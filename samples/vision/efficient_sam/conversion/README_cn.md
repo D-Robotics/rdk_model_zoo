@@ -66,6 +66,13 @@ sudo docker run -it --rm --network host --shm-size=15g \
 python3 -c "import torch, onnx, onnxruntime, numpy, cv2; print(torch.__version__, onnx.__version__, onnxruntime.__version__)"
 ```
 
+加载工具链镜像前，确认 Docker 可用：
+
+```bash
+sudo docker --version
+sudo docker run --rm hello-world
+```
+
 <a id="export"></a>
 ## 导出 ONNX
 

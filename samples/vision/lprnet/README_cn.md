@@ -5,7 +5,9 @@
 <a id="overview"></a>
 ## 算法与来源
 
-LPRNet 将车牌裁剪后的 tensor 直接识别为字符序列，不包含独立字符检测器。runtime 读取预打包 `float32` 文件并 reshape 为 `1x3x24x94`，不做图像解码、resize 或归一化。源论文为 [LPRNet: License Plate Recognition via Deep Neural Networks](https://arxiv.org/abs/1806.10447)。
+LPRNet 无需独立字符检测器即可识别车牌文字。本示例在 X5 上运行准备好的车牌张量，并使用 CTC 解码字符序列。
+
+参考：[LPRNet: License Plate Recognition via Deep Neural Networks](https://arxiv.org/abs/1806.10447).
 
 <a id="directory"></a>
 ## 目录结构
@@ -23,7 +25,7 @@ lprnet/
 ```
 
 <a id="support-matrix"></a>
-## 支持与验证矩阵
+## 支持的模型
 
 | 目标 | 变体 | Python | C++ | 说明 |
 |---|---|---|---|---|
@@ -55,6 +57,8 @@ python3 -m samples.vision.lprnet.runtime.python.main --target x5
 ## 预期结果
 
 成功推理退出码为 `0`，打印含 `target`、完整 `asset_id` 和解码后 `plate` 的 JSON。具体车牌由模型和输入决定，本说明不编造结果；`test_data/example.jpg` 只是源提供的可视参考，实际 runtime 输入是 `test_input.dat`。
+
+CLI 读取预先打包的 float32 `test_input.dat`，重塑为 `(1,3,24,94)`。生成张量前完成车牌图片解码、缩放和归一化。
 
 <a id="entry-points"></a>
 ## 入口索引

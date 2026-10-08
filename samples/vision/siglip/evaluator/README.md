@@ -2,7 +2,7 @@ English | [简体中文](./README_cn.md)
 
 # Evaluator — SigLIP vision features
 
-All numeric tables in this document are source records copied from the S platform sample and release benchmark records; they are retained for provenance and comparability.
+This guide describes image-feature comparison and the published S100/S100P accuracy and performance measurements.
 
 <a id="dataset"></a>
 ## Dataset
@@ -87,7 +87,7 @@ The comparison procedure writes complete raw arrays to a unique `evaluator-outpu
 <a id="reference-results"></a>
 ## Reference Results
 
-The following two source tables preserve every row and column. Source: S platform evaluator README, corroborated by the S release benchmark records.
+The following tables report ImageNet-1k zero-shot classification and COCO2014 patch-feature consistency on S100 and S100P.
 
 ### Source `pooler_output` zero-shot classification
 

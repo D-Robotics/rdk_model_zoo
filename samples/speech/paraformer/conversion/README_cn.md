@@ -115,6 +115,30 @@ python samples/speech/paraformer/conversion/export.py \
 则返回 2，保留部分文件和 `failed` 报告。部分制品不是可验收导出，强制中断
 进程也可能留下不完整状态。
 
+<a id="fixed-graph-contract"></a>
+## 固定输入尺寸与 ONNX 图处理
+
+Encoder 的 speech 输入为 float32 `[1,400,560]`：16 kHz 音频经 fbank 和 LFR（`m=7,n=6`）处理，**400 个 LFR 帧约对应 24 秒音频**。前端将较短输入补零，将较长输入截断到固定宽度；长录音需要调用方先分段。float32 `bias_embed` 为 `[1,1,512]`，全零表示不用热词。CPU CIF 将 decoder token 序列限制为 `max_label_len=100`；源 CPU 实现约需 1–2 ms，下文常驻运行表采用各自的测量范围。
+
+[源模型图与编译配方](https://github.com/D-Robotics/rdk_model_zoo/blob/d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d/platforms/s/samples/speech/paraformer/conversion/README_cn.md) 的处理步骤如下：
+
+1. 从 FunASR 导出 `model.onnx`，提取 `/decoder/*` 子图，将非 decoder 张量作为边界，得到五输入的 `decoder_only.onnx`；encoder、predictor 也分别按各自边界提取。
+2. 将 Gather 索引常量从 INT64 转为 INT32，再按拓扑排序并运行 ONNX checker。该源图需要转换 **145 个 Constant INT64→INT32**，以避开 HMCT `adjust_multi_output_use_quant_info_pass_fail`。
+3. 将静态 Range 转为 Constant。源配方用 ONNX Runtime 探针获取值，再通过 ONNX Simplifier 固定 shape 传播并折叠常量，节点数为 **2903 → 1214**。
+4. 在 batch=1 条件下将 `/predictor/Gather_output_0` 折为 Constant(1)，消除动态 Tile repeats，再将负 axis 归一化为正 axis。最终 `decoder_only_final.onnx` 为 **1137 个节点**，通过 HBDK4 导出。这些节点数描述的是该源图，不是每次源权重导出的固定要求。
+5. CIF 放在 CPU，decoder 使用 `pre_acoustic_embeds` 作为 graph input。HBDK4 4.7.5 编译路径中，将 CIF 的 `remains.unsqueeze(-1)` 改为 `remains.reshape(-1,1)`。
+
+本目录使用上面的 `export.py` 命令，直接从 Torch 导出各阶段并做数值验证。自定义 ONNX 图可调用 [graph_ops.py](graph_ops.py) 的 `gather_indices_int32`、`topological_sort`、`fold_constant_ranges` 和 `normalize_axes`，接口见下文。`fold_constant_ranges` 只折叠可证明为常量的结果；一次运行探针不足以确定数据相关的 Range。源配方中的 `extract_decoder_predictor.py`、`convert_gather_int64_to_int32.py`、`topsort.py`、`fold_range_ops.py`、`shape_freeze.py` 分别表示上述处理阶段，本目录不提供这些独立脚本。
+
+| 编译问题 | 报错 | 图处理 |
+| --- | --- | --- |
+| INT64 Gather | HMCT `adjust_multi_output_use_quant_info_pass_fail` | 将源图的 145 个 Constant 索引从 INT64 转为 INT32；拒绝超出 INT32 范围的索引。 |
+| Range | HBDK4 `Operator Range should be optimized` | 源配方为 ORT 探针 → Constant；当前 helper 只折叠可证明的静态值。 |
+| Unsqueeze 类型推断 | CIF `remains.unsqueeze(-1)` 的 HBDK4 `type_inf` 异常 | 使用 `.reshape(-1,1)`，见 [CIF shape workaround](#cif-shape-workaround)。 |
+| GatherND 动态索引 | `size of last dimension of index cannot be dynamic` | CIF 放在 CPU，向 decoder 输入 `pre_acoustic_embeds`。 |
+| Tile 动态 repeats | `cannot create ArrayAttr from OpResult` | batch=1 时将 `/predictor/Gather_output_0` 折为 Constant(1)。 |
+| Split axis=-1 | HBIR slice shape 推断错误 | 根据已知输入 rank，将负 axis 归一化为正 axis。 |
+
 <a id="calibration"></a>
 ## 准备真实校准数据与编译配置
 
@@ -251,6 +275,43 @@ Encoder 编译时间约 55 分钟（`jobs=32`）。S100 单核 BPU 已饱和；
 `--thread_num 8` 只是并发排队，单帧延迟不变。板端 `hbm_runtime` 的
 Python 接口手册见 [S Python API 指南](https://developer.d-robotics.cc/rdk_s_doc/Algorithm_Application/python-api)。
 
+
+### 编译模型的尺寸与静态估算
+
+数值来源：[S100 INT16 转换与性能报告](https://github.com/D-Robotics/rdk_model_zoo/blob/d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d/platforms/s/samples/speech/paraformer/conversion/README_cn.md)。下列模型尺寸、编译器静态估算与板端测量对应同一配方，计时范围分别说明。
+
+配置为 S100 `nash-e`、全节点 INT16、max 校准、`O2`、latency 模式、`core_num: 1`、`jobs: 32`，公共配置使用 `cache_mode: disable`。校准使用 50 条真实音频的 fbank+LFR 特征；Predictor 使用 Encoder 的 FP32 输出，Decoder 使用完整 FP32 pipeline 生成的四路真实输入。静态延迟和 FPS 为编译估算，DDR 与内存大小沿用报告的统计口径。
+
+#### Encoder
+
+| 项 | 值 |
+|---|---|
+| hbm 大小 | 211.5 MB |
+| 静态延迟 | 32.52 ms (FPS 30.75) |
+| 静态内存 | 211 MB |
+| 动态内存 | 3.6 MB |
+| DDR 占用 | 499 MB |
+| 编译时间 | ~55 min (jobs=32) |
+
+#### Predictor
+
+| 项 | 值 |
+|---|---|
+| hbm 大小 | ~4 MB |
+| 静态延迟 | ~0.35 ms (FPS ~2877) |
+| 输出 | `/predictor/Add_output_0` [1,401] (alphas) + `/predictor/Concat_5_output_0` [1,401,512] |
+
+#### Decoder
+
+| 项 | 值 |
+|---|---|
+| hbm 大小 | 73.5 MB |
+| 静态延迟 | 5.77 ms (FPS 173) |
+| DDR 占用 | 127 MB |
+| 输入 | 4 个：encoder_out, token_num, bias_embed, pre_acoustic_embeds |
+| 输出 | `logits [1, 100, 8404]` |
+
+
 <a id="artifacts"></a>
 ## 生成产物
 
@@ -352,7 +413,7 @@ print("Gather-only rewrite validated; input model preserved")
 几个测试输入通过不足以证明这一点。API 不自动替调用者作出这两个判断。
 
 <a id="known-gaps"></a>
-## 已知缺口
+## 补充准备
 
 - HMCT/OE 编译在 OE 工具链环境中按[编译](#compile)执行；生成的 HBM 在
   [验证](#validation)中的板端/SDK 检查通过前保持 `compiled_unverified` 状态。

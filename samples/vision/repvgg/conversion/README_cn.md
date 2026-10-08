@@ -44,7 +44,86 @@ conversion/
 
 按官方 RepVGG 流程加载训练权重，以 `create_RepVGG_B1g2(deploy=False)` 创建模型，并在 ONNX 导出前运行 `repvgg_model_convert`。构建时记录源码修订、PyTorch 版本与权重摘要。
 
-本 sample 没有可执行且已验证的导出命令。须在上表路径准备匹配图，名义输入 RGB NCHW 1×3×224×224、输出 ImageNet-1k。YAML input_shape/input_name 为空，维度与名称从图读取，必须核对。
+使用下面的 ONNX 导出示例，在上表路径准备匹配图，名义输入 RGB NCHW 1×3×224×224、输出 ImageNet-1k。YAML input_shape/input_name 为空，维度与名称从图读取，必须核对。
+
+### ONNX 导出示例
+
+在 x86 导出环境中运行以下示例。需要 PyTorch；使用简化步骤时还需安装 `onnxsim`。导出文件名与所选 YAML 的 `onnx_model` 必须对应。
+
+onnx 模型使用的是 RepVGG 模型源码进行转换的，使用以下命令安装所需要的包：
+
+```shell
+pip install timm onnx
+```
+
+在 Model Zoo 仓库根目录下载 RepVGG 源码：
+
+```shell
+git clone https://github.com/DingXiaoH/RepVGG.git
+```
+
+从 [RepVGG 官方仓库](https://github.com/DingXiaoH/RepVGG)的预训练模型列表获取 `RepVGG-B1g2-train.pth`，放入刚克隆的 `RepVGG/` 目录；也可将下面的 `model_path` 改为权重绝对路径。将以下代码保存为 `RepVGG/export_onnx.py`。
+
+模型转换以 RepVGG-B1g2 为例，其余五个模型需选择对应的构造函数和权重：
+
+```Python
+from repvgg import *
+import torch
+import onnx
+import torch.onnx
+
+def count_parameters(onnx_model_path):
+    # Load the ONNX model
+    model = onnx.load(onnx_model_path)
+    # Get the initializers (weights in the model)
+    initializer = model.graph.initializer
+
+    # Calculate the total number of parameters
+    total_params = 0
+    for tensor in initializer:
+        # Get the dimensions of each weight
+        dims = tensor.dims
+        # Calculate the number of parameters in this weight (product of all dimensions)
+        params = 1
+        for dim in dims:
+            params *= dim
+        total_params += params
+
+    return total_params
+
+if __name__ == "__main__":
+    model_path = "RepVGG-B1g2-train.pth"
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = create_RepVGG_B1g2(deploy=False)
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.eval()
+    model = repvgg_model_convert(model)
+
+    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
+    onnx_file_path = "RepVGG-B1g2.onnx"
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_file_path,
+        opset_version=11,
+        verbose=True,
+        input_names=["data"],  # input name
+        output_names=["output"],  # output name
+    )
+
+    param_count = count_parameters(onnx_file_path)
+    print(f'Total number of parameters: {param_count}')
+```
+
+在 Model Zoo 仓库根目录执行导出，再将生成的 ONNX 放入转换目录：
+
+```bash
+cd RepVGG
+python3 export_onnx.py
+cp RepVGG-B1g2.onnx ../samples/vision/repvgg/conversion/
+cd ..
+```
 
 <a id="calibration"></a>
 ## 校准
@@ -54,7 +133,7 @@ conversion/
 <a id="compile"></a>
 ## 编译
 
-在 OE 环境内、补齐 ONNX 图与校准数据前提后执行：
+在 OE 环境内准备对应变体的 ONNX 图与校准数据。以下 A0 示例使用 `RepVGG-A0.onnx`；编译上面的 B1g2 导出文件时，将 checker 的模型路径设为 `./RepVGG-B1g2.onnx`，makertbin 的配置设为 `RepVGG_B1g2_config.yaml`：
 
 ```bash
 # cwd: repository root, then conversion directory

@@ -1,6 +1,10 @@
 # MobileNetV1 图像分类
 
-MobileNetV1 在 RDK 板卡上的 ImageNet-1k 分类：输入一张 BGR 图像，输出稳定的 Top-K `(类别 ID, 分数, 标签)`。源模型：[tensorflow/models MobileNetV1](https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet_v1.md)，论文 [MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications](https://arxiv.org/abs/1704.04861)。[English](README.md)
+MobileNetV1 使用深度可分离卷积完成轻量图像分类。
+
+来源：[tensorflow/models MobileNetV1](https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet_v1.md) · [MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications](https://arxiv.org/abs/1704.04861)
+
+[English README](README.md)
 
 <a id="overview"></a>
 
@@ -40,7 +44,7 @@ mobilenetv1/
 ├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-└── requirements-host.txt  # 源码或数据文件
+└── requirements-host.txt  # Python 依赖
 ```
 
 <a id="support-matrix"></a>

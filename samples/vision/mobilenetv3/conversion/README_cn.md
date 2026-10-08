@@ -1,8 +1,7 @@
 # MobileNetV3 模型转换
 
 模型转换在 x86 Linux 主机上的 RDK OpenExplore (OE) 环境中执行，不是板卡
-操作。本目录保留交付随附的转换材料并说明其缺口；不虚构能产出不同
-制品的配置。
+操作。使用下面的导出脚本、校准工具和目标板卡配置准备部署模型。
 
 <a id="source-model"></a>
 ## 源模型
@@ -52,6 +51,92 @@ python3 get_mobilenetv3_onnx.py    # -> ./mobilenetv3_large_100.onnx
 5,470,832）；预期 metadata 输出为 `mean (0.485, 0.456, 0.406)`、
 `std (0.229, 0.224, 0.225)`、"Simplified model is valid."。
 
+安装导出依赖：
+
+```bash
+pip install timm onnx onnxsim
+huggingface-cli login
+python3 get_mobilenetv3_onnx.py
+```
+
+通过 Hugging Face 获取受限权重时，使用上述登录命令完成认证。
+
+### ONNX 导出示例
+
+在 x86 导出环境中运行以下示例。需要 PyTorch；使用简化步骤时还需安装 `onnxsim`。导出文件名与所选 YAML 的 `onnx_model` 必须对应。
+
+onnx 模型使用的是 timm 库 (PyTorch Image Models) 中的模型进行转换的，使用以下命令安装所需要的包：
+
+```shell
+pip install timm onnx
+```
+
+模型转换以 mobilenetv3_large_100 为例：
+
+```Python
+import torch
+import torch.onnx
+import onnx
+from onnxsim import simplify
+from timm.models import create_model
+
+from timm.models.mobilenetv3 import mobilenetv3_large_100
+
+def count_parameters(onnx_model_path):
+    # Load the ONNX model
+    model = onnx.load(onnx_model_path)
+    # Get the initializers (weights in the model)
+    initializer = model.graph.initializer
+
+    # Calculate the total number of parameters
+    total_params = 0
+    for tensor in initializer:
+        # Get the dimensions of each weight
+        dims = tensor.dims
+        # Calculate the number of parameters in this weight (product of all dimensions)
+        params = 1
+        for dim in dims:
+            params *= dim
+        total_params += params
+
+    return total_params
+
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = create_model('mobilenetv3_large_100', pretrained=True)
+    model.eval()
+
+    # print the model structure
+
+    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
+    onnx_file_path = "mobilenetv3_large_100.onnx"
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_file_path,
+        opset_version=11,
+        verbose=True,
+        input_names=["data"],  # Input name
+        output_names=["output"],  # Output name
+    )
+
+    # Simplify the ONNX model
+    model_simp, check = simplify(onnx_file_path)
+
+    if check:
+        print("Simplified model is valid.")
+        simplified_onnx_file_path = "mobilenetv3_large_100.onnx"
+        onnx.save(model_simp, simplified_onnx_file_path)
+        print(f"Simplified model saved to {simplified_onnx_file_path}")
+    else:
+        print("Simplified model is invalid!")
+
+    onnx_model_path = simplified_onnx_file_path  # Replace with your ONNX model path
+    total_params = count_parameters(onnx_model_path)
+    print(f"Total number of parameters in the model: {total_params}")
+```
+
 <a id="calibration"></a>
 ## 校准
 
@@ -85,6 +170,13 @@ shape/dtype 与数值结果之后，才能把再生成制品视为与已发布�
 的文件系统上与 X5 的 `MobileNetV3_config.yaml` 冲突，因此此处 S 副本
 更名为 `mobilenetv3_s_config.yaml`——仅文件名变化，内容原样。
 
+S100 编译器也支持直接传入 ONNX。生成经过校准的 NV12 部署模型时，使用上面的目标 YAML：
+
+```bash
+hb_compile --model mobilenetv3_large_100.onnx --march nash-e
+hb_compile --config mobilenetv3_s_config.yaml
+```
+
 <a id="validation"></a>
 ## 验证
 
@@ -111,7 +203,7 @@ BPU conv original OPs per run: 433,179,520
 ```
 
 <a id="artifacts"></a>
-## 保留材料
+## 转换文件
 
 - `get_mobilenetv3_onnx.py`
 - `timm2onnx_local.py`

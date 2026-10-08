@@ -45,9 +45,9 @@ The default pair is `reference_inputs.npz` and `reference_outputs.npz`; `referen
 
 The source identifies these as PyTorch float outputs, not annotation truth. Source metadata and known HBM hashes do not pin the full upstream checkpoint/export history. All packaged arrays are finite float32; runtime archives use separate raw and decoded schemas.
 
-## Five source cases
+## Five S600 examples
 
-All numbers below are retained S600 source records.
+The following S600 results compare quantized model outputs with the prepared float references.
 
 | Case | Scene | Predicted agents | BEV pixel agreement | BEV mean IoU |
 | --- | --- | ---: | ---: | ---: |
@@ -65,7 +65,7 @@ Mean IoU includes classes present in either prediction. A small number of class-
 | case_073 | case_099 |
 | ![Reference boulevard result](case_073/result.png) | ![Reference wide intersection result](case_099/result.png) |
 
-[Default result](reference_result.png) and [case_000 result](case_000/result.png) from the source record are also retained.
+See the [default visualization](reference_result.png) and [case_000 visualization](case_000/result.png).
 
 ## Running examples
 

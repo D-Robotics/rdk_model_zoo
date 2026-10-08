@@ -13,6 +13,20 @@ This directory lists the X5 release assets for the single-stage classifier. Choo
 | `b3` | `hgnetv2_b3_224x224_nv12.bin` | x5 | bin | download |
 | `b4` | `hgnetv2_b4_224x224_nv12.bin` | x5 | bin | download |
 
+### X5 file sizes
+
+The X5 release model table (`rdk_x5 @ e3f9fa3fb5a795b2531bdb84fa60d03768af5956`)
+lists these approximate BIN sizes in MB. Download validation uses the exact
+byte count in `docs/release/x5/models.yaml`.
+
+| Variant | File Name | Size |
+| --- | --- | --- |
+| HGNetV2 b0 | `hgnetv2_b0_224x224_nv12.bin` | ~5.9 MB |
+| HGNetV2 b1 | `hgnetv2_b1_224x224_nv12.bin` | ~6.2 MB |
+| HGNetV2 b2 | `hgnetv2_b2_224x224_nv12.bin` | ~11 MB |
+| HGNetV2 b3 | `hgnetv2_b3_224x224_nv12.bin` | ~16 MB |
+| HGNetV2 b4 | `hgnetv2_b4_224x224_nv12.bin` | ~19 MB |
+
 <a id="directory"></a>
 ## Directory structure
 

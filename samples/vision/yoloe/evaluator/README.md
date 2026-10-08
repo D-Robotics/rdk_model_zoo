@@ -159,6 +159,20 @@ S100 reference conditions: V1P0, OS 4.0.5-Beta, UCP 3.13.6/HBRT 4.7.5, OE 3.7.0 
 
 Predictions-only mode exports detections and masks for the selected image/category manifest. For COCO AP, supply instance ground truth and an explicit PF-to-dataset category mapping. Record checkpoint and artifact hashes for each model route separately.
 
+
+## Additional reference measurements
+
+Each table retains its published model, board and measurement conditions. Measurements from different configurations are separate reference sets.
+
+
+### RDK X5 & RDK X5 Module
+
+| Model | Size (pixels) | Number of Classes | Parameters(M)/FLOPs(B) | BPU Latency/BPU Throughput (threads) | Post-processing Time<br/>(Python) |
+|---------|---------|-------|---------|---------|----------|
+| YOLOE-11S-Seg | 640×640 | 4585 | 13.69 M | 142.9 ms / 7.0 FPS (1 thread  ) <br/> 149.5 ms / 13.3 FPS (2 threads) <br/> 167.4 ms / 17.8 FPS (3 threads)  | 300 ms |
+
+
+
 <a id="boundaries"></a>
 ## Boundaries and checks
 

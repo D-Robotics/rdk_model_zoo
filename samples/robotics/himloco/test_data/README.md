@@ -14,8 +14,7 @@ test_data/
 ```
 
 
-The 21 `obs_history/*.bin` files and `runtime-input-manifest.json` are preserved
-byte-for-byte from X5 commit `ac115717197920355fc390bb04299b20e6436864`.
+The 21 `obs_history/*.bin` files and `runtime-input-manifest.json` contain the example observations from X5 commit `ac115717197920355fc390bb04299b20e6436864`.
 Each file stores 270 little-endian float32 values (1080 bytes), current 45-value
 observation first, followed by five previous observations. There is no header.
 

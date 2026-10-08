@@ -1,5 +1,3 @@
-> Board results, accuracy figures and SDK release notes below are records from the source S release. Board runs follow each runtime's commands; the quantization recipes are in the conversion guide.
-
 [English](README.md) | [简体中文](README_cn.md)
 
 <a id="overview"></a>
@@ -93,7 +91,7 @@ The reference model itself answered one Chinese `1+1` prompt incorrectly and add
 | S600 C++ | [cpp](runtime/cpp/README.md) |
 | S100 / S100P C++ | [legacy](runtime/legacy/README.md) |
 | Conversion recipes | [conversion](conversion/README.md) |
-| Evaluation and historical evidence | [evaluator](evaluator/README.md) |
+| Evaluation and reference results | [evaluator](evaluator/README.md) |
 | Prompts and reference outputs | [test_data](test_data/README.md) |
 
 <a id="license"></a>

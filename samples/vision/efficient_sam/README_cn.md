@@ -5,12 +5,9 @@
 <a id="overview"></a>
 ## 算法与来源
 
-EfficientSAM-Tiny 使用 ViT-Tiny 图像编码器和固定提示解码器完成固定双正点提示图像分割。编码器把归一化的 `512x512` RGB 图像转换为 `1x256x32x32` embedding；解码器输出三个低分辨率 mask 候选及 IoU，运行时选择 IoU 最高者并上采样到 `512x512` 二值 mask。
+EfficientSAM 使用轻量图像编码器完成提示式分割。本示例部署 ViT-Tiny 编码器与 mask 解码器，解码器的两个正点提示固定在模型中。
 
-- 论文：<https://arxiv.org/abs/2312.00863>
-- 项目：<https://yformer.github.io/efficient-sam/>
-
-发布解码器固定使用缩放后 512 方形图像中的正点 `(248,210)`、`(302,315)`，不接收运行时点或框参数。编码器采用 RGB `/255`，选中 mask 的阈值为 logits `>=0`。输入直接拉伸至 512×512，结果保留在该坐标系，不反变换回原图。
+参考：<https://arxiv.org/abs/2312.00863>, <https://yformer.github.io/efficient-sam/>.
 
 <a id="directory"></a>
 ## 目录结构
@@ -70,6 +67,8 @@ python3 samples/vision/efficient_sam/runtime/python/main.py --target s100
 ## 预期结果
 
 默认输入是 `test_data/dogs.jpg`。成功运行会生成 overlay 图和 `512x512` 二值 mask；IoU 和 mask index 取决于实际模型执行。提交的 `efficient_sam_binary_mask.png` 是 source 参考，不是新的板端结果。
+
+解码器固定使用缩放后 512×512 图像中的正点 `(248,210)`、`(302,315)`。编码器采用 RGB `/255`，生成 `(1,256,32,32)` 嵌入。三个候选中选取 IoU 最高的 mask，缩放到 512×512 并以 logits `>=0` 二值化。结果使用缩放后的坐标系。
 
 <a id="entry-points"></a>
 ## 入口索引

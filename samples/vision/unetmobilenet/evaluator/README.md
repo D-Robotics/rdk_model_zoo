@@ -19,12 +19,24 @@ evaluator/
 <a id="environment"></a>
 ## Environment
 
-Host suite needs Python 3.10+, NumPy/OpenCV/PyYAML and a C++17 compiler for native pure/fake-interface tests. Real runtime checks require matching S100/S600 images, models and SDKs described in the runtime guides. The fake headers under native tests are deliberately not installation substitutes or real SDK compile evidence.
+Use a matching S100 or S600 board image, model and SDK. Python requires Python 3.10+, NumPy, OpenCV and PyYAML. C++ requires C++17, CMake, OpenCV development libraries and board DNN/UCP headers and libraries.
 
 <a id="command"></a>
+## Commands
 
+From the repository root, prepare the S100 model and run both implementations on the same image:
 
-Keep both runtime commands on the same target, artifact and input. Use --target s600 for every corresponding step when checking S600.
+```bash
+bash samples/vision/unetmobilenet/model/download.sh --target s100
+python3 samples/vision/unetmobilenet/runtime/python/main.py --target s100 \
+  --test-img samples/vision/unetmobilenet/test_data/segmentation.png \
+  --mask-save-path outputs/unetmobilenet/python-labels.npy
+bash samples/vision/unetmobilenet/runtime/cpp/run.sh --target s100 --build \
+  --test-img samples/vision/unetmobilenet/test_data/segmentation.png \
+  --mask-save-path outputs/unetmobilenet/cpp-labels.png
+```
+
+Keep target, artifact and input identical for comparison. For S600, use `--target s600` in every command.
 
 <a id="metrics"></a>
 ## Metrics

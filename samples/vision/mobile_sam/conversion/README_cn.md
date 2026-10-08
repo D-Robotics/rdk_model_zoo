@@ -62,6 +62,13 @@ python3 -c "import torch, onnx, onnxruntime, numpy, cv2; print(torch.__version__
 
 导出器实际调用 `ultralytics.models.sam.build.build_mobile_sam`，仅克隆 MobileSAM 仓库不会提供该包。源步骤是在导出环境执行 `python3 -m pip install ultralytics`。源没有固定版本，应记录实际版本，并在导出前核对 `build_mobile_sam`/`set_imgsz` API。
 
+加载工具链镜像前，确认 Docker 可用：
+
+```bash
+sudo docker --version
+sudo docker run --rm hello-world
+```
+
 <a id="export"></a>
 ## 导出 ONNX
 

@@ -20,11 +20,13 @@ python/
 └── run.sh  # 运行示例
 ```
 
+从 [main.py](main.py) 开始：入口构造 `SigLIPEmbedder` 并调用 `predict`。[embedding.py](embedding.py) 实现模型初始化及推理阶段；[cli.py](cli.py) 负责参数、模型选择和结果交付。模型初始化会加载 Runtime，应用可复用同一个实例执行多次预测。
+
 <a id="environment"></a>
 ## 环境
 
 - 运行目标：RDK S100（Nash-E）或 S100P（Nash-M），板端镜像需提供 `hbm_runtime`。使用板端镜像提供的 Python 环境。
-- 主机准备：Python 3.14.7，以及 `../../requirements-host.txt` 中的 `numpy`、`opencv-python`、`PyYAML`。
+- Python 依赖：Python 3.10+，以及 `../../requirements-host.txt` 中的 `numpy`、`opencv-python`、`PyYAML`。
 - `hbm_runtime` 只存在于板端镜像。`--help`、`--list-models` 和显式 target 的 `--dry-run` 有意不导入 SDK、不加载模型。
 
 <a id="usage"></a>

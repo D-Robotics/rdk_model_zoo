@@ -11,7 +11,7 @@ dump，并交给独立的 OpenCV 可视化模块渲染。发布事实由 `launch
 <a id="overview"></a>
 ## C++ 推理
 
-本目录提供C++ 推理所需的程序与操作说明。
+通过 X5 HB-DNN 或 S UCP 适配器运行 YOLOv5 检测。程序准备 NV12 输入、解码三个检测头并保存标注图片。
 
 <a id="directory"></a>
 ## 目录结构
@@ -150,7 +150,7 @@ manifests 中精确的 `--asset-id` 一起给出。预期产物为 `result.jpg`�
 - 编译期构建身份（`YOLOV5_TARGET_NAME`）必须与 `--target` 一致，因此按某一种 S
   对齐编译的二进制不能当作另一个目标运行。
 
-与固定源相比的**已声明**差异（保留而非静默抹平）：
+Python 与 C++ Runtime 的行为区别：
 
 - **X5 默认变体。** 固定 X5 C++ 源默认 `s-v2.0` 制品；统一 Python runtime 默认
   `n-v7.0`。原生 launcher 在既未给 `--variant` 也未给 `--asset-id` 时保留 C++

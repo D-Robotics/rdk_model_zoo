@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-RDK Model Zoo 为地瓜机器人 BPU 提供模型准备、前处理、推理、后处理及应用验证示例。每个 Sample 的 README 是用户与 Agent 共同的操作入口，包含运行命令、输入输出、源码结构、转换/评估流程及使用限制。模型推理仅依赖 Python 与板端 SDK。源码版本：2.0.0（仓库根 `VERSION`）。
+RDK Model Zoo 提供在地瓜机器人 RDK 板卡上运行的视觉、语音和大模型示例，包含模型下载、转换、推理与评估程序。源码版本为 2.0.0，见根目录 `VERSION`。
 
 ## 目录结构
 
@@ -82,13 +82,17 @@ python3 samples/vision/ultralytics_yolo/runtime/python/main.py \
 ## 阅读和扩展代码
 
 
-每个 Python Runtime 都是同一形态：`main.py` 是薄入口——解析参数、构造模型类、调用 `predict`、展示结果；模型类在单一可读文件内实现 `preprocess → infer → postprocess` 主线，由 `predict` 串联；样例本地 CLI 辅助模块（`cli.py`、`yolo_cli.py`）承担参数、清单、dry-run 与结果展示。普通单任务 Sample 使用这三个 Python 文件；模型构造时加载公共 Runtime，额外模块承载完整算法或模型特有张量契约。具体要求见 [Runtime 代码规范](docs/sample-standards/runtime-code.md)，参考实现为 ResNet [classify.py](samples/vision/resnet/runtime/python/classify.py) 与 YOLO 检测 [detect.py](samples/vision/ultralytics_yolo/runtime/python/detect.py)。两个 `samples/llm` 样例提供原生 generate/stream/reset C++ 接口。`conversion/`、`evaluator/` 各自保存可操作说明；共享机制见 [utils/py_utils](utils/py_utils/README.md)（英文）。
+从 Sample 的 `runtime/python/main.py` 开始阅读：入口构造模型，再调用 `predict`。预处理、推理和后处理位于模型文件中；参数解析、模型选择和结果展示位于 `cli.py` 或 `yolo_cli.py`。
 
-开发前阅读 [AGENTS.md](AGENTS.md)、[推理契约](docs/sample-standards/inference-contract.md)、[README 契约](docs/sample-standards/readme-contract.md)。用户和 Agent 使用同一原生命令。
+例如，ResNet 的 [classify.py](samples/vision/resnet/runtime/python/classify.py) 实现图像分类，YOLO 的 [detect.py](samples/vision/ultralytics_yolo/runtime/python/detect.py) 实现目标检测。多模型流水线和跟踪、解码等算法使用各自的模块。模型加载和 SDK 调用复用 [Python 公共函数](utils/py_utils/README_cn.md)。两个 `samples/llm` 示例使用原生 C++ 接口。
+
+自定义模型的导出与编译见各 Sample 的 `conversion/`，数据集评估见 `evaluator/`。新增 Sample 时参照 [Runtime 代码规范](docs/sample-standards/runtime-code.md)、[推理契约](docs/sample-standards/inference-contract.md) 和 [README 规范](docs/sample-standards/readme-contract.md)，贡献代码前阅读 [AGENTS.md](AGENTS.md)。
 
 ## 数据与验证
 
-- [统一发布事实](docs/release) 保存制品与历史测量事实（`docs/release/{x5,s}/models.yaml` 为活动清单；目标身份别名见 `docs/release/platforms.json`）。
+[模型性能数据](docs/benchmarks/README_cn.md)按任务和板卡列出分类精度、BPU 吞吐量与后处理时间。
+
+- [模型发布清单](docs/release) 包含模型文件、下载地址和性能数据。X5 与 S 系列清单位于 `docs/release/{x5,s}/models.yaml`，板卡标识位于 `docs/release/platforms.json`。
 - 数据准备入口：[datasets](datasets)。大数据集和模型通常不在 Git 中。
 - [TROS](docs/tros/README_cn.md) 板端运行栈文档。
 - Sample 指南中的性能表记录已发布测量值及其测试条件；数据集精度评估见各 Sample 的 `evaluator/` 指南。

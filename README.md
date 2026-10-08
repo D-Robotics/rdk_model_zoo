@@ -2,12 +2,7 @@
 
 [简体中文](README_cn.md)
 
-RDK Model Zoo provides model preparation, preprocessing, BPU inference,
-postprocessing and application-validation examples for D-Robotics devices.
-Each sample README is the shared entry for people and Agents: commands,
-I/O, source structure, conversion and evaluation. Model inference runs
-with Python and the board SDK alone. Source version: 2.0.0
-(`VERSION` at the repository root).
+RDK Model Zoo contains vision, speech and language-model examples for D-Robotics RDK boards, with programs for model download, conversion, inference and evaluation. The source version is 2.0.0; see `VERSION` at the repository root.
 
 ## Directory structure
 
@@ -114,33 +109,20 @@ for a board test checklist see the
 ## Read and extend the code
 
 
-Every Python runtime follows one shape: `main.py` stays a thin entry —
-parse arguments, construct the model class, call `predict`, show the
-result; the model class implements the `preprocess → infer → postprocess`
-chain in one readable file, assembled by `predict`; sample-local CLI
-helper modules (`cli.py`, `yolo_cli.py`) own argument, listing, dry-run
-and result presentation. Ordinary single-task samples use these three Python
-files. Model construction loads the shared Runtime; additional modules hold
-complete algorithms or model-specific tensor contracts. The pattern is described in
-[Runtime code standard](docs/sample-standards/runtime-code.md),
-with ResNet ([classify.py](samples/vision/resnet/runtime/python/classify.py))
-and YOLO detection ([detect.py](samples/vision/ultralytics_yolo/runtime/python/detect.py))
-as the reference implementations. The two `samples/llm` samples provide
-native generate/stream/reset C++ interfaces. `conversion/` and
-`evaluator/` each have actionable guides; shared mechanisms live under
-[utils/py_utils](utils/py_utils/README.md).
+Start with a sample's `runtime/python/main.py`: it constructs a model and calls `predict`. The model file contains preprocessing, inference and postprocessing. `cli.py` or `yolo_cli.py` handles arguments, model selection and result presentation.
 
-Read [AGENTS.md](AGENTS.md), the [inference
-contract](docs/sample-standards/inference-contract.md) and the [README
-contract](docs/sample-standards/readme-contract.md) before development.
-People and Agents use the same native commands.
+For example, ResNet's [classify.py](samples/vision/resnet/runtime/python/classify.py) implements image classification, and YOLO's [detect.py](samples/vision/ultralytics_yolo/runtime/python/detect.py) implements object detection. Multi-model pipelines, tracking and decoding algorithms have their own modules. Model loading and SDK calls use the [shared Python utilities](utils/py_utils/README.md). The two `samples/llm` examples use native C++ interfaces.
+
+Each sample's `conversion/` guide covers model export and compilation; `evaluator/` covers dataset evaluation. When adding a sample, follow the [Runtime code standard](docs/sample-standards/runtime-code.md), [inference contract](docs/sample-standards/inference-contract.md) and [README standard](docs/sample-standards/readme-contract.md). Read [AGENTS.md](AGENTS.md) before contributing.
 
 ## Data and validation
 
-- [Canonical release facts](docs/release) hold artifacts and historical
-  measurements (`docs/release/{x5,s}/models.yaml` are the active
-  manifests; target identity aliases live in
-  `docs/release/platforms.json`).
+[Model performance data](docs/benchmarks/README.md) lists classification accuracy, BPU throughput and postprocessing time by task and board.
+
+- [Model release manifests](docs/release) list model files, download URLs and
+  performance data. X5 and S-series manifests are in
+  `docs/release/{x5,s}/models.yaml`; board identifiers are in
+  `docs/release/platforms.json`.
 - Dataset preparation: [datasets](datasets). Large datasets/models are
   generally not in Git.
 - [TROS](docs/tros/README.md) documentation for board runtime stacks.

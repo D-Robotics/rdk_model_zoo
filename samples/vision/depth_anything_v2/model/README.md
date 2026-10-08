@@ -46,7 +46,7 @@ or installs dependencies.
 ## Accompanying files
 
 This model needs no class labels. The bundled `../test_data/furseal.jpg` and six
-figures are byte-preserved source files, not calibration images or ground truth.
+figures are visualization examples. Prepare calibration images and ground truth separately.
 The HBM, source weights and ONNX are not bundled. See the
 [conversion guide](../conversion/README.md) for missing reproduction prerequisites.
 A similarly named upstream checkpoint is not guaranteed to match this artifact.

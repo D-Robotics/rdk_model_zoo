@@ -5,9 +5,9 @@ English | [简体中文](./README_cn.md)
 <a id="overview"></a>
 ## Overview
 
-DINOv2 is a self-supervised ViT encoder that produces a global image feature and dense patch features. This sample deploys the ViT-S/14 backbone as an int16 PTQ HBM model for RDK S100, S100P, and S600. The upstream implementation and Apache-2.0 model artifacts are [facebookresearch/dinov2](https://github.com/facebookresearch/dinov2), pinned for conversion to revision `7764ea0f912e53c92e82eb78a2a1631e92725fc8`.
+DINOv2 is a self-supervised vision transformer for image representations. The ViT-S/14 backbone produces a global embedding and dense patch features for downstream visual tasks. This sample deploys its int16 PTQ model on RDK S100, S100P and S600.
 
-The graph has a patch-14 stem, 12 pre-LN transformer blocks, explicit BPU-friendly attention, and a final normalized feature interface. The sample exposes `cls_feat` `(1,384)` for global embedding and `patch_feat` `(1,256,384)` for per-patch features. Runtime post-processing dequantizes integer outputs using the bound metadata into owned float32 arrays; it does not apply softmax or L2 normalization.
+References: [facebookresearch/dinov2](https://github.com/facebookresearch/dinov2).
 
 <a id="directory"></a>
 ## Directory structure
@@ -40,7 +40,7 @@ Board execution requires the matching S-series board with `hbm_runtime`; the con
 ## Prerequisites
 
 - Board execution: RDK S100 (Nash-E), S100P (Nash-M), or S600 (Nash-P), with a board image that provides `hbm_runtime`. Use the Python environment supplied with that board image.
-- Host contract checks: Python 3.14.7 with `numpy`, `opencv-python`, and `PyYAML` from `requirements-host.txt`.
+- Python dependencies: Python 3.10+ with `numpy`, `opencv-python`, and `PyYAML` from `requirements-host.txt`.
 - Conversion: x86 Linux OE 3.7.0 image `ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0`; Torch 2.6 is supplied by that image, with `onnx==1.19.0` and `onnxruntime==1.23.2` additions.
 - Prepare one target-specific HBM before board inference; runtime commands do not download implicitly.
 
@@ -65,6 +65,8 @@ The convenience `runtime/python/run.sh` accepts the positional output (`cls_feat
 ## Expected Results
 
 The CLI prints a JSON summary with `output`, `shape`, `dtype`, `mean`, `std`, `min`, `max`, and `l2_norm`. When the default second image exists it also prints `second_image` and `cosine_similarity`; missing second images are reported as `skipped_missing`. `cls_feat` has shape `(1,384)` and `patch_feat` `(1,256,384)`, both returned as float32 after metadata-bound dequantization. Board values are obtained by running the target board.
+
+Outputs are `cls_feat` `(1,384)` and `patch_feat` `(1,256,384)`, returned as owned float32 arrays after metadata-based dequantization. The runtime applies neither softmax nor L2 normalization. The backbone uses a patch-14 stem and 12 pre-LN transformer blocks.
 
 <a id="entry-points"></a>
 ## Entry Points

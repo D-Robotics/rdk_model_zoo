@@ -1,5 +1,3 @@
-> 下文的板测结果、精度与 SDK 发布说明为源 S 发布的记录。板端运行按各运行时命令执行；量化方案见转换指南。
-
 [English](README.md) | [简体中文](README_cn.md)
 
 <a id="overview"></a>
@@ -93,7 +91,7 @@ bash run.sh -- --prompt="What is the capital of France? Answer with the city nam
 | S600 C++ | [cpp](runtime/cpp/README_cn.md) |
 | S100 / S100P C++ | [legacy](runtime/legacy/README_cn.md) |
 | 转换配方 | [conversion](conversion/README_cn.md) |
-| 评估与历史证据 | [evaluator](evaluator/README_cn.md) |
+| 评估与参考结果 | [evaluator](evaluator/README_cn.md) |
 | 提示词与参考输出 | [test_data](test_data/README_cn.md) |
 
 <a id="license"></a>

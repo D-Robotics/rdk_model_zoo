@@ -10,7 +10,7 @@ Detect people with YOLOv5 and associate detections across ordered video frames w
 
 ```text
 python/
-├── tracker_backend/  # Files for tracker_backend
+├── tracker_backend/  # BYTETracker association, Kalman filtering and matching
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
 ├── TRACKER_SOURCE_MAP.json  # Structured data
@@ -19,6 +19,8 @@ python/
 ├── run.sh  # Run the sample
 └── tracking.py  # Model initialization and inference stages
 ```
+
+Start with [main.py](main.py): it constructs `ByteTrackTask.from_model` and calls `predict`. [tracking.py](tracking.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.
 
 <a id="environment"></a>
 ## Environment

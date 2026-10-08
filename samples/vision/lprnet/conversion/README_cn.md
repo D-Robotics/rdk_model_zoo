@@ -46,7 +46,7 @@ hb_mapper makertbin --model-type onnx --config ./your_lprnet_config.yaml
 <a id="validation"></a>
 ## 转换后验证
 
-可用 `hrt_model_exec model_info --model_file./lpr.bin` 检查生成模型，再与 runtime binding 对照。转换后在板端运行[评估器](../evaluator/README_cn.md)对照器检查两套实现的 logits 一致性；转换配方的重建以本目录列出的前提为准。
+可用 `hrt_model_exec model_info --model_file ./lpr.bin` 检查生成模型，再与 runtime binding 对照。转换后在板端运行[评估器](../evaluator/README_cn.md)对照器检查两套实现的 logits 一致性；转换配方的重建以本目录列出的前提为准。
 
 <a id="artifacts"></a>
 ## 产物
@@ -54,7 +54,7 @@ hb_mapper makertbin --model-type onnx --config ./your_lprnet_config.yaml
 唯一的 manifest 制品是 `x5:lprnet:lpr.bin`；runtime 期望路径为 `../model/lpr.bin`。ONNX、checkpoint、校准数据和编译日志属于外部输入，不纳入仓库。
 
 <a id="known-gaps"></a>
-## 缺失项
+## 补充准备
 
 - 源没有导出脚本、checkpoint 版本、校准生成器、PTQ YAML 或可复现 OE 包。
 - `your_lprnet_config.yaml` 是源占位符，不是仓库文件。

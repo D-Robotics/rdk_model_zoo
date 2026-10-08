@@ -572,6 +572,198 @@ protocol.
   `config.yaml`, calibration files, and compiler log. A failed workspace is
   retained by default for this purpose.
 
+
+## S100 YOLOv13 iMoonLab export and quantization
+
+This recipe exports the iMoonLab detection head as six NHWC tensors and compiles an S100 NV12 HBM. The quantized box outputs retain their compiler scale metadata; inspect the model before selecting a runtime decoder. Commands in this section run in an external iMoonLab clone and the matching S OE environment.
+
+### Build Environment
+
+Run model conversion on an x86 Linux host inside the OpenExplore environment instead of installing the toolchain on the board.
+
+- OE resource entry point (Docker + OE dev package): <https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview>
+- OE toolchain online manual: <https://toolchain.d-robotics.cc/>
+
+#### 1. Install Docker
+
+```bash
+sudo docker --version
+sudo docker run --rm hello-world
+```
+
+#### 2. Load the offline image
+
+Download the CPU Docker image for the RDK S100 series from the OE resource page, then load it:
+
+```bash
+sudo docker load -i ai_toolchain_ubuntu_22_s100_xxx.tar
+```
+
+#### 3. Start the container
+
+```bash
+sudo docker run -it --rm \
+  --network host \
+  --shm-size=15g \
+  -v "$(pwd)":/workspace \
+  --workdir /workspace \
+  <docker-image-name> /bin/bash
+```
+
+### Conversion Flow
+
+#### 1. Prepare the training environment and weights
+
+YOLOv13 ONNX export must be performed in the iMoonLab/Ultralytics training environment. The source `.pt` weights should come from the official training flow or the official release weights.
+
+```bash
+git clone https://github.com/iMoonLab/yolov13.git
+cd yolov13
+wget https://github.com/iMoonLab/yolov13/releases/download/yolov13/yolov13n.pt
+```
+
+Training instructions:
+
+- <https://docs.ultralytics.com/modes/train/>
+
+No code changes and no `forward` changes are required during training.
+
+#### 2. Export ONNX
+
+It is recommended to uninstall the `ultralytics` package installed via `pip` or `conda` first, so the source tree you edit is the one that is actually imported.
+
+```bash
+conda list | grep ultralytics
+pip list | grep ultralytics
+conda uninstall ultralytics
+pip uninstall ultralytics
+```
+
+To verify which `ultralytics` path is imported:
+
+```python
+import ultralytics
+print(ultralytics.__path__)
+```
+
+Then edit `ultralytics/nn/modules/head.py` and replace `Detect.forward` so that each feature level emits separate classification and box tensors, for a total of 6 outputs:
+
+```python
+def forward(self, x):
+    result = []
+    for i in range(self.nl):
+        result.append(self.cv3[i](x[i]).permute(0, 2, 3, 1).contiguous())
+        result.append(self.cv2[i](x[i]).permute(0, 2, 3, 1).contiguous())
+    return result
+```
+
+If the exported output order is reversed compared with the reference model, swap the append order of `cv2` and `cv3` and export again:
+
+```python
+def forward(self, x):
+    result = []
+    for i in range(self.nl):
+        result.append(self.cv2[i](x[i]).permute(0, 2, 3, 1).contiguous())
+        result.append(self.cv3[i](x[i]).permute(0, 2, 3, 1).contiguous())
+    return result
+```
+
+Then export ONNX:
+
+```python
+from ultralytics import YOLO
+YOLO('yolov13n.pt').export(imgsz=640, format='onnx', simplify=False, opset=19)
+```
+
+If you hit `No module named onnxsim`, install the dependency. If the exported ONNX IR version is too high, keeping `simplify=False` is acceptable.
+
+#### 3. Prepare calibration data
+
+Prepare 20 to 50 images that cover the target scenes for PTQ calibration. The OE development package also provides related examples for calibration data preparation.
+
+### Conversion Reference
+
+ONNX export
+PTQ config generation
+
+#### 4. Confirm dequant node removal names
+
+Open the exported ONNX in Netron:
+
+- <https://netron.app/>
+
+Locate the three outputs shaped `[1, 80, 80, 64]`, `[1, 40, 40, 64]`, and `[1, 20, 20, 64]`, then fill the corresponding node names into `remove_node_name` in the YAML. A practical rule is to inspect the Dequantize nodes associated with `64 = 4 * REG`, but the exact names depend on the Ultralytics version and must be checked from your export.
+
+![Netron example](https://raw.githubusercontent.com/D-Robotics/rdk_model_zoo/d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d/platforms/s/samples/vision/yolov13_imoonlab/test_data/netron_conv_example.jpeg)
+
+Reference YAML snippet:
+
+```yaml
+model_parameters:
+  onnx_model: 'ultralytcs_YOLO.onnx'
+  march: nash-e
+  layer_out_dump: False
+  working_dir: 'ultralytcs_YOLO_output'
+  output_model_file_prefix: 'ultralytcs_YOLO'
+  remove_node_name: "/model.32/cv2.0/cv2.2.2/Conv;/model.32/cv2.1/cv2.1.2/Conv;/model.32/cv2.2/cv2.2.2/Conv;"
+```
+
+#### 5. Compile HBM
+
+```bash
+hb_compile --config config_yolov13_detect_nv12.yaml
+```
+
+The following reference logs are included for comparison:
+
+- `hb_compile_yolov13.txt`
+- `hb_model_info_yolov13.txt`
+- `hrt_model_exec_model_info_yolov13.txt`
+
+
+Save the complete S100 configuration below as `config_yolov13_detect_nv12.yaml` in the export directory. Prepare RGB float32 calibration tensors at the configured `cal_data_dir`, or replace that path with your prepared directory.
+
+```yaml
+model_parameters:
+  onnx_model: 'yolov13n.onnx'
+  march: nash-e  # S100: nash-e, S100P: nash-m.
+  layer_out_dump: False
+  working_dir: 'bpu_outputs'
+  output_model_file_prefix: 'yolo13n_detect_nashe_640x640_nv12'
+  remove_node_name: "/model.32/cv2.0/cv2.2.2/Conv;/model.32/cv2.1/cv2.1.2/Conv;/model.32/cv2.2/cv2.2.2/Conv;"  # Depend on your onnx model.
+  # Reference remove_node_name
+  # YOLOv13n: /model.32/cv2.0/cv2.2.2/Conv;/model.32/cv2.1/cv2.1.2/Conv;/model.32/cv2.2/cv2.2.2/Conv;
+  # YOLOv13s: /model.32/cv2.0/cv2.0.2/Conv;/model.32/cv2.1/cv2.1.2/Conv;/model.32/cv2.2/cv2.2.2/Conv;
+  # YOLOv13l: /model.32/cv2.0/cv2.0.2/Conv;/model.32/cv2.1/cv2.1.2/Conv;/model.32/cv2.2/cv2.2.2/Conv;
+  # YOLOv13x: /model.32/cv2.0/cv2.0.2/Conv;/model.32/cv2.1/cv2.1.2/Conv;/model.32/cv2.2/cv2.2.2/Conv;
+input_parameters:
+  input_name: ''
+  input_type_rt: 'nv12'
+  input_type_train: 'rgb'
+  input_layout_train: 'NCHW;'
+  input_shape: ''
+  norm_type: 'data_scale'
+  mean_value: ''
+  scale_value: 0.003921568627451
+calibration_parameters:
+  cal_data_dir: '/open_explorer/calibration_data_rgb_f32_640'
+  cal_data_type: 'float32'
+  calibration_type: 'default'
+  quant_config: {"op_config": {"softmax": {"qtype": "int8"}}}
+compiler_parameters:
+  extra_params: {'input_no_padding': True, 'output_no_padding': True}
+  jobs: 8
+  compile_mode: 'latency'
+  debug: True
+  advice: 1
+  optimize_level: 'O2'
+```
+
+```bash
+hb_compile --config config_yolov13_detect_nv12.yaml
+hrt_model_exec model_info --model_file bpu_outputs/yolo13n_detect_nashe_640x640_nv12.hbm
+```
+
 <a id="known-gaps"></a>
 ## Additional preparation
 

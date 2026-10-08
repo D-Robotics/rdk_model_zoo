@@ -5,12 +5,9 @@
 <a id="overview"></a>
 ## 算法与来源
 
-MobileSAM 使用 TinyViT 图像编码器和 mask decoder 完成框提示图像分割。编码器把归一化的 `512x512` RGB 图像转换为 `1x256x32x32` embedding；解码器接收 embedding 和一个 `[x1,y1,x2,y2]` 框，返回三个 mask 候选及 IoU，运行时选择最佳候选并上采样。
+MobileSAM 使用 TinyViT 替换 SAM 的图像编码器，降低提示式分割的计算成本。本示例使用一个框提示，从解码器候选结果中选择分割 mask。
 
-- 论文：<https://arxiv.org/abs/2306.14289>
-- 官方仓库：<https://github.com/ChaoningZhang/MobileSAM>
-
-输入直接拉伸至 512×512，框和结果 mask 都使用该坐标系，不反变换回原图。RGB 数值使用 mean `[123.675,116.28,103.53]`、std `[58.395,57.12,57.375]` 归一化；选中 mask 的阈值为 logits `>0`。
+参考：<https://arxiv.org/abs/2306.14289>, <https://github.com/ChaoningZhang/MobileSAM>.
 
 <a id="directory"></a>
 ## 目录结构
@@ -70,6 +67,8 @@ python3 samples/vision/mobile_sam/runtime/python/main.py --target s100 --box 185
 ## 预期结果
 
 默认图像为 `test_data/dogs.jpg`。成功运行会生成 `512x512` overlay 和二值 mask；IoU 与 mask index 是模型输出，`mobile_sam_binary_mask.png` 是保留的 source 参考。
+
+输入拉伸至 512×512；`[x1,y1,x2,y2]` 框与输出 mask 使用该坐标系。RGB 归一化采用 mean `[123.675,116.28,103.53]`、std `[58.395,57.12,57.375]`。编码器生成 `(1,256,32,32)` 嵌入。解码器返回三个 mask 候选及 IoU 分数，选中 mask 采用 logits `>0`。
 
 <a id="entry-points"></a>
 ## 入口索引

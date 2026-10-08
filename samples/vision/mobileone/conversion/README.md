@@ -22,7 +22,7 @@ conversion/
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
-5 unchanged YAMLs X5 march `bayes-e`;  OE version is not pinned by the source; record the actual rebuild environment.
+5 YAML configurations target X5 march `bayes-e`. Record the OE version used for compilation.
 
 | Config | ONNX input path | Working directory | Compiled basename |
 | --- | --- | --- | --- |
@@ -43,6 +43,91 @@ Toolchain resources:
 Use the upstream apple/ml-mobileone flow: load the matching unfused checkpoint (for example `mobileone_s0_unfused.pth.tar`), apply `reparameterize_model(model)`, then export and simplify ONNX. Record the selected upstream revision, package versions and checkpoint digest for each build.
 
 Export the matching graph to the table path with nominal RGB/NCHW 1×3×224×224 input and ImageNet-1k output. YAML `input_shape` and `input_name` are empty, so inspect the graph for its actual dimensions and names.
+
+### ONNX export example
+
+Run this example in the x86 export environment with PyTorch installed. The simplification step also requires `onnxsim`. Match the exported filename to `onnx_model` in the selected YAML.
+
+The onnx model is transformed using models from the timm library (PyTorch Image Models). Install the required packages using the following command:
+
+```shell
+pip install timm onnx
+```
+
+Download the model source code using the following command:
+
+```shell
+git clone https://github.com/apple/ml-mobileone.git
+```
+
+Model transformation takes mobileone_s0 as an example, and the other four models are the same:
+
+```Python
+import torch
+import torch.onnx
+import onnx
+from onnxsim import simplify
+
+from mobileone import *
+
+def count_parameters(onnx_model_path):
+    # Load the ONNX model
+    model = onnx.load(onnx_model_path)
+    # Get the initializers (weights in the model)
+    initializer = model.graph.initializer
+
+    # Calculate the total number of parameters
+    total_params = 0
+    for tensor in initializer:
+        # Get the dimensions of each weight
+        dims = tensor.dims
+        # Calculate the number of parameters in this weight (product of all dimensions)
+        params = 1
+        for dim in dims:
+            params *= dim
+        total_params += params
+
+    return total_params
+
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model_path = "mobileone_s0_unfused.pth.tar"
+    model = mobileone(variant='s0')
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.eval()
+    model = reparameterize_model(model)
+
+    # print(model)
+
+    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
+    onnx_file_path = "mobileone_s0.onnx"
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_file_path,
+        opset_version=11,
+        verbose=True,
+        input_names=["data"],  # input name
+        output_names=["output"],  # output name
+        keep_initializers_as_inputs=True
+    )
+
+    # Simplify the ONNX model
+    model_simp, check = simplify(onnx_file_path)
+
+    if check:
+        print("Simplified model is valid.")
+        simplified_onnx_file_path = "mobileone_s0.onnx"
+        onnx.save(model_simp, simplified_onnx_file_path)
+        print(f"Simplified model saved to {simplified_onnx_file_path}")
+    else:
+        print("Simplified model is invalid!")
+
+    onnx_model_path = simplified_onnx_file_path  # Replace with your ONNX model path
+    total_params = count_parameters(onnx_model_path)
+    print(f"Total number of parameters in the model: {total_params}")
+```
 
 <a id="calibration"></a>
 ## Calibration

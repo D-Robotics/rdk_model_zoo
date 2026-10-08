@@ -5,9 +5,9 @@ English | [简体中文](./README_cn.md)
 <a id="overview"></a>
 ## Overview
 
-SigLIP is a vision encoder that turns one image into a global embedding or a sequence of patch features. This sample exposes only the vision side of SigLIP: it does not include a text encoder or text-token pipeline. The upstream paper is [Sigmoid Loss for Language Image Pre-Training](https://arxiv.org/abs/2303.15343); the model family is published by [Google Research](https://github.com/google-research/big_vision). The sample lives at `samples/vision/siglip`.
+SigLIP learns image-text representations with a sigmoid loss. This sample provides its vision encoder, with eight variants that produce global image embeddings or patch features for downstream applications.
 
-The eight published variants are packed HBM artifacts. Every artifact contains two fixed submodels, `pooler_output` and `last_hidden_state`, with the same image input and selected-output execution.
+References: [Sigmoid Loss for Language Image Pre-Training](https://arxiv.org/abs/2303.15343), [Google Research](https://github.com/google-research/big_vision).
 
 <a id="directory"></a>
 ## Directory structure
@@ -47,7 +47,7 @@ Board execution requires a board image with `hbm_runtime`.
 ## Prerequisites
 
 - Board: RDK S100 or S100P with a board image providing `hbm_runtime`; no image or BPU firmware version is pinned.
-- Host preparation: Python 3.14.7 with `numpy`, `opencv-python`, and `PyYAML` from `requirements-host.txt`.
+- Python dependencies: Python 3.10+ with `numpy`, `opencv-python`, and `PyYAML` from `requirements-host.txt`.
 - The HBM must be prepared before inference. No runtime command downloads a model implicitly.
 - The source reports no memory or disk requirement beyond the selected HBM file.
 
@@ -72,6 +72,8 @@ The convenience `runtime/python/run.sh` accepts the source positional submodel (
 ## Expected Results
 
 The CLI prints one JSON statistics object for the selected raw feature tensor. Its `shape` is bound from HBM metadata: `pooler_output` is `(1,D)` or `(1,1,D)`, and `last_hidden_state` is `(1,N,D)`. `D` and `N` are listed in the runtime README. The native output dtype is preserved; the runtime does not dequantize, apply softmax, normalize, squeeze, or otherwise alter the feature values. Exact values come from running the artifact on a board.
+
+Each packed HBM contains `pooler_output` and `last_hidden_state` submodels with the same image input. Each inference executes only the selected submodel. Text encoding requires a separate model and tokenizer.
 
 <a id="entry-points"></a>
 ## Entry Points

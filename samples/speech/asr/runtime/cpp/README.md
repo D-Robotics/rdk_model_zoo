@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## C++ inference
 
-Use this directory for c++ inference.
+Transcribe fixed-length audio windows on S100/S600 using Wav2Vec2. The native program prepares the waveform tensor and decodes model logits with CTC or the legacy token mode.
 
 <a id="directory"></a>
 ## Directory structure

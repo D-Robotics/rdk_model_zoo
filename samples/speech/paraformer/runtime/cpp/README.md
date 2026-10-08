@@ -12,7 +12,7 @@ text decoding.
 <a id="overview"></a>
 ## C++ inference
 
-Use this directory for c++ inference.
+Transcribe 16 kHz audio on S100 with the encoder, predictor and decoder HBMs. CPU CIF joins the predictor output to the decoder input; the native program writes text and per-stage timings.
 
 <a id="directory"></a>
 ## Directory structure

@@ -5,9 +5,9 @@
 <a id="overview"></a>
 ## Overview
 
-DiffusionDrive combines a three-camera RGB panorama, LiDAR BEV histogram, ego status and explicit diffusion noise for trajectory planning. The source describes a two-step truncated diffusion decoder producing eight future ego poses, with auxiliary agent-state and seven-class BEV heads. This sample consumes prepared NAVSIM features and provides Python inference, visualization, five-case execution and float-reference comparison. It does not prepare raw sensor data, compute a complete NAVSIM score or execute a vehicle-control command.
+DiffusionDrive plans future vehicle trajectories from camera, LiDAR and ego-state features. Its truncated diffusion decoder predicts eight future poses, with auxiliary agent-state and BEV semantic heads. This sample runs prepared NAVSIM features on RDK S100P and S600.
 
-Source algorithm references: [official DiffusionDrive project](https://github.com/hustvl/DiffusionDrive), [CVPR2025 paper](https://openaccess.thecvf.com/content/CVPR2025/html/Liao_DiffusionDrive_Truncated_Diffusion_Model_for_End-to-End_Autonomous_Driving_CVPR_2025_paper.html), and [NAVSIM](https://github.com/autonomousvision/navsim). Use them as algorithm references; the deployable artifact identity is defined by the published HBM checksums in the [model guide](model/README.md).
+References: [official DiffusionDrive project](https://github.com/hustvl/DiffusionDrive), [CVPR2025 paper](https://openaccess.thecvf.com/content/CVPR2025/html/Liao_DiffusionDrive_Truncated_Diffusion_Model_for_End-to-End_Autonomous_Driving_CVPR_2025_paper.html), [NAVSIM](https://github.com/autonomousvision/navsim).
 
 <a id="directory"></a>
 ## Directory structure
@@ -89,7 +89,9 @@ S600 reference visualization:
 | Reference case_073 | Reference case_099 |
 | ![Boulevard](test_data/case_073/result.png) | ![Wide intersection](test_data/case_099/result.png) |
 
-All six input/reference pairs and six result images are retained byte-for-byte. The [evaluator guide](evaluator/README.md#reference-results) preserves the complete original S100P/S600 accuracy/performance table, including one-thread latency, two-thread aggregate throughput and five-case S100P means. The [test-data guide](test_data/README.md) preserves the five-case S600 table. Source-recorded conditions: accuracy comparisons use case_000 and profiling uses case_017; the source records all segments at CPU 0.0 ms with full-BPU execution.
+The six input/reference pairs include S600 visualizations. The [evaluator guide](evaluator/README.md#reference-results) reports S100P/S600 accuracy and performance, including one-thread latency, two-thread aggregate throughput and five-case S100P means. The [test-data guide](test_data/README.md) gives five-case S600 results. Accuracy comparisons use case_000; profiling uses case_017. The model runs every segment on BPU with CPU inference time 0.0 ms.
+
+Inputs are a three-camera RGB panorama, a LiDAR BEV histogram, ego status and explicit diffusion noise. Prepare these NAVSIM features before inference. The outputs support trajectory visualization and float-reference comparison; a complete NAVSIM score requires its dataset evaluator.
 
 <a id="entry-points"></a>
 ## Entry points for people and agents

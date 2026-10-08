@@ -13,6 +13,20 @@
 | `b3` | `hgnetv2_b3_224x224_nv12.bin` | x5 | bin | download |
 | `b4` | `hgnetv2_b4_224x224_nv12.bin` | x5 | bin | download |
 
+### X5 文件体积
+
+X5 发布模型表（`rdk_x5 @ e3f9fa3fb5a795b2531bdb84fa60d03768af5956`）
+以 MB 列出下列 BIN 文件的近似体积。下载校验使用
+`docs/release/x5/models.yaml` 中的精确字节数。
+
+| 变种 | 文件名 | 体积 |
+| --- | --- | --- |
+| HGNetV2 b0 | `hgnetv2_b0_224x224_nv12.bin` | ~5.9 MB |
+| HGNetV2 b1 | `hgnetv2_b1_224x224_nv12.bin` | ~6.2 MB |
+| HGNetV2 b2 | `hgnetv2_b2_224x224_nv12.bin` | ~11 MB |
+| HGNetV2 b3 | `hgnetv2_b3_224x224_nv12.bin` | ~16 MB |
+| HGNetV2 b4 | `hgnetv2_b4_224x224_nv12.bin` | ~19 MB |
+
 <a id="directory"></a>
 ## 目录结构
 

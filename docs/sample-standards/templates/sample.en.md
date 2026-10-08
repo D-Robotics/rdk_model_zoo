@@ -11,11 +11,11 @@
 > **Must answer:** what the model does (one sentence); the algorithm in one short
 > paragraph; official paper/repo links; where it sits in this repository.
 
-⟪One-sentence task description, e.g. “Real-time object detection for RDK boards.”⟫
+⟪Introduce the model and its method in one or two sentences, e.g. “ResNet uses residual connections to train deep image classifiers.”⟫
 
-- Algorithm: ⟪one paragraph, no implementation details⟫
-- Official source: ⟪paper/repo URL⟫
-- Category in this repo: `samples/⟪domain⟫/⟪name⟫`
+Sources: ⟪paper/upstream repository links⟫
+
+⟪Put boards and variants in the support matrix; put I/O and APIs in the runtime guide. Do not explain editorial choices in the finished README.⟫
 
 <a id="directory"></a>
 ## Directory structure

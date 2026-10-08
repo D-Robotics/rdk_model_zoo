@@ -1,11 +1,9 @@
 # ResNet image classification (ResNet18/50/152)
 
-ImageNet-1k classification on RDK boards: one BGR image in, a stable Top-K
-of `(class id, score, label)` out. The sample covers TorchVision ResNet18
-on X5 plus S100/S600, and ResNet50/152 on S100/S600
-([ResNet18 upstream](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html),
-[ResNet50](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet50.html),
-[ResNet152](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet152.html)).
+ResNet uses residual connections to train deep image classifiers.
+
+Sources: [ResNet18 upstream](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html) · [ResNet50](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet50.html) · [ResNet152](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet152.html)
+
 [中文说明](README_cn.md)
 
 <a id="overview"></a>
@@ -22,7 +20,7 @@ depth grows ([paper](https://arxiv.org/abs/1512.03385),
 
 Variant notes:
 
-- **resnet18** — the lightweight residual variant; the S delivery positions it for quick classification validation.
+- **resnet18** — the lightweight residual variant for image classification.
 - **resnet50** — bottleneck residual blocks (`1x1 → 3x3 → 1x1`) build a deeper network with controlled computation.
 - **resnet152** — the 152-layer design trades more compute for representational capacity.
 
@@ -32,13 +30,8 @@ Variant notes:
 convolutions) and the bottleneck building block of ResNet-50/101/152
 (right, 1×1 → 3×3 → 1×1), Figure 5 of the ResNet paper.*
 
-The sample provides one Python flow (all targets) plus one
-S-series C++ flow. Python resolves one exact artifact reference from the
-platform release manifests, verifies the board identity, loads `hbm_runtime`
-lazily, and runs a `preprocess → infer → postprocess` task assembled by
-`predict` ([runtime/python/README.md](runtime/python/README.md)). The C++
-flow uses the S-series `hbDNNInferV2` implementation
-([runtime/cpp/README.md](runtime/cpp/README.md)).
+Start with `runtime/python/main.py`; `classify.py` holds the model stages and `cli.py` handles options and results.
+[runtime/python/README.md](runtime/python/README.md) · [runtime/cpp/README.md](runtime/cpp/README.md)
 
 <a id="directory"></a>
 ## Directory structure
@@ -53,7 +46,7 @@ resnet/
 ├── tests/  # Automated tests
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-└── requirements-host.txt  # Source or data file
+└── requirements-host.txt  # Python dependencies
 ```
 
 <a id="support-matrix"></a>
@@ -178,8 +171,7 @@ Sample code follows the repository top-level LICENSE (Apache-2.0). The
 source models are the TorchVision ResNet18/50/152 distributions; upstream
 model/weights licensing is governed by those distributions (see the
 upstream links above).
-Published artifacts follow the platform release manifests; the manifests
-carry no separate license field, and no additional license is claimed here.
+Model artifacts are listed in `docs/release/{x5,s}/models.yaml`.
 
 <a id="readable-example"></a>
 ## Readable example and custom models

@@ -1,5 +1,9 @@
 # RepGhost 图像分类
 
+RepGhost 通过结构重参数化减少轻量 CNN 中显式特征拼接的开销。
+
+[English README](README.md)
+
 <a id="overview"></a>
 
 ## 概述
@@ -22,7 +26,7 @@ RepGhost 是面向硬件高效部署的轻量级 CNN 模型家族，通过将特
 
 *图（上游论文 Fig. 4）：(a) 带 `Concat` 显式特征复用的 Ghost
 bottleneck；(b) 训练期 RG-bneck——复用经 `add` 分支移入权重空间；
-(c) 推理期 RG-bneck——分支已融合消失。；图中为上游结构，实际部署
+(c) 推理期 RG-bneck——分支已融合消失。图中为上游结构，实际部署
 制品是 INT8 量化的 100–200 变体（224×224 NV12，见
 [支持范围](#support-matrix)）。*
 
@@ -44,7 +48,7 @@ repghost/
 ├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-└── requirements-host.txt  # 源码或数据文件
+└── requirements-host.txt  # Python 依赖
 ```
 
 <a id="support-matrix"></a>
@@ -137,6 +141,6 @@ rank 1 为 class 350（ibex, Capra ibex）。
 <a id="license"></a>
 ## 许可
 
-源 Python 文件保留 Apache-2.0 出处。转换 YAML 原样保留其原始专有声明；
+Python 文件采用 Apache-2.0。转换 YAML 的许可见文件声明；
 仓库许可不覆盖这些声明或上游权重许可。再分发转换材料或权重前请核对
 适用声明。

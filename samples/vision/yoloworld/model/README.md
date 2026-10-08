@@ -38,7 +38,7 @@ unidentified model into this path.
 <a id="accompanying-files"></a>
 ## Accompanying files
 
-The source fixture image is `../test_data/dog.jpeg` and the source vocabulary is
+The bundled example image is `../test_data/dog.jpeg` and the source vocabulary is
 `../test_data/offline_vocabulary_embeddings.json`. The JSON must contain finite
 F32 vectors of width 512 for every prompt; it supplies text embeddings and ID
 mapping. It must not be replaced with COCO label names.

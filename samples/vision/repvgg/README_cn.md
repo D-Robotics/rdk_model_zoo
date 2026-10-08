@@ -1,5 +1,9 @@
 # RepVGG 图像分类
 
+RepVGG 将训练分支融合为由 3×3 卷积组成的推理网络。
+
+[English README](README.md)
+
 <a id="overview"></a>
 
 ## 概述
@@ -45,7 +49,7 @@ repvgg/
 ├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-└── requirements-host.txt  # 源码或数据文件
+└── requirements-host.txt  # Python 依赖
 ```
 
 <a id="support-matrix"></a>
@@ -141,6 +145,6 @@ rank 1 为 class 99（goose）。
 <a id="license"></a>
 ## 许可
 
-源 Python 文件保留 Apache-2.0 出处。转换 YAML 原样保留其原始专有声明；
+Python 文件采用 Apache-2.0。转换 YAML 的许可见文件声明；
 仓库许可不覆盖这些声明或上游权重许可。再分发转换材料或权重前请核对
 适用声明。

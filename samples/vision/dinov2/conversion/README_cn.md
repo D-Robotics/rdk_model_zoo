@@ -149,7 +149,7 @@ S100P 或 S600 使用 `--march nash-m` 或 `nash-p`。mapper 其他默认值为 
 | `dinov2_vits14_224_int16_nashp.hbm` | s600 / Nash-P | 下载后 `samples/vision/dinov2/model/nash-p/`，或 mapper 的 `--output-dir` |
 
 <a id="known-gaps"></a>
-## 缺失项
+## 补充准备
 
 - 执行该流程需要 OE 容器、用于获取固定 checkpoint 的网络，以及用于最终验证的板卡。
 - 提供固定源、checkpoint digest、OE 版本和真实校准目录后，源 pipeline 即可复现。

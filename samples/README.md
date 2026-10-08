@@ -2,7 +2,7 @@
 
 [简体中文](README_cn.md)
 
-This index covers 51 unified samples: 45 vision, three speech, one robotics policy and two LLM samples. Each row links usage, conversion and evaluation; individual guides state targets, variants and prerequisites.
+Find models, conversion instructions and evaluation programs by task. There are 51 samples: 45 vision, three speech, one robotics policy and two language-model examples.
 
 ## Image classification
 

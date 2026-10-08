@@ -46,7 +46,7 @@ The exact output filename, calibration options, quantization settings, and sourc
 <a id="validation"></a>
 ## Post-conversion validation
 
-Inspect the generated model with `hrt_model_exec model_info --model_file./lpr.bin`, then compare its metadata to the runtime binding. After conversion, run the [evaluator](../evaluator/README.md) comparator on the board to check two-implementation logits parity; conversion reproducibility follows the prerequisites listed in this directory.
+Inspect the generated model with `hrt_model_exec model_info --model_file ./lpr.bin`, then compare its metadata to the runtime binding. After conversion, run the [evaluator](../evaluator/README.md) comparator on the board to check two-implementation logits parity; conversion reproducibility follows the prerequisites listed in this directory.
 
 <a id="artifacts"></a>
 ## Artifacts

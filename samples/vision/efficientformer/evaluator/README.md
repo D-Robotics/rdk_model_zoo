@@ -88,6 +88,35 @@ single-core, FPS multi-threaded; CPU 8xA55@1.8GHz performance mode, BPU
 In the published record the L1 quantized top-1 (67.72%) is far below its
 float value (76.75%).
 
+### RDK X5 / X5 Module performance
+
+Data version: `rdk_x5_legacy @ cb86079ae5befcef9ca50fb46c8a6d8980106dec`.
+
+The threading descriptions below are the conditions stated with these measurements. The dual-core and X3 eight-thread descriptions refer to X3; X5 has 1×Bayes-e.
+
+The following table shows the performance data obtained from actual testing on RDK X5 & RDK X5 Module. You can weigh the size of the model according to your own reasoning about the actual performance and accuracy required
+
+| Model              | Size    | Categories | Parameter | Floating point precision | Quantization accuracy | Latency/throughput (single-threaded) | Latency/throughput (multi-threaded) | Frame rate(FPS) |
+| ------------------ | ------- | ---------- | --------- | ------------------------ | --------------------- | ------------------------------------ | ----------------------------------- | --------------- |
+| EfficientFormer_l3 | 224x224 | 1000 | 31.3   | 76.75 | 76.05 | 17.55       | 65.56       | 60.52   |
+| EfficientFormer_l1 | 224x224 | 1000 | 12.3   | 76.75 | 67.72 | 5.88        | 20.69       | 191.605 |
+
+Description:
+1. X5 is in the best state: CPU is 8xA55@1.8G, full core Performance scheduling, BPU is 1xBayes-e@1G, a total of 10TOPS equivalent int8 computing power.
+2. Single-threaded delay is the ideal situation for single frame, single-threaded, and single-BPU core delay, and BPU inference for a task.
+3. The frame rate of a 4-thread project is when 4 threads simultaneously send tasks to a dual-core BPU. In a typical project, 4 threads can control the single frame delay to be small, while consuming all BPUs to 100%, achieving a good balance between throughput (FPS) and frame delay.
+4. The maximum frame rate of 8 threads is for 8 threads to simultaneously load tasks into the dual-core BPU of X3. The purpose is to test the maximum performance of the BPU. Generally, 4 cores are already full. If 8 threads are much better than 4 threads, it indicates that the model structure needs to improve the "calculation/memory access" ratio or optimize the DDR bandwidth when compiling.
+5. Floating-point/fixed-point precision: Floating-point accuracy uses the Top-1 inference accuracy Level of onnx before the model is quantized, while quantized accuracy is the accuracy Level of the actual inference of the model after quantization.
+
+### RDK X5 L1 accuracy records
+
+The English and Chinese data tables at `rdk_x5_legacy @ cb86079ae5befcef9ca50fb46c8a6d8980106dec` state different L1 accuracy values. Both records have the same latency and FPS:
+
+| Data table | Model | Float Top-1 | Quant Top-1 | Single-thread latency | Multi-thread latency | FPS |
+| --- | --- | --- | --- | --- | --- | --- |
+| English | EfficientFormer_l1 | 76.75 | 67.72 | 5.88 | 20.69 | 191.605 |
+| 中文 | EfficientFormer_l1 | 76.12 | 65.38 | 5.88 | 20.69 | 191.605 |
+
 <a id="boundaries"></a>
 ## Dataset-level evaluation
 

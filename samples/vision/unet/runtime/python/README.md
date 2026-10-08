@@ -22,6 +22,8 @@ python/
 
 `main.py` constructs the model and calls `predict`; `cli.py` handles options, model selection, and image/report output. The task file owns model stages and image loading uses `utils.py_utils.image.read_bgr_image`.
 
+Start with [main.py](main.py): it constructs `UNetSegmenter` and calls `predict`. [unet.py](unet.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.
+
 <a id="environment"></a>
 ## Environment
 

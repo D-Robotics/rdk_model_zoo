@@ -22,7 +22,7 @@ conversion/
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
-Five unchanged source YAMLs target X5 `march: bayes-e`. The OE version is unspecified in the source and must be recorded when rebuilding.
+Five YAML configurations target X5 `march: bayes-e`. Record the OE version used for compilation.
 
 | Variant | Config | Required ONNX | Published filename |
 | --- | --- | --- | --- |
@@ -40,7 +40,89 @@ Toolchain resources:
 <a id="export"></a>
 ## ONNX export
 
-No verified export command can be supplied from the checked-in material. Prepare the matching variant ONNX with RGB NCHW input (nominal 1×3×224×224); verify its real I/O first. YAML `input_shape` and `input_name` are empty, so they derive from the graph rather than constraining it to 224. Place the graph beside its YAML as listed above.
+Use the ONNX export example below. Prepare the matching variant ONNX with RGB NCHW input (nominal 1×3×224×224); verify its real I/O first. YAML `input_shape` and `input_name` are empty, so they derive from the graph rather than constraining it to 224. Place the graph beside its YAML as listed above.
+
+### ONNX export example
+
+Run this example in the x86 export environment with PyTorch installed. The simplification step also requires `onnxsim`. Match the exported filename to `onnx_model` in the selected YAML.
+
+The onnx model is transformed using models from the timm library (PyTorch Image Models). Install the required packages using the following command:
+
+```shell
+pip install timm onnx
+```
+
+The following command fetches MobileOne for a comparison model. The RepGhost export below uses `timm.models.repghost`:
+
+```shell
+git clone https://github.com/apple/ml-mobileone.git
+```
+
+Model transformation takes repghostnet_100 as an example, and the other four variants are the same:
+
+```Python
+import torch
+import torch.onnx
+import onnx
+from onnxsim import simplify
+from timm.models import create_model
+
+from timm.models.repghost import repghostnet_100, repghostnet_111, repghostnet_130, repghostnet_150, repghostnet_200
+
+def count_parameters(onnx_model_path):
+    # Load the ONNX model
+    model = onnx.load(onnx_model_path)
+    # Get the initializers (weights in the model)
+    initializer = model.graph.initializer
+
+    # Calculate the total number of parameters
+    total_params = 0
+    for tensor in initializer:
+        # Get the dimensions of each weight
+        dims = tensor.dims
+        # Calculate the number of parameters in this weight (product of all dimensions)
+        params = 1
+        for dim in dims:
+            params *= dim
+        total_params += params
+
+    return total_params
+
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = create_model('repghostnet_100', pretrained=True)
+    model.eval()
+
+    # print the model structure
+
+    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
+    onnx_file_path = "repghostnet_100.onnx"
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_file_path,
+        opset_version=11,
+        verbose=True,
+        input_names=["data"],  # Input name
+        output_names=["output"],  # Output name
+    )
+
+    # Simplify the ONNX model
+    model_simp, check = simplify(onnx_file_path)
+
+    if check:
+        print("Simplified model is valid.")
+        simplified_onnx_file_path = "repghostnet_100.onnx"
+        onnx.save(model_simp, simplified_onnx_file_path)
+        print(f"Simplified model saved to {simplified_onnx_file_path}")
+    else:
+        print("Simplified model is invalid!")
+
+    onnx_model_path = simplified_onnx_file_path  # Replace with your ONNX model path
+    total_params = count_parameters(onnx_model_path)
+    print(f"Total number of parameters in the model: {total_params}")
+```
 
 <a id="calibration"></a>
 ## Calibration

@@ -1,9 +1,8 @@
 # MobileNetV4 model conversion
 
 Conversion runs on an x86 Linux host in the RDK OpenExplore (OE)
-environment; it is not a board operation. This directory keeps the
-conversion material the source deliveries shipped and records its gaps;
-no configuration that could produce a different artifact is invented.
+environment. Use the export scripts, calibration helpers, and target-specific
+configurations below to prepare deployment models.
 
 <a id="source-model"></a>
 ## Source model
@@ -57,6 +56,89 @@ python3 get_mobilenetv4_onnx.py    # -> mobilenetv4_conv_small.onnx + mobilenetv
 The exporter uses onnx-simplifier and reports the parameter count
 (small 3,761,480 / medium 9,681,560).
 
+Install the export dependencies:
+
+```bash
+pip install timm onnx onnxsim
+```
+
+### ONNX export example
+
+Run this example in the x86 export environment with PyTorch installed. The simplification step also requires `onnxsim`. Match the exported filename to `onnx_model` in the selected YAML.
+
+The onnx model is transformed using models from the timm library (PyTorch Image Models). Install the required packages using the following command:
+
+```shell
+pip install timm onnx
+```
+
+Model transformation takes mobilenetv4_conv_small as an example:
+
+```Python
+import torch
+import torch.onnx
+import onnx
+from onnxsim import simplify
+from timm.models import create_model
+
+from timm.models.mobilenetv3 import mobilenetv4_conv_medium, mobilenetv4_conv_small
+
+def count_parameters(onnx_model_path):
+    # Load the ONNX model
+    model = onnx.load(onnx_model_path)
+    # Get the initializers (weights in the model)
+    initializer = model.graph.initializer
+
+    # Calculate the total number of parameters
+    total_params = 0
+    for tensor in initializer:
+        # Get the dimensions of each weight
+        dims = tensor.dims
+        # Calculate the number of parameters in this weight (product of all dimensions)
+        params = 1
+        for dim in dims:
+            params *= dim
+        total_params += params
+
+    return total_params
+
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = create_model('mobilenetv4_conv_small', pretrained=True)
+    model.eval()
+
+    # print the model structure
+
+    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
+    onnx_file_path = "mobilenetv4_conv_small.onnx"
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_file_path,
+        opset_version=11,
+        verbose=True,
+        input_names=["data"],  # Input name
+        output_names=["output"],  # Output name
+    )
+
+    # Simplify the ONNX model
+    model_simp, check = simplify(onnx_file_path)
+
+    if check:
+        print("Simplified model is valid.")
+        simplified_onnx_file_path = "mobilenetv4_conv_small.onnx"
+        onnx.save(model_simp, simplified_onnx_file_path)
+        print(f"Simplified model saved to {simplified_onnx_file_path}")
+    else:
+        print("Simplified model is invalid!")
+
+    onnx_model_path = simplified_onnx_file_path  # Replace with your ONNX model path
+    total_params = count_parameters(onnx_model_path)
+    print(f"Total number of parameters in the model: {total_params}")
+
+```
+
 <a id="calibration"></a>
 ## Calibration
 
@@ -103,6 +185,15 @@ Geometry note: the S-side medium config compiles the 256x256
 input recorded in `mobilenetv4_medium_config.yaml`; the X5 medium
 config builds the published 224x224 artifact. Both geometries are
 real and the runtime contract table records them per target.
+
+The S100 compiler also accepts ONNX graphs directly. Use the YAML commands above for the calibration and NV12 settings:
+
+```bash
+hb_compile --model mobilenetv4_conv_small.onnx --march nash-e
+hb_compile --model mobilenetv4_conv_medium.onnx --march nash-e
+hb_compile --config mobilenetv4_small_config.yaml
+hb_compile --config mobilenetv4_medium_config.yaml
+```
 
 <a id="validation"></a>
 ## Validation
@@ -151,7 +242,7 @@ BPU conv original OPs per run: 372,011,136
 ```
 
 <a id="artifacts"></a>
-## Kept material
+## Conversion files
 
 - `get_mobilenetv4_onnx.py`
 - `timm2onnx_local.py`
@@ -165,7 +256,7 @@ BPU conv original OPs per run: 372,011,136
 <a id="known-gaps"></a>
 ## Additional preparation
 
-- The X5 medium YAML expects a 224x224 input graph named `mobilenetv4_conv_medium_deploy.onnx`; the retained medium export helper produces a 256x256 graph. Before compiling X5 medium, reconcile the ONNX geometry with the YAML and prepare calibration data using the same geometry.
-- X5 small and medium calibration directories are RGB `./calibration_data_rgb_f32`; the retained calibrator produces BGR data. Convert channel order and apply the X5 YAML normalization before compiling.
+- The X5 medium YAML expects a 224x224 input graph named `mobilenetv4_conv_medium_deploy.onnx`; the medium export helper produces a 256x256 graph. Before compiling X5 medium, reconcile the ONNX geometry with the YAML and prepare calibration data using the same geometry.
+- X5 small and medium calibration directories are RGB `./calibration_data_rgb_f32`; the calibrator produces BGR data. Convert channel order and apply the X5 YAML normalization before compiling.
 - Set the calibration helper's source-image directory to the local dataset path. For S medium, switch both commented 256 geometry lines together. Align the helper mean constants with the selected S YAML's `mean_value`.
 - `x86_medium_inference.py` runs the medium ONNX model on the host; use the compiled HBM with the board runtime for deployment.

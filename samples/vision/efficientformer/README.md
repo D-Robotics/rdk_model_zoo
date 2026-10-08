@@ -1,21 +1,18 @@
 # EfficientFormer image classification
 
-EfficientFormer ImageNet-1k classification on RDK X5: one BGR image in, a
-stable Top-K of `(class id, score, label)` out. The X5 release ships the
-EfficientFormer-L1 and L3 variants (paper [EfficientFormer: Vision
-Transformers at MobileNet Speed](https://arxiv.org/abs/2206.01191)).
+EfficientFormer is a vision Transformer designed for mobile inference.
+
+Sources: [EfficientFormer: Vision
+Transformers at MobileNet Speed](https://arxiv.org/abs/2206.01191)
+
 [中文说明](README_cn.md)
 
 <a id="overview"></a>
 
 ## Overview
 
-The sample provides a Python runtime for X5. The
-`EfficientFormerClassifier` class runs a `preprocess → infer → postprocess`
-flow chained by `predict`: it resolves one exact artifact reference from the
-platform release manifest, verifies the board identity, loads `hbm_runtime`
-lazily, and returns a typed Top-K result
-([runtime/python/README.md](runtime/python/README.md)).
+Start with `runtime/python/main.py`; `classify.py` holds the model stages and `cli.py` handles options and results.
+[runtime/python/README.md](runtime/python/README.md)
 
 ### Algorithm background
 
@@ -56,12 +53,12 @@ efficientformer/
 ├── conversion/  # Export and quantization configuration
 ├── evaluator/  # Evaluation commands and metrics
 ├── model/  # Model files and download scripts
-├── runtime/  # Python and native inference implementations
+├── runtime/  # Python inference
 ├── test_data/  # Example inputs
 ├── tests/  # Automated tests
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-└── requirements-host.txt  # Source or data file
+└── requirements-host.txt  # Python dependencies
 ```
 
 <a id="support-matrix"></a>

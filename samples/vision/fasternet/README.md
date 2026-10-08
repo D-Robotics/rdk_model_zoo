@@ -1,9 +1,10 @@
 # FasterNet image classification
 
-FasterNet ImageNet-1k classification on RDK X5: one BGR image in, a
-stable Top-K of `(class id, score, label)` out. The X5 release ships the
-S, T0, T1, and T2 variants (paper [Run, Don't Walk: Chasing Higher FLOPS
-for Faster Neural Networks](https://arxiv.org/abs/2303.03667)).
+FasterNet uses partial convolution to reduce computation and memory access in image classification.
+
+Sources: [Run, Don't Walk: Chasing Higher FLOPS
+for Faster Neural Networks](https://arxiv.org/abs/2303.03667)
+
 [中文说明](README_cn.md)
 
 <a id="overview"></a>
@@ -50,12 +51,8 @@ The figure shows the upstream training architecture; the deployed
 artifacts are the INT8-quantized s/t0/t1/t2 variants at 224×224 NV12
 (see [Support matrix](#support-matrix)).*
 
-The sample provides a Python runtime for X5. The
-`FasterNetClassifier` class runs a `preprocess → infer → postprocess`
-flow chained by `predict`: it resolves one exact artifact reference from
-the platform release manifest, verifies the board identity, loads
-`hbm_runtime` lazily, and returns a typed Top-K result
-([runtime/python/README.md](runtime/python/README.md)).
+Start with `runtime/python/main.py`; `classify.py` holds the model stages and `cli.py` handles options and results.
+[runtime/python/README.md](runtime/python/README.md)
 
 <a id="directory"></a>
 ## Directory structure
@@ -65,12 +62,12 @@ fasternet/
 ├── conversion/  # Export and quantization configuration
 ├── evaluator/  # Evaluation commands and metrics
 ├── model/  # Model files and download scripts
-├── runtime/  # Python and native inference implementations
+├── runtime/  # Python inference
 ├── test_data/  # Example inputs
 ├── tests/  # Automated tests
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-└── requirements-host.txt  # Source or data file
+└── requirements-host.txt  # Python dependencies
 ```
 
 <a id="support-matrix"></a>

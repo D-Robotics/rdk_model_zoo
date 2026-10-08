@@ -1,13 +1,11 @@
 # ConvNeXt 图像分类
 
-ConvNeXt（现代化 ConvNet 系列）在 RDK X5 上的 ImageNet-1k 分类：
-输入一张 BGR 图像，输出稳定的 Top-K `(类别 ID, 分数, 标签)`。X5 发布
-交付 atto 变体（论文 [A ConvNet for the
-2020s](https://arxiv.org/abs/2201.03545)，参考实现
-[facebookresearch/ConvNeXt](https://github.com/facebookresearch/ConvNeXt)）；
-转换目录另含无已发布制品的 femto/nano PTQ 配方（见
-[conversion/README_cn.md](conversion/README_cn.md)）。
-[English](README.md)
+ConvNeXt 是采用大核深度卷积和 Transformer 风格模块的图像分类网络。
+
+来源：[A ConvNet for the
+2020s](https://arxiv.org/abs/2201.03545) · [facebookresearch/ConvNeXt](https://github.com/facebookresearch/ConvNeXt)
+
+[English README](README.md)
 
 <a id="overview"></a>
 
@@ -30,11 +28,8 @@ ConvNeXt 是从原始 ResNet 出发、逐步借鉴 Swin Transformer 设计改造
 block（中）、ConvNeXt block（右）。图中为上游训练结构；X5 上部署的制品
 为 INT8 量化的 atto 变体（224×224 NV12，见[支持范围](#support-matrix)）。*
 
-本样例提供面向 X5 的 Python 运行时。
-`ConvNeXtClassifier` 类执行由 `predict` 串联的
-`preprocess → infer → postprocess` 流程：从平台发布 Manifest 解析唯一的
-制品引用，核验板卡身份，懒加载 `hbm_runtime`，返回带类型的 Top-K 结果
-（见 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。
+Python 入口见 `runtime/python/main.py`，模型推理流程在 `classify.py`，参数和结果展示在 `cli.py`。
+[runtime/python/README_cn.md](runtime/python/README_cn.md)
 
 <a id="directory"></a>
 ## 目录结构
@@ -49,7 +44,7 @@ convnext/
 ├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-└── requirements-host.txt  # 源码或数据文件
+└── requirements-host.txt  # Python 依赖
 ```
 
 <a id="support-matrix"></a>

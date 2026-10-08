@@ -22,6 +22,8 @@ python/
 └── visualization.py  # Result rendering and image output
 ```
 
+Start with [main.py](main.py): it constructs `DepthEstimator` and calls `predict`. [depth_anything_v2.py](depth_anything_v2.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.
+
 <a id="environment"></a>
 ## Environment
 
@@ -148,16 +150,13 @@ The API returns float depth. For a uint8 display, call `visualization.normalize_
 Default input resize is INTER_NEAREST, preserving the actual source helper.
 After BGR→RGB, each pixel's three channels use `(rgb - mean(rgb)) /
 sqrt(var(rgb) + 1e-5)`, then transpose and cast float32. This is **not ImageNet
-mean/std or `/255`**, despite the source docstring. Source arithmetic uses float64
-statistics on uint8; this order is preserved.
+mean/std or `/255`**, despite the source docstring. Statistics are computed in float64 from uint8 input before the final float32 cast.
 
 Letterbox uses floor-rounded dimensions, INTER_LINEAR and fill127; gray padding
 normalizes to zero. Zero-sized scaled dimensions fail explicitly. Postprocess
 crops optional padding and restores with OpenCV INTER_LINEAR. The default stretch
 uses the same half-pixel bilinear geometry as the source Torch
-`align_corners=False` resize, but rounding/float accumulation can differ: no
-bit-exact equality is claimed. Host analytic affine-plane tests check the
-geometry.
+`align_corners=False` resize, but floating-point rounding and accumulation can produce small differences.
 
 Metadata must expose exactly one model/input/output with the declared shapes and
 float32 types. Internal int16 quantization is not an IO type declaration. Invalid

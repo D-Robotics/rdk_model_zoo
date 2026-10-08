@@ -165,9 +165,77 @@ padding）。阈值与 scale 描述符按 **float32 位值**
 | YOLOv5l_v7.0 | 640x640 | 46.5 M | 23.3 FPS | 12 ms |
 | YOLOv5x_v7.0 | 640x640 | 86.7 M | 13.1 FPS | 12 ms |
 
+
+### 板卡性能
+
+以下 COCO 检测器数据分别列出 BPU 执行与 Python 后处理耗时，每项注明线程数。X3 数据仅为历史参考；当前运行板卡以 Sample 支持矩阵为准。
+
+### RDK X5 & RDK X5 Module
+目标检测 Detection (COCO)
+| 模型(公版) | 尺寸(像素) | 类别数 | 参数量 | BPU吞吐量 | 后处理时间 |
+|---------|---------|-------|---------|---------|----------|
+| YOLOv5s_v2.0 | 640×640 | 80 | 7.5 M | 106.8 FPS | 2.3 ms |
+| YOLOv5m_v2.0 | 640×640 | 80 | 21.8 M | 45.2 FPS | 2.3 ms |
+| YOLOv5l_v2.0 | 640×640 | 80 | 47.8 M | 21.8 FPS | 2.3 ms |
+| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 M | 12.3 FPS | 2.3 ms |
+| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 M | 277.2 FPS | 2.3 ms |
+| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 M | 124.2 FPS | 2.3 ms |
+| YOLOv5m_v7.0 | 640×640 | 80 | 21.2 M | 48.4 FPS | 2.3 ms |
+| YOLOv5l_v7.0 | 640×640 | 80 | 46.5 M | 23.3 FPS | 2.3 ms |
+| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 M | 13.1 FPS | 2.3 ms |
+
+### RDK X3 & RDK X3 Module（历史性能记录）
+目标检测 Detection (COCO)
+| 模型(公版) | 尺寸(像素) | 类别数 | 参数量 | BPU吞吐量 | 后处理时间 |
+|---------|---------|-------|---------|---------|----------|
+| YOLOv5s_v2.0 | 640×640 | 80 | 7.5 M | 38.2 FPS | 3 ms |
+| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 M | 3.9 FPS | 3 ms |
+| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 M | 37.2 FPS | 3 ms |
+| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 M | 20.9 FPS | 3 ms |
+| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 M | 3.6 FPS | 3 ms |
+
+注: 详细性能数据见文末.
+
+
+
+## 补充参考数据
+
+各表按发布时的模型、板卡和测量条件列出，不同配置的数据分别保留。
+
+### RDK X5 & RDK X5 Module
+
+| 模型 | 尺寸(像素) | 类别数 | 参数量(M) | BPU延迟/BPU吞吐量(线程) |  后处理时间 |
+|-----|----------|-------|----------|------------------------|----------|
+| YOLOv5s_v2.0 | 640×640 | 80 | 7.5  | 13.0 ms / 76.6 FPS (1 thread  ) <br/> 16.0 ms / 124.8 FPS (2 threads) | 2.3 ms |
+| YOLOv5m_v2.0 | 640×640 | 80 | 21.8 | 23.9 ms / 41.7 FPS (1 thread  ) <br/> 37.7 ms / 52.9 FPS (2 threads) | 2.3 ms |
+| YOLOv5l_v2.0 | 640×640 | 80 | 47.8 | 44.0 ms / 22.7 FPS (1 thread  ) <br/> 78.2 ms / 25.5 FPS (2 threads) | 2.3 ms |
+| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 | 74.1 ms / 13.5 FPS (1 thread  ) <br/> 137.6 ms / 14.5 FPS (2 threads) | 2.3 ms |
+| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 | 8.1 ms / 122.7 FPS (1 thread  ) <br/> 8.6 ms / 232.3 FPS (2 threads) <br/> 9.7 ms / 307.9 FPS (3 threads) | 2.3 ms |
+| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 | 11.9 ms / 83.8 FPS (1 thread  ) <br/> 13.7 ms / 145.3 FPS (2 threads) | 2.3 ms |
+| YOLOv5m_v7.0 | 640×640 | 80 | 21.2 | 22.7 ms / 44.0 FPS (1 thread  ) <br/> 35.3 ms / 56.6 FPS (2 threads) | 2.3 ms |
+| YOLOv5l_v7.0 | 640×640 | 80 | 46.5 | 41.6 ms / 24.0 FPS (1 thread  ) <br/> 73.1 ms / 27.3 FPS (2 threads) | 2.3 ms |
+| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 | 69.7 ms / 14.4 FPS (1 thread  ) <br/> 129.0 ms / 15.5 FPS (2 threads) | 2.3 ms |
+
+
+
 <a id="boundaries"></a>
 ## 适用范围
 
 评估器不下载模型、不构建转换产物，也不会把主机测试写成板端兼容。X5 刻意保留源 OpenCV XYXY-to-NMSBoxes quirk，S 使用按类 XYXY NMS；不能跨 target 要求结果相等。
 
 源端 runner 将运行前实际校验的审计字节归档为 `instrumentation-audit.json`，并在运行记录保存 `audit_file`、`audit_sha256`。副本在子进程结束后写入，以满足观测头要求输出目录初始为空的约束。请保留完整源捕获目录和统一入口进程记录目录：审计缺失或内容变化、统一入口 stdout/stderr 缺失均会拒绝比较；成功输出的 `originals/` 包含审计与双方日志。
+
+
+### X3 与 X3 Module COCO 测量记录（中文来源）
+
+[Source measurement table](https://github.com/D-Robotics/rdk_model_zoo/blob/cb86079ae5befcef9ca50fb46c8a6d8980106dec/samples/vision/yolov5/README_cn.md).
+
+该来源的五行后处理均为 3 ms，上方英文来源表为 13 ms，两份完整记录分别标注来源。条件为 X3 / X3 Module、COCO 检测、4 × A53@1.8 GHz 且全核心 performance 调度、2 × Bernoulli2@1.0 GHz。单线程延迟是单 BPU 核心的一个任务耗时，多线程 FPS 是排队任务的吞吐量。此处 X3 测量记录不表示当前运行时支持 X3。
+
+| 模型 | 尺寸(像素) | 类别数 | 参数量(M) | 浮点精度<br/>(mAP:50-95) | 量化精度<br/>(mAP:50-95) | BPU延迟/BPU吞吐量(线程) |  后处理时间 |
+|---------|---------|-------|---------|---------|----------|--------------------|--------------------|
+| YOLOv5s_v2.0 | 640×640 | 80 | 7.5 M | - | - | 55.7 ms / 17.9 FPS(1 thread) <br/> 61.1 ms / 32.7 FPS(2 threads) <br/> 78.1 ms / 38.2 FPS(3 threads)| 3 ms |
+| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 M | - | - | 512.4 ms / 2.0 FPS(1 thread) <br/> 519.7 ms / 3.8 FPS(2 threads) <br/> 762.1 ms / 3.9 FPS(3 threads) | 3 ms |
+| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 M | 28.0 | - | 85.4 ms / 11.7 FPS(1 thread) <br/> 88.9 ms / 22.4 FPS(2 threads) <br/> 121.9 ms / 32.7 FPS(4 threads) <br/> 213.0 ms / 37.2 FPS(8 threads) | 3 ms |
+| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 M | 37.4 | - | 175.4 ms / 5.7 FPS(1 thread) <br/> 182.3 ms / 11.0 FPS(2 threads) <br/> 217.9 ms / 18.2 FPS(4 threads) <br/> 378.0 ms / 20.9 FPS(8 threads) | 3 ms |
+| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 M | 50.7 | - | 1021.5 ms / 1.0 FPS(1 thread) <br/> 1024.3 ms / 2.0 FPS(2 threads) <br/> 1238.0 ms / 3.1 FPS(4 threads)<br/> 2070.0 ms / 3.6 FPS(8 threads) | 3 ms |

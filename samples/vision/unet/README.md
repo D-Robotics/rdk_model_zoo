@@ -2,50 +2,14 @@
 
 # UNet Model Description
 
-This sample provides a Pascal VOC semantic-segmentation deployment pipeline for
-UNet with ResNet18, ResNet34, ResNet50, ResNet101, and ResNet152 backbones. It
-covers checkpoint export, X5 PTQ conversion, accuracy evaluation, and Python
-inference on RDK X5.
-
 <a id="overview"></a>
-## Algorithm Overview
+## Algorithm and source
 
-UNet uses an encoder-decoder structure with skip connections to combine
-high-level semantics and fine spatial details. This implementation uses a
-ResNet encoder and a UNet decoder to produce one class score for every pixel.
+UNet uses an encoder-decoder with skip connections to combine semantic features and fine spatial detail. This sample uses ResNet backbones for 21-class Pascal VOC segmentation on RDK X5, with five model variants, conversion recipes and Python inference.
 
-- Task: Pascal VOC semantic segmentation, 21 classes including background
 - UNet paper: [U-Net: Convolutional Networks for Biomedical Image Segmentation](https://arxiv.org/abs/1505.04597)
 - ResNet paper: [Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385)
 - Reference implementation: [bubbliiiing/unet-pytorch](https://github.com/bubbliiiing/unet-pytorch)
-
-### Deployment Contract
-
-| Item | Contract |
-| --- | --- |
-| Target | RDK X5, `bayes-e` |
-| Training input | RGB float32 NCHW `[1, 3, 512, 512]`, scaled by `1/255` |
-| Runtime input | Packed NV12, 512 × 512 |
-| Output | Float32 NCHW logits `[1, 21, 512, 512]` |
-| Post-processing | `argmax` over the class dimension |
-
-### Supported Backbones
-
-| Backbone | Current status |
-| --- | --- |
-| ResNet18 | Prebuilt X5 BIN published; download and Python inference verified on RDK X5 |
-| ResNet34 | FP32 mIoU 0.689319; ONNX export and X5 PTQ passed; BIN published, board Runtime pending |
-| ResNet50 | FP32 mIoU 0.683826; ONNX export and X5 PTQ passed; BIN published, board Runtime pending |
-| ResNet101 | FP32 mIoU 0.709437; ONNX export and X5 PTQ passed; BIN published, board Runtime pending |
-| ResNet152 | FP32 mIoU 0.740002; ONNX export and X5 PTQ passed; BIN published, board Runtime pending |
-
-The upstream ResNet50 VOC checkpoint is available from the
-[`unet-pytorch` v1.0 release](https://github.com/bubbliiiing/unet-pytorch/releases/download/v1.0/unet_resnet_voc.pth),
-SHA256 `556a74b8379c40cbc76af7a1faab84d1316f02b7d93290b5f1f724ff922faacb`.
-Generated variants use torchvision ImageNet encoder initialization; training
-receipts must record the exact torchvision version and weight identifier.
-
-Use the target-specific artifacts listed in the support matrix and the matching conversion configuration.
 
 <a id="directory"></a>
 ## Directory structure
@@ -68,14 +32,40 @@ calibration data, compiled BIN files, or evaluation datasets; prebuilt BINs are
 downloaded with the script in `model/`.
 
 <a id="support-matrix"></a>
-## Support and validation
+## Supported models
 
 | Target | Variants | Python | C++ |
 | --- | --- | --- | --- |
 | x5 | resnet18/34/50/101/152 | supported | not-supported |
 | s100 / s100p / s600 | — | not-supported | not-supported |
 
-Reference tables above retain their source dataset/artifact scope; run this entry on the board for fresh validation numbers.
+Use the published BIN for the selected backbone and the matching X5 runtime.
+
+### Deployment Contract
+
+| Item | Contract |
+| --- | --- |
+| Target | RDK X5, `bayes-e` |
+| Training input | RGB float32 NCHW `[1, 3, 512, 512]`, scaled by `1/255` |
+| Runtime input | Packed NV12, 512 × 512 |
+| Output | Float32 NCHW logits `[1, 21, 512, 512]` |
+| Post-processing | `argmax` over the class dimension |
+
+### Supported Backbones
+
+| Backbone | Current status |
+| --- | --- |
+| ResNet18 | Prebuilt X5 BIN; Python inference, ONNX export and PTQ configuration |
+| ResNet34 | Prebuilt X5 BIN; Python inference, ONNX export and PTQ configuration |
+| ResNet50 | Prebuilt X5 BIN; Python inference, ONNX export and PTQ configuration |
+| ResNet101 | Prebuilt X5 BIN; Python inference, ONNX export and PTQ configuration |
+| ResNet152 | Prebuilt X5 BIN; Python inference, ONNX export and PTQ configuration |
+
+The upstream ResNet50 VOC checkpoint is available from the
+[`unet-pytorch` v1.0 release](https://github.com/bubbliiiing/unet-pytorch/releases/download/v1.0/unet_resnet_voc.pth),
+SHA256 `556a74b8379c40cbc76af7a1faab84d1316f02b7d93290b5f1f724ff922faacb`.
+Generated variants use torchvision ImageNet encoder initialization; training
+receipts must record the exact torchvision version and weight identifier.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -142,10 +132,7 @@ post-processing.
 
 ### ResNet34/50/101/152 Release Results
 
-The four additionally trained variants were evaluated on the same complete
-1,449-image validation set. Their ONNX numerical gates and `bayes-e` PTQ
-compilation passed, and their public BIN files were downloaded again and checked
-against the published SHA256 values.
+The four additional variants use the same complete 1,449-image validation set. PTQ cosine compares quantized outputs with the float reference using `bayes-e` compilation.
 
 | Backbone | PyTorch FP32 mIoU | Pixel Accuracy | PTQ Output Cosine | Board Runtime |
 | --- | ---: | ---: | ---: | --- |

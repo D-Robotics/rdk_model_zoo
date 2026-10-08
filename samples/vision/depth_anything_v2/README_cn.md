@@ -5,18 +5,9 @@
 <a id="overview"></a>
 ## 概览
 
-使用已发布的 S100 HBM，从单张图片估计稠密相对深度。样例把前处理、推理、后处理
-与 SDK 资源、图片 IO、可视化分离，人和 Agent 使用相同入口。结果包含原图尺寸
-浮点深度和 INFERNO 显示图片；深度为相对量，不是校准后的米。
+Depth Anything V2 从单张图片估计稠密相对深度，使用合成标注图片、较大的教师模型和伪标注真实图片改善细节。本示例提供 RDK S100 推理与深度可视化。
 
-V2 方法使用合成标注训练图、扩大教师模型、利用伪标注真实图片来改善细节和鲁棒性。
-框架图来自源记录：
-
-![源框架图](test_data/readme_img/image-2.png)
-
-参考：[项目](https://depth-anything.github.io/)、
-[论文](https://arxiv.org/abs/2406.19675)、
-[上游仓库](https://github.com/DepthAnything/Depth-Anything-V2)。
+参考：[项目](https://depth-anything.github.io/), [论文](https://arxiv.org/abs/2406.19675), [上游仓库](https://github.com/DepthAnything/Depth-Anything-V2).
 
 <a id="directory"></a>
 ## 目录结构
@@ -91,6 +82,10 @@ bash samples/vision/depth_anything_v2/runtime/python/run.sh --target s100 \
 前处理为**逐像素 RGB z-score**（不是原始注释中提到的 ImageNet 常量）。默认使用
 最近邻拉伸。可选 letterbox 使用线性插值/127 填充，并在恢复尺寸前先裁去填充。
 task 返回浮点深度；uint8 显示 API 属于单独的可视化步骤。
+
+深度值为相对量，并非校准后的米。CLI 保存原图尺寸的浮点深度与 INFERNO 彩色显示图。
+
+![源框架图](test_data/readme_img/image-2.png)
 
 <a id="entry-points"></a>
 ## 入口

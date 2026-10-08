@@ -1,6 +1,10 @@
 # MobileNetV3 图像分类
 
-MobileNetV3 在 RDK 板卡上的 ImageNet-1k 分类：输入一张 BGR 图像，输出稳定的 Top-K `(类别 ID, 分数, 标签)`。源模型：[timm/models/mobilenetv3.py](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/mobilenetv3.py)，论文 [Searching for MobileNetV3](https://arxiv.org/abs/1905.02244)。[English](README.md)
+MobileNetV3 将倒残差模块与通道注意力结合，用于移动端图像分类。
+
+来源：[timm/models/mobilenetv3.py](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/mobilenetv3.py) · [Searching for MobileNetV3](https://arxiv.org/abs/1905.02244)
+
+[English README](README.md)
 
 <a id="overview"></a>
 
@@ -44,7 +48,7 @@ mobilenetv3/
 ├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-└── requirements-host.txt  # 源码或数据文件
+└── requirements-host.txt  # Python 依赖
 ```
 
 <a id="support-matrix"></a>

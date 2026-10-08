@@ -5,9 +5,9 @@
 <a id="overview"></a>
 ## Overview
 
-LaneNet uses a binary segmentation branch to distinguish lane pixels from background and an embedding branch intended for subsequent instance separation. This sample provides Python and C++ inference paths for the S100 HBM. Its result is **raw embedding features plus binary labels**: no implementation here clusters embeddings or fits lane curves. Display colors alone do not identify individual lanes.
+LaneNet predicts lane pixels with a binary segmentation branch and learns embedding features for lane-instance separation. This sample exposes binary labels and raw embeddings through Python and C++ inference on RDK S100.
 
-Algorithm references: [Towards End-to-End Lane Detection: an Instance Segmentation Approach](https://arxiv.org/abs/1802.05591) and [MaybeShewill-CV/lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection). The published HBM is not tied to a specific upstream commit: no revision or model checksum is supplied.
+References: [Towards End-to-End Lane Detection: an Instance Segmentation Approach](https://arxiv.org/abs/1802.05591), [MaybeShewill-CV/lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection).
 
 <a id="directory"></a>
 ## Directory structure
@@ -78,7 +78,7 @@ Both entries write `embedding.npy` (float32 CHW), `binary.npy` (uint8 labels 0/1
 
 The embedding PNG clips features to [0,1] and rounds after multiplying by 255. This intentionally replaces the source Python's wrapping/truncation behavior; raw embeddings remain unchanged. The binary PNG displays labels as 0/255. No clustering, lane IDs, tracking, curve fitting, dataset accuracy or latency is produced.
 
-These figures come byte-for-byte from the original S sample record:
+Example LaneNet visualizations:
 
 | Python embedding display (source record) | Python binary display (source record) |
 | --- | --- |
@@ -86,10 +86,12 @@ These figures come byte-for-byte from the original S sample record:
 
 [Source native embedding display](test_data/cpp_instance_pred.png) and [native binary display](test_data/cpp_binary_pred.png) are also retained. Display differences do not by themselves establish raw numerical differences or distinct lane instances.
 
+Lane-instance IDs and fitted curves require a clustering and curve-fitting algorithm applied to the embeddings. Display colors alone do not identify individual lanes.
+
 <a id="entry-points"></a>
 ## Entry points for users and agents
 
-For application integration use `LaneNetSegmenter.pre_process`, `forward`, `post_process`, or their composition `predict`. Keep downloading, filesystem operations, rendering and resource management outside the task. `model_binding.py` validates model semantics; the shared named-array runner handles transport. Native code similarly separates task stages, tensor contracts, SDK ownership, visualization and CLI IO.
+For application integration, construct `LaneNetSegmenter` from a model selection, then call `predict`. Its `preprocess`, `infer` and `postprocess` methods expose the individual stages. Model initialization owns runtime loading; downloading, file output and rendering belong to the CLI. `lanenet.py` validates model semantics and uses the shared named-array runtime. Native code similarly separates task stages, tensor contracts, SDK ownership, visualization and CLI IO.
 
 Read the [stage IO contract](runtime/python/README.md#stage-io) before changing preprocessing or introducing instance clustering. Clustering would be a new algorithmic capability, requiring its own validation; renaming the current display as an instance mask does not implement it.
 

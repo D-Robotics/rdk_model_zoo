@@ -5,19 +5,9 @@
 <a id="overview"></a>
 ## 概述
 
-本 sample 在 RDK 板卡上运行完整的两阶段 OCR 流程：DB 检测器在输入图像中
-找出文字区域，逐个裁剪后由 CRNN+CTC 识别器解码为字符串。它是仓库中
-合法多阶段推理的参照实现（见[阶段 I/O](./runtime/python/README.md#stage-io)）：
-检测与识别是两个独立懒加载的运行时阶段，由显式 pipeline 组合，
-检测→裁剪→识别的顺序全程可读。
+PaddleOCR 用于图片文字检测与识别。DB 检测器定位文字区域，再由 CRNN 识别器对裁剪区域进行 CTC 解码。本示例提供 X5 的 PP-OCRv3 英文模型对与 S100 的 PP-OCRv6 模型对。
 
-提供两个固定校验的模型对。一对 = 检测器 + 识别器 + 词典，作为整体使用；
-禁止跨对混用组件：
-
-| 板卡 | 模型对 | 检测器输入 | 识别器输出 |
-| --- | --- | --- | --- |
-| RDK X5 | PP-OCRv3 英文 | 单个 packed NV12 张量（640×640） | F32 `[1,40,97,1]`：固定 96 字符字母表加 blank |
-| RDK S100 | PP-OCRv6 | split NV12 `x_y`（640×640）+ `x_uv`（320×320） | F32 `[1,40,18710]`：随仓 UTF-8 词典加 blank 与末尾空格 |
+![PaddleOCR detection and recognition](test_data/readme_img/paddleocr.png)
 
 <a id="directory"></a>
 ## 目录结构
@@ -50,6 +40,13 @@ Python 默认与保持长宽比两条管线（含下载脚本）在 X5 与 S100 
 结果渲染到输出图像。S600 与
 S100 共享源码与 SoC 探测；S600 结果请在 S600 板卡上运行对应命令获取。
 S100P 在两侧发布清单中均无匹配的模型对，sample 对其显式拒绝。
+
+模型对包含检测器、识别器与词典，须配套使用：
+
+| 板卡 | 模型对 | 检测器输入 | 识别器输出 |
+| --- | --- | --- | --- |
+| RDK X5 | PP-OCRv3 英文 | 单个 packed NV12 张量（640×640） | F32 `[1,40,97,1]`：固定 96 字符字母表加 blank |
+| RDK S100 | PP-OCRv6 | split NV12 `x_y`（640×640）+ `x_uv`（320×320） | F32 `[1,40,18710]`：随仓 UTF-8 词典加 blank 与末尾空格 |
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -132,6 +129,11 @@ S100P 在两侧发布清单中均无匹配的模型对，sample 对其显式拒�
 不添加未经验证的激活或精度声明。随仓测试图的具体打印内容属于模型对的
 属性——已核验的对照记录见[评估](./evaluator/README.md#reference-results)；
 数据集级精度需要标注语料，本 sample 未附带。
+
+S100 参考结果：
+
+![Python OCR example](test_data/readme_img/python_demo.jpg)
+![C++ OCR example](test_data/readme_img/cpp_demo.jpg)
 
 <a id="entry-points"></a>
 ## 入口

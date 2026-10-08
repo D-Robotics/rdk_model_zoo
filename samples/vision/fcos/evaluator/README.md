@@ -94,6 +94,28 @@ unified/metadata.json unified/result.json unified/inputs/*.npy unified/raw/*.npy
 
 The board logs print an HBRT-library/model-build minor-version mismatch warning when loading these artifacts; the warning does not affect the comparison result.
 
+
+### Board performance
+
+The following COCO detector measurements separate BPU execution from Python postprocessing. Thread counts are stated for each measurement. X3 values are historical reference data; the runtime support matrix above applies to current board usage.
+
+
+### RDK X5 & RDK X5 Module
+Object Detection (COCO)
+| Model | size (pixels) | number of classes | BPU latency /BPU throughput (threads) | post-processing time (Python) |
+|---------|---------|-------|------------------------|--------------------|
+| fcos_efficientnetb0 | 512×512 | 80 |  3.3 ms / 298.0 FPS (1 thread) <br/> 6.2 ms / 323.0 FPS (2 threads) | 9 ms |
+| fcos_efficientnetb2 | 768×768 | 80 | 14.4 ms / 69.5 FPS (1 thread) <br/> 28.1 ms / 70.9 FPS (2 threads) | 16 ms |
+| fcos_efficientnetb3 | 896×896 | 80 |  26.1 ms / 38.2 FPS (1 thread) <br/> 51.6 ms / 38.7 FPS (2 threads) | 20 ms |
+
+### RDK X3 & RDK X3 Module (historical benchmark)
+Object Detection (COCO)
+| Model | size (pixels) | number of classes | BPU latency /BPU throughput (threads) | post-processing time (Python) |
+|---------|---------|-------|------------------------|--------------------|
+| fcos | 512×512 | 80 |  13.1 ms / 76.5 FPS (1 thread) <br/> 13.6 ms / 146.6 FPS (2 threads) <br/> 17.2 ms / 173.9 FPS (3 threads) | 5 ms |
+
+
+
 <a id="boundaries"></a>
 ## Boundaries
 

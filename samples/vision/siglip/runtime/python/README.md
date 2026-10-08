@@ -20,11 +20,13 @@ python/
 └── run.sh  # Run the sample
 ```
 
+Start with [main.py](main.py): it constructs `SigLIPEmbedder` and calls `predict`. [embedding.py](embedding.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.
+
 <a id="environment"></a>
 ## Environment
 
 - Execution target: RDK S100 (Nash-E) or S100P (Nash-M), with a board image that provides `hbm_runtime`. Use the Python environment supplied with that board image.
-- Host preparation: Python 3.14.7, `numpy`, `opencv-python`, and `PyYAML` from `../../requirements-host.txt` for contract tests and selection utilities.
+- Python dependencies: Python 3.10+, `numpy`, `opencv-python`, and `PyYAML` from `../../requirements-host.txt` for model selection and inference.
 - `hbm_runtime` is board-image-only. `--help`, `--list-models`, and explicit-target `--dry-run` intentionally work without importing the SDK or loading a model.
 
 <a id="usage"></a>
@@ -132,7 +134,7 @@ print({"shape": composed_result.shape, "dtype": str(composed_result.dtype)})
 - `postprocess`: raw output → owned ndarray with metadata-bound shape/dtype; it rejects wrong shape/dtype and NaN/Inf. This vision feature task consumes no geometry context.
 - `predict(image)` composes exactly preprocess → infer → postprocess. It does not download, save, activate, normalize, or evaluate results.
 
-The CLI entry keeps the same split: [cli.py](cli.py) holds option declarations, the model-free `--list-models`/`--dry-run` modes, image reading, the summary and the optional NumPy save, while `main.py` parses, resolves, constructs `SigLIPEmbedder` and calls `predict`.
+For application development, [cli.py](cli.py) holds option declarations, the model-free `--list-models`/`--dry-run` modes, image reading, the summary and the optional NumPy save, while `main.py` parses, resolves, constructs `SigLIPEmbedder` and calls `predict`.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

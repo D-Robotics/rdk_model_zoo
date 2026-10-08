@@ -5,7 +5,7 @@
 <a id="source-model"></a>
 ## Source model
 
-Source model: OpenBMB/MiniCPM5-2B, pinned revision `0e9c66dce9fedde5ba8663bbcdd54b6810bb929a` (Apache-2.0). Keep original weights/config/tokenizer; the external adapter integrates the SDK. The recipes below are the source release's workflow, reorganized for this layout. Use code blocks sequentially in the same shell unless another directory is stated.
+Source model: OpenBMB/MiniCPM5-2B, pinned revision `0e9c66dce9fedde5ba8663bbcdd54b6810bb929a` (Apache-2.0). Keep original weights/config/tokenizer; the external adapter integrates the SDK. The commands below prepare the quantized model and its runtime package. Use code blocks sequentially in the same shell unless another directory is stated.
 
 <a id="directory"></a>
 ## Directory structure

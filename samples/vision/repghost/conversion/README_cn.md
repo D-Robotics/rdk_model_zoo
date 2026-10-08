@@ -3,7 +3,7 @@
 <a id="source-model"></a>
 ## 源模型
 
-源说明基于 PyTorch/timm RepGhost 变体，但未固定 timm/torch 版本、权重修订或权重摘要。未交付权重与可执行 ONNX 导出脚本；未重建验证与发布 bin 的对应关系。
+源说明基于 PyTorch/timm RepGhost 变体，但未固定 timm/torch 版本、权重修订或权重摘要。按下面的 ONNX 示例导出匹配权重，编译前核对所选 YAML。
 
 <a id="directory"></a>
 ## 目录结构
@@ -41,6 +41,82 @@ conversion/
 ## ONNX 导出
 
 检入材料不足以给出经过验证的导出命令。需准备匹配变体的 RGB NCHW ONNX（名义输入 1×3×224×224），先核对真实输入输出。YAML 的 `input_shape` 和 `input_name` 为空，实际从图读取，并未强制限定 224。按表格把图放在对应 YAML 旁。
+
+### ONNX 导出示例
+
+在 x86 导出环境中运行以下示例。需要 PyTorch；使用简化步骤时还需安装 `onnxsim`。导出文件名与所选 YAML 的 `onnx_model` 必须对应。
+
+onnx 模型使用的是 timm 库 (PyTorch Image Models) 中的模型进行转换的，使用以下命令安装所需要的包：
+
+```shell
+pip install timm onnx
+```
+
+模型转换以 repghostnet_100 为例，其余四个模型同理：
+
+```Python
+import torch
+import torch.onnx
+import onnx
+from onnxsim import simplify
+from timm.models import create_model
+
+from timm.models.repghost import repghostnet_100, repghostnet_111, repghostnet_130, repghostnet_150, repghostnet_200
+
+def count_parameters(onnx_model_path):
+    # Load the ONNX model
+    model = onnx.load(onnx_model_path)
+    # Get the initializers (weights in the model)
+    initializer = model.graph.initializer
+
+    # Calculate the total number of parameters
+    total_params = 0
+    for tensor in initializer:
+        # Get the dimensions of each weight
+        dims = tensor.dims
+        # Calculate the number of parameters in this weight (product of all dimensions)
+        params = 1
+        for dim in dims:
+            params *= dim
+        total_params += params
+
+    return total_params
+
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = create_model('repghostnet_100', pretrained=True)
+    model.eval()
+
+    # print the model structure
+
+    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
+    onnx_file_path = "repghostnet_100.onnx"
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_file_path,
+        opset_version=11,
+        verbose=True,
+        input_names=["data"],  # Input name
+        output_names=["output"],  # Output name
+    )
+
+    # Simplify the ONNX model
+    model_simp, check = simplify(onnx_file_path)
+
+    if check:
+        print("Simplified model is valid.")
+        simplified_onnx_file_path = "repghostnet_100.onnx"
+        onnx.save(model_simp, simplified_onnx_file_path)
+        print(f"Simplified model saved to {simplified_onnx_file_path}")
+    else:
+        print("Simplified model is invalid!")
+
+    onnx_model_path = simplified_onnx_file_path  # Replace with your ONNX model path
+    total_params = count_parameters(onnx_model_path)
+    print(f"Total number of parameters in the model: {total_params}")
+```
 
 <a id="calibration"></a>
 ## 校准

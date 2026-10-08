@@ -28,7 +28,7 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-- 目标：RDK X5；图像 encoder 通过板端 `hbm_runtime`，文本 encoder 通过 CPU `onnxruntime`。
+使用 RDK X5 板端 `hbm_runtime` 执行图像编码器，以 CPU `onnxruntime` 执行文本编码器。Python 依赖为 NumPy、OpenCV、`ftfy==6.3.1` 和 `regex==2026.9.10`，词表随 runtime 提供。
 
 <a id="command"></a>
 ## 评估命令

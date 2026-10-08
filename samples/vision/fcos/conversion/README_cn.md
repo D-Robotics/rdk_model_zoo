@@ -78,7 +78,7 @@ FCOS EfficientNet-B3，896×896 输入：同样三个分支位于 112×112 至 7
 | `fcos_efficientnetb3_detect_896x896_bayese_nv12.bin` | x5 | `model/` |
 
 <a id="known-gaps"></a>
-## 已知缺口
+## 补充准备
 
 - 没有 checkpoint、ONNX 导出、校准数据、量化 YAML、工具链版本或可复现源编译流程。
 - manifest 发布 hash 未知；三个源截图不能证明 tensor 数值或数值等价。

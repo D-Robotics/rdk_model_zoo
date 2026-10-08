@@ -1,5 +1,3 @@
-> Recipes and measurements below come from the source S release; run quantization, evaluation and board tests through these commands as needed.
-
 [English](README.md) | [简体中文](README_cn.md)
 
 # S100 / S100P full evaluation
@@ -80,3 +78,13 @@ S600-style token-ID equality checks. Zero callback performance fields are not
 reported as measured TTFT or decode throughput. Concurrency and long-duration
 soak, tools, thinking and multimodal requests are outside this evaluation's
 coverage; validate them separately for your deployment.
+
+
+## Short-request generation throughput
+
+S100/S100P, W8, chunk 256, cache 4096, SDK 1.0.0, DNN 3.7.3/HBRT 4.2.11. These single-turn Chinese/English measurements exclude cold model loading. Prefill counts include padding to 256-token chunks.
+
+| Board | Prefill tokens/s | Decode tokens/s |
+|---|---:|---:|
+| S100 | 431.70–432.43 | 12.07–12.11 |
+| S100P | 554.11 | 12.97–13.04 |

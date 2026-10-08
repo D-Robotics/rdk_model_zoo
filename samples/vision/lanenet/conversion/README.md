@@ -58,6 +58,14 @@ writes a separate config with absolute caller paths and prefix `lanenet256x512`.
 Prepare-only checks the ONNX file and calibration identities; inspect graph and
 output semantics during model validation.
 
+In the matching LaneNet export project, install the dependencies, obtain the checkpoint and run `test.py`. That project must provide the script and `source/data/source_image/input.jpg`:
+
+```bash
+pip install torch torchvision numpy opencv-python pandas matplotlib
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Lanenet/best_model.pth
+python test.py --img source/data/source_image/input.jpg --model best_model.pth
+```
+
 <a id="calibration"></a>
 ## Explicit calibration preparation
 
@@ -83,6 +91,12 @@ runtime**: BGR→RGB, area resize256×512, float32 `/255`, per-channel mean
 records source paths/hashes, actual image shapes, tensor shapes/dtypes/hashes,
 count and protocol. Confirm whether
 your ONNX includes normalization; applying it twice changes the model contract.
+
+The export project may also provide `get_calibration_data.py`. Set its `dataset_dir` to the local TuSimple directory, then generate `.npy` calibration data with the command below. Keep its preprocessing consistent with the selected ONNX.
+
+```bash
+python get_calibration_data.py
+```
 
 <a id="compile"></a>
 ## Prepare config, then compile
@@ -112,6 +126,12 @@ generated config. It captures stdout/stderr and rejects nonzero exit or a missin
 empty expected HBM even if the compiler returns zero. `--prepare-only` never
 calls a compiler; use the compilation command to produce HBM.
 
+For direct OE compilation, run `hb_compile -c config.yaml` from this conversion directory after updating ONNX and calibration paths. In an export project organized with `source/yaml/config.yaml`, the equivalent command is:
+
+```bash
+hb_compile -c source/yaml/config.yaml
+```
+
 <a id="validation"></a>
 ## Validation and reference performance
 
@@ -125,6 +145,15 @@ reference performance uses 200 frames, 14.245 ms average model latency and
 69.894 FPS; firmware, model digest and complete parameters are unspecified.
 Record those conditions when measuring this sample on the board. See
 [evaluation](../evaluator/README.md).
+
+Copy the generated model to S100 and run from its directory:
+
+```bash
+hrt_model_exec perf --model_file lanenet256x512.hbm
+```
+
+![LaneNet embedding visualization](../test_data/instance_pred.png)
+![LaneNet binary labels](../test_data/binary_pred.png)
 
 <a id="artifacts"></a>
 ## Artifacts and provenance

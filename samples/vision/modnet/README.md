@@ -5,7 +5,9 @@ English | [简体中文](./README_cn.md)
 <a id="overview"></a>
 ## Algorithm and source
 
-MODNet is a one-stage portrait matting network: one RGB image produces an alpha matte without a trimap. The source is [ZHKKKe/MODNet](https://github.com/ZHKKKe/MODNet) and the paper is [Is a Green Screen Really Necessary for Real-Time Portrait Matting?](https://arxiv.org/abs/2011.11961). This sample preserves source letterbox-style geometry, RGB normalization, uint8 matte output, and optional background compositing.
+MODNet is a one-stage portrait matting network. It predicts an alpha matte from a single image without requiring a trimap; this sample also supports compositing the portrait over a chosen background.
+
+References: [ZHKKKe/MODNet](https://github.com/ZHKKKe/MODNet), [Is a Green Screen Really Necessary for Real-Time Portrait Matting?](https://arxiv.org/abs/2011.11961).
 
 <a id="directory"></a>
 ## Directory structure
@@ -23,7 +25,7 @@ modnet/
 ```
 
 <a id="support-matrix"></a>
-## Support and verification matrix
+## Supported models
 
 | target | variant | Python | C++ | status |
 |---|---|---|---|---|

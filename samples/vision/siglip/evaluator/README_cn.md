@@ -2,7 +2,7 @@
 
 # 模型评估 — SigLIP 视觉特征
 
-本文所有数值表均为 S 平台 sample 和发布 benchmark 中的源记录，用于保留来源和可比性。
+本指南说明图像特征比较，以及已发布的 S100/S100P 精度与性能测量。
 
 <a id="dataset"></a>
 ## 数据集
@@ -87,7 +87,7 @@ evaluator/
 <a id="reference-results"></a>
 ## 参考结果
 
-以下两张源数据表保留全部行和列。来源：S 平台 evaluator README，并由 S 发布 benchmark 记录佐证。
+以下表格列出 S100 和 S100P 的 ImageNet-1k 零样本分类与 COCO2014 patch 特征一致性。
 
 ### 源 `pooler_output` 零样本分类
 

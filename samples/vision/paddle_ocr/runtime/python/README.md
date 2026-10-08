@@ -1,15 +1,5 @@
 # PaddleOCR Python runtime
 
-`main.py` is the entrypoint for the X5 PP-OCRv3 and S100 PP-OCRv6
-pairs. It stays a thin entry: parse the arguments, run the model-free
-listing/dry-run/prepare modes, resolve a qualified detector/recognizer pair,
-check the execution target against detected hardware, construct
-`OCRPipeline`, call `predict`, and show the ordered boxes and texts. Option
-declarations, the model-free modes, the explicit `--prepare` fetch and result
-rendering live in [cli.py](cli.py); the detection → crop → recognition
-composition lives in [pipeline.py](pipeline.py) with each stage's three
-public steps.
-
 <a id="overview"></a>
 ## Python inference
 
@@ -22,17 +12,19 @@ Detect text regions and recognize their content with a two-stage PaddleOCR pipel
 python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── __init__.py  # Model initialization and inference stages
+├── __init__.py  # Package imports
 ├── cli.py  # Arguments, model selection and result output
-├── decode.py  # Model initialization and inference stages
+├── decode.py  # DB polygon decoding and CTC text decoding
 ├── geometry.py  # Geometry transforms and coordinate restoration
 ├── main.py  # CLI entry: construct model and call predict
-├── model_binding.py  # Model initialization and inference stages
-├── model_runner.py  # Model initialization and inference stages
+├── model_binding.py  # Detector/recognizer metadata and vocabulary contracts
+├── model_runner.py  # Board SDK execution for the two OCR models
 ├── pipeline.py  # Model initialization and inference stages
 ├── run.sh  # Run the sample
-└── tensor_io.py  # Model initialization and inference stages
+└── tensor_io.py  # NV12 planes and tensor packing
 ```
+
+Start with [main.py](main.py): it constructs `OCRPipeline.from_models` and calls `predict`. [pipeline.py](pipeline.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.
 
 <a id="environment"></a>
 ## Environment

@@ -9,7 +9,7 @@ source 文档描述了将 PyTorch `torchvision.models.video.r3d_18` 动作分类
 
 官方论文和参考实现见[样例总览](../README_cn.md#overview)。本目录没有 source checkpoint 文件名、checkpoint hash、导出脚本或源权重获取记录。
 
-保留原始图结构截图：
+模型图结构：
 
 ![R3D-18 ONNX graph](../test_data/readme_img/r3d_18_orig.png)
 
@@ -97,7 +97,7 @@ bash samples/vision/3dresnet/model/download.sh s100
 - 没有可复现的转换输出 hash；当前 HBM manifest SHA 为 `null`。
 - 没有 S100P、S600 或 x5 制品。
 
-以下四张 source 转换截图继续保留：
+转换结果截图：
 
 ![Original pooling error](../test_data/readme_img/image-1.png)
 ![Original 3D pooling](../test_data/readme_img/image.png)

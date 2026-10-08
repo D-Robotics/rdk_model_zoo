@@ -1,5 +1,3 @@
-> Board results, accuracy figures and SDK release notes below are records from the source S release; board runs follow the commands in this guide.
-
 [English](README.md) | [简体中文](README_cn.md)
 
 # C++ runtime
@@ -7,7 +5,7 @@
 <a id="overview"></a>
 ## C++ inference
 
-Use this directory for c++ inference.
+Generate and stream MiniCPM5-2B text on S600 with OELLM 2.0. The C++ session owns model resources and KV state; each request supplies its prompt and generation limits.
 
 <a id="directory"></a>
 ## Directory structure

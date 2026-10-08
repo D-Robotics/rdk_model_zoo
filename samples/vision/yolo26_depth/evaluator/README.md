@@ -177,7 +177,7 @@ uses the reference 2nd/98th percentile range for both maps; colors are not metre
 Names now use reference/candidate instead of incorrectly labeling every input X5.
 
 <a id="reference-results"></a>
-## Source-recorded results
+## Reference results
 
 X5 source records OE 1.2.8 / Mapper 1.24.3, 768 input, max percentile 0.9999,
 O3 latency and int16 tail convolution. HRT numbers cover model execution only:

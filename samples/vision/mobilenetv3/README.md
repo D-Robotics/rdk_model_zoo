@@ -1,8 +1,10 @@
 # MobileNetV3 image classification
 
-MobileNetV3 ImageNet-1k classification on RDK boards: one BGR image in, a
-stable Top-K of `(class id, score, label)` out. Source model: [timm/models/mobilenetv3.py](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/mobilenetv3.py),
-paper [Searching for MobileNetV3](https://arxiv.org/abs/1905.02244). [中文说明](README_cn.md)
+MobileNetV3 combines inverted residual blocks and squeeze-and-excitation for mobile image classification.
+
+Sources: [timm/models/mobilenetv3.py](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/mobilenetv3.py) · [Searching for MobileNetV3](https://arxiv.org/abs/1905.02244)
+
+[中文说明](README_cn.md)
 
 <a id="overview"></a>
 
@@ -44,12 +46,12 @@ mobilenetv3/
 ├── conversion/  # Export and quantization configuration
 ├── evaluator/  # Evaluation commands and metrics
 ├── model/  # Model files and download scripts
-├── runtime/  # Python and native inference implementations
+├── runtime/  # Python inference
 ├── test_data/  # Example inputs
 ├── tests/  # Automated tests
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-└── requirements-host.txt  # Source or data file
+└── requirements-host.txt  # Python dependencies
 ```
 
 <a id="support-matrix"></a>

@@ -150,6 +150,58 @@ C++ pipeline 为 40.81 ms；300 条 wall-clock 13.4 s（RTF ~0.007），
 
 评测器对两条随附语音记录 4 个编辑错误／28 个参考字符，CER 为 14.2857%。
 
+
+## 补充参考数据
+
+各表按发布时的模型、板卡和测量条件列出，不同配置的数据分别保留。
+
+### S100 Python and C++ pipeline latency
+
+| 阶段 | Python | **C++ UCP** | 加速 |
+|---|---|---|---|
+| Encoder (BPU) | 33.63 | **33.15** | ≈ |
+| Predictor (BPU) | 1.44 | **1.00** | ≈ |
+| CIF (CPU) | 3.41 | **0.38** | **9x** |
+| Decoder (BPU) | 7.12 | **6.29** | ≈ |
+| **端到端** | 45.61 | **40.81 ms/utt** | **1.12x** |
+| **CER** | 3.13% | **3.13%** | 一致 |
+
+**wall-clock**：300 条 13.4 秒（44.7 ms/utt）；一次模型加载 ~1.85 s
+
+C++ 版本主要优势：CPU 侧 CIF 快 9x（numpy 开销比手写循环大），BPU 部分相同（都通过同一底层库）。
+
+
+### 单模型 BPU 延迟与完整 pipeline 对照
+
+数值来源：[S100 INT16 转换与性能报告](https://github.com/D-Robotics/rdk_model_zoo/blob/d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d/platforms/s/samples/speech/paraformer/conversion/README_cn.md)。下列模型尺寸、编译器静态估算与板端测量对应同一配方，计时范围分别说明。
+
+板端条件为 S100、Ubuntu 22.04 aarch64、单 BPU 核，`hrt_model_exec perf` 使用一个线程；Encoder 和 Decoder 各运行 200 帧，Predictor 运行 500 帧。发布模型的单帧测量如下；多线程并发排队不会降低单帧延迟。
+
+```bash
+# cwd: repository root on S100; matching model package prepared
+hrt_model_exec perf --model_file samples/speech/paraformer/model/s100/paraformer_large_encoder_400x560_s100.hbm --thread_num 1 --frame_count 200
+hrt_model_exec perf --model_file samples/speech/paraformer/model/s100/paraformer_large_predictor_400x512_s100.hbm --thread_num 1 --frame_count 500
+hrt_model_exec perf --model_file samples/speech/paraformer/model/s100/paraformer_large_decoder_400x512_s100.hbm --thread_num 1 --frame_count 200
+```
+
+| 模块 | perf 延迟 | 编译静态估算 | FPS |
+|---|---|---|---|
+| Encoder INT16 | **33.11 ms** | 32.52 ms | 30.18 |
+| Predictor INT16 | **0.67 ms** | 0.35 ms | 1462 |
+| Decoder INT16 | **6.12 ms** | 5.77 ms | 162.8 |
+
+以下汇总对应 AISHELL dev 的 300 条音频、40 位说话人。Python 和 C++ UCP 常驻运行时均复用三个已加载的模型，延迟包含 Encoder、Predictor、CPU CIF 和 Decoder，不含 WAV 前处理。Python wall-clock 为 14.0 秒（46.7 ms/utt，含 NumPy I/O），C++ wall-clock 为 13.4 秒（44.7 ms/utt），一次模型加载约 1.85 秒。`~41 ms` 为三个 BPU perf 延迟的近似总和，不包含 CPU CIF；`~289 MB` 为 HBM 文件的近似总大小，不是进程峰值内存。
+
+| 模块 | 量化 | hbm 大小 | 板端 perf 单帧 | Python 常驻 | C++ UCP 常驻 |
+|---|---|---|---|---|---|
+| Encoder | INT16 all | 211.5 MB | 33.11 ms | 33.63 ms | 33.15 ms |
+| Predictor | INT16 all | ~4 MB | 0.67 ms | 1.44 ms | 1.00 ms |
+| CIF | CPU numpy | — | — | 3.41 ms | 0.38 ms |
+| Decoder | INT16 all | 73.5 MB | 6.12 ms | 7.12 ms | 6.29 ms |
+| **端到端** | — | **~289 MB** | ~41 ms | **45.61 ms** | **40.81 ms** |
+| **CER** | — | — | — | **3.13%** | **3.13%** |
+
+
 <a id="boundaries"></a>
 ## 评测流程
 

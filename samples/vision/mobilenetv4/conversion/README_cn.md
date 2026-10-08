@@ -1,8 +1,7 @@
 # MobileNetV4 模型转换
 
 模型转换在 x86 Linux 主机上的 RDK OpenExplore (OE) 环境中执行，不是板卡
-操作。本目录保留交付随附的转换材料并说明其缺口；不虚构能产出不同
-制品的配置。
+操作。使用下面的导出脚本、校准工具和目标板卡配置准备部署模型。
 
 <a id="source-model"></a>
 ## 源模型
@@ -55,6 +54,88 @@ python3 get_mobilenetv4_onnx.py    # -> mobilenetv4_conv_small.onnx + mobilenetv
 导出器使用 onnx-simplifier 并打印参数量（small 3,761,480 / medium
 9,681,560）。
 
+安装导出依赖：
+
+```bash
+pip install timm onnx onnxsim
+```
+
+### ONNX 导出示例
+
+在 x86 导出环境中运行以下示例。需要 PyTorch；使用简化步骤时还需安装 `onnxsim`。导出文件名与所选 YAML 的 `onnx_model` 必须对应。
+
+onnx 模型使用的是 timm 库 (PyTorch Image Models) 中的模型进行转换的，使用以下命令安装所需要的包：
+
+```shell
+pip install timm onnx
+```
+
+模型转换以 mobilenetv4_conv_small 为例：
+
+```Python
+import torch
+import torch.onnx
+import onnx
+from onnxsim import simplify
+from timm.models import create_model
+
+from timm.models.mobilenetv3 import mobilenetv4_conv_medium, mobilenetv4_conv_small
+
+def count_parameters(onnx_model_path):
+    # Load the ONNX model
+    model = onnx.load(onnx_model_path)
+    # Get the initializers (weights in the model)
+    initializer = model.graph.initializer
+
+    # Calculate the total number of parameters
+    total_params = 0
+    for tensor in initializer:
+        # Get the dimensions of each weight
+        dims = tensor.dims
+        # Calculate the number of parameters in this weight (product of all dimensions)
+        params = 1
+        for dim in dims:
+            params *= dim
+        total_params += params
+
+    return total_params
+
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = create_model('mobilenetv4_conv_small', pretrained=True)
+    model.eval()
+
+    # print the model structure
+
+    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
+    onnx_file_path = "mobilenetv4_conv_small.onnx"
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_file_path,
+        opset_version=11,
+        verbose=True,
+        input_names=["data"],  # Input name
+        output_names=["output"],  # Output name
+    )
+
+    # Simplify the ONNX model
+    model_simp, check = simplify(onnx_file_path)
+
+    if check:
+        print("Simplified model is valid.")
+        simplified_onnx_file_path = "mobilenetv4_conv_small.onnx"
+        onnx.save(model_simp, simplified_onnx_file_path)
+        print(f"Simplified model saved to {simplified_onnx_file_path}")
+    else:
+        print("Simplified model is invalid!")
+
+    onnx_model_path = simplified_onnx_file_path  # Replace with your ONNX model path
+    total_params = count_parameters(onnx_model_path)
+    print(f"Total number of parameters in the model: {total_params}")
+```
+
 <a id="calibration"></a>
 ## 校准
 
@@ -96,6 +177,15 @@ S600 变体只需把 S 侧 YAML 中的 march 改为 `nash-p`。上表 march 取�
 几何说明：S 侧 medium 配置按 `mobilenetv4_medium_config.yaml` 记录的
 256x256 输入编译；X5 medium 配置构建已发布的 224x224 制品。两种
 几何都是真实存在的，运行时契约表按目标分别记录。
+
+S100 编译器也支持直接传入 ONNX。校准和 NV12 设置使用上面的 YAML 命令：
+
+```bash
+hb_compile --model mobilenetv4_conv_small.onnx --march nash-e
+hb_compile --model mobilenetv4_conv_medium.onnx --march nash-e
+hb_compile --config mobilenetv4_small_config.yaml
+hb_compile --config mobilenetv4_medium_config.yaml
+```
 
 <a id="validation"></a>
 ## 验证
@@ -139,7 +229,7 @@ BPU conv original OPs per run: 372,011,136
 ```
 
 <a id="artifacts"></a>
-## 保留材料
+## 转换文件
 
 - `get_mobilenetv4_onnx.py`
 - `timm2onnx_local.py`

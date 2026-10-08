@@ -62,7 +62,7 @@ Inputs and class IDs must be exactly equal; raw tensors use `atol=1e-5`, boxes
 <a id="reference-results"></a>
 
 <a id="boundaries"></a>
-## Source-recorded reference and boundaries
+## Reference results and conditions
 
 | Reference record | Input/protocol | Value | Source |
 | --- | --- | --- | --- |

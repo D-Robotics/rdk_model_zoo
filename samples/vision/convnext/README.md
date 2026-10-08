@@ -1,12 +1,10 @@
 # ConvNeXt image classification
 
-ConvNeXt (modernized ConvNet line) ImageNet-1k classification on RDK X5:
-one BGR image in, a stable Top-K of `(class id, score, label)` out. The X5
-release publishes the atto variant (paper [A ConvNet for the
-2020s](https://arxiv.org/abs/2201.03545), reference
-[facebookresearch/ConvNeXt](https://github.com/facebookresearch/ConvNeXt));
-the conversion directory additionally provides femto/nano PTQ recipes
-The conversion guide also documents the femto and nano PTQ configurations (see [conversion/README.md](conversion/README.md)).
+ConvNeXt is a convolutional classifier built with large depthwise kernels and Transformer-style blocks.
+
+Sources: [A ConvNet for the
+2020s](https://arxiv.org/abs/2201.03545) · [facebookresearch/ConvNeXt](https://github.com/facebookresearch/ConvNeXt)
+
 [中文说明](README_cn.md)
 
 <a id="overview"></a>
@@ -38,12 +36,8 @@ shows the upstream training architecture; the artifact deployed on X5 is
 the INT8-quantized atto variant at 224×224 NV12 (see
 [Support matrix](#support-matrix)).*
 
-The sample provides a Python runtime for X5. The
-`ConvNeXtClassifier` class runs a `preprocess → infer → postprocess`
-flow chained by `predict`: it resolves one exact artifact reference from
-the platform release manifest, verifies the board identity, loads
-`hbm_runtime` lazily, and returns a typed Top-K result
-([runtime/python/README.md](runtime/python/README.md)).
+Start with `runtime/python/main.py`; `classify.py` holds the model stages and `cli.py` handles options and results.
+[runtime/python/README.md](runtime/python/README.md)
 
 <a id="directory"></a>
 ## Directory structure
@@ -53,12 +47,12 @@ convnext/
 ├── conversion/  # Export and quantization configuration
 ├── evaluator/  # Evaluation commands and metrics
 ├── model/  # Model files and download scripts
-├── runtime/  # Python and native inference implementations
+├── runtime/  # Python inference
 ├── test_data/  # Example inputs
 ├── tests/  # Automated tests
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-└── requirements-host.txt  # Source or data file
+└── requirements-host.txt  # Python dependencies
 ```
 
 <a id="support-matrix"></a>

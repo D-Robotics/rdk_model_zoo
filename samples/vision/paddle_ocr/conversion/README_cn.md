@@ -244,7 +244,7 @@ hrt_model_exec model_info --model_file \
 | validation | `hrt_model_exec model_info` 输出、板端运行命令、预测结果 |
 
 <a id="known-gaps"></a>
-## 缺失项
+## 补充准备
 
 - 仓库无自有的 PP-OCRv3（X5）导出器；从确切的上游 release 取得 ONNX
   文件并记录所用 release 身份。

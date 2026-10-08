@@ -58,7 +58,7 @@ EVAL_BUNDLE=/data/ppl-bundle OUTPUT=quick-check.json bash run.sh --samples=1
 The generated bundle contains SDK-owned protocol/RPC files copied from the installed hbm-infer 3.15.3. They are not committed here and remain subject to SDK terms. The helper starts the service, reads its allocated port and cleans its own temporary directory on exit. MODEL_DIR defaults to `../model/s600`; OUTPUT defaults to `board-local-ppl.json`. Do not load another model concurrently: the tested board configuration cannot hold two instances of this model.
 
 <a id="reference-results"></a>
-## Historical reference results
+## Reference results
 
 Final PPL **14.242767676160279**, compared with float 14.0184 and fake-quant 14.2687; relative increase **1.60052%**, elapsed **913.192 seconds**. Partial JSON is updated per segment and is not complete before 140 segments and the completion marker. The validator checks mathematical consistency, completeness and the 3% relative-PPL target; the HBM SHA-256 below ties the record to its artifact.
 

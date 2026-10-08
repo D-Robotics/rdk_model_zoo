@@ -86,7 +86,7 @@ in this directory contains only host calibration/configuration dependencies.
 Nothing installs dependencies implicitly. Python `--help` on the exporter does
 not import Torch or Ultralytics.
 
-All 29 source YAMLs are retained byte-for-byte under `ptq_yamls/{x5,s}`:
+The 29 compiler configurations are under `ptq_yamls/{x5,s}`:
 
 | Target | march | Published recipes | Retained experiments |
 |---|---|---|---|
@@ -216,7 +216,7 @@ Failed compilation has no successful final report. Partial work remains availabl
 for diagnosis; start another attempt in a new output directory.
 
 <a id="known-gaps"></a>
-## Additional preparation and source evidence
+## Additional preparation and reference results
 
 Checkpoint hashes, S image/compiler versions and
 publisher hashes for S HBMs remain absent from the source record. The exporter

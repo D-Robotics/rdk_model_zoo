@@ -66,6 +66,13 @@ Export and float embedding generation require host PyTorch, ONNX, ONNX Runtime, 
 python3 -c "import torch, onnx, onnxruntime, numpy, cv2; print(torch.__version__, onnx.__version__, onnxruntime.__version__)"
 ```
 
+Before loading the toolchain image, check that Docker can run:
+
+```bash
+sudo docker --version
+sudo docker run --rm hello-world
+```
+
 <a id="export"></a>
 ## Export ONNX
 

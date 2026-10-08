@@ -1,8 +1,10 @@
 # MobileNetV2 image classification
 
-MobileNetV2 ImageNet-1k classification on RDK boards: one BGR image in, a
-stable Top-K of `(class id, score, label)` out. Source model: [timm/models/mobilenetv2](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/mobilenetv2.py),
-paper [MobileNetV2: Inverted Residuals and Linear Bottlenecks](https://arxiv.org/abs/1801.04381). [中文说明](README_cn.md)
+MobileNetV2 uses inverted residual blocks and linear bottlenecks for lightweight image classification.
+
+Sources: [timm/models/mobilenetv2](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/mobilenetv2.py) · [MobileNetV2: Inverted Residuals and Linear Bottlenecks](https://arxiv.org/abs/1801.04381)
+
+[中文说明](README_cn.md)
 
 <a id="overview"></a>
 
@@ -63,7 +65,7 @@ mobilenetv2/
 ├── tests/  # Automated tests
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-└── requirements-host.txt  # Source or data file
+└── requirements-host.txt  # Python dependencies
 ```
 
 <a id="support-matrix"></a>

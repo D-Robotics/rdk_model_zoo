@@ -5,9 +5,9 @@
 <a id="overview"></a>
 ## 算法与来源
 
-UNetMobileNet 结合 U-Net 编解码结构与 MobileNet 轻量骨干，执行 Cityscapes 19 类语义分割。保留的算法资料：[U-Net 论文](https://arxiv.org/abs/1505.04597)、[MobileNet 论文](https://arxiv.org/abs/1704.04861)、[Cityscapes](https://www.cityscapes-dataset.com/)。源文件未指明精确训练仓库／checkpoint 版本。
+UNetMobileNet 结合 U-Net 编解码结构与轻量 MobileNet 主干，对道路场景进行 Cityscapes 19 类语义分割。本示例提供 S 系列的 Python 与 C++ 推理。
 
-本 S 系列示例与 X5 UNet 不同：2048×1024 两平面 NV12 输入、INTER_AREA 拉伸、19 类、原图尺寸输出。Python/C++ 均分离前处理、原始 forward 和 mask 解码；绘图位于 predict 之外。
+参考：[U-Net 论文](https://arxiv.org/abs/1505.04597), [MobileNet 论文](https://arxiv.org/abs/1704.04861), [Cityscapes](https://www.cityscapes-dataset.com/).
 
 <a id="directory"></a>
 ## 目录结构
@@ -60,6 +60,8 @@ python3 samples/vision/unetmobilenet/runtime/python/main.py --dry-run --target s
 Python 成功返回 0，在 cwd 输出 result.jpg、unetmobilenet_mask.npy（原图尺寸 int32 类别 0..18）与 unetmobilenet_report.json。alpha_f=0.75 是原图权重，1 为原图、0 为彩色 mask。实际类别取决于真实推理，不承诺固定结果。下图来自源分支记录。
 
 ![参考效果图](test_data/result.jpg)
+
+输入为 2048×1024 两平面 NV12，采用 INTER_AREA 拉伸准备。19 类输出恢复至原图尺寸，由 CLI 负责绘图。
 
 <a id="entry-points"></a>
 ## 入口索引

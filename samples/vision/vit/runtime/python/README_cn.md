@@ -106,7 +106,9 @@ print(result.class_ids, result.scores, result.labels)
 ```
 
 `predict` 接受本地图像路径或 BGR `uint8` 数组。阶段也可显式驱动
-（`preprocess`/`infer`/`postprocess`）。<a id="stage-io"></a>
+（`preprocess`/`infer`/`postprocess`）。
+
+<a id="stage-io"></a>
 ## 三阶段 I/O
 
 preprocess（pre_process）：图像路径或 BGR U8 H×W×3 → PreparedInput，含 Y U8 [1,224,224,1]、UV U8 [1,112,112,2] 和每次调用独立几何信息。直接缩放用 nearest，letterbox 用 linear、127填充。infer 只调用运行器并保留 raw 映射。postprocess 压缩 F32 十类向量，稳定 softmax 后取 Top-K。predict 组合三阶段。运行前核对张量形状与 dtype；量化输出需要 output_transform="dequant" 和 SDK 量化元数据。

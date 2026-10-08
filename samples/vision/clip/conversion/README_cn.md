@@ -61,7 +61,7 @@ conversion/
 | `text_encoder.onnx` | x5 文本 CPU ONNX | `samples/vision/clip/model/` |
 
 <a id="known-gaps"></a>
-## 缺失项
+## 补充准备
 
 - 没有源 checkpoint、图像 ONNX 导出脚本、文本 ONNX 导出脚本、转换 YAML、编译器/版本矩阵或校准数据集。
 - 可依据 manifest 准备已发布 `.bin`、`.onnx`，但无法从本 sample 复现转换过程。

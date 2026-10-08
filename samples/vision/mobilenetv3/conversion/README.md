@@ -1,9 +1,8 @@
 # MobileNetV3 model conversion
 
 Conversion runs on an x86 Linux host in the RDK OpenExplore (OE)
-environment; it is not a board operation. This directory keeps the
-conversion material the source deliveries shipped and records its gaps;
-no configuration that could produce a different artifact is invented.
+environment. Use the export scripts, calibration helpers, and target-specific
+configurations below to prepare deployment models.
 
 <a id="source-model"></a>
 ## Source model
@@ -55,6 +54,92 @@ The exporter uses onnx-simplifier and reports the parameter count
 print is `mean (0.485, 0.456, 0.406)`, `std (0.229, 0.224, 0.225)`,
 "Simplified model is valid.".
 
+Install the export dependencies:
+
+```bash
+pip install timm onnx onnxsim
+huggingface-cli login
+python3 get_mobilenetv3_onnx.py
+```
+
+Use the login command above when the selected Hugging Face weights require authentication.
+
+### ONNX export example
+
+Run this example in the x86 export environment with PyTorch installed. The simplification step also requires `onnxsim`. Match the exported filename to `onnx_model` in the selected YAML.
+
+The onnx model is transformed using models from the timm library (PyTorch Image Models). Install the required packages using the following command:
+
+```shell
+pip install timm onnx
+```
+
+Model transformation takes mobilenetv3_large_100 as an example:
+
+```Python
+import torch
+import torch.onnx
+import onnx
+from onnxsim import simplify
+from timm.models import create_model
+
+from timm.models.mobilenetv3 import mobilenetv3_large_100
+
+def count_parameters(onnx_model_path):
+    # Load the ONNX model
+    model = onnx.load(onnx_model_path)
+    # Get the initializers (weights in the model)
+    initializer = model.graph.initializer
+
+    # Calculate the total number of parameters
+    total_params = 0
+    for tensor in initializer:
+        # Get the dimensions of each weight
+        dims = tensor.dims
+        # Calculate the number of parameters in this weight (product of all dimensions)
+        params = 1
+        for dim in dims:
+            params *= dim
+        total_params += params
+
+    return total_params
+
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = create_model('mobilenetv3_large_100', pretrained=True)
+    model.eval()
+
+    # print the model structure
+
+    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
+    onnx_file_path = "mobilenetv3_large_100.onnx"
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_file_path,
+        opset_version=11,
+        verbose=True,
+        input_names=["data"],  # Input name
+        output_names=["output"],  # Output name
+    )
+
+    # Simplify the ONNX model
+    model_simp, check = simplify(onnx_file_path)
+
+    if check:
+        print("Simplified model is valid.")
+        simplified_onnx_file_path = "mobilenetv3_large_100.onnx"
+        onnx.save(model_simp, simplified_onnx_file_path)
+        print(f"Simplified model saved to {simplified_onnx_file_path}")
+    else:
+        print("Simplified model is invalid!")
+
+    onnx_model_path = simplified_onnx_file_path  # Replace with your ONNX model path
+    total_params = count_parameters(onnx_model_path)
+    print(f"Total number of parameters in the model: {total_params}")
+```
+
 <a id="calibration"></a>
 ## Calibration
 
@@ -90,6 +175,13 @@ Use the exact target config filename: `mobilenetv3_s_config.yaml` for S100/S600
 and `MobileNetV3_config.yaml` for X5. Keep the case distinction when selecting
 the target YAML.
 
+The S100 compiler also accepts an ONNX graph directly. For a calibrated NV12 deployment, use the target YAML shown above:
+
+```bash
+hb_compile --model mobilenetv3_large_100.onnx --march nash-e
+hb_compile --config mobilenetv3_s_config.yaml
+```
+
 <a id="validation"></a>
 ## Validation
 
@@ -118,7 +210,7 @@ BPU conv original OPs per run: 433,179,520
 ```
 
 <a id="artifacts"></a>
-## Kept material
+## Conversion files
 
 - `get_mobilenetv3_onnx.py`
 - `timm2onnx_local.py`
@@ -130,6 +222,6 @@ BPU conv original OPs per run: 433,179,520
 ## Additional preparation
 
 - Before S-side export on a case-insensitive filesystem, use the YAML filename `mobilenetv3_s_config.yaml` shown above.
-- For X5, prepare `./calibration_data_rgb_f32` in RGB order for `MobileNetV3_config.yaml`; the retained calibration helper produces BGR data, so convert channel order and apply the X5 YAML's RGB normalization rather than renaming the BGR directory.
+- For X5, prepare `./calibration_data_rgb_f32` in RGB order for `MobileNetV3_config.yaml`; the calibration helper produces BGR data, so convert channel order and apply the X5 YAML's RGB normalization rather than renaming the BGR directory.
 - Set the calibration helper's source-image directory to the local ImageNet directory before running it. The helper's mean constants differ slightly from the S YAML's `mean_value`; keep the selected target's calibration values aligned with its config.
 - Use the board runtime after compilation to check the emitted model contract.

@@ -5,20 +5,9 @@ English | [简体中文](./README_cn.md)
 <a id="overview"></a>
 ## Algorithm and source
 
-ByteTrack is a stateful multi-object tracker that associates high- and low-score detections. This sample runs an S100/S100P/S600 YOLOv5x detector, keeps COCO `person` class `0`, and updates the CPU BYTETracker. The source paper is [ByteTrack: Multi-Object Tracking by Associating Every Detection Box](https://arxiv.org/abs/2110.06864).
+ByteTrack tracks objects across video frames by associating both high- and low-confidence detections. Recovering low-score detections helps maintain identities when pedestrians are partly occluded. This sample combines a YOLOv5x person detector with the CPU BYTETracker.
 
-Multi-object tracking estimates object boxes and identities across video frames. Many tracking methods associate only high-score detections and discard low-score ones, which loses occluded objects and fragments tracks. ByteTrack's BYTE strategy — Tracking By associating Almost Every Detection Box — keeps both groups instead:
-
-- Keep both high-score and low-score detections.
-- First association: match high-confidence detections with existing tracks.
-- Second association: match remaining tracks with low-score detections using IoU.
-- Initialize new tracks only from unmatched high-score detections.
-
-The detection example below is a horizontal strip of three street frames: colored boxes carry per-detection confidence values (e.g. 0.94/0.92/0.83 in the left frame, down to 0.43 beside the red triangle in the middle frame), and a triangle marker (yellow in the outer frames, red in the middle) marks a followed pedestrian. The three-row figure illustrates what low-score recovery means, matching the paper's motivation example — (a) detection boxes, where a smaller tracked person scores 0.8 in t1, then 0.4 and 0.1 in t2/t3 (the 0.9 boxes belong to the taller foreground person); (b) tracklets by associating high score detection boxes; (c) tracklets by associating every detection box, where that person's low-score detections (dashed, annotated 0.4 and 0.1) are associated again.
-
-![ByteTrack detection example strip](test_data/readme_img/image1.png)
-
-![Three-row (a)/(b)/(c) association illustration](test_data/readme_img/image.png)
+References: [ByteTrack: Multi-Object Tracking by Associating Every Detection Box](https://arxiv.org/abs/2110.06864).
 
 <a id="directory"></a>
 ## Directory structure
@@ -81,6 +70,11 @@ The recorded SHA-256 of the published `track_test.mp4` is `4bbe5bf11fe8967b28a90
 Each processed frame yields zero or more person tracks with `track_id`, original-image `tlbr`, score, and frame index. A result video is written at the requested output path. Empty detections still advance `frame_index` and update the tracker. When a box lies wholly in letterbox padding, clipping can create zero area and XYAH initialization may produce NaN; the task drops non-positive-width/height person boxes before the tracker update.
 
 Applicability and tuning. `--score-thres` (default `0.25`) filters detector boxes before the tracker: lower it when too few boxes are detected — lowering `--track-thresh` cannot restore detector-discarded boxes. `--track-thresh` (`0.3`) partitions tracker input only: scores above it enter first association, scores in (0.1, `track-thresh`) enter second association with still-tracked targets, and new tracks start only from first-association boxes scoring at least `track_thresh + 0.1`. If track IDs switch frequently, a larger `--match-thresh` (`0.8`, the maximum accepted association cost — 1 − IoU, fused with detection score in the default mode, plain 1 − IoU with `--mot20`; larger accepts less-similar matches) or a longer `--track-buffer` (`60`, lost-track window scaled by `frame_rate / 30`) can help. These are tuning directions, not recalibrated thresholds. The pipeline tracks only COCO `person`; multi-class tracking needs one tracker per class or a class-aware tracker extension (see the [evaluator notes](evaluator/README.md)).
+
+The detector keeps COCO `person` class `0`. BYTETracker first matches high-score boxes, then associates remaining tracks with low-score boxes using IoU; only unmatched high-score detections initialize new tracks.
+
+![ByteTrack detection example strip](test_data/readme_img/image1.png)
+![Three-row (a)/(b)/(c) association illustration](test_data/readme_img/image.png)
 
 <a id="entry-points"></a>
 ## Entry points

@@ -1,5 +1,9 @@
 # RepGhost image classification
 
+RepGhost uses structural reparameterization to replace explicit feature concatenation in a lightweight CNN.
+
+[中文说明](README_cn.md)
+
 <a id="overview"></a>
 
 ## Overview
@@ -26,7 +30,7 @@ add branches fused for inference](./test_data/RepGhost_architecture.png)
 *Figure (upstream paper Fig. 4): (a) Ghost bottleneck with its explicit
 `Concat` feature reuse; (b) RG-bneck at training — reuse moves to weight
 space via `add` branches; (c) RG-bneck at inference — the branches are
-fused away. it depicts the upstream
+fused away. It depicts the upstream
 architecture, while the deployed artifacts are the INT8-quantized
 100–200 variants at 224×224 NV12 (see [Support
 matrix](#support-matrix)).*
@@ -44,12 +48,12 @@ repghost/
 ├── conversion/  # Export and quantization configuration
 ├── evaluator/  # Evaluation commands and metrics
 ├── model/  # Model files and download scripts
-├── runtime/  # Python and native inference implementations
+├── runtime/  # Python inference
 ├── test_data/  # Example inputs
 ├── tests/  # Automated tests
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-└── requirements-host.txt  # Source or data file
+└── requirements-host.txt  # Python dependencies
 ```
 
 <a id="support-matrix"></a>

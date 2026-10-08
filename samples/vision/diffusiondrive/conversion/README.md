@@ -2,7 +2,7 @@
 
 # DiffusionDrive conversion
 
-The two source PTQ YAMLs are preserved byte-for-byte. They document compiler settings; running them requires the export and calibration inputs prepared below.
+The two PTQ YAMLs configure the S100P and S600 compilers. Prepare the export and calibration inputs below before using them.
 
 <a id="source-model"></a>
 ## Source model

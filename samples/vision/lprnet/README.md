@@ -5,7 +5,9 @@ English | [简体中文](./README_cn.md)
 <a id="overview"></a>
 ## Algorithm and source
 
-LPRNet recognizes a cropped license-plate tensor as a character sequence without a separate character detector. The runtime consumes a pre-packed `float32` file reshaped to `1x3x24x94`; it performs no image decoding, resize, or normalization. The source paper is [LPRNet: License Plate Recognition via Deep Neural Networks](https://arxiv.org/abs/1806.10447).
+LPRNet recognizes license-plate text without a separate character detector. This sample runs the X5 model on a prepared plate tensor and decodes its character sequence with CTC.
+
+References: [LPRNet: License Plate Recognition via Deep Neural Networks](https://arxiv.org/abs/1806.10447).
 
 <a id="directory"></a>
 ## Directory structure
@@ -23,14 +25,14 @@ lprnet/
 ```
 
 <a id="support-matrix"></a>
-## Support and verification matrix
+## Supported models
 
 | target | variant | Python | C++ | note |
 |---|---|---|---|---|
 | X5 | `lpr.bin` | supported | not-supported | verify with the bundled `test_input.dat` |
 | S100/S100P/S600 | — | not-supported | not-supported | no published asset |
 
-This sample has no C++ implementation.dat` and checks native `(1,68,18,1)` logits parity between the two implementations — an implementation-consistency check for one input, not license-plate accuracy.
+Python is the available runtime. The evaluator compares raw `(1,68,18,1)` logits and decoded text for the bundled input; dataset recognition accuracy requires labeled plates.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -56,6 +58,8 @@ The first command writes `model/lpr.bin` and reports the observed hash; the mani
 
 Successful inference exits with code `0` and prints a JSON object containing `target`, the qualified `asset_id`, and a decoded `plate` string. The decoded plate depends on the model and input; `test_data/example.jpg` is only the visual reference shipped by the source, while `test_input.dat` is the actual runtime input.
 
+The CLI consumes pre-packed float32 `test_input.dat`, reshaped to `(1,3,24,94)`. Decode, resize and normalize plate images before generating this tensor.
+
 <a id="entry-points"></a>
 ## Entry points
 
@@ -65,7 +69,7 @@ Successful inference exits with code `0` and prints a JSON object containing `ta
 - [`evaluator/README.md`](./evaluator/README.md): exact raw/text comparison procedure.
 
 <a id="historical-performance"></a>
-## Source performance record
+## Reference performance
 
 The complete source benchmark row:
 

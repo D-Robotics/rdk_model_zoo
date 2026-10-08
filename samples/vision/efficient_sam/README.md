@@ -5,12 +5,9 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Overview
 
-EfficientSAM-Tiny segments one image using two fixed positive point prompts baked into its decoder with a ViT-Tiny image encoder and a fixed-prompt mask decoder. The encoder produces a `1x256x32x32` embedding from a normalized `512x512` RGB image; the decoder produces three low-resolution mask candidates and IoU scores. The selected mask is resized to `512x512` and returned as a binary mask.
+EfficientSAM uses a lightweight image encoder to perform prompt-based segmentation. This sample deploys the ViT-Tiny encoder with a mask decoder whose two positive point prompts are fixed in the model.
 
-- Paper: <https://arxiv.org/abs/2312.00863>
-- Project: <https://yformer.github.io/efficient-sam/>
-
-The published decoder fixes positive points `(248,210)` and `(302,315)` in the resized 512-square image. It accepts no runtime point or box argument. The encoder applies RGB `/255`; the selected mask uses logits `>=0`. Input is stretched to 512×512 and the result stays in that coordinate system, without mapping back to the original image.
+References: <https://arxiv.org/abs/2312.00863>, <https://yformer.github.io/efficient-sam/>.
 
 <a id="directory"></a>
 ## Directory structure
@@ -72,6 +69,8 @@ python3 samples/vision/efficient_sam/runtime/python/main.py --target s100
 ## Expected Results
 
 The default input is `test_data/dogs.jpg`. A successful run writes an overlay image and a binary `512x512` mask. The numeric IoU and selected mask index depend on the actual model execution; the committed `efficient_sam_binary_mask.png` is a source reference, not a new board result.
+
+The decoder fixes positive points `(248,210)` and `(302,315)` on the resized 512×512 image. The encoder applies RGB `/255` and produces `(1,256,32,32)` embeddings. Of three decoder candidates, the highest-IoU mask is resized to 512×512 and thresholded at logits `>=0`. Results use this resized coordinate system.
 
 <a id="entry-points"></a>
 ## Entry Points

@@ -5,15 +5,9 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Overview
 
-PointNet predicts one of four chair parts for every XYZ point: `back`, `seat`,
-`leg`, `arm`. Shared MLPs extract point features and a symmetric max operation
-aggregates global context. This sample preserves input point order; it is not
-whole-cloud classification, object detection, or support for all ShapeNet classes.
-The [PointNet paper](https://arxiv.org/abs/1612.00593) and
-[official implementation](https://github.com/charlesq34/pointnet) describe the
-architecture; the delivered model's reference is
-[the S100 PointNet project](https://gitee.com/chenguanzhong/rdk_-s100_-point-net_-official).
-The published HBM is downloaded separately, not bundled in Git.
+PointNet segments point clouds using shared MLPs and symmetric max pooling. This sample identifies four parts of a chair: back, seat, leg and arm, while keeping the input point order.
+
+References: [PointNet paper](https://arxiv.org/abs/1612.00593), [official implementation](https://github.com/charlesq34/pointnet), [the S100 PointNet project](https://gitee.com/chenguanzhong/rdk_-s100_-point-net_-official).
 
 <a id="directory"></a>
 ## Directory structure

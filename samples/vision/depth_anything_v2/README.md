@@ -5,21 +5,9 @@
 <a id="overview"></a>
 ## Overview
 
-Estimate dense relative depth from a single image using the published S100 HBM.
-This sample separates preprocessing, inference and postprocessing from SDK
-ownership, image IO and visualization. People and Agents use the same commands.
-The result contains original-size float depth and an INFERNO display image;
-values are relative, not calibrated meters.
+Depth Anything V2 estimates dense relative depth from a single image. It uses synthetic labeled images, a larger teacher and pseudo-labeled real images to improve fine detail. This sample provides inference and depth visualization on RDK S100.
 
-The V2 method uses synthetic labeled training images, a larger teacher and
-pseudo-labeled real images to improve fine detail and robustness. Framework
-figure from the source record:
-
-![Source framework](test_data/readme_img/image-2.png)
-
-References: [project](https://depth-anything.github.io/),
-[paper](https://arxiv.org/abs/2406.19675),
-[upstream repository](https://github.com/DepthAnything/Depth-Anything-V2).
+References: [project](https://depth-anything.github.io/), [paper](https://arxiv.org/abs/2406.19675), [upstream repository](https://github.com/DepthAnything/Depth-Anything-V2).
 
 <a id="directory"></a>
 ## Directory structure
@@ -100,6 +88,10 @@ the original docstring). Default resize is nearest-neighbor stretch. Optional
 letterbox uses linear resize/fill-127 and crops the padding before restoring
 the result. The task returns float depth; the uint8 display API is a separate
 visualization step.
+
+Depth values are relative, rather than calibrated meters. The CLI saves original-size float depth and an INFERNO color rendering.
+
+![Source framework](test_data/readme_img/image-2.png)
 
 <a id="entry-points"></a>
 ## Entry points

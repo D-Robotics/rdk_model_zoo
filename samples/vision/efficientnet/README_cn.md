@@ -1,6 +1,10 @@
 # EfficientNet 图像分类
 
-EfficientNet 在 RDK 板卡上的 ImageNet-1k 分类：输入一张 BGR 图像，输出稳定的 Top-K `(类别 ID, 分数, 标签)`。X5 侧发布 EfficientNet B2/B3/B4 变体（论文 [EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946)）；S100/S600 侧发布 EfficientNet-Lite lite0..lite4 系列（[TensorFlow TPU EfficientNet-Lite](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) 实现）。[English](README.md)
+EfficientNet 通过联合调整网络深度、宽度和输入分辨率完成图像分类。
+
+来源：[EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946) · [TensorFlow TPU EfficientNet-Lite](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet)
+
+[English README](README.md)
 
 <a id="overview"></a>
 
@@ -48,7 +52,7 @@ efficientnet/
 ├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-└── requirements-host.txt  # 源码或数据文件
+└── requirements-host.txt  # Python 依赖
 ```
 
 <a id="support-matrix"></a>

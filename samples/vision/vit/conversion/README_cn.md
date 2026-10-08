@@ -5,7 +5,7 @@
 
 源说明使用 PyTorch CIFAR-10 训练与 `vit_cifar10_batch1.onnx`，引用
 [ViT_PyTorch](https://github.com/xiongqi123123/ViT_PyTorch.git)。未交付
-固定权重版本或导出脚本。原 YAML 与 hb_compile.log 逐字节保留。
+固定权重版本或导出脚本。编译使用 `config_vit_nv12.yaml`。
 
 <a id="directory"></a>
 ## 目录结构

@@ -50,10 +50,10 @@ Smoke 参数：`--target s100`（parser 默认 auto→s100）、`--no-plot`（�
 ![源分割图](../test_data/readme_img/chair_res.png)
 
 <a id="reference-results"></a>
-## 源记录参考结果
+## S100 参考性能
 
-原 S 分支 evaluator 记录以下 `hrt_model_exec` 数值，但未注明延迟单位、完整调用命令、SDK
-版本或制品 digest。下表原样保留，不能当作当前统一入口的测量结果。
+以下为 S100 `hrt_model_exec` 参考性能，测量使用 100 帧，延迟单位、完整调用命令、SDK
+版本与制品摘要未注明。重新测量时请记录这些条件。
 
 | Threads | Frames | Total Latency | Average Latency | FPS |
 | --- | --- | --- | --- | --- |
@@ -62,7 +62,7 @@ Smoke 参数：`--target s100`（parser 默认 auto→s100）、`--no-plot`（�
 | 4 | 100 | 429.76 | 4.30 | 910.70 |
 | 8 | 100 | 839.86 | 8.35 | 910.84 |
 
-原转换记录另有 int16 “trans > 0.9999”和“pred > 0.98”，见[保留截图与限制](../conversion/README_cn.md#calibration)。
+原转换记录另有 int16 “trans > 0.9999”和“pred > 0.98”，见[量化结果](../conversion/README_cn.md#calibration)。
 
 <a id="boundaries"></a>
 ## 适用范围

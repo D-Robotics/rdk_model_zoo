@@ -62,6 +62,13 @@ python3 -c "import torch, onnx, onnxruntime, numpy, cv2; print(torch.__version__
 
 The exporter actually imports `ultralytics.models.sam.build.build_mobile_sam`; cloning the MobileSAM repository alone does not provide that package. The source's setup step is `python3 -m pip install ultralytics` in the export environment. Its version is unpinned in the source, so record the installed version and verify the `build_mobile_sam`/`set_imgsz` APIs before export.
 
+Before loading the toolchain image, check that Docker can run:
+
+```bash
+sudo docker --version
+sudo docker run --rm hello-world
+```
+
 <a id="export"></a>
 ## Export ONNX
 

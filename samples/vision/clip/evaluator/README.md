@@ -28,7 +28,7 @@ evaluator/
 <a id="environment"></a>
 ## Environment
 
-- Target: RDK X5; image encoder through board `hbm_runtime`, text encoder through CPU `onnxruntime`.14.7, NumPy, OpenCV, `ftfy==6.3.1`, and `regex==2026.9.10`; injected runtime fixtures avoid an ONNX Runtime requirement on the host.
+Use board `hbm_runtime` on RDK X5 for the image encoder and CPU `onnxruntime` for the text encoder. Python dependencies are NumPy, OpenCV, `ftfy==6.3.1` and `regex==2026.9.10`; the vocabulary ships with the runtime.
 
 <a id="command"></a>
 ## Evaluation Command

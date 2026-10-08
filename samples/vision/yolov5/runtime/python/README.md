@@ -45,7 +45,7 @@ python3 -m samples.vision.yolov5.runtime.python.main \
   --test-img samples/vision/yolov5/test_data/kite.jpg
 ```
 
-`bash samples/vision/yolov5/runtime/python/run.sh...` is the same module entry. The S command is conditional on a prepared model and recognized S100 board. Both examples run as written on a prepared board.
+`bash samples/vision/yolov5/runtime/python/run.sh --target x5 --variant n-v7.0` is the same module entry. The S command is conditional on a prepared model and recognized S100 board. Both examples run as written on a prepared board.
 
 <a id="parameters"></a>
 ## Parameters
@@ -99,7 +99,7 @@ if image is None:
     raise FileNotFoundError(image_path)
 selection = resolve_selection(target, variant=variant, asset_id=asset_id, model_path=model_path)
 task = YOLOv5Task(selection, score_thres=0.25, nms_thres=0.45)
-task.runner.set_scheduling_params(priority=0, bpu_cores=[0])
+task.set_scheduling_params(priority=0, bpu_cores=[0])
 prepared = task.preprocess(image)
 native_outputs = task.infer(prepared.tensors)
 explicit_result = task.postprocess(native_outputs, prepared.context)

@@ -5,9 +5,9 @@
 <a id="overview"></a>
 ## 算法与来源
 
-SigLIP 视觉编码器把一张图片转换为全局嵌入或 patch 特征序列。本 sample 只提供 SigLIP 的视觉侧，不包含文本编码器和文本 token 流程。上游论文是 [Sigmoid Loss for Language Image Pre-Training](https://arxiv.org/abs/2303.15343)，模型家族由 [Google Research](https://github.com/google-research/big_vision) 发布；本 sample 位于 `samples/vision/siglip`。
+SigLIP 通过 sigmoid 损失学习图文表示。本示例提供视觉编码器的八种变体，生成全局图像嵌入或 patch 特征，供下游应用使用。
 
-八个已发布 variant 均为打包 HBM 制品。每个制品包含固定的 `pooler_output` 和 `last_hidden_state` 两个子模型，使用同一图像输入，并且每次只执行所选子模型。
+参考：[Sigmoid Loss for Language Image Pre-Training](https://arxiv.org/abs/2303.15343), [Google Research](https://github.com/google-research/big_vision).
 
 <a id="directory"></a>
 ## 目录结构
@@ -47,7 +47,7 @@ siglip/
 ## 环境前提
 
 - 板卡：RDK S100 或 S100P，板端镜像必须提供 `hbm_runtime`；未固定镜像和 BPU 固件版本。
-- 主机准备：Python 3.14.7，以及 `requirements-host.txt` 中的 `numpy`、`opencv-python`、`PyYAML`。
+- Python 依赖：Python 3.10+，以及 `requirements-host.txt` 中的 `numpy`、`opencv-python`、`PyYAML`。
 - 推理前必须准备 HBM；运行时命令不会隐式下载模型。
 - 源资料未给出除 HBM 文件外的磁盘或内存要求；板端资源以实际加载为准。
 
@@ -72,6 +72,8 @@ python3 samples/vision/siglip/runtime/python/main.py --target s100 --variant bas
 ## 预期结果
 
 CLI 为所选原始特征 tensor 打印一个 JSON 统计对象。`shape` 来自 HBM metadata：`pooler_output` 为 `(1,D)` 或 `(1,1,D)`，`last_hidden_state` 为 `(1,N,D)`；`D`、`N` 见 runtime README。保留制品原生 dtype；运行时不会反量化、softmax、归一化、squeeze 或其他数值变换。板端运行制品前，不声明具体数值。
+
+每个打包 HBM 包含 `pooler_output` 与 `last_hidden_state` 子模型，共用图像输入；每次推理只执行所选子模型。文本编码需另行准备模型与分词器。
 
 <a id="entry-points"></a>
 ## 入口索引

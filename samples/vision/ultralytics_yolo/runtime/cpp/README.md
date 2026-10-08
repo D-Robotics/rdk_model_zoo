@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## C++ inference
 
-Use this directory for c++ inference.
+Run the supported Ultralytics detection, segmentation, pose, classification or oriented-box model on its matching board. The launcher selects the native backend and model configuration.
 
 <a id="directory"></a>
 ## Directory structure

@@ -79,7 +79,7 @@ docker run -it --rm --network host --shm-size=15g \
 本目录 `requirements.txt` 只列主机校准与配置依赖；工具不会隐式安装软件。
 导出器的 `--help` 不依赖 Torch 或 Ultralytics。
 
-29 份原始 YAML 逐字节保留在 `ptq_yamls/{x5,s}`：
+29 份编译配置位于 `ptq_yamls/{x5,s}`：
 
 | 目标 | march | 已发布制品对应配方 | 保留的实验配方 |
 |---|---|---|---|
@@ -195,7 +195,7 @@ hrt_model_exec model_info --model_file /work/depth/compile_x5_n/artifacts/yolo26
 失败时不会生成成功的最终报告。保留的部分工作目录用于诊断，下一次请换新目录。
 
 <a id="known-gaps"></a>
-## 已知缺口与源证据
+## 补充准备与源证据
 
 源记录缺少权重摘要、S 镜像/编译器精确版本以及 S HBM 发布方摘要。
 导出器依赖预期的 Depth 模块，找不到唯一一个对应头时显式报错。

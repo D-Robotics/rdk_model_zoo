@@ -19,17 +19,29 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-主机套件需要 Python 3.10+、NumPy/OpenCV/PyYAML，以及执行原生纯数值／假接口测试的 C++17 编译器。真实 runtime 检查需要运行时指南所列匹配 S100/S600 镜像、模型和 SDK。原生测试目录中的假头文件不能代替 SDK 安装，也不是实际 SDK 编译证据。
+使用匹配的 S100 或 S600 板端镜像、模型和 SDK。Python 需要 Python 3.10+、NumPy、OpenCV 与 PyYAML；C++ 需要 C++17、CMake、OpenCV 开发库及板端 DNN/UCP 头文件与库。
 
 <a id="command"></a>
+## 运行命令
 
+在仓库根目录准备 S100 模型，然后对相同图片运行两个实现：
 
-两侧 runtime 必须使用相同目标、制品和输入。检查 S600 时，各对应步骤均使用 --target s600。这些板端命令供后续验证。
+```bash
+bash samples/vision/unetmobilenet/model/download.sh --target s100
+python3 samples/vision/unetmobilenet/runtime/python/main.py --target s100 \
+  --test-img samples/vision/unetmobilenet/test_data/segmentation.png \
+  --mask-save-path outputs/unetmobilenet/python-labels.npy
+bash samples/vision/unetmobilenet/runtime/cpp/run.sh --target s100 --build \
+  --test-img samples/vision/unetmobilenet/test_data/segmentation.png \
+  --mask-save-path outputs/unetmobilenet/cpp-labels.png
+```
+
+比较时保持板卡、模型和输入一致。使用 S600 时，将全部命令的目标改为 `--target s600`。
 
 <a id="metrics"></a>
 ## 指标
 
-主机检查验证 fixture 的源预处理／绘图一致性、类别解码、逐通道 SCALE 反例、直接最近邻恢复、目标拒绝及注入失败时的资源释放；mIoU 与延迟在板端测量。把 Python NPY 与 C++ PNG 读取为整数数组比较；逐像素完全一致可作为同制品冒烟判据。不要对类别 ID 计算 logits 余弦相似度。
+将 Python NPY 和 C++ PNG 读取为整数类别 ID 数组，报告逐像素一致率。数据集 mIoU 需要 Cityscapes 真值 mask 与评估协议；类别 ID 不适合计算 logits 余弦相似度。
 
 <a id="outputs"></a>
 ## 输出

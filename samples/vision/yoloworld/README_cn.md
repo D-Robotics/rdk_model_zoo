@@ -7,7 +7,6 @@
 本 sample 在 X5 BPU 上从用户选择的离线词向量中检测词语；词向量 JSON
 是必需的文本输入资产，不是普通标签表。算法参考为
 [YOLO-World](https://github.com/AILab-CVC/YOLO-World)，属于开放词汇区域检测。
-来源：X5 平台 sample 交付 @ `ac115717197920355fc390bb04299b20e6436864`。
 
 <a id="directory"></a>
 ## 目录结构

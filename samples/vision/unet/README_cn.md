@@ -2,50 +2,14 @@
 
 # UNet 模型说明
 
-本示例提供基于 ResNet18、ResNet34、ResNet50、ResNet101 和 ResNet152 主干的
-UNet Pascal VOC 语义分割部署链路，覆盖 checkpoint 导出、X5 PTQ 转换、精度
-评测和 RDK X5 Python 推理。
-
 <a id="overview"></a>
-## 算法介绍（Algorithm Overview）
+## 算法与来源
 
-UNet 使用带跳跃连接的编码器—解码器结构，融合高层语义与精细空间信息。本实现
-以 ResNet 作为编码器，以 UNet 解码器为每个像素输出类别得分。
+UNet 使用带跳跃连接的编码器与解码器，结合高层语义与精细空间信息。本示例采用 ResNet 主干，在 RDK X5 上进行 Pascal VOC 21 类语义分割，提供五种主干的模型、转换配方与 Python 推理。
 
-- 任务：Pascal VOC 21 类语义分割，包含背景类
 - UNet 论文：[U-Net: Convolutional Networks for Biomedical Image Segmentation](https://arxiv.org/abs/1505.04597)
 - ResNet 论文：[Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385)
 - 参考实现：[bubbliiiing/unet-pytorch](https://github.com/bubbliiiing/unet-pytorch)
-
-### 部署合同
-
-| 项目 | 约定 |
-| --- | --- |
-| 目标平台 | RDK X5，`bayes-e` |
-| 训练输入 | RGB float32 NCHW `[1, 3, 512, 512]`，缩放系数 `1/255` |
-| Runtime 输入 | 512 × 512 packed NV12 |
-| 输出 | float32 NCHW logits `[1, 21, 512, 512]` |
-| 后处理 | 沿类别维执行 `argmax` |
-
-### 主干支持状态
-
-| Backbone | 当前状态 |
-| --- | --- |
-| ResNet18 | 预编译 X5 BIN 已发布；已在 RDK X5 验证下载与 Python 推理 |
-| ResNet34 | FP32 mIoU 0.689319；ONNX 导出与 X5 PTQ 通过；BIN 已发布，板端 Runtime 待测 |
-| ResNet50 | FP32 mIoU 0.683826；ONNX 导出与 X5 PTQ 通过；BIN 已发布，板端 Runtime 待测 |
-| ResNet101 | FP32 mIoU 0.709437；ONNX 导出与 X5 PTQ 通过；BIN 已发布，板端 Runtime 待测 |
-| ResNet152 | FP32 mIoU 0.740002；ONNX 导出与 X5 PTQ 通过；BIN 已发布，板端 Runtime 待测 |
-
-上游 ResNet50 VOC checkpoint 可从
-[`unet-pytorch` v1.0 release](https://github.com/bubbliiiing/unet-pytorch/releases/download/v1.0/unet_resnet_voc.pth)
-下载，SHA256 为
-`556a74b8379c40cbc76af7a1faab84d1316f02b7d93290b5f1f724ff922faacb`。
-新训练变体使用 torchvision ImageNet encoder 初始化；训练收据必须记录准确的
-torchvision 版本与权重标识。
-
-新增 backbone 需要完整验证后才能视为受支持：每个变体都必须
-分别通过 checkpoint、ONNX、PTQ、精度、Runtime 和板端性能门禁。
 
 <a id="directory"></a>
 ## 目录结构
@@ -66,12 +30,41 @@ unet/
 校准数据、编译后的 BIN 或完整评测数据集；预编译 BIN 通过 `model/` 中的脚本下载。
 
 <a id="support-matrix"></a>
-## 支持与验证
+## 支持的模型
 
 | Target | Variants | Python | C++ |
 | --- | --- | --- | --- |
 | x5 | resnet18/34/50/101/152 | supported | not-supported |
 | s100 / s100p / s600 | — | not-supported | not-supported |
+
+### 部署合同
+
+| 项目 | 约定 |
+| --- | --- |
+| 目标平台 | RDK X5，`bayes-e` |
+| 训练输入 | RGB float32 NCHW `[1, 3, 512, 512]`，缩放系数 `1/255` |
+| Runtime 输入 | 512 × 512 packed NV12 |
+| 输出 | float32 NCHW logits `[1, 21, 512, 512]` |
+| 后处理 | 沿类别维执行 `argmax` |
+
+### 主干支持状态
+
+| Backbone | 当前状态 |
+| --- | --- |
+| ResNet18 | X5 预编译 BIN；Python 推理、ONNX 导出与 PTQ 配置 |
+| ResNet34 | X5 预编译 BIN；Python 推理、ONNX 导出与 PTQ 配置 |
+| ResNet50 | X5 预编译 BIN；Python 推理、ONNX 导出与 PTQ 配置 |
+| ResNet101 | X5 预编译 BIN；Python 推理、ONNX 导出与 PTQ 配置 |
+| ResNet152 | X5 预编译 BIN；Python 推理、ONNX 导出与 PTQ 配置 |
+
+上游 ResNet50 VOC checkpoint 可从
+[`unet-pytorch` v1.0 release](https://github.com/bubbliiiing/unet-pytorch/releases/download/v1.0/unet_resnet_voc.pth)
+下载，SHA256 为
+`556a74b8379c40cbc76af7a1faab84d1316f02b7d93290b5f1f724ff922faacb`。
+新训练变体使用 torchvision ImageNet encoder 初始化；训练收据必须记录准确的
+torchvision 版本与权重标识。
+
+新增 backbone 需要完整验证后才能视为受支持：每个变体都必须
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -132,9 +125,8 @@ RDK X5 上使用单线程、200 帧和真实 packed NV12 输入时，`hrt_model_
 
 ### ResNet34/50/101/152 发布结果
 
-四个新训练变体均在同一份完整 1,449 张验证集上评测。它们通过了 ONNX 数值门禁和
-`bayes-e` PTQ 编译，公开 BIN 与发布 SHA256 核对一致。这四个发布模型的板端
-Runtime 精度和性能测试按[评估说明](evaluator/README_cn.md)在板端执行。
+四个变体使用相同的完整 1,449 张验证集。PTQ cosine 比较 `bayes-e` 量化输出
+与浮点参考。板端精度与性能测量方法见[评估说明](evaluator/README_cn.md)。
 
 | Backbone | PyTorch FP32 mIoU | Pixel Accuracy | PTQ 输出 Cosine | 板端 Runtime |
 | --- | ---: | ---: | ---: | --- |

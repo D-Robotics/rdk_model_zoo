@@ -8,7 +8,6 @@ This sample detects user-selected words from an **offline vocabulary embedding**
 JSON on the X5 BPU. The vocabulary is a required text input asset and is not a
 normal label list. YOLOWorld is an open-vocabulary region detector; the upstream
 algorithm reference is [YOLO-World](https://github.com/AILab-CVC/YOLO-World).
-Source: X5 platform sample delivery at `ac115717197920355fc390bb04299b20e6436864`.
 
 <a id="directory"></a>
 ## Directory structure
@@ -36,8 +35,7 @@ yoloworld/
 <a id="prerequisites"></a>
 ## Prerequisites
 
-Host checks use Python 3.14.7, NumPy 2.5.3, OpenCV 4.14.0 and PyYAML 6.0.3
-from the repository `.venv`. Board execution needs the X5 system Python and
+Use Python 3, NumPy, OpenCV and PyYAML. Board execution needs the X5 system Python and
 `hbm_runtime` matching the installed image. The model must be prepared with the
 explicit download command; the required vocabulary
 `test_data/offline_vocabulary_embeddings.json` ships with the sample.
@@ -52,10 +50,10 @@ bash samples/vision/yoloworld/model/download.sh --target x5
 python3 samples/vision/yoloworld/runtime/python/main.py --target x5 --prompts dog
 ```
 
-The second command requires a recognized X5. For a network-free contract check:
+The second command requires a recognized X5. To preview the selected model and prompt without running inference:
 
 ```bash
-.venv/bin/python samples/vision/yoloworld/runtime/python/main.py --dry-run --target x5 --prompts dog
+python3 samples/vision/yoloworld/runtime/python/main.py --dry-run --target x5 --prompts dog
 ```
 
 <a id="expected-results"></a>

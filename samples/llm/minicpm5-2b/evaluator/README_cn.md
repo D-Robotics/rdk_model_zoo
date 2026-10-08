@@ -58,7 +58,7 @@ EVAL_BUNDLE=/data/ppl-bundle OUTPUT=quick-check.json bash run.sh --samples=1
 bundle 中的 SDK 协议和 RPC 文件从本机安装的 hbm-infer 3.15.3 提取，不提交到仓库，继续遵循 SDK 条款。脚本启动服务、读取分配端口，并在退出时清理自己的临时目录。MODEL_DIR 默认为 `../model/s600`，OUTPUT 默认为 `board-local-ppl.json`。不要同时加载另一份模型，本次板卡配置不能容纳两份该模型。
 
 <a id="reference-results"></a>
-## 历史参考结果
+## 参考结果
 
 最终 PPL **14.242767676160279**，浮点 14.0184，假量化 14.2687，相对上升 **1.60052%**，耗时 **913.192 秒**。JSON 每段更新，未完成 140 段及完成标记前不能视作完整结果。校验脚本检查数学一致性、完整性和 3% 相对 PPL 目标；下方 HBM SHA-256 将记录绑定到对应产物。
 

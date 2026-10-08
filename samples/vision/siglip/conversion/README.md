@@ -53,7 +53,7 @@ hrt_model_exec perf --thread_num 1 --model_name pooler_output --model_file sampl
 hrt_model_exec perf --thread_num 1 --model_name last_hidden_state --model_file samples/vision/siglip/model/s100/bpu-siglip-base-patch16-224.hbm
 ```
 
-Apply the same three commands to the other seven artifacts by replacing the file name. The source-recorded evaluator tables are preserved as reference records; validate a fresh conversion with the runs below. A validation must bind both packed submodels, check `_input_0` metadata and the selected `_output_0` shape/dtype, then run the board smoke path in [`../runtime/python/README.md`](../runtime/python/README.md) on both S100 and S100P.
+Apply the same three commands to the other seven artifacts by replacing the file name. See the evaluator tables for reference measurements, then validate a new conversion with the commands below. A validation must bind both packed submodels, check `_input_0` metadata and the selected `_output_0` shape/dtype, then run the board smoke path in [`../runtime/python/README.md`](../runtime/python/README.md) on both S100 and S100P.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -70,7 +70,7 @@ Apply the same three commands to the other seven artifacts by replacing the file
 | `bpu-siglip-so400m-patch16-256-i18n.hbm` | s100, s100p | `samples/vision/siglip/model/s100/` |
 
 <a id="known-gaps"></a>
-## Known Gaps
+## Additional preparation
 
 - Exact source checkpoint/version and export script are missing.
 - OE version, compiler build, `march` configuration, calibration dataset/configuration, and compile command are missing.

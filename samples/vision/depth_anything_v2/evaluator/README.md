@@ -62,9 +62,7 @@ then maps to uint8 INFERNO. It discards scale and offset information. Constant
 outputs have zero grayscale instead of NaN; this is defined behavior,
 not an indication that a constant prediction is accurate. Resizing uses OpenCV
 linear interpolation instead of the source's Torch interpolation and matches it
-up to floating-point rounding. A host analytic affine
-plane verifies the half-pixel geometry; HBM output parity is verified with the
-board runtime.
+up to floating-point rounding. Compare raw HBM depth arrays using the same input and resize mode.
 
 <a id="outputs"></a>
 ## Records to retain
@@ -77,7 +75,7 @@ latency. Source HRT timing, end-to-end application timing and display IO must be
 reported separately. Observed hashes do not fill the missing publisher digest.
 
 <a id="reference-results"></a>
-## Source performance record
+## Reference performance
 
 | Threads | Frames | Total latency (ms) | Reported average (ms) | FPS |
 | --- | --- | --- | --- | --- |

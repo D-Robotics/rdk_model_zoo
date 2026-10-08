@@ -1,5 +1,9 @@
 # ViT CIFAR-10 图像分类
 
+ViT 将图像块组织为序列，通过自注意力完成分类。
+
+[English README](README.md)
+
 <a id="overview"></a>
 ## 概述
 
@@ -22,7 +26,7 @@ vit/
 ├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-└── requirements-host.txt  # 源码或数据文件
+└── requirements-host.txt  # Python 依赖
 ```
 
 <a id="support-matrix"></a>

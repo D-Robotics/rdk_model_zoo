@@ -5,9 +5,9 @@
 <a id="overview"></a>
 ## 算法与来源
 
-PP-LiteSeg-STDC1 为每个像素预测 Cityscapes 道路场景的 19 类语义。本示例提供 X5 Python 推理、转换配方与单图验证入口。算法资料：[论文](https://arxiv.org/abs/2204.02681)、[PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg)。
+PP-LiteSeg 是轻量语义分割网络。本示例使用 STDC1 主干，对道路场景预测 Cityscapes 的 19 类语义，运行于 RDK X5。
 
-模型**运行时**接收已经解码的 int32 类别图：`postprocess` 仅校验类别并去掉 batch/channel 维，没有 CPU argmax 步骤。编译制品元数据在板端加载时校验。
+参考：[论文](https://arxiv.org/abs/2204.02681), [PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg).
 
 <a id="directory"></a>
 ## 目录结构
@@ -55,6 +55,8 @@ python3 samples/vision/pp_liteseg/runtime/python/main.py --dry-run --target x5
 ## 预期结果
 
 成功时返回 0，输出 `outputs/pp_liteseg/result.jpg`（3078×548，原图／叠加／分割三面板），同目录的 `labels.npy`（512×1024 int32，类别 0..18）和 `result.json`。JSON/stdout 记录实际类别名和运行时元数据。未完成真实推理前，不承诺 street 图片的具体类别列表或精度。错误返回 2。mask 坐标对应拉伸后的模型输入，不是原图尺寸。
+
+编译模型返回解码后的 int32 类别图。`postprocess` 校验类别 ID 并去掉 batch/channel 维，无需 CPU argmax。加载时会检查模型元数据。
 
 <a id="entry-points"></a>
 ## 入口索引

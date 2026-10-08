@@ -1,8 +1,10 @@
 # MobileNetV1 image classification
 
-MobileNetV1 ImageNet-1k classification on RDK boards: one BGR image in, a
-stable Top-K of `(class id, score, label)` out. Source model: [tensorflow/models MobileNetV1](https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet_v1.md),
-paper [MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications](https://arxiv.org/abs/1704.04861). [中文说明](README_cn.md)
+MobileNetV1 uses depthwise separable convolution for lightweight image classification.
+
+Sources: [tensorflow/models MobileNetV1](https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet_v1.md) · [MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications](https://arxiv.org/abs/1704.04861)
+
+[中文说明](README_cn.md)
 
 <a id="overview"></a>
 
@@ -40,12 +42,12 @@ mobilenetv1/
 ├── conversion/  # Export and quantization configuration
 ├── evaluator/  # Evaluation commands and metrics
 ├── model/  # Model files and download scripts
-├── runtime/  # Python and native inference implementations
+├── runtime/  # Python inference
 ├── test_data/  # Example inputs
 ├── tests/  # Automated tests
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-└── requirements-host.txt  # Source or data file
+└── requirements-host.txt  # Python dependencies
 ```
 
 <a id="support-matrix"></a>

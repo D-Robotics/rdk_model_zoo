@@ -5,7 +5,9 @@
 <a id="overview"></a>
 ## 算法与来源
 
-MODNet 是单阶段人像抠图网络：输入一张 RGB 图像即可输出 alpha matte，不需要 trimap。源工程为 [ZHKKKe/MODNet](https://github.com/ZHKKKe/MODNet)，论文为 [Is a Green Screen Really Necessary for Real-Time Portrait Matting?](https://arxiv.org/abs/2011.11961)。本 sample 保留源的几何处理、RGB 归一化、uint8 matte 输出和可选背景合成。
+MODNet 是单阶段人像抠图网络，无需 trimap 即可从一张图片预测 alpha matte。本示例还支持将人像合成到指定背景上。
+
+参考：[ZHKKKe/MODNet](https://github.com/ZHKKKe/MODNet), [Is a Green Screen Really Necessary for Real-Time Portrait Matting?](https://arxiv.org/abs/2011.11961).
 
 <a id="directory"></a>
 ## 目录结构
@@ -23,7 +25,7 @@ modnet/
 ```
 
 <a id="support-matrix"></a>
-## 支持与验证矩阵
+## 支持的模型
 
 | target | variant | Python | C++ | 状态 |
 |---|---|---|---|---|

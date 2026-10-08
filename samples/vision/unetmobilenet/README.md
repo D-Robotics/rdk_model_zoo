@@ -5,9 +5,9 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Overview
 
-UNetMobileNet combines a U-Net encoder/decoder with a lightweight MobileNet backbone for Cityscapes 19-class segmentation. Algorithm references: [U-Net paper](https://arxiv.org/abs/1505.04597), [MobileNet paper](https://arxiv.org/abs/1704.04861), [Cityscapes](https://www.cityscapes-dataset.com/). The source does not identify an exact training repository/checkpoint release.
+UNetMobileNet combines a U-Net encoder-decoder with a lightweight MobileNet backbone. This sample segments road scenes into the 19 Cityscapes classes and provides Python and C++ inference on the S series.
 
-This S-family sample differs from X5 UNet: two NV12 input planes at 2048×1024, INTER_AREA stretch, 19 classes, original-resolution output. Both Python and C++ separate preprocessing, raw forward and mask decoding; rendering lives outside predict.
+References: [U-Net paper](https://arxiv.org/abs/1505.04597), [MobileNet paper](https://arxiv.org/abs/1704.04861), [Cityscapes](https://www.cityscapes-dataset.com/).
 
 <a id="directory"></a>
 ## Directory structure
@@ -60,6 +60,8 @@ From the repository root, install general dependencies with `python3 -m pip inst
 Python success returns 0 and writes result.jpg, unetmobilenet_mask.npy (original-size int32 IDs 0..18) and unetmobilenet_report.json in cwd. alpha_f=0.75 weights the original image, so 1 shows the original and 0 the mask colors. Actual classes depend on real inference; no fixed result is promised. The figure below is the retained source illustration, not a new board result.
 
 ![Reference source result](test_data/result.jpg)
+
+Inputs are two NV12 planes at 2048×1024, prepared with INTER_AREA stretching. The 19-class output is restored to original image resolution; rendering is handled by the CLI.
 
 <a id="entry-points"></a>
 ## Entry points

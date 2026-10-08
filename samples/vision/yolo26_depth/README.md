@@ -5,11 +5,7 @@
 <a id="overview"></a>
 ## Overview
 
-Estimate a dense relative-depth map from one BGR image, preserving X5 and S
-source capabilities in one sample. It includes Python inference on four targets,
-X5 C++, explicit model preparation, both conversion toolchains and offline depth
-evaluation. Rendering, file IO, model binding and SDK ownership are separate from
-the three inference stages. Human users and Agents use the same native commands.
+Estimate a dense relative-depth map from a single BGR image with Ultralytics YOLO26 Depth. The sample provides Python inference on X5 and S boards, X5 C++ inference, model preparation, conversion and offline depth evaluation.
 
 The published profile is target-dependent. All X5 variants and S n/s/m accept
 letterboxed NV12 and return calibrated log-depth; S l/x accept normalized RGB
@@ -92,7 +88,7 @@ identity from an exact `--asset-id`; it does not guess a platform on a host.
 Select a model scale with `--variant n|s|m|l|x`.
 
 <a id="expected-results"></a>
-## Expected results and source-recorded references
+## Expected results and reference measurements
 
 Python writes `log_depth.npy` (192×192 F32), `depth_native.npy` (original H×W F32),
 `depth.png`, `overlay.png` and `report.json`; S lite additionally writes

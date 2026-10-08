@@ -1,5 +1,9 @@
 # GoogLeNet 图像分类
 
+GoogLeNet 通过 Inception 模块提取不同空间尺度的图像特征。
+
+[English README](README.md)
+
 <a id="overview"></a>
 
 ## 概述
@@ -44,7 +48,7 @@ googlenet/
 ├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-└── requirements-host.txt  # 源码或数据文件
+└── requirements-host.txt  # Python 依赖
 ```
 
 <a id="support-matrix"></a>

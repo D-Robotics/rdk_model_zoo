@@ -120,6 +120,13 @@ cp hgnetv2_b0_224x224_nv12/hgnetv2_b0_224x224_nv12.bin ../model/
 
 输出文件名与已发布文件名一致。
 
+编译其他已导出变体时，将 `VARIANT` 设为对应 YAML 的后缀：
+
+```bash
+export VARIANT=b0
+hb_mapper makertbin --model-type onnx --config hgnetv2_${VARIANT}.yaml
+```
+
 <a id="validation"></a>
 ## 转换后验证
 

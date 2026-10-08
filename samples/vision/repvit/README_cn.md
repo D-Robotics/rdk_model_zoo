@@ -1,5 +1,9 @@
 # RepViT 图像分类
 
+RepViT 将 ViT 模块的设计应用于移动端卷积分类网络。
+
+[English README](README.md)
+
 <a id="overview"></a>
 
 ## 概述
@@ -29,7 +33,7 @@ RepViT 从轻量级 ViT 的角度重新审视移动端 CNN 设计。该模型保
 本 stage 分辨率上过一个 RepViTBlock，再经 stride-2 3×3DW、1×1 和 FFN
 ——分辨率减半、通道 C_i 映射到 C_i+1。RepViTSEBlock（绿色）：相同结构
 在 token 混合器与 FFN 之间加入 SE 模块。底部：推理期并行的 3×3DW +
-1×1DW 分支融合为单个 3×3DW。；。*
+1×1DW 分支融合为单个 3×3DW。*
 
 ![深度卷积 block：从 MobileNetV3 block 到混合器分离的 RepViT block](./test_data/RepViT_DW.png)
 
@@ -57,7 +61,7 @@ repvit/
 ├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-└── requirements-host.txt  # 源码或数据文件
+└── requirements-host.txt  # Python 依赖
 ```
 
 <a id="support-matrix"></a>
@@ -141,6 +145,6 @@ rank 1 为 class 915（yurt）。
 <a id="license"></a>
 ## 许可
 
-源 Python 文件保留 Apache-2.0 出处。转换 YAML 原样保留其原始专有声明；
+Python 文件采用 Apache-2.0。转换 YAML 的许可见文件声明；
 仓库许可不覆盖这些声明或上游权重许可。再分发转换材料或权重前请核对
 适用声明。

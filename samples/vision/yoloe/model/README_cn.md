@@ -63,6 +63,18 @@ bash samples/vision/yoloe/model/download.sh --target s100p --variant 26n
 
 ONNX 检查、平台校准与可选编译见[转换准备说明](../conversion/README_cn.md)。生成文件名中的 `_float` 表示目标协议；`compiled_unverified` 表示编译产物还需按验证步骤完成元数据与数值检查。
 
+
+## X5 模型文件大小
+
+
+| Model | Download | Size (MB) |
+| --- | --- | ---: |
+| YOLOE-11s-Seg-PF | [yoloe_11s_seg_pf_bayese_640x640_nv12.bin](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/yoloe/yoloe_11s_seg_pf_bayese_640x640_nv12.bin) | 13.17 |
+| YOLOE-11m-Seg-PF | [yoloe_11m_seg_pf_bayese_640x640_nv12.bin](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/yoloe/yoloe_11m_seg_pf_bayese_640x640_nv12.bin) | 26.73 |
+| YOLOE-11l-Seg-PF | [yoloe_11l_seg_pf_bayese_640x640_nv12.bin](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/yoloe/yoloe_11l_seg_pf_bayese_640x640_nv12.bin) | 32.83 |
+
+
+
 <a id="formats-checksums"></a>
 ## 格式与校验和
 

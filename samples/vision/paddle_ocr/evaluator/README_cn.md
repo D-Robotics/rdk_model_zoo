@@ -90,9 +90,29 @@ Python 默认与保持长宽比两条管线（含下载脚本）在 X5 与 S100 
 检测/识别延迟与 FPS 用[转换说明](../conversion/README_cn.md)中针对
 det/rec 制品的 `hrt_model_exec perf` 命令测量。
 
-同板前后对照使用相同图像、制品字节、词典与阈值，分别在快捷入口与
-入口运行，先比较多边形框与解码字符串再谈渲染；各维度的
-数值容差即阶段 I/O 契约的容差（相同输入下的框坐标应完全相等）。
+### PP-OCRv3 参考吞吐（ICDAR2019-ArT）
+
+以下测量使用 ICDAR2019-ArT。参数量与 BPU 吞吐对应原发布 PP-OCRv3 模型；SDK、固件、线程数和时钟设置未注明。
+
+#### RDK X5 与 RDK X5 Module
+
+| Model(public) | size(pixels) | Parameter | BPU throughput |
+| ------------ | ------- | ----- | ---------- |
+| PP-OCRv3_det | 640x640 | 3.8 M | 158.12 FPS |
+| PP-OCRv3_rec | 48x320  | 9.6 M | 245.68 FPS |
+
+![PP-OCRv3 X5 example](../test_data/readme_img/ppocrv3_x5.png)
+
+#### RDK X3 与 RDK X3 Module 原部署测量
+
+此表对应原 X3 制品。当前示例的板卡与模型要求见[支持矩阵](../README_cn.md#support-matrix)。
+
+| Model(public) | size(pixels) | Parameter | BPU throughput |
+| ------------ | ------- | ----- | ---------- |
+| PP-OCRv3_det | 640x640 | 3.8 M | 41.96 FPS |
+| PP-OCRv3_rec | 48x320  | 9.6 M | 78.92 FPS |
+
+![PP-OCRv3 X3 example](../test_data/readme_img/ppocrv3_x3.png)
 
 <a id="boundaries"></a>
 ## 适用范围

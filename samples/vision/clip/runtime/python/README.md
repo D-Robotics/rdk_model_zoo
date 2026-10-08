@@ -22,6 +22,8 @@ python/
 └── tokenization.py  # Text tokenization and input preparation
 ```
 
+Start with [main.py](main.py): it constructs `CLIPMatcher` and calls `predict`. [matching.py](matching.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.
+
 <a id="environment"></a>
 ## Environment
 
@@ -137,7 +139,7 @@ print({"scores": composed_result.scores.tolist(),
 - `postprocess`: raw features → `MatchResult(scores, order)`. It computes cosine similarity and descending `argsort`; no softmax or feature L2 mutation is returned.
 - `predict(image, texts)` composes exactly the three stages. The model initializes a tokenizer, or accepts one through its `tokenizer` argument. `preprocess` uses it to encode prompts; the CLI handles rendering and file output.
 
-The CLI entry keeps the same split: [cli.py](cli.py) holds option declarations, the model-free `--list-models`/`--dry-run` modes, prompt parsing and presentation, while `main.py` parses, resolves, constructs `CLIPMatcher` and calls `predict`.
+For application development, [cli.py](cli.py) holds option declarations, the model-free `--list-models`/`--dry-run` modes, prompt parsing and presentation, while `main.py` parses, resolves, constructs `CLIPMatcher` and calls `predict`.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

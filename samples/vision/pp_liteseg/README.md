@@ -5,9 +5,9 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Overview
 
-PP-LiteSeg-STDC1 predicts the 19 Cityscapes road-scene classes for every pixel. This sample provides the X5 Python inference, conversion recipe and single-image validation entry. Algorithm references: [paper](https://arxiv.org/abs/2204.02681), [PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg).
+PP-LiteSeg is a lightweight semantic segmentation network. The STDC1 variant in this sample labels road scenes with the 19 Cityscapes classes and runs on RDK X5.
 
-The model **runtime** consumes an already-decoded int32 class map: `postprocess` only validates the classes and removes batch/channel dimensions; there is no CPU argmax step. Compiled artifact metadata is checked at load on the board.
+References: [paper](https://arxiv.org/abs/2204.02681), [PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg).
 
 <a id="directory"></a>
 ## Directory structure
@@ -56,6 +56,8 @@ Install general Python dependencies with `python3 -m pip install numpy opencv-py
 ## Expected results
 
 Success returns 0 and writes `outputs/pp_liteseg/result.jpg` (3078×548, Original / Overlay / Segmentation), `labels.npy` (512×1024 int32 IDs 0..18) and `result.json` in the same directory. JSON/stdout report actual class names and runtime metadata. No class list or accuracy is promised for the supplied street image without real inference. Errors return 2. Mask coordinates refer to the stretched model input, not original image dimensions.
+
+The compiled model returns a decoded int32 class map. `postprocess` validates class IDs and removes batch/channel dimensions; CPU argmax is unnecessary. Model metadata is checked when loading.
 
 <a id="entry-points"></a>
 ## Entry points

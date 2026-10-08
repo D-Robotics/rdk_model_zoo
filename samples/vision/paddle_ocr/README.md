@@ -5,21 +5,9 @@ English | [简体中文](./README_cn.md)
 <a id="overview"></a>
 ## Overview
 
-This sample runs a complete two-stage OCR flow on RDK boards: a DB detector
-finds text regions in the input image, each detected region is cropped, and a
-CRNN+CTC recognizer decodes the crop into a string. It is the repository's
-reference implementation for legal multi-stage inference (see
-[stage I/O](./runtime/python/README.md#stage-io)): detection and recognition
-are separate lazily loaded runtime stages composed by an explicit pipeline,
-and the detect→crop→recognize order stays readable end to end.
+PaddleOCR detects and recognizes text in images. A DB detector locates text regions, then a CRNN recognizer decodes each crop with CTC. This sample provides the PP-OCRv3 English pair for X5 and the PP-OCRv6 pair for S100.
 
-Two model pairs are provided. A pair is detector + recognizer +
-dictionary as a unit; never mix components across pairs:
-
-| Board | Pair | Detector input | Recognizer output |
-| --- | --- | --- | --- |
-| RDK X5 | PP-OCRv3 English | one packed NV12 tensor (640×640) | F32 `[1,40,97,1]`: fixed 96-character alphabet plus blank |
-| RDK S100 | PP-OCRv6 | split NV12 `x_y` (640×640) + `x_uv` (320×320) | F32 `[1,40,18710]`: checked-in UTF-8 dictionary plus blank and trailing space |
+![PaddleOCR detection and recognition](test_data/readme_img/paddleocr.png)
 
 <a id="directory"></a>
 ## Directory structure
@@ -54,6 +42,13 @@ the recognized results onto the output image. S600
 shares source and SoC detection with S100; run the S600 commands on an S600
 board for S600 results. S100P has no matching pair in either release
 manifest, so the sample rejects it.
+
+Use each detector, recognizer and dictionary as a matched pair:
+
+| Board | Pair | Detector input | Recognizer output |
+| --- | --- | --- | --- |
+| RDK X5 | PP-OCRv3 English | one packed NV12 tensor (640×640) | F32 `[1,40,97,1]`: fixed 96-character alphabet plus blank |
+| RDK S100 | PP-OCRv6 | split NV12 `x_y` (640×640) + `x_uv` (320×320) | F32 `[1,40,18710]`: checked-in UTF-8 dictionary plus blank and trailing space |
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -141,6 +136,11 @@ directly (`0.5`); What
 the bundled fixtures print exactly is a property of the artifact pair — see
 [evaluation](./evaluator/README.md#reference-results) for the verified
 comparison record; dataset-level accuracy requires a labeled corpus and is not bundled.
+
+S100 reference results:
+
+![Python OCR example](test_data/readme_img/python_demo.jpg)
+![C++ OCR example](test_data/readme_img/cpp_demo.jpg)
 
 <a id="entry-points"></a>
 ## Entry points

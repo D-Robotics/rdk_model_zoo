@@ -1,11 +1,10 @@
 # ResNet 图像分类（ResNet18/50/152）
 
-在 RDK 板卡上运行 ImageNet-1k 分类：输入一张 BGR 图像，输出稳定的
-Top-K `(类别 ID, 分数, 标签)`。sample 覆盖 TorchVision ResNet18（X5 与
-S100/S600）及 ResNet50/152（S100/S600）
-（[ResNet18 上游](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html)、
-[ResNet50](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet50.html)、
-[ResNet152](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet152.html)）。[English README](README.md)
+ResNet 通过残差连接训练深层图像分类网络。
+
+来源：[ResNet18 上游](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html) · [ResNet50](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet50.html) · [ResNet152](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet152.html)
+
+[English README](README.md)
 
 <a id="overview"></a>
 ## 概述
@@ -20,7 +19,7 @@ ResNet 由 Kaiming He、Xiangyu Zhang、Shaoqing Ren 和 Jian Sun 提出。残�
 
 变体说明：
 
-- **resnet18** — 轻量残差变体；S 交付将其定位为快速分类验证模型。
+- **resnet18** — 轻量残差变体，适合图像分类。
 - **resnet50** — 瓶颈残差块（`1x1 → 3x3 → 1x1`）在受控计算量下构建更深的网络。
 - **resnet152** — 152 层设计以更多计算换取更强的特征表达能力。
 
@@ -30,11 +29,8 @@ ResNet 由 Kaiming He、Xiangyu Zhang、Shaoqing Ren 和 Jian Sun 提出。残�
 的残差基础块（左，两个 3×3 卷积）与 ResNet-50/101/152 的瓶颈构建块
 （右，1×1 → 3×3 → 1×1），即 ResNet 论文图 5。*
 
-本目录提供一条 Python 流程（全部 target）加一条 S 系列 C++ 流程。Python 从
-平台发布 Manifest 解析唯一制品引用，校验板卡身份，懒加载 `hbm_runtime`，
-执行 `preprocess → infer → postprocess` 任务并由 `predict` 串联（见
-[runtime/python/README_cn.md](runtime/python/README_cn.md)）。C++ 使用
-S 系列 `hbDNNInferV2` 实现（见 [runtime/cpp/README_cn.md](runtime/cpp/README_cn.md)）。
+Python 入口见 `runtime/python/main.py`，模型推理流程在 `classify.py`，参数和结果展示在 `cli.py`。
+[runtime/python/README_cn.md](runtime/python/README_cn.md) · [runtime/cpp/README_cn.md](runtime/cpp/README_cn.md)
 
 <a id="directory"></a>
 ## 目录结构
@@ -49,7 +45,7 @@ resnet/
 ├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-└── requirements-host.txt  # 源码或数据文件
+└── requirements-host.txt  # Python 依赖
 ```
 
 <a id="support-matrix"></a>
@@ -164,9 +160,7 @@ X5 发布（x5-v1.1.3）的 ResNet18 记录。源文档未注明延迟/FPS 的�
 ## 许可
 
 sample 代码遵循仓库顶层 LICENSE（Apache-2.0）。源模型为 TorchVision
-ResNet18/50/152，其模型/权重许可由 TorchVision 发行版约定（见上游链接）。已发布
-制品以平台发布 Manifest 为准；Manifest 未携带独立许可字段，本文不主张额外
-许可。
+ResNet18/50/152，其模型/权重许可由 TorchVision 发行版约定（见上游链接）。模型制品清单见 `docs/release/{x5,s}/models.yaml`。
 
 <a id="readable-example"></a>
 ## 可读范例与自定义模型

@@ -3,7 +3,7 @@
 <a id="source-model"></a>
 ## Source model
 
-Use the [MODNet repository](https://github.com/ZHKKKe/MODNet) to obtain a trained checkpoint and export ONNX. Prepare an ONNX model with the input/output contract below, then quantize and compile it with the target toolchain.
+Obtain a trained checkpoint and export ONNX using the official [MODNet project](https://github.com/ZHKKKe/MODNet). Paper: [Is a Green Screen Really Necessary for Real-Time Portrait Matting?](https://arxiv.org/abs/2011.11961). Prepare the checkpoint, exporter, PTQ configuration and calibration data, then compile with the X5 toolchain.
 
 <a id="directory"></a>
 ## Directory structure
@@ -22,7 +22,7 @@ The source describes RDK X5 OpenExplorer tools `hb_mapper`, `hb_perf`, and `hrt_
 <a id="export"></a>
 ## Export
 
-There is no `onnx_export` script or pinned checkpoint/export configuration. An external owner must provide an ONNX graph with float32 RGB NCHW input `(1,3,512,512)` and float32 matte output `(1,1,512,512)`. Thisigration did not execute or reconstruct that missing path.
+There is no `onnx_export` script or pinned checkpoint/export configuration. An external owner must provide an ONNX graph with float32 RGB NCHW input `(1,3,512,512)` and float32 matte output `(1,1,512,512)`.
 
 <a id="calibration"></a>
 ## Calibration
@@ -32,12 +32,33 @@ There is no PTQ YAML or calibration producer. `test_data/person.jpg` is an infer
 <a id="compile"></a>
 ## Compile
 
-No complete compile command can be made reproducible because the source YAML and ONNX are missing. Once the user supplies both in a toolchain environment, the source's conceptual steps are `hb_mapper checker` followed by `hb_mapper makertbin`; the exact options, calibration, output prefix, and checkpoint are unknown. The compiled output must still satisfy the model binding before use.
+Prepare `modnet.yaml` in the X5 OpenExplorer environment. Set its `onnx_model` field to the exported ONNX, then configure representative calibration data and the output prefix. This YAML is an external input; run the following commands once it is prepared:
+
+```bash
+hb_mapper checker --config modnet.yaml
+hb_mapper makertbin --config modnet.yaml
+```
 
 <a id="validation"></a>
 ## Post-conversion validation
 
-Use the target toolchain's `hb_perf` and `hrt_model_exec` only after an external model and configuration exist, then inspect input/output metadata against the runtime README. No export, PTQ, compile, or board test was run here.
+Inspect the compiled model performance with `hb_perf` in the OE environment:
+
+```bash
+hb_perf model_perf \
+    --model ./modnet_512x512_rgb.bin \
+    --input-shape input 1x3x512x512
+```
+
+Copy the model to X5 and measure a single-thread run on the board:
+
+```bash
+hrt_model_exec perf \
+    --model_file ./modnet_512x512_rgb.bin \
+    --thread_num 1
+```
+
+Input is float32 RGB NCHW `(1,3,512,512)`, normalized with `(pixel - 127.5) / 127.5` to [-1,1]. Output is float32 `(1,1,512,512)` alpha matte in [0,1]. Check runtime metadata and compare matte arrays with the evaluator.
 
 <a id="artifacts"></a>
 ## Artifacts

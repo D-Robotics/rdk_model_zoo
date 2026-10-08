@@ -5,9 +5,9 @@
 <a id="overview"></a>
 ## 概述
 
-DiffusionDrive 组合三相机 RGB 全景、LiDAR BEV 直方图、自车状态和显式扩散噪声进行轨迹规划。源描述为两步截断扩散解码器，输出八个未来自车位姿，并带有 Agent 状态和七类 BEV 辅助头。本 sample 消费已准备的 NAVSIM 特征，提供 Python 推理、可视化、五案例运行与浮点参考对照；不准备原始传感器数据、不计算完整 NAVSIM 分数、不执行车辆控制指令。
+DiffusionDrive 根据相机、LiDAR 和自车状态特征规划未来轨迹。截断扩散解码器预测八个未来位姿，并提供 Agent 状态和 BEV 语义辅助输出。本示例在 RDK S100P 和 S600 上运行已准备的 NAVSIM 特征。
 
-源算法参考：[官方 DiffusionDrive 项目](https://github.com/hustvl/DiffusionDrive)、[CVPR2025 论文](https://openaccess.thecvf.com/content/CVPR2025/html/Liao_DiffusionDrive_Truncated_Diffusion_Model_for_End-to-End_Autonomous_Driving_CVPR_2025_paper.html)、[NAVSIM](https://github.com/autonomousvision/navsim)。这些链接用于了解算法；可部署资产的身份由[模型说明](model/README_cn.md)中的发布 HBM 校验和定义。
+参考：[官方 DiffusionDrive 项目](https://github.com/hustvl/DiffusionDrive), [CVPR2025 论文](https://openaccess.thecvf.com/content/CVPR2025/html/Liao_DiffusionDrive_Truncated_Diffusion_Model_for_End-to-End_Autonomous_Driving_CVPR_2025_paper.html), [NAVSIM](https://github.com/autonomousvision/navsim).
 
 <a id="directory"></a>
 ## 目录结构
@@ -33,7 +33,7 @@ diffusiondrive/
 | S600 / nash-p | `s600/diffusiondrive_r34_256x1024_s600.hbm` | Python / hbm_runtime | 支持 |
 | S100 / X5 | 无 | 显式拒绝 | 无回退 |
 
-本 sample 没有原生 C++ 源码。保留两个发布 HBM 摘要，下载/加载均校验。`auto` 要求可识别本机身份或显式资产身份，未知主机会被拒绝而不是静默选择 S600。随附主机检查以合成数据验证浮点参考对照与运行元数据契约；真实 HBM 推理需按下文准备 S100P/S600 运行环境。
+运行语言为 Python，使用已发布的 S100P 或 S600 HBM 及匹配的板端 SDK。下载与加载均校验模型摘要；在主机准备模型时显式选择目标板卡。
 
 <a id="prerequisites"></a>
 ## 前置条件
@@ -89,12 +89,14 @@ S600 参考可视化（源记录）：
 | 参考 case_073 | 参考 case_099 |
 | ![大道](test_data/case_073/result.png) | ![宽阔路口](test_data/case_099/result.png) |
 
-六组输入/参考和六张结果图均逐字节保留。[评估说明](evaluator/README_cn.md#reference-results)完整保留原 S100P/S600 精度/性能表，含单线程延迟、双线程总吞吐和 S100P 五案例均值；[测试数据说明](test_data/README_cn.md)保留 S600 五案例表。源记录条件：数值对照使用 case_000，profiling 使用 case_017；源记录所有分段 CPU 0.0 ms、全部 BPU 执行。
+六组输入/参考附有 S600 可视化图片。[评估说明](evaluator/README_cn.md#reference-results)列出 S100P/S600 精度与性能，含单线程延迟、双线程总吞吐和 S100P 五案例均值；[测试数据说明](test_data/README_cn.md)给出 S600 五案例结果。源记录条件：数值对照使用 case_000，profiling 使用 case_017；源记录所有分段 CPU 0.0 ms、全部 BPU 执行。
+
+输入包括三相机 RGB 全景、LiDAR BEV 直方图、自车状态和显式扩散噪声。推理前准备这些 NAVSIM 特征。输出可用于轨迹可视化与浮点参考比较；完整 NAVSIM 得分需使用其数据集评估器。
 
 <a id="entry-points"></a>
 ## 人与 Agent 的入口
 
-使用 `DiffusionDrivePlanner.predict`，或由它组合的 `preprocess` → `infer` → `postprocess` 阶段。任务类只处理规划张量语义；SDK 加载/调度、NPZ 读写、下载、绘图和指标均在其外。共享 `NamedArrayRunner` 保留全部具名物理张量并检查板卡/资产身份。[完整 API 示例](runtime/python/README_cn.md#integration-example)包括变量和输入加载过程。
+使用 `DiffusionDrivePlanner.predict`，或由它组合的 `preprocess` → `infer` → `postprocess` 阶段。模型类负责规划张量处理与 Runtime 初始化；CLI 负责 NPZ 读写、下载命令和绘图，指标由评估器计算。共享 `NamedArrayRunner` 保留全部具名物理张量并检查板卡/资产身份。[完整 API 示例](runtime/python/README_cn.md#integration-example)包括变量和输入加载过程。
 
 量化处理核对逐轴 scale 与标量零点，拒绝畸形或负 scale，并在整数转换前完成裁剪。评估器要求形状一致；任一向量范数为零时，余弦相似度为未定义。
 

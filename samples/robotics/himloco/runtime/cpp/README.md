@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## C++ inference
 
-Use this directory for c++ inference.
+Run the fused HIMLoco Go2 policy offline on X5. Six observation frames form one 270-value input; inference returns twelve unscaled policy actions.
 
 <a id="directory"></a>
 ## Directory structure

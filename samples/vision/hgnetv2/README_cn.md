@@ -1,5 +1,9 @@
 # HGNetV2 图像分类
 
+HGNetV2 是用于图像分类的卷积骨干网络。
+
+[English README](README.md)
+
 <a id="overview"></a>
 
 ## 概述
@@ -37,7 +41,7 @@ hgnetv2/
 ├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-└── requirements-host.txt  # 源码或数据文件
+└── requirements-host.txt  # Python 依赖
 ```
 
 <a id="support-matrix"></a>

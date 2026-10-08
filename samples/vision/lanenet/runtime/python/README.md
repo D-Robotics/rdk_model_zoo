@@ -22,6 +22,8 @@ python/
 └── visualization.py  # Result rendering and image output
 ```
 
+Start with [main.py](main.py): it constructs `LaneNetSegmenter` and calls `predict`. [lanenet.py](lanenet.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.
+
 <a id="environment"></a>
 ## Environment
 

@@ -9,7 +9,7 @@ RDK S100P / S600 板端 Gemma4-E2B VLM 推理 C++ runtime，加载与对应 SoC 
 <a id="overview"></a>
 ## C++ 推理
 
-本目录提供C++ 推理所需的程序与操作说明。
+在 S100P/S600 上通过 Gemma4-E2B 进行多轮文本或图文对话。程序先加载 Vision 再加载 Text，使两个模型常驻并流式输出生成文本。
 
 <a id="directory"></a>
 ## 目录结构
@@ -581,19 +581,26 @@ Text 流水线拆分为三个显式阶段加一个会话策略模块；`TextEngi
 引擎自身不做任何隐式打印。`SetDebugSink` 为 Text 引擎诊断安装显式接收器；
 `[VLM-FIX]` 诊断跟随 `GEMMA4_DEBUG=1`。
 
-下面的示例由主机检查实际编译并运行（`tests/native/readme_text_stages_example.cpp`），
-对宿主替身会产生与文档完全一致的输出。板端只需把夹具模型句柄换成对已准备 HBM 的
-`hbDNNInitializeFromFiles`，其余代码不变。
+示例通过两个命令行参数接收 Text HBM 与 embedding 文件路径。先准备
+`GEMMA4_HOME` 下的 `model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm` 和
+`model/tok_embeddings.bin`。按上文 CMake 配置包含 `inc` 目录，将 Text engine
+源码与匹配的 DNN/UCP SDK 链接。下方 token ID 用于展示张量 API；对话文本通过
+`TokenizerBridge::EncodeMessagesJson` 获取 ID。
 
 ```cpp
-#include "text_fixture.hpp"   // 离线检查用的 SDK 宿主替身
+#include "gemma4_text_engine.hpp"
+#include "gemma4_text_inputs.hpp"
+#include <stdexcept>
 #include <iostream>
 #include <vector>
 
-int main() {
+int main(int argc, char **argv) {
+  if (argc != 3) return 2;
   // 阶段准备：子图 owner 加一个借用的 KV cache。
-  hbDNNPackedHandle_t packed = text_fixture::Packed();
-  gemma4::TokenEmbeddings embeddings("tok_embeddings.bin");
+  hbDNNPackedHandle_t packed = nullptr;
+  const char *model_file = argv[1];
+  if (hbDNNInitializeFromFiles(&packed, &model_file, 1) != 0) return 2;
+  gemma4::TokenEmbeddings embeddings(argv[2]);
   gemma4::ModelIo prefill = gemma4::InitTextSubgraph(packed, "prefill", gemma4::kChunkSize);
   gemma4::ModelIo decode  = gemma4::InitTextSubgraph(packed, "decode", 1);
   gemma4::KvCache cache;
@@ -615,9 +622,10 @@ int main() {
   std::cout << "stage first token: " << first << std::endl;
   prefill.Clear();
   decode.Clear();
+  hbDNNRelease(packed);
 
   // 高层会话：同一组阶段的多轮编排。
-  gemma4::TextEngine engine("text.hbm", "tok_embeddings.bin");
+  gemma4::TextEngine engine(argv[1], argv[2]);
   engine.SetDebugSink([](const std::string &m) { std::cerr << m << "\n"; });
   const auto out = engine.Generate(prompt, 2);
   const auto next = engine.ContinueGenerate(out, 1);
@@ -627,13 +635,7 @@ int main() {
 }
 ```
 
-主机检查的精确输出（板端 token id 随真实模型不同）：
-
-```
-stage first token: 104
-session out: 11 22 33 44 55 104 100
-session processed: 7
-```
+程序打印首个生成 token ID 与会话 token 数量。生成结果由模型和输入 token 决定。
 
 示例的生命周期规则：子图句柄借用自 packed model，因此必须在释放 packed model 之前
 `Clear` `prefill`/`decode`；KV 输入槽借用 `KvCache` 内存，其有效性持续到 cache 重新分配或销毁；

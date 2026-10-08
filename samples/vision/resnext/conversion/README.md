@@ -3,7 +3,7 @@
 <a id="source-model"></a>
 ## Source model
 
-ResNeXt source references timm resnext50_32x4d and ONNX simplification, without executable export, pinned package/weight versions or checksums.
+ResNeXt source references timm resnext50_32x4d and ONNX simplification, with the export example below. Select and record package versions, weight revisions, and checksums.
 
 <a id="directory"></a>
 ## Directory structure
@@ -32,7 +32,83 @@ Toolchain resources:
 <a id="export"></a>
 ## ONNX export
 
-No executable export script is delivered. Prepare `ResNeXt50_32x4d.onnx` next to its YAML, RGB NCHW 1×3×224×224 nominal input; input_shape/name are empty and read from the graph.
+Use the ONNX export example below. Prepare `ResNeXt50_32x4d.onnx` next to its YAML, RGB NCHW 1×3×224×224 nominal input; input_shape/name are empty and read from the graph.
+
+### ONNX export example
+
+Run this example in the x86 export environment with PyTorch installed. The simplification step also requires `onnxsim`. Match the exported filename to `onnx_model` in the selected YAML.
+
+The onnx model is transformed using models from the timm library (PyTorch Image Models). Install the required packages using the following command:
+
+```shell
+pip install timm onnx
+```
+
+Model transformation takes resnext50_32x4d as an example:
+
+```Python
+import torch
+import torch.onnx
+import onnx
+from onnxsim import simplify
+from timm.models import create_model
+
+from timm.models.resnet import resnext50_32x4d
+
+def count_parameters(onnx_model_path):
+    # Load the ONNX model
+    model = onnx.load(onnx_model_path)
+    # Get the initializers (weights in the model)
+    initializer = model.graph.initializer
+
+    # Calculate the total number of parameters
+    total_params = 0
+    for tensor in initializer:
+        # Get the dimensions of each weight
+        dims = tensor.dims
+        # Calculate the number of parameters in this weight (product of all dimensions)
+        params = 1
+        for dim in dims:
+            params *= dim
+        total_params += params
+
+    return total_params
+
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = create_model('resnext50_32x4d', pretrained=True)
+    model.eval()
+
+    # print the model structure
+
+    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
+    onnx_file_path = "resnext50_32x4d.onnx"
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_file_path,
+        opset_version=11,
+        verbose=True,
+        input_names=["data"],  # Input name
+        output_names=["output"],  # Output name
+    )
+
+    # Simplify the ONNX model
+    model_simp, check = simplify(onnx_file_path)
+
+    if check:
+        print("Simplified model is valid.")
+        simplified_onnx_file_path = "resnext50_32x4d.onnx"
+        onnx.save(model_simp, simplified_onnx_file_path)
+        print(f"Simplified model saved to {simplified_onnx_file_path}")
+    else:
+        print("Simplified model is invalid!")
+
+    onnx_model_path = simplified_onnx_file_path  # Replace with your ONNX model path
+    total_params = count_parameters(onnx_model_path)
+    print(f"Total number of parameters in the model: {total_params}")
+```
 
 <a id="calibration"></a>
 ## Calibration

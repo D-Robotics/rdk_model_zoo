@@ -22,6 +22,8 @@ python/
 
 `main.py` 构造模型并调用 `predict`；`cli.py` 负责参数、模型选择及图片/报告保存；任务文件包含模型阶段，通用图片读取调用 `utils.py_utils.image.read_bgr_image`。
 
+从 [main.py](main.py) 开始：入口构造 `UNetSegmenter` 并调用 `predict`。[unet.py](unet.py) 实现模型初始化及推理阶段；[cli.py](cli.py) 负责参数、模型选择和结果交付。模型初始化会加载 Runtime，应用可复用同一个实例执行多次预测。
+
 <a id="environment"></a>
 ## 环境
 

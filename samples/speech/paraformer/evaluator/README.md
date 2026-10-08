@@ -172,6 +172,58 @@ about 1.85 s.
 For the two bundled utterances, the evaluator records 4 edits across 28
 reference characters (CER 14.2857%).
 
+
+## Additional reference measurements
+
+Each table retains its published model, board and measurement conditions. Measurements from different configurations are separate reference sets.
+
+### S100 Python and C++ pipeline latency
+
+| 阶段 | Python | **C++ UCP** | 加速 |
+|---|---|---|---|
+| Encoder (BPU) | 33.63 | **33.15** | ≈ |
+| Predictor (BPU) | 1.44 | **1.00** | ≈ |
+| CIF (CPU) | 3.41 | **0.38** | **9x** |
+| Decoder (BPU) | 7.12 | **6.29** | ≈ |
+| **端到端** | 45.61 | **40.81 ms/utt** | **1.12x** |
+| **CER** | 3.13% | **3.13%** | 一致 |
+
+**wall-clock**：300 条 13.4 秒（44.7 ms/utt）；一次模型加载 ~1.85 s
+
+C++ 版本主要优势：CPU 侧 CIF 快 9x（numpy 开销比手写循环大），BPU 部分相同（都通过同一底层库）。
+
+
+### Per-model BPU latency and full-pipeline comparison
+
+Source: [S100 INT16 conversion and performance report](https://github.com/D-Robotics/rdk_model_zoo/blob/d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d/platforms/s/samples/speech/paraformer/conversion/README_cn.md). The model sizes, compiler estimates and board measurements below describe the same recipe; their timing scopes are stated separately.
+
+Board conditions: S100, Ubuntu 22.04 aarch64 and one BPU core. `hrt_model_exec perf` uses one thread, 200 frames for encoder/decoder and 500 frames for predictor. The table compares single-frame measurements with compiler estimates; concurrent queued tasks do not reduce single-frame latency.
+
+```bash
+# cwd: repository root on S100; matching model package prepared
+hrt_model_exec perf --model_file samples/speech/paraformer/model/s100/paraformer_large_encoder_400x560_s100.hbm --thread_num 1 --frame_count 200
+hrt_model_exec perf --model_file samples/speech/paraformer/model/s100/paraformer_large_predictor_400x512_s100.hbm --thread_num 1 --frame_count 500
+hrt_model_exec perf --model_file samples/speech/paraformer/model/s100/paraformer_large_decoder_400x512_s100.hbm --thread_num 1 --frame_count 200
+```
+
+| Module | Board perf latency | Compiler static estimate | FPS |
+|---|---|---|---|
+| Encoder INT16 | **33.11 ms** | 32.52 ms | 30.18 |
+| Predictor INT16 | **0.67 ms** | 0.35 ms | 1462 |
+| Decoder INT16 | **6.12 ms** | 5.77 ms | 162.8 |
+
+The summary uses 300 AISHELL dev utterances from 40 speakers. Resident Python and C++ UCP reuse all three loaded models. Pipeline latency includes encoder, predictor, CPU CIF and decoder, excluding WAV preprocessing. Python wall-clock is 14.0 s (46.7 ms/utterance, including NumPy I/O); C++ wall-clock is 13.4 s (44.7 ms/utterance), with one model load of about 1.85 s. `~41 ms` is the approximate sum of the three BPU perf latencies, excluding CPU CIF. `~289 MB` is the approximate combined HBM file size, not peak process memory.
+
+| Module | Quantization | HBM size | Board perf per frame | Resident Python | Resident C++ UCP |
+|---|---|---|---|---|---|
+| Encoder | INT16 all | 211.5 MB | 33.11 ms | 33.63 ms | 33.15 ms |
+| Predictor | INT16 all | ~4 MB | 0.67 ms | 1.44 ms | 1.00 ms |
+| CIF | CPU numpy | — | — | 3.41 ms | 0.38 ms |
+| Decoder | INT16 all | 73.5 MB | 6.12 ms | 7.12 ms | 6.29 ms |
+| **Pipeline total** | — | **~289 MB** | ~41 ms | **45.61 ms** | **40.81 ms** |
+| **CER** | — | — | — | **3.13%** | **3.13%** |
+
+
 <a id="boundaries"></a>
 ## Evaluation workflow
 

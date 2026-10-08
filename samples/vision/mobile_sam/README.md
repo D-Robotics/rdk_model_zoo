@@ -5,12 +5,9 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Overview
 
-MobileSAM performs box-prompted image segmentation with a TinyViT image encoder and a mask decoder. The encoder produces a `1x256x32x32` embedding from a normalized `512x512` RGB image; the decoder consumes that embedding and one `[x1,y1,x2,y2]` box, returns three mask candidates and IoU scores, and the runtime selects and upsamples the best candidate.
+MobileSAM replaces SAM’s image encoder with TinyViT to reduce the cost of prompt-based segmentation. This sample uses one box prompt to select a mask from the decoder’s candidates.
 
-- Paper: <https://arxiv.org/abs/2306.14289>
-- Official repository: <https://github.com/ChaoningZhang/MobileSAM>
-
-The input is stretched directly to 512×512. The box and result mask use that resized coordinate system; no inverse transform to the original image is performed. RGB values use mean `[123.675,116.28,103.53]` and std `[58.395,57.12,57.375]`; the selected mask uses logits `>0`.
+References: <https://arxiv.org/abs/2306.14289>, <https://github.com/ChaoningZhang/MobileSAM>.
 
 <a id="directory"></a>
 ## Directory structure
@@ -72,6 +69,8 @@ python3 samples/vision/mobile_sam/runtime/python/main.py --target s100 --box 185
 ## Expected Results
 
 The default image is `test_data/dogs.jpg`. A successful run writes a `512x512` overlay and binary mask. IoU and mask index are model outputs; `mobile_sam_binary_mask.png` is the preserved source reference.
+
+The input is stretched to 512×512; the `[x1,y1,x2,y2]` box and output mask use that coordinate system. RGB normalization uses mean `[123.675,116.28,103.53]` and std `[58.395,57.12,57.375]`. The encoder produces `(1,256,32,32)` embeddings. The decoder returns three mask candidates with IoU scores, and the selected mask uses logits `>0`.
 
 <a id="entry-points"></a>
 ## Entry Points

@@ -1,19 +1,19 @@
 # EfficientViT 图像分类
 
-EfficientViT（MSRA 级联组注意力系列）在 RDK X5 上的 ImageNet-1k 分类：
-输入一张 BGR 图像，输出稳定的 Top-K `(类别 ID, 分数, 标签)`。X5 发布
-交付 m5 变体（论文 [EfficientViT: Memory Efficient Vision Transformer
+EfficientViT 是采用高效注意力模块的图像分类网络。
+
+来源：[EfficientViT: Memory Efficient Vision Transformer
 with Cascaded Group
-Attention](https://arxiv.org/abs/2305.07027)，参考实现
-[microsoft/Cream/EfficientViT](https://github.com/microsoft/Cream/tree/main/EfficientViT)）。
-[English](README.md)
+Attention](https://arxiv.org/abs/2305.07027) · [microsoft/Cream/EfficientViT](https://github.com/microsoft/Cream/tree/main/EfficientViT)
+
+[English README](README.md)
 
 <a id="overview"></a>
 
 ## 概述
 
-本样例提供面向 X5 的 Python 运行时。`EfficientViTClassifier` 类执行由 `predict` 串联的 `preprocess → infer → postprocess` 流程：从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，返回带类型的 Top-K 结果（见
-[runtime/python/README_cn.md](runtime/python/README_cn.md)）。
+Python 入口见 `runtime/python/main.py`，模型推理流程在 `classify.py`，参数和结果展示在 `cli.py`。
+[runtime/python/README_cn.md](runtime/python/README_cn.md)
 
 ### 算法背景
 
@@ -61,7 +61,7 @@ efficientvit/
 ├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-└── requirements-host.txt  # 源码或数据文件
+└── requirements-host.txt  # Python 依赖
 ```
 
 <a id="support-matrix"></a>

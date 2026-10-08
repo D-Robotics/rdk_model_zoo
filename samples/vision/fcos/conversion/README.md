@@ -80,7 +80,7 @@ On a matching X5, inspect a supplied artifact with `hrt_model_exec model_info --
 | `fcos_efficientnetb3_detect_896x896_bayese_nv12.bin` | x5 | `model/` |
 
 <a id="known-gaps"></a>
-## Known Gaps
+## Additional preparation
 
 - No checkpoint, ONNX export, calibration data, quantization YAML, toolchain version, or reproducible source compile pipeline is present.
 - Manifest publisher hashes are unknown. The three source screenshots cannot establish tensor values or numerical equivalence.

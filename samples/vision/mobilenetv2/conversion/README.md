@@ -186,7 +186,7 @@ BPU conv original OPs per run: 601,548,544
 ```
 
 <a id="artifacts"></a>
-## Kept material
+## Conversion files
 
 - `mobilenetv2_config.yaml`
 

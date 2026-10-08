@@ -109,7 +109,7 @@ Golden verification prints per-input OK/FAIL, errors and final `ALL PASSED`/`SOM
 Prepare all five golden tensors before running the golden verifier. Interactive examples stream answers to the terminal.
 
 <a id="reference-results"></a>
-## Historical references
+## Reference measurements
 
 The source README and full tutorial retain the S100P demonstrations, approximately 6.9 tok/s text screenshot and S600 source regression notes.
 They are records from the S source release; the documented golden expected output likewise comes from that record.

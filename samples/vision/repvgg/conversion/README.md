@@ -23,7 +23,7 @@ conversion/
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
-6 unchanged YAMLs X5 march `bayes-e`;  OE version is not pinned by the source; record the actual rebuild environment.
+6 YAML configurations target X5 march `bayes-e`. Record the OE version used for compilation.
 
 | Config | ONNX input path | Working directory | Compiled basename |
 | --- | --- | --- | --- |
@@ -46,6 +46,85 @@ Use the official RepVGG flow: create the selected model with `create_RepVGG_B1g2
 
 Export the matching graph to the table path with nominal RGB/NCHW 1×3×224×224 input and ImageNet-1k output. YAML `input_shape` and `input_name` are empty, so inspect the graph for its actual dimensions and names.
 
+### ONNX export example
+
+Run this example in the x86 export environment with PyTorch installed. The simplification step also requires `onnxsim`. Match the exported filename to `onnx_model` in the selected YAML.
+
+Export uses the official RepVGG implementation. Install the example dependencies:
+
+```shell
+pip install timm onnx
+```
+
+From the Model Zoo repository root, clone the RepVGG source:
+
+```shell
+git clone https://github.com/DingXiaoH/RepVGG.git
+```
+
+Obtain `RepVGG-B1g2-train.pth` from the pretrained-model links in the [official RepVGG repository](https://github.com/DingXiaoH/RepVGG) and place it in the cloned `RepVGG/` directory, or set `model_path` below to its absolute path. Save this code as `RepVGG/export_onnx.py`.
+
+This example exports RepVGG-B1g2. For another variant, select its matching constructor and checkpoint:
+
+```Python
+from repvgg import *
+import torch
+import onnx
+import torch.onnx
+
+def count_parameters(onnx_model_path):
+    # Load the ONNX model
+    model = onnx.load(onnx_model_path)
+    # Get the initializers (weights in the model)
+    initializer = model.graph.initializer
+
+    # Calculate the total number of parameters
+    total_params = 0
+    for tensor in initializer:
+        # Get the dimensions of each weight
+        dims = tensor.dims
+        # Calculate the number of parameters in this weight (product of all dimensions)
+        params = 1
+        for dim in dims:
+            params *= dim
+        total_params += params
+
+    return total_params
+
+if __name__ == "__main__":
+    model_path = "RepVGG-B1g2-train.pth"
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = create_RepVGG_B1g2(deploy=False)
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.eval()
+    model = repvgg_model_convert(model)
+
+    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
+    onnx_file_path = "RepVGG-B1g2.onnx"
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_file_path,
+        opset_version=11,
+        verbose=True,
+        input_names=["data"],  # input name
+        output_names=["output"],  # output name
+    )
+
+    param_count = count_parameters(onnx_file_path)
+    print(f'Total number of parameters: {param_count}')
+```
+
+Run from the Model Zoo repository root, then copy the exported ONNX into the conversion directory:
+
+```bash
+cd RepVGG
+python3 export_onnx.py
+cp RepVGG-B1g2.onnx ../samples/vision/repvgg/conversion/
+cd ..
+```
+
 <a id="calibration"></a>
 ## Calibration
 
@@ -53,6 +132,8 @@ All YAMLs require `./calibration_data_rgb_f32` (float32, calibration default), R
 
 <a id="compile"></a>
 ## Compile
+
+The A0 commands below require `RepVGG-A0.onnx`. For the B1g2 example above, use `./RepVGG-B1g2.onnx` with checker and `RepVGG_B1g2_config.yaml` with makertbin.
 
 In the OE environment, after the ONNX graph and calibration data
 prerequisites are supplied:

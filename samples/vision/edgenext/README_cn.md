@@ -1,11 +1,12 @@
 # EdgeNeXt 图像分类
 
-EdgeNeXt 在 RDK X5 上的 ImageNet-1k 分类：输入一张 BGR 图像，输出稳定
-的 Top-K `(类别 ID, 分数, 标签)`。X5 发布交付 base、small、x-small、
-xx-small 四个变体（论文 [EdgeNeXt: Efficiently Amalgamated
+EdgeNeXt 将卷积与注意力结合，用于轻量图像分类。
+
+来源：[EdgeNeXt: Efficiently Amalgamated
 CNN-Transformer Architecture for Mobile Vision
-Applications](https://arxiv.org/abs/2206.10589)，参考实现
-[mmaaz60/EdgeNeXt](https://github.com/mmaaz60/EdgeNeXt)）。[English](README.md)
+Applications](https://arxiv.org/abs/2206.10589) · [mmaaz60/EdgeNeXt](https://github.com/mmaaz60/EdgeNeXt)
+
+[English README](README.md)
 
 <a id="overview"></a>
 
@@ -31,8 +32,8 @@ EdgeNeXt 是面向移动视觉的高效 CNN-Transformer 混合架构：四级金
 INT8 量化的 base/small/x_small/xx_small 变体（224×224 NV12，见
 [支持范围](#support-matrix)）。*
 
-本样例提供面向 X5 的 Python 运行时。`EdgeNeXtClassifier` 类执行由 `predict` 串联的 `preprocess → infer → postprocess` 流程：从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，返回带类型的 Top-K 结果（见
-[runtime/python/README_cn.md](runtime/python/README_cn.md)）。
+Python 入口见 `runtime/python/main.py`，模型推理流程在 `classify.py`，参数和结果展示在 `cli.py`。
+[runtime/python/README_cn.md](runtime/python/README_cn.md)
 
 <a id="directory"></a>
 ## 目录结构
@@ -47,7 +48,7 @@ edgenext/
 ├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-└── requirements-host.txt  # 源码或数据文件
+└── requirements-host.txt  # Python 依赖
 ```
 
 <a id="support-matrix"></a>

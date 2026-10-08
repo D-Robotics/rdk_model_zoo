@@ -149,7 +149,7 @@ The exporter performs ONNXRuntime float parity and reports cosine/max-absolute e
 | `dinov2_vits14_224_int16_nashp.hbm` | s600 / Nash-P | `samples/vision/dinov2/model/nash-p/` after download, or mapper `--output-dir` |
 
 <a id="known-gaps"></a>
-## Known Gaps
+## Additional preparation
 
 - Executing the pipeline requires the OE container, network access for the pinned checkpoint, and a board for final validation.
 - The source supplies a complete conversion pipeline with pinned prerequisites; reproducibility, resulting artifacts, and parity numbers still require execution in the specified OE environment.

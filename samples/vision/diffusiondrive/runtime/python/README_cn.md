@@ -25,6 +25,8 @@ python/
 └── visualization.py  # 结果渲染与图片保存
 ```
 
+从 [main.py](main.py) 开始：入口构造 `DiffusionDrivePlanner` 并调用 `predict`。[diffusiondrive.py](diffusiondrive.py) 实现模型初始化及推理阶段；[cli.py](cli.py) 负责参数、模型选择和结果交付。模型初始化会加载 Runtime，应用可复用同一个实例执行多次预测。
+
 <a id="environment"></a>
 ## 环境
 

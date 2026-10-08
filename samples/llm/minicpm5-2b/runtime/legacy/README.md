@@ -1,5 +1,3 @@
-> Board results, accuracy figures and SDK release notes below are records from the source S release; board runs follow the commands in this guide.
-
 [English](README.md) | [简体中文](README_cn.md)
 
 # S100 / S100P: OELLM 1.0.0 C++ runtime

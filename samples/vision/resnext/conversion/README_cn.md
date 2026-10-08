@@ -3,7 +3,7 @@
 <a id="source-model"></a>
 ## 源模型
 
-ResNeXt 源引用 timm resnext50_32x4d 与 ONNX 简化，但没有可执行导出、固定包/权重版本或摘要。
+ResNeXt 源引用 timm resnext50_32x4d 与 ONNX 简化，导出示例见下文；构建时记录包版本、权重版本与摘要。
 
 <a id="directory"></a>
 ## 目录结构
@@ -32,7 +32,83 @@ conversion/
 <a id="export"></a>
 ## ONNX 导出
 
-未交付可执行导出脚本。需在 YAML 旁准备 `ResNeXt50_32x4d.onnx`，名义输入 RGB NCHW 1×3×224×224；input_shape/name 为空，从图读取。
+使用下面的导出示例，在 YAML 旁准备 `ResNeXt50_32x4d.onnx`，名义输入 RGB NCHW 1×3×224×224；input_shape/name 为空，从图读取。
+
+### ONNX 导出示例
+
+在 x86 导出环境中运行以下示例。需要 PyTorch；使用简化步骤时还需安装 `onnxsim`。导出文件名与所选 YAML 的 `onnx_model` 必须对应。
+
+onnx 模型使用的是 timm 库 (PyTorch Image Models) 中的模型进行转换的，使用以下命令安装所需要的包：
+
+```shell
+pip install timm onnx
+```
+
+模型转换以 resnext50_32x4d 为例：
+
+```Python
+import torch
+import torch.onnx
+import onnx
+from onnxsim import simplify
+from timm.models import create_model
+
+from timm.models.resnet import resnext50_32x4d
+
+def count_parameters(onnx_model_path):
+    # Load the ONNX model
+    model = onnx.load(onnx_model_path)
+    # Get the initializers (weights in the model)
+    initializer = model.graph.initializer
+
+    # Calculate the total number of parameters
+    total_params = 0
+    for tensor in initializer:
+        # Get the dimensions of each weight
+        dims = tensor.dims
+        # Calculate the number of parameters in this weight (product of all dimensions)
+        params = 1
+        for dim in dims:
+            params *= dim
+        total_params += params
+
+    return total_params
+
+if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = create_model('resnext50_32x4d', pretrained=True)
+    model.eval()
+
+    # print the model structure
+
+    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
+    onnx_file_path = "resnext50_32x4d.onnx"
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_file_path,
+        opset_version=11,
+        verbose=True,
+        input_names=["data"],  # Input name
+        output_names=["output"],  # Output name
+    )
+
+    # Simplify the ONNX model
+    model_simp, check = simplify(onnx_file_path)
+
+    if check:
+        print("Simplified model is valid.")
+        simplified_onnx_file_path = "resnext50_32x4d.onnx"
+        onnx.save(model_simp, simplified_onnx_file_path)
+        print(f"Simplified model saved to {simplified_onnx_file_path}")
+    else:
+        print("Simplified model is invalid!")
+
+    onnx_model_path = simplified_onnx_file_path  # Replace with your ONNX model path
+    total_params = count_parameters(onnx_model_path)
+    print(f"Total number of parameters in the model: {total_params}")
+```
 
 <a id="calibration"></a>
 ## 校准

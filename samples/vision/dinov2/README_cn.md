@@ -5,9 +5,9 @@
 <a id="overview"></a>
 ## 算法与来源
 
-DINOv2 是一个生成全局图像特征和稠密 patch 特征的自监督 ViT 编码器。本 sample 将 ViT-S/14 以 int16 PTQ HBM 制品部署到 RDK S100、S100P、S600。上游实现和 Apache-2.0 模型制品来自 [facebookresearch/dinov2](https://github.com/facebookresearch/dinov2)，转换固定使用 revision `7764ea0f912e53c92e82eb78a2a1631e92725fc8`。
+DINOv2 是用于图像表示的自监督视觉 Transformer。ViT-S/14 主干生成全局嵌入与稠密 patch 特征，可供下游视觉任务使用。本示例在 RDK S100、S100P 和 S600 上部署 int16 PTQ 模型。
 
-模型图包含 patch-14 stem、12 个 pre-LN transformer block、显式的 BPU 友好 attention 和最终归一化特征接口。sample 提供 `cls_feat` `(1,384)` 全局特征和 `patch_feat` `(1,256,384)` patch 特征。运行时依据绑定 metadata 将整数输出反量化为 owned float32 数组，不执行 softmax 或 L2 归一化。
+参考：[facebookresearch/dinov2](https://github.com/facebookresearch/dinov2).
 
 <a id="directory"></a>
 ## 目录结构
@@ -65,6 +65,8 @@ python3 samples/vision/dinov2/runtime/python/main.py --target s100 --output cls_
 ## 预期结果
 
 CLI 打印包含 `output`、`shape`、`dtype`、`mean`、`std`、`min`、`max`、`l2_norm` 的 JSON 摘要。默认第二张图存在时，还打印 `second_image` 和 `cosine_similarity`；缺失时报告 `skipped_missing`。`cls_feat` shape 为 `(1,384)`，`patch_feat` 为 `(1,256,384)`，均由 metadata 绑定的反量化后以 float32 返回。目标板实际运行前不声明具体数值。
+
+输出为 `cls_feat` `(1,384)` 和 `patch_feat` `(1,256,384)`，按元数据反量化后返回独立 float32 数组。运行时不执行 softmax 或 L2 归一化。主干包含 patch-14 stem 与 12 个 pre-LN Transformer block。
 
 <a id="entry-points"></a>
 ## 入口索引

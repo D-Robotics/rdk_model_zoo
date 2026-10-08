@@ -10,7 +10,7 @@ arrays now also have NumPy headers for direct offline evaluation.
 <a id="overview"></a>
 ## C++ inference
 
-Use this directory for c++ inference.
+Estimate relative depth on X5 from a BGR image. `YOLO26Depth` owns the model stages; the launcher selects the artifact and starts the native program.
 
 <a id="directory"></a>
 ## Directory structure

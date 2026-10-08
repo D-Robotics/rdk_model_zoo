@@ -94,6 +94,26 @@ unified/metadata.json unified/result.json unified/inputs/*.npy unified/raw/*.npy
 
 板端日志加载这些制品时会打印 HBRT 库与模型构建小版本不一致的警告；该警告不影响对照结果。
 
+
+### 板卡性能
+
+以下 COCO 检测器数据分别列出 BPU 执行与 Python 后处理耗时，每项注明线程数。X3 数据仅为历史参考；当前运行板卡以 Sample 支持矩阵为准。
+
+### RDK X5 & RDK X5 Module
+
+目标检测 Detection (COCO)
+| 模型(公版) | 尺寸(像素) | 类别数 | 参数量 | BPU吞吐量 | 后处理时间(Python) |
+|---------|---------|-------|---------|---------|----------|
+| fcos_efficientnetb0 | 512×512 | 80 | - | 323.0 FPS | 9 ms |
+| fcos_efficientnetb2 | 768×768 | 80 | - | 70.9 FPS | 16 ms |
+| fcos_efficientnetb3 | 896×896 | 80 | - | 38.7 FPS | 20 ms |
+
+### RDK X3 & RDK X3 Module（历史性能记录）
+| 模型(公版) | 尺寸(像素) | 类别数 | 参数量 | BPU吞吐量 | 后处理时间(Python) |
+|---------|---------|-------|---------|---------|----------|
+| fcos | 512×512 | 80 | - | 173.9 FPS | 5 ms |
+
+
 <a id="boundaries"></a>
 ## 适用范围
 

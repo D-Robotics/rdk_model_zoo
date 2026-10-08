@@ -61,7 +61,7 @@ The validation path runs the published pair through `runtime/python/main.py`, co
 | `text_encoder.onnx` | x5 text CPU ONNX | `samples/vision/clip/model/` |
 
 <a id="known-gaps"></a>
-## Known Gaps
+## Additional preparation
 
 - No source checkpoint, image ONNX export script, text ONNX export script, conversion YAML, compiler/version matrix, or calibration dataset is provided.
 - The published `.bin` and `.onnx` files can be prepared from the manifest, but the conversion process cannot be reproduced from this sample.

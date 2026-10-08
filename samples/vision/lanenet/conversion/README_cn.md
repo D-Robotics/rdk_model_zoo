@@ -55,6 +55,14 @@ YAML 引用 `../log/best_model.onnx`、`../cal_data` 和输出前缀
 使用调用者绝对路径和 `lanenet256x512` 前缀。prepare-only 检查 ONNX 文件和
 校准身份；图结构与输出语义在模型验证中检查。
 
+在匹配的 LaneNet 导出工程目录中安装上述依赖、取得 checkpoint，再执行 `test.py`。该脚本与 `source/data/source_image/input.jpg` 由导出工程提供：
+
+```bash
+pip install torch torchvision numpy opencv-python pandas matplotlib
+wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Lanenet/best_model.pth
+python test.py --img source/data/source_image/input.jpg --model best_model.pth
+```
+
 <a id="calibration"></a>
 ## 显式校准准备
 
@@ -77,6 +85,12 @@ area 缩放256×512、float32 `/255`、通道均值`[.485,.456,.406]`和标准�
 `data/000000.npy` 等文件保存 `[1,3,256,512]` float32。`manifest.json` 记录图片
 路径/摘要、实际图片形状、张量形状/类型/摘要、数量和协议。需确认 ONNX
 是否自带归一化，重复应用会改变契约。
+
+也可使用导出工程的 `get_calibration_data.py`：先将脚本的 `dataset_dir` 改为本地 TuSimple 目录，再执行下列命令生成 `.npy` 校准数据。保持其预处理与所选 ONNX 一致。
+
+```bash
+python get_calibration_data.py
+```
 
 <a id="compile"></a>
 ## 先准备配置，再编译
@@ -104,6 +118,12 @@ python -m samples.vision.lanenet.conversion.compile \
 捕获 stdout/stderr；非零退出或预期 HBM 缺失/为空均失败，即便编译器返回零。
 `--prepare-only` 只生成配置并校验输入，编译需另行调用 `hb_compile`。
 
+直接使用 OE 编译器时，从本转换目录执行 `hb_compile -c config.yaml`；先按实际 ONNX 和校准路径修改配置。导出工程按 `source/yaml/config.yaml` 布局组织时，等价命令为：
+
+```bash
+hb_compile -c source/yaml/config.yaml
+```
+
 <a id="validation"></a>
 ## 验证与参考性能
 
@@ -115,6 +135,15 @@ python -m samples.vision.lanenet.conversion.compile \
 200 帧、平均模型延迟 14.245 ms、69.894 FPS，固件、模型摘要和完整参数
 未注明；在板端测量本 sample 时需记录这些条件。
 参见[评估](../evaluator/README_cn.md)。
+
+将生成模型复制到 S100，在模型所在目录运行：
+
+```bash
+hrt_model_exec perf --model_file lanenet256x512.hbm
+```
+
+![LaneNet embedding visualization](../test_data/instance_pred.png)
+![LaneNet binary labels](../test_data/binary_pred.png)
 
 <a id="artifacts"></a>
 ## 制品与来源

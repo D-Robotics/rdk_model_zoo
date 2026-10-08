@@ -5,9 +5,7 @@
 <a id="overview"></a>
 ## 概述
 
-从单张 BGR 图像估计稠密相对深度，在同一样例中保留 X5 与 S 的源能力：四种目标的 Python 推理、
-X5 C++、显式模型准备、两套转换工具链及离线评估。
-绘图、文件读写、模型绑定和 SDK 资源管理与三个推理阶段分离，人和 Agent 使用同样的原生命令。
+YOLO26 Depth 从单张 BGR 图片估计稠密相对深度。本 Sample 提供 X5 与 S 系列板卡的 Python 推理、X5 C++ 推理，以及模型准备、转换和离线深度评估。
 
 已发布方案取决于目标：X5 全变体及 S n/s/m 输入 letterbox NV12，输出已校准 log-depth；
 S l/x 输入归一化 RGB featuremap，输出原始 logit，只有后者需要 CPU clip/scale/bias。

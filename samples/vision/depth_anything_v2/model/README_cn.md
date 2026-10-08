@@ -42,7 +42,7 @@ bash samples/vision/depth_anything_v2/model/download.sh --target s100
 <a id="accompanying-files"></a>
 ## 配套文件
 
-本模型不需要分类标签。内置 `../test_data/furseal.jpg` 与六张图按字节保留自源目录，
+本模型不需要分类标签。内置 `../test_data/furseal.jpg` 与六张示意图用于展示效果，
 不是校准数据或真值。HBM、源权重、ONNX 不随仓库附带。复现所缺前提见
 [转换说明](../conversion/README_cn.md)。上游同名 checkpoint 与本制品以各自摘要区分。
 

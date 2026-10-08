@@ -5,14 +5,9 @@
 <a id="overview"></a>
 ## 算法与来源
 
-R3D-18 将预处理后的 16 帧视频片段分类为 Kinetics-400 的 400 个动作类别之一。模型把 ResNet-18 的二维卷积扩展为三维卷积，同时建模空间和时间特征。Python runtime 接收已经归一化的 RGB float32 NumPy 片段，通过 `VideoClassificationTask` 的 `preprocess → infer → postprocess` 三阶段（由 `predict` 串联）返回 softmax Top-K 动作类别。
+R3D-18 用于短视频片段的动作识别。它把 ResNet-18 的卷积扩展为三维卷积，同时学习空间与时间特征，预测 Kinetics 的 400 个动作类别。
 
-- 论文：[A Closer Look at Spatiotemporal Convolutions for Action Recognition](https://arxiv.org/abs/1711.11248)
-- 参考实现：[torchvision r3d_18](https://pytorch.org/vision/main/models/generated/torchvision.models.video.r3d_18.html)
-- 仓库位置：`samples/vision/3dresnet`
-- 任务：使用 3D ResNet 模型进行视频动作分类。
-
-输入不是视频文件。`test_data/video0.npy` 是已经准备好的 `(1, 3, 16, 112, 112)` 片段；视频解码、抽帧、缩放和归一化不属于本 sample。
+参考：[A Closer Look at Spatiotemporal Convolutions for Action Recognition](https://arxiv.org/abs/1711.11248), [torchvision r3d_18](https://pytorch.org/vision/main/models/generated/torchvision.models.video.r3d_18.html).
 
 <a id="directory"></a>
 ## 目录结构
@@ -96,11 +91,13 @@ bash run.sh --target s100 --asset-id s:3dresnet:s100/r3d_18.hbm
 
 score 数值取决于编译产物，上面的数字仅示意字段结构。实际列表包含 `--top-k` 条结果；label 从 `test_data` 中的 400 条 Kinetics 映射读取（加载时会去掉原始标签名称中内嵌的引号字符）。
 
+运行时读取准备好的 RGB float32 片段 `test_data/video0.npy`，形状为 `(1,3,16,112,112)`。调用前完成视频解码、抽帧、缩放和归一化。
+
 <a id="entry-points"></a>
 ## 入口索引
 
 - 模型准备：[`model/README_cn.md`](model/README_cn.md) — 一个精确的 S100 HBM 制品和显式下载命令。
-- Python runtime：[`runtime/python/README_cn.md`](runtime/python/README_cn.md) — CLI 与四阶段 `VideoClassificationTask` API。
+- Python runtime：[`runtime/python/README_cn.md`](runtime/python/README_cn.md) — CLI 与 `R3D18Classifier` API。
 - 转换：[`conversion/README_cn.md`](conversion/README_cn.md) — source 转换说明、截图及缺失配方边界。
 - 评测：[`evaluator/README_cn.md`](evaluator/README_cn.md) — 功能参考与已发布的性能记录。
 - Runtime 语言：Python。

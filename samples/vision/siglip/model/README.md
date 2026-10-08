@@ -78,7 +78,7 @@ The manifest has no publisher SHA-256 values. The downloader prints the observed
 <a id="formats-checksums"></a>
 ## Formats & Checksums
 
-The source inventory and release manifest record all publisher hashes as unknown. No hash is copied between artifacts.
+The release manifest records all publisher hashes as unknown.
 
 | Artifact | Format | SHA-256 | Source of value |
 | --- | --- | --- | --- |

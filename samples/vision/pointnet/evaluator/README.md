@@ -50,17 +50,17 @@ and “pred” quantization numbers lack a named metric and cannot be called mIo
 
 `outputs/pointnet-check/labels.npy` stores point IDs and `result.json` stores counts,
 normalization and metadata. Remove `--no-plot` to also write `result_orig.png` and
-`result.png`. No metric summary is fabricated from those pictures.
+`result.png`. Dataset metrics require ground-truth point labels.
 
 ![Original source chair](../test_data/readme_img/chair.png)
 ![Source segmentation](../test_data/readme_img/chair_res.png)
 
 <a id="reference-results"></a>
-## Source-recorded reference results
+## S100 reference performance
 
-The original S branch evaluator records these `hrt_model_exec` values. Its table
+The S100 `hrt_model_exec` reference table
 does not state latency units, exact invocation, SDK version, or artifact digest;
-values below are retained verbatim from the source record.
+record these conditions when measuring a new model.
 
 | Threads | Frames | Total Latency | Average Latency | FPS |
 | --- | --- | --- | --- | --- |
@@ -70,7 +70,7 @@ values below are retained verbatim from the source record.
 | 8 | 100 | 839.86 | 8.35 | 910.84 |
 
 The original conversion record also reports int16 “trans > 0.9999” and “pred > 0.98”;
-see the [preserved screenshot and limitations](../conversion/README.md#calibration).
+see the [quantization results](../conversion/README.md#calibration).
 
 <a id="boundaries"></a>
 ## Scope

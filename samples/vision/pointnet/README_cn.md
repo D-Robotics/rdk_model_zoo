@@ -5,12 +5,9 @@
 <a id="overview"></a>
 ## 算法与来源
 
-PointNet 为每个 XYZ 点预测四类椅子部件之一：`back`、`seat`、`leg`、`arm`。
-共享 MLP 提取点特征，最大值聚合形成全局特征。本例保持输入点顺序，任务为部件分割；整幅点云分类、
-目标检测及 ShapeNet 其他类别需另行适配。
-[论文](https://arxiv.org/abs/1612.00593)与[官方实现](https://github.com/charlesq34/pointnet)
-说明算法；交付模型参考[S100 PointNet 项目](https://gitee.com/chenguanzhong/rdk_-s100_-point-net_-official)。
-HBM 需单独下载，Git 仓库没有附带模型文件。
+PointNet 使用共享 MLP 和对称最大池化进行点云分割。本示例识别椅子的四种部件：靠背、座面、椅腿和扶手，输出保持输入点顺序。
+
+参考：[论文](https://arxiv.org/abs/1612.00593), [官方实现](https://github.com/charlesq34/pointnet), [S100 PointNet 项目](https://gitee.com/chenguanzhong/rdk_-s100_-point-net_-official).
 
 <a id="directory"></a>
 ## 目录结构

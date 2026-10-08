@@ -20,6 +20,8 @@ python/
 └── tracking.py  # 模型初始化与推理阶段
 ```
 
+从 [main.py](main.py) 开始：入口构造 `ByteTrackTask.from_model` 并调用 `predict`。[tracking.py](tracking.py) 实现模型初始化及推理阶段；[cli.py](cli.py) 负责参数、模型选择和结果交付。模型初始化会加载 Runtime，应用可复用同一个实例执行多次预测。
+
 <a id="environment"></a>
 ## 环境
 

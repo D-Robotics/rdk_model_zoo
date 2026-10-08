@@ -14,7 +14,7 @@ are not interchangeable.
 This sample provides Python and C++ offline entries for X5, explicit model
 preparation, source observations and conversion/evaluation tools. Board
 execution follows each runtime's quickstart. Conversion instructions and
-historical measurements come from the source release.
+reference measurements are listed in the evaluator guide.
 
 Input: `obs_history`, float32 `[1,270]`, current frame first. Output: `actions`,
 float32 `[1,12]`. No additional normalization, history update, output scaling or
@@ -81,7 +81,7 @@ See the Python guide for single-file input, external model identity, scheduling,
 report location, warmup and library integration.
 
 <a id="expected-results"></a>
-## Expected results and historical measurements
+## Expected results and reference measurements
 
 The default run processes 21 source-indexed observations after 10 warmups and
 writes `000000.bin` through `000020.bin`, each 12 little-endian float32 actions,

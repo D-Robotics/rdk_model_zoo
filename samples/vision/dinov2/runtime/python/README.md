@@ -20,11 +20,13 @@ python/
 └── run.sh  # Run the sample
 ```
 
+Start with [main.py](main.py): it constructs `DINOv2Embedder` and calls `predict`. [embedding.py](embedding.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.
+
 <a id="environment"></a>
 ## Environment
 
 - Board targets: RDK S100 (`nash-e`), S100P (`nash-m`), and S600 (`nash-p`), with a board image providing `hbm_runtime`; use the image/firmware shipped with your board and record its version with results.
-- Host contract checks: Python 3.14.7 with `numpy`, `opencv-python`, and `PyYAML` from `../../requirements-host.txt`. Host `--help`, `--list-models`, and explicit-target `--dry-run` do not import or load the SDK.
+- Python dependencies: Python 3.10+ with `numpy`, `opencv-python`, and `PyYAML` from `../../requirements-host.txt`. Host `--help`, `--list-models`, and explicit-target `--dry-run` do not import or load the SDK.
 - The runtime uses one target-specific HBM with both `cls_feat` and `patch_feat` outputs. Runtime instances and the installed SDK are not declared thread-safe.
 
 <a id="usage"></a>
@@ -74,7 +76,7 @@ python3 samples/vision/dinov2/runtime/python/main.py \
 
 The CLI prints JSON fields `output`, `shape`, `dtype`, `mean`, `std`, `min`, `max`, and `l2_norm`. If the second image is used, it also prints `second_image` and `cosine_similarity`; a missing file has status `skipped_missing`. `cls_feat` is `(1,384)`, `patch_feat` is `(1,256,384)`, and both results are owned float32 arrays. Integer HBM outputs are dequantized by the output quantization metadata. No softmax, L2 normalization, patch pooling, or other feature transformation is applied.
 
-The entry is split for readability: `main.py` resolves the selection, constructs
+The execution entry is `main.py`: `main.py` resolves the selection, constructs
 `DINOv2Embedder`, calls `predict` (once per image) and prints the JSON summary;
 option declarations, the `--list-models`/`--dry-run` modes, the feature
 summary/cosine helpers and the optional tensor export live in `cli.py`. The

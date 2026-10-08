@@ -97,10 +97,29 @@ Per-platform detector/recognizer latency and FPS are measured with the
 `hrt_model_exec perf` commands for the det/rec artifacts in the
 [conversion guide](../conversion/README.md).
 
-A same-board before/after comparison uses the same image, artifact bytes,
-dictionary, and threshold on both the legacy entrypoint and the one, then compares polygon boxes and decoded strings before any rendering;
-numeric tolerances for each dimension are those of the stage-I/O contract
-(box coordinates from identical inputs are expected to be exactly equal).
+### PP-OCRv3 reference throughput (ICDAR2019-ArT)
+
+These measurements use ICDAR2019-ArT and describe the original published PP-OCRv3 models. SDK, firmware, thread count and clock settings were unspecified.
+
+#### RDK X5 and RDK X5 Module
+
+| Model(public) | size(pixels) | Parameter | BPU throughput |
+| ------------ | ------- | ----- | ---------- |
+| PP-OCRv3_det | 640x640 | 3.8 M | 158.12 FPS |
+| PP-OCRv3_rec | 48x320  | 9.6 M | 245.68 FPS |
+
+![PP-OCRv3 X5 example](../test_data/readme_img/ppocrv3_x5.png)
+
+#### RDK X3 and RDK X3 Module original deployment measurements
+
+This table describes the original X3 artifacts. See the [support matrix](../README.md#support-matrix) for the current sample’s board and model requirements.
+
+| Model(public) | size(pixels) | Parameter | BPU throughput |
+| ------------ | ------- | ----- | ---------- |
+| PP-OCRv3_det | 640x640 | 3.8 M | 41.96 FPS |
+| PP-OCRv3_rec | 48x320  | 9.6 M | 78.92 FPS |
+
+![PP-OCRv3 X3 example](../test_data/readme_img/ppocrv3_x3.png)
 
 <a id="boundaries"></a>
 ## Scope

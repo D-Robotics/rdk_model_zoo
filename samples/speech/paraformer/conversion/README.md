@@ -127,6 +127,30 @@ finite. Parser/preflight failures return 2 before creating output; later errors
 return 2 and preserve partial files plus a `failed` report. Partial artifacts are
 not approved exports. A forcibly terminated process may leave incomplete state.
 
+<a id="fixed-graph-contract"></a>
+## Fixed input geometry and ONNX preparation
+
+The encoder speech input is float32 `[1,400,560]`: 16 kHz audio, fbank followed by LFR with `m=7,n=6`. **400 LFR frames represent about 24 seconds of audio**. The frontend pads shorter inputs and truncates longer ones to this fixed width; split longer recordings explicitly before preparation. The float32 `bias_embed` is `[1,1,512]`; zeros disable hotwords. CPU CIF caps the decoder token sequence at `max_label_len=100`; it takes about 1–2 ms in the source CPU implementation, while the resident measurements below use their own timing scope.
+
+For the [source graph and compiler recipe](https://github.com/D-Robotics/rdk_model_zoo/blob/d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d/platforms/s/samples/speech/paraformer/conversion/README_cn.md), the preparation sequence is:
+
+1. Export the FunASR model to `model.onnx`. Extract `/decoder/*`, treating non-decoder tensors as boundaries, to obtain the five-input `decoder_only.onnx`; extract encoder and predictor subgraphs at their respective boundaries too.
+2. Convert Gather index constants from INT64 to INT32, then sort nodes topologically and run the ONNX checker. The source graph required **145 Constant INT64→INT32 conversions** to avoid HMCT `adjust_multi_output_use_quant_info_pass_fail`.
+3. Replace static Range operations with Constants. The source procedure evaluated them with an ONNX Runtime probe, then propagated fixed shapes and folded constants with ONNX Simplifier: **2903 → 1214 nodes**.
+4. Fold `/predictor/Gather_output_0` to Constant(1) for batch=1, removing dynamic Tile repeats, and normalize negative axes to positive axes. The resulting `decoder_only_final.onnx` contained **1137 nodes** and passed HBDK4 export. These counts describe that exact source graph, rather than a required count for every source-weight export.
+5. Keep CIF on CPU and expose `pre_acoustic_embeds` as a decoder graph input. Replace CIF `remains.unsqueeze(-1)` with `remains.reshape(-1,1)` when compiling with HBDK4 4.7.5.
+
+Use the `export.py` commands above for this checkout: they export each stage directly from Torch and validate it numerically. For custom ONNX graphs, [graph_ops.py](graph_ops.py) provides `gather_indices_int32`, `topological_sort`, `fold_constant_ranges` and `normalize_axes`, described below. `fold_constant_ranges` requires provably constant values; a single runtime probe is insufficient for a data-dependent Range. The standalone source scripts `extract_decoder_predictor.py`, `convert_gather_int64_to_int32.py`, `topsort.py`, `fold_range_ops.py` and `shape_freeze.py` identify the source procedure's stages; they are not commands shipped in this directory.
+
+| Compiler problem | Diagnostic | Graph preparation |
+| --- | --- | --- |
+| INT64 Gather | HMCT `adjust_multi_output_use_quant_info_pass_fail` | Convert the 145 source Constant indices from INT64 to INT32; reject indices outside the INT32 range. |
+| Range | HBDK4 `Operator Range should be optimized` | Source procedure: ORT probe → Constant; current helper: fold only proven static values. |
+| Unsqueeze type inference | HBDK4 `type_inf` for CIF `remains.unsqueeze(-1)` | Use `.reshape(-1,1)`; see [CIF shape workaround](#cif-shape-workaround). |
+| Dynamic GatherND index | `size of last dimension of index cannot be dynamic` | Keep CIF on CPU and feed `pre_acoustic_embeds` to the decoder. |
+| Dynamic Tile repeats | `cannot create ArrayAttr from OpResult` | Fold `/predictor/Gather_output_0` to Constant(1) under batch=1. |
+| Split axis=-1 | HBIR slice shape inference failure | Normalize negative axes to positive axes using the known input rank. |
+
 <a id="calibration"></a>
 ## Prepare real calibration and compiler configs
 
@@ -283,6 +307,43 @@ Encoder compile time is ~55 min at `jobs=32`. The single BPU core is
 saturated on S100; `--thread_num 8` only queues concurrently and does not
 change single-frame latency. The board Python manual for `hbm_runtime` is the
 [S Python API guide](https://developer.d-robotics.cc/rdk_s_doc/Algorithm_Application/python-api).
+
+
+### Compiled model sizes and static estimates
+
+Source: [S100 INT16 conversion and performance report](https://github.com/D-Robotics/rdk_model_zoo/blob/d2d2a4e0a898697bdfe5f68a9740a8c7d7cad57d/platforms/s/samples/speech/paraformer/conversion/README_cn.md). The model sizes, compiler estimates and board measurements below describe the same recipe; their timing scopes are stated separately.
+
+Configuration: S100 `nash-e`, all-node INT16, max calibration, `O2`, latency mode, `core_num: 1` and `jobs: 32`; the common configuration uses `cache_mode: disable`. Calibration uses fbank+LFR features from 50 real recordings. Predictor inputs are FP32 encoder outputs; the decoder receives four real inputs from the full FP32 pipeline. Static latency and FPS are compiler estimates. Memory and DDR figures retain the report’s measurement scope.
+
+#### Encoder
+
+| Item | Value |
+|---|---|
+| HBM size | 211.5 MB |
+| Static latency | 32.52 ms (FPS 30.75) |
+| Static memory | 211 MB |
+| Dynamic memory | 3.6 MB |
+| DDR usage | 499 MB |
+| Compilation time | ~55 min (jobs=32) |
+
+#### Predictor
+
+| Item | Value |
+|---|---|
+| HBM size | ~4 MB |
+| Static latency | ~0.35 ms (FPS ~2877) |
+| Outputs | `/predictor/Add_output_0` [1,401] (alphas) + `/predictor/Concat_5_output_0` [1,401,512] |
+
+#### Decoder
+
+| Item | Value |
+|---|---|
+| HBM size | 73.5 MB |
+| Static latency | 5.77 ms (FPS 173) |
+| DDR usage | 127 MB |
+| Inputs | 4: encoder_out, token_num, bias_embed, pre_acoustic_embeds |
+| Outputs | `logits [1, 100, 8404]` |
+
 
 <a id="artifacts"></a>
 ## Produced artifacts

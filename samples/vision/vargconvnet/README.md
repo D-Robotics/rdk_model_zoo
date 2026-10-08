@@ -1,5 +1,9 @@
 # VargConvNet image classification
 
+VargConvNet is a lightweight convolutional image classifier.
+
+[中文说明](README_cn.md)
+
 <a id="overview"></a>
 
 ## Overview
@@ -21,12 +25,12 @@ vargconvnet/
 ├── conversion/  # Export and quantization configuration
 ├── evaluator/  # Evaluation commands and metrics
 ├── model/  # Model files and download scripts
-├── runtime/  # Python and native inference implementations
+├── runtime/  # Python inference
 ├── test_data/  # Example inputs
 ├── tests/  # Automated tests
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-└── requirements-host.txt  # Source or data file
+└── requirements-host.txt  # Python dependencies
 ```
 
 <a id="support-matrix"></a>

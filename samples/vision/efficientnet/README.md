@@ -1,12 +1,11 @@
 # EfficientNet image classification
 
-EfficientNet ImageNet-1k classification on RDK boards: one BGR image in, a
-stable Top-K of `(class id, score, label)` out. The X5 side ships the
-EfficientNet B2/B3/B4 variants (paper [EfficientNet: Rethinking Model Scaling
-for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946)); the
-S100/S600 side ships the EfficientNet-Lite lite0..lite4 family (the
-[TensorFlow TPU EfficientNet-Lite](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet)
-implementation). [中文说明](README_cn.md)
+EfficientNet scales network depth, width, and image resolution together for image classification.
+
+Sources: [EfficientNet: Rethinking Model Scaling
+for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946) · [TensorFlow TPU EfficientNet-Lite](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet)
+
+[中文说明](README_cn.md)
 
 <a id="overview"></a>
 
@@ -53,12 +52,12 @@ efficientnet/
 ├── conversion/  # Export and quantization configuration
 ├── evaluator/  # Evaluation commands and metrics
 ├── model/  # Model files and download scripts
-├── runtime/  # Python and native inference implementations
+├── runtime/  # Python inference
 ├── test_data/  # Example inputs
 ├── tests/  # Automated tests
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-└── requirements-host.txt  # Source or data file
+└── requirements-host.txt  # Python dependencies
 ```
 
 <a id="support-matrix"></a>

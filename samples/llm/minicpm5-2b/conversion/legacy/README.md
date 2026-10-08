@@ -1,5 +1,3 @@
-> Recipes and measurements below come from the source S release; run quantization, evaluation and board tests through these commands as needed.
-
 [English](README.md) | [简体中文](README_cn.md)
 
 # S100 / S100P quantization and compilation

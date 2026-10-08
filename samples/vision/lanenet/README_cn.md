@@ -5,9 +5,9 @@
 <a id="overview"></a>
 ## 概述
 
-LaneNet 通过二值分割分支区分车道像素与背景，通过嵌入分支为后续实例分离提供特征。本 sample 为 S100 HBM 提供 Python 和 C++ 推理入口。其结果是**原始嵌入特征与二值标签**：输出不含嵌入聚类和车道曲线拟合，车道实例的区分需在下游聚类步骤完成。
+LaneNet 通过二值分割分支预测车道像素，通过嵌入分支学习区分车道实例的特征。本示例提供 RDK S100 的 Python 与 C++ 推理，输出二值标签和原始嵌入。
 
-算法参考：[Towards End-to-End Lane Detection: an Instance Segmentation Approach](https://arxiv.org/abs/1802.05591) 和 [MaybeShewill-CV/lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection)。已发布 HBM 未绑定具体上游提交：未提供该提交或模型校验和。
+参考：[Towards End-to-End Lane Detection: an Instance Segmentation Approach](https://arxiv.org/abs/1802.05591), [MaybeShewill-CV/lanenet-lane-detection](https://github.com/MaybeShewill-CV/lanenet-lane-detection).
 
 <a id="directory"></a>
 ## 目录结构
@@ -86,10 +86,12 @@ bash samples/vision/lanenet/runtime/cpp/run.sh --target s100 --build --output ou
 
 另保留[源原生嵌入显示图](test_data/cpp_instance_pred.png)和[原生二值显示图](test_data/cpp_binary_pred.png)。显示差异本身不能证明原始数值不同，也不能证明已分离出不同车道实例。
 
+车道实例 ID 与拟合曲线需对嵌入执行聚类及曲线拟合。显示颜色本身不代表车道实例身份。
+
 <a id="entry-points"></a>
 ## 用户与 Agent 的入口
 
-应用集成使用 `LaneNetSegmenter.pre_process`、`forward`、`post_process` 或其组合 `predict`。下载、文件系统操作、绘图与资源管理放在任务类之外。`model_binding.py` 负责模型语义校验，共享具名数组 runner 负责传输；原生代码同样分离任务阶段、张量契约、SDK 资源管理、可视化和 CLI 读写。
+应用集成先构造 `LaneNetSegmenter`，再调用 `predict`。`lanenet.py` 实现 `preprocess`、`infer`、`postprocess` 及模型初始化；初始化时加载 Runtime。CLI 负责下载命令、文件读写与绘图；C++ 接口见原生运行指南。
 
 修改前处理或增加实例聚类前先阅读[阶段 IO 契约](runtime/python/README_cn.md#stage-io)。聚类属于额外的算法能力，需要单独实现并验证；实例掩码应以聚类算法的输出为准。
 

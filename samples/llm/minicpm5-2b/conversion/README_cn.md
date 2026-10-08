@@ -5,7 +5,7 @@
 <a id="source-model"></a>
 ## 源模型
 
-源模型为 OpenBMB/MiniCPM5-2B，固定 revision `0e9c66dce9fedde5ba8663bbcdd54b6810bb929a`（Apache-2.0）。保留原始权重/config/tokenizer，外部适配器负责 SDK 接入。以下为源配方整理。所有代码块依次在同一 shell 环境使用，除非另有目录说明。
+源模型为 OpenBMB/MiniCPM5-2B，固定 revision `0e9c66dce9fedde5ba8663bbcdd54b6810bb929a`（Apache-2.0）。保留原始权重/config/tokenizer，外部适配器负责 SDK 接入。下列命令准备量化模型与运行包。所有代码块依次在同一 shell 环境使用，除非另有目录说明。
 
 <a id="directory"></a>
 ## 目录结构

@@ -53,7 +53,7 @@ hrt_model_exec perf --thread_num 1 --model_name pooler_output --model_file sampl
 hrt_model_exec perf --thread_num 1 --model_name last_hidden_state --model_file samples/vision/siglip/model/s100/bpu-siglip-base-patch16-224.hbm
 ```
 
-对其余七个制品替换文件名，执行相同的三条命令。源记录评测表保留为参考记录；新转换以下述运行验证。验证应绑定打包的两个子模型，检查 `_input_0` metadata 及所选 `_output_0` shape/dtype，然后在 S100、S100P 上分别运行 [`../runtime/python/README_cn.md`](../runtime/python/README_cn.md) 的板端冒烟路径。
+对其余七个制品替换文件名，执行相同的三条命令。参考测量见评估表；新转换使用下述命令验证。验证应绑定打包的两个子模型，检查 `_input_0` metadata 及所选 `_output_0` shape/dtype，然后在 S100、S100P 上分别运行 [`../runtime/python/README_cn.md`](../runtime/python/README_cn.md) 的板端冒烟路径。
 
 <a id="artifacts"></a>
 ## 产物
@@ -70,7 +70,7 @@ hrt_model_exec perf --thread_num 1 --model_name last_hidden_state --model_file s
 | `bpu-siglip-so400m-patch16-256-i18n.hbm` | s100, s100p | `samples/vision/siglip/model/s100/` |
 
 <a id="known-gaps"></a>
-## 缺失项
+## 补充准备
 
 - 缺少精确源 checkpoint/版本和导出脚本。
 - 缺少 OE 版本、编译器构建版本、`march` 配置、校准数据/配置和编译命令。

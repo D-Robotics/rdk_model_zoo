@@ -1,9 +1,11 @@
 # FastViT 图像分类
 
-FastViT 在 RDK X5 上的 ImageNet-1k 分类：输入一张 BGR 图像，输出稳定
-的 Top-K `(类别 ID, 分数, 标签)`。X5 发布交付 S12、SA12、T12、T8 四个
-变体（论文 [FastViT: A Fast Hybrid Vision Transformer using Structural
-Reparameterization](https://arxiv.org/abs/2303.14189)）。[English](README.md)
+FastViT 结合卷积、注意力与结构重参数化，用于图像分类。
+
+来源：[FastViT: A Fast Hybrid Vision Transformer using Structural
+Reparameterization](https://arxiv.org/abs/2303.14189)
+
+[English README](README.md)
 
 <a id="overview"></a>
 
@@ -31,12 +33,8 @@ RepMixer，stage 4 使用注意力；T8、T12 与 S12 的四个 stage 均使用 
 （见 apple/ml-fastvit 的 `models/fastvit.py`）。训练/推理双结构也解释了部署制品为何是已重参数化的 INT8
 s12/sa12/t12/t8 变体（224×224 NV12，见[支持范围](#support-matrix)）。*
 
-本样例提供面向 X5 的 Python 运行时。
-`FastViTClassifier` 类执行由 `predict` 串联的
-`preprocess → infer → postprocess` 流程：从平台发布 Manifest 解析唯一的
-制品引用，核验板卡身份，懒加载 `hbm_runtime`，返回带类型的 Top-K 结果
-（见
-[runtime/python/README_cn.md](runtime/python/README_cn.md)）。
+Python 入口见 `runtime/python/main.py`，模型推理流程在 `classify.py`，参数和结果展示在 `cli.py`。
+[runtime/python/README_cn.md](runtime/python/README_cn.md)
 
 <a id="directory"></a>
 ## 目录结构
@@ -51,7 +49,7 @@ fastvit/
 ├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-└── requirements-host.txt  # 源码或数据文件
+└── requirements-host.txt  # Python 依赖
 ```
 
 <a id="support-matrix"></a>

@@ -1,12 +1,5 @@
 # PaddleOCR Python 运行时
 
-`main.py` 是 X5 PP-OCRv3 与 S100 PP-OCRv6 模型对的 入口，保持
-薄入口形态：解析参数、执行 model-free 的 list/dry-run/prepare 模式、解析
-完整引用的检测器/识别器对、对照实际硬件校验执行目标、构造 `OCRPipeline`
-并调用 `predict`、输出有序的框与文本。参数声明、model-free 模式、显式
-`--prepare` 取模与结果渲染位于 [cli.py](cli.py)；检测 → 裁剪 → 识别的编排
-位于 [pipeline.py](pipeline.py)，每个阶段各有公开三步接口。
-
 <a id="overview"></a>
 ## Python 推理
 
@@ -19,17 +12,19 @@
 python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── __init__.py  # 模型初始化与推理阶段
+├── __init__.py  # 包接口
 ├── cli.py  # 参数、模型选择与结果交付
-├── decode.py  # 模型初始化与推理阶段
+├── decode.py  # DB 多边形解码与 CTC 文字解码
 ├── geometry.py  # 几何变换与坐标恢复
 ├── main.py  # 命令行入口：构造模型并调用 predict
-├── model_binding.py  # 模型初始化与推理阶段
-├── model_runner.py  # 模型初始化与推理阶段
+├── model_binding.py  # 检测/识别元数据与词典契约
+├── model_runner.py  # OCR 双模型的板端 SDK 执行
 ├── pipeline.py  # 模型初始化与推理阶段
 ├── run.sh  # 运行示例
-└── tensor_io.py  # 模型初始化与推理阶段
+└── tensor_io.py  # NV12 平面与张量打包
 ```
+
+从 [main.py](main.py) 开始：入口构造 `OCRPipeline.from_models` 并调用 `predict`。[pipeline.py](pipeline.py) 实现模型初始化及推理阶段；[cli.py](cli.py) 负责参数、模型选择和结果交付。模型初始化会加载 Runtime，应用可复用同一个实例执行多次预测。
 
 <a id="environment"></a>
 ## 环境

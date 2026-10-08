@@ -126,6 +126,13 @@ cp hgnetv2_b0_224x224_nv12/hgnetv2_b0_224x224_nv12.bin ../model/
 
 Output basenames match the published filenames.
 
+To compile another exported variant, set `VARIANT` to its YAML suffix:
+
+```bash
+export VARIANT=b0
+hb_mapper makertbin --model-type onnx --config hgnetv2_${VARIANT}.yaml
+```
+
 <a id="validation"></a>
 ## Post-conversion validation
 

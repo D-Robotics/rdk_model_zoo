@@ -180,6 +180,17 @@ ResNet50——经 OE `13_resnet50` 示例编译；本目录未提供配置。只
 目标制品对应的块。若 OE 示例的命令拼写不同，按其确切命令执行并
 随结果记录。
 
+ONNX 路径保存在 `ONNX` 变量时，可使用同一套 X5 检查和编译命令：
+
+```bash
+export ONNX="$WORK/resnet18.onnx"
+export X5_MARCH="${X5_MARCH:-bayes-e}"
+hb_mapper --version
+hb_mapper checker --model-type onnx --march "$X5_MARCH" --model "$ONNX"
+hb_mapper makertbin --model-type onnx --config "$OE_CONFIG"
+find "$WORK" -type f -name '*.bin' -print
+```
+
 <a id="validation"></a>
 ## 转换后验证
 

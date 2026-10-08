@@ -5,9 +5,7 @@
 <a id="overview"></a>
 ## 算法与来源
 
-CLIP 将图像和候选文本映射到共享的 512 维空间，并用 cosine similarity 对文本排序。图像 encoder 是 X5 BPU `.bin` 模型，文本 encoder 是 CPU ONNX 模型；BPE 词表随附在 `runtime/python/bpe_simple_vocab_16e6.txt.gz`。来源：X5 平台 sample，固定提交 `ac115717197920355fc390bb04299b20e6436864`。
-
-`CLIPMatcher` 分三个阶段：`preprocess` 将一张 BGR 图片和 prompt 列表转换为图像/token tensor，`infer` 运行两个 encoder 并返回原始特征，`postprocess` 计算 cosine 分数及降序排列；`predict` 串联三个阶段。绘图由独立 helper 负责。
+CLIP 学习图像与文本的共同表示。本示例使用 BPU 图像编码器和 CPU ONNX 文本编码器，比较图片与候选描述，并按余弦相似度对描述排序。
 
 <a id="directory"></a>
 ## 目录结构
@@ -63,6 +61,8 @@ python3 samples/vision/clip/runtime/python/main.py --target x5
 ## 预期结果
 
 CLI 打印 `target`、`prompts`、`scores`、`order`、`image_saved`。`scores` 按 prompt 原顺序保存 cosine similarity，`order` 是降序 prompt 索引。绘图会将每个 prompt 和分数写入输入图片的副本。`dog.jpg` 的定性预期是 `a dog` 的分数高于 `a diagram`（源验证预期）；没有公开数值 benchmark。
+
+编码器生成 512 维特征。BPE 词表位于 `runtime/python/bpe_simple_vocab_16e6.txt.gz`；余弦分数保持 prompt 顺序，运行时同时返回降序排名。
 
 <a id="entry-points"></a>
 ## 入口索引

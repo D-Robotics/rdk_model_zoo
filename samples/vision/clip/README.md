@@ -5,9 +5,7 @@ English | [简体中文](./README_cn.md)
 <a id="overview"></a>
 ## Overview
 
-CLIP maps an image and candidate texts into a shared 512-dimensional space and ranks the texts by cosine similarity. The image encoder is an X5 BPU `.bin` model and the text encoder is a CPU ONNX model; the BPE vocabulary ships as `runtime/python/bpe_simple_vocab_16e6.txt.gz`. Source: X5 platform sample delivery at `ac115717197920355fc390bb04299b20e6436864`.
-
-The `CLIPMatcher` has three stages: `preprocess` converts one BGR image and prompt list into image/tokens tensors, `infer` runs both encoders and returns raw features, and `postprocess` computes cosine scores and descending order. `predict` chains the three stages; visualization remains a separate helper.
+CLIP learns a shared representation of images and text. This sample compares an image with candidate descriptions and ranks the descriptions by cosine similarity, using a BPU image encoder and a CPU ONNX text encoder.
 
 <a id="directory"></a>
 ## Directory structure
@@ -63,6 +61,8 @@ The default visualization path is the tracked `test_data/inference.png` and is o
 ## Expected Results
 
 The CLI prints `target`, `prompts`, `scores`, `order`, and `image_saved`. `scores` are cosine similarities in prompt order; `order` contains descending prompt indices. The visualization writes each prompt and score onto a copy of the input image. The expected qualitative result for `dog.jpg` is a higher score for `a dog` than for `a diagram` (source validation expectation); no numeric benchmark is published.
+
+The encoders produce 512-dimensional features. The bundled BPE vocabulary is `runtime/python/bpe_simple_vocab_16e6.txt.gz`; cosine scores remain in prompt order, and the runtime also returns their descending rank order.
 
 <a id="entry-points"></a>
 ## Entry Points

@@ -1,5 +1,9 @@
 # ResNeXt 图像分类
 
+ResNeXt 在 ResNet 的基础上采用组卷积与并行残差变换。
+
+[English README](README.md)
+
 <a id="overview"></a>
 
 ## 概述
@@ -24,11 +28,11 @@ ResNeXt 在残差网络的基础上引入 split-transform-merge 设计，通过�
 *图（上游论文 Table 1）：逐 stage 的 block 结构表——每个 ResNeXt
 bottleneck 把稠密 1×1/3×3/1×1 变换替换为分组 3×3（C=32），参数量
 （25.0 对 25.5 M）与 FLOPs（4.2 对 4.1 G）相对 ResNet-50 几乎不变。
-；图中为上游训练结构，实际
+图中为上游训练结构，实际
 部署制品是 INT8 量化的 `50_32x4d` 变体（224×224 NV12，见
 [支持范围](#support-matrix)）。*
 
-输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。统一 Python 任务复用已有分类实现，按前处理、推理、后处理组织；标签读取、绘图和文件输出由 CLI 负责。
+输入一张 BGR 图像，输出 ImageNet-1k Top-K 类别 ID、分数和可选标签。`ResNeXtClassifier` 在 `classify.py` 中实现前处理、推理和后处理；标签读取、绘图和文件输出由 `cli.py` 负责。
 
 <a id="directory"></a>
 ## 目录结构
@@ -43,7 +47,7 @@ resnext/
 ├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-└── requirements-host.txt  # 源码或数据文件
+└── requirements-host.txt  # Python 依赖
 ```
 
 <a id="support-matrix"></a>

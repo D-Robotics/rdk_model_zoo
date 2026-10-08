@@ -21,6 +21,8 @@ python/
 └── run.sh  # Run the sample
 ```
 
+Start with [main.py](main.py): it constructs `R3D18Classifier` and calls `predict`. [classification.py](classification.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.
+
 <a id="environment"></a>
 ## Environment
 
@@ -86,7 +88,7 @@ Successful CLI execution prints one JSON object to stdout:
 
 `predictions` contains exactly `--top-k` entries sorted by descending softmax probability. `class_id` is an integer in `[0,399]`; `score` is the float32 softmax value; `label` is the JSON mapping name with embedded double quotes removed. No output file is written by the CLI.
 
-The entry is split for readability: `main.py` resolves the selection, constructs
+The execution entry is `main.py`: `main.py` resolves the selection, constructs
 `R3D18Classifier`, calls `predict` once and prints the JSON report;
 option declarations, the `--list-models`/`--dry-run` modes and the report
 assembly live in `cli.py`. The classification algorithm itself lives in

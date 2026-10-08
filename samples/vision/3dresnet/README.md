@@ -5,14 +5,9 @@ English | [简体中文](./README_cn.md)
 <a id="overview"></a>
 ## Overview
 
-R3D-18 classifies a preprocessed 16-frame video clip into one of the 400 Kinetics action classes. The network extends ResNet-18 with 3D convolutions so that spatial and temporal features are modeled together. The Python runtime consumes an already-normalized RGB float32 NumPy clip and returns the softmax Top-K action classes through a `VideoClassificationTask` whose `preprocess → infer → postprocess` stages are chained by `predict`.
+R3D-18 recognizes actions in short video clips. It extends ResNet-18 with 3D convolutions to learn spatial and temporal features together, and predicts the 400 Kinetics action classes.
 
-- Paper: [A Closer Look at Spatiotemporal Convolutions for Action Recognition](https://arxiv.org/abs/1711.11248)
-- Reference implementation: [torchvision r3d_18](https://pytorch.org/vision/main/models/generated/torchvision.models.video.r3d_18.html)
-- Repository location: `samples/vision/3dresnet`
-- Task: video action classification using the 3D ResNet model.
-
-The input is not a video file. `test_data/video0.npy` is the prepared `(1, 3, 16, 112, 112)` clip. Frame decoding, sampling, resizing, and normalization are outside this sample.
+References: [A Closer Look at Spatiotemporal Convolutions for Action Recognition](https://arxiv.org/abs/1711.11248), [torchvision r3d_18](https://pytorch.org/vision/main/models/generated/torchvision.models.video.r3d_18.html).
 
 <a id="directory"></a>
 ## Directory structure
@@ -96,11 +91,13 @@ The default clip is `test_data/video0.npy`; the source sample reports its Top-1 
 
 Score values depend on the compiled artifact; the numbers above illustrate the schema. The actual list contains `--top-k` entries, and labels come from the 400-entry Kinetics mapping in `test_data` (the loader strips the quote characters embedded in the original label names).
 
+The runtime reads the prepared RGB float32 clip `test_data/video0.npy` with shape `(1,3,16,112,112)`. Prepare video decoding, frame sampling, resizing and normalization before invoking it.
+
 <a id="entry-points"></a>
 ## Entry Points
 
 - Model preparation: [`model/README.md`](model/README.md) — one exact S100 HBM asset and explicit download commands.
-- Python runtime: [`runtime/python/README.md`](runtime/python/README.md) — CLI and four-stage `VideoClassificationTask` API.
+- Python runtime: [`runtime/python/README.md`](runtime/python/README.md) — CLI and `R3D18Classifier` API.
 - Conversion: [`conversion/README.md`](conversion/README.md) — source conversion notes, screenshots, and missing-recipe boundaries.
 - Evaluation: [`evaluator/README.md`](evaluator/README.md) — functional reference and the published performance record.
 - Runtime language: Python.

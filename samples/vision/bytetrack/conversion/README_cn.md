@@ -45,7 +45,7 @@ ByteTrack 没有导出步骤，因为 tracker 没有神经图。重建 detector 
 三个外部输出就是 `model/README_cn.md` 中的 manifest HBM 行；ByteTrack 没有独立编译 tracker 制品。`TRACKER_SOURCE_MAP.json` 记录 tracker 源文件 hash 以及唯一相对 import 改动。
 
 <a id="known-gaps"></a>
-## 缺失项
+## 补充准备
 
 - 没有 S 导出脚本、checkpoint pin、YAML、校准生成器或编译日志。
 - 测试视频未随附，需按 sample README 中的 archive URL 自行获取。

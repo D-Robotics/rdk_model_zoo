@@ -13,7 +13,7 @@ never guesses a layout from a file name.
 <a id="overview"></a>
 ## C++ inference
 
-Use this directory for c++ inference.
+Run YOLOv5 detection with the X5 HB-DNN or S UCP adapter. The native application prepares NV12 input, decodes three detection heads and saves an annotated image.
 
 <a id="directory"></a>
 ## Directory structure
@@ -162,7 +162,7 @@ synchronous forward and cleanup.
 - The compiled build identity (`YOLOV5_TARGET_NAME`) must equal `--target`; build
   one binary per S alignment and run it on its matching target.
 
-Declared differences from the fixed sources (preserved, not silently unified):
+Python and C++ runtime behavior:
 
 - **Default X5 variant.** The fixed X5 C++ source defaults to the `s-v2.0`
   artifact; the unified Python runtime defaults to `n-v7.0`. The native

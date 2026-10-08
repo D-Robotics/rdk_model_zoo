@@ -1,5 +1,3 @@
-> 下文的板测结果、精度与 SDK 发布说明为 S 源发布的记录；板端运行按本指南命令执行。
-
 [English](README.md) | [简体中文](README_cn.md)
 
 # S100 / S100P：OELLM 1.0.0 C++ Runtime

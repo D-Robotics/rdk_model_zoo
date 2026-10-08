@@ -7,7 +7,7 @@ Run E11/E26 prompt-free instance segmentation through `run.sh`, or embed the C++
 <a id="overview"></a>
 ## C++ inference
 
-Use this directory for c++ inference.
+Run prompt-free YOLOE instance segmentation with the matching X5 or S model. The native pipeline decodes candidates, restores masks and writes predictions and visualization files.
 
 <a id="directory"></a>
 ## Directory structure

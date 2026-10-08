@@ -89,7 +89,7 @@ Board-side execution of the downloaded artifact uses the [Python runtime](../run
 No ONNX, checkpoint, calibration, or compiler workspace artifact is supplied.
 
 <a id="known-gaps"></a>
-## Known Gaps
+## Additional preparation
 
 - No executable ONNX export script or pinned source checkpoint.
 - No calibration dataset, sample count, quantization YAML, or calibration command.

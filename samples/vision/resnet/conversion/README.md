@@ -117,7 +117,7 @@ ResNet152 — `get_calibration_data.py` (run inside the OE container, cwd:
 this conversion directory) converts 100 ImageNet validation images to
 float32 RGB calibration data. Two inputs are user-provided and must be
 edited in the script before running; the script's default paths point into
-the legacy tree and need replacing:
+an external OE example tree; set them for your local data:
 
 ```python
 # get_calibration_data.py — user-edited inputs
@@ -195,6 +195,17 @@ ships no ResNet50 config. Run only the block for the artifact being
 regenerated. If
 the OE sample uses a different command spelling, run that exact
 command and record it with the result.
+
+For an ONNX path stored in `ONNX`, use the same X5 checker and compiler:
+
+```bash
+export ONNX="$WORK/resnet18.onnx"
+export X5_MARCH="${X5_MARCH:-bayes-e}"
+hb_mapper --version
+hb_mapper checker --model-type onnx --march "$X5_MARCH" --model "$ONNX"
+hb_mapper makertbin --model-type onnx --config "$OE_CONFIG"
+find "$WORK" -type f -name '*.bin' -print
+```
 
 <a id="validation"></a>
 ## Validation

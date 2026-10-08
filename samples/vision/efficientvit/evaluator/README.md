@@ -83,6 +83,14 @@ Figures published in the X5 release (x5-v1.1.3; Float Top-1 on the pre-quantizat
 
 The published quantized Top-1 is 72.50% and Float Top-1 is 73.75%. Use the same dataset and preprocessing when comparing these results.
 
+### RDK X5 performance
+
+Data version: x5-v1.1.3. The `.bin` model uses `hbm_runtime`, CPU 8×A55@1.8GHz with full-core Performance scheduling, and BPU 1×Bayes-e@1GHz with 10TOPS INT8 compute. Single-thread latency measures one frame on one BPU core; multi-thread latency and FPS measure concurrent task submission.
+
+| Model | Size | Params (M) | Float Top-1 | Quant Top-1 | Single-thread Latency (ms) | Multi-thread Latency (ms) | FPS |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| EfficientViT_m5 | 224x224 | 12.4 | 73.75% | 72.50% | 6.34 | 22.69 | 174.70 |
+
 <a id="boundaries"></a>
 ## Dataset-level evaluation
 

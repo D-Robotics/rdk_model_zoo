@@ -9,7 +9,7 @@ C++ inference runtime for Gemma4-E2B VLM on D-Robotics RDK S100P and S600. It lo
 <a id="overview"></a>
 ## C++ inference
 
-Use this directory for c++ inference.
+Run multi-turn text or image-and-text chat with Gemma4-E2B on S100P/S600. The native application loads Vision before Text, keeps both models resident and streams generated text.
 
 <a id="directory"></a>
 ## Directory structure
@@ -625,21 +625,27 @@ The engine prints nothing on its own. `SetDebugSink` installs an explicit
 receiver for Text engine diagnostics. `[VLM-FIX]` diagnostics follow
 `GEMMA4_DEBUG=1`.
 
-The example below is compiled and executed by the host check
-(`tests/native/readme_text_stages_example.cpp`); against the host doubles it
-produces exactly the output shown. On a board, replace the fixture model
-handle with `hbDNNInitializeFromFiles` over the prepared HBM — everything
-else is identical.
+The example takes the Text HBM path and embedding path as its two arguments.
+Prepare `model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm` and
+`model/tok_embeddings.bin` under `GEMMA4_HOME` first. Include the runtime's
+`inc` directory and link its Text engine sources with the matching DNN/UCP SDK,
+as in the CMake build above. The token IDs below illustrate the tensor API;
+for chat text, obtain IDs with `TokenizerBridge::EncodeMessagesJson`.
 
 ```cpp
-#include "text_fixture.hpp"   // host double for the SDK in the offline check
+#include "gemma4_text_engine.hpp"
+#include "gemma4_text_inputs.hpp"
+#include <stdexcept>
 #include <iostream>
 #include <vector>
 
-int main() {
+int main(int argc, char **argv) {
+  if (argc != 3) return 2;
   // Stage setup: subgraph owners plus one borrowed KV cache.
-  hbDNNPackedHandle_t packed = text_fixture::Packed();
-  gemma4::TokenEmbeddings embeddings("tok_embeddings.bin");
+  hbDNNPackedHandle_t packed = nullptr;
+  const char *model_file = argv[1];
+  if (hbDNNInitializeFromFiles(&packed, &model_file, 1) != 0) return 2;
+  gemma4::TokenEmbeddings embeddings(argv[2]);
   gemma4::ModelIo prefill = gemma4::InitTextSubgraph(packed, "prefill", gemma4::kChunkSize);
   gemma4::ModelIo decode  = gemma4::InitTextSubgraph(packed, "decode", 1);
   gemma4::KvCache cache;
@@ -661,9 +667,10 @@ int main() {
   std::cout << "stage first token: " << first << std::endl;
   prefill.Clear();
   decode.Clear();
+  hbDNNRelease(packed);
 
   // High-level session: the same stages orchestrated multi-turn.
-  gemma4::TextEngine engine("text.hbm", "tok_embeddings.bin");
+  gemma4::TextEngine engine(argv[1], argv[2]);
   engine.SetDebugSink([](const std::string &m) { std::cerr << m << "\n"; });
   const auto out = engine.Generate(prompt, 2);
   const auto next = engine.ContinueGenerate(out, 1);
@@ -673,13 +680,7 @@ int main() {
 }
 ```
 
-Exact host-check output (board token ids differ with the real model):
-
-```
-stage first token: 104
-session out: 11 22 33 44 55 104 100
-session processed: 7
-```
+The program prints the first generated token ID and the session token count. Generated IDs depend on the supplied model and prompt.
 
 Lifetime rules for the example: subgraph handles are borrowed from the packed
 model, so `prefill`/`decode` must be `Clear`ed before the packed model is

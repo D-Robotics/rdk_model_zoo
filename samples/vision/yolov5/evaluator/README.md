@@ -191,9 +191,101 @@ The complete source X5 reference table:
 | YOLOv5l_v7.0 | 640x640 | 46.5 M | 23.3 FPS | 12 ms |
 | YOLOv5x_v7.0 | 640x640 | 86.7 M | 13.1 FPS | 12 ms |
 
+
+### Board performance
+
+The following COCO detector measurements separate BPU execution from Python postprocessing. Thread counts are stated for each measurement. X3 values are historical reference data; the runtime support matrix above applies to current board usage.
+
+### RDK X5 & RDK X5 Module
+Object Detection (COCO)
+| Model | size (pixels) | number of classes | number of parameters (M) | float-point precision <br/>(mAP:50-95) | quantization precision <br/>(mAP:50-95) | BPU latency /BPU throughput (threads) | post-processing time <br/>(Python) |
+|---------|---------|-------|---------|---------|----------|--------------------|--------------------|
+| YOLOv5s_v2.0 | 640×640 | 80 | 7.5  | - | - | 14.3 ms / 70.0 FPS(1 thread) <br/> 18.7 ms / 106.8 FPS(2 threads) | 12 ms |
+| YOLOv5m_v2.0 | 640×640 | 80 | 21.8 | - | - | 27.0 ms / 37.0 FPS(1 thread) <br/> 44.1 ms / 45.2 FPS(2 threads) | 12 ms |
+| YOLOv5l_v2.0 | 640×640 | 80 | 47.8 | - | - | 50.8 ms / 19.7 FPS(1 thread) <br/> 91.5 ms / 21.8 FPS(2 threads) | 12 ms |
+| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 | - | - | 86.3 ms / 11.6 FPS(1 thread) <br/> 162.1 ms / 12.3 FPS(2 threads) | 12 ms |
+| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 | 28.0 | - | 8.5 ms / 117.4 FPS(1 thread) <br/> 8.9 ms / 223.0 FPS(2 threads) <br/> 10.7 ms / 277.2 FPS(3 threads) | 12 ms |
+| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 | 37.4 | - | 13.0 ms / 76.6 FPS(1 thread) <br/> 16.0 ms / 124.2 FPS(2 threads) | 12 ms |
+| YOLOv5m_v7.0 | 640×640 | 80 | 21.2 | 45.4 | - | 25.7 ms / 38.8 FPS(1 thread) <br/> 41.2 ms / 48.4 FPS(2 threads) | 12 ms |
+| YOLOv5l_v7.0 | 640×640 | 80 | 46.5 | 49.0 | - | 47.9 ms / 20.9 FPS(1 thread) <br/> 85.7 ms / 23.3 FPS(2 threads) | 12 ms |
+| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 | 50.7 | - | 81.1 ms / 12.3 FPS(1 thread) <br/> 151.9 ms / 13.1 FPS(2 threads) | 12 ms |
+
+### RDK X3 & RDK X3 Module (historical benchmark)
+Object Detection (COCO)
+| Model | size (pixels) | number of classes | number of parameters (M) | float-point precision <br/>(mAP:50-95) | quantization precision <br/>(mAP:50-95) | BPU latency /BPU throughput (threads) | post-processing time <br/>(Python) |
+
+|---------|---------|-------|---------|---------|----------|--------------------|--------------------|
+| YOLOv5s_v2.0 | 640×640 | 80 | 7.5 M | - | - | 55.7 ms / 17.9 FPS(1 thread) <br/> 61.1 ms / 32.7 FPS(2 threads) <br/> 78.1 ms / 38.2 FPS(3 threads)| 13 ms |
+| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 M | - | - | 512.4 ms / 2.0 FPS(1 thread) <br/> 519.7 ms / 3.8 FPS(2 threads) <br/> 762.1 ms / 3.9 FPS(3 threads) | 13 ms |
+| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 M | 28.0 | - | 85.4 ms / 11.7 FPS(1 thread) <br/> 88.9 ms / 22.4 FPS(2 threads) <br/> 121.9 ms / 32.7 FPS(4 threads) <br/> 213.0 ms / 37.2 FPS(8 threads) | 13 ms |
+| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 M | 37.4 | - | 175.4 ms / 5.7 FPS(1 thread) <br/> 182.3 ms / 11.0 FPS(2 threads) <br/> 217.9 ms / 18.2 FPS(4 threads) <br/> 378.0 ms / 20.9 FPS(8 threads) | 13 ms |
+| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 M | 50.7 | - | 1021.5 ms / 1.0 FPS(1 thread) <br/> 1024.3 ms / 2.0 FPS(2 threads) <br/> 1238.0 ms / 3.1 FPS(4 threads)<br/> 2070.0 ms / 3.6 FPS(8 threads) | 13 ms |
+
+Note:
+
+1. BPU latency vs. BPU throughput.
+- Single thread latency is the latency of a single frame, single thread, single BPU core,BPU reasoning about a task.
+- Multi-threaded frame rate means that multiple threads can simultaneously jam tasks to the BPU, each BPU core can handle the tasks of multiple threads. In general, 4 threads can control the single frame latency to be small, and eat all Bpus to 100% at the same time, getting a good balance between throughput (FPS) and frame latency. X5 BPU as a whole is quite good, generally 2 threads can eat up the BPU, frame latency and throughput are very good.
+- The table generally records data where the throughput no longer increases significantly with the number of threads.
+-BPU latency and BPU throughput are tested at the board side using the following commands
+```bash
+hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv12_modified.bin
+```
+2. The test board is in the best condition.
+The state of -X5 is the best state: 8 × A55@1.8G for CPU, full core Performance scheduling, and 1 × Bayes-e@10TOPS for BPU.
+```bash
+sudo bash -c "echo 1 > /sys/devices/system/cpu/cpufreq/boost" # 1.8 Ghz
+sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor" # Performance Mode
+```
+-X3 is in the best state: 4 × A53@1.8G for CPU, full core Performance scheduling, and 2 × Bernoulli2@5TOPS for BPU.
+```bash
+sudo bash -c "echo 1 > /sys/devices/system/cpu/cpufreq/boost" # 1.8 Ghz
+sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor" # Performance Mode
+```
+Floating-point/fixed-point mAP: 50-95 accuracy calculated using pycocotools, from the COCO dataset, refer to the Microsoft paper, here used to evaluate the accuracy degradation of on-board deployments.
+4. On post-processing: At present, the post-processing of Python reconstruction on X5 only takes about 12ms from a single core and a single thread in serial, that is to say, it only takes 2 CPU cores (200% CPU occupancy, and the maximum CPU occupancy is 800%), and 166 frames of image post-processing can be completed every minute, and post-processing will not constitute a bottleneck.
+
+
+
+
+## Additional reference measurements
+
+Each table retains its published model, board and measurement conditions. Measurements from different configurations are separate reference sets.
+
+### RDK X5 & RDK X5 Module
+
+| 模型 | 尺寸(像素) | 类别数 | 参数量(M) | BPU延迟/BPU吞吐量(线程) |  后处理时间 |
+|-----|----------|-------|----------|------------------------|----------|
+| YOLOv5s_v2.0 | 640×640 | 80 | 7.5  | 13.0 ms / 76.6 FPS (1 thread  ) <br/> 16.0 ms / 124.8 FPS (2 threads) | 2.3 ms |
+| YOLOv5m_v2.0 | 640×640 | 80 | 21.8 | 23.9 ms / 41.7 FPS (1 thread  ) <br/> 37.7 ms / 52.9 FPS (2 threads) | 2.3 ms |
+| YOLOv5l_v2.0 | 640×640 | 80 | 47.8 | 44.0 ms / 22.7 FPS (1 thread  ) <br/> 78.2 ms / 25.5 FPS (2 threads) | 2.3 ms |
+| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 | 74.1 ms / 13.5 FPS (1 thread  ) <br/> 137.6 ms / 14.5 FPS (2 threads) | 2.3 ms |
+| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 | 8.1 ms / 122.7 FPS (1 thread  ) <br/> 8.6 ms / 232.3 FPS (2 threads) <br/> 9.7 ms / 307.9 FPS (3 threads) | 2.3 ms |
+| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 | 11.9 ms / 83.8 FPS (1 thread  ) <br/> 13.7 ms / 145.3 FPS (2 threads) | 2.3 ms |
+| YOLOv5m_v7.0 | 640×640 | 80 | 21.2 | 22.7 ms / 44.0 FPS (1 thread  ) <br/> 35.3 ms / 56.6 FPS (2 threads) | 2.3 ms |
+| YOLOv5l_v7.0 | 640×640 | 80 | 46.5 | 41.6 ms / 24.0 FPS (1 thread  ) <br/> 73.1 ms / 27.3 FPS (2 threads) | 2.3 ms |
+| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 | 69.7 ms / 14.4 FPS (1 thread  ) <br/> 129.0 ms / 15.5 FPS (2 threads) | 2.3 ms |
+
+
+
 <a id="boundaries"></a>
 ## Boundaries
 
 Prepare the model and input images before comparison. X5 uses OpenCV XYXY-to-NMSBoxes; S uses class-wise XYXY NMS. Compare each target with its matching reference implementation.
 
 The source runner archives the exact pre-execution audit bytes as `instrumentation-audit.json` with `audit_file` and `audit_sha256` in the run record. It writes the copy after the child finishes to preserve the observer's empty-directory requirement. Keep the whole source capture and unified process-record directories: comparison rejects a missing or changed audit and missing unified stdout/stderr, and includes the audit plus both sides' logs under `originals/` in its output.
+
+
+### X3 and X3 Module COCO measurement set (Chinese source)
+
+[Source measurement table](https://github.com/D-Robotics/rdk_model_zoo/blob/cb86079ae5befcef9ca50fb46c8a6d8980106dec/samples/vision/yolov5/README_cn.md).
+
+This source reports 3 ms postprocessing for all five rows; the English source table above reports 13 ms. Each full record has its own source attribution. Conditions: X3 / X3 Module, COCO detection, 4 × A53 at 1.8 GHz with all cores in performance mode, 2 × Bernoulli2 at 1.0 GHz. Single-thread latency measures one task on one BPU core; multithread FPS measures queued throughput. These X3 measurements do not indicate current runtime support.
+
+| 模型 | 尺寸(像素) | 类别数 | 参数量(M) | 浮点精度<br/>(mAP:50-95) | 量化精度<br/>(mAP:50-95) | BPU延迟/BPU吞吐量(线程) |  后处理时间 |
+|---------|---------|-------|---------|---------|----------|--------------------|--------------------|
+| YOLOv5s_v2.0 | 640×640 | 80 | 7.5 M | - | - | 55.7 ms / 17.9 FPS(1 thread) <br/> 61.1 ms / 32.7 FPS(2 threads) <br/> 78.1 ms / 38.2 FPS(3 threads)| 3 ms |
+| YOLOv5x_v2.0 | 640×640 | 80 | 89.0 M | - | - | 512.4 ms / 2.0 FPS(1 thread) <br/> 519.7 ms / 3.8 FPS(2 threads) <br/> 762.1 ms / 3.9 FPS(3 threads) | 3 ms |
+| YOLOv5n_v7.0 | 640×640 | 80 | 1.9 M | 28.0 | - | 85.4 ms / 11.7 FPS(1 thread) <br/> 88.9 ms / 22.4 FPS(2 threads) <br/> 121.9 ms / 32.7 FPS(4 threads) <br/> 213.0 ms / 37.2 FPS(8 threads) | 3 ms |
+| YOLOv5s_v7.0 | 640×640 | 80 | 7.2 M | 37.4 | - | 175.4 ms / 5.7 FPS(1 thread) <br/> 182.3 ms / 11.0 FPS(2 threads) <br/> 217.9 ms / 18.2 FPS(4 threads) <br/> 378.0 ms / 20.9 FPS(8 threads) | 3 ms |
+| YOLOv5x_v7.0 | 640×640 | 80 | 86.7 M | 50.7 | - | 1021.5 ms / 1.0 FPS(1 thread) <br/> 1024.3 ms / 2.0 FPS(2 threads) <br/> 1238.0 ms / 3.1 FPS(4 threads)<br/> 2070.0 ms / 3.6 FPS(8 threads) | 3 ms |

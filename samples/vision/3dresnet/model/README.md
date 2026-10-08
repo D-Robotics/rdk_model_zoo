@@ -64,4 +64,4 @@ When `--model-path` is omitted, the runtime resolves this path from the exact se
 | --- | --- | --- |
 | `s100/r3d_18.hbm` | HBM | `sha256: null (unknown)` |
 
-The `null` value reflects the active manifest; no checksum is guessed or copied from another artifact.
+The manifest records no publisher SHA-256 for this artifact.

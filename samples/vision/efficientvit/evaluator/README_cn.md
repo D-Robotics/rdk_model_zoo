@@ -79,6 +79,14 @@ X5 发布（x5-v1.1.3）的已发布数值（Float Top-1 为量化前 ONNX 结�
 
 已发布记录中量化 Top-1（72.50%）与 float 值（73.75%）接近。
 
+### RDK X5 性能
+
+数据版本：x5-v1.1.3。使用 `.bin` 模型与 `hbm_runtime`，CPU 8×A55@1.8GHz、全核 Performance 调度，BPU 1×Bayes-e@1GHz，10TOPS INT8。单线程延迟为单帧、单线程、单 BPU 核推理时间，多线程延迟和 FPS 对应并发提交任务。
+
+| Model | Size | Params (M) | Float Top-1 | Quant Top-1 | Single-thread Latency (ms) | Multi-thread Latency (ms) | FPS |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| EfficientViT_m5 | 224x224 | 12.4 | 73.75% | 72.50% | 6.34 | 22.69 | 174.70 |
+
 <a id="boundaries"></a>
 ## 数据集级评估
 
