@@ -46,6 +46,26 @@ body.compare {
 .compare .task-option[aria-pressed="true"] .facet-count,
 .compare .facet-option[aria-pressed="true"] .facet-count { color: inherit; }
 
+/* Code and command text use the shared monospace stack; reports render
+   node names in bare <code> and JSON in <pre>. */
+.compare code, .compare pre, .compare kbd, .compare samp { font-family: var(--mz-mono); }
+
+/* Sidebar width fits English task names on one line: the check takes the
+   count's place when a task is chosen instead of reserving its own slot. */
+.compare .catalog-layout { grid-template-columns: 240px minmax(0, 1fr); }
+.compare .task-children { padding-left: 24px; }
+.compare .task-option { padding-inline: 6px; }
+.compare .task-option > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.compare .task-option > .selection-mark { display: none; }
+.compare .task-option[aria-pressed="true"] > .selection-mark { display: block; margin-left: auto; }
+.compare .task-option[aria-pressed="true"] > .facet-count { display: none; }
+@media (max-width: 1120px) {
+  .compare .catalog-layout { grid-template-columns: 216px minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .compare .catalog-layout { grid-template-columns: none; }
+}
+
 /* Cards: name, task, platforms. */
 .compare .model-card { border: 1px solid var(--mz-line); border-radius: var(--mz-radius); background: var(--mz-surface); box-shadow: none; }
 .compare .model-card:hover { border-color: var(--mz-line-strong); box-shadow: var(--mz-shadow-raised); }
@@ -63,7 +83,7 @@ body.compare {
 #detail .mz-quickstart-label > span { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--mz-fill); color: var(--mz-ink-2); font-size: 11px; font-weight: 600; }
 #detail .mz-code { position: relative; min-width: 0; border: 1px solid var(--mz-line); border-radius: var(--mz-radius); background: var(--mz-surface); }
 #detail .mz-code pre { margin: 0; padding: 14px 52px 14px 16px; overflow-x: auto; }
-#detail .mz-code code { color: var(--mz-ink); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; line-height: 1.7; white-space: pre; }
+#detail .mz-code code { color: var(--mz-ink); font-family: var(--mz-mono); font-size: 12.5px; line-height: 1.7; white-space: pre; }
 #detail .mz-copy { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: var(--mz-radius-sm); background: var(--mz-surface); color: var(--mz-ink-3); }
 #detail .mz-copy:hover { background: var(--mz-fill); color: var(--mz-ink); }
 #detail .mz-copy:focus-visible { outline: 2px solid var(--mz-accent); outline-offset: 1px; }
@@ -118,17 +138,17 @@ body.compare {
 @media (prefers-reduced-motion: no-preference) {
   /* Catalog cards rise in, staggered, whenever the list renders. */
   .compare .model-card { animation: mz-rise 760ms var(--mz-ease-out) both; animation-delay: calc(var(--i, 0) * 60ms); transition: border-color 300ms var(--mz-ease-out), box-shadow 500ms var(--mz-ease-out), transform 500ms var(--mz-ease-out); }
-  .compare .model-card:hover { transform: translateY(-3px); }
-  .compare .model-card:active { transform: translateY(-1px) scale(0.99); transition-duration: 120ms; }
+  /* Hover grows the card in place by a hair; it never lifts or shifts. */
+  .compare .model-card:hover { transform: scale(1.01); }
+  .compare .model-card:active { transform: scale(0.995); transition-duration: 120ms; }
   .compare .model-card .thumbnail img { transition: transform 1000ms var(--mz-ease-out); }
   .compare .model-card:hover .thumbnail img { transform: scale(1.035); }
   @keyframes mz-rise { from { opacity: 0; transform: translateY(16px); } }
 
-  /* Detail content fades up when a model opens. */
-  #detail:not([hidden]) > :not(dialog) { animation: mz-fade-up 680ms var(--mz-ease-out) both; }
-  #detail:not([hidden]) > :nth-child(2) { animation-delay: 70ms; }
-  #detail:not([hidden]) > :nth-child(n+3) { animation-delay: 140ms; }
-  @keyframes mz-fade-up { from { opacity: 0; transform: translateY(12px); } }
+  /* A model opened from the catalog grows in slightly from the top, without
+     moving; switching platform or size swaps the content in place. */
+  #detail.is-entering { transform-origin: 50% 0; animation: mz-zoom-in 560ms var(--mz-ease-out) both; }
+  @keyframes mz-zoom-in { from { opacity: 0; transform: scale(0.985); } }
 
   /* Pressed controls give way slightly. */
   .compare .button, #detail .mz-store-choice, .compare .facet-option, .compare .task-option, .compare .domain-heading { transition-property: background-color, border-color, box-shadow, color, transform; transition-duration: 160ms; transition-timing-function: var(--mz-ease-out); }

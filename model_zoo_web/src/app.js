@@ -57,7 +57,7 @@
   const header = `<header class="header"><a href="#" class="brand"><img src="assets/rdk-brand/logo.png" alt="D-Robotics"><span class="brand-separator"></span><span>RDK <b>Model Zoo</b></span></a><div class="header-actions"><nav aria-label="主导航"><button type="button" class="header-action ask-nav-button" data-ask-open aria-controls="ask-ai-panel" aria-expanded="false"><span class="header-action-icon" style="--header-icon:url('assets/icons/sparkles.svg')" aria-hidden="true"></span>Ask AI</button><a class="header-action" href="${esc(repositoryUrl)}" target="_blank" rel="noopener"><span class="header-action-icon" style="--header-icon:url('assets/icons/external-link.svg')" aria-hidden="true"></span>GitHub</a></nav>${languageSwitch}</div></header>`;
   const footer = `<footer><div class="footer-inner"><span>© ${new Date().getFullYear()} D-Robotics <span class="muted">/ Model Zoo</span></span></div></footer>`;
   const search = '<label class="search"><span class="search-icon" aria-hidden="true"></span><input id="search" type="search" placeholder="搜索模型" aria-label="搜索模型"></label>';
-  const taskFilters = `<div id="filters" class="task-domains">${facets.groups.map(group => `<div class="task-domain${domainCount(group) ? '' : ' is-empty'}" data-domain="${group.id}"><div class="domain-heading"><button type="button" class="domain-label" data-task-group="${group.id}" aria-expanded="false" aria-controls="tasks-${group.id}" data-active="false"><span class="domain-symbol domain-symbol-${group.id}" aria-hidden="true"></span><span>${group.label}</span><small class="facet-count">${domainCount(group)}</small></button><button type="button" class="domain-toggle" data-toggle-group="${group.id}" aria-expanded="false" aria-controls="tasks-${group.id}" aria-label="${group.label}子类"></button></div><div class="task-children" id="tasks-${group.id}" hidden>${group.tasks.map(([id, label]) => `<button type="button" class="task-option${taskCount(id) ? '' : ' is-empty'}" data-task-id="${id}" aria-pressed="false"><span>${label}</span><small class="facet-count">${taskCount(id)}</small><span class="selection-mark" aria-hidden="true"></span></button>`).join('')}</div></div>`).join('')}</div>`;
+  const taskFilters = `<div id="filters" class="task-domains">${facets.groups.map(group => `<div class="task-domain${domainCount(group) ? '' : ' is-empty'}" data-domain="${group.id}"><div class="domain-heading"><button type="button" class="domain-label" data-task-group="${group.id}" aria-expanded="false" aria-controls="tasks-${group.id}" data-active="false"><span class="domain-symbol domain-symbol-${group.id}" aria-hidden="true"></span><span>${group.label}</span><small class="facet-count">${domainCount(group)}</small></button><button type="button" class="domain-toggle" data-toggle-group="${group.id}" aria-expanded="false" aria-controls="tasks-${group.id}" aria-label="${group.label}子类"></button></div><div class="task-children" id="tasks-${group.id}" hidden>${group.tasks.map(([id, label]) => `<button type="button" class="task-option${taskCount(id) ? '' : ' is-empty'}" data-task-id="${id}" aria-pressed="false"><span title="${label}">${label}</span><small class="facet-count">${taskCount(id)}</small><span class="selection-mark" aria-hidden="true"></span></button>`).join('')}</div></div>`).join('')}</div>`;
   const platformFilters = `<fieldset class="sidebar-group"><legend>硬件平台</legend><div id="platform-filters">${platforms.map(platform => {
     const count = groups.filter(group => group.platforms.includes(platform)).length;
     if (!count) return '';
@@ -275,10 +275,12 @@
     document.title = `${model.variantName || model.name} · RDK ${model.releasePlatform || modelPlatforms(model)[0] || ''} · RDK Model Zoo`;
     if (!$('catalog').hidden) state.scroll = window.scrollY;
     // Switching platforms stays in place: only entering from the catalog
-    // scrolls to the top of the detail page.
-    const keepScroll = $('detail').hidden ? 0 : window.scrollY;
+    // (or opening a model link directly) scrolls to the top and animates.
+    const entering = $('detail').hidden;
+    const keepScroll = entering ? 0 : window.scrollY;
     $('catalog').hidden = true;
     $('detail').hidden = false;
+    $('detail').classList.toggle('is-entering', entering);
     $('detail').innerHTML = window.ModelDetail.render({ model, models, data });
     window.ModelDetail.bind($('detail'), model, models, data);
     window.scrollTo(0, keepScroll);
