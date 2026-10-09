@@ -577,6 +577,186 @@ variants:
       source_checkpoint_sha256: 361fbfabab285c3237700b6bb91d7ecfa602cd945fffda8dbe1242829b71e73f
       source_weight_url: https://huggingface.co/Ultralytics/YOLO26/blob/070ac3c51435984d992ba92eb3f234daf4e4500d/yolo26n-seg.pt
       precision_policy: int8
+  - platform: x5
+    status: released
+    released_at: '2026-10-09'
+    artifact:
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/n/x5/yolo26n_seg_bayese_640x640_nv12.bin
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/n/x5/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/n/x5/SHA256SUMS
+      size_bytes: 4529151
+      sha256: cdc79ead90d753445c7a9c3e156fb68762f3646095b58c42ea6c532f55e8ac4f
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/n/x5/oe_report.html
+    accuracy:
+      dataset: COCO val2017 instance segmentation
+      task: instance segmentation
+      images: 5000
+      float_onnx:
+        box_ap: 0.39864508853366654
+        mask_ap: 0.33968741506938
+      runtime:
+        box_ap: 0.335
+        mask_ap: 0.29
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 1
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 21.760647333333335
+        observed_min_latency_ms: 15.957
+        observed_max_latency_ms: 22.329
+        aggregate_fps: 45.905680047509314
+      - threads: 2
+        average_latency_ms: 22.100771333333334
+        observed_min_latency_ms: 19.141001
+        observed_max_latency_ms: 30.854
+        aggregate_fps: 90.13672840331499
+      fixed_input:
+        source_image_sha256: 6ad91f53f6e9d9c788852373253089e9e97238879e31bbb5315e76a0bbb6e299
+        preprocessing: YOLO26 seg runtime resize_type=1, OpenCV BGR I420 to NV12
+        resize_type: 1
+        model_size:
+        - 640
+        - 640
+        padding:
+        - 0
+        - 106
+        - 0
+        - 107
+        planes:
+        - name: images_y
+          shape:
+          - 1
+          - 640
+          - 640
+          - 1
+          size_bytes: 409600
+          sha256: 137d7c1fba4a079554bbe75947e2e1d4b2825a36a4802ab0ea91d6d3d24c2789
+        - name: images_uv
+          shape:
+          - 1
+          - 320
+          - 320
+          - 2
+          size_bytes: 204800
+          sha256: 3785cbe156b00366d2d245583a8ab93db8eb72c56fb6b5bb8cb9aa4071b95936
+      end_to_end:
+      - tool: ultralytics_yolo_seg
+        implementation: native_cpp_yolo26_segment_ltrb
+        timing_scope: in_memory_bgr_to_instance_masks
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1200.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 35726.747066
+        metrics_ms:
+          preprocess:
+            mean: 1.238368
+            p50: 1.221357
+            p95: 1.276521
+            min: 1.189837
+            max: 3.673594
+          runtime:
+            mean: 16.149042
+            p50: 16.108442
+            p95: 16.334322
+            min: 15.978546
+            max: 17.06184
+          postprocess:
+            mean: 42.108036
+            p50: 41.797556
+            p95: 43.772941
+            min: 41.552201
+            max: 52.039898
+          end_to_end:
+            mean: 59.495447
+            p50: 59.139084
+            p95: 61.174809
+            min: 58.783709
+            max: 71.494203
+        throughput_fps: 16.79414
+      - tool: ultralytics_yolo_seg
+        implementation: native_cpp_yolo26_segment_ltrb
+        timing_scope: in_memory_bgr_to_instance_masks
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1200.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 37402.135886
+        metrics_ms:
+          preprocess:
+            mean: 1.567849
+            p50: 1.356524
+            p95: 3.150249
+            min: 1.265128
+            max: 6.248726
+          runtime:
+            mean: 16.611769
+            p50: 16.561797
+            p95: 16.881956
+            min: 16.128629
+            max: 26.226157
+          postprocess:
+            mean: 44.034276
+            p50: 43.545248
+            p95: 47.900167
+            min: 42.116453
+            max: 54.336488
+          end_to_end:
+            mean: 62.213894
+            p50: 61.576633
+            p95: 66.148038
+            min: 60.172379
+            max: 82.406651
+        throughput_fps: 32.083729
+    provenance:
+      repository_commit: becb068806fb5a1c3291be544ea5e54194777847
+      build_id: 20260928T1222Z-becb0688-yolo26n-seg-rtx5090-r03
+      conversion_receipt_sha256: 8182643c1334fd07d210324c2dc33cf8825b7c796a38c62b2b2f36084220c0f3
+      board_receipt_sha256: 57a92a8e2d8d562e2f53716f3e29b00050af2c14374f751464974ebd6fb202d3
+      float_result_sha256: c76dc6027f4ba8fc3a8f569f4504b24fa9ff35200b6bf9e795b23517c5ae6921
+      comparison_receipt_sha256: eeb70a6e308a4259422a73e142886fb29833a5e5cf0cf3dc1d4ebad4925e5ece
+      campaign_source_sha256: 361fbfabab285c3237700b6bb91d7ecfa602cd945fffda8dbe1242829b71e73f
+      source_checkpoint_sha256: 361fbfabab285c3237700b6bb91d7ecfa602cd945fffda8dbe1242829b71e73f
+      source_weight_url: https://huggingface.co/Ultralytics/YOLO26/blob/070ac3c51435984d992ba92eb3f234daf4e4500d/yolo26n-seg.pt
+      precision_policy: int8
+      platform_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      runtime_source_sha256: f36e69f1a0f11c861d225355c3b6b5869cb501bded511466726501da739498cd
 - size: s
   model:
     parameter_count: 11505800
@@ -1140,6 +1320,186 @@ variants:
       source_checkpoint_sha256: 3da1d83e31caec96f9300eb4064f4f62882c133c7c264d63dfe61a7c197837a4
       source_weight_url: https://huggingface.co/Ultralytics/YOLO26/blob/070ac3c51435984d992ba92eb3f234daf4e4500d/yolo26s-seg.pt
       precision_policy: int8
+  - platform: x5
+    status: released
+    released_at: '2026-10-09'
+    artifact:
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/s/x5/yolo26s_seg_bayese_640x640_nv12.bin
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/s/x5/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/s/x5/SHA256SUMS
+      size_bytes: 12262399
+      sha256: 45279e89f9f811f0a3a46a3d657884753e7304000cc87c97da845f2f08979dd0
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/s/x5/oe_report.html
+    accuracy:
+      dataset: COCO val2017 instance segmentation
+      task: instance segmentation
+      images: 5000
+      float_onnx:
+        box_ap: 0.4725163740101024
+        mask_ap: 0.39874430222346113
+      runtime:
+        box_ap: 0.434
+        mask_ap: 0.373
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 1
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 30.599239333333333
+        observed_min_latency_ms: 28.384001
+        observed_max_latency_ms: 39.394001
+        aggregate_fps: 32.6604109278469
+      - threads: 2
+        average_latency_ms: 47.23720433333333
+        observed_min_latency_ms: 31.541
+        observed_max_latency_ms: 56.069
+        aggregate_fps: 42.207592132842485
+      fixed_input:
+        source_image_sha256: 6ad91f53f6e9d9c788852373253089e9e97238879e31bbb5315e76a0bbb6e299
+        preprocessing: YOLO26 seg runtime resize_type=1, OpenCV BGR I420 to NV12
+        resize_type: 1
+        model_size:
+        - 640
+        - 640
+        padding:
+        - 0
+        - 106
+        - 0
+        - 107
+        planes:
+        - name: images_y
+          shape:
+          - 1
+          - 640
+          - 640
+          - 1
+          size_bytes: 409600
+          sha256: 137d7c1fba4a079554bbe75947e2e1d4b2825a36a4802ab0ea91d6d3d24c2789
+        - name: images_uv
+          shape:
+          - 1
+          - 320
+          - 320
+          - 2
+          size_bytes: 204800
+          sha256: 3785cbe156b00366d2d245583a8ab93db8eb72c56fb6b5bb8cb9aa4071b95936
+      end_to_end:
+      - tool: ultralytics_yolo_seg
+        implementation: native_cpp_yolo26_segment_ltrb
+        timing_scope: in_memory_bgr_to_instance_masks
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1200.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 53713.55783
+        metrics_ms:
+          preprocess:
+            mean: 1.243047
+            p50: 1.233128
+            p95: 1.29297
+            min: 1.200878
+            max: 2.939675
+          runtime:
+            mean: 29.397582
+            p50: 29.527147
+            p95: 29.610844
+            min: 28.552581
+            max: 35.00535
+          postprocess:
+            mean: 58.831114
+            p50: 59.053397
+            p95: 59.43424
+            min: 57.53083
+            max: 65.522061
+          end_to_end:
+            mean: 89.471744
+            p50: 89.82863
+            p95: 90.197025
+            min: 87.444374
+            max: 103.467086
+        throughput_fps: 11.170364
+      - tool: ultralytics_yolo_seg
+        implementation: native_cpp_yolo26_segment_ltrb
+        timing_scope: in_memory_bgr_to_instance_masks
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1200.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 55366.137462
+        metrics_ms:
+          preprocess:
+            mean: 1.617086
+            p50: 1.360421
+            p95: 4.101596
+            min: 1.233003
+            max: 9.702028
+          runtime:
+            mean: 29.911204
+            p50: 29.312083
+            p95: 35.483192
+            min: 28.761332
+            max: 50.102351
+          postprocess:
+            mean: 60.631412
+            p50: 60.080421
+            p95: 64.150853
+            min: 58.995418
+            max: 66.663023
+          end_to_end:
+            mean: 92.159702
+            p50: 90.971779
+            p95: 97.60394
+            min: 89.517172
+            max: 122.736975
+        throughput_fps: 21.673898
+    provenance:
+      repository_commit: becb068806fb5a1c3291be544ea5e54194777847
+      build_id: 20260928T1222Z-becb0688-yolo26s-seg-rtx5090-r03
+      conversion_receipt_sha256: 3290969eebe4258ddaf92b21628f99a94265adbba2c1420fc6f699b722f0ee43
+      board_receipt_sha256: 6fec5b0099312516f5be989ca33873673fd6b124fe04b082192808671a640999
+      float_result_sha256: 1df1aee003f152e356d101999903b959aba31b1cd8385bb28ffd81bf2bf5377f
+      comparison_receipt_sha256: 74071b16f50feb37612ee67efcc2604e5097a70081d7b799fccc78b1c1d72703
+      campaign_source_sha256: 3da1d83e31caec96f9300eb4064f4f62882c133c7c264d63dfe61a7c197837a4
+      source_checkpoint_sha256: 3da1d83e31caec96f9300eb4064f4f62882c133c7c264d63dfe61a7c197837a4
+      source_weight_url: https://huggingface.co/Ultralytics/YOLO26/blob/070ac3c51435984d992ba92eb3f234daf4e4500d/yolo26s-seg.pt
+      precision_policy: int8
+      platform_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      runtime_source_sha256: f36e69f1a0f11c861d225355c3b6b5869cb501bded511466726501da739498cd
 - size: m
   model:
     parameter_count: 27112072
@@ -1703,6 +2063,186 @@ variants:
       source_checkpoint_sha256: 16b636f04e8fb6a325b3370f22dc5e5535ff473e384f4d041fd28d788f6ee9f5
       source_weight_url: https://huggingface.co/Ultralytics/YOLO26/blob/070ac3c51435984d992ba92eb3f234daf4e4500d/yolo26m-seg.pt
       precision_policy: int8
+  - platform: x5
+    status: released
+    released_at: '2026-10-09'
+    artifact:
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/m/x5/yolo26m_seg_bayese_640x640_nv12.bin
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/m/x5/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/m/x5/SHA256SUMS
+      size_bytes: 24845311
+      sha256: de2bc711c1a20f7ba2930d6b87b7e705177822034a17e8043c3c2153a7e55ecd
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/m/x5/oe_report.html
+    accuracy:
+      dataset: COCO val2017 instance segmentation
+      task: instance segmentation
+      images: 5000
+      float_onnx:
+        box_ap: 0.5242308491980036
+        mask_ap: 0.4404458497533362
+      runtime:
+        box_ap: 0.467
+        mask_ap: 0.406
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 1
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 59.084686000000005
+        observed_min_latency_ms: 58.466
+        observed_max_latency_ms: 69.209
+        aggregate_fps: 16.91893026679602
+      - threads: 2
+        average_latency_ms: 107.343885
+        observed_min_latency_ms: 63.294998
+        observed_max_latency_ms: 117.384003
+        aggregate_fps: 18.5797312782499
+      fixed_input:
+        source_image_sha256: 6ad91f53f6e9d9c788852373253089e9e97238879e31bbb5315e76a0bbb6e299
+        preprocessing: YOLO26 seg runtime resize_type=1, OpenCV BGR I420 to NV12
+        resize_type: 1
+        model_size:
+        - 640
+        - 640
+        padding:
+        - 0
+        - 106
+        - 0
+        - 107
+        planes:
+        - name: images_y
+          shape:
+          - 1
+          - 640
+          - 640
+          - 1
+          size_bytes: 409600
+          sha256: 137d7c1fba4a079554bbe75947e2e1d4b2825a36a4802ab0ea91d6d3d24c2789
+        - name: images_uv
+          shape:
+          - 1
+          - 320
+          - 320
+          - 2
+          size_bytes: 204800
+          sha256: 3785cbe156b00366d2d245583a8ab93db8eb72c56fb6b5bb8cb9aa4071b95936
+      end_to_end:
+      - tool: ultralytics_yolo_seg
+        implementation: native_cpp_yolo26_segment_ltrb
+        timing_scope: in_memory_bgr_to_instance_masks
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 74689.839606
+        metrics_ms:
+          preprocess:
+            mean: 1.233038
+            p50: 1.219421
+            p95: 1.276151
+            min: 1.190836
+            max: 2.9708
+          runtime:
+            mean: 59.82381
+            p50: 58.791835
+            p95: 64.686861
+            min: 58.633125
+            max: 65.164019
+          postprocess:
+            mean: 63.367984
+            p50: 63.186867
+            p95: 63.964041
+            min: 62.861054
+            max: 72.538207
+          end_to_end:
+            mean: 124.424831
+            p50: 123.268059
+            p95: 129.278627
+            min: 122.802559
+            max: 134.523425
+        throughput_fps: 8.033221
+      - tool: ultralytics_yolo_seg
+        implementation: native_cpp_yolo26_segment_ltrb
+        timing_scope: in_memory_bgr_to_instance_masks
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 77036.662469
+        metrics_ms:
+          preprocess:
+            mean: 1.574032
+            p50: 1.362066
+            p95: 3.124042
+            min: 1.203587
+            max: 12.302285
+          runtime:
+            mean: 60.659298
+            p50: 59.8429
+            p95: 63.940022
+            min: 58.962501
+            max: 109.894813
+          postprocess:
+            mean: 65.934989
+            p50: 64.96954
+            p95: 69.205149
+            min: 62.964096
+            max: 74.778672
+          end_to_end:
+            mean: 128.168319
+            p50: 126.841737
+            p95: 131.322827
+            min: 124.342938
+            max: 190.590961
+        throughput_fps: 15.576999
+    provenance:
+      repository_commit: becb068806fb5a1c3291be544ea5e54194777847
+      build_id: 20260928T1222Z-becb0688-yolo26m-seg-rtx5090-r03
+      conversion_receipt_sha256: 5ef2b3f45dd2b0066c43d1e4ec9fd44ab3e16984ccfc3600fb41db774397bc46
+      board_receipt_sha256: 0b0949b9cad2dd74c0165dcf6538a5d33daa578e0431aa6ab94e757ec080c9dd
+      float_result_sha256: 96eba9e1bf9ab4e2df86232751caa082fc430d583e882c314c5c02035047abbe
+      comparison_receipt_sha256: 8fdcef69436c92db3583ffe12d24551c20ae5e7ff84b27e2f7aac643854ef325
+      campaign_source_sha256: 16b636f04e8fb6a325b3370f22dc5e5535ff473e384f4d041fd28d788f6ee9f5
+      source_checkpoint_sha256: 16b636f04e8fb6a325b3370f22dc5e5535ff473e384f4d041fd28d788f6ee9f5
+      source_weight_url: https://huggingface.co/Ultralytics/YOLO26/blob/070ac3c51435984d992ba92eb3f234daf4e4500d/yolo26m-seg.pt
+      precision_policy: int8
+      platform_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      runtime_source_sha256: f36e69f1a0f11c861d225355c3b6b5869cb501bded511466726501da739498cd
 - size: l
   model:
     parameter_count: 31515528
@@ -2266,6 +2806,186 @@ variants:
       source_checkpoint_sha256: 636024306410afa1732692322fba57d22ea2b1c2f07613fcee131a93d7dd380c
       source_weight_url: https://huggingface.co/Ultralytics/YOLO26/blob/070ac3c51435984d992ba92eb3f234daf4e4500d/yolo26l-seg.pt
       precision_policy: int8
+  - platform: x5
+    status: released
+    released_at: '2026-10-09'
+    artifact:
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/l/x5/yolo26l_seg_bayese_640x640_nv12.bin
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/l/x5/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/l/x5/SHA256SUMS
+      size_bytes: 29760526
+      sha256: 9e21fb3d7feb1318058b4caa03109f891ca548aabcb1f255632ae230f8b7659d
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/l/x5/oe_report.html
+    accuracy:
+      dataset: COCO val2017 instance segmentation
+      task: instance segmentation
+      images: 5000
+      float_onnx:
+        box_ap: 0.5419433277880767
+        mask_ap: 0.45425250888559887
+      runtime:
+        box_ap: 0.517
+        mask_ap: 0.438
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 1
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 70.35031599999999
+        observed_min_latency_ms: 69.551003
+        observed_max_latency_ms: 80.177002
+        aggregate_fps: 14.210236613939347
+      - threads: 2
+        average_latency_ms: 129.52892533333332
+        observed_min_latency_ms: 74.533997
+        observed_max_latency_ms: 140.444
+        aggregate_fps: 15.398157076702995
+      fixed_input:
+        source_image_sha256: 6ad91f53f6e9d9c788852373253089e9e97238879e31bbb5315e76a0bbb6e299
+        preprocessing: YOLO26 seg runtime resize_type=1, OpenCV BGR I420 to NV12
+        resize_type: 1
+        model_size:
+        - 640
+        - 640
+        padding:
+        - 0
+        - 106
+        - 0
+        - 107
+        planes:
+        - name: images_y
+          shape:
+          - 1
+          - 640
+          - 640
+          - 1
+          size_bytes: 409600
+          sha256: 137d7c1fba4a079554bbe75947e2e1d4b2825a36a4802ab0ea91d6d3d24c2789
+        - name: images_uv
+          shape:
+          - 1
+          - 320
+          - 320
+          - 2
+          size_bytes: 204800
+          sha256: 3785cbe156b00366d2d245583a8ab93db8eb72c56fb6b5bb8cb9aa4071b95936
+      end_to_end:
+      - tool: ultralytics_yolo_seg
+        implementation: native_cpp_yolo26_segment_ltrb
+        timing_scope: in_memory_bgr_to_instance_masks
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1200.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 88794.779027
+        metrics_ms:
+          preprocess:
+            mean: 1.224444
+            p50: 1.214504
+            p95: 1.275264
+            min: 1.183254
+            max: 1.70113
+          runtime:
+            mean: 72.716445
+            p50: 71.853538
+            p95: 76.027018
+            min: 69.696199
+            max: 79.102809
+          postprocess:
+            mean: 73.978385
+            p50: 73.841358
+            p95: 74.31454
+            min: 73.44596
+            max: 83.07557
+          end_to_end:
+            mean: 147.919274
+            p50: 147.301941
+            p95: 151.196817
+            min: 144.58158
+            max: 161.880921
+        throughput_fps: 6.757154
+      - tool: ultralytics_yolo_seg
+        implementation: native_cpp_yolo26_segment_ltrb
+        timing_scope: in_memory_bgr_to_instance_masks
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1200.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 90007.336829
+        metrics_ms:
+          preprocess:
+            mean: 1.57678
+            p50: 1.384504
+            p95: 1.925504
+            min: 1.213545
+            max: 10.026653
+          runtime:
+            mean: 71.469662
+            p50: 71.050973
+            p95: 74.669303
+            min: 70.020742
+            max: 132.430046
+          postprocess:
+            mean: 76.705771
+            p50: 76.102593
+            p95: 80.237648
+            min: 73.706419
+            max: 86.626747
+          end_to_end:
+            mean: 149.752212
+            p50: 148.757447
+            p95: 153.120925
+            min: 146.165502
+            max: 218.731042
+        throughput_fps: 13.332246
+    provenance:
+      repository_commit: becb068806fb5a1c3291be544ea5e54194777847
+      build_id: 20260928T1222Z-becb0688-yolo26l-seg-rtx5090-r03
+      conversion_receipt_sha256: b2671cbf69f0f3f32c8be4cbe7b9075c472dcdc91882f829374a38c744f3495a
+      board_receipt_sha256: a6abeff8c03b554f375f68c61e1acf44f051336b34c240413e241adf7348452b
+      float_result_sha256: c2815a3f22101e6b5c740bcb4145933c04382c06b6cb7230b0732af166e284f0
+      comparison_receipt_sha256: d1645d626f6dac992dd429e7e23f0f0e10743531dd9f44e580f9d327ee0fd01e
+      campaign_source_sha256: 636024306410afa1732692322fba57d22ea2b1c2f07613fcee131a93d7dd380c
+      source_checkpoint_sha256: 636024306410afa1732692322fba57d22ea2b1c2f07613fcee131a93d7dd380c
+      source_weight_url: https://huggingface.co/Ultralytics/YOLO26/blob/070ac3c51435984d992ba92eb3f234daf4e4500d/yolo26l-seg.pt
+      precision_policy: int8
+      platform_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      runtime_source_sha256: f36e69f1a0f11c861d225355c3b6b5869cb501bded511466726501da739498cd
 - size: x
   model:
     parameter_count: 70693800
@@ -2829,3 +3549,183 @@ variants:
       source_checkpoint_sha256: 92b3de0065766a17180d6219858717dc9d03cdce8a3ca9576c97fd75aabb64f3
       source_weight_url: https://huggingface.co/Ultralytics/YOLO26/blob/070ac3c51435984d992ba92eb3f234daf4e4500d/yolo26x-seg.pt
       precision_policy: int8
+  - platform: x5
+    status: released
+    released_at: '2026-10-09'
+    artifact:
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/x/x5/yolo26x_seg_bayese_640x640_nv12.bin
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/x/x5/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/x/x5/SHA256SUMS
+      size_bytes: 61873166
+      sha256: 8e48ff99512f9268adf96e114a7fcc5f37c4ef11b36938516176f4976061012c
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/seg/x/x5/oe_report.html
+    accuracy:
+      dataset: COCO val2017 instance segmentation
+      task: instance segmentation
+      images: 5000
+      float_onnx:
+        box_ap: 0.5636898068529662
+        mask_ap: 0.4696624273795977
+      runtime:
+        box_ap: 0.511
+        mask_ap: 0.437
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 1
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 143.79267866666666
+        observed_min_latency_ms: 143.115005
+        observed_max_latency_ms: 153.110001
+        aggregate_fps: 6.953418055787691
+      - threads: 2
+        average_latency_ms: 276.26069133333334
+        observed_min_latency_ms: 148.350998
+        observed_max_latency_ms: 287.157013
+        aggregate_fps: 7.220492132136595
+      fixed_input:
+        source_image_sha256: 6ad91f53f6e9d9c788852373253089e9e97238879e31bbb5315e76a0bbb6e299
+        preprocessing: YOLO26 seg runtime resize_type=1, OpenCV BGR I420 to NV12
+        resize_type: 1
+        model_size:
+        - 640
+        - 640
+        padding:
+        - 0
+        - 106
+        - 0
+        - 107
+        planes:
+        - name: images_y
+          shape:
+          - 1
+          - 640
+          - 640
+          - 1
+          size_bytes: 409600
+          sha256: 137d7c1fba4a079554bbe75947e2e1d4b2825a36a4802ab0ea91d6d3d24c2789
+        - name: images_uv
+          shape:
+          - 1
+          - 320
+          - 320
+          - 2
+          size_bytes: 204800
+          sha256: 3785cbe156b00366d2d245583a8ab93db8eb72c56fb6b5bb8cb9aa4071b95936
+      end_to_end:
+      - tool: ultralytics_yolo_seg
+        implementation: native_cpp_yolo26_segment_ltrb
+        timing_scope: in_memory_bgr_to_instance_masks
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1200.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 135708.430058
+        metrics_ms:
+          preprocess:
+            mean: 2.812315
+            p50: 2.796529
+            p95: 2.877914
+            min: 1.791047
+            max: 5.473891
+          runtime:
+            mean: 143.818597
+            p50: 143.602745
+            p95: 143.838529
+            min: 143.157868
+            max: 153.148939
+          postprocess:
+            mean: 77.473333
+            p50: 77.223492
+            p95: 77.594658
+            min: 76.804553
+            max: 90.323884
+          end_to_end:
+            mean: 224.104245
+            p50: 223.645683
+            p95: 227.361401
+            min: 222.43022
+            max: 238.456142
+        throughput_fps: 4.421243
+      - tool: ultralytics_yolo_seg
+        implementation: native_cpp_yolo26_segment_ltrb
+        timing_scope: in_memory_bgr_to_instance_masks
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1200.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 167217.669069
+        metrics_ms:
+          preprocess:
+            mean: 2.928411
+            p50: 2.899342
+            p95: 2.992662
+            min: 1.900464
+            max: 13.390664
+          runtime:
+            mean: 193.717572
+            p50: 194.004974
+            p95: 199.05203
+            min: 143.75212
+            max: 280.243929
+          postprocess:
+            mean: 79.565629
+            p50: 79.126082
+            p95: 81.740589
+            min: 77.106389
+            max: 96.583402
+          end_to_end:
+            mean: 276.211612
+            p50: 276.057794
+            p95: 281.729468
+            min: 236.428053
+            max: 389.389994
+        throughput_fps: 7.176275
+    provenance:
+      repository_commit: becb068806fb5a1c3291be544ea5e54194777847
+      build_id: 20260928T1222Z-becb0688-yolo26x-seg-rtx5090-r03
+      conversion_receipt_sha256: f653dfcf1860527261ae299e14743cc726f443838ce5e774724e16b3372daf64
+      board_receipt_sha256: c9457422eea23ec55e0720f32f2e11e89326afca8f79d59923242a748fcefc68
+      float_result_sha256: 49da25fa2dca8ad70cc1a4a240eb1c715fbd8b42dc77ab111c01bb1caad45973
+      comparison_receipt_sha256: 66d327eb483afa51b2c53829c48362b481d398f0b5b860301908af11e7c04795
+      campaign_source_sha256: 92b3de0065766a17180d6219858717dc9d03cdce8a3ca9576c97fd75aabb64f3
+      source_checkpoint_sha256: 92b3de0065766a17180d6219858717dc9d03cdce8a3ca9576c97fd75aabb64f3
+      source_weight_url: https://huggingface.co/Ultralytics/YOLO26/blob/070ac3c51435984d992ba92eb3f234daf4e4500d/yolo26x-seg.pt
+      precision_policy: int8
+      platform_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      runtime_source_sha256: f36e69f1a0f11c861d225355c3b6b5869cb501bded511466726501da739498cd
