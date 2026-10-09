@@ -67,7 +67,7 @@
 
   $('app').innerHTML = `${header}<main id="main" tabindex="-1"><div id="catalog">${catalog}</div><section id="detail" hidden></section></main>${footer}`;
 
-  function card(group, index = 0) {
+  function card(group, index = 0, arriving = false) {
     const model = group.entry;
     const description = window.HubI18n?.locale === 'en' ? (model.descriptionEn || model.description) : model.description;
     const openModel = group.members.find(member => modelPlatforms(member).some(platform => selectedPlatforms.has(platform)))
@@ -75,7 +75,7 @@
            openRank(modelPlatforms(a)[0]) - openRank(modelPlatforms(b)[0])
            || sizeRank(a.modelSize) - sizeRank(b.modelSize))[0];
     const platformOrder = [...group.platforms].sort((a, b) => openRank(a) - openRank(b));
-    return `<article class="model-card" style="--i:${Math.min(index, 8)}"><a class="gallery-link" href="#model/${esc(openModel.id)}" aria-label="查看 ${esc(model.name)}" title="${esc(description)}"><div class="thumbnail" data-image="${esc(model.id)}"><img src="${esc(model.coverImage)}" alt="${esc(model.name)}" loading="lazy"></div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="card-task">${esc(model.task)}</p><div class="card-platforms">${platformOrder.map(platform => `<span>${esc(platform)}</span>`).join('')}</div></div></a></article>`;
+    return `<article class="model-card${arriving ? ' is-arriving' : ''}" style="--i:${Math.min(index, 11)}"><a class="gallery-link" href="#model/${esc(openModel.id)}" aria-label="查看 ${esc(model.name)}" title="${esc(description)}"><div class="thumbnail" data-image="${esc(model.id)}"><img src="${esc(model.coverImage)}" alt="${esc(model.name)}" loading="lazy"></div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="card-task">${esc(model.task)}</p><div class="card-platforms">${platformOrder.map(platform => `<span>${esc(platform)}</span>`).join('')}</div></div></a></article>`;
   }
 
   function matchesTask(model) {
@@ -117,7 +117,12 @@
     if (remaining && !$('catalog').hidden) listObserver?.observe($('load-more-trigger'));
   }
 
+  // Cards fade in on the first render and with each loaded batch; later
+  // renders (filters, search) replace the list in place.
+  let rendered = false;
   function render() {
+    const arriving = !rendered;
+    rendered = true;
     state.visibleCount = batchSize;
     listObserver?.disconnect();
     const platformItems = groups.filter(group => !selectedPlatforms.size || group.platforms.some(platform => selectedPlatforms.has(platform)));
@@ -140,7 +145,7 @@
       $('grid').innerHTML = '<div class="empty"><h3>没有匹配的模型</h3><p>试试其他关键词，或清除筛选条件。</p><div class="ask-empty-actions"><button class="button secondary" id="empty-reset" type="button">清除筛选</button><button class="button secondary" type="button" data-ask-open>Ask AI</button><button class="button" type="button" data-ask-request>提交模型需求</button></div></div>';
       $('empty-reset').addEventListener('click', reset);
     } else {
-      $('grid').innerHTML = items.slice(0, state.visibleCount).map(card).join('');
+      $('grid').innerHTML = items.slice(0, state.visibleCount).map((group, index) => card(group, index, arriving)).join('');
     }
 
     const filterCount = Number(Boolean(state.domain)) + selectedPlatforms.size + Number(Boolean(query));
@@ -191,7 +196,7 @@
     if ($('catalog').hidden || state.visibleCount >= filteredItems.length) return;
     const next = filteredItems.slice(state.visibleCount, state.visibleCount + batchSize);
     state.visibleCount += next.length;
-    $('grid').insertAdjacentHTML('beforeend', next.map(card).join(''));
+    $('grid').insertAdjacentHTML('beforeend', next.map((group, index) => card(group, index, true)).join(''));
     syncLoadMore();
     window.HubI18n?.apply();
   }
@@ -240,6 +245,11 @@
     render();
   });
   $('load-more').addEventListener('click', loadNextBatch);
+  // Once a card has arrived, showing the catalog again must not replay it.
+  const settleCard = card => card.classList.remove('is-arriving');
+  $('grid').addEventListener('animationend', event => {
+    if (event.target.classList.contains('model-card')) settleCard(event.target);
+  });
 
   if ('IntersectionObserver' in window) {
     listObserver = new window.IntersectionObserver(entries => {
@@ -278,6 +288,7 @@
     // (or opening a model link directly) scrolls to the top and animates.
     const entering = $('detail').hidden;
     const keepScroll = entering ? 0 : window.scrollY;
+    $('grid').querySelectorAll('.is-arriving').forEach(settleCard);
     $('catalog').hidden = true;
     $('detail').hidden = false;
     $('detail').classList.toggle('is-entering', entering);

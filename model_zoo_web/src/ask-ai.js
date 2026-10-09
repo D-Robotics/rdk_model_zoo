@@ -154,7 +154,7 @@
     };
     if (reducedMotion.matches) finish();
     else {
-      closing = { finish, timer: setTimeout(finish, 520) };
+      closing = { finish, timer: setTimeout(finish, 320) };
       panel.addEventListener('transitionend', finish);
       panel.classList.add('is-closing');
       scrim.classList.add('is-closing');
@@ -569,7 +569,21 @@
     requestSubmit.focus();
   }
 
-  function closeRequest() { request.close(); }
+  // The request dialog sinks back out before it closes, like the model picker.
+  function closeRequest() {
+    if (!request.open || request.classList.contains('is-closing')) return;
+    if (reducedMotion.matches) return request.close();
+    const finish = () => {
+      clearTimeout(timer);
+      request.removeEventListener('transitionend', onEnd);
+      request.classList.remove('is-closing');
+      request.close();
+    };
+    const onEnd = event => { if (event.target === request && event.propertyName === 'opacity') finish(); };
+    const timer = setTimeout(finish, 320);
+    request.addEventListener('transitionend', onEnd);
+    request.classList.add('is-closing');
+  }
 
   document.addEventListener('click', event => {
     const open = event.target.closest('[data-ask-open], [data-ask-model]');
@@ -587,6 +601,7 @@
     if (prompt) send(prompt.dataset.askPrompt);
   });
   scrim.addEventListener('click', closePanel);
+  request.addEventListener('cancel', event => { event.preventDefault(); closeRequest(); });
   composer.addEventListener('submit', event => { event.preventDefault(); send(question.value); });
   question.addEventListener('input', () => {
     sendButton.disabled = !question.value.trim();

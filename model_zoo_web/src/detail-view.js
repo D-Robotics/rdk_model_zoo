@@ -299,9 +299,27 @@
         syncDownloadDialog();
       }
     });
+    // The sheet sinks back out before it closes, whichever way it is dismissed.
+    function closeDownloadDialog() {
+      if (!downloadDialog?.open || downloadDialog.classList.contains('is-closing')) return;
+      if (typeof downloadDialog.close !== 'function') return downloadDialog.removeAttribute('open');
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return downloadDialog.close();
+      const finish = () => {
+        clearTimeout(timer);
+        downloadDialog.removeEventListener('transitionend', onEnd);
+        downloadDialog.classList.remove('is-closing');
+        downloadDialog.close();
+      };
+      const onEnd = event => { if (event.target === downloadDialog && event.propertyName === 'opacity') finish(); };
+      const timer = setTimeout(finish, 320);
+      downloadDialog.addEventListener('transitionend', onEnd);
+      downloadDialog.classList.add('is-closing');
+    }
     listen(downloadDialog, 'click', event => {
-      if (event.target === downloadDialog) downloadDialog.close();
+      if (event.target === downloadDialog) closeDownloadDialog();
     });
+    listen(downloadDialog, 'submit', event => { event.preventDefault(); closeDownloadDialog(); });
+    listen(downloadDialog, 'cancel', event => { event.preventDefault(); closeDownloadDialog(); });
     listen(downloadDialog, 'close', () => {
       document.documentElement.classList.remove('mz-dialog-open');
       downloadOpener?.focus();

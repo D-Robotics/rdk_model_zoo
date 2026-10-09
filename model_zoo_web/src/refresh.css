@@ -19,10 +19,12 @@ body.compare {
   --mz-radius: 8px;
   --mz-shadow-raised: 0 8px 24px #1d1d1f14;
   --mz-focus: 0 0 0 3px #0071e333;
-  /* Motion: settle quickly, then ease in the last few pixels. */
-  --mz-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --mz-ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
-  --mz-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  /* Motion, after apple.com: one symmetric curve, two durations, and exits
+     a little quicker than entrances. */
+  --mz-ease: cubic-bezier(0.4, 0, 0.6, 1);
+  --mz-fast: 240ms;
+  --mz-slow: 320ms;
+  --mz-exit: 200ms;
   --mz-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236e6e73' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   --accent: var(--mz-accent);
   --ink: var(--mz-ink);
@@ -105,7 +107,7 @@ body.compare {
 #detail .mz-store-step legend { padding: 0; margin-bottom: 14px; color: var(--mz-ink); font-size: 20px; font-weight: 600; line-height: 1.35; }
 #detail .mz-store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 #detail .mz-store-list { display: grid; gap: 12px; }
-#detail .mz-store-choice { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; min-height: 72px; padding: 16px 18px; border: 1px solid var(--mz-line-strong); border-radius: var(--mz-radius); background: var(--mz-surface); cursor: pointer; transition: border-color 150ms, box-shadow 150ms; }
+#detail .mz-store-choice { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; min-height: 72px; padding: 16px 18px; border: 1px solid var(--mz-line-strong); border-radius: var(--mz-radius); background: var(--mz-surface); cursor: pointer; }
 #detail .mz-store-choice[hidden] { display: none; }
 #detail .mz-store-choice:hover { border-color: var(--mz-line-hover); }
 #detail .mz-store-choice:has(input:checked) { border-color: var(--mz-accent); box-shadow: inset 0 0 0 1px var(--mz-accent); }
@@ -125,7 +127,7 @@ body.compare {
 
 /* Report filters: the native selects take the site's control shape. */
 .rd-filters input[type="search"],
-.rd-filters select { height: 36px; border: 1px solid var(--mz-line-strong); border-radius: var(--mz-radius); background-color: var(--mz-surface); color: var(--mz-ink); font-size: 13px; transition: border-color 150ms, box-shadow 150ms; }
+.rd-filters select { height: 36px; border: 1px solid var(--mz-line-strong); border-radius: var(--mz-radius); background-color: var(--mz-surface); color: var(--mz-ink); font-size: 13px; }
 .rd-filters input[type="search"] { padding: 0 12px; }
 .rd-filters select { -webkit-appearance: none; appearance: none; padding: 0 34px 0 12px; background-image: var(--mz-chevron); background-position: right 11px center; background-repeat: no-repeat; background-size: 14px; cursor: pointer; }
 .rd-filters input[type="search"]:hover,
@@ -133,41 +135,66 @@ body.compare {
 .rd-filters input[type="search"]:focus-visible,
 .rd-filters select:focus-visible { outline: none; border-color: var(--mz-accent); box-shadow: var(--mz-focus); }
 
-/* Motion only marks a change of state: content arriving, a sheet opening,
-   a choice being pressed. Nothing moves on its own. */
+/* Motion only marks a change of state: content arriving, a layer opening or
+   closing. Things move a few pixels at most, and nothing moves on its own.
+   Choosing an option or pressing a button changes state at once. */
 @media (prefers-reduced-motion: no-preference) {
-  /* Catalog cards rise in, staggered, whenever the list renders. */
-  .compare .model-card { animation: mz-rise 760ms var(--mz-ease-out) both; animation-delay: calc(var(--i, 0) * 60ms); transition: border-color 300ms var(--mz-ease-out), box-shadow 500ms var(--mz-ease-out), transform 500ms var(--mz-ease-out); }
+  /* Cards fade up when they first arrive (first load, next batch); a filter
+     change swaps the list in place. */
+  .compare .model-card { transition: border-color var(--mz-slow) var(--mz-ease), box-shadow var(--mz-slow) var(--mz-ease), transform var(--mz-slow) var(--mz-ease); }
+  .compare .model-card.is-arriving { animation: mz-rise var(--mz-slow) var(--mz-ease) both; animation-delay: calc(var(--i, 0) * 20ms); }
   /* Hover grows the card in place by a hair; it never lifts or shifts. */
   .compare .model-card:hover { transform: scale(1.01); }
-  .compare .model-card:active { transform: scale(0.995); transition-duration: 120ms; }
-  .compare .model-card .thumbnail img { transition: transform 1000ms var(--mz-ease-out); }
+  .compare .model-card .thumbnail img { transition: transform var(--mz-slow) var(--mz-ease); }
   .compare .model-card:hover .thumbnail img { transform: scale(1.035); }
-  @keyframes mz-rise { from { opacity: 0; transform: translateY(16px); } }
+  @keyframes mz-rise { from { opacity: 0; transform: translateY(6px); } }
 
   /* A model opened from the catalog grows in slightly from the top, without
      moving; switching platform or size swaps the content in place. */
-  #detail.is-entering { transform-origin: 50% 0; animation: mz-zoom-in 560ms var(--mz-ease-out) both; }
-  @keyframes mz-zoom-in { from { opacity: 0; transform: scale(0.985); } }
+  #detail.is-entering { transform-origin: 50% 0; animation: mz-zoom-in var(--mz-slow) var(--mz-ease) both; }
+  @keyframes mz-zoom-in { from { opacity: 0; transform: scale(0.99); } }
 
-  /* Pressed controls give way slightly. */
-  .compare .button, #detail .mz-store-choice, .compare .facet-option, .compare .task-option, .compare .domain-heading { transition-property: background-color, border-color, box-shadow, color, transform; transition-duration: 160ms; transition-timing-function: var(--mz-ease-out); }
-  .compare .button:active { transform: scale(0.97); }
-  #detail .mz-store-choice:active { transform: scale(0.985); }
+  /* Hover and focus feedback on every control. */
+  .compare .button, .compare .facet-option, .compare .task-option, .compare .domain-heading,
+  .compare .header-actions .header-action, .compare .language-switch button, .compare .ask-nav-button,
+  .ask-icon-button, .ask-prompt, .ask-send, .ask-message-actions button, .ask-message-assistant.is-error button,
+  .ask-request-submit, .ask-request-cancel, .ask-file-control,
+  #detail .mz-select-trigger, #detail .mz-copy, #detail .mz-dialog-close,
+  .rd-filters input[type="search"], .rd-filters select {
+    transition-property: color, background-color, border-color, box-shadow, opacity;
+    transition-duration: var(--mz-fast);
+    transition-timing-function: var(--mz-ease);
+  }
+  .compare .catalog-sidebar > summary::before { transition: transform var(--mz-fast) var(--mz-ease); }
 
-  /* Get-model sheet: scales up from slightly smaller over a fading backdrop. */
-  #detail .mz-download-dialog.mz-store[open] { transition: opacity 420ms var(--mz-ease-out), transform 680ms var(--mz-ease-sheet); }
-  #detail .mz-download-dialog.mz-store[open]::backdrop { transition: opacity 420ms var(--mz-ease-out); }
+  /* Menus and tips fade in a few pixels from their trigger and fade back out. */
+  #detail .mz-select-options { transition: opacity var(--mz-exit) var(--mz-ease), translate var(--mz-exit) var(--mz-ease), display var(--mz-exit) allow-discrete; }
+  #detail .mz-select-options:not([hidden]) { transition-duration: var(--mz-fast); }
+  #detail .mz-select-options[hidden] { opacity: 0; translate: 0 -4px; pointer-events: none; }
+  #detail .mz-select.is-above .mz-select-options[hidden] { translate: 0 4px; }
+  #detail .mz-accuracy-popover { opacity: 0; translate: 0 4px; transition: opacity var(--mz-exit) var(--mz-ease), translate var(--mz-exit) var(--mz-ease), display var(--mz-exit) allow-discrete; }
+  #detail .mz-accuracy-popover.is-open { opacity: 1; translate: 0 0; transition-duration: var(--mz-fast); }
   @starting-style {
-    #detail .mz-download-dialog.mz-store[open] { opacity: 0; transform: translateY(12px) scale(0.96); }
-    #detail .mz-download-dialog.mz-store[open]::backdrop { opacity: 0; }
+    #detail .mz-select-options:not([hidden]) { opacity: 0; translate: 0 -4px; }
+    #detail .mz-select.is-above .mz-select-options:not([hidden]) { translate: 0 4px; }
+    #detail .mz-accuracy-popover.is-open { opacity: 0; translate: 0 4px; }
   }
 
-  /* Ask AI slides in like a sheet and slides back out before hiding. */
-  .ask-panel { transition: transform 640ms var(--mz-ease-sheet), opacity 400ms var(--mz-ease-out); }
-  .ask-panel.is-closing { transform: translateX(100%); opacity: 0.6; transition-duration: 380ms; transition-timing-function: var(--mz-ease-in); }
-  .ask-scrim { transition: opacity 420ms var(--mz-ease-out); }
-  .ask-scrim.is-closing { opacity: 0; transition-duration: 340ms; }
+  /* Dialogs rise in over a fading backdrop and sink back out before closing. */
+  #detail .mz-download-dialog.mz-store[open], .ask-request-dialog[open] { transition: opacity var(--mz-slow) var(--mz-ease), transform var(--mz-slow) var(--mz-ease); }
+  #detail .mz-download-dialog.mz-store[open]::backdrop, .ask-request-dialog[open]::backdrop { transition: opacity var(--mz-slow) var(--mz-ease); }
+  #detail .mz-download-dialog.mz-store.is-closing, .ask-request-dialog.is-closing { opacity: 0; transform: translateY(8px) scale(0.98); transition-duration: var(--mz-exit); }
+  #detail .mz-download-dialog.mz-store.is-closing::backdrop, .ask-request-dialog.is-closing::backdrop { opacity: 0; transition-duration: var(--mz-exit); }
+  @starting-style {
+    #detail .mz-download-dialog.mz-store[open], .ask-request-dialog[open] { opacity: 0; transform: translateY(8px) scale(0.98); }
+    #detail .mz-download-dialog.mz-store[open]::backdrop, .ask-request-dialog[open]::backdrop { opacity: 0; }
+  }
+
+  /* Ask AI slides in from the edge and slides back out before hiding. */
+  .ask-panel { transition: transform var(--mz-slow) var(--mz-ease), opacity var(--mz-slow) var(--mz-ease); }
+  .ask-panel.is-closing { transform: translateX(100%); opacity: 0; transition-duration: var(--mz-exit); }
+  .ask-scrim { transition: opacity var(--mz-slow) var(--mz-ease); }
+  .ask-scrim.is-closing { opacity: 0; transition-duration: var(--mz-exit); }
   @starting-style {
     .ask-panel { transform: translateX(100%); }
     .ask-scrim { opacity: 0; }
