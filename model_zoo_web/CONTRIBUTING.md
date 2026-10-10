@@ -184,7 +184,9 @@ variants:
 
 - `id` 必须等于 `<source>/<family>/<task>`。
 - YAML 路径必须与 `domain/source/family/task` 完全对应。
-- `sample_path` 必须位于本仓库 `samples/` 下且真实存在。
+- `sample_path` 必须位于本仓库 `samples/` 下且真实存在：本地检出中有该目录，或在
+  `MODEL_ZOO_SAMPLE_REF` 指定的 git 引用（CI 使用 `refs/remotes/origin/develop`）中存在。
+  示例源码只需合入 `develop`，Web 分支不必携带；两处都找不到时构建失败。
 - 中文和英文描述只说明架构特点，不写板端性能、宣传语或下载说明。
 - `license.url` 必须是官方 HTTPS 页面。
 - Source 输入和 Runtime 输入必须分开记录，例如 `NCHW float32 RGB` 与

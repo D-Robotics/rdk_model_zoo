@@ -8,7 +8,9 @@ import copy
 import hashlib
 import json
 import math
+import os
 import re
+import subprocess
 from pathlib import Path, PurePosixPath
 from typing import Any
 from urllib.parse import unquote, urlparse
@@ -24,6 +26,10 @@ CATALOG_PATH = BUILD_ROOT / "catalog.json"
 META_PATH = BUILD_ROOT / "catalog.meta.json"
 OSS_HOST = "rdk-model-zoo.oss-cn-beijing.aliyuncs.com"
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+# Samples live on develop; the Web branch does not have to carry their source. When a sample
+# directory is absent from this checkout, it is verified against this git ref instead.
+SAMPLE_REF_ENV = "MODEL_ZOO_SAMPLE_REF"
+SAMPLE_REF_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$")
 BUILD_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 SIZE_ORDER = {name: index for index, name in enumerate(("n", "s", "m", "l", "x"))}
 ACCURACY_SCHEMA_PATH = WEB_ROOT / "accuracy-metrics.json"
@@ -91,8 +97,22 @@ def validate_sample_path(value: Any, label: str) -> str:
     pure_path = PurePosixPath(sample_path)
     if pure_path.is_absolute() or ".." in pure_path.parts or pure_path.parts[0] != "samples":
         raise CatalogError(f"{label} must be a safe path below samples/")
-    if not (ROOT / sample_path).is_dir():
-        raise CatalogError(f"{label} does not exist: {sample_path}")
+    if (ROOT / sample_path).is_dir():
+        return sample_path
+    ref = os.environ.get(SAMPLE_REF_ENV, "")
+    if not ref:
+        raise CatalogError(
+            f"{label} does not exist: {sample_path} "
+            f"(set {SAMPLE_REF_ENV} to a git ref such as origin/develop to verify it there)"
+        )
+    if not SAMPLE_REF_RE.match(ref):
+        raise CatalogError(f"{SAMPLE_REF_ENV} is not a plain git ref: {ref!r}")
+    kind = subprocess.run(
+        ["git", "-C", str(ROOT), "cat-file", "-t", f"{ref}:{sample_path}"],
+        capture_output=True, text=True, check=False,
+    )
+    if kind.returncode != 0 or kind.stdout.strip() != "tree":
+        raise CatalogError(f"{label} does not exist locally or in {ref}: {sample_path}")
     return sample_path
 
 
@@ -459,7 +479,10 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
 
     normalized = copy.deepcopy(record)
     normalized["source_file"] = relative_source
-    normalized["variants"].sort(key=lambda item: (SIZE_ORDER.get(item["size"], 99), item["size"]))
+    # Sizes outside the n/s/m/l/x ladder (for example conv-small-224) order by parameter count.
+    normalized["variants"].sort(
+        key=lambda item: (SIZE_ORDER.get(item["size"], 99), item["model"]["parameter_count"], item["size"])
+    )
     for variant in normalized["variants"]:
         variant["platforms"].sort(key=lambda item: item["platform"])
     return normalized

@@ -2,6 +2,7 @@ import copy
 import importlib.util
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import yaml
 
@@ -15,7 +16,10 @@ SPEC.loader.exec_module(build_catalog)
 
 class CandidateReleaseGuardTest(unittest.TestCase):
     def test_candidate_batch_is_outside_active_catalog_scan(self):
-        catalog, _ = build_catalog.build_catalog()
+        # This test is about which YAML files are scanned, not about sample sources, which the Web
+        # branch does not have to carry (see MODEL_ZOO_SAMPLE_REF in build_catalog.py).
+        with mock.patch.object(build_catalog, "validate_sample_path", lambda value, label: value):
+            catalog, _ = build_catalog.build_catalog()
         parsed = yaml.safe_load(catalog)
         self.assertEqual(parsed["source"], "model_zoo_web/data")
         self.assertFalse(any("candidate-staging" in model["source_file"] for model in parsed["models"]))

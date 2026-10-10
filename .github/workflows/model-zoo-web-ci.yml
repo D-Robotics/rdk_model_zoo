@@ -25,12 +25,17 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      MODEL_ZOO_SAMPLE_REF: refs/remotes/origin/develop
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Fetch develop for sample verification
+        run: git fetch --no-tags origin develop:refs/remotes/origin/develop
 
       - name: Set up Python
         uses: actions/setup-python@v5

@@ -16,6 +16,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      MODEL_ZOO_SAMPLE_REF: refs/remotes/origin/develop
     permissions:
       contents: read
       pages: read
@@ -38,6 +40,9 @@ jobs:
             echo "Tagged commit is not part of origin/model_zoo_web" >&2
             exit 1
           fi
+
+      - name: Fetch develop for sample verification
+        run: git fetch --no-tags origin develop:refs/remotes/origin/develop
 
       - name: Set up Python
         uses: actions/setup-python@v5
