@@ -2,6 +2,8 @@ English | [简体中文](README_cn.md)
 
 # MobileNetV1 model conversion
 
+For the pinned timm checkpoint workflow, use [`export.py`](export.py) and the [shared host workflow](../../../../utils/tools/mobilenet/README.md). It records the exact checkpoint, center-crop preprocessing, batch-one logits contract, and full-dataset evaluation inputs. The existing artifact commands below retain their own contracts.
+
 Run conversion on an x86 Linux host in the RDK OpenExplore (OE)
 environment. The steps below identify the graph, calibration data, and
 target-specific PTQ configuration to prepare before rebuilding.

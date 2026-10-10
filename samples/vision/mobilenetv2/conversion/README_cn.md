@@ -2,6 +2,8 @@
 
 # MobileNetV2 模型转换
 
+固定版本 timm checkpoint 流程使用 [`export.py`](export.py)，命令见[公共主机流程](../../../../utils/tools/mobilenet/README_cn.md)。该流程明确记录权重、中心裁剪预处理、batch=1 logits 合同和全量评测输入；下文既有制品命令按各自合同使用。
+
 模型转换在 x86 Linux 主机上的 RDK OpenExplore (OE) 环境中执行，不是板卡
 操作。随附的 `mobilenetv2_config.yaml` 面向 **S100**（`march: "nash-e"`）；
 S600 构建与 S100 使用同一源 ONNX 与同一量化配置——仅把 `march` 改为

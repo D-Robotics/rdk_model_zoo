@@ -2,6 +2,8 @@
 
 # MobileNetV1 模型转换
 
+固定版本 timm checkpoint 流程使用 [`export.py`](export.py)，命令见[公共主机流程](../../../../utils/tools/mobilenet/README_cn.md)。该流程明确记录权重、中心裁剪预处理、batch=1 logits 合同和全量评测输入；下文既有制品命令按各自合同使用。
+
 在 x86 Linux 主机的 RDK OpenExplore (OE) 环境中执行模型转换。
 重建前准备模型图、校准数据和与目标匹配的 PTQ 配置。
 

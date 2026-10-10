@@ -1,6 +1,8 @@
 [English](README.md) | 简体中文
 
 # MobileNetV1 评估
+
+固定版本 timm checkpoint 流程使用 [`evaluate.py`](evaluate.py)，命令见[公共主机流程](../../../../utils/tools/mobilenet/README_cn.md)。该流程明确记录权重、中心裁剪预处理、batch=1 logits 合同和全量评测输入；下文既有制品命令按各自合同使用。
 使用随附图片进行单图分类检查。计算数据集精度时，准备对应验证集及逐图真值类别索引，并将其与运行时返回的 Top-1 类别 ID 对照。
 
 <a id="dataset"></a>

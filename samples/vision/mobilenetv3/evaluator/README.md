@@ -1,6 +1,8 @@
 English | [简体中文](README_cn.md)
 
 # MobileNetV3 evaluation
+
+For the pinned timm checkpoint workflow, use [`evaluate.py`](evaluate.py) and the [shared host workflow](../../../../utils/tools/mobilenet/README.md). It records the exact checkpoint, center-crop preprocessing, batch-one logits contract, and full-dataset evaluation inputs. The existing artifact commands below retain their own contracts.
 Use the bundled image for a single-image classification check. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
 
 <a id="dataset"></a>
