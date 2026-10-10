@@ -4,13 +4,13 @@
  */
 
 // Host unit tests for the NV12 plane packing helpers
-// (common/nv12_geometry.{h,cc}).
+// (declared in inc/yolo.hpp, defined in src/backend.cpp).
 
 #include <cstdio>
 #include <cstring>
 #include <vector>
 
-#include "common/nv12_geometry.h"
+#include "yolo.hpp"
 
 namespace {
 

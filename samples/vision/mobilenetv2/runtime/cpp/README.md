@@ -16,12 +16,17 @@ Use this directory for c++ inference.
 
 ```text
 cpp/
-├── inc/  # Files for inc
-├── src/  # Files for src
-├── CMakeLists.txt  # Source or data file
+├── inc/
+│   ├── classify.hpp  # MobileNetV2 model class and owned stage-data types
+│   └── cli.hpp       # CLI options and helpers
+├── src/
+│   ├── classify.cpp  # runtime lifecycle, preprocess/infer/postprocess
+│   ├── cli.cpp       # argument parsing, defaults, image/label loading, printing
+│   └── main.cpp      # entry point: parse options, predict, print
+├── CMakeLists.txt    # build (C++17, explicit RDK_TARGET board selection)
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-└── run.sh  # Run the sample
+└── run.sh  # Build and launch the sample
 ```
 
 <a id="supported-boards"></a>
@@ -36,13 +41,10 @@ local runs; on a board, use the system identity files.
 <a id="dependencies"></a>
 ## Dependencies
 
-CMake, a C++17 compiler, OpenCV development packages, `libgflags-dev`,
-and the Horizon DNN headers/libraries of the board image. Install the required compiler and board SDK development packages before building:
-
-```bash
-# cwd: on the board — success: apt reports the packages installed
-sudo apt update && sudo apt install -y libgflags-dev
-```
+CMake, a C++17 compiler, OpenCV development packages, `fmt` development
+libraries, and the Horizon DNN headers/libraries of the board image. Use the SDK development packages
+provided by your board image and perform the full SDK build in that
+environment; the launcher never calls apt.
 
 <a id="build"></a>
 ## Build
@@ -54,9 +56,12 @@ Manual build (cwd: `samples/vision/mobilenetv2/runtime/cpp`; success:
 mkdir -p build && cd build && cmake .. && make -j"$(nproc)"
 ```
 
-`CMakeLists.txt` detects the SoC at configure time via
-`/sys/class/boardinfo/soc_name` and defines `SOC_S100`/`SOC_S600`. On
-small-RAM boards, build with `make -j1` or `BUILD_JOBS=1 bash run.sh`.
+`CMakeLists.txt` selects the board at configure time: natively on a board
+it reads `/sys/class/boardinfo/soc_name` (`-DRDK_TARGET=auto`, the
+default) and defines `SOC_S100`/`SOC_S600`; cross compilation must pass an
+explicit `-DRDK_TARGET=s100|s600` (auto is rejected while cross-compiling,
+and unsupported targets fail the configure). On small-RAM boards, build
+with `make -j1` or `BUILD_JOBS=1 bash run.sh`.
 
 <a id="run"></a>
 ## Run
@@ -79,24 +84,47 @@ with the prepared model, `test_data/zebra_cls.jpg`, and
 
 | Parameter | Description | Default (from the launcher) |
 | --- | --- | --- |
-| `--model_path` | Path to the `.hbm` artifact | `model/<soc>/mobilenetv2_224x224_nv12.hbm` relative to the sample |
-| `--test_img` | Test image path | `test_data/zebra_cls.jpg` relative to the sample |
-| `--label_file` | Label file path | `test_data/imagenet1000_labels.txt` relative to the sample |
-| `--top_k` | Number of Top-K results to print | `5` |
+| `--model-path` | Path to the `.hbm` artifact | `model/<soc>/mobilenetv2_224x224_nv12.hbm` relative to the sample |
+| `--test-img` | Test image path | `test_data/zebra_cls.jpg` relative to the sample |
+| `--label-file` | Label file path | `test_data/imagenet1000_labels.txt` relative to the sample |
+| `--top-k` | Number of Top-K results to print | `5` |
 
-The binary's compiled-in defaults point at `/opt/hobot/model/...`; the
-launcher always passes explicit paths, so the system-model location is
-used only if you pass it yourself.
+Option names are kebab-case to match the Python runtime, and both the
+`--flag value` and `--flag=value` spellings are accepted. The binary's
+compiled-in defaults point at `/opt/hobot/model/...`; the launcher always
+passes explicit paths, so the system-model location is used only if you
+pass it yourself.
 
 <a id="interface-lifecycle"></a>
 ## Interface and lifecycle
 
-`mobilenetv2::init` loads the model, allocates tensors, and reads the
-layout metadata; `pre_process`, `infer`, and `post_process` are free
-functions passing tensors by reference (declaration in
-`inc/mobilenetv2.hpp`). Doxygen comments live in the source; the
-repository-level API reference build is described in
-`docs/source_reference/README.md`.
+`main.cpp` parses the options, constructs `MobileNetV2 model(model_path)`
+— the constructor loads the HBM pack, reads and validates the tensor
+metadata and allocates the reusable tensor buffers — then calls
+`model.predict(image, top_k)` and prints the returned classes. All DNN
+and UCP types stay inside `src/classify.cpp` (private `Impl`), so
+`inc/classify.hpp` depends only on OpenCV and the standard library.
+
+The model exposes the preprocessing, inference and postprocessing stages
+separately, each returning data owned by the caller:
+
+- `MobileNetV2Prepared preprocess(const cv::Mat&)` — letterbox resize to
+  the model input resolution and BGR→NV12 conversion into owned Y/UV
+  planes;
+- `MobileNetV2Raw infer(const MobileNetV2Prepared&)` — upload of the
+  planes into the model input tensors (row-stride aware), one
+  `hbDNNInferV2` BPU task, copy of the F32 output into an owned
+  probability vector that survives later inferences;
+- `std::vector<Classification> postprocess(const MobileNetV2Raw&, int top_k)`
+  — direct read of the probabilities (the model output node is already a
+  post-softmax distribution; no further normalization) and Top-K
+  selection;
+- `predict` composes the three stages in that order.
+
+Errors surface as C++ exceptions (SDK error descriptions included); the
+entry point prints them and exits with status 2. Resources are released
+by RAII on every path, including partial initialization failures. There
+is no background thread; the process performs one synchronous inference.
 
 <a id="results-interpretation"></a>
 ## Results interpretation

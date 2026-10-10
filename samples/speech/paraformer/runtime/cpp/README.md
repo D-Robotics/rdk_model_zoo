@@ -21,10 +21,10 @@ Transcribe 16 kHz audio on S100 with the encoder, predictor and decoder HBMs. CP
 
 ```text
 cpp/
-├── inc/  # Files for inc
-├── src/  # Files for src
+├── inc/  # cif.hpp (CIF contract), pipeline.hpp (stages/preflight/decode/Pipeline/SdkRunner), cli.hpp (arguments, vocabulary, manifest/NPY reader, run workspace)
+├── src/  # cif.cpp, pipeline.cpp (preflight + UCP adapter + three-stage model), cli.cpp (arguments/vocabulary/features/report), main.cpp
 ├── tests/  # Automated tests
-├── CMakeLists.txt  # Source or data file
+├── CMakeLists.txt  # Build options
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
 ├── launcher.py  # Python script
@@ -64,7 +64,7 @@ ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
 Success means four CTest checks pass: numerical contract, synthetic three-model
 composition, SDK control flow with an isolated API double, and group preflight. Address/undefined-behavior sanitizers are enabled for Clang/GNU in
 this command. Release tests retain assertions. The production artifact is the
-static `paraformer_contract` library; test executables are not an inference CLI.
+static `paraformer_pipeline` model library; test executables are not an inference CLI.
 
 <a id="run"></a>
 
@@ -152,6 +152,14 @@ execution and stage timings.
 Stage timing excludes frontend, file I/O and other work outside the runner/CIF
 calls. Exact-empty CIF skips decoder with zero IDs/text and null decoder timing.
 
+`main.cpp` constructs the named `paraformer::Pipeline` model from the verified
+group and gate, then calls `pipeline.predict(features, item.valid_frames)` once
+per utterance; no SDK runner construction or stage wiring appears at the call
+site. The run report lifecycle is owned by `RunWorkspace` (`inc/cli.hpp`):
+it reserves the new output directory, records observed stage metadata and each
+prediction, re-verifies manifest/feature digests on completion and writes
+`result.json`/`failed.json` atomically.
+
 Both layers reject existing output directories. Preflight/parser failures before
 a directory is created return rc=2 with stderr and no new result directory. Later
 native errors write `result/failed.json` containing partial completed records,
@@ -175,13 +183,13 @@ never installed as the public binary or accepted as native success.
 | `PARAFORMER_BUILD_TESTS` | `OFF` | Build/register four host tests |
 | `PARAFORMER_SANITIZERS` | `OFF` | Enable ASan/UBSan on Clang/GNU and propagate link flags |
 | `PARAFORMER_BUILD_CLI` | `OFF` | Build `paraformer_demo`; requires both SDK and I/O options enabled |
-| `PARAFORMER_BUILD_IO` | `OFF` | Build prepared-manifest/NPY library using nlohmann JSON; add its host test when tests are enabled |
-| `PARAFORMER_BUILD_SDK` | `OFF` | Build `paraformer_sdk` using actual vendor headers/libraries |
+| `PARAFORMER_BUILD_IO` | `OFF` | Enable the manifest/NPY reader and CLI (nlohmann JSON); add their host tests when tests are enabled |
+| `PARAFORMER_BUILD_SDK` | `OFF` | Compile the UCP adapter into `paraformer_pipeline` using actual vendor headers/libraries |
 | `CMAKE_BUILD_TYPE` | CMake default | Documentation checks use `Release` |
 
 The complete CLI and launcher flags are described below. In an embedding CMake project, add this directory
-with `add_subdirectory` and link `paraformer_contract`; its public include path
-contains `contract.h` and `pipeline.h`. Do not compile this numerical library with
+with `add_subdirectory` and link `paraformer_pipeline`; its public include path
+contains `pipeline.hpp` and `cif.hpp`. Do not compile this numerical library with
 fast-math: float32 operation order is part of source parity. Clang/GNU builds
 explicitly disable floating-point contraction for the library.
 
@@ -222,6 +230,15 @@ retain them. The caller must keep any captured SDK resources alive and coordinat
 access if they are not thread-safe. The numerical library does not load models, select
 boards, perform file I/O, set scheduling or compile a fake SDK fallback.
 
+A second native construction `Pipeline(models, preflight, vocabulary)` owns all
+three stage `SdkRunner`s itself: it selects one artifact per stage from the verified
+`ModelGroup`, wires the stage callables to those runners and exposes their observed
+tensor metadata through `metadata(stage)`. It is the construction `main.cpp` uses;
+application code passes the verified group plus the `make_preflight` gate and calls
+`predict` per utterance. Runner construction, board selection and SDK setup stay
+inside the model, not at the call site. In SDK-free library builds the native
+construction rejects at runtime with an explicit transport error.
+
 <a id="results-interpretation"></a>
 
 <a id="results"></a>
@@ -246,7 +263,7 @@ After the build above, still from repository root:
 
 ```bash
 cat > /tmp/rdk-paraformer-core/example.cc <<'CPP'
-#include "contract.h"
+#include "pipeline.hpp"
 #include <iostream>
 int main() {
     std::vector<float> weights(401, 0.f), hidden(401 * 512, 0.f);
@@ -259,7 +276,7 @@ int main() {
               << result.acoustic[512] << "\n";
 }
 CPP
-c++ -std=c++17 -fsanitize=address,undefined -Isamples/speech/paraformer/runtime/cpp/inc /tmp/rdk-paraformer-core/example.cc /tmp/rdk-paraformer-core/libparaformer_contract.a -o /tmp/rdk-paraformer-core/example
+c++ -std=c++17 -fsanitize=address,undefined -Isamples/speech/paraformer/runtime/cpp/inc /tmp/rdk-paraformer-core/example.cc /tmp/rdk-paraformer-core/libparaformer_pipeline.a -o /tmp/rdk-paraformer-core/example
 /tmp/rdk-paraformer-core/example
 ```
 
@@ -285,7 +302,11 @@ documented in the [preflight](#preflight) section.
 <a id="sdk-adapter"></a>
 ## S100 SDK adapter
 
-The optional `paraformer_sdk` library requires real S-series UCP headers
+The optional UCP adapter is compiled into `paraformer_pipeline` by
+`PARAFORMER_BUILD_SDK=ON`, which sets the explicit `PARAFORMER_ENABLE_UCP=1`
+compile definition. Visible vendor headers alone never enable SDK bindings;
+SDK-free library builds link a clearly-throwing rejected-transport stub instead.
+The adapter requires real S-series UCP headers
 `dnn/hb_dnn.h`, `hb_ucp.h`, `hb_ucp_sys.h` and the `dnn`/`hbucp` libraries. On a
 matching SDK development environment, configure a separate directory with
 `cmake -S samples/speech/paraformer/runtime/cpp -B /tmp/rdk-paraformer-sdk -DPARAFORMER_BUILD_SDK=ON`
@@ -330,7 +351,7 @@ real preflight callback itself. It is not a
 synthetic inference result or a self-contained board application:
 
 ```cpp
-#include "preflight.h"
+#include "pipeline.hpp"
 #include <algorithm>
 #include <utility>
 std::vector<float> encode_features(const paraformer::ModelGroup &models,
@@ -352,8 +373,8 @@ the image transport retains its one/two-input restriction.
 <a id="preflight"></a>
 ## Three-model preflight
 
-Link `paraformer_preflight` for the SDK-independent checks, or `paraformer_sdk`
-which links it transitively. `ModelGroup` is an array of three `ModelArtifact`
+The preflight checks are part of `paraformer_pipeline` (`src/pipeline.cpp`);
+linking the model library provides them. `ModelGroup` is an array of three `ModelArtifact`
 records. Each record contains `SdkModel{path, "s100", stage}`, `asset_id`, and a
 64-digit expected SHA-256. Order is arbitrary; exactly one encoder, predictor and
 decoder is required. `expected_asset_id(stage)` returns the fixed publication ID:
@@ -394,7 +415,8 @@ switch or implicit S100P fallback is provided.
 <a id="prepared-features"></a>
 ## Read Python-prepared features
 
-`paraformer_feature_io` reads the actual `prepared-manifest.json` and `.npy`
+The prepared-manifest/NPY reader lives in `src/cli.cpp` (declared in `cli.hpp`)
+and reads the actual `prepared-manifest.json` and `.npy`
 files produced by the [Python `--preprocess-only` flow](../python/README.md).
 It does not recompute or approximate FunASR features, resample audio, load models
 or modify the original manifest. Install/provide the nlohmann JSON header library
@@ -415,14 +437,16 @@ files. `feature_probe` is a host verification tool, not an inference executable.
 A complete feature reader embedding function is:
 
 ```cpp
-#include "feature_io.h"
+#include "cli.hpp"
 std::vector<float> first_features(const std::string &manifest) {
     const auto items = paraformer::load_prepared_manifest(manifest, 1);
     return paraformer::load_features(items.front());
 }
 ```
 
-Link `paraformer_feature_io` in your CMake application. For full inference pass the
+Compile `src/cli.cpp` with the `paraformer_pipeline` model library and the nlohmann
+JSON include in your CMake application (the `feature_probe` test target shows the
+exact wiring). For full inference pass the
 selected item's `valid_frames` alongside its loaded values to `Pipeline::predict`;
 never substitute 400 for a short utterance. The example returns only values to
 illustrate reading and does not execute a model.

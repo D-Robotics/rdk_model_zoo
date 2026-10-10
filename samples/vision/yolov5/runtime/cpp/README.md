@@ -2,15 +2,15 @@ English | [简体中文](README_cn.md)
 
 # YOLOv5 native C++ runtime
 
-This directory is the native C++ counterpart of the unified YOLOv5 sample. It
-keeps the X5 HB-DNN adapter and the S UCP adapter separate and shares only the
-SDK-free pieces: tensor metadata gates (`yolov5_gate.*`), the numeric decoder
-(`yolov5_decode.*`) and the evidence dump writer (`yolov5_dump.*`). The native
-binary parses arguments, performs target-specific input/forward I/O, decodes the
-three raw heads, writes an optional evidence dump, and renders through the
-separate OpenCV visualizer. Publication facts are resolved by `launcher.py`
-through `samples.vision.yolov5.runtime.python.model_binding`; the native binary
-never guesses a layout from a file name.
+This directory is the native C++ runtime of the YOLOv5 sample,
+delivered as the ordinary five files: `inc/detect.hpp` + `src/detect.cpp` own
+the detection model (SDK-free tensor gates, head decoder, S dequantizer, and
+the X5 HB-DNN and S UCP backends behind compile-time target guards in the same
+translation unit), `inc/cli.hpp` + `src/cli.cpp` own the command line, the
+evidence dump writer and the rendered output, and `src/main.cpp` constructs
+the model, runs `predict` and reports. Publication facts are resolved by
+`launcher.py` through `samples.vision.yolov5.runtime.python.model_binding`; the
+native binary never guesses a layout from a file name.
 
 <a id="overview"></a>
 ## C++ inference
@@ -22,9 +22,9 @@ Run YOLOv5 detection with the X5 HB-DNN or S UCP adapter. The native application
 
 ```text
 cpp/
-├── include/  # Files for include
-├── src/  # Files for src
-├── CMakeLists.txt  # Source or data file
+├── inc/  # detect.hpp (model), cli.hpp (CLI)
+├── src/  # main.cpp, cli.cpp, detect.cpp
+├── CMakeLists.txt  # Explicit-target build
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
 ├── launcher.py  # Python script
@@ -40,9 +40,9 @@ cpp/
 | S100 | `x-672` `.hbm` | S100 UCP/DNN SDK, split NV12 |
 | S600 | `x-672` `.hbm` | S600 UCP/DNN SDK, split NV12 |
 
-All three boards above are supported through the listed artifacts and SDKs. After building, run the launcher on the board with its default case; numerical source/unified comparison and accuracy/performance measurements are performed with the [evaluator guide](../../evaluator/README.md).
+All three boards above are supported through the listed artifacts and SDKs. After building, run the launcher on the board with its default case; accuracy and performance measurements are performed with the [evaluator guide](../../evaluator/README.md).
 
-Each adapter is compiled for exactly one target and the resulting binary refuses
+Each backend is compiled for exactly one target and the resulting binary refuses
 a `--target` that differs from its compiled identity (see
 [Interface and lifecycle](#interface-lifecycle)), because the S alignment macros
 differ between S600 and the rest.
@@ -74,10 +74,11 @@ cmake --build samples/vision/yolov5/runtime/cpp/build/s100 --parallel
 ```
 
 `YOLOV5_TARGET` must be `x5`, `s100`, `s100p` or `s600`; any other value is a
-configure-time error. Exactly one adapter source is compiled per target, and
-CMake defines both the SoC alignment macro (`SOC_S600` / `SOC_S100` /
-`SOC_S100P`) and `YOLOV5_TARGET_NAME` used at runtime to reject a mismatching
-`--target`. Expect a `yolov5_cpp` binary in the selected build directory.
+configure-time error. One `src/detect.cpp` serves every target: the selected
+backend is a compile-time guard, and CMake defines both the SoC alignment macro
+(`SOC_S600` / `SOC_S100` / `SOC_S100P`) and `YOLOV5_TARGET_NAME` used at
+runtime to reject a mismatching `--target`. Expect a `yolov5_cpp` binary in the
+selected build directory.
 
 <a id="run"></a>
 ## Run
@@ -113,7 +114,7 @@ from the manifest. Expect `result.jpg` (or `--output <file>`) plus, when
 | Parameter | Default | Description |
 | --- | --- | --- |
 | `--target` | `auto` | `x5`, `s100`, `s100p` or `s600`; `auto` resolves from board identity in the launcher |
-| `--variant` | X5 `s-v2.0`, S `x-672` | Artifact variant; the X5 default is the fixed C++ source default |
+| `--variant` | X5 `s-v2.0`, S `x-672` | Artifact variant; per-board default shown |
 | `--asset-id` | omitted | Required together with `--model-path`; must match the manifest exactly |
 | `--model-path` | resolved manifest path | Model file; only valid with `--asset-id` |
 | `--test-img` | sample test data | BGR input image |
@@ -128,13 +129,26 @@ from the manifest. Expect `result.jpg` (or `--output <file>`) plus, when
 <a id="interface-lifecycle"></a>
 ## Interface and lifecycle
 
-`yolov5::RuntimeOptions` is the native entry contract; `run_native` owns
-target-specific model initialization, tensor allocation, cache operations,
-synchronous forward and cleanup.
+`yolov5::Yolov5` (declared in `inc/detect.hpp`) is the native model contract:
+its constructor performs the build-identity and scheduling gates and loads the
+runtime (RAII; a partially failed initialization frees exactly what it
+allocated), and the public stages are `preprocess` → `infer` → `postprocess`
+plus an explicit `predict` chain. `src/main.cpp` constructs the model visibly,
+loads the image through the CLI (`inc/cli.hpp`) and passes caller-owned pixels:
+`Input` is a BGR buffer plus its source geometry, `preprocess` converts it into
+an owned `Prepared` NV12 payload without touching the SDK, `infer` validates
+that payload at entry (exact model plane lengths and positive source geometry,
+before any SDK allocation or copy) and uploads exactly its explicit argument —
+never instance buffers a later call could rewrite — and `postprocess` only
+decodes. `predict` chains the three stages and returns a `Prediction` (the
+`Result` plus this call's `RunEvidence`), and `main` reports that returned
+value through the CLI, which owns the dump and the rendered output. There are
+no last-call accessors: every stage value is owned per call, so a returned
+`Prediction` stays valid across later `predict` calls.
 
 - X5: requires exactly one packed NV12 model with a compact
   `[1,3,640,640]` input and three native F32, `NONE`-quantized NHWC heads whose
-  strides are exactly 8/16/32. The fixed X5 source writes the NV12 payload and
+  strides are exactly 8/16/32. The X5 backend writes the NV12 payload and
   reads the heads as flat compact buffers, so the gates require the reported
   aligned layout to equal the valid layout: a padded artifact is rejected with
   a precise reason instead of being misread, and the dump manifest records its
@@ -151,42 +165,38 @@ synchronous forward and cleanup.
   accepted, while a smaller value that makes pixels overlap is rejected),
   `stride[1]` must equal `width*stride[2]`, and the allocation must cover the
   exact last addressed byte with overflow-checked arithmetic. A scalar
-  scale/zero-point descriptor (length 1) is accepted because the adapter's
+  scale/zero-point descriptor (length 1) is accepted because the model's
   private dequantizer broadcasts it; the shared `c_utils`
   `dequantizeTensorS32` would index `scale_data[c]` out of bounds and is never
   given such a tensor. The raw dump keeps the full `alignedByteSize` extent
   with the strides and the full scale/zero-point arrays in the manifest, so a
   padded run stays machine-comparable.
-- Ownership: both adapters free only resources that were actually allocated, so
-  a partially failed allocation never turns into a blind free. The X5 adapter
-  releases the task and buffers through an RAII lease; the S adapter uses a
+- Ownership: both backends free only resources that were actually allocated, so
+  a partially failed allocation never turns into a blind free. The X5 backend
+  releases the task and buffers through an RAII lease; the S backend uses a
   guard that skips tensors whose `sysMem` was never assigned.
 - The compiled build identity (`YOLOV5_TARGET_NAME`) must equal `--target`; build
   one binary per S alignment and run it on its matching target.
 
 Python and C++ runtime behavior:
 
-- **Default X5 variant.** The fixed X5 C++ source defaults to the `s-v2.0`
-  artifact; the unified Python runtime defaults to `n-v7.0`. The native
-  launcher keeps the C++ source default when neither `--variant` nor `--asset-id`
-  is given.
-- **NMS.** X5 preserves the source `cv::dnn::NMSBoxes` behaviour per class: the
-  score boundary is strictly greater than `--score-thres`, and each class is
-  capped at `top_k = 300`. S preserves the source `nms_bboxes` behaviour: a
-  score equal to `--score-thres` is kept and there is no per-class cap.
-- **Preprocessing.** Both native adapters letterbox; the unified Python path
-  uses stretch by default. This is a deliberate source-compatibility choice, not
-  a claim that the two paths are numerically identical.
-- **Scheduling.** The fixed S source forces `priority = 0`; the unified S
-  adapter applies the caller's `--priority`/`--bpu-core` so the documented
-  parameters are real. `--bpu-core` is a core *index* (`-1` = any, `0..3`) and
+- **Default X5 variant.** The native launcher defaults to the `s-v2.0`
+  artifact when neither `--variant` nor `--asset-id` is given; the Python
+  runtime defaults to `n-v7.0`.
+- **NMS.** X5 runs per-class `cv::dnn::NMSBoxes`: a score must be strictly
+  greater than `--score-thres`, and each class keeps at most `top_k = 300`
+  boxes. S runs `nms_bboxes`: a score equal to `--score-thres` is kept and
+  there is no per-class cap.
+- **Preprocessing.** Both native adapters letterbox; the Python runtime uses
+  stretch by default.
+- **Scheduling.** The S adapter applies the caller's `--priority` and
+  `--bpu-core`. `--bpu-core` is a core *index* (`-1` = any, `0..3`) and
   is converted explicitly to the SDK's backend bitmask
   (`HB_UCP_BPU_CORE_0..3 = 1ULL<<0..3`, `HB_UCP_BPU_CORE_ANY = 1ULL<<7`);
   indices outside `-1..3` are rejected, and the raw index is never assigned to
   the backend field. X5 has no verified HB-DNN mapping for these flags, so
   non-default values are rejected rather than silently ignored.
-- **Non-finite scores.** The unified decoder drops non-finite confidence values;
-  the source S decode keeps them. The unified behaviour is a declared fix.
+- **Non-finite scores.** The decoder drops non-finite confidence values.
 
 <a id="results-interpretation"></a>
 ## Results interpretation
@@ -206,12 +216,12 @@ Python and C++ runtime behavior:
   file name and SHA-256, so the raw and transformed bytes of one output can
   never overwrite each other.
 - The input files hold the buffers actually submitted with the inference (the
-  compact NV12 payload on X5, the per-row gathered plane payload on S);
+  compact NV12 payload on X5, the compact Y/UV plane payload on S — exactly
+  the valid row bytes the upload writes at the stride pitch);
   uninitialized padding bytes are deliberately not dumped. X5 raw and
   transformed tensors are the same native F32 heads; S raw tensors keep the
   full allocated extent (`alignedByteSize`, including pixel padding) and the
   transformed tensors are the dequantized floats, so a board comparison can
   check both stages and interpret padded layouts from the manifest strides.
-  A dump records what this binary produced; it is not by itself a statement
-  of numerical equivalence with the fixed-source runtime, which the board
-  evaluator has to establish separately.
+  A dump records what this binary produced; the board evaluator performs any
+  cross-runtime assessment separately.

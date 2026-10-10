@@ -13,6 +13,16 @@ from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # no
 ROOT = Path(__file__).resolve().parents[4]
 
 
+def opencv_flags():
+    import subprocess as sp
+    for pkg in ('opencv5', 'opencv4'):
+        if sp.run(['pkg-config', '--exists', pkg]).returncode == 0:
+            cflags = sp.run(['pkg-config', '--cflags', pkg], capture_output=True, text=True).stdout.split()
+            libs = sp.run(['pkg-config', '--libs', pkg], capture_output=True, text=True).stdout.split()
+            return cflags, libs
+    raise RuntimeError('host tests need opencv5 or opencv4 via pkg-config')
+
+
 def metadata(dtype='int32', quant=None):
     if quant is None:
         quant = SimpleNamespace(quant_type=SimpleNamespace(name='NONE'))
@@ -297,13 +307,16 @@ class NativeBoundaryTests(unittest.TestCase):
             result=subprocess.run([sys.executable,str(path),*args],cwd='/tmp',capture_output=True,text=True)
             self.assertEqual(result.returncode,rc,result.stderr)
 
-    def test_native_pure_decoder_compiles_and_runs(self):
+    def test_native_score_contract_compiles_and_runs(self):
         import subprocess,tempfile
         cpp=ROOT/'samples/vision/unetmobilenet/runtime/cpp'
+        cflags,libs=opencv_flags()
         with tempfile.TemporaryDirectory() as temp:
             binary=Path(temp)/'test'
-            build=subprocess.run(['c++','-std=c++17','-Wall','-Wextra','-Werror','-I',str(cpp/'inc'),
-                                  str(cpp/'tests/test_tensor_contract.cpp'),str(cpp/'src/tensor_contract.cpp'),
+            build=subprocess.run(['c++','-std=c++17','-Wall','-Wextra','-Werror',
+                                  *cflags,'-I',str(cpp/'inc'),'-I',str(cpp/'tests/fixtures'),
+                                  str(cpp/'tests/test_tensor_contract.cpp'),str(cpp/'src/segment.cpp'),
+                                  str(cpp/'tests/fixtures/stub_impl.cpp'),*libs,
                                   '-o',str(binary)],capture_output=True,text=True)
             self.assertEqual(build.returncode,0,build.stderr)
             result=subprocess.run([str(binary)],capture_output=True,text=True)
@@ -326,11 +339,12 @@ class DocumentationAndResourceTests(unittest.TestCase):
     def test_native_resource_cleanup_with_fake_interfaces(self):
         import subprocess,tempfile
         cpp=ROOT/'samples/vision/unetmobilenet/runtime/cpp'
+        cflags,libs=opencv_flags()
         with tempfile.TemporaryDirectory() as temp:
             binary=Path(temp)/'resources'
             build=subprocess.run(['c++','-std=c++17','-Wall','-Wextra','-Werror',
-                '-I',str(cpp/'tests/fixtures'),'-I',str(cpp/'inc'),str(cpp/'src/model_runner.cpp'),
-                str(cpp/'src/tensor_contract.cpp'),str(cpp/'tests/test_resources.cpp'),'-o',str(binary)],
+                *cflags,'-I',str(cpp/'tests/fixtures'),'-I',str(cpp/'inc'),str(cpp/'src/segment.cpp'),
+                str(cpp/'tests/test_resources.cpp'),*libs,'-o',str(binary)],
                 capture_output=True,text=True)
             self.assertEqual(build.returncode,0,build.stderr)
             result=subprocess.run([str(binary)],capture_output=True,text=True)

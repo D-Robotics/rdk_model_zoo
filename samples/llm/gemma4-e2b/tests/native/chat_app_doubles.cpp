@@ -1,9 +1,9 @@
-// Host SDK/engine doubles for the interactive chat application check.
+// Host SDK/engine doubles for the interactive chat model check.
 //
 // These doubles are NOT the vendor SDK and NOT the Gemma4 engines: no HBM
 // files are read, no BPU inference runs and no real tokenization happens.
-// They exist so the production application source (src/gemma4_chat_app.cpp)
-// can be compiled and its session logic — history budgeting, image turns,
+// They exist so the production model source (src/gemma4.cpp) can be
+// compiled and its session logic — history budgeting, image turns,
 // streaming display, reset/context commands — executed on a host. Engine
 // numerical behavior remains board-only and is explicitly not-run here.
 //
@@ -21,11 +21,12 @@
 #include <string>
 #include <vector>
 
+#include <opencv2/core.hpp>
+
 #include "nlohmann/json.hpp"
 
-#include "gemma4_chat_app.hpp"
-#include "gemma4_image_io.hpp"
-#include "gemma4_vision_task.hpp"
+#include "gemma4.hpp"
+#include "gemma4_vision_engine.hpp"
 
 namespace chat_test {
 

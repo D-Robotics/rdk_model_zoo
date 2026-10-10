@@ -62,31 +62,26 @@ runtime/cpp/                            C++ 源码（本目录）
 ├── run.sh                              显式编译或启动
 ├── inc/                                公共头文件
 │   ├── gemma4_config.hpp               模型常量（图像 token ID、维度等）
-│   ├── gemma4_chat_app.hpp             交互式对话应用会话（应用 facade）
-│   ├── gemma4_text_engine.hpp          Text 编排器（prefill + decode + KV 会话）
-│   ├── gemma4_text_inputs.hpp          Text 阶段 1：CPU 输入准备（ids/嵌入/位置/mask）
-│   ├── gemma4_text_transport.hpp       Text 阶段 2：原始 SDK 写入/推理/KV 收集
+│   ├── gemma4.hpp                      ★ Gemma4 模型：引擎 + 单个对话会话（predict）
+│   ├── cli.hpp                         ★ CLI 层：flags/选项 + REPL 解析 + 展示
+│   ├── gemma4_text_engine.hpp          完整 Text 引擎：输入准备、描述符契约、
+│   │                                   SDK 传输、prefill/decode 编排
 │   ├── gemma4_text_session.hpp         Text 会话状态与续写策略
-│   ├── gemma4_text_tensor.hpp          固定 Text 导出的描述符契约与带 stride 读写
-│   ├── gemma4_vision_engine.hpp        Vision ViT 引擎
+│   ├── gemma4_vision_engine.hpp        完整 Vision 链路：预处理、阶段组合、
+│   │                                   ViT 引擎、描述符契约与传输
 │   ├── gemma4_embeddings.hpp           Token embedding 查表 + vision 注入
 │   ├── gemma4_kv_cache.hpp             零拷贝 KV cache 管理
-│   ├── gemma4_vision_preprocess.hpp    图像缩放 + 分块
-│   ├── gemma4_vision_task.hpp          Vision 三阶段及显式 runner 组合
-│   ├── gemma4_image_io.hpp             应用层图片读取
-│   ├── gemma4_vision_tensor.hpp        SDK 描述符、带 stride 的打包/解包
-│   ├── gemma4_vision_debug.hpp         可选诊断日志
 │   ├── gemma4_native_tokenizer.hpp     原生 C++ tokenizer（来自 OE-LLM-s600）
 │   ├── gemma4_tokenizer.hpp            TokenizerBridge：chat template + 图片展开
 │   └── hb_utils.hpp                    Horizon BPU 辅助函数（tensor、flush、infer）
 └── src/                                实现 + 入口
-    ├── main.cpp                        ★ 薄入口：flags → 路径 → 构造并运行应用
-    ├── gemma4_chat_app.cpp             ★ 交互式对话会话（REPL、历史、控制台 IO）
-    ├── gemma4_server.cpp               HTTP API 服务
-    ├── gemma4_demo.cpp                 单次 VLM 演示
-    ├── gemma4_text_bench.cpp           纯文本基准测试
-    ├── gemma4_golden_verify.cpp        Golden mask/KV 对齐校验
-    └── gemma4_*.cpp                    引擎实现
+    ├── main.cpp                        ★ 薄入口：选项 → 具名模型 → 每轮 predict
+    ├── gemma4.cpp                      ★ Gemma4 模型会话（历史、预算、KV 复用）
+    ├── cli.cpp                         ★ CLI 参数解析 + 控制台展示
+    └── gemma4_*.cpp                    引擎/算法实现
+
+../../evaluator/                        辅助入口工具源码（server/bench/demo/golden_verify；
+                                        由 runtime/cpp 的 CMake 统一配置构建）
 
 ../../third_party/
 └── tokenizers-cpp/                     显式准备（见 third_party/README_cn.md）
@@ -138,6 +133,10 @@ S100 保留手动 HBM 分支，没有默认公共 HBM。不同板目标使用不
 | `gemma4_demo` | 单次：图片 + prompt → 文本 |
 | `gemma4_text_bench` | 纯文本推理基准 |
 | `gemma4_golden_verify` | 校验 prefill 张量与 golden 数据对齐 |
+
+五个可执行文件均由本目录 CMakeLists.txt 配置构建；辅助入口工具源码
+（`gemma4_server.cpp`、`gemma4_text_bench.cpp`、`gemma4_demo.cpp`、`gemma4_golden_verify.cpp`）位于
+[`../../evaluator/`](../../evaluator/README_cn.md)，与其服务评测放在一起。
 
 ## 下载预编译模型
 
@@ -316,22 +315,32 @@ ChatBox 中选择 OpenAI 兼容接口，Base URL 填 `http://板端IP:8000/v1`�
 
 7. **统一双模型生命周期** — `main` 启动时统一按 Vision→Text 顺序加载两个模型，并在整个进程内常驻。该顺序避免 S600 跨 core IOVA 映射冲突，同时 S100/S100P/S600 共用完全相同的聊天主流程；板型差异只体现在匹配的 HBM、CMake SoC 宏和 `run.sh` 环境设置。
 
-### 交互式对话入口：应用 facade 与模型类
+### 交互式对话入口：模型 + CLI，薄入口
 
-`main` 在应用边界上拆分。`main.cpp` 是薄入口：解析 gflags、解析 `$GEMMA4_HOME`
-默认路径、校验生成参数后构造 `gemma4::chat::InteractiveChatApp`
-（`gemma4_chat_app.hpp/.cpp`）并调用 `Run`。应用 facade 持有全部控制台与会话
-职责——banner/help、REPL 提示符、UTF-8/GB18030 终端编码归一、对话历史 JSON、
-按 4096-token 预算裁剪最旧轮次、前缀失配重置与流式回显。它不承担任何模型
-计算：文本生成委托给真正的运行时类 `TextEngine::ContinueGenerateStream`
-（图文轮次配合 `BuildPromptHidden`），图像编码委托给 `PredictVision` +
-`VisionEngine::Infer`。该 facade 是应用类而非模型
-类——不存在执行控制台 IO 的 `predict` 型引擎 API，引擎自身也从不会隐式打印。
+`main` 在模型/展示边界上拆分。`src/cli.hpp/.cpp` 是 CLI 层：
+`ParseOptions` 负责解析 gflags、解析 `$GEMMA4_HOME` 默认路径并校验生成参数
+（返回 `ChatOptions` 值），`ParseCommand` 将每条归一化后的终端输入行分类为
+`TerminalCommand`；同一模块还持有 banner/help、REPL 提示符、UTF-8/GB18030
+终端编码归一与结果/图片/上下文输出行。`src/main.cpp` 是薄入口：调用
+`ParseOptions` 后显式构造具名模型 `gemma4::Gemma4`（`gemma4.hpp/.cpp`），
+并运行读取-分发循环——每个对话轮次调用一次 `model.predict(...)`，图文轮次
+调用 `model.LoadImage(...)`。无法解码的终端输入打印终端配置错误、重新提示
+并保持会话存活；只有输入结束或 `/quit` 才退出。模型构造函数按
+Vision→Text 顺序加载两个引擎与 tokenizer，自身不做控制台 IO：加载进度与
+`[context]` 提示经注入的 sink 输出，生成片段经调用方持有的 token sink 送达。
+模型持有全部会话职责——对话历史 JSON、按 4096-token 预算裁剪最旧轮次、前缀
+失配重置、图像特征保留——并以值返回 `ChatTurnResult`，携带报告所需事实
+（回复文本、流式 token 数、耗时、tok/s、输出预算、裁剪状态）。模型计算仍在
+真正的运行时类中：文本生成
+委托给 `TextEngine::ContinueGenerateStream`（图文轮次配合
+`BuildPromptHidden`），图像编码委托给 `PredictVision` + `VisionEngine::Infer`。
+不存在执行控制台 IO 的模型或引擎 API，引擎自身也从不会隐式打印。
 
 ### Vision 库接口与职责
 
-`gemma4_image_io` 负责读图，`gemma4_vision_preprocess` 只处理内存像素，`gemma4_vision_task`
-组合三个阶段；`VisionEngine` 负责 SDK 模型及张量传输。交互与单次 VLM 入口均使用同一组合。
+`gemma4_vision_engine` 统一持有整条 Vision 链路：图片解码、像素预处理、
+阶段组合与含固定导出描述符契约的 SDK 模型/张量传输。交互与单次 VLM 入口
+均使用同一组合。
 
 | 接口 | 输入 → 输出 | 契约 |
 | --- | --- | --- |
@@ -351,9 +360,7 @@ ChatBox 中选择 OpenAI 兼容接口，Base URL 填 `http://板端IP:8000/v1`�
 #include <iostream>
 #include <stdexcept>
 #include <vector>
-#include "gemma4_image_io.hpp"
 #include "gemma4_vision_engine.hpp"
-#include "gemma4_vision_task.hpp"
 
 int main(int argc, char** argv) {
   if (argc != 3) {
@@ -417,20 +424,23 @@ Text 所有权（含注入分配失败下的张量采用）、张量契约、生
 外加可运行的 README 示例。Release 构建仍启用断言。测试运行于显式离线 runner；
 真实 SDK 描述符与板端数值以本指南的板端命令为准。
 
-交互式对话入口另有专属主机检查：编译生产 `src/gemma4_chat_app.cpp` 与真实
-`src/main.cpp`，链接 `tests/native/chat_app_doubles.cpp` 引擎替身、
-`tests/native/sdk_fixtures` 的 SDK 头替身，以及 `tests/native/app_stubs/`
-中明确标注的 tokenizers-cpp / OpenCV 第三方头编译桩，再通过重定向 stdin
-驱动 REPL：
+交互式对话入口另有专属主机检查：编译生产模型源码 `src/gemma4.cpp`、CLI 源码
+`src/cli.cpp` 与真实 `src/main.cpp`，链接 `tests/native/chat_app_doubles.cpp`
+引擎替身、`tests/native/sdk_fixtures` 的 SDK 头替身，以及
+`tests/native/app_stubs/` 中明确标注的 tokenizers-cpp / OpenCV 第三方头编译桩。
+场景驱动直接调用 Gemma4 模型 API（每轮一次 `predict`，图文轮次 `LoadImage`）；
+入口二进制通过重定向 stdin 驱动真实 REPL：
 
 ```bash
 python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_chat_app.py -v
 ```
 
-该检查覆盖会话逻辑全链路：引擎构造信息、流式回显、`/reset`
-`/context` 命令、图文轮次接线（一次 `LoadImage`/`PredictVision`/`Infer`
+该检查覆盖会话逻辑全链路：引擎构造信息、流式回显、`/reset` `/context`
+`/image`/`/quit` 命令、图文轮次接线（一次 `LoadImage`/`PredictVision`/`Infer`
 链路并注入 prompt hidden）、超长 prompt 拒绝、最旧轮次裁剪、每轮重建模式、
-跨轮上下文增长、GB18030 终端编码转换，以及薄入口的参数校验。它运行于
+跨轮上下文增长、GB18030 终端编码转换，以及迁移后的入口/CLI 边界：参数默认值
+与校验、无效输入行后接有效输入行（不可解码行重新提示且会话继续）、`/image`
+参数错误。它运行于
 显式标注的替身之上；真实 SDK/OpenCV/tokenizers-cpp 栈与生成在板端执行。
 `GEMMA_CXX` 选择编译器。nlohmann-json 头文件依次从
 `GEMMA_JSON_INCLUDE` 覆盖、`pkg-config nlohmann_json` 或标准系统包含根
@@ -447,7 +457,7 @@ Vision 构造失败时会释放已经取得的输入/输出 buffer 和 packed mo
 
 全部刷新与 Text/KV 选择性刷新入口共用同一个 task 生命周期：输入刷新 → infer → 按编译核数调度 → submit/wait → 输出刷新与属性更新 → release。
 取得 task 之后的失败（包括 infer 返回错误但已给出 task）都会触发释放；正常路径的 release 错误继续上抛，不重复释放同一 handle。
-选择性刷新的索引语义、S600 的编译核数选择和可选 V3 入口均按源实现执行。
+选择性刷新的索引语义、S600 的编译核数选择和可选 V3 入口均使用同一 task 生命周期。
 
 主机资源测试使用 SDK 接口替身，在 S100/S600 两个编译分支下检查错误处理中的内存/handle 所有权。可从仓库根目录运行：
 
@@ -457,7 +467,7 @@ python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_resourc
 
 ### Vision 张量传输契约
 
-`gemma4_vision_tensor` 集中负责物理描述符校验、F16 存储打包与带 stride 的输出读取；`VisionEngine` 只组合这些操作和 SDK 调用。
+vision 引擎源码集中负责物理描述符校验、F16 存储打包与带 stride 的输出读取；`VisionEngine` 只组合这些操作和 SDK 调用。
 描述符先校验再分配，输出属性在推理后重新校验，不把 SDK 返回的新分配长度当成原 buffer 的真实容量。
 
 | 项 | 接受范围 |
@@ -468,7 +478,7 @@ python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_resourc
 | stride | 单位为字节，按元素大小对齐、元素与行不重叠，所有访问地址均落在声明分配及原 buffer 容量内 |
 | 数据 | 输入 float patches 必须有限且在 `[0,1]`；输出 NaN/Inf 显式拒绝 |
 
-输入保持源实现的 F32→F16 截断方式，写入前清零 padding；输出分别按行和列 stride 提取，自有 float 向量不含 padding。
+输入按 F32→F16 截断写入，写入前清零 padding；输出分别按行和列 stride 提取，自有 float 向量不含 padding。
 未知或整数输出会被拒绝，不会强制解释为 float。F16/F32 是运行时存储转换，不涉及修改或重跑量化方案。
 
 主机集成测试实际调用生产 `VisionEngine::Infer`，由 SDK 替身检查输入存储并填充带行/元素间隙的 F16/F32 输出，
@@ -516,7 +526,7 @@ embedding 加载发生在模型获取之前。
 
 ### Text 张量传输契约
 
-`gemma4_text_tensor` 集中负责物理描述符校验、带 stride 的输入写入、KV 输出行寻址和贪心 logits argmax；
+Text 引擎源码集中负责物理描述符校验、带 stride 的输入写入、KV 输出行寻址和贪心 logits argmax；
 `TextEngine` 只组合这些操作和 SDK 调用。所有描述符先按固定导出契约校验、再分配；每次推理之后按引擎
 最初分配的容量（而非 SDK 刷新后的声明）重新校验输出描述符。不匹配的导出（例如 512 序列长度或
 不支持的 dtype）会在构造时、读取任何张量之前拒绝。
@@ -535,9 +545,9 @@ byte stride 必须按元素大小对齐、互不重叠，且所有访问地址�
 序列维度固定：prefill 256、decode 1——`kChunkSize`/`kCacheLen`/`kHiddenSize`/`kVocabSize`/`kHeadDims`
 这些常量就是导出契约；不同导出的模型需要显式适配层，不得静默进入本引擎。
 
-mask 的 int16 量化、logits 的 `kLogitScale` 反量化与 int8 KV 存储仍保留为 CPU 侧源算法：
+mask 的 int16 量化、logits 的 `kLogitScale` 反量化与 int8 KV 存储均为 CPU 侧算法：
 携带量化 metadata 的描述符会被拒绝；写入路径先清零 padding，再按描述符 stride 复制。
-贪心 argmax 将 int16 存储乘以 `kLogitScale` 并保留首个最大值；平票与全零行的行为与源实现一致。
+贪心 argmax 将 int16 存储乘以 `kLogitScale` 并保留首个最大值；平票取首个最大位置，全零行解码为 token 0。
 
 主机覆盖包括：一项 helper 契约测试（padding、单例轴、dtype/形状/stride/容量/量化拒绝、argmax 行寻址与平票语义），
 以及一项生成流程测试——用说这套契约的 SDK 替身驱动生产引擎，校验生成 token、经借用 KV 输入的缓存搬运、
@@ -554,15 +564,17 @@ python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_text_te
 
 ### Text 流水线阶段
 
-Text 流水线拆分为三个显式阶段加一个会话策略模块；`TextEngine` 只负责编排。行为遵循源实现——
-贪心 `kLogitScale` 解码、首个最大值平票、EOS/turn-end 集合、完整返回向量、前缀续写对齐和基准计时范围——
-每项职责均有独立可寻的单元：
+Text 流水线收拢为一个完整的引擎源码 `gemma4_text_engine.hpp/.cpp`，其具名函数覆盖一次子图
+调用的每个阶段，另有一个独立的会话策略模块。引擎实现贪心 `kLogitScale` 解码、
+首个最大值平票、EOS/turn-end 集合、完整返回向量、前缀续写对齐和基准计时范围，
+每项职责均可按名寻址：
 
-| 阶段 | 头文件 | 职责 |
+| 阶段 | 位置 | 职责 |
 | --- | --- | --- |
-| 1. 输入准备 | `gemma4_text_inputs.hpp` | `PrepareBatchInputs` / `PrepareDecodeInputs` 生成 `TextBatchInputs`（PLE 替换后的 ids、嵌入行、位置、量化 mask），纯 vector、无 SDK 类型；同时拥有源 mask 构建算法。 |
-| 2. SDK 传输 | `gemma4_text_transport.hpp` | `InitTextSubgraph`（描述符契约 + 分配）、`BindKvCache`（零拷贝借用）、`WriteBatchInputs`（带 stride 写入）、`RunSubgraphInference`（刷新 → 推理 → 刷新输出）、`CollectKvOutputs`（重校验后的 KV 行）。不做解码、不做 IO。 |
-| 3. 解码 + KV 更新 | `gemma4_text_engine.cpp` | 显式步骤：`ArgmaxTextLogits` 解码、`KvCache::Append*` 更新缓存，随后才推进会话计数。 |
+| 1. 输入准备 | `gemma4_text_engine.hpp/.cpp` | `PrepareBatchInputs` / `PrepareDecodeInputs` 生成 `TextBatchInputs`（PLE 替换后的 ids、嵌入行、位置、量化 mask），纯 vector、无 SDK 类型；同时拥有 mask 构建算法（`BuildFullMask` / `BuildSlidingMask` / `QuantizeMask`）。 |
+| 2. 描述符契约 + 带 stride 读写 | `gemma4_text_engine.hpp/.cpp` | `ValidateTextTensor` / `WriteTextInput` / `TextKvOutputRows` / `ArgmaxTextLogits`：固定导出描述符校验、带 stride 写入、KV 行寻址与贪心解码。 |
+| 3. SDK 传输 | `gemma4_text_engine.hpp/.cpp` | `InitTextSubgraph`（描述符契约 + 分配）、`BindKvCache`（零拷贝借用）、`WriteBatchInputs`（带 stride 写入）、`RunSubgraphInference`（刷新 → 推理 → 刷新输出）、`CollectKvOutputs`（重校验后的 KV 行）。 |
+| 4. 解码 + KV 更新编排 | `gemma4_text_engine.hpp/.cpp`（`TextEngine`） | 显式步骤：`ArgmaxTextLogits` 解码、`KvCache::Append*` 更新缓存，随后才推进会话计数。 |
 | 会话策略 | `gemma4_text_session.hpp` | 对 `TextSessionState` 的纯决策：上下文平移、自动截断、续写对齐、logits 行选择。 |
 
 容量与窗口契约（在任何分配、查表或写入之前用带溢出保护的符号检查校验；违约抛出
@@ -590,7 +602,6 @@ Text 流水线拆分为三个显式阶段加一个会话策略模块；`TextEngi
 
 ```cpp
 #include "gemma4_text_engine.hpp"
-#include "gemma4_text_inputs.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <vector>

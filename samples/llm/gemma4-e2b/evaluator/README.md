@@ -18,9 +18,19 @@ This internal golden dataset is not included in the public model archive. The fo
 
 ```text
 evaluator/
+├── gemma4_server.cpp        # OpenAI-compatible HTTP API server (aux entry tool)
+├── gemma4_text_bench.cpp    # Text-only inference benchmark (aux entry tool)
+├── gemma4_demo.cpp          # Single-shot text/VLM diagnostic (aux entry tool)
+├── gemma4_golden_verify.cpp # Golden mask/KV alignment verifier (aux entry tool)
 ├── README.md  # English instructions
 └── README_cn.md  # Chinese instructions
 ```
+
+The four native aux entry tools are built by the CMake configure in
+[`runtime/cpp/`](../runtime/cpp/README.md) (targets `gemma4_server`,
+`gemma4_text_bench`, `gemma4_demo`, `gemma4_golden_verify`); build and flag
+documentation stays in the runtime README. They live here because they serve
+evaluation workflows, not the interactive sample entry.
 
 <a id="environment"></a>
 ## Environment
@@ -64,14 +74,16 @@ BOARD_IP=<board-ip> TARGET_SOC="$TARGET_SOC" \
 `golden_mask_kv/` is optional internal verification data and is not included in
 the public model archive.
 
-Build **all** runtime targets (not only `main`):
+Build **all** runtime targets (not only `main`). The verifier source lives in
+this directory; the build is configured from `runtime/cpp`:
 
 ```bash
 cd samples/llm/gemma4-e2b/runtime/cpp
 ./run.sh --target s600 --build
 ```
 
-Then run the golden verifier:
+Then run the golden verifier (`gemma4_golden_verify`, source
+`evaluator/gemma4_golden_verify.cpp`):
 
 ```bash
 export GEMMA4_HOME=~/gemma4_e2b

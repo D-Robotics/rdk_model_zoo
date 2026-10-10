@@ -1,7 +1,6 @@
 // Copyright (c) 2026 D-Robotics. SPDX-License-Identifier: Apache-2.0
 // Host verification utility, not a board inference executable.
-#include "e11_decode.h"
-#include "e26_decode.h"
+#include "detect.hpp"
 #include <fstream>
 #include <iomanip>
 #include <iostream>

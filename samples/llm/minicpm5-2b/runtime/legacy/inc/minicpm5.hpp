@@ -1,5 +1,6 @@
 /** @file minicpm5.hpp Single-request MiniCPM5 inference with OELLM 1.0.0. */
 #pragma once
+#include <cstddef>
 #include <functional>
 #include <string>
 
@@ -16,13 +17,13 @@ struct MiniCPM5Config {
    */
   std::string prompt = "请用一句话介绍你自己。";
   /** Optional streaming sink invoked once per streamed text chunk; empty
-   * disables streaming output so the library stays console-free. main.cc
-   * injects stdout here. Exceptions thrown by the sink are contained by the
-   * callback (recorded as RequestOutcome::stream_error), never propagated
-   * across the vendor C callback. */
+   * disables streaming output so the library stays console-free. The CLI
+   * (src/cli.cpp) injects stdout here. Exceptions thrown by the sink are
+   * contained by the callback (recorded as RequestOutcome::stream_error),
+   * never propagated across the vendor C callback. */
   std::function<void(const char*)> text_sink;
 };
-/** Outcome of one predict() request; main.cc renders the RESULT line. */
+/** Outcome of one predict() request; the CLI renders the RESULT line. */
 struct RequestOutcome {
   int sdk_status = 0;      ///< Raw xlm_infer return value; zero is success.
   bool ended = false;      ///< XLM_STATE_END arrived for this request.
@@ -60,36 +61,50 @@ struct PreparedRequest {
 /** Build the single fixed request for one new conversation. */
 PreparedRequest prepare_request(const std::string& prompt,
                                 const std::string& chat_template);
+/** Largest accepted chat template payload in bytes. */
+constexpr std::size_t kMaxChatTemplateBytes = 65535;
+
+/** Read a prepared non-thinking text Jinja template file.
+ * @param template_path Path to the prepared template file.
+ * @return Raw template bytes; prepare_request copies them before inference.
+ * @throws std::runtime_error If the file cannot be opened, is empty, or
+ * exceeds kMaxChatTemplateBytes.
+ */
+std::string load_chat_template(const std::string& template_path);
 /** Owns the SDK handle; each instance serves exactly one synchronous request.
- * init() after predict() is rejected — create a fresh instance per request. */
+ * The constructor loads the model and tokenizer, so a constructed instance is
+ * ready for exactly one predict(); predict() after a completed predict() is
+ * rejected — create a fresh instance per request. Copy is deleted and move is
+ * therefore not generated, so the address passed as callback userdata stays
+ * valid for the instance lifetime. */
 class MiniCPM5 {
  public:
-  /** Store configuration without allocating runtime resources.
+  /** Store configuration and load the model and tokenizer.
    * @param config Model/tokenizer/template paths, the single-request prompt
    * and the optional streaming sink.
+   * @throws std::runtime_error If SDK initialization fails. A partially
+   * initialized handle returned alongside the error is destroyed before the
+   * exception propagates, so nothing leaks.
    */
   explicit MiniCPM5(MiniCPM5Config config);
   /** Release the runtime handle if no request consumed it. */
   ~MiniCPM5();
   MiniCPM5(const MiniCPM5&) = delete;
   MiniCPM5& operator=(const MiniCPM5&) = delete;
-  /** Load the model and tokenizer.
-   * @throws std::runtime_error If already initialized, already finalized by a
-   * previous predict(), or SDK initialization fails.
-   */
-  void init();
   /** Stream one greedy non-thinking response through the injected sink and
-   * release the SDK handle. Outcome status is returned unprinted; main.cc
+   * release the SDK handle. Outcome status is returned unprinted; the CLI
    * renders the RESULT line. Text is suppressed for END and ERROR states as
    * in the source; a throwing sink is contained and recorded.
    * @return RequestOutcome; exit_code() maps it to the source exit statuses.
-   * @throws std::runtime_error If uninitialized, already finalized, or the
-   * chat template cannot be loaded (see load_chat_template).
+   * @throws std::runtime_error If already finalized by a previous predict(),
+   * or the chat template cannot be loaded (see load_chat_template).
    */
   RequestOutcome predict();
 
  private:
   static void callback(xlm_result_t*, xlm_state_t, void*);
+  /** SDK initialization; called exactly once by the constructor. */
+  void init();
   MiniCPM5Config config_;
   xlm_handle_t handle_ = nullptr;
   bool ended_ = false;

@@ -1,6 +1,6 @@
 // Copyright (c) 2026 D-Robotics. SPDX-License-Identifier: Apache-2.0
 // Host-only preparation probe. Backend inference deliberately cannot run.
-#include "yoloe.h"
+#include "detect.hpp"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
     if (!stream || stream.peek() != std::char_traits<char>::eof())
       throw std::invalid_argument("BGR file size mismatch");
     yoloe::YOLOE task(cfg, std::make_unique<UnusedRunner>(cfg.protocol));
-    auto prepared = task.pre_process(image);
+    auto prepared = task.preprocess(image);
     std::filesystem::path output = argv[6];
     if (!std::filesystem::create_directory(output))
       throw std::invalid_argument("Use new output directory");

@@ -70,7 +70,7 @@ def main(argv=None):
             raise ValueError('Input image does not exist')
         if args.build:
             subprocess.run(['cmake', '-S', str(CPP), '-B', str(build_dir),
-                            f'-DUNETMOBILENET_TARGET={selection.target}', '-DCMAKE_BUILD_TYPE=Release'], check=True)
+                            f'-DRDK_TARGET={selection.target}', '-DCMAKE_BUILD_TYPE=Release'], check=True)
             subprocess.run(['cmake', '--build', str(build_dir), '--parallel', '2'], check=True)
         if not binary.is_file():
             raise ValueError('Native binary missing; build explicitly with --build on the target board')

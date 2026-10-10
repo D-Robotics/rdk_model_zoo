@@ -10,18 +10,17 @@ SAMPLE = Path(__file__).resolve().parents[1]
 CPP = SAMPLE / "runtime/cpp"
 NATIVE = SAMPLE / "tests/native"
 
-# The helper test covers the physical contract alone; the flow test drives
-# the production engine, cache, and helper against a host SDK double.
+# Both tests drive the folded production engine source (input preparation,
+# tensor contract, transport and orchestration in one TU) against the host
+# SDK double; the flow test adds the cache and session algorithm sources.
+ENGINE_SOURCES = [
+    CPP / "src/gemma4_text_engine.cpp",
+    CPP / "src/gemma4_kv_cache.cpp",
+    CPP / "src/gemma4_text_session.cpp",
+]
 CASES = {
-    "text_tensor_test": [CPP / "src/gemma4_text_tensor.cpp"],
-    "text_tensor_flow_test": [
-        CPP / "src/gemma4_text_tensor.cpp",
-        CPP / "src/gemma4_kv_cache.cpp",
-        CPP / "src/gemma4_text_engine.cpp",
-        CPP / "src/gemma4_text_inputs.cpp",
-        CPP / "src/gemma4_text_session.cpp",
-        CPP / "src/gemma4_text_transport.cpp",
-    ],
+    "text_tensor_test": ENGINE_SOURCES,
+    "text_tensor_flow_test": ENGINE_SOURCES,
 }
 
 
@@ -40,6 +39,10 @@ class TextTensorContractTests(unittest.TestCase):
                         "-Wall",
                         "-Wextra",
                         "-Werror",
+                        # text_tensor_test links the folded engine TU through
+                        # the shared host SDK double in tests/native.
+                        "-I",
+                        str(NATIVE),
                         "-I",
                         str(NATIVE / "sdk_fixtures"),
                         "-I",

@@ -1,7 +1,7 @@
 // Copyright (c) 2026 D-Robotics. SPDX-License-Identifier: Apache-2.0
 // Production control flow with an API double; never real SDK ABI evidence.
-#include "common/dnn_io.h"
-#include "sdk_runner.h"
+#include "backend.hpp"
+#include "asr.hpp"
 #include <cassert>
 #include <cstdlib>
 #include <cstring>

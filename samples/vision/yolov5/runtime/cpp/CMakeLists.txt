@@ -8,13 +8,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(YOLOV5_TARGET "x5" CACHE STRING "Explicit runtime target: x5, s100, s100p or s600")
 set_property(CACHE YOLOV5_TARGET PROPERTY STRINGS x5 s100 s100p s600)
 
-add_executable(yolov5_cpp src/cli_main.cpp src/yolov5_decode.cpp src/yolov5_visualize.cpp
-                          src/yolov5_gate.cpp src/yolov5_dump.cpp src/yolov5_s_native.cpp)
-target_include_directories(yolov5_cpp PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+# The ordinary five-file layout: main constructs the model and reports, cli
+# owns options/dump/render, detect owns the gates, decoder, dequantizer and
+# both board backends behind compile-time target guards in one source.
+add_executable(yolov5_cpp src/main.cpp src/cli.cpp src/detect.cpp)
+target_include_directories(yolov5_cpp PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/inc")
 target_compile_options(yolov5_cpp PRIVATE -Wall -Wextra -Wpedantic)
 
 if(YOLOV5_TARGET STREQUAL "x5")
-  target_sources(yolov5_cpp PRIVATE src/x5_adapter.cpp)
   # The compiled target identity lets the binary refuse a mismatching --target.
   target_compile_definitions(yolov5_cpp PRIVATE YOLOV5_TARGET_X5=1 YOLOV5_TARGET_NAME="x5")
   find_package(OpenCV REQUIRED)
@@ -22,7 +23,6 @@ if(YOLOV5_TARGET STREQUAL "x5")
   target_link_directories(yolov5_cpp PRIVATE /usr/hobot/lib)
   target_link_libraries(yolov5_cpp PRIVATE dnn ${OpenCV_LIBS})
 elseif(YOLOV5_TARGET STREQUAL "s100" OR YOLOV5_TARGET STREQUAL "s100p" OR YOLOV5_TARGET STREQUAL "s600")
-  target_sources(yolov5_cpp PRIVATE src/s_adapter.cpp)
   target_compile_definitions(yolov5_cpp PRIVATE YOLOV5_TARGET_S=1 YOLOV5_TARGET_NAME="${YOLOV5_TARGET}")
   if(YOLOV5_TARGET STREQUAL "s600")
     target_compile_definitions(yolov5_cpp PRIVATE SOC_S600=1)

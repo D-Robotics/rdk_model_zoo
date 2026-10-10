@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "minicpm5.hpp"
-#include "runtime_config.hpp"
 #include "scratch_dir.hpp"
 
 namespace {

@@ -1,5 +1,5 @@
 // Copyright (c) 2026 D-Robotics. SPDX-License-Identifier: Apache-2.0
-#include "cli_io.h"
+#include "cli.hpp"
 #include "sha256.h"
 #include <filesystem>
 #include <fstream>

@@ -1,5 +1,5 @@
 // Host feature reader probe; does not load any SDK or execute a model.
-#include "feature_io.h"
+#include "cli.hpp"
 #include "sha256.h"
 #include <fstream>
 #include <iostream>

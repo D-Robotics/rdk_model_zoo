@@ -1,9 +1,30 @@
-"""Host native contract builds; no vendor SDK/OpenCV image pipeline evidence."""
+"""Host native contract builds; no vendor SDK/OpenCV image pipeline evidence.
+
+The consolidated production sources (src/segment.cpp, src/cli.cpp) include the
+OpenCV headers, so every native test compiles them against the host OpenCV
+(pkg-config opencv5/opencv4) and the checked-in fake SDK headers; the pure
+contract and CLI tests link the link-only stubs in tests/fake_sdk/stub_impl.cpp,
+while the resource test defines its own fault-injecting SDK implementation.
+"""
 
 from pathlib import Path
 import subprocess, tempfile, unittest
 
 SAMPLE = Path(__file__).resolve().parents[1]
+
+
+def opencv_flags():
+    for name in ("opencv5", "opencv4"):
+        probe = subprocess.run(
+            ["pkg-config", "--cflags", "--libs", name],
+            capture_output=True,
+            text=True,
+        )
+        if probe.returncode == 0:
+            return probe.stdout.split()
+    raise RuntimeError(
+        "pkg-config cannot locate OpenCV (opencv5/opencv4) for the native tests"
+    )
 
 
 class NativeTests(unittest.TestCase):
@@ -19,8 +40,12 @@ class NativeTests(unittest.TestCase):
                     "-Werror",
                     "-I",
                     str(SAMPLE / "runtime/cpp/inc"),
+                    "-I",
+                    str(SAMPLE / "tests/fake_sdk"),
                     str(SAMPLE / "tests/test_native_contract.cpp"),
-                    str(SAMPLE / "runtime/cpp/src/tensor_contract.cpp"),
+                    str(SAMPLE / "runtime/cpp/src/segment.cpp"),
+                    str(SAMPLE / "tests/fake_sdk/stub_impl.cpp"),
+                    *opencv_flags(),
                     "-o",
                     str(exe),
                 ],
@@ -46,8 +71,8 @@ class NativeTests(unittest.TestCase):
                     "-I",
                     str(SAMPLE / "runtime/cpp/inc"),
                     str(SAMPLE / "tests/test_resources.cpp"),
-                    str(SAMPLE / "runtime/cpp/src/model_runner.cpp"),
-                    str(SAMPLE / "runtime/cpp/src/tensor_contract.cpp"),
+                    str(SAMPLE / "runtime/cpp/src/segment.cpp"),
+                    *opencv_flags(),
                     "-o",
                     str(exe),
                 ],
@@ -77,9 +102,13 @@ class NativeTests(unittest.TestCase):
                     "-Werror",
                     "-I",
                     str(SAMPLE / "runtime/cpp/inc"),
+                    "-I",
+                    str(SAMPLE / "tests/fake_sdk"),
                     str(SAMPLE / "tests/test_native_io.cpp"),
-                    str(SAMPLE / "runtime/cpp/src/cli_io.cpp"),
-                    str(SAMPLE / "runtime/cpp/src/tensor_contract.cpp"),
+                    str(SAMPLE / "runtime/cpp/src/cli.cpp"),
+                    str(SAMPLE / "runtime/cpp/src/segment.cpp"),
+                    str(SAMPLE / "tests/fake_sdk/stub_impl.cpp"),
+                    *opencv_flags(),
                     "-o",
                     str(exe),
                 ],

@@ -1,6 +1,6 @@
 // Explicit host transport/identity double; never linked into paraformer_demo.
 #include "platform_identity.h"
-#include "sdk_runner.h"
+#include "pipeline.hpp"
 #include <fstream>
 #include <stdexcept>
 namespace rdk {

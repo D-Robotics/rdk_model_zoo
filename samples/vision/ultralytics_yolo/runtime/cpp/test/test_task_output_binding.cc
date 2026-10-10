@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <limits>
 
-#include "common/task_output_binding.h"
+#include "backend.hpp"
 #define expect(v)                           \
   do {                                      \
     if (!(v)) throw std::runtime_error(#v); \
@@ -20,18 +20,18 @@ int hbDNNGetOutputTensorProperties(hbDNNTensorProperties* p, hbDNNHandle_t,
   *p = metadata.at(i);
   return 0;
 }
-int fake_allocate(TestMemory* m, int n) {
+int test_allocate(TestMemory* m, int n) {
   if (allocated == fail_alloc) return -1;
   m->virAddr = std::calloc(1, n);
   ++allocated;
   return m->virAddr ? 0 : -1;
 }
-int fake_free(TestMemory* m) {
+int test_free(TestMemory* m) {
   std::free(m->virAddr);
   ++freed;
   return 0;
 }
-int fake_flush(TestMemory*, int) { return fail_flush; }
+int test_flush(TestMemory*, int) { return fail_flush; }
 template <class F>
 void rejects(F fn) {
   bool bad = false;
@@ -86,7 +86,8 @@ int main() {
       raw[0] = std::numeric_limits<float>::quiet_NaN();
       rejects([&] { outputs.read(); });
       // views() exposes the padded physical layout without copying or
-      // prescanning; decoders check the values they consume.
+      // prescanning (the NaN above survives); decoders check the values
+      // they consume.
       auto views = outputs.views();
       expect(views.size() == metadata.size());
       expect(views[0].data == raw);

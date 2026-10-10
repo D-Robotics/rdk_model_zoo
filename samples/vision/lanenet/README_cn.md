@@ -91,7 +91,7 @@ bash samples/vision/lanenet/runtime/cpp/run.sh --target s100 --build --output ou
 <a id="entry-points"></a>
 ## 用户与 Agent 的入口
 
-应用集成先构造 `LaneNetSegmenter`，再调用 `predict`。`lanenet.py` 实现 `preprocess`、`infer`、`postprocess` 及模型初始化；初始化时加载 Runtime。CLI 负责下载命令、文件读写与绘图；C++ 接口见原生运行指南。
+应用集成先构造 `LaneNetSegmenter`，再调用 `predict`。`lanenet.py` 实现 `preprocess`、`infer`、`postprocess` 及模型初始化；初始化时加载 Runtime。CLI 负责下载命令、文件读写与绘图。原生运行时遵循同一契约：先以模型路径构造 `LaneNet`，再调用 `predict`；`segment.hpp`/`segment.cpp` 负责阶段方法、张量契约与 SDK 句柄，CLI 模块负责渲染与报告输出。
 
 修改前处理或增加实例聚类前先阅读[阶段 IO 契约](runtime/python/README_cn.md#stage-io)。聚类属于额外的算法能力，需要单独实现并验证；实例掩码应以聚类算法的输出为准。
 

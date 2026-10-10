@@ -1,12 +1,14 @@
-// Explicit link-time SDK and preflight doubles; never linked into production.
+// Explicit link-time SDK doubles with an injected admission gate; never linked
+// into production.
 #include "dnn/hb_dnn.h"
-#include "sdk_runner.hpp"
+#include "policy.hpp"
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
+#include <string>
 
 namespace {
 int packs = 0, allocations = 0, tasks = 0, calls = 0, gates = 0,
@@ -14,6 +16,12 @@ int packs = 0, allocations = 0, tasks = 0, calls = 0, gates = 0,
 int fail_alloc = 0, infer_error = 0, wait_error = 0, flush_error = 0;
 bool deny = false, bad_output = false;
 hbDNNTensorProperties input, output;
+// Injectable model gate replacing the former link-time production override.
+void Gate(const std::string &) {
+  ++gates;
+  if (deny)
+    throw std::runtime_error("gate denied");
+}
 void Reset() {
   assert(packs == 0 && allocations == 0 && tasks == 0);
   input = {};
@@ -50,13 +58,6 @@ template <class F> void Fails(F f) {
   assert(failed);
 }
 } // namespace
-namespace himloco {
-void verify_native_model(const std::string &) {
-  ++gates;
-  if (deny)
-    throw std::runtime_error("gate denied");
-}
-} // namespace himloco
 int hbDNNInitializeFromFiles(hbPackedDNNHandle_t *p, const char **, int) {
   assert(gates > 0);
   *p = &packs;
@@ -144,67 +145,65 @@ int hbDNNReleaseTask(hbDNNTaskHandle_t) {
 int main() {
   Reset();
   deny = true;
-  Fails([] { himloco::SdkRunner r({"fixture.bin", 7}); });
+  Fails([] { himloco::HimLoco r({"fixture.bin", 7}, &Gate); });
   assert(!packs && !allocations);
   Reset();
   input.alignedByteSize = 4;
-  Fails([] { himloco::SdkRunner r({"fixture.bin", 7}); });
+  Fails([] { himloco::HimLoco r({"fixture.bin", 7}, &Gate); });
   assert(!packs && !allocations);
   Reset();
   output.alignedShape.dimensionSize[3] = 2;
-  Fails([] { himloco::SdkRunner r({"fixture.bin", 7}); });
+  Fails([] { himloco::HimLoco r({"fixture.bin", 7}, &Gate); });
   assert(!packs && !allocations);
   Reset();
   output.quantiType = 1;
-  Fails([] { himloco::SdkRunner r({"fixture.bin", 7}); });
+  Fails([] { himloco::HimLoco r({"fixture.bin", 7}, &Gate); });
   assert(!packs && !allocations);
   Reset();
   output.tensorType = 99;
-  Fails([] { himloco::SdkRunner r({"fixture.bin", 7}); });
+  Fails([] { himloco::HimLoco r({"fixture.bin", 7}, &Gate); });
   assert(!packs && !allocations);
   Reset();
   output.alignedShape.dimensionSize[0] = std::numeric_limits<int>::max();
   output.alignedShape.dimensionSize[1] = std::numeric_limits<int>::max();
   output.alignedShape.dimensionSize[2] = std::numeric_limits<int>::max();
-  Fails([] { himloco::SdkRunner r({"fixture.bin", 7}); });
+  Fails([] { himloco::HimLoco r({"fixture.bin", 7}, &Gate); });
   assert(!packs && !allocations);
   Reset();
   fail_alloc = 1;
-  Fails([] { himloco::SdkRunner r({"fixture.bin", 7}); });
+  Fails([] { himloco::HimLoco r({"fixture.bin", 7}, &Gate); });
   assert(!packs && !allocations);
   Reset();
   fail_alloc = 2;
-  Fails([] { himloco::SdkRunner r({"fixture.bin", 7}); });
+  Fails([] { himloco::HimLoco r({"fixture.bin", 7}, &Gate); });
   assert(!packs && !allocations);
   Reset();
   {
-    himloco::SdkRunner runner({"fixture.bin", 7});
+    himloco::HimLoco runner({"fixture.bin", 7}, &Gate);
     assert(packs == 1 && allocations == 2);
-    himloco::HimLoco task(
-        [&](const std::vector<float> &v) { return runner.run(v); });
-    auto result = task.predict(std::vector<float>(270, 2));
+    auto result = runner.predict(std::vector<float>(270, 2));
     for (int i = 0; i < 12; ++i)
       assert(result.actions[i] == i);
     assert(result.latency_ms >= 0 && tasks == 0 &&
            runner.model_name() == "policy");
     assert(runner.input_metadata().aligned_shape[3] == 272);
     int before = calls;
-    Fails([&] { runner.run({1}); });
+    Fails([&] { runner.infer({std::vector<float>(1)}); });
     assert(calls == before);
     infer_error = -7;
-    Fails([&] { runner.run(std::vector<float>(270, 2)); });
+    Fails([&] { runner.predict(std::vector<float>(270, 2)); });
     assert(tasks == 0);
     infer_error = 0;
     wait_error = -8;
-    Fails([&] { runner.run(std::vector<float>(270, 2)); });
+    Fails([&] { runner.predict(std::vector<float>(270, 2)); });
     assert(tasks == 0);
     wait_error = 0;
     flush_error = -9;
-    Fails([&] { runner.run(std::vector<float>(270, 2)); });
+    Fails([&] { runner.predict(std::vector<float>(270, 2)); });
     assert(tasks == 0);
     flush_error = 0;
     bad_output = true;
-    Fails([&] { runner.run(std::vector<float>(270, 2)); });
+    Fails([&] { runner.predict(std::vector<float>(270, 2)); });
     assert(tasks == 0);
     assert(result.actions[0] == 0);
   }

@@ -91,7 +91,7 @@ Lane-instance IDs and fitted curves require a clustering and curve-fitting algor
 <a id="entry-points"></a>
 ## Entry points for users and agents
 
-For application integration, construct `LaneNetSegmenter` from a model selection, then call `predict`. Its `preprocess`, `infer` and `postprocess` methods expose the individual stages. Model initialization owns runtime loading; downloading, file output and rendering belong to the CLI. `lanenet.py` validates model semantics and uses the shared named-array runtime. Native code similarly separates task stages, tensor contracts, SDK ownership, visualization and CLI IO.
+For application integration, construct `LaneNetSegmenter` from a model selection, then call `predict`. Its `preprocess`, `infer` and `postprocess` methods expose the individual stages. Model initialization owns runtime loading; downloading, file output and rendering belong to the CLI. `lanenet.py` validates model semantics and uses the shared named-array runtime. The native runtime follows the same contract: construct `LaneNet` from a model path, then call `predict`; `segment.hpp`/`segment.cpp` own the stage methods, tensor contract and SDK handles, while the CLI module owns rendering and report IO.
 
 Read the [stage IO contract](runtime/python/README.md#stage-io) before changing preprocessing or introducing instance clustering. Clustering would be a new algorithmic capability, requiring its own validation; renaming the current display as an instance mask does not implement it.
 

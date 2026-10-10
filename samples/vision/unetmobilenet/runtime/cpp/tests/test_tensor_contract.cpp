@@ -1,7 +1,6 @@
 // Copyright (c) 2026 D-Robotics Corporation
 // SPDX-License-Identifier: Apache-2.0
-#include "tensor_contract.hpp"
-#include "target_identity.hpp"
+#include "segment.hpp"
 #include <cassert>
 #include <cstring>
 #include <iostream>

@@ -1,5 +1,5 @@
 // Copyright (c) 2026 D-Robotics. SPDX-License-Identifier: Apache-2.0
-#include "asr.h"
+#include "asr.hpp"
 #include <cassert>
 #include <limits>
 int main() {
@@ -17,24 +17,27 @@ int main() {
     ++calls;
     return logits;
   };
-  asr::ASR task(runner, 4, vocabulary);
+  // Explicit Ctc: the runtime default has been Legacy since 6c5cd7f2, and the
+  // collapse semantics asserted below belong to the Ctc decoder.
+  asr::ASR task(runner, 4, vocabulary, asr::DecodeMode::Ctc);
   const asr::AudioChunk audio{{.1f, .2f, .3f}, 16000, 1, 0, 0};
-  auto prepared = task.pre_process(audio);
+  auto prepared = task.preprocess(audio);
   assert(calls == 0 && prepared.valid_samples == 3);
-  auto raw = task.forward(prepared);
+  auto raw = task.infer(prepared);
   assert(calls == 1 && raw == logits);
-  assert(task.post_process(raw) == "AA" && calls == 1);
+  assert(task.postprocess(raw) == "AA" && calls == 1);
   logits.assign(logits.size(), 0.f);
-  assert(task.post_process(raw) == "AA");
-  assert(task.predict(audio).empty() && calls == 2);
+  assert(task.postprocess(raw) == "AA");
+  assert(task.predict(audio).text.empty() && calls == 2);
   asr::ASR legacy(runner, 4, vocabulary, asr::DecodeMode::Legacy);
   logits[5] = 1;
   logits[3503 + 5] = 1;
   logits[3 * 3503 + 5] = 1;
-  assert(legacy.predict(audio) == "AAA");
+  const auto legacy_result = legacy.predict(audio);
+  assert(legacy_result.text == "AAA" && legacy_result.valid_samples == 3);
   bool failed = false;
   try {
-    task.forward(asr::PreparedChunk{{1}, 1});
+    task.infer(asr::PreparedChunk{{1}, 1});
   } catch (const std::invalid_argument &) {
     failed = true;
   }
@@ -42,7 +45,7 @@ int main() {
   failed = false;
   prepared.values[0] = std::numeric_limits<float>::infinity();
   try {
-    task.forward(prepared);
+    task.infer(prepared);
   } catch (const std::invalid_argument &) {
     failed = true;
   }

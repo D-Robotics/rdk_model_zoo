@@ -1,4 +1,4 @@
-"""Exercise real native CLI/application IO with an explicit model-runner double."""
+"""Exercise the real native CLI run flow behind link-time DNN doubles."""
 
 import json
 import os
@@ -60,20 +60,23 @@ class NativeCliTests(unittest.TestCase):
                 "-Wall",
                 "-Wextra",
                 "-Werror",
+                "-DHIMLOCO_HOST_FIXTURE=1",
+                "-DHIMLOCO_ENABLE_DNN=1",
                 "-I",
-                str(CPP),
+                str(CPP / "inc"),
                 "-I",
                 str(ROOT / "utils/c_utils"),
+                "-I",
+                str(CPP / "tests/fixtures"),
                 "-I",
                 str(include),
             ]
             argv += [
                 str(CPP / f)
                 for f in [
-                    "main.cc",
-                    "cli_io.cc",
-                    "application.cc",
-                    "policy.cc",
+                    "src/main.cpp",
+                    "src/cli.cpp",
+                    "src/policy.cpp",
                     "tests/cli_fixture_runner.cc",
                 ]
             ]

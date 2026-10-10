@@ -1,4 +1,4 @@
-#include "tensor_contract.hpp"
+#include "segment.hpp"
 #include <cassert>
 #include <cmath>
 #include <cstring>

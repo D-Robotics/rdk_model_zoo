@@ -1,5 +1,5 @@
 #include "hobot/dnn/hb_dnn.h"
-#include "model_runner.hpp"
+#include "segment.hpp"
 #include <cassert>
 #include <cstdlib>
 #include <fstream>
@@ -99,8 +99,8 @@ int main(int argc, char **argv) {
     fail = point;
     bool threw = false;
     try {
-      lanenet::ModelRunner runner(argv[1], [] {});
-      auto raw = runner.run(std::vector<float>(3 * 256 * 512, .5f));
+      lanenet::LaneNet runner(argv[1], [] {});
+      auto raw = runner.infer(std::vector<float>(3 * 256 * 512, .5f));
       assert(raw.size() == 3);
       auto result = lanenet::decode_outputs(raw);
       assert(result.binary[0] == 0);
@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
   calls = 0;
   bool rejected = false;
   try {
-    lanenet::ModelRunner runner(
+    lanenet::LaneNet runner(
         argv[1], [] { throw std::invalid_argument("wrong board"); });
   } catch (const std::exception &) {
     rejected = true;
@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
   bad_metadata = true;
   rejected = false;
   try {
-    lanenet::ModelRunner runner(argv[1], [] {});
+    lanenet::LaneNet runner(argv[1], [] {});
   } catch (const std::exception &) {
     rejected = true;
   }

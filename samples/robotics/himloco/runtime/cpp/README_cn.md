@@ -12,21 +12,19 @@
 
 ```text
 cpp/
+├── inc/  # 公共头文件
+│   ├── cli.hpp  # CLI 选项、输入发现与加载、运行工作区
+│   └── policy.hpp  # 策略类型、模型类、原生运行配置
+├── src/  # 实现
+│   ├── cli.cpp  # 参数解析、输入 IO、增量报告
+│   ├── main.cpp  # 入口：门禁、模型构造、逐条 predict
+│   └── policy.cpp  # 策略阶段、准入门禁、X5 SDK 运行时
 ├── tests/  # 自动化测试
-├── CMakeLists.txt  # 源码或数据文件
+├── CMakeLists.txt  # 构建
+├── launcher.py  # Python 脚本
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── application.cc  # 源码或数据文件
-├── cli_io.cc  # 源码或数据文件
-├── cli_io.hpp  # 源码或数据文件
-├── launcher.py  # Python 脚本
-├── main.cc  # 源码或数据文件
-├── model_preflight.cc  # 源码或数据文件
-├── policy.cc  # 源码或数据文件
-├── policy.hpp  # 源码或数据文件
-├── run.sh  # 运行示例
-├── sdk_runner.cc  # 源码或数据文件
-└── sdk_runner.hpp  # 源码或数据文件
+└── run.sh  # 运行示例
 ```
 
 <a id="supported-boards"></a>
@@ -143,19 +141,20 @@ bash samples/robotics/himloco/runtime/cpp/run.sh --target x5 \
 <a id="interface-lifecycle"></a>
 ## 接口与资源生命周期
 
-`HimLoco(Runner)` 保存传入的可调用对象，不打开模型、不分配 SDK 缓冲区。
+`HimLoco(Runner)` 保存传入的可调用对象，不打开模型、不分配 SDK 缓冲区；
+`HimLoco(NativeConfig, gate)` 通过准入门禁加载原生运行时。
 公开推理接口仅包含四个阶段：
 
 ```cpp
-auto prepared = task.pre_process(observation);
-auto raw = task.forward(prepared);
-auto result = task.post_process(raw);
+auto prepared = task.preprocess(observation);
+auto raw = task.infer(prepared);
+auto result = task.postprocess(raw);
 // 等价的完整路径：
 auto complete = task.predict(observation);
 ```
 
-`pre_process` 校验并复制观测。`forward` 校验输入，调用一次 runner，再校验动作和
-耗时。`post_process` 返回独立副本，不裁剪、不归一化、不应用控制器的 0.25 rad
+`preprocess` 校验并复制观测。`infer` 校验输入，调用一次 runner，再校验动作和
+耗时。`postprocess` 返回独立副本，不裁剪、不归一化、不应用控制器的 0.25 rad
 动作缩放。`predict` 顺序组合前三个阶段。
 
 尺寸错误、NaN／Inf、非法耗时或空 runner 抛出 `std::invalid_argument`；runner 异常
@@ -164,30 +163,30 @@ auto complete = task.predict(observation);
 
 各阶段容器独立持有 vector，后续调用不会覆盖早先的原始输出或耗时；前处理与后处理
 均不调用 runner。任务不保存可变的逐次推理状态，但线程安全仍取决于 runner，
-不要并发使用同一个原生 SDK runner。SDK 加载、元数据、资源生命周期、输入输出文件、
-报告及板型／模型身份检查由适配器和应用负责，SDK 生命周期、元数据及身份检查在 `SdkRunner` 中实现；`cli_io.cc` 和 `application.cc` 负责输入、输出和报告。
+不要并发使用同一个原生 SDK runner。SDK 加载、元数据、资源生命周期及板型／模型身份
+检查由模型在 `src/policy.cpp` 中负责；`src/cli.cpp` 负责选项、输入输出和报告；
+`src/main.cpp` 通过门禁准入后显式构造 `HimLoco` 并逐条调用 `predict`。
 
-### SDK 适配器
+### 原生运行时与准入门禁
 
-`SdkRunner(NativeConfig)` 在构造时先读取实际板型，要求 X5，再校验显式本地 `.bin`
-路径和发布 SHA-256；通过后才加载 SDK。没有下载、环境变量绕过或自动 S 平台回退。
-`NativeConfig::priority` 默认 `-1`（SDK 默认），可指定 `[0,255]`；`model_path` 必须显式提供。
+`HimLoco(NativeConfig, gate)` 构造时先校验调度优先级，再执行准入门禁——读取实际
+板型并要求 X5、校验显式本地 `.bin` 路径与发布 SHA-256；通过后才加载 SDK。
+默认门禁为 `verify_native_model`，主机测试可注入自定义门禁。没有下载、
+环境变量绕过或自动 S 平台回退。`NativeConfig::priority` 默认 `-1`（SDK 默认），
+可指定 `[0,255]`；`model_path` 必须显式提供。
 
 ```cpp
-himloco::SdkRunner runner({model_path, 7});
-himloco::HimLoco task([&runner](const std::vector<float>& input) {
-  return runner.run(input);
-});
-auto result = task.predict(observation);
+himloco::HimLoco model({model_path, 7});
+auto result = model.predict(observation);
 ```
 
-runner 必须比引用它的 task 活得更久，二者不能并发使用同一 SDK 资源。
-适配器要求单模型、单输入 `obs_history`、单输出 `actions`，float32 且无需手动反量化。
-校验 X5 四维有效／对齐形状、元素数与分配容量后才复制数据。输入保留源实现的紧凑提交
-方式并清零剩余缓冲区；输出按对齐跨度取出 12 个逻辑值。返回数据独立持有。
+模型在自身生命周期内持有 SDK 资源，不能并发共享使用。
+运行时要求单模型、单输入 `obs_history`、单输出 `actions`，float32 且无需手动反量化。
+校验 X5 四维有效／对齐形状、元素数与分配容量后才复制数据。输入按紧凑提交方式写入，
+并清零剩余缓冲区；输出按对齐跨度取出 12 个逻辑值。返回数据独立持有。
 每次任务退出释放 task handle，构造失败和析构均先释放张量再释放 packed model。
 `input_metadata`／`output_metadata`、`model_name`、`runtime_version` 与
-`priority` 为应用提供报告信息，不在推理文件中写报告。
+`priority` 提供报告信息，不在推理文件中写报告。
 
 <a id="results-interpretation"></a>
 ## 结果解释

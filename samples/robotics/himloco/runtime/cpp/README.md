@@ -14,21 +14,19 @@ Run the fused HIMLoco Go2 policy offline on X5. Six observation frames form one 
 
 ```text
 cpp/
+├── inc/  # Public headers
+│   ├── cli.hpp  # CLI options, input discovery/loading, run workspace
+│   └── policy.hpp  # Policy types, model class, native runtime config
+├── src/  # Implementation
+│   ├── cli.cpp  # Argument parsing, input IO, incremental report
+│   ├── main.cpp  # Entry: gate, model construction, per-record predict
+│   └── policy.cpp  # Policy stages, admission gate, X5 SDK runtime
 ├── tests/  # Automated tests
-├── CMakeLists.txt  # Source or data file
+├── CMakeLists.txt  # Build
+├── launcher.py  # Python script
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── application.cc  # Source or data file
-├── cli_io.cc  # Source or data file
-├── cli_io.hpp  # Source or data file
-├── launcher.py  # Python script
-├── main.cc  # Source or data file
-├── model_preflight.cc  # Source or data file
-├── policy.cc  # Source or data file
-├── policy.hpp  # Source or data file
-├── run.sh  # Run the sample
-├── sdk_runner.cc  # Source or data file
-└── sdk_runner.hpp  # Source or data file
+└── run.sh  # Run the sample
 ```
 
 <a id="supported-boards"></a>
@@ -157,19 +155,20 @@ a manifest is allowed and reports null manifest provenance. See the
 ## Interface and resource lifecycle
 
 `HimLoco(Runner)` stores the supplied callable and does not open a model or allocate
-SDK buffers. Its public inference surface is limited to four stages:
+SDK buffers; `HimLoco(NativeConfig, gate)` loads the native runtime through the
+admission gate. Its public inference surface is limited to four stages:
 
 ```cpp
-auto prepared = task.pre_process(observation);
-auto raw = task.forward(prepared);
-auto result = task.post_process(raw);
+auto prepared = task.preprocess(observation);
+auto raw = task.infer(prepared);
+auto result = task.postprocess(raw);
 // Equivalent complete path:
 auto complete = task.predict(observation);
 ```
 
-`pre_process` validates and copies observations. `forward` validates its input,
+`preprocess` validates and copies observations. `infer` validates its input,
 invokes the runner once, then validates its returned actions and timing.
-`post_process` returns an owned copy without clipping, normalization or the
+`postprocess` returns an owned copy without clipping, normalization or the
 controller's 0.25 rad action scaling. `predict` composes the three stages.
 
 Invalid sizes, NaN/Inf values, invalid timing or an empty runner raise
@@ -181,36 +180,36 @@ All stage containers own their vectors. A later call cannot overwrite an earlier
 raw output or its duration; preprocessing and postprocessing do not call the
 runner. The task stores no mutable per-call state. Thread safety still depends
 on the supplied runner; do not invoke a shared native SDK runner concurrently.
-The adapter/application owns SDK loading, metadata, resource lifetime, input/output
-files, reports and target/model identity checks; SDK lifecycle, metadata and identity checks are implemented in `SdkRunner`;
-`cli_io.cc` and `application.cc` own input/output and reports.
+The model owns SDK loading, metadata, resource lifetime and target/model identity
+checks in `src/policy.cpp`; `src/cli.cpp` owns options, input/output and reports;
+`src/main.cpp` admits the model, constructs `HimLoco` visibly and calls `predict`
+per record.
 
-### SDK adapter
+### Native runtime and admission gate
 
-`SdkRunner(NativeConfig)` first reads actual board identity, requires X5 and checks
-the explicit local `.bin` path against the published SHA-256, before loading the
-SDK. There is no download, environment override or S-platform fallback.
+`HimLoco(NativeConfig, gate)` first validates scheduling priority, then runs the
+admission gate — actual board identity, X5 required, and the explicit local
+`.bin` path checked against the published SHA-256 — before loading the SDK.
+The default gate is `verify_native_model`; host tests inject their own.
+There is no download, environment override or S-platform fallback.
 `NativeConfig::priority` defaults to `-1` (SDK default), with `[0,255]` accepted;
 `model_path` must be supplied explicitly.
 
 ```cpp
-himloco::SdkRunner runner({model_path, 7});
-himloco::HimLoco task([&runner](const std::vector<float>& input) {
-  return runner.run(input);
-});
-auto result = task.predict(observation);
+himloco::HimLoco model({model_path, 7});
+auto result = model.predict(observation);
 ```
 
-The runner must outlive any task referencing it; do not use the same SDK resources
-concurrently. The adapter requires one model, one `obs_history` input and one
+The model holds its SDK resources for its lifetime; do not share them
+concurrently. The runtime requires one model, one `obs_history` input and one
 `actions` output, float32 without manual dequantization. It checks four-dimensional
 X5 logical/aligned shapes, element counts and allocation capacity before copying.
-Input retains the source compact-submission convention, with remaining memory
+Input uses compact submission, with remaining memory
 zeroed. Output extraction follows aligned strides to return 12 owned logical values.
 Task handles release on every exit; failed construction and destruction release
 tensors before the packed model. `input_metadata`/`output_metadata`,
-`model_name`, `runtime_version` and `priority` supply report facts to the
-application without writing reports inside inference code.
+`model_name`, `runtime_version` and `priority` supply report facts without
+writing reports inside inference code.
 
 <a id="results-interpretation"></a>
 ## Interpreting results

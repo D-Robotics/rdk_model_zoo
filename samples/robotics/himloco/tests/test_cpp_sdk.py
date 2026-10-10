@@ -15,7 +15,7 @@ SHARED = ROOT / "utils/c_utils"
 
 
 class NativeSdkTests(unittest.TestCase):
-    def compile_and_run(self, sources, args=(), fixtures=False):
+    def compile_and_run(self, sources, args=(), fixtures=False, enable_dnn=True):
         compiler = shutil.which("c++")
         if not compiler:
             self.skipTest("C++17 compiler missing; SDK fixture check not-run")
@@ -28,13 +28,21 @@ class NativeSdkTests(unittest.TestCase):
                 "-Wextra",
                 "-Werror",
                 "-I",
-                str(CPP),
+                str(CPP / "inc"),
                 "-I",
                 str(SHARED),
             ]
             if fixtures:
-                argv += ["-I", str(CPP / "tests/fixtures")]
-            argv += [str(CPP / path) for path in sources] + ["-o", str(binary)]
+                argv += [
+                    "-I",
+                    str(CPP / "tests/fixtures"),
+                ]
+                if enable_dnn:
+                    argv += ["-DHIMLOCO_ENABLE_DNN=1"]
+            argv += [
+                str(source if source.is_absolute() else CPP / source)
+                for source in map(Path, sources)
+            ] + ["-o", str(binary)]
             built = subprocess.run(argv, capture_output=True, text=True)
             self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
             run = subprocess.run(
@@ -47,12 +55,27 @@ class NativeSdkTests(unittest.TestCase):
 
     def test_sdk_metadata_memory_and_failures(self):
         self.compile_and_run(
-            ["sdk_runner.cc", "policy.cc", "tests/test_sdk.cc"], fixtures=True
+            ["src/policy.cpp", SHARED / "platform_identity.cc", "tests/test_sdk.cc"],
+            fixtures=True,
+        )
+
+    def test_sdk_free_build_ignores_visible_fake_headers(self):
+        # The DNN binding must follow the explicit HIMLOCO_ENABLE_DNN
+        # definition, not header visibility: with the fake SDK headers on the
+        # include path but no definition, policy.cpp stays SDK-free and links
+        # without the declaration-only fixture stubs. Under the previous
+        # __has_include gate this build failed to link with undefined hbDNN*
+        # symbols even though HIMLOCO_BUILD_SDK was OFF.
+        self.compile_and_run(
+            ["src/policy.cpp", "tests/test_preflight.cc"],
+            ["fixture.bin"],
+            fixtures=True,
+            enable_dnn=False,
         )
 
     def test_production_preflight_rejections(self):
         self.compile_and_run(
-            ["model_preflight.cc", "tests/test_preflight.cc"], ["fixture.bin"]
+            ["src/policy.cpp", "tests/test_preflight.cc"], ["fixture.bin"]
         )
 
     def test_published_digest_matches_active_manifest(self):
@@ -61,5 +84,5 @@ class NativeSdkTests(unittest.TestCase):
         rows = document["models"] if isinstance(document, dict) else document
         row = next(item for item in rows if item["id"] == "himloco")
         digest = row["assets"][0]["sha256"]
-        source = (CPP / "model_preflight.cc").read_text()
+        source = (CPP / "src/policy.cpp").read_text()
         self.assertEqual(re.findall(r'"([a-f0-9]{64})"', source), [digest])

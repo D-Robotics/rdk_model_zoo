@@ -1,8 +1,8 @@
 // Copyright (c) 2026 D-Robotics Corporation
 // SPDX-License-Identifier: Apache-2.0
-// Host failure injection against the real ModelRunner implementation.
+// Host failure injection against the real UnetMobileNet implementation.
 // These fake interfaces do NOT verify real SDK ABI, linkage or execution.
-#include "model_runner.hpp"
+#include "segment.hpp"
 #include "hobot/dnn/hb_dnn.h"
 #include <cassert>
 #include <cstring>
@@ -50,8 +50,8 @@ int main(){
     for(const auto* entry:cases){
         failure=entry;alloc_calls=0;bool threw=false;
         try{
-            ModelRunner runner("fixture.hbm","s100",3,1,[](const std::string&,const std::string&){});
-            auto raw=runner.run(cv::Mat(1024,2048,CV_8UC1),cv::Mat(512,1024,CV_8UC2));
+            UnetMobileNet model("fixture.hbm","s100",3,1,[](const std::string&,const std::string&){});
+            auto raw=model.infer(PreparedInput{cv::Mat(1024,2048,CV_8UC1),cv::Mat(512,1024,CV_8UC2),{}});
             assert(tasks==0);
             const auto mask=decode_scores(raw,2,3);
             for(auto id:mask)assert(id==4);

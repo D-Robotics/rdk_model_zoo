@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Host unit tests for output discovery by shape (common/tensor_view.h).
+// Host unit tests for output discovery by shape (inc/yolo.hpp).
 
 #include <cstdio>
 #include <vector>
 
-#include "common/tensor_view.h"
+#include "yolo.hpp"
 
 namespace {
 

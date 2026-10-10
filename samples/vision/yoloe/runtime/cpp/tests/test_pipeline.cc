@@ -1,5 +1,5 @@
 // Copyright (c) 2026 D-Robotics. SPDX-License-Identifier: Apache-2.0
-#include "yoloe.h"
+#include "detect.hpp"
 #include <stdexcept>
 #define EXPECT(v)                                                              \
   do {                                                                         \
@@ -53,17 +53,17 @@ int main() {
     config.protocol = protocol;
     yoloe::YOLOE task(config, std::move(owned));
     cv::Mat image(333, 1000, CV_8UC3, cv::Scalar(0, 0, 255));
-    auto prepared = task.pre_process(image);
+    auto prepared = task.preprocess(image);
     EXPECT(fixture->calls == 0);
     auto raw = task.infer(prepared);
     EXPECT(fixture->calls == 1);
-    auto result = task.post_process(raw);
+    auto result = task.postprocess(raw);
     EXPECT(fixture->calls == 1);
     EXPECT(result.size() == 1);
     EXPECT(result[0].label == 7);
     EXPECT(result[0].mask.type() == CV_8UC1);
     auto alternate =
-        task.pre_process(cv::Mat(517, 311, CV_8UC3, cv::Scalar(0)));
+        task.preprocess(cv::Mat(517, 311, CV_8UC3, cv::Scalar(0)));
     EXPECT(alternate.geometry().width == 311);
     EXPECT(raw.geometry().width == 1000 && raw.geometry().height == 333);
     auto whole = task.predict(image);
@@ -75,7 +75,7 @@ int main() {
     EXPECT(prepared.input().y == saved_y);
     yoloe::YOLOE other(config, std::make_unique<FixtureRunner>(protocol));
     rejects([&] { other.infer(prepared); });
-    rejects([&] { other.post_process(raw); });
+    rejects([&] { other.postprocess(raw); });
     fixture->fail = true;
     bool failed = false;
     try {
@@ -87,8 +87,8 @@ int main() {
     fixture->fail = false;
     fixture->malformed = true;
     auto bad = task.infer(prepared);
-    rejects([&] { task.post_process(bad); });
-    rejects([&] { task.pre_process(cv::Mat()); });
+    rejects([&] { task.postprocess(bad); });
+    rejects([&] { task.preprocess(cv::Mat()); });
   }
   int before_invalid = destroyed;
   yoloe::Config invalid;

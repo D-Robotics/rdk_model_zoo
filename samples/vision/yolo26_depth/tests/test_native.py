@@ -1,4 +1,4 @@
-"""Compile pure native contracts on host; this is not an SDK/board build."""
+"""Compile production native sources on host; this is not an SDK/board build."""
 
 from pathlib import Path
 import subprocess
@@ -7,10 +7,22 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / "samples/vision/yolo26_depth"
+CPP = SAMPLE / "runtime/cpp"
+
+
+def opencv_flags():
+    import subprocess as sp
+    for pkg in ('opencv5', 'opencv4'):
+        if sp.run(['pkg-config', '--exists', pkg]).returncode == 0:
+            cflags = sp.run(['pkg-config', '--cflags', pkg], capture_output=True, text=True).stdout.split()
+            libs = sp.run(['pkg-config', '--libs', pkg], capture_output=True, text=True).stdout.split()
+            return cflags, libs
+    raise RuntimeError('host tests need opencv5 or opencv4 via pkg-config')
 
 
 class NativeTests(unittest.TestCase):
     def test_native_tensor_geometry_and_identity_contract(self):
+        cflags, libs = opencv_flags()
         with tempfile.TemporaryDirectory() as tmp:
             executable = Path(tmp) / "contract"
             result = subprocess.run(
@@ -20,10 +32,15 @@ class NativeTests(unittest.TestCase):
                     "-Wall",
                     "-Wextra",
                     "-Werror",
+                    *cflags,
                     "-I",
-                    str(SAMPLE / "runtime/cpp/inc"),
+                    str(SAMPLE / "tests/fake_sdk"),
+                    "-I",
+                    str(CPP / "inc"),
                     str(SAMPLE / "tests/test_native_contract.cpp"),
-                    str(SAMPLE / "runtime/cpp/src/tensor_contract.cpp"),
+                    str(CPP / "src/depth.cpp"),
+                    str(SAMPLE / "tests/fake_sdk/stub_impl.cpp"),
+                    *libs,
                     "-o",
                     str(executable),
                 ],
@@ -35,6 +52,7 @@ class NativeTests(unittest.TestCase):
             self.assertEqual(run.returncode, 0, run.stderr)
 
     def test_actual_runner_resource_cleanup_against_fake_sdk(self):
+        cflags, libs = opencv_flags()
         with tempfile.TemporaryDirectory() as tmp:
             executable = Path(tmp) / "resources"
             result = subprocess.run(
@@ -44,13 +62,14 @@ class NativeTests(unittest.TestCase):
                     "-Wall",
                     "-Wextra",
                     "-Werror",
+                    *cflags,
                     "-I",
                     str(SAMPLE / "tests/fake_sdk"),
                     "-I",
-                    str(SAMPLE / "runtime/cpp/inc"),
+                    str(CPP / "inc"),
                     str(SAMPLE / "tests/test_resources.cpp"),
-                    str(SAMPLE / "runtime/cpp/src/model_runner.cpp"),
-                    str(SAMPLE / "runtime/cpp/src/tensor_contract.cpp"),
+                    str(CPP / "src/depth.cpp"),
+                    *libs,
                     "-o",
                     str(executable),
                 ],
@@ -69,6 +88,7 @@ class NativeTests(unittest.TestCase):
         import json
         import numpy as np
 
+        cflags, libs = opencv_flags()
         with tempfile.TemporaryDirectory() as tmp:
             executable = Path(tmp) / "io"
             result = subprocess.run(
@@ -78,10 +98,16 @@ class NativeTests(unittest.TestCase):
                     "-Wall",
                     "-Wextra",
                     "-Werror",
+                    *cflags,
                     "-I",
-                    str(SAMPLE / "runtime/cpp/inc"),
+                    str(SAMPLE / "tests/fake_sdk"),
+                    "-I",
+                    str(CPP / "inc"),
                     str(SAMPLE / "tests/test_native_io.cpp"),
-                    str(SAMPLE / "runtime/cpp/src/cli_io.cpp"),
+                    str(CPP / "src/cli.cpp"),
+                    str(CPP / "src/depth.cpp"),
+                    str(SAMPLE / "tests/fake_sdk/stub_impl.cpp"),
+                    *libs,
                     "-o",
                     str(executable),
                 ],

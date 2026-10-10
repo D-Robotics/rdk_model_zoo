@@ -32,13 +32,17 @@ endif()
 add_library(source_preprocess OBJECT "${LEGACY}/cpp/src/gemma4_vision_preprocess.cpp")
 target_include_directories(source_preprocess PRIVATE "${LEGACY}/cpp/inc" ${OpenCV_INCLUDE_DIRS})
 target_compile_definitions(source_preprocess PRIVATE PreprocessImage=SourcePreprocessImage)
+# gemma4_vision_engine.cpp now carries the whole vision pipeline in one
+# translation unit: image IO, preprocessing, stage composition, the tensor
+# contract and the SDK-driven engine (formerly separate
+# gemma4_image_io/gemma4_vision_task/gemma4_vision_preprocess/
+# gemma4_vision_tensor fragments); it reads the SDK through the sdk_fixtures
+# header double like the text stage tests.
 add_executable(vision_test vision_test.cpp
-  "${CPP}/src/gemma4_vision_preprocess.cpp"
-  "${CPP}/src/gemma4_vision_task.cpp"
-  "${CPP}/src/gemma4_image_io.cpp"
+  "${CPP}/src/gemma4_vision_engine.cpp"
   $<TARGET_OBJECTS:source_preprocess>)
-target_include_directories(vision_test PRIVATE "${CPP}/inc" ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(vision_test PRIVATE ${OpenCV_LIBS})
+target_include_directories(vision_test PRIVATE sdk_fixtures "${CPP}/inc" ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(vision_test PRIVATE ${OpenCV_LIBS} ${CMAKE_DL_LIBS})
 if(MSVC)
   target_compile_options(vision_test PRIVATE /UNDEBUG)
 else()
@@ -49,8 +53,11 @@ add_test(NAME vision_contract COMMAND vision_test)
 add_test(NAME vision_source_images COMMAND vision_test "${SAMPLE_ROOT}/test_data")
 
 # Metadata/packing tests use local declarations, not a vendor SDK or BPU.
-add_executable(vision_tensor_test vision_tensor_test.cpp "${CPP}/src/gemma4_vision_tensor.cpp")
-target_include_directories(vision_tensor_test PRIVATE sdk_fixtures "${CPP}/inc")
+# The contract helpers live in the folded engine source, so the binary
+# compiles the full engine TU (OpenCV headers and SDK link stubs included).
+add_executable(vision_tensor_test vision_tensor_test.cpp "${CPP}/src/gemma4_vision_engine.cpp")
+target_include_directories(vision_tensor_test PRIVATE sdk_fixtures "${CPP}/inc" ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(vision_tensor_test PRIVATE ${OpenCV_LIBS})
 if(MSVC)
   target_compile_options(vision_tensor_test PRIVATE /UNDEBUG)
 else()
@@ -70,17 +77,19 @@ foreach(KV_CASE reset transaction null invalid append alias reallocate)
 endforeach()
 
 # Fixed Text export descriptor contract: physical layout, padding, and
-# argmax semantics; no SDK.
+# argmax semantics; no SDK. The helpers live in the folded engine source, so
+# the binary compiles the full engine TU against the text_fixture double.
 add_executable(text_tensor_test text_tensor_test.cpp
-  "${CPP}/src/gemma4_text_tensor.cpp")
+  "${CPP}/src/gemma4_text_engine.cpp" "${CPP}/src/gemma4_kv_cache.cpp"
+  "${CPP}/src/gemma4_text_session.cpp")
 target_include_directories(text_tensor_test PRIVATE sdk_fixtures "${CPP}/inc")
+target_link_libraries(text_tensor_test PRIVATE ${CMAKE_DL_LIBS})
 
 # Production TextEngine against an SDK double speaking the fixed contract:
 # generation flow, cache transport, post-inference drift and rejections.
 add_executable(text_tensor_flow_test text_tensor_flow_test.cpp
   "${CPP}/src/gemma4_text_engine.cpp" "${CPP}/src/gemma4_kv_cache.cpp"
-  "${CPP}/src/gemma4_text_tensor.cpp" "${CPP}/src/gemma4_text_inputs.cpp"
-  "${CPP}/src/gemma4_text_session.cpp" "${CPP}/src/gemma4_text_transport.cpp")
+  "${CPP}/src/gemma4_text_session.cpp")
 target_include_directories(text_tensor_flow_test PRIVATE sdk_fixtures "${CPP}/inc")
 target_link_libraries(text_tensor_flow_test PRIVATE ${CMAKE_DL_LIBS})
 
@@ -93,8 +102,7 @@ add_executable(model_io_adopt_test model_io_adopt_test.cpp)
 target_include_directories(model_io_adopt_test PRIVATE sdk_fixtures "${CPP}/inc")
 add_executable(text_resources_test text_resources_test.cpp
   "${CPP}/src/gemma4_text_engine.cpp" "${CPP}/src/gemma4_kv_cache.cpp"
-  "${CPP}/src/gemma4_text_tensor.cpp" "${CPP}/src/gemma4_text_inputs.cpp"
-  "${CPP}/src/gemma4_text_session.cpp" "${CPP}/src/gemma4_text_transport.cpp")
+  "${CPP}/src/gemma4_text_session.cpp")
 target_include_directories(text_resources_test PRIVATE sdk_fixtures "${CPP}/inc")
 target_link_libraries(text_resources_test PRIVATE ${CMAKE_DL_LIBS})
 foreach(OWNER_TEST model_io_test model_io_adopt_test text_resources_test)
@@ -119,12 +127,12 @@ add_executable(text_session_test text_session_test.cpp
   "${CPP}/src/gemma4_text_session.cpp")
 target_include_directories(text_session_test PRIVATE sdk_fixtures "${CPP}/inc")
 
+# The folded text engine TU carries input preparation, the tensor contract
+# and SDK transport alongside the orchestration; the session policy and KV
+# cache remain independent algorithm sources.
 set(TEXT_STAGE_SOURCES
   "${CPP}/src/gemma4_text_engine.cpp"
-  "${CPP}/src/gemma4_text_inputs.cpp"
   "${CPP}/src/gemma4_text_session.cpp"
-  "${CPP}/src/gemma4_text_tensor.cpp"
-  "${CPP}/src/gemma4_text_transport.cpp"
   "${CPP}/src/gemma4_kv_cache.cpp")
 add_executable(text_stages_test text_stages_test.cpp ${TEXT_STAGE_SOURCES})
 target_include_directories(text_stages_test PRIVATE sdk_fixtures "${CPP}/inc")

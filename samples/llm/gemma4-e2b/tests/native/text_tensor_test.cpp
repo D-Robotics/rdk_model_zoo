@@ -1,8 +1,11 @@
 // Contract tests for the fixed Text export tensor helpers: host buffers
-// only, no SDK, model, or inference.
-#include "gemma4_text_tensor.hpp"
+// only, no SDK, model, or inference. The helpers now live inside the folded
+// text engine source, so this binary compiles the full engine translation
+// unit and links against the host SDK double in text_fixture.hpp.
+#include "gemma4_text_engine.hpp"
 #include "gemma4_config.hpp"
 #include "hb_utils.hpp"
+#include "text_fixture.hpp"
 
 #include <cassert>
 #include <cstdint>

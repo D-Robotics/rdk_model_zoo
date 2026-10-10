@@ -15,12 +15,12 @@ SAMPLE = Path(__file__).resolve().parents[1]
 CPP = SAMPLE / "runtime/cpp"
 NATIVE = SAMPLE / "tests/native"
 
+# The folded text engine TU carries input preparation, the tensor contract
+# and SDK transport alongside the orchestration; the session policy and KV
+# cache remain independent algorithm sources.
 STAGE_SOURCES = [
     CPP / "src/gemma4_text_engine.cpp",
-    CPP / "src/gemma4_text_inputs.cpp",
     CPP / "src/gemma4_text_session.cpp",
-    CPP / "src/gemma4_text_tensor.cpp",
-    CPP / "src/gemma4_text_transport.cpp",
     CPP / "src/gemma4_kv_cache.cpp",
 ]
 

@@ -43,7 +43,6 @@ int main() {
     config.template_path = templ;
     config.text_sink = [&](const char* chunk) { chunks.emplace_back(chunk); };
     MiniCPM5 model(config);
-    model.init();
     const auto outcome = model.predict();
     CHECK(outcome.exit_code() == 0, "sink request succeeds");
     CHECK(chunks.size() == 1 && chunks.front() == "你好，很高兴认识你。",
@@ -56,7 +55,6 @@ int main() {
     MiniCPM5Config config;
     config.template_path = templ;
     MiniCPM5 model(config);
-    model.init();
     const auto outcome = model.predict();
     CHECK(outcome.exit_code() == 0 && outcome.ended && !outcome.stream_error,
           "silent request succeeds");
@@ -70,7 +68,6 @@ int main() {
     config.template_path = templ;
     config.text_sink = [&](const char* chunk) { chunks.emplace_back(chunk); };
     MiniCPM5 model(config);
-    model.init();
     const auto outcome = model.predict();
     CHECK(outcome.exit_code() == 0 && outcome.ended, "END with text finishes");
     CHECK(chunks.size() == 1 && chunks.front() == "你好，很高兴认识你。",
@@ -86,7 +83,6 @@ int main() {
     config.template_path = templ;
     config.text_sink = [&](const char* chunk) { chunks.emplace_back(chunk); };
     MiniCPM5 model(config);
-    model.init();
     const auto outcome = model.predict();
     CHECK(outcome.exit_code() == 1 && outcome.failed && !outcome.ended,
           "ERROR state reported");
@@ -106,7 +102,6 @@ int main() {
       throw std::runtime_error("consumer exploded");
     };
     MiniCPM5 model(config);
-    model.init();
     bool threw = false;
     RequestOutcome outcome;
     try {
@@ -132,7 +127,6 @@ int main() {
     config.template_path = templ;
     config.text_sink = [&](const char* chunk) { chunks.emplace_back(chunk); };
     MiniCPM5 model(config);
-    model.init();
     const auto outcome = model.predict();
     CHECK(outcome.exit_code() == 0, "multi-chunk request finishes");
     CHECK(chunks.size() == 2 && chunks.front() == "A",

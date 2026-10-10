@@ -147,6 +147,7 @@ def main(argv=None):
                     str(CPP),
                     "-B",
                     str(build_dir),
+                    "-DRDK_TARGET=x5",
                     "-DCMAKE_BUILD_TYPE=Release",
                 ],
                 check=True,

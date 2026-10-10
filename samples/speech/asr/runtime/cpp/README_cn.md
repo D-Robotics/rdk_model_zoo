@@ -12,8 +12,8 @@
 
 ```text
 cpp/
-├── inc/  # inc 相关文件
-├── src/  # src 相关文件
+├── inc/  # asr.hpp（解码与模型契约）、cli.hpp（CLI）、frontend.hpp
+├── src/  # asr.cpp（预检 + 模型 + UCP 绑定）、cli.cpp、frontend.cpp、main.cpp
 ├── tests/  # 自动化测试
 ├── CMakeLists.txt  # 源码或数据文件
 ├── README.md  # 英文说明
@@ -36,7 +36,7 @@ C++17、CMake >=3.18、libsndfile/libsamplerate 开发头文件与库；CLI 使�
 ## 构建
 在匹配板卡上，`run.sh --build` 先验证身份/模型/输入，再以 Release、`ASR_BUILD_SDK=ON`、`ASR_BUILD_CLI=ON`、关闭测试进行构建并运行 `asr_demo`，保留构建日志。模型加载仍核对实际元数据。已有可执行程序可通过 `--binary` 指定。
 
-库构建默认关闭 SDK 和 CLI，`asr_frontend`、`asr_preflight` 不需厂商头文件；`asr_sdk` 需开启 SDK，`asr_demo` 需同时开启 SDK 和 CLI。只开 CLI 会明确失败。交叉编译应提供目标编译器/sysroot；自定义安装可设置 `ASR_DNN_INCLUDE`、`ASR_UCP_INCLUDE`、`ASR_UCP_SYS_INCLUDE`、`ASR_DNN_LIBRARY`、`ASR_UCP_LIBRARY`、`ASR_JSON_INCLUDE` 或 CMake 安装前缀。X5/UCP 头文件同时可见会拒绝构建。
+库构建默认关闭 SDK 和 CLI，`asr_frontend`、`asr_model` 不需厂商头文件；`src/asr.cpp` 内的 UCP 绑定仅在开启 SDK 时编译，`asr_demo` 需同时开启 SDK 和 CLI。只开 CLI 会明确失败。交叉编译应提供目标编译器/sysroot；自定义安装可设置 `ASR_DNN_INCLUDE`、`ASR_UCP_INCLUDE`、`ASR_UCP_SYS_INCLUDE`、`ASR_DNN_LIBRARY`、`ASR_UCP_LIBRARY`、`ASR_JSON_INCLUDE` 或 CMake 安装前缀。X5/UCP 头文件同时可见会拒绝构建。
 
 <a id="run"></a>
 ## 运行
@@ -90,20 +90,20 @@ S600 应下载 s600 制品并替换 target，不复用 S100 文件。默认 auto
 ## 接口与资源生命周期
 `AudioReader` 独占 libsndfile 句柄；`next(AudioChunk&)` 返回自有交错浮点数据及源采样率/声道、帧偏移/块索引。正常 EOF 清空输出并返回 false，读取失败抛异常。每块读取 `ceil(30000 × 原采样率 / 16000)` 帧，不执行归一化或推理。
 
-`ASR` 只包含构造/配置和四个阶段方法，构造接收 Runner、实际正数输出步数、有序 3503 项词表、解码模式（默认 Legacy：逐帧 argmax 后按原文拼接 token，仅删除 `<pad>`）。
+`ASR`（`inc/asr.hpp`，实现于 `src/asr.cpp`）只包含构造/配置和四个阶段方法；同一头文件还承载解码契约（`DecodeMode`、`validate_vocabulary`、`decode_ids`、`decode_logits`、`source_chunk_size`、`normalize_and_pad`）。提供两个构造：可注入构造接收 Runner、实际正数输出步数、有序 3503 项词表、解码模式（默认 Legacy：逐帧 argmax 后按原文拼接 token，仅删除 `<pad>`）；原生构造接收 `SdkModel`、强制预检门与词表，模型自持有 UCP runner 及其实测元数据（`metadata()` 暴露；无 SDK 的库构建中原生构造被拒绝）。`main` 可见地构造命名模型并对每个音频块调用 `predict`。
 
-- `pre_process(AudioChunk)` 验证有限值、均值混声、逐窗口使用 `SRC_SINC_BEST_QUALITY` 重采样，以方差加 1e-5 归一化后补零到 30000，返回自有浮点数据和有效长度。空/错误几何/超长/不足一个目标点的输入拒绝。
-- `forward(PreparedChunk)` 验证定长有限输入，仅调用 runner 一次，返回自有原始 logits。
-- `post_process(raw)` 核对 `[1,T,3503]`、有限值并解码。Legacy（默认）逐帧 argmax 后按原文拼接 token，保留重复 ID 和 `|`，仅删除 `<pad>`。CTC 折叠连续 ID、去 blank 0、将词分隔符 `|` 转为空格并去掉首尾空白。
-- `predict(AudioChunk)` 组合三阶段。读音频、词表解析和报告保存留在任务类外部。
+- `preprocess(AudioChunk)` 验证有限值、均值混声、逐窗口使用 `SRC_SINC_BEST_QUALITY` 重采样，以方差加 1e-5 归一化后补零到 30000，返回自有浮点数据和有效长度。空/错误几何/超长/不足一个目标点的输入拒绝。
+- `infer(PreparedChunk)` 验证定长有限输入，仅调用 runner 一次，返回自有原始 logits。
+- `postprocess(raw)` 核对 `[1,T,3503]`、有限值并解码。Legacy（默认）逐帧 argmax 后按原文拼接 token，保留重复 ID 和 `|`，仅删除 `<pad>`。CTC 折叠连续 ID、去 blank 0、将词分隔符 `|` 转为空格并去掉首尾空白。
+- `predict(AudioChunk)` 只组合一次三阶段，返回自有 `Prediction`（解码文本及报告所需的有效目标采样数）。读音频、词表解析和报告保存留在任务类外部：`src/cli.cpp` 的 `RunWorkspace` 负责报告生命周期（输出目录独占、元数据/分块记录、完成时重校验摘要、`result.json`/`failed.json`）。
 
 `SdkRunner` 必须在 SDK 调用前执行 `make_preflight(model_digest, vocabulary_path)`：核对本机精确目标（包含 S100P 别名）、模型字节及固定词表 SHA。`load_vocabulary` 将同一份哈希校验后的字节解析为 3503 个有序 token。原生适配器接受一个有名称的模型、无量化 FLOAT32 `[1,30000]` 输入和 `[1,T,3503]` 输出，并在分配前验证正容量、无重叠的 float 对齐字节步长及 T；整数 SCALE 输出由 [Python 运行时](../python/README_cn.md)支持。
 
 输入补齐区域清零，浮点值按实际步长复制；检查输入缓存清理、同步 UCP 推理与输出缓存失效，并返回拥有独立内存的紧凑 logits。模型/张量所有者清理部分初始化，包括返回错误但取得非空地址的分配；返回成功但地址为空则拒绝。清理走不抛异常的析构路径：对已获得的 tensor 与模型句柄调用 `hbDNNRelease`/free 释放，不检查返回码、不报告错误。不要并发复用 SDK 实例，捕获它的 Runner 不能比实例存活更久。
 
-下面的 API 示例展示如何向 `ASR` 注入 `Runner` 并调用前处理、推理和解码阶段。编译需 `inc`、`src/frontend.cc` 与 libsamplerate；板端运行由 `SdkRunner` 接入 UCP SDK。
+下面的 API 示例展示如何向 `ASR` 注入 `Runner` 并调用前处理、推理和解码阶段。编译需 `inc`、`src/frontend.cpp` 与 libsamplerate；板端运行由 `SdkRunner` 接入 UCP SDK。
 ```cpp
-#include "asr.h"
+#include "asr.hpp"
 #include <iostream>
 int main() {
   std::vector<std::string> vocabulary{"<pad>"};
@@ -117,9 +117,9 @@ int main() {
   };
   asr::ASR task(fixture, 4, vocabulary);
   asr::AudioChunk audio{{0.1f, 0.2f, 0.3f}, 16000, 1, 0, 0};
-  auto prepared = task.pre_process(audio);
-  auto raw = task.forward(prepared);
-  std::cout << task.post_process(raw) << '\n';
+  auto prepared = task.preprocess(audio);
+  auto raw = task.infer(prepared);
+  std::cout << task.postprocess(raw) << '\n';
 }
 ```
 

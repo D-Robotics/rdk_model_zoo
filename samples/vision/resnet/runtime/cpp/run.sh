@@ -40,11 +40,11 @@ option_value() {
 
 # A caller may override all three file flags. Resolve those values before the
 # existence checks so a prepared model outside the sample directory works.
-if value="$(option_value --model_path "$@")"; then MODEL_PATH="$value"; fi
-if value="$(option_value --test_img "$@")"; then TEST_IMAGE="$value"; fi
-if value="$(option_value --label_file "$@")"; then LABEL_FILE="$value"; fi
+if value="$(option_value --model-path "$@")"; then MODEL_PATH="$value"; fi
+if value="$(option_value --test-img "$@")"; then TEST_IMAGE="$value"; fi
+if value="$(option_value --label-file "$@")"; then LABEL_FILE="$value"; fi
 TOP_K="${TOP_K:-5}"
-if value="$(option_value --top_k "$@")"; then TOP_K="$value"; fi
+if value="$(option_value --top-k "$@")"; then TOP_K="$value"; fi
 
 if [[ ! -f "$MODEL_PATH" ]]; then
   echo "Model not found: $MODEL_PATH" >&2
@@ -64,16 +64,16 @@ cmake -S "$SCRIPT_DIR" -B "$BUILD_DIR"
 cmake --build "$BUILD_DIR" --parallel "${BUILD_JOBS:-$(nproc)}"
 
 NATIVE_ARGS=("$@")
-if ! has_option --model_path "${NATIVE_ARGS[@]}"; then
-  NATIVE_ARGS+=(--model_path "$MODEL_PATH")
+if ! has_option --model-path "${NATIVE_ARGS[@]}"; then
+  NATIVE_ARGS+=(--model-path "$MODEL_PATH")
 fi
-if ! has_option --test_img "${NATIVE_ARGS[@]}"; then
-  NATIVE_ARGS+=(--test_img "$TEST_IMAGE")
+if ! has_option --test-img "${NATIVE_ARGS[@]}"; then
+  NATIVE_ARGS+=(--test-img "$TEST_IMAGE")
 fi
-if ! has_option --label_file "${NATIVE_ARGS[@]}"; then
-  NATIVE_ARGS+=(--label_file "$LABEL_FILE")
+if ! has_option --label-file "${NATIVE_ARGS[@]}"; then
+  NATIVE_ARGS+=(--label-file "$LABEL_FILE")
 fi
-if ! has_option --top_k "${NATIVE_ARGS[@]}"; then
-  NATIVE_ARGS+=(--top_k "$TOP_K")
+if ! has_option --top-k "${NATIVE_ARGS[@]}"; then
+  NATIVE_ARGS+=(--top-k "$TOP_K")
 fi
 exec "$BUILD_DIR/resnet18" "${NATIVE_ARGS[@]}"

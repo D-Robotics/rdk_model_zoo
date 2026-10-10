@@ -90,10 +90,11 @@ class SdkResourceTests(unittest.TestCase):
                 "-I",
                 str(NATIVE / "sdk_fixtures"),
                 "-I",
+                str(NATIVE / "app_stubs"),
+                "-I",
                 str(CPP / "inc"),
                 str(NATIVE / "sdk_resources_test.cpp"),
                 str(CPP / "src/gemma4_vision_engine.cpp"),
-                str(CPP / "src/gemma4_vision_tensor.cpp"),
                 "-o",
                 str(binary),
             ]

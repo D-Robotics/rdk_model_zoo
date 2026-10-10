@@ -18,9 +18,18 @@ PC 对照使用转换教程中的 COCO 图像、文本验证 prompt、原始浮�
 
 ```text
 evaluator/
+├── gemma4_server.cpp        # OpenAI 兼容 HTTP API 服务（辅助入口工具）
+├── gemma4_text_bench.cpp    # 纯文本推理基准（辅助入口工具）
+├── gemma4_demo.cpp          # 单次文本/VLM 诊断（辅助入口工具）
+├── gemma4_golden_verify.cpp # Golden mask/KV 对齐校验（辅助入口工具）
 ├── README.md  # 英文说明
 └── README_cn.md  # 中文说明
 ```
+
+四个原生辅助入口工具由 [`runtime/cpp/`](../runtime/cpp/README_cn.md) 的 CMake
+统一配置构建（目标 `gemma4_server`、`gemma4_text_bench`、`gemma4_demo`、`gemma4_golden_verify`）；
+构建与参数说明保留在 runtime README。它们位于此处是因为服务于评测流程，
+而非交互式示例入口。
 
 <a id="environment"></a>
 ## 环境
@@ -62,14 +71,16 @@ BOARD_IP=<board-ip> TARGET_SOC="$TARGET_SOC" \
 
 `golden_mask_kv/` 为可选的内部校验数据，不包含在公开模型服务器中。
 
-需编译 **全部** runtime 目标（不只 `main`）：
+需编译 **全部** runtime 目标（不只 `main`）。校验工具源码位于本目录，构建由
+`runtime/cpp` 统一配置：
 
 ```bash
 cd samples/llm/gemma4-e2b/runtime/cpp
 ./run.sh --target s600 --build
 ```
 
-然后运行 golden 校验：
+然后运行 golden 校验（`gemma4_golden_verify`，源码
+`evaluator/gemma4_golden_verify.cpp`）：
 
 ```bash
 export GEMMA4_HOME=~/gemma4_e2b

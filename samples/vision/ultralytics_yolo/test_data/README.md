@@ -209,7 +209,7 @@ name array with spellings (`motorcycle`, `airplane`, `couch`,
 `potted plant`, `dining table`, `tv` — six entries differ from this
 directory's VOC-style synonyms, same order), pose compiles 17 COCO keypoint
 names, and classification compiles the 1000-entry ImageNet order in
-`common/imagenet_labels.h`. Conversion post-compilation checks likewise quote
+`runtime/cpp/inc/imagenet_labels.hpp`. Conversion post-compilation checks likewise quote
 `test_data/bus.jpg` as their example input (see the
 [conversion guide](../conversion/README.md#validation)).
 

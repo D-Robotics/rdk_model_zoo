@@ -16,12 +16,17 @@ Use this directory for c++ inference.
 
 ```text
 cpp/
-├── inc/  # Files for inc
-├── src/  # Files for src
-├── CMakeLists.txt  # Source or data file
+├── inc/
+│   ├── classify.hpp  # Resnet18 model class and owned stage-data types
+│   └── cli.hpp       # CLI options and helpers
+├── src/
+│   ├── classify.cpp  # runtime lifecycle, preprocess/infer/postprocess
+│   ├── cli.cpp       # argument parsing, defaults, image/label loading, printing
+│   └── main.cpp      # entry point: parse options, predict, print
+├── CMakeLists.txt    # build (C++17, explicit RDK_TARGET board selection)
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-└── run.sh  # Run the sample
+└── run.sh  # Build and launch the sample
 ```
 
 <a id="supported-boards"></a>
@@ -33,19 +38,18 @@ cpp/
 | S600 | supported |
 | X5 | not-supported |
 
-The CMake file reads `/sys/class/boardinfo/soc_name` and defines the SoC
-macro used by the original source; an unreadable identity file is an error,
-not a fallback.
+The CMake file reads `/sys/class/boardinfo/soc_name` and defines the matching
+SoC macro; an unreadable identity file is an error, not a fallback.
 
 <a id="dependencies"></a>
 ## Dependencies
 
 On the board image: CMake and a C++17 compiler; OpenCV development
-headers/libraries; `gflags` and `fmt` development libraries; Horizon DNN
-headers under `/usr/hobot/include` and libraries under `/usr/hobot/lib`
-(`hbDNN`, `hbucp`). The source utility implementations come from the
-existing `utils/c_utils` files referenced by the CMake target. The launcher does not install system packages, modify the
-SDK, or download a model.
+headers/libraries; `fmt` development libraries; Horizon DNN headers under
+`/usr/hobot/include` and libraries under `/usr/hobot/lib` (`hbDNN`,
+`hbucp`). Utility implementations come from the shared
+`utils/c_utils` files referenced by the CMake target. The launcher does
+not install system packages, modify the SDK, or download a model.
 
 <a id="build"></a>
 ## Build
@@ -64,8 +68,8 @@ An alternative build directory selects the same target:
 
 ```bash
 cmake -S samples/vision/resnet/runtime/cpp \
-  -B /tmp/resnet18-legacy-build
-cmake --build /tmp/resnet18-legacy-build --parallel
+  -B /tmp/resnet18-alt-build
+cmake --build /tmp/resnet18-alt-build --parallel
 ```
 
 <a id="run"></a>
@@ -96,38 +100,55 @@ from any directory.
 <a id="parameters"></a>
 ## Parameters
 
-Native gflags of the `resnet18` binary (the launcher overrides the first
-three with absolute sample paths):
+Options of the `resnet18` binary, matching the Python runtime's
+kebab-case names (the launcher overrides the first three with absolute
+sample paths):
 
-| Flag | Default | Meaning |
+| Option | Default | Meaning |
 | --- | --- | --- |
-| `--model_path` | SoC-dependent: `/opt/hobot/model/s100/basic/resnet18_224x224_nv12.hbm` (S100) or `/opt/hobot/model/s600/basic/resnet18_224x224_nv12.hbm` (S600) | HBM model path |
-| `--test_img` | `../../../test_data/zebra_cls.jpg` (relative to the historical build layout) | BGR test image |
-| `--label_file` | repository S ImageNet labels path | one label per line |
-| `--top_k` | `5` | number of printed classes |
+| `--model-path` | SoC-dependent: `/opt/hobot/model/s100/basic/resnet18_224x224_nv12.hbm` (S100) or `/opt/hobot/model/s600/basic/resnet18_224x224_nv12.hbm` (S600) | HBM model path |
+| `--test-img` | `../../../test_data/zebra_cls.jpg` (relative to the process working directory) | BGR test image |
+| `--label-file` | repository S ImageNet labels path | one label per line |
+| `--top-k` | `5` | number of printed classes |
+| `--help` / `-h` | — | print usage |
 
 Example override through the launcher:
 
 ```bash
 bash samples/vision/resnet/runtime/cpp/run.sh \
-  --model_path /opt/hobot/model/s100/basic/resnet18_224x224_nv12.hbm \
-  --test_img /tmp/zebra_cls.jpg \
-  --label_file /tmp/imagenet_classes.names \
-  --top_k 5
+  --model-path /opt/hobot/model/s100/basic/resnet18_224x224_nv12.hbm \
+  --test-img /tmp/zebra_cls.jpg \
+  --label-file /tmp/imagenet_classes.names \
+  --top-k 5
 ```
 
 <a id="interface-lifecycle"></a>
 ## Interface and lifecycle
 
-`main.cpp` creates the `Resnet18` model object, loads the HBM and extracts
-tensor metadata, converts the BGR image through the model's preprocessing
-(NV12 Y/UV tensor creation), invokes `hbDNNInferV2` on the S-series input
-tensors, decodes the F32 output with the Top-K postprocess, prints the
-configured Top-K classes, and releases the DNN resources at scope exit.
-The heavy work happens after construction, not in the constructor; the
-utility implementations are the existing `utils/c_utils`
-sources. There is no background thread; the process performs one
-synchronous inference.
+`main.cpp` parses the options, constructs `Resnet18 model(model_path)` —
+the constructor loads the HBM pack, reads the tensor metadata and
+allocates the reusable tensor buffers — then calls
+`model.predict(image, top_k)` and prints the returned classes. All DNN
+and UCP types stay inside `src/classify.cpp` (private `Impl`), so
+`inc/classify.hpp` depends only on OpenCV and the standard library.
+
+The model exposes the preprocessing, inference and postprocessing stages
+separately, each returning data owned by the caller:
+
+- `Resnet18Prepared preprocess(const cv::Mat&)` — letterbox resize to the
+  model input resolution and BGR→NV12 conversion into owned Y/UV planes;
+- `Resnet18Raw infer(const Resnet18Prepared&)` — upload of the planes
+  into the model input tensors (row-stride aware), one
+  `hbDNNInferV2` BPU task, copy of the F32 output into an owned logits
+  vector that survives later inferences;
+- `std::vector<Classification> postprocess(const Resnet18Raw&, int top_k)`
+  — stable softmax and Top-K selection;
+- `predict` composes the three stages in that order.
+
+Errors surface as C++ exceptions (SDK error descriptions included); the
+entry point prints them and exits with status 2. Resources are released
+by RAII on every path, including partial initialization failures. There
+is no background thread; the process performs one synchronous inference.
 
 <a id="results-interpretation"></a>
 ## Results interpretation

@@ -15,11 +15,10 @@
 
 ```text
 cpp/
-├── common/  # common 相关文件
-├── inc/  # inc 相关文件
-├── src/  # src 相关文件
+├── inc/  # 模型与 CLI 头文件：detect.hpp、cli.hpp
+├── src/  # 五文件运行时：detect.cpp、cli.cpp、main.cpp
 ├── tests/  # 自动化测试
-├── CMakeLists.txt  # 源码或数据文件
+├── CMakeLists.txt  # 构建配置
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
 ├── launcher.py  # Python 脚本
@@ -131,26 +130,15 @@ outputs/yoloe_cpp_x5_11s_run1/
 | 模块 | 职责 |
 | --- | --- |
 | `launcher.py`、`run.sh` | 发布制品选择、显式构建、进程日志和运行记录 |
-| `src/main.cpp`、`src/cli_options.cpp`、`src/cli_io.cpp` | CLI 编排、参数解析、图片/标签读取及结果保存 |
-| `common/float_heads.h` | 按唯一形状绑定十个逻辑角色，不依赖物理输出顺序 |
-| `inc/yoloe.h`、`src/yoloe.cpp` | 构造及 pre_process/infer/post_process/predict 编排 |
-| `inc/runner.h`、`inc/pipeline_io.h` | 后端契约、独立输入输出和实例身份 |
-| `inc/sdk_runner.h`、`src/sdk_runner.cpp` | 必需预检之后的模型加载、SDK 资源及共用输入输出传输 |
-| `inc/model_identity.h`、`inc/preflight.h`、`src/preflight.cpp` | 显式模型选择及基于共用原生工具的本机/模型/词表核验 |
-| `inc/config.h` | 分协议配置校验 |
-| `common/nv12.h` | BGR 转 I420 及共用 split-NV12 打包 |
-| `common/postprocess.h` | 家族分派及对齐实例结果组装 |
-| `common/geometry.h` | 显式 E11/E26 缩放几何及实际比例框还原 |
-| `common/image_ops.h` | OpenCV BGR 前处理及 E11/E26 ROI 掩码恢复 |
-| `common/candidate.h` | 两个家族共用、拥有独立数据的候选结果 |
-| `common/e11_decode.h` | DFL16、分类 NMS 及对齐的 E11 系数 |
-| `common/e26_decode.h` | 筛选 E26 PF 候选，解码 LTRB 框并保持掩码系数对齐 |
+| `src/main.cpp` | CLI 编排：预检门 → 输入 → 以 model/config/gate 构造 `YOLOE` → `predict` → 保存结果 |
+| `src/cli.cpp`、`inc/cli.hpp` | 严格参数解析、图片/标签逐字节读取、全新输出目录策略及报告/掩码写入 |
+| `src/detect.cpp`、`inc/detect.hpp` | 单一单元承载完整 YOLOE 模型：几何、NV12 准备、`bind_heads` 角色绑定、E11/E26 解码、ROI 掩码还原、板卡/模型/词表预检、`preprocess`/`infer`/`postprocess`/`predict` 阶段及板端 DNN 适配器（以 `YOLOE_HAS_SDK` 编译） |
 | `tests/test_float_heads.cc` | 验证形状、精度、步长、分配长度及有限值边界 |
 | `tests/test_e11_decode.cc` | DFL、同/异类抑制、分数/IoU 相等边界及非法输出 |
 | `tests/test_e26_decode.cc` | 验证候选排序、单/多标签、阈值和非法输出 |
 | `tests/decode_probe.cc` | 对照已保存原始浮点张量的主机工具，不是推理应用 |
 
-浮点读取复用 Ultralytics 的 `common/task_outputs.h`：`nhwc_float_plan` 要求未量化 FLOAT32、batch=1 的 NHWC、有效物理行/单元步长及足够的内存分配，`copy_float_output` 去除物理填充并拒绝非有限值。`bind_heads` 按唯一形状绑定十个逻辑输出角色；数据类型、步长和分配要求由这两个工具强制执行，模型家族与词表身份由下文的显式选择规则核验。
+浮点读取复用 Ultralytics 的共享词汇头 `inc/yolo.hpp`：`nhwc_float_plan` 要求未量化 FLOAT32、batch=1 的 NHWC、有效物理行/单元步长及足够的内存分配，`copy_float_output` 去除物理填充并拒绝非有限值。`bind_heads` 按唯一形状绑定十个逻辑输出角色；数据类型、步长和分配要求由这两个工具强制执行，模型家族与词表身份由下文的显式选择规则核验。
 
 | 角色 | stride 8 / 16 / 32 对应形状 |
 | --- | --- |
@@ -160,12 +148,12 @@ outputs/yoloe_cpp_x5_11s_run1/
 | 掩码系数 | 相同空间形状，32 通道 |
 | Prototype | 单个 `[1,160,160,32]` 张量 |
 
-调用者明确选择 E11（框通道 64）或 E26（框通道 4）；家族不符、缺失/重复角色、错误词表宽度及额外输出均拒绝。SDK 管理已复用 Ultralytics 的 `PackedModelOwner`、`Nv12Input` 和 `TaskOutputs`；YOLOE 语义角色在分配前校验，量化输出直接拒绝，不在后处理手动反量化。[转换说明](../../conversion/README_cn.md)给出浮点输出模型的准备方法；S 浮点 HBM 按转换说明生成。
+调用者明确选择 E11（框通道 64）或 E26（框通道 4）；家族不符、缺失/重复角色、错误词表宽度及额外输出均拒绝。SDK 管理复用 Ultralytics 共享 DNN 后端（`inc/backend.hpp` + `src/backend.cpp`）提供的 `PackedModelOwner`、`Nv12Input`、`TaskOutputs` 及跨栈可移植的同步推理；YOLOE 语义角色在分配前校验，量化输出直接拒绝，不在后处理手动反量化。[转换说明](../../conversion/README_cn.md)给出浮点输出模型的准备方法；S 浮点 HBM 按转换说明生成。
 
 <a id="dependencies"></a>
 ## 依赖
 
-需要 C++17 编译器和仓库检出；四个几何/候选测试不需要 OpenCV 或板端 SDK；图像/掩码及阶段测试需要 OpenCV C++ core/imgproc/imgcodecs 开发库。文档构建/测试命令需要 CMake/CTest 3.20+（使用 `ctest --test-dir`）；若不能自动发现 OpenCV，将 `OpenCV_DIR` 指向已安装的 OpenCV CMake 包目录。仅安装 Python opencv-python 不会提供这里需要的 C++ 开发环境。在仓库根目录执行：
+前置条件：C++17 编译器和仓库检出。主机测试需要 OpenCV C++ core/imgproc/imgcodecs 开发库，但不需要板端 SDK：几何/解码/预检函数与基于 OpenCV 的准备代码位于同一模型翻译单元，因此即使核心数值测试也链接模型核心（进而依赖 OpenCV）。文档中的构建/测试命令需要 CMake/CTest 3.20+（使用 `ctest --test-dir`）；若不能自动发现 OpenCV，将 `OpenCV_DIR` 指向已安装的 OpenCV CMake 包目录。仅安装 Python opencv-python 不会提供这里需要的 C++ 开发环境。
 
 在 macOS 上，开启 OpenCV 的测试项目以 sanitizer 构建（`YOLOE_TEST_OPENCV=ON` 且 `YOLOE_SANITIZERS=ON`）时，还会通过 CMake 标准 TBB CONFIG 包解析 OpenCV 构建所依赖的真实 TBB，并将其直接链接到使用 OpenCV 的测试可执行程序。在 ASan 下，仅经由 `libopencv_core` 间接加载 libtbb 的进程会在退出时于 `tbb::detail::r1::__TBB_InitOnce::~__TBB_InitOnce` 中中止；仅链接 OpenCV core 的空 `main` 即可复现该崩溃。直接的 TBB 引用使 ASan+UBSan 得以保留；若 CMake 无法发现该包，将 `CMAKE_PREFIX_PATH` 指向安装 TBB 的前缀。Linux 构建与关闭 OpenCV 的构建不经过该分支，也不需要 TBB。该行为只影响主机 sanitizer 构建，板端构建不受影响。
 
@@ -173,29 +161,9 @@ outputs/yoloe_cpp_x5_11s_run1/
 ## 构建主机测试
 
 ```bash
-mkdir -p /tmp/yoloe-native-tests
-c++ -std=c++17 -Wall -Wextra -Werror \
-  -fsanitize=address,undefined -fno-omit-frame-pointer \
-  -I samples/vision/yoloe/runtime/cpp/common \
-  -I samples/vision/ultralytics_yolo/runtime/cpp \
-  samples/vision/yoloe/runtime/cpp/tests/test_float_heads.cc \
-  -o /tmp/yoloe-native-tests/float-heads
-c++ -std=c++17 -Wall -Wextra -Werror \
-  -fsanitize=address,undefined -fno-omit-frame-pointer \
-  -I samples/vision/yoloe/runtime/cpp/common \
-  samples/vision/yoloe/runtime/cpp/tests/test_e26_decode.cc \
-  -o /tmp/yoloe-native-tests/e26-decode
-c++ -std=c++17 -Wall -Wextra -Werror \
-  -fsanitize=address,undefined -fno-omit-frame-pointer \
-  -I samples/vision/yoloe/runtime/cpp/common \
-  -I samples/vision/ultralytics_yolo/runtime/cpp \
-  samples/vision/yoloe/runtime/cpp/tests/test_e11_decode.cc \
-  -o /tmp/yoloe-native-tests/e11-decode
-c++ -std=c++17 -Wall -Wextra -Werror \
-  -fsanitize=address,undefined -fno-omit-frame-pointer \
-  -I samples/vision/yoloe/runtime/cpp/common \
-  samples/vision/yoloe/runtime/cpp/tests/test_geometry.cc \
-  -o /tmp/yoloe-native-tests/geometry
+cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-core \
+  -DYOLOE_SANITIZERS=ON
+cmake --build /tmp/yoloe-native-core --parallel 4
 ```
 
 使用真实 OpenCV 安装构建全部十一个测试（不需要板端 SDK）：
@@ -220,10 +188,7 @@ cmake --build /tmp/yoloe-stage-core --parallel 4
 ## 运行主机测试
 
 ```bash
-/tmp/yoloe-native-tests/float-heads
-/tmp/yoloe-native-tests/e26-decode
-/tmp/yoloe-native-tests/e11-decode
-/tmp/yoloe-native-tests/geometry
+ctest --test-dir /tmp/yoloe-native-core --output-on-failure
 ```
 
 成功时退出码为 0、无输出。解码测试分配完整的 4585 类张量，开启 sanitizer 时应预留数百 MB 内存。断言/契约异常及 sanitizer 报错均为失败。这些命令验证 C++ 数学及浮点内存工具；SDK ABI 兼容性由下文板端构建验证。
@@ -260,28 +225,28 @@ E11 边界：分数**大于等于**阈值时接受；同类框仅在 IoU **大�
 <a id="interface-lifecycle"></a>
 ## 接口与生命周期
 
-`YOLOE` 独占一个 `std::unique_ptr<Runner>`。构造时验证配置和后端协议，构造失败也会释放传入后端。后端必须返回十个独立拥有存储的紧凑语义 FLOAT32 向量，并在推理前完成硬件/制品身份与 SDK metadata 校验；基类接口本身不承担这些校验。`SdkRunner` 实现下述低层 SDK 边界。
+`YOLOE` 独占一个 `std::unique_ptr<Runner>`。构造时验证配置和后端协议，构造失败也会释放传入后端。原生构造函数 `YOLOE(SdkModel, Config, SdkPreflight)` 自行创建并持有板端适配器；注入 runner 的构造函数供自定义后端与测试使用。后端必须返回十个独立拥有存储的紧凑语义 FLOAT32 向量，并在推理前完成硬件/制品身份与 SDK metadata 校验；基类接口本身不承担这些校验。`SdkRunner` 实现下述低层 SDK 边界。
 
-`pre_process` 返回独立紧凑 Y 平面（409600 字节）、交错 UV 平面（204800 字节）和实际几何；`infer` 恰好调用 runner 一次，返回独立原始输出并携带对应几何；`post_process` 返回框/分数/类别/ROI 掩码对齐的 `Instance`。不同 task 的 prepared/raw 批次不能串用，即便协议相同也会拒绝；不用自行缓存上一张图的几何。原始输出跨后续调用仍有效，结果掩码不借用 SDK 缓冲。每个推理线程使用一个 task，不承诺后端并发安全。
+`preprocess` 返回独立紧凑 Y 平面（409600 字节）、交错 UV 平面（204800 字节）和实际几何；`infer` 恰好调用 runner 一次，返回独立原始输出并携带对应几何；`postprocess` 返回框/分数/类别/ROI 掩码对齐的 `Instance`。不同 task 的 prepared/raw 批次不能串用，即便协议相同也会拒绝；不用自行缓存上一张图的几何。原始输出跨后续调用仍有效，结果掩码不借用 SDK 缓冲。每个推理线程使用一个 task，不承诺后端并发安全。
 
 下面的函数展示嵌入 API 的用法；应用提供匹配的后端：
 
 ```cpp
-#include "yoloe.h"
+#include "detect.hpp"
 yoloe::Result process_image(yoloe::Config config,
                             std::unique_ptr<yoloe::Runner> backend,
                             const cv::Mat& image) {
     yoloe::YOLOE task(config, std::move(backend));
-    auto prepared = task.pre_process(image);
+    auto prepared = task.preprocess(image);
     auto raw = task.infer(prepared);
-    return task.post_process(raw);
+    return task.postprocess(raw);
     // task.predict(image) composes the same three operations.
 }
 ```
 
-配置默认 E11、score 0.25、NMS 未设置（E11 解析为 0.7）、形态学关闭、letterbox、max_det 300、single_label true。E11 拒绝仅属于 E26 的参数覆盖；E26 拒绝显式 NMS、形态学或 stretch。仅在后端匹配时设置 `config.protocol = yoloe::Protocol::E26`。这些是库默认值，源 demo CLI 默认值可能不同。
+配置默认 E11、score 0.25、NMS 未设置（E11 解析为 0.7）、形态学关闭、letterbox、max_det 300、single_label true。E11 拒绝仅属于 E26 的参数覆盖；E26 拒绝显式 NMS、形态学或 stretch。仅在后端匹配时设置 `config.protocol = yoloe::Protocol::E26`。这些是库默认值；demo CLI 在参数缺省时应用自身的默认值。
 
-数值模块头文件提供纯函数，不管理 SDK 资源。`bind_heads` 返回输出索引，不保留引用。`decode_e11` 和 `decode_e26` 仅在调用期间借用十个输入向量，返回拥有独立框、分数和系数的检测结果；返回后调用方可释放输入张量。内部指针视图不逃逸。OpenCV 结果矩阵拥有引用计数管理的独立存储，不与调用方图片/prototype 别名；需要像素时应保留返回对象。参数非法时抛出 `std::invalid_argument`，内存分配失败可能向外传播。不加载模型、不隐式选择硬件，也不保存跨调用的图片几何状态。
+解码/几何函数提供纯接口，不管理 SDK 资源。`bind_heads` 返回输出索引，不保留引用。`decode_e11` 和 `decode_e26` 仅在调用期间借用十个输入向量，返回拥有独立框、分数和系数的检测结果；返回后调用方可释放输入张量。内部指针视图不逃逸。OpenCV 结果矩阵拥有引用计数管理的独立存储，不与调用方图片/prototype 别名；需要像素时应保留返回对象。参数非法时抛出 `std::invalid_argument`，内存分配失败可能向外传播。不加载模型、不隐式选择硬件，也不保存跨调用的图片几何状态。
 
 ## SDK 后端库
 
@@ -307,20 +272,18 @@ SDK 调用执行，抛异常即停止构造。适配器的形状、target/varian
 证明字节一致，不认证编译器来源；调用者仍需保留转换证据，本 API 不提供兼容的
 S 浮点 HBM。
 
-第二个完整 API 示例展示带预检的 SDK 路径；调用者传入选定模型的预期摘要与词表路径：
+第二个完整 API 示例展示带预检的原生路径；task 自行构造并持有板端适配器：
 
 ```cpp
-#include "preflight.h"
-#include "sdk_runner.h"
-#include "yoloe.h"
+#include "detect.hpp"
 yoloe::Result process_sdk_image(const cv::Mat& image, yoloe::SdkModel model,
                                 const std::string& expected_model_sha256,
                                 const std::string& label_path) {
-    auto gate = yoloe::make_preflight(expected_model_sha256, label_path);
-    auto backend = std::make_unique<yoloe::SdkRunner>(model, std::move(gate));
     yoloe::Config config;
-    config.protocol = backend->protocol();
-    yoloe::YOLOE task(config, std::move(backend));
+    config.protocol = model.variant.rfind("26", 0) == 0 ? yoloe::Protocol::E26
+                                                        : yoloe::Protocol::E11;
+    yoloe::YOLOE task(model, config,
+                      yoloe::make_preflight(expected_model_sha256, label_path));
     return task.predict(image);
 }
 ```
@@ -333,7 +296,7 @@ cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-board-lib \
 cmake --build /tmp/yoloe-board-lib --parallel 4
 ```
 
-产物为 `libyoloe_core.a`、`libyoloe_preflight.a` 和 `libyoloe_sdk.a`，不含可执行程序。通过 CMake
+产物为 `libyoloe_core.a` 和 `libyoloe_sdk.a`，不含可执行程序。通过 CMake
 `add_subdirectory` 集成时将应用链接到 `yoloe_sdk`。自动查找失败时，将
 `YOLOE_DNN_INCLUDE_DIR` 指向包含 `dnn/hb_dnn.h` 的目录，
 `YOLOE_DNN_LIBRARY` 指向匹配的 DNN 库；UCP 头还要求 `YOLOE_UCP_LIBRARY`。
@@ -341,7 +304,7 @@ cmake --build /tmp/yoloe-board-lib --parallel 4
 开发文件，缺省主机构建保持 `YOLOE_BUILD_SDK=OFF`。
 
 OpenCV 主机配置运行十一项测试：六项数值/阶段检查、X5/UCP 适配器、预检、CLI I/O 及夹具 help。显式夹具还使用合成输出执行真实入口；它不是 SDK 后端。
-预检库本身不需要 OpenCV 或 SDK；适配器测试使用 ASan/UBSan 检查生产代码。覆盖先于 SDK 的预检拒绝、先于分配的元数据/精度拒绝、
+预检位于模型核心内，需要 OpenCV 但不需要 SDK；适配器测试使用 ASan/UBSan 检查生产代码。覆盖先于 SDK 的预检拒绝、先于分配的元数据/精度拒绝、
 部分分配和初始化失败清理、任务/cache 错误、语义输出顺序及跨调用独立持有。
 使用的是精简 API 替身，不是厂商 SDK 头或库。
 

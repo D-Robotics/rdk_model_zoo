@@ -1,4 +1,4 @@
-// S600 stage-boundary checks: constructor validation, pre-process request
+// S600 stage-boundary checks: constructor validation, preprocess request
 // construction, response/status/metric failure mapping and the preserved
 // two-turn conversation behavior.
 // Fixtures live in an atomically owned mkdtemp scratch directory; nothing
@@ -44,7 +44,7 @@ int main() {
   {
     oellm::reset();
     minicpm5::MiniCPM5 bounds({model.string(), 1});
-    bounds.Generate("hello");
+    bounds.predict("hello");
     CHECK(oellm::captured_requests.front().max_new_tokens == 1,
           "limit one accepted and passed");
     oellm::reset();
@@ -52,23 +52,23 @@ int main() {
 
   // Pre-process: empty prompts and out-of-range limits never reach the
   // runtime, so direct public callers cannot bypass the constructor bounds.
-  CHECK(throws([&] { minicpm5::pre_process("", true, 128, 1); }, "empty"),
-        "empty prompt rejected in pre_process");
-  CHECK(throws([&] { minicpm5::pre_process("hi", true, 0, 1); },
+  CHECK(throws([&] { minicpm5::preprocess("", true, 128, 1); }, "empty"),
+        "empty prompt rejected in preprocess");
+  CHECK(throws([&] { minicpm5::preprocess("hi", true, 0, 1); },
                "max_new_tokens"),
-        "zero limit rejected in pre_process");
-  CHECK(throws([&] { minicpm5::pre_process("hi", true, 4097, 1); },
+        "zero limit rejected in preprocess");
+  CHECK(throws([&] { minicpm5::preprocess("hi", true, 4097, 1); },
                "max_new_tokens"),
-        "oversize limit rejected in pre_process");
+        "oversize limit rejected in preprocess");
   {
-    const auto bounded_low = minicpm5::pre_process("hi", true, 1, 1);
-    const auto bounded_high = minicpm5::pre_process("hi", true, 4096, 2);
+    const auto bounded_low = minicpm5::preprocess("hi", true, 1, 1);
+    const auto bounded_high = minicpm5::preprocess("hi", true, 4096, 2);
     CHECK(bounded_low.oellm_requests.front().max_new_tokens == 1 &&
               bounded_high.oellm_requests.front().max_new_tokens == 4096,
-          "boundary limits accepted in pre_process");
+          "boundary limits accepted in preprocess");
   }
   {
-    const auto request = minicpm5::pre_process("hi", false, 32, 7);
+    const auto request = minicpm5::preprocess("hi", false, 32, 7);
     CHECK(request.oellm_requests.size() == 1, "single request built");
     const auto& item = request.oellm_requests.front();
     CHECK(item.request_id == 7 && item.conversation_id == 1 && !item.new_chat &&
@@ -80,39 +80,39 @@ int main() {
   {
     oellm::reset();
     minicpm5::MiniCPM5 instance({model.string(), 4});
-    CHECK(throws([&] { instance.Generate(""); }, "empty"),
-          "Generate rejects empty prompt");
+    CHECK(throws([&] { instance.predict(""); }, "empty"),
+          "predict rejects empty prompt");
     CHECK(oellm::captured_requests.empty(),
           "rejected prompt never reaches the runtime");
 
     oellm::infer_result = oellm::OellmErrorCode::kInferFailed;
-    CHECK(throws([&] { instance.Generate("hello"); }, "inference failed"),
+    CHECK(throws([&] { instance.predict("hello"); }, "inference failed"),
           "infer error return throws");
     oellm::reset();
 
     oellm::response_count = 2;
-    CHECK(throws([&] { instance.Generate("hello"); }, "inference failed"),
+    CHECK(throws([&] { instance.predict("hello"); }, "inference failed"),
           "malformed response shape throws");
     oellm::reset();
 
     oellm::null_first_response = true;
-    CHECK(throws([&] { instance.Generate("hello"); }, "inference failed"),
+    CHECK(throws([&] { instance.predict("hello"); }, "inference failed"),
           "null response throws");
     oellm::reset();
 
     oellm::status = oellm::OellmStatus::kAborted;
-    CHECK(throws([&] { instance.Generate("hello"); },
+    CHECK(throws([&] { instance.predict("hello"); },
                  "Unexpected generation status"),
           "unexpected status throws");
     oellm::reset();
 
     oellm::metric_result = oellm::OellmErrorCode::kMetricFailed;
-    CHECK(throws([&] { instance.Generate("hello"); }, "metrics"),
+    CHECK(throws([&] { instance.predict("hello"); }, "metrics"),
           "metric failure throws");
     oellm::reset();
 
     oellm::metric_count = 2;
-    CHECK(throws([&] { instance.Generate("hello"); }, "metrics"),
+    CHECK(throws([&] { instance.predict("hello"); }, "metrics"),
           "unexpected metric count throws");
     oellm::reset();
   }
@@ -121,8 +121,8 @@ int main() {
   {
     oellm::reset();
     minicpm5::MiniCPM5 chat({model.string(), 128});
-    const auto first = chat.Generate("What is 1+1?");
-    const auto second = chat.Generate("Translate that into Chinese.", false);
+    const auto first = chat.predict("What is 1+1?");
+    const auto second = chat.predict("Translate that into Chinese.", false);
     CHECK(oellm::captured_requests.size() == 2, "two requests captured");
     CHECK(oellm::captured_requests[0].request_id == 1 &&
               oellm::captured_requests[0].new_chat,

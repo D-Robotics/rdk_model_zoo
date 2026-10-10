@@ -151,7 +151,7 @@ def main(argv=None):
                     "-B",
                     str(build_dir),
                     "-DCMAKE_BUILD_TYPE=Release",
-                    "-DLANENET_TARGET=s100",
+                    "-DRDK_TARGET=s100",
                 ],
                 check=True,
                 cwd=ROOT,

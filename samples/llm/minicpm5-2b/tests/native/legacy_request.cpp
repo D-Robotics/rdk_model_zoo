@@ -8,7 +8,6 @@
 #include <iostream>
 #include <string>
 
-#include "chat_template.hpp"
 #include "minicpm5.hpp"
 
 namespace {
@@ -88,7 +87,6 @@ int main() {
     config.tokenizer_path = "/models/s100/tokenizer";
     config.template_path = templ;
     MiniCPM5 model(config);
-    model.init();
     const auto outcome = model.predict();
     CHECK(outcome.exit_code() == 0, "captured request completes");
     const auto& seen = xlm_double::capture;

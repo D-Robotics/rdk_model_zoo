@@ -3,7 +3,7 @@
 #include <limits>
 #include <stdexcept>
 
-#include "common/task_outputs.h"
+#include "yolo.hpp"
 #define expect(v)                           \
   do {                                      \
     if (!(v)) throw std::runtime_error(#v); \

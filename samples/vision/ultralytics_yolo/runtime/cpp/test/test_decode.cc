@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Host unit tests for the shared box-decode primitives (common/decode.h).
+// Host unit tests for the shared box-decode primitives (inc/yolo.hpp).
 
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 
-#include "common/decode.h"
+#include "yolo.hpp"
 
 namespace {
 

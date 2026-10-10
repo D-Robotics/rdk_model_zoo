@@ -3,17 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Host unit tests for the benchmark bookkeeping and the catalog-aligned
-// JSON writer (common/benchmark.{h,cc}).
+// Host unit tests for the benchmark bookkeeping: the statistics helpers,
+// the catalog-aligned JSON writer and the synchronized round runner (all
+// inline in inc/cli.hpp, no library links). The CLI option surface is
+// asserted by test_benchmark_streams.cc, which links src/cli.cpp.
 
-#include <cstdio>
 #include <atomic>
+#include <cstdio>
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
-#include "common/benchmark.h"
+#include "cli.hpp"
 
 namespace {
 
@@ -69,7 +72,7 @@ int main() {
   meta.runs_per_round = 200;
   meta.rounds = 3;
 
-  const std::string path = "test_benchmark.json";
+  const std::string path = "/tmp/yolo_test_benchmark.json";
   if (!yolo::write_benchmark_json(path, meta, samples, 5, 10, 100.0)) {
     std::printf("FAIL write_benchmark_json returned false\n");
     return 1;
@@ -85,6 +88,7 @@ int main() {
   expect_contains("json", json, "\"pipeline_streams\": 2");
   expect_contains("json", json, "\"output_kind\": \"detections\"");
   expect_contains("json", json, "\"outputs_per_frame\": 5");
+  expect_contains("json", json, "\"detections_per_frame\": 5");
   expect_contains("json", json, "\"runtime_submission_threads\": 2");
   expect_contains("json", json, "\"cpu_thread_policy\": \"all_online\"");
   expect_contains("json", json, "\"online_cpu_threads\": 8");
@@ -101,45 +105,43 @@ int main() {
   expect_contains("json", json, "\"runtime\": {\"mean\": 12.000000");
   expect_contains("json", json, "\"implementation\": \"native_cpp_yolo26_ltrb\"");
 
-  char arg0[] = "test_benchmark";
-  char arg1[] = "--benchmark";
-  char arg2[] = "--warmup";
-  char arg3[] = "0";
-  char arg4[] = "--runs";
-  char arg5[] = "3";
-  char arg6[] = "--rounds";
-  char arg7[] = "1";
-  char arg8[] = "--pipeline-streams";
-  char arg9[] = "2";
-  char arg10[] = "--opencv-threads";
-  char arg11[] = "all";
-  char arg12[] = "--no-save";
-  char arg13[] = "--runtime-source-sha256";
-  char arg14[] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-  char arg15[] = "--executable-sha256";
-  char arg16[] = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-  char* args[] = {arg0, arg1, arg2, arg3, arg4, arg5, arg6,
-                  arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14,
-                  arg15, arg16};
-  yolo::BenchmarkOptions options;
-  std::string parse_error;
-  if (!yolo::parse_benchmark_options(17, args, 1, &options, &parse_error) ||
-      !options.enabled || options.pipeline_streams != 2 ||
-      options.warmup_frames != 0 || options.runs_per_round != 3 ||
-      options.rounds != 1 || options.opencv_threads != 0 ||
-      options.save_result || options.runtime_source_sha256 != arg14 ||
-      options.executable_sha256 != arg16) {
-    std::printf("FAIL parse benchmark options: %s\n", parse_error.c_str());
+  // Oriented-box metadata: the angle options are recorded and Top-K tasks
+  // omit score/NMS. One probe per conditional field.
+  yolo::BenchmarkMeta obb_meta = meta;
+  obb_meta.output_kind = "rotated_boxes";
+  const std::string obb_path = "/tmp/yolo_test_benchmark_obb.json";
+  if (!yolo::write_benchmark_json(obb_path, obb_meta, samples, 2, 4, 40.0)) {
+    std::printf("FAIL write_benchmark_json (obb) returned false\n");
+    return 1;
+  }
+  std::ifstream obb_stream(obb_path.c_str());
+  std::stringstream obb_buffer;
+  obb_buffer << obb_stream.rdbuf();
+  const std::string obb_json = obb_buffer.str();
+  expect_contains("obb json", obb_json, "\"output_kind\": \"rotated_boxes\"");
+  expect_contains("obb json", obb_json, "\"angle_sign\": 1.000000");
+  expect_contains("obb json", obb_json, "\"angle_offset_degrees\": 0.000000");
+  expect_contains("obb json", obb_json, "\"regularize_obb\": true");
+  if (obb_json.find("\"detections_per_frame\"") != std::string::npos) {
+    std::printf("FAIL obb json: unexpected detections_per_frame\n");
     ++failures;
   }
-  char bad_sha_arg0[] = "test_benchmark";
-  char bad_sha_arg1[] = "--runtime-source-sha256";
-  char bad_sha_arg2[] = "nope";
-  char* bad_sha_args[] = {bad_sha_arg0, bad_sha_arg1, bad_sha_arg2};
-  yolo::BenchmarkOptions bad_sha_options;
-  if (yolo::parse_benchmark_options(3, bad_sha_args, 1, &bad_sha_options,
-                                    &parse_error)) {
-    std::printf("FAIL accepted invalid runtime source SHA256\n");
+
+  yolo::BenchmarkMeta cls_meta = meta;
+  cls_meta.output_kind = "topk_predictions";
+  const std::string cls_path = "/tmp/yolo_test_benchmark_cls.json";
+  if (!yolo::write_benchmark_json(cls_path, cls_meta, samples, 5, 10, 100.0)) {
+    std::printf("FAIL write_benchmark_json (classify) returned false\n");
+    return 1;
+  }
+  std::ifstream cls_stream(cls_path.c_str());
+  std::stringstream cls_buffer;
+  cls_buffer << cls_stream.rdbuf();
+  const std::string cls_json = cls_buffer.str();
+  if (cls_json.find("\"score_threshold\"") != std::string::npos ||
+      cls_json.find("\"nms_threshold\"") != std::string::npos ||
+      cls_json.find("\"detections_per_frame\"") != std::string::npos) {
+    std::printf("FAIL classify json: score/NMS must be omitted\n");
     ++failures;
   }
 
@@ -159,9 +161,7 @@ int main() {
   pipelines.push_back([&calls1](yolo::StageTiming* stage, size_t* count,
                                 std::string*) {
     ++calls1;
-    stage->preprocess_ms = 1.0;
     stage->runtime_ms = 2.0;
-    stage->postprocess_ms = 3.0;
     stage->end_to_end_ms = 6.0;
     *count = 1;
     return true;
@@ -176,6 +176,8 @@ int main() {
     ++failures;
   }
   std::remove(path.c_str());
+  std::remove(obb_path.c_str());
+  std::remove(cls_path.c_str());
 
   if (failures == 0) {
     std::printf("test_benchmark: OK\n");

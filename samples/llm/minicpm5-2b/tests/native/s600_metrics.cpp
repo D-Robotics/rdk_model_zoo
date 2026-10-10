@@ -67,12 +67,12 @@ int main() {
     CHECK(!threw, "zero measurements preserved");
   }
 
-  // Full Generate path: invalid metrics fail the request instead of being
+  // Full predict path: invalid metrics fail the request instead of being
   // serialized as null JSON.
   {
     oellm::reset();
     minicpm5::MiniCPM5 valid({model.string(), 4});
-    const auto result = valid.Generate("hello");
+    const auto result = valid.predict("hello");
     CHECK(result.text == "fixture text" && result.tokens.size() == 3,
           "payload carried through");
     CHECK(result.status == 3, "normal-finish status carried");
@@ -83,16 +83,16 @@ int main() {
 
     oellm::ttft = NAN;
     std::string message;
-    CHECK(throws([&] { valid.Generate("hello"); }, "TTFT", &message),
-          "Generate rejects non-finite TTFT");
+    CHECK(throws([&] { valid.predict("hello"); }, "TTFT", &message),
+          "predict rejects non-finite TTFT");
     oellm::ttft = 12.5;
     oellm::decode_tps = -1.0;
-    CHECK(throws([&] { valid.Generate("hello"); }, "decode_tps"),
-          "Generate rejects negative decode_tps");
+    CHECK(throws([&] { valid.predict("hello"); }, "decode_tps"),
+          "predict rejects negative decode_tps");
     oellm::decode_tps = 53.25;
     oellm::e2e = INFINITY;
-    CHECK(throws([&] { valid.Generate("hello"); }, "e2e"),
-          "Generate rejects non-finite e2e");
+    CHECK(throws([&] { valid.predict("hello"); }, "e2e"),
+          "predict rejects non-finite e2e");
 
     // Documented one-token length-limited case: zero decode throughput and
     // length-limit status 6 stay a successful bounded request.
@@ -100,7 +100,7 @@ int main() {
     oellm::status = oellm::OellmStatus::kLengthFinished;
     oellm::decode_tps = 0.0;
     oellm::ttft = 0.0;
-    const auto limited = valid.Generate("hello");
+    const auto limited = valid.predict("hello");
     CHECK(limited.status == 6 && limited.decode_tps == 0.0,
           "one-token length-limited request stays valid");
     oellm::reset();

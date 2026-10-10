@@ -7,6 +7,7 @@ import unittest
 
 SAMPLE = Path(__file__).resolve().parents[1]
 CPP = SAMPLE / "runtime/cpp"
+SHARED = SAMPLE.parents[2] / "utils/c_utils"
 
 
 class NativePolicyTests(unittest.TestCase):
@@ -18,7 +19,9 @@ class NativePolicyTests(unittest.TestCase):
             binary = Path(directory) / "test_policy"
             build = subprocess.run(
                 [compiler, "-std=c++17", "-Wall", "-Wextra", "-Werror",
-                 "-I", str(CPP), str(CPP / "policy.cc"),
+                 "-I", str(CPP / "inc"), "-I", str(SHARED),
+                 str(CPP / "src/policy.cpp"),
+                 str(SHARED / "platform_identity.cc"),
                  str(CPP / "tests/test_policy.cc"), "-o", str(binary)],
                 capture_output=True, text=True,
             )

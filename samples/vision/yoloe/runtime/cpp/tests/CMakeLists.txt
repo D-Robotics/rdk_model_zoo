@@ -6,33 +6,33 @@ option(YOLOE_TEST_OPENCV "Build real OpenCV image/mask tests" OFF)
 option(YOLOE_SANITIZERS "Instrument test code with ASan and UBSan" ON)
 get_filename_component(YOLO_CPP "${CMAKE_CURRENT_SOURCE_DIR}/../../../../ultralytics_yolo/runtime/cpp" ABSOLUTE)
 get_filename_component(RDK_SHARED_CPP "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../utils/c_utils" ABSOLUTE)
+find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs)
+# Host-testable model core. Geometry/decode tests live in the same model
+# translation unit as the OpenCV-backed preparation code, so they link the
+# core library (and therefore OpenCV) like every other consumer.
+if(NOT TARGET yoloe_core)
+  add_library(yoloe_core STATIC ../src/detect.cpp "${RDK_SHARED_CPP}/platform_identity.cc")
+  target_include_directories(yoloe_core PUBLIC ../inc "${YOLO_CPP}/inc" "${RDK_SHARED_CPP}" ${OpenCV_INCLUDE_DIRS})
+  target_link_libraries(yoloe_core PUBLIC ${OpenCV_LIBS})
+endif()
 enable_testing()
 foreach(name float_heads e11_decode e26_decode geometry)
   add_executable(test_${name} test_${name}.cc)
-  target_include_directories(test_${name} PRIVATE ../common "${YOLO_CPP}")
+  target_link_libraries(test_${name} PRIVATE yoloe_core)
   add_test(NAME ${name} COMMAND test_${name})
 endforeach()
-if(NOT TARGET yoloe_preflight)
-  add_library(yoloe_preflight STATIC ../src/preflight.cpp "${RDK_SHARED_CPP}/platform_identity.cc")
-  target_include_directories(yoloe_preflight PUBLIC ../inc "${RDK_SHARED_CPP}")
-endif()
 add_executable(test_preflight test_preflight.cc)
-target_link_libraries(test_preflight PRIVATE yoloe_preflight)
+target_include_directories(test_preflight PRIVATE "${RDK_SHARED_CPP}")
+target_link_libraries(test_preflight PRIVATE yoloe_core)
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/preflight-model" "abc")
 add_test(NAME preflight COMMAND test_preflight "${CMAKE_CURRENT_BINARY_DIR}/preflight-model" "${CMAKE_CURRENT_SOURCE_DIR}/../../../test_data/classes.names" "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
 add_executable(identity_probe identity_probe.cc)
 target_include_directories(identity_probe PRIVATE "${RDK_SHARED_CPP}")
 if(YOLOE_TEST_OPENCV)
-  find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs)
   add_executable(test_image_ops test_image_ops.cc)
-  target_include_directories(test_image_ops PRIVATE ../common ${OpenCV_INCLUDE_DIRS})
-  target_link_libraries(test_image_ops PRIVATE ${OpenCV_LIBS})
+  target_include_directories(test_image_ops PRIVATE ../inc ${OpenCV_INCLUDE_DIRS})
+  target_link_libraries(test_image_ops PRIVATE yoloe_core)
   add_test(NAME image_ops COMMAND test_image_ops)
-  if(NOT TARGET yoloe_core)
-    add_library(yoloe_core STATIC ../src/yoloe.cpp "${YOLO_CPP}/common/nv12_geometry.cc")
-    target_include_directories(yoloe_core PUBLIC ../inc ../common "${YOLO_CPP}" ${OpenCV_INCLUDE_DIRS})
-    target_link_libraries(yoloe_core PUBLIC ${OpenCV_LIBS})
-  endif()
   add_executable(test_pipeline test_pipeline.cc)
   target_link_libraries(test_pipeline PRIVATE yoloe_core)
   add_test(NAME pipeline COMMAND test_pipeline)
@@ -40,14 +40,19 @@ if(YOLOE_TEST_OPENCV)
   target_link_libraries(input_probe PRIVATE yoloe_core)
 
   foreach(stack x5 ucp)
-    add_executable(test_sdk_runner_${stack} test_sdk_runner.cc ../src/sdk_runner.cpp "${YOLO_CPP}/common/dnn_io.cc")
+    # Production model TU with the DNN adapter enabled, linked against the
+    # shared ultralytics_yolo backend and the fake stack doubles; the test
+    # provides the SDK entry points and a tensor-aware inference fixture.
+    add_executable(test_sdk_runner_${stack} test_sdk_runner.cc ../src/detect.cpp "${YOLO_CPP}/src/backend.cpp" "${RDK_SHARED_CPP}/platform_identity.cc")
     target_include_directories(test_sdk_runner_${stack} BEFORE PRIVATE "${YOLO_CPP}/test/fake_dnn_io/${stack}")
-    target_compile_definitions(test_sdk_runner_${stack} PRIVATE TEST_TENSOR_AWARE_INFER=1)
-    target_link_libraries(test_sdk_runner_${stack} PRIVATE yoloe_core)
+    target_include_directories(test_sdk_runner_${stack} PRIVATE ../inc "${YOLO_CPP}/inc" "${RDK_SHARED_CPP}" ${OpenCV_INCLUDE_DIRS})
+    target_compile_definitions(test_sdk_runner_${stack} PRIVATE TEST_TENSOR_AWARE_INFER=1 YOLOE_HAS_SDK=1)
+    target_link_libraries(test_sdk_runner_${stack} PRIVATE ${OpenCV_LIBS})
     add_test(NAME sdk_runner_${stack} COMMAND test_sdk_runner_${stack} "${CMAKE_CURRENT_BINARY_DIR}/fixture-${stack}.model")
   endforeach()
-  add_executable(test_cli_io test_cli_io.cc ../src/cli_io.cpp ../src/cli_options.cpp)
-  target_link_libraries(test_cli_io PRIVATE yoloe_core yoloe_preflight)
+  add_executable(test_cli_io test_cli_io.cc ../src/cli.cpp)
+  target_include_directories(test_cli_io PRIVATE "${RDK_SHARED_CPP}")
+  target_link_libraries(test_cli_io PRIVATE yoloe_core)
   target_compile_definitions(test_cli_io PRIVATE YOLOE_HOST_FIXTURE=1)
   # The test creates a fresh result directory; use a per-run wrapper to retain
   # its output only in explicit evidence runs.
@@ -56,17 +61,20 @@ if(YOLOE_TEST_OPENCV)
     -DTEST_OUTPUT=${CMAKE_CURRENT_BINARY_DIR}/cli-io-result
     -DTEST_LABELS=${CMAKE_CURRENT_SOURCE_DIR}/../../../test_data/classes.names
     -P ${CMAKE_CURRENT_SOURCE_DIR}/run_cli_io.cmake)
-  add_executable(yoloe_cli_fixture ../src/main.cpp ../src/cli_options.cpp ../src/cli_io.cpp ../src/preflight.cpp cli_fixture_runner.cpp)
+  # cli_fixture_runner.cpp replaces SdkRunner and the local identity reader at
+  # link time; its definitions satisfy the references from the model core
+  # before the archive would pull the real ones.
+  add_executable(yoloe_cli_fixture ../src/main.cpp ../src/cli.cpp cli_fixture_runner.cpp)
   target_include_directories(yoloe_cli_fixture PRIVATE "${RDK_SHARED_CPP}")
   target_compile_definitions(yoloe_cli_fixture PRIVATE YOLOE_HOST_FIXTURE=1)
   target_link_libraries(yoloe_cli_fixture PRIVATE yoloe_core)
   add_test(NAME cli_fixture_help COMMAND yoloe_cli_fixture --help)
   add_executable(mask_probe mask_probe.cc)
-  target_include_directories(mask_probe PRIVATE ../common ${OpenCV_INCLUDE_DIRS})
-  target_link_libraries(mask_probe PRIVATE ${OpenCV_LIBS})
+  target_include_directories(mask_probe PRIVATE ../inc ${OpenCV_INCLUDE_DIRS})
+  target_link_libraries(mask_probe PRIVATE yoloe_core ${OpenCV_LIBS})
   # Under ASan on macOS an executable that loads libtbb only transitively
   # through libopencv_core aborts at process exit inside
-  # tbb::detail::r1::__TBB_InitOnce::~__TBB_InitOnce; a minimal empty main
+  # tbb::detail::r1::__TBBInitOnce::~__TBBInitOnce; a minimal empty main
   # linked against OpenCV core alone reproduces it. Linking the same real TBB
   # (standard CMake CONFIG lookup of the dependency OpenCV was built against)
   # directly into every OpenCV-linked test executable keeps ASan+UBSan enabled.

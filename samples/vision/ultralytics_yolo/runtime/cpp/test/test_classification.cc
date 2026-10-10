@@ -1,5 +1,5 @@
 // Copyright (c) 2026 D-Robotics. SPDX-License-Identifier: Apache-2.0
-#include "common/classification.h"
+#include "yolo.hpp"
 #include <cassert>
 #include <cmath>
 #include <cstring>

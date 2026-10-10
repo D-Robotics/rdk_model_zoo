@@ -1,7 +1,7 @@
 // Copyright (c) 2026 D-Robotics. SPDX-License-Identifier: Apache-2.0
 // Linked only into asr_cli_fixture; no vendor SDK or real board identity.
 #include "platform_identity.h"
-#include "sdk_runner.h"
+#include "asr.hpp"
 #include <cstdlib>
 #include <stdexcept>
 namespace rdk {

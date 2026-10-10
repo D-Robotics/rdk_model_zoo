@@ -1,4 +1,4 @@
-#include "model_runner.hpp"
+#include "depth.hpp"
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
@@ -91,9 +91,11 @@ int main(int argc, char **argv) {
     fail_at = failure;
     bool threw = false;
     try {
-      yolo26_depth::ModelRunner runner(argv[1], [] {});
-      auto values = runner.run(std::vector<std::uint8_t>(768 * 768 * 3 / 2));
-      assert(values[0] == 2);
+      yolo26_depth::Yolo26Depth runner(argv[1], yolo26_depth::DepthOptions{},
+                                       [] {});
+      auto raw = runner.infer(yolo26_depth::PreparedInput{
+          std::vector<std::uint8_t>(768 * 768 * 3 / 2), {}});
+      assert(raw.values[0] == 2);
     } catch (const std::exception &) {
       threw = true;
     }
@@ -105,7 +107,8 @@ int main(int argc, char **argv) {
   wrong_shape = 1;
   bool bad = false;
   try {
-    yolo26_depth::ModelRunner runner(argv[1], [] {});
+    yolo26_depth::Yolo26Depth runner(argv[1], yolo26_depth::DepthOptions{},
+                                     [] {});
   } catch (const std::exception &) {
     bad = true;
   }
@@ -113,8 +116,9 @@ int main(int argc, char **argv) {
   step = 0;
   bad = false;
   try {
-    yolo26_depth::ModelRunner runner(
-        argv[1], [] { throw std::invalid_argument("wrong board"); });
+    yolo26_depth::Yolo26Depth runner(
+        argv[1], yolo26_depth::DepthOptions{},
+        [] { throw std::invalid_argument("wrong board"); });
   } catch (const std::exception &) {
     bad = true;
   }

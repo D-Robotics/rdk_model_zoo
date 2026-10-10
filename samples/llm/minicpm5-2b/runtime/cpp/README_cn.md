@@ -70,11 +70,11 @@ bash run.sh -- --prompt="What is the capital of France?" --follow_up="Translate 
 <a id="interface-lifecycle"></a>
 ## 接口与生命周期
 
-inc/minicpm5.hpp 定义 Config、Result、生成阶段函数和顺序调用的模型类；src/minicpm5.cc 实现各阶段；src/runtime_config.cc 负责模型文件校验、OELLM JSON 配置与临时配置文件；src/main.cc 负责 gflags 参数及 RESULT 输出。生成的代码文本不会被执行。
+inc/minicpm5.hpp 定义 Config、Result、生成阶段函数和顺序调用的模型类；src/minicpm5.cpp 实现各阶段，并负责模型文件校验、OELLM JSON 配置与临时配置文件；src/cli.cpp 负责 gflags 参数及 RESULT 输出；src/main.cpp 构造具名模型并对每一轮调用一次 `predict`。生成的代码文本不会被执行。
 
-公开阶段函数为 `pre_process`（构建并校验一个 OELLM 请求，不调用 SDK）、`infer`（一次同步推理调用加响应形态校验）与 `post_process`（提取文本、token 和状态，并读取与校验请求指标）；`Generate` 按此串联。分词与模板渲染保留在 runtime 内部；SDK 未暴露分词接口。配置与文件 IO 位于 `src/runtime_config.cc`，不在推理阶段文件内；临时 runtime JSON 由 RAII 守护持有，在成功、SDK 错误返回和异常路径上都会删除。
+公开阶段函数为 `preprocess`（构建并校验一个 OELLM 请求，不调用 SDK）、`infer`（一次同步推理调用加响应形态校验）与 `postprocess`（提取文本、token 和状态，并读取与校验请求指标）；`MiniCPM5::predict` 按此串联每次请求。分词与模板渲染保留在 runtime 内部；SDK 未暴露分词接口。临时 runtime JSON 由 RAII 守护持有，在成功、SDK 错误返回和异常路径上都会删除。
 
-`MiniCPM5(Config)` 持有一个 runtime/会话，`Generate(prompt, new_chat=true)` 开始新会话，后续轮传 `false`。同一实例顺序调用，返回值拥有文本/token 数据。`validate_metrics` 按指标名称拒绝非有限或负数的测量值，绝不将其改写为 0，因此 RESULT 行只包含有效测量值；只生成一个 token 的长度限制请求允许 decode_tps 为 0。
+`MiniCPM5(Config)` 持有一个 runtime/会话，`predict(prompt, new_chat=true)` 开始新会话，后续轮传 `false`。同一实例顺序调用，返回值拥有文本/token 数据。`validate_metrics` 按指标名称拒绝非有限或负数的测量值，绝不将其改写为 0，因此 RESULT 行只包含有效测量值；只生成一个 token 的长度限制请求允许 decode_tps 为 0。
 
 完整的原生库使用示例（自包含程序）——可直接复制、对照 SDK 头文件编译并运行：
 
@@ -85,16 +85,16 @@ int main() {
   minicpm5::Config config;              // model_path 默认 ../../model/s600
   config.max_new_tokens = 128;          // 1-4096
   minicpm5::MiniCPM5 model(config);     // 校验配置并准备 runtime；失败抛异常
-  minicpm5::Result first = model.Generate("What is 1+1?");  // 开启会话
+  minicpm5::Result first = model.predict("What is 1+1?");   // 开启会话
   if (first.status == 3) {              // 3 EOS；6 生成上限；4 上下文上限
     // 消费 first.text、first.tokens、first.ttft_ms、first.decode_tps、first.e2e_ms
   }
-  minicpm5::Result follow = model.Generate("Translate that.", false);  // 同一会话
+  minicpm5::Result follow = model.predict("Translate that.", false);  // 同一会话
   return first.status == 3 && follow.status == 3 ? 0 : 1;
 }
 ```
 
-`pre_process` 是公开函数，因此其参数约束在函数内部强制执行：空 prompt 或超出 1–4096 的 `max_new_tokens` 对所有调用方直接抛错，与构造函数在加载模型前的校验相互独立。runtime 负责分词、BPU 执行与解码；生成的代码文本不会被执行。
+`preprocess` 是公开函数，因此其参数约束在函数内部强制执行：空 prompt 或超出 1–4096 的 `max_new_tokens` 对所有调用方直接抛错，与构造函数在加载模型前的校验相互独立。runtime 负责分词、BPU 执行与解码；生成的代码文本不会被执行。
 
 <a id="results-interpretation"></a>
 ## 结果解释

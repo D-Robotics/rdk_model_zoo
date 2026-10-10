@@ -18,7 +18,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 binding = importlib.import_module("samples.vision.yolov5.runtime.python.cli")
 
-# The fixed X5 C++ source (runtime/cpp/main.cc MODEL_PATH) defaults to the
+# The fixed X5 C++ delivery (its historical MODEL_PATH default) resolves to the
 # s-v2.0 artifact, while the unified Python runtime defaults to n-v7.0. Neither
 # choice is a substitute for the other, so the native launcher keeps the C++
 # source default when the caller names no variant and no asset id.

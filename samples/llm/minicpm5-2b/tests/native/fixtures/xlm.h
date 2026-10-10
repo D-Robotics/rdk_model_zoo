@@ -52,8 +52,10 @@ struct Capture {
 inline Capture capture;
 inline Callback registered_callback = nullptr;
 inline int init_status = 0;         // xlm_init return value
+inline bool init_handle = true;     // xlm_init produces a handle (partial on error)
 inline int infer_status = 0;        // xlm_infer return value
 inline int destroy_status = 0;      // xlm_destroy return value
+inline int destroy_calls = 0;       // xlm_destroy invocations, null handle rejected
 inline bool deliver_end = true;     // END delivered on the end_call_index call
 inline int end_call_index = 1;      // 1-based infer call that delivers END
 inline bool deliver_error = false;  // ERROR state delivered before returning
@@ -65,6 +67,8 @@ inline void reset() {
   capture = Capture{};
   registered_callback = nullptr;
   init_status = infer_status = destroy_status = 0;
+  init_handle = true;
+  destroy_calls = 0;
   deliver_end = true;
   end_call_index = 1;
   deliver_error = false;
@@ -91,7 +95,7 @@ inline int xlm_init(param_t* params, Callback callback, xlm_handle_t* handle) {
   seen.token_config_path =
       params->token_config_path ? params->token_config_path : "";
   xlm_double::registered_callback = callback;
-  *handle = new int(1);
+  *handle = xlm_double::init_handle ? new int(1) : nullptr;
   return xlm_double::init_status;
 }
 
@@ -129,6 +133,7 @@ inline int xlm_infer(xlm_handle_t handle, xlm_input_t* input, void* userdata) {
 }
 
 inline int xlm_destroy(xlm_handle_t* handle) {
+  ++xlm_double::destroy_calls;
   delete static_cast<int*>(*handle);
   *handle = nullptr;
   return xlm_double::destroy_status;

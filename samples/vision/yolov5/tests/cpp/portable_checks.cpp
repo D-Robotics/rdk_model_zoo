@@ -2,14 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Host-compilable behaviour checks for the YOLOv5 native numeric core. The
-// target SDK is absent on a host, so the checks drive the SDK-free gate, decoder
-// and dump modules with explicit metadata values instead of asserting on source
-// text. Usage: portable_checks <check-name> [scratch-dir]
+// target SDK is absent on a host, so the checks drive the SDK-free gates,
+// decoder, dequantizer and dump writer (the model core in detect.cpp plus the
+// CLI writer in cli.cpp) with explicit metadata values instead of asserting on
+// source text. Usage: portable_checks <check-name> [scratch-dir]
 
-#include "yolov5_decode.hpp"
-#include "yolov5_dump.hpp"
-#include "yolov5_gate.hpp"
-#include "yolov5_s_native.hpp"
+#include "cli.hpp"
+#include "detect.hpp"
 
 #include <cmath>
 #include <cstring>
@@ -465,7 +464,7 @@ void check_dump(const std::string& dir) {
              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
          "sha256('') must match the published vector");
 
-  DumpRecord record;
+  RunEvidence record;
   record.dir = dir;
   record.utc = utc_timestamp();
   record.target = "x5";

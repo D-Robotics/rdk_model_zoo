@@ -63,31 +63,26 @@ runtime/cpp/                            C++ source code (this directory)
 ├── run.sh                              Explicit build or native launch
 ├── inc/                                Public headers
 │   ├── gemma4_config.hpp               Model constants (image token IDs, dims, ...)
-│   ├── gemma4_chat_app.hpp             Interactive chat application session (facade)
-│   ├── gemma4_text_engine.hpp          Text orchestrator (prefill + decode + KV session)
-│   ├── gemma4_text_inputs.hpp          Text stage 1: prepared CPU inputs (ids/embeds/positions/masks)
-│   ├── gemma4_text_transport.hpp       Text stage 2: raw SDK writes/inference/KV collection
+│   ├── gemma4.hpp                      ★ Gemma4 model: engines + one chat session (predict)
+│   ├── cli.hpp                         ★ CLI layer: flags/options + REPL parsing + presentation
+│   ├── gemma4_text_engine.hpp          Complete Text engine: input prep, descriptor contract,
+│   │                                   SDK transport, prefill/decode orchestration
 │   ├── gemma4_text_session.hpp         Text session state and continuation policy
-│   ├── gemma4_text_tensor.hpp          Fixed Text export descriptor contract and strided IO
-│   ├── gemma4_vision_engine.hpp        Vision ViT engine
+│   ├── gemma4_vision_engine.hpp        Complete Vision path: preprocessing, stage composition,
+│   │                                   ViT engine, descriptor contract and transport
 │   ├── gemma4_embeddings.hpp           Token embedding lookup + vision injection
 │   ├── gemma4_kv_cache.hpp             Zero-copy KV cache management
-│   ├── gemma4_vision_preprocess.hpp    Image resize + patchify
-│   ├── gemma4_vision_task.hpp          Vision stages and explicit runner composition
-│   ├── gemma4_image_io.hpp             Application image IO
-│   ├── gemma4_vision_tensor.hpp        SDK descriptors and strided packing/extraction
-│   ├── gemma4_vision_debug.hpp         Optional diagnostics
 │   ├── gemma4_native_tokenizer.hpp     Native C++ tokenizer (from OE-LLM-s600)
 │   ├── gemma4_tokenizer.hpp            TokenizerBridge: chat template + image expand
 │   └── hb_utils.hpp                    Horizon BPU helpers (tensor, flush, infer)
 └── src/                                Implementation + executables
-    ├── main.cpp                        ★ Thin entry: flags → paths → app construct & run
-    ├── gemma4_chat_app.cpp             ★ Interactive chat session (REPL, history, console IO)
-    ├── gemma4_server.cpp               HTTP API server
-    ├── gemma4_demo.cpp                 Single-shot VLM demo
-    ├── gemma4_text_bench.cpp           Text-only benchmark
-    ├── gemma4_golden_verify.cpp        Golden mask/KV alignment checker
-    └── gemma4_*.cpp                    Engine implementations
+    ├── main.cpp                        ★ Thin entry: options → named model → predict per turn
+    ├── gemma4.cpp                      ★ Gemma4 model session (history, budgeting, KV reuse)
+    ├── cli.cpp                         ★ CLI argument parsing + console presentation
+    └── gemma4_*.cpp                    Engine/algorithm implementations
+
+../../evaluator/                        Aux entry-tool sources (server/bench/demo/golden_verify;
+                                        built by the CMake configure in runtime/cpp)
 
 ../../third_party/
 └── tokenizers-cpp/                     Explicitly prepared (see third_party/README.md)
@@ -141,6 +136,12 @@ This produces 5 executables in `build/`:
 | `gemma4_demo` | Single-shot: image + prompt → text |
 | `gemma4_text_bench` | Text-only inference benchmark |
 | `gemma4_golden_verify` | Verify prefill tensors against golden data |
+
+All five are configured by this directory's CMakeLists.txt; the aux entry-tool
+sources (`gemma4_server.cpp`, `gemma4_text_bench.cpp`, `gemma4_demo.cpp`,
+`gemma4_golden_verify.cpp`)
+live in [`../../evaluator/`](../../evaluator/README.md) next to the evaluation
+they serve.
 
 ## Download Pre-compiled Models
 
@@ -322,25 +323,39 @@ Pass `--help` to any binary to see the gflags-generated full help.
 
 7. **Unified dual-model lifecycle** — `main` always loads Vision before Text and keeps both resident for the process lifetime. This order avoids the S600 cross-core IOVA mapping conflict while preserving identical chat control flow on S100, S100P, and S600; only the matching HBMs, CMake SoC macros, and `run.sh` environment setup differ.
 
-### Interactive chat entry: application facade vs. model classes
+### Interactive chat entry: model + CLI, thin main
 
-`main` is split at the application boundary. `main.cpp` is the thin entry: it parses
-gflags, resolves `$GEMMA4_HOME` defaults, validates the generation flags, then
-constructs `gemma4::chat::InteractiveChatApp` (`gemma4_chat_app.hpp/.cpp`) and calls
-`Run`. The app facade owns everything console- and session-shaped — banner/help,
-REPL prompts, UTF-8/GB18030 terminal normalization, chat-history JSON, oldest-turn
-trimming against the 4096-token budget, prefix-mismatch resets and the streaming
-echo. It performs no model math: text generation is delegated to the real runtime
-classes `TextEngine::ContinueGenerateStream` (with `BuildPromptHidden` for image
-turns) and image encoding to `PredictVision` + `VisionEngine::Infer`. The facade
-is an application class, not a model class — no `predict`-style engine API
-performs console IO, and the engines themselves never print implicitly.
+`main` is split at the model/presentation boundary. `src/cli.hpp/.cpp` is the
+CLI layer: `ParseOptions` owns the gflags command line, `$GEMMA4_HOME`
+default-path resolution and generation-flag validation (returning a
+`ChatOptions` value), `ParseCommand` classifies each normalized terminal line
+into a `TerminalCommand`, and the same module owns the banner/help, REPL
+prompt, UTF-8/GB18030 terminal normalization and result/image/context report
+lines. `src/main.cpp` is the thin entry: it calls `ParseOptions`, visibly
+constructs the named model — `gemma4::Gemma4` (`gemma4.hpp/.cpp`) — and runs
+the read-dispatch loop, calling `model.predict(...)` once per chat turn and
+`model.LoadImage(...)` for image turns. Undecodable terminal input prints the
+terminal-configuration error, re-prompts and keeps the session alive; only
+end-of-input or `/quit` exits. The model constructor loads Vision before Text
+plus the tokenizer and performs no console IO: load progress and `[context]`
+notices are emitted through injected sinks, generated fragments through a
+caller-owned token sink.
+The model owns the conversation (chat-history JSON, oldest-turn trimming
+against the 4096-token budget, prefix-mismatch resets, image-feature
+retention) and returns an owned `ChatTurnResult` carrying the report facts
+(reply, streamed-token count, elapsed time, tokens/sec, budget, trim status).
+Model execution stays in the real runtime classes:
+text generation is delegated to `TextEngine::ContinueGenerateStream` (with
+`BuildPromptHidden` for image turns) and image encoding to `PredictVision` +
+`VisionEngine::Infer`. No engine or model API performs console IO, and the
+engines themselves never print implicitly.
 
 ### Vision library interfaces and responsibilities
 
-`gemma4_image_io` reads files; `gemma4_vision_preprocess` transforms in-memory pixels;
-`gemma4_vision_task` composes the stages; `VisionEngine` owns SDK model/tensor transport.
-Interactive and single-shot VLM entry points use the same composition.
+`gemma4_vision_engine` owns the whole Vision path in one place: image decoding,
+the pixel preprocessing, the stage composition and the SDK model/tensor
+transport including the fixed-export descriptor contract. Interactive and
+single-shot VLM entry points use the same composition.
 
 | Interface | Input → output | Contract |
 | --- | --- | --- |
@@ -360,9 +375,7 @@ This complete example links `gemma4_runtime` in an SDK-enabled project:
 #include <iostream>
 #include <stdexcept>
 #include <vector>
-#include "gemma4_image_io.hpp"
 #include "gemma4_vision_engine.hpp"
-#include "gemma4_vision_task.hpp"
 
 int main(int argc, char** argv) {
   if (argc != 3) {
@@ -431,21 +444,26 @@ offline runner; real SDK descriptors and board numerical results come from
 the board commands in this guide.
 
 The interactive chat entry has its own host check, which compiles the production
-`src/gemma4_chat_app.cpp` and the real `src/main.cpp` against the engine doubles in
-`tests/native/chat_app_doubles.cpp`, the SDK header double in `tests/native/sdk_fixtures`
-and clearly-marked compile stubs for the third-party tokenizers-cpp / OpenCV headers
-(`tests/native/app_stubs/`), then drives the REPL through redirected stdin:
+model source `src/gemma4.cpp`, the CLI source `src/cli.cpp` and the real
+`src/main.cpp` against the engine doubles in `tests/native/chat_app_doubles.cpp`,
+the SDK header double in `tests/native/sdk_fixtures` and clearly-marked compile
+stubs for the third-party tokenizers-cpp / OpenCV headers
+(`tests/native/app_stubs/`). The scenario driver calls the Gemma4 model API
+directly (one `predict` per turn, `LoadImage` for image turns); the entry
+binary exercises the real REPL through redirected stdin:
 
 ```bash
 python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_chat_app.py -v
 ```
 
 The check covers the session logic end to end: engine construction messages,
-streaming echo, `/reset` `/context` commands, image-turn wiring
+streaming echo, `/reset` `/context` `/image`/`/quit` commands, image-turn wiring
 (`LoadImage`/`PredictVision`/`Infer` chain with prompt-hidden injection),
 oversize-prompt rejection, oldest-turn history trimming, per-turn rebuild
-mode, cross-turn context growth, GB18030 terminal conversion, and the thin
-entry's flag validation. It runs against marked doubles; the real
+mode, cross-turn context growth, GB18030 terminal conversion, and the moved
+entry/CLI boundary: flag defaults and validation, the invalid-line-then-valid
+line path (an undecodable line re-prompts and the session continues), and
+`/image` argument errors. It runs against marked doubles; the real
 SDK/OpenCV/tokenizers-cpp stack and generation run on the board.
 `GEMMA_CXX` selects the compiler. nlohmann-json headers come from the
 `GEMMA_JSON_INCLUDE` override, `pkg-config nlohmann_json`, or standard system
@@ -463,7 +481,7 @@ Failed Vision construction releases acquired input/output buffers and the packed
 
 Full-flush and Text/KV selective-flush entries share one task lifecycle: input flush → infer → compiled-core scheduling → submit/wait → output flush/property refresh → release.
 Failures after task acquisition release it, including inference errors that still return a task. Normal-path release errors propagate without retrying the same handle.
-Selective-flush index semantics, S600 compiled-core selection and optional V3 dispatch follow the source implementation.
+Selective-flush index semantics, S600 compiled-core selection and optional V3 dispatch use the same task lifecycle.
 
 Host resource tests run against SDK doubles on both the S100/S600 compile
 branches and check memory/handle ownership under error injection. From the
@@ -475,7 +493,7 @@ python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_resourc
 
 ### Vision tensor transport contract
 
-`gemma4_vision_tensor` owns physical descriptor validation, F16 storage packing and strided output extraction; `VisionEngine` composes these operations with SDK calls.
+The vision engine source owns physical descriptor validation, F16 storage packing and strided output extraction; `VisionEngine` composes these operations with SDK calls.
 Descriptors are validated before allocation and output properties are revalidated after inference. A refreshed allocation length does not replace the original buffer capacity.
 
 | Item | Accepted contract |
@@ -486,7 +504,7 @@ Descriptors are validated before allocation and output properties are revalidate
 | Stride | Bytes aligned to element width, nonoverlapping elements/rows, every accessed address within declared allocation and original buffer capacity |
 | Data | Prepared float patches must be finite in `[0,1]`; output NaN/Inf is rejected |
 
-Input applies the source F32→F16 truncation and zeroes padding before writing. Output extraction honors both row and column strides and returns owned floats without padding.
+Input truncates F32 to F16 and zeroes padding before writing. Output extraction honors both row and column strides and returns owned floats without padding.
 Output tensors must use a supported F16/F32 dtype; unknown and integer outputs are rejected. F16/F32 storage conversion does not modify the quantization recipe.
 
 Host integration tests call the production `VisionEngine::Infer`; SDK doubles
@@ -540,7 +558,7 @@ and a missing/nonpositive sequence dimension are rejected before indexed use.
 
 ### Text tensor transport contract
 
-`gemma4_text_tensor` owns physical descriptor validation, strided input packing,
+The text engine source owns physical descriptor validation, strided input packing,
 KV output row addressing and greedy logits argmax; `TextEngine` composes these
 operations with SDK calls. Every descriptor is validated against the fixed export
 before any allocation; output descriptors are revalidated after each inference
@@ -567,11 +585,11 @@ the export contract, and a differently exported model needs an explicit
 adapter instead of silently entering this engine.
 
 Mask int16 quantization, logits `kLogitScale` dequantization and int8 KV
-storage stay CPU-side source algorithms: descriptors carrying quantization
+storage stay CPU-side algorithms: descriptors carrying quantization
 metadata are rejected, and the write path zeroes padding before copying
 through the descriptor strides. Greedy argmax scales int16 storage by
-`kLogitScale` and keeps the first maximum; ties and all-zero rows therefore
-behave exactly as the source implementation.
+`kLogitScale` and keeps the first maximum; a tie keeps the first maximal
+position and an all-zero row decodes to token 0.
 
 Host coverage: a helper contract test (padding, singleton axes, dtype/shape/
 stride/capacity/quantization rejections, argmax row addressing and tie
@@ -593,17 +611,20 @@ in the ownership tests.
 
 ### Text pipeline stages
 
-The Text pipeline is separated into three explicit stages plus a session
-policy module; `TextEngine` only sequences them. The behavior follows the source
-implementation — greedy `kLogitScale` decoding, first-max ties, the
-EOS/turn-end set, full return vectors, prefix-continuation alignment and
-benchmark timing scope — with each responsibility in one addressable unit:
+The Text pipeline lives in one coherent engine source —
+`gemma4_text_engine.hpp/.cpp` — whose named pieces cover each stage of one
+subgraph invocation, plus an independent session policy module. The engine
+implements greedy `kLogitScale` decoding, first-max
+ties, the EOS/turn-end set, full return vectors, prefix-continuation
+alignment and benchmark timing scope, with each responsibility addressable
+by name:
 
-| Stage | Header | Responsibility |
+| Stage | Location | Responsibility |
 | --- | --- | --- |
-| 1. Input preparation | `gemma4_text_inputs.hpp` | `PrepareBatchInputs` / `PrepareDecodeInputs` build a `TextBatchInputs` value (PLE-substituted ids, embedding rows, positions, quantized masks) with plain vectors — no SDK types. Also owns the source mask builders. |
-| 2. SDK transport | `gemma4_text_transport.hpp` | `InitTextSubgraph` (descriptor contract + allocation), `BindKvCache` (zero-copy borrowing), `WriteBatchInputs` (strided writes), `RunSubgraphInference` (flush → infer → refresh), `CollectKvOutputs` (revalidated KV rows). No decoding, no IO. |
-| 3. Decode + KV update | `gemma4_text_engine.cpp` | Explicit steps: `ArgmaxTextLogits` decodes, `KvCache::Append*` updates the cache, then session counters advance. |
+| 1. Input preparation | `gemma4_text_engine.hpp/.cpp` | `PrepareBatchInputs` / `PrepareDecodeInputs` build a `TextBatchInputs` value (PLE-substituted ids, embedding rows, positions, quantized masks) with plain vectors — no SDK types. Also owns the mask builders (`BuildFullMask` / `BuildSlidingMask` / `QuantizeMask`). |
+| 2. Descriptor contract + strided IO | `gemma4_text_engine.hpp/.cpp` | `ValidateTextTensor` / `WriteTextInput` / `TextKvOutputRows` / `ArgmaxTextLogits`: the fixed-export descriptor validation, strided packing, KV row addressing and greedy decoding. |
+| 3. SDK transport | `gemma4_text_engine.hpp/.cpp` | `InitTextSubgraph` (descriptor contract + allocation), `BindKvCache` (zero-copy borrowing), `WriteBatchInputs` (strided writes), `RunSubgraphInference` (flush → infer → refresh), `CollectKvOutputs` (revalidated KV rows). |
+| 4. Decode + KV update orchestration | `gemma4_text_engine.hpp/.cpp` (`TextEngine`) | Explicit steps: `ArgmaxTextLogits` decodes, `KvCache::Append*` updates the cache, then session counters advance. |
 | Session policy | `gemma4_text_session.hpp` | Pure decisions over `TextSessionState`: context shift, auto-truncate, continuation alignment, logits row selection. |
 
 Extent and window contracts (validated with overflow-safe signed checks
@@ -636,7 +657,6 @@ for chat text, obtain IDs with `TokenizerBridge::EncodeMessagesJson`.
 
 ```cpp
 #include "gemma4_text_engine.hpp"
-#include "gemma4_text_inputs.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <vector>

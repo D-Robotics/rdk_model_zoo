@@ -2,8 +2,8 @@
 // Explicit host-only replacements for the SDK adapter and local identity
 // reader. Never linked into yoloe_demo; there is no runtime switch enabling
 // this fixture.
+#include "detect.hpp"
 #include "platform_identity.h"
-#include "sdk_runner.h"
 #include <stdexcept>
 namespace rdk {
 NativeIdentity read_native_identity() { return {"s100", "RDK S100P", "", ""}; }

@@ -2,7 +2,7 @@
 
 # LaneNet C++ 推理
 
-本入口基于 DNN/UCP 实现，图像前处理、推理、结果解析、可视化和文件读写各为独立步骤。输出为嵌入特征图与车道二值标签，**不执行**实例聚类或曲线拟合。
+本入口基于 DNN/UCP 实现，输出嵌入特征图与车道二值标签。`segment` 模块负责模型生命周期、张量契约及前处理、推理、解析三阶段；CLI 模块负责渲染与报告输出。**不执行**实例聚类或曲线拟合。
 
 <a id="overview"></a>
 ## C++ 推理
@@ -14,9 +14,14 @@
 
 ```text
 cpp/
-├── inc/  # inc 相关文件
-├── src/  # src 相关文件
-├── CMakeLists.txt  # 源码或数据文件
+├── inc/
+│   ├── segment.hpp  # LaneNet 模型类、张量契约与各阶段独立持有的数据类型
+│   └── cli.hpp      # CLI 选项、NPY/JSON 序列化与产物写出
+├── src/
+│   ├── segment.cpp  # 运行时生命周期、张量绑定及 preprocess/infer/postprocess
+│   ├── cli.cpp      # 参数解析、图像读取、可视化与报告写出
+│   └── main.cpp     # 入口：解析选项、predict、保存结果
+├── CMakeLists.txt   # 构建（C++17，显式 RDK_TARGET S100 门禁）
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
 ├── launcher.py  # Python 脚本
@@ -95,23 +100,25 @@ python3 samples/vision/lanenet/runtime/cpp/launcher.py --target s100 --asset-id 
 
 额外图片路径必须不存在、互不相同，且不能覆盖结果文件或启动日志。启动器先解析相对路径，再从仓库根目录执行原生二进制；Shell 包装入口会先切换到仓库根目录。
 
-直接运行二进制时，`--model-path` 和 `--test-img` 必填；`--target`、`--output` 分别默认为 `s100`、`outputs/lanenet_cpp`，额外图片路径默认空。兼容原有下划线参数（`--model_path`、`--test_img`、`--instance_save_path`、`--binary_save_path`）以及 `--key=value`。二进制自身没有清单选择、自动构建、下载或摘要记录功能；需要运行溯源请使用启动器。UCP 调度使用默认优先级与 ANY 核选择。
+直接运行二进制时，`--model-path` 和 `--test-img` 必填；`--target`、`--output` 分别默认为 `s100`、`outputs/lanenet_cpp`，额外图片路径默认空。接受下划线别名（`--model_path`、`--test_img`、`--instance_save_path`、`--binary_save_path`）以及 `--key=value`。二进制自身没有清单选择、自动构建、下载或摘要记录功能；需要运行溯源请使用启动器。UCP 调度使用默认优先级与 ANY 核选择。
 
 <a id="interface-lifecycle"></a>
 ## 接口与生命周期
 
-[LaneNetSegmenter](inc/lanenet.hpp)仅提供 `pre_process`、`forward`、`post_process`、`predict`。调用者注入原始推理回调；[ModelRunner](inc/model_runner.hpp)持有模型、缓冲区和推理任务。捕获资源管理器的回调，其生命周期不得长于资源管理器本身。
+`main.cpp` 解析选项后构造 `LaneNet model(model_path)`——构造函数在调用任何 SDK 之前校验板卡 S100 身份，随后加载 HBM、校验张量契约并分配可复用张量缓冲——再调用 `model.predict(image)` 并把结果交给产物写出模块。所有 DNN/UCP 类型都留在 `src/segment.cpp`（私有 `Impl`）中，`inc/segment.hpp` 只依赖 OpenCV 与标准库。
+
+[LaneNet](inc/segment.hpp)单独暴露三个阶段，各阶段返回由调用者持有的数据：
 
 | 阶段 | 输入 | 输出 / 契约 |
 | --- | --- | --- |
-| `pre_process` | 非空 `CV_8UC3` BGR 图像 | 独立连续 float32 NCHW `[1,3,256,512]`；BGR→RGB、INTER_AREA 缩放、/255、ImageNet 归一化 |
-| `forward` | 预处理后的 float 向量 | 独立持有字节的原始张量，保留实际形状、类型、字节步长及分配大小 |
-| `post_process` | 原始张量向量 | float32 CHW `[3,256,512]` 嵌入特征和 uint8 `[256,512]` 标签；标签必须为 0 或 1 |
+| `preprocess` | 非空 `CV_8UC3` BGR 图像 | 独立连续 float32 NCHW `[1,3,256,512]`；BGR→RGB、INTER_AREA 缩放、/255、ImageNet 归一化 |
+| `infer` | 预处理后的 float 向量 | 独立持有字节的原始张量，保留实际形状、类型、字节步长及分配大小 |
+| `postprocess` | 原始张量向量 | `LaneResult`：独立持有的原始输出，加 float32 CHW `[3,256,512]` 嵌入特征和 uint8 `[256,512]` 标签（必须为 0 或 1） |
 | `predict` | BGR 图像 | 组合上述三阶段，不写文件或绘图 |
 
 原生输出必须有唯一的 float32 `[1,3,256,512]` 嵌入张量，以及唯一的 int64 `[1,1,256,512]` 或 `[1,256,512]` 二值张量。按唯一形状和类型绑定角色，不假设输出索引；有歧义则报错。其他实际观察到的数值输出按索引原样保留，不虚构名称或语义；原生实现不查询输出名称。[Python 入口](../python/README_cn.md)按其 SDK 暴露的两个必需名称绑定。
 
-张量复制检查所有字节步长，包括宽度填充，并拒绝重叠或越界布局。资源管理器检查 SDK 返回值，对部分初始化、分配、提交和等待失败使用作用域清理。析构清理为尽力执行。返回张量独立持有数据，推理任务释放后仍然有效。
+张量复制检查所有字节步长，包括宽度填充，并拒绝重叠或越界布局。每条路径都检查 SDK 返回值——包括任务提交、等待与释放——已完成的任务恰好释放一次；作用域清理覆盖部分初始化、分配、提交和等待失败。错误以 C++ 异常抛出，入口打印后以退出码 2 退出。返回张量独立持有数据，推理任务释放后仍然有效。
 
 <a id="results-interpretation"></a>
 ## 结果解释

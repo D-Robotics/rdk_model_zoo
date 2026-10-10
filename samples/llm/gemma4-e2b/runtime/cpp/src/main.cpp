@@ -2,89 +2,84 @@
  * @file main.cpp
  * @brief Entry point for the interactive Gemma4-E2B VLM chat.
  *
- * This file stays deliberately thin: parse the gflags command line, resolve
- * default paths from $GEMMA4_HOME, validate the generation settings, then
- * construct the application session and run it. All console interaction and
- * conversation bookkeeping live in gemma4_chat_app.hpp/.cpp
- * (InteractiveChatApp); all model execution lives in the real engines
- * (TextEngine / VisionEngine / TokenizerBridge).
+ * This file stays deliberately thin: the CLI layer (cli.hpp/.cpp) parses the
+ * command line into ChatOptions, then main visibly constructs the named
+ * Gemma4 model and runs the read-dispatch loop — one model.predict call per
+ * chat turn over the parsed TerminalCommand. Invalid terminal input
+ * re-prompts and continues; only end-of-input or /quit exits. Console
+ * presentation (banner, prompt, result lines) lives in the CLI; all model
+ * execution and conversation bookkeeping live in gemma4.hpp/.cpp and the
+ * engines.
  *
  * @note Primary executable of this Model Zoo sample; built as `main`.
  */
-#include <cstdlib>
 #include <iostream>
 #include <string>
 
-#include "gflags/gflags.h"
-
-#include "gemma4_chat_app.hpp"
-#include "gemma4_config.hpp"
-
-// -------------------- Command-line flags --------------------
-// Empty default => resolved at runtime from $GEMMA4_HOME.
-DEFINE_string(text_hbm, "",
-              "Path to text LLM *.hbm. Default: $GEMMA4_HOME/model/"
-              "gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm");
-DEFINE_string(vision_hbm, "",
-              "Path to vision ViT *.hbm. Default: $GEMMA4_HOME/model/"
-              "gemma4-e2b_vit_ptq.hbm");
-DEFINE_string(tok_embeddings, "",
-              "Path to tok_embeddings.bin (external token embedding table). "
-              "Default: $GEMMA4_HOME/model/tok_embeddings.bin");
-DEFINE_string(tokenizer_path, "",
-              "Path to tokenizer.json. Default: $GEMMA4_HOME/tokenizer/tokenizer.json");
-DEFINE_int32(max_tokens, 0,
-             "Maximum new tokens per turn. 0 uses all KV capacity remaining "
-             "after the prompt.");
-DEFINE_int32(min_response_tokens, 256,
-             "Minimum response capacity preserved when old chat turns are trimmed.");
-DEFINE_bool(rebuild_context_each_turn, false,
-            "Rebuild the full prompt and KV cache before every response.");
+#include "cli.hpp"
+#include "gemma4.hpp"
 
 int main(int argc, char** argv) {
-  // Parse gflags first (consumes recognized --flag args, leaves the rest).
-  gflags::SetUsageMessage(
-      "Interactive VLM chat for Gemma4-E2B on RDK S series.\n"
-      "Usage: ./main [--text_hbm PATH] [--vision_hbm PATH] "
-      "[--tok_embeddings PATH] [--tokenizer_path PATH] [--max_tokens N] "
-      "[--min_response_tokens N]");
-  gflags::ParseCommandLineFlags(&argc, &argv, true);
-
-  // Resolve default paths from $GEMMA4_HOME when the corresponding flag is empty.
-  const char* env_home = std::getenv("GEMMA4_HOME");
-  const std::string home = (env_home && *env_home) ? env_home : ".";
-  gemma4::chat::ChatPaths paths;
-  paths.text_hbm = FLAGS_text_hbm.empty()
-      ? home + "/model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm"
-      : FLAGS_text_hbm;
-  paths.vision_hbm = FLAGS_vision_hbm.empty()
-      ? home + "/model/gemma4-e2b_vit_ptq.hbm"
-      : FLAGS_vision_hbm;
-  paths.tok_embeddings = FLAGS_tok_embeddings.empty()
-      ? home + "/model/tok_embeddings.bin"
-      : FLAGS_tok_embeddings;
-  paths.tokenizer_json = FLAGS_tokenizer_path.empty()
-      ? home + "/tokenizer/tokenizer.json"
-      : FLAGS_tokenizer_path;
-
-  if (FLAGS_max_tokens < 0) {
-    std::cerr << "--max_tokens must be zero or positive" << std::endl;
+  gemma4::cli::ChatOptions options;
+  if (!gemma4::cli::ParseOptions(argc, argv, &options)) {
     return 2;
   }
-  if (FLAGS_min_response_tokens <= 0) {
-    std::cerr << "--min_response_tokens must be positive" << std::endl;
-    return 2;
-  }
-
-  gemma4::chat::ChatSettings settings;
-  settings.max_tokens = FLAGS_max_tokens;
-  settings.min_response_tokens = FLAGS_min_response_tokens;
-  settings.rebuild_context_each_turn = FLAGS_rebuild_context_each_turn;
-  // The reserve is capped by the KV capacity inside InteractiveChatApp.
 
   try {
-    gemma4::chat::InteractiveChatApp app(paths, settings);
-    return app.Run();
+    gemma4::cli::PrintBanner();
+    gemma4::Gemma4 model(options.paths, options.settings,
+                         gemma4::cli::StatusLineSink(),
+                         gemma4::cli::DebugLineSink());
+
+    gemma4::cli::PrintHelp();
+    gemma4::cli::PrintPrompt();
+    std::string line;
+    for (;;) {
+      const gemma4::cli::ReadStatus status = gemma4::cli::ReadLine(&line);
+      if (status == gemma4::cli::ReadStatus::kEof) {
+        break;
+      }
+      if (status == gemma4::cli::ReadStatus::kInvalid) {
+        // ReadLine printed the terminal-configuration error; re-prompt and
+        // keep the session alive on undecodable input.
+        gemma4::cli::PrintPrompt();
+        continue;
+      }
+
+      const gemma4::cli::TerminalCommand command =
+          gemma4::cli::ParseCommand(line);
+      switch (command.command) {
+        case gemma4::cli::Command::kQuit:
+          return 0;
+        case gemma4::cli::Command::kHelp:
+          gemma4::cli::PrintHelp();
+          break;
+        case gemma4::cli::Command::kReset:
+          model.Reset();
+          gemma4::cli::ReportSessionReset();
+          break;
+        case gemma4::cli::Command::kContext:
+          gemma4::cli::ReportContext(model.ContextUsage());
+          break;
+        case gemma4::cli::Command::kImage: {
+          std::string img_path;
+          if (!gemma4::cli::ParseImageArgument(command.text, &img_path)) {
+            break;
+          }
+          gemma4::cli::ReportImageProcessing(img_path);
+          gemma4::cli::ReportImageLoaded(model.LoadImage(img_path));
+          break;
+        }
+        case gemma4::cli::Command::kEmpty:
+          break;
+        case gemma4::cli::Command::kChat:
+          gemma4::cli::ReportTurn(
+              model.predict(command.text, gemma4::cli::StreamSink()));
+          break;
+      }
+      gemma4::cli::PrintPrompt();
+    }
+    return 0;
   } catch (const std::exception& ex) {
     std::cerr << "ERROR: " << ex.what() << std::endl;
     return 1;

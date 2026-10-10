@@ -1,7 +1,7 @@
 // Copyright (c) 2026 D-Robotics. SPDX-License-Identifier: Apache-2.0
 // Explicit host API double; not real vendor ABI or model evidence.
-#include "common/dnn_io.h"
-#include "sdk_runner.h"
+#include "backend.hpp"
+#include "pipeline.hpp"
 #include <cassert>
 #include <cstdlib>
 #include <cstring>

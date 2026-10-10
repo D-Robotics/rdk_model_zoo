@@ -1,7 +1,9 @@
 // Copyright (c) 2026 D-Robotics. SPDX-License-Identifier: Apache-2.0
-#include "common/classification_binding.h"
-#include "common/dnn_resources.h"
-#include "common/imagenet_labels.h"
+// Host unit tests for the classification descriptor binding and the RAII
+// resource owners, compiled against the production inc/backend.hpp with the
+// fake_dnn_io stack doubles selecting the stack via the genuine header probe.
+#include "backend.hpp"
+#include "imagenet_labels.hpp"
 #include <stdexcept>
 int allocations=0,frees=0,releases=0,allocation_error=0;
 #define expect(value) do { if (!(value)) throw std::runtime_error(#value); } while (0)
@@ -10,6 +12,15 @@ template<class F> void rejects(F fn) {
   try {fn();} catch (const std::invalid_argument&) {rejected=true;}
   expect(rejected);
 }
+// SDK hooks behind the fake stack headers; the allocation semantics cover
+// success, each failure mode, and success-with-null-address.
+int test_allocate(TestMemory* memory,int) {
+  ++allocations;
+  memory->virAddr=(allocation_error==0 || allocation_error==-5) ? reinterpret_cast<void*>(1) : nullptr;
+  return allocation_error==1 ? 0 : allocation_error;
+}
+int test_free(TestMemory*) { ++frees;return 0; }
+int hbDNNRelease(void*) { ++releases;return 0; }
 int main() {
   expect(IMAGENET_CLASSES.size()==1000);
   hbDNNTensorProperties p{};

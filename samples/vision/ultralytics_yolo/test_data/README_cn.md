@@ -126,7 +126,7 @@ Top-K Classification Results:
 
 `<score>` 与 `<probability>` 是任务各自后处理之后的模型置信度（检测经阈值/NMS 过滤；分类经 Softmax），分别保留两位与四位小数；框使用原图像素坐标，类别 ID 从 0 开始。除每个任务都会打印的模型/协议信息外，detect 打印逐目标报告、分类打印 Top-K；seg、pose、obb 通过渲染图表达结果。数据集精度与性能指标通过[评估器](../evaluator/README_cn.md)测量。
 
-C++ 参考程序接受同样的图片作为位置参数（其[文档](../runtime/cpp/README_cn.md)将它们与 `test_data/bus.jpg`、`test_data/zebra_cls.jpg` 配对），但**不读取**本目录的 `.names` 文件：detect/segment 编译了 80 项 COCO 名称数组（使用规范拼写 `motorcycle`、`airplane`、`couch`、`potted plant`、`dining table`、`tv`——与本目录的 VOC 风格同义词有 6 项不同，顺序相同）；pose 编译 17 个 COCO 关键点名；分类编译 `common/imagenet_labels.h` 中 1000 项 ImageNet 顺序。转换后的编译校验同样以 `test_data/bus.jpg` 作为示例输入（见[转换指南](../conversion/README_cn.md#validation)）。
+C++ 参考程序接受同样的图片作为位置参数（其[文档](../runtime/cpp/README_cn.md)将它们与 `test_data/bus.jpg`、`test_data/zebra_cls.jpg` 配对），但**不读取**本目录的 `.names` 文件：detect/segment 编译了 80 项 COCO 名称数组（使用规范拼写 `motorcycle`、`airplane`、`couch`、`potted plant`、`dining table`、`tv`——与本目录的 VOC 风格同义词有 6 项不同，顺序相同）；pose 编译 17 个 COCO 关键点名；分类编译 `runtime/cpp/inc/imagenet_labels.hpp` 中 1000 项 ImageNet 顺序。转换后的编译校验同样以 `test_data/bus.jpg` 作为示例输入（见[转换指南](../conversion/README_cn.md#validation)）。
 
 <a id="boundaries"></a>
 ## 数据准备

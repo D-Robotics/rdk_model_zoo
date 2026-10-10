@@ -1,7 +1,7 @@
 // Production preflight with only the board identity reader replaced for host
 // tests.
 #include "platform_identity.h"
-#include "sdk_runner.hpp"
+#include "policy.hpp"
 #include <cassert>
 #include <fstream>
 #include <iostream>

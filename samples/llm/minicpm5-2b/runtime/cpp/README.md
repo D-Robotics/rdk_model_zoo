@@ -70,11 +70,11 @@ bash run.sh -- --prompt="What is the capital of France?" --follow_up="Translate 
 <a id="interface-lifecycle"></a>
 ## Interface and lifecycle
 
-`inc/minicpm5.hpp` defines Config, Result, the generation-stage functions and the sequential MiniCPM5 helper; `src/minicpm5.cc` implements the stages; `src/runtime_config.cc` owns model-file validation, the OELLM JSON settings and the temporary configuration file; `src/main.cc` handles gflags and RESULT output.
+`inc/minicpm5.hpp` defines Config, Result, the generation-stage functions and the sequential MiniCPM5 helper; `src/minicpm5.cpp` implements the stages and owns model-file validation, the OELLM JSON settings and the temporary configuration file; `src/cli.cpp` handles gflags and RESULT output; `src/main.cpp` constructs the named model and calls `predict` once per turn.
 
-The public stage functions are `pre_process` (builds and validates one OELLM request; no SDK calls), `infer` (one synchronous runtime call plus a response-shape check) and `post_process` (extracts text, tokens and status, then reads and validates request metrics); `Generate` chains them. Tokenization and template rendering stay inside the runtime; the SDK exposes no tokenization API. Configuration and file IO live in `src/runtime_config.cc`, outside the inference-stage file; the temporary runtime JSON is owned by an RAII guard and removed on success, SDK error return and exception paths alike.
+The public stage functions are `preprocess` (builds and validates one OELLM request; no SDK calls), `infer` (one synchronous runtime call plus a response-shape check) and `postprocess` (extracts text, tokens and status, then reads and validates request metrics); `MiniCPM5::predict` chains them per request. Tokenization and template rendering stay inside the runtime; the SDK exposes no tokenization API. The temporary runtime JSON is owned by an RAII guard and removed on success, SDK error return and exception paths alike.
 
-`MiniCPM5(Config)` owns one runtime/conversation. `Generate(prompt, new_chat=true)` starts a new conversation; pass `false` for a follow-up. Calls on one instance are sequential; the returned value owns text/token data. `validate_metrics` rejects non-finite or negative measurements with a message naming the metric and never coerces them to zero, so a RESULT line only contains valid measurements; zero `decode_tps` remains valid for one-token length-limited requests.
+`MiniCPM5(Config)` owns one runtime/conversation. `predict(prompt, new_chat=true)` starts a new conversation; pass `false` for a follow-up. Calls on one instance are sequential; the returned value owns text/token data. `validate_metrics` rejects non-finite or negative measurements with a message naming the metric and never coerces them to zero, so a RESULT line only contains valid measurements; zero `decode_tps` remains valid for one-token length-limited requests.
 
 Complete native library usage as one self-contained program — copy it, compile against the SDK headers and run:
 
@@ -85,11 +85,11 @@ int main() {
   minicpm5::Config config;              // model_path defaults to ../../model/s600
   config.max_new_tokens = 128;          // 1-4096
   minicpm5::MiniCPM5 model(config);     // validates settings, prepares the runtime; throws on failure
-  minicpm5::Result first = model.Generate("What is 1+1?");  // opens the conversation
+  minicpm5::Result first = model.predict("What is 1+1?");   // opens the conversation
   if (first.status == 3) {              // 3 EOS; 6 output limit; 4 context limit
     // consume first.text, first.tokens, first.ttft_ms, first.decode_tps, first.e2e_ms
   }
-  minicpm5::Result follow = model.Generate("Translate that.", false);  // same conversation
+  minicpm5::Result follow = model.predict("Translate that.", false);  // same conversation
   return first.status == 3 && follow.status == 3 ? 0 : 1;
 }
 ```

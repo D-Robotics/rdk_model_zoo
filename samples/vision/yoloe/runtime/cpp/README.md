@@ -15,11 +15,10 @@ Run prompt-free YOLOE instance segmentation with the matching X5 or S model. The
 
 ```text
 cpp/
-├── common/  # Files for common
-├── inc/  # Files for inc
-├── src/  # Files for src
+├── inc/  # Model and CLI headers: detect.hpp, cli.hpp
+├── src/  # Five-file runtime: detect.cpp, cli.cpp, main.cpp
 ├── tests/  # Automated tests
-├── CMakeLists.txt  # Source or data file
+├── CMakeLists.txt  # Build configuration
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
 ├── launcher.py  # Python script
@@ -131,26 +130,15 @@ The native report is written last. A zero exit without a valid identity-matched 
 | Module | Responsibility |
 | --- | --- |
 | `launcher.py`, `run.sh` | Publication selection, explicit build, process logs and run records |
-| `src/main.cpp`, `src/cli_options.cpp`, `src/cli_io.cpp` | CLI orchestration, option parsing, image/label I/O and saved results |
-| `common/float_heads.h` | Bind ten logical roles by unique shape, independently of physical output order |
-| `inc/yoloe.h`, `src/yoloe.cpp` | Task construction and pre_process/infer/post_process/predict orchestration |
-| `inc/runner.h`, `inc/pipeline_io.h` | Backend contract, owned input/output batches and instance identity |
-| `inc/sdk_runner.h`, `src/sdk_runner.cpp` | Model loading, SDK ownership and shared input/output transport after required preflight |
-| `inc/model_identity.h`, `inc/preflight.h`, `src/preflight.cpp` | Explicit model selection and local board/model/vocabulary verification using shared native helpers |
-| `inc/config.h` | Protocol-specific configuration validation |
-| `common/nv12.h` | BGR-to-I420 conversion and shared split-NV12 packing |
-| `common/postprocess.h` | Family dispatch and aligned instance result assembly |
-| `common/geometry.h` | Explicit E11/E26 resize geometry and actual-scale inverse boxes |
-| `common/image_ops.h` | OpenCV BGR preparation and E11/E26 ROI mask restoration |
-| `common/candidate.h` | Shared owning candidate result for both families |
-| `common/e11_decode.h` | DFL16, classwise NMS and aligned E11 coefficients |
-| `common/e26_decode.h` | Select E26 PF candidates, decode LTRB boxes and retain aligned mask coefficients |
+| `src/main.cpp` | CLI orchestration: preflight gate → inputs → `YOLOE` built from model/config/gate → `predict` → saved results |
+| `src/cli.cpp`, `inc/cli.hpp` | Strict option parsing, image/label byte-exact loading, fresh-output policy and report/mask writing |
+| `src/detect.cpp`, `inc/detect.hpp` | The whole YOLOE model in one unit: geometry, NV12 preparation, `bind_heads` role binding, E11/E26 decodes, ROI mask restoration, board/model/vocabulary preflight, the `preprocess`/`infer`/`postprocess`/`predict` stages and the board DNN adapter (compiled with `YOLOE_HAS_SDK`) |
 | `tests/test_float_heads.cc` | Shape/precision/stride/allocation and finite-value boundary tests |
 | `tests/test_e11_decode.cc` | DFL, same/different-class suppression, score/IoU equality and malformed outputs |
 | `tests/test_e26_decode.cc` | Candidate ordering, single/multi-label selection, thresholds and invalid outputs |
 | `tests/decode_probe.cc` | Host-only utility for comparison with saved raw float tensors; not an inference application |
 
-Float reads reuse Ultralytics' `common/task_outputs.h`: `nhwc_float_plan` requires unquantized FLOAT32, batch-one NHWC, valid physical row/cell strides and a sufficient allocation, and `copy_float_output` removes physical padding and rejects nonfinite values. `bind_heads` binds the ten logical output roles by unique shape; dtype, stride and allocation requirements are enforced by these helpers, and model-family and vocabulary identity by the explicit selection rules below.
+Float reads reuse Ultralytics' shared vocabulary header `inc/yolo.hpp`: `nhwc_float_plan` requires unquantized FLOAT32, batch-one NHWC, valid physical row/cell strides and a sufficient allocation, and `copy_float_output` removes physical padding and rejects nonfinite values. `bind_heads` binds the ten logical output roles by unique shape; dtype, stride and allocation requirements are enforced by these helpers, and model-family and vocabulary identity by the explicit selection rules below.
 
 | Role | Shape at stride 8 / 16 / 32 |
 | --- | --- |
@@ -160,12 +148,12 @@ Float reads reuse Ultralytics' `common/task_outputs.h`: `nhwc_float_plan` requir
 | Mask coefficients | Same spatial shapes, 32 channels |
 | Prototype | One `[1,160,160,32]` tensor |
 
-The caller explicitly selects E11 (64 box channels) or E26 (4); an incompatible family, missing/duplicate role, wrong vocabulary width or extra output is rejected. SDK ownership reuses Ultralytics `PackedModelOwner`, `Nv12Input` and `TaskOutputs`; semantic YOLOE roles are validated before allocation. Quantized outputs are rejected, not manually dequantized. The existing [conversion guide](../../conversion/README.md) describes preparing float output models; prepare the matching float-output S HBM before native execution.
+The caller explicitly selects E11 (64 box channels) or E26 (4); an incompatible family, missing/duplicate role, wrong vocabulary width or extra output is rejected. SDK ownership reuses the Ultralytics shared DNN backend (`inc/backend.hpp` + `src/backend.cpp`): `PackedModelOwner`, `Nv12Input`, `TaskOutputs` and the stack-portable synchronous inference; semantic YOLOE roles are validated before allocation. Quantized outputs are rejected, not manually dequantized. The existing [conversion guide](../../conversion/README.md) describes preparing float output models; prepare the matching float-output S HBM before native execution.
 
 <a id="dependencies"></a>
 ## Dependencies
 
-Prerequisites: a C++17 compiler and the repository checkout. The four geometry/candidate tests do not need OpenCV or a board SDK. The image/mask and stage tests need OpenCV C++ core/imgproc/imgcodecs development libraries. The documented build/test commands need CMake/CTest 3.20+ (`ctest --test-dir`); set `OpenCV_DIR` to your installed OpenCV CMake package directory if it is not discoverable. Python opencv-python alone does not provide this C++ development environment. From the repository root:
+Prerequisites: a C++17 compiler and the repository checkout. Host tests need OpenCV C++ core/imgproc/imgcodecs development libraries but no board SDK: the geometry/decode/preflight functions live in the same model translation unit as the OpenCV-backed preparation code, so even the core tests link the model core (and therefore OpenCV). The documented build/test commands need CMake/CTest 3.20+ (`ctest --test-dir`); set `OpenCV_DIR` to your installed OpenCV CMake package directory if it is not discoverable. Python opencv-python alone does not provide this C++ development environment.
 
 On macOS, sanitizer builds of the OpenCV-enabled test project (`YOLOE_TEST_OPENCV=ON` with `YOLOE_SANITIZERS=ON`) additionally resolve the real TBB that OpenCV was built against through CMake's standard TBB CONFIG package and link it directly to the OpenCV-linked test executables. Under ASan, an executable that loads libtbb only transitively through `libopencv_core` aborts at process exit in `tbb::detail::r1::__TBB_InitOnce::~__TBB_InitOnce`; a minimal empty `main` linked against OpenCV core alone reproduces the crash. The direct TBB reference keeps ASan+UBSan enabled; if CMake cannot discover the package, point `CMAKE_PREFIX_PATH` at the prefix that installed TBB. Linux and OpenCV-off builds take no such branch and need no TBB. This behavior applies to host sanitizer builds; board builds are unaffected.
 
@@ -173,29 +161,9 @@ On macOS, sanitizer builds of the OpenCV-enabled test project (`YOLOE_TEST_OPENC
 ## Build host tests
 
 ```bash
-mkdir -p /tmp/yoloe-native-tests
-c++ -std=c++17 -Wall -Wextra -Werror \
-  -fsanitize=address,undefined -fno-omit-frame-pointer \
-  -I samples/vision/yoloe/runtime/cpp/common \
-  -I samples/vision/ultralytics_yolo/runtime/cpp \
-  samples/vision/yoloe/runtime/cpp/tests/test_float_heads.cc \
-  -o /tmp/yoloe-native-tests/float-heads
-c++ -std=c++17 -Wall -Wextra -Werror \
-  -fsanitize=address,undefined -fno-omit-frame-pointer \
-  -I samples/vision/yoloe/runtime/cpp/common \
-  samples/vision/yoloe/runtime/cpp/tests/test_e26_decode.cc \
-  -o /tmp/yoloe-native-tests/e26-decode
-c++ -std=c++17 -Wall -Wextra -Werror \
-  -fsanitize=address,undefined -fno-omit-frame-pointer \
-  -I samples/vision/yoloe/runtime/cpp/common \
-  -I samples/vision/ultralytics_yolo/runtime/cpp \
-  samples/vision/yoloe/runtime/cpp/tests/test_e11_decode.cc \
-  -o /tmp/yoloe-native-tests/e11-decode
-c++ -std=c++17 -Wall -Wextra -Werror \
-  -fsanitize=address,undefined -fno-omit-frame-pointer \
-  -I samples/vision/yoloe/runtime/cpp/common \
-  samples/vision/yoloe/runtime/cpp/tests/test_geometry.cc \
-  -o /tmp/yoloe-native-tests/geometry
+cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-core \
+  -DYOLOE_SANITIZERS=ON
+cmake --build /tmp/yoloe-native-core --parallel 4
 ```
 
 Build all eleven tests with a real OpenCV installation (no board SDK):
@@ -220,10 +188,7 @@ The output is `libyoloe_core.a`, not a board executable. For a normal embedding 
 ## Run host tests
 
 ```bash
-/tmp/yoloe-native-tests/float-heads
-/tmp/yoloe-native-tests/e26-decode
-/tmp/yoloe-native-tests/e11-decode
-/tmp/yoloe-native-tests/geometry
+ctest --test-dir /tmp/yoloe-native-core --output-on-failure
 ```
 
 Successful tests exit 0 with no output. The decoder test allocates the full 4585-class tensor geometry, so allow several hundred MB with sanitizers. A thrown assertion/contract error or sanitizer diagnostic is a failure. These commands verify the C++ math and float-memory utilities; SDK ABI compatibility is verified by the board build below.
@@ -260,28 +225,28 @@ Selection applies a static Top-K: candidates are ranked by score, exact ties pre
 <a id="interface-lifecycle"></a>
 ## Interface and lifetime
 
-`YOLOE` exclusively owns a `std::unique_ptr<Runner>`. Construction validates configuration and backend protocol; invalid construction releases the supplied backend. The backend must return ten independently owned compact semantic FLOAT32 vectors. It must perform hardware/artifact identity and SDK metadata validation before exposing inference; the base interface carries none of that validation itself. `SdkRunner` implements the low-level SDK boundary described below.
+`YOLOE` exclusively owns a `std::unique_ptr<Runner>`. Construction validates configuration and backend protocol; invalid construction releases the supplied backend. The native constructor `YOLOE(SdkModel, Config, SdkPreflight)` builds and owns the board adapter itself; the runner-injecting constructor serves custom backends and tests. The backend must return ten independently owned compact semantic FLOAT32 vectors. It must perform hardware/artifact identity and SDK metadata validation before exposing inference; the base interface carries none of that validation itself. `SdkRunner` implements the low-level SDK boundary described below.
 
-`pre_process` returns an owned compact Y plane (409600 bytes) and interleaved UV plane (204800 bytes), plus actual geometry. `infer` invokes the runner exactly once and returns owned raw outputs carrying that geometry. `post_process` returns aligned `Instance` values with box/score/label/ROI mask. Prepared/raw batches from another task are rejected, including another task with the same protocol; do not cache a last-image geometry yourself. Raw outputs remain valid across subsequent calls, and result masks do not borrow SDK buffers. Use one task per inference thread; concurrent backend use is not guaranteed.
+`preprocess` returns an owned compact Y plane (409600 bytes) and interleaved UV plane (204800 bytes), plus actual geometry. `infer` invokes the runner exactly once and returns owned raw outputs carrying that geometry. `postprocess` returns aligned `Instance` values with box/score/label/ROI mask. Prepared/raw batches from another task are rejected, including another task with the same protocol; do not cache a last-image geometry yourself. Raw outputs remain valid across subsequent calls, and result masks do not borrow SDK buffers. Use one task per inference thread; concurrent backend use is not guaranteed.
 
 The following function shows the embedding API; the application supplies the matching backend:
 
 ```cpp
-#include "yoloe.h"
+#include "detect.hpp"
 yoloe::Result process_image(yoloe::Config config,
                             std::unique_ptr<yoloe::Runner> backend,
                             const cv::Mat& image) {
     yoloe::YOLOE task(config, std::move(backend));
-    auto prepared = task.pre_process(image);
+    auto prepared = task.preprocess(image);
     auto raw = task.infer(prepared);
-    return task.post_process(raw);
+    return task.postprocess(raw);
     // task.predict(image) composes the same three operations.
 }
 ```
 
-Configuration defaults to E11, score 0.25, NMS unset (E11 resolves 0.7), morphology off, letterbox, max_det 300 and single_label true. E11 rejects E26-only overrides; E26 rejects an explicitly supplied NMS threshold, morphology or stretch. Select `config.protocol = yoloe::Protocol::E26` only with a matching backend. These values describe library behavior; source demo CLI defaults may differ.
+Configuration defaults to E11, score 0.25, NMS unset (E11 resolves 0.7), morphology off, letterbox, max_det 300 and single_label true. E11 rejects E26-only overrides; E26 rejects an explicitly supplied NMS threshold, morphology or stretch. Select `config.protocol = yoloe::Protocol::E26` only with a matching backend. These are the library defaults; the demo CLI applies its own defaults where options are omitted.
 
-The numerical headers expose pure functions and own no SDK resources. `bind_heads` returns output indices; it does not retain references. `decode_e11` and `decode_e26` borrow their ten input vectors only for the duration of the call and return owning detections with copied boxes/scores/coefficients. Callers may release input tensors after return. Internal pointer views never escape. OpenCV result matrices use reference-counted owned storage and do not alias the caller's image/prototype; retain a returned result for as long as its pixels are needed. Invalid arguments throw `std::invalid_argument`; allocation failures may propagate. There is no model loading, implicit hardware selection or hidden cross-call geometry state.
+The decode/geometry functions expose pure interfaces and own no SDK resources. `bind_heads` returns output indices; it does not retain references. `decode_e11` and `decode_e26` borrow their ten input vectors only for the duration of the call and return owning detections with copied boxes/scores/coefficients. Callers may release input tensors after return. Internal pointer views never escape. OpenCV result matrices use reference-counted owned storage and do not alias the caller's image/prototype; retain a returned result for as long as its pixels are needed. Invalid arguments throw `std::invalid_argument`; allocation failures may propagate. There is no model loading, implicit hardware selection or hidden cross-call geometry state.
 
 ## SDK backend library
 
@@ -315,21 +280,19 @@ is exposed. For custom conversion, a matching digest proves bytes, not compiler
 provenance; the caller must retain conversion evidence. No compatible S float
 HBM is supplied by this API.
 
-The second complete API example shows the preflight-gated SDK path. Its caller
-supplies the selected model's expected digest and the vocabulary path:
+The second complete API example shows the preflight-gated native path; the
+task constructs and owns its board adapter:
 
 ```cpp
-#include "preflight.h"
-#include "sdk_runner.h"
-#include "yoloe.h"
+#include "detect.hpp"
 yoloe::Result process_sdk_image(const cv::Mat& image, yoloe::SdkModel model,
                                 const std::string& expected_model_sha256,
                                 const std::string& label_path) {
-    auto gate = yoloe::make_preflight(expected_model_sha256, label_path);
-    auto backend = std::make_unique<yoloe::SdkRunner>(model, std::move(gate));
     yoloe::Config config;
-    config.protocol = backend->protocol();
-    yoloe::YOLOE task(config, std::move(backend));
+    config.protocol = model.variant.rfind("26", 0) == 0 ? yoloe::Protocol::E26
+                                                        : yoloe::Protocol::E11;
+    yoloe::YOLOE task(model, config,
+                      yoloe::make_preflight(expected_model_sha256, label_path));
     return task.predict(image);
 }
 ```
@@ -342,7 +305,7 @@ cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-board-lib \
 cmake --build /tmp/yoloe-board-lib --parallel 4
 ```
 
-This produces `libyoloe_core.a`, `libyoloe_preflight.a` and `libyoloe_sdk.a`, not an executable. With
+This produces `libyoloe_core.a` and `libyoloe_sdk.a`, not an executable. With
 CMake `add_subdirectory`, link the application to `yoloe_sdk`. Set
 `YOLOE_DNN_INCLUDE_DIR` to the directory containing `dnn/hb_dnn.h` and
 `YOLOE_DNN_LIBRARY` to the matching DNN library if discovery fails. UCP headers
@@ -352,8 +315,8 @@ files are still required. The default host build leaves `YOLOE_BUILD_SDK=OFF`.
 
 The OpenCV host configuration runs eleven tests: six numerical/stage checks,
 X5/UCP adapter checks, preflight, CLI I/O and fixture help. The explicit fixture
-also runs the actual executable entry with synthetic outputs; it is not a SDK backend. The preflight library itself needs no OpenCV
-or SDK. The adapter tests run with production code instrumented by ASan/UBSan. They
+also runs the actual executable entry with synthetic outputs; it is not a SDK backend. Preflight is part of the model core,
+which needs OpenCV but no SDK. The adapter tests run with production code instrumented by ASan/UBSan. They
 cover preflight rejection before SDK calls, metadata/precision rejection before
 allocation, partial allocation and failed initialization cleanup, task/cache
 errors, semantic output order and independence across inference calls. These

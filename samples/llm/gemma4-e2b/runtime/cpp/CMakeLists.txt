@@ -59,20 +59,17 @@ endif()
 add_subdirectory(${TOKENIZERS_CPP_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/tokenizers-cpp)
 
 # ── Static library: core inference engine ────────────────────────────────────
+# gemma4_text_engine / gemma4_vision_engine each carry their whole pipeline
+# (input preparation, descriptor contract, transport, orchestration /
+# preprocessing) in one TU; the session policy, KV cache, embeddings and
+# tokenizers remain independent algorithm sources.
 add_library(gemma4_runtime STATIC
   src/gemma4_native_tokenizer.cpp
   src/gemma4_tokenizer.cpp
   src/gemma4_embeddings.cpp
   src/gemma4_kv_cache.cpp
   src/gemma4_text_engine.cpp
-  src/gemma4_text_inputs.cpp
   src/gemma4_text_session.cpp
-  src/gemma4_text_tensor.cpp
-  src/gemma4_text_transport.cpp
-  src/gemma4_vision_preprocess.cpp
-  src/gemma4_vision_task.cpp
-  src/gemma4_image_io.cpp
-  src/gemma4_vision_tensor.cpp
   src/gemma4_vision_engine.cpp
 )
 
@@ -88,24 +85,30 @@ target_link_libraries(gemma4_runtime PUBLIC
 
 # ── Executables ──────────────────────────────────────────────────────────────
 
-# Interactive VLM chat (Model Zoo standard entry: main.cpp + chat app session)
-add_executable(main src/main.cpp src/gemma4_chat_app.cpp)
+# Aux entry-tool sources live with the evaluator they serve.
+set(GEMMA4_EVALUATOR_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../evaluator)
+
+# Interactive VLM chat (Model Zoo standard entry: thin main.cpp + Gemma4
+# model + CLI argument parsing/presentation).
+add_executable(main src/main.cpp src/gemma4.cpp src/cli.cpp)
 target_link_libraries(main PRIVATE gemma4_runtime gflags)
 
 # HTTP API server
-add_executable(gemma4_server src/gemma4_server.cpp)
+add_executable(gemma4_server ${GEMMA4_EVALUATOR_DIR}/gemma4_server.cpp)
 target_link_libraries(gemma4_server PRIVATE gemma4_runtime gflags)
 
 # Text-only benchmark
-add_executable(gemma4_text_bench src/gemma4_text_bench.cpp)
+add_executable(gemma4_text_bench ${GEMMA4_EVALUATOR_DIR}/gemma4_text_bench.cpp)
 target_link_libraries(gemma4_text_bench PRIVATE gemma4_runtime gflags)
 
-# Single-shot VLM diagnostic (image + prompt → text)
-add_executable(gemma4_demo src/gemma4_demo.cpp)
+# Single-shot VLM diagnostic (image + prompt → text); source lives with the
+# other aux entry tools next to the evaluator.
+add_executable(gemma4_demo ${GEMMA4_EVALUATOR_DIR}/gemma4_demo.cpp)
 target_link_libraries(gemma4_demo PRIVATE gemma4_runtime gflags)
 
 # Golden mask/KV alignment verification tool
-add_executable(gemma4_golden_verify src/gemma4_golden_verify.cpp)
+add_executable(gemma4_golden_verify
+  ${GEMMA4_EVALUATOR_DIR}/gemma4_golden_verify.cpp)
 target_link_libraries(gemma4_golden_verify PRIVATE gemma4_runtime gflags)
 
 set_target_properties(

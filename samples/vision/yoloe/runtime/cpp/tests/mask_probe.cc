@@ -1,7 +1,7 @@
 // Copyright (c) 2026 D-Robotics. SPDX-License-Identifier: Apache-2.0
 // Host comparison utility: compact proto + candidate boxes/coefficients to ROI
 // bytes.
-#include "image_ops.h"
+#include "detect.hpp"
 #include <filesystem>
 #include <fstream>
 #include <iomanip>

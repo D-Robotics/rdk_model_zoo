@@ -7,8 +7,11 @@
 #include <string>
 #include <vector>
 
-#include "gemma4_image_io.hpp"
-#include "gemma4_vision_task.hpp"
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+
+#include "gemma4_vision_engine.hpp"
+#include "vision_fixture.hpp"
 
 namespace gemma4 {
 std::vector<float> SourcePreprocessImage(const std::string &path);

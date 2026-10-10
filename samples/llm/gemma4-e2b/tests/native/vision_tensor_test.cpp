@@ -1,4 +1,7 @@
-#include "gemma4_vision_tensor.hpp"
+// Contract tests for the folded Vision engine's descriptor/IO helpers: host
+// buffers only; the SDK link stubs come from vision_fixture.hpp.
+#include "gemma4_vision_engine.hpp"
+#include "vision_fixture.hpp"
 #include <cassert>
 #include <cmath>
 #include <cstring>

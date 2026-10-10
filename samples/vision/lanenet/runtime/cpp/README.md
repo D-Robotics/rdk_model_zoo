@@ -2,7 +2,7 @@ English | [简体中文](README_cn.md)
 
 # LaneNet C++ runtime
 
-This entry is a DNN/UCP implementation with image preparation, inference, result decoding, visualization and file IO as separate steps. It produces an embedding map and binary lane labels. It does **not** cluster embeddings into lane instances or fit curves.
+This entry is a DNN/UCP implementation producing an embedding map and binary lane labels. The `segment` module owns the model lifecycle, tensor contract and the preprocessing, inference and decoding stages; the CLI module owns rendering and report IO. It does **not** cluster embeddings into lane instances or fit curves.
 
 <a id="overview"></a>
 ## C++ inference
@@ -14,9 +14,14 @@ Use this directory for c++ inference.
 
 ```text
 cpp/
-├── inc/  # Files for inc
-├── src/  # Files for src
-├── CMakeLists.txt  # Source or data file
+├── inc/
+│   ├── segment.hpp  # LaneNet model class, tensor contract and owned stage-data types
+│   └── cli.hpp      # CLI options, NPY/JSON serialization and artifact writer
+├── src/
+│   ├── segment.cpp  # runtime lifecycle, tensor binding, preprocess/infer/postprocess
+│   ├── cli.cpp      # argument parsing, image loading, visualization, report writing
+│   └── main.cpp     # entry point: parse options, predict, save results
+├── CMakeLists.txt   # build (C++17, explicit RDK_TARGET S100 gate)
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
 ├── launcher.py  # Python script
@@ -95,23 +100,25 @@ These defaults belong to the Python launcher, also used by `run.sh`:
 
 Additional image paths must be new, distinct and must not overwrite result files or launch logs. Relative paths passed to the launcher are resolved before it starts the binary from the repository root. The shell helper first changes to the repository root.
 
-The direct binary requires `--model-path` and `--test-img`. Its `--target` and `--output` defaults are `s100` and `outputs/lanenet_cpp`; extra image paths are empty by default. It accepts the original underscore aliases (`--model_path`, `--test_img`, `--instance_save_path`, `--binary_save_path`) and `--key=value`. It has no manifest selection, automatic build, download or digest recording; use the launcher for run provenance. UCP scheduling uses the default priority and the ANY core.
+The direct binary requires `--model-path` and `--test-img`. Its `--target` and `--output` defaults are `s100` and `outputs/lanenet_cpp`; extra image paths are empty by default. It accepts the underscore aliases (`--model_path`, `--test_img`, `--instance_save_path`, `--binary_save_path`) and `--key=value`. It has no manifest selection, automatic build, download or digest recording; use the launcher for run provenance. UCP scheduling uses the default priority and the ANY core.
 
 <a id="interface-lifecycle"></a>
 ## Interface and lifecycle
 
-[LaneNetSegmenter](inc/lanenet.hpp) exposes `pre_process`, `forward`, `post_process` and `predict`. A caller supplies a raw runner callback; [ModelRunner](inc/model_runner.hpp) owns the packed model, buffers and inference task. Keep the owner alive longer than any callback that captures it.
+`main.cpp` parses the options, constructs `LaneNet model(model_path)` — the constructor verifies the board's S100 identity before any SDK call, loads the HBM pack, validates the tensor contract and allocates the reusable tensor buffers — then calls `model.predict(image)` and hands the result to the artifact writer. All DNN and UCP types stay inside `src/segment.cpp` (private `Impl`), so `inc/segment.hpp` depends only on OpenCV and the standard library.
+
+[LaneNet](inc/segment.hpp) exposes the three stages separately, each returning data owned by the caller:
 
 | Stage | Input | Output / contract |
 | --- | --- | --- |
-| `pre_process` | Nonempty `CV_8UC3` BGR image | Owned contiguous float32 NCHW `[1,3,256,512]`; BGR→RGB, INTER_AREA resize, /255 and ImageNet normalization |
-| `forward` | Prepared float vector | Owned raw tensors with actual shape, dtype, byte strides and allocation size |
-| `post_process` | Raw tensor vector | Float32 CHW `[3,256,512]` embedding and uint8 `[256,512]` labels; values must be 0 or 1 |
+| `preprocess` | Nonempty `CV_8UC3` BGR image | Owned contiguous float32 NCHW `[1,3,256,512]`; BGR→RGB, INTER_AREA resize, /255 and ImageNet normalization |
+| `infer` | Prepared float vector | Owned raw tensors with actual shape, dtype, byte strides and allocation size |
+| `postprocess` | Raw tensor vector | `LaneResult`: owned raw outputs plus float32 CHW `[3,256,512]` embedding and uint8 `[256,512]` labels (values 0 or 1) |
 | `predict` | BGR image | Composes the three stages; no file writes or visualization |
 
 Native output roles require exactly one float32 `[1,3,256,512]` embedding and exactly one int64 `[1,1,256,512]` or `[1,256,512]` binary tensor. Roles are resolved by unique shape and type, not assumed indices. Ambiguity is an error. Other observed numeric outputs are retained by index without inventing names or semantics; native output names are not queried. The [Python entry](../python/README.md) binds the two required names exposed by its SDK.
 
-Tensor copying honors every byte stride, including width padding, and rejects overlapping or out-of-capacity layouts. The owner checks SDK call results and uses scoped cleanup through partial initialization, allocation, submit and wait failures. Destructor cleanup is best-effort. Returned tensors own their bytes and remain valid after the inference task is released.
+Tensor copying honors every byte stride, including width padding, and rejects overlapping or out-of-capacity layouts. SDK call results are checked on every path — including task submission, wait and release — and a finished task is released exactly once; scoped cleanup covers partial initialization, allocation, submit and wait failures. Errors surface as C++ exceptions; the entry point prints them and exits with status 2. Returned tensors own their bytes and remain valid after the inference task is released.
 
 <a id="results-interpretation"></a>
 ## Results and interpretation

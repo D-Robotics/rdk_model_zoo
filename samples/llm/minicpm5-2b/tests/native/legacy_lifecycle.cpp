@@ -1,7 +1,7 @@
 // R1 regression: the legacy runtime enforces a single-use lifecycle.
-// Scenario order matches the reviewer baseline reproduction: a first
-// successful request must be followed by rejected reinitialization instead of
-// a second request that silently never receives END.
+// Construction performs SDK initialization; a first successful request can
+// never be followed by a second request on the same instance, which would
+// silently never receive END.
 #include <unistd.h>
 
 #include <filesystem>
@@ -49,19 +49,40 @@ int failures = 0;
 
 int main() {
   const auto templ = make_template();
-  // 1. predict() before init() throws.
+  // 1. SDK initialization failure throws from the constructor with the raw
+  // status, so no model instance exists in an uninitialized state. The
+  // destructor does not run for a throwing constructor, so a nonnull partial
+  // handle returned alongside the error must be destroyed exactly once
+  // before the exception propagates; a null handle is left untouched.
   {
+    xlm_double::reset();
+    xlm_double::init_status = 3;  // Error plus a nonnull partial handle.
     MiniCPM5Config config;
     config.template_path = templ;
     config.text_sink = [](const char* chunk) { streamed() << chunk; };
-    MiniCPM5 model(config);
     bool threw = false;
+    std::string message;
     try {
-      model.predict();
-    } catch (const std::exception&) {
+      MiniCPM5 model(config);
+    } catch (const std::exception& error) {
       threw = true;
+      message = error.what();
     }
-    CHECK(threw, "predict before init throws");
+    CHECK(threw && message.find("xlm_init failed: 3") != std::string::npos,
+          "constructor surfaces init failure");
+    CHECK(xlm_double::destroy_calls == 1,
+          "partial handle destroyed exactly once");
+    xlm_double::reset();
+    xlm_double::init_status = 3;
+    xlm_double::init_handle = false;  // Error with a null handle.
+    try {
+      MiniCPM5Config null_config;
+      null_config.template_path = templ;
+      MiniCPM5 model(null_config);
+    } catch (const std::exception&) {
+    }
+    CHECK(xlm_double::destroy_calls == 0, "null handle not destroyed");
+    xlm_double::reset();
   }
   // 2. First request streams text, ends normally and cleans up.
   {
@@ -70,7 +91,6 @@ int main() {
     config.template_path = templ;
     config.text_sink = [](const char* chunk) { streamed() << chunk; };
     MiniCPM5 model(config);
-    model.init();
     RequestOutcome outcome;
     const auto streamed = captured_predict(model, outcome);
     CHECK(outcome.exit_code() == 0, "first request exit zero");
@@ -79,25 +99,19 @@ int main() {
           "first request statuses");
     CHECK(streamed == "你好，很高兴认识你。", "streamed text preserved");
     CHECK(xlm_double::capture.infer_calls == 1, "exactly one infer call");
+    CHECK(xlm_double::destroy_calls == 1, "request teardown destroys handle");
   }
-  // 3. Reinitialization after predict is rejected; no second request runs.
+  // 3. A second predict on the completed instance is rejected; no second
+  // request runs.
   {
     xlm_double::reset();
     MiniCPM5Config config;
     config.template_path = templ;
     config.text_sink = [](const char* chunk) { streamed() << chunk; };
     MiniCPM5 model(config);
-    model.init();
     RequestOutcome first;
     captured_predict(model, first);
-    CHECK(first.exit_code() == 0, "baseline request before reinit");
-    bool init_threw = false;
-    try {
-      model.init();
-    } catch (const std::exception&) {
-      init_threw = true;
-    }
-    CHECK(init_threw, "init after predict rejected");
+    CHECK(first.exit_code() == 0, "baseline request before reuse");
     bool predict_threw = false;
     try {
       model.predict();
@@ -116,7 +130,6 @@ int main() {
     config.template_path = templ;
     config.text_sink = [](const char* chunk) { streamed() << chunk; };
     MiniCPM5 model(config);
-    model.init();
     RequestOutcome outcome;
     captured_predict(model, outcome);
     CHECK(outcome.exit_code() == 1 && !outcome.ended && !outcome.failed,
@@ -130,7 +143,6 @@ int main() {
     config.template_path = templ;
     config.text_sink = [](const char* chunk) { streamed() << chunk; };
     MiniCPM5 model(config);
-    model.init();
     RequestOutcome outcome;
     captured_predict(model, outcome);
     CHECK(outcome.exit_code() == 1 && outcome.failed && !outcome.ended,
@@ -144,7 +156,6 @@ int main() {
     config.template_path = templ;
     config.text_sink = [](const char* chunk) { streamed() << chunk; };
     MiniCPM5 model(config);
-    model.init();
     RequestOutcome outcome;
     captured_predict(model, outcome);
     CHECK(outcome.exit_code() == 1 && outcome.destroy_status == 5,
@@ -158,7 +169,6 @@ int main() {
     config.template_path = templ;
     config.text_sink = [](const char* chunk) { streamed() << chunk; };
     MiniCPM5 model(config);
-    model.init();
     RequestOutcome outcome;
     captured_predict(model, outcome);
     CHECK(outcome.exit_code() == 1 && outcome.sdk_status == 7,

@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+// Host unit tests for the oriented-box geometry (inline in inc/yolo.hpp).
+
 #include <cmath>
 #include <cstdio>
 
-#include "common/obb_decode.h"
+#include "yolo.hpp"
 
 namespace {
 

@@ -1,5 +1,5 @@
 // Host callbacks are synthetic model boundaries, not SDK inference.
-#include "pipeline.h"
+#include "pipeline.hpp"
 #include <cassert>
 #include <stdexcept>
 

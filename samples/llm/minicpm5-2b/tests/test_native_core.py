@@ -28,13 +28,11 @@ from native_dependencies import (  # noqa: E402
 
 LEGACY_INC = SAMPLE / "runtime/legacy/inc"
 LEGACY_SRC = [
-    SAMPLE / "runtime/legacy/src/minicpm5.cc",
-    SAMPLE / "runtime/legacy/src/chat_template.cc",
+    SAMPLE / "runtime/legacy/src/minicpm5.cpp",
 ]
 CPP_INC = SAMPLE / "runtime/cpp/inc"
 CPP_SRC = [
-    SAMPLE / "runtime/cpp/src/minicpm5.cc",
-    SAMPLE / "runtime/cpp/src/runtime_config.cc",
+    SAMPLE / "runtime/cpp/src/minicpm5.cpp",
 ]
 
 FIXTURES = NATIVE / "fixtures"
@@ -42,7 +40,7 @@ FIXTURES = NATIVE / "fixtures"
 # honest: no return-value optimization can mask a rebinding bug.
 EXTRA_FLAGS = ["-fno-elide-constructors"]
 
-# S600 drivers compile runtime_config.cc, which includes nlohmann/json.hpp
+# S600 drivers compile minicpm5.cpp, which includes nlohmann/json.hpp
 # (MINICPM_JSON_INCLUDE override, pkg-config or standard system discovery).
 JSON_DRIVERS = frozenset({"s600_config_cleanup", "s600_metrics", "s600_stages"})
 
@@ -229,13 +227,14 @@ class NativeCoreTests(unittest.TestCase):
 
 
 class LegacyCliTests(unittest.TestCase):
-    """The real main.cc against the double: RESULT line and exit statuses."""
+    """The real main.cpp against the double: RESULT line and exit statuses."""
 
     @classmethod
     def setUpClass(cls):
         cls.build = tempfile.TemporaryDirectory()
         driver, sources, includes = (
-            [SAMPLE / "runtime/legacy/src/main.cc"],
+            [SAMPLE / "runtime/legacy/src/main.cpp",
+             SAMPLE / "runtime/legacy/src/cli.cpp"],
             LEGACY_SRC,
             [FIXTURES, LEGACY_INC],
         )

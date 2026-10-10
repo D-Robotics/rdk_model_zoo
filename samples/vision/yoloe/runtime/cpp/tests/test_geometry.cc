@@ -1,5 +1,5 @@
 // Copyright (c) 2026 D-Robotics. SPDX-License-Identifier: Apache-2.0
-#include "geometry.h"
+#include "detect.hpp"
 #include <cfenv>
 #include <stdexcept>
 #define EXPECT(v)                                                              \
