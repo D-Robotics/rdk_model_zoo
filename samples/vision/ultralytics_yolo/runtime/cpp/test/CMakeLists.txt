@@ -14,7 +14,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 
-foreach(test_name test_decode test_head_probe test_nv12_geometry test_benchmark test_classification test_task_outputs)
+foreach(test_name test_decode test_head_probe test_nv12_geometry test_benchmark test_classification test_task_outputs test_obb_decode)
   add_executable(${test_name} ${test_name}.cc
                  ../common/nv12_geometry.cc
                  ../common/benchmark.cc)

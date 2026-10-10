@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(ultralytics_yolo_pose)
+project(ultralytics_yolo_obb)
 
 # C++11 standard
 set(CMAKE_CXX_STANDARD 11)
@@ -44,7 +44,7 @@ link_directories(${DNN_LIB_PATH})
 
 # Add executable (with the shared helpers in ../common)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
-add_executable(ultralytics_yolo_pose
+add_executable(ultralytics_yolo_obb
     main.cc
     ../common/dnn_io.cc
     ../common/nv12_geometry.cc
@@ -52,7 +52,7 @@ add_executable(ultralytics_yolo_pose
 )
 
 # Link libraries
-target_link_libraries(ultralytics_yolo_pose
+target_link_libraries(ultralytics_yolo_obb
     ${OpenCV_LIBS}
     dnn
     ${DNN_EXTRA_LIBS}

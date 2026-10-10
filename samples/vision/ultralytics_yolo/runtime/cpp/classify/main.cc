@@ -51,6 +51,8 @@ limitations under the License.
 #include <chrono>
 #include <cmath>
 #include <iomanip>
+#include <memory>
+#include <string>
 #include <numeric>
 
 // OpenCV
@@ -58,11 +60,11 @@ limitations under the License.
 
 // RDK BPU libDNN API (stack-portable layer; pulls in the X5 hbSys or the
 // S-series UCP headers itself)
-#include "common/dnn_io.h"
-#include "common/nv12_geometry.h"
 #include "common/classification_binding.h"
 #include "common/dnn_resources.h"
 #include "common/imagenet_labels.h"
+#include "common/task_benchmark.h"
+#include "common/task_session.h"
 
 // ============================================================================
 // Macros
@@ -93,269 +95,112 @@ limitations under the License.
               << std::setprecision(2) << (duration) << " ms\033[0m"    \
               << std::endl
 
-/**
- * @brief Preprocess image with letterbox or resize
- */
-cv::Mat preprocess_image(const cv::Mat& img, int input_h, int input_w,
-                         float& x_scale, float& y_scale,
-                         int& x_shift, int& y_shift) {
-    auto start = std::chrono::high_resolution_clock::now();
-    cv::Mat result;
+// ============================================================================
+// Classification Runtime
+// ============================================================================
 
-    if (PREPROCESS_TYPE == LETTERBOX_TYPE) {
-        // Letterbox preprocessing
-        x_scale = std::min(1.0f * input_h / img.rows, 1.0f * input_w / img.cols);
-        y_scale = x_scale;
-
-        if (x_scale <= 0 || y_scale <= 0) {
-            throw std::runtime_error("Invalid scale factor");
-        }
-
-        int new_w = static_cast<int>(img.cols * x_scale);
-        int new_h = static_cast<int>(img.rows * y_scale);
-
-        x_shift = (input_w - new_w) / 2;
-        y_shift = (input_h - new_h) / 2;
-        int x_other = input_w - new_w - x_shift;
-        int y_other = input_h - new_h - y_shift;
-
-        cv::resize(img, result, cv::Size(new_w, new_h));
-        cv::copyMakeBorder(result, result, y_shift, y_other, x_shift, x_other,
-                          cv::BORDER_CONSTANT, cv::Scalar(127, 127, 127));
-
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
-        LOG_TIME("Preprocess (LetterBox) time", duration);
-
-    } else if (PREPROCESS_TYPE == RESIZE_TYPE) {
-        // Resize preprocessing
-        cv::resize(img, result, cv::Size(input_w, input_h));
-
-        x_scale = 1.0f * input_w / img.cols;
-        y_scale = 1.0f * input_h / img.rows;
-        x_shift = 0;
-        y_shift = 0;
-
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
-        LOG_TIME("Preprocess (Resize) time", duration);
+// One model context, input tensors and the logits output. Each benchmark
+// stream owns its own runtime; `run` leaves the Top-K result for reporting.
+class ClassifyRuntime {
+public:
+    explicit ClassifyRuntime(const std::string& model_path) {
+        session_.initialize(model_path);
+        int32_t output_count = 0;
+        if (hbDNNGetOutputCount(&output_count, session_.model()) != 0)
+            throw std::runtime_error("Failed to get output count");
+        if (output_count != 1)
+            throw std::runtime_error("Classification model should have exactly 1 output, but has " +
+                                     std::to_string(output_count));
+        hbDNNTensorProperties properties{};
+        if (hbDNNGetOutputTensorProperties(&properties, session_.model(), 0) != 0)
+            throw std::runtime_error("Failed to get output tensor properties");
+        plan_ = yolo::bind_classification(properties);
+        if (output_.allocate(properties) != 0)
+            throw std::runtime_error("Failed to allocate output tensor");
     }
 
-    LOG_INFO("Scale: x=" << x_scale << ", y=" << y_scale);
-    LOG_INFO("Shift: x=" << x_shift << ", y=" << y_shift);
+    int input_h() const { return session_.input_h(); }
+    int input_w() const { return session_.input_w(); }
+    const char* implementation() const { return "native_cpp_yolo_classify"; }
+    size_t class_stride() const { return plan_.class_stride; }
+    const std::vector<yolo::ClassificationScore>& results() const { return results_; }
 
-    return result;
-}
+    // Timing starts with the in-memory BGR image and ends with Top-K results.
+    size_t run(const cv::Mat& image, int resize_type, yolo::StageTiming* timing) {
+        const auto start = std::chrono::steady_clock::now();
+        yolo::ImageTransform transform;
+        const cv::Mat resized = yolo::preprocess_image(image, input_h(), input_w(),
+                                                       resize_type, &transform);
+        cv::Mat i420;
+        cv::cvtColor(resized, i420, cv::COLOR_BGR2YUV_I420);
+        session_.upload(i420.ptr<uint8_t>());
+        const auto preprocessed = std::chrono::steady_clock::now();
+        session_.infer(&output_.tensor);
+        const auto inferred = std::chrono::steady_clock::now();
+        if (YOLO_SYS_FLUSH(YOLO_SYS_MEM(output_.tensor), HB_SYS_MEM_CACHE_INVALIDATE) != 0)
+            throw std::runtime_error("Failed to invalidate output cache");
+        results_ = yolo::classification_topk(
+            YOLO_SYS_MEM(output_.tensor)->virAddr,
+            static_cast<size_t>(output_.tensor.properties.alignedByteSize), plan_, TOP_K);
+        const auto finished = std::chrono::steady_clock::now();
+        timing->preprocess_ms = yolo::elapsed_ms(start, preprocessed);
+        timing->runtime_ms = yolo::elapsed_ms(preprocessed, inferred);
+        timing->postprocess_ms = yolo::elapsed_ms(inferred, finished);
+        timing->end_to_end_ms = yolo::elapsed_ms(start, finished);
+        return results_.size();
+    }
+
+private:
+    // Declared first so the output is released before the model context.
+    yolo::TaskSession session_;
+    yolo::OutputTensorOwner output_;
+    yolo::ClassificationPlan plan_{};
+    std::vector<yolo::ClassificationScore> results_;
+};
 
 // ============================================================================
 // Main Function
 // ============================================================================
 
-int run(int argc, char** argv) {
-    LOG_INFO("=== Ultralytics YOLO Classify Demo (C++) ===");
-    LOG_INFO("OpenCV Version: " << CV_VERSION);
-
-    // ========================================================================
-    // 0. Parse command line arguments
-    // ========================================================================
-
-    std::string model_path = MODEL_PATH;
-    std::string test_img_path = TEST_IMG_PATH;
-
-    if (argc >= 2) model_path = argv[1];
-    if (argc >= 3) test_img_path = argv[2];
-
-    // ========================================================================
-    // 1. Load BPU model
-    // ========================================================================
-
-    LOG_INFO("Loading model: " << model_path);
-    auto start_time = std::chrono::high_resolution_clock::now();
-
-    yolo::PackedModelOwner packed_model;
-    auto& packed_dnn_handle=packed_model.handle;
-    const char* model_file_name = model_path.c_str();
-    CHECK_SUCCESS(
-        hbDNNInitializeFromFiles(&packed_dnn_handle, &model_file_name, 1),
-        "Failed to initialize model from file");
-
-    auto load_duration = std::chrono::duration_cast<std::chrono::microseconds>(
-        std::chrono::high_resolution_clock::now() - start_time).count() / 1000.0;
-    LOG_TIME("Load model time", load_duration);
-
-    // ========================================================================
-    // 2. Get model handle
-    // ========================================================================
-
-    const char** model_name_list=nullptr;
-    int model_count = 0;
-    CHECK_SUCCESS(
-        hbDNNGetModelNameList(&model_name_list, &model_count, packed_dnn_handle),
-        "Failed to get model name list");
-
-    if (model_count != 1 || model_name_list == nullptr || model_name_list[0] == nullptr) {
-        LOG_ERROR("Expected exactly one named model");
-        return -1;
-    }
-    const char* model_name = model_name_list[0];
-    LOG_INFO("Model name: " << model_name);
-
-    hbDNNHandle_t dnn_handle;
-    CHECK_SUCCESS(
-        hbDNNGetModelHandle(&dnn_handle, packed_dnn_handle, model_name),
-        "Failed to get model handle");
-
-    // ========================================================================
-    // 3. Check model input
-    // ========================================================================
-
-    int32_t input_h = 0;
-    int32_t input_w = 0;
-    yolo::InputPlan input_plan;
-    {
-        std::string protocol_error;
-        input_plan = yolo::probe_input_protocol(dnn_handle, &protocol_error);
-        if (input_plan.protocol == yolo::InputProtocol::kUnknown) {
-            LOG_ERROR("Unsupported model input: " << protocol_error);
-            return -1;
-        }
-        input_h = input_plan.input_h;
-        input_w = input_plan.input_w;
-        LOG_INFO("Input: "
-                 << (input_plan.protocol == yolo::InputProtocol::kPackedNv12
-                         ? "packed NV12 "
-                         : "split Y/UV NV12 ")
-                 << input_w << "x" << input_h);
-    }
-
-    // ========================================================================
-    // 4. Check model outputs
-    // ========================================================================
-
-    int32_t output_count = 0;
-    CHECK_SUCCESS(
-        hbDNNGetOutputCount(&output_count, dnn_handle),
-        "Failed to get output count");
-
-    if (output_count != 1) {
-        LOG_ERROR("Classification model should have exactly 1 output, but has " << output_count);
-        return -1;
-    }
-
-    hbDNNTensorProperties output_properties{};
-    CHECK_SUCCESS(
-        hbDNNGetOutputTensorProperties(&output_properties, dnn_handle, 0),
-        "Failed to get output tensor properties");
-
-    const auto output_plan=yolo::bind_classification(output_properties);
-    LOG_INFO("Output: 1000 FLOAT32 logits, class byte stride=" << output_plan.class_stride);
-    if (IMAGENET_CLASSES.size()!=1000) throw std::runtime_error("ImageNet labels must contain 1000 entries");
-
-    // ========================================================================
-    // 5. Load and preprocess image
-    // ========================================================================
-
-    LOG_INFO("Loading image: " << test_img_path);
-    cv::Mat img = cv::imread(test_img_path);
-    if (img.empty()) {
-        LOG_ERROR("Failed to load image: " << test_img_path);
-        return -1;
-    }
-    LOG_INFO("Image size: " << img.cols << "x" << img.rows);
-
-    // Preprocess image
-    float x_scale, y_scale;
-    int x_shift, y_shift;
-    cv::Mat preprocessed = preprocess_image(img, input_h, input_w,
-                                           x_scale, y_scale, x_shift, y_shift);
-
-    // Convert to I420 (shared source for both input protocols)
-    cv::Mat yuv_mat;
-    cv::cvtColor(preprocessed, yuv_mat, cv::COLOR_BGR2YUV_I420);
-    const uint8_t* i420 = yuv_mat.ptr<uint8_t>();
-
-    // ========================================================================
-    // 6. Prepare input tensor(s)
-    // ========================================================================
-
-    yolo::Nv12Input inputs;
-    if (!inputs.allocate(dnn_handle, input_plan)) {
-        LOG_ERROR("Failed to allocate model input tensors");
-        return -1;
-    }
-    if (!inputs.upload(input_plan, i420)) {
-        LOG_ERROR("Failed to upload the preprocessed frame");
-        return -1;
-    }
-
-    // ========================================================================
-    // 7. Prepare output tensor
-    // ========================================================================
-
-    yolo::OutputTensorOwner output_owner;
-    CHECK_SUCCESS(output_owner.allocate(output_properties), "Failed to allocate output tensor");
-    hbDNNTensor* output=&output_owner.tensor;
-
-    // ========================================================================
-    // 8. Run inference
-    // ========================================================================
-
-    LOG_INFO("Running inference...");
-    start_time = std::chrono::high_resolution_clock::now();
-
-    CHECK_SUCCESS(
-        yolo::infer_sync(output, inputs.tensors(), inputs.input_count(), dnn_handle),
-        "Inference failed");
-
-    auto infer_duration = std::chrono::duration_cast<std::chrono::microseconds>(
-        std::chrono::high_resolution_clock::now() - start_time).count() / 1000.0;
-    LOG_TIME("BPU inference time", infer_duration);
-
-    // ========================================================================
-    // 9. Post-process
-    // ========================================================================
-
-    LOG_INFO("Post-processing...");
-    start_time = std::chrono::high_resolution_clock::now();
-
-    CHECK_SUCCESS(YOLO_SYS_FLUSH(YOLO_SYS_MEM(output[0]), HB_SYS_MEM_CACHE_INVALIDATE),
-                  "Failed to invalidate output cache");
-    const auto results=yolo::classification_topk(YOLO_SYS_MEM(output[0])->virAddr,
-        static_cast<size_t>(output_properties.alignedByteSize),output_plan,TOP_K);
-
-    auto post_duration = std::chrono::duration_cast<std::chrono::microseconds>(
-        std::chrono::high_resolution_clock::now() - start_time).count() / 1000.0;
-    LOG_TIME("Post-processing time", post_duration);
-
-    // ========================================================================
-    // 10. Display results
-    // ========================================================================
-
-    LOG_INFO("Classification results:");
-    LOG_INFO("Image: " << test_img_path);
-    std::cout << std::endl;
-
-    for (size_t i = 0; i < results.size(); i++) {
-        const auto& res = results[i];
-        std::cout << "\033[1;32m"
-                  << "TOP" << (i + 1) << " -> "
-                  << "id: " << res.id << ", "
-                  << "score: " << std::fixed << std::setprecision(3) << res.probability << ", "
-                  << "name: " << IMAGENET_CLASSES.at(res.id)
-                  << "\033[0m" << std::endl;
-    }
-
-    // ========================================================================
-    // 11. Cleanup
-    // ========================================================================
-
-    // Tensor/input/model owners release resources on every return or exception.
-
-    LOG_INFO("=== Demo completed successfully ===");
-    return 0;
-}
-
 int main(int argc, char** argv) {
-    try { return run(argc,argv); }
-    catch (const std::exception& error) { LOG_ERROR(error.what()); return 1; }
+    try {
+        if (IMAGENET_CLASSES.size() != 1000)
+            throw std::runtime_error("ImageNet labels must contain 1000 entries");
+        const yolo::TaskCommand command = yolo::parse_task_command(
+            argc, argv, {MODEL_PATH, TEST_IMG_PATH}, yolo::BenchmarkOptions());
+        if (command.help) {
+            yolo::print_task_usage(argv[0], "MODEL IMAGE", false);
+            return 0;
+        }
+        LOG_INFO("=== Ultralytics YOLO Classify Demo (C++) ===");
+        LOG_INFO("Loading model: " << command.paths[0]);
+
+        yolo::BenchmarkMeta meta;
+        meta.output_kind = "topk_predictions";
+        meta.timing_scope = "in_memory_bgr_to_topk_predictions";
+        return yolo::run_task<ClassifyRuntime>(
+            command, PREPROCESS_TYPE, meta,
+            [&command]() {
+                return std::unique_ptr<ClassifyRuntime>(new ClassifyRuntime(command.paths[0]));
+            },
+            [&command](ClassifyRuntime& runtime, const cv::Mat&, int) {
+                LOG_INFO("Output: 1000 FLOAT32 logits, class byte stride=" << runtime.class_stride());
+                LOG_INFO("Classification results:");
+                LOG_INFO("Image: " << command.paths[1]);
+                std::cout << std::endl;
+                const auto& results = runtime.results();
+                for (size_t i = 0; i < results.size(); i++) {
+                    const auto& res = results[i];
+                    std::cout << "\033[1;32m"
+                              << "TOP" << (i + 1) << " -> "
+                              << "id: " << res.id << ", "
+                              << "score: " << std::fixed << std::setprecision(3) << res.probability << ", "
+                              << "name: " << IMAGENET_CLASSES.at(res.id)
+                              << "\033[0m" << std::endl;
+                }
+            });
+    } catch (const std::exception& error) {
+        LOG_ERROR(error.what());
+        return 1;
+    }
 }

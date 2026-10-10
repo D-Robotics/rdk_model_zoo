@@ -17,6 +17,7 @@ cpp/
 ├── classify/  # classify 相关文件
 ├── common/  # common 相关文件
 ├── detect/  # detect 相关文件
+├── obb/  # obb 相关文件
 ├── pose/  # pose 相关文件
 ├── segment/  # segment 相关文件
 ├── test/  # test 相关文件
@@ -32,9 +33,10 @@ cpp/
 | 程序 | 已实现协议 | 限制 |
 |---|---|---|
 | detect | YOLO26 四通道 LTRB；YOLO11 类 64 通道 DFL | 支持显式 head 选择和 benchmark |
-| pose | DFL/LTRB 检测框及对应关键点编码 | 功能参考入口，无 benchmark CLI |
-| segment | DFL/LTRB 检测框及对应 mask 系数/prototype | 功能参考入口，无 benchmark CLI |
-| classify | 单个未量化 FLOAT32、1000 类 logits 向量 | 按物理 stride 读取 Top-5，无结果图 |
+| pose | DFL/LTRB 检测框及对应关键点编码 | 功能参考入口，支持 benchmark |
+| segment | DFL/LTRB 检测框及对应 mask 系数/prototype | 功能参考入口，支持 benchmark |
+| classify | 单个未量化 FLOAT32、1000 类 logits 向量 | 按物理 stride 读取 Top-5，支持 benchmark，无结果图 |
+| obb | YOLO26 直接 LTRB 加角度，每个 stride 的类别/框/角度输出 | X5/S 策略与 Python 解码一致，支持 benchmark |
 
 自定义类别/模型需符合所选 C++ 任务使用的标签和维度。YOLOv10 NMS-free 任务入口见上方 Python 链接。
 
@@ -49,7 +51,7 @@ cpp/
 从仓库根目录在目标板上执行。每个任务各有 CMakeLists.txt，本层没有统一 CMake 工程或 run.sh。
 
 ```bash
-for task in detect classify pose segment; do
+for task in detect classify pose segment obb; do
   cmake -S "samples/vision/ultralytics_yolo/runtime/cpp/$task" \
     -B "/tmp/ultralytics-cpp-$task" -DCMAKE_BUILD_TYPE=Release
   cmake --build "/tmp/ultralytics-cpp-$task" -j2
@@ -77,14 +79,16 @@ bash samples/vision/ultralytics_yolo/model/download_model.sh \
   /models/pose.bin samples/vision/ultralytics_yolo/test_data/bus.jpg /tmp/cpp-pose.jpg
 /tmp/ultralytics-cpp-segment/ultralytics_yolo_segment \
   /models/segmentation.bin samples/vision/ultralytics_yolo/test_data/bus.jpg /tmp/cpp-segment.jpg
+/tmp/ultralytics-cpp-obb/ultralytics_yolo_obb \
+  /models/obb.bin /data/aerial.jpg /tmp/cpp-obb.jpg
 ```
 
 <a id="parameters"></a>
 ## 参数
 
-detect/pose/segment 的前三个位置参数依次为模型、图片、结果路径；classify 只使用模型和图片。pose/segment/classify 没有 Python 风格的 `--platform`、`--model-path` 或通用 `--help`，不要将选项当作位置参数传入。请显式传入模型、图片和结果文件路径。
+detect/pose/segment/obb 的前三个位置参数依次为模型、图片、结果路径；classify 只使用模型和图片。这些程序都没有 Python 风格的 `--platform`、`--model-path`，请显式传入路径。
 
-只有 **detect** 接受以下选项：
+**detect** 接受以下选项：
 
 | 参数 | 默认值 | 含义 |
 |---|---|---|
@@ -102,14 +106,27 @@ detect/pose/segment 的前三个位置参数依次为模型、图片、结果路
 | `--no-save` | `false` | 跳过验证结果绘制与保存 |
 | `--help / -h` | `false` | 打印 detect 帮助 |
 
-pose/segment 的源码阈值为 score=0.25、NMS=0.45；pose 点阈值 0.5，classify Top-K=5；这些不是可用的 CLI 参数。detect 默认模型/图片/输出为 `yolo26n_detect_bayese_640x640_nv12.bin`、`bus.jpg`、`cpp_result.jpg`，相对调用目录。
+classify、pose、segment、obb 共用 `MODEL IMAGE [OUTPUT] [options]`，选项位于位置参数之后：
+
+| 参数 | 默认值 | 含义 |
+|---|---|---|
+| `--score` / `--nms` | 任务源码常量 | 分数阈值与 NMS IoU；pose/segment 为 0.25/0.45，obb 为 0.25/0.2；classify 忽略 |
+| `--resize-type` | 任务源码常量 | 0 拉伸，1 letterbox；四个任务源码默认均为 letterbox |
+| `--classes` | `15` | obb 类别通道数 |
+| `--angle-sign` / `--angle-offset` / `--no-regularize` | `1` / `0` / 关闭 | obb 角度约定，偏移单位为度 |
+| `--benchmark`、`--warmup`、`--runs`、`--rounds`、`--opencv-threads`、`--json`、`--no-save` | 同 detect | 含义与 detect 相同 |
+| `--pipeline-streams` | `1` | 1 或 2 条完整并发流水线 |
+| `--runtime-source-sha256` / `--executable-sha256` | 空 | 写入 JSON 的 64 位十六进制来源信息 |
+| `--help / -h` | `false` | 打印任务帮助 |
+
+pose 点阈值 0.5、classify Top-K=5 仍为源码常量。detect 默认模型/图片/输出为 `yolo26n_detect_bayese_640x640_nv12.bin`、`bus.jpg`、`cpp_result.jpg`，相对调用目录。
 
 <a id="interface-lifecycle"></a>
 ## 接口与资源生命周期
 
 这些是独立可执行参考程序，不是与 Python 相同的稳定库 API。`detect/main.cc` 的 `DetectRuntime` 管理模型/张量；`common/dnn_io` 绑定输入，负责 NV12 拷贝及输入 cache clean；执行结束后使输出 cache 可读，再解码/NMS；detect/pose 还原原图坐标，segment 在模型输入空间绘图（见下文）。释放张量和模型必须发生在请求完成后。
 
-每个并发 stream 使用独立运行上下文和张量，不能跨未完成请求复用缓冲区。几何、head 探测/解码与 benchmark 统计集中在 `common/`；pose/segment/classify 仍保留各自的主程序和资源流程。集成时核对所有 SDK 返回码、stride 和有效形状，不要只抽取一次推理调用。
+每个并发 stream 使用独立运行上下文和张量，不能跨未完成请求复用缓冲区。几何、head 探测/解码与 benchmark 统计集中在 `common/`；classify/pose/segment/obb 的解码仍在各自主程序中；每个 stream 拥有一个 `common/task_session.h` 模型上下文及其输出张量，验证帧和 benchmark 由 `common/task_benchmark.h` 驱动。集成时核对所有 SDK 返回码、stride 和有效形状，不要只抽取一次推理调用。
 
 <a id="classification-contract"></a>
 ## 分类输出契约
@@ -131,10 +148,9 @@ pose/segment 的源码阈值为 score=0.25、NMS=0.45；pose 点阈值 0.5，cla
 操作失败时停止解码。描述符错误或非有限 logits 会带诊断信息非零退出。
 
 前处理仍保留原 C++ 的 **letterbox、灰色 127 填充**。程序不从制品名称推断
-YOLO 家族，也没有 resize 参数；Python YOLO26 分类默认 stretch，Python S 分类
+YOLO 家族；Python YOLO26 分类默认 stretch，Python S 分类
 也默认 stretch。因此不能将 C++ 默认行为当成 Python 的等价精度基线。如果模型
-评估配方要求 stretch，请将 `PREPROCESS_TYPE` 改为 `RESIZE_TYPE` 后重新构建，
-并在结果中记录该选择。此处没有新增数据集精度结论。
+评估配方要求 stretch，请传入 `--resize-type 0`，并在结果中记录该选择。此处没有新增数据集精度结论。
 
 <a id="pose-segment-output-contract"></a>
 ## 姿态与分割输出契约
@@ -147,8 +163,9 @@ YOLO 家族，也没有 resize 参数；Python YOLO26 分类默认 stretch，Pyt
 SCALE 张量、不支持的布局和非有限值均明确拒绝。C++ 原型路径**不支持** Python
 可接受的 NCHW 原型；请选择对应 NHWC 导出，或使用 Python 入口。
 
-按 X5 aligned shape 或 S 字节 stride 读取。缓存失效操作成功后，将有效值复制到
-独立拥有内存的紧凑 NHWC 向量，跳过填充；这会增加一份有效输出的临时主机副本。
+按 X5 aligned shape 或 S 字节 stride 读取。缓存失效操作成功后，`TaskOutputs::views()`
+直接提供输出缓冲区的跨步视图，不做主机拷贝；解码器拒绝其读取到的非有限值。
+需要紧凑副本的调用方仍可使用 `read()`。
 分配或缓存操作失败会中止，所有退出路径释放已取得的输出和模型资源。
 DFL 和直接距离数学复用 `common/decode.h`，不再维护私有副本；关键点公式、NMS
 和绘图策略保持原有行为。
@@ -158,6 +175,17 @@ DFL 和直接距离数学复用 `common/decode.h`，不再维护私有副本；�
 叠加图），总宽为 `3 * input_width`，不返回 Python 的原图 ROI mask。
 姿态使用原有缩放/填充运算在原图绘制。共用张量传输不能证明 Python 等价性或
 数据集精度；保存图片失败现在会非零退出。
+
+<a id="obb-output-contract"></a>
+## 旋转框输出契约
+
+`obb` 按形状绑定 9 个未量化 FLOAT32 NHWC 输出：stride 8/16/32 各有类别图
+（`--classes`，默认 15）、4 通道直接 LTRB 框和 1 通道角度。输入须为边长可被 32
+整除的方形；类别数为 1 或 4 时与角度/框角色冲突，直接拒绝。解码与
+`runtime/python/obb_decode.py` 一致：LTRB 距离取绝对值，角度乘 `--angle-sign`
+再加 `--angle-offset`，并做宽高规整。X5 将角度折回 [-pi/2, pi/2)、按类别做旋转
+NMS 并把还原后的框裁剪到图像内；S 系列做不区分类别的旋转 NMS，不裁剪。还原使用
+letterbox 实际的逐轴缩放比例。结果图绘制旋转框及类别 ID。
 
 <a id="results-interpretation"></a>
 ## 结果解读与验证
@@ -176,9 +204,23 @@ DFL 和直接距离数学复用 `common/decode.h`，不再维护私有副本；�
 ```
 计时从内存中的 BGR 图片开始，到还原后的检测结果结束：包括 resize/letterbox、NV12、拷贝/cache、BPU 与解码/NMS，不包括模型加载、图片文件读取、绘图和保存。`--pipeline-streams 2` 可测两条完整流水线；吞吐量是总完成帧数/共同墙钟时间，延迟是每请求值。OpenCV 线程数和流水线数相互独立，不限定 CPU affinity。不要将 C++ 与 Python、runtime-only 与端到端、单流与多流数据混成同一结论。
 
-主机套件包含六个纯辅助测试（解码、head 探测、NV12 几何、benchmark 统计、分类、
-任务输出绑定），四个分类/任务描述符与资源测试，以及两个输入/任务生命周期测试，
-共 12 项。后两项使用精简 X5/UCP 替身，并以 AddressSanitizer 与
+classify、pose、segment、obb 使用相同的有限轮次 benchmark，例如：
+
+```bash
+/tmp/ultralytics-cpp-pose/ultralytics_yolo_pose /models/pose.bin \
+  samples/vision/ultralytics_yolo/test_data/bus.jpg /tmp/cpp-pose.jpg \
+  --benchmark --warmup 20 --runs 200 --rounds 3 --pipeline-streams 2 \
+  --no-save --json /tmp/yolo-pose-e2e-cpp.json
+```
+计时终点为任务结果：Top-5 预测、NMS 保留的姿态、二值化实例 mask 或还原后的旋转框。
+JSON 另含 `output_kind`（`topk_predictions`、`pose_instances`、`instance_masks`、
+`rotated_boxes`；detect 为 `detections`）、`outputs_per_frame` 与 `resize_type`；
+classify 不写 score/NMS，obb 记录角度选项，传入时记录源码与可执行文件 SHA256。
+所有计时帧的结果数量必须保持一致。
+
+主机套件包含七个纯辅助测试（解码、head 探测、NV12 几何、benchmark 统计、分类、
+任务输出绑定、旋转框解码），四个分类/任务描述符与资源测试，以及两个输入/任务生命周期测试，
+共 13 项。后两项使用精简 X5/UCP 替身，并以 AddressSanitizer 与
 UndefinedBehaviorSanitizer 检查生产代码；均不使用真实板卡 SDK：
 
 ```bash

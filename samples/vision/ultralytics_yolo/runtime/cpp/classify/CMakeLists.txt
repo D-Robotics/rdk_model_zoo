@@ -48,6 +48,7 @@ add_executable(ultralytics_yolo_classify
     main.cc
     ../common/dnn_io.cc
     ../common/nv12_geometry.cc
+    ../common/benchmark.cc
 )
 
 # Link libraries

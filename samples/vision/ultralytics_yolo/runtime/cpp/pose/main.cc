@@ -79,6 +79,8 @@ limitations under the License.
 #include <chrono>
 #include <cmath>
 #include <iomanip>
+#include <memory>
+#include <string>
 
 // OpenCV
 #include <opencv2/opencv.hpp>
@@ -86,10 +88,9 @@ limitations under the License.
 // RDK BPU libDNN API (stack-portable layer; pulls in the X5 hbSys or the
 // S-series UCP headers itself)
 #include "common/decode.h"
-#include "common/dnn_io.h"
-#include "common/dnn_resources.h"
-#include "common/nv12_geometry.h"
+#include "common/task_benchmark.h"
 #include "common/task_output_binding.h"
+#include "common/task_session.h"
 
 // ============================================================================
 // Macros
@@ -155,72 +156,8 @@ struct PoseDetection {
 };
 
 // ============================================================================
-// Utility Functions
+// Drawing
 // ============================================================================
-
-/**
- * @brief Convert BGR image to I420 (used by both NV12 input protocols via
- *        common/nv12_geometry.h)
- */
-cv::Mat bgr2i420(const cv::Mat& bgr_img) {
-    cv::Mat yuv_mat;
-    cv::cvtColor(bgr_img, yuv_mat, cv::COLOR_BGR2YUV_I420);
-    return yuv_mat;
-}
-
-/**
- * @brief Preprocess image with letterbox or resize
- */
-cv::Mat preprocess_image(const cv::Mat& img, int input_h, int input_w,
-                         float& x_scale, float& y_scale,
-                         int& x_shift, int& y_shift) {
-    auto start = std::chrono::high_resolution_clock::now();
-    cv::Mat result;
-
-    if (PREPROCESS_TYPE == LETTERBOX_TYPE) {
-        // Letterbox preprocessing
-        x_scale = std::min(1.0f * input_h / img.rows, 1.0f * input_w / img.cols);
-        y_scale = x_scale;
-
-        if (x_scale <= 0 || y_scale <= 0) {
-            throw std::runtime_error("Invalid scale factor");
-        }
-
-        int new_w = static_cast<int>(img.cols * x_scale);
-        int new_h = static_cast<int>(img.rows * y_scale);
-
-        x_shift = (input_w - new_w) / 2;
-        y_shift = (input_h - new_h) / 2;
-        int x_other = input_w - new_w - x_shift;
-        int y_other = input_h - new_h - y_shift;
-
-        cv::resize(img, result, cv::Size(new_w, new_h));
-        cv::copyMakeBorder(result, result, y_shift, y_other, x_shift, x_other,
-                          cv::BORDER_CONSTANT, cv::Scalar(127, 127, 127));
-
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
-        LOG_TIME("Preprocess (LetterBox) time", duration);
-
-    } else if (PREPROCESS_TYPE == RESIZE_TYPE) {
-        // Resize preprocessing
-        cv::resize(img, result, cv::Size(input_w, input_h));
-
-        x_scale = 1.0f * input_w / img.cols;
-        y_scale = 1.0f * input_h / img.rows;
-        x_shift = 0;
-        y_shift = 0;
-
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
-        LOG_TIME("Preprocess (Resize) time", duration);
-    }
-
-    LOG_INFO("Scale: x=" << x_scale << ", y=" << y_scale);
-    LOG_INFO("Shift: x=" << x_shift << ", y=" << y_shift);
-
-    return result;
-}
 
 /**
  * @brief Draw pose detection results
@@ -279,358 +216,213 @@ void draw_pose(cv::Mat& img, const PoseDetection& det, float kpt_threshold_raw) 
 }
 
 // ============================================================================
-// Main Function
+// Pose Runtime
 // ============================================================================
 
-int run(int argc, char** argv) {
-  LOG_INFO("=== Ultralytics YOLO Pose Demo (C++) ===");
-  LOG_INFO("OpenCV Version: " << CV_VERSION);
+// One model context, input and output tensor set. Each benchmark stream owns
+// its own runtime; `run` leaves the NMS result for reporting.
+class PoseRuntime {
+ public:
+  PoseRuntime(const std::string& model_path, float score_threshold,
+              float nms_threshold)
+      : score_threshold_(score_threshold), nms_threshold_(nms_threshold) {
+    session_.initialize(model_path);
+    outputs_.bind(session_.model(), session_.input_h(), session_.input_w(),
+                  false);
+    outputs_.allocate();
+  }
 
-  // ========================================================================
-  // 0. Parse command line arguments
-  // ========================================================================
+  int input_h() const { return session_.input_h(); }
+  int input_w() const { return session_.input_w(); }
+  const char* implementation() const {
+    return outputs_.heads.direct_ltrb ? "native_cpp_yolo26_pose_ltrb"
+                                      : "native_cpp_yolo_pose_dfl";
+  }
 
-  std::string model_path = MODEL_PATH;
-  std::string test_img_path = TEST_IMG_PATH;
-  std::string save_path = IMG_SAVE_PATH;
+  // Timing starts with the in-memory BGR image and ends with NMS-kept poses.
+  size_t run(const cv::Mat& image, int resize_type, yolo::StageTiming* timing) {
+    const auto start = std::chrono::steady_clock::now();
+    const cv::Mat resized = yolo::preprocess_image(image, input_h(), input_w(),
+                                                   resize_type, &transform_);
+    cv::Mat i420;
+    cv::cvtColor(resized, i420, cv::COLOR_BGR2YUV_I420);
+    session_.upload(i420.ptr<uint8_t>());
+    const auto preprocessed = std::chrono::steady_clock::now();
+    session_.infer(outputs_.tensors());
+    const auto inferred = std::chrono::steady_clock::now();
+    decode();
+    const auto finished = std::chrono::steady_clock::now();
+    timing->preprocess_ms = yolo::elapsed_ms(start, preprocessed);
+    timing->runtime_ms = yolo::elapsed_ms(preprocessed, inferred);
+    timing->postprocess_ms = yolo::elapsed_ms(inferred, finished);
+    timing->end_to_end_ms = yolo::elapsed_ms(start, finished);
+    return keep_.size();
+  }
 
-  if (argc >= 2) model_path = argv[1];
-  if (argc >= 3) test_img_path = argv[2];
-  if (argc >= 4) save_path = argv[3];
-
-  // ========================================================================
-  // 1. Load BPU model
-  // ========================================================================
-
-  LOG_INFO("Loading model: " << model_path);
-  auto start_time = std::chrono::high_resolution_clock::now();
-
-  yolo::PackedModelOwner packed_model;
-  auto& packed_dnn_handle = packed_model.handle;
-  const char* model_file_name = model_path.c_str();
-  CHECK_SUCCESS(
-      hbDNNInitializeFromFiles(&packed_dnn_handle, &model_file_name, 1),
-      "Failed to initialize model from file");
-
-  auto load_duration =
-      std::chrono::duration_cast<std::chrono::microseconds>(
-          std::chrono::high_resolution_clock::now() - start_time)
-          .count() /
-      1000.0;
-  LOG_TIME("Load model time", load_duration);
-
-  // ========================================================================
-  // 2. Get model handle
-  // ========================================================================
-
-  const char** model_name_list = nullptr;
-  int model_count = 0;
-  CHECK_SUCCESS(
-      hbDNNGetModelNameList(&model_name_list, &model_count, packed_dnn_handle),
-      "Failed to get model name list");
-
-  if (model_count != 1 || model_name_list == nullptr ||
-      model_name_list[0] == nullptr)
-    throw std::runtime_error("Expected exactly one named model");
-  const char* model_name = model_name_list[0];
-  LOG_INFO("Model name: " << model_name);
-
-  hbDNNHandle_t dnn_handle;
-  CHECK_SUCCESS(hbDNNGetModelHandle(&dnn_handle, packed_dnn_handle, model_name),
-                "Failed to get model handle");
-
-  // ========================================================================
-  // 3. Check model input
-  // ========================================================================
-
-  int32_t input_h = 0;
-  int32_t input_w = 0;
-  yolo::InputPlan input_plan;
-  {
-    std::string protocol_error;
-    input_plan = yolo::probe_input_protocol(dnn_handle, &protocol_error);
-    if (input_plan.protocol == yolo::InputProtocol::kUnknown) {
-      LOG_ERROR("Unsupported model input: " << protocol_error);
-      return -1;
+  // Kept detections with boxes and keypoints restored to the source image.
+  std::vector<PoseDetection> results() const {
+    const float inv_x_scale = 1.0f / transform_.scale_x;
+    const float inv_y_scale = 1.0f / transform_.scale_y;
+    std::vector<PoseDetection> restored;
+    for (int idx : keep_) {
+      PoseDetection det = detections_[idx];
+      det.bbox.x = (det.bbox.x - transform_.shift_x) * inv_x_scale;
+      det.bbox.y = (det.bbox.y - transform_.shift_y) * inv_y_scale;
+      det.bbox.width *= inv_x_scale;
+      det.bbox.height *= inv_y_scale;
+      for (auto& kpt : det.keypoints) {
+        kpt.x = (kpt.x - transform_.shift_x) * inv_x_scale;
+        kpt.y = (kpt.y - transform_.shift_y) * inv_y_scale;
+      }
+      restored.push_back(det);
     }
-    input_h = input_plan.input_h;
-    input_w = input_plan.input_w;
-    LOG_INFO(
-        "Input: " << (input_plan.protocol == yolo::InputProtocol::kPackedNv12
-                          ? "packed NV12 "
-                          : "split Y/UV NV12 ")
-                  << input_w << "x" << input_h);
+    return restored;
   }
 
-  // ========================================================================
-  // 4. Check model outputs
-  // ========================================================================
+ private:
+  void decode() {
+    const std::vector<yolo::TensorView> views = outputs_.views();
+    const float conf_thres_raw = -std::log(1.0f / score_threshold_ - 1.0f);
+    detections_.clear();
 
-  yolo::TaskOutputs output_set;
-  output_set.bind(dnn_handle, input_h, input_w, false);
+    // All scales have been bound and validated with the same box encoding.
+    const bool direct_ltrb = outputs_.heads.direct_ltrb;
+    const int strides[3] = {8, 16, 32};
+    for (int scale = 0; scale < 3; scale++) {
+      const int grid_h = input_h() / strides[scale];
+      const int grid_w = input_w() / strides[scale];
+      const float stride = strides[scale];
+      // Strided views over the physical outputs; consumed values are checked.
+      const yolo::TensorView& box_view = views[outputs_.heads.box[scale]];
+      const yolo::TensorView& cls_view = views[outputs_.heads.cls[scale]];
+      const yolo::TensorView& kpt_view = views[outputs_.heads.extra[scale]];
 
-  // ========================================================================
-  // 5. Load and preprocess image
-  // ========================================================================
+      for (int h = 0; h < grid_h; h++) {
+        for (int w = 0; w < grid_w; w++) {
+          const float* cur_box = box_view.cell(h, w);
+          const float* cur_cls = cls_view.cell(h, w);
+          const float* cur_kpt = kpt_view.cell(h, w);
 
-  LOG_INFO("Loading image: " << test_img_path);
-  cv::Mat img = cv::imread(test_img_path);
-  if (img.empty()) {
-    LOG_ERROR("Failed to load image: " << test_img_path);
-    return -1;
-  }
-  LOG_INFO("Image size: " << img.cols << "x" << img.rows);
+          // Check threshold (before sigmoid)
+          yolo::require_finite(cur_cls, CLASSES_NUM);
+          if (cur_cls[0] < conf_thres_raw) continue;
+          yolo::require_finite(cur_box, direct_ltrb ? 4 : 4 * REG);
+          yolo::require_finite(cur_kpt, KPT_NUM * KPT_ENCODE);
+          const float score = 1.0f / (1.0f + std::exp(-cur_cls[0]));
 
-  // Preprocess image
-  float x_scale, y_scale;
-  int x_shift, y_shift;
-  cv::Mat preprocessed = preprocess_image(img, input_h, input_w, x_scale,
-                                          y_scale, x_shift, y_shift);
+          // Decode bbox: YOLO26 stores direct LTRB distances,
+          // YOLO11-family uses DFL (Distribution Focal Loss).
+          float ltrb[4] = {0.0f};
+          if (direct_ltrb)
+            yolo::decode_box_ltrb(cur_box, ltrb);
+          else
+            yolo::decode_box_dfl(cur_box, ltrb);
+          const float cx = (w + 0.5f) * stride;
+          const float cy = (h + 0.5f) * stride;
+          const float x1 = cx - ltrb[0] * stride;
+          const float y1 = cy - ltrb[1] * stride;
+          const float x2 = cx + ltrb[2] * stride;
+          const float y2 = cy + ltrb[3] * stride;
+          if (!(x1 >= 0 && y1 >= 0 && x2 > x1 && y2 > y1 && x2 <= input_w() &&
+                y2 <= input_h()))
+            continue;
 
-  // Convert to I420 (shared source for both input protocols)
-  cv::Mat yuv_mat = bgr2i420(preprocessed);
-  const uint8_t* i420 = yuv_mat.ptr<uint8_t>();
-
-  // ========================================================================
-  // 6. Prepare input tensor(s)
-  // ========================================================================
-
-  yolo::Nv12Input inputs;
-  if (!inputs.allocate(dnn_handle, input_plan)) {
-    LOG_ERROR("Failed to allocate model input tensors");
-    return -1;
-  }
-  if (!inputs.upload(input_plan, i420)) {
-    LOG_ERROR("Failed to upload the preprocessed frame");
-    return -1;
-  }
-
-  // ========================================================================
-  // 7. Prepare output tensors
-  // ========================================================================
-
-  output_set.allocate();
-  hbDNNTensor* output = output_set.tensors();
-
-  // ========================================================================
-  // 8. Run inference
-  // ========================================================================
-
-  LOG_INFO("Running inference...");
-  start_time = std::chrono::high_resolution_clock::now();
-
-  CHECK_SUCCESS(yolo::infer_sync(output, inputs.tensors(), inputs.input_count(),
-                                 dnn_handle),
-                "Inference failed");
-
-  auto infer_duration =
-      std::chrono::duration_cast<std::chrono::microseconds>(
-          std::chrono::high_resolution_clock::now() - start_time)
-          .count() /
-      1000.0;
-  LOG_TIME("BPU inference time", infer_duration);
-
-  // ========================================================================
-  // 9. Post-process
-  // ========================================================================
-
-  LOG_INFO("Post-processing...");
-  start_time = std::chrono::high_resolution_clock::now();
-  auto values = output_set.read();
-
-  float CONF_THRES_RAW = -std::log(1.0f / SCORE_THRESHOLD - 1.0f);
-  float KPT_THRES_RAW = -std::log(1.0f / KPT_SCORE_THRESHOLD - 1.0f);
-
-  std::vector<PoseDetection> detections;
-
-  // All scales have been bound and validated with the same box encoding.
-  const bool direct_ltrb = output_set.heads.direct_ltrb;
-
-  // Process 3 scales
-  const int strides[3] = {8, 16, 32};
-  const int grid_sizes[3] = {input_h / 8, input_h / 16, input_h / 32};
-
-  for (int scale = 0; scale < 3; scale++) {
-    int cls_idx = output_set.heads.cls[scale];
-    int box_idx = output_set.heads.box[scale];
-    int kpt_idx = output_set.heads.extra[scale];
-
-    int grid_h = grid_sizes[scale];
-    int grid_w = grid_sizes[scale];
-    float stride = strides[scale];
-
-    // Compact owned copies skip physical padding and contain finite floats.
-    float* box_raw = values[box_idx].data();
-    float* cls_raw = values[cls_idx].data();
-    float* kpt_raw = values[kpt_idx].data();
-
-    // Process each grid cell
-    for (int h = 0; h < grid_h; h++) {
-      for (int w = 0; w < grid_w; w++) {
-        int offset = h * grid_w + w;
-
-        float* cur_box = box_raw + offset * (direct_ltrb ? 4 : 4 * REG);
-        float* cur_cls = cls_raw + offset * CLASSES_NUM;
-        float* cur_kpt = kpt_raw + offset * (KPT_NUM * KPT_ENCODE);
-
-        // Check threshold (before sigmoid)
-        if (cur_cls[0] < CONF_THRES_RAW) {
-          continue;
-        }
-
-        // Apply sigmoid to get confidence score
-        float score = 1.0f / (1.0f + std::exp(-cur_cls[0]));
-
-        // Decode bbox: YOLO26 stores direct LTRB distances,
-        // YOLO11-family uses DFL (Distribution Focal Loss).
-        float ltrb[4] = {0.0f};  // left, top, right, bottom
-
-        if (direct_ltrb)
-          yolo::decode_box_ltrb(cur_box, ltrb);
-        else
-          yolo::decode_box_dfl(cur_box, ltrb);
-
-        // Convert to bbox coordinates
-        float cx = (w + 0.5f) * stride;
-        float cy = (h + 0.5f) * stride;
-        float x1 = cx - ltrb[0] * stride;
-        float y1 = cy - ltrb[1] * stride;
-        float x2 = cx + ltrb[2] * stride;
-        float y2 = cy + ltrb[3] * stride;
-
-        // Check validity
-        if (x1 >= 0 && y1 >= 0 && x2 > x1 && y2 > y1 && x2 <= input_w &&
-            y2 <= input_h) {
           PoseDetection det;
           det.bbox = cv::Rect2d(x1, y1, x2 - x1, y2 - y1);
           det.score = score;
-
-          // Decode keypoints
           det.keypoints.resize(KPT_NUM);
           det.keypoint_scores.resize(KPT_NUM);
-
           for (int k = 0; k < KPT_NUM; k++) {
-            float kpt_x = cur_kpt[k * 3 + 0];
-            float kpt_y = cur_kpt[k * 3 + 1];
-            float kpt_conf = cur_kpt[k * 3 + 2];
-
-            float decoded_x;
-            float decoded_y;
+            const float kpt_x = cur_kpt[k * 3 + 0];
+            const float kpt_y = cur_kpt[k * 3 + 1];
             if (direct_ltrb) {
-              // YOLO26: keypoints regress directly from the
-              // grid centre, as in runtime/python/pose_decode.py.
-              decoded_x = (kpt_x + w + 0.5f) * stride;
-              decoded_y = (kpt_y + h + 0.5f) * stride;
+              // YOLO26: keypoints regress directly from the grid centre, as
+              // in runtime/python/pose_decode.py.
+              det.keypoints[k] = cv::Point2f((kpt_x + w + 0.5f) * stride,
+                                             (kpt_y + h + 0.5f) * stride);
             } else {
               // YOLO11-family:
               // kpts_xy = (kpts[:, :, :2] * 2.0 + (anchor - 0.5)) * stride
-              decoded_x = (kpt_x * 2.0f + (w + 0.5f) - 0.5f) * stride;
-              decoded_y = (kpt_y * 2.0f + (h + 0.5f) - 0.5f) * stride;
+              det.keypoints[k] =
+                  cv::Point2f((kpt_x * 2.0f + (w + 0.5f) - 0.5f) * stride,
+                              (kpt_y * 2.0f + (h + 0.5f) - 0.5f) * stride);
             }
-
-            det.keypoints[k] = cv::Point2f(decoded_x, decoded_y);
-            // Both families keep the raw confidence here; the
-            // draw pass compares against a raw-logit threshold,
-            // which is equivalent to sigmoid-space thresholding.
-            det.keypoint_scores[k] = kpt_conf;
+            // Both families keep the raw confidence here; the draw pass
+            // compares against a raw-logit threshold, which is equivalent to
+            // sigmoid-space thresholding.
+            det.keypoint_scores[k] = cur_kpt[k * 3 + 2];
           }
-
-          detections.push_back(det);
+          detections_.push_back(det);
         }
       }
     }
-  }
 
-  LOG_INFO("Detections before NMS: " << detections.size());
-
-  // ========================================================================
-  // 10. NMS (Non-Maximum Suppression)
-  // ========================================================================
-
-  std::vector<cv::Rect2d> nms_boxes;
-  std::vector<float> nms_scores;
-  std::vector<int> nms_indices;
-
-  for (const auto& det : detections) {
-    nms_boxes.push_back(det.bbox);
-    nms_scores.push_back(det.score);
-  }
-
-  if (!nms_boxes.empty()) {
-    cv::dnn::NMSBoxes(nms_boxes, nms_scores, SCORE_THRESHOLD, NMS_THRESHOLD,
-                      nms_indices);
-  }
-
-  LOG_INFO("Detections after NMS: " << nms_indices.size());
-
-  auto post_duration =
-      std::chrono::duration_cast<std::chrono::microseconds>(
-          std::chrono::high_resolution_clock::now() - start_time)
-          .count() /
-      1000.0;
-  LOG_TIME("Post-processing time", post_duration);
-
-  // ========================================================================
-  // 11. Draw results
-  // ========================================================================
-
-  LOG_INFO("Drawing results...");
-  start_time = std::chrono::high_resolution_clock::now();
-
-  cv::Mat result_img = img.clone();
-
-  // Scale keypoints back to original image size
-  float inv_x_scale = 1.0f / x_scale;
-  float inv_y_scale = 1.0f / y_scale;
-
-  for (int idx : nms_indices) {
-    PoseDetection det = detections[idx];
-
-    // Scale bbox back to original image
-    det.bbox.x = (det.bbox.x - x_shift) * inv_x_scale;
-    det.bbox.y = (det.bbox.y - y_shift) * inv_y_scale;
-    det.bbox.width *= inv_x_scale;
-    det.bbox.height *= inv_y_scale;
-
-    // Scale keypoints back to original image
-    for (auto& kpt : det.keypoints) {
-      kpt.x = (kpt.x - x_shift) * inv_x_scale;
-      kpt.y = (kpt.y - y_shift) * inv_y_scale;
+    std::vector<cv::Rect2d> nms_boxes;
+    std::vector<float> nms_scores;
+    for (const auto& det : detections_) {
+      nms_boxes.push_back(det.bbox);
+      nms_scores.push_back(det.score);
     }
-
-    LOG_INFO("Person detected: score="
-             << std::fixed << std::setprecision(3) << det.score << ", bbox=("
-             << det.bbox.x << "," << det.bbox.y << "," << det.bbox.width << ","
-             << det.bbox.height << ")");
-
-    draw_pose(result_img, det, KPT_THRES_RAW);
+    keep_.clear();
+    if (!nms_boxes.empty())
+      cv::dnn::NMSBoxes(nms_boxes, nms_scores, score_threshold_, nms_threshold_,
+                        keep_);
   }
 
-  // Save result
-  if (!cv::imwrite(save_path, result_img))
-    throw std::runtime_error("Failed to save pose image");
-  LOG_INFO("Result saved to: " << save_path);
+  // Declared first so outputs are released before the model context.
+  yolo::TaskSession session_;
+  yolo::TaskOutputs outputs_;
+  yolo::ImageTransform transform_;
+  float score_threshold_;
+  float nms_threshold_;
+  std::vector<PoseDetection> detections_;
+  std::vector<int> keep_;
+};
 
-  auto draw_duration =
-      std::chrono::duration_cast<std::chrono::microseconds>(
-          std::chrono::high_resolution_clock::now() - start_time)
-          .count() /
-      1000.0;
-  LOG_TIME("Drawing time", draw_duration);
-
-  // ========================================================================
-  // 12. Cleanup
-  // ========================================================================
-
-  // Owners release all acquired output/input/model resources on every exit.
-
-  LOG_INFO("=== Demo completed successfully ===");
-  return 0;
-}
+// ============================================================================
+// Main Function
+// ============================================================================
 
 int main(int argc, char** argv) {
   try {
-    return run(argc, argv);
+    yolo::BenchmarkOptions defaults;
+    defaults.score_threshold = SCORE_THRESHOLD;
+    defaults.nms_threshold = NMS_THRESHOLD;
+    const yolo::TaskCommand command = yolo::parse_task_command(
+        argc, argv, {MODEL_PATH, TEST_IMG_PATH, IMG_SAVE_PATH}, defaults);
+    if (command.help) {
+      yolo::print_task_usage(argv[0], "MODEL IMAGE OUTPUT", true);
+      return 0;
+    }
+    LOG_INFO("=== Ultralytics YOLO Pose Demo (C++) ===");
+    LOG_INFO("Loading model: " << command.paths[0]);
+
+    yolo::BenchmarkMeta meta;
+    meta.output_kind = "pose_instances";
+    meta.timing_scope = "in_memory_bgr_to_pose_instances";
+    return yolo::run_task<PoseRuntime>(
+        command, PREPROCESS_TYPE, meta,
+        [&command]() {
+          return std::unique_ptr<PoseRuntime>(new PoseRuntime(
+              command.paths[0], command.options.score_threshold,
+              command.options.nms_threshold));
+        },
+        [&command](PoseRuntime& runtime, const cv::Mat& image, int) {
+          cv::Mat result_img = image.clone();
+          const float kpt_thres_raw =
+              -std::log(1.0f / KPT_SCORE_THRESHOLD - 1.0f);
+          for (const PoseDetection& det : runtime.results()) {
+            LOG_INFO("Person detected: score="
+                     << std::fixed << std::setprecision(3) << det.score
+                     << ", bbox=(" << det.bbox.x << "," << det.bbox.y << ","
+                     << det.bbox.width << "," << det.bbox.height << ")");
+            draw_pose(result_img, det, kpt_thres_raw);
+          }
+          if (!command.options.save_result) return;
+          if (!cv::imwrite(command.paths[2], result_img))
+            throw std::runtime_error("Failed to save pose image");
+          LOG_INFO("Result saved to: " << command.paths[2]);
+        });
   } catch (const std::exception& error) {
     LOG_ERROR(error.what());
     return 1;

@@ -112,6 +112,30 @@ class TaskOutputs {
     }
     return result;
   }
+  // Zero-copy alternative to read() for per-frame decoding: invalidates every
+  // output cache and returns strided views over the validated physical
+  // layout. Values are not prescanned, so decoders must reject nonfinite
+  // values they consume. Views stay valid until the next inference.
+  std::vector<TensorView> views() {
+    if (!bound_) throw std::invalid_argument("Task outputs are not bound.");
+    std::vector<TensorView> result;
+    for (size_t i = 0; i < tensors_.size(); ++i) {
+      if (!allocated_[i])
+        throw std::invalid_argument("Task output not allocated.");
+      check(YOLO_SYS_FLUSH(YOLO_SYS_MEM(tensors_[i]),
+                           HB_SYS_MEM_CACHE_INVALIDATE),
+            "Cannot invalidate task output cache.");
+      TensorView view;
+      view.data = static_cast<const float*>(YOLO_SYS_MEM(tensors_[i])->virAddr);
+      view.h = plans_[i].shape.h;
+      view.w = plans_[i].shape.w;
+      view.channels = plans_[i].shape.c;
+      view.row_step = static_cast<int>(plans_[i].row_bytes / sizeof(float));
+      view.cell_step = static_cast<int>(plans_[i].cell_bytes / sizeof(float));
+      result.push_back(view);
+    }
+    return result;
+  }
   TaskHeadPlan heads;
 
  private:

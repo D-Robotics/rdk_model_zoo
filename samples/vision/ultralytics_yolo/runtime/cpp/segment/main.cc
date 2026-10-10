@@ -74,7 +74,10 @@ limitations under the License.
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstring>
 #include <iomanip>
+#include <memory>
+#include <string>
 
 // OpenCV
 #include <opencv2/opencv.hpp>
@@ -82,10 +85,9 @@ limitations under the License.
 // RDK BPU libDNN API (stack-portable layer; pulls in the X5 hbSys or the
 // S-series UCP headers itself)
 #include "common/decode.h"
-#include "common/dnn_io.h"
-#include "common/dnn_resources.h"
-#include "common/nv12_geometry.h"
+#include "common/task_benchmark.h"
 #include "common/task_output_binding.h"
+#include "common/task_session.h"
 
 // ============================================================================
 // Macros
@@ -151,103 +153,8 @@ struct Detection {
 };
 
 // ============================================================================
-// Utility Functions
+// Drawing
 // ============================================================================
-
-/**
- * @brief Convert BGR image to NV12 format
- */
-cv::Mat bgr2nv12(const cv::Mat& bgr_img) {
-    auto start = std::chrono::high_resolution_clock::now();
-
-    int height = bgr_img.rows;
-    int width = bgr_img.cols;
-
-    // BGR to YUV420P
-    cv::Mat yuv_mat;
-    cv::cvtColor(bgr_img, yuv_mat, cv::COLOR_BGR2YUV_I420);
-    uint8_t* yuv = yuv_mat.ptr<uint8_t>();
-
-    // Allocate NV12 image
-    cv::Mat nv12_img(height * 3 / 2, width, CV_8UC1);
-    uint8_t* nv12 = nv12_img.ptr<uint8_t>();
-
-    // Copy Y plane
-    int y_size = height * width;
-    memcpy(nv12, yuv, y_size);
-
-    // Convert UV planar to UV packed (NV12)
-    int uv_height = height / 2;
-    int uv_width = width / 2;
-    uint8_t* nv12_uv = nv12 + y_size;
-    uint8_t* u_data = yuv + y_size;
-    uint8_t* v_data = u_data + uv_height * uv_width;
-
-    for (int i = 0; i < uv_width * uv_height; i++) {
-        *nv12_uv++ = *u_data++;
-        *nv12_uv++ = *v_data++;
-    }
-
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
-    LOG_TIME("BGR to NV12 time", duration);
-
-    return nv12_img;
-}
-
-/**
- * @brief Preprocess image with letterbox or resize
- */
-cv::Mat preprocess_image(const cv::Mat& img, int input_h, int input_w,
-                         float& x_scale, float& y_scale,
-                         int& x_shift, int& y_shift) {
-    auto start = std::chrono::high_resolution_clock::now();
-    cv::Mat result;
-
-    if (PREPROCESS_TYPE == LETTERBOX_TYPE) {
-        // Letterbox preprocessing
-        x_scale = std::min(1.0f * input_h / img.rows, 1.0f * input_w / img.cols);
-        y_scale = x_scale;
-
-        if (x_scale <= 0 || y_scale <= 0) {
-            throw std::runtime_error("Invalid scale factor");
-        }
-
-        int new_w = static_cast<int>(img.cols * x_scale);
-        int new_h = static_cast<int>(img.rows * y_scale);
-
-        x_shift = (input_w - new_w) / 2;
-        y_shift = (input_h - new_h) / 2;
-        int x_other = input_w - new_w - x_shift;
-        int y_other = input_h - new_h - y_shift;
-
-        cv::resize(img, result, cv::Size(new_w, new_h));
-        cv::copyMakeBorder(result, result, y_shift, y_other, x_shift, x_other,
-                          cv::BORDER_CONSTANT, cv::Scalar(127, 127, 127));
-
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
-        LOG_TIME("Preprocess (LetterBox) time", duration);
-
-    } else if (PREPROCESS_TYPE == RESIZE_TYPE) {
-        // Resize preprocessing
-        cv::resize(img, result, cv::Size(input_w, input_h));
-
-        x_scale = 1.0f * input_w / img.cols;
-        y_scale = 1.0f * input_h / img.rows;
-        x_shift = 0;
-        y_shift = 0;
-
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
-        LOG_TIME("Preprocess (Resize) time", duration);
-    }
-
-    LOG_INFO("Scale: x=" << x_scale << ", y=" << y_scale);
-    LOG_INFO("Shift: x=" << x_shift << ", y=" << y_shift);
-
-    return result;
-}
 
 /**
  * @brief Draw detection results on image
@@ -276,398 +183,267 @@ void draw_detection(cv::Mat& img, const Detection& det) {
 }
 
 // ============================================================================
-// Main Function
+// Segmentation Runtime
 // ============================================================================
 
-int run(int argc, char** argv) {
-  LOG_INFO("=== Ultralytics YOLO Segment Demo (C++) ===");
-  LOG_INFO("OpenCV Version: " << CV_VERSION);
+// One binarized instance mask cropped to its box, in model-input space.
+struct InstanceMask {
+    cv::Rect roi;
+    cv::Mat pixels;  // CV_8U, 255 inside the instance
+    int detection_index;
+};
 
-  // ========================================================================
-  // 0. Parse command line arguments
-  // ========================================================================
+// One model context, input and output tensor set. Each benchmark stream owns
+// its own runtime; `run` leaves the kept detections and masks for reporting.
+class SegmentRuntime {
+ public:
+  SegmentRuntime(const std::string& model_path, float score_threshold,
+                 float nms_threshold)
+      : score_threshold_(score_threshold), nms_threshold_(nms_threshold) {
+    session_.initialize(model_path);
+    outputs_.bind(session_.model(), session_.input_h(), session_.input_w(),
+                  true);
+    outputs_.allocate();
+  }
 
-  std::string model_path = MODEL_PATH;
-  std::string test_img_path = TEST_IMG_PATH;
-  std::string save_path = IMG_SAVE_PATH;
+  int input_h() const { return session_.input_h(); }
+  int input_w() const { return session_.input_w(); }
+  const char* implementation() const {
+    return outputs_.heads.direct_ltrb ? "native_cpp_yolo26_seg_ltrb"
+                                      : "native_cpp_yolo_seg_dfl";
+  }
 
-  if (argc >= 2) model_path = argv[1];
-  if (argc >= 3) test_img_path = argv[2];
-  if (argc >= 4) save_path = argv[3];
+  // Timing starts with the in-memory BGR image and ends with binarized
+  // instance masks for every NMS-kept detection.
+  size_t run(const cv::Mat& image, int resize_type, yolo::StageTiming* timing) {
+    const auto start = std::chrono::steady_clock::now();
+    yolo::ImageTransform transform;
+    preprocessed_ = yolo::preprocess_image(image, input_h(), input_w(),
+                                           resize_type, &transform);
+    cv::Mat i420;
+    cv::cvtColor(preprocessed_, i420, cv::COLOR_BGR2YUV_I420);
+    session_.upload(i420.ptr<uint8_t>());
+    const auto preprocessed = std::chrono::steady_clock::now();
+    session_.infer(outputs_.tensors());
+    const auto inferred = std::chrono::steady_clock::now();
+    decode();
+    const auto finished = std::chrono::steady_clock::now();
+    timing->preprocess_ms = yolo::elapsed_ms(start, preprocessed);
+    timing->runtime_ms = yolo::elapsed_ms(preprocessed, inferred);
+    timing->postprocess_ms = yolo::elapsed_ms(inferred, finished);
+    timing->end_to_end_ms = yolo::elapsed_ms(start, finished);
+    return masks_.size();
+  }
 
-  // ========================================================================
-  // 1. Load BPU model
-  // ========================================================================
-
-  LOG_INFO("Loading model: " << model_path);
-  auto start_time = std::chrono::high_resolution_clock::now();
-
-  yolo::PackedModelOwner packed_model;
-  auto& packed_dnn_handle = packed_model.handle;
-  const char* model_file_name = model_path.c_str();
-  CHECK_SUCCESS(
-      hbDNNInitializeFromFiles(&packed_dnn_handle, &model_file_name, 1),
-      "Failed to initialize model from file");
-
-  auto load_duration =
-      std::chrono::duration_cast<std::chrono::microseconds>(
-          std::chrono::high_resolution_clock::now() - start_time)
-          .count() /
-      1000.0;
-  LOG_TIME("Load model time", load_duration);
-
-  // ========================================================================
-  // 2. Get model handle
-  // ========================================================================
-
-  const char** model_name_list = nullptr;
-  int model_count = 0;
-  CHECK_SUCCESS(
-      hbDNNGetModelNameList(&model_name_list, &model_count, packed_dnn_handle),
-      "Failed to get model name list");
-
-  if (model_count != 1 || model_name_list == nullptr ||
-      model_name_list[0] == nullptr)
-    throw std::runtime_error("Expected exactly one named model");
-  const char* model_name = model_name_list[0];
-  LOG_INFO("Model name: " << model_name);
-
-  hbDNNHandle_t dnn_handle;
-  CHECK_SUCCESS(hbDNNGetModelHandle(&dnn_handle, packed_dnn_handle, model_name),
-                "Failed to get model handle");
-
-  // ========================================================================
-  // 3. Check model input
-  // ========================================================================
-
-  int32_t input_h = 0;
-  int32_t input_w = 0;
-  yolo::InputPlan input_plan;
-  {
-    std::string protocol_error;
-    input_plan = yolo::probe_input_protocol(dnn_handle, &protocol_error);
-    if (input_plan.protocol == yolo::InputProtocol::kUnknown) {
-      LOG_ERROR("Unsupported model input: " << protocol_error);
-      return -1;
+  // Detection | mask | combined panels in model-input space.
+  cv::Mat render() const {
+    cv::Mat img_display = preprocessed_.clone();
+    cv::Mat mask_overlay = cv::Mat::zeros(input_h(), input_w(), CV_8UC3);
+    for (int idx : keep_) draw_detection(img_display, detections_[idx]);
+    for (const InstanceMask& mask : masks_) {
+      const Detection& det = detections_[mask.detection_index];
+      cv::Scalar color = RDK_COLORS[det.class_id % RDK_COLORS.size()];
+      cv::Mat color_mask(mask.roi.height, mask.roi.width, CV_8UC3, color);
+      cv::Mat masked_color;
+      cv::bitwise_and(color_mask, color_mask, masked_color, mask.pixels);
+      cv::Mat overlay_roi = mask_overlay(mask.roi);
+      cv::addWeighted(overlay_roi, 1.0, masked_color, 0.6, 0, overlay_roi);
     }
-    input_h = input_plan.input_h;
-    input_w = input_plan.input_w;
-    LOG_INFO(
-        "Input: " << (input_plan.protocol == yolo::InputProtocol::kPackedNv12
-                          ? "packed NV12 "
-                          : "split Y/UV NV12 ")
-                  << input_w << "x" << input_h);
+    cv::Mat final_result;
+    cv::addWeighted(img_display, 0.7, mask_overlay, 0.3, 0, final_result);
+    cv::Mat concatenated;
+    cv::hconcat(img_display, mask_overlay, concatenated);
+    cv::hconcat(concatenated, final_result, concatenated);
+    return concatenated;
   }
 
-  // ========================================================================
-  // 4. Check model outputs
-  // ========================================================================
+  const std::vector<Detection>& detections() const { return detections_; }
+  const std::vector<int>& keep() const { return keep_; }
 
-  yolo::TaskOutputs output_set;
-  output_set.bind(dnn_handle, input_h, input_w, true);
+ private:
+  void decode() {
+    const std::vector<yolo::TensorView> views = outputs_.views();
+    const float conf_thres_raw = -std::log(1.0f / score_threshold_ - 1.0f);
+    detections_.clear();
 
-  // ========================================================================
-  // 5. Load and preprocess image
-  // ========================================================================
+    // Use the uniquely bound stride-4 NHWC prototype.
+    const int proto_h = input_h() / 4;
+    const int proto_w = input_w() / 4;
+    // The matrix product needs compact (proto_h*proto_w × MCES) rows; view
+    // the physical buffer in place when it is already compact.
+    const yolo::TensorView& proto = views[outputs_.heads.prototype];
+    cv::Mat proto_mat;
+    if (proto.cell_step == MCES && proto.row_step == proto_w * MCES) {
+      proto_mat = cv::Mat(proto_h * proto_w, MCES, CV_32F,
+                          const_cast<float*>(proto.data));
+    } else {
+      proto_mat.create(proto_h * proto_w, MCES, CV_32F);
+      for (int y = 0; y < proto_h; ++y)
+        for (int x = 0; x < proto_w; ++x)
+          std::memcpy(proto_mat.ptr<float>(y * proto_w + x), proto.cell(y, x),
+                      MCES * sizeof(float));
+    }
 
-  LOG_INFO("Loading image: " << test_img_path);
-  cv::Mat img = cv::imread(test_img_path);
-  if (img.empty()) {
-    LOG_ERROR("Failed to load image: " << test_img_path);
-    return -1;
-  }
-  LOG_INFO("Image size: " << img.cols << "x" << img.rows);
+    // All scales have been bound and validated with the same box encoding.
+    const bool direct_ltrb = outputs_.heads.direct_ltrb;
+    const int strides[3] = {8, 16, 32};
+    for (int scale = 0; scale < 3; scale++) {
+      const int grid_h = input_h() / strides[scale];
+      const int grid_w = input_w() / strides[scale];
+      const float stride = strides[scale];
+      // Strided views over the physical outputs; consumed values are checked.
+      const yolo::TensorView& box_view = views[outputs_.heads.box[scale]];
+      const yolo::TensorView& cls_view = views[outputs_.heads.cls[scale]];
+      const yolo::TensorView& mce_view = views[outputs_.heads.extra[scale]];
 
-  // Preprocess image
-  float x_scale, y_scale;
-  int x_shift, y_shift;
-  cv::Mat preprocessed = preprocess_image(img, input_h, input_w, x_scale,
-                                          y_scale, x_shift, y_shift);
+      for (int h = 0; h < grid_h; h++) {
+        for (int w = 0; w < grid_w; w++) {
+          const float* cur_cls = cls_view.cell(h, w);
+          const float* cur_box = box_view.cell(h, w);
+          const float* cur_mce = mce_view.cell(h, w);
 
-  // Convert to NV12
-  // Convert to I420 (shared source for both input protocols)
-  cv::Mat yuv_mat;
-  cv::cvtColor(preprocessed, yuv_mat, cv::COLOR_BGR2YUV_I420);
-  const uint8_t* i420 = yuv_mat.ptr<uint8_t>();
+          // Find max class score
+          int cls_id = 0;
+          for (int i = 1; i < CLASSES_NUM; i++)
+            if (cur_cls[i] > cur_cls[cls_id]) cls_id = i;
+          // Check threshold (before sigmoid)
+          yolo::require_finite(cur_cls + cls_id, 1);
+          if (cur_cls[cls_id] < conf_thres_raw) continue;
+          yolo::require_finite(cur_box, direct_ltrb ? 4 : 4 * REG);
+          yolo::require_finite(cur_mce, MCES);
+          const float score = 1.0f / (1.0f + std::exp(-cur_cls[cls_id]));
 
-  // ========================================================================
-  // 6. Prepare input tensor
-  // ========================================================================
+          // Decode bbox: YOLO26 stores direct LTRB distances,
+          // YOLO11-family uses DFL (Distribution Focal Loss).
+          float ltrb[4] = {0.0f};
+          if (direct_ltrb)
+            yolo::decode_box_ltrb(cur_box, ltrb);
+          else
+            yolo::decode_box_dfl(cur_box, ltrb);
+          const float cx = (w + 0.5f) * stride;
+          const float cy = (h + 0.5f) * stride;
+          const float x1 = cx - ltrb[0] * stride;
+          const float y1 = cy - ltrb[1] * stride;
+          const float x2 = cx + ltrb[2] * stride;
+          const float y2 = cy + ltrb[3] * stride;
+          if (!(x1 >= 0 && y1 >= 0 && x2 > x1 && y2 > y1 && x2 <= input_w() &&
+                y2 <= input_h()))
+            continue;
 
-  yolo::Nv12Input inputs;
-  if (!inputs.allocate(dnn_handle, input_plan)) {
-    LOG_ERROR("Failed to allocate model input tensors");
-    return -1;
-  }
-  if (!inputs.upload(input_plan, i420)) {
-    LOG_ERROR("Failed to upload the preprocessed frame");
-    return -1;
-  }
-
-  // ========================================================================
-  // 7. Prepare output tensors
-  // ========================================================================
-
-  output_set.allocate();
-  hbDNNTensor* output = output_set.tensors();
-
-  // ========================================================================
-  // 8. Run inference
-  // ========================================================================
-
-  LOG_INFO("Running inference...");
-  start_time = std::chrono::high_resolution_clock::now();
-
-  CHECK_SUCCESS(yolo::infer_sync(output, inputs.tensors(), inputs.input_count(),
-                                 dnn_handle),
-                "Inference failed");
-
-  auto infer_duration =
-      std::chrono::duration_cast<std::chrono::microseconds>(
-          std::chrono::high_resolution_clock::now() - start_time)
-          .count() /
-      1000.0;
-  LOG_TIME("BPU inference time", infer_duration);
-
-  // ========================================================================
-  // 9. Post-process
-  // ========================================================================
-
-  LOG_INFO("Post-processing...");
-  start_time = std::chrono::high_resolution_clock::now();
-  auto values = output_set.read();
-
-  float CONF_THRES_RAW = -std::log(1.0f / SCORE_THRESHOLD - 1.0f);
-
-  std::vector<Detection> detections;
-
-  // Use the uniquely bound stride-4 NHWC prototype.
-  int proto_h = input_h / 4;
-  int proto_w = input_w / 4;
-
-  float* proto_data = values[output_set.heads.prototype].data();
-
-  // Create proto matrix (proto_h*proto_w × MCES)
-  cv::Mat proto_mat(proto_h * proto_w, MCES, CV_32F, proto_data);
-
-  // All scales have been bound and validated with the same box encoding.
-  const bool direct_ltrb = output_set.heads.direct_ltrb;
-
-  // Process 3 scales
-  const int strides[3] = {8, 16, 32};
-  const int grid_sizes[3] = {input_h / 8, input_h / 16, input_h / 32};
-
-  for (int scale = 0; scale < 3; scale++) {
-    int cls_idx = output_set.heads.cls[scale];
-    int box_idx = output_set.heads.box[scale];
-    int mce_idx = output_set.heads.extra[scale];
-
-    int grid_h = grid_sizes[scale];
-    int grid_w = grid_sizes[scale];
-    float stride = strides[scale];
-
-    // Compact owned copies skip physical padding and contain finite floats.
-    float* box_raw = values[box_idx].data();
-    float* cls_raw = values[cls_idx].data();
-    float* mce_raw = values[mce_idx].data();
-
-    // Process each grid cell
-    for (int h = 0; h < grid_h; h++) {
-      for (int w = 0; w < grid_w; w++) {
-        int offset = h * grid_w + w;
-
-        float* cur_cls = cls_raw + offset * CLASSES_NUM;
-        float* cur_box = box_raw + offset * (direct_ltrb ? 4 : 4 * REG);
-        float* cur_mce = mce_raw + offset * MCES;
-
-        // Find max class score
-        int cls_id = 0;
-        for (int i = 1; i < CLASSES_NUM; i++) {
-          if (cur_cls[i] > cur_cls[cls_id]) {
-            cls_id = i;
-          }
-        }
-
-        // Check threshold (before sigmoid)
-        if (cur_cls[cls_id] < CONF_THRES_RAW) {
-          continue;
-        }
-
-        // Apply sigmoid to get confidence score
-        float score = 1.0f / (1.0f + std::exp(-cur_cls[cls_id]));
-
-        // Decode bbox: YOLO26 stores direct LTRB distances,
-        // YOLO11-family uses DFL (Distribution Focal Loss).
-        float ltrb[4] = {0.0f};  // left, top, right, bottom
-
-        if (direct_ltrb)
-          yolo::decode_box_ltrb(cur_box, ltrb);
-        else
-          yolo::decode_box_dfl(cur_box, ltrb);
-
-        // Convert to bbox coordinates
-        float cx = (w + 0.5f) * stride;
-        float cy = (h + 0.5f) * stride;
-        float x1 = cx - ltrb[0] * stride;
-        float y1 = cy - ltrb[1] * stride;
-        float x2 = cx + ltrb[2] * stride;
-        float y2 = cy + ltrb[3] * stride;
-
-        // Check validity
-        if (x1 >= 0 && y1 >= 0 && x2 > x1 && y2 > y1 && x2 <= input_w &&
-            y2 <= input_h) {
           Detection det;
           det.bbox = cv::Rect2d(x1, y1, x2 - x1, y2 - y1);
           det.score = score;
           det.class_id = cls_id;
-          det.mask_coeffs.resize(MCES);
-
-          // Copy mask coefficients
-          for (int i = 0; i < MCES; i++) {
-            det.mask_coeffs[i] = cur_mce[i];
-          }
-
-          detections.push_back(det);
+          det.mask_coeffs.assign(cur_mce, cur_mce + MCES);
+          detections_.push_back(det);
         }
       }
     }
+
+    std::vector<cv::Rect2d> nms_boxes;
+    std::vector<float> nms_scores;
+    for (const auto& det : detections_) {
+      nms_boxes.push_back(det.bbox);
+      nms_scores.push_back(det.score);
+    }
+    keep_.clear();
+    if (!nms_boxes.empty())
+      cv::dnn::NMSBoxes(nms_boxes, nms_scores, score_threshold_, nms_threshold_,
+                        keep_);
+
+    masks_.clear();
+    for (int idx : keep_) {
+      const Detection& det = detections_[idx];
+      // 1. Matrix multiplication: (proto_h*proto_w × MCES) × (MCES × 1)
+      cv::Mat mce_mat(MCES, 1, CV_32F, const_cast<float*>(det.mask_coeffs.data()));
+      cv::Mat mask_flat = proto_mat * mce_mat;
+      cv::Mat mask_low_res = mask_flat.reshape(1, proto_h);
+      if (!cv::checkRange(mask_low_res))
+        throw std::runtime_error("Output contains nonfinite values.");
+      // 2. Apply sigmoid
+      cv::Mat sigmoid_mask;
+      cv::exp(-mask_low_res, sigmoid_mask);
+      sigmoid_mask = 1.0 / (1.0 + sigmoid_mask);
+      // 3. Resize to input size
+      cv::Mat resized_mask;
+      cv::resize(sigmoid_mask, resized_mask, cv::Size(input_w(), input_h()), 0,
+                 0, cv::INTER_LINEAR);
+      // 4. Binarize mask
+      cv::Mat binary_mask;
+      cv::threshold(resized_mask, binary_mask, MASK_THRESHOLD, 1.0,
+                    cv::THRESH_BINARY);
+      binary_mask.convertTo(binary_mask, CV_8U, 255);
+      // 5. Crop mask to bbox region
+      const int x1 = std::max(0.0, det.bbox.x);
+      const int y1 = std::max(0.0, det.bbox.y);
+      const int x2 = std::min(static_cast<double>(input_w()),
+                              det.bbox.x + det.bbox.width);
+      const int y2 = std::min(static_cast<double>(input_h()),
+                              det.bbox.y + det.bbox.height);
+      if (x2 - x1 <= 0 || y2 - y1 <= 0) continue;
+      InstanceMask mask;
+      mask.roi = cv::Rect(x1, y1, x2 - x1, y2 - y1);
+      mask.pixels = binary_mask(mask.roi).clone();
+      mask.detection_index = idx;
+      masks_.push_back(mask);
+    }
   }
 
-  LOG_INFO("Detections before NMS: " << detections.size());
+  // Declared first so outputs are released before the model context.
+  yolo::TaskSession session_;
+  yolo::TaskOutputs outputs_;
+  float score_threshold_;
+  float nms_threshold_;
+  cv::Mat preprocessed_;
+  std::vector<Detection> detections_;
+  std::vector<int> keep_;
+  std::vector<InstanceMask> masks_;
+};
 
-  // ========================================================================
-  // 10. NMS (Non-Maximum Suppression)
-  // ========================================================================
-
-  std::vector<cv::Rect2d> nms_boxes;
-  std::vector<float> nms_scores;
-  std::vector<int> nms_indices;
-
-  for (const auto& det : detections) {
-    nms_boxes.push_back(det.bbox);
-    nms_scores.push_back(det.score);
-  }
-
-  if (!nms_boxes.empty()) {
-    cv::dnn::NMSBoxes(nms_boxes, nms_scores, SCORE_THRESHOLD, NMS_THRESHOLD,
-                      nms_indices);
-  }
-
-  LOG_INFO("Detections after NMS: " << nms_indices.size());
-
-  auto post_duration =
-      std::chrono::duration_cast<std::chrono::microseconds>(
-          std::chrono::high_resolution_clock::now() - start_time)
-          .count() /
-      1000.0;
-  LOG_TIME("Post-processing time", post_duration);
-
-  // ========================================================================
-  // 11. Generate masks and draw results
-  // ========================================================================
-
-  LOG_INFO("Generating masks and drawing results...");
-  start_time = std::chrono::high_resolution_clock::now();
-
-  cv::Mat img_display = preprocessed.clone();
-  cv::Mat mask_overlay = cv::Mat::zeros(input_h, input_w, CV_8UC3);
-
-  // Process each detection after NMS
-  for (int idx : nms_indices) {
-    const Detection& det = detections[idx];
-
-    LOG_INFO("Detection: " << COCO_NAMES[det.class_id] << ", score="
-                           << std::fixed << std::setprecision(3) << det.score);
-
-    // Draw bounding box
-    draw_detection(img_display, det);
-
-    // Generate instance mask
-    // 1. Matrix multiplication: (proto_h*proto_w × MCES) × (MCES × 1)
-    cv::Mat mce_mat(MCES, 1, CV_32F, (void*)det.mask_coeffs.data());
-    cv::Mat mask_flat = proto_mat * mce_mat;
-    cv::Mat mask_low_res = mask_flat.reshape(1, proto_h);
-
-    // 2. Apply sigmoid
-    cv::Mat sigmoid_mask;
-    cv::exp(-mask_low_res, sigmoid_mask);
-    sigmoid_mask = 1.0 / (1.0 + sigmoid_mask);
-
-    // 3. Resize to input size
-    cv::Mat resized_mask;
-    cv::resize(sigmoid_mask, resized_mask, cv::Size(input_w, input_h), 0, 0,
-               cv::INTER_LINEAR);
-
-    // 4. Binarize mask
-    cv::Mat binary_mask;
-    cv::threshold(resized_mask, binary_mask, MASK_THRESHOLD, 1.0,
-                  cv::THRESH_BINARY);
-    binary_mask.convertTo(binary_mask, CV_8U, 255);
-
-    // 5. Crop mask to bbox region
-    int x1 = std::max(0.0, det.bbox.x);
-    int y1 = std::max(0.0, det.bbox.y);
-    int x2 =
-        std::min(static_cast<double>(input_w), det.bbox.x + det.bbox.width);
-    int y2 =
-        std::min(static_cast<double>(input_h), det.bbox.y + det.bbox.height);
-
-    int mask_w = x2 - x1;
-    int mask_h = y2 - y1;
-
-    if (mask_w <= 0 || mask_h <= 0) continue;
-
-    cv::Rect roi(x1, y1, mask_w, mask_h);
-    cv::Mat roi_mask = binary_mask(roi);
-
-    // 6. Create colored mask
-    cv::Scalar color = RDK_COLORS[det.class_id % RDK_COLORS.size()];
-    cv::Mat color_mask(mask_h, mask_w, CV_8UC3, color);
-
-    // 7. Apply mask
-    cv::Mat masked_color;
-    cv::bitwise_and(color_mask, color_mask, masked_color, roi_mask);
-
-    // 8. Add to overlay
-    cv::Mat overlay_roi = mask_overlay(roi);
-    cv::addWeighted(overlay_roi, 1.0, masked_color, 0.6, 0, overlay_roi);
-  }
-
-  // Create final result
-  cv::Mat final_result;
-  cv::addWeighted(img_display, 0.7, mask_overlay, 0.3, 0, final_result);
-
-  // Concatenate: detection | mask | combined
-  cv::Mat concatenated;
-  cv::hconcat(img_display, mask_overlay, concatenated);
-  cv::hconcat(concatenated, final_result, concatenated);
-
-  // Output size: input_h × (input_w * 3)
-  if (!cv::imwrite(save_path, concatenated))
-    throw std::runtime_error("Failed to save segmentation image");
-  LOG_INFO("Result saved to: " << save_path);
-  LOG_INFO("Output size: " << concatenated.cols << "x" << concatenated.rows);
-
-  auto draw_duration =
-      std::chrono::duration_cast<std::chrono::microseconds>(
-          std::chrono::high_resolution_clock::now() - start_time)
-          .count() /
-      1000.0;
-  LOG_TIME("Mask generation and drawing time", draw_duration);
-
-  // ========================================================================
-  // 12. Cleanup
-  // ========================================================================
-
-  // Owners release all acquired output/input/model resources on every exit.
-
-  LOG_INFO("=== Demo completed successfully ===");
-  return 0;
-}
+// ============================================================================
+// Main Function
+// ============================================================================
 
 int main(int argc, char** argv) {
   try {
-    return run(argc, argv);
+    yolo::BenchmarkOptions defaults;
+    defaults.score_threshold = SCORE_THRESHOLD;
+    defaults.nms_threshold = NMS_THRESHOLD;
+    const yolo::TaskCommand command = yolo::parse_task_command(
+        argc, argv, {MODEL_PATH, TEST_IMG_PATH, IMG_SAVE_PATH}, defaults);
+    if (command.help) {
+      yolo::print_task_usage(argv[0], "MODEL IMAGE OUTPUT", true);
+      return 0;
+    }
+    LOG_INFO("=== Ultralytics YOLO Segmentation Demo (C++) ===");
+    LOG_INFO("Loading model: " << command.paths[0]);
+
+    yolo::BenchmarkMeta meta;
+    meta.output_kind = "instance_masks";
+    meta.timing_scope = "in_memory_bgr_to_instance_masks";
+    return yolo::run_task<SegmentRuntime>(
+        command, PREPROCESS_TYPE, meta,
+        [&command]() {
+          return std::unique_ptr<SegmentRuntime>(new SegmentRuntime(
+              command.paths[0], command.options.score_threshold,
+              command.options.nms_threshold));
+        },
+        [&command](SegmentRuntime& runtime, const cv::Mat&, int) {
+          for (int idx : runtime.keep()) {
+            const Detection& det = runtime.detections()[idx];
+            LOG_INFO("Detection: " << COCO_NAMES[det.class_id] << ", score="
+                                   << std::fixed << std::setprecision(3)
+                                   << det.score);
+          }
+          if (!command.options.save_result) return;
+          // Output size: input_h × (input_w * 3)
+          const cv::Mat concatenated = runtime.render();
+          if (!cv::imwrite(command.paths[2], concatenated))
+            throw std::runtime_error("Failed to save segmentation image");
+          LOG_INFO("Result saved to: " << command.paths[2]);
+          LOG_INFO("Output size: " << concatenated.cols << "x"
+                                   << concatenated.rows);
+        });
   } catch (const std::exception& error) {
     LOG_ERROR(error.what());
     return 1;

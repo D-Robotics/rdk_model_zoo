@@ -38,7 +38,7 @@ class CppContractTests(unittest.TestCase):
         for source in (CPP_POSE, CPP_SEGMENT):
             with self.subTest(source='pose' if source is CPP_POSE else 'segment'):
                 self.assertIn('direct_ltrb', source)
-                self.assertIn('offset * (direct_ltrb ? 4 : 4 * REG)', source)
+                self.assertIn('direct_ltrb ? 4 : 4 * REG', source)
 
     def test_pose_keypoint_constants(self):
         self.assertIn('#define KPT_NUM 17', CPP_POSE)
@@ -48,12 +48,17 @@ class CppContractTests(unittest.TestCase):
         self.assertIn('#define MCES 32', CPP_SEGMENT)
 
     def test_all_tasks_support_both_input_protocols(self):
-        for task in ('classify', 'detect', 'pose', 'segment'):
+        session = (S / 'runtime/cpp/common/task_session.h').read_text()
+        for task in ('classify', 'detect', 'pose', 'segment', 'obb'):
             source = (S / f'runtime/cpp/{task}/main.cc').read_text()
             with self.subTest(task=task):
-                # Input plumbing lives in common/dnn_io via probe_input_protocol.
-                self.assertIn('probe_input_protocol', source)
-                self.assertIn('Nv12Input', source)
+                # Input plumbing lives in common/dnn_io via probe_input_protocol;
+                # task programs reach it through the shared TaskSession.
+                plumbing = source if task == 'detect' else session
+                if task != 'detect':
+                    self.assertIn('yolo::TaskSession', source)
+                self.assertIn('probe_input_protocol', plumbing)
+                self.assertIn('Nv12Input', plumbing)
         # The protocol detection itself is shared, not duplicated per task.
         self.assertIn('HB_DNN_IMG_TYPE_NV12', CPP_DNN_IO)
         # Execute production plumbing against both SDK API doubles. Helper

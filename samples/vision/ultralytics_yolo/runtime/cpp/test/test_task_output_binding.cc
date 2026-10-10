@@ -85,6 +85,17 @@ int main() {
           static_cast<float*>(YOLO_SYS_MEM(outputs.tensors()[0])->virAddr);
       raw[0] = std::numeric_limits<float>::quiet_NaN();
       rejects([&] { outputs.read(); });
+      // views() exposes the padded physical layout without copying or
+      // prescanning; decoders check the values they consume.
+      auto views = outputs.views();
+      expect(views.size() == metadata.size());
+      expect(views[0].data == raw);
+      const yolo::TensorView& box = views[outputs.heads.box[0]];
+      expect(box.h == 8 && box.w == 8 && box.channels == 4);
+      expect(box.cell_step == 5 && box.row_step == 8 * 5);
+      fail_flush = -1;
+      rejects([&] { outputs.views(); });
+      fail_flush = 0;
     }
     expect(allocated == static_cast<int>(metadata.size()) &&
            freed == allocated);
@@ -121,6 +132,7 @@ int main() {
   metadata[0] = metadata[1];
   yolo::TaskOutputs invalid;
   rejects([&] { invalid.read(); });
+  rejects([&] { invalid.views(); });
   rejects([&] { invalid.bind(nullptr, 64, 64, false); });
   rejects([&] { invalid.allocate(); });
   expect(allocated == 0 && freed == 0);

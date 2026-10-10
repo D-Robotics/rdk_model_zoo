@@ -17,6 +17,7 @@ cpp/
 ├── classify/  # Files for classify
 ├── common/  # Files for common
 ├── detect/  # Files for detect
+├── obb/  # Files for obb
 ├── pose/  # Files for pose
 ├── segment/  # Files for segment
 ├── test/  # Files for test
@@ -32,9 +33,10 @@ The C++ entries select protocols from model metadata: packed NV12 `.bin` input f
 | Program | Implemented protocol | Limits |
 |---|---|---|
 | detect | YOLO26 four-channel LTRB; YOLO11-family 64-channel DFL | Explicit head selection and benchmark |
-| pose | DFL/LTRB boxes and corresponding keypoint encoding | Functional reference, no benchmark CLI |
-| segment | DFL/LTRB boxes and mask coefficients/prototypes | Functional reference, no benchmark CLI |
-| classify | One unquantized FLOAT32 vector of 1000 logits | Stride-aware Top-5, no result image |
+| pose | DFL/LTRB boxes and corresponding keypoint encoding | Functional reference and benchmark |
+| segment | DFL/LTRB boxes and mask coefficients/prototypes | Functional reference and benchmark |
+| classify | One unquantized FLOAT32 vector of 1000 logits | Stride-aware Top-5 and benchmark, no result image |
+| obb | YOLO26 direct LTRB plus angle, per-stride class/box/angle outputs | X5/S policy of the Python decoder, benchmark |
 
 Custom class/model layouts must match the labels and dimensions expected by the selected C++ task. Use the linked Python entry for the YOLOv10 NMS-free task interface.
 
@@ -49,7 +51,7 @@ Board builds require CMake/CTest ≥3.20 (including `ctest --test-dir`), a C++11
 Run from the repository root on the target board. Each task owns its CMakeLists.txt; this directory has no top-level CMake project or run.sh.
 
 ```bash
-for task in detect classify pose segment; do
+for task in detect classify pose segment obb; do
   cmake -S "samples/vision/ultralytics_yolo/runtime/cpp/$task" \
     -B "/tmp/ultralytics-cpp-$task" -DCMAKE_BUILD_TYPE=Release
   cmake --build "/tmp/ultralytics-cpp-$task" -j2
@@ -77,14 +79,16 @@ For the other tasks, first prepare the corresponding artifact using [model instr
   /models/pose.bin samples/vision/ultralytics_yolo/test_data/bus.jpg /tmp/cpp-pose.jpg
 /tmp/ultralytics-cpp-segment/ultralytics_yolo_segment \
   /models/segmentation.bin samples/vision/ultralytics_yolo/test_data/bus.jpg /tmp/cpp-segment.jpg
+/tmp/ultralytics-cpp-obb/ultralytics_yolo_obb \
+  /models/obb.bin /data/aerial.jpg /tmp/cpp-obb.jpg
 ```
 
 <a id="parameters"></a>
 ## Parameters
 
-Detect/pose/segment take positional model, image and result paths; classify takes model and image only. Pose/segment/classify do not implement Python-style `--platform`, `--model-path` or general `--help`; these strings would be treated as positional paths. Pass model, image and result paths explicitly.
+Detect/pose/segment/obb take positional model, image and result paths; classify takes model and image only. None of them implements Python-style `--platform` or `--model-path`; pass the paths explicitly.
 
-Only **detect** accepts these options:
+**detect** accepts these options:
 
 | Option | Default | Meaning |
 |---|---|---|
@@ -102,7 +106,20 @@ Only **detect** accepts these options:
 | `--no-save` | `false` | Skip drawing and saving validation image |
 | `--help / -h` | `false` | Print detection CLI help |
 
-Pose/segment source constants are score=0.25 and NMS=0.45; pose point threshold is 0.5 and classify Top-K is 5. These are not CLI flags. Detect defaults to `yolo26n_detect_bayese_640x640_nv12.bin`, `bus.jpg` and `cpp_result.jpg`, relative to the caller.
+Classify, pose, segment and obb share `MODEL IMAGE [OUTPUT] [options]`. Options start after the positional paths:
+
+| Option | Default | Meaning |
+|---|---|---|
+| `--score` / `--nms` | task source constant | Score cutoff and NMS IoU; pose/segment 0.25/0.45, obb 0.25/0.2; ignored by classify |
+| `--resize-type` | task source constant | 0 stretch, 1 letterbox; the source default is letterbox for all four |
+| `--classes` | `15` | obb class channels |
+| `--angle-sign` / `--angle-offset` / `--no-regularize` | `1` / `0` / off | obb angle convention, offset in degrees |
+| `--benchmark`, `--warmup`, `--runs`, `--rounds`, `--opencv-threads`, `--json`, `--no-save` | as detect | Same meaning as for detect |
+| `--pipeline-streams` | `1` | 1 or 2 complete concurrent pipelines |
+| `--runtime-source-sha256` / `--executable-sha256` | empty | 64-hex provenance recorded in the JSON |
+| `--help / -h` | `false` | Print task help |
+
+The pose point threshold 0.5 and classify Top-K 5 remain source constants. Detect defaults to `yolo26n_detect_bayese_640x640_nv12.bin`, `bus.jpg` and `cpp_result.jpg`, relative to the caller.
 
 <a id="interface-lifecycle"></a>
 ## Interfaces and resource lifetime
@@ -111,7 +128,7 @@ These are standalone reference executables, not a stable library API identical t
 restore coordinates to the original image; segment renders in model-input space,
 as detailed below. Tensors/models must not be released before requests complete.
 
-Each concurrent stream owns its runtime context and tensors; do not reuse buffers across unfinished requests. Geometry, head probing/decode and benchmark bookkeeping live in `common/`; pose/segment/classify retain their own main programs and resource flow. Integrations must check SDK return codes, strides and valid shapes, not merely copy the inference call.
+Each concurrent stream owns its runtime context and tensors; do not reuse buffers across unfinished requests. Geometry, head probing/decode and benchmark bookkeeping live in `common/`; classify/pose/segment/obb keep their decode in their own main programs; each stream owns a `common/task_session.h` model context and its output tensors, and `common/task_benchmark.h` drives the validation frame and the benchmark. Integrations must check SDK return codes, strides and valid shapes, not merely copy the inference call.
 
 <a id="classification-contract"></a>
 ## Classification output contract
@@ -137,8 +154,8 @@ exceptions. Allocation and output-cache invalidation failures stop decoding.
 Malformed descriptors/nonfinite logits produce a nonzero exit with a diagnostic.
 
 Classification preprocessing uses **letterbox with gray 127 padding** in C++;
-Python classification on S and Python YOLO26 uses stretch. To use stretch in C++,
-set `PREPROCESS_TYPE` to `RESIZE_TYPE` and rebuild. The program selects the task
+Python classification on S and Python YOLO26 uses stretch. Pass `--resize-type 0`
+to use stretch in C++. The program selects the task
 from its executable and model metadata.
 
 <a id="pose-segment-output-contract"></a>
@@ -155,8 +172,9 @@ In particular this C++ prototype path does **not** accept Python's NCHW prototyp
 alternative; use the matching NHWC export or the Python entry.
 
 X5 aligned dimensions and S byte strides determine physical reads. After cache
-invalidation, valid values are copied to owned compact NHWC vectors, skipping
-padding. This adds a temporary host copy of the valid outputs. Allocation and
+invalidation, `TaskOutputs::views()` exposes strided views over the output
+buffers without a host copy; decoders reject nonfinite values they consume.
+`read()` still returns compact owned copies for callers that need them. Allocation and
 cache errors abort; acquired output/model resources release on all exit paths.
 DFL and direct-distance math now use `common/decode.h` rather than private copies.
 The existing keypoint equations, NMS and rendering policies remain unchanged.
@@ -166,6 +184,20 @@ class-agnostic NMS and renders a **model-input-sized** three-panel image
 (detections, colored mask, combined), with total width `3 * input_width`. Pose
 renders on the original image using its resize/padding arithmetic. A failed image
 save produces a nonzero exit.
+
+<a id="obb-output-contract"></a>
+## Oriented-box output contract
+
+`obb` binds nine unquantized FLOAT32 NHWC outputs by shape: at strides 8/16/32 a
+class map (`--classes`, default 15), a 4-channel direct-LTRB box and a 1-channel
+angle. Input must be square and divisible by 32; class counts 1 and 4 collide
+with the angle/box roles and are rejected. Decoding follows
+`runtime/python/obb_decode.py`: absolute LTRB distances, angle times
+`--angle-sign` plus `--angle-offset`, and width/height regularization. X5 wraps
+angles to [-pi/2, pi/2), runs per-class rotated NMS and clips restored boxes to
+the image; the S series runs class-agnostic rotated NMS and keeps unclipped
+geometry. Boxes are restored with the realized letterbox ratio per axis. The
+result image draws rotated boxes with class IDs.
 
 <a id="results-interpretation"></a>
 ## Results and verification
@@ -183,6 +215,22 @@ Bounded detection benchmark:
   --score 0.25 --nms 0.7 --no-save --json /tmp/yolo-e2e-cpp.json
 ```
 Timing starts with an in-memory BGR image and ends with restored detections: resize/letterbox, NV12 conversion, copy/cache operations, BPU and decode/NMS are included; model load, file I/O, drawing and saving are excluded. Set `--pipeline-streams 2` for two complete pipelines. Throughput is total completed frames over shared wall time; latency is per request. OpenCV thread count is independent of stream count, with no CPU-affinity restriction. Keep C++/Python, runtime-only/end-to-end and single/multistream measurements separate.
+
+Classify, pose, segment and obb run the same bounded benchmark, for example:
+
+```bash
+/tmp/ultralytics-cpp-pose/ultralytics_yolo_pose /models/pose.bin \
+  samples/vision/ultralytics_yolo/test_data/bus.jpg /tmp/cpp-pose.jpg \
+  --benchmark --warmup 20 --runs 200 --rounds 3 --pipeline-streams 2 \
+  --no-save --json /tmp/yolo-pose-e2e-cpp.json
+```
+Their timing ends with the task result: Top-5 predictions, NMS-kept poses,
+binarized instance masks or restored rotated boxes. The JSON adds `output_kind`
+(`topk_predictions`, `pose_instances`, `instance_masks`, `rotated_boxes`;
+detect writes `detections`), `outputs_per_frame` and `resize_type`; classify
+omits score/NMS, obb records its angle options, and the optional source and
+executable SHA256 values are recorded when given. The result count must stay
+identical across all timed frames.
 
 The common input owner validates metadata before allocating. Packed X5 NV12
 accepts RGB-shaped NCHW/NHWC descriptors only when the physical shape is compact;
