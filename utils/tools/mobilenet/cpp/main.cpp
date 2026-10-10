@@ -28,7 +28,7 @@ static void check(int code, const char* call) {
 }
 #define CHECK(call) check((call), #call)
 // Row byte alignment the S-series runtime requires for dynamic NV12 strides:
-// 32 on nash-e/nash-m (224-byte rows stay packed), 64 on nash-p (rows pad to 256).
+// 32 on nash-e/nash-m (224/256-byte rows stay packed), 64 on nash-p (224-byte rows pad to 256).
 #ifndef NV12_ROW_ALIGN
 #define NV12_ROW_ALIGN 32
 #endif
@@ -67,8 +67,11 @@ class Session {
       auto& t = inputs_[i]; CHECK(hbDNNGetInputTensorProperties(&t.properties, model_, i));
 #ifdef TARGET_S100
       auto& p = t.properties;
-      const std::array<int, 4> expected = i == 0 ? std::array<int,4>{1,224,224,1} : std::array<int,4>{1,112,112,2};
       if (p.tensorType != HB_DNN_TENSOR_TYPE_U8 || p.validShape.numDimensions != 4) throw std::runtime_error("Wrong S100 input type");
+      if (i == 0) size_ = p.validShape.dimensionSize[1];
+      const int half = size_ / 2;
+      const std::array<int, 4> expected = i == 0 ? std::array<int,4>{1,size_,size_,1} : std::array<int,4>{1,half,half,2};
+      if (size_ <= 0 || size_ % 2) throw std::runtime_error("Unsupported S100 input size");
       for (int k = 0; k < 4; ++k) if (p.validShape.dimensionSize[k] != expected[k]) throw std::runtime_error("Wrong S100 input shape");
       for (int k = 3; k >= 0; --k) if (p.stride[k] < 0) {
         if (k == 3) throw std::runtime_error("Unknown element stride");
@@ -81,9 +84,11 @@ class Session {
       rows_.push_back(expected[1]); packedRow_.push_back(packedRow); strideRow_.push_back(alignedRow);
 #else
       auto& p = t.properties;
-      if (p.tensorType != HB_DNN_IMG_TYPE_NV12 || p.alignedByteSize != 224*224*3/2 || p.tensorLayout != HB_DNN_LAYOUT_NCHW) throw std::runtime_error("Unexpected packed NV12 properties");
-      const int dims[] = {1,3,224,224};
       if (p.validShape.numDimensions != 4) throw std::runtime_error("Wrong X5 rank");
+      size_ = p.validShape.dimensionSize[2];
+      if (size_ <= 0 || size_ % 2) throw std::runtime_error("Unsupported X5 input size");
+      if (p.tensorType != HB_DNN_IMG_TYPE_NV12 || p.alignedByteSize != size_*size_*3/2 || p.tensorLayout != HB_DNN_LAYOUT_NCHW) throw std::runtime_error("Unexpected packed NV12 properties");
+      const int dims[] = {1,3,size_,size_};
       for (int k = 0; k < 4; ++k) if (p.validShape.dimensionSize[k] != dims[k] || p.alignedShape.dimensionSize[k] != dims[k]) throw std::runtime_error("Unsupported X5 padding");
       rows_.push_back(1); packedRow_.push_back(p.alignedByteSize); strideRow_.push_back(p.alignedByteSize);
 #endif
@@ -129,6 +134,7 @@ class Session {
     CHECK(hbDNNReleaseTask(task));
 #endif
   }
+  int size() const { return size_; }
   std::array<float,1000> logits() {
     CHECK(flush(&memory(output_), HB_SYS_MEM_CACHE_INVALIDATE));
     std::array<float,1000> result; std::memcpy(result.data(), memory(output_).virAddr, sizeof(result));
@@ -141,7 +147,7 @@ class Session {
     if (packed_) { int r = hbDNNRelease(packed_); if (r) std::cerr << "model release error " << r << '\n'; }
   }
  private:
-  hbDNNPackedHandle_t packed_ = nullptr; hbDNNHandle_t model_ = nullptr;
+  hbDNNPackedHandle_t packed_ = nullptr; hbDNNHandle_t model_ = nullptr; int size_ = 0;  // square model input side
   std::vector<hbDNNTensor> inputs_; hbDNNTensor output_{};
   std::vector<size_t> rows_, packedRow_, strideRow_;  // per input: rows, packed and padded row bytes
 };
@@ -149,7 +155,7 @@ static int resize_shorter = 256;  // set once from argv before any worker starts
 struct Row { int stream, frame, image; double preprocess, runtime, postprocess, e2e; std::array<int,5> top5; };
 static double ms(Clock::time_point a, Clock::time_point b) { return std::chrono::duration<double,std::milli>(b-a).count(); }
 static Row step(Session& session, const cv::Mat& image, int stream, int frame, int image_id, std::array<float,1000>* saved = nullptr) {
-  auto t0 = Clock::now(); auto crop = mobilenet::center_crop(image, 224, resize_shorter); auto bytes = mobilenet::nv12(crop); session.upload(bytes);
+  auto t0 = Clock::now(); auto crop = mobilenet::center_crop(image, session.size(), resize_shorter); auto bytes = mobilenet::nv12(crop); session.upload(bytes);
   auto t1 = Clock::now(); session.infer(); auto t2 = Clock::now(); auto scores = session.logits();
   std::array<int,1000> ids; std::iota(ids.begin(), ids.end(), 0);
   std::partial_sort(ids.begin(), ids.begin()+5, ids.end(), [&](int a,int b) { return scores[a] == scores[b] ? a < b : scores[a] > scores[b]; });
@@ -162,18 +168,20 @@ static Row step(Session& session, const cv::Mat& image, int stream, int frame, i
 int main(int argc, char** argv) {
   try {
     if (argc != 8 && argc != 9) throw std::runtime_error("Usage: benchmark MODEL IMAGE_LIST OUTPUT_PREFIX STREAMS FRAMES WARMUP CPU_THREADS [RESIZE_SHORTER]");
-    // Shorter-edge resize before the 224 crop: int(224 / crop_pct), 256 for Small and 235 for Medium-224.
+    // Shorter-edge resize before the center crop to the model input size: int(size / crop_pct),
+    // e.g. 256 for Small, 235 for Medium-224 and 269 for Large-256.
     resize_shorter = argc == 9 ? std::stoi(argv[8]) : 256;
-    if (resize_shorter < 224) throw std::runtime_error("RESIZE_SHORTER must be at least 224");
     const int streams=std::stoi(argv[4]), frames=std::stoi(argv[5]), warmup=std::stoi(argv[6]), threads=std::stoi(argv[7]);
     if ((streams != 1 && streams != 2) || frames <= 0 || warmup < 0 || threads <= 0) throw std::runtime_error("Invalid benchmark configuration");
     cv::setNumThreads(threads); std::ifstream list(argv[2]); std::string path; std::vector<cv::Mat> images;
     while (std::getline(list,path)) { if (path.empty()) continue; auto image=cv::imread(path); if (image.empty()) throw std::runtime_error("Cannot decode "+path); images.push_back(image); }
     if (images.empty()) throw std::runtime_error("Empty image list");
     const std::string prefix=argv[3];
-    for (size_t i=0;i<images.size();++i) cv::imwrite(prefix+"-crop-"+std::to_string(i)+".png",mobilenet::center_crop(images[i], 224, resize_shorter));
     std::vector<std::unique_ptr<Session>> sessions;
     for (int s=0;s<streams;++s) { auto ptr=std::make_unique<Session>();ptr->init(argv[1]);sessions.push_back(std::move(ptr)); }
+    const int size=sessions[0]->size();
+    if (resize_shorter < size) throw std::runtime_error("RESIZE_SHORTER must be at least the model input size");
+    for (size_t i=0;i<images.size();++i) cv::imwrite(prefix+"-crop-"+std::to_string(i)+".png",mobilenet::center_crop(images[i], size, resize_shorter));
     std::vector<std::vector<Row>> rows(streams); std::vector<std::vector<std::array<float,1000>>> saved(streams);
     std::vector<std::exception_ptr> failures(streams); std::mutex mutex; std::condition_variable cv; int ready=0; bool start=false;
     std::vector<std::thread> workers;

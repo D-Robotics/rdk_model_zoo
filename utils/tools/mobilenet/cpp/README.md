@@ -1,9 +1,10 @@
-# MobileNetV4 Small C++ benchmark
+# MobileNet C++ benchmark
 
 This native benchmark loads a model once per pipeline stream and measures
 batch-one inference on X5 (libdnn) or S100/S100P/S600 (libhbucp). The artifact must expose
-224×224 NV12 video-range inputs and one contiguous 1000-class float output.
-Input tensor shapes, strides, data types and memory sizes are checked before use.
+square NV12 video-range inputs and one contiguous 1000-class float output.
+The input side (for example 224 or 256) is read from the model; input tensor
+shapes, strides, data types and memory sizes are checked before use.
 
 Build on the board with its installed matching SDK, CMake, g++ and OpenCV:
 
@@ -18,19 +19,19 @@ cmake --build /path/to/new-build -j2
 
 `-DTARGET_S100=ON` selects the S-series UCP path used on S100, S100P and S600.
 On S600 (nash-p) also pass `-DNV12_ROW_ALIGN=64`: its runtime requires NV12 rows
-aligned to 64 bytes, so the 224-byte rows are copied into 256-byte padded rows.
+aligned to 64 bytes, so 224-byte rows are copied into 256-byte padded rows.
 S100/S100P keep the default 32, which leaves rows packed. Use
 `-DTARGET_S100=OFF` and a `.bin` for X5. The positional arguments are model,
 image list (one path per line), output prefix, streams (1 or 2), measured frames
 **per stream**, warmup frames per stream, OpenCV CPU threads, and an optional shorter-edge
-resize size (`int(224 / crop_pct)`: 256 for Small, the default, and 235 for
-Medium-224). Output prefix
+resize size (`int(size / crop_pct)`: 256 for Small, the default, 235 for
+Medium-224 and 269 for Large-256). Output prefix
 parents must exist. Use a fresh output prefix for every run. Use all online CPU
 threads for the maximum-performance condition and record CPU/BPU frequency,
 governor and SDK version separately; this executable does not change them.
 
 Images are decoded before timing. Each timed frame performs Pillow-compatible
-antialiased bicubic shorter-edge resize to 256, center crop to 224, OpenCV I420
+antialiased bicubic shorter-edge resize, center crop to the model input size, OpenCV I420
 to NV12 packing, input upload/cache clean, model execution/wait, output cache
 invalidation and Top-5 selection. Preprocess includes input upload, runtime
 includes submit/wait/task release, and postprocess includes output readback and

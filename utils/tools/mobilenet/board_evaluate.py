@@ -1,4 +1,4 @@
-"""Evaluate a compiled MobileNetV4 model on the frozen full ImageNetV2 manifest.
+"""Evaluate a compiled MobileNet model on the frozen full ImageNetV2 manifest.
 
 The host's PIL geometry is applied before the sample's NV12 conversion. Model
 loading happens once. This accuracy run does not claim performance metrics.
@@ -38,13 +38,17 @@ def evaluate(args: argparse.Namespace) -> None:
         ValueError: Input hashes, model metadata or dataset coverage disagree.
     """
     campaign = json.loads(args.campaign.read_text())
+    if args.variant not in campaign["source_models"]:
+        raise ValueError(f"Variant {args.variant} is not in the campaign")
     contract = campaign["source_models"][args.variant]["contract"]
     if sha256_file(args.model) != args.model_sha256:
         raise ValueError("Model SHA256 mismatch")
     args.output.mkdir(parents=True, exist_ok=False)
     _, images = load_dataset(args.manifest, args.data_root,
                              expected_count=campaign["evaluation"]["count"])
+    # The prepared crop already has the model size, so resize_type 0 is an identity resize.
     classifier = MobileNetV4Classifier(args.model, target=args.target,
+                                      input_size=(contract["size"], contract["size"]),
                                       resize_type=0, score_policy="none")
     metadata = classifier.runner.metadata
     # SDK QuantParams are pybind objects, not serializable dataclasses.
@@ -105,8 +109,8 @@ def main() -> None:
         parser.add_argument("--" + name, type=Path, required=True)
     parser.add_argument("--model-sha256", required=True)
     parser.add_argument("--target", choices=("x5", "s100", "s100p", "s600"), required=True)
-    parser.add_argument("--variant", choices=("v4-small", "v4-medium-224"), default="v4-small",
-                        help="Campaign source model whose preprocessing contract applies")
+    parser.add_argument("--variant", default="v4-small",
+                        help="Campaign source model key whose preprocessing contract applies")
     evaluate(parser.parse_args())
 
 
