@@ -24,7 +24,7 @@ from samples.speech.paraformer.runtime.python.cli import Preparation
 
 TOKENS = (
     Path(__file__).resolve().parents[4]
-    / "docs/releases/unified-migration/evidence/2026-09-28-b10-paraformer-pipeline/published-tokens.json"
+    / "samples/speech/paraformer/tests/fixtures/published-tokens.json"
 )
 
 

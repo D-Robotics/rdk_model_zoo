@@ -411,8 +411,7 @@ class PairingTests(unittest.TestCase):
 
 class ScopeTests(unittest.TestCase):
     def test_migration_scope_reads_refactor_column_of_progress_region(self):
-        map_path = (CHECK.REPO_ROOT / "docs/releases/unified-migration"
-                    / "x5-s-migration-map.md")
+        map_path = CHECK.REPO_ROOT / "utils/tools/sample_contract/sample-scope.md"
         paths, findings = CHECK.resolve_migration_scope(
             map_path, CHECK.REPO_ROOT / "samples")
         names = {path.name for path in paths}

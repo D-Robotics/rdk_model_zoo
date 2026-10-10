@@ -1,7 +1,7 @@
 """Pinned access to the removed ``platforms/`` historical copies for tests.
 
 The ``platforms/`` directory was removed from the active branch (see
-``docs/migration/2026-09-30-model-examples.md``).  Its content stays
+the pinned historical record https://github.com/D-Robotics/rdk_model_zoo/blob/6c5cd7f2800bd0b341f2bb7b110d0a0454eefeba/docs/migration/2026-09-30-model-examples.md).  Its content stays
 reachable through Git: ``PIN`` below is the last commit that touched the
 tree and is reachable from the repository's ``develop`` history, so a
 clone with full history has every object.  Tests that compare unified

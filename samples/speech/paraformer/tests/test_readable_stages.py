@@ -128,7 +128,7 @@ class ThinEntryTests(unittest.TestCase):
             out = root / "run"
             tokens = (
                 Path(__file__).resolve().parents[4]
-                / "docs/releases/unified-migration/evidence/2026-09-28-b10-paraformer-pipeline/published-tokens.json"
+                / "samples/speech/paraformer/tests/fixtures/published-tokens.json"
             )
             args = ["--target", "s100", "--audio-file", str(audio),
                     "--output-dir", str(out), "--tokens-path", str(tokens)]

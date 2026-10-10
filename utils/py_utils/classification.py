@@ -64,7 +64,7 @@ class ClassificationResult:
 class ClassificationTask:
     """One classification pipeline driven by an injected callable runner.
 
-    Stage data flow (inference-contract §2), concretized for classification:
+    Stage data flow (runtime-code.md §9), concretized for classification:
 
     - ``Input``: one BGR ``uint8`` image, shape ``(height, width, 3)``.
     - ``Tensors``: the bound NV12 physical mapping (packed single tensor on
@@ -72,7 +72,7 @@ class ClassificationTask:
     - ``Context``: :class:`ImageTransform` carried by
       :class:`PreparedInput.transform` — per-call geometry (resize, scale,
       padding).  Classification consumes no geometry in ``post_process``, so
-      the stage omits the context argument (see inference-contract §1) and
+      the stage omits the context argument (see runtime-code.md §9) and
       the transform exists for callers and debugging.
     - ``RawOutputs``: the runner's validated F32 score tensor in the bound
       shape; ``forward`` performs container adaptation only — no decode,

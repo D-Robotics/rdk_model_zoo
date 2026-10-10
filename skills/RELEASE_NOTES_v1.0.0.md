@@ -28,7 +28,7 @@ After the Hub onboarding PR merges, the same seven names are available through `
 
 - Reference synchronization, seven package checks, independent resource closure and 50 local tests passed.
 - 75 core Codex behavior cases executed. Initial grading includes failures and incomplete fixtures; this is not a claim of complete behavioral acceptance.
-- Fourteen paired controls were attempted; one release baseline timed out. Focused reruns and known limitations are preserved in `skills/verification/REPORT.md` and the evidence archive linked from `skills/evals/REPORT.md`.
+- Fourteen paired controls were attempted; one release baseline timed out. Focused reruns and known limitations are recorded in the release evidence archive.
 - Evaluation expansion stopped at the maintainer's request to prioritize shipping. No real hardware, model accuracy, performance, or external actuator validation was performed.
 
 ## Component tags

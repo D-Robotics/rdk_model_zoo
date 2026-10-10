@@ -30,7 +30,7 @@ class ExportCLI(unittest.TestCase):
             shutil.copyfile(archived / "paraformer_config.yaml", source / "config.yaml")
             shutil.copyfile(
                 ROOT
-                / "docs/releases/unified-migration/evidence/2026-09-28-b10-paraformer-pipeline/published-tokens.json",
+                / "samples/speech/paraformer/tests/fixtures/published-tokens.json",
                 source / "tokens.json",
             )
             args = argparse.Namespace(

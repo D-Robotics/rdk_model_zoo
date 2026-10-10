@@ -3,7 +3,7 @@ English | [简体中文](README_cn.md)
 <!-- Template: runtime/python README (English). Contract: readme-contract.md §4.3.
      Keep anchors; replace ⟪…⟫; delete guidance when done. Parameter defaults are
      machine-checked against build_parser; the integration example must run as-is
-     (verified by sample tests per inference-contract). -->
+     (verified by sample tests per runtime-code.md §10). -->
 
 # Python Runtime — ⟪model name⟫
 
@@ -87,7 +87,7 @@ print(⟪result field⟫)
 
 > **Must answer:** the preprocess / infer / postprocess contract of this
 > sample as a readable summary consistent with the docstrings (see
-> inference-contract). Multi-stage pipelines (e.g. OCR det→rec) get one
+> runtime-code.md §9). Multi-stage pipelines (e.g. OCR det→rec) get one
 > subsection per stage plus the pipeline.predict composition.
 
 - `preprocess`: ⟪Input⟫ → ⟪Tensors + Context⟫ (⟪shapes/dtypes/layout⟫)

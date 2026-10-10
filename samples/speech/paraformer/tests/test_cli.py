@@ -203,7 +203,7 @@ class CliTests(unittest.TestCase):
             out = root / "run"
             tokens = (
                 root_repo
-                / "docs/releases/unified-migration/evidence/2026-09-28-b10-paraformer-pipeline/published-tokens.json"
+                / "samples/speech/paraformer/tests/fixtures/published-tokens.json"
             )
             args = [
                 "--target",

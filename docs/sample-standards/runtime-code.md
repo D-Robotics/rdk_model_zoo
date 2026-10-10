@@ -25,7 +25,7 @@ utils/
 utils/tools/              # 可独立执行的维护程序
 ```
 
-模型文件按职责命名，例如 `classify.py`、`detect.py`、`segment.py`、`matching.py`、`policy.py`。普通单任务 Sample 默认采用三个 Python 文件。多任务或多模型组合按实际算法划分，不按每个函数拆文件。
+模型文件按职责命名，例如 `classify.py`、`detect.py`、`segment.py`、`matching.py`、`policy.py`。普通单任务 Sample 默认采用三个 Python 文件。多任务家族按任务划分模型文件：Ultralytics YOLO 覆盖 detect / segment / pose / classify / obb 五类任务，目标形态是每任务一个模型文件加 `main.py` 与 `cli.py`，合计约 7–8 个 Python 文件；确有完整职责的后端绑定可另立一个文件并说明其角色。已存在的 `pre_process`/`forward`/`post_process` 兼容名保留为实际行为的委托，不为满足命名一致性新增包装层。不按每个函数拆文件。
 
 ## 2. main.py：看得见的运行入口
 
@@ -116,7 +116,25 @@ Shell 不复制 Python 的参数表、模型列表和板卡选择规则，不自
 
 行内注释解释关键算法或平台约束。代码和注释同步更新，普通转发无需逐行复述。
 
-## 9. 代码验收
+## 9. 阶段名与数据流契约
+
+公开业务接口统一为 `preprocess` → `infer` → `postprocess`，由 `predict` 串联；旧名
+`pre_process`/`forward`/`post_process` 保留为同一实现的薄兼容委托，静态检查器对两套
+拼写同等扫描。`postprocess` 是否接收 context 由任务是否消费几何信息决定；`predict` 的
+串联语义与三步显式调用的结果一致性必须在 tests 中验证。
+
+每个任务在 docstring/类型定义中具体化五个概念：Input（业务输入）、Tensors（后端物理
+输入映射）、Context（本次调用的几何/状态信息）、RawOutputs（结构/metadata 校验后的
+原始输出）、Result（业务结果）。Context 必须显式存放在 `prepared` 返回值中，不允许放
+入会被下一次调用覆盖的实例字段；有状态任务（跟踪、语音流、生成式）显式声明
+session/reset 语义，不虚称线程安全。
+
+多阶段任务（OCR/SAM/Paraformer）：每个 stage 具备公开的 preprocess/infer/postprocess
+三步接口，`pipeline.predict` 显式编排；stage composer 与逐阶段 helper 合法，但阶段次序
+在代码中直接可读，不为凑函数数把下一阶段推理藏入上一阶段 postprocess。仅有原生 C++
+运行时的 sample（如 `samples/llm/*`）以其 README 声明的原生等价接口为准。
+
+## 10. 代码验收
 
 - 入口可直接定位模型构造与 `predict`，模型文件可读到完整阶段。
 - 发布模型的默认参数、CLI 选项、前处理字节、输出变换和后处理数值保持一致。
@@ -126,5 +144,10 @@ Shell 不复制 Python 的参数表、模型列表和板卡选择规则，不自
 - 更新移动后的 Python 导入、测试 patch 目标、评估器与维护工具引用。
 - 保留有意义的数值和行为断言，不能靠删除测试消除回归。
 - 主机注入测试、真实板端推理和模型编译分别记录其实际执行结果。
+
+Sample tests 至少覆盖：predict 与显式三步逐字段一致（含旧名委托等价）；注入固定
+fixture 时 infer 只做容器校验、无解码/激活/文件读写；两种尺寸输入交错调用时
+context 只描述当次输入；binding 声明之外的数值变换使测试失败。多阶段 sample 另需
+覆盖零检测短路、多 crop 次序稳定与阶段错误归属。
 
 接口和目录变化另附映射供文档维护者更新示例；README 按当前交付接口介绍使用方法。

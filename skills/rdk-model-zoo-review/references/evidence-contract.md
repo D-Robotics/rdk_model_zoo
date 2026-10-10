@@ -37,4 +37,4 @@
 
 工具链 Pack 可能已有 input/environment/route/plan/artifacts/verification/receipt 等平台专属运行文件。只有目标 ref 和实际平台匹配时才能引用它们；X5、S100/S100P/S600、X3 与 legacy 的收据不能互相代用。保留原始格式，以路径、来源提交和哈希引用，不复制或改写它们来伪装本次成功。本包验证报告只记录新增的 sample 层检查。
 
-原始 X5 run contract (historical `https://github.com/D-Robotics/rdk-skills/blob/131d3048d5b1b8012b1383dc70be4f8264e25918/skills/oe-skills-x5/platforms/x5/references/run-contract.md` at pinned commit `d2d2a4e0`; see docs/migration/2026-09-30-model-examples.md)
+原始 X5 run contract (historical `https://github.com/D-Robotics/rdk-skills/blob/131d3048d5b1b8012b1383dc70be4f8264e25918/skills/oe-skills-x5/platforms/x5/references/run-contract.md` at pinned commit `d2d2a4e0`; historical https://github.com/D-Robotics/rdk_model_zoo/blob/6c5cd7f2800bd0b341f2bb7b110d0a0454eefeba/docs/migration/2026-09-30-model-examples.md)

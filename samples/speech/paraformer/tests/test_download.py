@@ -45,7 +45,7 @@ class DownloadTests(unittest.TestCase):
                     return io.BytesIO(
                         (
                             ROOT
-                            / "docs/releases/unified-migration/evidence/2026-09-28-b10-paraformer-pipeline/published-tokens.json"
+                            / "samples/speech/paraformer/tests/fixtures/published-tokens.json"
                         ).read_bytes()
                     )
                 return io.BytesIO(b"synthetic-host-test-model-not-HBM")

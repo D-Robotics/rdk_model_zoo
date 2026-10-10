@@ -4,7 +4,7 @@ English | [简体中文](README_cn.md)
 
 Static contract checker for the unified samples layout. It executes the
 machine-decidable rules of `docs/sample-standards/readme-contract.md` and
-`docs/sample-standards/inference-contract.md`; everything not decidable
+`docs/sample-standards/runtime-code.md` §9; everything not decidable
 statically goes to semantic review — a skipped check is reported as a
 skip and never counts as a pass.
 
@@ -61,7 +61,7 @@ and surrounding quotes in README cells are stripped.
 ## Check scope
 
 `--scope migration` reads the progress region of
-`docs/releases/unified-migration/x5-s-migration-map.md` and checks every
+`utils/tools/sample_contract/sample-scope.md` and checks every
 sample whose **Refactor** column is `in-progress` or `done` (parenthetical
 annotations are ignored). A selected row without a resolvable
 `samples/<domain>/<name>` directory raises an `R-SCOPE` violation, keeping

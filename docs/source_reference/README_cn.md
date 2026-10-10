@@ -9,33 +9,14 @@
 
 ## 一、查看已构建文档（普通用户）
 
-### 1. 解压文档包
+### 1. 浏览文档
 
-在仓库根目录执行：
-
-```bash
-mkdir -p /tmp/bpu_sample_docs_html
-tar -xf docs/source_reference/bpu_sample_docs_html.tar.xz -C /tmp/bpu_sample_docs_html
-```
-
-压缩包根目录即站点根目录，解压后主要入口：
-
-```text
-/tmp/bpu_sample_docs_html/
-├── index.html            # 站点首页
-├── python/               # Python 导航页（samples 按任务/模型分组、utils）
-├── autoapi/              # AutoAPI 生成的 Python API 页面
-├── cpp/                  # C/C++ 说明页（链接到 Doxygen 站点）
-└── doxygen_site/html/    # Doxygen 生成的 C/C++ API 站点（index.html / files.html）
-```
-
-### 2. 浏览文档
-
-- 本地（有图形界面）：用浏览器直接打开 `/tmp/bpu_sample_docs_html/index.html`。
+- 本地（有图形界面）：用浏览器直接打开
+    `docs/source_reference/sphinx/build/html/index.html`。
 - 命令行方式（本地或远程均适用）：
 
     ```bash
-    python3 -m http.server 8000 --directory /tmp/bpu_sample_docs_html
+    python3 -m http.server 8000 --directory docs/source_reference/sphinx/build/html
     ```
 
     在浏览器中访问 `http://localhost:8000`。
@@ -59,7 +40,6 @@ tar -xf docs/source_reference/bpu_sample_docs_html.tar.xz -C /tmp/bpu_sample_doc
 ```text
 docs/source_reference/
 ├── README.md                        # 本说明
-├── bpu_sample_docs_html.tar.xz     # 已构建的 HTML 文档包（发布物）
 ├── doxygen/
 │   └── Doxyfile                     # Doxygen 配置：INPUT=../../../samples/ 与 ../../../utils/，输出 ../sphinx/build/html/doxygen_site
 └── sphinx/
@@ -121,15 +101,3 @@ python3 tools/gen_samples_nav.py .
 #    输出：docs/source_reference/sphinx/build/html/index.html
 make html
 ```
-
-### 构建产物与打包
-
-最终站点位于 `docs/source_reference/sphinx/build/html/`，首页为 `index.html`。
-
-打包新构建的文档（从仓库根目录执行；输出到 `/tmp`，不改动仓库内文件）：
-
-```bash
-tar -cJf /tmp/bpu_sample_docs_html.tar.xz -C docs/source_reference/sphinx/build/html .
-```
-
-包根即站点根（`index.html` 位于包根，与已发布文档包布局一致）。仓库内 `docs/source_reference/bpu_sample_docs_html.tar.xz` 为已发布文档包；新增或更新模型、接口注释后，按上述步骤重新构建并替换该文件。

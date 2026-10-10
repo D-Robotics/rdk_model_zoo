@@ -1,161 +1,307 @@
-![RDK Model Zoo](docs/assets/model_zoo_logo.jpg)
+<div align="center">
+  <img src="docs/assets/model_zoo_logo.jpg" width="60%" alt="RDK Model Zoo Logo"/>
+</div>
 
-English | [简体中文](README_cn.md)
+<div align="center">
+  <h1 align="center">RDK Model Zoo</h1>
+  <p align="center">
+    <b>Out-of-the-Box AI Model Deployment Pipelines and Full-Link Conversion Tutorials Based on D-Robotics BPU</b>
+  </p>
+</div>
 
-# ⭐️ Give a Star for Guidance, Thanks for Your Attention ⭐️
+<div align="center">
 
-RDK Model Zoo contains vision, speech and language-model examples for D-Robotics RDK boards, with programs for model download, conversion, inference and evaluation. The source version is 2.0.0; see `VERSION` at the repository root.
+**English** | [简体中文](./README_cn.md)
 
-## Directory structure
+<p align="center">
+  <a href="https://github.com/D-Robotics/rdk_model_zoo/stargazers"><img src="https://img.shields.io/github/stars/D-Robotics/rdk_model_zoo?style=flat-square&logo=github&color=blue" alt="Stars"></a>
+  <a href="https://github.com/D-Robotics/rdk_model_zoo/network/members"><img src="https://img.shields.io/github/forks/D-Robotics/rdk_model_zoo?style=flat-square&logo=github&color=blue" alt="Forks"></a>
+  <a href="https://github.com/D-Robotics/rdk_model_zoo/pulls"><img src="https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=flat-square" alt="PRs Welcome"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/github/license/D-Robotics/rdk_model_zoo?style=flat-square" alt="License"></a>
+  <a href="https://developer.d-robotics.cc"><img src="https://img.shields.io/badge/Community-D--Robotics-orange.svg?style=flat-square" alt="Community"></a>
+</p>
 
-```text
-samples/                  # task implementations and guides
-docs/release/             # artifact/benchmark facts and target identity
-docs/sample-standards/    # README and inference contracts
-docs/architecture/        # readable runtime architecture
-docs/validation/          # board smoke-test checklist
-datasets/                 # dataset entry points
-utils/                    # shared Python/C++ runtime utilities
-utils/tools/            # catalog, contract checks and validation tooling
-```
+</div>
 
-## Start by task
+## Introduction
 
-The [sample index](samples/README.md) lists 51 samples: 45 vision, three
-speech, one robotics policy and two LLM samples. Each guide states its own
-targets, variants and languages.
+> **Mission**: Dedicated to providing D-Robotics developers with extreme performance, out-of-the-box, and full-scenario AI deployment validation experiences.
 
-| Task | Entry |
-|---|---|
-| Detection, segmentation, pose, classification, oriented boxes | [Ultralytics YOLO](samples/vision/ultralytics_yolo/README.md) |
-| Prompt-free instance segmentation | [YOLOE](samples/vision/yoloe/README.md) |
-| Speech recognition | [ASR](samples/speech/asr/README.md), [Paraformer](samples/speech/paraformer/README.md) |
-| Keyword spotting | [KWS](samples/speech/kws/README.md) |
-| Offline robotics policy | [HIMLoco](samples/robotics/himloco/README.md): six-frame observations to actions, without robot control |
-| Vision-language model | [Gemma4-E2B](samples/llm/gemma4-e2b/README.md): native chat, HTTP, single-shot inference and verification tools |
-| Text generation | [MiniCPM5-2B](samples/llm/minicpm5-2b/README.md): S100/S100P OELLM 1.0.0 and S600 OELLM 2.0 beta native entries |
-| Image classification | [ResNet](samples/vision/resnet/README.md), MobileNet, EfficientNet, ConvNeXt, Rep families and others in the full index |
-| Text detection and recognition | [PaddleOCR](samples/vision/paddle_ocr/README.md) |
-| Prompted segmentation | [EfficientSAM](samples/vision/efficient_sam/README.md), [MobileSAM](samples/vision/mobile_sam/README.md) |
-| Detection, open vocabulary and tracking | [YOLOv5](samples/vision/yolov5/README.md), [FCOS](samples/vision/fcos/README.md), [YOLOWorld](samples/vision/yoloworld/README.md), [ByteTrack](samples/vision/bytetrack/README.md) |
-| License plates and image matting | [LPRNet](samples/vision/lprnet/README.md), [MODNet](samples/vision/modnet/README.md) |
-| Point cloud part segmentation | [PointNet](samples/vision/pointnet/README.md) |
-| Semantic segmentation | [UNet](samples/vision/unet/README.md) · [PP-LiteSeg](samples/vision/pp_liteseg/README.md) · [UNetMobileNet](samples/vision/unetmobilenet/README.md) |
-| Monocular depth | [YOLO26 Depth](samples/vision/yolo26_depth/README.md) · [Depth Anything V2](samples/vision/depth_anything_v2/README.md) |
-| Lane embeddings and binary labels | [LaneNet](samples/vision/lanenet/README.md) |
-| Prepared-feature trajectory planning | [DiffusionDrive](samples/vision/diffusiondrive/README.md) |
-| Features, image-text matching and video classification | [DINOv2](samples/vision/dinov2/README.md), [SigLIP](samples/vision/siglip/README.md), [CLIP](samples/vision/clip/README.md), [3DResNet](samples/vision/3dresnet/README.md) |
+This repository is the official collection of BPU model examples and tools (Model Zoo) provided by D-Robotics. It is oriented towards AI model deployment and application development on BPU (Brain Processing Unit), helping developers to **quickly get started with BPU** and **fast-track model inference workflows**.
 
-ACT/Pi0 are integrated as pinned upstream Git submodules for
-vision-language-action policy work — see the [VLA guide](samples/vla/README.md):
-S100 and S600 ACT use different source versions, Pi0 targets S600, and
-model resources are operator-supplied.
+The repository includes BPU-ready models across multiple AI domains and provides complete reference implementations from **Original Model (PyTorch/ONNX) -> Fixed-point Quantization -> Inference Execution -> Result Parsing -> Example Validation**, helping users understand and utilize BPU capabilities at minimal cost.
 
-## Boards, artifacts and environments
+### Core Value
 
-| Target | Artifact | March | Notes |
-|---|---|---|---|
-| RDK X5 | `.bin` | bayes-e | 4GB/8GB memory variants |
-| RDK S100 | `.hbm` | nash-e | Not interchangeable with S100P/S600 |
-| RDK S100P | `.hbm` | nash-m | Only published combinations |
-| RDK S600 | `.hbm` | nash-p | Input geometry follows the actual artifact |
+- 🚀 **Quick BPU Adoption**: Provides out-of-the-box inference pipelines to help users complete BPU inference validation and performance evaluation in the shortest time.
+- 🧩 **Complete End-to-End Examples**: Covers the entire process from algorithm export and fixed-point quantization to efficient on-board execution (`.bin` / `.hbm`). Includes model loading, preprocessing, BPU inference execution, post-processing, and result visualization.
+- 📐 **Standardized Design & Documentation**: Provides unified directory structures and sample code specifications, supporting Python (`hbm_runtime`) and C/C++ interfaces for easy understanding, secondary development, and reduced integration/maintenance costs.
+- 🌐 **Full Scenario Coverage**: Covers classification, detection, segmentation, depth estimation, OCR, speech, and multi-modal models.
 
-Samples select the board through their native CLI — ResNet uses
-`--target auto|x5|s100|s100p|s600`, YOLO uses `--platform`; `auto`
-resolves the target from the system board identity (SoC name/board type
-plus socinfo and device-tree fallbacks) and an unknown board raises an
-explicit error. Use the SDK supplied by the matching board image (the
-`hbm_runtime` module ships with that image). Sample guides control
-host/board dependencies, image versions and memory requirements. Common
-Python dependencies include NumPy, OpenCV, SciPy and PyYAML; tasks do not
-all share one input protocol or install set. C++ needs board development
-headers/libraries; conversion needs host training/OE environments.
+### Hardware & System Support
 
-## Quick start
+This `develop` branch is the unified source for all current boards: every sample selects its target at run time with `--target auto|x5|s100|s100p|s600`, and the per-sample README states which boards its published artifacts support. Platform artifacts are recorded in the manifests under `docs/release/x5/` and `docs/release/s/`. The `rdk_x5` and `rdk_s` branches are per-board delivery lines; RDK X3 material is archived on `rdk_x3`.
 
-Clone the complete repository and prepare the dependencies documented by
-the chosen sample in its Python environment. Ordinary inference does not
-require VLA submodule initialization.
+| Target Hardware | Where | Description |
+| :--- | :--- | :--- |
+| RDK X5 | this branch, `--target x5` | Recommended system version: RDK OS >= 3.5.0, based on Ubuntu 22.04 aarch64 and TROS-Humble. |
+| RDK S100 | this branch, `--target s100` | Nash-E artifacts published under `docs/release/s/`. |
+| RDK S100P | this branch, `--target s100p` | Nash-M artifacts published under `docs/release/s/`. |
+| RDK S600 | this branch, `--target s600` | Nash-P artifacts published under `docs/release/s/`. |
+| Per-board delivery lines | [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) / [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | Board-specific release branches. |
+| RDK X3 (archive) | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | Historical archive only, not an adaptation target. |
+
+**[Browse the online model catalog →](https://d-robotics.github.io/rdk_model_zoo/)**
+
+The online catalog presents released models as searchable cards with model assets, measured performance and accuracy results, and their documented test conditions.
+
+---
+
+## Directory Structure
+
+<details>
+<summary><b>Click to expand project directory architecture</b></summary>
+
+<br>
 
 ```bash
-git clone --branch develop https://github.com/D-Robotics/rdk_model_zoo.git
-cd rdk_model_zoo
-python3 samples/vision/ultralytics_yolo/runtime/python/main.py --help
-python3 samples/vision/ultralytics_yolo/runtime/python/main.py --platform x5 --list-models
+rdk_model_zoo/
+|-- samples/
+|   |-- llm/                 # On-device text generation (native C++)
+|   |   |-- gemma4-e2b/      # VLM chat runtime (native C++)
+|   |   `-- minicpm5-2b/     # Text generation (native C++)
+|   |-- robotics/
+|   |   `-- himloco/         # Unitree Go2 locomotion policy
+|   |-- speech/
+|   |   |-- asr/             # Speech recognition
+|   |   |-- kws/             # Keyword spotting
+|   |   |-- paraformer/      # Paraformer speech recognition
+|   |-- vla/                 # Upstream VLA integrations (ACT / Pi0, pinned submodules)
+|   |-- vision/
+|   |   |-- 3dresnet/              # Video action classification
+|   |   |-- bytetrack/             # Multi-object tracking
+|   |   |-- clip/                  # Image-text multimodal matching
+|   |   |-- convnext/              # Image classification
+|   |   |-- depth_anything_v2/     # Monocular depth estimation
+|   |   |-- diffusiondrive/        # End-to-end driving planning
+|   |   |-- dinov2/                # Vision feature encoder
+|   |   |-- edgenext/              # Image classification
+|   |   |-- efficient_sam/         # Promptable image segmentation
+|   |   |-- efficientformer/       # Image classification
+|   |   |-- efficientformerv2/     # Image classification
+|   |   |-- efficientnet/          # Image classification
+|   |   |-- efficientvit/          # Image classification
+|   |   |-- fasternet/             # Image classification
+|   |   |-- fastvit/               # Image classification
+|   |   |-- fcos/                  # Object detection
+|   |   |-- googlenet/             # Image classification
+|   |   |-- hgnetv2/               # Image classification
+|   |   |-- lanenet/               # Lane detection
+|   |   |-- lprnet/                # License plate recognition
+|   |   |-- mobile_sam/            # Promptable image segmentation
+|   |   |-- mobilenetv1/           # Image classification
+|   |   |-- mobilenetv2/           # Image classification
+|   |   |-- mobilenetv3/           # Image classification
+|   |   |-- mobilenetv4/           # Image classification
+|   |   |-- mobileone/             # Image classification
+|   |   |-- modnet/                # Image matting
+|   |   |-- paddle_ocr/            # OCR text detection and recognition
+|   |   |-- pointnet/              # Point cloud part segmentation
+|   |   |-- pp_liteseg/            # Semantic segmentation
+|   |   |-- repghost/              # Image classification
+|   |   |-- repvgg/                # Image classification
+|   |   |-- repvit/                # Image classification
+|   |   |-- resnet/                # Image classification
+|   |   |-- resnext/               # Image classification
+|   |   |-- siglip/                # Vision-language encoder
+|   |   |-- ultralytics_yolo/      # Detection, segmentation, pose, classification (YOLOv5u-YOLO26)
+|   |   |-- unet/                  # Semantic segmentation
+|   |   |-- unetmobilenet/         # Semantic segmentation
+|   |   |-- vargconvnet/           # Image classification
+|   |   |-- vit/                   # Image classification
+|   |   |-- yolo26_depth/          # Monocular depth estimation
+|   |   |-- yoloe/                 # Prompt-free instance segmentation
+|   |   |-- yolov5/                # Object detection
+|   `-- yoloworld/             # Open-vocabulary object detection
+|-- datasets/              # Sample datasets and download scripts
+|-- docs/                  # Project guidelines and reference documentation
+|-- skills/                # RDK Model Zoo Agent Skills
+`-- utils/                 # Shared C++ / Python utilities
 ```
+</details>
 
-Then, on a matching X5, explicitly prepare a model and run detection from
-the repository root:
+---
+
+## Quick Start
+
+1. **Check system version**: Ensure the target board is running `RDK OS >= 3.5.0`.
+2. **Connect hardware**: Ensure your RDK board is powered and network-connected. SSH or VSCode Remote SSH is recommended.
+3. **Read the model README first**: Always open the target directory `README.md` before running commands.
+4. **Run the Ultralytics YOLO11x detection sample**:
 
 ```bash
-bash samples/vision/ultralytics_yolo/model/download_model.sh \
-  --platform x5 --family yolov8 --task detect --model-size n
-python3 samples/vision/ultralytics_yolo/runtime/python/main.py \
-  --platform x5 --family yolov8 --task detect \
-  --model-path samples/vision/ultralytics_yolo/model/yolov8n_detect_bayese_640x640_nv12.bin \
-  --label-file datasets/coco/coco_classes.names \
-  --test-img samples/vision/ultralytics_yolo/test_data/bus.jpg \
-  --img-save-path /tmp/rdk-yolov8n.jpg
+cd samples/vision/ultralytics_yolo/model
+bash download_model.sh --platform x5 --family yolo11 --task detect --model-size x
+
+cd ../runtime/python
+python3 main.py \
+  --task detect \
+  --platform x5 \
+  --family yolo11 \
+  --model-size x \
+  --test-img ../../test_data/bus.jpg \
+  --img-save-path ../../test_data/inference_yolo11x.jpg
 ```
 
-Success prints `[Saved]` and writes `/tmp/rdk-yolov8n.jpg`; the input is
-bundled in `test_data`. Other boards require matching targets/artifact
-paths. Without a board use `--dry-run` for an argument-resolution check.
-See [YOLO model preparation](samples/vision/ultralytics_yolo/model/README.md)
-and [runtime instructions](samples/vision/ultralytics_yolo/runtime/python/README.md)
-for offline copying, hash handling and other tasks. For a first
-classification run see the [ResNet quick start](samples/vision/resnet/README.md#quickstart);
-for a board test checklist see the
-[board smoke test](docs/validation/board-smoke-test.md).
+**Inference Result:**
+<div align="center">
+  <img src="samples/vision/ultralytics_yolo/test_data/ultralytics_YOLO_Detect_demo.jpg" width="80%" alt="Ultralytics YOLO detection result"/>
+</div>
 
-## Read and extend the code
+---
 
+## Model List
 
-Start with a sample's `runtime/python/main.py`: it constructs a model and calls `predict`. The model file contains preprocessing, inference and postprocessing. `cli.py` or `yolo_cli.py` handles arguments, model selection and result presentation.
+| Category | Model Name | Model Path | Supported Platform | Details |
+| :--- | :--- | :--- | :--- | :---: |
+| Video Action Classification | 3D ResNet | `samples/vision/3dresnet` | RDK S100 | [Details](./samples/vision/3dresnet) |
+| Image Classification | ConvNeXt | `samples/vision/convnext` | RDK X5 | [Details](./samples/vision/convnext) |
+| Image Classification | EdgeNeXt | `samples/vision/edgenext` | RDK X5 | [Details](./samples/vision/edgenext) |
+| Image Classification | EfficientFormer | `samples/vision/efficientformer` | RDK X5 | [Details](./samples/vision/efficientformer) |
+| Image Classification | EfficientFormerV2 | `samples/vision/efficientformerv2` | RDK X5 | [Details](./samples/vision/efficientformerv2) |
+| Image Classification | EfficientNet | `samples/vision/efficientnet` | RDK X5 / RDK S100 / RDK S600 | [Details](./samples/vision/efficientnet) |
+| Image Classification | EfficientViT | `samples/vision/efficientvit` | RDK X5 | [Details](./samples/vision/efficientvit) |
+| Image Classification | FasterNet | `samples/vision/fasternet` | RDK X5 | [Details](./samples/vision/fasternet) |
+| Image Classification | FastViT | `samples/vision/fastvit` | RDK X5 | [Details](./samples/vision/fastvit) |
+| Image Classification | GoogLeNet | `samples/vision/googlenet` | RDK X5 | [Details](./samples/vision/googlenet) |
+| Image Classification | HGNetV2 | `samples/vision/hgnetv2` | RDK X5 | [Details](./samples/vision/hgnetv2) |
+| Image Classification | MobileNetV1 | `samples/vision/mobilenetv1` | RDK X5 / RDK S100 / RDK S600 | [Details](./samples/vision/mobilenetv1) |
+| Image Classification | MobileNetV2 | `samples/vision/mobilenetv2` | RDK X5 / RDK S100 / RDK S600 | [Details](./samples/vision/mobilenetv2) |
+| Image Classification | MobileNetV3 | `samples/vision/mobilenetv3` | RDK X5 / RDK S100 / RDK S600 | [Details](./samples/vision/mobilenetv3) |
+| Image Classification | MobileNetV4 | `samples/vision/mobilenetv4` | RDK X5 / RDK S100 / RDK S600 | [Details](./samples/vision/mobilenetv4) |
+| Image Classification | MobileOne | `samples/vision/mobileone` | RDK X5 | [Details](./samples/vision/mobileone) |
+| Image Classification | RepGhost | `samples/vision/repghost` | RDK X5 | [Details](./samples/vision/repghost) |
+| Image Classification | RepVGG | `samples/vision/repvgg` | RDK X5 | [Details](./samples/vision/repvgg) |
+| Image Classification | RepViT | `samples/vision/repvit` | RDK X5 | [Details](./samples/vision/repvit) |
+| Image Classification | ResNet | `samples/vision/resnet` | RDK X5 / RDK S100 / RDK S600 | [Details](./samples/vision/resnet) |
+| Image Classification | ResNeXt | `samples/vision/resnext` | RDK X5 | [Details](./samples/vision/resnext) |
+| Image Classification | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [Details](./samples/vision/vargconvnet) |
+| Image Classification | ViT | `samples/vision/vit` | RDK S100 | [Details](./samples/vision/vit) |
+| Multi-Object Tracking | ByteTrack | `samples/vision/bytetrack` | RDK S100 | [Details](./samples/vision/bytetrack) |
+| Promptable Image Segmentation | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 / RDK S100 / RDK S100P | [Details](./samples/vision/efficient_sam) |
+| Promptable Image Segmentation | MobileSAM | `samples/vision/mobile_sam` | RDK X5 / RDK S100 / RDK S100P | [Details](./samples/vision/mobile_sam) |
+| Monocular Depth Estimation | Depth Anything V2 | `samples/vision/depth_anything_v2` | RDK S100 | [Details](./samples/vision/depth_anything_v2) |
+| Monocular Depth Estimation | YOLO26 Depth | `samples/vision/yolo26_depth` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/yolo26_depth) |
+| Semantic Segmentation | PP-LiteSeg | `samples/vision/pp_liteseg` | RDK X5 | [Details](./samples/vision/pp_liteseg) |
+| Semantic Segmentation | UNet ResNet Family | `samples/vision/unet` | RDK X5 | [Details](./samples/vision/unet) |
+| Semantic Segmentation | UNetMobileNet | `samples/vision/unetmobilenet` | RDK S100 / RDK S600 | [Details](./samples/vision/unetmobilenet) |
+| Lane Detection | LaneNet | `samples/vision/lanenet` | RDK S100 | [Details](./samples/vision/lanenet) |
+| Object Detection | FCOS | `samples/vision/fcos` | RDK X5 | [Details](./samples/vision/fcos) |
+| Object Detection | YOLOv5 | `samples/vision/yolov5` | RDK X5 / RDK S100 / RDK S600 | [Details](./samples/vision/yolov5) |
+| Object Detection / Instance Segmentation / Pose Estimation / Image Classification / Oriented Bounding Boxes | Ultralytics YOLO (`YOLOv5u / YOLOv8 / YOLOv9 / YOLOv10 / YOLO11 / YOLO12 / YOLO13 / YOLO26`) | `samples/vision/ultralytics_yolo` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/ultralytics_yolo) |
+| Prompt-Free Instance Segmentation | YOLOE | `samples/vision/yoloe` | RDK X5 / RDK S100 / RDK S100P | [Details](./samples/vision/yoloe) |
+| Open-Vocabulary Object Detection | YOLOWorld | `samples/vision/yoloworld` | RDK X5 | [Details](./samples/vision/yoloworld) |
+| Point Cloud Segmentation | PointNet | `samples/vision/pointnet` | RDK S100 | [Details](./samples/vision/pointnet) |
+| Image Matting | MODNet | `samples/vision/modnet` | RDK X5 | [Details](./samples/vision/modnet) |
+| OCR Text Detection and Recognition | PaddleOCR | `samples/vision/paddle_ocr` | RDK X5 / RDK S100 / RDK S600 | [Details](./samples/vision/paddle_ocr) |
+| License Plate Recognition | LPRNet | `samples/vision/lprnet` | RDK X5 | [Details](./samples/vision/lprnet) |
+| Image-Text Multimodal Matching | CLIP | `samples/vision/clip` | RDK X5 | [Details](./samples/vision/clip) |
+| Vision Feature Encoder | DINOv2 | `samples/vision/dinov2` | RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/dinov2) |
+| Vision-Language Encoder | SigLIP | `samples/vision/siglip` | RDK S100 / RDK S100P | [Details](./samples/vision/siglip) |
+| Speech Recognition | ASR (Wav2Vec2) | `samples/speech/asr` | RDK S100 / RDK S600 | [Details](./samples/speech/asr) |
+| Keyword Spotting | KWS | `samples/speech/kws` | RDK S100 | [Details](./samples/speech/kws) |
+| Speech Recognition | Paraformer | `samples/speech/paraformer` | RDK S100 | [Details](./samples/speech/paraformer) |
+| Planning / End-to-End Driving | DiffusionDrive | `samples/vision/diffusiondrive` | RDK S100P / RDK S600 | [Details](./samples/vision/diffusiondrive) |
+| Legged Locomotion | HIMLoco (Unitree Go2) | `samples/robotics/himloco` | RDK X5 | [Details](./samples/robotics/himloco) |
+| Vision-Language Model | Gemma4-E2B (native C++) | `samples/llm/gemma4-e2b` | RDK S100P / RDK S600 | [Details](./samples/llm/gemma4-e2b) |
+| Text Generation | MiniCPM5-2B (native C++) | `samples/llm/minicpm5-2b` | RDK S100P / RDK S600 | [Details](./samples/llm/minicpm5-2b) |
 
-For example, ResNet's [classify.py](samples/vision/resnet/runtime/python/classify.py) implements image classification, and YOLO's [detect.py](samples/vision/ultralytics_yolo/runtime/python/detect.py) implements object detection. Multi-model pipelines, tracking and decoding algorithms have their own modules. Model loading and SDK calls use the [shared Python utilities](utils/py_utils/README.md). The two `samples/llm` examples use native C++ interfaces.
+Upstream VLA integrations (ACT and Pi0) are additionally available under `samples/vla/` as pinned Git submodules; see the [VLA overview](./samples/vla/README.md) for their integration scope.
 
-Each sample's `conversion/` guide covers model export and compilation; `evaluator/` covers dataset evaluation. When adding a sample, follow the [Runtime code standard](docs/sample-standards/runtime-code.md), [inference contract](docs/sample-standards/inference-contract.md) and [README standard](docs/sample-standards/readme-contract.md). Read [AGENTS.md](AGENTS.md) before contributing.
+## Documentation & Resources
 
-## Data and validation
+- **Model Docs**: Each model's top-level `README.md` provides an overview and run guide.
+- **Source Reference**: For code-level interface details, see **[Source Documentation](./docs/source_reference/README.md)**.
+- **Guidelines**: To contribute or develop, please read the **[Model Zoo Repository Guidelines](./docs/Model_Zoo_Repository_Guidelines.md)**.
+- **Runtime Standards**: [Runtime code standard](./docs/sample-standards/runtime-code.md) (stages, data flow and tests in §9–§10) and [README standard](./docs/sample-standards/readme-contract.md).
+- **Architecture**: The readable model-example pattern is described in [Model examples](./docs/architecture/model-examples.md).
+- **Release & Manifests**: Release procedure and manifests live under [docs/release](./docs/release).
+- **Toolchain Manuals**:
+  - [RDK X5 Toolchain Doc](https://developer.d-robotics.cc/api/v1/fileData/x5_doc-v126cn/index.html)
+  - [RDK X3 Toolchain Doc](https://developer.d-robotics.cc/api/v1/fileData/horizon_xj3_open_explorer_cn_doc/index.html)
+- **Developer Forum**: [D-Robotics Developer Community](https://developer.d-robotics.cc/)
+- **User Manual**: [RDK User Manual](https://developer.d-robotics.cc/information)
 
-[Model performance data](docs/benchmarks/README.md) lists classification accuracy, BPU throughput and postprocessing time by task and board.
+---
 
-- [Model release manifests](docs/release) list model files, download URLs and
-  performance data. X5 and S-series manifests are in
-  `docs/release/{x5,s}/models.yaml`; board identifiers are in
-  `docs/release/platforms.json`.
-- Dataset preparation: [datasets](datasets). Large datasets/models are
-  generally not in Git.
-- [TROS](docs/tros/README.md) documentation for board runtime stacks.
-- Performance tables in sample guides record published measurements with
-  their stated conditions; dataset-accuracy evaluation is documented per
-  sample in its `evaluator/` guide.
+## FAQ
 
-## Catalog data (maintainers)
+<details>
+<summary><b>1. Model accuracy doesn't meet expectations?</b></summary>
+<br>
 
-`utils/tools/catalog-publisher` validates platform manifests and produces
-derived data. Use Node 22.12+ and below 23 as required by package.json.
-From the repository root:
+- Ensure OpenExplorer Docker and board-side `libdnn.so` versions are up-to-date.
+- Check if model export followed the structure adjustments/operator replacements required in the model's README.
+- Verify cosine similarity of each output node is >= 0.999 (minimum 0.99) during quantization validation.
+</details>
 
-```bash
-npm --prefix utils/tools/catalog-publisher ci
-npm --prefix utils/tools/catalog-publisher run check
-npm --prefix utils/tools/catalog-publisher run catalog:build
-```
+<details>
+<summary><b>2. Inference speed doesn't meet expectations?</b></summary>
+<br>
 
-Generated `dist/catalog.meta.json` binds `catalog.json` by SHA-256; CI
-uploads data artifacts.
+- Python API performance is lower than C/C++. For maximum performance, use C/C++.
+- Benchmark data (pure forward) excludes pre/post-processing. Models with **NV12** input usually achieve peak BPU throughput.
+- Ensure CPU/BPU frequency is locked to maximum.
+- Check for other resource-heavy processes.
+</details>
 
-## Community, contribution and license
+<details>
+<summary><b>3. How to fix quantization precision loss?</b></summary>
+<br>
 
-- [Online model catalog](https://d-robotics.github.io/rdk_model_zoo/)
-- [GitHub Issues](https://github.com/D-Robotics/rdk_model_zoo/issues) —
-  include target, image/SDK, model reference, commit and reproducible
-  commands; preserve original failure output and submit matching
-  documentation/tests with fixes.
-- [D-Robotics developer community](https://developer.d-robotics.cc/) and
-  its [user manual](https://developer.d-robotics.cc/information)
+- Refer to the PTQ accuracy debugging section in the platform documentation.
+- If INT8 loss is severe due to model characteristics, consider Mixed Precision or QAT (Quantization-Aware Training).
+</details>
 
-Unified code uses the root [LICENSE](LICENSE). Model weights, datasets
-and upstream projects retain their respective licenses and provenance.
+<details>
+<summary><b>4. Error "Can't reshape 1354752 in (1,3,640,640)"?</b></summary>
+<br>
+
+The conversion settings no longer match the ONNX input size. Update the input resolution in the sample's `conversion/` guide settings to match your ONNX model, delete old calibration data and re-run the calibration script.
+</details>
+
+<details>
+<summary><b>5. mAP accuracy is lower than official results (e.g., Ultralytics)?</b></summary>
+<br>
+
+- Deployment uses fixed shape and INT8 quantization, unlike dynamic shape/float official tests.
+- Slight implementation differences in evaluation scripts (e.g., `pycocotools`).
+- NCHW-RGB to NV12 conversion adds minimal pixel-level loss.
+</details>
+
+<details>
+<summary><b>6. Does the model use CPU during inference?</b></summary>
+<br>
+
+Yes. Non-quantizable or BPU-unsupported operators **fallback** to CPU. Even for pure BPU models, input/output quantization/dequantization nodes are executed by the CPU.
+</details>
+
+---
+
+## Community & Contribution
+
+### Star History
+
+<a href="https://www.star-history.com/?type=date&repos=D-Robotics%2Frdk_model_zoo">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=D-Robotics%2Frdk_model_zoo&type=date&theme=dark&legend=top-left&sealed_token=pcz2nn9lRITzBL-JyNLEYFdMZf7Ra0ft7FtCA_eTVEsXH_7xk2cX9jbYWg1AT0ilwVvO4VgrNH0vXv3LVHeGq58Yi24r1novjfb7VFH3Gc1GCT2jGjg38g" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=D-Robotics%2Frdk_model_zoo&type=date&legend=top-left&sealed_token=pcz2nn9lRITzBL-JyNLEYFdMZf7Ra0ft7FtCA_eTVEsXH_7xk2cX9jbYWg1AT0ilwVvO4VgrNH0vXv3LVHeGq58Yi24r1novjfb7VFH3Gc1GCT2jGjg38g" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=D-Robotics%2Frdk_model_zoo&type=date&legend=top-left&sealed_token=pcz2nn9lRITzBL-JyNLEYFdMZf7Ra0ft7FtCA_eTVEsXH_7xk2cX9jbYWg1AT0ilwVvO4VgrNH0vXv3LVHeGq58Yi24r1novjfb7VFH3Gc1GCT2jGjg38g" />
+ </picture>
+</a>
+
+We warmly welcome contributions! Please raise an issue on [GitHub Issues](https://github.com/D-Robotics/rdk_model_zoo/issues) or discuss on the [Developer Community](https://developer.d-robotics.cc/).
+
+## License
+
+This project is licensed under the [Apache License 2.0](./LICENSE) agreement.

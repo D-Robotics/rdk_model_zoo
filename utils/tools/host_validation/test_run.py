@@ -97,7 +97,7 @@ ABSENT_PIN = "0123456789abcdef0123456789abcdef01234567"
 
 # The accepted native sample inventory the runner validates coverage against.
 SAMPLE_INVENTORY_RELPATH = (
-    "docs/releases/unified-migration/2026-10-05-all-sample-coverage.json")
+    "utils/tools/host_validation/sample-inventory.json")
 
 # The samples the green fixture repository carries.  The green layout ships
 # an accepted inventory listing exactly these, because the maintained gate

@@ -92,7 +92,7 @@ SCHEME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*:")
 FENCE_OPEN_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
 FENCE_CLOSE_RE = re.compile(r"^ {0,3}(`+|~+)[ \t]*$")
 
-# Stage functions whose bodies are purity-checked (inference-contract §1/§3).
+# Stage functions whose bodies are purity-checked (runtime-code.md §9).
 # The 2026-10-05 readable-runtime rollout made preprocess/infer/postprocess
 # the primary stage spellings; the established pre_process/forward/
 # post_process names remain covered as compatibility aliases (same body,
@@ -110,7 +110,7 @@ STAGE_PREFIXES = (
 # reason.  These are reported as skips, never silently ignored.
 POLICY_SKIPPED_FILES = {
     "main.py": "CLI layer: saving output and argument handling live here",
-    "legacy.py": "documented compatibility shim (inference-contract §4)",
+    "legacy.py": "documented compatibility shim (runtime-code.md §9)",
 }
 
 # Sample-local CLI helper files.  Their *module-level* functions are the
@@ -692,7 +692,7 @@ def check_stage_purity(report: SampleReport, sample_dir: Path) -> None:
                 report.add(
                     RULE_PURITY, py_file, child.lineno,
                     f"stage function {node.name}() calls {name}() — "
-                    f"{category} boundary (inference-contract §3)")
+                    f"{category} boundary (runtime-code.md §9)")
         if cli_boundary_names:
             report.skip(
                 RULE_PURITY, py_file,
@@ -916,8 +916,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="resolve samples from the migration progress region")
     parser.add_argument(
         "--migration-map", type=Path,
-        default=REPO_ROOT / "docs/releases/unified-migration/"
-                            "x5-s-migration-map.md",
+        default=REPO_ROOT / "utils/tools/sample_contract/sample-scope.md",
         help="progress-region markdown used by --scope migration")
     parser.add_argument(
         "--samples-root", type=Path, default=REPO_ROOT / "samples",

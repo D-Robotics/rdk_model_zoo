@@ -184,7 +184,7 @@ class NativeCLI(unittest.TestCase):
             manifest.write_text("[{}]")
             vocabulary = (
                 launcher.ROOT
-                / "docs/releases/unified-migration/evidence/2026-09-28-b10-paraformer-pipeline/published-tokens.json"
+                / "samples/speech/paraformer/tests/fixtures/published-tokens.json"
             )
             binary = tmp / "fixture"
             binary.write_text('#!/bin/sh\nprintf "Backend: host-fixture\\n"\n')

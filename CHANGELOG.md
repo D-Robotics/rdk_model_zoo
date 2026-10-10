@@ -1,48 +1,40 @@
 # Changelog
 
-This file merges the per-platform changelogs of the two delivery branches at
-the migration freeze point (Phase 1 A6, 2026-09-21):
+Version changes of the unified `develop` source and the two platform
+delivery lines:
 
-- **rdk_x5** @ `ac11571` (tag `x5-v1.1.3`)
-- **rdk_s** @ `380e1a2` (tag `s-v1.1.2`)
+- **unified source** — repository root `VERSION` (2.0.0); unified tags use
+  `zoo-vX.Y.Z`
+- **rdk_x5** — `docs/release/x5/VERSION` (x5-v1.1.3)
+- **rdk_s** — `docs/release/s/VERSION` (s-v1.1.2)
 
-Entries under each source header below are carried **verbatim**. Their
-historical anchor links (`<a id="x5-v1.1.x-details">`, `<a id="s-v1.1.x-details">`,
-…) are platform-prefixed and therefore unique across both bodies, so every
-in-file link keeps resolving after the merge.
-
-Per-platform release versions now travel with their manifests at
-`docs/release/{x5,s}/VERSION`. A unified repository-root version line is a
-separate concept governed by ADR-0006 and starts with the first unified
-release; no root `VERSION` is introduced at this point.
+Entries under each platform header below are carried verbatim from the
+delivery branches; their platform-prefixed anchor links stay unique across
+both bodies, so every in-file link keeps resolving.
 
 ---
 
-## Unreleased — unified source 2.0.0 candidate (zoo-v2.0.0, tag not created)
+## zoo-v2.0.0 — unified source 2.0.0
 
-First unified-source release candidate of the merged X5/S tree (ADR-0006).
-Local source version only: no `zoo-v*` tag exists, no GitHub Release was
-created, and the remote default branch is still `rdk_x5` (no `main`). See
-[unified-source-release.md](docs/releases/unified-source-release.md) for the
-version identities, the support/verification matrix and the main
-promotion/rollback procedure.
+Unified source 2.0.0: X5 and S samples maintained in one `develop` tree.
 
-- Source version `2.0.0` introduced at the repository root (`VERSION`);
-  unified source tags will use `zoo-vX.Y.Z`. Platform artifact versions stay
-  separate and unchanged (X5 `x5-v1.1.3`, S `s-v1.1.2`), and the Skills pack
-  (candidate 1.1.0) keeps its own independent versioning; nothing is re-tagged.
-- All 51 in-repo samples now follow the approved readable-runtime
-  architecture with independent host acceptance (2026-10-05: 1871 tests,
-  1859 executed-passed, 12 explicit optional-dependency skips; ACT/Pi0
-  gitlinks excluded). Board dimensions are preserved as recorded: scoped
-  historical evidence stays scoped, 33 samples remain board not-run.
-- Catalog provenance now binds worktree builds to the immutable commit they
-  are generated from (`sources.json` `link_ref: "HEAD"` resolved by the
-  loader); artifact links are `blob/<full-commit>/...`, never `/tree/HEAD`
-  or a branch name. Historical X3/pinned-tag links and all asset/benchmark
-  values are unchanged.
-- No runtime code rewrite is part of this candidate; promotion to `main` is
-  a procedure over equivalent CI gates, not a code change.
+- Source version `2.0.0` at the repository root (`VERSION`); unified source
+  tags use `zoo-vX.Y.Z`. Platform artifact versions stay separate (X5
+  `x5-v1.1.3`, S `s-v1.1.2`); the Skills pack (1.1.0) keeps its own
+  independent versioning. Platform manifests live under `docs/release/{x5,s}/`
+  (`models.yaml`, `benchmarks.yaml`, `VERSION`) and platform identities under
+  `docs/release/platforms.json`.
+- In-repo samples expose a unified model entry: each sample's `main.py`
+  constructs the named model class and calls `predict`, with shared SDK
+  session, image IO and platform identity in `utils/py_utils/`. The
+  [Runtime code standard](docs/sample-standards/runtime-code.md) defines the
+  target file layout for single-task samples and the five Ultralytics YOLO
+  tasks; per-sample alignment is recorded per sample, not claimed wholesale.
+  ACT/Pi0 are pinned upstream gitlinks.
+- Catalog provenance binds worktree builds to the immutable commit they are
+  generated from (`sources.json` `link_ref: "HEAD"` resolved by the loader);
+  artifact links are `blob/<full-commit>/...`, never `/tree/HEAD` or a
+  branch name.
 
 ---
 

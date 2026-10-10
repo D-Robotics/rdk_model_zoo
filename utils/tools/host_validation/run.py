@@ -143,7 +143,7 @@ PARAFORMER_EXPORT_MODULE_PREFIX = "test_export_stages."
 #: not carry it — or carries an empty/malformed one — fails with an
 #: explicit reason and can never claim full CI equivalence.
 SAMPLE_INVENTORY_RELPATH = (
-    "docs/releases/unified-migration/2026-10-05-all-sample-coverage.json")
+    "utils/tools/host_validation/sample-inventory.json")
 #: First-party sample domains (``vla`` holds excluded pinned gitlinks).
 SAMPLE_DOMAINS = ("vision", "llm", "robotics", "speech")
 

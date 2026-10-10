@@ -102,7 +102,7 @@ describe("multi-platform variant catalog", () => {
     const retired = new Set(["yolo11", "yolo11_pose", "yolo11_seg", "yolov13_imoonlab"]);
     expect(variants.some(variant => retired.has(variant.sample_path?.split("/").at(-1) ?? ""))).toBe(false);
     const evidence = JSON.parse(await readFile(resolve(repositoryRoot,
-      "docs/releases/unified-migration/evidence/2026-09-27-yolo-deduplication/retired-records.json"), "utf8"));
+      "utils/tools/catalog-publisher/tests/fixtures/retired-records.json"), "utf8"));
     // YOLO26 deliberately shares the canonical Ultralytics sample directory.
     expect(catalog.models.some(model => model.id === "yolov26" && model.assets.length > 0)).toBe(true);
     const removedUrls: string[] = evidence.models.flatMap((model: { assets: { url?: string }[] }) =>

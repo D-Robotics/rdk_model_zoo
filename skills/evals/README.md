@@ -4,9 +4,7 @@ English | [简体中文](README_cn.md)
 
 The seven Model Zoo Skills define 75 core behavior cases in their respective
 `evals/tasks.yaml` files. Each case records the input, fixture and expected routing
-or behavior. Results and evidence for individual cases are available in the
-[behavior report](REPORT.md). Archive checksums are available in the
-[SHA256 file](codex-evidence-2026-09-17.sha256).
+or behavior.
 
 ## Evaluation records
 
@@ -23,11 +21,8 @@ an independent session; synthetic scenarios use separate temporary fixtures.
 Review checks expected behavior case by case against actual tool calls, file
 changes, logs and final artifacts.
 
-## Current report
+## Running an evaluation
 
-The [behavior report](REPORT.md) records execution of the 75 core cases,
-comparison results, scoring status and known limitations. It also links to an
-archive containing inputs, commit identities, tool events, file changes and
-scoring records. After modifying a Skill, run new Agent evaluations for affected
-cases and related negative routing scenarios, and record the results in the
-corresponding report.
+After modifying a Skill, run new Agent evaluations for the affected cases and
+the related negative routing scenarios, then record the results in a report
+following the record structure above.

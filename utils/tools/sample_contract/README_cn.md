@@ -43,7 +43,7 @@ README 的 `Default` 列与解析器经过标准化后进行比较：`None` → 
 
 ## 检查范围
 
-`--scope migration` 读取 `docs/releases/unified-migration/x5-s-migration-map.md` 的进度区域，检查 **Refactor** 列为 `in-progress` 或 `done` 的全部样例（忽略括号注释）。选中行若没有可解析的 `samples/<domain>/<name>` 目录，会产生 `R-SCOPE` 违规，使进度表与样例树保持同步。
+`--scope migration` 读取 `utils/tools/sample_contract/sample-scope.md` 的进度区域，检查 **Refactor** 列为 `in-progress` 或 `done` 的全部样例（忽略括号注释）。选中行若没有可解析的 `samples/<domain>/<name>` 目录，会产生 `R-SCOPE` 违规，使进度表与样例树保持同步。
 
 ## 豁免
 

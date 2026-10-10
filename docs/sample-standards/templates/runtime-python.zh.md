@@ -2,7 +2,7 @@
 
 <!-- 模板：runtime/python README（中文）。契约：readme-contract.md §4.3。
      保持锚点；替换 ⟪…⟫；完成后删除引导。参数默认值与 build_parser 机器核对；
-     集成示例必须原样可运行（由 sample tests 按 inference-contract 验证）。 -->
+     集成示例必须原样可运行（由 sample tests 按 runtime-code.md §10 验证）。 -->
 
 # Python 运行 — ⟪模型名⟫
 
@@ -80,7 +80,7 @@ print(⟪result 字段⟫)
 ## 三阶段 I/O
 
 > **必须回答：** 本 sample 的 preprocess / infer / postprocess 契约摘要，
-> 与 docstring 一致（见 inference-contract）。多阶段 pipeline（如 OCR det→rec）
+> 与 docstring 一致（见 runtime-code.md §9）。多阶段 pipeline（如 OCR det→rec）
 > 每阶段一小节，另加 pipeline.predict 编排说明。
 
 - `preprocess`：⟪Input⟫ → ⟪Tensors + Context⟫（⟪shape/dtype/布局⟫）

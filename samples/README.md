@@ -101,6 +101,4 @@ Complete upstream ACT/Pi0 Git submodules are maintained separately from the 51 i
 
 ## Choose and extend
 
-Start with the sample README, then model/runtime/conversion/evaluator. Classification, feature extraction and image-text matching expose different outputs. EfficientSAM's export-fixed prompt and MobileSAM's runtime box are not interchangeable. Shared target/artifact mechanisms are in [utils/py_utils](../utils/py_utils/README.md); responsibilities and documentation requirements are in the [inference contract](../docs/sample-standards/inference-contract.md) and [README contract](../docs/sample-standards/readme-contract.md).
-
-For a first board session see the [board smoke test](../docs/validation/board-smoke-test.md).
+Start with the sample README, then model/runtime/conversion/evaluator. Classification, feature extraction and image-text matching expose different outputs. EfficientSAM's export-fixed prompt and MobileSAM's runtime box are not interchangeable. Shared target/artifact mechanisms are in [utils/py_utils](../utils/py_utils/README.md); responsibilities and documentation requirements are in the [Runtime code standard](../docs/sample-standards/runtime-code.md) and [README contract](../docs/sample-standards/readme-contract.md).

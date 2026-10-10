@@ -1,14 +1,11 @@
 # README 内容契约（readme-contract）
 
-> 状态：Phase 0.5 Q1 基线（2026-09-20）。适用范围：`develop` 统一 samples 架构下的全部
-> sample 文档。旧交付分支（rdk_x5 / rdk_s / rdk_x3）的存量 README 不追溯适用本契约；
-> 其修订以各自 ref 的规范为准。
 
-## 交付文档口径（2026-10-07）
+## 交付文档口径
 
-### 阅读顺序（2026-10-08）
+### 阅读顺序
 
-以 [Sample 交付规范](sample-delivery.md) 为当前统一框架：模型介绍与来源在前，
+以 [Runtime 代码规范](runtime-code.md) 与本契约为统一框架：模型介绍与来源在前，
 当前目录结构其次，使用方法随后。Sample 根的 `directory` 紧随 `overview`；
 conversion 的 `directory` 紧随 `source-model`；model 的 `directory` 紧随 `artifacts`；
 evaluator 的 `directory` 紧随 `dataset`。Python/C++ runtime 以 `overview`、`directory`
@@ -22,7 +19,7 @@ README 直接介绍当前交付物的用途、适用板卡、模型准备、编�
 英文和中文遵循同一口径。下文的固定锚点继续有效；`known-gaps` 可显示为“补充准备”，
 `boundaries` 可显示为“适用范围”，标题无需沿用历史命名。
 
-## 行文与资料完整性（2026-10-08）
+## 行文与资料完整性
 
 - 开头简短介绍模型及任务。输入张量、输出结构、板卡组合和 API 细节写在对应章节，不集中堆入导语。
 - 说明面向开发者的操作和模型行为，不解释作者的编排选择，不加入迁移、审计或验收叙述。
@@ -116,7 +113,7 @@ Skills（develop/review/validate）按本契约引导流程。三层各司其职
 | `parameters` | 参数 | 全部 CLI 参数表：名称/类型/默认值/说明；**默认值必须与 parser 实际值一致**（Q3 从 `build_parser` 核对） | 无遗漏；kebab-case 命名 |
 | `results` | 结果 | 输出字段/文件的位置、格式与含义；坐标/类别/置信度语义 | 字段名与代码返回一致 |
 | `integration-example` | 集成示例 | **完整可运行**的 Python 片段：输入与配置变量全部定义、无未定义引用；优先演示具名模型类的 `predict`，按需要补充三阶段调用 | 由 sample tests 在 fixture 中验证（Q2）；不得含未定义变量 |
-| `stage-io` | 三阶段 I/O | `preprocess` 输入→输出、`infer` 张量契约、`postprocess` 输出的类型与 shape 约定（与 inference-contract 一致的摘要） | 与 docstring 一致 |
+| `stage-io` | 三阶段 I/O | `preprocess` 输入→输出、`infer` 张量契约、`postprocess` 输出的类型与 shape 约定（与 runtime-code.md §9 一致的摘要） | 与 docstring 一致 |
 | `troubleshooting` | 故障排查 | 常见错误（模型缺失/target 不匹配/输入尺寸）与处置 | 只列真实会踩坑的点 |
 
 ### 4.4 runtime/cpp（`templates/runtime-cpp.{en,zh}.md`）
@@ -156,6 +153,23 @@ Skills（develop/review/validate）按本契约引导流程。三层各司其职
 | `reference-results` | 参考结果 | 已发布的参考值、模型/板卡/数据集条件及来源 | 只列有来源的数值；没有参考数值时给出结果获取步骤 |
 | `boundaries` | 适用范围 | 列出实现支持的数据集、指标和输入条件；外部评估工具给出具体入口 | 与实际脚本或可执行程序对应 |
 
+## 4.7 子目录 README 的操作覆盖
+
+每个子目录先说明用途和输入输出，再给当前目录结构，最后给完整操作步骤。主 README 提供
+一条完整快速运行路径；子 README 不能仅用“参考其他模型”代替本目录操作。
+
+| 目录 | 必须说明的操作 |
+| --- | --- |
+| `model/` | 模型/板卡对应关系、下载或准备命令、伴随文件、最终保存路径 |
+| `conversion/` | 原始权重获取、ONNX 导出、工具链环境、校准数据准备、量化配置、编译命令、输出模型路径及使用方式 |
+| `runtime/python/` | 环境与依赖、模型准备、运行命令、完整 CLI 参数、结果说明、模型类 predict 和三阶段集成示例 |
+| `runtime/cpp/` | SDK/编译依赖、构建命令、模型准备、运行参数、输出与调用接口 |
+| `evaluator/` | 数据集准备、依赖、运行命令、指标定义、结果文件和读取方式 |
+| `test_data/`、`tests/` | 若有 README，说明所含数据或测试的用途及实际运行方式 |
+
+同一模型有多种板卡/工具链配方时分小节列出，完整保留每条原始配方的命令、依赖、版本、
+配置、链接和图片，仅调整已经改变的路径。
+
 ## 5. 统一内容纪律（全层级适用）
 
 1. **命令五要素**：cwd、前置文件来源、参数、输出位置、成功判断。缺任一要素的命令块
@@ -163,47 +177,13 @@ Skills（develop/review/validate）按本契约引导流程。三层各司其职
 2. **集成示例变量必须定义**：Python 示例中出现的输入/配置变量必须在示例内定义或指向
    明确的本地文件；“用户按步骤准备真实文件”是前提，须在示例前写明前置条件，不得把
    未定义变量当示例。
-3. **禁止转嫁**：“同其他模型/参考原分支/见迁移记录”不能替代关键步骤；迁移历史、
-   canonical/wrapper 审计说明放 `docs/releases/unified-migration/`，客户 README 只保留
-   用户需要的实际调用接口与准备条件。
+3. **禁止转嫁**：“同其他模型/参考原分支/见迁移记录”不能替代关键步骤；迁移历史与审计说明不进入客户
+   README；客户 README 只保留用户需要的实际调用接口与准备条件。
 4. **操作真实**：转换与评估步骤使用实际脚本、配置和参数；外部工具、权重及校准数据给出
    具体获取和准备步骤，不用不存在的脚本或虚构产物充数。
 5. **hash 纪律**：未知校验值一律 `sha256: null (unknown)`，禁止猜测、禁止从同模型其他
    制品复制。
 6. **API 摘要**：公开 API 的 shape、dtype、布局、值域、坐标约定及异常在 docstring 中
-   精确说明（见 inference-contract），README 给可理解的摘要与使用例，两者不得矛盾。
+   精确说明（见 runtime-code.md §9），README 给可理解的摘要与使用例，两者不得矛盾。
 7. **支持与测试记录**：README 的支持矩阵描述当前实现、制品和适用条件。实际主机或板端
    测试记录包含提交、模型、环境、输入和结果，放在独立验证文档中；README 不写测试状态或验收说明。
-
-## 6. 与旧规范（rdk_x5 `docs/Model_Zoo_Repository_Guidelines.md`）的冲突记录
-
-本契约在 develop 生效；rdk_x5 旧规范在 rdk_x5 上继续有效。已识别冲突及处置：
-
-| # | 旧规范条款 | 本契约处置 |
-| --- | --- | --- |
-| C1 | sample 根 QuickStart 以 run.sh“自动下载模型/自动构建/自动运行”为默认叙事 | develop 采用**显式模型准备**（`model/download.sh --target`）＋分步命令；run.sh 若存在可作为快捷方式并列给出，但 quickstart 必须先给显式路径 |
-| C2 | `model/README.md` 仅要求“写清楚模型下载方式” | 扩展为 §4.2 五章节：制品对应、伴随文件、本地路径、格式与校验值 |
-| C3 | conversion/evaluator README “暂无统一规范” | 本契约 §4.5/§4.6 给出完整契约；缺配方必须显式列 `known-gaps` |
-| C4 | sample 根无支持矩阵要求；runtime 章节默认“同时提供 C++ / Python” | 强制 `support-matrix`（target×variant×语言的可用组合）；语言覆盖按实际声明 |
-| C5 | runtime README “默认值必须与代码一致”（仅人工约束） | 保留并升级为 Q3 自动核对（parser `build_parser` 提取） |
-| C6 | 代码文档指向 `docs/source_reference/` | develop 上该目录在 Phase 1（A6）前不存在；引用必须以实际存在路径为准，模板不预设该链接 |
-| C7 | 顶层 README 规范描述 rdk_x5 目录树（docs/manifests 等） | develop 布局以本契约与根规范 develop 版为准；A6 合并时按 develop 布局改写目录章节 |
-
-## 7. 参照覆盖检验（ResNet 单模型 / OCR 多阶段）
-
-契约设计对照两个既有试点验证可表达性（试点文档按 Q4 重写后才宣称合规）：
-
-- **ResNet（单模型）**：`support-matrix` 表达 x5+s100 / resnet18 / python+s100-cpp；
-  resnet50/152 迁入后作为 variant 行扩展，无需新层级。`stage-io` 表达单阶段分类的
-  Input→Tensors→Result。
-- **paddle_ocr（多阶段）**：`artifacts`（model 层）以 stage 列表达 det/rec 两组成品对应；
-  `stage-io` 表达 pipeline 编排（det→crop→rec），阶段错误归属在 Q2 tests 覆盖；
-  `integration-example` 需给 pipeline.predict 级示例而非仅单阶段。
-- **覆盖结论**：两级场景均可由 §4 章节集合表达，无缺口；OCR 场景要求 `stage-io` 章节
-  允许按阶段分小节（模板已含该形态）。
-
-## 8. 维护
-
-- 本契约修订与模板修订同 commit；模板是契约的实例化，不允许模板先行偏离契约。
-- 新增章节 ID 先改契约再改模板；Q3 规则同步更新（规则 ID 与章节 ID 解耦）。
-- 历史版本见 git 记录；重大语义变更在 `docs/adr/` 记录。
