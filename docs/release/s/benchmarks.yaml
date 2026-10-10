@@ -516,37 +516,175 @@ benchmarks:
   - id: mobilenetv4-small-s100
     sample_id: mobilenetv4
     variant_id: mobilenetv4-conv-small-224-s100
-    display_name: MobileNetV4 Conv Small 224x224 PTQ reference
-    asset_filename: s100/mobilenetv4_small_224x224_nv12.hbm
+    display_name: MobileNetV4 Conv Small 224x224 on RDK S100
+    asset_filename: s100/mobilenetv4_conv_small_nashe_224x224_nv12.hbm
     model_format: hbm
-    environment: { hardware: RDK S100, runtime: OpenExplore toolchain }
+    precision: int8
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
     performance:
-      - { metric: latency, value: 0.18, unit: ms, scope: 1 core toolchain reference }
-      - { metric: throughput, value: 5698.18, unit: fps, scope: 1 core toolchain reference }
+      - { metric: latency, value: 0.407, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 2359.33, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 0.452, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 4202.89, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 2.761, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: throughput, value: 361.83, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: latency, value: 4.593, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: throughput, value: 416.18, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to Top-K" }
     accuracy:
-      - { metric: cosine-similarity, value: 0.99988, unit: ratio, model_stage: quantized, scope: output tensor vs float reference }
+      - { metric: top-1, value: 60.96, unit: percent, model_stage: float, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-5, value: 82.64, unit: percent, model_stage: float, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-1, value: 58.56, unit: percent, model_stage: quantized, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-5, value: 80.78, unit: percent, model_stage: quantized, dataset: ImageNetV2 MatchedFrequency }
     source:
-      ref: 53d924f4c88175ec77634d24e5d711a3a0901eb6
-      path: samples/vision/mobilenetv4/conversion/README.md
-      section: "## Original Quantization Record"
+      ref: bec73d783d320df1fae4d7e5ef6856e7eeb5afcd
+      path: samples/vision/mobilenetv4/README.md
+      section: "## Performance data"
+      provenance: existing-repository-documentation
+
+  - id: mobilenetv4-small-s100p
+    sample_id: mobilenetv4
+    variant_id: mobilenetv4-conv-small-224-s100p
+    display_name: MobileNetV4 Conv Small 224x224 on RDK S100P
+    asset_filename: s100p/mobilenetv4_conv_small_nashm_224x224_nv12.hbm
+    model_format: hbm
+    precision: int8
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK S100P, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 0.355, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 2709.62, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 0.431, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 4500.99, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 2.178, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: throughput, value: 458.64, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: latency, value: 3.631, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: throughput, value: 534.19, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to Top-K" }
+    accuracy:
+      - { metric: top-1, value: 60.96, unit: percent, model_stage: float, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-5, value: 82.64, unit: percent, model_stage: float, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-1, value: 58.56, unit: percent, model_stage: quantized, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-5, value: 80.78, unit: percent, model_stage: quantized, dataset: ImageNetV2 MatchedFrequency }
+    source:
+      ref: bec73d783d320df1fae4d7e5ef6856e7eeb5afcd
+      path: samples/vision/mobilenetv4/README.md
+      section: "## Performance data"
+      provenance: existing-repository-documentation
+
+  - id: mobilenetv4-small-s600
+    sample_id: mobilenetv4
+    variant_id: mobilenetv4-conv-small-224-s600
+    display_name: MobileNetV4 Conv Small 224x224 on RDK S600
+    asset_filename: s600/mobilenetv4_conv_small_nashp_224x224_nv12.hbm
+    model_format: hbm
+    precision: int8
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK S600, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 0.311, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 3077.93, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 0.317, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 5990.71, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 1.348, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: throughput, value: 740.87, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: latency, value: 1.936, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: throughput, value: 910.95, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to Top-K" }
+    accuracy:
+      - { metric: top-1, value: 60.96, unit: percent, model_stage: float, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-5, value: 82.64, unit: percent, model_stage: float, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-1, value: 58.57, unit: percent, model_stage: quantized, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-5, value: 80.94, unit: percent, model_stage: quantized, dataset: ImageNetV2 MatchedFrequency }
+    source:
+      ref: bec73d783d320df1fae4d7e5ef6856e7eeb5afcd
+      path: samples/vision/mobilenetv4/README.md
+      section: "## Performance data"
       provenance: existing-repository-documentation
 
   - id: mobilenetv4-medium-s100
     sample_id: mobilenetv4
-    variant_id: mobilenetv4-conv-medium-256-s100
-    display_name: MobileNetV4 Conv Medium 256x256 PTQ reference
-    asset_filename: s100/mobilenetv4_medium_256x256_nv12.hbm
+    variant_id: mobilenetv4-conv-medium-224-s100
+    display_name: MobileNetV4 Conv Medium 224x224 on RDK S100
+    asset_filename: s100/mobilenetv4_conv_medium_nashe_224x224_nv12.hbm
     model_format: hbm
-    environment: { hardware: RDK S100, runtime: OpenExplore toolchain }
+    precision: int8
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
     performance:
-      - { metric: latency, value: 0.41, unit: ms, scope: 1 core toolchain reference }
-      - { metric: throughput, value: 2468.07, unit: fps, scope: 1 core toolchain reference }
+      - { metric: latency, value: 0.607, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 1595.06, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 0.683, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 2830.64, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 2.733, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: throughput, value: 365.51, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: latency, value: 4.498, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: throughput, value: 431.19, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to Top-K" }
     accuracy:
-      - { metric: cosine-similarity, value: 0.999863, unit: ratio, model_stage: quantized, scope: output tensor vs float reference }
+      - { metric: top-1, value: 67.35, unit: percent, model_stage: float, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-5, value: 87.86, unit: percent, model_stage: float, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-1, value: 66.94, unit: percent, model_stage: quantized, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-5, value: 87.65, unit: percent, model_stage: quantized, dataset: ImageNetV2 MatchedFrequency }
     source:
-      ref: 53d924f4c88175ec77634d24e5d711a3a0901eb6
-      path: samples/vision/mobilenetv4/conversion/README.md
-      section: "## Original Quantization Record"
+      ref: bec73d783d320df1fae4d7e5ef6856e7eeb5afcd
+      path: samples/vision/mobilenetv4/README.md
+      section: "## Performance data"
+      provenance: existing-repository-documentation
+
+  - id: mobilenetv4-medium-s100p
+    sample_id: mobilenetv4
+    variant_id: mobilenetv4-conv-medium-224-s100p
+    display_name: MobileNetV4 Conv Medium 224x224 on RDK S100P
+    asset_filename: s100p/mobilenetv4_conv_medium_nashm_224x224_nv12.hbm
+    model_format: hbm
+    precision: int8
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK S100P, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 0.53, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 1828.72, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 0.612, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 3173.55, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 2.167, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: throughput, value: 460.92, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: latency, value: 3.431, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: throughput, value: 550.96, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to Top-K" }
+    accuracy:
+      - { metric: top-1, value: 67.35, unit: percent, model_stage: float, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-5, value: 87.86, unit: percent, model_stage: float, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-1, value: 66.94, unit: percent, model_stage: quantized, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-5, value: 87.65, unit: percent, model_stage: quantized, dataset: ImageNetV2 MatchedFrequency }
+    source:
+      ref: bec73d783d320df1fae4d7e5ef6856e7eeb5afcd
+      path: samples/vision/mobilenetv4/README.md
+      section: "## Performance data"
+      provenance: existing-repository-documentation
+
+  - id: mobilenetv4-medium-s600
+    sample_id: mobilenetv4
+    variant_id: mobilenetv4-conv-medium-224-s600
+    display_name: MobileNetV4 Conv Medium 224x224 on RDK S600
+    asset_filename: s600/mobilenetv4_conv_medium_nashp_224x224_nv12.hbm
+    model_format: hbm
+    precision: int8
+    input: { shape: [224, 224], format: NV12 }
+    environment: { hardware: RDK S600, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 0.407, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 2380.91, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 0.419, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 4605.22, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 1.412, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: throughput, value: 707.09, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: latency, value: 1.938, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to Top-K" }
+      - { metric: throughput, value: 980.41, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to Top-K" }
+    accuracy:
+      - { metric: top-1, value: 67.35, unit: percent, model_stage: float, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-5, value: 87.86, unit: percent, model_stage: float, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-1, value: 66.75, unit: percent, model_stage: quantized, dataset: ImageNetV2 MatchedFrequency }
+      - { metric: top-5, value: 87.56, unit: percent, model_stage: quantized, dataset: ImageNetV2 MatchedFrequency }
+    source:
+      ref: bec73d783d320df1fae4d7e5ef6856e7eeb5afcd
+      path: samples/vision/mobilenetv4/README.md
+      section: "## Performance data"
       provenance: existing-repository-documentation
 
   - id: pointnet-s100

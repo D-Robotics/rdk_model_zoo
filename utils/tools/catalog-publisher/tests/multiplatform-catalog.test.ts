@@ -88,10 +88,12 @@ describe("multi-platform variant catalog", () => {
     // The user retired four redundant standalone S YOLO sources on 2026-09-27.
     // The active inventory drops their ten artifacts/eight benchmark rows;
     // canonical grouping changes 603 configurations to 595, with 57 families.
+    // On 2026-10-10 the S MobileNetV4 models were replaced (two older builds became six: small and
+    // medium 224 on S100, S100P and S600), which moves the totals to 597 variants and 816 benchmark rows.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(57);
-    expect(variants).toHaveLength(595);
-    expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(812);
+    expect(variants).toHaveLength(597);
+    expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(816);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
   });
