@@ -17,8 +17,14 @@ import { loadInferenceTaskBanners } from './task-banner-assets.mjs';
 const scriptRoot = dirname(fileURLToPath(import.meta.url));
 const webRoot = resolve(scriptRoot, '..');
 const args = process.argv.slice(2);
+// --local-candidate overlays an unpublished draft onto the released catalog;
+// it is not a snapshot candidate preview.
+const localCandidate = args.includes('--local-candidate');
 const candidatePreview = args.includes('--candidates');
 const technicalPassedPreview = args.includes('--technical-passed');
+if (localCandidate && (candidatePreview || technicalPassedPreview)) {
+  throw new Error('--local-candidate cannot be combined with snapshot promotion options');
+}
 if (technicalPassedPreview && !candidatePreview) {
   throw new Error('--technical-passed requires --candidates');
 }
@@ -27,8 +33,13 @@ let requestedSnapshotDir = null;
 let requestedAuditPath = null;
 let requestedReviewPath = null;
 let expectedSelectedCount = null;
+let localCandidateRoot = null;
 for (let i = 0; i < args.length; i += 1) {
   if (args[i] === '--candidates' || args[i] === '--technical-passed') continue;
+  if (args[i] === '--local-candidate' && args[i + 1]) {
+    localCandidateRoot = resolve(args[++i]);
+    continue;
+  }
   if (['--candidate-dir', '--snapshot-dir', '--audit-path', '--review-path', '--expected-selected-count'].includes(args[i])
       && args[i + 1]) {
     const option = args[i];
@@ -51,6 +62,9 @@ for (let i = 0; i < args.length; i += 1) {
 if (technicalPassedPreview && (!requestedSnapshotDir || !requestedAuditPath || !requestedReviewPath)) {
   throw new Error('--technical-passed requires explicit --snapshot-dir, --audit-path, and --review-path');
 }
+if (localCandidate && (requestedSnapshotDir || requestedCandidateDir || requestedAuditPath || requestedReviewPath)) {
+  throw new Error('--local-candidate cannot be combined with snapshot promotion options');
+}
 const candidateStagingRoot = resolve(webRoot, 'candidate-staging');
 const candidateDirs = [];
 for (const entry of candidatePreview ? await readdir(candidateStagingRoot, { withFileTypes: true }) : []) {
@@ -67,7 +81,10 @@ for (const entry of candidatePreview ? await readdir(candidateStagingRoot, { wit
 candidateDirs.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 let candidateDir;
 let candidateRoot;
-if (requestedSnapshotDir) {
+if (localCandidate) {
+  candidateRoot = localCandidateRoot;
+  candidateDir = basename(candidateRoot);
+} else if (requestedSnapshotDir) {
   candidateRoot = isAbsolute(requestedSnapshotDir)
     ? resolve(requestedSnapshotDir)
     : resolve(candidateStagingRoot, requestedSnapshotDir);
@@ -91,10 +108,10 @@ if (candidatePreview) {
   if (requestedAuditPath) buildArgs.push('--audit-path', resolve(requestedAuditPath));
   execFileSync('python3', buildArgs, { stdio: 'inherit' });
 }
-const outputRoot = technicalPassedPreview
+const outputRoot = localCandidate ? resolve(webRoot, 'dist-local-candidate') : technicalPassedPreview
   ? resolve(webRoot, '.dist-candidates-passed-next')
   : candidatePreview ? resolve(webRoot, 'dist-candidates') : resolve(webRoot, 'dist');
-if (candidatePreview) process.env.MODEL_ZOO_OUTPUT_ROOT = outputRoot;
+if (candidatePreview || localCandidate) process.env.MODEL_ZOO_OUTPUT_ROOT = outputRoot;
 else delete process.env.MODEL_ZOO_OUTPUT_ROOT;
 const catalogPath = candidatePreview
   ? resolve(webRoot, 'build', `candidate-${candidateDir}`, 'catalog.json')
@@ -127,22 +144,44 @@ const repositoryUrl = process.env.MODEL_ZOO_REPOSITORY_URL || 'https://github.co
 const candidateSampleReferenceCommit = 'eed26ce610d7fba03a68d1c0ee6e62603cd9b85d';
 const officialRepositoryUrl = 'https://github.com/D-Robotics/rdk_model_zoo';
 
-const fullCatalog = JSON.parse(await readFile(resolve(catalogPath), 'utf8'));
+// Validate the draft before the released catalog so a malformed draft fails
+// before any output is generated.
+let localCatalog = null;
+if (localCandidate) {
+  localCatalog = JSON.parse(await readFile(resolve(candidateRoot, 'catalog.json'), 'utf8'));
+  if (localCatalog.source !== 'local-candidate') {
+    throw new Error(`Unexpected local candidate catalog source: ${localCatalog.source || 'missing'}`);
+  }
+  if (localCatalog.status !== 'candidate') {
+    throw new Error('Catalog status does not match candidate preview mode');
+  }
+}
+const releasedCatalog = JSON.parse(await readFile(resolve(catalogPath), 'utf8'));
 const expectedCatalogSource = candidatePreview
   ? `model_zoo_web/candidate-staging/${candidateDir}`
   : 'model_zoo_web/data';
-if (fullCatalog.source !== expectedCatalogSource) {
-  throw new Error(`Unexpected catalog source: ${fullCatalog.source || 'missing'}`);
+if (releasedCatalog.source !== expectedCatalogSource) {
+  throw new Error(`Unexpected catalog source: ${releasedCatalog.source || 'missing'}`);
 }
-if (candidatePreview ? fullCatalog.status !== 'candidate' : fullCatalog.status === 'candidate') {
+if (candidatePreview ? releasedCatalog.status !== 'candidate' : releasedCatalog.status === 'candidate') {
   throw new Error(`Catalog status does not match ${candidatePreview ? 'candidate' : 'release'} preview mode`);
 }
+const localCandidateIds = new Set((localCatalog?.models || []).map(record => record.id));
+for (const record of releasedCatalog.models || []) {
+  if (localCandidateIds.has(record.id)) {
+    throw new Error(`Local candidate ${record.id} collides with a released catalog model`);
+  }
+}
+const fullCatalog = localCatalog
+  ? { ...releasedCatalog, models: [...(releasedCatalog.models || []), ...(localCatalog.models || [])] }
+  : releasedCatalog;
 
 const sha256Bytes = bytes => createHash('sha256').update(bytes).digest('hex');
-const expectedReleaseStatus = candidatePreview ? 'candidate' : 'released';
+const expectedReleaseStatus = record =>
+  candidatePreview || localCandidateIds.has(record.id) ? 'candidate' : 'released';
 const candidateReleaseIds = new Set((fullCatalog.models || []).flatMap(record =>
   (record.variants || []).flatMap(variant => (variant.platforms || [])
-    .filter(release => release.status === expectedReleaseStatus)
+    .filter(release => release.status === expectedReleaseStatus(record))
     .map(release => `${record.id}/${variant.size}/${release.platform}`))));
 let catalog = fullCatalog;
 let technicalSelection = null;
@@ -275,6 +314,21 @@ if (!inputs.models || typeof inputs.models !== 'object' || Array.isArray(inputs.
 if (!inputs.releases || typeof inputs.releases !== 'object' || Array.isArray(inputs.releases)) {
   throw new Error('MODEL_ZOO_INPUTS.releases must be an object keyed by release id');
 }
+if (localCandidate) {
+  // Draft inputs resolve relative paths against the draft directory.
+  const localInputs = JSON.parse(await readFile(resolve(candidateRoot, 'inputs.json'), 'utf8'));
+  if (localInputs.schema_version !== 1 || !localInputs.models || !localInputs.releases) {
+    throw new Error('Local candidate inputs.json must define schema_version 1, models and releases');
+  }
+  const anchor = value => (typeof value === 'string' && value && !isAbsolute(value)
+    ? resolve(candidateRoot, value) : value);
+  for (const [id, entry] of Object.entries(localInputs.models)) {
+    inputs.models[id] = { ...entry, cover: anchor(entry.cover) };
+  }
+  for (const [id, entry] of Object.entries(localInputs.releases)) {
+    inputs.releases[id] = { ...entry, oe_data: anchor(entry.oe_data), oe_html: anchor(entry.oe_html) };
+  }
+}
 
 // Defer generate.mjs until provenance and selection preflight has passed. It
 // recreates only the selected output directory on import.
@@ -315,7 +369,15 @@ const taskMetadata = {
 };
 
 const safeId = (...parts) => parts.join('-').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-');
-const displayNames = (family, size, task) => {
+const displayNames = (record, size) => {
+  const { family, task } = record;
+  if (!/^yolo/i.test(family)) {
+    // Other families keep their catalog name; the size id is spelled out
+    // ("conv-small-224" -> "Conv Small 224").
+    const sizeName = size.split('-')
+      .map(part => (/^\d/.test(part) ? part : part[0].toUpperCase() + part.slice(1))).join(' ');
+    return { model: record.name, variant: `${record.name} ${sizeName}` };
+  }
   const familyName = family.replace(/^yolo/i, 'YOLO');
   // Spell tasks the way Ultralytics names them ("YOLO26 Classify",
   // "YOLO26 Segment") and keep acronyms whole: "YOLO26 OBB", not "Obb".
@@ -355,13 +417,14 @@ for (const record of catalog.models || []) {
     label: record.task,
     description: `${record.family} ${record.task} model`,
   };
+  const localRecord = localCandidateIds.has(record.id);
   for (const variant of record.variants || []) {
     for (const release of variant.platforms || []) {
-      if (candidatePreview ? release.status !== 'candidate' : release.status !== 'released') continue;
+      if (release.status !== expectedReleaseStatus(record)) continue;
       const platform = String(release.platform).toUpperCase();
       const id = safeId(record.source, record.family, record.task, variant.size, release.platform);
       const releaseId = `${record.id}/${variant.size}/${release.platform}`;
-      const names = displayNames(record.family, variant.size, record.task);
+      const names = displayNames(record, variant.size);
 
       const artifact = release.artifact;
       const clsSegCandidate = candidatePreview && ['cls', 'seg'].includes(record.task);
@@ -369,9 +432,14 @@ for (const record of catalog.models || []) {
       const sampleLinkedCandidate = clsSegCandidate || poseObbTechnicalCandidate;
       const conversionRepositoryCommit = release.provenance?.workbench_repository_commit || null;
       const sourceRepositoryCommit = sampleLinkedCandidate ? candidateSampleReferenceCommit : null;
-      const releasedDevelopTask = !candidatePreview && record.family === 'yolo26'
-        && ['cls', 'seg', 'pose', 'obb'].includes(record.task);
-      const sourceUrl = candidatePreview
+      // Samples that land on upstream develop link there. For MobileNetV4 the build commit still holds the
+      // superseded sample, so linking to it would show users code that no longer matches the models.
+      const releasedDevelopTask = !candidatePreview && (
+        (record.family === 'yolo26' && ['cls', 'seg', 'pose', 'obb'].includes(record.task))
+        || record.family === 'mobilenetv4');
+      // Drafts link the existing upstream develop sample; their own source
+      // changes are not pushed yet.
+      const sourceUrl = localRecord ? `${officialRepositoryUrl}/tree/develop/${record.sample_path}` : candidatePreview
         ? sampleLinkedCandidate
           ? `${officialRepositoryUrl}/tree/${sourceRepositoryCommit}/${record.sample_path}`
           : release.provenance?.source_weight_url || null
@@ -399,24 +467,39 @@ for (const record of catalog.models || []) {
       const reportSourceUrl = release.reports?.oe_conversion_url;
       const releaseInput = inputs.releases[releaseId];
       let oeData;
+      let localReport;
       if (releaseInput !== undefined) {
         if (!releaseInput || typeof releaseInput !== 'object' || Array.isArray(releaseInput)) {
           throw new Error(`MODEL_ZOO_INPUTS.releases.${releaseId} must be an object`);
         }
         usedReleaseInputs.add(releaseId);
-        oeData = await loadOeData(
-          releaseInput.oe_data,
-          `MODEL_ZOO_INPUTS.releases.${releaseId}.oe_data`,
-        );
-        if (oeData.provenance.artifact_sha256 !== artifact.sha256) {
-          throw new Error(
-            `${releaseId}: OE data artifact sha256 does not match the catalog artifact`,
+        if (localRecord && releaseInput.oe_html && !releaseInput.oe_data) {
+          const reportPath = await resolveInputFile(releaseInput.oe_html, `${releaseId}.oe_html`);
+          localReport = await readFile(reportPath);
+          if (sha256Bytes(localReport) !== releaseInput.oe_html_sha256
+              || releaseInput.artifact_sha256 !== artifact.sha256
+              || !/<(?:!doctype\s+html|html)[\s>]/i.test(localReport.subarray(0, 512).toString('utf8'))) {
+            throw new Error(`${releaseId}: local OE HTML identity or format mismatch`);
+          }
+        } else {
+          oeData = await loadOeData(
+            releaseInput.oe_data,
+            `MODEL_ZOO_INPUTS.releases.${releaseId}.oe_data`,
           );
+          if (oeData.provenance.artifact_sha256 !== artifact.sha256) {
+            throw new Error(
+              `${releaseId}: OE data artifact sha256 does not match the catalog artifact`,
+            );
+          }
         }
       }
       let reportUrl;
       let reportDataUrl;
-      if (oeData) {
+      if (localReport) {
+        const reportFilename = `${id}-oe-report.html`;
+        await writeFile(resolve(reportsRoot, reportFilename), localReport);
+        reportUrl = `reports/models/${reportFilename}`;
+      } else if (oeData) {
         // Structured path: ship the small extracted JSON. Full HTML payloads
         // stay out of dist and are only retained as a report fallback source.
         const dataRoot = resolve(outputRoot, 'reports', 'data');
@@ -462,7 +545,9 @@ for (const record of catalog.models || []) {
       const comparisonEvidenceValid = comparison?.status === 'valid-evidence'
         && comparison?.direct_metric_comparison === 'valid'
         && comparison?.comparison_scope?.comparable === true;
-      const stagedAccuracyRecords = candidatePreview
+      const stagedAccuracyRecords = localRecord
+        ? accuracyRecords(record.task, floatAccuracy, runtimeAccuracy, accuracyMetadata)
+        : candidatePreview
         ? technicalPassedPreview
           && ['cls', 'seg', 'pose', 'obb'].includes(record.task)
           && comparisonEvidenceValid
@@ -480,6 +565,31 @@ for (const record of catalog.models || []) {
           runtimeAccuracy,
           accuracyMetadata,
         );
+      let localAssets;
+      if (localRecord) {
+        // No public URL exists before OSS publication; the preview serves the
+        // hash-verified local artifact itself.
+        const artifactPath = await resolveInputFile(artifact.local_path, `${releaseId}.artifact.local_path`);
+        const artifactBytes = await readFile(artifactPath);
+        if (sha256Bytes(artifactBytes) !== artifact.sha256
+            || artifactBytes.length !== Number(artifact.size_bytes)) {
+          throw new Error(`${releaseId}: local artifact identity mismatch`);
+        }
+        // A draft may carry the name the object will have once published; the
+        // bytes are still the hash-verified local file.
+        const filename = artifact.filename || basename(artifactPath);
+        if (basename(filename) !== filename) throw new Error(`${releaseId}: artifact.filename must be a bare file name`);
+        await mkdir(resolve(outputRoot, 'downloads', id), { recursive: true });
+        await writeFile(resolve(outputRoot, 'downloads', id, filename), artifactBytes);
+        localAssets = [{
+          role: `${platform} 部署模型`,
+          format: artifact.format,
+          filename,
+          url: `downloads/${id}/${filename}`,
+          sha256: artifact.sha256,
+          sizeBytes: artifactBytes.length,
+        }];
+      }
 
       models.push({
         id,
@@ -502,6 +612,7 @@ for (const record of catalog.models || []) {
         coverLabel: inferenceCover?.cover_label || modelInput.cover_label || '模型参考推理结果',
         sample: `${record.source}/${record.family}/${record.task}/${variant.size}`,
         source: sourceUrl,
+        ...(localRecord ? { sourceType: 'repository' } : {}),
         ...(clsSegCandidate ? {
           upstreamWeightUrl: release.provenance?.source_weight_url || null,
           sourceRepositoryCommit,
@@ -521,7 +632,7 @@ for (const record of catalog.models || []) {
         reportUrl,
         reportDataUrl,
         reportSourceUrl,
-        assets: candidatePreview ? previewDownloadAssets(previewDownloads, releaseId, platform) : [
+        assets: localAssets || (candidatePreview ? previewDownloadAssets(previewDownloads, releaseId, platform) : [
           {
             role: `${platform} 部署模型`,
             format: artifact.format,
@@ -530,7 +641,7 @@ for (const record of catalog.models || []) {
             sha256: artifact.sha256,
             sizeBytes: Number(artifact.size_bytes),
           },
-        ],
+        ]),
         benchmark: {
           precision: release.provenance?.precision_policy || 'int8',
           ...(release.provenance?.precision_policy
@@ -633,7 +744,7 @@ const platformNames = [...new Set(models.flatMap(model => model.platforms))];
 const data = {
   schemaVersion: 1,
   catalog: {
-    status: candidatePreview ? 'candidate' : 'published',
+    status: localCandidate ? 'local-candidate' : candidatePreview ? 'candidate' : 'published',
     summary: {
       sample_count: new Set(models.map(model => model.sample)).size,
       asset_count: models.reduce((count, model) => count + model.assets.length, 0),
@@ -644,10 +755,11 @@ const data = {
   repository: { url: repositoryUrl },
   accuracyMetricLabels: accuracyMetricLabels(),
   release: {
-    status: candidatePreview ? 'candidate' : 'published',
+    status: localCandidate ? 'local-candidate' : candidatePreview ? 'candidate' : 'published',
     compatibility: { hardware: platformNames.map(name => `RDK ${name}`).join(' / ') },
   },
   candidatePreview,
+  localCandidatePreview: localCandidate,
   technicalPassedPreview: false,
   models,
 };
@@ -674,4 +786,7 @@ await writeFile(
 );
 await stampAssetVersions(outputRoot);
 
-console.log(`Built local Model Zoo ${candidatePreview ? 'candidate preview' : 'preview'} with ${models.length} ${candidatePreview ? 'candidate' : 'released'} model entries.`);
+const localEntryCount = models.filter(model => localCandidateIds.has(model.catalogId)).length;
+console.log(localCandidate
+  ? `Built local candidate preview with ${models.length - localEntryCount} released and ${localEntryCount} local candidate model entries.`
+  : `Built local Model Zoo ${candidatePreview ? 'candidate preview' : 'preview'} with ${models.length} ${candidatePreview ? 'candidate' : 'released'} model entries.`);

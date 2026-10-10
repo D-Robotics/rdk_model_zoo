@@ -415,3 +415,36 @@ python3 model_zoo_web/scripts/stage_yolo26_task_b8.py
 ```
 
 混合预览的一键构建入口（原 `build:mixed-technical-preview`）未随仓库提交，已从 `package.json` 移除；补回脚本前，需分别运行 `scripts/merge_technical_passed_preview.mjs`、`scripts/validate_technical_passed_preview.mjs` 与 `scripts/promote_technical_passed_preview.mjs`，并显式指定不可变快照、权威审计和评审矩阵路径。构建先写入 `model_zoo_web/.dist-candidates-passed-next/` 并验证；只有显式执行 promote 才替换 `dist-candidates-passed/`。正常 `build:preview` 与 `build:release` 仍读取活动 catalog 和正式 `release/inputs.json`。
+
+## 本地未发布模型草稿
+
+新模型尚未上传 OSS 时，可以把本地草稿叠加到正式目录上预览：
+
+```bash
+npm --prefix model_zoo_web run build:catalog
+node model_zoo_web/scripts/generate-preview.mjs --local-candidate /absolute/path/to/draft
+```
+
+构建器先读取正式 `build/catalog.json` 与 `release/inputs.json`，再加入草稿模型；
+草稿模型 id 与正式模型重复时直接失败。该模式不能与 `--candidates`、
+`--technical-passed` 或快照参数同时使用。
+
+草稿目录包含 `catalog.json`（`source: local-candidate`、`status: candidate`，
+平台条目也为 `candidate`）及 `inputs.json`。Catalog 使用本页相同的 model、
+input、accuracy、performance 字段，不填写尚不存在的公开下载 URL；
+`artifact.local_path` 指向本地制品。`inputs.json` 中的相对路径以草稿目录为基准：
+
+- `models.<id>.cover`：封面。
+- `releases.<source/family/task/size/platform>.oe_data`：由 workbench
+  `scripts/extract_oe_report.py` 生成的结构化 OE 数据，页面显示“查看转换详情”；
+  其 `provenance.artifact_sha256` 必须与 catalog 制品一致。
+- 仅有原始 HTML 时可改用 `oe_html`、`oe_html_sha256` 与 `artifact_sha256`，
+  页面退回原始 “OE 转换报告” 链接。
+
+草稿模型的“模型仓库”“运行文档”“模型转换”链接指向上游 develop 分支已有的
+`sample_path`，不代表草稿源码已合入。构建器核验 `artifact.local_path` 的
+SHA256 与大小后，将制品复制到 `dist-local-candidate/downloads/<id>/`，供预览中的
+“获取模型”下载；这不是公开发布地址。
+
+输出仅位于被忽略的 `model_zoo_web/dist-local-candidate/`，不能用于发布门禁的替代证明。
+模型制品、完整报告、评测数据和输入清单继续保存在仓库外 workbench。
