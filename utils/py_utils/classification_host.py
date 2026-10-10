@@ -14,6 +14,8 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
+from utils.py_utils.tensor_io import resize_shorter_center_crop
+
 
 def sha256_file(path: Path) -> str:
     """Hash file bytes without loading a model or dataset into memory.
@@ -93,19 +95,8 @@ def prepare_rgb(source: Path | Image.Image, contract: dict) -> np.ndarray:
         with Image.open(source) as image:
             rgb = image.convert("RGB")
     size = contract["size"]
-    short = int(size / contract["crop_pct"])
-    width, height = rgb.size
-    if width <= height:
-        resized = (short, int(short * height / width))
-    else:
-        resized = (int(short * width / height), short)
-    if resized != rgb.size:
-        # Pillow 9.0 on the S100 image predates the Resampling enum.
-        resampling = getattr(Image, "Resampling", Image)
-        rgb = rgb.resize(resized, resampling.BICUBIC)
-    left = int(round((resized[0] - size) / 2.0))
-    top = int(round((resized[1] - size) / 2.0))
-    return np.ascontiguousarray(rgb.crop((left, top, left + size, top + size)))
+    crop, _, _ = resize_shorter_center_crop(rgb, size, int(size / contract["crop_pct"]))
+    return np.ascontiguousarray(crop)
 
 
 def float_input(rgb: np.ndarray, contract: dict) -> np.ndarray:

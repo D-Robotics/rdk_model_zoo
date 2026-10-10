@@ -77,6 +77,7 @@ class LocalModelInterfaceTests(unittest.TestCase):
                         input_size=(height, width), class_count=contract.class_count,
                         resize_type=contract.resize_type,
                         resize_interpolation=contract.resize_interpolation,
+                        resize_shorter=contract.resize_shorter,
                         score_policy=contract.output_score_policy,
                         output_transform=contract.output_transform, runtime=SDK())
                     model = model_class(selection.model_path, target=selection.target, runner=direct)

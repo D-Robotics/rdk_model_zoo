@@ -94,6 +94,7 @@ class RuntimeModelRunner:
         input_size: tuple[int, int], class_count: int,
         resize_type: int = 1, resize_interpolation: str = "linear",
         score_policy: str = "softmax", output_transform: str = "raw_f32",
+        resize_shorter: int = 0,
         runtime_factory: Optional[Callable[[str], Any]] = None, runtime: Any = None,
     ) -> RuntimeModelRunner:
         """Prepare a lazy NV12 classification runner from a local artifact.
@@ -103,11 +104,14 @@ class RuntimeModelRunner:
             target: Concrete artifact target: x5, s100, s100p, or s600.
             input_size: Positive, even (height, width) of the model input in pixels.
             class_count: Positive number of output classes.
-            resize_type: 0 for stretching or 1 for letterbox; defaults to 1.
+            resize_type: 0 stretches, 1 letterboxes (default), 2 resizes the shorter
+                edge to resize_shorter and center-crops (needs a square input and Pillow).
             resize_interpolation: Direct-resize interpolation name; defaults to linear.
                 Image preprocessing validates it when called.
             score_policy: softmax, legacy_softmax, or none; defaults to softmax.
             output_transform: raw_f32 or dequant; defaults to raw_f32.
+            resize_shorter: Shorter-edge size for resize_type 2, at least the input
+                size; 0 (default) for the other resize types.
             runtime_factory: Optional model-path-to-SDK-object factory for injection.
                 When supplied, file and hardware checks are bypassed.
             runtime: Optional prebuilt SDK object; overrides runtime_factory and
@@ -134,15 +138,18 @@ class RuntimeModelRunner:
             raise ValueError("NV12 input dimensions must be positive and even.")
         if class_count <= 0:
             raise ValueError("class_count must be positive.")
-        if resize_type not in (0, 1) or score_policy not in SCORE_POLICIES:
+        if resize_type not in (0, 1, 2) or score_policy not in SCORE_POLICIES:
             raise ValueError("Invalid resize_type or score_policy.")
+        if resize_type == 2 and (height != width or resize_shorter < width):
+            raise ValueError(
+                "resize_type 2 needs a square input and resize_shorter >= the input size.")
         path = Path(model_path).expanduser()
         if runtime is None and runtime_factory is None and not path.is_file():
             raise FileNotFoundError(f"model file not found: {path}")
         facts = VariantFacts(
             input_height=height, input_width=width, class_count=class_count,
             resize_type=resize_type, resize_interpolation=resize_interpolation,
-            output_score_policy=score_policy,
+            resize_shorter=resize_shorter, output_score_policy=score_policy,
             output_transform=validate_output_transform(output_transform))
         contract = ClassificationContract(
             asset_id=f"local:{path.name}", variant="custom", target=target,

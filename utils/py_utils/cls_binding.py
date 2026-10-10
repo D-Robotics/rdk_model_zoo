@@ -78,6 +78,7 @@ class VariantFacts:
     resize_type: int = 1
     resize_interpolation: str = "linear"
     letterbox_interpolation: str = "linear"
+    resize_shorter: int = 0
 
 
 @dataclass(frozen=True)
@@ -159,6 +160,7 @@ class ClassificationContract:
     resize_interpolation: str
     letterbox_interpolation: str
     source_manifest: str
+    resize_shorter: int = 0
 
 
 @dataclass(frozen=True)
@@ -523,6 +525,18 @@ def contract_for(table: SampleBindingTable, record: AssetRecord) -> Classificati
             f"Score policy {facts.output_score_policy!r} is not one of "
             f"{SCORE_POLICIES}."
         )
+    if facts.resize_type not in (0, 1, 2):
+        raise ManifestAssetError(
+            f"Resize type {facts.resize_type!r} is not 0 (stretch), 1 (letterbox) "
+            "or 2 (shorter-edge center crop)."
+        )
+    if facts.resize_type == 2 and facts.resize_shorter < max(
+            facts.input_height, facts.input_width):
+        raise ManifestAssetError(
+            "Resize type 2 needs resize_shorter at least as large as the model "
+            f"input; got {facts.resize_shorter} for "
+            f"{facts.input_height}x{facts.input_width}."
+        )
     return ClassificationContract(
         asset_id=record.asset_id,
         variant=record.variant,
@@ -538,6 +552,7 @@ def contract_for(table: SampleBindingTable, record: AssetRecord) -> Classificati
         resize_type=facts.resize_type,
         resize_interpolation=facts.resize_interpolation,
         letterbox_interpolation=facts.letterbox_interpolation,
+        resize_shorter=facts.resize_shorter,
         source_manifest=record.source_manifest,
     )
 

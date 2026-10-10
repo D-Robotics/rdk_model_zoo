@@ -44,6 +44,47 @@ class PreparedInput:
     transform: ImageTransform
 
 
+def resize_shorter_center_crop(image, size: int, shorter: int):
+    """Resize a PIL image's shorter edge, then take a rounded center crop.
+
+    This is the timm/torchvision evaluation geometry: antialiased PIL bicubic
+    resize so the shorter edge is ``shorter`` pixels (the longer edge follows
+    the aspect ratio with ``int`` truncation), then a ``size`` x ``size`` crop
+    at ``round((resized - size) / 2)`` offsets.  Python's ``round`` is
+    round-half-to-even, matching the reference.  Host evaluation and the
+    runtime both call this one function so they cannot drift apart.
+
+    Args:
+        image: Open PIL RGB image.
+        size: Positive square crop edge in pixels.
+        shorter: Resized shorter edge; at least ``size`` (``int(size / crop_pct)``).
+
+    Returns:
+        tuple: The cropped PIL image, the ``(width, height)`` after resizing, and
+        the ``(left, top)`` crop offsets in the resized image.
+
+    Raises:
+        ValueError: ``size`` is not positive or ``shorter`` is smaller than ``size``.
+    """
+
+    from PIL import Image
+
+    if size <= 0 or shorter < size:
+        raise ValueError("Require 0 < size <= shorter.")
+    width, height = image.size
+    if width <= height:
+        resized = (shorter, int(shorter * height / width))
+    else:
+        resized = (int(shorter * width / height), shorter)
+    if resized != image.size:
+        # Pillow 9.0 on the S100 image predates the Resampling enum.
+        resampling = getattr(Image, "Resampling", Image)
+        image = image.resize(resized, resampling.BICUBIC)
+    left = int(round((resized[0] - size) / 2.0))
+    top = int(round((resized[1] - size) / 2.0))
+    return image.crop((left, top, left + size, top + size)), resized, (left, top)
+
+
 def resize_bgr(
     image: np.ndarray,
     input_width: int,
@@ -52,8 +93,9 @@ def resize_bgr(
     resize_type: int = 1,
     interpolation: str | int = "nearest",
     letterbox_interpolation: str | int = "linear",
+    resize_shorter: int = 0,
 ) -> tuple[np.ndarray, ImageTransform]:
-    """Resize one BGR image using the source samples' two policies.
+    """Resize one BGR image using the source samples' three policies.
 
     ``resize_type=0`` stretches directly to the target geometry.  ``1`` keeps
     aspect ratio, uses the source helper's integer dimensions, and pads with
@@ -61,6 +103,11 @@ def resize_bgr(
     OpenCV's default INTER_LINEAR even when the caller supplies a different
     direct-resize interpolation; that behavior is represented explicitly by
     the two interpolation arguments.
+
+    ``2`` is the timm evaluation geometry: antialiased PIL bicubic resize of the
+    shorter edge to ``resize_shorter`` pixels, then a center crop to the square
+    model input (see :func:`resize_shorter_center_crop`).  It needs Pillow, which
+    is imported only for this policy, and ignores both interpolation arguments.
     """
 
     _validate_image(image)
@@ -69,6 +116,40 @@ def resize_bgr(
     if input_height % 2 or input_width % 2:
         raise ValueError("NV12 model input dimensions must be even.")
     height, width = image.shape[:2]
+
+    if resize_type == 2:
+        if input_height != input_width:
+            raise ValueError("Shorter-edge center crop needs a square model input.")
+        if resize_shorter < input_width:
+            raise ValueError(
+                "resize_type 2 needs resize_shorter >= the model input size, "
+                f"got {resize_shorter} for {input_width}.")
+        try:
+            from PIL import Image
+        except ImportError as exc:
+            raise RuntimeError(
+                "Pillow is required for resize_type 2 (shorter-edge center crop); "
+                "install it with 'python3 -m pip install pillow'.") from exc
+        # BGR <-> RGB is a pure channel permutation, so it is exact.
+        rgb = Image.fromarray(np.ascontiguousarray(image[:, :, ::-1]))
+        crop, resized_size, (left, top) = resize_shorter_center_crop(
+            rgb, input_width, resize_shorter)
+        transform = ImageTransform(
+            original_height=height,
+            original_width=width,
+            resized_height=resized_size[1],
+            resized_width=resized_size[0],
+            pad_top=0,
+            pad_bottom=0,
+            pad_left=0,
+            pad_right=0,
+            scale_x=resized_size[0] / width,
+            scale_y=resized_size[1] / height,
+            crop_x=float(left),
+            crop_y=float(top),
+        )
+        return np.ascontiguousarray(np.asarray(crop)[:, :, ::-1]), transform
+
     direct_interpolation = _cv_interpolation(interpolation)
 
     if resize_type == 0:
@@ -89,7 +170,7 @@ def resize_bgr(
         return np.ascontiguousarray(resized), transform
 
     if resize_type != 1:
-        raise ValueError(f"Invalid resize_type: {resize_type}; expected 0 or 1.")
+        raise ValueError(f"Invalid resize_type: {resize_type}; expected 0, 1 or 2.")
 
     scale = min(input_height / height, input_width / width)
     resized_width = max(1, int(width * scale))
@@ -178,6 +259,7 @@ def prepare_nv12(image: np.ndarray, binding: "ModelBinding", *,
         resize_type=chosen_resize,
         interpolation=contract.resize_interpolation,
         letterbox_interpolation=contract.letterbox_interpolation,
+        resize_shorter=getattr(contract, "resize_shorter", 0),
     )
     y, uv = bgr_to_nv12_planes(resized)
     if contract.input_protocol == "packed_nv12":
@@ -310,5 +392,6 @@ __all__ = [
     "pack_nv12_single",
     "prepare_nv12",
     "resize_bgr",
+    "resize_shorter_center_crop",
     "validate_input_tensors",
 ]
