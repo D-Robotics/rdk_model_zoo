@@ -126,6 +126,8 @@ assert np.array_equal(explicit_result, composed_result)
 print({"shape": composed_result.shape, "dtype": str(composed_result.dtype)})
 ```
 
+Use the default `pooler_output` for global image matching: its learned attention pooling head produces the image embedding. Select `last_hidden_state` for spatial patch features consumed by downstream models. Averaging these patch tokens does not reproduce the learned pooling head. See the [evaluator](../../evaluator/README.md) for global image relations and aligned-token consistency checks. [Architecture source](https://github.com/huggingface/transformers/blob/main/src/transformers/models/siglip/modeling_siglip.py).
+
 <a id="stage-io"></a>
 ## Three-Stage I/O
 

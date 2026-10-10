@@ -121,7 +121,8 @@ class ModelOwnedConstructionTests(unittest.TestCase):
                 [np.linspace(-1, 1, 800, dtype=np.float32), np.zeros(800, np.float32)],
                 axis=1,
             )
-            self.assertEqual(task.predict(stereo, 8000), vocabulary[5] * 2)
+            # Default legacy keeps every frame token: three repeats.
+            self.assertEqual(task.predict(stereo, 8000), vocabulary[5] * 3)
             self.assertEqual(fake.calls, 1)
             self.assertEqual(task.metadata.output_names, ("logits",))
             task.set_scheduling_params(priority=2, bpu_cores=[0])

@@ -1,7 +1,12 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
 """Greedy CTC in float32 or exact comparison precision, plus an explicit
-archived concatenate-only comparison mode."""
+archived concatenate-only comparison mode.
+
+The default ``legacy`` mode reproduces the source sample byte for byte:
+argmax per frame, tokens concatenated verbatim (repeats and ``|`` kept),
+only the ``<pad>`` token removed. ``ctc`` is an optional normalization
+(collapse repeats, blank-separated, ``|`` rendered as space, trimmed)."""
 
 from numbers import Integral
 import numpy as np
@@ -19,7 +24,7 @@ def validate_vocabulary(vocabulary):
     return tuple(vocabulary)
 
 
-def decode_ids(ids, vocabulary, mode="ctc"):
+def decode_ids(ids, vocabulary, mode="legacy"):
     tokens = validate_vocabulary(vocabulary)
     if mode not in ("ctc", "legacy"):
         raise ValueError("decode-mode must be ctc or legacy")
@@ -35,10 +40,13 @@ def decode_ids(ids, vocabulary, mode="ctc"):
         if token != 0 and (mode == "legacy" or token != previous):
             output.append(tokens[token])
         previous = token
-    return "".join(output)
+    text = "".join(output)
+    # Wav2Vec2 CTC vocabulary uses | as the word delimiter, not a glyph.
+    # Preserve the archived concatenate-only representation in legacy mode.
+    return text.replace("|", " ").strip() if mode == "ctc" else text
 
 
-def decode_logits(logits, vocabulary, mode="ctc"):
+def decode_logits(logits, vocabulary, mode="legacy"):
     tokens = validate_vocabulary(vocabulary)
     if (
         not isinstance(logits, np.ndarray)
@@ -53,7 +61,7 @@ def decode_logits(logits, vocabulary, mode="ctc"):
     return decode_ids(np.argmax(logits[0], axis=-1), tokens, mode)
 
 
-def decode_exact_logits(logits, vocabulary, mode="ctc"):
+def decode_exact_logits(logits, vocabulary, mode="legacy"):
     """Greedy decode of float64 logits carrying exact integer affine scores.
 
     Integer SCALE outputs dequantized with ``dequantize_tensor(dtype="float64")``

@@ -68,7 +68,7 @@ Use `s600` in both commands for an S600; never rename the S100 HBM. `PYTHON` sel
 
 The console prints a full-file transcription and the path to `result.json`. The report binds model/audio/vocabulary hashes, model metadata, decoder mode and each chunk's source position, valid sample count and text. Errors return 2; a failure after processing starts saves `failed.json` with completed chunks.
 
-Default `ctc` collapses adjacent duplicate token IDs before removing blank ID 0. `--decode-mode legacy` removes `<pad>` while retaining repeated IDs. For IDs `[1,1,0,1,2,2]` and tokens `<pad>,a,b`, the results are `aab` (`ctc`) and `aaabb` (`legacy`). Other tokens, punctuation and `|` remain verbatim. Each independent chunk starts with a fresh CTC state.
+The default `legacy` decode concatenates per-frame argmax tokens verbatim (repeated IDs and `|` kept) and removes only `<pad>`. `--decode-mode ctc` additionally collapses adjacent duplicate IDs, drops blank ID 0 between repeats, renders the Wav2Vec2 word delimiter `|` as a space and trims surrounding whitespace. For IDs `[1,1,0,1,2,2]` and tokens `<pad>,a,b`, the results are `aaabb` (`legacy`, default) and `aab` (`ctc`). Each independent chunk starts with a fresh CTC state.
 
 <a id="entry-points"></a>
 ## Guides

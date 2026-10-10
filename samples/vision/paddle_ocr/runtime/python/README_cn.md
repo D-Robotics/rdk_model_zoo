@@ -82,7 +82,8 @@ python3 samples/vision/paddle_ocr/runtime/python/main.py \
 `--prepare` 配合 `--model-dir` 是显式取模操作（见
 [模型准备](../../model/README.md#preparation)）。入口拒绝不完整的路径
 组合、跨 target 的引用、运行时元数据不匹配、非 F32 输出以及无法识别
-的执行目标——绝不按文件名猜测。
+的执行目标——绝不按文件名猜测。即使元数据带有量化描述符，float32
+输出仍保留 SDK 返回的数值，不重复反量化；整数输出仍不满足 F32 契约。
 
 <a id="parameters"></a>
 ## 参数

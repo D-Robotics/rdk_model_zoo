@@ -141,9 +141,10 @@ class BindingTests(unittest.TestCase):
             calls.append(tensors)
             return raw
 
+        # Default decode is the source sample behavior: repeats kept.
         task = ASR(runner, binding, vocabulary)
         self.assertEqual(
-            task.predict(np.ones(20, np.float32), 16000), vocabulary[5] * 2
+            task.predict(np.ones(20, np.float32), 16000), vocabulary[5] * 3
         )
         self.assertEqual(len(calls), 1)
         self.assertIs(task.forward(calls[0]), raw)
@@ -164,7 +165,11 @@ class BindingTests(unittest.TestCase):
         task32 = ASR(lambda tensors: raw32, binding32, vocabulary)
         self.assertEqual(
             task32.predict(np.ones(20, np.float32), 16000),
-            vocabulary[1] + vocabulary[5],
+            vocabulary[1] + vocabulary[5] * 3,
+        )
+        ctc32 = ASR(lambda tensors: raw32, binding32, vocabulary, decode_mode="ctc")
+        self.assertEqual(
+            ctc32.post_process(raw32), vocabulary[1] + vocabulary[5]
         )
         legacy32 = ASR(lambda tensors: raw32, binding32, vocabulary, decode_mode="legacy")
         self.assertEqual(

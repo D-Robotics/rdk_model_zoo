@@ -45,7 +45,8 @@ def build_parser():
     )
     parser.add_argument("--audio-maxlen", type=int, default=30000)
     parser.add_argument("--new-rate", type=int, default=16000)
-    parser.add_argument("--decode-mode", choices=("ctc", "legacy"), default="ctc")
+    parser.add_argument("--decode-mode", choices=("ctc", "legacy"), default="legacy",
+                        help="legacy reproduces the source sample output; ctc normalizes repeats and word delimiters")
     parser.add_argument("--priority", type=int, default=0)
     parser.add_argument("--bpu-cores", type=int, nargs="+", default=[0])
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/asr"))

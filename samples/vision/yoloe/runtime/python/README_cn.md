@@ -25,7 +25,7 @@ python/
 <a id="environment"></a>
 ## 环境
 
-Python 3.10+，NumPy/OpenCV/SciPy/PyYAML；只有实际模型执行才导入板端 `hbm_runtime`。系统环境要求见 [主说明](../../README_cn.md#prerequisites)。S 公开量化模型不能直接运行。
+Python 3.10+，NumPy/OpenCV/SciPy/PyYAML；只有实际模型执行才导入板端 `hbm_runtime`。系统环境要求见 [主说明](../../README_cn.md#prerequisites)。S100 YOLOE-11s 与 S100/S100P YOLOE-26 n/s/m/l/x 可直接运行发布模型的原生 SCALE 量化输出。
 
 <a id="usage"></a>
 ## 使用
@@ -36,7 +36,7 @@ bash samples/vision/yoloe/model/download.sh --target x5 --variant 11s
 python3 samples/vision/yoloe/runtime/python/main.py --target x5 --variant 11s
 ```
 
-缺省无参数运行会检测当前板卡，推导默认变体；X5 需先下载原制品，S 会给出浮点制品缺口。自定义 X5 命令如下：
+缺省无参数运行会检测当前板卡，推导默认变体；推理前需下载对应的发布模型。自定义 X5 命令如下：
 
 ```bash
 # cwd: repository root; first prepare 11m using model/download.sh --target x5 --variant 11m
@@ -75,9 +75,9 @@ X5 11 先将置信阈值夹紧至 `[1e-6,1-1e-6]`，再转为 logit；S11/26 直
 <a id="results"></a>
 ## 结果
 
-`Result.boxes` 为 float32 `[N,4]` 原图连续 xyxy 像素坐标，裁剪到 `[0,W]/[0,H]`；`scores` 是 `[N]` float32 sigmoid 概率；`class_ids` 是 `[N]` int64 固定词表 ID，不能直接用作 COCO 类别 ID。`masks` 在 X5 为 bool `[N,H,W]`（`mask_layout="full"`），在 S 为 N 个 uint8 0/1 ROI（`mask_layout="roi"`），坐标截断成整数后截取，保留空 ROI 对齐。返回数据独立拥有内存。 S11 保留精确零轴 ROI 形状，并将 Lanczos 过冲归一为 0/1，不改变前景范围。
+`Result.boxes` 为 float32 `[N,4]` 原图连续 xyxy 像素坐标，裁剪到 `[0,W]/[0,H]`；`scores` 是 `[N]` float32 sigmoid 概率；`class_ids` 是 `[N]` int64 固定词表 ID，不能直接用作 COCO 类别 ID。`masks` 在 X5 为 bool `[N,H,W]`（`mask_layout="full"`）。S 返回 N 个逐检测 ROI（`mask_layout="roi"`）：S11 为 uint8，坐标截断成整数后截取，退化轴至少保留 1 像素，数值为 Lanczos 原样输出（个别像素可能为 2，非零即前景）；S26 为 bool。返回数据独立拥有内存。
 
-CLI 保存彩色叠加图，默认 `test_data/result.jpg`，不会保存原始张量或把模型推理当作精度报告。CLI 入口组织为：`main.py` 解析选择、构造 `Config`、用 runner 构造 `YOLOE`、调用一次 `predict` 并渲染结果；参数声明、`--list-models`/`--dry-run` 模式与 JSON 结果报告在 `cli.py`。分割实现位于 `yoloe.py` 及其解码/IO 模块。
+CLI 保存彩色叠加图（默认 `test_data/result.jpg`），并打印包含 `target`、`variant`、`count`、`class_ids`、`scores`、`mask_layout`、`image_saved`（所保存叠加图的路径）七个键的 JSON 报告。`Result.boxes` 属于 Python `predict` API；CLI JSON 不含 boxes，也不单独保存掩码图文件。CLI 入口组织为：`main.py` 解析选择、构造 `Config`、用 runner 构造 `YOLOE`、调用一次 `predict` 并渲染结果；参数声明、`--list-models`/`--dry-run` 模式与 JSON 结果报告在 `cli.py`。分割实现位于 `yoloe.py` 及其解码/IO 模块。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -105,9 +105,11 @@ print(result.boxes.shape, result.mask_layout)
 `preprocess` / `infer` / `postprocess`，既有 `pre_process` / `forward` / `post_process`
 为薄别名（每阶段只有一个实现）。preprocess 接受非空 uint8 BGR HWC；返回 `Prepared.tensors` 和本次调用关联的 `context`。X5 发送一维 packed NV12，共 614400 字节；S 发送 Y `[1,640,640,1]`、UV `[1,320,320,2]`。11 使用截断尺寸/127 填充（拉伸使用最近邻），26 使用四舍五入尺寸/114 填充。
 
-infer 只调用一次 runner，保留 raw float32，不做激活或反量化；输出是借用的 `RawOutputs`，必须在下一次 SDK 调用前消费，或由调用者复制。每 stride 8/16/32 为 cls 4585、box 64（11）或 4（26）、mces 32，另有 NHWC `[1,160,160,32]` proto。实际输出按完整形状唯一绑定，不依赖名字/枚举顺序。
+infer 只调用一次 runner，保留输出原生 dtype；postprocess 对整数头按已校验的 SCALE 描述符反量化，float32 头原样保留；分类头保持 raw logits，由解码器执行 sigmoid。输出是借用的 `RawOutputs`，必须在下一次 SDK 调用前消费，或由调用者复制。每 stride 8/16/32 为 cls 4585、box 64（11）或 4（26）、mces 32，另有 NHWC `[1,160,160,32]` proto。实际输出按完整形状唯一绑定，不依赖名字/枚举顺序。
 
-postprocess 必须收到匹配的 context。11 使用 DFL 与 NMS；X5 在低分辨率裁剪 mask 概率后两次线性插值，S 使用 ROI 二值掩码流程。26 在 640 尺寸插值 logits 后二值化，去 padding 并最近邻还原。框按实际整数 resize 的横纵比例还原。predict 只串联三阶段；不缓存上一张图，不承诺 SDK 并发安全。
+S26 使用 split NV12 Y `[1,640,640,1]` 与 UV `[1,320,320,2]`；分类、box、掩码系数为 int32，proto 为 int8。S11 分类为 float32，DFL box 与掩码系数为 int32，proto 为 int16。逐通道 SCALE 按描述符声明的 axis 广播，标量 SCALE 作用于整个张量。
+
+postprocess 必须收到匹配的 context。11 使用 DFL 与 NMS；X5 在低分辨率裁剪 mask 概率后两次线性插值，S11 返回 uint8 ROI 掩码（非零即前景，Lanczos 数值原样保留，个别像素可能为 2）。26 在 640 尺寸插值 logits 后二值化，去 padding 并最近邻还原，返回 bool ROI 掩码。框按实际整数 resize 的横纵比例还原。每次 `predict` 自带本次图像的 context 串联三阶段；每张图调用一次。
 
 需要中间张量时可以显式调用三个阶段；它与 `predict` 等价，同样只执行一次推理：
 
@@ -117,7 +119,7 @@ raw = task.infer(prepared)
 result = task.postprocess(raw, prepared.context)
 ```
 
-库 Config 的 do_morph 缺省 False，沿用 S11 库接口；CLI 在 S11 上缺省 True，沿用源命令行。调度使用 `runner.set_scheduling_params`。
+库 `Config` 的 `do_morph` 默认 False；CLI 在 S11 运行时传入 `do_morph=True`（可用 `--no-morph` 关闭）。调度使用 `runner.set_scheduling_params`。
 
 X5 接受两种 RGB 形状描述符 `[1,3,640,640]` 与 `[1,640,640,3]`，两者实际仍发送 614400 字节 packed NV12。共享绑定器只为明确声明的 YOLOE-11 协议启用 NHWC RGB 描述符，不放宽其他 sample 的输入契约。
 
@@ -126,10 +128,10 @@ X5 接受两种 RGB 形状描述符 `[1,3,640,640]` 与 `[1,640,640,3]`，两者
 
 | 现象 | 原因与处理 |
 | --- | --- |
-| `Published S YOLOE outputs are quantized` | 原 S HBM 不能用于浮点入口；保留 Dequantize 输出节点后另行转换，记录新哈希并验证 SDK 描述符。 |
+| `Invalid tensor quantization scales/zero-points` | 整数输出需要有限正值 SCALE、匹配的通道轴和 zero-point。 |
 | `Local float SHA-256 mismatch` | 本地文件与指定摘要不同，核对产物，不能复用原发布摘要。 |
 | `No unique YOLOE asset` | target/variant/asset-id 冲突或无资产；用 --list-models 检查，不改名冒充目标。 |
 | `Vocabulary checksum mismatch` | 恢复配套词表，禁止通过重排 label 改类别。 |
-| `YOLOE requires the ten declared NHWC float32 outputs` | 编译协议、布局或输出精度不符；检查转换，不能直接 cast 整数。 |
+| `Unsupported YOLOE dtype` | 使用 float32 输出，或所选 S 模型原生整数头及 SCALE 描述符。 |
 
-自行生成浮点制品请先阅读[转换准备说明](../../conversion/README_cn.md)；校准完成、编译成功和输出精度验证分别记录。
+如需另行准备 float32 输出模型，请按[转换准备说明](../../conversion/README_cn.md)完成 ONNX 检查、平台校准与编译。

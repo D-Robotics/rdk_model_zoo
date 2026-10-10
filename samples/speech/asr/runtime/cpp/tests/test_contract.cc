@@ -14,13 +14,19 @@ template <class F> void rejected(F f) {
 }
 int main() {
   std::vector<std::string> vocab{"<pad>", "a", "b"};
-  assert(asr::decode_ids({1, 1, 0, 1, 2, 2}, vocab) == "aab");
-  assert(asr::decode_ids({1, 1, 0, 1, 2, 2}, vocab, asr::DecodeMode::Legacy) ==
-         "aaabb");
+  // The default decode reproduces the source sample output (legacy).
+  assert(asr::decode_ids({1, 1, 0, 1, 2, 2}, vocab) == "aaabb");
+  assert(asr::decode_ids({1, 1, 0, 1, 2, 2}, vocab, asr::DecodeMode::Ctc) ==
+         "aab");
+  const std::vector<std::string> spaced_vocab{"<pad>", "你", "|", "好"};
+  assert(asr::decode_ids({2, 1, 2, 2, 0, 3, 2}, spaced_vocab) == "|你||好|");
+  assert(asr::decode_ids({2, 1, 2, 2, 0, 3, 2}, spaced_vocab,
+                         asr::DecodeMode::Ctc) == "你 好");
+  assert(asr::decode_ids({2, 2}, spaced_vocab, asr::DecodeMode::Ctc).empty());
   assert(asr::decode_ids({0, 0}, vocab).empty());
   assert(asr::decode_ids({}, vocab).empty());
   assert(asr::decode_logits({-3e35f, -2e35f, -3e35f, -3e35f, -2e35f, -2e35f}, 2,
-                            vocab) == "a");
+                            vocab) == "aa");
   rejected([&] { asr::decode_ids({3}, vocab); });
   rejected([&] { asr::decode_logits({0, 0}, 1, vocab); });
   rejected([&] {

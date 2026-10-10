@@ -5,24 +5,24 @@ English | [简体中文](README_cn.md)
 <a id="artifacts"></a>
 ## Artifacts
 
-These are the 14 original published artifacts. S rows describe the published quantized-output models; for float-output inference on S, prepare a local float model via [conversion](../conversion/README.md) (no float S HBM is published).
+These are the 14 original published artifacts. The Python runtime supports the published S mixed float/SCALE output models directly. Optional local float models can be prepared via [conversion](../conversion/README.md).
 
 | Asset ID | Target | Variant | Output route |
 | --- | --- | --- | --- |
 | `x5:yoloe:yoloe_11s_seg_pf_bayese_640x640_nv12.bin` | x5 | 11s | floating |
 | `x5:yoloe:yoloe_11m_seg_pf_bayese_640x640_nv12.bin` | x5 | 11m | floating |
 | `x5:yoloe:yoloe_11l_seg_pf_bayese_640x640_nv12.bin` | x5 | 11l | floating |
-| `s:yoloe11_seg:yoloe_11s_seg_pf_nashe_640x640_nv12.hbm` | s100 | 11s | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26n | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-e/yoloe_26s_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26s | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-e/yoloe_26m_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26m | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-e/yoloe_26l_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26l | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-e/yoloe_26x_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26x | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-m/yoloe_26n_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26n | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-m/yoloe_26s_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26s | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-m/yoloe_26m_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26m | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-m/yoloe_26l_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26l | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-m/yoloe_26x_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26x | quantized / float conversion pending |
+| `s:yoloe11_seg:yoloe_11s_seg_pf_nashe_640x640_nv12.hbm` | s100 | 11s | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26n | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-e/yoloe_26s_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26s | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-e/yoloe_26m_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26m | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-e/yoloe_26l_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26l | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-e/yoloe_26x_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26x | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-m/yoloe_26n_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26n | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-m/yoloe_26s_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26s | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-m/yoloe_26m_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26m | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-m/yoloe_26l_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26l | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-m/yoloe_26x_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26x | native SCALE outputs (Python) |
 
 <a id="directory"></a>
 ## Directory structure
@@ -44,7 +44,7 @@ model/
 bash samples/vision/yoloe/model/download.sh --target x5 --variant 11s
 ```
 
-Download or checksum failure exits nonzero; an existing mismatched file is not overwritten. For an offline copy of the original artifact, supply exact `--asset-id` and `--model-path`. S originals may be downloaded explicitly for quantized-output use and source comparison, but cannot run through this float entry.
+Download or checksum failure exits nonzero; an existing mismatched file is not overwritten. For an offline copy of the original artifact, supply exact `--asset-id` and `--model-path`. The Python entry accepts the original S artifacts and dequantizes their integer heads using runtime SCALE metadata.
 
 ```bash
 # cwd: repository root; original quantized publication only

@@ -107,15 +107,14 @@ def decode_segmentation(
             masks,
         )
     proto = outputs["protos"][0]
-    # Clip the prototype crop to image content, excluding letterbox padding.
-    # Negative NumPy starts otherwise address the opposite edge of the tensor.
-    visible_boxes = boxes[keep].copy()
-    left, top, right, bottom = transform.padding
-    visible_boxes[:, (0, 2)] = np.clip(visible_boxes[:, (0, 2)], left, width - right)
-    visible_boxes[:, (1, 3)] = np.clip(visible_boxes[:, (1, 3)], top, height - bottom)
+    # Source semantics: the prototype crop uses the full decoded box, letterbox
+    # padding included (the model produces prototype responses there too).
+    # Boxes are not clipped to the content region, and negative crop starts
+    # keep the source NumPy slicing behavior, so masks match the original
+    # sample output exactly.
     masks = post.decode_masks(
         coefficients[keep],
-        visible_boxes,
+        boxes[keep],
         proto,
         width,
         height,

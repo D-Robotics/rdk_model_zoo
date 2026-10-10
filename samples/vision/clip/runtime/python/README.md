@@ -24,6 +24,10 @@ python/
 
 Start with [main.py](main.py): it constructs `CLIPMatcher` and calls `predict`. [matching.py](matching.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.
 
+The image SDK output is a float32 512-feature vector in `[1,512]`,
+`[1,512,1,1]`, or `[1,1,1,512]` layout. Singleton axes are removed without
+changing feature order before cosine matching with the ONNX text features.
+
 <a id="environment"></a>
 ## Environment
 

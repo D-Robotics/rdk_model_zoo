@@ -22,7 +22,8 @@ samples/vision/dinov2/test_data/bus.jpg
 ```text
 evaluator/
 ├── README.md  # 英文说明
-└── README_cn.md  # 中文说明
+├── README_cn.md  # 中文说明
+└── evaluate.py  # 基础图像语义关系检查
 ```
 
 <a id="environment"></a>
@@ -35,6 +36,22 @@ evaluator/
 
 <a id="command"></a>
 ## 评估命令
+
+`evaluate.py` 分别检查CLS 特征和 patch 特征均值。基准图片是小狗，独立正例图片是两只狗，负例图片是公交车。图片之间的关系应在推理前确定。
+
+```bash
+# S100 板端，仓库根目录；输出目录必须尚不存在。
+python3 samples/vision/dinov2/evaluator/evaluate.py \
+  --target s100 \
+  --asset-id s:dinov2:nash-e/dinov2_vits14_224_int16_nashe.hbm \
+  --model-path samples/vision/dinov2/model/nash-e/dinov2_vits14_224_int16_nashe.hbm \
+  --anchor samples/vision/dinov2/test_data/dog.jpg \
+  --positive samples/vision/mobile_sam/test_data/dogs.jpg \
+  --negative samples/vision/dinov2/test_data/bus.jpg \
+  --output-dir outputs/dinov2-relations
+```
+
+每个输出角色均要求：重复输入 cosine ≥ 0.99999，轻度变换 cosine ≥ 0.95，正例 cosine 减负例 cosine > 0.05。轻度变换为 `clip(BGR * 0.9 + 5, 0, 255).astype(uint8)`；patch token 先取均值再计算 cosine。`result.json` 记录阈值、逐角色检查、元数据与输入/模型哈希；逐角色 `.npz` 保存基准、重复、变换、正例和负例特征。所有角色通过时返回 0；关系检查失败或模型/数值错误时记录结果并返回 1。
 
 以下性能命令在匹配板卡和目标制品上运行时，可复现记录中的线程/核心设置。
 
@@ -79,7 +96,7 @@ hrt_model_exec perf --model_file ../model/nash-p/dinov2_vits14_224_int16_nashp.h
 <a id="outputs"></a>
 ## 输出
 
-runtime CLI 输出 JSON 统计并可按精确路径保存 NumPy tensor。raw 数组对照保存完整 input/raw/result 数组和 comparison.json。ONNX 精度需另行分别统计 cls_feat/patch_feat 的 cosine（无捆绑实现），用上文的板端复现命令执行。
+评估结果写入命令中的 `--output-dir`：`result.json`（schema `rdk-model-zoo/embedding-relations/v1`）记录 target、asset ID、模型/输入 SHA-256、轻度变换定义、各 role 的 metadata、判定标准、cosine 数值与逐项检查；同目录下 `cls_feat.npz` 与 `patch_mean.npz` 分别保存该 role 的五个特征数组（`anchor`、`repeat`、`mild`、`positive`、`negative`）。全部 role 通过返回 0；关系不成立或模型/数值错误记录后返回 1。ONNX 精度需另行分别统计 cls_feat/patch_feat 的 cosine（无捆绑实现），用上文的板端复现命令执行。
 
 <a id="reference-results"></a>
 ## 参考结果
@@ -118,7 +135,7 @@ runtime CLI 输出 JSON 统计并可按精确路径保存 NumPy tensor。raw 数
 <a id="boundaries"></a>
 ## 适用范围
 
-- 本目录没有独立评估实现；复现使用 `hrt_model_exec`、ONNXRuntime、`hbm_runtime` 和 runtime CLI。
+- `evaluate.py` 测量所声明的图像关系；参考性能与 float ONNX 对照使用上文命令。
 - 所有参考数值均为记录的 benchmark；当前板端测量请运行上文性能命令。
 - PTQ 量化质量表明确仅适用于 Nash-E；板端 cosine 范围按 target 分别记录。
 - DINOv2 在此作为视觉特征编码器，不覆盖文本编码、分类标签、检索数据集或 C++ 评估。

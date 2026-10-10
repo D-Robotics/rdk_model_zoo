@@ -133,17 +133,20 @@ CLI 单独设置调度参数；应用可在支持时调用
 既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
 X5 全部变体及 S 的 `n/s/m` 使用 768×768 INTER_LINEAR letterbox，填充值 114，
-再转换为**单个 884736 字节的扁平 NV12 uint8 数组**，不是独立 Y/UV 输入。
+再转换为 NV12 uint8 字节。X5 使用单个 884736 字节的扁平数组；S full 模型
+使用按形状绑定的 Y `[1,768,768,1]` 与 UV `[1,384,384,2]` 两个张量，
+也接受 packed NV12 描述符。
 192×192 输出已经是校准后的 log depth。后处理执行 exp、放大至 768、裁去填充、
 恢复原图尺寸。几何使用 Python ties-to-even 舍入；缩放后某一边变成零会显式拒绝。
 
 S 的 `l/x` 使用 INTER_LINEAR 直接拉伸、BGR→RGB、`/255`，得到 float32 NCHW
 `[1,3,768,768]`。输出是原始 logits：截断到 `[-4,5]`，乘 scale 1，加 bias
 `-0.2498779296875`（`l`）或 `-0.316650390625`（`x`），再 exp 并直接恢复尺寸。
-exp 和尺寸恢复在 CPU 执行；源文字称其在图内，但其自身的导出/运行代码在 CPU 执行——实际图边界以制品 metadata 为准。
+exp 与尺寸恢复在 CPU 执行。
 根 README 记录了此差异。
 
-元数据必须描述一个模型、一个输入和一个 float32 输出，输出形状为
+元数据必须描述一个模型、一个 packed 输入或两个 split NV12 输入，
+以及一个 float32 输出，输出形状为
 `[1,192,192,1]` 或 `[1,1,192,192]`。形状/类型错误、NaN/Inf、上下文不匹配、
 exp 溢出均报错。不要对已校准的 log depth 再套 lite 校准。task 隔离的是几何状态；
 SDK runner 的线程安全性以 SDK 说明为准，共享 runner 时请串行调用。

@@ -348,10 +348,9 @@ def bind_stage(
             f"The OCR pilot accepts only F32 outputs; {stage} reported "
             f"{actual_output_dtype!r}."
         )
-    if contract.output_name in facts.output_quants:
-        raise MetadataMismatchError(
-            f"{stage} F32 output must not carry a quantization descriptor."
-        )
+    # SDK metadata may retain quantization descriptors for an F32 output.
+    # The shared raw_f32 contract uses the actual tensor dtype; applying a
+    # second dequantization here would change already decoded OCR scores.
 
     return StageBinding(
         pair=pair,

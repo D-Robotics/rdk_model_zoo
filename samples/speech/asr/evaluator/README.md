@@ -13,7 +13,8 @@ This evaluator computes character error rate from saved reference/hypothesis pai
 evaluator/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-└── evaluate.py  # Python script
+├── evaluate.py  # Python script
+└── basic.py  # Bundled-audio prefix and decoder checks
 ```
 
 <a id="environment"></a>
@@ -22,6 +23,18 @@ Python 3.10+ standard library only. The evaluator reads transcript JSON and writ
 
 <a id="command"></a>
 ## Command
+
+`basic.py` checks a saved native runtime `result.json` for the bundled audio. Its reference is the prefix `我是来自阿里云的大规模` shown in `../test_data/readme_img/print.jpg`. It checks completion, exact audio identity, concatenated chunk text, the published prefix, word-delimiter decoding under `ctc` mode and absence of special tokens.
+
+```bash
+# Repository root; result.json comes from the ASR runtime.
+python3 samples/speech/asr/evaluator/basic.py \
+  --run-report outputs/asr/result.json \
+  --output outputs/asr/basic-check.json
+```
+
+The output binds the run report and prefix screenshot by SHA-256, and records the full text, prefix and individual checks. Exit 0 means the checks pass; exit 1 means a check fails. The output file must be new. Optional `--crosscheck-text-file <file.txt>` adds another independently run recognizer’s text and sequence-match ratio; it does not affect the prefix criterion. Remaining characters require an independent full transcript for CER scoring with `evaluate.py`.
+
 ```bash
 # Repository root; example input with two transcript records.
 asr_eval_dir=$(mktemp -d)

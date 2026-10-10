@@ -52,7 +52,7 @@ On S100, after explicitly preparing dependencies:
 bash samples/speech/asr/model/download.sh --target s100
 bash samples/speech/asr/runtime/cpp/run.sh --target s100 --build
 # Later run: reuse the built binary and choose a new output directory
-bash samples/speech/asr/runtime/cpp/run.sh --target s100 --decode-mode legacy --output-dir outputs/asr_cpp_legacy
+bash samples/speech/asr/runtime/cpp/run.sh --target s100 --decode-mode ctc --output-dir outputs/asr_cpp_ctc
 ```
 For S600, download for s600 and replace the target; do not reuse S100's file. Default target auto reads the actual local identity. Use a new output directory for every launch. Shell `run.sh` resolves its own location and honors `PYTHON`; default input/vocabulary paths are sample-relative, while user relative paths/output paths use the caller's directory. Native binary defaults below assume repository-root cwd.
 
@@ -65,7 +65,7 @@ For S600, download for s600 and replace the target; do not reuse S100's file. De
 | `--model-path` | `None` | External path requires exact asset-id / 外部路径须同时指定身份 |
 | `--audio-file` | `samples/speech/asr/test_data/chi_sound.wav` | Sample-relative default / 默认相对 sample 定位 |
 | `--vocab-file` | `samples/speech/asr/test_data/vocab.json` | Fixed vocabulary / 固定词表 |
-| `--decode-mode` | `ctc` | ctc or legacy / CTC 或旧解码 |
+| `--decode-mode` | `legacy` | ctc or legacy; `legacy` keeps repeats and `|` verbatim / CTC 或逐帧解码，默认 legacy 保留重复与 `|` |
 | `--output-dir` | `outputs/asr_cpp` | New launch directory / 新启动记录目录 |
 | `--build` | `false` | Explicit native build; conflicts with binary / 显式构建，与 binary 互斥 |
 | `--binary` | `None` | Otherwise runtime/cpp/build/TARGET/asr_demo / 默认使用目标构建目录 |
@@ -83,23 +83,23 @@ The native `asr_demo` accepts the following separate interface. Required means n
 | `--audio-file` | samples/speech/asr/test_data/chi_sound.wav |
 | `--vocab-file` | samples/speech/asr/test_data/vocab.json |
 | `--output-dir` | outputs/asr_cpp/result |
-| `--decode-mode` | ctc |
+| `--decode-mode` | legacy |
 | `--help` | false |
 
 <a id="interface-lifecycle"></a>
 ## Interface and resource lifecycle
 `AudioReader` exclusively owns its libsndfile handle. `next(AudioChunk&)` returns owned interleaved float data, source rate/channels, frame offset and index; clean EOF clears output and returns false, errors throw. Reads use `ceil(30000 × source_rate / 16000)` frames. It does not normalize or infer.
 
-`ASR` contains construction/configuration and four stage methods. Construction takes a Runner, observed positive output-step count, ordered 3503-token vocabulary and decoder mode (default CTC).
+`ASR` contains construction/configuration and four stage methods. Construction takes a Runner, observed positive output-step count, ordered 3503-token vocabulary and decoder mode (default Legacy, which concatenates per-frame argmax tokens verbatim and removes only `<pad>`).
 
 - `pre_process(AudioChunk)` validates finite data, averages channels, independently resamples with `SRC_SINC_BEST_QUALITY`, normalizes with variance plus 1e-5, then pads to 30000. It returns owned floats and valid sample count. Empty, malformed, overlong and sub-target-sample chunks are rejected.
 - `forward(PreparedChunk)` validates fixed finite input and invokes the runner once, returning owned raw logits.
-- `post_process(raw)` checks `[1,T,3503]`, finite values and decodes. CTC collapses adjacent IDs before removing blank 0; legacy only removes blank. Nonblank token text, including `|`, is retained.
+- `post_process(raw)` checks `[1,T,3503]`, finite values and decodes. Legacy (default) concatenates per-frame argmax tokens verbatim, keeps repeats and `|`, and removes only `<pad>`. CTC collapses adjacent IDs, removes blank 0, renders the Wav2Vec2 word delimiter `|` as a space and trims surrounding whitespace.
 - `predict(AudioChunk)` composes the stages. Audio files, vocabulary parsing and report saving remain outside the task.
 
 `SdkRunner` requires `make_preflight(model_digest, vocabulary_path)` before any SDK call. Preflight verifies exact local target (including S100P aliases), model bytes and the fixed vocabulary SHA. `load_vocabulary` parses the same hash-checked bytes into 3503 ordered tokens. The native adapter accepts one named model with an unquantized FLOAT32 `[1,30000]` input and `[1,T,3503]` output, validating positive allocation, nonoverlapping float-aligned strides and T before allocation; integer SCALE outputs are supported by the [Python runtime](../python/README.md).
 
-Input padding is cleared and floats copied through observed strides. Cache clean, synchronous UCP task execution and output invalidation are checked; outputs are copied to owned compact vectors. Model/tensor owners unwind partial initialization, including error returns with a nonnull allocation. Success with a null allocation is rejected. Cleanup is nonthrowing and cannot guarantee reclamation after a real SDK release error. Do not concurrently reuse an SDK instance; a Runner capturing it must not outlive it.
+Input padding is cleared and floats copied through observed strides. Cache clean, synchronous UCP task execution and output invalidation are checked; outputs are copied to owned compact vectors. Model/tensor owners unwind partial initialization, including error returns with a nonnull allocation. Success with a null allocation is rejected. Cleanup is a non-throwing destructor path: acquired tensors and the model handle are released with `hbDNNRelease`/free calls, with no return-code check or error reporting. Do not concurrently reuse an SDK instance; a Runner capturing it must not outlive it.
 
 <a id="results-interpretation"></a>
 ## Results and interpretation

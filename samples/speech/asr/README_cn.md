@@ -69,7 +69,7 @@ S600 将两条命令都改为 `s600`，不能将 S100 HBM 改名使用。`PYTHON
 metadata、解码模式，以及逐块位置、有效样本数和文本。错误返回 2；处理开始后失败会
 写入带已完成块的 `failed.json`。
 
-默认 `ctc` 先合并相邻重复 ID，再删除 blank ID 0；`--decode-mode legacy` 删除 `<pad>` 并保留重复 ID。词表 `<pad>,a,b` 下，ID `[1,1,0,1,2,2]` 的结果分别为 `aab`（`ctc`）和 `aaabb`（`legacy`）。其他 token、标点及 `|` 按原文保留。每个独立音频块重新开始 CTC 状态。
+默认 `legacy` 解码逐帧取 argmax 后按原文拼接 token（保留重复 ID 和 `|`），仅删除 `<pad>`。`--decode-mode ctc` 额外合并相邻重复 ID、按 blank ID 0 分隔重复、将 Wav2Vec2 词分隔符 `|` 转为空格并去掉首尾空白。词表 `<pad>,a,b` 下，ID `[1,1,0,1,2,2]` 的结果分别为 `aaabb`（`legacy`，默认）和 `aab`（`ctc`）。每个独立音频块重新开始 CTC 状态。
 
 <a id="entry-points"></a>
 ## 导航

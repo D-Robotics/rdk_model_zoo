@@ -38,6 +38,8 @@ class ModelBinding:
         text_input_name: Bound I32 token input tensor name.
         text_output_name: Bound F32 text-feature output tensor name.
         text_batch_size: Fixed ONNX batch when declared; None when dynamic.
+        image_output_shape: Physical SDK feature layout; singleton axes
+            are removed before cosine matching.
     """
 
     selection: ModelSelection
@@ -47,6 +49,7 @@ class ModelBinding:
     text_input_name: str
     text_output_name: str
     text_batch_size: "int | None"
+    image_output_shape: tuple = (1, 512)
 
 
 def _batch_dimension(dim):
@@ -86,8 +89,11 @@ def bind_model(selection, image_metadata, text_session):
     inp, out = facts.input_names[0], facts.output_names[0]
     if facts.input_shapes.get(inp) != (1, 3, 224, 224) or facts.input_dtypes.get(inp) != 'float32':
         raise MetadataMismatchError('CLIP image input must be F32[1,3,224,224].')
-    if facts.output_shapes.get(out) != (1, 512) or facts.output_dtypes.get(out) != 'float32':
-        raise MetadataMismatchError('CLIP image output must be F32[1,512].')
+    image_output_shape = facts.output_shapes.get(out)
+    # X5 compilers retain singleton spatial axes around the 512 features.
+    # These layouts preserve the source encoder's feature ordering.
+    if image_output_shape not in ((1, 512), (1, 512, 1, 1), (1, 1, 1, 512)) or facts.output_dtypes.get(out) != 'float32':
+        raise MetadataMismatchError('CLIP image output must be F32 with one 512-feature axis and supported singleton layout.')
     inputs, outputs = text_session.get_inputs(), text_session.get_outputs()
     if len(inputs) != 1 or len(outputs) != 1:
         raise MetadataMismatchError('CLIP text encoder requires one input and one output.')
@@ -100,7 +106,7 @@ def bind_model(selection, image_metadata, text_session):
     if len(fixed) > 1:
         raise MetadataMismatchError('CLIP text input/output batch metadata conflicts.')
     return ModelBinding(selection, facts.model_name, inp, out, text_in.name,
-                        text_out.name, next(iter(fixed), None))
+                        text_out.name, next(iter(fixed), None), image_output_shape)
 
 
 def _default_text_factory(path):
@@ -185,8 +191,10 @@ class RuntimeModelRunner:
         if not isinstance(flat, Mapping) or set(flat) != {binding.image_output_name}:
             raise MetadataMismatchError('CLIP image runtime output names changed.')
         image_feature = np.asarray(flat[binding.image_output_name])
-        if image_feature.shape != (1, 512) or image_feature.dtype != np.float32:
-            raise MetadataMismatchError('CLIP image runtime output shape/dtype changed.')
+        if image_feature.shape != binding.image_output_shape or image_feature.dtype != np.float32 or not np.isfinite(image_feature).all():
+            raise MetadataMismatchError('CLIP image runtime output shape/dtype/values changed.')
+        if image_feature.shape != (1, 512):
+            image_feature = image_feature.reshape(1, 512)
         try:
             text_outputs = self.text_session.run([binding.text_output_name], {binding.text_input_name: texts})
         except Exception as exc:

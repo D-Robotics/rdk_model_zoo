@@ -22,7 +22,7 @@ inline void validate_vocabulary(const std::vector<std::string> &tokens) {
 }
 inline std::string decode_ids(const std::vector<int> &ids,
                               const std::vector<std::string> &tokens,
-                              DecodeMode mode = DecodeMode::Ctc) {
+                              DecodeMode mode = DecodeMode::Legacy) {
   validate_vocabulary(tokens);
   if (mode != DecodeMode::Ctc && mode != DecodeMode::Legacy)
     throw std::invalid_argument("Invalid decode mode");
@@ -35,11 +35,20 @@ inline std::string decode_ids(const std::vector<int> &ids,
       result += tokens[id];
     previous = id;
   }
+  if (mode == DecodeMode::Ctc) {
+    // Wav2Vec2 uses | as the word delimiter; legacy keeps source tokens.
+    std::replace(result.begin(), result.end(), '|', ' ');
+    const auto first = result.find_first_not_of(" \t\n\r\f\v");
+    if (first == std::string::npos)
+      return "";
+    const auto last = result.find_last_not_of(" \t\n\r\f\v");
+    result = result.substr(first, last - first + 1);
+  }
   return result;
 }
 inline std::string decode_logits(const std::vector<float> &logits, size_t steps,
                                  const std::vector<std::string> &tokens,
-                                 DecodeMode mode = DecodeMode::Ctc) {
+                                 DecodeMode mode = DecodeMode::Legacy) {
   validate_vocabulary(tokens);
   if (steps == 0 ||
       steps > std::numeric_limits<size_t>::max() / tokens.size() ||

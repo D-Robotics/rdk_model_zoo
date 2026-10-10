@@ -15,7 +15,7 @@ import numpy as np
 from utils.py_utils.platforms import require_execution_target
 from utils.py_utils.quantization import dequantize_tensor, validate_scale_quantization
 from utils.py_utils.runtime_meta import MetadataMismatchError, RuntimeMetadata
-from utils.py_utils.single_array_runner import SingleArrayRunner
+from utils.py_utils.single_array_runner import NamedArrayRunner
 from samples.vision.pointnet.runtime.python.cli import ModelSelection
 
 
@@ -74,9 +74,19 @@ def bind_model(selection: ModelSelection, metadata: RuntimeMetadata | Mapping[st
     meta = metadata if isinstance(metadata, RuntimeMetadata) else RuntimeMetadata.from_mapping(metadata)
     if meta.model_names != (meta.model_name,):
         raise MetadataMismatchError("PointNet artifact must expose exactly one model.")
-    if len(meta.input_names) != 1 or len(meta.output_names) != 1:
-        raise MetadataMismatchError("PointNet requires exactly one input and one output.")
-    input_name, output_name = meta.input_names[0], meta.output_names[0]
+    if len(meta.input_names) != 1:
+        raise MetadataMismatchError("PointNet requires exactly one point input.")
+    if len(meta.output_names) == 1:
+        output_name = meta.output_names[0]
+    elif len(meta.output_names) == 2 and set(meta.output_names) == {"pred", "trans"}:
+        # The published HBM also exposes its learned XYZ transform. It is
+        # an auxiliary output, not another set of chair-part logits.
+        output_name = "pred"
+        if meta.output_shapes.get("trans") != (1, 3, 3) or meta.output_dtypes.get("trans") != "float32":
+            raise MetadataMismatchError("PointNet trans must be float32 (1,3,3).")
+    else:
+        raise MetadataMismatchError("PointNet requires part logits, optionally with the named XYZ transform.")
+    input_name = meta.input_names[0]
     shape = meta.input_shapes.get(input_name, ())
     if len(shape) != 3 or shape[:2] != (1, 3) or type(shape[2]) is not int or shape[2] <= 0:
         raise MetadataMismatchError("PointNet input must have fixed shape (1,3,N), N > 0.")
@@ -92,7 +102,21 @@ def bind_model(selection: ModelSelection, metadata: RuntimeMetadata | Mapping[st
     return ModelBinding(selection, meta, input_name, output_name)
 
 
-def create_runner(selection: ModelSelection, *, runtime_factory=None, runtime=None) -> SingleArrayRunner:
+class PointNetRunner(NamedArrayRunner):
+    """Validate all published SDK outputs and return the named part logits.
+
+    The auxiliary XYZ transform is checked for shape, dtype and finite values
+    by the shared named transport. Part decoding uses only ``pred``; output
+    ordering never selects a different tensor as the segmentation result.
+    """
+
+    def __call__(self, tensors):
+        """Return owned raw part logits after every bound output is validated."""
+        binding = self.load()
+        return super().__call__(tensors)[binding.output_name]
+
+
+def create_runner(selection: ModelSelection, *, runtime_factory=None, runtime=None) -> PointNetRunner:
     """Construct the lazy PointNet transport for a resolved selection.
 
     Args:
@@ -101,11 +125,11 @@ def create_runner(selection: ModelSelection, *, runtime_factory=None, runtime=No
         runtime: Optional prebuilt SDK object; overrides the factory.
 
     Returns:
-        SingleArrayRunner: Lazy runner bound to the normalized-points F32
+        PointNetRunner: Lazy runner bound to the normalized-points F32
         physical input contract; loading gates board identity and the
         published file hash.
     """
-    return SingleArrayRunner(
+    return PointNetRunner(
         selection,
         binding_loader=bind_model,
         physical_input=lambda binding: (binding.metadata.input_shapes[binding.input_name], "float32"),
@@ -153,7 +177,7 @@ class PointNetSegmenter:
     mutable context happens here.
 
     Attributes:
-        runner (SingleArrayRunner): Lazy shared transport used by infer.
+        runner (PointNetRunner): Shared transport with explicit output roles.
         binding (ModelBinding): Validated tensor names and runtime metadata.
     """
     def __init__(self, selection: ModelSelection, *, runner=None):

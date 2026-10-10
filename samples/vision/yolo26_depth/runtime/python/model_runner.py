@@ -17,10 +17,11 @@ class RuntimeModelRunner(SingleArrayRunner):
         super().__init__(
             selection,
             binding_loader=bind_model,
-            physical_input=lambda b: (
-                ((1, 3, 768, 768), "float32")
-                if b.selection.profile == "lite"
-                else ((768 * 768 * 3 // 2,), "uint8")
+            physical_inputs=lambda b: (
+                {n: (b.metadata.input_shapes[n], "uint8") for n in (b.input_name, b.uv_name)}
+                if b.uv_name is not None else
+                {b.input_name: (((1, 3, 768, 768), "float32")
+                    if b.selection.profile == "lite" else ((768 * 768 * 3 // 2,), "uint8"))}
             ),
             task_name="YOLO26 Depth",
             runtime_factory=runtime_factory,

@@ -9,7 +9,7 @@ using Runner = std::function<std::vector<float>(const std::vector<float> &)>;
 class ASR {
 public:
   ASR(Runner runner, size_t steps, std::vector<std::string> vocabulary,
-      DecodeMode mode = DecodeMode::Ctc)
+      DecodeMode mode = DecodeMode::Legacy)
       : runner_(std::move(runner)), steps_(steps),
         vocabulary_(std::move(vocabulary)), mode_(mode) {
     validate_vocabulary(vocabulary_);

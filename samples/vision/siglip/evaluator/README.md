@@ -7,13 +7,7 @@ This guide describes image-feature comparison and the published S100/S100P accur
 <a id="dataset"></a>
 ## Dataset
 
-The historical `pooler_output` zero-shot classification record used ImageNet-1k validation (50,000 images). The historical `last_hidden_state` semantic-consistency record used COCO2014 validation (5,000 images). The source does not publish a preparation script, exact archive revision, directory layout, or evaluator implementation.
-
-```text
-# cwd: repository root
-# Preparation: not provided; do not infer a download command from this README.
-# expected source-owned layouts: ImageNet-1k val and COCO2014 val, as supplied by the evaluator owner
-```
+`evaluate.py` runs on the images bundled with this repository: the anchor and negative are `samples/vision/dinov2/test_data/dog.jpg` and `bus.jpg`, and the positive is `samples/vision/mobile_sam/test_data/dogs.jpg`; no dataset download is needed. The reference tables below were recorded by the source publisher on ImageNet-1k validation (50,000 images) for zero-shot classification and COCO2014 validation (5,000 images) for patch-feature consistency; the exact source-side evaluation implementation is not published, so treat the tables as reference conditions rather than a locally reproducible benchmark.
 
 <a id="directory"></a>
 ## Directory structure
@@ -21,7 +15,8 @@ The historical `pooler_output` zero-shot classification record used ImageNet-1k 
 ```text
 evaluator/
 ├── README.md  # English instructions
-└── README_cn.md  # Chinese instructions
+├── README_cn.md  # Chinese instructions
+└── evaluate.py  # Basic image relation checks
 ```
 
 <a id="environment"></a>
@@ -34,7 +29,23 @@ evaluator/
 <a id="command"></a>
 ## Evaluation Command
 
-There is no checked-in evaluator command; the runtime sample's CLI is the functional entry point (see [runtime/python](../runtime/python/README.md)). For a same-board comparison, run the runtime CLI on the same image and HBM twice and compare the JSON outputs and saved embeddings.
+`evaluate.py` checks global image semantics using `pooler_output` and aligned patch input consistency using `last_hidden_state` separately. The anchor is a puppy, the independently different positive image contains two dogs, and the negative image contains a bus. Choose image relationships before inference.
+
+```bash
+# Repository root on S100; use a new output directory.
+python3 samples/vision/siglip/evaluator/evaluate.py \
+  --target s100 \
+  --asset-id s:siglip:s100/bpu-siglip-base-patch16-224.hbm \
+  --model-path samples/vision/siglip/model/s100/bpu-siglip-base-patch16-224.hbm \
+  --anchor samples/vision/dinov2/test_data/dog.jpg \
+  --positive samples/vision/mobile_sam/test_data/dogs.jpg \
+  --negative samples/vision/dinov2/test_data/bus.jpg \
+  --output-dir outputs/siglip-relations
+```
+
+`pooler_output` requires repeat cosine ≥ 0.99999, mild-transform cosine ≥ 0.95, and positive cosine minus negative cosine > 0.05. `last_hidden_state` preserves token positions and requires flattened repeat cosine ≥ 0.99999, mild-transform cosine ≥ 0.95, and mild-transform cosine minus unrelated-image cosine > 0.05. Its mean-vector image ranking is saved as a diagnostic. The mild transform is `clip(BGR * 0.9 + 5, 0, 255).astype(uint8)`. `result.json` records criteria, per-role checks, metadata and input/model hashes; per-role `.npz` files contain anchor, repeat, mild, positive and negative features. Exit 0 means every role passes; exit 1 records a failed relation or model/numeric error.
+
+The runtime sample's CLI also exposes individual embeddings (see [runtime/python](../runtime/python/README.md)). For a same-board comparison, run the runtime CLI on the same image and HBM twice and compare the JSON outputs and saved embeddings.
 
 <a id="metrics"></a>
 ## Metrics
@@ -82,7 +93,7 @@ Source-recorded board settings:
 <a id="outputs"></a>
 ## Outputs
 
-The comparison procedure writes complete raw arrays to a unique `evaluator-output/siglip-raw-<UTC microsecond run id>/legacy.npy` and `unified.npy`. It writes no reduced summary as a substitute for the arrays; the arrays are the comparison basis, and a JSON summary may be added beside them by a future evaluator. Shape and dtype must match first; integer raw arrays require exact equality, while floating raw arrays allow `rtol=0` and `atol=1e-5`. The assertion must pass.
+The evaluation writes to the `--output-dir` given in the command: `result.json` (schema `rdk-model-zoo/embedding-relations/v1`) records the target, asset ID, model/input SHA-256 hashes, the mild-transform definition, per-role metadata, criteria, cosine values and individual checks; alongside it, `pooler_output.npz` and `last_hidden_state.npz` each contain the five feature arrays (`anchor`, `repeat`, `mild`, `positive`, `negative`) captured for that role, plus `feature_shape`/`feature_dtype` in the JSON. Exit 0 means every role passed; exit 1 records a failed relation or a model/numeric error.
 
 <a id="reference-results"></a>
 ## Reference Results
@@ -118,7 +129,7 @@ The following tables report ImageNet-1k zero-shot classification and COCO2014 pa
 <a id="boundaries"></a>
 ## Scope
 
-- This directory has no evaluator implementation or dataset preparation script; functional checks use the runtime CLI on the board.
+- `evaluate.py` checks the declared image relation on both packed submodels.
 - The four tables are source records; they do not by themselves identify the current artifact bytes or runtime version.
 - SigLIP is evaluated as a vision feature encoder here. No text encoder, text tokenizer, image-text score, calibration recipe, or C++ evaluator is covered.
 

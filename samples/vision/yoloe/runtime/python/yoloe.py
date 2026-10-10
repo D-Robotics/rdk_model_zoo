@@ -134,7 +134,7 @@ class YOLOE:
         return Prepared(self.runner.prepare_input(y, uv), context)
 
     def infer(self, prepared):
-        """Exactly one runner call; return borrowed raw floating arrays unchanged."""
+        """Exactly one runner call; return borrowed native arrays unchanged."""
         return self.runner(
             prepared.tensors if isinstance(prepared, Prepared) else prepared
         )

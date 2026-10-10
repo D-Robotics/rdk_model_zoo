@@ -105,7 +105,7 @@ print(details.prepared.tensors["point"].shape, details.prepared.context.radius)
 prepared 记录（精确的 `(1,3,N)` 归一化张量加冻结的质心/半径上下文）打包返回，绘图与
 归档无需二次执行；默认 `predict` 仍返回普通标签数组，task 不保存上一次点云。
 真实 runner 懒加载，
-先校验板卡/制品，再导入 SDK、核对 metadata。不承诺 SDK 并发执行安全。
+先校验板卡/制品，再导入 SDK、核对 metadata。每个推理线程使用独立 runner，或串行调用共享 runner。
 
 <a id="stage-io"></a>
 ## 阶段 I/O
@@ -116,6 +116,11 @@ prepared 记录（精确的 `(1,3,N)` 归一化张量加冻结的质心/半径�
 | infer | 使用绑定输入名的张量映射 | 从 runtime 取得自有 raw `(1,N,4)` logits，不做 argmax/反量化/IO |
 | postprocess | 与绑定 shape/dtype 一致的 raw 张量 | int32 `(N,)` 标签；整数以 float64 做 SCALE 解码后再 argmax，float32 不变 |
 | predict | 原始 `(N,3)` 坐标 | 串联同样阶段和标签结果；`return_details=True` 额外返回单次调用的 prepared 记录 |
+
+发布的 HBM 同时输出 `pred` float32 `[1,N,4]` 椅子部件分数，以及
+辅助 XYZ 变换 `trans` float32 `[1,3,3]`。Runtime 校验两个张量后，
+按名称解码 `pred`，不依赖输出顺序。也支持只输出部件分数的制品；
+其他输出职责或变换形状不满足契约。
 
 既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
@@ -132,5 +137,5 @@ float32 解码会把大整数舍入成人为平局（独立评审 POINTNET-R2）
 - Target mismatch/无已发布制品：S100P、S600 不能复用 S100 制品。
 - 点数或列数不符：提供精确 N 行 XYZ，不接受法线/颜色列。
 - 零半径或非有限输入：完全重合的点或 NaN/Inf 无法归一化。
-- 额外输出、形状或 dtype 不符：核对实际制品，不绕过 binding 去运行另一种导出。
+- 未知输出、形状或 dtype 不符：核对实际制品，不绕过 binding 去运行另一种导出。
 - 缺 matplotlib：安装它或使用 `--no-plot`，后者仍保存标签与 JSON。

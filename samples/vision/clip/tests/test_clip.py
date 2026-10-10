@@ -118,6 +118,52 @@ class ClipTests(unittest.TestCase):
         r=RuntimeModelRunner(resolve_selection('x5'),image_runtime=ImageRuntime(),text_session=fixed);r.load()
         with self.assertRaises(ValueError):r({'image':np.zeros((1,3,224,224),np.float32),'texts':np.zeros((2,77),np.int32)})
 
+    def test_singleton_sdk_feature_layouts_preserve_cosine_ranking(self):
+        from samples.vision.clip.runtime.python.cli import resolve_selection
+        from samples.vision.clip.runtime.python.matching import RuntimeModelRunner
+
+        baseline = None
+        for shape in ((1, 512), (1, 512, 1, 1), (1, 1, 1, 512)):
+            with self.subTest(shape=shape):
+                image, text = ImageRuntime(), TextSession()
+                image.output_shapes = {'vision': {'embedding': shape}}
+                image.raw = np.arange(512, dtype=np.float32).reshape(shape)
+                runner = RuntimeModelRunner(resolve_selection('x5'),
+                                            image_runtime=image, text_session=text)
+                values = runner({'image': np.zeros((1, 3, 224, 224), np.float32),
+                                 'texts': np.zeros((2, 77), np.int32)})
+                np.testing.assert_array_equal(values['image_feature'],
+                                              np.arange(512, dtype=np.float32)[None])
+                task, _, _, _ = fixture()
+                result = task.post_process(values)
+                if baseline is None:
+                    baseline = result.scores
+                np.testing.assert_array_equal(result.scores, baseline)
+
+        for shape in ((512,), (2, 256), (1, 2, 256, 1)):
+            image = ImageRuntime()
+            image.output_shapes = {'vision': {'embedding': shape}}
+            with self.subTest(shape=shape), self.assertRaises(ValueError):
+                RuntimeModelRunner(resolve_selection('x5'), image_runtime=image,
+                                   text_session=TextSession()).load()
+
+    def test_sdk_runtime_feature_shape_and_finite_values_still_checked(self):
+        from samples.vision.clip.runtime.python.cli import resolve_selection
+        from samples.vision.clip.runtime.python.matching import RuntimeModelRunner
+
+        for raw in (np.zeros((1, 512), np.float32),
+                    np.full((1, 512, 1, 1), np.nan, np.float32),
+                    np.zeros((1, 512, 1, 1), np.int8)):
+            image, text = ImageRuntime(), TextSession()
+            image.output_shapes = {'vision': {'embedding': (1, 512, 1, 1)}}
+            image.raw = raw
+            runner = RuntimeModelRunner(resolve_selection('x5'),
+                                        image_runtime=image, text_session=text)
+            with self.assertRaises(ValueError):
+                runner({'image': np.zeros((1, 3, 224, 224), np.float32),
+                        'texts': np.zeros((1, 77), np.int32)})
+            self.assertEqual(text.calls, [])
+
     def test_sdk_free_entry_help_and_explicit_dryrun(self):
         for args in [('--help',),('--list-models',),('--dry-run','--target','x5')]:
             p=subprocess.run([sys.executable,str(SAMPLE/'runtime/python/main.py'),*args],cwd='/tmp',capture_output=True,text=True)

@@ -95,12 +95,12 @@ class RuntimeTests(unittest.TestCase):
         self.assertTrue(custom.local_float)
         self.assertFalse(custom.published_float)
 
-    def test_published_quantized_route_fails_before_sdk(self):
+    def test_published_quantized_route_checks_identity_and_asset_before_sdk(self):
         s = resolve_selection("s100")
         with patch("utils.py_utils.platforms.require_execution_target") as gate:
-            with self.assertRaisesRegex(ValueError, "quantized"):
+            with self.assertRaisesRegex(ValueError, "Missing or empty model"):
                 build_runner(s)
-            gate.assert_not_called()
+            gate.assert_called_once_with("s100")
 
     def test_binding_orders_by_shape_and_rejects_integer(self):
         for target, variant in [("x5", "11s"), ("s100", "26n")]:
@@ -241,7 +241,7 @@ class BoundaryTests(unittest.TestCase):
             path.write_bytes(b"not a real model")
             s = resolve_selection("s100", model_path=path, local_float_sha256="0" * 64)
             with patch("utils.py_utils.platforms.require_execution_target"), patch(
-                "samples.vision.yoloe.runtime.python.model_runner.common_runner"
+                "utils.py_utils.runtime.RuntimeSession.load"
             ) as load:
                 with self.assertRaisesRegex(ValueError, "SHA-256 mismatch"):
                     build_runner(s)

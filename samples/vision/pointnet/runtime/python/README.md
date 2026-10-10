@@ -111,8 +111,8 @@ the exact normalized `(1,3,N)` tensor plus the frozen centroid/radius context â€
 so plotting and archiving need no second pass; the default `predict` return
 stays the plain labels array and the task never retains a last cloud. The real
 runner is lazy, verifies target and
-artifact before importing the SDK, and then checks tensor metadata. No concurrent
-SDK execution guarantee is made.
+artifact before importing the SDK, and then checks tensor metadata. Use one
+runner per inference thread, or serialize calls on a shared runner.
 
 <a id="stage-io"></a>
 ## Stage IO
@@ -123,6 +123,12 @@ SDK execution guarantee is made.
 | infer | tensor mapping using bound input name | owned raw `(1,N,4)` logits from runtime; no argmax, dequant or IO |
 | postprocess | raw tensor with bound shape/dtype | int32 `(N,)` IDs; integer SCALE decoding in float64 before argmax, float32 unchanged |
 | predict | raw `(N,3)` points | same stages and labels; `return_details=True` additionally returns this call's prepared record |
+
+The published HBM exposes named `pred` float32 `[1,N,4]` chair-part
+logits and auxiliary `trans` float32 `[1,3,3]` XYZ transformation. The
+runtime validates both tensors, then decodes `pred` regardless of output
+order. A single-logit export is also accepted; other output roles or
+transform shapes are rejected.
 
 
 N comes from compiled metadata and must match exactly; no resampling/padding.
@@ -142,6 +148,6 @@ guessing.
 - Target mismatch/no published asset: S100P and S600 cannot reuse the S100 asset.
 - Wrong point count/columns: provide exactly N XYZ rows; normals/colors are not inputs.
 - Zero-radius/nonfinite cloud: identical or NaN/Inf points cannot be normalized.
-- Extra outputs, differing shapes or unknown dtype: inspect the actual artifact;
+- Unknown outputs, differing shapes or unknown dtype: inspect the actual artifact;
   do not bypass binding checks to run a different export.
 - Missing matplotlib: install it or use `--no-plot`. The latter still saves labels/JSON.

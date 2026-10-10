@@ -9,7 +9,7 @@ struct CliOptions {
   std::string asset_id, model_sha256;
   std::string audio = "samples/speech/asr/test_data/chi_sound.wav";
   std::string vocabulary = "samples/speech/asr/test_data/vocab.json";
-  std::string output = "outputs/asr_cpp/result", decode_mode = "ctc";
+  std::string output = "outputs/asr_cpp/result", decode_mode = "legacy";
   bool help = false;
 };
 CliOptions parse_cli(int argc, const char *const *argv);

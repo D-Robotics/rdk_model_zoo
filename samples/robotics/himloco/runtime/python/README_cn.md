@@ -32,6 +32,10 @@ python/
 
 准备模型后，通过 `HimLocoTask.from_model(selection)` 初始化 Runtime。模型输入为 `{"obs_history": float32[1,270]}`，输出为 `{"actions": float32[1,12]}`。一般调用 `predict(observation)`，也可按下方示例分别执行三个阶段。
 
+SDK 适配器接受紧凑向量，以及 X5 的单例空间布局 `[1,C,1,1]`、
+`[1,1,1,C]`（输入 `C=270`，输出 `C=12`）。布局转换不改变观测数值
+或关节顺序；公开 API 仍使用 `[1,270]` 输入和 `[1,12]` 动作。
+
 ```bash
 # Repository root; these commands do not load SDKs or download.
 python samples/robotics/himloco/runtime/python/main.py --list-models

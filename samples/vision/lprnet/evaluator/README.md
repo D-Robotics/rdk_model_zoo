@@ -8,8 +8,8 @@ English | [简体中文](README_cn.md)
 
 There is no source accuracy dataset or label file. The reproducible input is the
 bundled `../test_data/test_input.dat` (float32 `1x3x24x94`), the same pre-packed
-tensor the source runtime reads; `../test_data/example.jpg` is only a visual
-reference. This is a single input fixture, not a license-plate accuracy
+tensor the source runtime reads. `../test_data/example.jpg` depicts a different
+plate; the DAT reference is `渝A999U9`. This is a single input fixture, not a license-plate accuracy
 benchmark.
 
 <a id="directory"></a>
@@ -20,6 +20,7 @@ evaluator/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
 ├── compare.py  # Python script
+├── evaluate.py  # Plate reference comparison
 └── source_reference.py  # Python script
 ```
 
@@ -39,6 +40,20 @@ anything. The source performance record follows.
 
 <a id="command"></a>
 ## Evaluation command
+
+`evaluate.py` compares the decoded plate with a reference established from the input pixels; `compare.py` compares numerical results between two implementations. The bundled `test_input.dat`, interpreted as RGB CHW scaled to [-1, 1], shows `渝A999U9`.
+
+```bash
+python3 samples/vision/lprnet/evaluator/evaluate.py \
+  --target x5 --asset-id x5:lprnet:lpr.bin \
+  --model-path samples/vision/lprnet/model/lpr.bin \
+  --test-bin samples/vision/lprnet/test_data/test_input.dat \
+  --reference-plate 渝A999U9 \
+  --reference-source 'Visual transcription of decoded RGB test_input.dat pixels before inference' \
+  --output outputs/lprnet-reference.json
+```
+
+The JSON records the reference and its source, decoded plate, target, asset ID and model/input SHA-256. Exact plate agreement returns 0; mismatch or a recorded model error returns 1. The output file must be new. For another DAT, supply that input’s own plate reference and source.
 
 From the repository root, on a board with the artifact and input prepared:
 

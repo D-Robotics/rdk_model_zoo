@@ -53,6 +53,39 @@ class BindingTests(unittest.TestCase):
             with self.subTest(change=change), self.assertRaises(ValueError):
                 bind_model(selected, {**metadata(), **change})
 
+    def test_singleton_sdk_vectors_preserve_observation_and_action_order(self):
+        from types import SimpleNamespace
+
+        for input_shape, output_shape in (
+            ((1, 1, 1, 270), (1, 1, 1, 12)),
+            ((1, 270, 1, 1), (1, 12, 1, 1)),
+            ((1, 270), (1, 1, 1, 12)),
+        ):
+            m = metadata()
+            m['input_shapes'] = {'obs_history': input_shape}
+            m['output_shapes'] = {'actions': output_shape}
+            runtime = SimpleNamespace(model_names=['policy'])
+            for field in ('input_names', 'input_shapes', 'input_dtypes',
+                          'output_names', 'output_shapes', 'output_dtypes'):
+                setattr(runtime, field, {'policy': m[field]})
+            raw = np.arange(12, dtype=np.float32).reshape(output_shape)
+            runtime.run = Mock(return_value={'policy': {'actions': raw}})
+            runner = RuntimeModelRunner(resolve_selection('x5'), runtime=runtime)
+            observation = np.arange(270, dtype=np.float32)[None]
+            with self.subTest(input_shape=input_shape, output_shape=output_shape):
+                outputs = runner({'obs_history': observation})
+                physical = runtime.run.call_args.args[0]['policy']['obs_history']
+                self.assertEqual(physical.shape, input_shape)
+                np.testing.assert_array_equal(physical.reshape(1, 270), observation)
+                np.testing.assert_array_equal(outputs['actions'], np.arange(12, dtype=np.float32)[None])
+                self.assertFalse(np.shares_memory(raw, outputs['actions']))
+
+        for shape in ((270,), (1, 3, 90, 1), (2, 135, 1, 1)):
+            with self.subTest(shape=shape), self.assertRaises(ValueError):
+                bind_model(resolve_selection('x5'), {
+                    **metadata(), 'input_shapes': {'obs_history': shape},
+                })
+
     def test_forged_selection_rejected_before_sdk_factory(self):
         factory = Mock()
         with self.assertRaises(ValueError):

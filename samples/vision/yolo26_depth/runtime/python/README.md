@@ -144,8 +144,9 @@ The CLI separately sets scheduling parameters; applications may call
 The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names.
 
 X5 all variants and S `n/s/m` use 768×768 INTER_LINEAR letterbox with fill 114,
-then **one flat packed NV12 uint8 array of 884736 bytes**, not separate Y/UV
-inputs. Their 192×192 output is already calibrated log depth. Postprocessing
+then NV12 uint8 bytes. X5 uses one flat packed array of 884736 bytes. S full
+models accept split Y `[1,768,768,1]` and UV `[1,384,384,2]` tensors, bound by
+their shapes; packed NV12 descriptors are also accepted. Their 192×192 output is already calibrated log depth. Postprocessing
 applies exp, resizes to 768, crops padding, and restores original dimensions.
 Python ties-to-even rounding determines letterbox geometry; images whose scaled
 dimension collapses to zero are explicitly rejected.
@@ -153,11 +154,10 @@ dimension collapses to zero are explicitly rejected.
 S `l/x` use INTER_LINEAR scale-fill, BGR→RGB and `/255`, yielding float32 NCHW
 `[1,3,768,768]`. Output is raw logits: clip to `[-4,5]`, apply scale 1 and bias
 `-0.2498779296875` (`l`) or `-0.316650390625` (`x`), then exp and restore directly.
-Exp and restoration run on CPU; the source prose places them in the graph, but
-its own export/runtime code executes them on CPU — the artifact metadata is
-authoritative on the actual graph boundary.
+Exp and dimension restoration run on CPU.
 
-Metadata must describe one model, one input and one float32 output of
+Metadata must describe one model, one packed input or two split NV12 inputs,
+and one float32 output of
 `[1,192,192,1]` or `[1,1,192,192]`. Incorrect geometry/type, NaN/Inf, mismatched
 context and exp overflow are errors. Do not apply lite calibration twice to a
 calibrated log-depth output. Task-level context isolation is per-call; shared-runner

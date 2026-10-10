@@ -111,7 +111,11 @@ class SegmentationBinding(unittest.TestCase):
                         actual, reference.post_process(reference.forward({}), 64, 64)
                     )
 
-    def test_border_masks_clip_to_visible_content_instead_of_negative_slices(self):
+    def test_border_masks_keep_source_negative_slice_semantics(self):
+        # Source semantics: the prototype crop receives the raw decoded box
+        # (letterbox padding included, negative crop starts keep Python slice
+        # addressing) and the Lanczos result is returned unchanged, so values
+        # may exceed 1 instead of being renormalized.
         task, raw, _ = fixture(quantized=False)
         raw["protos"].fill(1)
         raw["cls_8"].fill(-20)
@@ -120,17 +124,18 @@ class SegmentationBinding(unittest.TestCase):
         raw["box_8"][..., [4, 20, 36, 52]] = 20
         actual = task.post_process(task.forward({}), 64, 64)
         np.testing.assert_array_equal(actual[0][0], [0, 0, 36, 36])
-        self.assertTrue(
-            np.all(actual[3][0] == 1),
-            "Visible mask must not be lost by negative NumPy slicing",
-        )
-        # A small box lies wholly in top letterbox padding of a panoramic image.
+        # The decoded model-space box starts left of the prototype grid, so the
+        # source's negative slice yields an empty crop and the ROI falls back
+        # to the zero mask — exactly the original sample's output.
+        self.assertEqual(int(actual[3][0].max()), 0)
+        # A small box lies wholly in top letterbox padding of a panoramic image:
+        # the source clamps the ROI to the image with a minimum 1-pixel axis.
         raw["box_8"].fill(-20)
         raw["box_8"][..., [0, 16, 32, 48]] = 20
         prepared = task.pre_process(np.zeros((8, 64, 3), np.uint8))
         result = task.post_process(task.forward(prepared), transform=prepared.transform)
         self.assertEqual(result[0][0, 1], result[0][0, 3])
-        self.assertFalse(np.any(result[3][0]))
+        self.assertGreaterEqual(result[3][0].size, 1)
 
     def test_empty_and_owned_results(self):
         task, raw, _ = fixture()

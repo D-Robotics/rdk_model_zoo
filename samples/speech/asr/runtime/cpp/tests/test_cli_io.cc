@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
       "--model-sha256",
       "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
   const auto parsed = asr::parse_cli(9, args);
-  assert(parsed.model.target == "s100" && parsed.decode_mode == "ctc");
+  assert(parsed.model.target == "s100" && parsed.decode_mode == "legacy");
   const char *duplicate[] = {"asr", "--target", "s100", "--target", "s600"};
   rejects([&] { asr::parse_cli(5, duplicate); });
   const char *unknown[] = {"asr", "--unknown"};

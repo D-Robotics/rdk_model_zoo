@@ -34,6 +34,11 @@ the core does not install or substitute that dependency.
 
 Construct `HimLocoTask.from_model(selection)` after preparing the model. Its runtime accepts `{"obs_history": float32[1,270]}` and returns `{"actions": float32[1,12]}`. Use `predict(observation)` for one observation history, or call the three stages shown below.
 
+The SDK adapter accepts the compact vectors or X5 singleton-spatial layouts
+`[1,C,1,1]` and `[1,1,1,C]` (`C=270` for input, `C=12` for output). It
+reshapes these layouts without changing observation values or joint order;
+the public API remains `[1,270]` input and `[1,12]` actions.
+
 ```bash
 # Repository root; these commands do not load SDKs or download.
 python samples/robotics/himloco/runtime/python/main.py --list-models

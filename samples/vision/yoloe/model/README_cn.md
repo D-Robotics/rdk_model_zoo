@@ -5,24 +5,24 @@
 <a id="artifacts"></a>
 ## 制品
 
-下表列出 14 个原始发布制品。S 行为已发布的量化输出模型；在 S 上进行浮点输出推理，请按[转换说明](../conversion/README_cn.md)准备本地浮点模型（当前没有发布浮点 S HBM）。
+下表列出 14 个原始发布制品。Python 运行时直接支持 S 发布制品的混合浮点/SCALE 输出；也可按[转换说明](../conversion/README_cn.md)准备本地浮点模型。
 
 | Asset ID | Target | Variant | Output route |
 | --- | --- | --- | --- |
 | `x5:yoloe:yoloe_11s_seg_pf_bayese_640x640_nv12.bin` | x5 | 11s | floating |
 | `x5:yoloe:yoloe_11m_seg_pf_bayese_640x640_nv12.bin` | x5 | 11m | floating |
 | `x5:yoloe:yoloe_11l_seg_pf_bayese_640x640_nv12.bin` | x5 | 11l | floating |
-| `s:yoloe11_seg:yoloe_11s_seg_pf_nashe_640x640_nv12.hbm` | s100 | 11s | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26n | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-e/yoloe_26s_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26s | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-e/yoloe_26m_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26m | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-e/yoloe_26l_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26l | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-e/yoloe_26x_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26x | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-m/yoloe_26n_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26n | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-m/yoloe_26s_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26s | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-m/yoloe_26m_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26m | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-m/yoloe_26l_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26l | quantized / float conversion pending |
-| `s:yoloe26_seg:nash-m/yoloe_26x_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26x | quantized / float conversion pending |
+| `s:yoloe11_seg:yoloe_11s_seg_pf_nashe_640x640_nv12.hbm` | s100 | 11s | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26n | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-e/yoloe_26s_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26s | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-e/yoloe_26m_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26m | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-e/yoloe_26l_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26l | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-e/yoloe_26x_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26x | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-m/yoloe_26n_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26n | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-m/yoloe_26s_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26s | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-m/yoloe_26m_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26m | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-m/yoloe_26l_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26l | native SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-m/yoloe_26x_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26x | native SCALE outputs (Python) |
 
 <a id="directory"></a>
 ## 目录结构
@@ -44,7 +44,7 @@ model/
 bash samples/vision/yoloe/model/download.sh --target x5 --variant 11s
 ```
 
-下载失败或哈希不符会非零退出；已存在且哈希不符的文件不覆盖。离线复制原制品后使用精确 `--asset-id` 与 `--model-path`。S 原制品可显式下载，用于量化输出路线与来源对照；浮点入口请使用自行转换的浮点制品。
+下载失败或哈希不符会非零退出；已存在且哈希不符的文件不覆盖。离线复制原制品后使用精确 `--asset-id` 与 `--model-path`。Python 入口可使用 S 原制品，按运行时 SCALE 元数据反量化整数输出头。
 
 ```bash
 # cwd: repository root; original quantized publication only

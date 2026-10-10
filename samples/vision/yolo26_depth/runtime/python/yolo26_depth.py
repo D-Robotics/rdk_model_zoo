@@ -107,8 +107,9 @@ class Yolo26DepthTask:
     # ------------------------------------------------------------------
 
     def preprocess(self, image: np.ndarray) -> PreparedInput:
-        """Nonempty BGR uint8 HWC → owned flat NV12 or RGB float32 NCHW.
+        """Nonempty BGR uint8 HWC → owned packed/split NV12 or RGB NCHW.
 
+        Split S inputs keep the bound batch-one Y/UV NHWC plane shapes.
         NV12 uses INTER_LINEAR letterbox with padding 114; lite uses scale-fill
         and /255. Geometry is returned with the tensor, never stored on the task.
         Invalid images or a collapsed letterbox dimension raise ValueError.
@@ -147,6 +148,12 @@ class Yolo26DepthTask:
                 value=(114, 114, 114),
             )
             y, uv = bgr_to_nv12_planes(padded)
+            if self.binding.uv_name is not None:
+                tensors = {
+                    self.binding.input_name: np.ascontiguousarray(y.reshape(1, 768, 768, 1)),
+                    self.binding.uv_name: np.ascontiguousarray(uv.reshape(1, 384, 384, 2)),
+                }
+                return PreparedInput(tensors, ctx)
             value = np.concatenate((y.reshape(-1), uv.reshape(-1)))
         return PreparedInput({self.binding.input_name: value}, ctx)
 

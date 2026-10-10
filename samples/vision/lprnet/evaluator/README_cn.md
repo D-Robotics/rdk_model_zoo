@@ -7,8 +7,8 @@
 ## 数据集
 
 源没有精度数据集或标签文件。可复现输入是 `../test_data/test_input.dat`（float32
-`1x3x24x94`），即源 runtime 读取的同一个预打包张量；`../test_data/example.jpg` 只是
-视觉参考。它是单个输入 fixture，不是车牌精度基准集。
+`1x3x24x94`），即源 runtime 读取的同一个预打包张量。`../test_data/example.jpg` 展示另一块
+车牌；DAT 的车牌参照为 `渝A999U9`。它是单个输入 fixture，不是车牌精度基准集。
 
 <a id="directory"></a>
 ## 目录结构
@@ -18,6 +18,7 @@ evaluator/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
 ├── compare.py  # Python 脚本
+├── evaluate.py  # 车牌参照比较
 └── source_reference.py  # Python 脚本
 ```
 
@@ -35,6 +36,20 @@ runtime（在身份 gate 之后惰性导入）、已准备的 `lpr.bin` 与 `.da
 
 <a id="command"></a>
 ## 评估命令
+
+`evaluate.py` 将解码车牌与从输入像素确定的参照比较；`compare.py` 对照两套实现的数值结果。内置 `test_input.dat` 按 RGB CHW、[-1, 1] 值域还原后，车牌为 `渝A999U9`。
+
+```bash
+python3 samples/vision/lprnet/evaluator/evaluate.py \
+  --target x5 --asset-id x5:lprnet:lpr.bin \
+  --model-path samples/vision/lprnet/model/lpr.bin \
+  --test-bin samples/vision/lprnet/test_data/test_input.dat \
+  --reference-plate 渝A999U9 \
+  --reference-source 'Visual transcription of decoded RGB test_input.dat pixels before inference' \
+  --output outputs/lprnet-reference.json
+```
+
+JSON 记录参照与来源、解码车牌、目标、资产 ID 及模型/输入 SHA-256。车牌完全一致时返回 0；不一致或已记录的模型错误返回 1。输出文件必须尚不存在。更换 DAT 时，应提供该输入自己的车牌参照和来源。
 
 在已准备资产与输入的板卡上，于仓库根目录运行：
 

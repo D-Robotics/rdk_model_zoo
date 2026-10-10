@@ -242,8 +242,8 @@ stay thin aliases of the readable stage methods (one implementation).
 `YoloDetect` (in `detect.py`) and `YOLO26Detect` compose exactly three stages.
 They keep no
 last-image context. Preparing B after A does not overwrite A's geometry; retain
-each prepared object and use its own transform. SDK calls still require external
-serialization; per-call context does not certify thread-safe inference.
+each prepared object and use its own transform. SDK calls require external
+serialization.
 Every task class — detect, cls, seg, pose, OBB, in both the DFL and YOLO26
 families — spells the stages `preprocess` / `infer` / `postprocess` with
 `pre_process` / `forward` / `post_process` as thin aliases (one implementation
@@ -346,7 +346,7 @@ The decode uses a coefficient/prototype dot-product threshold `>0.5`, Lanczos
 resize and optional 5×5 morphological opening (`do_morph=True`). The
 returned masks are per-box ROIs; upstream Ultralytics full-image mask
 evaluation is a different metric.
-Lanczos overshoot is normalized back to 0/1 after the optional opening, preserving its foreground support.
+The Lanczos result is returned as-is after the optional opening: isolated pixels can read 2 (uint8 overshoot); any nonzero value is foreground.
 Confidence must be finite in `(0,1)` and NMS in `[0,1]`.
 
 Geometry uses actual integer resize/padding; prototype crops

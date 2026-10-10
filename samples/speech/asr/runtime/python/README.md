@@ -39,7 +39,7 @@ Run from the repository root. The default command detects the board, selects its
 ```sh
 # Repository root; matching board and explicitly downloaded model required.
 python3 samples/speech/asr/runtime/python/main.py
-python3 samples/speech/asr/runtime/python/main.py --target s600 --decode-mode legacy --output-dir outputs/asr-legacy
+python3 samples/speech/asr/runtime/python/main.py --target s600 --decode-mode ctc --output-dir outputs/asr-ctc
 ```
 The command returns 0 and records `status: completed` in `result.json` when processing succeeds. Help, `--list-models`, and explicit-target `--dry-run` work without the board SDK; dry-run resolves target and artifact selection without running inference.
 
@@ -54,7 +54,7 @@ The command returns 0 and records `status: completed` in `result.json` when proc
 | `--vocab-file` | Path | `samples/speech/asr/test_data/vocab.json` | Hash-pinned vocabulary / 固定哈希词表 |
 | `--audio-maxlen` | int | `30000` | Fixed compiled length / 编译固定长度 |
 | `--new-rate` | int | `16000` | Fixed sample rate / 固定采样率 |
-| `--decode-mode` | str | `ctc` | ctc or legacy / CTC 或逐帧解码模式 |
+| `--decode-mode` | str | `legacy` | ctc or legacy; `legacy` keeps repeats and `|` verbatim / CTC 或逐帧解码，默认 legacy 保留重复与 `|` |
 | `--priority` | int | `0` | Scheduling priority 0–255 / 调度优先级 |
 | `--bpu-cores` | int list | `[0]` | Nonnegative core IDs / 非负核心编号 |
 | `--output-dir` | Path | `outputs/asr` | Must be new / 必须为新目录 |
@@ -95,7 +95,7 @@ print("".join(texts))
 
 The established `pre_process`, `forward`, and `post_process` names remain importable aliases of `preprocess`, `infer`, and `postprocess`.
 
-CTC collapses adjacent equal IDs before removing blank 0; legacy only removes blank. Blank separates repeated tokens: `[5,5,0,5]` becomes `AA` under CTC and `AAA` under legacy. Only exactly equal scores tie, and ties go to the lowest ID: float32 output compares in float32, while integer SCALE output compares at float64 so distinct raw integers cannot round into an artificial tie. All nonblank vocabulary strings, including `|` and special tokens, are retained literally. No state or duplicate suppression crosses chunk boundaries. Final padding still produces a full logit sequence, and all output frames are decoded because model metadata supplies no valid-frame count. Independent windows can split words; chunking does not add overlap-aware stitching. Python uses Fourier resampling, while the C++ runtime uses sinc resampling.
+Legacy (default) concatenates per-frame argmax tokens verbatim, keeps repeats and `|`, and removes only `<pad>`. CTC collapses adjacent equal IDs before removing blank 0: `[5,5,0,5]` becomes `AA` under CTC and `AAA` under legacy. Only exactly equal scores tie, and ties go to the lowest ID: float32 output compares in float32, while integer SCALE output compares at float64 so distinct raw integers cannot round into an artificial tie. CTC renders the Wav2Vec2 word delimiter `|` as a space and trims surrounding whitespace; legacy retains it literally. Other nonblank vocabulary strings and special tokens remain unchanged. No state or duplicate suppression crosses chunk boundaries. Final padding still produces a full logit sequence, and all output frames are decoded because model metadata supplies no valid-frame count. Independent windows can split words; chunking does not add overlap-aware stitching. Python uses Fourier resampling, while the C++ runtime uses sinc resampling.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

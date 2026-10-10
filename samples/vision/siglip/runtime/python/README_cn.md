@@ -126,6 +126,8 @@ assert np.array_equal(explicit_result, composed_result)
 print({"shape": composed_result.shape, "dtype": str(composed_result.dtype)})
 ```
 
+全局图像匹配使用默认的 `pooler_output`，其学习得到的注意力池化头产生图像嵌入。下游模型需要空间 patch 特征时选择 `last_hidden_state`。patch token 的均值不能复现该池化头。全局图像关系与对齐 token 一致性检查见[评估器](../../evaluator/README_cn.md)。[架构源码](https://github.com/huggingface/transformers/blob/main/src/transformers/models/siglip/modeling_siglip.py)。
+
 <a id="stage-io"></a>
 ## 三阶段 I/O
 

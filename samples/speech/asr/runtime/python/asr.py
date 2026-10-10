@@ -99,7 +99,7 @@ class ASR:
     """One independent audio chunk per call; no state crosses chunks."""
 
     def __init__(
-        self, runner, binding, vocabulary, config=Config(), *, decode_mode="ctc"
+        self, runner, binding, vocabulary, config=Config(), *, decode_mode="legacy"
     ):
         validate_config(config)
         if decode_mode not in ("ctc", "legacy"):
@@ -117,7 +117,7 @@ class ASR:
 
     @classmethod
     def from_model(
-        cls, selection, vocabulary, config=Config(), *, decode_mode="ctc",
+        cls, selection, vocabulary, config=Config(), *, decode_mode="legacy",
         runtime=None, runtime_factory=None,
     ):
         """Construct the loaded ASR task for one resolved selection.

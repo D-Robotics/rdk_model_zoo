@@ -39,7 +39,7 @@ python3 -m pip install numpy PyYAML scipy soundfile
 ```sh
 # Repository root; matching board and explicitly downloaded model required.
 python3 samples/speech/asr/runtime/python/main.py
-python3 samples/speech/asr/runtime/python/main.py --target s600 --decode-mode legacy --output-dir outputs/asr-legacy
+python3 samples/speech/asr/runtime/python/main.py --target s600 --decode-mode ctc --output-dir outputs/asr-ctc
 ```
 处理成功时命令返回 0，且 `result.json` 记录 `status: completed`。帮助、列表和显式 target 的 dry-run 无需板端 SDK；dry-run 用于解析目标和制品选择，不会执行推理。
 
@@ -54,7 +54,7 @@ python3 samples/speech/asr/runtime/python/main.py --target s600 --decode-mode le
 | `--vocab-file` | Path | `samples/speech/asr/test_data/vocab.json` | Hash-pinned vocabulary / 固定哈希词表 |
 | `--audio-maxlen` | int | `30000` | Fixed compiled length / 编译固定长度 |
 | `--new-rate` | int | `16000` | Fixed sample rate / 固定采样率 |
-| `--decode-mode` | str | `ctc` | ctc or legacy / CTC 或逐帧解码模式 |
+| `--decode-mode` | str | `legacy` | ctc 或逐帧解码；默认 `legacy` 保留重复 ID 与 `|` / decode mode |
 | `--priority` | int | `0` | Scheduling priority 0–255 / 调度优先级 |
 | `--bpu-cores` | int list | `[0]` | Nonnegative core IDs / 非负核心编号 |
 | `--output-dir` | Path | `outputs/asr` | Must be new / 必须为新目录 |
@@ -95,7 +95,7 @@ print("".join(texts))
 
 既有 `pre_process`、`forward`、`post_process` 名称仍是 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名称。
 
-CTC 先折叠连续相同 ID，再去掉 blank 0；legacy 只去 blank。`[5,5,0,5]` 在 CTC 下为 `AA`，legacy 为 `AAA`。只有完全相等的分数才平局并取最小 ID：float32 输出按 float32 比较，整数 SCALE 输出按 float64 比较，不同整数不会因舍入变成假平局。所有非 blank 词表字符串按原文保留，包括 `|` 和特殊 token。不跨块保留状态或去重。末块补零后仍解码全部输出帧，因为模型元数据不提供有效帧数。独立窗口可能截断词语，分块流程不会执行带重叠拼接。Python 使用 Fourier 重采样，C++ 运行时使用 sinc 重采样。
+Legacy（默认）逐帧 argmax 后按原文拼接 token，保留重复 ID 和 `|`，仅删除 `<pad>`。CTC 先折叠连续相同 ID，再去掉 blank 0：`[5,5,0,5]` 在 CTC 下为 `AA`，legacy 为 `AAA`。只有完全相等的分数才平局并取最小 ID：float32 输出按 float32 比较，整数 SCALE 输出按 float64 比较，不同整数不会因舍入变成假平局。CTC 将 Wav2Vec2 词分隔符 `|` 转为空格并去掉首尾空白；legacy 按原文保留。其他非 blank 词表字符串和特殊 token 保持原样。不跨块保留状态或去重。末块补零后仍解码全部输出帧，因为模型元数据不提供有效帧数。独立窗口可能截断词语，分块流程不会执行带重叠拼接。Python 使用 Fourier 重采样，C++ 运行时使用 sinc 重采样。
 
 <a id="troubleshooting"></a>
 ## 排错

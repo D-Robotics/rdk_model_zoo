@@ -52,7 +52,7 @@ python3 samples/speech/asr/runtime/cpp/launcher.py --target s600 --dry-run
 bash samples/speech/asr/model/download.sh --target s100
 bash samples/speech/asr/runtime/cpp/run.sh --target s100 --build
 # Later run: reuse the built binary and choose a new output directory
-bash samples/speech/asr/runtime/cpp/run.sh --target s100 --decode-mode legacy --output-dir outputs/asr_cpp_legacy
+bash samples/speech/asr/runtime/cpp/run.sh --target s100 --decode-mode ctc --output-dir outputs/asr_cpp_ctc
 ```
 S600 应下载 s600 制品并替换 target，不复用 S100 文件。默认 auto 读取本机身份，每次启动使用新输出目录。`run.sh` 根据自身位置定位并支持 `PYTHON` 环境变量；默认音频/词表相对 sample 定位，用户的相对路径和输出路径相对当前目录。下表原生二进制默认值以仓库根目录为运行目录。
 
@@ -65,7 +65,7 @@ S600 应下载 s600 制品并替换 target，不复用 S100 文件。默认 auto
 | `--model-path` | `None` | External path requires exact asset-id / 外部路径须同时指定身份 |
 | `--audio-file` | `samples/speech/asr/test_data/chi_sound.wav` | Sample-relative default / 默认相对 sample 定位 |
 | `--vocab-file` | `samples/speech/asr/test_data/vocab.json` | Fixed vocabulary / 固定词表 |
-| `--decode-mode` | `ctc` | ctc or legacy / CTC 或旧解码 |
+| `--decode-mode` | `legacy` | ctc 或逐帧解码；默认 `legacy` 保留重复 ID 与 `|` / decode mode |
 | `--output-dir` | `outputs/asr_cpp` | New launch directory / 新启动记录目录 |
 | `--build` | `false` | Explicit native build; conflicts with binary / 显式构建，与 binary 互斥 |
 | `--binary` | `None` | Otherwise runtime/cpp/build/TARGET/asr_demo / 默认使用目标构建目录 |
@@ -83,23 +83,23 @@ S600 应下载 s600 制品并替换 target，不复用 S100 文件。默认 auto
 | `--audio-file` | samples/speech/asr/test_data/chi_sound.wav |
 | `--vocab-file` | samples/speech/asr/test_data/vocab.json |
 | `--output-dir` | outputs/asr_cpp/result |
-| `--decode-mode` | ctc |
+| `--decode-mode` | legacy |
 | `--help` | false |
 
 <a id="interface-lifecycle"></a>
 ## 接口与资源生命周期
 `AudioReader` 独占 libsndfile 句柄；`next(AudioChunk&)` 返回自有交错浮点数据及源采样率/声道、帧偏移/块索引。正常 EOF 清空输出并返回 false，读取失败抛异常。每块读取 `ceil(30000 × 原采样率 / 16000)` 帧，不执行归一化或推理。
 
-`ASR` 只包含构造/配置和四个阶段方法，构造接收 Runner、实际正数输出步数、有序 3503 项词表、解码模式（默认 CTC）。
+`ASR` 只包含构造/配置和四个阶段方法，构造接收 Runner、实际正数输出步数、有序 3503 项词表、解码模式（默认 Legacy：逐帧 argmax 后按原文拼接 token，仅删除 `<pad>`）。
 
 - `pre_process(AudioChunk)` 验证有限值、均值混声、逐窗口使用 `SRC_SINC_BEST_QUALITY` 重采样，以方差加 1e-5 归一化后补零到 30000，返回自有浮点数据和有效长度。空/错误几何/超长/不足一个目标点的输入拒绝。
 - `forward(PreparedChunk)` 验证定长有限输入，仅调用 runner 一次，返回自有原始 logits。
-- `post_process(raw)` 核对 `[1,T,3503]`、有限值并解码。CTC 先折叠连续 ID 再去 blank 0；legacy 只去 blank。包括 `|` 在内的非 blank 文本按原文保留。
+- `post_process(raw)` 核对 `[1,T,3503]`、有限值并解码。Legacy（默认）逐帧 argmax 后按原文拼接 token，保留重复 ID 和 `|`，仅删除 `<pad>`。CTC 折叠连续 ID、去 blank 0、将词分隔符 `|` 转为空格并去掉首尾空白。
 - `predict(AudioChunk)` 组合三阶段。读音频、词表解析和报告保存留在任务类外部。
 
 `SdkRunner` 必须在 SDK 调用前执行 `make_preflight(model_digest, vocabulary_path)`：核对本机精确目标（包含 S100P 别名）、模型字节及固定词表 SHA。`load_vocabulary` 将同一份哈希校验后的字节解析为 3503 个有序 token。原生适配器接受一个有名称的模型、无量化 FLOAT32 `[1,30000]` 输入和 `[1,T,3503]` 输出，并在分配前验证正容量、无重叠的 float 对齐字节步长及 T；整数 SCALE 输出由 [Python 运行时](../python/README_cn.md)支持。
 
-输入补齐区域清零，浮点值按实际步长复制；检查输入缓存清理、同步 UCP 推理与输出缓存失效，并返回拥有独立内存的紧凑 logits。模型/张量所有者清理部分初始化，包括返回错误但取得非空地址的分配；返回成功但地址为空则拒绝。清理不抛异常，真实 SDK 释放失败时不能保证底层已经回收。不要并发复用 SDK 实例，捕获它的 Runner 不能比实例存活更久。
+输入补齐区域清零，浮点值按实际步长复制；检查输入缓存清理、同步 UCP 推理与输出缓存失效，并返回拥有独立内存的紧凑 logits。模型/张量所有者清理部分初始化，包括返回错误但取得非空地址的分配；返回成功但地址为空则拒绝。清理走不抛异常的析构路径：对已获得的 tensor 与模型句柄调用 `hbDNNRelease`/free 释放，不检查返回码、不报告错误。不要并发复用 SDK 实例，捕获它的 Runner 不能比实例存活更久。
 
 下面的 API 示例展示如何向 `ASR` 注入 `Runner` 并调用前处理、推理和解码阶段。编译需 `inc`、`src/frontend.cc` 与 libsamplerate；板端运行由 `SdkRunner` 接入 UCP SDK。
 ```cpp

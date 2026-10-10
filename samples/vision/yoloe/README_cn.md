@@ -38,11 +38,11 @@ yoloe/
 
 | 变体 | x5 | s100 | s100p | s600 | Python | C++ |
 | --- | --- | --- | --- | --- | --- | --- |
-| 11s | 支持 | 仅本地浮点路线* | 不支持 | 不支持 | X5 发布制品；S 本地浮点路线* | 支持 |
+| 11s | 支持 | 支持（Python）* | 不支持 | 不支持 | X5/S 发布制品* | 支持 |
 | 11m / 11l | 支持 | 不支持 | 不支持 | 不支持 | X5 | 支持（X5 扩展） |
-| 26n/s/m/l/x | 不支持 | 仅本地浮点路线* | 仅本地浮点路线* | 不支持 | S 本地浮点路线* | 支持 |
+| 26n/s/m/l/x | 不支持 | 支持（Python）* | 支持（Python）* | 不支持 | S 发布制品* | 支持 |
 
-* S 上存在两套输出契约并分开维护：发布的 S11 HBM 为混合输出，S26 公开 HBM 声明量化输出，而本 Python 入口消费浮点输出。要通过本浮点输出口在 S 目标上运行，请按[转换说明](conversion/README_cn.md)导出并编译本地浮点模型，再以其 SHA-256 显式选择；当前没有发布浮点 S HBM，已发布 S 制品为量化输出契约。S600 无源支持，不回退 S100。
+* Python 支持 S11 发布制品的混合 float32/int32/int16 输出与 S26 的 int32/int8 输出。整数头需要有效的运行时 SCALE 元数据，postprocess 先反量化，再执行与浮点头相同的 logit/sigmoid 解码。可选本地浮点模型需显式 SHA-256。C++ 运行时要求浮点输出。S600 没有发布 YOLOE 模型。
 
 权重导出与校准/配置准备工作见[转换说明](conversion/README_cn.md)。下方板测数据使用已发布制品测得；本地浮点路线在自行编译后另行测量。
 
@@ -74,14 +74,14 @@ python3 samples/vision/yoloe/runtime/python/main.py --list-models
 python3 samples/vision/yoloe/runtime/python/main.py --target s100 --variant 26n --dry-run
 ```
 
-dry-run 解析选择并以 JSON 预览显示，不加载模型、不连接板卡。S 目标会提示浮点准备要求：按[转换说明](conversion/README_cn.md)导出并编译本地浮点模型，再以其 SHA-256 显式选择。
+dry-run 解析选择并以 JSON 预览显示，不加载模型、不连接板卡。X5 与 S 发布模型按各自原生运行时张量契约执行。
 
 <a id="expected-results"></a>
 ## 预期结果
 
-输出为原图 xyxy float32 框、sigmoid float32 概率和 int64 PF 类别 ID。X5 11 保留 `[N,H,W]` bool 整图掩码；S11/26 为 uint8 0/1 ROI 列表，`mask_layout` 明确区分。空输出框形状为 `[0,4]`，分数和 ID 为 `[0]`。
+输出为原图 xyxy float32 框、sigmoid float32 概率和 int64 PF 类别 ID。X5 11 保留 `[N,H,W]` bool 整图掩码；S 返回逐检测 ROI 掩码，由 `mask_layout` 区分：S11 为 uint8（Lanczos 原样输出，个别像素可能为 2，非零即前景），S26 为 bool。空输出框形状为 `[0,4]`，分数和 ID 为 `[0]`。
 
-不承诺测试图固定检测数。下表为源记录的 Runtime 数据（不含前后处理）；Python 端到端性能另含主机侧各阶段开销：
+下表为 Runtime 性能（不含前后处理）；端到端性能另含各阶段主机侧开销：
 
 | 模型（源记录） | 目标 | Runtime 延迟 / FPS |
 | --- | --- | --- |
@@ -106,7 +106,7 @@ X5 为源单线程 libdnn Runtime 记录。S100 为源 2026-09-08、200 帧、wa
 
 S26 源交付发布的示例：已发布 S100 量化 YOLOE-26n PF 模型在随附 `office_desk.jpg` 上的实测输出，标签按 PF 检查点类别 ID 顺序导出，与源图注一致。
 
-两图均为源发布的量化 S 结果（基于随附图片）；浮点路线的预期输出来自实际运行本 sample，精度指标来自[评估器](evaluator/README_cn.md)。
+两图均为源发布的量化 S 结果（基于随附图片）；当前输出来自实际运行本 sample，精度指标来自[评估器](evaluator/README_cn.md)。
 
 <a id="entry-points"></a>
 ## 入口

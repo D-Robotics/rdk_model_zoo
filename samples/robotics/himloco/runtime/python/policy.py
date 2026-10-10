@@ -35,12 +35,35 @@ class RuntimeModelRunner(NamedArrayRunner):
         super().__init__(
             selection,
             binding_loader=bind_model,
-            physical_input=lambda binding: ((1, 270), "float32"),
+            physical_input=lambda binding: (
+                binding.metadata.input_shapes[binding.input_name], "float32"
+            ),
             task_name="HIMLoco",
             runtime_factory=runtime_factory,
             runtime=runtime,
             execution_target_gate=require_execution_target,
         )
+
+
+    def __call__(self, tensors):
+        """Adapt semantic policy vectors to the bound singleton SDK layout.
+
+        Args:
+            tensors: Exactly obs_history finite float32[1,270].
+
+        Returns:
+            dict: Owned actions float32[1,12], with values and joint order
+            unchanged from the validated physical SDK output.
+
+        Raises:
+            ValueError: The semantic observation contract is violated.
+            MetadataMismatchError: Physical runtime tensors changed.
+        """
+        binding = self.load()
+        observation = _physical(tensors, INPUT_NAME, (1, 270))
+        shape = binding.metadata.input_shapes[binding.input_name]
+        outputs = super().__call__({binding.input_name: observation.reshape(shape)})
+        return {OUTPUT_NAME: outputs[binding.output_name].reshape(1, 12)}
 
 
 @dataclass(frozen=True)

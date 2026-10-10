@@ -153,7 +153,7 @@ class LauncherTests(unittest.TestCase):
                             launcher.SAMPLE_DIR / "test_data/chi_sound.wav"
                         ),
                         "vocabulary_sha256": launcher.SHA256,
-                        "decode_mode": "ctc",
+                        "decode_mode": "legacy",
                         "config": {"audio_maxlen": 30000, "new_rate": 16000},
                         "metadata": {
                             "model_name": "unit-fixture",

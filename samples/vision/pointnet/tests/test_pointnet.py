@@ -47,6 +47,44 @@ class PointNetTests(unittest.TestCase):
     def points(self):
         return np.array([[0, 0, 0], [1, 0, 0], [0, 2, 0], [0, 0, 3]], np.float32)
 
+    def test_published_auxiliary_xyz_transform_is_validated_before_part_decode(self):
+        from samples.vision.pointnet.runtime.python.cli import resolve_selection
+        from samples.vision.pointnet.runtime.python.pointnet import create_runner
+
+        m = metadata()
+        m['output_names'] = ['trans', 'pred']
+        m['output_shapes']['trans'] = (1, 3, 3)
+        m['output_dtypes']['trans'] = 'float32'
+        raw = np.eye(4, dtype=np.float32)[None]
+        transform = np.eye(3, dtype=np.float32)[None]
+        class Runtime:
+            model_names = ['pointnet']
+            def __init__(self):
+                for field in ('input_names', 'input_shapes', 'input_dtypes',
+                              'output_names', 'output_shapes', 'output_dtypes'):
+                    setattr(self, field, {'pointnet': m[field]})
+            def run(self, inputs):
+                return {'pointnet': {'trans': transform, 'pred': raw}}
+        runtime = Runtime()
+        runner = create_runner(resolve_selection('s100'), runtime=runtime)
+        got = runner({'point': np.zeros((1, 3, 4), np.float32)})
+        np.testing.assert_array_equal(got, raw)
+        self.assertFalse(np.shares_memory(got, raw))
+        task = self.task(binding=runner.load())
+        np.testing.assert_array_equal(task.postprocess(got), [0, 1, 2, 3])
+        transform[0, 0, 0] = np.nan
+        with self.assertRaises(ValueError):
+            runner({'point': np.zeros((1, 3, 4), np.float32)})
+
+        from samples.vision.pointnet.runtime.python.pointnet import bind_model
+        for changes in (
+            {'output_shapes': {'pred': (1, 4, 4), 'trans': (1, 4, 4)}},
+            {'output_dtypes': {'pred': 'float32', 'trans': 'int16'}},
+            {'output_names': ['pred', 'unknown']},
+        ):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                bind_model(resolve_selection('s100'), {**m, **changes})
+
     def test_source_cli_normalization_and_tensor_bytes(self):
         p = self.points()
         centered = p - np.mean(p, axis=0, keepdims=True)

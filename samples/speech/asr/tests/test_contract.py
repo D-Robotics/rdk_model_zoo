@@ -25,9 +25,18 @@ class DecodeTests(unittest.TestCase):
         self.assertEqual(decode_ids([0, 0, 0], vocab), "")
         self.assertEqual(decode_ids([], vocab), "")
 
+    def test_default_decode_matches_the_source_sample(self):
+        # Default mode is the source sample behavior: verbatim tokens,
+        # repeats kept, | kept, only <pad> removed.
+        vocabulary = ("<pad>", "你", "|", "好")
+        self.assertEqual(decode_ids([2, 1, 2, 2, 0, 3, 2], vocabulary), "|你||好|")
+        self.assertEqual(decode_ids([2, 1, 2, 2, 0, 3, 2], vocabulary, "ctc"), "你 好")
+        vocab = ("<pad>", "中", "|", "<unk>")
+        self.assertEqual(decode_ids([1, 1, 2, 3], vocab), "中中|<unk>")
+        self.assertEqual(decode_ids([1, 1, 2, 3], vocab, "ctc"), "中 <unk>")
+
     def test_tokens_preserved_and_calls_independent(self):
         vocab = ("<pad>", "中", "|", "<unk>")
-        self.assertEqual(decode_ids([1, 1, 2, 3], vocab), "中|<unk>")
         self.assertEqual(decode_ids([1], vocab) + decode_ids([1], vocab), "中中")
 
     def test_greedy_ties_and_very_negative_logits(self):
@@ -35,8 +44,8 @@ class DecodeTests(unittest.TestCase):
         raw = np.array(
             [[[-3e35, -2e35, -3e35], [-3e35, -2e35, -2e35], [0, 0, 0]]], np.float32
         )
-        self.assertEqual(decode_logits(raw, vocab), "a")
-        self.assertEqual(decode_logits(raw, vocab, "legacy"), "aa")
+        self.assertEqual(decode_logits(raw, vocab), "aa")
+        self.assertEqual(decode_logits(raw, vocab, "ctc"), "a")
 
     def test_invalid_vocabulary_ids_logits_modes(self):
         for vocab in ((), ("a", "b"), ("<pad>", "a", "a"), ("<pad>", 1)):

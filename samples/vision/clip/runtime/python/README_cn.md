@@ -24,6 +24,10 @@ python/
 
 从 [main.py](main.py) 开始：入口构造 `CLIPMatcher` 并调用 `predict`。[matching.py](matching.py) 实现模型初始化及推理阶段；[cli.py](cli.py) 负责参数、模型选择和结果交付。模型初始化会加载 Runtime，应用可复用同一个实例执行多次预测。
 
+图像 SDK 输出为 float32 的 512 维特征向量，支持 `[1,512]`、
+`[1,512,1,1]`、`[1,1,1,512]` 布局。移除单例维度不会改变特征顺序，
+随后与 ONNX 文本特征计算余弦相似度。
+
 <a id="environment"></a>
 ## 环境
 

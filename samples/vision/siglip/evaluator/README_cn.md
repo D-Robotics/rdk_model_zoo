@@ -7,13 +7,7 @@
 <a id="dataset"></a>
 ## 数据集
 
-源记录 `pooler_output` 零样本分类使用 ImageNet-1k validation（50,000 张）。源记录 `last_hidden_state` 语义一致性使用 COCO2014 validation（5,000 张）。源资料没有发布准备脚本、精确压缩包版本、目录结构或评估实现。
-
-```text
-# cwd：仓库根目录
-# 准备：未提供；不要从本文推断下载命令。
-# 预期源数据布局：由评估负责人提供的 ImageNet-1k val 和 COCO2014 val
-```
+`evaluate.py` 直接使用仓库自带图片：anchor 与 negative 为 `samples/vision/dinov2/test_data/dog.jpg` 和 `bus.jpg`，positive 为 `samples/vision/mobile_sam/test_data/dogs.jpg`，无需下载数据集。下方参考表由发布方在 ImageNet-1k validation（50,000 张）上测零样本分类、在 COCO2014 validation（5,000 张）上测 patch 特征一致性；源侧评估实现未发布，因此这些表是参考条件，不是本地可复现的基准。
 
 <a id="directory"></a>
 ## 目录结构
@@ -21,7 +15,8 @@
 ```text
 evaluator/
 ├── README.md  # 英文说明
-└── README_cn.md  # 中文说明
+├── README_cn.md  # 中文说明
+└── evaluate.py  # 基础图像语义关系检查
 ```
 
 <a id="environment"></a>
@@ -34,7 +29,23 @@ evaluator/
 <a id="command"></a>
 ## 评估命令
 
-仓库没有评估脚本；runtime CLI 即功能入口（见 [runtime/python](../runtime/python/README_cn.md)）。同板对照可在相同图片和 HBM 上重复运行 runtime CLI，并比较两次的 JSON 输出与保存的 embedding。
+`evaluate.py` 分别使用 `pooler_output` 检查全局图像语义，使用 `last_hidden_state` 检查对齐 patch 的输入一致性。基准图片是小狗，独立正例图片是两只狗，负例图片是公交车。图片之间的关系应在推理前确定。
+
+```bash
+# S100 板端，仓库根目录；输出目录必须尚不存在。
+python3 samples/vision/siglip/evaluator/evaluate.py \
+  --target s100 \
+  --asset-id s:siglip:s100/bpu-siglip-base-patch16-224.hbm \
+  --model-path samples/vision/siglip/model/s100/bpu-siglip-base-patch16-224.hbm \
+  --anchor samples/vision/dinov2/test_data/dog.jpg \
+  --positive samples/vision/mobile_sam/test_data/dogs.jpg \
+  --negative samples/vision/dinov2/test_data/bus.jpg \
+  --output-dir outputs/siglip-relations
+```
+
+`pooler_output` 要求：重复输入 cosine ≥ 0.99999，轻度变换 cosine ≥ 0.95，正例 cosine 减负例 cosine > 0.05。`last_hidden_state` 保留 token 位置，要求展平后的重复输入 cosine ≥ 0.99999，轻度变换 cosine ≥ 0.95，轻度变换 cosine 减无关图片 cosine > 0.05。其 token 均值图像排序作为诊断数据保存。轻度变换为 `clip(BGR * 0.9 + 5, 0, 255).astype(uint8)`。`result.json` 记录阈值、逐角色检查、元数据与输入/模型哈希；逐角色 `.npz` 保存基准、重复、变换、正例和负例特征。所有角色通过时返回 0；关系检查失败或模型/数值错误时记录结果并返回 1。
+
+runtime CLI 也提供单个 embedding（见 [runtime/python](../runtime/python/README_cn.md)）。同板对照可在相同图片和 HBM 上重复运行 runtime CLI，并比较两次的 JSON 输出与保存的 embedding。
 
 <a id="metrics"></a>
 ## 指标
@@ -82,7 +93,7 @@ evaluator/
 <a id="outputs"></a>
 ## 输出
 
-对照流程将完整 raw 数组写入唯一的 `evaluator-output/siglip-raw-<UTC 微秒 run id>/legacy.npy` 和 `unified.npy`，不会用缩减摘要替代数组；数组即对照依据，未来评估可在旁边补充 JSON 记录。必须先相等 shape 和 dtype；整数 raw 必须完全相等，浮点 raw 允许 `rtol=0`、`atol=1e-5`，且断言必须通过。
+评估结果写入命令中的 `--output-dir`：`result.json`（schema `rdk-model-zoo/embedding-relations/v1`）记录 target、asset ID、模型/输入 SHA-256、轻度变换定义、各 role 的 metadata、判定标准、cosine 数值与逐项检查；同目录下 `pooler_output.npz` 与 `last_hidden_state.npz` 分别保存该 role 的五个特征数组（`anchor`、`repeat`、`mild`、`positive`、`negative`），JSON 中另有 `feature_shape`/`feature_dtype`。全部 role 通过返回 0；关系不成立或模型/数值错误记录后返回 1。
 
 <a id="reference-results"></a>
 ## 参考结果
@@ -118,7 +129,7 @@ evaluator/
 <a id="boundaries"></a>
 ## 适用范围
 
-- 本目录没有评估实现或数据集准备脚本；功能检查使用板端 runtime CLI。
+- `evaluate.py` 检查两个打包子模型上的指定图像关系。
 - 四张表是源记录，本身不标识当前制品字节或 runtime 版本。
 - 本 sample 仅评估视觉特征编码器，不覆盖文本编码器、文本 tokenizer、图文分数、校准配方或 C++ 评估器。
 

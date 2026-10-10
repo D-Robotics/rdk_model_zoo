@@ -22,7 +22,8 @@ samples/vision/dinov2/test_data/bus.jpg
 ```text
 evaluator/
 ├── README.md  # English instructions
-└── README_cn.md  # Chinese instructions
+├── README_cn.md  # Chinese instructions
+└── evaluate.py  # Basic image relation checks
 ```
 
 <a id="environment"></a>
@@ -35,6 +36,22 @@ evaluator/
 
 <a id="command"></a>
 ## Evaluation Command
+
+`evaluate.py` checks CLS features and mean patch features separately. The anchor is a puppy, the independently different positive image contains two dogs, and the negative image contains a bus. Choose image relationships before inference.
+
+```bash
+# Repository root on S100; use a new output directory.
+python3 samples/vision/dinov2/evaluator/evaluate.py \
+  --target s100 \
+  --asset-id s:dinov2:nash-e/dinov2_vits14_224_int16_nashe.hbm \
+  --model-path samples/vision/dinov2/model/nash-e/dinov2_vits14_224_int16_nashe.hbm \
+  --anchor samples/vision/dinov2/test_data/dog.jpg \
+  --positive samples/vision/mobile_sam/test_data/dogs.jpg \
+  --negative samples/vision/dinov2/test_data/bus.jpg \
+  --output-dir outputs/dinov2-relations
+```
+
+Each role requires repeat cosine ≥ 0.99999, mild-transform cosine ≥ 0.95, and positive cosine minus negative cosine > 0.05. The mild transform is `clip(BGR * 0.9 + 5, 0, 255).astype(uint8)`; patch tokens are averaged before cosine comparison. `result.json` records criteria, per-role checks, metadata and input/model hashes; per-role `.npz` files contain anchor, repeat, mild, positive and negative features. Exit 0 means every role passes; exit 1 records a failed relation or model/numeric error.
 
 The performance commands below reproduce the recorded thread/core settings when run on the matching board with its target artifact.
 
@@ -79,7 +96,7 @@ The preprocessing is OpenCV BGR→RGB, bicubic short-side resize to 256, center 
 <a id="outputs"></a>
 ## Outputs
 
-The runtime CLI emits JSON statistics and optional exact NumPy output files. The raw-array comparison saves full input/raw/result arrays plus comparison.json. ONNX accuracy comparison requires separate cosine values for cls_feat and patch_feat and has no bundled implementation; use the reproduction commands above on the board.
+The evaluation writes to the `--output-dir` given in the command: `result.json` (schema `rdk-model-zoo/embedding-relations/v1`) records the target, asset ID, model/input SHA-256 hashes, the mild-transform definition, per-role metadata, criteria, cosine values and individual checks; alongside it, `cls_feat.npz` and `patch_mean.npz` each contain the five feature arrays (`anchor`, `repeat`, `mild`, `positive`, `negative`) captured for that role. Exit 0 means every role passed; exit 1 records a failed relation or a model/numeric error. ONNX accuracy comparison requires separate cosine values for cls_feat and patch_feat and has no bundled implementation; use the reproduction commands above on the board.
 
 <a id="reference-results"></a>
 ## Reference Results
@@ -118,7 +135,7 @@ The record reports identical values from an independent export and a different 5
 <a id="boundaries"></a>
 ## Scope
 
-- This directory has no standalone evaluator implementation; reproduction uses `hrt_model_exec`, ONNXRuntime, `hbm_runtime`, and the runtime CLI.
+- `evaluate.py` measures the declared image relation; reference performance and float-ONNX comparison use the commands above.
 - All reference values are recorded benchmarks; run the performance commands above for current-board measurements.
 - The PTQ quantization-quality table is explicitly Nash-E only. Board cosine ranges are separately attributed to each target.
 - DINOv2 is documented as a vision feature encoder. Text encoding, classification labels, retrieval datasets, and C++ evaluation are outside this sample.

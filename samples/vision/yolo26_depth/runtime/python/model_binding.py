@@ -29,11 +29,20 @@ class ModelSelection:
 
 @dataclass(frozen=True)
 class ModelBinding:
+    """Validated depth tensors and physical input roles.
+
+    Attributes:
+        input_name: Packed NV12, RGB lite, or split luma tensor name.
+        uv_name: Split chroma tensor name; None for single-input profiles.
+        output_name: The single float32 192-square depth tensor name.
+    """
+
     selection: ModelSelection
     metadata: RuntimeMetadata
     input_name: str
     output_name: str
     input_size: int = 768
+    uv_name: str | None = None
 
     @property
     def model_name(self):
@@ -131,13 +140,24 @@ def bind_model(selection, metadata):
     )
     if (
         meta.model_names != (meta.model_name,)
-        or len(meta.input_names) != 1
+        or len(meta.input_names) not in (1, 2)
         or len(meta.output_names) != 1
     ):
         raise MetadataMismatchError(
-            "Depth requires exactly one model, one input and one output"
+            "Depth requires one model, one packed or two split inputs and one output"
         )
     inp, out = meta.input_names[0], meta.output_names[0]
+    uv_name = None
+    if len(meta.input_names) == 2:
+        if selection.profile != "nv12" or selection.target == "x5":
+            raise MetadataMismatchError("Split NV12 is supported by the S full depth profile")
+        y_names = [n for n in meta.input_names if meta.input_shapes.get(n) == (1, 768, 768, 1)]
+        uv_names = [n for n in meta.input_names if meta.input_shapes.get(n) == (1, 384, 384, 2)]
+        if len(y_names) != 1 or len(uv_names) != 1 or any(
+            meta.input_dtypes.get(n) != "uint8" for n in meta.input_names
+        ):
+            raise MetadataMismatchError("Split depth NV12 requires uint8 Y[1,768,768,1] and UV[1,384,384,2]")
+        inp, uv_name = y_names[0], uv_names[0]
     if selection.profile == "lite":
         shapes = ((1, 3, 768, 768),)
         dtype = "float32"
@@ -146,7 +166,9 @@ def bind_model(selection, metadata):
         shapes = ((1, 3, 768, 768), (1, 768, 768, 3), (1, 1152, 768, 1))
         dtype = "nv12"
         semantics = ("log_depth", "calibrated_log_depth")
-    if meta.input_shapes.get(inp) not in shapes or meta.input_dtypes.get(inp) != dtype:
+    if uv_name is None and (
+        meta.input_shapes.get(inp) not in shapes or meta.input_dtypes.get(inp) != dtype
+    ):
         raise MetadataMismatchError(
             f"{selection.profile} requires 768-square {dtype} input metadata"
         )
@@ -164,4 +186,4 @@ def bind_model(selection, metadata):
         raise MetadataMismatchError(
             f"Output semantic {declared!r} conflicts with {selection.profile}"
         )
-    return ModelBinding(selection, meta, inp, out)
+    return ModelBinding(selection, meta, inp, out, uv_name=uv_name)

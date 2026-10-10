@@ -13,7 +13,8 @@
 evaluator/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-└── evaluate.py  # Python 脚本
+├── evaluate.py  # Python 脚本
+└── basic.py  # 内置音频前缀与解码协议检查
 ```
 
 <a id="environment"></a>
@@ -22,6 +23,18 @@ evaluator/
 
 <a id="command"></a>
 ## 命令
+
+`basic.py` 检查内置音频的原生 runtime `result.json`。参照是 `../test_data/readme_img/print.jpg` 展示的前缀 `我是来自阿里云的大规模`。检查项目包括完成状态、音频身份、各块文本拼接、已发布前缀、`ctc` 模式下的词分隔符解码和特殊 token。
+
+```bash
+# Repository root; result.json comes from the ASR runtime.
+python3 samples/speech/asr/evaluator/basic.py \
+  --run-report outputs/asr/result.json \
+  --output outputs/asr/basic-check.json
+```
+
+输出通过 SHA-256 绑定运行报告和前缀截图，并记录全文、前缀与逐项检查。检查通过时返回 0；未通过时返回 1。输出文件必须尚不存在。可选 `--crosscheck-text-file <file.txt>` 添加独立运行的另一识别器文本及序列匹配比例，不影响前缀检查。使用 `evaluate.py` 计算 CER 时，其余字符需要独立完整参照文本。
+
 ```bash
 # 从仓库根目录运行；示例输入含两条转录记录。
 asr_eval_dir=$(mktemp -d)

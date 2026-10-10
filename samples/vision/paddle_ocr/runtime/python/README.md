@@ -88,7 +88,10 @@ python3 samples/vision/paddle_ocr/runtime/python/main.py \
 [model preparation](../../model/README.md#preparation)). The entrypoint
 rejects incomplete path pairs, mixed-target references, runtime metadata
 mismatches, non-F32 outputs, and an execution target that cannot be
-identified — it never guesses from a filename.
+identified — it never guesses from a filename. Float32 outputs keep their
+SDK-returned values even when metadata includes a quantization descriptor;
+the runtime does not apply a second dequantization. Integer outputs still
+fail the F32 contract.
 
 <a id="parameters"></a>
 ## Parameters

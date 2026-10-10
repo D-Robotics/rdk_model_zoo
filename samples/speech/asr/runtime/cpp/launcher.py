@@ -37,7 +37,7 @@ def build_parser():
     p.add_argument(
         "--vocab-file", type=Path, default=SAMPLE_DIR / "test_data/vocab.json"
     )
-    p.add_argument("--decode-mode", choices=("ctc", "legacy"), default="ctc")
+    p.add_argument("--decode-mode", choices=("ctc", "legacy"), default="legacy")
     p.add_argument("--output-dir", type=Path, default=Path("outputs/asr_cpp"))
     build = p.add_mutually_exclusive_group()
     build.add_argument("--build", action="store_true")

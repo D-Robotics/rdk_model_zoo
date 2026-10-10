@@ -222,35 +222,46 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(s100_tokens[-1], " ")
         self.assertIn("照", s100_tokens)
 
-    def test_all_present_quantization_descriptors_are_rejected_for_each_stage(self):
+    def test_float_outputs_preserve_scores_with_sdk_quantization_descriptors(self):
+        import numpy as np
+        from types import SimpleNamespace
         from samples.vision.paddle_ocr.runtime.python.model_binding import (
-            MetadataMismatchError,
-            bind_stage,
-            list_available_pairs,
+            MetadataMismatchError, bind_stage, list_available_pairs,
+            validate_stage_output,
         )
 
+        descriptor = SimpleNamespace(
+            quant_type=SimpleNamespace(name="SCALE"),
+            scale=np.array([0.125], np.float32),
+            zero_point=np.array([3]), axis=1,
+        )
         for pair in list_available_pairs():
             for stage in ("detector", "recognizer"):
                 contract = getattr(pair, stage)
-                for values in (
-                    {contract.output_name: [0.5]},
-                    {contract.output_name: [0.5, 0.75]},
-                    {contract.output_name: object()},
-                ):
-                    metadata = {
-                        "model_name": contract.model_name,
-                        "input_names": list(contract.input_names),
-                        "input_shapes": dict(contract.input_shapes),
-                        "input_dtypes": dict(contract.input_dtypes),
-                        "output_names": [contract.output_name],
-                        "output_shapes": {contract.output_name: contract.output_shape},
-                        "output_dtypes": {contract.output_name: "float32"},
-                        # The F32 stage contract must reject any present
-                        # output_quants descriptor (H1 raw_f32 discipline).
-                        "output_quants": values,
-                    }
+                metadata = {
+                    "model_name": contract.model_name,
+                    "input_names": list(contract.input_names),
+                    "input_shapes": dict(contract.input_shapes),
+                    "input_dtypes": dict(contract.input_dtypes),
+                    "output_names": [contract.output_name],
+                    "output_shapes": {contract.output_name: contract.output_shape},
+                    "output_dtypes": {contract.output_name: "float32"},
+                    "output_quants": {contract.output_name: descriptor},
+                }
+                with self.subTest(target=pair.target, stage=stage):
+                    binding = bind_stage(pair, stage, metadata)
+                    scores = np.full(contract.output_shape, 0.75, np.float32)
+                    checked = validate_stage_output(binding, {contract.output_name: scores})
+                    np.testing.assert_array_equal(checked[contract.output_name], scores)
+                    self.assertIs(binding.runtime_metadata.output_quants[contract.output_name], descriptor)
                     with self.assertRaises(MetadataMismatchError):
-                        bind_stage(pair, stage, metadata)
+                        bind_stage(pair, stage, {
+                            **metadata, "output_dtypes": {contract.output_name: "int8"},
+                        })
+                    with self.assertRaises(MetadataMismatchError):
+                        validate_stage_output(binding, {
+                            contract.output_name: scores.astype(np.int8),
+                        })
 
     def test_multi_model_runtime_requires_explicit_model_selection(self):
         from utils.py_utils.runtime_meta import (

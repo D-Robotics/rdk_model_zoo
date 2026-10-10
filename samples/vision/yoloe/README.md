@@ -38,11 +38,11 @@ Checkpoint export, conversion preparation and evaluation workflows are documente
 
 | Variant | x5 | s100 | s100p | s600 | Python | C++ |
 | --- | --- | --- | --- | --- | --- | --- |
-| 11s | supported | local float route only* | not-supported | not-supported | X5 published; S local float route* | supported |
+| 11s | supported | supported (Python)* | not-supported | not-supported | X5/S published* | supported |
 | 11m / 11l | supported | not-supported | not-supported | not-supported | X5 | supported (X5 extension) |
-| 26n/s/m/l/x | not-supported | local float route only* | local float route only* | not-supported | S local float route* | supported |
+| 26n/s/m/l/x | not-supported | supported (Python)* | supported (Python)* | not-supported | S published* | supported |
 
-* Two output contracts exist on S and are kept separate: the published S11 HBM has mixed outputs and the published S26 HBM declares quantized outputs, while this Python entry consumes float outputs. To run S targets through this float-output entry, export and compile a local float model (see [conversion](conversion/README.md)) and select it explicitly with its SHA-256; no float S HBM is published. S600 has no source support and never falls back to S100.
+* Python supports the published S11 mixed float32/int32/int16 outputs and S26 int32/int8 outputs. Integer heads require valid runtime SCALE metadata; postprocess dequantizes them before running the same logit/sigmoid decode as the float heads. Optional local float models require an explicit SHA-256. The C++ runtime requires float outputs. S600 has no published YOLOE model.
 
 Checkpoint export and calibration/configuration preparation are provided under [conversion](conversion/README.md). The board results below were measured with the published artifacts; a locally converted float model is measured after its own compile.
 
@@ -74,14 +74,14 @@ python3 samples/vision/yoloe/runtime/python/main.py --list-models
 python3 samples/vision/yoloe/runtime/python/main.py --target s100 --variant 26n --dry-run
 ```
 
-A dry-run resolves the selection and prints a JSON preview without loading a model or contacting a board. For an S target it reports the float-preparation requirement: export and compile a local float model with the [conversion guide](conversion/README.md), then select it by its SHA-256.
+A dry-run resolves the selection and prints a JSON preview without loading a model or contacting a board. Published X5 and S selections use their native runtime tensor contracts.
 
 <a id="expected-results"></a>
 ## Expected Results
 
-Results contain original-image xyxy float32 boxes, sigmoid float32 probabilities and int64 PF class IDs. X5 11 retains full-image bool masks `[N,H,W]`; S11/26 return uint8 0/1 ROI lists, distinguished by `mask_layout`. Empty boxes have shape `[0,4]`, scores/IDs `[0]`.
+Results contain original-image xyxy float32 boxes, sigmoid float32 probabilities and int64 PF class IDs. X5 11 retains full-image bool masks `[N,H,W]`; S returns per-detection ROI masks distinguished by `mask_layout`: S11 uint8 (Lanczos output as-is, isolated pixels can read 2, nonzero is foreground) and S26 bool. Empty boxes have shape `[0,4]`, scores/IDs `[0]`.
 
-No fixed detection count is promised. The table below records the source's Runtime-only measurements (preprocessing/postprocessing excluded); end-to-end Python performance additionally includes host-side stages:
+The table below records Runtime-only performance (preprocessing/postprocessing excluded); end-to-end performance additionally includes every host-side stage:
 
 | Model (source-recorded) | Target | Runtime latency / FPS |
 | --- | --- | --- |
@@ -106,7 +106,7 @@ Result illustration published with the S100 quantized YOLOE-11s PF HBM over the 
 
 Example published with the S26 source delivery: recorded outputs of the published S100 quantized YOLOE-26n PF model over the bundled `office_desk.jpg`, with labels exported in PF checkpoint class-ID order, as stated by the source caption.
 
-Both figures show source-published quantized S results over the bundled image; expected outputs of the float route come from running this sample, and accuracy metrics come from the [evaluator](evaluator/README.md).
+Both figures show source-published quantized S results over the bundled image; current outputs come from running this sample, and accuracy metrics come from the [evaluator](evaluator/README.md).
 
 <a id="entry-points"></a>
 ## Entry Points

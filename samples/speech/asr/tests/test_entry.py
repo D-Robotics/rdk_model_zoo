@@ -48,8 +48,11 @@ def make_task():
 class PredictDetailsTests(unittest.TestCase):
     def test_default_predict_returns_text_with_single_runner_call(self):
         task, calls = make_task()
-        # Fixture ids [1,1,0,1]: CTC keeps both separated repeats.
-        self.assertEqual(task.predict(np.ones(3, np.float32), 16000), "aa")
+        # Fixture ids [1,1,0,1]: default legacy keeps every frame token.
+        self.assertEqual(task.predict(np.ones(3, np.float32), 16000), "aaa")
+        ctc_task, _ = make_task()
+        ctc_task.decode_mode = "ctc"
+        self.assertEqual(ctc_task.predict(np.ones(3, np.float32), 16000), "aa")
         self.assertEqual(len(calls), 1)
 
     def test_return_details_matches_explicit_stages(self):
@@ -61,7 +64,7 @@ class PredictDetailsTests(unittest.TestCase):
             task.infer({task.binding.input_name: manual.tensor})
         )
         self.assertEqual(details.text, manual_text)
-        self.assertEqual(details.text, "aa")
+        self.assertEqual(details.text, "aaa")
         self.assertEqual(details.prepared.valid_samples, manual.valid_samples)
         self.assertEqual(details.prepared.source_rate, manual.source_rate)
         np.testing.assert_array_equal(details.prepared.tensor, manual.tensor)

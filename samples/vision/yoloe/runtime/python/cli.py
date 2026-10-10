@@ -21,7 +21,7 @@ from samples.vision.yoloe.runtime.python.model_binding import (
 
 def build_parser():
     p = argparse.ArgumentParser(
-        description="YOLOE-11/26 prompt-free segmentation with floating model outputs."
+        description="YOLOE-11/26 prompt-free segmentation with native float or SCALE-quantized outputs."
     )
     p.add_argument(
         "--target", choices=("auto", "x5", "s100", "s100p", "s600"), default="auto"
@@ -107,11 +107,7 @@ def run_dry_run(selection, config) -> int:
                 "local_float_sha256": selection.local_float_sha256,
                 "runtime_metadata_verified": False,
                 "config": asdict(config),
-                "status": (
-                    "metadata validation required"
-                    if selection.published_float or selection.local_float
-                    else "requires separately converted floating-output model"
-                ),
+                "status": "metadata validation required",
             },
             indent=2,
         )

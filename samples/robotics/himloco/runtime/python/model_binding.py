@@ -70,7 +70,13 @@ def validate_selection(selection):
 
 
 def bind_model(selection, metadata):
-    """Require one model, obs_history F32 [1,270], actions F32 [1,12]."""
+    """Bind fixed policy values in compact or singleton-spatial SDK layouts.
+
+    The semantic interface remains obs_history F32[1,270] and actions
+    F32[1,12]. X5 may expose those vectors as NCHW or NHWC with unit
+    spatial dimensions; layouts that distribute values over multiple axes
+    are rejected. The binding retains the exact physical SDK dimensions.
+    """
     validate_selection(selection)
     meta = (
         metadata
@@ -85,7 +91,9 @@ def bind_model(selection, metadata):
     ):
         if (
             getattr(meta, side + "_names") != (name,)
-            or getattr(meta, side + "_shapes").get(name) != shape
+            or getattr(meta, side + "_shapes").get(name) not in (
+                shape, (1, shape[1], 1, 1), (1, 1, 1, shape[1])
+            )
             or getattr(meta, side + "_dtypes").get(name) != "float32"
         ):
             raise MetadataMismatchError(f"Expected {side} {name} float32 {shape}")

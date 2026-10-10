@@ -47,7 +47,7 @@ class RuntimeTests(unittest.TestCase):
                 self.assertEqual(main(["--target", target, "--dry-run"]), 0)
             data = json.loads(out.getvalue())
             self.assertFalse(data["sdk_loaded"])
-            self.assertEqual(data["decode_mode"], "ctc")
+            self.assertEqual(data["decode_mode"], "legacy")
         with contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main(["--target", "s100p", "--dry-run"]), 2)
 
@@ -116,7 +116,7 @@ class RuntimeTests(unittest.TestCase):
                 if fail:
                     self.assertFalse((root / "out/result.json").exists())
                 else:
-                    self.assertEqual(record["text"], "AAAA")
+                    self.assertEqual(record["text"], "AAAAAA")
 
     def test_report_write_failure_returns_original_error_without_traceback(self):
         from samples.speech.asr.runtime.python import asr as asr_module
