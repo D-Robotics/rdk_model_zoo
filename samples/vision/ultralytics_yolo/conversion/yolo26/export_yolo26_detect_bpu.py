@@ -15,10 +15,13 @@ import argparse
 
 try:
     from workflow import export_defaults
+    from batch_flex import adapt_calibration_batch8
 except ImportError:
     import sys
     sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
     from workflow import export_defaults
+    sys.path.insert(0, os.path.dirname(__file__))
+    from batch_flex import adapt_calibration_batch8
 
 def main():
     """Main entry point for detection model export."""
@@ -93,6 +96,7 @@ def export_bpu_onnx(model_path: str, output_name: str='yolo26_bpu.onnx', imgsz: 
         print(f'Export exception: {e}')
         raise RuntimeError('YOLO26 export failed; see preceding error')
     if exported_path:
+        adapt_calibration_batch8(exported_path, "detect")
         if output_name and exported_path != output_name:
             out_dir = os.path.dirname(output_name)
             if out_dir:

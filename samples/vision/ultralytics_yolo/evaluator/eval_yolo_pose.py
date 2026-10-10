@@ -89,6 +89,10 @@ def build_parser() -> argparse.ArgumentParser:
                              "--json-save-path and no metric is computed.")
     parser.add_argument("--json-save-path", default="results_pose.json",
                         help="Where to write the COCO keypoint results.")
+    parser.add_argument("--dump-only", action="store_true",
+                        help="Stream predictions to --json-save-path as NDJSON "
+                             "without in-memory accumulation or board-side COCO "
+                             "evaluation; score the dump on the host instead.")
     parser.add_argument("--limit", type=int, default=0,
                         help="Evaluate only the first N images; 0 means all.")
     parser.add_argument("--category-id", type=int, default=1,
@@ -128,6 +132,10 @@ def main(argv=None) -> int:
     model = Model(Config(**common))
 
     results = []
+    dump_handle = None
+    dumped = 0
+    if args.dump_only:
+        dump_handle = open(args.json_save_path, "w", encoding="utf-8")
     start = time.time()
     for image_id, file_name in images:
         img = cv2.imread(os.path.join(args.image_dir, file_name))
@@ -137,7 +145,7 @@ def main(argv=None) -> int:
             img, score_thres=args.conf_thres, nms_thres=args.nms_thres)
         for box, score, kxy, kscore in zip(boxes, scores, kpts_xy, kpts_score):
             x1, y1, x2, y2 = (float(value) for value in box)
-            results.append({
+            record = {
                 "image_id": image_id,
                 "category_id": args.category_id,
                 "bbox": [x1, y1, x2 - x1, y2 - y1],
@@ -145,7 +153,19 @@ def main(argv=None) -> int:
                 "keypoints": flatten_keypoints(kxy, kscore,
                     yolo26_platform=platform.family if family == 'yolo26' else None,
                     visibility_threshold=args.kpt_conf_thres),
-            })
+            }
+            if dump_handle is not None:
+                dump_handle.write(json.dumps(record) + "\n")
+                dumped += 1
+            else:
+                results.append(record)
+    if dump_handle is not None:
+        dump_handle.close()
+        print(f"dumped {dumped} NDJSON "
+              f"prediction line(s) to {args.json_save_path}; host-side scoring "
+              f"is required (--dump-only).")
+        print(f"elapsed: {time.time() - start:.3f}s")
+        return 0
 
     with open(args.json_save_path, "w", encoding="utf-8") as handle:
         json.dump(results, handle)

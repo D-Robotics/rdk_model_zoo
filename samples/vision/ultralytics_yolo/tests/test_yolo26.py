@@ -78,14 +78,19 @@ class Yolo26Contracts(unittest.TestCase):
             modules={'torch':torch,'torch.nn':nn,'ultralytics':ul,'ultralytics.nn.modules':head}
             if task=='cls':module.convert_linear_to_conv=lambda _:False
             for platform,opset,simplify in [('x5',11,True),('s600',19,False)]:
-                with self.subTest(task=task,platform=platform),patch.dict(sys.modules,modules),patch.object(sys,'argv',['export','--weights','mock.pt','--output','output.onnx','--platform',platform]):
+                with self.subTest(task=task,platform=platform),patch.dict(sys.modules,modules),patch.object(sys,'argv',['export','--weights','mock.pt','--output','output.onnx','--platform',platform]),patch.object(module,'adapt_calibration_batch8') as adapt:
                     module.main()
                     self.assertEqual(model.export.call_args.kwargs['opset'],opset)
                     self.assertEqual(model.export.call_args.kwargs['simplify'],simplify)
-            with patch.dict(sys.modules,modules),patch.object(sys,'argv',['export','--pt=mock.pt','--output','output.onnx','--platform','s600','--opset','17','--simplify','1']):
+                    self.assertIs(model.export.call_args.kwargs['dynamic'],False)
+                    adapt.assert_called_once_with('output.onnx',task)
+                    adapt.reset_mock()
+            with patch.dict(sys.modules,modules),patch.object(sys,'argv',['export','--pt=mock.pt','--output','output.onnx','--platform','s600','--opset','17','--simplify','1']),patch.object(module,'adapt_calibration_batch8') as adapt:
                 module.main()
                 self.assertEqual(model.export.call_args.kwargs['opset'],17)
                 self.assertTrue(model.export.call_args.kwargs['simplify'])
+                self.assertIs(model.export.call_args.kwargs['dynamic'],False)
+                adapt.assert_called_once_with('output.onnx',task)
                 model.export.side_effect=RuntimeError('test exporter failure')
                 with self.assertRaises(RuntimeError):module.main()
 

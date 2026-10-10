@@ -203,6 +203,12 @@ python samples/vision/ultralytics_yolo/conversion/export_monkey_patch.py \
 
 YOLO26 cls/seg/pose/obb exporters do not accept `--require-local`. Check that the absolute checkpoint paths exist before running; do not pass that flag to these four scripts.
 
+Every YOLO26 task exporter applies `yolo26/batch_flex.py` after export: internal
+attention `Reshape` targets accept batch eight for PTQ calibration, while graph
+inputs and outputs stay static batch one. See
+[CONVERSION_CONTRACT.md](CONVERSION_CONTRACT.md#yolo26-task-export-and-calibration-batch)
+for the rules and the evidence a batch-eight artifact needs.
+
 Pass the generated ONNX to the mapper below, adding `--family yolo26` for YOLO26. Expected input is static batch-one float32 NCHW. Detection DFL and direct-LTRB outputs are not interchangeable; segmentation includes mask coefficients/prototypes, pose keypoints, OBB angles, and classification logits with runtime Softmax. Check each exporter's output description and runtime binding rather than inferring compatibility from tensor count alone.
 
 <a id="dataflow"></a>
