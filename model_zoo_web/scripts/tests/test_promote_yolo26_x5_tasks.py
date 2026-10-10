@@ -35,8 +35,13 @@ class X5PromotionTests(unittest.TestCase):
             target.write_text(yaml.safe_dump(original, sort_keys=False, allow_unicode=True))
             self.before[task] = original
         self.inputs = json.loads((promotion.WEB_ROOT / "release/inputs.json").read_text())
+        # This scenario promotes YOLO26 tasks only; other families published later (for example
+        # MobileNetV4) live in the same inputs.json but are outside the counts asserted below.
+        self.inputs["models"] = {key: value for key, value in self.inputs["models"].items()
+                                 if key.startswith("ultralytics_yolo/")}
         self.inputs["releases"] = {key: value for key, value in self.inputs["releases"].items()
-                                   if not (key.endswith("/x5") and key.split("/")[2] in promotion.TASKS)}
+                                   if key.startswith("ultralytics_yolo/")
+                                   and not (key.endswith("/x5") and key.split("/")[2] in promotion.TASKS)}
         (self.web / "release/inputs.json").write_text(json.dumps(self.inputs))
         self.builder = promotion._load_catalog_builder()
 
