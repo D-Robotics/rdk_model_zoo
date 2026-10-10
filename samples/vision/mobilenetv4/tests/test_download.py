@@ -16,12 +16,14 @@ from unittest import mock
 from samples.vision.mobilenetv4.model import download as download_mod
 
 EXPECTED_REFERENCES = {
-    ('x5', 'small'): 'x5:mobilenetv4:MobileNetV4_conv_small_224x224_nv12.bin',
-    ('x5', 'medium'): 'x5:mobilenetv4:MobileNetV4_conv_medium_224x224_nv12.bin',
-    ('s100', 'small'): 's:mobilenetv4:s100/mobilenetv4_small_224x224_nv12.hbm',
-    ('s600', 'small'): 's:mobilenetv4:s600/mobilenetv4_small_224x224_nv12.hbm',
-    ('s100', 'medium'): 's:mobilenetv4:s100/mobilenetv4_medium_256x256_nv12.hbm',
-    ('s600', 'medium'): 's:mobilenetv4:s600/mobilenetv4_medium_256x256_nv12.hbm',
+    ('x5', 'small'): 'x5:mobilenetv4:mobilenetv4_conv_small_bayese_224x224_nv12.bin',
+    ('x5', 'medium'): 'x5:mobilenetv4:mobilenetv4_conv_medium_bayese_224x224_nv12.bin',
+    ('s100', 'small'): 's:mobilenetv4:s100/mobilenetv4_conv_small_nashe_224x224_nv12.hbm',
+    ('s100', 'medium'): 's:mobilenetv4:s100/mobilenetv4_conv_medium_nashe_224x224_nv12.hbm',
+    ('s100p', 'small'): 's:mobilenetv4:s100p/mobilenetv4_conv_small_nashm_224x224_nv12.hbm',
+    ('s100p', 'medium'): 's:mobilenetv4:s100p/mobilenetv4_conv_medium_nashm_224x224_nv12.hbm',
+    ('s600', 'small'): 's:mobilenetv4:s600/mobilenetv4_conv_small_nashp_224x224_nv12.hbm',
+    ('s600', 'medium'): 's:mobilenetv4:s600/mobilenetv4_conv_medium_nashp_224x224_nv12.hbm',
 }
 
 

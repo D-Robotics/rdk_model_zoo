@@ -6,19 +6,24 @@ For the pinned timm checkpoint workflow, use [`evaluate.py`](evaluate.py) and th
 Use the bundled image for a single-image classification check. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
 
 
-## Pinned V4 Small board evaluation
+## Pinned board evaluation
 
 `evaluate_board.py` loads one compiled model and evaluates every image in the
-frozen ImageNetV2 MatchedFrequency manifest. Use the matching X5 `.bin` or
-S100 `.hbm`, with NV12 `bt601_video` input and float32 logits. The evaluator
-uses PIL bicubic shorter-edge resize to 256 and a 224 center crop, followed
-by the sample's OpenCV NV12 conversion. The required campaign binds labels,
-geometry and the expected 10,000 images; every image and model hash is checked.
+frozen ImageNetV2 MatchedFrequency manifest. Use the matching artifact for the
+board (X5 `.bin`; S100, S100P or S600 `.hbm`), with NV12 `bt601_video` input
+and float32 logits, and select the checkpoint's preprocessing contract with
+`--variant` (`v4-small` or `v4-medium-224`). The evaluator uses PIL bicubic
+shorter-edge resize (256 for Small, 235 for Medium) and a 224 center crop,
+followed by the sample's OpenCV NV12 conversion; this is the same geometry
+the runtime applies with `--resize-type 2`. The required campaign binds
+labels, geometry and the expected 10,000 images; every image and model hash is
+checked.
 
 ```bash
 python3 samples/vision/mobilenetv4/evaluator/evaluate_board.py \
-  --target s100 --model /path/to/v4_small_s100.hbm \
-  --model-sha256 <actual-model-sha256> \
+  --target s100 --variant v4-small \
+  --model samples/vision/mobilenetv4/model/s100/mobilenetv4_conv_small_nashe_224x224_nv12.hbm \
+  --model-sha256 <sha256-from-model/README.md> \
   --campaign /path/to/campaign.json --manifest /path/to/manifest.json \
   --data-root /path/to/imagenetv2/images --output /path/to/new-evaluation
 ```
@@ -67,15 +72,15 @@ Functional board check on X5 (prerequisite:
 ```bash
 python3 samples/vision/mobilenetv4/runtime/python/main.py \
   --target x5 \
-  --asset-id x5:mobilenetv4:MobileNetV4_conv_small_224x224_nv12.bin \
-  --model-path samples/vision/mobilenetv4/model/MobileNetV4_conv_small_224x224_nv12.bin \
+  --asset-id x5:mobilenetv4:mobilenetv4_conv_small_bayese_224x224_nv12.bin \
+  --model-path samples/vision/mobilenetv4/model/mobilenetv4_conv_small_bayese_224x224_nv12.bin \
   --test-img samples/vision/mobilenetv4/test_data/great_grey_owl.JPEG \
   --label-file datasets/imagenet/imagenet_classes.names \
   --top-k 5
 ```
 
-On S100/S600 substitute the `s:` reference and the `s100/`/`s600/`
-artifact path; the labels file is shared. For a same-board comparison between runs, keep the compared run fixed —
+On S100, S100P and S600 substitute the `s:` reference and the `s100/`,
+`s100p/` or `s600/` artifact path; the labels file is shared. For a same-board comparison between runs, keep the compared run fixed —
 same image, model bytes, labels, resize type, and Top-K — and compare
 class IDs and raw scores before label formatting; expect identical IDs
 and scores within 1e-5. Comparing X5 against S results is not a
@@ -103,38 +108,26 @@ output, image path, resize type, and command line.
 <a id="reference-results"></a>
 ## Reference results
 
-Figures published in the X5 release (x5-v1.1.3):
+Accuracy of the published models, measured with the pinned board evaluation
+above on the complete ImageNetV2 MatchedFrequency set (10,000 images). This is
+not the ILSVRC2012 validation set, so the values are not comparable with
+ImageNet-1k validation figures. "FP32" is the ONNX export of the same
+checkpoint on the same crops.
 
-| Model | Size | Classes | Params (M) | Float Top-1 | Quant Top-1 | Latency (ms) | FPS |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| MobileNetV4-Conv-Medium | 224x224 | 1000 | 9.7 | 76.8% | 75.1% | 2.42 | 572+ |
-| MobileNetV4-Conv-Small | 224x224 | 1000 | 3.8 | 70.8% | 68.8% | 1.18 | 1436+ |
+| Model | Target | FP32 Top-1 | Board Top-1 | FP32 Top-5 | Board Top-5 |
+| --- | --- | --- | --- | --- | --- |
+| MobileNetV4-Conv-Small | X5 | 60.96% | 58.72% | 82.64% | 80.53% |
+| MobileNetV4-Conv-Small | S100 | 60.96% | 58.56% | 82.64% | 80.78% |
+| MobileNetV4-Conv-Small | S100P | 60.96% | 58.56% | 82.64% | 80.78% |
+| MobileNetV4-Conv-Small | S600 | 60.96% | 58.57% | 82.64% | 80.94% |
+| MobileNetV4-Conv-Medium | X5 | 67.35% | 66.25% | 87.86% | 87.54% |
+| MobileNetV4-Conv-Medium | S100 | 67.35% | 66.94% | 87.86% | 87.65% |
+| MobileNetV4-Conv-Medium | S100P | 67.35% | 66.94% | 87.86% | 87.65% |
+| MobileNetV4-Conv-Medium | S600 | 67.35% | 66.75% | 87.86% | 87.56% |
 
-For S100/S600 artifacts from release `s-v1.1.2`, run the selected artifact
-on the matching board and use [Dataset-level evaluation](#boundaries) to
-calculate accuracy and timing.
-
-### RDK X5 / X5 Module performance
-
-Data version: `rdk_x5_legacy @ cb86079ae5befcef9ca50fb46c8a6d8980106dec`.
-
-The threading descriptions below are the conditions stated with these measurements. The dual-core and X3 eight-thread descriptions refer to X3; X5 has 1×Bayes-e.
-
-The following table shows the performance data obtained from actual testing on RDK X5 & RDK X5 Module. You can weigh the size of the model according to your own reasoning about the actual performance and accuracy required
-
-
-| Model        | Size    | Categories | Parameter | Floating point precision | Quantization accuracy | Latency/throughput (single-threaded) | Latency/throughput (multi-threaded) | Frame rate(FPS) |
-| ------------ | ------- | ---- | ------ | ----- | ----- | ----------- | ----------- | ------- |
-| Mobilenetv4_conv_medium | 224x224 | 1000 | 9.68   | 76.75 | 75.14 | 2.42        | 6.91        | 572.36  |
-| Mobilenetv4_conv_small  | 224x224 | 1000 | 3.76   | 70.75 | 68.75 | 1.18        | 2.74        | 1436.22 |
-
-
-Description:
-1. X5 is in the best state: CPU is 8xA55@1.8G, full core Performance scheduling, BPU is 1xBayes-e@1G, a total of 10TOPS equivalent int8 computing power.
-2. Single-threaded delay is the ideal situation for single frame, single-threaded, and single-BPU core delay, and BPU inference for a task.
-3. The frame rate of a 4-thread project is when 4 threads simultaneously send tasks to a dual-core BPU. In a typical project, 4 threads can control the single frame delay to be small, while consuming all BPUs to 100%, achieving a good balance between throughput (FPS) and frame delay.
-4. The maximum frame rate of 8 threads is for 8 threads to simultaneously load tasks into the dual-core BPU of X3. The purpose is to test the maximum performance of the BPU. Generally, 4 cores are already full. If 8 threads are much better than 4 threads, it indicates that the model structure needs to improve the "calculation/memory access" ratio or optimize the DDR bandwidth when compiling.
-5. Floating-point/fixed-point precision: Floating-point accuracy uses the Top-1 inference accuracy Level of onnx before the model is quantized, while quantized accuracy is the accuracy Level of the actual inference of the model after quantization.
+Latency and throughput of the same artifacts, with the measurement
+conditions, are in the [sample README](../README.md#performance). The X3
+figures below belong to earlier X3 builds and are kept as history.
 
 ### RDK X3 / X3 Module performance
 

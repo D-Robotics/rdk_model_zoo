@@ -1,0 +1,31 @@
+# MobileNetV4 PTQ configuration for RDK X5 (OE x5 v1.2.8, hb_mapper makertbin).
+# Compile parameters are those used for the published X5 artifacts; only the
+# @WORK@ placeholder differs (see README.md, "Compile"). The normalization is
+# compiled into the model: mean = mean x 255, scale = 1 / (255 x std).
+model_parameters:
+  onnx_model: @WORK@/export/model.onnx
+  march: bayes-e
+  working_dir: @WORK@/x5/build
+  output_model_file_prefix: mobilenetv4_x5
+input_parameters:
+  input_name: data
+  input_type_rt: nv12
+  input_type_train: rgb
+  input_layout_train: NCHW
+  input_shape: 1x3x224x224
+  norm_type: data_mean_and_scale
+  mean_value: 123.675 116.28 103.53
+  scale_value: 0.0171247538317 0.0175070028011 0.0174291938998
+  # OpenCV converts I420 to NV12 in limited (video) range, BT.601.
+  input_space_and_range: bt601_video
+calibration_parameters:
+  cal_data_dir: @WORK@/x5/calibration/data
+  cal_data_type: float32
+  calibration_type: default
+  preprocess_on: false
+compiler_parameters:
+  optimize_level: O3
+  compile_mode: latency
+  core_num: 1
+  input_source:
+    data: pyramid

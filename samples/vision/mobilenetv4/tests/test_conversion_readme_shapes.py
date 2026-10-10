@@ -2,10 +2,10 @@
 
 The validation section of the conversion READMEs states the input shapes
 a customer should accept per target×variant. Those statements must equal
-the runtime binding's contract facts — for the S medium artifact that is
-Y [1,256,256,1] / UV [1,128,128,2], not the 224 shapes of every other
-variant. A section-presence check cannot catch this drift; parsing the
-stated shapes and comparing them to BINDING_TABLE can.
+the runtime binding's contract facts — every published artifact takes a
+224x224 input (S series: Y [1,224,224,1] / UV [1,112,112,2]). A
+section-presence check cannot catch this drift; parsing the stated shapes
+and comparing them to BINDING_TABLE can.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ CONV_DIR = (
 #: (the Chinese README separates the target list and variant with a
 #: full-width comma).
 S_ROW = re.compile(
-    r"s100/s600[，,]\s*(small|medium)[^\n]*?"
+    r"s100/s100p/s600[，,]\s*(small|medium)[^\n]*?"
     r"Y\s*`\[1,(\d+),(\d+),1\]`[^\n]*?"
     r"UV\s*`\[1,(\d+),(\d+),2\]`"
 )
@@ -57,27 +57,30 @@ class ConversionReadmeShapeTests(unittest.TestCase):
                     len(rows), 2, "expected small and medium S rows"
                 )
                 for variant, y_h, y_w, uv_h, uv_w in rows:
-                    with self.subTest(variant=variant):
-                        fact = facts[(variant, "s100")]
-                        self.assertEqual(
-                            (int(y_h), int(y_w), int(uv_h), int(uv_w)),
-                            (
-                                fact.input_height,
-                                fact.input_width,
-                                fact.input_height // 2,
-                                fact.input_width // 2,
-                            ),
-                        )
+                    for target in ("s100", "s100p", "s600"):
+                        with self.subTest(variant=variant, target=target):
+                            fact = facts[(variant, target)]
+                            self.assertEqual(
+                                (int(y_h), int(y_w), int(uv_h), int(uv_w)),
+                                (
+                                    fact.input_height,
+                                    fact.input_width,
+                                    fact.input_height // 2,
+                                    fact.input_width // 2,
+                                ),
+                            )
 
-    def test_medium_s_shapes_are_256(self):
-        # The regression B1-R4 pinned: S medium is 256x256, and its UV
-        # plane is 128x128x2 — previously both languages stated 224/112.
+    def test_s_shapes_are_224_for_both_variants(self):
+        # Every published S artifact is 224x224 (Y 224x224, UV 112x112x2),
+        # including Medium, which earlier builds shipped at 256x256.
         facts = self._binding_facts()
-        self.assertEqual(
-            (facts[("medium", "s100")].input_height,
-             facts[("medium", "s100")].input_width),
-            (256, 256),
-        )
+        for variant in ("small", "medium"):
+            for target in ("s100", "s100p", "s600"):
+                fact = facts[(variant, target)]
+                self.assertEqual(
+                    (fact.input_height, fact.input_width), (224, 224),
+                    f"{variant}/{target}",
+                )
         for readme_name in ("README.md", "README_cn.md"):
             with self.subTest(readme=readme_name):
                 section = self._validation_section(readme_name)
@@ -86,7 +89,7 @@ class ConversionReadmeShapeTests(unittest.TestCase):
                     variant: (h, w, uh, uw)
                     for variant, h, w, uh, uw in S_ROW.findall(section)
                 }
-                self.assertEqual(rows["medium"], ("256", "256", "128", "128"))
+                self.assertEqual(rows["medium"], ("224", "224", "112", "112"))
                 self.assertEqual(rows["small"], ("224", "224", "112", "112"))
 
     def test_x5_row_states_packed_geometry_of_both_variants(self):

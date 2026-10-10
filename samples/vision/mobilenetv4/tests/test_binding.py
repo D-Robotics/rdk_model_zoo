@@ -55,38 +55,63 @@ class BindingTableTests(unittest.TestCase):
                 f"unexpected manifest source: {record.source_manifest}",
             )
 
-    def test_s100p_publishes_nothing_and_rejects_selection(self):
+    def test_s100p_publishes_both_variants(self):
         from samples.vision.mobilenetv4.runtime.python.cli import (
-            BindingError,
             list_available_assets,
             resolve_selection,
         )
 
-        self.assertEqual(list_available_assets("s100p"), ())
-        with self.assertRaises(BindingError):
-            resolve_selection("s100p")
+        records = list_available_assets("s100p")
+        self.assertEqual(
+            {(r.variant, r.filename) for r in records},
+            {
+                ("small", "s100p/mobilenetv4_conv_small_nashm_224x224_nv12.hbm"),
+                ("medium", "s100p/mobilenetv4_conv_medium_nashm_224x224_nv12.hbm"),
+            },
+        )
+        for variant in ("small", "medium"):
+            selection = resolve_selection("s100p", variant=variant)
+            self.assertEqual(selection.target, "s100p")
+            self.assertEqual(selection.contract.input_protocol, "split_nv12")
+            self.assertEqual(selection.model_path.parent.name, "s100p")
+
+    def test_every_target_publishes_both_variants_with_hash(self):
+        from samples.vision.mobilenetv4.runtime.python.cli import list_available_assets
+        from utils.py_utils.assets import resolve_asset
+
+        for target in ("x5", "s100", "s100p", "s600"):
+            records = list_available_assets(target)
+            self.assertEqual({r.variant for r in records}, {"small", "medium"}, target)
+            for record in records:
+                asset = resolve_asset(record.asset_id)
+                self.assertRegex(asset.sha256 or "", r"^[0-9a-f]{64}$", record.asset_id)
+                self.assertTrue(
+                    asset.url.startswith(
+                        "https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/"
+                        f"mobilenetv4/mobilenetv4/cls/conv-{record.variant}-224/{target}/"
+                    ),
+                    asset.url,
+                )
 
     def test_per_target_contracts_match_source_facts(self):
         from samples.vision.mobilenetv4.runtime.python.cli import resolve_selection
 
-        expected = {('small', 'x5'): (224, 224, 'softmax', 'source_declared_logits', 0, 'linear'), ('small', 's100'): (224, 224, 'softmax', 'source_declared_logits', 1, 'nearest'), ('small', 's600'): (224, 224, 'softmax', 'source_declared_logits', 1, 'nearest'), ('medium', 'x5'): (224, 224, 'softmax', 'source_declared_logits', 0, 'linear'), ('medium', 's100'): (256, 256, 'softmax', 'source_declared_logits', 1, 'nearest'), ('medium', 's600'): (256, 256, 'softmax', 'source_declared_logits', 1, 'nearest')}
-        for (variant, target), (height, width, policy, semantics, resize, interp) in expected.items():
-            selection = resolve_selection(target, variant=variant)
-            contract = selection.contract
-            self.assertEqual(
-                (contract.input_height, contract.input_width), (height, width),
-                f"{variant}/{target} geometry",
-            )
-            self.assertEqual(contract.output_score_policy, policy, f"{variant}/{target} policy")
-            self.assertEqual(contract.output_semantics, semantics, f"{variant}/{target} semantics")
-            self.assertEqual(contract.resize_type, resize, f"{variant}/{target} resize")
-            self.assertEqual(
-                contract.resize_interpolation, interp, f"{variant}/{target} interp"
-            )
-            self.assertEqual(contract.class_count, 1000)
-            self.assertEqual(contract.output_transform, "raw_f32")
-            expected_protocol = "packed_nv12" if target == "x5" else "split_nv12"
-            self.assertEqual(contract.input_protocol, expected_protocol)
+        # Every published model is 224x224 and uses the timm evaluation geometry
+        # (resize type 2): shorter edge int(224 / crop_pct), then a center crop.
+        shorter = {"small": 256, "medium": 235}
+        for variant in ("small", "medium"):
+            for target in ("x5", "s100", "s100p", "s600"):
+                contract = resolve_selection(target, variant=variant).contract
+                label = f"{variant}/{target}"
+                self.assertEqual((contract.input_height, contract.input_width), (224, 224), label)
+                self.assertEqual(contract.output_score_policy, "softmax", label)
+                self.assertEqual(contract.output_semantics, "source_declared_logits", label)
+                self.assertEqual(contract.resize_type, 2, label)
+                self.assertEqual(contract.resize_shorter, shorter[variant], label)
+                self.assertEqual(contract.class_count, 1000)
+                self.assertEqual(contract.output_transform, "raw_f32")
+                expected_protocol = "packed_nv12" if target == "x5" else "split_nv12"
+                self.assertEqual(contract.input_protocol, expected_protocol)
 
     def test_bind_model_accepts_source_metadata_shapes(self):
         from samples.vision.mobilenetv4.runtime.python.cli import (

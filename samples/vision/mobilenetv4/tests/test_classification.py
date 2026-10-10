@@ -52,6 +52,52 @@ class PolicyTests(unittest.TestCase):
                 result.scores, expected[0, [3, 11]], rtol=1e-5
             )
 
+    def test_published_preprocessing_feeds_the_evaluation_bytes(self):
+        """The runtime applies the geometry the models were evaluated with.
+
+        The published contract resizes the shorter edge and center-crops (type 2).
+        Preparing the host evaluation crop and feeding it through a plain direct
+        resize (a no-op at 224x224) must yield identical NV12 tensors, for both
+        variants and both input protocols.
+        """
+
+        try:
+            from PIL import Image
+        except ImportError:
+            self.skipTest("Pillow is required for the shorter-edge center crop")
+
+        from samples.vision.mobilenetv4.runtime.python.cli import (
+            bind_model,
+            resolve_selection,
+        )
+        from utils.py_utils.classification_host import prepare_rgb
+        from utils.py_utils.tensor_io import prepare_nv12
+        from testsupport import runtime_metadata
+
+        rng = np.random.default_rng(7)
+        bgr = rng.integers(0, 256, size=(300, 400, 3), dtype=np.uint8)
+        for variant, crop_pct in (("small", 0.875), ("medium", 0.95)):
+            contract = {
+                "size": 224, "crop_pct": crop_pct, "geometry": "resize_shorter_center_crop",
+                "interpolation": "pil_bicubic", "color": "RGB", "layout": "NCHW",
+                "dtype": "float32", "mean": [0.485, 0.456, 0.406],
+                "std": [0.229, 0.224, 0.225], "batch": 1, "class_count": 1000,
+                "output": "logits",
+            }
+            evaluation_crop = prepare_rgb(Image.fromarray(bgr[:, :, ::-1]), contract)[:, :, ::-1]
+            for target in ("x5", "s100", "s100p", "s600"):
+                with self.subTest(variant=variant, target=target):
+                    binding = bind_model(
+                        resolve_selection(target, variant=variant),
+                        runtime_metadata("x5" if target == "x5" else "s", variant=variant))
+                    self.assertEqual(binding.contract.resize_type, 2)
+                    published = prepare_nv12(bgr, binding)
+                    evaluated = prepare_nv12(
+                        np.ascontiguousarray(evaluation_crop), binding, resize_type=0)
+                    self.assertEqual(set(published.tensors), set(evaluated.tensors))
+                    for name, tensor in published.tensors.items():
+                        np.testing.assert_array_equal(tensor, evaluated.tensors[name])
+
     def test_topk_from_scores_softmax_false_preserves_raw_values(self):
         from utils.py_utils.classification import topk_from_scores
 

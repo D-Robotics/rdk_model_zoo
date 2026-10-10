@@ -33,27 +33,42 @@ class EntrypointTests(unittest.TestCase):
     def test_list_models_publishes_every_manifest_filename(self):
         completed = self._run("--list-models", "--target", "auto")
         self.assertEqual(completed.returncode, 0, completed.stderr)
-        for filename in ('MobileNetV4_conv_small_224x224_nv12.bin', 'MobileNetV4_conv_medium_224x224_nv12.bin', 's100/mobilenetv4_small_224x224_nv12.hbm', 's600/mobilenetv4_small_224x224_nv12.hbm', 's100/mobilenetv4_medium_256x256_nv12.hbm', 's600/mobilenetv4_medium_256x256_nv12.hbm'):
+        for filename in (
+            'mobilenetv4_conv_small_bayese_224x224_nv12.bin',
+            'mobilenetv4_conv_medium_bayese_224x224_nv12.bin',
+            's100/mobilenetv4_conv_small_nashe_224x224_nv12.hbm',
+            's100/mobilenetv4_conv_medium_nashe_224x224_nv12.hbm',
+            's100p/mobilenetv4_conv_small_nashm_224x224_nv12.hbm',
+            's100p/mobilenetv4_conv_medium_nashm_224x224_nv12.hbm',
+            's600/mobilenetv4_conv_small_nashp_224x224_nv12.hbm',
+            's600/mobilenetv4_conv_medium_nashp_224x224_nv12.hbm',
+        ):
             self.assertIn(filename, completed.stdout)
 
     def test_dry_run_per_target_reports_source_contract(self):
-        for target, variant, expected in (('x5', 'small', {'protocol': 'packed_nv12', 'geometry': '224x224', 'policy': 'softmax'}), ('s100', 'small', {'protocol': 'split_nv12', 'geometry': '224x224', 'policy': 'softmax'}), ('s600', 'small', {'protocol': 'split_nv12', 'geometry': '224x224', 'policy': 'softmax'}), ('x5', 'medium', {'protocol': 'packed_nv12', 'geometry': '224x224', 'policy': 'softmax'}), ('s100', 'medium', {'protocol': 'split_nv12', 'geometry': '256x256', 'policy': 'softmax'}), ('s600', 'medium', {'protocol': 'split_nv12', 'geometry': '256x256', 'policy': 'softmax'})):
-            completed = self._run(
-                "--dry-run", "--target", target, "--variant", variant
-            )
-            self.assertEqual(completed.returncode, 0, completed.stderr)
-            self.assertIn(f"input_protocol: {expected['protocol']}", completed.stdout)
-            self.assertIn(f"input_geometry: {expected['geometry']}", completed.stdout)
-            self.assertIn(
-                f"output_score_policy: {expected['policy']}", completed.stdout
-            )
-            self.assertIn("No model is downloaded", completed.stdout)
-            self.assertNotIn("hbm_runtime", completed.stdout)
+        shorter = {'small': 256, 'medium': 235}
+        for variant in ('small', 'medium'):
+            for target in ('x5', 's100', 's100p', 's600'):
+                self._check_dry_run(target, variant, {
+                    'protocol': 'packed_nv12' if target == 'x5' else 'split_nv12',
+                    'geometry': '224x224', 'policy': 'softmax',
+                    'preprocess': f'resize_type=2, resize_shorter={shorter[variant]}'})
+
+    def _check_dry_run(self, target, variant, expected):
+        completed = self._run("--dry-run", "--target", target, "--variant", variant)
+        label = f"{variant}/{target}"
+        self.assertEqual(completed.returncode, 0, f"{label}: {completed.stderr}")
+        self.assertIn(f"input_protocol: {expected['protocol']}", completed.stdout, label)
+        self.assertIn(f"input_geometry: {expected['geometry']}", completed.stdout, label)
+        self.assertIn(f"output_score_policy: {expected['policy']}", completed.stdout, label)
+        self.assertIn(f"preprocess: {expected['preprocess']}", completed.stdout, label)
+        self.assertIn("No model is downloaded", completed.stdout, label)
+        self.assertNotIn("hbm_runtime", completed.stdout, label)
 
     def test_missing_model_is_a_visible_error_without_implicit_download(self):
         completed = self._run(
             "--target", "x5",
-            "--asset-id", "x5:mobilenetv4:MobileNetV4_conv_medium_224x224_nv12.bin",
+            "--asset-id", "x5:mobilenetv4:mobilenetv4_conv_medium_bayese_224x224_nv12.bin",
             "--model-path", str(ROOT / "missing-mobilenetv4-model.bin"),
         )
         self.assertNotEqual(completed.returncode, 0)

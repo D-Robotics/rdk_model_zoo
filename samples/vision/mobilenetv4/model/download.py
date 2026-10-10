@@ -26,15 +26,19 @@ from utils.py_utils.assets import download_asset, resolve_asset
 
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent
 VARIANTS = ('small', 'medium')
+# Both variants are 224x224 on every target.  File names carry the toolchain
+# march token (bayese, nashe, nashm, nashp), so each file identifies its chip.
 ASSET_REFERENCES = {
-    ('x5', 'small'): 'x5:mobilenetv4:MobileNetV4_conv_small_224x224_nv12.bin',
-    ('x5', 'medium'): 'x5:mobilenetv4:MobileNetV4_conv_medium_224x224_nv12.bin',
-    ('s100', 'small'): 's:mobilenetv4:s100/mobilenetv4_small_224x224_nv12.hbm',
-    ('s600', 'small'): 's:mobilenetv4:s600/mobilenetv4_small_224x224_nv12.hbm',
-    ('s100', 'medium'): 's:mobilenetv4:s100/mobilenetv4_medium_256x256_nv12.hbm',
-    ('s600', 'medium'): 's:mobilenetv4:s600/mobilenetv4_medium_256x256_nv12.hbm',
+    ('x5', 'small'): 'x5:mobilenetv4:mobilenetv4_conv_small_bayese_224x224_nv12.bin',
+    ('x5', 'medium'): 'x5:mobilenetv4:mobilenetv4_conv_medium_bayese_224x224_nv12.bin',
+    ('s100', 'small'): 's:mobilenetv4:s100/mobilenetv4_conv_small_nashe_224x224_nv12.hbm',
+    ('s100', 'medium'): 's:mobilenetv4:s100/mobilenetv4_conv_medium_nashe_224x224_nv12.hbm',
+    ('s100p', 'small'): 's:mobilenetv4:s100p/mobilenetv4_conv_small_nashm_224x224_nv12.hbm',
+    ('s100p', 'medium'): 's:mobilenetv4:s100p/mobilenetv4_conv_medium_nashm_224x224_nv12.hbm',
+    ('s600', 'small'): 's:mobilenetv4:s600/mobilenetv4_conv_small_nashp_224x224_nv12.hbm',
+    ('s600', 'medium'): 's:mobilenetv4:s600/mobilenetv4_conv_medium_nashp_224x224_nv12.hbm',
 }
-TARGETS = ("x5", "s100", "s600")
+TARGETS = ("x5", "s100", "s100p", "s600")
 
 
 def asset_reference(target: str, variant: str = 'small') -> str:
@@ -59,8 +63,8 @@ def download_target(
 ) -> str:
     """Download an exact target artifact and return its observed SHA-256.
 
-    ``output_dir`` preserves the source sample's layout: X5 is flat while the
-    S-series artifact remains under ``s100/`` or ``s600/``. Existing files are
+    ``output_dir`` preserves the sample's layout: X5 is flat while the S-series
+    artifact stays under ``s100/``, ``s100p/`` or ``s600/``. Existing files are
     verified by the shared downloader and are never silently replaced.
     """
 

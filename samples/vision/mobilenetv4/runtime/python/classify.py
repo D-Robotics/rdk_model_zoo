@@ -43,7 +43,7 @@ class MobileNetV4Classifier:
         top_k: int = 5, labels: Mapping[int, str] | Sequence[str] | None = None,
         resize_type: int | None = None, resize_interpolation: str | None = None,
         score_policy: str = "softmax", output_transform: str = "raw_f32",
-        runner: RuntimeModelRunner | None = None,
+        runner: RuntimeModelRunner | None = None, resize_shorter: int = 0,
     ) -> None:
         """Load the compiled model and validate its classification settings.
 
@@ -55,7 +55,10 @@ class MobileNetV4Classifier:
             top_k: Number of results in [1, class_count]; defaults to 5.
             labels: Full class-name sequence, sparse index/name mapping, or None.
                 Missing names are rendered as class IDs.
-            resize_type: 0 stretches; 1 preserves aspect ratio with letterbox padding.
+            resize_type: 0 stretches; 1 preserves aspect ratio with letterbox padding;
+                2 resizes the shorter edge to resize_shorter with antialiased PIL bicubic
+                and center-crops to the model size (the geometry the published models
+                were calibrated and evaluated with; needs Pillow).
                 None follows an injected binding or uses 1 for a local model.
             resize_interpolation: Direct-resize interpolation; None uses linear on
                 X5 and nearest on S. Letterbox uses linear interpolation.
@@ -65,6 +68,8 @@ class MobileNetV4Classifier:
                 SDK quantization metadata before scoring.
             runner: Optional injected runner. Its loaded binding supplies the model
                 contract instead of model_path, target, and tensor settings.
+            resize_shorter: Shorter-edge size for resize_type 2: int(input / crop_pct),
+                256 for the Small and 235 for the Medium model; ignored otherwise.
 
         Returns:
             None.
@@ -83,7 +88,8 @@ class MobileNetV4Classifier:
             model_path, target=target, input_size=input_size, class_count=class_count,
             resize_type=1 if resize_type is None else resize_type,
             resize_interpolation=resize_interpolation or ("linear" if target == "x5" else "nearest"),
-            score_policy=score_policy, output_transform=output_transform)
+            score_policy=score_policy, output_transform=output_transform,
+            resize_shorter=resize_shorter)
         self.binding = self.runner.load()
         class_count = self.binding.contract.class_count
         if not 1 <= top_k <= class_count:

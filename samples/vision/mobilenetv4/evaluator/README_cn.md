@@ -6,17 +6,21 @@
 使用随附图片进行单图分类检查。计算数据集精度时，准备对应验证集及逐图真值类别索引，并将其与运行时返回的 Top-1 类别 ID 对照。
 
 
-## 固定 V4 Small 制品的板端评测
+## 固定制品的板端评测
 
 `evaluate_board.py` 加载一次模型，对冻结的 ImageNetV2 MatchedFrequency 清单逐图评测。
-使用对应 X5 `.bin` 或 S100 `.hbm`，输入为 `bt601_video` NV12，输出为 float32 logits。
-前处理为 PIL bicubic 短边缩放到 256、中心裁剪 224，再调用样例的 OpenCV NV12 转换。
-campaign 固定标签顺序、几何变换和完整 10,000 张图片数量；程序校验每张图片与模型的 SHA256。
+使用与板卡匹配的制品（X5 `.bin`；S100、S100P 或 S600 `.hbm`），输入为
+`bt601_video` NV12，输出为 float32 logits，并用 `--variant`（`v4-small` 或
+`v4-medium-224`）选择检查点的预处理合同。前处理为 PIL bicubic 短边缩放
+（Small 为 256，Medium 为 235）、中心裁剪 224，再调用样例的 OpenCV NV12 转换；
+这与 runtime 使用 `--resize-type 2` 时的几何相同。campaign 固定标签顺序、
+几何变换和完整 10,000 张图片数量；程序校验每张图片与模型的 SHA256。
 
 ```bash
 python3 samples/vision/mobilenetv4/evaluator/evaluate_board.py \
-  --target s100 --model /path/to/v4_small_s100.hbm \
-  --model-sha256 <actual-model-sha256> \
+  --target s100 --variant v4-small \
+  --model samples/vision/mobilenetv4/model/s100/mobilenetv4_conv_small_nashe_224x224_nv12.hbm \
+  --model-sha256 <model/README_cn.md 中的 sha256> \
   --campaign /path/to/campaign.json --manifest /path/to/manifest.json \
   --data-root /path/to/imagenetv2/images --output /path/to/new-evaluation
 ```
@@ -59,14 +63,14 @@ X5 功能板卡检查（前置：`bash samples/vision/mobilenetv4/model/download
 ```bash
 python3 samples/vision/mobilenetv4/runtime/python/main.py \
   --target x5 \
-  --asset-id x5:mobilenetv4:MobileNetV4_conv_small_224x224_nv12.bin \
-  --model-path samples/vision/mobilenetv4/model/MobileNetV4_conv_small_224x224_nv12.bin \
+  --asset-id x5:mobilenetv4:mobilenetv4_conv_small_bayese_224x224_nv12.bin \
+  --model-path samples/vision/mobilenetv4/model/mobilenetv4_conv_small_bayese_224x224_nv12.bin \
   --test-img samples/vision/mobilenetv4/test_data/great_grey_owl.JPEG \
   --label-file datasets/imagenet/imagenet_classes.names \
   --top-k 5
 ```
 
-S100/S600 替换 `s:` 引用与 `s100/`/`s600/` 制品路径；标签文件共用。同板多次运行对照时，固定同一图像、制品字节、标签、resize 类型与
+S100、S100P、S600 替换 `s:` 引用与 `s100/`、`s100p/`、`s600/` 制品路径；标签文件共用。同板多次运行对照时，固定同一图像、制品字节、标签、resize 类型与
 Top-K，在标签格式化之前比较类别 ID 与原始分数；预期类别 ID 相同、
 分数差在 1e-5 内。对照双方使用相同板型。
 
@@ -91,40 +95,23 @@ Top-K，在标签格式化之前比较类别 ID 与原始分数；预期类别 I
 <a id="reference-results"></a>
 ## 参考结果
 
-| 项目 | 数值 | 来源 |
-| --- | --- | --- |
+已发布模型的精度，用上面的固定板端评测在完整 ImageNetV2 MatchedFrequency 集合
+（10,000 张图像）上测得。它不是 ILSVRC2012 验证集，因此数值不能与 ImageNet-1k
+验证集的结果相比。“FP32”是同一检查点的 ONNX 导出在相同裁剪图上的结果。
 
-X5 发布（x5-v1.1.3）的已发布数值：
+| 模型 | Target | FP32 Top-1 | 板端 Top-1 | FP32 Top-5 | 板端 Top-5 |
+| --- | --- | --- | --- | --- | --- |
+| MobileNetV4-Conv-Small | X5 | 60.96% | 58.72% | 82.64% | 80.53% |
+| MobileNetV4-Conv-Small | S100 | 60.96% | 58.56% | 82.64% | 80.78% |
+| MobileNetV4-Conv-Small | S100P | 60.96% | 58.56% | 82.64% | 80.78% |
+| MobileNetV4-Conv-Small | S600 | 60.96% | 58.57% | 82.64% | 80.94% |
+| MobileNetV4-Conv-Medium | X5 | 67.35% | 66.25% | 87.86% | 87.54% |
+| MobileNetV4-Conv-Medium | S100 | 67.35% | 66.94% | 87.86% | 87.65% |
+| MobileNetV4-Conv-Medium | S100P | 67.35% | 66.94% | 87.86% | 87.65% |
+| MobileNetV4-Conv-Medium | S600 | 67.35% | 66.75% | 87.86% | 87.56% |
 
-| 模型 | 尺寸 | 类别数 | 参数量 (M) | Float Top-1 | Quant Top-1 | 延迟 (ms) | FPS |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| MobileNetV4-Conv-Medium | 224x224 | 1000 | 9.7 | 76.8% | 75.1% | 2.42 | 572+ |
-| MobileNetV4-Conv-Small | 224x224 | 1000 | 3.8 | 70.8% | 68.8% | 1.18 | 1436+ |
-
-对 `s-v1.1.2` 的 S100/S600 制品，在匹配板卡上运行，并按[数据集级评估](#boundaries)
-计算精度与计时。
-
-### RDK X5 / X5 Module 性能
-
-数据版本：`rdk_x5_legacy @ cb86079ae5befcef9ca50fb46c8a6d8980106dec`.
-
-表后四线程/八线程说明沿用源数据的测试条件。其中双核和 X3 八线程说明对应 X3；X5 的硬件配置为 1×Bayes-e。
-
-以下表格是在 RDK X5 & RDK X5 Module 上实际测试得到的性能数据，可以根据自己推理实际需要的性能和精度，对模型的大小做权衡取舍。
-
-
-| 模型           | 尺寸(像素)  | 类别数  | 参数量(M) | 浮点Top-1  | 量化Top-1  | 延迟/吞吐量(单线程) | 延迟/吞吐量(多线程) | 帧率      |
-| ------------ | ------- | ---- | ------ | ----- | ----- | ----------- | ----------- | ------- |
-| Mobilenetv4_conv_medium | 224x224 | 1000 | 9.68   | 76.75 | 75.14 | 2.42        | 6.91        | 572.36  |
-| Mobilenetv4_conv_small  | 224x224 | 1000 | 3.76   | 70.75 | 68.75 | 1.18        | 2.74        | 1436.22 |
-
-
-说明:
-1. X5的状态为最佳状态：CPU为8xA55@1.8G, 全核心Performance调度, BPU为1xBayes-e@1G, 共10TOPS等效int8算力。
-2. 单线程延迟为单帧，单线程，单BPU核心的延迟，BPU推理一个任务最理想的情况。
-3. 4线程工程帧率为4个线程同时向双核心BPU塞任务，一般工程中4个线程可以控制单帧延迟较小，同时吃满所有BPU到100%，在吞吐量(FPS)和帧延迟间得到一个较好的平衡。
-4. 8线程极限帧率为8个线程同时向X3的双核心BPU塞任务，目的是为了测试BPU的极限性能，一般来说4核心已经占满，如果8线程比4线程还要好很多，说明模型结构需要提高"计算/访存"比，或者编译时选择优化DDR带宽。
-5. 浮点/定点Top-1：浮点Top-1使用的是模型未量化前onnx的 Top-1 推理精度，量化Top-1则为量化后模型实际推理的精度。
+相同制品的延迟与吞吐及测量条件见 [sample README](../README_cn.md#performance)。
+下面的 X3 数据属于早期的 X3 构建，仅作历史保留。
 
 ### RDK X3 / X3 Module 性能
 

@@ -21,17 +21,15 @@ def runtime_metadata(protocol: str, variant: str = "small", wrong_geometry: bool
     dtype and keep the descriptor visible instead of rejecting it.
     """
 
-    if variant == "medium" and protocol != "x5":
-        height = width = 256
-    else:
-        height = width = 224
+    # Every published MobileNetV4 model takes a 224x224 input on every target.
+    height = width = 224
     if wrong_geometry:
         height += 8
         width += 8
     if protocol == "x5":
         return RuntimeMetadata.from_mapping(
             {
-                "model_name": "MobileNetV4_conv_small_224x224_nv12",
+                "model_name": f"mobilenetv4_conv_{variant}_224x224_nv12",
                 "input_names": ["data"],
                 "input_shapes": {"data": (1, 3, height, width)},
                 "input_dtypes": {"data": "U8"},
@@ -43,7 +41,7 @@ def runtime_metadata(protocol: str, variant: str = "small", wrong_geometry: bool
         )
     return RuntimeMetadata.from_mapping(
         {
-            "model_name": "MobileNetV4_conv_small_224x224_nv12",
+            "model_name": f"mobilenetv4_conv_{variant}_224x224_nv12",
             "input_names": ["input_y", "input_uv"],
             "input_shapes": {
                 "input_y": (1, height, width, 1),
