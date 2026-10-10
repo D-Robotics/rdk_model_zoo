@@ -8,8 +8,9 @@
 
 ## 模型和环境
 
-`checkpoints.json` 固定六个 checkpoint 的 revision、文件 SHA256、模型卡和许可证：
-`v1-100`、`v2-100`、`v3-large-100`、`v4-small`、`v4-medium-224`、`v4-medium-256`。
+`checkpoints.json` 固定十个 checkpoint 的 revision、文件 SHA256、模型卡和许可证：
+`v1-100`、`v1-125`、`v2-100`、`v2-140`、`v3-large-100`、`v3-small-100`、
+`v4-small`、`v4-medium-224`、`v4-medium-256`、`v4-large-256`。
 Medium-224 对应全部四个平台，Medium-256 对应 S100/S100P/S600；其他规格的候选矩阵包含四个平台。
 矩阵记录目标范围，板端支持以实际转换和验收为准。
 

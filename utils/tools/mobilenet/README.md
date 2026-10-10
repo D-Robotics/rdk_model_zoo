@@ -10,9 +10,10 @@ for every run. Model files and datasets belong outside the repository.
 
 ## Models and environment
 
-`checkpoints.json` pins six checkpoints by repository revision and file SHA256:
-`v1-100`, `v2-100`, `v3-large-100`, `v4-small`, `v4-medium-224`, and
-`v4-medium-256`. Medium-224 targets all four platforms; Medium-256 targets S100/S100P/S600.
+`checkpoints.json` pins ten checkpoints by repository revision and file SHA256:
+`v1-100`, `v1-125`, `v2-100`, `v2-140`, `v3-large-100`, `v3-small-100`,
+`v4-small`, `v4-medium-224`, `v4-medium-256`, and `v4-large-256`.
+Medium-224 targets all four platforms; Medium-256 targets S100/S100P/S600.
 Other variants have all four targets in their candidate matrix. A matrix
 entry is not a claim that a compiled model has passed board acceptance.
 
