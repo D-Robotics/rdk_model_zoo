@@ -1,7 +1,32 @@
 English | [简体中文](README_cn.md)
 
 # MobileNetV4 evaluation
+
+For the pinned timm checkpoint workflow, use [`evaluate.py`](evaluate.py) and the [shared host workflow](../../../../utils/tools/mobilenet/README.md). It records the exact checkpoint, center-crop preprocessing, batch-one logits contract, and full-dataset evaluation inputs. The existing artifact commands below retain their own contracts.
 Use the bundled image for a single-image classification check. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
+
+
+## Pinned V4 Small board evaluation
+
+`evaluate_board.py` loads one compiled model and evaluates every image in the
+frozen ImageNetV2 MatchedFrequency manifest. Use the matching X5 `.bin` or
+S100 `.hbm`, with NV12 `bt601_video` input and float32 logits. The evaluator
+uses PIL bicubic shorter-edge resize to 256 and a 224 center crop, followed
+by the sample's OpenCV NV12 conversion. The required campaign binds labels,
+geometry and the expected 10,000 images; every image and model hash is checked.
+
+```bash
+python3 samples/vision/mobilenetv4/evaluator/evaluate_board.py \
+  --target s100 --model /path/to/v4_small_s100.hbm \
+  --model-sha256 <actual-model-sha256> \
+  --campaign /path/to/campaign.json --manifest /path/to/manifest.json \
+  --data-root /path/to/imagenetv2/images --output /path/to/new-evaluation
+```
+
+The new output directory contains full predictions, tensor metadata, three
+fixed-input outputs and `evaluation.json` with Top-1/Top-5 and source hashes.
+For C++ performance timing and its image boundary, see
+[the benchmark instructions](../../../../utils/tools/mobilenet/cpp/README.md).
 
 <a id="dataset"></a>
 

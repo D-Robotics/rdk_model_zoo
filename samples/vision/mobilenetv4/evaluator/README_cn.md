@@ -1,7 +1,28 @@
 [English](README.md) | 简体中文
 
 # MobileNetV4 评估
+
+固定版本 timm checkpoint 流程使用 [`evaluate.py`](evaluate.py)，命令见[公共主机流程](../../../../utils/tools/mobilenet/README_cn.md)。该流程明确记录权重、中心裁剪预处理、batch=1 logits 合同和全量评测输入；下文既有制品命令按各自合同使用。
 使用随附图片进行单图分类检查。计算数据集精度时，准备对应验证集及逐图真值类别索引，并将其与运行时返回的 Top-1 类别 ID 对照。
+
+
+## 固定 V4 Small 制品的板端评测
+
+`evaluate_board.py` 加载一次模型，对冻结的 ImageNetV2 MatchedFrequency 清单逐图评测。
+使用对应 X5 `.bin` 或 S100 `.hbm`，输入为 `bt601_video` NV12，输出为 float32 logits。
+前处理为 PIL bicubic 短边缩放到 256、中心裁剪 224，再调用样例的 OpenCV NV12 转换。
+campaign 固定标签顺序、几何变换和完整 10,000 张图片数量；程序校验每张图片与模型的 SHA256。
+
+```bash
+python3 samples/vision/mobilenetv4/evaluator/evaluate_board.py \
+  --target s100 --model /path/to/v4_small_s100.hbm \
+  --model-sha256 <actual-model-sha256> \
+  --campaign /path/to/campaign.json --manifest /path/to/manifest.json \
+  --data-root /path/to/imagenetv2/images --output /path/to/new-evaluation
+```
+
+新输出目录包含全量预测、张量元信息、三个固定输入的输出，以及记录 Top-1/Top-5 和源码哈希的
+`evaluation.json`。C++ 性能计时与输入边界见[评测说明](../../../../utils/tools/mobilenet/cpp/README.md)。
 
 <a id="dataset"></a>
 
