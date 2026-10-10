@@ -6,7 +6,7 @@ import unittest
 
 
 def _metadata_x5(stage: str = "det", **overrides):
-    from samples.vision.paddle_ocr.runtime.python.model_binding import RuntimeMetadata
+    from samples.vision.paddle_ocr.runtime.python.backend import RuntimeMetadata
 
     if stage == "det":
         values = {
@@ -33,7 +33,7 @@ def _metadata_x5(stage: str = "det", **overrides):
 
 
 def _metadata_s100(stage: str = "det", **overrides):
-    from samples.vision.paddle_ocr.runtime.python.model_binding import RuntimeMetadata
+    from samples.vision.paddle_ocr.runtime.python.backend import RuntimeMetadata
 
     if stage == "det":
         values = {
@@ -64,7 +64,7 @@ def _metadata_s100(stage: str = "det", **overrides):
 
 class BindingTests(unittest.TestCase):
     def test_list_contains_only_the_two_audited_pairs(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import list_available_pairs
+        from samples.vision.paddle_ocr.runtime.python.cli import list_available_pairs
 
         pairs = list_available_pairs()
         self.assertEqual({pair.target for pair in pairs}, {"x5", "s100"})
@@ -79,10 +79,7 @@ class BindingTests(unittest.TestCase):
         )
 
     def test_custom_paths_require_both_qualified_asset_references(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import (
-            BindingError,
-            resolve_pair,
-        )
+        from samples.vision.paddle_ocr.runtime.python.cli import BindingError, resolve_pair
 
         with self.assertRaises(BindingError):
             resolve_pair(
@@ -106,10 +103,7 @@ class BindingTests(unittest.TestCase):
             )
 
     def test_mixed_target_pair_is_rejected(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import (
-            BindingError,
-            resolve_pair,
-        )
+        from samples.vision.paddle_ocr.runtime.python.cli import BindingError, resolve_pair
 
         with self.assertRaises(BindingError):
             resolve_pair(
@@ -119,10 +113,8 @@ class BindingTests(unittest.TestCase):
             )
 
     def test_actual_x5_and_s100_metadata_bind_to_exact_names(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import (
-            bind_stage,
-            resolve_pair,
-        )
+        from samples.vision.paddle_ocr.runtime.python.backend import bind_stage
+        from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
 
         x5 = resolve_pair("x5")
         x5_det = bind_stage(x5, "detector", _metadata_x5())
@@ -139,11 +131,8 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(s_rec.output_shape, (1, 40, 18710))
 
     def test_metadata_mismatch_and_missing_dtype_are_rejected(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import (
-            MetadataMismatchError,
-            bind_stage,
-            resolve_pair,
-        )
+        from samples.vision.paddle_ocr.runtime.python.cli import MetadataMismatchError, resolve_pair
+        from samples.vision.paddle_ocr.runtime.python.backend import bind_stage
 
         pair = resolve_pair("x5")
         with self.assertRaises(MetadataMismatchError):
@@ -162,9 +151,7 @@ class BindingTests(unittest.TestCase):
             )
 
     def test_direct_runtime_metadata_has_safe_optional_mappings(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import (
-            RuntimeMetadata,
-        )
+        from samples.vision.paddle_ocr.runtime.python.backend import RuntimeMetadata
 
         metadata = RuntimeMetadata(
             model_name="model",
@@ -183,12 +170,12 @@ class BindingTests(unittest.TestCase):
     def test_bound_stage_validates_physical_runtime_tensors(self):
         import numpy as np
 
-        from samples.vision.paddle_ocr.runtime.python.model_binding import (
+        from samples.vision.paddle_ocr.runtime.python.backend import (
             bind_stage,
-            resolve_pair,
             validate_stage_inputs,
             validate_stage_output,
         )
+        from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
 
         pair = resolve_pair("x5")
         binding = bind_stage(pair, "detector", _metadata_x5())
@@ -204,10 +191,7 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(outputs["sigmoid_0.tmp_0"].dtype, np.float32)
 
     def test_vocabulary_policies_keep_fixed_x5_and_hashed_s100_table(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import (
-            X5_ALPHABET,
-            list_available_pairs,
-        )
+        from samples.vision.paddle_ocr.runtime.python.cli import X5_ALPHABET, list_available_pairs
 
         pairs = {pair.target: pair for pair in list_available_pairs()}
         x5_tokens = pairs["x5"].vocabulary.load_tokens()
@@ -225,10 +209,8 @@ class BindingTests(unittest.TestCase):
     def test_float_outputs_preserve_scores_with_sdk_quantization_descriptors(self):
         import numpy as np
         from types import SimpleNamespace
-        from samples.vision.paddle_ocr.runtime.python.model_binding import (
-            MetadataMismatchError, bind_stage, list_available_pairs,
-            validate_stage_output,
-        )
+        from samples.vision.paddle_ocr.runtime.python.cli import MetadataMismatchError, list_available_pairs
+        from samples.vision.paddle_ocr.runtime.python.backend import bind_stage, validate_stage_output
 
         descriptor = SimpleNamespace(
             quant_type=SimpleNamespace(name="SCALE"),
@@ -267,9 +249,7 @@ class BindingTests(unittest.TestCase):
         from utils.py_utils.runtime_meta import (
             MetadataMismatchError as SharedMetadataMismatchError,
         )
-        from samples.vision.paddle_ocr.runtime.python.model_binding import (
-            RuntimeMetadata,
-        )
+        from samples.vision.paddle_ocr.runtime.python.backend import RuntimeMetadata
 
         MetadataMismatchError = SharedMetadataMismatchError
 

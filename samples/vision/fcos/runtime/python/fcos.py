@@ -1,9 +1,17 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""FCOS readable task: preprocess, infer, postprocess, and predict."""
+"""FCOS readable task: tensor contract, runner, preprocess, infer, postprocess, predict.
+
+``fcos.py`` owns the model end to end: the observed-metadata tensor binding
+(all fifteen FCOS outputs resolved by exact shape family), the lazy X5
+runtime adapter, and the ``FCOSTask`` stages (``preprocess`` → ``infer`` →
+``postprocess`` → ``predict``). Published asset identity/selection and
+rendering live in ``cli.py``.
+"""
 
 from __future__ import annotations
 
+import importlib
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping
 
@@ -12,6 +20,274 @@ import numpy as np
 
 from utils.py_utils.image import bgr_to_nv12_planes
 from utils.py_utils.quantization import apply_output_transform
+from utils.py_utils.runtime_meta import RuntimeMetadata, canonicalise_dtype
+from samples.vision.fcos.runtime.python.cli import (
+    BindingError,
+    FCOSContract,
+    ModelSelection,
+    _records,
+)
+
+# ======================================================================
+# Observed-metadata tensor contract: fifteen outputs bound by exact shape
+# family, quantization descriptors retained for post-processing.
+# ======================================================================
+
+_ALLOWED_OUTPUT_DTYPES = {"float16", "float32", "int8", "uint8", "int16", "int32"}
+
+
+@dataclass(frozen=True)
+class ModelBinding:
+    """Observed runtime metadata bound to one exact FCOS artifact."""
+
+    selection: ModelSelection
+    metadata: RuntimeMetadata
+    model_name: str
+    input_names: tuple[str, ...]
+    input_shapes: Mapping[str, tuple[int, ...]]
+    output_names: tuple[str, ...]
+    output_shapes: Mapping[str, tuple[int, ...]]
+    output_dtypes: Mapping[str, str]
+    output_quants: Mapping[str, Any]
+    cls_output_names: tuple[str, ...]
+    box_output_names: tuple[str, ...]
+    center_output_names: tuple[str, ...]
+
+    @property
+    def contract(self) -> FCOSContract:
+        """Return the static contract used for binding."""
+        return self.selection.contract
+
+    @property
+    def input_width(self) -> int:
+        return self.contract.input_width
+
+    @property
+    def input_height(self) -> int:
+        return self.contract.input_height
+
+    def validate_inputs(self, tensors: Mapping[str, np.ndarray]) -> None:
+        """Validate packed NV12 tensors without changing their identity."""
+        import numpy as np
+
+        if tuple(tensors) != self.input_names:
+            raise BindingError(f"Input names {tuple(tensors)!r} != {self.input_names!r}.")
+        value = tensors[self.input_names[0]]
+        if not isinstance(value, np.ndarray):
+            raise BindingError("Packed NV12 input must be a NumPy array.")
+        expected = self.input_height * self.input_width * 3 // 2
+        if value.ndim != 1 or value.size != expected or value.dtype != np.uint8:
+            raise BindingError(
+                f"Packed NV12 input must be uint8 shape ({expected},), got "
+                f"{value.shape} {value.dtype}."
+            )
+        if not value.flags.c_contiguous:
+            raise BindingError("Packed NV12 input must be contiguous.")
+
+    def validate_outputs(self, outputs: Mapping[str, Any]) -> dict[str, np.ndarray]:
+        """Validate raw output containers and return the same ndarray objects.
+
+        Matching is by exact name set, never by insertion order: the board
+        ``hbm_runtime`` ``run()`` mapping does not preserve
+        ``metadata.output_names`` order while the fifteen names themselves
+        are identical (X5 evidence 2026-09-24).  Missing and extra names are
+        both rejected, and every bound name is checked against the binding's
+        shape, dtype, and finiteness.  The mapping and each ndarray stay
+        caller-owned and identity-stable; roles are resolved only from the
+        binding's own name tuples, never by iterating the caller's dict.
+        """
+        import numpy as np
+
+        if not isinstance(outputs, Mapping):
+            raise BindingError("Runtime output must be a name→ndarray mapping.")
+        observed = set(outputs)
+        bound = set(self.output_names)
+        missing = sorted(bound - observed)
+        extra = sorted(observed - bound)
+        if missing or extra:
+            raise BindingError(
+                f"Output names must match the binding exactly; "
+                f"missing={missing}, unexpected={extra}."
+            )
+        for name in self.output_names:
+            value = outputs[name]
+            if not isinstance(value, np.ndarray):
+                raise BindingError(f"Output {name!r} must be a NumPy array.")
+            if tuple(value.shape) != self.output_shapes[name]:
+                raise BindingError(
+                    f"Output {name!r} shape {value.shape} != {self.output_shapes[name]}."
+                )
+            if canonicalise_dtype(value.dtype) != self.output_dtypes[name]:
+                raise BindingError(
+                    f"Output {name!r} dtype {value.dtype} != {self.output_dtypes[name]}."
+                )
+            if not np.all(np.isfinite(value.astype(np.float32, copy=False))):
+                raise BindingError(f"Output {name!r} contains non-finite values.")
+        # The raw output mapping and each ndarray remain caller-owned and
+        # identity-stable; validation is deliberately observational.
+        return outputs  # type: ignore[return-value]
+
+
+def bind_model(selection: ModelSelection, metadata: RuntimeMetadata | Mapping[str, Any]) -> ModelBinding:
+    """Bind all fifteen observed tensors to the selected FCOS contract.
+
+    Output names are not guessed.  Their roles are resolved only by the exact
+    source shape family for each stride and channel count; every output keeps
+    its runtime quantization descriptor for post-processing.
+    """
+    records = {record.asset_id: record for record in _records()}
+    if selection.asset_id not in records or records[selection.asset_id].variant != selection.variant:
+        raise BindingError("Selection does not match a current FCOS manifest asset.")
+    facts = metadata if isinstance(metadata, RuntimeMetadata) else RuntimeMetadata.from_mapping(metadata)
+    if tuple(facts.model_names) != (facts.model_name,):
+        raise BindingError("FCOS artifact must expose exactly one selected runtime model.")
+    if len(facts.input_names) != 1:
+        raise BindingError("FCOS X5 expects one packed input tensor.")
+    input_name = facts.input_names[0]
+    if tuple(facts.input_shapes.get(input_name, ())) != (1, 3, selection.contract.input_height, selection.contract.input_width):
+        raise BindingError("Runtime input shape does not match the selected FCOS variant.")
+    if canonicalise_dtype(facts.input_dtypes.get(input_name)) != "nv12":
+        raise BindingError("FCOS input metadata must report NV12.")
+    if len(facts.output_names) != 15 or set(facts.output_names) != set(facts.output_shapes):
+        raise BindingError("FCOS metadata must expose exactly fifteen named outputs.")
+    cls: list[str] = []
+    box: list[str] = []
+    center: list[str] = []
+    used: set[str] = set()
+    size = selection.contract.input_height
+    for names, channels in ((cls, 80), (box, 4), (center, 1)):
+        for stride in selection.contract.strides:
+            expected = (1, size // stride, size // stride, channels)
+            matches = [name for name in facts.output_names if name not in used and tuple(facts.output_shapes.get(name, ())) == expected]
+            if len(matches) != 1:
+                raise BindingError(f"Expected exactly one FCOS output with shape {expected}, found {matches}.")
+            name = matches[0]
+            used.add(name)
+            names.append(name)
+    if used != set(facts.output_names):
+        raise BindingError("FCOS metadata contains an unclassified output tensor.")
+    for name in facts.output_names:
+        dtype = canonicalise_dtype(facts.output_dtypes.get(name))
+        if dtype not in _ALLOWED_OUTPUT_DTYPES:
+            raise BindingError(f"Unsupported FCOS output dtype for {name!r}: {dtype!r}.")
+        if name not in facts.output_quants or not _is_quant_descriptor(facts.output_quants[name]):
+            raise BindingError(f"FCOS output {name!r} is missing its quantization descriptor.")
+    return ModelBinding(
+        selection=selection,
+        metadata=facts,
+        model_name=facts.model_name,
+        input_names=facts.input_names,
+        input_shapes=facts.input_shapes,
+        output_names=facts.output_names,
+        output_shapes=facts.output_shapes,
+        output_dtypes={name: canonicalise_dtype(facts.output_dtypes[name]) or "" for name in facts.output_names},
+        output_quants=facts.output_quants,
+        cls_output_names=tuple(cls),
+        box_output_names=tuple(box),
+        center_output_names=tuple(center),
+    )
+
+
+def _is_quant_descriptor(value: Any) -> bool:
+    """Accept only runtime-like descriptors that source dequant can inspect."""
+    return value is not None and all(hasattr(value, key) for key in ("quant_type", "scale", "zero_point"))
+
+
+# ======================================================================
+# Lazy X5 runtime adapter.
+# ======================================================================
+
+class RuntimeUnavailableError(RuntimeError):
+    """The board-only ``hbm_runtime`` package is unavailable."""
+
+
+class RuntimeModelRunner:
+    """Load the board SDK only after an execution call requests it."""
+
+    def __init__(self, selection: ModelSelection, *, runtime_factory: Callable[[str], Any] | None = None, runtime: Any = None):
+        self.selection = selection
+        self._factory = runtime_factory
+        self._runtime = runtime
+        self.binding: ModelBinding | None = None
+        self.metadata: RuntimeMetadata | None = None
+
+    @property
+    def loaded(self) -> bool:
+        """Whether runtime and binding metadata have both been loaded."""
+        return self._runtime is not None and self.binding is not None
+
+    def load(self) -> ModelBinding:
+        """Load, observe, and bind one exact selected model."""
+        if self.loaded:
+            return self.binding  # type: ignore[return-value]
+        if self._runtime is None:
+            if self._factory is None:
+                from utils.py_utils.platforms import require_execution_target
+                from utils.py_utils.assets import resolve_asset, verify_asset_file
+
+                require_execution_target(self.selection.target)
+                verify_asset_file(resolve_asset(self.selection.asset_id), self.selection.model_path)
+            factory = self._factory or _default_runtime_factory()
+            self._runtime = factory(str(self.selection.model_path))
+        try:
+            self.metadata = RuntimeMetadata.from_runtime(self._runtime)
+            self.binding = bind_model(self.selection, self.metadata)
+        except Exception:
+            self._runtime = None
+            self.metadata = None
+            self.binding = None
+            raise
+        return self.binding
+
+    def set_scheduling_params(self, *, priority: int | None = None, bpu_cores: list[int] | None = None) -> None:
+        """Apply source scheduling parameters after metadata binding."""
+        binding = self.load()
+        if priority is not None and not 0 <= priority <= 255:
+            raise ValueError("priority must be between 0 and 255.")
+        if bpu_cores is not None and any((not isinstance(core, int) or core < 0) for core in bpu_cores):
+            raise ValueError("bpu_cores must contain non-negative integers.")
+        if priority is None and bpu_cores is None:
+            return
+        setter = getattr(self._runtime, "set_scheduling_params", None)
+        if not callable(setter):
+            raise RuntimeError("hbm_runtime does not expose set_scheduling_params.")
+        kwargs = {}
+        if priority is not None:
+            kwargs["priority"] = {binding.model_name: priority}
+        if bpu_cores is not None:
+            kwargs["bpu_cores"] = {binding.model_name: bpu_cores}
+        setter(**kwargs)
+
+    def __call__(self, tensors: Mapping[str, np.ndarray]) -> dict[str, np.ndarray]:
+        """Run one validated packed input and return raw output arrays."""
+        binding = self.load()
+        binding.validate_inputs(tensors)
+        runtime = self._runtime
+        if runtime is None:
+            raise RuntimeError("Runtime has not been loaded.")
+        outputs = runtime.run({binding.model_name: dict(tensors)})
+        if not isinstance(outputs, Mapping):
+            raise BindingError("Runtime returned a non-mapping output.")
+        flat = outputs.get(binding.model_name, outputs)
+        if not isinstance(flat, Mapping):
+            raise BindingError("Runtime returned a non-mapping model output.")
+        return binding.validate_outputs(flat)
+
+
+def _default_runtime_factory() -> Callable[[str], Any]:
+    try:
+        module = importlib.import_module("hbm_runtime")
+    except ImportError as exc:
+        raise RuntimeUnavailableError("hbm_runtime is board-only; host help/list/dry-run do not need it.") from exc
+    factory = getattr(module, "HB_HBMRuntime", None)
+    if not callable(factory):
+        raise RuntimeUnavailableError("hbm_runtime does not expose HB_HBMRuntime.")
+    return factory
+
+
+# ======================================================================
+# The readable FCOS task stages.
+# ======================================================================
 
 
 @dataclass(frozen=True)
@@ -117,8 +393,6 @@ class FCOSTask:
                  conf_thres: float | None = None, iou_thres: float | None = None,
                  resize_type: int | None = None):
         if runner is None:
-            from samples.vision.fcos.runtime.python.model_binding import ModelSelection
-            from samples.vision.fcos.runtime.python.model_runner import RuntimeModelRunner
             if not isinstance(selection, ModelSelection):
                 raise TypeError("Pass a ModelSelection from resolve_selection, or inject runner=/binding=.")
             runner = RuntimeModelRunner(selection, runtime_factory=runtime_factory)
@@ -283,4 +557,4 @@ def _validate_context(context: ImageContext, binding) -> None:
         raise ValueError(f"Unsupported resize_type in ImageContext: {context.resize_type!r}.")
 
 
-__all__ = ["DetectionResult", "FCOSTask"]
+__all__ = ["DetectionResult", "FCOSTask", "ModelBinding", "RuntimeModelRunner", "RuntimeUnavailableError", "bind_model"]

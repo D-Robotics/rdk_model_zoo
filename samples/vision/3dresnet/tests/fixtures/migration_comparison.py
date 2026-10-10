@@ -2,12 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 """Test-only 3DResNet source-parity recipe (no code executes at import).
 
-The constants below hold the exact ``python3 - <<'PY'`` heredocs formerly
+The constants below hold the ``python3 - <<'PY'`` heredocs formerly
 published in ``samples/vision/3dresnet/evaluator/README.md`` and
-``README_cn.md`` at commit f773f3542f01. The customer-facing evaluator
-documents no longer carry the migration recipe; it is preserved here so the
-host suite still executes the identical source-vs-unified comparison under
-fake-SDK fixtures. The English and Chinese heredocs differ only in comments;
+``README_cn.md`` at commit f773f3542f01, preserving the original
+source-vs-unified comparison logic, fixtures and assertions unchanged. The
+customer-facing evaluator documents no longer carry the migration recipe;
+it is preserved here so the host suite still executes the identical
+comparison under fake-SDK fixtures. The one maintained deviation: the
+current-implementation ``importlib`` strings follow the consolidated layout
+(``labels`` module merged into ``cli``), so the recipe keeps loading the
+live unified API. The English and Chinese heredocs differ only in comments;
 both variants are kept explicitly rather than discarding one. Only
 ``test_readme_contract.py`` compiles and executes these strings.
 """
@@ -51,7 +55,7 @@ legacy_spec.loader.exec_module(legacy_mod)
 binding = importlib.import_module("samples.vision.3dresnet.runtime.python.cli")
 runner_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.classification")
 task_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.classification")
-labels_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.labels")
+labels_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.cli")
 selection = binding.resolve_selection(
     target, asset_id=asset_id, model_path=model_path)
 
@@ -154,7 +158,7 @@ legacy_spec.loader.exec_module(legacy_mod)
 binding = importlib.import_module("samples.vision.3dresnet.runtime.python.cli")
 runner_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.classification")
 task_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.classification")
-labels_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.labels")
+labels_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.cli")
 selection = binding.resolve_selection(
     target, asset_id=asset_id, model_path=model_path)
 

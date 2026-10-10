@@ -45,7 +45,7 @@ class YoloDetectImportSurfaceTests(unittest.TestCase):
 
         self.assertIs(detect_module.YoloDetect, YoloDetect)
         self.assertIs(detect_module.YoloDetectConfig, YoloDetectConfig)
-        from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
+        from samples.vision.ultralytics_yolo.runtime.python.detect import (
             DetectionResult,
         )
         self.assertIs(detect_module.DetectionResult, DetectionResult)
@@ -175,7 +175,7 @@ class YoloDetectProtocolErrorTests(unittest.TestCase):
         self.assertIn("cls_8", str(raised.exception))
 
     def test_ltrb_class_rejects_a_dfl_contract(self):
-        from samples.vision.ultralytics_yolo.runtime.python.yolo26_det import (
+        from samples.vision.ultralytics_yolo.runtime.python.detect import (
             YOLO26Detect,
             YOLO26DetectConfig,
         )
@@ -188,7 +188,7 @@ class YoloDetectProtocolErrorTests(unittest.TestCase):
             )
 
     def test_nms_free_class_rejects_an_nms_contract(self):
-        from samples.vision.ultralytics_yolo.runtime.python.yolo_v10detect import (
+        from samples.vision.ultralytics_yolo.runtime.python.detect import (
             YoloV10Detect,
             YoloV10DetectConfig,
         )
@@ -205,10 +205,10 @@ class YoloDispatchTests(unittest.TestCase):
     def test_dispatch_still_selects_the_protocol_specific_classes(self):
         import importlib
 
-        from yolo_platform import resolve_platform
+        from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
 
         from samples.vision.ultralytics_yolo.runtime.python.detect import YoloDetect
-        from yolo_dispatch import get_task_types
+        from samples.vision.ultralytics_yolo.runtime.python.cli import get_task_types
 
         dfl_cls, _ = get_task_types(resolve_platform("x5"), "yolo11", "detect")
         # Dispatch imports the readable detect.YoloDetect class directly.
@@ -217,11 +217,11 @@ class YoloDispatchTests(unittest.TestCase):
         ltrb_cls, _ = get_task_types(resolve_platform("s100"), "yolo26", "detect")
         self.assertIs(
             ltrb_cls,
-            getattr(importlib.import_module("samples.vision.ultralytics_yolo.runtime.python.yolo26_det"), "YOLO26Detect"))
+            getattr(importlib.import_module("samples.vision.ultralytics_yolo.runtime.python.detect"), "YOLO26Detect"))
 
         nms_free_cls, _ = get_task_types(resolve_platform("s100"), "yolov10", "detect")
         v10_cls = getattr(
-            importlib.import_module("samples.vision.ultralytics_yolo.runtime.python.yolo_v10detect"), "YoloV10Detect")
+            importlib.import_module("samples.vision.ultralytics_yolo.runtime.python.detect"), "YoloV10Detect")
         self.assertIs(nms_free_cls, v10_cls)
         # The NMS-free adapter reuses the readable DFL implementation.
         self.assertTrue(issubclass(nms_free_cls, YoloDetect))

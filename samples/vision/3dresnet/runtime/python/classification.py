@@ -6,8 +6,8 @@
 ``R3D18Classifier`` owns the fixed five-dimensional S100 contract end to end:
 construction loads the model through the sample's lazy runner, and each
 ``predict`` call runs preprocess -> infer -> postprocess visible in this
-file. Catalog selection and reporting live in ``cli.py``; Kinetics label
-decoding lives in ``labels.py``.
+file. Catalog selection, reporting, and Kinetics label decoding live in
+``cli.py``.
 """
 
 from __future__ import annotations

@@ -16,12 +16,12 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from utils.py_utils.assets import sha256_file, verify_asset_file
 from utils.py_utils.platforms import require_execution_target
-from samples.speech.asr.runtime.python.model_binding import (
+from samples.speech.asr.runtime.python.cli import (
     SAMPLE_DIR,
     list_available_assets,
     resolve_selection,
 )
-from samples.speech.asr.runtime.python.vocabulary import load_vocabulary, SHA256
+from samples.speech.asr.runtime.python.cli import load_vocabulary, SHA256
 
 
 def build_parser():

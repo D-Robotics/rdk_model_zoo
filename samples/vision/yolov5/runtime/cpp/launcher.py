@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[5]
 CPP = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-binding = importlib.import_module("samples.vision.yolov5.runtime.python.model_binding")
+binding = importlib.import_module("samples.vision.yolov5.runtime.python.cli")
 
 # The fixed X5 C++ source (runtime/cpp/main.cc MODEL_PATH) defaults to the
 # s-v2.0 artifact, while the unified Python runtime defaults to n-v7.0. Neither

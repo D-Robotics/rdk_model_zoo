@@ -5,7 +5,8 @@
 ``main.py`` stays a thin entry that constructs the task and calls ``predict``;
 everything presentational — the parser, the model-free listing/dry-run modes
 and the label/plot/report writing — lives here.  Nothing in this module runs
-inference or plots by itself.
+inference by itself, and matplotlib is imported lazily by the plot helpers so
+listing, dry-run and ``--no-plot`` runs never load a plotting stack.
 """
 from __future__ import annotations
 import argparse
@@ -111,6 +112,8 @@ def resolve_selection(
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build the CLI parser with target, asset and input options."""
+
     parser = argparse.ArgumentParser(description='PointNet chair part segmentation')
     parser.add_argument('--target', choices=('auto',) + SUPPORTED_TARGETS, default='auto')
     parser.add_argument('--asset-id')
@@ -143,6 +146,98 @@ def run_dry_run(selection) -> int:
     return 0
 
 
+def _plot_pyplot():
+    """Import matplotlib headlessly, returning ``pyplot``.
+
+    The backend is set to ``Agg`` before ``pyplot`` is imported, exactly as the
+    source plot helpers did; the import stays lazy so model-free CLI modes and
+    ``--no-plot`` runs never touch a plotting stack.
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    return plt
+
+
+def _create_point_cloud_axes(point_set, np, plt):
+    """Create a 3D axis with the source X/Z/Y axis ordering and equal extents."""
+    fig = plt.figure(dpi=192, figsize=(4, 4))
+    ax = fig.add_subplot(111, projection="3d")
+    x_axis = point_set[:, 0]
+    y_axis = point_set[:, 2]
+    z_axis = point_set[:, 1]
+
+    max_range = (
+        np.array(
+            [
+                x_axis.max() - x_axis.min(),
+                y_axis.max() - y_axis.min(),
+                z_axis.max() - z_axis.min(),
+            ]
+        ).max()
+        * 0.5
+    )
+    mid_x = (x_axis.max() + x_axis.min()) * 0.5
+    mid_y = (y_axis.max() + y_axis.min()) * 0.5
+    mid_z = (z_axis.max() + z_axis.min()) * 0.5
+    ax.set_xlim(mid_x - max_range, mid_x + max_range)
+    ax.set_ylim(mid_y - max_range, mid_y + max_range)
+    ax.set_zlim(mid_z - max_range, mid_z + max_range)
+
+    plt.tick_params(labelsize=5)
+    ax.set_xlabel("X", fontsize=10)
+    ax.set_ylabel("Y", fontsize=10)
+    ax.set_zlabel("Z", fontsize=10)
+    return ax
+
+
+def save_original_view(point_set, output_path: str) -> None:
+    """Save the normalized input point cloud visualization.
+
+    The plot preserves the source X/Z/Y axis ordering of the chair cloud.
+    """
+    import numpy as np
+    plt = _plot_pyplot()
+    x_axis = point_set[:, 0]
+    y_axis = point_set[:, 2]
+    z_axis = point_set[:, 1]
+    ax = _create_point_cloud_axes(point_set, np, plt)
+    ax.scatter3D(x_axis, y_axis, z_axis, s=5, cmap="jet", marker="o", label="chair")
+    ax.set_title("3D Point Cloud")
+    plt.legend(loc="upper right", fontsize=8)
+    plt.savefig(output_path, bbox_inches="tight", dpi=192)
+    plt.close()
+
+
+def save_segmentation_view(point_set, pred_labels, output_path: str) -> None:
+    """Save the predicted point cloud segmentation visualization.
+
+    Each chair part is drawn with its source label name; colors follow the
+    source jet colormap and do not encode part identity beyond the legend.
+    """
+    import numpy as np
+    plt = _plot_pyplot()
+    x_axis = point_set[:, 0]
+    y_axis = point_set[:, 2]
+    z_axis = point_set[:, 1]
+    ax = _create_point_cloud_axes(point_set, np, plt)
+    for idx, name in enumerate(PART_NAMES):
+        mask = pred_labels == idx
+        ax.scatter(
+            x_axis[mask],
+            y_axis[mask],
+            z_axis[mask],
+            s=5,
+            cmap="jet",
+            marker="o",
+            label=name,
+        )
+    ax.set_title("3D Segmentation Result")
+    plt.legend(loc="upper right", fontsize=8)
+    plt.savefig(output_path, bbox_inches="tight", dpi=192)
+    plt.close()
+
+
 def save_pointnet_evidence(out: Path, *, selection, binding, input_path, details,
                            no_plot: bool) -> None:
     """Write labels, optional views and the normalization-context report."""
@@ -154,9 +249,6 @@ def save_pointnet_evidence(out: Path, *, selection, binding, input_path, details
     out.mkdir(parents=True, exist_ok=True)
     np.save(out/'labels.npy', labels, allow_pickle=False)
     if not no_plot:
-        from samples.vision.pointnet.runtime.python.visualization import (
-            save_original_view, save_segmentation_view,
-        )
         normalized = prepared.tensors[binding.input_name][0].T
         save_original_view(normalized, str(out/'result_orig.png'))
         save_segmentation_view(normalized, labels, str(out/'result.png'))

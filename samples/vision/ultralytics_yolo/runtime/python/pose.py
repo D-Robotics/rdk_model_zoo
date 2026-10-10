@@ -11,29 +11,50 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""YOLO pose estimation: DFL (v8/11) and direct-LTRB YOLO26 keypoints.
 
-"""Shared pose stages with raw inference and explicit per-image geometry."""
+:class:`YoloPose` owns the readable pose stages (preprocess → infer →
+postprocess) for the DFL families; :class:`YOLO26Pose` selects the
+direct-LTRB COCO-17 contract on the same stages.  Below the classes lives
+the numeric pose decode — box/keypoint decoding, visibility sigmoid and
+inverse geometry.  The shared image transport and letterbox geometry come
+from ``detect.py``; the tensor contracts and runner come from
+``backend.py``.
+"""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Optional, Tuple
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import PlatformProfile
-from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
-    DFLPoseContract,
-    ModelSelection,
+
+import numpy as np
+from utils.py_utils import (
+    postprocess as post,
 )
-from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
-from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
+
+from samples.vision.ultralytics_yolo.runtime.python.backend import (
+    DFLPoseContract,
+    LTRBPoseContract,
+    ModelSelection,
+    build_runner,
+)
+from samples.vision.ultralytics_yolo.runtime.python.cli import PlatformProfile
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
+    ImageTransform,
     PreparedDetection,
-    _prepare_image,
     _forward_runner,
+    _normalise_grids,
+    _prepare_image,
     _semantic_outputs,
-    _transform_for_postprocess,
     _set_scheduling_params,
     _size_from_runner,
-    _normalise_grids,
+    _transform_for_postprocess,
+    inverse_boxes,
+    inverse_points,
+    sigmoid,
 )
-from samples.vision.ultralytics_yolo.runtime.python.pose_decode import decode_pose
 
+# ====================================================================
+# The pose task classes.
+# ====================================================================
 
 @dataclass
 class YoloPoseConfig:
@@ -202,3 +223,133 @@ class YoloPose:
         """Compatibility alias for :meth:`postprocess`."""
         return self.postprocess(
             outputs, ori_img_w, ori_img_h, score_thres, nms_thres, transform)
+
+
+@dataclass
+class YOLO26PoseConfig:
+    """Local artifact, target, confidence/NMS thresholds and resize strategy.
+
+    Library NMS default remains 0.65; CLI and legacy adapters explicitly provide
+    their platform defaults. Only strides 8/16/32 and COCO-17 are supported.
+    """
+
+    model_path: str
+    score_thres: float = 0.25
+    nms_thres: float = 0.65
+    resize_type: int = 1
+    strides: list = field(default_factory=lambda: [8, 16, 32])
+    platform: Optional[PlatformProfile] = None
+    input_shape: Optional[tuple] = None
+    contract: Optional[LTRBPoseContract] = None
+    anchor_sizes: Optional[list] = None
+
+
+class YOLO26Pose(YoloPose):
+    """Shared raw stages; five owned arrays with one sigmoid visibility."""
+
+    task = "pose"
+
+    def __init__(self, config: YOLO26PoseConfig, runner=None):
+        requested = config.contract or LTRBPoseContract(strides=config.strides)
+        effective = getattr(getattr(runner, "binding", None), "contract", requested)
+        for contract in (requested, effective):
+            if (
+                contract.task != "pose"
+                or getattr(contract, "box_encoding", None) != "ltrb"
+                or contract.nkpt != 17
+            ):
+                raise ValueError(
+                    "YOLO26Pose requires the direct-LTRB COCO-17 pose contract."
+                )
+        super().__init__(replace(config, contract=requested), runner=runner)
+
+# ====================================================================
+# Numeric decode: DFL/direct-LTRB pose and visibility; no model loading, SDK or drawing.
+# ====================================================================
+
+def decode_pose(outputs, contract, transform, score_thres, nms_thres):
+    """Return owned original-image pose arrays after named floating-output binding."""
+    score_thres, nms_thres = float(score_thres), float(nms_thres)
+    if not np.isfinite(score_thres) or not 0 < score_thres < 1:
+        raise ValueError("score_thres must be finite and strictly between 0 and 1.")
+    if not np.isfinite(nms_thres) or not 0 <= nms_thres <= 1:
+        raise ValueError("nms_thres must be finite and between 0 and 1.")
+    height, width = transform.model_size
+    direct = getattr(contract, "box_encoding", None) == "ltrb"
+    box_channels = 4 if direct else 4 * contract.reg_bins
+    required = {
+        f"{kind}_{stride}": (1, height // stride, width // stride, channels)
+        for stride in contract.strides
+        for kind, channels in [
+            ("cls", 1),
+            ("box", box_channels),
+            ("kpts", 3 * contract.nkpt),
+        ]
+    }
+    if set(outputs) != set(required):
+        raise ValueError("Pose requires exactly the declared semantic output roles.")
+    for name, shape in required.items():
+        value = np.asarray(outputs[name])
+        if (
+            value.shape != shape
+            or value.dtype.kind != "f"
+            or not np.isfinite(value).all()
+        ):
+            raise ValueError(
+                f"Semantic output {name!r} must be finite floating NHWC {shape}."
+            )
+    weights = (
+        None
+        if direct
+        else np.arange(contract.reg_bins, dtype=np.float32)[None, None, :]
+    )
+    boxes, scores, ids, points, logits = [], [], [], [], []
+    threshold = -np.log(1.0 / score_thres - 1.0)
+    for stride in contract.strides:
+        conf, classes, selected = post.filter_classification(
+            outputs[f"cls_{stride}"], threshold
+        )
+        if direct:
+            anchors = post.gen_anchor(height // stride)[selected]
+            offsets = outputs[f"box_{stride}"].reshape(-1, 4)[selected]
+            boxes.append(post.decode_ltrb_boxes(anchors, offsets, stride))
+            keypoints = outputs[f"kpts_{stride}"].reshape(-1, contract.nkpt, 3)[
+                selected
+            ]
+            xy = (keypoints[..., :2] + anchors[:, None, :]) * stride
+            visibility = keypoints[..., 2:3]
+        else:
+            boxes.append(
+                post.decode_boxes(
+                    outputs[f"box_{stride}"],
+                    selected,
+                    height // stride,
+                    stride,
+                    weights,
+                )
+            )
+            xy, visibility = post.decode_kpts(
+                outputs[f"kpts_{stride}"], selected, height // stride, stride
+            )
+        scores.append(conf)
+        ids.append(classes)
+        points.append(xy)
+        logits.append(visibility)
+    boxes, scores, ids, points, logits = [
+        np.concatenate(values, axis=0)
+        for values in (boxes, scores, ids, points, logits)
+    ]
+    keep = post.NMS(boxes, scores, ids, nms_thres)
+    xyxy = inverse_boxes(boxes[keep], transform)
+    points = inverse_points(points[keep], transform)
+    visibility = sigmoid(logits[keep])
+    return (
+        np.array(xyxy, dtype=np.float32, copy=True),
+        np.array(scores[keep], dtype=np.float32, copy=True),
+        np.array(ids[keep], dtype=np.int64, copy=True),
+        points,
+        np.array(visibility, dtype=np.float32, copy=True),
+    )
+
+__all__ = ["YOLO26Pose", "YOLO26PoseConfig", "YoloPose", "YoloPoseConfig",
+           "decode_pose"]

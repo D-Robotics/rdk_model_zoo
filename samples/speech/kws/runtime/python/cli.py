@@ -2,12 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 """Command-line surface for the KWS sample.
 
-Option declarations, the model-free listing/dry-run rendering and the
-probability report (records, file writing, printing) live here so
-``main.py`` can stay a thin, readable entry: parse arguments, construct the
-runner and the ``KWS`` task, call ``predict`` once, present the report.
-Nothing in this module imports NumPy, decodes audio or loads a board SDK, so
-host listing, help and dry-run stay light.
+Everything around selection and delivery lives here: the published asset
+identities and resolver, option declarations, the model-free listing/dry-run
+rendering, audio-file decoding and the probability report (records, file
+writing, printing), so ``main.py`` can stay a thin, readable entry: parse
+arguments, construct the runner and the ``KWS`` task, call ``predict`` once,
+present the report. Nothing in this module imports NumPy, decodes audio or
+loads a board SDK at import time, so host listing, help and dry-run stay
+light; the MDTC feature frontend, tensor binding and task stages live in
+``kws.py``.
 """
 
 from __future__ import annotations
@@ -17,12 +20,78 @@ from pathlib import Path
 import argparse
 import json
 
-from utils.py_utils.assets import sha256_file
+from dataclasses import dataclass
+
+from utils.py_utils.assets import Asset, list_assets, sha256_file
 from utils.py_utils.runtime_meta import metadata_evidence
-from samples.speech.kws.runtime.python.model_binding import (
-    SAMPLE_DIR,
-    list_available_assets,
-)
+
+# ======================================================================
+# Published S100 KWS identity and selection; no SDK import.
+# ======================================================================
+
+SAMPLE_DIR = Path(__file__).resolve().parents[2]
+ASSET_ID = "s:kws:s100/kws.hbm"
+
+
+@dataclass(frozen=True)
+class Selection:
+    target: str
+    asset: Asset
+    model_path: Path
+    explicit_model_path: bool = False
+
+
+def list_available_assets(target="auto"):
+    if target not in ("auto", "s100", "s100p", "s600", "x5"):
+        raise ValueError(f"Unknown target {target!r}")
+    if target not in ("auto", "s100"):
+        return ()
+    assets = tuple(list_assets("s", "kws"))
+    if len(assets) != 1 or assets[0].reference != ASSET_ID:
+        raise ValueError("Expected the exact S100 KWS publication")
+    return assets
+
+
+def resolve_selection(target="auto", *, asset_id=None, model_path=None):
+    if target == "auto":
+        from utils.py_utils.platforms import detect_target
+
+        target = detect_target()
+    if target != "s100":
+        raise ValueError("KWS has a published asset only for s100")
+    asset = list_available_assets("s100")[0]
+    if asset_id is not None and asset_id != ASSET_ID:
+        raise ValueError(f"Expected asset-id {ASSET_ID}")
+    if model_path is not None and asset_id is None:
+        raise ValueError(f"An external model path requires --asset-id {ASSET_ID}")
+    return Selection(
+        target,
+        asset,
+        (
+            Path(model_path).expanduser()
+            if model_path
+            else SAMPLE_DIR / "model" / asset.filename
+        ),
+        model_path is not None,
+    )
+
+# ======================================================================
+# File decoding outside KWS inference stages.
+# ======================================================================
+
+def load_audio(path):
+    import numpy as np
+    import soundfile as sf
+
+    path = Path(path).expanduser()
+    if not path.is_file():
+        raise ValueError(f"Missing audio file: {path}")
+    waveform, rate = sf.read(path, dtype="float32", always_2d=True)
+    if waveform.shape[1] != 1:
+        raise ValueError(
+            "Published KWS accepts mono audio; convert channels explicitly"
+        )
+    return np.array(waveform[:, 0], dtype=np.float32, copy=True), int(rate)
 
 
 def build_parser():

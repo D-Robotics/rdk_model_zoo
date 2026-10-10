@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from utils.py_utils.assets import sha256_file
-from samples.vision.yoloe.runtime.python.model_binding import resolve_selection
+from samples.vision.yoloe.runtime.python.cli import resolve_selection
 from samples.vision.yoloe.conversion.calibration import select_images, write_calibration
 from samples.vision.yoloe.conversion.contract import inspect_graph
 from samples.vision.yoloe.conversion.configuration import make_config

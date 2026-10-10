@@ -11,7 +11,7 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 
 from utils.py_utils.assets import sha256_file
-from samples.speech.paraformer.runtime.python.input_io import write_json
+from samples.speech.paraformer.runtime.python.cli import write_json
 from samples.speech.paraformer.conversion.configuration import STAGES, PREFIXES
 from samples.speech.paraformer.conversion.workspace import verify_prepared
 

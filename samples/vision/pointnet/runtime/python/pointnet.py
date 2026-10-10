@@ -5,8 +5,7 @@
 ``PointNetSegmenter`` owns the fixed per-point contract end to end:
 construction loads the model through the shared lazy transport, and each
 ``predict`` call runs preprocess -> infer -> postprocess visible in this
-file. Catalog selection and evidence writing live in ``cli.py``; plotting
-lives in ``visualization.py``.
+file. Catalog selection, evidence writing and plotting live in ``cli.py``.
 """
 from dataclasses import dataclass
 from pathlib import Path

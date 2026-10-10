@@ -4,10 +4,9 @@ import ast, sys, subprocess, tempfile, unittest, importlib.util, os
 from unittest.mock import patch
 import numpy as np
 S=Path(__file__).resolve().parents[1];R=S.parents[2]
-sys.path.insert(0,str(S/'runtime/python'))
-from yolo_platform import resolve_platform
-from yolo_input import Nv12InputAdapter, UnsupportedInputError
-from yolo_runtime import default_resize_type, default_nms_thres
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.backend import Nv12InputAdapter, UnsupportedInputError
+from samples.vision.ultralytics_yolo.runtime.python.cli import default_resize_type, default_nms_thres
 def command(path,*args):
     result=subprocess.run([sys.executable,str(path),*args],cwd=tempfile.gettempdir(),capture_output=True,text=True,timeout=25)
     return result
@@ -29,7 +28,7 @@ class Entrypoints(unittest.TestCase):
         self.assertTrue(constructed,'main() must visibly call Model(config)')
         self.assertTrue(predicts,'main() must call model.predict itself')
     def test_help_without_board(self):
-        paths=list((S/'evaluator').glob('eval_*.py'))+[S/'runtime/python/main.py',S/'runtime/python/yolo_download.py',S/'conversion/mapper.py',S/'conversion/export_monkey_patch.py']
+        paths=list((S/'evaluator').glob('eval_*.py'))+[S/'runtime/python/main.py',S/'model/download.py',S/'conversion/mapper.py',S/'conversion/export_monkey_patch.py']
         paths=[p for p in paths if p.name!='eval_common.py']
         for path in paths:
             with self.subTest(path=path):

@@ -133,7 +133,7 @@ def fixture_outputs(size=512):
 
 class FcosContractTests(unittest.TestCase):
     def test_three_manifest_variants_have_exact_asset_identity(self):
-        from samples.vision.fcos.runtime.python.model_binding import list_available_assets
+        from samples.vision.fcos.runtime.python.cli import list_available_assets
 
         assets = list_available_assets("x5")
         self.assertEqual([asset.variant for asset in assets], ["efficientnetb0", "efficientnetb2", "efficientnetb3"])
@@ -147,7 +147,8 @@ class FcosContractTests(unittest.TestCase):
         )
 
     def test_each_variant_binds_five_by_three_output_families(self):
-        from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python.fcos import bind_model
 
         for variant in ("efficientnetb0", "efficientnetb2", "efficientnetb3"):
             with self.subTest(variant=variant):
@@ -159,7 +160,8 @@ class FcosContractTests(unittest.TestCase):
                 self.assertEqual(binding.contract.output_transform, "dequant")
 
     def test_binding_rejects_missing_or_wrong_variant_metadata(self):
-        from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python.fcos import bind_model
 
         with self.assertRaises(ValueError):
             bind_model(resolve_selection("x5", variant="efficientnetb0"), metadata_for("efficientnetb0", bad=True))
@@ -167,7 +169,7 @@ class FcosContractTests(unittest.TestCase):
             bind_model(resolve_selection("x5", variant="efficientnetb2"), metadata_for("efficientnetb0"))
 
     def test_external_model_path_requires_exact_asset_reference(self):
-        from samples.vision.fcos.runtime.python.model_binding import resolve_selection
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
 
         with self.assertRaises(ValueError):
             resolve_selection("x5", model_path="/tmp/fcos.bin")
@@ -179,7 +181,8 @@ class FcosContractTests(unittest.TestCase):
         self.assertEqual(selection.model_path, Path("/tmp/private-fcos.bin"))
 
     def test_real_source_post_process_matches_unified_for_quantized_fixture(self):
-        from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python.fcos import bind_model
         from samples.vision.fcos.runtime.python.fcos import FCOSTask
 
         selection = resolve_selection("x5", variant="efficientnetb0")
@@ -211,7 +214,8 @@ class FcosContractTests(unittest.TestCase):
 
     def test_forward_preserves_raw_objects_and_predict_equals_explicit_stages(self):
         from samples.vision.fcos.runtime.python.fcos import FCOSTask
-        from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python.fcos import bind_model
 
         binding = bind_model(resolve_selection("x5"), metadata_for("efficientnetb0"))
         raw = fixture_outputs()
@@ -235,7 +239,8 @@ class FcosContractTests(unittest.TestCase):
 
     def test_letterbox_post_process_restores_non_square_coordinates_from_context(self):
         from samples.vision.fcos.runtime.python.fcos import FCOSTask
-        from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python.fcos import bind_model
 
         binding = bind_model(resolve_selection("x5"), metadata_for("efficientnetb0"))
         raw = {name: value.copy() for name, value in fixture_outputs().items()}
@@ -255,7 +260,8 @@ class FcosContractTests(unittest.TestCase):
 
     def test_float_outputs_with_scale_follow_source_dequant_contract(self):
         from samples.vision.fcos.runtime.python.fcos import FCOSTask
-        from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python.fcos import bind_model
 
         binding = bind_model(resolve_selection("x5"), metadata_for("efficientnetb0", dtype="float32"))
         raw = {name: value.astype(np.float32) for name, value in fixture_outputs().items()}
@@ -286,7 +292,8 @@ class FcosContractTests(unittest.TestCase):
         np.testing.assert_array_equal(source(value, descriptor), value)
 
     def test_binding_rejects_unknown_quant_descriptor(self):
-        from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python.fcos import bind_model
 
         metadata = metadata_for("efficientnetb0")
         metadata["output_quants"]["cls_8"] = None
@@ -295,7 +302,8 @@ class FcosContractTests(unittest.TestCase):
 
     def test_binding_rejects_multi_model_and_non_array_outputs(self):
         from samples.vision.fcos.runtime.python.fcos import FCOSTask
-        from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python.fcos import bind_model
 
         metadata = metadata_for("efficientnetb0")
         metadata["model_names"] = (metadata["model_name"], "unrelated_model")
@@ -310,7 +318,8 @@ class FcosContractTests(unittest.TestCase):
 
     def test_post_process_rejects_context_with_wrong_geometry(self):
         from samples.vision.fcos.runtime.python.fcos import FCOSTask
-        from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python.fcos import bind_model
         from samples.vision.fcos.runtime.python.fcos import ImageContext
 
         binding = bind_model(resolve_selection("x5"), metadata_for("efficientnetb0"))
@@ -334,7 +343,8 @@ class FcosContractTests(unittest.TestCase):
     def test_evaluator_writes_complete_success_and_difference_evidence(self):
         from samples.vision.fcos.evaluator.compare import run_comparison
         from samples.vision.fcos.runtime.python.fcos import FCOSTask
-        from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python.fcos import bind_model
         from utils.py_utils.runtime_meta import RuntimeMetadata
 
         metadata = metadata_for("efficientnetb0")
@@ -438,7 +448,8 @@ class FcosContractTests(unittest.TestCase):
         """The old asdict() metadata snapshot raised TypeError on the real board."""
         from samples.vision.fcos.evaluator.compare import run_comparison
         from samples.vision.fcos.runtime.python.fcos import FCOSTask
-        from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python.fcos import bind_model
         from utils.py_utils.runtime_meta import RuntimeMetadata
 
         metadata = metadata_for("efficientnetb0")
@@ -509,8 +520,8 @@ class FcosContractTests(unittest.TestCase):
                 self.assertEqual(quant["axis"], 0)
 
     def test_runner_binds_injected_runtime_metadata_and_returns_raw_output(self):
-        from samples.vision.fcos.runtime.python.model_binding import resolve_selection
-        from samples.vision.fcos.runtime.python.model_runner import RuntimeModelRunner
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python.fcos import RuntimeModelRunner
 
         values = metadata_for("efficientnetb0")
         raw = fixture_outputs()
@@ -536,8 +547,8 @@ class FcosContractTests(unittest.TestCase):
         self.assertIs(outputs["cls_8"], raw["cls_8"])
 
     def test_execution_identity_gate_precedes_default_sdk_factory(self):
-        from samples.vision.fcos.runtime.python.model_binding import resolve_selection
-        from samples.vision.fcos.runtime.python import model_runner
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python import fcos as model_runner
 
         runner = model_runner.RuntimeModelRunner(resolve_selection("x5"))
         with patch("utils.py_utils.platforms.require_execution_target", side_effect=ValueError("identity")), patch.object(model_runner, "_default_runtime_factory") as factory:
@@ -546,8 +557,8 @@ class FcosContractTests(unittest.TestCase):
             factory.assert_not_called()
 
     def test_execution_requires_existing_selected_model_before_sdk_factory(self):
-        from samples.vision.fcos.runtime.python.model_binding import resolve_selection
-        from samples.vision.fcos.runtime.python import model_runner
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python import fcos as model_runner
 
         runner = model_runner.RuntimeModelRunner(resolve_selection("x5"))
         with patch("utils.py_utils.platforms.require_execution_target", return_value="x5"), patch.object(model_runner, "_default_runtime_factory") as factory:
@@ -557,7 +568,8 @@ class FcosContractTests(unittest.TestCase):
 
     def test_context_a_b_a_is_frozen_and_not_shared(self):
         from samples.vision.fcos.runtime.python.fcos import FCOSTask
-        from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python.fcos import bind_model
 
         binding = bind_model(resolve_selection("x5"), metadata_for("efficientnetb0"))
         task = FCOSTask(runner=lambda _: fixture_outputs(), binding=binding)
@@ -571,7 +583,8 @@ class FcosContractTests(unittest.TestCase):
 
     def test_letterbox_predict_and_explicit_stages_are_a_b_a_equivalent(self):
         from samples.vision.fcos.runtime.python.fcos import FCOSTask
-        from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python.fcos import bind_model
 
         binding = bind_model(resolve_selection("x5"), metadata_for("efficientnetb0"))
         raw = fixture_outputs()
@@ -616,7 +629,8 @@ class ReadableInterfaceTests(unittest.TestCase):
 
     def task(self, **kwargs):
         from samples.vision.fcos.runtime.python.fcos import FCOSTask
-        from samples.vision.fcos.runtime.python.model_binding import bind_model, resolve_selection
+        from samples.vision.fcos.runtime.python.cli import resolve_selection
+        from samples.vision.fcos.runtime.python.fcos import bind_model
 
         binding = bind_model(resolve_selection("x5"), metadata_for("efficientnetb0"))
         raw = fixture_outputs()

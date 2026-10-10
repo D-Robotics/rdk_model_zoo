@@ -13,7 +13,7 @@ import cv2
 from samples.vision.yoloe.conversion.prepare import prepare_conversion
 from samples.vision.yoloe.conversion.calibration import calibration_tensor
 from utils.py_utils.yoloe26_geometry import prepare_rgb
-from samples.vision.ultralytics_yolo.runtime.python.geometry import (
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
     resize_with_transform,
 )
 
@@ -95,7 +95,7 @@ class CalibrationTests(unittest.TestCase):
 class ConversionTests(unittest.TestCase):
     def test_x5_large_recipe_keeps_both_source_attention_overrides(self):
         from samples.vision.yoloe.conversion.configuration import make_config
-        from samples.vision.yoloe.runtime.python.model_binding import resolve_selection
+        from samples.vision.yoloe.runtime.python.cli import resolve_selection
 
         names = [f"/model.10/m/m.{i}/attn/Softmax" for i in (0, 1)]
         for variant, expected in [
@@ -242,7 +242,7 @@ class ConversionTests(unittest.TestCase):
         self.assertIsNone(status["compiler"])
 
     def test_all_fourteen_target_variants_produce_reviewable_configs(self):
-        from samples.vision.yoloe.runtime.python.model_binding import list_models
+        from samples.vision.yoloe.runtime.python.cli import list_models
         from samples.vision.yoloe.conversion.configuration import MARCHES
         import yaml
 

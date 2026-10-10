@@ -5,8 +5,7 @@ from unittest.mock import patch, MagicMock
 import numpy as np
 
 S = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(S / 'runtime/python'))
-from yolo_platform import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
 
 
 class RuntimeContract(unittest.TestCase):
@@ -25,12 +24,12 @@ class RuntimeContract(unittest.TestCase):
     def test_every_task_binds_platform_input(self):
         for platform in ('x5', 's100', 's100p', 's600'):
             profile = resolve_platform(platform)
-            for module, name, count in [('yolo_cls', 'YoloCls', 1),
+            for module, name, count in [('classify', 'YoloCls', 1),
                                          ('detect', 'YoloDetect', 6),
-                                         ('yolo_seg', 'YoloSeg', 10),
-                                         ('yolo_pose', 'YoloPose', 9),
-                                         ('yolo_v10detect', 'YoloV10Detect', 6)]:
-                if platform == 'x5' and module == 'yolo_v10detect':
+                                         ('segment', 'YoloSeg', 10),
+                                         ('pose', 'YoloPose', 9),
+                                         ('detect', 'YoloV10Detect', 6)]:
+                if platform == 'x5' and name == 'YoloV10Detect':
                     continue
                 with self.subTest(platform=platform, task=module):
                     names = ['image'] if profile.is_packed_input else ['y', 'uv']
@@ -41,7 +40,7 @@ class RuntimeContract(unittest.TestCase):
                     fake = types.SimpleNamespace(HB_HBMRuntime=lambda _: runtime)
                     m = importlib.import_module('samples.vision.ultralytics_yolo.runtime.python.' + module)
                     cfg = getattr(m, name + 'Config')(model_path='stub', platform=profile)
-                    if module in ('detect', 'yolo_seg', 'yolo_pose', 'yolo_cls', 'yolo_v10detect'):
+                    if name in ('YoloDetect', 'YoloSeg', 'YoloPose', 'YoloCls', 'YoloV10Detect'):
                         # The new detector requires the descriptors provided
                         # by the real SDK, not the former names-only fixture.
                         runtime.input_dtypes = {'m': {n: np.dtype(np.uint8) for n in names}}
@@ -50,16 +49,16 @@ class RuntimeContract(unittest.TestCase):
                             for i, grid in enumerate((80, 40, 20))
                             for j, channels in enumerate((80, 64))}}
                         runtime.output_dtypes = {'m': {str(i): np.dtype(np.float32) for i in range(count)}}
-                        from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
-                        if module == 'yolo_cls':
-                            from samples.vision.ultralytics_yolo.runtime.python.model_binding import ClassificationContract, ModelSelection
+                        from samples.vision.ultralytics_yolo.runtime.python.backend import build_runner
+                        if name == 'YoloCls':
+                            from samples.vision.ultralytics_yolo.runtime.python.backend import ClassificationContract, ModelSelection
                             runtime.output_shapes = {'m': {'0': (1,1000,1,1)}}
                             runner = build_runner(ModelSelection('stub',target=platform,task='classify',contract=ClassificationContract()),runtime_loader=lambda:fake)
-                        elif module == 'yolo_v10detect':
-                            from samples.vision.ultralytics_yolo.runtime.python.model_binding import DFLDetectionContract, ModelSelection
+                        elif name == 'YoloV10Detect':
+                            from samples.vision.ultralytics_yolo.runtime.python.backend import DFLDetectionContract, ModelSelection
                             runner=build_runner(ModelSelection('stub',target=platform,contract=DFLDetectionContract(nms='none')),runtime_loader=lambda:fake)
-                        elif module == 'yolo_seg':
-                            from samples.vision.ultralytics_yolo.runtime.python.model_binding import DFLSegmentationContract, ModelSelection
+                        elif name == 'YoloSeg':
+                            from samples.vision.ultralytics_yolo.runtime.python.backend import DFLSegmentationContract, ModelSelection
                             runtime.output_shapes = {'m': {
                                 str(3*i+j): (1, grid, grid, channels)
                                 for i, grid in enumerate((80,40,20))
@@ -67,8 +66,8 @@ class RuntimeContract(unittest.TestCase):
                             runtime.output_shapes['m']['9'] = (1,160,160,32)
                             selection = ModelSelection('stub',target=platform,task='segment',contract=DFLSegmentationContract())
                             runner = build_runner(selection,runtime_loader=lambda:fake)
-                        elif module == 'yolo_pose':
-                            from samples.vision.ultralytics_yolo.runtime.python.model_binding import DFLPoseContract, ModelSelection
+                        elif name == 'YoloPose':
+                            from samples.vision.ultralytics_yolo.runtime.python.backend import DFLPoseContract, ModelSelection
                             runtime.output_shapes = {'m': {
                                 str(3*i+j): (1, grid, grid, channels)
                                 for i,grid in enumerate((80,40,20))
@@ -79,7 +78,7 @@ class RuntimeContract(unittest.TestCase):
                             runner = build_runner(cfg, runtime_loader=lambda: fake)
                         model = getattr(m, name)(cfg, runner=runner)
                     else:
-                        with patch('yolo_runtime.load_hbm_runtime', return_value=fake):
+                        with patch('samples.vision.ultralytics_yolo.runtime.python.backend.load_hbm_runtime', return_value=fake):
                             model = getattr(m, name)(cfg)
                     tensors = model.pre_process(np.zeros((24, 36, 3), np.uint8))['m']
                     self.assertEqual(list(tensors), names)

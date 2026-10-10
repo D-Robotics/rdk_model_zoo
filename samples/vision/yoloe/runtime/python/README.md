@@ -12,14 +12,10 @@ Run YOLOE-11/26 prompt-free detection and instance segmentation. `YOLOE` initial
 
 ```text
 python/
-├── cli.py  # Arguments, model selection and result presentation
-├── config.py  # Model configuration
+├── cli.py  # Published selection, configuration, arguments and result rendering
 ├── main.py  # Command-line entry: construct the model and call predict
-├── model_binding.py  # Model selection and physical tensor contracts
-├── model_runner.py  # Runtime loading and raw tensor execution
 ├── run.sh  # Locate the Python entry and forward arguments
-├── visualization.py  # Image results and overlays
-└── yoloe.py  # Model stages and prediction
+└── yoloe.py  # Model stages, tensor binding, runner and prediction
 ```
 
 <a id="environment"></a>
@@ -77,7 +73,7 @@ X5 11 clamps confidence to `[1e-6,1-1e-6]` before logit conversion; S11/26 use t
 
 `Result.boxes` is float32 `[N,4]` continuous original-image xyxy pixels, clipped to `[0,W]/[0,H]`; `scores` is float32 `[N]` sigmoid probability and `class_ids` is int64 `[N]` fixed-vocabulary ID, not COCO category ID. X5 `masks` is bool `[N,H,W]` (`mask_layout="full"`). S returns N per-detection ROI arrays (`mask_layout="roi"`): S11 uint8 sliced by integer-truncated box bounds with a degenerate axis kept at one pixel (Lanczos output as-is, so isolated pixels can read 2; nonzero is foreground), S26 bool. Returned results own their memory.
 
-The CLI saves a colored overlay (default `test_data/result.jpg`) and prints a JSON report with the keys `target`, `variant`, `count`, `class_ids`, `scores`, `mask_layout` and `image_saved` (the path of the saved overlay image). `Result.boxes` is part of the Python `predict` API; the CLI JSON does not include boxes, and no separate mask image file is written. The CLI entry is organized as: `main.py` resolves the selection, builds the `Config`, constructs `YOLOE` with its runner, calls `predict` once and renders the result; option declarations, the `--list-models`/`--dry-run` modes and the JSON result report live in `cli.py`. The segmentation implementation lives in `yoloe.py` with its decode/IO modules.
+The CLI saves a colored overlay (default `test_data/result.jpg`) and prints a JSON report with the keys `target`, `variant`, `count`, `class_ids`, `scores`, `mask_layout` and `image_saved` (the path of the saved overlay image). `Result.boxes` is part of the Python `predict` API; the CLI JSON does not include boxes, and no separate mask image file is written. The CLI entry is organized as: `main.py` resolves the selection, builds the `Config`, constructs `YOLOE` (the model loads its own runner), calls `predict` once and renders the result; `cli.py` owns the options, published-asset selection/listing, the `--list-models`/`--dry-run` modes, input loading and the JSON report/overlay rendering. All model stages — binding, runner, decode — live in `yoloe.py`.
 
 <a id="integration-example"></a>
 ## Integration Example
@@ -86,8 +82,8 @@ Prerequisites: a Python 3.10+ environment and the 11s model explicitly prepared 
 
 ```python
 # cwd: repository root; on X5 after the explicit model/download.sh step
-from samples.vision.yoloe.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.vision.yoloe.runtime.python.visualization import load_inputs
+from samples.vision.yoloe.runtime.python.cli import resolve_selection, SAMPLE_DIR
+from samples.vision.yoloe.runtime.python.cli import load_inputs
 from samples.vision.yoloe.runtime.python.yoloe import YOLOE, Config
 selection = resolve_selection("x5", variant="11s")
 image, labels = load_inputs(SAMPLE_DIR / "test_data/office_desk.jpg", SAMPLE_DIR / "test_data/classes.names")
@@ -96,7 +92,7 @@ result = task.predict(image)
 print(result.boxes.shape, result.mask_layout)
 ```
 
-Configuration and validation live in `config.py`, shared with the native launcher without importing image or SDK modules. `from...yoloe import Config` is also supported.
+Configuration and validation live in `cli.py`, shared with the native launcher without importing image or SDK modules. `from...yoloe import Config` is also supported.
 
 <a id="stage-io"></a>
 ## Three-Stage I/O

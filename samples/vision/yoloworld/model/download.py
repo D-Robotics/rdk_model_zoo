@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path: sys.path.insert(0, str(ROOT))
 from utils.py_utils.assets import download_asset
-from samples.vision.yoloworld.runtime.python.model_binding import list_available_assets
+from samples.vision.yoloworld.runtime.python.cli import list_available_assets
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent
 
 def download_target(target='x5', output_dir=None):

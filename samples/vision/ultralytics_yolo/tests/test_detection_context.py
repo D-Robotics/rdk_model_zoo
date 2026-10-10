@@ -9,7 +9,7 @@ from samples.vision.ultralytics_yolo.runtime.python.detect import (
     YoloDetect,
     YoloDetectConfig,
 )
-from samples.vision.ultralytics_yolo.runtime.python.yolo26_det import (
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
     YOLO26Detect,
     YOLO26DetectConfig,
 )

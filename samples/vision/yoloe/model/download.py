@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from utils.py_utils.assets import download_asset
-from samples.vision.yoloe.runtime.python.model_binding import resolve_selection
+from samples.vision.yoloe.runtime.python.cli import resolve_selection
 
 
 def build_parser():

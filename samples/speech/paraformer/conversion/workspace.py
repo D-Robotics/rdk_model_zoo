@@ -10,7 +10,7 @@ import yaml
 from utils.py_utils.assets import sha256_file
 from samples.speech.paraformer.conversion.calibration import CALIBRATION, checked_tensor
 from samples.speech.paraformer.conversion.configuration import STAGES, make_config
-from samples.speech.paraformer.runtime.python.model_binding import LOCAL_DIGESTS
+from samples.speech.paraformer.runtime.python.cli import LOCAL_DIGESTS
 
 
 def verify_prepared(root):

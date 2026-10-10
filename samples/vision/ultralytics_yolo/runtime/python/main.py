@@ -17,9 +17,10 @@
 This file stays deliberately small: parse the arguments, resolve the plan,
 construct the selected task model, call ``predict``, present the result —
 the construct/predict/presentation sequence runs inline in ``main()``.
-Option declarations, the model-free listing/dry-run/download-preparation
-modes and result presentation live in ``yolo_cli.py``; each task's readable
-flow lives in its task module (``detect.py`` for DFL detection).
+Option declarations, the platform/asset registry, task dispatch, the
+model-free listing/dry-run/download-preparation modes and result
+presentation live in ``cli.py``; each task's readable flow lives in its task
+module (``detect.py`` for the DFL/LTRB/v10 detection families).
 
 One script drives every supported Ultralytics YOLO task on every supported
 platform. The platform decides the artifact format, the download location,
@@ -42,12 +43,8 @@ import os
 import sys
 from pathlib import Path
 
-# Make the sample-local helper modules importable regardless of the working
-# directory the sample is started from.
-_PYTHON_DIR = os.path.dirname(os.path.abspath(__file__))
-if _PYTHON_DIR not in sys.path:
-    sys.path.insert(0, _PYTHON_DIR)
-
+# Make the sample importable by repository package name regardless of the
+# working directory the sample is started from.
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
 if not (_REPOSITORY_ROOT / 'docs/release/platforms.json').is_file():
     raise RuntimeError('This entry requires a complete Model Zoo source checkout.')
@@ -55,18 +52,20 @@ if str(_REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPOSITORY_ROOT))
 from utils.py_utils.platforms import resolve_target, require_execution_target
 
-from yolo_assets import UnsupportedAssetError  # noqa: E402
-from yolo_platform import resolve_platform  # noqa: E402
-from yolo_runtime import BoardRuntimeUnavailableError  # noqa: E402
-import yolo_cli  # noqa: E402
-from yolo_cli import (  # noqa: E402 - import paths kept for existing callers
+from samples.vision.ultralytics_yolo.runtime.python.backend import (
+    BoardRuntimeUnavailableError,
+)
+from samples.vision.ultralytics_yolo.runtime.python.cli import (
+    UnsupportedAssetError,
     build_parser,  # the contract checker imports it from main
     describe_plan,
     ensure_model,
     load_labels,
+    prepare_runtime_model,
     present_result,
     print_dry_run,
     print_model_listing,
+    resolve_platform,
     validate_label_count,
 )
 
@@ -131,7 +130,6 @@ def main(argv=None) -> int:
         # The readable flow itself: construct the dispatched task model,
         # run one prediction, present the result.
         from utils.py_utils import file_io, inspect as inspect_utils
-        from yolo_dispatch import prepare_runtime_model
 
         Model, config = prepare_runtime_model(profile, args)
         model = Model(config)

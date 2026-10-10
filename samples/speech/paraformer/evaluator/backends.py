@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import numpy as np
 
-from samples.speech.paraformer.runtime.python.model_binding import bind_stage_io
+from samples.speech.paraformer.runtime.python.pipeline import bind_stage_io
 from samples.speech.paraformer.runtime.python.pipeline import TensorNames
 
 

@@ -30,8 +30,12 @@ def previous(model):
     spec = importlib.util.spec_from_file_location("obb_previous_fixture", FIXTURE)
     module = importlib.util.module_from_spec(spec)
     runtime_path = str(FIXTURE.parents[2] / "runtime/python")
+    # The frozen fixture keeps its historical flat imports; the consolidated
+    # package modules are exposed under those names for its execution only.
+    from samples.vision.ultralytics_yolo.runtime.python import cli
     with patch.object(sys, "path", [runtime_path, *sys.path]), patch.dict(
         sys.modules, {"yolo26_common": stub, spec.name: module,
+                      "yolo_platform": cli,
                       "rdk_yolo_utils": common_utils,
                       "rdk_yolo_utils.preprocess": common_preprocess,
                       "rdk_yolo_utils.postprocess": common_postprocess}
@@ -91,7 +95,7 @@ class OBBReference(unittest.TestCase):
                         )
 
     def test_invalid_angle_controls_and_target_conflict(self):
-        from samples.vision.ultralytics_yolo.runtime.python.yolo26_obb import (
+        from samples.vision.ultralytics_yolo.runtime.python.obb import (
             YOLO26OBB,
             YOLO26OBBConfig,
         )

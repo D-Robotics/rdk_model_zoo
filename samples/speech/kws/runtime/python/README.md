@@ -12,12 +12,9 @@ Detect the wake word on S100. `KWS.from_model` initializes the runtime; `predict
 
 ```text
 python/
-├── audio_io.py  # Audio file reading
-├── cli.py  # Arguments, model selection and result presentation
-├── frontend.py  # Audio feature preparation
-├── kws.py  # Model stages and prediction
+├── cli.py  # Published selection, arguments, audio loading and reports
+├── kws.py  # MDTC frontend, tensor binding, runner and model stages
 ├── main.py  # Command-line entry: construct the model and call predict
-├── model_binding.py  # Model selection and physical tensor contracts
 └── run.sh  # Locate the Python entry and forward arguments
 ```
 
@@ -87,8 +84,8 @@ The CLI writes and prints `result.json`: score/decision, threshold rule, selecte
 On S100 with a prepared model and frontend dependencies, this example reads the bundled audio, loads the runner and calls all three stages.
 
 ```python
-from samples.speech.kws.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.speech.kws.runtime.python.audio_io import load_audio
+from samples.speech.kws.runtime.python.cli import resolve_selection, SAMPLE_DIR
+from samples.speech.kws.runtime.python.cli import load_audio
 from samples.speech.kws.runtime.python.kws import KWS
 selection = resolve_selection("s100")
 audio, sample_rate = load_audio(SAMPLE_DIR / "test_data/sample.wav")
@@ -106,7 +103,7 @@ print(score)
 
 `infer` performs one shared runner call and returns raw output; it has no sigmoid, dequantization, file access or reduction. The runner validates names/shapes/dtypes/finite values and copies SDK output so it survives later calls. `postprocess` validates the bound output, applies shared SCALE conversion only to integer data, requires probabilities in [0,1] and returns their maximum. Float output is not transformed even if metadata carries a vestigial quant descriptor. No additional sigmoid is applied.
 
-`predict` composes the stages and caches no last-image/audio state. The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names. One instance is intended for serial use; SDK concurrency is not promised. `frontend.py` prepares features; `kws.py` owns scoring and runtime initialization; `audio_io.py` reads files and `cli.py` writes reports.
+`predict` composes the stages and caches no last-image/audio state. The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names. One instance is intended for serial use; SDK concurrency is not promised. `kws.py` prepares features (fixed MDTC frontend), owns scoring and runtime initialization; `cli.py` reads audio files, resolves selection and writes reports.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

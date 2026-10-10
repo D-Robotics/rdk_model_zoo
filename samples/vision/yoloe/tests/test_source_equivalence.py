@@ -11,8 +11,8 @@ from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # no
 from unittest.mock import patch
 import numpy as np
 from test_runtime import fake_runtime, ROOT
-from samples.vision.yoloe.runtime.python.model_binding import resolve_selection
-from samples.vision.yoloe.runtime.python.model_runner import build_runner
+from samples.vision.yoloe.runtime.python.cli import resolve_selection
+from samples.vision.yoloe.runtime.python.yoloe import build_runner
 from samples.vision.yoloe.runtime.python.yoloe import YOLOE, Config
 
 

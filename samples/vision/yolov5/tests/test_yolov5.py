@@ -7,7 +7,8 @@ from pathlib import Path
 from unittest.mock import patch
 import numpy as np
 from utils.py_utils.runtime_meta import RuntimeMetadata, MetadataMismatchError
-from samples.vision.yolov5.runtime.python.model_binding import resolve_selection, bind_model, list_available_assets
+from samples.vision.yolov5.runtime.python.cli import resolve_selection, list_available_assets
+from samples.vision.yolov5.runtime.python.detection import bind_model
 from samples.vision.yolov5.runtime.python.detection import YOLOv5Task
 from utils.py_utils.tests.legacy_platforms import legacy_module_namespace, legacy_path, legacy_tree  # noqa: E402
 
@@ -154,7 +155,7 @@ class YOLOv5Tests(unittest.TestCase):
         task,runtime,b=self.make_task('s100');p=task.pre_process(np.zeros((45,71,3),np.uint8))
         # Keep only three non-underflow detections; source `or` bug swallowed zero NMS.
         raw=task.forward(p.tensors)
-        with patch('samples.vision.yolov5.runtime.python.decode.classwise_nms',return_value=np.array([],dtype=int)) as nms:
+        with patch('samples.vision.yolov5.runtime.python.detection.classwise_nms',return_value=np.array([],dtype=int)) as nms:
             task.post_process(raw,p.context,score_thres=0,nms_thres=0)
             self.assertEqual(nms.call_args.args[-1],0)
 

@@ -1,23 +1,60 @@
 """YOLOWorld command surface: options, listing, dry-run, and result rendering.
 
-The entry point (``main.py``) parses arguments, constructs the runner and
-task, and calls ``predict``; everything presentational lives here — the
-parser with the published defaults, the model-free ``--list-models`` and
-``--dry-run`` modes, prompt parsing, and the annotated-image drawing.
-Nothing in this module loads the board SDK, NumPy, or OpenCV at import time.
+The entry point (``main.py``) parses arguments, constructs the task, and
+calls ``predict``; everything presentational lives here — the parser with
+the published defaults, the published X5 asset identity/selection, the
+model-free ``--list-models`` and ``--dry-run`` modes, prompt parsing, and
+the annotated-image drawing. Nothing in this module loads the board SDK,
+NumPy, or OpenCV at import time. The tensor binding and task stages live in
+``yoloworld.py``.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+from dataclasses import dataclass
 from pathlib import Path
 
-from samples.vision.yoloworld.runtime.python.model_binding import (
-    SAMPLE_DIR,
-    list_available_assets,
-    resolve_selection,
-)
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.platforms import resolve_target
+
+SAMPLE_DIR = Path(__file__).resolve().parents[2]
+
+
+@dataclass(frozen=True)
+class ModelSelection:
+    target: str
+    asset: Asset
+    model_path: Path
+
+
+def list_available_assets(target: str | None = None) -> tuple[Asset, ...]:
+    """Return the one published X5 model asset; no target detection is done."""
+    key = (target or "auto").lower()
+    if key in {"auto", "x5"}:
+        assets = tuple(list_assets("x5", "yoloworld"))
+        if len(assets) != 1 or assets[0].filename != "yolo_world.bin":
+            raise ValueError("The published YOLOWorld asset facts changed; review this sample.")
+        return assets
+    if key in {"s100", "s100p", "s600"}:
+        return ()
+    raise ValueError(f"Unknown target {target!r}.")
+
+
+def resolve_selection(target: str = "auto", *, model_path: str | Path | None = None,
+                      asset_id: str | None = None) -> ModelSelection:
+    """Resolve X5 and require exact asset identity for an external model path."""
+    concrete = resolve_target(target)
+    if concrete != "x5":
+        raise ValueError(f"YOLOWorld has a published model only for x5, not {concrete}.")
+    asset = list_available_assets(concrete)[0]
+    if model_path is not None and asset_id is None:
+        raise ValueError("--model-path requires the exact --asset-id.")
+    if asset_id is not None and asset_id != asset.reference:
+        raise ValueError(f"Expected asset-id {asset.reference}, got {asset_id!r}.")
+    path = Path(model_path).expanduser() if model_path is not None else SAMPLE_DIR / "model" / asset.filename
+    return ModelSelection(concrete, asset, path)
 
 
 def parse_prompts(value: str) -> list[str]:

@@ -7,11 +7,10 @@ import subprocess, tempfile
 from unittest.mock import patch, MagicMock
 S = Path(__file__).resolve().parents[1]
 R = S.parents[2]
-sys.path.insert(0, str(S/'runtime/python'))
 
 def bound_output_names(names, shapes, height, strides, task, classes):
     """Exercise production metadata validation, including geometry and dtype."""
-    from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+    from samples.vision.ultralytics_yolo.runtime.python.backend import (
         RuntimeMetadata, ModelSelection, bind_model, LTRBDetectionContract,
         LTRBPoseContract, LTRBSegmentationContract, LTRBOBBContract,
     )
@@ -34,8 +33,8 @@ class Yolo26Contracts(unittest.TestCase):
         self.assertEqual(flatten_keypoints(xy,confidence,yolo26_platform='s')[2::3],[1,1,1])
 
     def test_all_task_platform_input_bindings(self):
-        from yolo_dispatch import get_task_types
-        from yolo_platform import resolve_platform
+        from samples.vision.ultralytics_yolo.runtime.python.cli import get_task_types
+        from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
         for platform in ('x5','s100','s100p','s600'):
             profile=resolve_platform(platform)
             for task in ('detect','cls','seg','pose','obb'):
@@ -57,8 +56,8 @@ class Yolo26Contracts(unittest.TestCase):
                         # full metadata binding; it does not claim a host board.
                         runtime=Model(Config('stub',platform=profile),runtime_loader=lambda:sdk)
                     else:
-                        from samples.vision.ultralytics_yolo.runtime.python.model_binding import ClassificationContract, LTRBPoseContract, LTRBSegmentationContract, LTRBOBBContract, ModelSelection
-                        from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
+                        from samples.vision.ultralytics_yolo.runtime.python.backend import ClassificationContract, LTRBPoseContract, LTRBSegmentationContract, LTRBOBBContract, ModelSelection
+                        from samples.vision.ultralytics_yolo.runtime.python.backend import build_runner
                         contract={'cls':ClassificationContract,'pose':LTRBPoseContract,'seg':LTRBSegmentationContract,'obb':LTRBOBBContract}[task]()
                         runner=build_runner(ModelSelection('stub',target=platform,task={'cls':'classify','pose':'pose','seg':'segment','obb':'obb'}[task],contract=contract),runtime_loader=lambda:sdk)
                         runtime=Model(Config('stub',platform=profile),runner=runner)
@@ -91,8 +90,8 @@ class Yolo26Contracts(unittest.TestCase):
                 with self.assertRaises(RuntimeError):module.main()
 
     def test_all_task_renderers(self):
-        import main
-        from yolo_platform import resolve_platform
+        from samples.vision.ultralytics_yolo.runtime.python import main
+        from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
         boxes=np.array([[2,2,20,20]],np.float32)
         scores=np.array([.9]); ids=np.array([0])
         results={'detect':(boxes,scores,ids), 'seg':(boxes,scores,ids,[np.ones((18,18),np.uint8)]),
@@ -107,10 +106,10 @@ class Yolo26Contracts(unittest.TestCase):
                           '--label-file',str(labels_path),
                           '--img-save-path',str(Path(directory)/(task+'.jpg'))]
                     model=MagicMock();model.predict.return_value=result;model.contract.classes=4
-                    from yolo_dispatch import get_task_types
+                    from samples.vision.ultralytics_yolo.runtime.python.cli import get_task_types
                     _, Config = get_task_types(resolve_platform('x5'), 'yolo26', task)
                     constructor = MagicMock(return_value=model)
-                    with patch('yolo_dispatch.get_task_types',return_value=(constructor, Config)),patch('main.require_execution_target'),patch('main.ensure_model'),patch('utils.py_utils.file_io.load_image',return_value=np.zeros((32,32,3),np.uint8)),patch('utils.py_utils.inspect.print_model_info'):
+                    with patch('samples.vision.ultralytics_yolo.runtime.python.cli.get_task_types',return_value=(constructor, Config)),patch('samples.vision.ultralytics_yolo.runtime.python.main.require_execution_target'),patch('samples.vision.ultralytics_yolo.runtime.python.main.ensure_model'),patch('utils.py_utils.file_io.load_image',return_value=np.zeros((32,32,3),np.uint8)),patch('utils.py_utils.inspect.print_model_info'):
                         exit_code=main.main(argv)
                     self.assertEqual(exit_code,0)
                     constructor.assert_called_once()
@@ -128,19 +127,22 @@ class Yolo26Contracts(unittest.TestCase):
         self.assertTrue(mask.all())
 
     def test_dispatch_uses_ltrb_not_dfl(self):
-        from yolo_dispatch import get_task_types
-        from yolo_platform import resolve_platform
+        from samples.vision.ultralytics_yolo.runtime.python.cli import get_task_types
+        from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
         from samples.vision.ultralytics_yolo.runtime.python.detect import YoloDetect
-        from samples.vision.ultralytics_yolo.runtime.python.yolo26_det import YOLO26Detect
+        from samples.vision.ultralytics_yolo.runtime.python.detect import YOLO26Detect
         profile = resolve_platform('x5')
         self.assertIs(get_task_types(profile, 'yolov8', 'detect')[0], YoloDetect)
         self.assertIs(get_task_types(profile, 'yolo26', 'detect')[0], YOLO26Detect)
 
     def test_all_100_assets_match_catalog(self):
-        from yolo_assets import model_url
-        from yolo_platform import resolve_platform
-        data=json.loads((R/'utils/tools/catalog-publisher/dist/catalog.json').read_text(encoding='utf-8'))
-        published={a['url'] for m in data['models'] for a in m.get('assets',[]) if a.get('url')}
+        from samples.vision.ultralytics_yolo.runtime.python.cli import model_url
+        from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
+        import yaml
+        published=set()
+        for manifest in ('x5','s'):
+            data=yaml.safe_load((R/f'docs/release/{manifest}/models.yaml').read_text(encoding='utf-8'))
+            published|={a['url'] for m in data['models'] for a in m.get('assets',[]) if a.get('url')}
         urls=set()
         for platform in ('x5','s100','s100p','s600'):
             for task in ('detect','cls','seg','pose','obb'):
@@ -160,8 +162,8 @@ class Yolo26Contracts(unittest.TestCase):
         self.assertEqual(bound_output_names(list(shapes),shapes,64,[8,16,32],'seg',80),expected)
 
     def test_obb_angles_are_radians_on_all_platforms(self):
-        from yolo26_obb import YOLO26OBB, YOLO26OBBConfig
-        from yolo_platform import resolve_platform
+        from samples.vision.ultralytics_yolo.runtime.python.obb import YOLO26OBB, YOLO26OBBConfig
+        from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
         shapes = {f'{g}-{c}': (1, g, g, c)
                   for g in (20, 80, 40) for c in (1, 4, 15)}
         for platform in ('x5', 's100', 's100p', 's600'):
@@ -174,8 +176,8 @@ class Yolo26Contracts(unittest.TestCase):
                     output_names={'m': list(shapes)}, output_shapes={'m': shapes},
             output_dtypes={'m': {n:'F32' for n in shapes}})
                 sdk = types.SimpleNamespace(HB_HBMRuntime=lambda _: model)
-                from samples.vision.ultralytics_yolo.runtime.python.model_binding import ModelSelection, LTRBOBBContract
-                from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
+                from samples.vision.ultralytics_yolo.runtime.python.backend import ModelSelection, LTRBOBBContract
+                from samples.vision.ultralytics_yolo.runtime.python.backend import build_runner
                 runner=build_runner(ModelSelection('stub',target=platform,task='obb',contract=LTRBOBBContract()),runtime_loader=lambda:sdk)
                 runtime = YOLO26OBB(YOLO26OBBConfig('stub', platform=resolve_platform(platform)),runner=runner)
                 outputs = {name: np.zeros(shape, np.float32) for name, shape in shapes.items()}
@@ -233,8 +235,8 @@ class Yolo26Contracts(unittest.TestCase):
                         names, shapes, 640, [8, 16, 32], task, classes), expected)
 
     def test_pose_right_side_coordinates_survive_output_reordering(self):
-        from yolo26_pose import YOLO26Pose, YOLO26PoseConfig
-        from yolo_platform import resolve_platform
+        from samples.vision.ultralytics_yolo.runtime.python.pose import YOLO26Pose, YOLO26PoseConfig
+        from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
         # Inject only the board loader; use real metadata binding and decoding.
         shapes = {f'{g}-{c}': (1, g, g, c)
                   for g in (20, 80, 40) for c in (51, 4, 1)}
@@ -245,8 +247,8 @@ class Yolo26Contracts(unittest.TestCase):
             output_names={'m': list(shapes)}, output_shapes={'m': shapes},
             output_dtypes={'m': {n:'F32' for n in shapes}})
         sdk = types.SimpleNamespace(HB_HBMRuntime=lambda _: model)
-        from samples.vision.ultralytics_yolo.runtime.python.model_binding import ModelSelection, LTRBPoseContract
-        from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
+        from samples.vision.ultralytics_yolo.runtime.python.backend import ModelSelection, LTRBPoseContract
+        from samples.vision.ultralytics_yolo.runtime.python.backend import build_runner
         runner=build_runner(ModelSelection('stub',target='x5',task='pose',contract=LTRBPoseContract()),runtime_loader=lambda:sdk)
         runtime = YOLO26Pose(YOLO26PoseConfig('stub', platform=resolve_platform('x5')),runner=runner)
         for grid, row, col, box, point in (

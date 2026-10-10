@@ -67,7 +67,7 @@ bash samples/vision/diffusiondrive/runtime/python/run.sh --target s600 --output 
 执行源五案例；追加 `--dry-run` 可在主机只检查命令和输入：
 
 ```bash
-bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s600 --output outputs/diffusiondrive_cases
+bash samples/vision/diffusiondrive/evaluator/run_all_cases.sh --target s600 --output outputs/diffusiondrive_cases
 ```
 
 S100P 的下载和推理均选择 `--target s100p`，它使用独立 HBM，修改文件名不能改变模型目标。使用外部路径前请阅读[运行参数与集成](runtime/python/README_cn.md)。

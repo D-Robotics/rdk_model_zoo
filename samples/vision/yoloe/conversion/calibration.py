@@ -8,10 +8,10 @@ import cv2
 import numpy as np
 from utils.py_utils.assets import sha256_file
 from utils.py_utils.yoloe26_geometry import prepare_rgb
-from samples.vision.ultralytics_yolo.runtime.python.geometry import (
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
     resize_with_transform,
 )
-from samples.vision.yoloe.runtime.python.model_binding import resolve_selection
+from samples.vision.yoloe.runtime.python.cli import resolve_selection
 
 
 def calibration_tensor(image, target, variant):

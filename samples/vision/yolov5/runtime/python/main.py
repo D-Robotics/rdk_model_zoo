@@ -3,8 +3,8 @@
 Parse options, construct the runner and the detection task, call ``predict``,
 and present the result. Option declarations, listing/dry-run, and rendering
 live in ``cli.py``; the detection stages and per-call geometry live in
-``detection.py``; manifest selection and tensor contracts in
-``model_binding.py``. Help, listing, and dry-run stay model-free.
+``detection.py``; published manifest selection in ``cli.py`` and tensor
+contracts in ``detection.py``. Help, listing, and dry-run stay model-free.
 """
 
 import json
@@ -23,7 +23,7 @@ from samples.vision.yolov5.runtime.python.cli import (  # noqa: F401 - build_par
     list_models,
     validate_options,
 )
-from samples.vision.yolov5.runtime.python.model_binding import resolve_selection
+from samples.vision.yolov5.runtime.python.cli import resolve_selection
 
 
 def main(argv=None) -> int:

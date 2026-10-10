@@ -12,7 +12,7 @@ import numpy as np
 
 class GeometryTests(unittest.TestCase):
     def test_degenerate_crops_preserve_each_original_source_result(self):
-        from samples.vision.paddle_ocr.runtime.python.geometry import crop_and_rotate_image
+        from samples.vision.paddle_ocr.runtime.python.ocr import crop_and_rotate_image
 
         # A non-extreme textured fixture exercises OpenCV's zero-dimension
         # behavior without relying on a blank image.
@@ -47,7 +47,7 @@ class GeometryTests(unittest.TestCase):
         )
 
     def test_x5_and_s100_keep_source_multi_polygon_conversion_order(self):
-        from samples.vision.paddle_ocr.runtime.python.geometry import dilate_contours
+        from samples.vision.paddle_ocr.runtime.python.ocr import dilate_contours
 
         class FakeOffset:
             def AddPath(self, *args):

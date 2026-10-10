@@ -6,7 +6,7 @@ Parse options, construct the runner and the detection task, call
 ``predict``, and present the result. Option declarations, listing/dry-run,
 label reading, and drawing live in ``cli.py``; the detection stages and
 per-call geometry live in ``fcos.py``; the manifest and tensor contract in
-``model_binding.py``. Help, listing, and dry-run stay model-free.
+``cli.py``. Help, listing, and dry-run stay model-free.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ from samples.vision.fcos.runtime.python.cli import (  # noqa: F401 - build_parse
     load_labels,
     save_result,
 )
-from samples.vision.fcos.runtime.python.model_binding import BindingError, resolve_selection
+from samples.vision.fcos.runtime.python.cli import BindingError, resolve_selection
 
 
 def main(argv=None) -> int:

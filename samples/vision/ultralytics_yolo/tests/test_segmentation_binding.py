@@ -4,14 +4,14 @@ from dataclasses import replace
 from types import SimpleNamespace
 import unittest
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import (
     DFLSegmentationContract,
     ModelSelection,
     RuntimeMetadata,
     bind_model,
 )
-from samples.vision.ultralytics_yolo.runtime.python.model_runner import ModelRunner
-from samples.vision.ultralytics_yolo.runtime.python.yolo_seg import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import ModelRunner
+from samples.vision.ultralytics_yolo.runtime.python.segment import (
     YoloSeg,
     YoloSegConfig,
 )

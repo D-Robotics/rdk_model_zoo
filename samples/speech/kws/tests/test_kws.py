@@ -8,11 +8,9 @@ from dataclasses import replace
 from unittest.mock import patch
 from types import SimpleNamespace
 import numpy as np
-from samples.speech.kws.runtime.python.model_binding import (
-    resolve_selection,
-    bind_model,
-)
-from samples.speech.kws.runtime.python.frontend import (
+from samples.speech.kws.runtime.python.cli import resolve_selection
+from samples.speech.kws.runtime.python.kws import bind_model
+from samples.speech.kws.runtime.python.kws import (
     Config,
     prepare_waveform,
     prepare_features,
@@ -207,3 +205,19 @@ class ContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AnnotationGlobalTests(unittest.TestCase):
+    """Binding.selection evaluates eagerly on Python 3.10-3.13.
+
+    After consolidation ``Selection`` lives in ``cli.py``; this guards the
+    import actually existing in kws' module globals rather than relying on
+    deferred-annotation masking.
+    """
+
+    def test_binding_selection_annotation_resolves_to_cli_selection(self):
+        import typing
+
+        from samples.speech.kws.runtime.python import cli, kws
+
+        self.assertIs(typing.get_type_hints(kws.Binding)["selection"], cli.Selection)

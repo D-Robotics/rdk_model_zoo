@@ -59,7 +59,7 @@ from eval_common import (  # noqa: E402  (path is set up above)
     report_empty_predictions,
     resolve_platform_argument,
 )
-from samples.vision.ultralytics_yolo.runtime.python.yolo_cls import YoloCls, YoloClsConfig  # noqa: E402
+from samples.vision.ultralytics_yolo.runtime.python.classify import YoloCls, YoloClsConfig  # noqa: E402
 
 _IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png", ".bmp", ".webp")
 _SYNSET_RE = re.compile(r"n\d+")

@@ -12,34 +12,15 @@
 
 ```text
 python/
-├── classification_decode.py  # 模型阶段与预测
-├── decode.py  # 任务输出解码
-├── detect.py  # 模型阶段与预测
-├── detection_io.py  # 模型阶段与预测
-├── geometry.py  # 图像几何与坐标变换
+├── backend.py  # 共享张量绑定、Runner 与运行时 metadata
+├── classify.py  # 分类任务与 Softmax/Top-K 解码
+├── cli.py  # 平台、发布资产、任务分发、列表与结果展示
+├── detect.py  # 检测任务（DFL / YOLOv10 / YOLO26）与解码、共享几何
 ├── main.py  # 命令行入口：构造模型并调用 predict
-├── model_binding.py  # 模型选择与物理张量契约
-├── model_runner.py  # Runtime 加载与原始张量执行
-├── obb_decode.py  # 模型阶段与预测
-├── pose_decode.py  # 模型阶段与预测
+├── obb.py  # 旋转框任务与旋转 NMS 解码
+├── pose.py  # 姿态任务与关键点解码
 ├── run.sh  # 定位 Python 入口并转发参数
-├── segmentation_decode.py  # 模型阶段与预测
-├── tensor_io.py  # 模型阶段与预测
-├── yolo26_det.py  # 模型阶段与预测
-├── yolo26_obb.py  # 模型阶段与预测
-├── yolo26_pose.py  # 模型阶段与预测
-├── yolo26_seg.py  # 模型阶段与预测
-├── yolo_assets.py  # 模型阶段与预测
-├── yolo_cli.py  # 参数、模型选择与结果展示
-├── yolo_cls.py  # 模型阶段与预测
-├── yolo_dispatch.py  # 模型阶段与预测
-├── yolo_download.py  # 模型阶段与预测
-├── yolo_input.py  # 模型阶段与预测
-├── yolo_platform.py  # 模型阶段与预测
-├── yolo_pose.py  # 模型阶段与预测
-├── yolo_runtime.py  # 模型阶段与预测
-├── yolo_seg.py  # 模型阶段与预测
-└── yolo_v10detect.py  # 模型阶段与预测
+└── segment.py  # 分割任务与掩码解码
 ```
 
 <a id="environment"></a>
@@ -190,7 +171,7 @@ DFL 检测流程在 `detect.py`（`YoloDetect`）。`predict` 接受本地图片
 ```python
 from samples.vision.ultralytics_yolo.runtime.python.detect import (
     YoloDetect, YoloDetectConfig)
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import (
+from samples.vision.ultralytics_yolo.runtime.python.cli import (
     resolve_platform)
 
 profile = resolve_platform("s600")
@@ -248,17 +229,17 @@ DFL 分割、姿态、分类和 YOLO26 OBB 的阶段接口与完整例子见下�
 
 ```text
 main.py
-  -> resolve_target / 平台 Manifest 选择（yolo_cli 负责列表、dry-run、
+  -> resolve_target / 平台 Manifest 选择（cli.py 负责列表、dry-run、
      下载准备与结果展示）
-  -> yolo_dispatch.prepare_runtime_model -> Model(config) -> model.predict(image)
+  -> cli.prepare_runtime_model -> Model(config) -> model.predict(image)
   -> ModelRunner + ModelBinding（输入/输出契约，共享 SDK 会话）
   -> geometry.resize_with_transform + NV12 输入绑定
   -> YoloDetect 或 YOLO26Detect 解码 + NMS
-  -> DetectionResult -> yolo_cli.present_result -> --img-save-path
+  -> DetectionResult -> cli.present_result -> --img-save-path
 ```
 
-`model_binding.py` 按既定形状/类型契约识别输出角色，编译器枚举名称
-只是物理名称。`geometry.py` 记录实际整数缩放和 padding，使框还原使用
+`backend.py` 按既定形状/类型契约识别输出角色，编译器枚举名称
+只是物理名称。`detect.py` 记录实际整数缩放和 padding，使框还原使用
 同一个变换。检测张量协议见
 [`DETECTION_CONTRACT.md`](../../DETECTION_CONTRACT.md)。
 
@@ -274,8 +255,8 @@ YOLOv8/9/11 分割使用 `YoloSeg`；YOLO26 分割采用不同的直接框协议
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
-from samples.vision.ultralytics_yolo.runtime.python.yolo_seg import YoloSeg, YoloSegConfig
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.segment import YoloSeg, YoloSegConfig
 
 image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
 image = cv2.imread(str(image_path))
@@ -338,8 +319,8 @@ YOLOv8/11 姿态使用同一套三阶段接口。以下从仓库根目录在匹�
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
-from samples.vision.ultralytics_yolo.runtime.python.yolo_pose import YoloPose, YoloPoseConfig
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.pose import YoloPose, YoloPoseConfig
 
 image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
 image = cv2.imread(str(image_path))
@@ -388,8 +369,8 @@ YOLOv8、YOLO11 和 YOLO26 共用分类流程。在匹配的 S600 板卡上，�
 ```python
 from pathlib import Path
 import cv2
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
-from samples.vision.ultralytics_yolo.runtime.python.yolo_cls import YoloCls, YoloClsConfig
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.classify import YoloCls, YoloClsConfig
 
 image_path = Path("samples/vision/ultralytics_yolo/test_data/zebra_cls.jpg")
 image = cv2.imread(str(image_path))
@@ -440,8 +421,8 @@ CLI 对 S100/S100P/S600 的 v10 选择该 `nms='none'` 适配器；X5 v10 走 DF
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
-from samples.vision.ultralytics_yolo.runtime.python.yolo_v10detect import (
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
     YoloV10Detect, YoloV10DetectConfig,
 )
 
@@ -493,8 +474,8 @@ DFL 姿态的倍数和偏移规则不同，绑定契约明确区分两者。文�
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
-from samples.vision.ultralytics_yolo.runtime.python.yolo26_pose import YOLO26Pose, YOLO26PoseConfig
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.pose import YOLO26Pose, YOLO26PoseConfig
 
 image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
 image = cv2.imread(str(image_path))
@@ -548,8 +529,8 @@ LTRB 距离，mask 算法也不同：系数与原型相乘，执行 sigmoid，�
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
-from samples.vision.ultralytics_yolo.runtime.python.yolo26_seg import YOLO26Seg, YOLO26SegConfig
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.segment import YOLO26Seg, YOLO26SegConfig
 
 image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
 image = cv2.imread(str(image_path))
@@ -602,7 +583,7 @@ OBB 制品并替换本地路径。随附 bus 图片仅演示 API 调用，不是
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.yolo26_obb import YOLO26OBB, YOLO26OBBConfig
+from samples.vision.ultralytics_yolo.runtime.python.obb import YOLO26OBB, YOLO26OBBConfig
 
 image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
 image = cv2.imread(str(image_path))

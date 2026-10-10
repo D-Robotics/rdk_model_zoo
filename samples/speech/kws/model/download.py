@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from utils.py_utils.assets import download_asset
-from samples.speech.kws.runtime.python.model_binding import ASSET_ID, resolve_selection
+from samples.speech.kws.runtime.python.cli import ASSET_ID, resolve_selection
 
 
 def main(argv=None):

@@ -4,13 +4,13 @@ from dataclasses import replace
 import unittest
 import numpy as np
 from test_forward_purity import fixture as detection_fixture
-from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import (
     DFLDetectionContract,
     ModelSelection,
     bind_model,
 )
-from samples.vision.ultralytics_yolo.runtime.python.model_runner import ModelRunner
-from samples.vision.ultralytics_yolo.runtime.python.yolo_v10detect import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import ModelRunner
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
     YoloV10Detect,
     YoloV10DetectConfig,
 )

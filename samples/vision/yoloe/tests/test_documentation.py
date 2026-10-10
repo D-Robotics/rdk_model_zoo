@@ -9,8 +9,8 @@ import unittest
 from unittest.mock import patch
 import numpy as np
 from test_runtime import ROOT, fake_runtime
-from samples.vision.yoloe.runtime.python.model_binding import list_models
-from samples.vision.yoloe.runtime.python.model_runner import build_runner
+from samples.vision.yoloe.runtime.python.cli import list_models
+from samples.vision.yoloe.runtime.python.yoloe import build_runner
 
 
 class DocumentationTests(unittest.TestCase):
@@ -41,7 +41,7 @@ class DocumentationTests(unittest.TestCase):
             created = []
             scope = {}
             with patch(
-                "samples.vision.yoloe.runtime.python.model_runner.build_runner",
+                "samples.vision.yoloe.runtime.python.yoloe.build_runner",
                 side_effect=factory,
             ), redirect_stdout(io.StringIO()):
                 exec(compile(integration[0], lang, "exec"), scope)

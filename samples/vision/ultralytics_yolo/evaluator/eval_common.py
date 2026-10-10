@@ -42,19 +42,13 @@ COCO_CATEGORY_IDS: Tuple[int, ...] = (
     89, 90,
 )
 
-_EVALUATOR_DIR = os.path.dirname(os.path.abspath(__file__))
-_RUNTIME_DIR = os.path.abspath(os.path.join(_EVALUATOR_DIR, os.pardir,
-                                            "runtime", "python"))
-if _RUNTIME_DIR not in sys.path:
-    sys.path.insert(0, _RUNTIME_DIR)
-
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 if not (_REPOSITORY_ROOT / 'docs/release/platforms.json').is_file():
     raise RuntimeError('This entry requires a complete Model Zoo source checkout.')
 if str(_REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPOSITORY_ROOT))
 
-from yolo_platform import (  # noqa: E402  (path is set up above)
+from samples.vision.ultralytics_yolo.runtime.python.cli import (  # noqa: E402
     PlatformProfile,
     UnsupportedPlatformError,
     resolve_platform,
@@ -245,8 +239,8 @@ __all__ = [
 
 
 def evaluation_types(args, platform, task):
-    from yolo_assets import family_from_filename
-    from yolo_dispatch import get_task_types
+    from samples.vision.ultralytics_yolo.runtime.python.cli import family_from_filename
+    from samples.vision.ultralytics_yolo.runtime.python.cli import get_task_types
     inferred=family_from_filename(platform,args.model_path)
     if args.family and inferred and args.family!=inferred:
         raise ValueError('--family conflicts with model filename.')

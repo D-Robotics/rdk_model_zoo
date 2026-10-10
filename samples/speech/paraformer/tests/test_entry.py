@@ -19,7 +19,7 @@ from unittest.mock import Mock, patch
 
 import numpy as np
 
-from samples.speech.paraformer.runtime.python import cli, input_io
+from samples.speech.paraformer.runtime.python import cli, cli as input_io
 from samples.speech.paraformer.runtime.python.cli import Preparation
 
 TOKENS = (
@@ -60,9 +60,7 @@ def inference_args(root, audio):
 
 
 def add_model_paths(args, root):
-    from samples.speech.paraformer.runtime.python.model_binding import (
-        resolve_selections,
-    )
+    from samples.speech.paraformer.runtime.python.cli import resolve_selections
 
     for selected in resolve_selections("s100"):
         path = root / f"{selected.stage}.hbm"
@@ -101,7 +99,7 @@ class MainLoopTests(unittest.TestCase):
                 "samples.speech.paraformer.runtime.python.pipeline.ParaformerPipeline.from_models",
                 return_value=bundle,
             ), patch(
-                "samples.speech.paraformer.runtime.python.input_io.read_audio",
+                "samples.speech.paraformer.runtime.python.cli.read_audio",
                 return_value=(np.zeros(16000, np.float32), 16000),
             ), contextlib.redirect_stdout(stream):
                 self.assertEqual(main.main(args), 0)
@@ -140,7 +138,7 @@ class MainLoopTests(unittest.TestCase):
                 "samples.speech.paraformer.runtime.python.pipeline.ParaformerPipeline.from_models",
                 return_value=bundle,
             ), patch(
-                "samples.speech.paraformer.runtime.python.input_io.read_audio",
+                "samples.speech.paraformer.runtime.python.cli.read_audio",
                 return_value=(np.zeros(16000, np.float32), 16000),
             ), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(
                 io.StringIO()

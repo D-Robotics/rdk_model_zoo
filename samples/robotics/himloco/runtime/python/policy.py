@@ -1,6 +1,6 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Offline HIMLoco policy stages and raw runner construction.
+"""Offline HIMLoco policy stages, tensor binding and raw runner construction.
 
 No robot control, SDK loading or file handling happens here: the board SDK
 stays a lazy import inside the shared transport, and this module only
@@ -17,14 +17,55 @@ from time import perf_counter
 import sys
 import numpy as np
 from utils.py_utils.platforms import require_execution_target
+from utils.py_utils.runtime_meta import MetadataMismatchError, RuntimeMetadata
 from utils.py_utils.single_array_runner import NamedArrayRunner
-from samples.robotics.himloco.runtime.python.model_binding import (
-    bind_model,
-    validate_selection,
-)
+from samples.robotics.himloco.runtime.python.cli import ModelSelection, validate_selection
 
 INPUT_NAME = "obs_history"
 OUTPUT_NAME = "actions"
+
+
+@dataclass(frozen=True)
+class ModelBinding:
+    selection: ModelSelection
+    metadata: RuntimeMetadata
+    input_name: str = "obs_history"
+    output_name: str = "actions"
+
+    @property
+    def model_name(self):
+        return self.metadata.model_name
+
+
+def bind_model(selection, metadata):
+    """Bind fixed policy values in compact or singleton-spatial SDK layouts.
+
+    The semantic interface remains obs_history F32[1,270] and actions
+    F32[1,12]. X5 may expose those vectors as NCHW or NHWC with unit
+    spatial dimensions; layouts that distribute values over multiple axes
+    are rejected. The binding retains the exact physical SDK dimensions.
+    """
+    validate_selection(selection)
+    meta = (
+        metadata
+        if isinstance(metadata, RuntimeMetadata)
+        else RuntimeMetadata.from_mapping(metadata)
+    )
+    if meta.model_names != (meta.model_name,):
+        raise MetadataMismatchError("HIMLoco requires exactly one packed model")
+    for side, name, shape in (
+        ("input", "obs_history", (1, 270)),
+        ("output", "actions", (1, 12)),
+    ):
+        if (
+            getattr(meta, side + "_names") != (name,)
+            or getattr(meta, side + "_shapes").get(name) not in (
+                shape, (1, shape[1], 1, 1), (1, 1, 1, shape[1])
+            )
+            or getattr(meta, side + "_dtypes").get(name) != "float32"
+        ):
+            raise MetadataMismatchError(f"Expected {side} {name} float32 {shape}")
+    return ModelBinding(selection, meta)
 
 
 class RuntimeModelRunner(NamedArrayRunner):

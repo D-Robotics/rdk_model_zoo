@@ -4,14 +4,14 @@ from dataclasses import replace
 from types import SimpleNamespace
 import unittest
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import (
     LTRBOBBContract,
     ModelSelection,
     RuntimeMetadata,
     bind_model,
 )
-from samples.vision.ultralytics_yolo.runtime.python.model_runner import ModelRunner
-from samples.vision.ultralytics_yolo.runtime.python.yolo26_obb import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import ModelRunner
+from samples.vision.ultralytics_yolo.runtime.python.obb import (
     YOLO26OBB,
     YOLO26OBBConfig,
 )

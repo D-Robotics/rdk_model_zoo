@@ -12,11 +12,9 @@ Run FCOS object detection on X5 using EfficientNet B0, B2 or B3 models. `FCOSTas
 
 ```text
 python/
-├── cli.py  # Arguments, model selection and result presentation
-├── fcos.py  # Model stages and prediction
+├── cli.py  # Published selection, arguments, listing/dry-run and rendering
+├── fcos.py  # Tensor contract, runner and model stages
 ├── main.py  # Command-line entry: construct the model and call predict
-├── model_binding.py  # Model selection and physical tensor contracts
-├── model_runner.py  # Runtime loading and raw tensor execution
 └── run.sh  # Locate the Python entry and forward arguments
 ```
 
@@ -80,7 +78,7 @@ Prerequisite: prepare the exact B0 artifact with `model/download.sh`; `bus.jpg` 
 import cv2
 import numpy as np
 from samples.vision.fcos.runtime.python.fcos import FCOSTask
-from samples.vision.fcos.runtime.python.model_binding import resolve_selection
+from samples.vision.fcos.runtime.python.cli import resolve_selection
 
 selection = resolve_selection("x5", asset_id="x5:fcos:fcos_efficientnetb0_detect_512x512_bayese_nv12.bin")
 task = FCOSTask(selection)

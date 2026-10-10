@@ -4,8 +4,8 @@
 
 ``main.py`` stays a thin entry that constructs the task and calls ``predict``;
 everything presentational — the parser, the model-free listing/dry-run modes,
-destination validation and the canonical output/report writing — lives here.
-Nothing in this module runs inference.
+destination validation, display normalization and the canonical output/report
+writing — lives here. Nothing in this module runs inference.
 """
 
 import argparse
@@ -125,6 +125,8 @@ CANONICAL_OUTPUTS = (
 
 
 def build_parser():
+    """Build the CLI parser with target, asset and input options."""
+
     p = argparse.ArgumentParser(
         description="Depth Anything V2 relative depth; published S100 artifact only"
     )
@@ -209,6 +211,31 @@ def read_bgr_image(path: Path):
     return image
 
 
+def normalize_depth(depth):
+    """Finite 2D relative depth → uint8 display values; constant maps yield zero.
+
+    Float64 arithmetic avoids overflow in the range of finite float32 values.
+    The constant-map policy replaces source division by zero, not a depth claim.
+    """
+    import numpy as np
+
+    value = np.asarray(depth)
+    if value.ndim != 2 or value.size == 0 or not np.isfinite(value).all():
+        raise ValueError("Expected nonempty finite 2D depth")
+    value = value.astype(np.float64)
+    low, high = float(value.min()), float(value.max())
+    if high == low:
+        return np.zeros(value.shape, np.uint8)
+    return np.clip((value - low) / (high - low) * 255, 0, 255).astype(np.uint8)
+
+
+def colorize_depth(depth):
+    """Render relative depth with the source INFERNO colormap."""
+    import cv2
+
+    return cv2.applyColorMap(normalize_depth(depth), cv2.COLORMAP_INFERNO)
+
+
 def save_depth_evidence(
     output: Path,
     extra: Path | None,
@@ -227,10 +254,6 @@ def save_depth_evidence(
 
     from utils.py_utils.assets import sha256_file
     from utils.py_utils.runtime_meta import metadata_evidence
-    from samples.vision.depth_anything_v2.runtime.python.visualization import (
-        normalize_depth,
-        colorize_depth,
-    )
 
     result = details.result
     color = colorize_depth(result.depth_native)

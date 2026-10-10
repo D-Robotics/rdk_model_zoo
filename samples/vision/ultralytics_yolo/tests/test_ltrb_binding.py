@@ -5,12 +5,12 @@ import types
 
 import numpy as np
 
-from samples.vision.ultralytics_yolo.runtime.python.decode import (
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
     DecodeError,
     decode_dfl,
     decode_ltrb,
 )
-from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import (
     BindingError,
     DFLDetectionContract,
     LTRBDetectionContract,
@@ -18,12 +18,12 @@ from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
     RuntimeMetadata,
     bind_model,
 )
-from samples.vision.ultralytics_yolo.runtime.python.tensor_io import InputBinding
-from samples.vision.ultralytics_yolo.runtime.python.yolo26_det import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import InputBinding
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
     YOLO26Detect,
     YOLO26DetectConfig,
 )
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
 
 
 def _semantic_ltrb_outputs(input_size=(64, 64), *, classes=1,

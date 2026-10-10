@@ -12,15 +12,10 @@ Transcribe audio on S100/S600 in independent fixed-length windows. `ASR.from_mod
 
 ```text
 python/
-├── asr.py  # Model stages and prediction
-├── audio_io.py  # Audio file reading
-├── cli.py  # Arguments, model selection and result presentation
-├── decoding.py  # Token decoding
-├── frontend.py  # Audio feature preparation
+├── asr.py  # Frontend, decoders, tensor binding, runner and model stages
+├── cli.py  # Published selection, arguments, audio streaming, vocabulary and reports
 ├── main.py  # Command-line entry: construct the model and call predict
-├── model_binding.py  # Model selection and physical tensor contracts
-├── run.sh  # Locate the Python entry and forward arguments
-└── vocabulary.py  # Vocabulary loading and validation
+└── run.sh  # Locate the Python entry and forward arguments
 ```
 
 <a id="environment"></a>
@@ -70,9 +65,9 @@ The audio/vocabulary defaults resolve relative to this sample, independent of th
 ## Integration example
 From the repository root on S100, after preparing the model. The bundled audio and vocabulary are included. Use `s600` in the selection for S600.
 ```python
-from samples.speech.asr.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.speech.asr.runtime.python.vocabulary import load_vocabulary
-from samples.speech.asr.runtime.python.audio_io import read_chunks
+from samples.speech.asr.runtime.python.cli import resolve_selection, SAMPLE_DIR
+from samples.speech.asr.runtime.python.cli import load_vocabulary
+from samples.speech.asr.runtime.python.cli import read_chunks
 from samples.speech.asr.runtime.python.asr import ASR
 
 selection = resolve_selection("s100")

@@ -12,11 +12,9 @@
 
 ```text
 python/
-├── cli.py  # 参数、模型选择与结果展示
-├── fcos.py  # 模型阶段与预测
+├── cli.py  # 发布选择、参数、列表/dry-run 与结果渲染
+├── fcos.py  # 张量契约、Runner 与模型阶段
 ├── main.py  # 命令行入口：构造模型并调用 predict
-├── model_binding.py  # 模型选择与物理张量契约
-├── model_runner.py  # Runtime 加载与原始张量执行
 └── run.sh  # 定位 Python 入口并转发参数
 ```
 
@@ -80,7 +78,7 @@ python3 samples/vision/fcos/runtime/python/main.py \
 import cv2
 import numpy as np
 from samples.vision.fcos.runtime.python.fcos import FCOSTask
-from samples.vision.fcos.runtime.python.model_binding import resolve_selection
+from samples.vision.fcos.runtime.python.cli import resolve_selection
 
 selection = resolve_selection("x5", asset_id="x5:fcos:fcos_efficientnetb0_detect_512x512_bayese_nv12.bin")
 task = FCOSTask(selection)

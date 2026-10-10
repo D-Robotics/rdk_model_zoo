@@ -46,8 +46,8 @@ class SimplifiedRuntimeTests(unittest.TestCase):
         return FakeRuntime()
 
     def test_from_models_loads_only_stages_that_execute(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import resolve_pair
-        from samples.vision.paddle_ocr.runtime.python.pipeline import OCRPipeline, OCRResult
+        from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
+        from samples.vision.paddle_ocr.runtime.python.ocr import OCRPipeline, OCRResult
 
         pair = resolve_pair("x5")
         pipeline = OCRPipeline.from_models(

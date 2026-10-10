@@ -11,11 +11,7 @@ from unittest.mock import patch
 import numpy as np
 
 from samples.speech.paraformer.evaluator import main, backends
-from samples.speech.paraformer.runtime.python.model_binding import (
-    INPUTS,
-    OUTPUTS,
-    bind_stage_io,
-)
+from samples.speech.paraformer.runtime.python.pipeline import INPUTS, OUTPUTS, bind_stage_io
 
 
 def metadata(stage, alias=False, count=False):

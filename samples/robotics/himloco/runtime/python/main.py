@@ -21,18 +21,19 @@ if __package__ in (None, ""):
 from samples.robotics.himloco.runtime.python.cli import (  # noqa: E402
     build_parser,  # re-exported here: the contract checker imports it from main
     complete,
+    load_observation,
     normalize_args,
     note_runtime,
     prepare,
     print_resolution,
     record_sample,
-)
-from samples.robotics.himloco.runtime.python.model_binding import (  # noqa: E402
     resolve_selection,
 )
 
 
 def main(argv=None):
+    """Run the locomotion-policy CLI: resolve the published assets, run one observation sequence, and present the predicted actions."""
+
     args = build_parser().parse_args(argv)
     try:
         normalize_args(args)
@@ -43,8 +44,6 @@ def main(argv=None):
         )
         if args.list_models or args.dry_run:
             return print_resolution(args, selected)
-        from samples.robotics.himloco.runtime.python.input_io import load_observation
-
         run = prepare(args, selected)
         try:
             # Visible model construction: the task owns its runner and load.

@@ -12,14 +12,10 @@ Run YOLO26 monocular relative-depth estimation. `Yolo26DepthTask.predict` return
 
 ```text
 python/
-├── cli.py  # Arguments, model selection and result presentation
-├── geometry.py  # Image geometry and coordinate transforms
+├── cli.py  # Published selection, arguments, listing/dry-run and evidence output
 ├── main.py  # Command-line entry: construct the model and call predict
-├── model_binding.py  # Model selection and physical tensor contracts
-├── model_runner.py  # Runtime loading and raw tensor execution
 ├── run.sh  # Locate the Python entry and forward arguments
-├── tensor_io.py  # Model stages and prediction
-└── yolo26_depth.py  # Model stages and prediction
+└── yolo26_depth.py  # Model stages, tensor binding, runner and prediction
 ```
 
 <a id="environment"></a>
@@ -105,7 +101,7 @@ files, warm up or time inference:
 
 ```python
 import cv2
-from samples.vision.yolo26_depth.runtime.python.model_binding import resolve_selection
+from samples.vision.yolo26_depth.runtime.python.cli import resolve_selection
 from samples.vision.yolo26_depth.runtime.python.yolo26_depth import Yolo26DepthTask
 
 selection = resolve_selection("x5", variant="n")

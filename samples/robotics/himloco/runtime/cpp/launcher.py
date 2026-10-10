@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[5]
 CPP = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-from samples.robotics.himloco.runtime.python.model_binding import (
+from samples.robotics.himloco.runtime.python.cli import (
     resolve_selection,
     SAMPLE_DIR,
 )

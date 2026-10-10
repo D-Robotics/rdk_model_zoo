@@ -15,8 +15,8 @@ import cv2
 import numpy as np
 from samples.vision.yolo26_depth.runtime.python import main
 from samples.vision.yolo26_depth.model import download
-from samples.vision.yolo26_depth.runtime.python.model_binding import resolve_selection
-from samples.vision.yolo26_depth.runtime.python.model_runner import RuntimeModelRunner
+from samples.vision.yolo26_depth.runtime.python.cli import resolve_selection
+from samples.vision.yolo26_depth.runtime.python.yolo26_depth import RuntimeModelRunner
 from test_depth import metadata, ROOT
 
 
@@ -66,7 +66,7 @@ class CliTests(unittest.TestCase):
             )
             real = RuntimeModelRunner
             with patch(
-                "samples.vision.yolo26_depth.runtime.python.model_runner.RuntimeModelRunner",
+                "samples.vision.yolo26_depth.runtime.python.yolo26_depth.RuntimeModelRunner",
                 side_effect=lambda selection: real(selection, runtime=runtime),
             ), contextlib.redirect_stdout(io.StringIO()):
                 rc = main.main(
@@ -106,7 +106,7 @@ class CliTests(unittest.TestCase):
 
     def test_gate_precedes_factory(self):
         with patch(
-            "samples.vision.yolo26_depth.runtime.python.model_runner.require_execution_target",
+            "samples.vision.yolo26_depth.runtime.python.yolo26_depth.require_execution_target",
             side_effect=ValueError("wrong board"),
         ) as gate:
             with self.assertRaisesRegex(ValueError, "wrong board"):
@@ -136,7 +136,7 @@ class CliTests(unittest.TestCase):
                 HB_HBMRuntime=lambda path: (calls.append(path) or runtime)
             )
             with patch.dict(sys.modules, {"hbm_runtime": sdk}), patch(
-                "samples.vision.yolo26_depth.runtime.python.model_runner.require_execution_target"
+                "samples.vision.yolo26_depth.runtime.python.yolo26_depth.require_execution_target"
             ) as gate:
                 with self.assertRaisesRegex(ValueError, "SHA-256 mismatch"):
                     RuntimeModelRunner(published).load()
@@ -145,7 +145,7 @@ class CliTests(unittest.TestCase):
                 self.assertEqual(calls, [str(p)])
                 self.assertEqual(gate.call_count, 2)
             with patch(
-                "samples.vision.yolo26_depth.runtime.python.model_runner.require_execution_target",
+                "samples.vision.yolo26_depth.runtime.python.yolo26_depth.require_execution_target",
                 side_effect=ValueError("wrong board"),
             ):
                 with self.assertRaisesRegex(ValueError, "wrong board"):

@@ -5,8 +5,8 @@
 
 This file stays deliberately small: parse the arguments, resolve the model,
 construct the classifier, call ``predict``, present results. Option
-declarations, model-free listing/dry-run, and report assembly live in
-``cli.py``; the classification flow lives in ``classification.py``.
+declarations, model-free listing/dry-run, label loading, and report assembly
+live in ``cli.py``; the classification flow lives in ``classification.py``.
 """
 
 from __future__ import annotations
@@ -66,13 +66,10 @@ def main(argv=None) -> int:
         classification = importlib.import_module(
             "samples.vision.3dresnet.runtime.python.classification"
         )
-        labels_module = importlib.import_module(
-            "samples.vision.3dresnet.runtime.python.labels"
-        )
 
         clip_path = Path(args.test_clip).expanduser()
         clip = np.load(clip_path, allow_pickle=False)
-        labels = labels_module.load_labels(args.label_file)
+        labels = _cli.load_labels(args.label_file)
         model = classification.R3D18Classifier(selection, top_k=args.top_k, labels=labels)
         model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
         result = model.predict(clip)

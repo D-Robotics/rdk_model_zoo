@@ -11,8 +11,8 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 import numpy as np
-from samples.robotics.himloco.runtime.python import cli, input_io, main, policy
-from samples.robotics.himloco.runtime.python.model_binding import (
+from samples.robotics.himloco.runtime.python import cli, main, policy
+from samples.robotics.himloco.runtime.python.cli import (
     resolve_selection,
     SAMPLE_DIR,
 )
@@ -144,16 +144,16 @@ class CliTests(unittest.TestCase):
             (directory / "0.bin").write_bytes(data)
             (directory / "000000.bin").write_bytes(data)
             with self.assertRaisesRegex(ValueError, "Duplicate"):
-                input_io.discover_inputs(directory)
+                cli.discover_inputs(directory)
             (directory / "0.bin").unlink()
             manifest = json.loads(
                 (SAMPLE_DIR / "test_data/runtime-input-manifest.json").read_text()
             )
             manifest["records"] = manifest["records"][:1]
             (root / "runtime-input-manifest.json").write_text(json.dumps(manifest))
-            records, _ = input_io.discover_inputs(directory)
+            records, _ = cli.discover_inputs(directory)
             with self.assertRaisesRegex(ValueError, "digest mismatch"):
-                input_io.load_observation(records[0])
+                cli.load_observation(records[0])
 
 
 if __name__ == "__main__":

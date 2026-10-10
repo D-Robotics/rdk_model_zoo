@@ -3,7 +3,9 @@
 import contextlib, io, json, tempfile, unittest
 from pathlib import Path
 from unittest.mock import patch
-from samples.vision.diffusiondrive.runtime.python import run_cases
+from samples.vision.diffusiondrive.evaluator import run_cases
+
+SAMPLE_DIR = Path(__file__).resolve().parents[1]
 
 
 class CaseTests(unittest.TestCase):
@@ -64,3 +66,39 @@ class CaseTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BatchEntryFromUnrelatedCwdTests(unittest.TestCase):
+    """The moved batch entry resolves the repository root from any cwd.
+
+    ``evaluator/run_all_cases.sh`` recomputes the root from its own location
+    (four parents now that it lives in ``evaluator/``) and forwards to
+    ``evaluator.run_cases``; this guards the traversal and the module path
+    from an unrelated working directory without running any inference.
+    """
+
+    def test_shell_help_from_unrelated_cwd_without_pythonpath(self):
+        """The PYTHON override selects the interpreter, not ambient PATH.
+
+        Runs the actual shell from an unrelated cwd with PYTHONPATH unset,
+        PATH deliberately stripped of any venv, and ``PYTHON`` pointed at
+        this suite's own interpreter — proving the override works rather
+        than an inherited PATH.
+        """
+        import os
+        import subprocess
+        import sys
+        import tempfile
+
+        shell = SAMPLE_DIR / 'evaluator' / 'run_all_cases.sh'
+        env = {k: v for k, v in os.environ.items()
+               if k not in ('PYTHONPATH', 'VIRTUAL_ENV') and not k.startswith('PATH')}
+        env['PATH'] = '/usr/bin:/bin'
+        env['PYTHON'] = sys.executable
+        with tempfile.TemporaryDirectory() as cwd:
+            result = subprocess.run(
+                ['bash', str(shell), '--help'],
+                cwd=cwd, env=env, capture_output=True, text=True, timeout=60,
+            )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('usage:', result.stdout)

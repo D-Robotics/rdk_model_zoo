@@ -52,9 +52,16 @@ def metadata(stage):
 
 class BindingTests(unittest.TestCase):
     def setUp(self):
-        name = "samples.speech.paraformer.runtime.python.model_binding"
-        self.assertIsNotNone(importlib.util.find_spec(name), "Missing model binding")
-        self.binding = importlib.import_module(name)
+        # Selection lives in cli; tensor binding lives in pipeline.
+        from samples.speech.paraformer.runtime.python import cli, pipeline
+
+        class _Binding:
+            resolve_selections = staticmethod(cli.resolve_selections)
+            bind_model = staticmethod(pipeline.bind_model)
+            bind_stage_io = staticmethod(pipeline.bind_stage_io)
+            load_model_runners = staticmethod(pipeline.load_model_runners)
+
+        self.binding = _Binding()
 
     def test_only_exact_published_three_model_group_is_selected(self):
         selections = self.binding.resolve_selections("s100")

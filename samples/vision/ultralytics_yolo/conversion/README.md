@@ -322,7 +322,7 @@ logits (`...×64`) — and the runtime performs the ReduceMax /
 threshold-filter / gather / ArgMax, DFL SoftMax-plus-expected-bin, and
 dist2bbox stages, followed by class-wise NMS where the selected binding
 requires one, in its Python post-processing (`decode_dfl` in
-`runtime/python/decode.py`; protocol in
+`runtime/python/detect.py`; protocol in
 [`DETECTION_CONTRACT.md`](../DETECTION_CONTRACT.md)). The S-series YOLOv10
 binding is the NMS-free exception: it reuses the same decode stages with
 `nms='none'` fixed (see the [runtime

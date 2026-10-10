@@ -13,17 +13,11 @@ Transcribe Mandarin audio on S100 through the audio frontend, encoder, predictor
 ```text
 python/
 ├── cif.py  # Continuous integrate-and-fire algorithm
-├── cli.py  # Arguments, model selection and result presentation
-├── decoding.py  # Token decoding
+├── cli.py  # Published selection, arguments, manifest/audio records and evidence
 ├── frontend.py  # Audio feature preparation
-├── input_io.py  # Input files and data records
 ├── main.py  # Command-line entry: construct the model and call predict
-├── model_binding.py  # Model selection and physical tensor contracts
-├── pipeline.py  # Encoder, predictor, CIF and decoder pipeline
-├── requirements-frontend.txt  # Audio frontend dependencies
-├── run.sh  # Locate the Python entry and forward arguments
-├── runtime.py  # Runtime construction for the model stages
-└── stages.py  # Model stage interfaces
+├── pipeline.py  # Stage classes, tensor binding, runners, decoding and composition
+└── run.sh  # Locate the Python entry and forward arguments
 ```
 
 <a id="environment"></a>
@@ -243,7 +237,7 @@ manifest records no publisher hash for it.
 
 ## Publication selection and runtime binding
 
-[model_binding.py](model_binding.py) reads the active S publication manifest.
+`cli.py` reads the active S publication manifest.
 `resolve_selections("s100")` returns encoder, predictor and decoder in that order;
 `auto` uses the shared local-board detector. X5, S100P and S600 are rejected because
 there is no corresponding published model set. Selection does not load the SDK,
@@ -254,7 +248,7 @@ and an explicit rejection for S100P:
 
 ```bash
 python - <<'PYCODE'
-from samples.speech.paraformer.runtime.python.model_binding import resolve_selections
+from samples.speech.paraformer.runtime.python.cli import resolve_selections
 for selection in resolve_selections("s100"):
     print(selection.stage, selection.asset.reference)
 try:
@@ -294,7 +288,7 @@ and wrong dtypes are rejected. The shapes are those in the pipeline table; only
 the count uses int32, all other tensors require float32. A differing compiled
 contract must be inspected and explicitly adapted, not cast silently.
 
-[runtime.py](runtime.py) constructs three shared `NamedArrayRunner` instances.
+[pipeline.py](pipeline.py) constructs three shared `NamedArrayRunner` instances.
 `ParaformerPipeline.from_models` validates the entire declared model set before creating any SDK
 object. On the normal path each runner checks local target identity and its model
 file before importing/constructing `hbm_runtime`. It then binds observed metadata.
@@ -309,7 +303,7 @@ prepared frontend features from the frontend below. The complete CLI is document
 ```python
 import json
 from pathlib import Path
-from samples.speech.paraformer.runtime.python.model_binding import resolve_selections
+from samples.speech.paraformer.runtime.python.cli import resolve_selections
 from samples.speech.paraformer.runtime.python.pipeline import ParaformerPipeline
 
 # Board-only integration: the model package must already be prepared.
@@ -390,7 +384,7 @@ not a model `forward` containing CPU processing between several SDK executions.
 | CPU CIF | predictor arrays + valid frame count | float32 acoustic `[1,100,512]`, int32 count `[1]` |
 | Decoder | context, acoustic, count, zero float32 bias `[1,1,512]` | float32 logits `[1,100,8404]` |
 
-[stages.py](stages.py) exposes `pipeline.encoder_stage`, `predictor_stage` and
+`pipeline.py` exposes `pipeline.encoder_stage`, `predictor_stage` and
 `decoder_stage`, each with the `preprocess`, `infer`, `postprocess`
 spellings; the established `pre_process`, `forward`, `post_process` names remain
 as aliases of the same single implementation. Preprocessing

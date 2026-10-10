@@ -32,6 +32,8 @@ from samples.vision.depth_anything_v2.runtime.python.cli import (
 
 
 def main(argv=None):
+    """Run the depth CLI: resolve the published asset, run one image, and present or save the relative-depth result."""
+
     args = build_parser().parse_args(argv)
     try:
         if args.list_models:

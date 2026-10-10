@@ -4,10 +4,9 @@ from pathlib import Path
 import contextlib, io, sys, unittest
 
 ROOT = Path(__file__).resolve().parents[4]
-sys.path.insert(0, str(ROOT / "samples/vision/ultralytics_yolo/runtime/python"))
-from yolo_assets import model_filename, manifest_asset
-from yolo_platform import resolve_platform
-import yolo_download
+from samples.vision.ultralytics_yolo.runtime.python.cli import model_filename, manifest_asset
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
+from samples.vision.ultralytics_yolo.model import download as yolo_download
 from unittest.mock import patch
 
 

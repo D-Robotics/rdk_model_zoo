@@ -1,6 +1,6 @@
 """Actual planning CLI through injected named runtime; no model/SDK download."""
 
-import contextlib, io, json, tempfile, unittest
+import contextlib, io, json, subprocess, sys, tempfile, unittest
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -118,3 +118,49 @@ class CliTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class HostModesWithoutCv2OrSdkTests(unittest.TestCase):
+    """Help/list/dry-run must not import cv2 or the board SDK.
+
+    The rendering code (the only cv2 consumer) imports it lazily inside
+    ``render_result``; host modes never reach it. A ``find_spec`` hook makes
+    any cv2/hbm_runtime import fatal so a green run proves each mode really
+    completed; ``--help`` exits through argparse SystemExit(0).
+    """
+
+    def test_help_list_and_dry_run_block_cv2_and_sdk(self):
+        script = (
+            "import sys\n"
+            "import importlib.abc\n"
+            "class _Block(importlib.abc.MetaPathFinder):\n"
+            "    def find_spec(self, fullname, path=None, target=None):\n"
+            "        root = fullname.split('.')[0]\n"
+            "        if root in ('cv2', 'hbm_runtime'):\n"
+            "            raise ImportError('blocked ' + root)\n"
+            "        return None\n"
+            "sys.meta_path.insert(0, _Block())\n"
+            "from samples.vision.diffusiondrive.runtime.python import main\n"
+            "try:\n"
+            "    main.main(['--help'])\n"
+            "except SystemExit as exc:\n"
+            "    assert exc.code in (0, None), exc.code\n"
+            "else:\n"
+            "    raise AssertionError('--help must exit through argparse')\n"
+            "print('HELP-DONE')\n"
+            "assert main.main(['--list-models']) == 0\n"
+            "print('LIST-DONE')\n"
+            "assert main.main(['--dry-run', '--target', 's100p']) == 0\n"
+            "print('DRYRUN-DONE')\n"
+            "for heavy in ('cv2', 'hbm_runtime'):\n"
+            "    assert heavy not in sys.modules, heavy + ' was imported'\n"
+            "print('CLEAN-DONE')\n"
+        )
+        result = subprocess.run(
+            [sys.executable, '-c', script],
+            cwd=str(Path(__file__).resolve().parents[4]),
+            text=True, capture_output=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for marker in ("HELP-DONE", "LIST-DONE", "DRYRUN-DONE", "CLEAN-DONE"):
+            self.assertIn(marker, result.stdout)

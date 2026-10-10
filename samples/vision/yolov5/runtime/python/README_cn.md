@@ -12,12 +12,9 @@
 
 ```text
 python/
-├── cli.py  # 参数、模型选择与结果展示
-├── decode.py  # 任务输出解码
-├── detection.py  # 模型阶段与预测
+├── cli.py  # 发布选择、参数、列表/dry-run 与结果渲染
+├── detection.py  # 张量契约、Runner、解码数学与模型阶段
 ├── main.py  # 命令行入口：构造模型并调用 predict
-├── model_binding.py  # 模型选择与物理张量契约
-├── model_runner.py  # Runtime 加载与原始张量执行
 └── run.sh  # 定位 Python 入口并转发参数
 ```
 
@@ -86,7 +83,7 @@ CLI 打印 `boxes`、`scores`、`class_ids`，并保存到 `--img-save-path`。`
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.yolov5.runtime.python.model_binding import resolve_selection
+from samples.vision.yolov5.runtime.python.cli import resolve_selection
 from samples.vision.yolov5.runtime.python.detection import YOLOv5Task
 
 target = "x5"

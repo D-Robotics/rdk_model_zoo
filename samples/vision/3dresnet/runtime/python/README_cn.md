@@ -16,7 +16,6 @@ python/
 ├── README_cn.md  # 中文说明
 ├── classification.py  # 模型初始化与推理阶段
 ├── cli.py  # 参数、模型选择与结果交付
-├── labels.py  # 动作类别标签读取
 ├── main.py  # 命令行入口：构造模型并调用 predict
 └── run.sh  # 运行示例
 ```
@@ -105,7 +104,7 @@ import numpy as np
 repo = Path.cwd()
 binding_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.cli")
 task_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.classification")
-labels_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.labels")
+labels_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.cli")
 
 selection = binding_mod.resolve_selection(
     "s100",

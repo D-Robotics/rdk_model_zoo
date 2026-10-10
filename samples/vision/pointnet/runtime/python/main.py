@@ -26,6 +26,8 @@ from samples.vision.pointnet.runtime.python.cli import resolve_selection
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run the part-segmentation CLI: resolve the published asset, run one point-cloud sample, and present the per-point classes."""
+
     args = build_parser().parse_args(argv)
     try:
         if args.list_models:

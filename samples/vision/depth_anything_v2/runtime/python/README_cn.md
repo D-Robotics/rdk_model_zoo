@@ -16,10 +16,8 @@ python/
 ├── README_cn.md  # 中文说明
 ├── cli.py  # 参数、模型选择与结果交付
 ├── depth_anything_v2.py  # 模型初始化与推理阶段
-├── geometry.py  # 几何变换与坐标恢复
 ├── main.py  # 命令行入口：构造模型并调用 predict
 ├── run.sh  # 运行示例
-└── visualization.py  # 结果渲染与图片保存
 ```
 
 从 [main.py](main.py) 开始：入口构造 `DepthEstimator` 并调用 `predict`。[depth_anything_v2.py](depth_anything_v2.py) 实现模型初始化及推理阶段；[cli.py](cli.py) 负责参数、模型选择和结果交付。模型初始化会加载 Runtime，应用可复用同一个实例执行多次预测。
@@ -124,7 +122,7 @@ print(details.raw.shape, details.result.depth_native.shape)
 普通 `DepthResult`，task 不保存上一帧图像或输出。每帧保持匹配上下文，
 task 按当前图片尺寸处理。并发调用使用独立模型实例。
 
-API 返回浮点深度。显示 uint8 图像时，调用 `visualization.normalize_depth(result.depth_native)` 或 `colorize_depth(...)`。每帧结果须保留对应 `ImageContext`，共享 runner 时须同步访问。
+API 返回浮点深度。显示 uint8 图像时，调用 `cli.normalize_depth(result.depth_native)` 或 `colorize_depth(...)`。每帧结果须保留对应 `ImageContext`，共享 runner 时须同步访问。
 
 <a id="stage-io"></a>
 ## 阶段契约

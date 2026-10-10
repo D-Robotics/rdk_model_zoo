@@ -10,8 +10,9 @@ from utils.py_utils.runtime_meta import RuntimeMetadata,metadata_evidence
 from utils.py_utils.platforms import require_execution_target
 from utils.py_utils.legacy_platforms import pinned_name
 from utils.py_utils.assets import verify_asset_file
-from samples.vision.yolov5.runtime.python.model_binding import SAMPLE_DIR,ANCHORS,resolve_selection
-from samples.vision.yolov5.runtime.python.model_runner import RuntimeModelRunner
+from samples.vision.yolov5.runtime.python.cli import SAMPLE_DIR, resolve_selection
+from samples.vision.yolov5.runtime.python.detection import ANCHORS
+from samples.vision.yolov5.runtime.python.detection import RuntimeModelRunner
 from samples.vision.yolov5.runtime.python.detection import YOLOv5Task,_threshold
 from samples.vision.yolov5.evaluator.source_reference import load_legacy,source_paths
 

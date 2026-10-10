@@ -5,12 +5,8 @@ from pathlib import Path
 import unittest
 from unittest.mock import Mock
 import numpy as np
-from samples.robotics.himloco.runtime.python.model_binding import (
-    resolve_selection,
-    bind_model,
-    ASSET_ID,
-)
-from samples.robotics.himloco.runtime.python.policy import RuntimeModelRunner
+from samples.robotics.himloco.runtime.python.cli import ASSET_ID, resolve_selection
+from samples.robotics.himloco.runtime.python.policy import RuntimeModelRunner, bind_model
 
 
 def metadata():

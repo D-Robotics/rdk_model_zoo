@@ -6,12 +6,9 @@ import tempfile
 import unittest
 from unittest.mock import patch
 import numpy as np
-from samples.speech.asr.runtime.python.model_binding import (
-    resolve_selection,
-    SAMPLE_DIR,
-)
+from samples.speech.asr.runtime.python.cli import resolve_selection, SAMPLE_DIR
 from samples.speech.asr.runtime.python.asr import RuntimeModelRunner
-from samples.speech.asr.runtime.python.audio_io import AudioChunk
+from samples.speech.asr.runtime.python.cli import AudioChunk
 from samples.speech.asr.runtime.python.main import main
 
 
@@ -68,7 +65,8 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(float(result.max()), 1)
 
     def test_success_and_partial_failure_reports(self):
-        from samples.speech.asr.runtime.python import asr as asr_module, audio_io
+        from samples.speech.asr.runtime.python import asr as asr_module
+        from samples.speech.asr.runtime.python import cli as audio_io
 
         for fail in (False, True):
             with self.subTest(fail=fail), tempfile.TemporaryDirectory() as temp:

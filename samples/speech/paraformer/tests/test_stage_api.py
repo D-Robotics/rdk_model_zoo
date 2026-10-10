@@ -59,7 +59,7 @@ class StageAPI(unittest.TestCase):
                 runner.assert_called_once()
 
     def test_cif_failure_is_attributed_before_decoder(self):
-        from samples.speech.paraformer.runtime.python.stages import StageError
+        from samples.speech.paraformer.runtime.python.pipeline import StageError
 
         fixture, pipeline = self.fixture()
         pipeline.decoder = Mock()
@@ -75,7 +75,7 @@ class StageAPI(unittest.TestCase):
         pipeline.decoder.assert_not_called()
 
     def test_explicit_decoder_forward_rejects_out_of_range_count(self):
-        from samples.speech.paraformer.runtime.python.stages import StageError
+        from samples.speech.paraformer.runtime.python.pipeline import StageError
 
         _, pipeline = self.fixture()
         task = pipeline.decoder_stage
@@ -109,7 +109,7 @@ class StageAPI(unittest.TestCase):
             )
 
     def test_stage_error_retains_original_cause_and_stops_later_models(self):
-        from samples.speech.paraformer.runtime.python.stages import StageError
+        from samples.speech.paraformer.runtime.python.pipeline import StageError
 
         fixture, pipeline = self.fixture()
         original = RuntimeError("transport failed")
@@ -123,7 +123,7 @@ class StageAPI(unittest.TestCase):
         pipeline.decoder.assert_not_called()
 
     def test_malformed_outputs_identify_stage(self):
-        from samples.speech.paraformer.runtime.python.stages import StageError
+        from samples.speech.paraformer.runtime.python.pipeline import StageError
 
         fixture, pipeline = self.fixture()
         pipeline.encoder = lambda feed: {"context": np.zeros((1, 1, 512), np.float32)}

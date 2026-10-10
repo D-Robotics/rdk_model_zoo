@@ -13,8 +13,8 @@ from unittest import mock
 
 import numpy as np
 
-from samples.vision.ultralytics_yolo.runtime.python import segmentation_decode
-from samples.vision.ultralytics_yolo.runtime.python.geometry import ImageTransform
+from samples.vision.ultralytics_yolo.runtime.python import segment as segmentation_decode
+from samples.vision.ultralytics_yolo.runtime.python.detect import ImageTransform
 
 
 def _padding_transform():

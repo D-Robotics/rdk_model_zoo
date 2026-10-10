@@ -65,8 +65,8 @@ raise SystemExit(main(sys.argv[1:]))
     def test_config_module_stays_shared_with_the_native_launcher(self):
         # The C++ launcher imports Config/validate_config from config.py; the
         # merge must not move that shared surface.
-        self.assertTrue((SAMPLE / "runtime/python/config.py").exists())
-        from samples.vision.yoloe.runtime.python.config import Config, validate_config  # noqa: F401
+        self.assertTrue((SAMPLE / "runtime/python/yoloe.py").exists())
+        from samples.vision.yoloe.runtime.python.cli import Config, validate_config  # noqa: F401
 
     def test_main_does_not_assemble_the_sdk_runner_itself(self):
         import ast

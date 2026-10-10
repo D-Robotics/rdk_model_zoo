@@ -8,7 +8,7 @@ import sys
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 from utils.py_utils.assets import download_asset
-from samples.robotics.himloco.runtime.python.model_binding import resolve_selection
+from samples.robotics.himloco.runtime.python.cli import resolve_selection
 
 
 def main(argv=None):

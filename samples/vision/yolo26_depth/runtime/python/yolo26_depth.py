@@ -2,9 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 """Three-stage depth inference with explicit per-call restoration geometry.
 
-``predict`` composes ``preprocess`` → ``infer`` → ``postprocess``; the
-established ``pre_process``/``forward``/``post_process`` names stay thin
-aliases of those implementations.
+``Yolo26DepthTask`` owns the model end to end: the immutable per-call depth
+geometry (round/114 letterbox for the NV12 profiles), the published depth
+tensor binding, the lazy SDK transport and the ``predict`` chain
+(``preprocess`` → ``infer`` → ``postprocess``); the established
+``pre_process``/``forward``/``post_process`` names stay thin aliases of those
+implementations.  Published asset selection/listing and evidence rendering
+live in ``cli.py``.
 """
 
 from dataclasses import dataclass
@@ -15,14 +19,231 @@ import cv2
 import numpy as np
 
 from utils.py_utils.image import bgr_to_nv12_planes
-from samples.vision.yolo26_depth.runtime.python.tensor_io import restore_log_depth
-from samples.vision.yolo26_depth.runtime.python.geometry import (
-    ImageContext,
-    make_context,
-    validate_context,
+from utils.py_utils.platforms import require_execution_target
+from utils.py_utils.runtime_meta import RuntimeMetadata, MetadataMismatchError
+from utils.py_utils.single_array_runner import (
+    RuntimeUnavailableError,
+    SingleArrayRunner,
 )
-from samples.vision.yolo26_depth.runtime.python.model_binding import LITE_CALIBRATION
+from samples.vision.yolo26_depth.runtime.python.cli import (
+    LITE_CALIBRATION,
+    ModelSelection,
+    resolve_selection,
+)
 
+
+@dataclass(frozen=True)
+class ImageContext:
+    original_height: int
+    original_width: int
+    profile: str
+    variant: str
+    top: int = 0
+    bottom: int = 0
+    left: int = 0
+    right: int = 0
+    size: int = 768
+
+
+def make_context(height, width, profile, variant, size=768):
+    if any(type(v) is not int or v <= 0 for v in (height, width, size)):
+        raise ValueError("Image dimensions must be positive integers")
+    if profile == "lite":
+        return ImageContext(height, width, profile, variant, size=size)
+    if profile != "nv12":
+        raise ValueError(f"Unknown depth profile {profile!r}")
+    ratio = min(size / height, size / width)
+    h, w = round(height * ratio), round(width * ratio)
+    if h <= 0 or w <= 0:
+        raise ValueError("Aspect ratio collapses a letterbox dimension to zero")
+    ph, pw = size - h, size - w
+    return ImageContext(
+        height,
+        width,
+        profile,
+        variant,
+        round(ph / 2 - 0.1),
+        round(ph / 2 + 0.1),
+        round(pw / 2 - 0.1),
+        round(pw / 2 + 0.1),
+        size,
+    )
+
+
+def validate_context(context, selection):
+    if (
+        not isinstance(context, ImageContext)
+        or context.size != 768
+        or context.profile != selection.profile
+        or context.variant != selection.variant
+    ):
+        raise ValueError("Depth context must match the bound variant/profile/size")
+    expected = make_context(
+        context.original_height,
+        context.original_width,
+        context.profile,
+        context.variant,
+        context.size,
+    )
+    if context != expected:
+        raise ValueError("Depth context padding does not match its source geometry")
+
+def resize_opencv(depth, height, width):
+    return cv2.resize(depth, (width, height), interpolation=cv2.INTER_LINEAR)
+
+
+def restore_log_depth(log_depth, context, *, resize=resize_opencv):
+    """Finite calibrated F32 H×W log-depth → original-size relative depth.
+
+    Caller validates profile/geometry. Optional resize supplies the source
+    evaluator's Torch backend without changing the runtime's OpenCV default.
+    """
+    with np.errstate(over="ignore", invalid="ignore"):
+        depth = np.exp(log_depth)
+    if not np.isfinite(depth).all():
+        raise ValueError("Depth exponential overflow; verify model output boundary")
+    if context.profile == "nv12":
+        square = resize(depth, context.size, context.size)
+        depth = square[
+            context.top : context.size - context.bottom,
+            context.left : context.size - context.right,
+        ]
+    return resize(depth, context.original_height, context.original_width)
+
+@dataclass(frozen=True)
+class ModelBinding:
+    """Validated depth tensors and physical input roles.
+
+    Attributes:
+        input_name: Packed NV12, RGB lite, or split luma tensor name.
+        uv_name: Split chroma tensor name; None for single-input profiles.
+        output_name: The single float32 192-square depth tensor name.
+    """
+
+    selection: ModelSelection
+    metadata: RuntimeMetadata
+    input_name: str
+    output_name: str
+    input_size: int = 768
+    uv_name: str | None = None
+
+    @property
+    def model_name(self):
+        return self.metadata.model_name
+
+
+def bind_model(selection, metadata):
+    resolved = resolve_selection(
+        selection.target,
+        variant=selection.variant,
+        asset_id=selection.asset.reference,
+        model_path=selection.model_path if selection.explicit_model_path else None,
+        converted_model=selection.converted_model,
+    )
+    if selection != resolved:
+        raise ValueError(
+            "ModelSelection differs from the manifest identity/profile/path"
+        )
+    meta = (
+        metadata
+        if isinstance(metadata, RuntimeMetadata)
+        else RuntimeMetadata.from_mapping(metadata)
+    )
+    if (
+        meta.model_names != (meta.model_name,)
+        or len(meta.input_names) not in (1, 2)
+        or len(meta.output_names) != 1
+    ):
+        raise MetadataMismatchError(
+            "Depth requires one model, one packed or two split inputs and one output"
+        )
+    inp, out = meta.input_names[0], meta.output_names[0]
+    uv_name = None
+    if len(meta.input_names) == 2:
+        if selection.profile != "nv12" or selection.target == "x5":
+            raise MetadataMismatchError("Split NV12 is supported by the S full depth profile")
+        y_names = [n for n in meta.input_names if meta.input_shapes.get(n) == (1, 768, 768, 1)]
+        uv_names = [n for n in meta.input_names if meta.input_shapes.get(n) == (1, 384, 384, 2)]
+        if len(y_names) != 1 or len(uv_names) != 1 or any(
+            meta.input_dtypes.get(n) != "uint8" for n in meta.input_names
+        ):
+            raise MetadataMismatchError("Split depth NV12 requires uint8 Y[1,768,768,1] and UV[1,384,384,2]")
+        inp, uv_name = y_names[0], uv_names[0]
+    if selection.profile == "lite":
+        shapes = ((1, 3, 768, 768),)
+        dtype = "float32"
+        semantics = ("raw_logit",)
+    else:
+        shapes = ((1, 3, 768, 768), (1, 768, 768, 3), (1, 1152, 768, 1))
+        dtype = "nv12"
+        semantics = ("log_depth", "calibrated_log_depth")
+    if uv_name is None and (
+        meta.input_shapes.get(inp) not in shapes or meta.input_dtypes.get(inp) != dtype
+    ):
+        raise MetadataMismatchError(
+            f"{selection.profile} requires 768-square {dtype} input metadata"
+        )
+    if (
+        meta.output_shapes.get(out) not in ((1, 192, 192, 1), (1, 1, 192, 192))
+        or meta.output_dtypes.get(out) != "float32"
+    ):
+        raise MetadataMismatchError(
+            "Expected one float32 NHWC/NCHW 192-square depth channel"
+        )
+    declared = meta.output_semantics
+    if isinstance(declared, dict):
+        declared = declared.get(out)
+    if declared is not None and declared not in semantics:
+        raise MetadataMismatchError(
+            f"Output semantic {declared!r} conflicts with {selection.profile}"
+        )
+    return ModelBinding(selection, meta, inp, out, uv_name=uv_name)
+
+class RuntimeModelRunner(SingleArrayRunner):
+    def __init__(self, selection, *, runtime_factory=None, runtime=None):
+        if selection.converted_model and runtime_factory is None and runtime is None:
+            runtime_factory = _converted_factory(selection)
+        super().__init__(
+            selection,
+            binding_loader=bind_model,
+            physical_inputs=lambda b: (
+                {n: (b.metadata.input_shapes[n], "uint8") for n in (b.input_name, b.uv_name)}
+                if b.uv_name is not None else
+                {b.input_name: (((1, 3, 768, 768), "float32")
+                    if b.selection.profile == "lite" else ((768 * 768 * 3 // 2,), "uint8"))}
+            ),
+            task_name="YOLO26 Depth",
+            runtime_factory=runtime_factory,
+            runtime=runtime,
+            execution_target_gate=require_execution_target,
+        )
+
+
+def _converted_factory(selection):
+    """Explicit custom-artifact loader; target gating is never optional here.
+
+    The referenced published asset selects only the declared tensor contract.
+    Its publisher digest cannot certify user-generated bytes.
+    """
+
+    def create(path):
+        require_execution_target(selection.target)
+        if (
+            not selection.model_path.is_file()
+            or selection.model_path.stat().st_size == 0
+        ):
+            raise ValueError(
+                f"Missing or empty converted model: {selection.model_path}"
+            )
+        try:
+            from hbm_runtime import HB_HBMRuntime
+        except ImportError as exc:
+            raise RuntimeUnavailableError(
+                "hbm_runtime is required on the selected board"
+            ) from exc
+        return HB_HBMRuntime(path)
+
+    return create
 
 @dataclass(frozen=True)
 class PreparedInput:
@@ -82,8 +303,6 @@ class Yolo26DepthTask:
             ValueError: When an injected runner carries no binding.
         """
         if runner is None and binding is None:
-            from samples.vision.yolo26_depth.runtime.python.model_binding import ModelSelection
-            from samples.vision.yolo26_depth.runtime.python.model_runner import RuntimeModelRunner
             if not isinstance(selection, ModelSelection):
                 raise TypeError("Pass a ModelSelection from resolve_selection, or inject runner=/binding=.")
             if runtime_factory is None:

@@ -10,7 +10,7 @@ class ExportOutputNames(unittest.TestCase):
         import onnx
         from onnx import helper as h, TensorProto as T
         from samples.speech.paraformer.conversion.export import bind_output_names
-        from samples.speech.paraformer.runtime.python.model_binding import CONTEXT
+        from samples.speech.paraformer.runtime.python.cli import CONTEXT
 
         graph = h.make_model(
             h.make_graph(

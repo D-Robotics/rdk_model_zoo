@@ -13,12 +13,12 @@ import cv2
 import numpy as np
 
 from utils.py_utils.runtime_meta import MetadataMismatchError
-from samples.vision.yolo26_depth.runtime.python.model_binding import (
+from samples.vision.yolo26_depth.runtime.python.cli import (
     resolve_selection,
     list_available_assets,
-    bind_model,
 )
-from samples.vision.yolo26_depth.runtime.python.model_runner import RuntimeModelRunner
+from samples.vision.yolo26_depth.runtime.python.yolo26_depth import bind_model
+from samples.vision.yolo26_depth.runtime.python.yolo26_depth import RuntimeModelRunner
 from samples.vision.yolo26_depth.runtime.python.yolo26_depth import Yolo26DepthTask
 from samples.vision.yolo26_depth.runtime.python.cli import colorize_depth
 from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402

@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """R3D-18 CLI options, published-model selection, listing, dry-run, and report.
 
-``main.py`` uses these helpers to parse arguments, preview a selection, and
-assemble the JSON prediction report. The classification flow itself lives in
-``classification.py``; Kinetics label decoding lives in ``labels.py``.
+``main.py`` uses these helpers to parse arguments, preview a selection, load
+the Kinetics-400 label mapping, and assemble the JSON prediction report. The
+classification flow itself lives in ``classification.py``.
 """
 
 from __future__ import annotations
@@ -177,6 +177,38 @@ def run_dry_run(selection) -> int:
         "source_manifest": selection.asset.source_path,
     }, indent=2, ensure_ascii=False))
     return 0
+
+
+def load_labels(path: str | Path) -> dict[int, str]:
+    """Load and validate the exact published Kinetics-400 class mapping.
+
+    Args:
+        path: JSON file mapping class names to integer class ids.
+
+    Returns:
+        dict[int, str]: Class id to class name for all 400 classes.
+
+    Raises:
+        ValueError: The file is not a 400-entry mapping of unique integer
+            ids covering every id from 0 through 399; malformed JSON raises
+            ``json.JSONDecodeError``, a ``ValueError`` subclass.
+        OSError: The file cannot be read at all.
+    """
+    with Path(path).expanduser().open(encoding="utf-8") as handle:
+        values = json.load(handle)
+    if not isinstance(values, dict) or len(values) != 400:
+        raise ValueError("Expected a 400-entry Kinetics class-name mapping.")
+    result: dict[int, str] = {}
+    for name, class_id in values.items():
+        if isinstance(class_id, bool) or not isinstance(class_id, int):
+            raise ValueError(f"Invalid Kinetics class id: {class_id!r}; expected JSON integer.")
+        index = class_id
+        if index in result or not 0 <= index < 400:
+            raise ValueError(f"Kinetics class ids must be unique integers in [0,399], got {index}.")
+        result[index] = str(name).replace('"', "")
+    if set(result) != set(range(400)):
+        raise ValueError("Kinetics class ids must cover every id from 0 through 399.")
+    return result
 
 
 def report(result, labels: dict[int, str], selection, clip_path: Path) -> dict:

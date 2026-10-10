@@ -2,12 +2,9 @@ import unittest
 import numpy as np
 from dataclasses import replace
 from types import SimpleNamespace
-from samples.speech.asr.runtime.python.model_binding import (
-    resolve_selection,
-    bind_model,
-    SAMPLE_DIR,
-)
-from samples.speech.asr.runtime.python.vocabulary import load_vocabulary
+from samples.speech.asr.runtime.python.cli import resolve_selection, SAMPLE_DIR
+from samples.speech.asr.runtime.python.asr import bind_model
+from samples.speech.asr.runtime.python.cli import load_vocabulary
 from samples.speech.asr.runtime.python.asr import ASR
 
 
@@ -175,3 +172,24 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(
             legacy32.post_process(raw32), vocabulary[1] + vocabulary[5] * 3
         )
+
+
+class AnnotationGlobalTests(unittest.TestCase):
+    """The merged modules must keep every annotation global resolvable.
+
+    ``Binding.selection`` evaluates eagerly on Python 3.10-3.13 (no future
+    annotations in asr.py), and ``AudioChunk.waveform`` must resolve to a
+    real NumPy dtype; both were silent NameErrors when ``Selection``/``np``
+    moved modules during consolidation.
+    """
+
+    def test_binding_and_audio_chunk_annotations_resolve_to_real_globals(self):
+        import typing
+
+        import numpy as np
+
+        from samples.speech.asr.runtime.python import asr, cli
+
+        hints = typing.get_type_hints(asr.Binding)
+        self.assertIs(hints["selection"], cli.Selection)
+        self.assertIs(typing.get_type_hints(cli.AudioChunk)["waveform"], np.ndarray)

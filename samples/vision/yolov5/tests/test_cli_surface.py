@@ -32,6 +32,83 @@ class CliSurfaceTests(unittest.TestCase):
                                 text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_help_list_and_dry_run_work_with_heavy_imports_blocked(self):
+        """The real entry modes must not import cv2/NumPy/hbm_runtime.
+
+        A ``find_spec`` meta-path hook (the only finder protocol Python 3.12+
+        consults) raises ImportError for cv2/numpy/hbm_runtime and their
+        submodules; the blocker is proven active first. Each mode runs as its
+        own child and must print an explicit completion marker, so a green
+        run proves every mode actually executed; ``--help`` exits through
+        argparse's SystemExit(0). Parser defaults must equal the cli-owned
+        ANCHORS/STRIDES constants.
+        """
+        prelude = (
+            "import sys\n"
+            "import importlib.abc\n"
+            "class _Block(importlib.abc.MetaPathFinder):\n"
+            "    def find_spec(self, fullname, path=None, target=None):\n"
+            "        root = fullname.split('.')[0]\n"
+            "        if root in ('cv2', 'numpy', 'hbm_runtime'):\n"
+            "            raise ImportError('blocked ' + root)\n"
+            "        return None\n"
+            "sys.meta_path.insert(0, _Block())\n"
+        )
+        # 0. the blocker is genuinely active for every heavy root
+        probe = prelude + (
+            "for heavy in ('cv2', 'numpy.hbm_runtime_stub', 'hbm_runtime'):\n"
+            "    try:\n"
+            "        __import__(heavy)\n"
+            "    except ImportError as exc:\n"
+            "        assert str(exc).startswith('blocked '), exc\n"
+            "    else:\n"
+            "        raise AssertionError('blocker inactive for ' + heavy)\n"
+            "print('BLOCKER-ACTIVE')\n"
+        )
+        result = subprocess.run([sys.executable, "-c", probe], cwd=SAMPLE.parents[2],
+                                text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("BLOCKER-ACTIVE", result.stdout)
+        # 1. --help goes through argparse SystemExit(0)
+        help_script = prelude + (
+            "from samples.vision.yolov5.runtime.python import main\n"
+            "try:\n"
+            "    main.main(['--help'])\n"
+            "except SystemExit as exc:\n"
+            "    assert exc.code in (0, None), exc.code\n"
+            "else:\n"
+            "    raise AssertionError('--help must exit through argparse')\n"
+            "print('HELP-DONE')\n"
+        )
+        result = subprocess.run([sys.executable, "-c", help_script], cwd=SAMPLE.parents[2],
+                                text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("HELP-DONE", result.stdout)
+        # 2. real modes each complete and stay import-clean
+        modes_script = prelude + (
+            "from samples.vision.yolov5.runtime.python import main\n"
+            "assert main.main(['--list-models', '--target', 'x5']) == 0\n"
+            "print('LIST-DONE')\n"
+            "assert main.main(['--dry-run', '--target', 'x5', '--model-path', "
+            "'/tmp/yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin', '--asset-id', "
+            "'x5:yolov5:yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin']) == 0\n"
+            "print('DRYRUN-DONE')\n"
+            "from samples.vision.yolov5.runtime.python import cli\n"
+            "parser = cli.build_parser()\n"
+            "args = parser.parse_args(['--target', 'x5'])\n"
+            "cli.validate_options(args)\n"
+            "assert args.anchors == cli.ANCHORS and tuple(args.strides) == cli.STRIDES\n"
+            "print('PARSER-DONE')\n"
+            "for heavy in ('cv2', 'numpy', 'hbm_runtime'):\n"
+            "    assert heavy not in sys.modules, heavy + ' was imported'\n"
+            "print('CLEAN-DONE')\n"
+        )
+        result = subprocess.run([sys.executable, "-c", modes_script], cwd=SAMPLE.parents[2],
+                                text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for marker in ("LIST-DONE", "DRYRUN-DONE", "PARSER-DONE", "CLEAN-DONE"):
+            self.assertIn(marker, result.stdout)
+
     def test_cli_exposes_listing_dry_run_and_drawing(self):
         from samples.vision.yolov5.runtime.python import cli
 
@@ -78,7 +155,7 @@ class CliSurfaceTests(unittest.TestCase):
     def test_task_constructs_from_selection_with_injected_sdk(self):
         from test_yolov5 import FakeRuntime
         from samples.vision.yolov5.runtime.python.detection import YOLOv5Task
-        from samples.vision.yolov5.runtime.python.model_binding import resolve_selection
+        from samples.vision.yolov5.runtime.python.cli import resolve_selection
 
         runtime = FakeRuntime("s100")
         task = YOLOv5Task(resolve_selection("s100"),

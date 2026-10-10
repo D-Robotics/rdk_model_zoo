@@ -11,12 +11,8 @@ from unittest.mock import patch
 
 from samples.speech.paraformer.runtime.cpp import launcher
 from samples.speech.paraformer.runtime.cpp.native_report import validate_report
-from samples.speech.paraformer.runtime.python.model_binding import (
-    INPUTS,
-    OUTPUTS,
-    VOCABULARY_DIGEST,
-    resolve_selections,
-)
+from samples.speech.paraformer.runtime.python.cli import VOCABULARY_DIGEST, resolve_selections
+from samples.speech.paraformer.runtime.python.pipeline import INPUTS, OUTPUTS
 
 
 def valid_report():

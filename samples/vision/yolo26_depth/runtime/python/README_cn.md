@@ -12,14 +12,10 @@
 
 ```text
 python/
-├── cli.py  # 参数、模型选择与结果展示
-├── geometry.py  # 图像几何与坐标变换
+├── cli.py  # 发布选择、参数、列表/dry-run 与结果输出
 ├── main.py  # 命令行入口：构造模型并调用 predict
-├── model_binding.py  # 模型选择与物理张量契约
-├── model_runner.py  # Runtime 加载与原始张量执行
 ├── run.sh  # 定位 Python 入口并转发参数
-├── tensor_io.py  # 模型阶段与预测
-└── yolo26_depth.py  # 模型阶段与预测
+└── yolo26_depth.py  # 模型阶段、张量绑定、Runner 与预测
 ```
 
 <a id="environment"></a>
@@ -95,7 +91,7 @@ Lite 模型另写 `raw_logit.npy`（192×192 float32）。深度为相对量，�
 
 ```python
 import cv2
-from samples.vision.yolo26_depth.runtime.python.model_binding import resolve_selection
+from samples.vision.yolo26_depth.runtime.python.cli import resolve_selection
 from samples.vision.yolo26_depth.runtime.python.yolo26_depth import Yolo26DepthTask
 
 selection = resolve_selection("x5", variant="n")

@@ -15,7 +15,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
-from samples.vision.yolov5.runtime.python import model_binding as detector
+from samples.vision.yolov5.runtime.python import cli as detector
 
 SAMPLE_DIR = Path(__file__).resolve().parents[2]
 

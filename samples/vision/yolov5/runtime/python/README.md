@@ -12,12 +12,9 @@ Run YOLOv5 object detection with the X5 or S model protocol. `YOLOv5Task` loads 
 
 ```text
 python/
-├── cli.py  # Arguments, model selection and result presentation
-├── decode.py  # Task output decoding
-├── detection.py  # Model stages and prediction
+├── cli.py  # Published selection, arguments, listing/dry-run and rendering
+├── detection.py  # Tensor contract, runner, decode math and model stages
 ├── main.py  # Command-line entry: construct the model and call predict
-├── model_binding.py  # Model selection and physical tensor contracts
-├── model_runner.py  # Runtime loading and raw tensor execution
 └── run.sh  # Locate the Python entry and forward arguments
 ```
 
@@ -86,7 +83,7 @@ After a matching model is prepared and the board target is recognized, this comp
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.yolov5.runtime.python.model_binding import resolve_selection
+from samples.vision.yolov5.runtime.python.cli import resolve_selection
 from samples.vision.yolov5.runtime.python.detection import YOLOv5Task
 
 target = "x5"

@@ -5,21 +5,21 @@ import unittest
 import numpy as np
 
 
-from samples.vision.ultralytics_yolo.runtime.python.geometry import (
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
     ImageTransform,
     inverse_boxes,
     resize_with_transform,
 )
-from samples.vision.ultralytics_yolo.runtime.python.decode import DecodeError, decode_dfl
-from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+from samples.vision.ultralytics_yolo.runtime.python.detect import DecodeError, decode_dfl
+from samples.vision.ultralytics_yolo.runtime.python.backend import (
     DFLDetectionContract,
     ModelSelection,
     RuntimeMetadata,
     bind_model,
     BindingError,
 )
-from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
-from samples.vision.ultralytics_yolo.runtime.python.tensor_io import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import build_runner
+from samples.vision.ultralytics_yolo.runtime.python.backend import (
     InputBinding,
     normalize_dtype,
 )

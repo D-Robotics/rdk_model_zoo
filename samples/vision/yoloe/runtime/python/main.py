@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """YOLOE CLI entry: construct the model, run one ``predict``, show the result.
 
-Option declarations, the model-free listing/dry-run modes and the result
-report live in ``cli.py``.  This entry stays focused on the execution path:
+Option declarations, published selection, the model-free listing/dry-run
+modes and the result report live in ``cli.py``.  This entry stays focused on the execution path:
 resolve the selection, build the config, construct ``YOLOE`` (it loads the
 selected artifact itself) and call ``predict`` once; rendering the
 annotated image is a separate visualization step.
@@ -17,13 +17,13 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from samples.vision.yoloe.runtime.python.cli import (
     build_parser,  # re-exported here: the contract checker imports it from main
+    load_inputs,
     print_result_report,
+    resolve_selection,
     run_dry_run,
     run_list_models,
+    save_result,
     validate_scheduling,
-)
-from samples.vision.yoloe.runtime.python.model_binding import (
-    resolve_selection,
 )
 
 
@@ -41,7 +41,7 @@ def main(argv=None):
             model_path=args.model_path,
             local_float_sha256=args.local_float_sha256,
         )
-        from samples.vision.yoloe.runtime.python.config import Config, validate_config
+        from samples.vision.yoloe.runtime.python.cli import Config, validate_config
 
         config = Config(
             args.score_thres,
@@ -58,10 +58,6 @@ def main(argv=None):
         if args.dry_run:
             return run_dry_run(selection, config)
         from samples.vision.yoloe.runtime.python.yoloe import YOLOE
-        from samples.vision.yoloe.runtime.python.visualization import (
-            load_inputs,
-            save_result,
-        )
 
         image, labels = load_inputs(args.test_img, args.label_file)
         model = YOLOE(selection, config)

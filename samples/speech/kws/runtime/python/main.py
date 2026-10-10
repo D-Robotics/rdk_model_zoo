@@ -5,10 +5,10 @@
 This file stays deliberately small: parse the arguments, handle the
 model-free listing/dry-run modes, gate the board, construct the ``KWS``
 task through ``KWS.from_model``, apply scheduling, call ``predict`` once,
-present the report. Option declarations, the model-free rendering and the
-report records live in ``cli.py``; the readable preprocess → infer →
-postprocess chain, the raw runner construction and the model-owned loader
-live in ``kws.py``.
+present the report. Option declarations, published selection, the model-free rendering, audio
+loading and the report records live in ``cli.py``; the MDTC frontend, the
+readable preprocess → infer → postprocess chain, the raw runner construction
+and the model-owned loader live in ``kws.py``.
 """
 
 from pathlib import Path
@@ -20,12 +20,10 @@ if str(ROOT) not in sys.path:
 from samples.speech.kws.runtime.python.cli import (  # noqa: E402
     build_parser,  # re-exported here: the contract checker imports it from main
     build_report,
+    resolve_selection,
     run_dry_run,
     run_list_models,
     write_report,
-)
-from samples.speech.kws.runtime.python.model_binding import (  # noqa: E402
-    resolve_selection,
 )
 
 
@@ -41,7 +39,7 @@ def main(argv=None):
         selection = resolve_selection(
             args.target, asset_id=args.asset_id, model_path=args.model_path
         )
-        from samples.speech.kws.runtime.python.frontend import Config, validate_config
+        from samples.speech.kws.runtime.python.kws import Config, validate_config
 
         config = Config(
             args.audio_maxlen, args.frame_shift, args.frame_length, args.n_mels
@@ -56,7 +54,7 @@ def main(argv=None):
         from utils.py_utils.platforms import require_execution_target
 
         require_execution_target(selection.target)
-        from samples.speech.kws.runtime.python.audio_io import load_audio
+        from samples.speech.kws.runtime.python.cli import load_audio
         from samples.speech.kws.runtime.python.kws import KWS
 
         audio, rate = load_audio(args.audio_file)

@@ -12,21 +12,14 @@ Detect text regions and recognize their content with a two-stage PaddleOCR pipel
 
 ```text
 python/
-├── README.md  # English instructions
-├── README_cn.md  # Chinese instructions
-├── __init__.py  # Package imports
-├── cli.py  # Arguments, model selection and result output
-├── decode.py  # DB polygon decoding and CTC text decoding
-├── geometry.py  # Geometry transforms and coordinate restoration
-├── main.py  # CLI entry: construct model and call predict
-├── model_binding.py  # Detector/recognizer metadata and vocabulary contracts
-├── model_runner.py  # Board SDK execution for the two OCR models
-├── pipeline.py  # Model initialization and inference stages
-├── run.sh  # Run the sample
-└── tensor_io.py  # NV12 planes and tensor packing
+├── backend.py  # Shared stage contracts binding and lazy SDK runners
+├── cli.py  # Published pair selection, arguments, listing/dry-run and delivery
+├── main.py  # Command-line entry: construct the pipeline and call predict
+├── ocr.py  # Two-stage pipeline with CTC decode, geometry and input math
+└── run.sh  # Locate the Python entry and forward arguments
 ```
 
-Start with [main.py](main.py): it constructs `OCRPipeline.from_models` and calls `predict`. [pipeline.py](pipeline.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.
+Start with [main.py](main.py): it constructs `OCRPipeline.from_models` and calls `predict`. [ocr.py](ocr.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.
 
 <a id="environment"></a>
 ## Environment
@@ -137,7 +130,7 @@ Prepare the S100 pair with the model guide, then run this example from the repos
 import cv2
 
 from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
-from samples.vision.paddle_ocr.runtime.python.pipeline import OCRPipeline
+from samples.vision.paddle_ocr.runtime.python.ocr import OCRPipeline
 
 pair = resolve_pair(
     "s100",

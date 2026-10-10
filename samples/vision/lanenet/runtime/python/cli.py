@@ -4,8 +4,8 @@
 
 ``main.py`` stays a thin entry that constructs the task and calls ``predict``;
 everything presentational — the parser, the model-free listing/dry-run modes,
-destination validation and the canonical output/report writing — lives here.
-Nothing in this module runs inference or clusters lanes.
+destination validation, the display renderers and the canonical output/report
+writing — lives here. Nothing in this module runs inference or clusters lanes.
 """
 
 import argparse
@@ -126,6 +126,8 @@ CANONICAL_OUTPUTS = (
 
 
 def build_parser():
+    """Build the CLI parser with target, asset and input options."""
+
     p = argparse.ArgumentParser(
         description="LaneNet embeddings and binary labels; S100 published asset only"
     )
@@ -204,6 +206,41 @@ def validate_display_destinations(output: Path, extras: dict) -> None:
             raise FileExistsError(f"Use a new additional image path: {path}")
 
 
+def embedding_image(embedding):
+    """Finite float32 CHW3 → HWC uint8 clip/round; channel order is preserved.
+
+    This unifies Python with native clipping/saturating rounding and deliberately
+    replaces source Python truncation/wrap. It is a display, not instance labels.
+    """
+    import numpy as np
+
+    value = np.asarray(embedding)
+    if (
+        value.ndim != 3
+        or value.shape[0] != 3
+        or value.size == 0
+        or value.dtype != np.float32
+        or not np.isfinite(value).all()
+    ):
+        raise ValueError("Expected finite float32 CHW embedding with three channels")
+    return np.rint(np.clip(value, 0, 1) * 255).transpose(1, 2, 0).astype(np.uint8)
+
+
+def binary_image(binary):
+    """2D discrete labels → 0/255 display; reject invalid labels."""
+    import numpy as np
+
+    value = np.asarray(binary)
+    if (
+        value.ndim != 2
+        or value.size == 0
+        or value.dtype.kind not in "iu"
+        or not np.isin(value, (0, 1)).all()
+    ):
+        raise ValueError("Expected 2D integer labels 0/1")
+    return value.astype(np.uint8) * 255
+
+
 def read_bgr_image(path: Path):
     """Read one BGR image; decode failures name the exact path."""
 
@@ -234,10 +271,6 @@ def save_lane_evidence(
 
     from utils.py_utils.assets import sha256_file
     from utils.py_utils.runtime_meta import metadata_evidence
-    from samples.vision.lanenet.runtime.python.visualization import (
-        embedding_image,
-        binary_image,
-    )
 
     result = details.result
     displays = {

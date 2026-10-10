@@ -132,9 +132,7 @@ class ThinEntryTests(unittest.TestCase):
             )
             args = ["--target", "s100", "--audio-file", str(audio),
                     "--output-dir", str(out), "--tokens-path", str(tokens)]
-            from samples.speech.paraformer.runtime.python.model_binding import (
-                resolve_selections,
-            )
+            from samples.speech.paraformer.runtime.python.cli import resolve_selections
 
             for selected in resolve_selections("s100"):
                 path = root / f"{selected.stage}.hbm"
@@ -150,7 +148,7 @@ class ThinEntryTests(unittest.TestCase):
                 return_value=frontend), patch(
                 "samples.speech.paraformer.runtime.python.pipeline.ParaformerPipeline.from_models",
                 return_value=bundle) as load, patch(
-                "samples.speech.paraformer.runtime.python.input_io.read_audio",
+                "samples.speech.paraformer.runtime.python.cli.read_audio",
                 return_value=(np.zeros(16000, np.float32), 16000)), contextlib.redirect_stdout(stream):
                 self.assertEqual(main.main(args), 0)
             load.assert_called_once()

@@ -293,7 +293,7 @@ class LabelsAndCLITests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
 
     def test_labels_keep_source_name_to_id_decode(self):
-        load_labels = local_module("labels").load_labels
+        load_labels = local_module("cli").load_labels
 
         labels = load_labels(SAMPLE / "test_data/kinetics_classnames.json")
         self.assertEqual(len(labels), 400)
@@ -375,7 +375,7 @@ class SimplifiedRuntimeTests(unittest.TestCase):
     Selection/catalog duties live in ``cli.py``; ``classification.py`` owns the
     named model class plus the sample runner and clip preparation; the
     per-sample ``model_binding``/``model_runner``/``tensor_io`` forwarding
-    modules are gone. ``labels.py`` stays: independent Kinetics-400 decoding.
+    modules are gone. Kinetics-400 label decoding lives in ``cli.py``.
     """
 
     def test_classifier_constructs_from_selection_and_runs_stages(self):

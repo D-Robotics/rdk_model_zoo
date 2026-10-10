@@ -9,11 +9,11 @@ import unittest
 from unittest.mock import patch
 import numpy as np
 
-from samples.vision.yoloe.runtime.python.model_binding import (
+from samples.vision.yoloe.runtime.python.cli import (
     resolve_selection,
     list_models,
 )
-from samples.vision.yoloe.runtime.python.model_runner import build_runner
+from samples.vision.yoloe.runtime.python.yoloe import build_runner
 from samples.vision.yoloe.runtime.python.yoloe import YOLOE, Config
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -250,7 +250,7 @@ class BoundaryTests(unittest.TestCase):
     def test_vocabulary_and_visualization(self):
         import tempfile
         import cv2
-        from samples.vision.yoloe.runtime.python.visualization import (
+        from samples.vision.yoloe.runtime.python.cli import (
             load_inputs,
             save_result,
         )

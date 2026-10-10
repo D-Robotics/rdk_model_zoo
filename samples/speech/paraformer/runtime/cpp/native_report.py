@@ -3,10 +3,8 @@
 import math
 from pathlib import Path
 
-from samples.speech.paraformer.runtime.python.model_binding import (
-    bind_model,
-    VOCABULARY_DIGEST,
-)
+from samples.speech.paraformer.runtime.python.cli import VOCABULARY_DIGEST
+from samples.speech.paraformer.runtime.python.pipeline import bind_model
 
 
 def validate_report(

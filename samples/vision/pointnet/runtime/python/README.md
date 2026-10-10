@@ -17,8 +17,7 @@ python/
 ├── cli.py  # Arguments, model selection and result output
 ├── main.py  # CLI entry: construct model and call predict
 ├── pointnet.py  # Model initialization and inference stages
-├── run.sh  # Run the sample
-└── visualization.py  # Result rendering and image output
+└── run.sh  # Run the sample
 ```
 
 Start with [main.py](main.py): it constructs `PointNetSegmenter` and calls `predict`. [pointnet.py](pointnet.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.
@@ -76,7 +75,7 @@ actual metadata or inference. Inference never downloads missing artifacts.
 `labels.npy`: int32 N-vector, IDs 0=back, 1=seat, 2=leg, 3=arm, same row order as
 input. `result.json`: target/asset, input path, point_count, counts, centroid,
 radius and observed tensor metadata. `result_orig.png` and `result.png` show
-normalized points; the visualization preserves the source X/Z/Y axis ordering.
+normalized points; the plot helpers in ``cli.py`` preserve the source X/Z/Y axis ordering.
 `--no-plot` omits both images. Existing same-named output files are replaced;
 choose a separate output directory for each retained experiment.
 

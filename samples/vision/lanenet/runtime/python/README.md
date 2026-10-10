@@ -15,11 +15,9 @@ python/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
 ├── cli.py  # Arguments, model selection and result output
-├── image_preprocess.py  # Model initialization and inference stages
 ├── lanenet.py  # Model initialization and inference stages
 ├── main.py  # CLI entry: construct model and call predict
-├── run.sh  # Run the sample
-└── visualization.py  # Result rendering and image output
+└── run.sh  # Run the sample
 ```
 
 Start with [main.py](main.py): it constructs `LaneNetSegmenter` and calls `predict`. [lanenet.py](lanenet.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.

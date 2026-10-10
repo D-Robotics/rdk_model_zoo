@@ -10,7 +10,7 @@ import numpy as np
 
 class DecodePipelineTests(unittest.TestCase):
     def test_ctc_blank_resets_repeat_and_unicode_tokens_are_preserved(self):
-        from samples.vision.paddle_ocr.runtime.python.decode import ctc_greedy_decode
+        from samples.vision.paddle_ocr.runtime.python.ocr import ctc_greedy_decode
 
         tokens = ("blank", "你", "好", " ")
         scores = np.full((1, 5, len(tokens)), -10.0, dtype=np.float32)
@@ -19,7 +19,7 @@ class DecodePipelineTests(unittest.TestCase):
         self.assertEqual(ctc_greedy_decode(scores, tokens), "你你好")
 
     def test_ctc_rejects_bad_class_count_and_nonfinite_scores(self):
-        from samples.vision.paddle_ocr.runtime.python.decode import ctc_greedy_decode
+        from samples.vision.paddle_ocr.runtime.python.ocr import ctc_greedy_decode
 
         with self.assertRaises(ValueError):
             ctc_greedy_decode(np.zeros((1, 3, 4), dtype=np.float32), ("blank", "a"))
@@ -29,8 +29,8 @@ class DecodePipelineTests(unittest.TestCase):
             ctc_greedy_decode(bad, ("blank", "a"))
 
     def test_zero_detector_output_returns_empty_owned_result_without_recognition(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import resolve_pair
-        from samples.vision.paddle_ocr.runtime.python.pipeline import OCRPipeline
+        from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
+        from samples.vision.paddle_ocr.runtime.python.ocr import OCRPipeline
 
         calls = []
 
@@ -50,8 +50,8 @@ class DecodePipelineTests(unittest.TestCase):
         self.assertEqual([name for name, _ in calls], ["detector"])
 
     def test_postprocess_detection_returns_boxes_and_crops(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import resolve_pair
-        from samples.vision.paddle_ocr.runtime.python.pipeline import OCRPipeline
+        from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
+        from samples.vision.paddle_ocr.runtime.python.ocr import OCRPipeline
 
         pipeline = OCRPipeline(
             resolve_pair("x5"),
@@ -66,11 +66,8 @@ class DecodePipelineTests(unittest.TestCase):
         self.assertEqual(detection.crops, ())
 
     def test_stage_output_shape_dtype_and_nonfinite_values_are_rejected(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import (
-            MetadataMismatchError,
-            resolve_pair,
-        )
-        from samples.vision.paddle_ocr.runtime.python.pipeline import OCRPipeline
+        from samples.vision.paddle_ocr.runtime.python.cli import MetadataMismatchError, resolve_pair
+        from samples.vision.paddle_ocr.runtime.python.ocr import OCRPipeline
 
         pair = resolve_pair("x5")
         pipeline = OCRPipeline(pair, lambda inputs: {}, lambda inputs: {})
@@ -85,11 +82,8 @@ class DecodePipelineTests(unittest.TestCase):
             pipeline.postprocess_detection({"sigmoid_0.tmp_0": bad}, np.zeros((40, 60, 3), dtype=np.uint8))
 
     def test_both_injected_stages_keep_order_and_result_lifetime_across_calls(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import resolve_pair
-        from samples.vision.paddle_ocr.runtime.python.pipeline import (
-            DetectionResult,
-            OCRPipeline,
-        )
+        from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
+        from samples.vision.paddle_ocr.runtime.python.ocr import DetectionResult, OCRPipeline
 
         pair = resolve_pair("x5")
         detector_calls = []
@@ -129,8 +123,8 @@ class DecodePipelineTests(unittest.TestCase):
         self.assertEqual(len(recognizer_calls), 2)
 
     def test_postprocess_exposes_owned_rotated_crop_for_a_detected_polygon(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import resolve_pair
-        from samples.vision.paddle_ocr.runtime.python.pipeline import OCRPipeline
+        from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
+        from samples.vision.paddle_ocr.runtime.python.ocr import OCRPipeline
 
         pair = resolve_pair("x5")
         pipeline = OCRPipeline(pair, lambda inputs: {}, lambda inputs: {})
@@ -141,7 +135,7 @@ class DecodePipelineTests(unittest.TestCase):
         image = np.arange(64 * 80 * 3, dtype=np.uint16).reshape(64, 80, 3)
         image = (image % 251).astype(np.uint8)
         with patch(
-            "samples.vision.paddle_ocr.runtime.python.pipeline.dilate_contours",
+            "samples.vision.paddle_ocr.runtime.python.ocr.dilate_contours",
             return_value=(polygon,),
         ):
             detection = pipeline.postprocess_detection(
@@ -154,8 +148,8 @@ class DecodePipelineTests(unittest.TestCase):
         self.assertEqual(detection.crops[0].shape[2], 3)
 
     def test_postprocess_keeps_dilated_polygons_filtered_from_boxes(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import resolve_pair
-        from samples.vision.paddle_ocr.runtime.python.pipeline import OCRPipeline
+        from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
+        from samples.vision.paddle_ocr.runtime.python.ocr import OCRPipeline
 
         pair = resolve_pair("s100")
         pipeline = OCRPipeline(pair, lambda inputs: {}, lambda inputs: {})
@@ -166,7 +160,7 @@ class DecodePipelineTests(unittest.TestCase):
             [[[10, 10], [50, 10], [50, 30], [10, 30]]], dtype=np.int64
         )
         with patch(
-            "samples.vision.paddle_ocr.runtime.python.pipeline.dilate_contours",
+            "samples.vision.paddle_ocr.runtime.python.ocr.dilate_contours",
             return_value=(small, large),
         ):
             detection = pipeline.postprocess_detection(

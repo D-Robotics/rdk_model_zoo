@@ -13,7 +13,7 @@ from utils.py_utils.legacy_platforms import legacy_tree, pinned_name
 from samples.vision.bytetrack.runtime.python.cli import SAMPLE_DIR,resolve_selection
 from samples.vision.yolov5.evaluator.compare import _hash,_json
 from samples.vision.yolov5.evaluator.source_reference import load_legacy,source_paths
-from samples.vision.yolov5.runtime.python.model_binding import ANCHORS
+from samples.vision.yolov5.runtime.python.detection import ANCHORS
 
 
 def _legacy_task(selection,factory):
@@ -83,7 +83,7 @@ def capture_frames(selection,frames,output_dir,*,side,video_path,runtime_factory
         if side=='legacy':
             task=_legacy_task(selection,factory);task.set_scheduling_params(priority=priority,bpu_cores=list(bpu_cores))
         else:
-            from samples.vision.yolov5.runtime.python.model_runner import RuntimeModelRunner
+            from samples.vision.yolov5.runtime.python.detection import RuntimeModelRunner
             from samples.vision.yolov5.runtime.python.detection import YOLOv5Task
             from samples.vision.bytetrack.runtime.python.tracking import ByteTrackTask
             runner=RuntimeModelRunner(selection,runtime_factory=factory);binding=runner.load();runner.set_scheduling_params(priority=priority,bpu_cores=list(bpu_cores))

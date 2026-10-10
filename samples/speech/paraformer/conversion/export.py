@@ -11,13 +11,12 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 
 from utils.py_utils.assets import sha256_file
-from samples.speech.paraformer.runtime.python.input_io import write_json
-from samples.speech.paraformer.runtime.python.model_binding import (
-    INPUTS,
-    OUTPUTS,
+from samples.speech.paraformer.runtime.python.cli import (
     LOCAL_DIGESTS,
     VOCABULARY_DIGEST,
+    write_json,
 )
+from samples.speech.paraformer.runtime.python.pipeline import INPUTS, OUTPUTS
 
 
 def build_parser():

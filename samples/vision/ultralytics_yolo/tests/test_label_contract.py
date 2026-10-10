@@ -14,12 +14,8 @@ import types
 import unittest
 from unittest import mock
 
-_RUNTIME_PYTHON = Path(__file__).resolve().parents[1] / "runtime" / "python"
-if str(_RUNTIME_PYTHON) not in sys.path:
-    sys.path.insert(0, str(_RUNTIME_PYTHON))
-
-import yolo_cli  # noqa: E402
-from yolo_cli import load_labels, validate_label_count  # noqa: E402
+from samples.vision.ultralytics_yolo.runtime.python import cli as yolo_cli  # noqa: E402
+from samples.vision.ultralytics_yolo.runtime.python.cli import load_labels, validate_label_count  # noqa: E402
 
 
 def _args(label_file=None):
@@ -234,7 +230,7 @@ class ValidatorStrictnessTests(unittest.TestCase):
 
 class PlanExplicitFlagTests(unittest.TestCase):
     def test_explicit_flag_comes_from_describe_plan(self):
-        from yolo_platform import resolve_platform
+        from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
         profile = resolve_platform("x5")
         explicit_args = types.SimpleNamespace(
             asset_id=None, family=None, model_size=None, model_path="custom.bin",

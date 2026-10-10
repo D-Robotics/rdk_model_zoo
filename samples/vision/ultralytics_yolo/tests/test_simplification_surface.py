@@ -31,10 +31,10 @@ class SimplificationSurfaceTests(unittest.TestCase):
         if str(RUNTIME) not in sys.path:
             sys.path.insert(0, str(RUNTIME))
         from samples.vision.ultralytics_yolo.runtime.python.detect import YoloDetect
-        from samples.vision.ultralytics_yolo.runtime.python.yolo_seg import YoloSeg
-        from samples.vision.ultralytics_yolo.runtime.python.yolo_pose import YoloPose
-        from samples.vision.ultralytics_yolo.runtime.python.yolo26_det import YOLO26Detect
-        from samples.vision.ultralytics_yolo.runtime.python.yolo26_obb import YOLO26OBB
+        from samples.vision.ultralytics_yolo.runtime.python.segment import YoloSeg
+        from samples.vision.ultralytics_yolo.runtime.python.pose import YoloPose
+        from samples.vision.ultralytics_yolo.runtime.python.detect import YOLO26Detect
+        from samples.vision.ultralytics_yolo.runtime.python.obb import YOLO26OBB
 
         for cls in (YoloDetect, YoloSeg, YoloPose, YOLO26Detect, YOLO26OBB):
             self.assertFalse(hasattr(cls, "pre_process_with_transform"),
@@ -58,7 +58,7 @@ class SimplificationSurfaceTests(unittest.TestCase):
 
         if str(RUNTIME) not in sys.path:
             sys.path.insert(0, str(RUNTIME))
-        import yolo_dispatch
+        from samples.vision.ultralytics_yolo.runtime.python import cli as yolo_dispatch
 
         source = Path(yolo_dispatch.__file__).read_text(encoding="utf-8")
         self.assertNotIn("importlib", source,

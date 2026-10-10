@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Depth CLI entry: construct the task, run one measured ``predict``, save evidence.
 
-Option declarations, the model-free listing/dry-run modes and the canonical
-output/report writing live in ``cli.py``.  This entry stays focused on the
+Option declarations, published selection, the model-free listing/dry-run
+modes and the canonical output/report writing live in ``cli.py``.  This entry stays focused on the
 execution path: resolve the selection, load the runner, construct
 ``Yolo26DepthTask`` and call ``predict`` once.  The report needs the explicit
 warmup count and the one-forward latency, so the entry requests them through
@@ -20,16 +20,16 @@ if str(ROOT) not in sys.path:
 from samples.vision.yolo26_depth.runtime.python.cli import (
     build_parser,  # re-exported here: the contract checker imports it from main
     read_bgr_image,
+    resolve_selection,
     run_dry_run,
     run_list_models,
     save_depth_evidence,
 )
-from samples.vision.yolo26_depth.runtime.python.model_binding import (
-    resolve_selection,
-)
 
 
 def main(argv=None):
+    """Run the depth CLI: resolve the published asset, run one image, and present or save the relative-depth result."""
+
     args = build_parser().parse_args(argv)
     try:
         if args.list_models:

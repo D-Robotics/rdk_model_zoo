@@ -28,7 +28,7 @@ class StubRunner:
 
     def __call__(self, tensors):
         return self._raw
-from samples.vision.diffusiondrive.runtime.python.quantization import quantize, decode
+from samples.vision.diffusiondrive.runtime.python.diffusiondrive import quantize, decode
 
 from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 SOURCE = legacy_tree("s/samples/vision/diffusiondrive")
@@ -175,7 +175,7 @@ class DiffusionTests(unittest.TestCase):
                 DiffusionDrivePlanner(resolve_selection('s600'), agent_score_threshold=threshold, runner=StubRunner(b))
 
     def test_integer_saturation_does_not_wrap_at_uint32_boundary(self):
-        from samples.vision.diffusiondrive.runtime.python.quantization import transform
+        from samples.vision.diffusiondrive.runtime.python.diffusiondrive import transform
 
         q = SimpleNamespace(
             quant_type="SCALE", scale=np.array([1.0]), zero_point=np.array([0]), axis=0
@@ -249,7 +249,7 @@ class DiffusionTests(unittest.TestCase):
         )
 
     def test_all_six_packaged_cases_match_actual_source_postprocess_and_render(self):
-        from samples.vision.diffusiondrive.runtime.python.visualization import (
+        from samples.vision.diffusiondrive.runtime.python.cli import (
             render_result,
         )
         import cv2, tempfile

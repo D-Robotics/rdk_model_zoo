@@ -78,7 +78,7 @@ python3 -m samples.vision.diffusiondrive.runtime.python.main --target s600 --inp
 Run the five cases with explicit target and a new batch directory:
 
 ```bash
-bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s600 --output outputs/diffusiondrive_cases
+bash samples/vision/diffusiondrive/evaluator/run_all_cases.sh --target s600 --output outputs/diffusiondrive_cases
 ```
 
 For command inspection, add `--dry-run` to the batch command. It validates all five input archives and prints commands without executing the SDK or creating output directories. Batch runs stop on the first failed case and keep completed run records; no later case is reported as passed. Use `--target s100p` with the distinct S100P model when that board is available. No auto-download or board fallback is performed.

@@ -18,8 +18,7 @@ python/
 ├── main.py  # 命令行入口：构造模型并调用 predict
 ├── matching.py  # 模型初始化与推理阶段
 ├── run.sh  # 运行示例
-├── simple_tokenizer.py  # CLIP BPE 分词算法
-└── tokenization.py  # 文本分词与输入准备
+└── simple_tokenizer.py  # 保留的 CLIP BPE 分词与 77-token 提示桥接
 ```
 
 从 [main.py](main.py) 开始：入口构造 `CLIPMatcher` 并调用 `predict`。[matching.py](matching.py) 实现模型初始化及推理阶段；[cli.py](cli.py) 负责参数、模型选择和结果交付。模型初始化会加载 Runtime，应用可复用同一个实例执行多次预测。
@@ -99,7 +98,7 @@ import numpy as np
 
 from samples.vision.clip.runtime.python.matching import CLIPMatcher
 from samples.vision.clip.runtime.python.cli import resolve_selection
-from samples.vision.clip.runtime.python.tokenization import PromptTokenizer
+from samples.vision.clip.runtime.python.simple_tokenizer import PromptTokenizer
 
 repo = Path.cwd()
 image_path = repo / "samples/vision/clip/test_data/dog.jpg"

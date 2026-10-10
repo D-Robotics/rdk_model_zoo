@@ -26,7 +26,7 @@ class Calibration(unittest.TestCase):
     def test_bridge_reuses_unmasked_cif_and_preserves_named_inputs(self):
         from samples.speech.paraformer.conversion.calibration import intermediates
         from samples.speech.paraformer.runtime.python.cif import cif_numpy
-        from samples.speech.paraformer.runtime.python.model_binding import CONTEXT
+        from samples.speech.paraformer.runtime.python.cli import CONTEXT
 
         context = np.ones((1, 400, 512), np.float32)
         alphas = np.full((1, 401), 0.3, np.float32)
@@ -66,7 +66,7 @@ class Calibration(unittest.TestCase):
 
     def test_invalid_features_or_intermediate_are_not_silently_skipped(self):
         from samples.speech.paraformer.conversion.calibration import intermediates
-        from samples.speech.paraformer.runtime.python.model_binding import CONTEXT
+        from samples.speech.paraformer.runtime.python.cli import CONTEXT
 
         good = np.zeros((1, 400, 560), np.float32)
         for bad in (good.astype(np.float64), good[:, :20], good + np.nan):

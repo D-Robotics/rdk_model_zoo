@@ -18,8 +18,7 @@ python/
 ├── main.py  # CLI entry: construct model and call predict
 ├── matching.py  # Model initialization and inference stages
 ├── run.sh  # Run the sample
-├── simple_tokenizer.py  # CLIP BPE tokenization algorithm
-└── tokenization.py  # Text tokenization and input preparation
+└── simple_tokenizer.py  # Preserved CLIP BPE tokenization and 77-token prompts
 ```
 
 Start with [main.py](main.py): it constructs `CLIPMatcher` and calls `predict`. [matching.py](matching.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.
@@ -99,7 +98,7 @@ import numpy as np
 
 from samples.vision.clip.runtime.python.matching import CLIPMatcher
 from samples.vision.clip.runtime.python.cli import resolve_selection
-from samples.vision.clip.runtime.python.tokenization import PromptTokenizer
+from samples.vision.clip.runtime.python.simple_tokenizer import PromptTokenizer
 
 repo = Path.cwd()
 image_path = repo / "samples/vision/clip/test_data/dog.jpg"

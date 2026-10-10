@@ -86,7 +86,7 @@ and `20x20` with channels `80`, `64`, `80`, `64`, `80`, `64`; the SDK reports
 `[1,320,320,2]`, both `hbDNNDataType.U8`.
 
 The binding expresses this finite, reviewed DFL protocol in
-`model_binding.py`; shape matching only identifies the six opaque physical
+`backend.py`; shape matching only identifies the six opaque physical
 names after the protocol is selected and does not prove that an arbitrary
 model has YOLO semantics. The current pilot records and board evidence are
 YOLOv8n only. The unified entrypoint still exposes the existing DFL-compatible
@@ -147,14 +147,14 @@ The maintained symbols now map as follows:
 
 | Previous symbol or responsibility | Maintained symbol |
 | --- | --- |
-| `YoloDetect.__init__` model load | `model_runner.build_runner` → `ModelRunner.from_selection` |
-| runtime input metadata and NV12 protocol | `model_binding.bind_model` → `tensor_io.bind_nv12_inputs` |
-| positional output pairing | `model_binding._bind_output_roles` → `OutputBinding` role map |
-| `YoloDetect.pre_process` | `geometry.resize_with_transform` + `InputBinding.build` |
+| `YoloDetect.__init__` model load | `backend.build_runner` → `ModelRunner.from_selection` |
+| runtime input metadata and NV12 protocol | `backend.bind_model` → `backend.bind_nv12_inputs` |
+| positional output pairing | `backend._bind_output_roles` → `OutputBinding` role map |
+| `YoloDetect.pre_process` | `detect.resize_with_transform` + `backend.InputBinding.build` |
 | `YoloDetect.forward` | injected `ModelRunner` callable |
-| `filter_classification` / `decode_boxes` path | `decode.decode_dfl` |
-| `YOLO26Runtime` LTRB postprocess | `decode.decode_ltrb` through `YOLO26Detect` |
-| `scale_coords_back` path | `geometry.inverse_boxes` |
+| `filter_classification` / `decode_boxes` path | `detect.decode_dfl` |
+| `YOLO26Runtime` LTRB postprocess | `detect.decode_ltrb` through `YOLO26Detect` |
+| `scale_coords_back` path | `detect.inverse_boxes` |
 | tuple result | `DetectionResult`, a `NamedTuple` retaining tuple unpacking |
 
 The platform compatibility wrappers
@@ -172,9 +172,9 @@ protocol-specific decoder and binding contract differ.
 Both detectors return `PreparedDetection(tensors, transform)` from preprocessing.
 The transform is frozen and is not stored on the model. Use
 `post_process(forward(prepared.tensors), transform=prepared.transform)`; `predict`
-composes exactly that path. The shared `detection_io.py` owns transport/context,
-`tensor_io.py` owns declared output transforms, and `legacy.py` owns the old
-`pre_process_with_transform` tuple adapter. Tensor mapping access and explicit
+composes exactly that path. `detect.py` owns the shared transport/context and
+per-call geometry helpers, and `backend.py` owns the declared output
+transforms. Tensor mapping access and explicit
 original-width/height postprocess calls remain executable without cached state.
 Missing context or conflicting geometry fails explicitly.
 

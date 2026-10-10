@@ -5,18 +5,18 @@ from dataclasses import replace
 from unittest.mock import patch
 import unittest, warnings
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import (
     LTRBPoseContract,
     ModelSelection,
     RuntimeMetadata,
     bind_model,
 )
-from samples.vision.ultralytics_yolo.runtime.python.model_runner import ModelRunner
-from samples.vision.ultralytics_yolo.runtime.python.yolo26_pose import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import ModelRunner
+from samples.vision.ultralytics_yolo.runtime.python.pose import (
     YOLO26Pose,
     YOLO26PoseConfig,
 )
-from samples.vision.ultralytics_yolo.runtime.python.yolo_pose import YoloPose
+from samples.vision.ultralytics_yolo.runtime.python.pose import YoloPose
 
 
 def fixture(target="s100"):

@@ -9,12 +9,10 @@ from unittest.mock import patch
 
 import numpy as np
 
-PYTHON_DIR = Path(__file__).resolve().parents[1] / "runtime/python"
-sys.path.insert(0, str(PYTHON_DIR))
-import main
-import yolo_dispatch
-from yolo_cli import build_parser
-from yolo_platform import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python import main
+from samples.vision.ultralytics_yolo.runtime.python import cli as yolo_dispatch
+from samples.vision.ultralytics_yolo.runtime.python.cli import build_parser
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
 
 
 class ModelConfigTests(unittest.TestCase):
@@ -80,9 +78,9 @@ class ModelConfigTests(unittest.TestCase):
                 return [(3, 0.9)]
 
         # Keep real argument-to-config preparation; only replace the board model.
-        from samples.vision.ultralytics_yolo.runtime.python.yolo_cls import YoloClsConfig
-        with patch("yolo_dispatch.get_task_types", return_value=(RecordedModel, YoloClsConfig)), \
-             patch("main.require_execution_target"), patch("main.ensure_model"), \
+        from samples.vision.ultralytics_yolo.runtime.python.classify import YoloClsConfig
+        with patch("samples.vision.ultralytics_yolo.runtime.python.cli.get_task_types", return_value=(RecordedModel, YoloClsConfig)), \
+             patch("samples.vision.ultralytics_yolo.runtime.python.main.require_execution_target"), patch("samples.vision.ultralytics_yolo.runtime.python.main.ensure_model"), \
              patch("utils.py_utils.file_io.load_image", return_value=image), \
              patch("utils.py_utils.inspect.print_model_info"), \
              contextlib.redirect_stdout(io.StringIO()) as output:

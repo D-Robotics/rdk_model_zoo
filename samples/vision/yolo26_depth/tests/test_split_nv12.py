@@ -3,8 +3,9 @@ from types import SimpleNamespace
 import unittest
 import numpy as np
 from utils.py_utils.image import bgr_to_nv12_planes
-from samples.vision.yolo26_depth.runtime.python.model_binding import resolve_selection, bind_model
-from samples.vision.yolo26_depth.runtime.python.model_runner import RuntimeModelRunner
+from samples.vision.yolo26_depth.runtime.python.cli import resolve_selection
+from samples.vision.yolo26_depth.runtime.python.yolo26_depth import bind_model
+from samples.vision.yolo26_depth.runtime.python.yolo26_depth import RuntimeModelRunner
 from samples.vision.yolo26_depth.runtime.python.yolo26_depth import Yolo26DepthTask
 
 

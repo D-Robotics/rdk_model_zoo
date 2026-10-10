@@ -3,13 +3,13 @@
 import unittest
 from types import SimpleNamespace
 import numpy as np
-from samples.speech.asr.runtime.python.decoding import (
+from samples.speech.asr.runtime.python.asr import (
     decode_exact_logits,
     decode_ids,
     decode_logits,
     validate_vocabulary,
 )
-from samples.speech.asr.runtime.python.frontend import (
+from samples.speech.asr.runtime.python.asr import (
     Config,
     prepare_chunk,
     source_chunk_size,

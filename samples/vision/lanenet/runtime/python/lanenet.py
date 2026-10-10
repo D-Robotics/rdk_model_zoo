@@ -7,8 +7,8 @@ construction loads the model through the shared lazy transport, and each
 ``predict`` call runs preprocess -> infer -> postprocess visible in this
 file. The three stages return raw embeddings and model-grid binary labels,
 not lane IDs. Catalog selection and presentation live in ``cli.py``; the
-source input arithmetic shared with conversion calibration lives in
-``image_preprocess.py``; rendering lives in ``visualization.py``.
+source input arithmetic shared with conversion calibration lives here as
+``image_to_tensor``.
 """
 
 from collections.abc import Mapping
@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import cv2
 import numpy as np
 
 from utils.py_utils.platforms import require_execution_target
@@ -23,7 +24,31 @@ from utils.py_utils.runtime_meta import MetadataMismatchError, RuntimeMetadata
 from utils.py_utils.single_array_runner import NamedArrayRunner
 
 from samples.vision.lanenet.runtime.python.cli import ModelSelection
-from samples.vision.lanenet.runtime.python.image_preprocess import image_to_tensor
+
+
+def image_to_tensor(image):
+    """BGR uint8 HWC → the source RGB/ImageNet float32 NCHW input tensor.
+
+    INTER_AREA stretch to (512, 256) preserves the source input policy; the
+    explicit-calibration conversion script imports this same function.
+    """
+    if (
+        not isinstance(image, np.ndarray)
+        or image.ndim != 3
+        or image.shape[2] != 3
+        or image.dtype != np.uint8
+        or min(image.shape[:2]) <= 0
+    ):
+        raise ValueError("Expected nonempty BGR uint8 HWC image")
+    rgb = cv2.resize(
+        cv2.cvtColor(image, cv2.COLOR_BGR2RGB),
+        (512, 256),
+        interpolation=cv2.INTER_AREA,
+    )
+    chw = (rgb.astype(np.float32) / 255).transpose(2, 0, 1)
+    mean = np.array([0.485, 0.456, 0.406], np.float32)[:, None, None]
+    std = np.array([0.229, 0.224, 0.225], np.float32)[:, None, None]
+    return np.ascontiguousarray(((chw - mean) / std)[None])
 
 
 @dataclass(frozen=True)
@@ -358,4 +383,4 @@ class LaneNetSegmenter:
 
 
 __all__ = ["LaneNetSegmenter", "LanePredictionDetails", "LaneResult",
-           "NamedArrayRunner", "create_runner", "validate_raw"]
+           "NamedArrayRunner", "create_runner", "image_to_tensor", "validate_raw"]

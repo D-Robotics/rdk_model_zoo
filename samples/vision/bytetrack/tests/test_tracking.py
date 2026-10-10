@@ -5,7 +5,8 @@ from unittest.mock import patch
 import numpy as np
 from samples.vision.bytetrack.runtime.python.tracking import ByteTrackTask,TrackingConfig
 from samples.vision.yolov5.runtime.python.detection import DetectionResult,YOLOv5Task
-from samples.vision.yolov5.runtime.python.model_binding import resolve_selection,bind_model
+from samples.vision.yolov5.runtime.python.cli import resolve_selection
+from samples.vision.yolov5.runtime.python.detection import bind_model
 from samples.vision.yolov5.tests.test_yolov5 import FakeRuntime
 from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 ROOT=Path(__file__).resolve().parents[4]

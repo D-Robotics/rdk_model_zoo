@@ -1,35 +1,165 @@
 """Command-line surface and per-utterance evidence records for Paraformer.
 
-Option declarations, argument validation/normalization, selection
-resolution and the model-free listing/dry-run rendering live here, together
-with the evidence discipline the entry drives: :func:`prepare` collects
+Option declarations, argument validation/normalization, the published S100
+asset identities/digests and selection, the audio/manifest input records and
+the model-free listing/dry-run rendering live here, together with the
+evidence discipline the entry drives: :func:`prepare` collects
 input digests and creates the (new) output directory, the per-utterance
 helpers — :func:`note_runtime`, :func:`prepare_utterance`,
 :func:`mark_attempted`, :func:`record_prediction`, :func:`save_features` —
 and :func:`complete`/:func:`record_failure` keep one implementation of the
-report records. Nothing in this module loads an SDK, imports NumPy at
-module level or processes audio, so ``main.py`` stays a thin, readable
-entry: parse arguments, run the model-free modes, construct the frontend
-and the three-model bundle, run the per-utterance ``pipeline.predict``
-loop visibly.
+report records. Nothing in this module loads an SDK, imports NumPy at module level or
+processes audio features, so ``main.py`` stays a thin, readable entry: parse
+arguments, run the model-free modes, construct the frontend and the
+three-model bundle, run the per-utterance ``pipeline.predict`` loop visibly.
+The stage/pipeline composition lives in ``pipeline.py``.
 """
 
 import argparse
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
 
-from utils.py_utils.assets import sha256_file
+from utils.py_utils.assets import Asset, list_assets, sha256_file
 from utils.py_utils.runtime_meta import metadata_evidence
-from samples.speech.paraformer.runtime.python import input_io
-from samples.speech.paraformer.runtime.python.model_binding import (
-    SAMPLE_DIR,
-    STAGES,
-    VOCABULARY_DIGEST,
-    resolve_selections,
-)
+
+# ======================================================================
+# Published S100 asset identities, digests and selection.
+# ======================================================================
+
+SAMPLE_DIR = Path(__file__).resolve().parents[2]
+
+
+STAGES = ("encoder", "predictor", "decoder")
+
+
+FILENAMES = {
+    "encoder": "s100/paraformer_large_encoder_400x560_s100.hbm",
+    "predictor": "s100/paraformer_large_predictor_400x512_s100.hbm",
+    "decoder": "s100/paraformer_large_decoder_400x512_s100.hbm",
+}
+
+
+CONTEXT = "/encoder/after_norm/Add_1_output_0"
+
+
+LOCAL_DIGESTS = {
+    "am.mvn": "29b3c740a2c0cfc6b308126d31d7f265fa2be74f3bb095cd2f143ea970896ae5",
+    "paraformer_config.yaml": "1d9057edeaba9e131cb98f26011606497cf3af187d8943525ddb5ee36c836b1b",
+}
+
+
+VOCABULARY_DIGEST = "2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127"
+
+
+@dataclass(frozen=True)
+class Selection:
+    target: str
+    stage: str
+    asset: Asset
+    model_path: Path
+    explicit_model_path: bool = False
+
+
+def resolve_selections(target="auto", *, model_paths=None, asset_ids=None):
+    """Select all three models; alternate paths require all three asset IDs."""
+    if target == "auto":
+        from utils.py_utils.platforms import detect_target
+
+        target = detect_target()
+    if target != "s100":
+        raise ValueError("Paraformer has a published three-model set only for s100")
+    for name, values in (("model_paths", model_paths), ("asset_ids", asset_ids)):
+        if values is not None and (
+            not isinstance(values, Mapping) or set(values) != set(STAGES)
+        ):
+            raise ValueError(f"{name} requires exactly encoder, predictor and decoder")
+    if model_paths is not None and asset_ids is None:
+        raise ValueError("External model paths require explicit matching asset IDs")
+    assets = {asset.filename: asset for asset in list_assets("s", "paraformer")}
+    selected = []
+    for stage in STAGES:
+        asset = assets.get(FILENAMES[stage])
+        if asset is None or asset.format != "hbm" or not asset.url:
+            raise ValueError(f"Missing published {stage} HBM asset")
+        if asset_ids is not None and asset_ids[stage] != asset.reference:
+            raise ValueError(f"Expected {stage} asset-id {asset.reference}")
+        path = (
+            Path(model_paths[stage]).expanduser()
+            if model_paths is not None
+            else SAMPLE_DIR / "model" / asset.filename
+        )
+        selected.append(Selection(target, stage, asset, path, model_paths is not None))
+    return tuple(selected)
+
+# ======================================================================
+# Audio/manifest file handling, kept outside feature and inference math.
+# ======================================================================
+
+@dataclass(frozen=True)
+class InputItem:
+    entry: dict
+    audio_path: Path
+
+
+def validate_id(value):
+    if (
+        not isinstance(value, str)
+        or not value
+        or value in (".", "..")
+        or value.strip() != value
+        or any(char in value for char in ("/", "\\", "\0"))
+    ):
+        raise ValueError("utt_id must be a nonempty filename stem, not a path")
+    return value
+
+
+def load_manifest(path, audio_dir, max_utts=0):
+    if type(max_utts) is not int or max_utts < 0:
+        raise ValueError("max-utts must be nonnegative; zero means all")
+    records = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(records, list) or not records:
+        raise ValueError("Manifest must be a nonempty JSON list")
+    seen = set()
+    items = []
+    for record in records:
+        if not isinstance(record, dict):
+            raise ValueError("Each manifest entry must be an object")
+        key = validate_id(record.get("utt_id"))
+        if key in seen or ("text" in record and not isinstance(record["text"], str)):
+            raise ValueError(
+                "Manifest IDs must be unique and reference text must be a string"
+            )
+        seen.add(key)
+        items.append(InputItem(dict(record), Path(audio_dir) / f"{key}.wav"))
+    selected = items[:max_utts] if max_utts else items
+    for item in selected:
+        if not item.audio_path.is_file():
+            raise ValueError(f"Missing selected WAV: {item.audio_path}")
+    return tuple(selected)
+
+
+def read_audio(path):
+    import soundfile as sf
+
+    return sf.read(Path(path), dtype="float32")
+
+
+def write_json(path, payload):
+    """Atomically finish JSON inside a newly created per-run directory."""
+    path = Path(path)
+    temporary = path.with_name(path.name + ".part")
+    try:
+        temporary.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + "\n",
+            encoding="utf-8",
+        )
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def build_parser():
@@ -184,17 +314,17 @@ def prepare(args, selections) -> Preparation:
         )
     initial = {args.cmvn_path: sha256_file(args.cmvn_path)}
     if args.audio_file is not None:
-        key = input_io.validate_id(args.audio_file.stem)
+        key = validate_id(args.audio_file.stem)
         if not args.audio_file.is_file():
             raise ValueError(f"Missing WAV: {args.audio_file}")
-        items = (input_io.InputItem({"utt_id": key}, args.audio_file),)
+        items = (InputItem({"utt_id": key}, args.audio_file),)
     else:
         initial[args.manifest] = sha256_file(args.manifest)
-        items = input_io.load_manifest(args.manifest, args.audio_dir, args.max_utts)
+        items = load_manifest(args.manifest, args.audio_dir, args.max_utts)
     vocabulary = None
     if not args.preprocess_only:
         # Imported here so the model-free modes of this module stay NumPy-free.
-        from samples.speech.paraformer.runtime.python.decoding import (
+        from samples.speech.paraformer.runtime.python.pipeline import (
             validate_vocabulary,
         )
 
@@ -255,7 +385,7 @@ def prepare_utterance(args, preparation, frontend, item) -> Utterance:
     preparation.report["current_utterance"] = key
     digest = sha256_file(item.audio_path)
     preparation.initial[item.audio_path] = digest
-    audio, rate = input_io.read_audio(item.audio_path)
+    audio, rate = read_audio(item.audio_path)
     start = perf_counter()
     features = frontend.pre_process(audio, rate)
     frontend_ms = (perf_counter() - start) * 1000
@@ -332,14 +462,14 @@ def complete(args, preparation, prepared_manifest):
         if sha256_file(path) != digest:
             raise ValueError(f"Input changed during execution: {path}")
     if args.preprocess_only:
-        input_io.write_json(
+        write_json(
             args.output_dir / "prepared-manifest.json", prepared_manifest
         )
     report.pop("current_utterance", None)
     report.update(
         status="completed", ended_utc=datetime.now(timezone.utc).isoformat()
     )
-    input_io.write_json(args.output_dir / "result.json", report)
+    write_json(args.output_dir / "result.json", report)
     return report
 
 
@@ -352,7 +482,7 @@ def record_failure(args, report, error) -> None:
         ended_utc=datetime.now(timezone.utc).isoformat(),
     )
     try:
-        input_io.write_json(args.output_dir / "failed.json", report)
+        write_json(args.output_dir / "failed.json", report)
     except OSError as report_error:
         raise RuntimeError(
             f"{error}; also unable to write failure record: {report_error}"

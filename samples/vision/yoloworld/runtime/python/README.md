@@ -14,8 +14,6 @@ Run YOLOWorld detection using the bundled offline vocabulary embeddings and per-
 python/
 ├── cli.py  # Arguments, model selection and result presentation
 ├── main.py  # Command-line entry: construct the model and call predict
-├── model_binding.py  # Model selection and physical tensor contracts
-├── model_runner.py  # Runtime loading and raw tensor execution
 ├── run.sh  # Locate the Python entry and forward arguments
 └── yoloworld.py  # Model stages and prediction
 ```
@@ -82,7 +80,7 @@ last prompt fills remaining text slots. No label-file fallback exists.
 
 ```python
 import cv2, json
-from samples.vision.yoloworld.runtime.python.model_binding import resolve_selection
+from samples.vision.yoloworld.runtime.python.cli import resolve_selection
 from samples.vision.yoloworld.runtime.python.yoloworld import YOLOWorldTask
 selection = resolve_selection('x5')
 with open('samples/vision/yoloworld/test_data/offline_vocabulary_embeddings.json') as f:

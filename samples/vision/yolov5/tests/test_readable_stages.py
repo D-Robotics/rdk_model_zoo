@@ -15,7 +15,8 @@ import unittest
 import numpy as np
 
 from utils.py_utils.runtime_meta import RuntimeMetadata
-from samples.vision.yolov5.runtime.python.model_binding import bind_model, resolve_selection
+from samples.vision.yolov5.runtime.python.cli import resolve_selection
+from samples.vision.yolov5.runtime.python.detection import bind_model
 from samples.vision.yolov5.runtime.python.detection import YOLOv5Task
 from test_yolov5 import FakeRuntime
 

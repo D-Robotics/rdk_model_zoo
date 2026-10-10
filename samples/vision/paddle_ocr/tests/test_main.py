@@ -69,7 +69,7 @@ class MainTests(unittest.TestCase):
 
     def test_prepare_rejects_destination_collision_after_model_dir_rewrite(self):
         from samples.vision.paddle_ocr.runtime.python import cli
-        from samples.vision.paddle_ocr.runtime.python.model_binding import BindingError
+        from samples.vision.paddle_ocr.runtime.python.cli import BindingError
 
         args = cli.build_parser().parse_args(
             [

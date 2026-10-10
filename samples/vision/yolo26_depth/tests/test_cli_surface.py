@@ -62,8 +62,8 @@ class CliSurfaceTests(unittest.TestCase):
         import numpy as np
 
         from test_depth import metadata
-        from samples.vision.yolo26_depth.runtime.python import model_runner
-        from samples.vision.yolo26_depth.runtime.python.model_binding import resolve_selection
+        from samples.vision.yolo26_depth.runtime.python import yolo26_depth as model_runner
+        from samples.vision.yolo26_depth.runtime.python.cli import resolve_selection
         from samples.vision.yolo26_depth.runtime.python.yolo26_depth import Yolo26DepthTask
 
         raw = np.linspace(-5, 6, 192 * 192, dtype=np.float32).reshape(1, 192, 192, 1)
@@ -75,7 +75,7 @@ class CliSurfaceTests(unittest.TestCase):
         )
         real = model_runner.RuntimeModelRunner
         with mock.patch(
-            "samples.vision.yolo26_depth.runtime.python.model_runner.RuntimeModelRunner",
+            "samples.vision.yolo26_depth.runtime.python.yolo26_depth.RuntimeModelRunner",
             side_effect=lambda selection: real(selection, runtime=runtime),
         ), contextlib.redirect_stdout(io.StringIO()):
             task = Yolo26DepthTask(resolve_selection("x5"))

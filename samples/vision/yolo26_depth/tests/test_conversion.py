@@ -32,10 +32,8 @@ class ConversionTests(unittest.TestCase):
         self.assertEqual(s.shape, (1, 3, 768, 768))
         self.assertEqual(s.dtype, np.float32)
         np.testing.assert_array_equal(s, x[None].astype(np.float32) / 255.0)
-        from samples.vision.yolo26_depth.runtime.python.model_binding import (
-            bind_model,
-            resolve_selection,
-        )
+        from samples.vision.yolo26_depth.runtime.python.cli import resolve_selection
+        from samples.vision.yolo26_depth.runtime.python.yolo26_depth import bind_model
         from samples.vision.yolo26_depth.runtime.python.yolo26_depth import (
             Yolo26DepthTask,
         )

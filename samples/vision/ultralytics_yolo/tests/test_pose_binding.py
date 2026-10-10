@@ -6,14 +6,14 @@ from unittest.mock import patch
 import unittest
 import warnings
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import (
     DFLPoseContract,
     ModelSelection,
     RuntimeMetadata,
     bind_model,
 )
-from samples.vision.ultralytics_yolo.runtime.python.model_runner import ModelRunner
-from samples.vision.ultralytics_yolo.runtime.python.yolo_pose import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import ModelRunner
+from samples.vision.ultralytics_yolo.runtime.python.pose import (
     YoloPose,
     YoloPoseConfig,
 )

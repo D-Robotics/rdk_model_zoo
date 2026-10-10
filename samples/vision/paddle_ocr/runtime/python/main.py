@@ -19,7 +19,7 @@ model-free listing/dry-run/prepare modes, resolve the pair, construct the
 two-stage pipeline, call ``predict``, show the result.  Option
 declarations, the model-free modes and result rendering live in
 ``cli.py``; the detection → crop → recognition composition itself lives
-in ``pipeline.py``.  The entrypoint is the only module that adjusts
+in ``ocr.py``.  The entrypoint is the only module that adjusts
 ``sys.path`` for direct full-checkout invocation; SDK, OpenCV and
 pyclipper imports stay behind the selected operation so help/list/dry-run
 remain host-safe.
@@ -49,7 +49,7 @@ from samples.vision.paddle_ocr.runtime.python.cli import (  # noqa: E402
     run_prepare,
     write_json_output,
 )
-from samples.vision.paddle_ocr.runtime.python.model_binding import (  # noqa: E402
+from samples.vision.paddle_ocr.runtime.python.cli import (  # noqa: E402
     BindingError,
     SUPPORTED_TARGETS,  # noqa: F401 - re-exported for existing callers
     list_available_pairs,  # noqa: F401 - re-exported for existing callers
@@ -85,7 +85,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
         # Imported inside real execution: OpenCV and hbm_runtime load only
         # after the pair, file, and board checks above have passed.
-        from samples.vision.paddle_ocr.runtime.python.pipeline import OCRPipeline
+        from samples.vision.paddle_ocr.runtime.python.ocr import OCRPipeline
 
         image = read_bgr_image(
             args.test_img if args.test_img else default_image(pair.target)

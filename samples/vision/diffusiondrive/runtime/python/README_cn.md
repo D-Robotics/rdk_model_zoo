@@ -12,17 +12,10 @@
 
 ```text
 python/
-├── README.md  # 英文说明
-├── README_cn.md  # 中文说明
-├── cli.py  # 参数、模型选择与结果交付
-├── data_io.py  # NPZ 输入读取和检查
-├── diffusiondrive.py  # 模型初始化与推理阶段
+├── cli.py  # 选择、参数、NPZ 特征 IO、输出目录与渲染
+├── diffusiondrive.py  # 张量契约、仿射变换与模型阶段
 ├── main.py  # 命令行入口：构造模型并调用 predict
-├── quantization.py  # 量化和反量化计算
-├── run.sh  # 运行示例
-├── run_all_cases.sh  # Shell 脚本
-├── run_cases.py  # 模型初始化与推理阶段
-└── visualization.py  # 结果渲染与图片保存
+└── run.sh  # 定位 Python 入口并转发参数
 ```
 
 从 [main.py](main.py) 开始：入口构造 `DiffusionDrivePlanner` 并调用 `predict`。[diffusiondrive.py](diffusiondrive.py) 实现模型初始化及推理阶段；[cli.py](cli.py) 负责参数、模型选择和结果交付。模型初始化会加载 Runtime，应用可复用同一个实例执行多次预测。
@@ -52,8 +45,8 @@ bash samples/vision/diffusiondrive/runtime/python/run.sh --target s600 --input-n
 检查或执行源五案例：
 
 ```bash
-bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s100p --output outputs/diffusiondrive_cases --dry-run
-bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s100p --output outputs/diffusiondrive_cases
+bash samples/vision/diffusiondrive/evaluator/run_all_cases.sh --target s100p --output outputs/diffusiondrive_cases --dry-run
+bash samples/vision/diffusiondrive/evaluator/run_all_cases.sh --target s100p --output outputs/diffusiondrive_cases
 ```
 
 批量 dry-run 校验全部五份输入并打印命令，不执行 SDK、不创建输出。实际运行复用单案例 CLI，每案例加载一次模型，在首个非零返回处停止，`batch-report.json` 保留已完成返回码、剩余案例及可用报告摘要；各案例的完成状态以其返回码为准。批量输出通过 `--output` 指定。
@@ -104,7 +97,7 @@ bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s100
 
 ```python
 from samples.vision.diffusiondrive.runtime.python.cli import resolve_selection
-from samples.vision.diffusiondrive.runtime.python.data_io import load_features
+from samples.vision.diffusiondrive.runtime.python.cli import load_features
 from samples.vision.diffusiondrive.runtime.python.diffusiondrive import DiffusionDrivePlanner
 
 selection = resolve_selection("s600")

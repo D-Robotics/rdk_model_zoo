@@ -15,11 +15,9 @@ python/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
 ├── cli.py  # 参数、模型选择与结果交付
-├── image_preprocess.py  # 模型初始化与推理阶段
 ├── lanenet.py  # 模型初始化与推理阶段
 ├── main.py  # 命令行入口：构造模型并调用 predict
-├── run.sh  # 运行示例
-└── visualization.py  # 结果渲染与图片保存
+└── run.sh  # 运行示例
 ```
 
 从 [main.py](main.py) 开始：入口构造 `LaneNetSegmenter` 并调用 `predict`。[lanenet.py](lanenet.py) 实现模型初始化及推理阶段；[cli.py](cli.py) 负责参数、模型选择和结果交付。模型初始化会加载 Runtime，应用可复用同一个实例执行多次预测。

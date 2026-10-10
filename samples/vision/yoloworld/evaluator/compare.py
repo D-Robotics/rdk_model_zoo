@@ -31,12 +31,14 @@ from utils.py_utils.assets import verify_asset_file  # noqa: E402
 from utils.py_utils.platforms import require_execution_target  # noqa: E402
 from utils.py_utils.legacy_platforms import pinned_name  # noqa: E402
 from utils.py_utils.runtime_meta import RuntimeMetadata, metadata_evidence  # noqa: E402
-from samples.vision.yoloworld.runtime.python.model_binding import (  # noqa: E402
+from samples.vision.yoloworld.runtime.python.cli import (  # noqa: E402
     SAMPLE_DIR,
     resolve_selection,
 )
-from samples.vision.yoloworld.runtime.python.model_runner import RuntimeModelRunner  # noqa: E402
-from samples.vision.yoloworld.runtime.python.yoloworld import YOLOWorldTask  # noqa: E402
+from samples.vision.yoloworld.runtime.python.yoloworld import (  # noqa: E402
+    RuntimeModelRunner,
+    YOLOWorldTask,
+)
 from samples.vision.yoloworld.evaluator.source_reference import (  # noqa: E402
     load_legacy,
     source_paths,

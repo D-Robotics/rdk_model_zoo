@@ -12,34 +12,15 @@ Run Ultralytics detection, segmentation, pose, classification and oriented-box m
 
 ```text
 python/
-├── classification_decode.py  # Model stages and prediction
-├── decode.py  # Task output decoding
-├── detect.py  # Model stages and prediction
-├── detection_io.py  # Model stages and prediction
-├── geometry.py  # Image geometry and coordinate transforms
+├── backend.py  # Shared tensor binding, runner and runtime metadata
+├── classify.py  # Classification task and Softmax/Top-K decode
+├── cli.py  # Platforms, published assets, dispatch, listing and rendering
+├── detect.py  # Detection tasks (DFL / YOLOv10 / YOLO26) with decode and shared geometry
 ├── main.py  # Command-line entry: construct the model and call predict
-├── model_binding.py  # Model selection and physical tensor contracts
-├── model_runner.py  # Runtime loading and raw tensor execution
-├── obb_decode.py  # Model stages and prediction
-├── pose_decode.py  # Model stages and prediction
+├── obb.py  # Rotated-box task and rotated NMS decode
+├── pose.py  # Pose task and keypoint decode
 ├── run.sh  # Locate the Python entry and forward arguments
-├── segmentation_decode.py  # Model stages and prediction
-├── tensor_io.py  # Model stages and prediction
-├── yolo26_det.py  # Model stages and prediction
-├── yolo26_obb.py  # Model stages and prediction
-├── yolo26_pose.py  # Model stages and prediction
-├── yolo26_seg.py  # Model stages and prediction
-├── yolo_assets.py  # Model stages and prediction
-├── yolo_cli.py  # Arguments, model selection and result presentation
-├── yolo_cls.py  # Model stages and prediction
-├── yolo_dispatch.py  # Model stages and prediction
-├── yolo_download.py  # Model stages and prediction
-├── yolo_input.py  # Model stages and prediction
-├── yolo_platform.py  # Model stages and prediction
-├── yolo_pose.py  # Model stages and prediction
-├── yolo_runtime.py  # Model stages and prediction
-├── yolo_seg.py  # Model stages and prediction
-└── yolo_v10detect.py  # Model stages and prediction
+└── segment.py  # Segmentation tasks and mask decode
 ```
 
 <a id="environment"></a>
@@ -198,7 +179,7 @@ YOLO11 detection artifact:
 ```python
 from samples.vision.ultralytics_yolo.runtime.python.detect import (
     YoloDetect, YoloDetectConfig)
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import (
+from samples.vision.ultralytics_yolo.runtime.python.cli import (
     resolve_platform)
 
 profile = resolve_platform("s600")
@@ -265,17 +246,17 @@ DFL pose, classification and YOLO26 OBB stages are documented below.
 
 ```text
 main.py
-  -> resolve_target / platform Manifest selection (yolo_cli for listing,
+  -> resolve_target / platform Manifest selection (cli.py for listing,
      dry-run, download preparation and presentation)
-  -> yolo_dispatch.prepare_runtime_model -> Model(config) -> model.predict(image)
+  -> cli.prepare_runtime_model -> Model(config) -> model.predict(image)
   -> ModelRunner + ModelBinding (input/output contract, shared SDK session)
   -> geometry.resize_with_transform + NV12 input binding
   -> YoloDetect or YOLO26Detect decoder + NMS
-  -> DetectionResult -> yolo_cli.present_result -> --img-save-path
+  -> DetectionResult -> cli.present_result -> --img-save-path
 ```
 
-`model_binding.py` identifies output roles by established shape/dtype contracts;
-compiler enumeration names are opaque. `geometry.py` records the actual
+`backend.py` identifies output roles by established shape/dtype contracts;
+compiler enumeration names are opaque. `detect.py` records the actual
 integer resize and padding so inverse boxes use the same transform. The
 detection tensor protocols are in
 [`DETECTION_CONTRACT.md`](../../DETECTION_CONTRACT.md).
@@ -293,8 +274,8 @@ absolute model path with your prepared artifact. The example uses the S platform
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
-from samples.vision.ultralytics_yolo.runtime.python.yolo_seg import YoloSeg, YoloSegConfig
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.segment import YoloSeg, YoloSegConfig
 
 image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
 image = cv2.imread(str(image_path))
@@ -367,8 +348,8 @@ X5 0.70). YOLO26 pose uses direct boxes and is not covered by this DFL example.
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
-from samples.vision.ultralytics_yolo.runtime.python.yolo_pose import YoloPose, YoloPoseConfig
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.pose import YoloPose, YoloPoseConfig
 
 image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
 image = cv2.imread(str(image_path))
@@ -424,8 +405,8 @@ link to URLs containing `224`; keep the published identity and inspect metadata.
 ```python
 from pathlib import Path
 import cv2
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
-from samples.vision.ultralytics_yolo.runtime.python.yolo_cls import YoloCls, YoloClsConfig
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.classify import YoloCls, YoloClsConfig
 
 image_path = Path("samples/vision/ultralytics_yolo/test_data/zebra_cls.jpg")
 image = cv2.imread(str(image_path))
@@ -483,8 +464,8 @@ absolute path:
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
-from samples.vision.ultralytics_yolo.runtime.python.yolo_v10detect import (
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
     YoloV10Detect, YoloV10DetectConfig,
 )
 
@@ -544,8 +525,8 @@ through [model preparation](../../model/README.md) and replacing the absolute pa
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
-from samples.vision.ultralytics_yolo.runtime.python.yolo26_pose import YOLO26Pose, YOLO26PoseConfig
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.pose import YOLO26Pose, YOLO26PoseConfig
 
 image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
 image = cv2.imread(str(image_path))
@@ -608,8 +589,8 @@ artifact through [model preparation](../../model/README.md); replace the path:
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import resolve_platform
-from samples.vision.ultralytics_yolo.runtime.python.yolo26_seg import YOLO26Seg, YOLO26SegConfig
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
+from samples.vision.ultralytics_yolo.runtime.python.segment import YOLO26Seg, YOLO26SegConfig
 
 image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
 image = cv2.imread(str(image_path))
@@ -668,7 +649,7 @@ an aerial-object benchmark or an expected-detection assertion.
 from pathlib import Path
 import cv2
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.yolo26_obb import YOLO26OBB, YOLO26OBBConfig
+from samples.vision.ultralytics_yolo.runtime.python.obb import YOLO26OBB, YOLO26OBBConfig
 
 image_path = Path("samples/vision/ultralytics_yolo/test_data/bus.jpg")
 image = cv2.imread(str(image_path))

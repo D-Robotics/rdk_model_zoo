@@ -16,7 +16,6 @@ python/
 ├── README_cn.md  # Chinese instructions
 ├── classification.py  # Model initialization and inference stages
 ├── cli.py  # Arguments, model selection and result output
-├── labels.py  # Action-class label loading
 ├── main.py  # CLI entry: construct model and call predict
 └── run.sh  # Run the sample
 ```
@@ -109,7 +108,7 @@ import numpy as np
 repo = Path.cwd()
 binding_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.cli")
 task_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.classification")
-labels_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.labels")
+labels_mod = importlib.import_module("samples.vision.3dresnet.runtime.python.cli")
 
 selection = binding_mod.resolve_selection(
     "s100",

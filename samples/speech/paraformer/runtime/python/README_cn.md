@@ -12,18 +12,12 @@
 
 ```text
 python/
-├── cif.py  # 连续积分触发算法
-├── cli.py  # 参数、模型选择与结果展示
-├── decoding.py  # 词元解码
+├── cif.py  # 连续积分触发（CIF）算法
+├── cli.py  # 发布选择、参数、清单/音频记录与证据
 ├── frontend.py  # 音频特征准备
-├── input_io.py  # 输入文件与数据记录
 ├── main.py  # 命令行入口：构造模型并调用 predict
-├── model_binding.py  # 模型选择与物理张量契约
-├── pipeline.py  # Encoder、predictor、CIF 与 decoder 流水线
-├── requirements-frontend.txt  # 音频前端依赖
-├── run.sh  # 定位 Python 入口并转发参数
-├── runtime.py  # 模型阶段的 Runtime 构造
-└── stages.py  # 模型阶段接口
+├── pipeline.py  # 阶段类、张量绑定、Runner、解码与组合
+└── run.sh  # 定位 Python 入口并转发参数
 ```
 
 <a id="environment"></a>
@@ -223,7 +217,7 @@ PYCODE
 
 ## 发布制品选择与运行绑定
 
-[model_binding.py](model_binding.py) 读取活动 S 发布清单。
+`cli.py` 读取活动 S 发布清单。
 `resolve_selections("s100")` 按 encoder、predictor、decoder 顺序返回三项选择；
 `auto` 使用共享的本机板型检测。X5、S100P、S600 没有对应发布组合，明确拒绝。
 选择过程不加载 SDK、不连接板卡、不下载文件，也不检查模型文件是否存在。
@@ -232,7 +226,7 @@ PYCODE
 
 ```bash
 python - <<'PYCODE'
-from samples.speech.paraformer.runtime.python.model_binding import resolve_selections
+from samples.speech.paraformer.runtime.python.cli import resolve_selections
 for selection in resolve_selections("s100"):
     print(selection.stage, selection.asset.reference)
 try:
@@ -268,7 +262,7 @@ Decoder 若暴露可选的 `token_num` 透传输出，它必须是 int32 `[1]`�
 重复或歧义名称、错误形状和类型一律拒绝。形状见前述流程表，只有 count 使用 int32，
 其他张量均为 float32。若实际编译接口不同，应核定并显式适配，不能悄悄转换类型。
 
-[runtime.py](runtime.py) 创建三个共享 `NamedArrayRunner`。
+[pipeline.py](pipeline.py) 创建三个共享 `NamedArrayRunner`。
 `ParaformerPipeline.from_models` 在创建任何 SDK 对象之前校验完整组合。正常路径中，每个 runner
 先核对本机板型和本地模型文件，再导入／创建 `hbm_runtime`，然后绑定实际元数据。
 
@@ -281,7 +275,7 @@ Decoder 若暴露可选的 `token_num` 透传输出，它必须是 int32 `[1]`�
 ```python
 import json
 from pathlib import Path
-from samples.speech.paraformer.runtime.python.model_binding import resolve_selections
+from samples.speech.paraformer.runtime.python.cli import resolve_selections
 from samples.speech.paraformer.runtime.python.pipeline import ParaformerPipeline
 
 # Board-only integration: the model package must already be prepared.
@@ -351,7 +345,7 @@ fbank。输入为已加载的有限 float32 数组 `[samples]` 或 `[samples,cha
 | CPU CIF | predictor 数组及有效帧数 | float32 acoustic `[1,100,512]`、int32 count `[1]` |
 | Decoder | context、acoustic、count、全零 float32 bias `[1,1,512]` | float32 logits `[1,100,8404]` |
 
-[stages.py](stages.py) 提供 `pipeline.encoder_stage`、`predictor_stage` 和
+`pipeline.py` 提供 `pipeline.encoder_stage`、`predictor_stage` 和
 `decoder_stage`，每个阶段均有规范拼写 `preprocess`、`infer`、`postprocess`；
 
 前处理返回 `PreparedInput.tensors`，数组具有独立存储；decoder 还将本次 token

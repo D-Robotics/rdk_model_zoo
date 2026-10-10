@@ -19,7 +19,7 @@ from test_segmentation_binding import fixture as segmentation_fixture
 from test_pose_binding import fixture as pose_fixture
 from test_obb_binding import fixture as obb_fixture
 
-from samples.vision.ultralytics_yolo.runtime.python.yolo26_det import (
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
     YOLO26Detect,
     YOLO26DetectConfig,
 )

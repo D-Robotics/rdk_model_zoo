@@ -12,21 +12,14 @@
 
 ```text
 python/
-├── README.md  # 英文说明
-├── README_cn.md  # 中文说明
-├── __init__.py  # 包接口
-├── cli.py  # 参数、模型选择与结果交付
-├── decode.py  # DB 多边形解码与 CTC 文字解码
-├── geometry.py  # 几何变换与坐标恢复
-├── main.py  # 命令行入口：构造模型并调用 predict
-├── model_binding.py  # 检测/识别元数据与词典契约
-├── model_runner.py  # OCR 双模型的板端 SDK 执行
-├── pipeline.py  # 模型初始化与推理阶段
-├── run.sh  # 运行示例
-└── tensor_io.py  # NV12 平面与张量打包
+├── backend.py  # 共享阶段契约绑定与惰性 SDK Runner
+├── cli.py  # 发布对选择、参数、列表/dry-run 与交付
+├── main.py  # 命令行入口：构造流水线并调用 predict
+├── ocr.py  # 双阶段流水线与 CTC 解码、几何、输入数学
+└── run.sh  # 定位 Python 入口并转发参数
 ```
 
-从 [main.py](main.py) 开始：入口构造 `OCRPipeline.from_models` 并调用 `predict`。[pipeline.py](pipeline.py) 实现模型初始化及推理阶段；[cli.py](cli.py) 负责参数、模型选择和结果交付。模型初始化会加载 Runtime，应用可复用同一个实例执行多次预测。
+从 [main.py](main.py) 开始：入口构造 `OCRPipeline.from_models` 并调用 `predict`。[ocr.py](ocr.py) 实现模型初始化及推理阶段；[cli.py](cli.py) 负责参数、模型选择和结果交付。模型初始化会加载 Runtime，应用可复用同一个实例执行多次预测。
 
 <a id="environment"></a>
 ## 环境
@@ -130,7 +123,7 @@ score-map/CTC 策略——不插入未经验证的激活。`s100p` 与 `s600` �
 import cv2
 
 from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
-from samples.vision.paddle_ocr.runtime.python.pipeline import OCRPipeline
+from samples.vision.paddle_ocr.runtime.python.ocr import OCRPipeline
 
 pair = resolve_pair(
     "s100",

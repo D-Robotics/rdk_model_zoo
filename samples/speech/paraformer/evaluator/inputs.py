@@ -9,7 +9,7 @@ import re
 
 import numpy as np
 
-from samples.speech.paraformer.runtime.python.input_io import validate_id
+from samples.speech.paraformer.runtime.python.cli import validate_id
 
 
 @dataclass(frozen=True)

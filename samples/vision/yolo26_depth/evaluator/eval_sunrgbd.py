@@ -13,12 +13,12 @@ if str(ROOT) not in sys.path:
 import cv2
 import numpy as np
 from utils.py_utils.assets import sha256_file
-from samples.vision.yolo26_depth.runtime.python.geometry import make_context
-from samples.vision.yolo26_depth.runtime.python.tensor_io import (
+from samples.vision.yolo26_depth.runtime.python.yolo26_depth import make_context
+from samples.vision.yolo26_depth.runtime.python.yolo26_depth import (
     restore_log_depth,
     resize_opencv,
 )
-from samples.vision.yolo26_depth.runtime.python.model_binding import LITE_CALIBRATION
+from samples.vision.yolo26_depth.runtime.python.yolo26_depth import LITE_CALIBRATION
 from samples.vision.yolo26_depth.evaluator.metrics import (
     DepthMetrics,
     fidelity_metrics,

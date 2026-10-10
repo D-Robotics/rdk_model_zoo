@@ -20,7 +20,7 @@ class CliTests(unittest.TestCase):
         self.assertIsNotNone(importlib.util.find_spec(name), "Missing Paraformer CLI")
         self.cli = importlib.import_module(name)
         self.io = importlib.import_module(
-            "samples.speech.paraformer.runtime.python.input_io"
+            "samples.speech.paraformer.runtime.python.cli"
         )
 
     def test_manifest_rejects_duplicate_or_escaping_ids_and_negative_limit(self):
@@ -136,9 +136,7 @@ class CliTests(unittest.TestCase):
 
     def test_full_cli_uses_real_shared_pipeline_with_explicit_sdk_doubles(self):
         from samples.speech.paraformer.tests.test_binding import metadata
-        from samples.speech.paraformer.runtime.python.model_binding import (
-            resolve_selections,
-        )
+        from samples.speech.paraformer.runtime.python.cli import resolve_selections
         from samples.speech.paraformer.runtime.python import pipeline
 
         original_loader = pipeline.ParaformerPipeline.from_models

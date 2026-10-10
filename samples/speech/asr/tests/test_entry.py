@@ -102,8 +102,8 @@ class PredictDetailsTests(unittest.TestCase):
 
 class EntryLoopTests(unittest.TestCase):
     def test_main_runs_one_predict_per_chunk_with_details(self):
-        from samples.speech.asr.runtime.python import audio_io
-        from samples.speech.asr.runtime.python.model_binding import resolve_selection
+        from samples.speech.asr.runtime.python import cli as audio_io
+        from samples.speech.asr.runtime.python.cli import resolve_selection
 
         original = asr_module.ASR.predict
         seen = []

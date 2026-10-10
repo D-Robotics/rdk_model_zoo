@@ -6,14 +6,14 @@ import unittest
 from unittest.mock import Mock
 import numpy as np
 from scipy.special import softmax
-from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import (
     ClassificationContract,
     ModelSelection,
     RuntimeMetadata,
     bind_model,
 )
-from samples.vision.ultralytics_yolo.runtime.python.model_runner import ModelRunner
-from samples.vision.ultralytics_yolo.runtime.python.yolo_cls import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import ModelRunner
+from samples.vision.ultralytics_yolo.runtime.python.classify import (
     YoloCls,
     YoloClsConfig,
 )

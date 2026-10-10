@@ -64,7 +64,7 @@ contract:
 
 | Target | Dictionary | Location | Notes |
 | --- | --- | --- | --- |
-| X5 | fixed 96-character alphabet | embedded in `runtime/python/model_binding.py` (`X5_ALPHABET`) | not a file; blank class prepended at decode time |
+| X5 | fixed 96-character alphabet | embedded in `runtime/python/cli.py` (`X5_ALPHABET`) | not a file; blank class prepended at decode time |
 | S100 | PP-OCRv6 UTF-8 dictionary | [`test_data/s100/ppocrv6_dict.txt`](../test_data/s100/ppocrv6_dict.txt) | 18,708 lines; blank prepended and one trailing space appended at load → 18,710 classes |
 
 `--vocabulary-path` may substitute the S100 dictionary only when the file's

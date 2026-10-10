@@ -24,18 +24,423 @@ Nothing in this module runs OCR or loads a board SDK.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+from dataclasses import dataclass
 from pathlib import Path
 import sys
-from typing import Any, Optional, Sequence
+from typing import Any, Literal, Mapping, Optional, Sequence
 
-from samples.vision.paddle_ocr.runtime.python.model_binding import (
-    BindingError,
-    OCRPair,
-    SUPPORTED_TARGETS,
-    list_available_pairs,
-    resolve_pair,
+from utils.py_utils.assets import resolve_asset
+from utils.py_utils.runtime_meta import (
+    MetadataMismatchError as _SharedMetadataMismatchError,
 )
+from utils.py_utils.runtime_meta import RuntimeMetadata, canonicalise_dtype
+
+# ======================================================================
+# Published pair identity and listing.
+# ======================================================================
+
+SUPPORTED_TARGETS = ("x5", "s100", "s100p", "s600")
+SUPPORTED_VARIANTS = ("ppocrv3", "ppocrv6")
+_SUPPORTED_PUBLISHED_TARGETS = ("x5", "s100")
+_SAMPLE_DIR = Path(__file__).resolve().parents[2]
+_MODEL_DIR = _SAMPLE_DIR / "model"
+_TEST_DATA_DIR = _SAMPLE_DIR / "test_data"
+S100_VOCABULARY_SHA256 = (
+    "b5f2bfe2bdd9448429e3e82b51c789775d9b42f2403d082b00662eb77e401c5d"
+)
+
+
+@dataclass(frozen=True)
+class StageContract:
+    """Static facts observed for one detector or recognizer artifact."""
+
+    stage: Literal["detector", "recognizer"]
+    asset_id: str
+    target: str
+    variant: str
+    model_name: str
+    input_names: tuple[str, ...]
+    input_shapes: Mapping[str, tuple[int, ...]]
+    input_dtypes: Mapping[str, str]
+    runtime_input_shapes: Mapping[str, tuple[int, ...]]
+    runtime_input_dtypes: Mapping[str, str]
+    output_name: str
+    output_shape: tuple[int, ...]
+    output_dtype: str
+    input_protocol: str
+    output_semantics: str = "unverified_score_vector"
+
+X5_ALPHABET = (
+    "0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz"
+    "{|}~!\"#$%&'()*+,-./  "
+)
+
+
+class BindingError(ValueError):
+    """Base class for selection, metadata and tensor contract failures."""
+
+
+class UnsupportedAssetError(BindingError):
+    """The requested asset pair or target is outside the pilot boundary."""
+
+
+class MetadataMismatchError(BindingError, _SharedMetadataMismatchError):
+    """A loaded model or runner tensor does not satisfy its bound contract."""
+
+
+@dataclass(frozen=True)
+class VocabularySpec:
+    """Vocabulary identity and construction policy for a recognizer pair."""
+
+    kind: Literal["fixed", "utf8_lines"]
+    class_count: int
+    source_path: Optional[Path] = None
+    sha256: Optional[str] = None
+
+    def load_tokens(self, path: Optional[str | Path] = None) -> tuple[str, ...]:
+        """Load and validate the token table used by the bound recognizer."""
+
+        if self.kind == "fixed":
+            if self.class_count != len(X5_ALPHABET) + 1:
+                raise BindingError("The fixed X5 vocabulary contract is inconsistent.")
+            return ("blank",) + tuple(X5_ALPHABET)
+
+        actual_path = Path(path).expanduser() if path is not None else self.source_path
+        if actual_path is None:
+            raise BindingError("The S100 vocabulary path is required.")
+        if not actual_path.is_file():
+            raise FileNotFoundError(f"vocabulary file not found: {actual_path}")
+        raw = actual_path.read_bytes()
+        observed = hashlib.sha256(raw).hexdigest()
+        if self.sha256 is not None and observed != self.sha256.lower():
+            raise BindingError(
+                f"vocabulary SHA-256 mismatch for {actual_path}: {observed}"
+            )
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise BindingError(f"vocabulary is not valid UTF-8: {actual_path}") from exc
+        # ``splitlines`` removes line terminators while keeping each source line
+        # as one token.  The source entry prepends blank and appends one space.
+        lines = tuple(text.splitlines())
+        tokens = ("blank",) + lines + (" ",)
+        if len(tokens) != self.class_count:
+            raise BindingError(
+                f"vocabulary class count {len(tokens)} does not match the bound "
+                f"contract {self.class_count} for {actual_path}"
+            )
+        return tokens
+
+
+@dataclass(frozen=True)
+class OCRPair:
+    """One detector/recognizer pair selected from existing manifest rows."""
+
+    target: str
+    variant: str
+    detector_asset: str
+    recognizer_asset: str
+    detector: StageContract
+    recognizer: StageContract
+    detector_model_path: Path
+    recognizer_model_path: Path
+    vocabulary: VocabularySpec
+
+    @property
+    def det_model_path(self) -> Path:
+        """Compatibility spelling for callers that use detector shorthand."""
+
+        return self.detector_model_path
+
+    @property
+    def rec_model_path(self) -> Path:
+        """Compatibility spelling for callers that use recognizer shorthand."""
+
+        return self.recognizer_model_path
+
+    @property
+    def asset_ids(self) -> tuple[str, str]:
+        """Return the ordered detector and recognizer qualified references."""
+
+        return self.detector_asset, self.recognizer_asset
+
+
+def list_available_pairs(target: Optional[str] = None) -> tuple[OCRPair, ...]:
+    """List only the X5 PP-OCRv3 and S100 PP-OCRv6 manifest-backed pairs.
+
+    ``auto`` is deliberately host-independent.  It lists both known pairs and
+    does not inspect hardware; execution target authorization belongs to the
+    real runner.
+    """
+
+    if target is None or str(target).strip().lower() == "auto":
+        return tuple(_pair_for_target(value) for value in _SUPPORTED_PUBLISHED_TARGETS)
+    key = _normalise_target(target)
+    if key not in _SUPPORTED_PUBLISHED_TARGETS:
+        return ()
+    return (_pair_for_target(key),)
+
+
+def resolve_pair(
+    target: str = "auto",
+    *,
+    det_asset_id: Optional[str] = None,
+    rec_asset_id: Optional[str] = None,
+    det_model_path: Optional[str | Path] = None,
+    rec_model_path: Optional[str | Path] = None,
+) -> OCRPair:
+    """Resolve one finite pair without loading SDKs or inspecting model bytes.
+
+    Custom local paths are accepted only when both paths are associated with
+    their exact qualified manifest references.  With ``target='auto'`` an
+    explicit pair reference is required so selection remains host-independent.
+    """
+
+    if (det_model_path is None) != (rec_model_path is None):
+        raise UnsupportedAssetError(
+            "det_model_path and rec_model_path must be supplied together."
+        )
+    if (det_asset_id is None) != (rec_asset_id is None):
+        raise UnsupportedAssetError(
+            "det_asset_id and rec_asset_id must be supplied together."
+        )
+    if (det_model_path is not None) and det_asset_id is None:
+        raise UnsupportedAssetError(
+            "Custom model paths require exact det_asset_id and rec_asset_id references."
+        )
+
+    requested = _normalise_target(target, allow_auto=True)
+    if requested == "auto":
+        if det_asset_id is None or rec_asset_id is None:
+            raise UnsupportedAssetError(
+                "target='auto' needs both qualified asset references; use x5 or s100 "
+                "to select the default pair."
+            )
+        candidates = [
+            pair
+            for pair in list_available_pairs()
+            if pair.detector_asset == det_asset_id
+            and pair.recognizer_asset == rec_asset_id
+        ]
+    else:
+        if requested not in _SUPPORTED_PUBLISHED_TARGETS:
+            raise UnsupportedAssetError(
+                f"No audited PaddleOCR pair is published for target {requested!r}."
+            )
+        candidates = [pair for pair in list_available_pairs(requested)]
+        if det_asset_id is not None:
+            candidates = [
+                pair
+                for pair in candidates
+                if pair.detector_asset == det_asset_id
+                and pair.recognizer_asset == rec_asset_id
+            ]
+
+    if len(candidates) != 1:
+        if det_asset_id is not None or rec_asset_id is not None:
+            raise UnsupportedAssetError(
+                "Detector and recognizer references are not one audited pair; "
+                "mixed target/model-family pairs are rejected."
+            )
+        raise UnsupportedAssetError(
+            f"No unique audited PaddleOCR pair for target={requested!r}."
+        )
+
+    selected = candidates[0]
+    if det_model_path is not None:
+        detector_path = Path(det_model_path).expanduser()
+        recognizer_path = Path(rec_model_path).expanduser()  # type: ignore[arg-type]
+        if detector_path.resolve() == recognizer_path.resolve():
+            raise UnsupportedAssetError(
+                "Detector and recognizer model paths must be distinct files."
+            )
+        selected = _with_paths(selected, detector_path, recognizer_path)
+    return selected
+
+
+def _pair_for_target(target: str) -> OCRPair:
+    records = _manifest_records()
+    if target == "x5":
+        det = _find_record(records, "x5:paddleocr:en_PP-OCRv3_det_640x640_nv12.bin")
+        rec = _find_record(records, "x5:paddleocr:en_PP-OCRv3_rec_48x320_rgb.bin")
+        return _build_pair(
+            target="x5",
+            variant="ppocrv3",
+            det=det,
+            rec=rec,
+            detector=StageContract(
+                stage="detector",
+                asset_id=det[0],
+                target="x5",
+                variant="ppocrv3",
+                model_name="en_PP-OCRv3_det_infer-deploy_640x640_nv12",
+                input_names=("x",),
+                input_shapes={"x": (1, 3, 640, 640)},
+                input_dtypes={"x": "nv12"},
+                runtime_input_shapes={"x": (1, 960, 640, 1)},
+                runtime_input_dtypes={"x": "uint8"},
+                output_name="sigmoid_0.tmp_0",
+                output_shape=(1, 1, 640, 640),
+                output_dtype="float32",
+                input_protocol="packed_nv12",
+            ),
+            recognizer=StageContract(
+                stage="recognizer",
+                asset_id=rec[0],
+                target="x5",
+                variant="ppocrv3",
+                model_name="en_PP-OCRv3_rec_infer-deploy_48x320_rgb_NCHW",
+                input_names=("x",),
+                input_shapes={"x": (1, 3, 48, 320)},
+                input_dtypes={"x": "float32"},
+                runtime_input_shapes={"x": (1, 3, 48, 320)},
+                runtime_input_dtypes={"x": "float32"},
+                output_name="softmax_2.tmp_0",
+                output_shape=(1, 40, 97, 1),
+                output_dtype="float32",
+                input_protocol="rgb_f32_nchw",
+            ),
+            vocabulary=VocabularySpec(kind="fixed", class_count=97),
+        )
+    if target == "s100":
+        det = _find_record(
+            records,
+            "s:paddle_ocr:s100/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm",
+        )
+        rec = _find_record(
+            records,
+            "s:paddle_ocr:s100/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm",
+        )
+        return _build_pair(
+            target="s100",
+            variant="ppocrv6",
+            det=det,
+            rec=rec,
+            detector=StageContract(
+                stage="detector",
+                asset_id=det[0],
+                target="s100",
+                variant="ppocrv6",
+                model_name="PP-OCRv6_det_infer-deploy_640x640_nv12",
+                input_names=("x_y", "x_uv"),
+                input_shapes={
+                    "x_y": (1, 640, 640, 1),
+                    "x_uv": (1, 320, 320, 2),
+                },
+                input_dtypes={"x_y": "uint8", "x_uv": "uint8"},
+                runtime_input_shapes={
+                    "x_y": (1, 640, 640, 1),
+                    "x_uv": (1, 320, 320, 2),
+                },
+                runtime_input_dtypes={"x_y": "uint8", "x_uv": "uint8"},
+                output_name="fetch_name_0",
+                output_shape=(1, 1, 640, 640),
+                output_dtype="float32",
+                input_protocol="split_nv12",
+            ),
+            recognizer=StageContract(
+                stage="recognizer",
+                asset_id=rec[0],
+                target="s100",
+                variant="ppocrv6",
+                model_name="PP-OCRv6_rec_infer-deploy_48x320_rgb",
+                input_names=("x",),
+                input_shapes={"x": (1, 3, 48, 320)},
+                input_dtypes={"x": "float32"},
+                runtime_input_shapes={"x": (1, 3, 48, 320)},
+                runtime_input_dtypes={"x": "float32"},
+                output_name="fetch_name_0",
+                output_shape=(1, 40, 18710),
+                output_dtype="float32",
+                input_protocol="rgb_f32_nchw",
+            ),
+            vocabulary=VocabularySpec(
+                kind="utf8_lines",
+                class_count=18710,
+                source_path=_TEST_DATA_DIR / "s100" / "ppocrv6_dict.txt",
+                sha256=S100_VOCABULARY_SHA256,
+            ),
+        )
+    raise UnsupportedAssetError(f"No audited pair for target {target!r}.")
+
+
+def _build_pair(
+    *,
+    target: str,
+    variant: str,
+    det: tuple[str, str],
+    rec: tuple[str, str],
+    detector: StageContract,
+    recognizer: StageContract,
+    vocabulary: VocabularySpec,
+) -> OCRPair:
+    return OCRPair(
+        target=target,
+        variant=variant,
+        detector_asset=det[0],
+        recognizer_asset=rec[0],
+        detector=detector,
+        recognizer=recognizer,
+        detector_model_path=_MODEL_DIR / Path(det[1]),
+        recognizer_model_path=_MODEL_DIR / Path(rec[1]),
+        vocabulary=vocabulary,
+    )
+
+
+def _with_paths(pair: OCRPair, det_path: Path, rec_path: Path) -> OCRPair:
+    return OCRPair(
+        target=pair.target,
+        variant=pair.variant,
+        detector_asset=pair.detector_asset,
+        recognizer_asset=pair.recognizer_asset,
+        detector=pair.detector,
+        recognizer=pair.recognizer,
+        detector_model_path=det_path,
+        recognizer_model_path=rec_path,
+        vocabulary=pair.vocabulary,
+    )
+
+
+def _manifest_records() -> tuple[tuple[str, str], ...]:
+    """Return ``(qualified_reference, filename)`` from the shared reader."""
+
+    try:
+        from utils.py_utils.assets import list_assets
+    except ImportError as exc:  # pragma: no cover - checkout-integrity guard
+        raise BindingError("The shared manifest asset resolver is required.") from exc
+
+    records: list[tuple[str, str]] = []
+    for group, sample in (("x5", "paddleocr"), ("s", "paddle_ocr")):
+        try:
+            assets = list_assets(group, sample)
+        except (OSError, KeyError, TypeError, ValueError) as exc:
+            raise BindingError(f"Could not read {group}:{sample} manifest: {exc}") from exc
+        for asset in assets:
+            records.append((asset.reference, asset.filename))
+    return tuple(records)
+
+
+def _find_record(records: Sequence[tuple[str, str]], reference: str) -> tuple[str, str]:
+    matches = [record for record in records if record[0] == reference]
+    if len(matches) != 1:
+        raise BindingError(f"Expected one manifest asset {reference!r}, found {len(matches)}.")
+    return matches[0]
+
+
+def _normalise_target(value: str, *, allow_auto: bool = False) -> str:
+    key = (value or "").strip().lower()
+    allowed = set(SUPPORTED_TARGETS)
+    if allow_auto:
+        allowed.add("auto")
+    if key not in allowed:
+        suffix = "/auto" if allow_auto else ""
+        raise UnsupportedAssetError(
+            f"Unknown target {value!r}; use x5/s100/s100p/s600{suffix}."
+        )
+    return key
+
 
 
 _ROOT = Path(__file__).resolve().parents[5]

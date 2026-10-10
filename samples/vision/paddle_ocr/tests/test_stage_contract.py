@@ -20,13 +20,13 @@ def _rec_scores() -> np.ndarray:
 
 class StageContractTests(unittest.TestCase):
     def _pipeline(self, detector, recognizer):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import resolve_pair
-        from samples.vision.paddle_ocr.runtime.python.pipeline import OCRPipeline
+        from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
+        from samples.vision.paddle_ocr.runtime.python.ocr import OCRPipeline
 
         return OCRPipeline(resolve_pair("x5"), detector, recognizer)
 
     def test_predict_equals_explicit_stage_composition(self):
-        from samples.vision.paddle_ocr.runtime.python.pipeline import DetectionResult
+        from samples.vision.paddle_ocr.runtime.python.ocr import DetectionResult
 
         box = np.array([[1, 1], [10, 1], [10, 5], [1, 5]], dtype=np.int64)
         crop = np.full((7, 11, 3), 23, dtype=np.uint8)
@@ -102,7 +102,7 @@ class StageContractTests(unittest.TestCase):
         self.assertIn("recognizer", str(ctx.exception))
 
     def test_recognizer_failure_keeps_crop_attribution(self):
-        from samples.vision.paddle_ocr.runtime.python.pipeline import DetectionResult
+        from samples.vision.paddle_ocr.runtime.python.ocr import DetectionResult
 
         calls = []
 
@@ -133,3 +133,30 @@ class StageContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AnnotationGlobalTests(unittest.TestCase):
+    """The merged ocr.py must keep its collections.abc annotation globals.
+
+    ``ctc_decode_indices``/``ctc_greedy_decode`` annotate ``Sequence[str]``
+    and the geometry helpers annotate ``Iterable`` without future annotations,
+    so a missing import is a real NameError on supported Python 3.13 even
+    when 3.14's deferred annotations mask it in the main suite.
+    """
+
+    def test_decode_and_geometry_annotation_globals_resolve(self):
+        import typing
+        from collections.abc import Iterable, Sequence
+
+        from samples.vision.paddle_ocr.runtime.python import ocr
+
+        tokens_hint = typing.get_type_hints(ocr.ctc_decode_indices)["tokens"]
+        self.assertIs(tokens_hint.__origin__, Sequence)
+        for fn in (ocr.dilate_contours, ocr.get_bounding_boxes):
+            hints = typing.get_type_hints(fn)
+            self.assertTrue(
+                any(
+                    getattr(v, "__origin__", None) is Iterable for v in hints.values()
+                ),
+                fn.__name__,
+            )

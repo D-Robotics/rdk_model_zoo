@@ -5,9 +5,10 @@
 This file stays deliberately small: parse the arguments, handle the
 model-free listing/dry-run modes, gate the board, construct the chunk model,
 call ``predict`` once per chunk, save the report. Option declarations, the
-model-free rendering and the report records live in ``cli.py``; the readable
-preprocess → infer → postprocess chain and the raw runner construction live
-in ``asr.py``.
+model-free rendering, the report records, audio streaming and vocabulary
+loading live in ``cli.py``; the frontend, decoders, tensor binding, the
+readable preprocess → infer → postprocess chain and the raw runner
+construction live in ``asr.py``.
 """
 
 import json
@@ -22,12 +23,11 @@ from samples.speech.asr.runtime.python.cli import (  # noqa: E402
     build_report,
     complete_report,
     record_chunk,
+    resolve_selection,
     run_dry_run,
     run_list_models,
 )
-from samples.speech.asr.runtime.python.model_binding import (  # noqa: E402
-    resolve_selection,
-)
+
 
 
 def main(argv=None):
@@ -42,7 +42,7 @@ def main(argv=None):
         selection = resolve_selection(
             args.target, asset_id=args.asset_id, model_path=args.model_path
         )
-        from samples.speech.asr.runtime.python.frontend import Config, validate_config
+        from samples.speech.asr.runtime.python.asr import Config, validate_config
 
         config = Config(args.audio_maxlen, args.new_rate)
         validate_config(config)
@@ -54,9 +54,11 @@ def main(argv=None):
 
         require_execution_target(selection.target)
         from utils.py_utils.assets import sha256_file
-        from samples.speech.asr.runtime.python.audio_io import read_chunks
         from samples.speech.asr.runtime.python.asr import ASR
-        from samples.speech.asr.runtime.python.vocabulary import load_vocabulary
+        from samples.speech.asr.runtime.python.cli import (
+            load_vocabulary,
+            read_chunks,
+        )
 
         vocabulary = load_vocabulary(args.vocab_file)
         audio = args.audio_file.expanduser()

@@ -1,24 +1,120 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Depth CLI surface: option declarations, path checks and evidence IO.
+"""Depth CLI surface: published selection, options, path checks and evidence IO.
 
 ``main.py`` stays a thin entry that constructs the task and calls ``predict``;
-everything presentational — the parser, the model-free listing/dry-run modes
-and the canonical output/report writing — lives here.  Nothing in this module
-runs inference or measures latency.
+everything around selection and presentation lives here: the published asset
+identity/listing/resolver, the parser, the model-free listing/dry-run modes
+and the canonical output/report writing.  Nothing in this module runs
+inference or measures latency; the tensor contracts and task stages live in
+``yolo26_depth.py``.
 """
 
 import argparse
 import json
-from pathlib import Path
 import sys
+from dataclasses import dataclass
+from pathlib import Path
 
-from samples.vision.yolo26_depth.runtime.python.model_binding import (
-    SAMPLE_DIR,
-    TARGETS,
-    VARIANTS,
-    list_available_assets,
-)
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.platforms import resolve_target
+
+SAMPLE_DIR = Path(__file__).resolve().parents[2]
+
+
+TARGETS = ("x5", "s100", "s100p", "s600")
+
+
+VARIANTS = ("n", "s", "m", "l", "x")
+
+
+MARCH = {"s100": "nash-e", "s100p": "nash-m", "s600": "nash-p"}
+
+
+LITE_CALIBRATION = {"l": (1.0, -0.2498779296875), "x": (1.0, -0.316650390625)}
+
+
+@dataclass(frozen=True)
+class ModelSelection:
+    target: str
+    asset: Asset
+    model_path: Path
+    explicit_model_path: bool
+    variant: str
+    profile: str
+    converted_model: bool = False
+
+
+def list_available_assets(target=None):
+    if target not in (None, "auto", *TARGETS):
+        raise ValueError(f"Unknown target {target!r}")
+    rows = tuple(list_assets("x5", "yolo26_depth")) + tuple(
+        list_assets("s", "yolo26_depth")
+    )
+    if target in (None, "auto"):
+        return rows
+    if target == "x5":
+        return tuple(a for a in rows if a.filename.endswith(".bin"))
+    return tuple(a for a in rows if a.filename.startswith(MARCH[target] + "/"))
+
+
+def resolve_selection(
+    target="auto",
+    *,
+    variant=None,
+    asset_id=None,
+    model_path=None,
+    converted_model=False,
+):
+    if converted_model and (model_path is None or asset_id is None):
+        raise ValueError(
+            "Converted models require --model-path and an exact --asset-id contract reference"
+        )
+    if asset_id is not None:
+        matches = [a for a in list_available_assets() if a.reference == asset_id]
+        if len(matches) != 1:
+            raise ValueError(f"Unknown YOLO26 Depth asset-id {asset_id!r}")
+        asset = matches[0]
+        inferred = (
+            "x5"
+            if asset.filename.endswith(".bin")
+            else next(t for t, m in MARCH.items() if asset.filename.startswith(m + "/"))
+        )
+        inferred_variant = Path(asset.filename).name[len("yolo26")]
+        if target not in (None, "auto", inferred) or variant not in (
+            None,
+            inferred_variant,
+        ):
+            raise ValueError("target/variant and asset-id select different artifacts")
+        target, variant = inferred, inferred_variant
+    target = resolve_target(target) if target in (None, "auto") else target
+    variant = "n" if variant is None else variant
+    if target not in TARGETS or variant not in VARIANTS:
+        raise ValueError(f"Unsupported target/variant: {target!r}/{variant!r}")
+    profile = "lite" if target != "x5" and variant in LITE_CALIBRATION else "nv12"
+    if target == "x5":
+        filename = f"yolo26{variant}_depth_bayese_768x768_nv12.bin"
+    else:
+        march = MARCH[target]
+        suffix = march.replace("-", "")
+        filename = (
+            f"{march}/yolo26{variant}_depth_lite_{suffix}_768x768.hbm"
+            if profile == "lite"
+            else f"{march}/yolo26{variant}_depth_{suffix}_768x768_nv12.hbm"
+        )
+    rows = [a for a in list_available_assets(target) if a.filename == filename]
+    if len(rows) != 1:
+        raise ValueError(f"Expected one published artifact for {target}/{variant}")
+    if model_path is not None and asset_id is None:
+        raise ValueError("External model paths require the exact --asset-id")
+    path = (
+        Path(model_path).expanduser()
+        if model_path is not None
+        else SAMPLE_DIR / "model" / filename
+    )
+    return ModelSelection(
+        target, rows[0], path, model_path is not None, variant, profile, converted_model
+    )
 
 #: Canonical files every run writes into its fresh output directory.
 CANONICAL_OUTPUTS = (
@@ -32,6 +128,8 @@ CANONICAL_OUTPUTS = (
 
 
 def build_parser():
+    """Build the depth CLI parser with target, asset and input options."""
+
     p = argparse.ArgumentParser(
         description="YOLO26 relative depth on X5/S100/S100P/S600"
     )
@@ -220,9 +318,6 @@ def save_depth_evidence(
         "depth_units": "relative; not calibrated metres",
     }
     if result.raw_logit is not None:
-        from samples.vision.yolo26_depth.runtime.python.model_binding import (
-            LITE_CALIBRATION,
-        )
 
         a, b = LITE_CALIBRATION[selection.variant]
         report["calibration"] = {"cal_a": a, "cal_b": b, "clip": [-4, 5]}

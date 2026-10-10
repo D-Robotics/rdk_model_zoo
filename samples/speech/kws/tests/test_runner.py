@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 import numpy as np
-from samples.speech.kws.runtime.python.model_binding import resolve_selection
+from samples.speech.kws.runtime.python.cli import resolve_selection
 from samples.speech.kws.runtime.python.kws import RuntimeModelRunner
 from samples.speech.kws.runtime.python.main import main
 
@@ -61,7 +61,9 @@ class RunnerTests(unittest.TestCase):
         factory.assert_not_called()
 
     def test_main_end_to_end_report_with_explicit_test_doubles(self):
-        from samples.speech.kws.runtime.python import audio_io, frontend, kws as kws_module
+        from samples.speech.kws.runtime.python import kws as kws_module
+        from samples.speech.kws.runtime.python import cli as audio_io
+        from samples.speech.kws.runtime.python import kws as frontend
 
         with tempfile.TemporaryDirectory() as temp:
             folder = Path(temp)

@@ -1,22 +1,116 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""YOLOE CLI surface: option declarations, inspection modes and result display.
+"""YOLOE CLI surface: published selection, options, inspection modes and result display.
 
 ``main.py`` stays a thin entry that constructs the model and calls ``predict``;
-the parser, the model-free listing/dry-run modes and the result report live
-here.  Nothing in this module runs segmentation or loads a board SDK.
+everything around selection and presentation lives here: the published YOLOE
+asset matrix and resolver, the parser, the model-free listing/dry-run modes,
+the result report and the annotated-image rendering.  Nothing in this module
+runs segmentation or loads a board SDK; the task stages and tensor binding
+live in ``yoloe.py``.
 """
 
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 import argparse
+import hashlib
 import json
+import re
+from numbers import Integral
 from pathlib import Path
 import sys
 
-from samples.vision.yoloe.runtime.python.model_binding import (
-    SAMPLE_DIR,
-    list_models,
-)
+import numpy as np
+
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.platforms import resolve_target
+from samples.vision.yoloe.model.vocabulary import LABELS_SHA256
+
+SAMPLE_DIR = Path(__file__).resolve().parents[2]
+
+
+DEFAULTS = {"x5": "11s", "s100": "11s", "s100p": "26n"}
+
+
+@dataclass(frozen=True)
+class Selection:
+    target: str
+    variant: str
+    asset: Asset
+    model_path: Path
+    local_float_sha256: str | None = None
+
+    @property
+    def local_float(self):
+        return self.local_float_sha256 is not None
+
+    @property
+    def published_float(self):
+        return self.target == "x5"
+
+
+def list_models(target=None):
+    """Return (target, variant, publication) rows, including unavailable float routes."""
+    if target not in (None, "auto", "x5", "s100", "s100p", "s600"):
+        raise ValueError(f"Unknown target {target!r}.")
+    rows = []
+    for group, sample in [("x5", "yoloe"), ("s", "yoloe11_seg"), ("s", "yoloe26_seg")]:
+        for asset in list_assets(group, sample):
+            match = re.fullmatch(
+                r"(?:nash-[em]/)?yoloe_(11[sml]|26[nslmx])_seg_pf_(bayese|nashe|nashm)_640x640_nv12\.(bin|hbm)",
+                asset.filename,
+            )
+            if match is None:
+                raise ValueError(
+                    f"Unexpected YOLOE publication: {asset.reference}; review its protocol."
+                )
+            variant, march, ext = match.groups()
+            concrete = {"bayese": "x5", "nashe": "s100", "nashm": "s100p"}[march]
+            if target in (None, "auto", concrete):
+                rows.append((concrete, variant, asset))
+    return tuple(rows)
+
+
+def resolve_selection(
+    target="auto",
+    *,
+    variant=None,
+    asset_id=None,
+    model_path=None,
+    local_float_sha256=None,
+):
+    """No implicit downloads or local-file trust; a custom float file needs its digest."""
+    concrete = resolve_target(target)
+    rows = list_models(concrete)
+    if asset_id is not None:
+        rows = tuple(row for row in rows if row[2].reference == asset_id)
+    else:
+        variant = variant or DEFAULTS.get(concrete)
+    if variant is not None:
+        rows = tuple(row for row in rows if row[1] == variant)
+    if len(rows) != 1:
+        raise ValueError(
+            f"No unique YOLOE asset for target={concrete}, variant={variant}, asset_id={asset_id}."
+        )
+    _, variant, asset = rows[0]
+    if local_float_sha256 is not None:
+        if (
+            model_path is None
+            or re.fullmatch("[0-9a-fA-F]{64}", local_float_sha256) is None
+        ):
+            raise ValueError(
+                "A local float model requires --model-path and a 64-digit --local-float-sha256."
+            )
+        local_float_sha256 = local_float_sha256.lower()
+    elif model_path is not None and asset_id is None:
+        raise ValueError(
+            "--model-path requires the exact --asset-id or --local-float-sha256."
+        )
+    path = (
+        Path(model_path).expanduser()
+        if model_path is not None
+        else SAMPLE_DIR / "model" / concrete / asset.filename
+    )
+    return Selection(concrete, variant, asset, path, local_float_sha256)
 
 
 def build_parser():
@@ -143,3 +237,112 @@ def print_result_report(result, selection, args) -> None:
             indent=2,
         )
     )
+
+
+@dataclass(frozen=True)
+class Config:
+    score_thres: float = 0.25
+    nms_thres: float | None = None
+    resize_type: int = 1
+    do_morph: bool = False
+    max_det: int = 300
+    single_label: bool = True
+
+
+def validate_config(selection, cfg):
+    if not np.isfinite(cfg.score_thres) or not 0 < cfg.score_thres < 1:
+        raise ValueError("score_thres must be finite and strictly between 0 and 1.")
+    if cfg.resize_type not in (0, 1) or not isinstance(cfg.do_morph, bool):
+        raise ValueError("resize_type must be 0/1 and do_morph must be boolean.")
+    if (
+        isinstance(cfg.max_det, bool)
+        or not isinstance(cfg.max_det, Integral)
+        or not 1 <= cfg.max_det <= 8400
+        or not isinstance(cfg.single_label, bool)
+    ):
+        raise ValueError(
+            "max_det must be an integer in 1..8400; single_label must be boolean."
+        )
+    if selection.variant.startswith("26"):
+        if cfg.nms_thres is not None or cfg.resize_type != 1 or cfg.do_morph:
+            raise ValueError(
+                "YOLOE-26 uses fixed round/114 letterbox, no NMS and no morphology."
+            )
+    else:
+        if cfg.max_det != 300 or not cfg.single_label:
+            raise ValueError("max_det and multi-label apply only to YOLOE-26.")
+        if cfg.nms_thres is not None and (
+            not np.isfinite(cfg.nms_thres) or not 0 <= cfg.nms_thres <= 1
+        ):
+            raise ValueError("nms_thres must be finite in [0,1].")
+        if selection.target == "x5" and cfg.do_morph:
+            raise ValueError("Morphology applies only to S YOLOE-11 ROI masks.")
+
+
+def load_inputs(image_path, label_path):
+    import cv2
+
+    image = cv2.imread(str(Path(image_path).expanduser()), cv2.IMREAD_COLOR)
+    if image is None:
+        raise ValueError(f"Cannot read image: {image_path}")
+    raw = Path(label_path).expanduser().read_bytes()
+    if hashlib.sha256(raw).hexdigest() != LABELS_SHA256:
+        raise ValueError(
+            "Vocabulary checksum mismatch; the PF model requires its fixed ordered 4585 classes."
+        )
+    labels = raw.decode("utf-8").splitlines()
+    if len(labels) != 4585:
+        raise ValueError("Expected 4585 vocabulary entries.")
+    return image, labels
+
+
+def draw_result(image, result, labels, *, contours=True):
+    import cv2
+    import numpy as np
+
+    canvas = image.copy()
+    for box, score, cls, mask in zip(
+        result.boxes, result.scores, result.class_ids, result.masks
+    ):
+        cls = int(cls)
+        if not 0 <= cls < len(labels):
+            raise ValueError("Class ID is outside the fixed vocabulary.")
+        x1, y1, x2, y2 = box.astype(int)
+        color = np.array(
+            [(37 * cls + 50) % 256, (67 * cls + 80) % 256, (97 * cls + 110) % 256],
+            dtype=np.uint8,
+        )
+        view = canvas if result.mask_layout == "full" else canvas[y1:y2, x1:x2]
+        selected = np.asarray(mask, dtype=bool)
+        if selected.shape != view.shape[:2]:
+            raise ValueError("Mask geometry differs from its declared layout.")
+        view[selected] = (view[selected].astype(np.float32) * 0.6 + color * 0.4).astype(
+            np.uint8
+        )
+        if contours and selected.size:
+            curves, _ = cv2.findContours(
+                selected.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+            )
+            cv2.drawContours(view, curves, -1, tuple(int(v) for v in color), 1)
+        cv2.rectangle(canvas, (x1, y1), (x2, y2), tuple(int(v) for v in color), 2)
+        cv2.putText(
+            canvas,
+            f"{labels[cls]} {float(score):.3f}",
+            (x1, max(15, y1 - 5)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            tuple(int(v) for v in color),
+            1,
+        )
+    return canvas
+
+
+def save_result(path, image, result, labels, *, contours=True):
+    import cv2
+
+    destination = Path(path).expanduser()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if not cv2.imwrite(
+        str(destination), draw_result(image, result, labels, contours=contours)
+    ):
+        raise OSError(f"Cannot save result: {destination}")

@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 from samples.speech.paraformer.runtime.python.cif import cif_numpy
-from samples.speech.paraformer.runtime.python.model_binding import CONTEXT
+from samples.speech.paraformer.runtime.python.cli import CONTEXT
 
 CALIBRATION = {
     "speech": ((1, 400, 560), "float32"),

@@ -11,7 +11,7 @@ if str(ROOT) not in sys.path:
 import cv2
 import numpy as np
 from utils.py_utils.assets import sha256_file
-from samples.vision.lanenet.runtime.python.image_preprocess import image_to_tensor
+from samples.vision.lanenet.runtime.python.lanenet import image_to_tensor
 
 PROTOCOL = "lanenet-rgb-area-imagenet-f32-nchw-v1"
 

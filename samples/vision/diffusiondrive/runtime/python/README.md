@@ -12,17 +12,10 @@ Run the prepared camera, LiDAR, status and noise tensors through DiffusionDrive 
 
 ```text
 python/
-├── README.md  # English instructions
-├── README_cn.md  # Chinese instructions
-├── cli.py  # Arguments, model selection and result output
-├── data_io.py  # NPZ input loading and validation
-├── diffusiondrive.py  # Model initialization and inference stages
-├── main.py  # CLI entry: construct model and call predict
-├── quantization.py  # Quantization and dequantization
-├── run.sh  # Run the sample
-├── run_all_cases.sh  # Shell command
-├── run_cases.py  # Model initialization and inference stages
-└── visualization.py  # Result rendering and image output
+├── cli.py  # Selection, arguments, NPZ feature IO, destinations and rendering
+├── diffusiondrive.py  # Tensor contracts, affine transforms and model stages
+├── main.py  # Command-line entry: construct the model and call predict
+└── run.sh  # Locate the Python entry and forward arguments
 ```
 
 Start with [main.py](main.py): it constructs `DiffusionDrivePlanner` and calls `predict`. [diffusiondrive.py](diffusiondrive.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.
@@ -52,8 +45,8 @@ bash samples/vision/diffusiondrive/runtime/python/run.sh --target s600 --input-n
 To inspect or execute the five source cases:
 
 ```bash
-bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s100p --output outputs/diffusiondrive_cases --dry-run
-bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s100p --output outputs/diffusiondrive_cases
+bash samples/vision/diffusiondrive/evaluator/run_all_cases.sh --target s100p --output outputs/diffusiondrive_cases --dry-run
+bash samples/vision/diffusiondrive/evaluator/run_all_cases.sh --target s100p --output outputs/diffusiondrive_cases
 ```
 
 Batch dry-run validates all five input NPZ files and prints commands without SDK execution or output creation. Execution uses the same single-case CLI, loads the model per case as the source did, stops at the first nonzero return, and writes `batch-report.json` with completed return codes, remaining cases and available report digests. Set the batch output directory with `--output`.
@@ -104,7 +97,7 @@ From the repository root on a prepared S600, this executes the same task path wi
 
 ```python
 from samples.vision.diffusiondrive.runtime.python.cli import resolve_selection
-from samples.vision.diffusiondrive.runtime.python.data_io import load_features
+from samples.vision.diffusiondrive.runtime.python.cli import load_features
 from samples.vision.diffusiondrive.runtime.python.diffusiondrive import DiffusionDrivePlanner
 
 selection = resolve_selection("s600")

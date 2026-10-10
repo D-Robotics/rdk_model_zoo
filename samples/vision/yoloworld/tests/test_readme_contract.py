@@ -8,7 +8,7 @@ from unittest.mock import patch
 SAMPLE=Path(__file__).resolve().parents[1]
 class ReadmeTests(unittest.TestCase):
     def test_runtime_api_snippet_executes_with_injected_fixture(self):
-        from samples.vision.yoloworld.runtime.python import model_runner
+        from samples.vision.yoloworld.runtime.python import yoloworld as model_runner
         original = model_runner.RuntimeModelRunner
         for filename in ("README.md", "README_cn.md"):
             text = (SAMPLE / "runtime/python" / filename).read_text(encoding="utf-8")

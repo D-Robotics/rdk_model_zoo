@@ -27,11 +27,11 @@ from unittest.mock import patch
 
 import numpy as np
 
-from samples.speech.kws.runtime.python import audio_io, frontend, kws as kws_module
-from samples.speech.kws.runtime.python.model_binding import (
-    bind_model,
-    resolve_selection,
-)
+from samples.speech.kws.runtime.python import kws as kws_module
+from samples.speech.kws.runtime.python import cli as audio_io
+from samples.speech.kws.runtime.python import kws as frontend
+from samples.speech.kws.runtime.python.cli import resolve_selection
+from samples.speech.kws.runtime.python.kws import bind_model
 from samples.speech.kws.tests.test_runner import FakeRuntime
 
 REPO_ROOT = Path(__file__).resolve().parents[4]

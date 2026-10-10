@@ -22,7 +22,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from utils.py_utils.assets import sha256_file  # noqa: F401 - re-export used by callers
 from samples.vision.diffusiondrive.runtime.python.cli import (
-    add_runtime_arguments,  # re-exported here: run_cases.py builds its parser from it
+    add_runtime_arguments,  # re-exported here: evaluator/run_cases.py builds its parser from it
     build_parser,  # re-exported here: the contract checker imports it from main
     resolve_extras,
     run_dry_run,
@@ -30,7 +30,7 @@ from samples.vision.diffusiondrive.runtime.python.cli import (
     save_planning_evidence,
     validate_extra_destinations,
 )
-from samples.vision.diffusiondrive.runtime.python.data_io import (
+from samples.vision.diffusiondrive.runtime.python.cli import (
     load_features,
     validate_destinations,
 )

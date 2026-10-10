@@ -13,9 +13,7 @@ Run the HIMLoco policy offline on X5 from six frames of observation history. `Hi
 ```text
 python/
 ├── cli.py  # Arguments, model selection and result presentation
-├── input_io.py  # Input files and data records
 ├── main.py  # Command-line entry: construct the model and call predict
-├── model_binding.py  # Model selection and physical tensor contracts
 ├── policy.py  # Model stages and prediction
 └── run.sh  # Locate the Python entry and forward arguments
 ```
@@ -124,7 +122,7 @@ After preparing the X5 model, run from the repository root. The example reads th
 ```python
 from pathlib import Path
 import numpy as np
-from samples.robotics.himloco.runtime.python.model_binding import resolve_selection
+from samples.robotics.himloco.runtime.python.cli import resolve_selection
 from samples.robotics.himloco.runtime.python.policy import HimLocoTask
 
 selection = resolve_selection("x5")

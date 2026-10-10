@@ -18,7 +18,7 @@ from unittest.mock import MagicMock, Mock, patch
 import numpy as np
 
 from samples.robotics.himloco.runtime.python import cli, main, policy
-from samples.robotics.himloco.runtime.python.model_binding import (
+from samples.robotics.himloco.runtime.python.cli import (
     resolve_selection,
     SAMPLE_DIR,
 )

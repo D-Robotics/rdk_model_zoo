@@ -292,7 +292,7 @@ $$x_2 = (x+0.5+r)\times{Stride(i)},\quad y_2 = (y+0.5+b)\times{Stride(i)}$$
 `1×80×80×80`、`1×40×40×80`、`1×20×20×80`；自定义类别数改变 80）和 DFL
 box logits（`...×64`）——而 ReduceMax / 阈值筛选 / gather / ArgMax、DFL
 SoftMax 加期望 bin、dist2bbox 等阶段，以及在所选绑定需要时进行的按类别
-NMS，都由 Python 后处理（`runtime/python/decode.py` 中的 `decode_dfl`；协议见
+NMS，都由 Python 后处理（`runtime/python/detect.py` 中的 `decode_dfl`；协议见
 [`DETECTION_CONTRACT.md`](../DETECTION_CONTRACT.md)）完成。S 系列 YOLOv10
 绑定是 NMS-free 例外：它复用同样的解码阶段并固定 `nms='none'`
 （见[运行时 README](../runtime/python/README.md)）。运行时只接受

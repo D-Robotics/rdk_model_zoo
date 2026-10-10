@@ -59,7 +59,7 @@ S100 将两条引用换成 `s:paddle_ocr:s100/...`，`--model-dir` 例如
 
 | 目标 | 词典 | 位置 | 说明 |
 | --- | --- | --- | --- |
-| X5 | 固定 96 字符字母表 | 内嵌于 `runtime/python/model_binding.py`（`X5_ALPHABET`） | 非文件；解码时前置 blank 类 |
+| X5 | 固定 96 字符字母表 | 内嵌于 `runtime/python/cli.py`（`X5_ALPHABET`） | 非文件；解码时前置 blank 类 |
 | S100 | PP-OCRv6 UTF-8 词典 | [`test_data/s100/ppocrv6_dict.txt`](../test_data/s100/ppocrv6_dict.txt) | 18,708 行；加载时前置 blank、追加末尾空格 → 18,710 类 |
 
 `--vocabulary-path` 替换 S100 词典时，文件 SHA-256 必须命中下方记录的

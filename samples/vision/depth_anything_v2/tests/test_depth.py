@@ -35,7 +35,7 @@ class StubRunner:
         if self._raw is None:
             return tensors
         return self._raw.copy() if self._copy else self._raw
-from samples.vision.depth_anything_v2.runtime.python.visualization import (
+from samples.vision.depth_anything_v2.runtime.python.cli import (
     normalize_depth,
 )
 
@@ -330,7 +330,8 @@ class SimplifiedRuntimeTests(unittest.TestCase):
     Selection/catalog duties live in ``cli.py``; ``depth_anything_v2.py``
     owns the named model class that loads via the shared transport; the
     per-sample ``model_binding``/``model_runner`` forwarding modules are
-    gone. ``geometry.py`` stays: the per-frame resize/letterbox algorithm.
+    gone. The per-frame resize/letterbox geometry lives in
+    ``depth_anything_v2.py`` with the model that consumes it.
     """
 
     def test_estimator_constructs_from_selection_and_runs_stages(self):

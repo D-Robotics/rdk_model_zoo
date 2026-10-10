@@ -12,14 +12,10 @@
 
 ```text
 python/
-├── cli.py  # 参数、模型选择与结果展示
-├── config.py  # 模型配置
+├── cli.py  # 发布选择、配置、参数与结果渲染
 ├── main.py  # 命令行入口：构造模型并调用 predict
-├── model_binding.py  # 模型选择与物理张量契约
-├── model_runner.py  # Runtime 加载与原始张量执行
 ├── run.sh  # 定位 Python 入口并转发参数
-├── visualization.py  # 图像结果与可视化
-└── yoloe.py  # 模型阶段与预测
+└── yoloe.py  # 模型阶段、张量绑定、Runner 与预测
 ```
 
 <a id="environment"></a>
@@ -77,7 +73,7 @@ X5 11 先将置信阈值夹紧至 `[1e-6,1-1e-6]`，再转为 logit；S11/26 直
 
 `Result.boxes` 为 float32 `[N,4]` 原图连续 xyxy 像素坐标，裁剪到 `[0,W]/[0,H]`；`scores` 是 `[N]` float32 sigmoid 概率；`class_ids` 是 `[N]` int64 固定词表 ID，不能直接用作 COCO 类别 ID。`masks` 在 X5 为 bool `[N,H,W]`（`mask_layout="full"`）。S 返回 N 个逐检测 ROI（`mask_layout="roi"`）：S11 为 uint8，坐标截断成整数后截取，退化轴至少保留 1 像素，数值为 Lanczos 原样输出（个别像素可能为 2，非零即前景）；S26 为 bool。返回数据独立拥有内存。
 
-CLI 保存彩色叠加图（默认 `test_data/result.jpg`），并打印包含 `target`、`variant`、`count`、`class_ids`、`scores`、`mask_layout`、`image_saved`（所保存叠加图的路径）七个键的 JSON 报告。`Result.boxes` 属于 Python `predict` API；CLI JSON 不含 boxes，也不单独保存掩码图文件。CLI 入口组织为：`main.py` 解析选择、构造 `Config`、用 runner 构造 `YOLOE`、调用一次 `predict` 并渲染结果；参数声明、`--list-models`/`--dry-run` 模式与 JSON 结果报告在 `cli.py`。分割实现位于 `yoloe.py` 及其解码/IO 模块。
+CLI 保存彩色叠加图（默认 `test_data/result.jpg`），并打印包含 `target`、`variant`、`count`、`class_ids`、`scores`、`mask_layout`、`image_saved`（所保存叠加图的路径）七个键的 JSON 报告。`Result.boxes` 属于 Python `predict` API；CLI JSON 不含 boxes，也不单独保存掩码图文件。CLI 入口组织为：`main.py` 解析选择、构造 `Config`、构造 `YOLOE`（模型自行加载 runner）、调用一次 `predict` 并渲染结果；`cli.py` 负责参数、发布资产选择/列表、`--list-models`/`--dry-run` 模式、输入加载与 JSON 报告/叠加图渲染。绑定、Runner 与解码等全部模型阶段位于 `yoloe.py`。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -86,8 +82,8 @@ CLI 保存彩色叠加图（默认 `test_data/result.jpg`），并打印包含 `
 
 ```python
 # cwd: repository root; on X5 after the explicit model/download.sh step
-from samples.vision.yoloe.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.vision.yoloe.runtime.python.visualization import load_inputs
+from samples.vision.yoloe.runtime.python.cli import resolve_selection, SAMPLE_DIR
+from samples.vision.yoloe.runtime.python.cli import load_inputs
 from samples.vision.yoloe.runtime.python.yoloe import YOLOE, Config
 selection = resolve_selection("x5", variant="11s")
 image, labels = load_inputs(SAMPLE_DIR / "test_data/office_desk.jpg", SAMPLE_DIR / "test_data/classes.names")
@@ -96,7 +92,7 @@ result = task.predict(image)
 print(result.boxes.shape, result.mask_layout)
 ```
 
-配置及校验位于 `config.py`，与原生启动器共用，不引入图片或 SDK 模块；`from...yoloe import Config` 导入方式同样支持。
+配置及校验位于 `cli.py`，与原生启动器共用，不引入图片或 SDK 模块；`from...yoloe import Config` 导入方式同样支持。
 
 <a id="stage-io"></a>
 ## 三阶段接口

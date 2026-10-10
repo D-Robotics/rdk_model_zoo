@@ -72,8 +72,10 @@ class SimplifiedLayoutTests(unittest.TestCase):
 
     def test_justified_numerical_modules_are_retained(self):
         package = "samples.speech.paraformer.runtime.python"
-        for name in ("frontend", "cif", "decoding", "input_io", "model_binding",
-                     "pipeline", "stages", "runtime"):
+        # The consolidated layout keeps the frontend and CIF algorithms as
+        # their own modules; decoding/stages/runtime live in pipeline.py and
+        # input_io/selection in cli.py.
+        for name in ("frontend", "cif", "pipeline", "cli"):
             self.assertIsNotNone(
                 importlib.util.find_spec(f"{package}.{name}"), name
             )

@@ -2,29 +2,79 @@
 # SPDX-License-Identifier: Apache-2.0
 """Command-line surface and offline evidence records for the HIMLoco sample.
 
-Option declarations, argument validation, the model-free listing/dry-run
-rendering and the evidence discipline live here: :func:`prepare` gates the
-target, collects input digests and reserves the (new) report file,
-:meth:`PreparedRun.record_sample` writes one action dump and its evidence
-record, and :func:`complete` re-verifies digests and summarizes latencies.
-``main.py`` stays a thin, readable entry that constructs the bound policy
-task visibly and drives the offline predict loop. Nothing in this module
-imports NumPy at module level or loads a board SDK, so host listing, help
-and dry-run stay light.
+Option declarations, argument validation, the published X5 asset identity
+and selection, the source-indexed observation records, the model-free
+listing/dry-run rendering and the evidence discipline live here:
+:func:`prepare` gates the target, collects input digests and reserves the
+(new) report file, :meth:`PreparedRun.record_sample` writes one action dump
+and its evidence record, and :func:`complete` re-verifies digests and
+summarizes latencies. ``main.py`` stays a thin, readable entry that
+constructs the bound policy task visibly and drives the offline predict
+loop. Nothing in this module imports NumPy at module level or loads a board
+SDK, so host listing, help and dry-run stay light. The policy tensor binding
+and task stages live in ``policy.py``.
 """
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 import argparse
+import hashlib
 import json
 import platform
 import sys
 
-from utils.py_utils.assets import sha256_file, verify_asset_file
+from utils.py_utils.assets import Asset, list_assets, sha256_file, verify_asset_file
 from utils.py_utils.runtime_meta import metadata_evidence
-from samples.robotics.himloco.runtime.python.input_io import discover_inputs
-from samples.robotics.himloco.runtime.python.model_binding import SAMPLE_DIR
+
+SAMPLE_DIR = Path(__file__).resolve().parents[2]
+ASSET_ID = "x5:himloco:himloco_go2_bayese_1x270.bin"
+
+
+@dataclass(frozen=True)
+class ModelSelection:
+    target: str
+    asset: Asset
+    model_path: Path
+    explicit_model_path: bool = False
+
+
+def resolve_selection(target="auto", *, model_path=None, asset_id=None):
+    """Resolve exact X5 asset; alternate paths require its explicit asset identity."""
+    if target == "auto":
+        from utils.py_utils.platforms import detect_target
+
+        target = detect_target()
+    if target != "x5":
+        raise ValueError("HIMLoco has a published fused model only for x5")
+    assets = list_assets("x5", "himloco")
+    if len(assets) != 1 or assets[0].reference != ASSET_ID or assets[0].format != "bin":
+        raise ValueError("Expected the single published HIMLoco BIN asset")
+    asset = assets[0]
+    if asset_id is not None and asset_id != asset.reference:
+        raise ValueError(f"Expected asset-id {asset.reference}")
+    if model_path is not None and asset_id is None:
+        raise ValueError(
+            "An external model path requires the explicit matching asset-id"
+        )
+    path = (
+        Path(model_path).expanduser()
+        if model_path is not None
+        else SAMPLE_DIR / "model/bayes-e" / asset.filename
+    )
+    if path.suffix != ".bin":
+        raise ValueError("HIMLoco requires an X5 .bin artifact")
+    return ModelSelection(target, asset, path, model_path is not None)
+
+
+def validate_selection(selection):
+    expected = resolve_selection(
+        selection.target,
+        model_path=selection.model_path if selection.explicit_model_path else None,
+        asset_id=selection.asset.reference,
+    )
+    if selection != expected:
+        raise ValueError("Selection differs from the declared publication and path")
 
 
 def _utc():
@@ -287,13 +337,136 @@ def complete(run: PreparedRun, latencies) -> None:
     run.report["status"] = "completed"
 
 
+# ----------------------------------------------------------------------
+# Source-indexed observation files and provenance, separate from the
+# policy math in ``policy.py``. NumPy loads lazily inside
+# :func:`load_observation` so importing this module (the manifest
+# validation path) stays NumPy-free for host listing/dry-run.
+# ----------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class InputRecord:
+    source_index: int
+    path: Path
+    expected_sha256: str | None
+
+
+def discover_inputs(path):
+    path = Path(path).resolve()
+    files = sorted(path.glob("*.bin")) if path.is_dir() else [path]
+    if not files:
+        raise ValueError("No observation BIN files found")
+    indexed = {}
+    for file in files:
+        if (
+            not file.is_file()
+            or file.suffix != ".bin"
+            or not file.stem.isascii()
+            or not file.stem.isdecimal()
+        ):
+            raise ValueError(f"Expected a numerically named observation BIN: {file}")
+        index = int(file.stem)
+        if index in indexed:
+            raise ValueError(f"Duplicate source index {index}")
+        indexed[index] = file
+    directory = path if path.is_dir() else path.parent
+    manifest_path = directory.parent / "runtime-input-manifest.json"
+    manifest_info = None
+    records = {}
+    if manifest_path.is_file():
+        data = manifest_path.read_bytes()
+        manifest = json.loads(data)
+        contract = manifest.get("input_contract", {})
+        if any(
+            contract.get(k) != v
+            for k, v in {
+                "name": "obs_history",
+                "shape": [1, 270],
+                "dtype": "float32",
+                "bytes_per_file": 1080,
+            }.items()
+        ):
+            raise ValueError("Observation manifest physical contract mismatch")
+        entries = manifest.get("records")
+        if not isinstance(entries, list) or not entries:
+            raise ValueError("Manifest requires nonempty records")
+        indices = set()
+        for entry in entries:
+            if not isinstance(entry, dict):
+                raise ValueError("Invalid manifest record")
+            name = entry.get("file")
+            index = entry.get("source_index")
+            digest = entry.get("sha256")
+            if (
+                not isinstance(name, str)
+                or Path(name).is_absolute()
+                or ".." in Path(name).parts
+                or type(index) is not int
+                or index < 0
+                or index in indices
+                or not isinstance(digest, str)
+                or len(digest) != 64
+                or any(c not in "0123456789abcdef" for c in digest)
+                or entry.get("bytes") != 1080
+            ):
+                raise ValueError("Invalid or duplicate manifest identity/digest")
+            location = (manifest_path.parent / name).resolve()
+            if (
+                not location.is_relative_to(manifest_path.parent.resolve())
+                or location in records
+            ):
+                raise ValueError(
+                    "Manifest paths must be unique and within its directory"
+                )
+            indices.add(index)
+            records[location] = (index, digest)
+        manifest_info = {
+            "path": str(manifest_path),
+            "sha256": hashlib.sha256(data).hexdigest(),
+            "source": manifest.get("source"),
+            "source_sha256": manifest.get("source_sha256"),
+        }
+    result = []
+    for index, file in sorted(indexed.items()):
+        expected = None
+        if manifest_info is not None:
+            if file not in records or records[file][0] != index:
+                raise ValueError(f"Input identity not in manifest: {file}")
+            expected = records[file][1]
+        result.append(InputRecord(index, file, expected))
+    return tuple(result), manifest_info
+
+
+def load_observation(record):
+    import numpy as np
+
+    data = record.path.read_bytes()
+    digest = hashlib.sha256(data).hexdigest()
+    if len(data) != 1080:
+        raise ValueError("Observation must contain exactly 1080 bytes")
+    if record.expected_sha256 is not None and digest != record.expected_sha256:
+        raise ValueError(f"Observation digest mismatch: {record.path}")
+    values = np.frombuffer(data, dtype="<f4").astype(np.float32).reshape(1, 270)
+    if not np.isfinite(values).all():
+        raise ValueError("Observation contains NaN/Inf")
+    return values, digest
+
+
 __all__ = [
+    "ASSET_ID",
+    "InputRecord",
+    "ModelSelection",
     "PreparedRun",
     "build_parser",
     "complete",
+    "discover_inputs",
+    "load_observation",
     "normalize_args",
     "note_runtime",
     "prepare",
     "print_resolution",
     "record_sample",
+    "resolve_selection",
+    "validate_selection",
 ]

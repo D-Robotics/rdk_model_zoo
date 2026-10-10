@@ -3,10 +3,9 @@ from pathlib import Path
 import sys, unittest
 
 S = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(S / 'runtime/python'))
 
-from yolo_assets import family_from_filename  # noqa: E402
-from yolo_platform import resolve_platform  # noqa: E402
+from samples.vision.ultralytics_yolo.runtime.python.cli import family_from_filename  # noqa: E402
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform  # noqa: E402
 
 
 class FamilyInferenceTests(unittest.TestCase):

@@ -14,20 +14,20 @@
 
 """Download the Ultralytics YOLO model assets a platform publishes.
 
-Every filename and URL comes from `yolo_assets`, which derives them from the
-platform profile, so the downloader cannot drift from what the runtime
-resolves. The script covers the whole published inventory of a platform, a
-single family/task/size selection, the platform's documented default set, and a
-dry run that only prints the plan.
+Every filename and URL comes from the asset registry in the runtime's
+``cli.py``, which derives them from the platform profile, so the downloader
+cannot drift from what the runtime resolves. The script covers the whole
+published inventory of a platform, a single family/task/size selection, the
+platform's documented default set, and a dry run that only prints the plan.
 
 `--dry-run` and `--help` never import the board runtime and never touch the
 network.
 
 Typical Usage:
-    python yolo_download.py --platform x5
-    python yolo_download.py --platform s600 --family yolov8 --task seg
-    python yolo_download.py x5 yolo11 detect n        # legacy positional form
-    python yolo_download.py --platform x5 --all --dry-run
+    python model/download.py --platform x5
+    python model/download.py --platform s600 --family yolov8 --task seg
+    python model/download.py x5 yolo11 detect n        # legacy positional form
+    python model/download.py --platform x5 --all --dry-run
 """
 
 import argparse
@@ -35,36 +35,27 @@ import os
 import sys
 from pathlib import Path
 
-# Make the sample-local helper modules importable regardless of the working
-# directory the sample is started from.
-_PYTHON_DIR = os.path.dirname(os.path.abspath(__file__))
-if _PYTHON_DIR not in sys.path:
-    sys.path.insert(0, _PYTHON_DIR)
-
-_REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 if not (_REPOSITORY_ROOT / 'docs/release/platforms.json').is_file():
     raise RuntimeError('This entry requires a complete Model Zoo source checkout.')
 if str(_REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPOSITORY_ROOT))
 
-_SAMPLE_DIR = os.path.dirname(os.path.dirname(_PYTHON_DIR))
-_DEFAULT_MODEL_DIR = os.path.join(_SAMPLE_DIR, "model")
+_DEFAULT_MODEL_DIR = os.path.dirname(os.path.abspath(__file__))
 
-from yolo_assets import (  # noqa: E402
+from samples.vision.ultralytics_yolo.runtime.python.cli import (  # noqa: E402
     DEFAULT_FAMILY,
     DEFAULT_TASK,
     SUPPORTED_TASKS,
     UnsupportedAssetError,
-    family_registry,
-    model_filename,
-    model_url,
-    manifest_asset,
-)
-from yolo_platform import (  # noqa: E402
     PlatformProfile,
     UnsupportedPlatformError,
     available_platforms,
+    family_registry,
     model_directory,
+    model_filename,
+    model_url,
+    manifest_asset,
     resolve_platform,
 )
 

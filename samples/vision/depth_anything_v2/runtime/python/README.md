@@ -16,10 +16,8 @@ python/
 ├── README_cn.md  # Chinese instructions
 ├── cli.py  # Arguments, model selection and result output
 ├── depth_anything_v2.py  # Model initialization and inference stages
-├── geometry.py  # Geometry transforms and coordinate restoration
 ├── main.py  # CLI entry: construct model and call predict
 ├── run.sh  # Run the sample
-└── visualization.py  # Result rendering and image output
 ```
 
 Start with [main.py](main.py): it constructs `DepthEstimator` and calls `predict`. [depth_anything_v2.py](depth_anything_v2.py) contains model initialization and inference stages; [cli.py](cli.py) handles arguments, model selection and result output. Model initialization loads the runtime, so applications can reuse one instance for repeated predictions.
@@ -134,7 +132,7 @@ and the task never retains a last image or last output. Keep the
 matching context with every frame; the task stores no last-image dimensions.
 Use a separate model instance for each concurrent worker.
 
-The API returns float depth. For a uint8 display, call `visualization.normalize_depth(result.depth_native)` or `colorize_depth(...)`. Keep the frame’s `ImageContext` with its result and synchronize access to any shared runner.
+The API returns float depth. For a uint8 display, call `cli.normalize_depth(result.depth_native)` or `colorize_depth(...)`. Keep the frame’s `ImageContext` with its result and synchronize access to any shared runner.
 
 <a id="stage-io"></a>
 ## Stage contracts

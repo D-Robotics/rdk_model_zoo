@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 from samples.vision.yolo26_depth.runtime.cpp import launcher
-from samples.vision.yolo26_depth.runtime.python.model_binding import resolve_selection
+from samples.vision.yolo26_depth.runtime.python.cli import resolve_selection
 
 
 class LauncherTests(unittest.TestCase):

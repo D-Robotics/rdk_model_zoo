@@ -5,7 +5,7 @@ import sys
 ROOT=Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
 from utils.py_utils.assets import download_asset
-from samples.vision.yolov5.runtime.python.model_binding import resolve_selection,SAMPLE_DIR
+from samples.vision.yolov5.runtime.python.cli import resolve_selection,SAMPLE_DIR
 
 
 def download_target(target,output_dir=None,*,variant=None,asset_id=None):

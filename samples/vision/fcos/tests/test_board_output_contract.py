@@ -21,9 +21,9 @@ from unittest import mock
 import numpy as np
 
 
-BINDING = "samples.vision.fcos.runtime.python.model_binding"
+BINDING = "samples.vision.fcos.runtime.python.cli"
 TASK = "samples.vision.fcos.runtime.python.fcos"
-RUNNER_MODULE = "samples.vision.fcos.runtime.python.model_runner"
+RUNNER_MODULE = "samples.vision.fcos.runtime.python.fcos"
 COMPARE = "samples.vision.fcos.evaluator.compare"
 SAMPLE = Path(__file__).resolve().parents[1]
 STRIDES = (8, 16, 32, 64, 128)
@@ -107,7 +107,8 @@ class FakeBoardRuntime:
 class ShuffledDictAcceptanceTests(unittest.TestCase):
     def _binding(self, dtype="int8"):
         binding_mod = importlib.import_module(BINDING)
-        return binding_mod.bind_model(
+        task_mod = importlib.import_module(TASK)
+        return task_mod.bind_model(
             binding_mod.resolve_selection(
                 "x5",
                 asset_id="x5:fcos:fcos_efficientnetb0_detect_512x512_bayese_nv12.bin",
@@ -182,7 +183,7 @@ class ShuffledDictAcceptanceTests(unittest.TestCase):
         )
 
         def legacy_side(selection, image, **kwargs):
-            binding = binding_mod.bind_model(selection, metadata)
+            binding = importlib.import_module(TASK).bind_model(selection, metadata)
             task = fcos_mod.FCOSTask(runner=lambda tensors: raw, binding=binding)
             prepared = task.pre_process(image)
             return {
@@ -212,7 +213,7 @@ class StrictSemanticsTests(unittest.TestCase):
     def setUp(self):
         binding_mod = importlib.import_module(BINDING)
         self.binding_mod = binding_mod
-        self.binding = binding_mod.bind_model(
+        self.binding = importlib.import_module(TASK).bind_model(
             binding_mod.resolve_selection(
                 "x5",
                 asset_id="x5:fcos:fcos_efficientnetb0_detect_512x512_bayese_nv12.bin",
@@ -268,7 +269,7 @@ class StrictSemanticsTests(unittest.TestCase):
             self.binding.validate_outputs(raw)
 
     def test_non_finite_values_are_rejected(self):
-        binding = self.binding_mod.bind_model(
+        binding = importlib.import_module(TASK).bind_model(
             self.binding_mod.resolve_selection(
                 "x5",
                 asset_id="x5:fcos:fcos_efficientnetb0_detect_512x512_bayese_nv12.bin",

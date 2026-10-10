@@ -113,7 +113,7 @@ YOLO26 检测效果示例（类别 ID 与分数）：
 - [evaluator](evaluator/README_cn.md) — COCO/ImageNet/DOTA、逐任务评估与参考测量.
 - [test_data](test_data/README_cn.md) — 随仓输入图片、显示标签表与效果示例.
 
-源码阅读顺序：`main.py` 处理参数/文件/显示，`yolo_dispatch.py` 选任务，runner/binding 负责 SDK 与张量，任务类处理前处理、推理、后处理。检测 DFL 与 YOLO26 direct LTRB 使用不同协议，详见 [检测契约](DETECTION_CONTRACT.md)。输入尺寸由元数据或显式回退解析。YOLO26 OBB 使用弧度，X5 类别内 NMS/裁剪与 S 路径有区别。
+源码阅读顺序：`main.py` 是可见的构造与 predict 入口。`cli.py` 负责参数声明、发布资产选择/列表、dry-run 与结果展示；`backend.py` 负责 Runner、张量绑定与运行时 metadata；任务文件（`detect.py`/`segment.py`/`pose.py`/`obb.py`/`classify.py`）处理前处理、推理、后处理。检测 DFL 与 YOLO26 direct LTRB 使用不同协议，详见 [检测契约](DETECTION_CONTRACT.md)。输入尺寸由元数据或显式回退解析。YOLO26 OBB 使用弧度，X5 类别内 NMS/裁剪与 S 路径有区别。
 
 `--family yolov8|yolo11|yolo26|...` 选择检测、分割、姿态、分类与 OBB 任务。任务输出契约见各任务说明。
 

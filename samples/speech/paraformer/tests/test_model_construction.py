@@ -5,7 +5,7 @@ import unittest
 
 import numpy as np
 
-from samples.speech.paraformer.runtime.python.model_binding import resolve_selections
+from samples.speech.paraformer.runtime.python.cli import resolve_selections
 from samples.speech.paraformer.runtime.python.pipeline import ParaformerPipeline
 from samples.speech.paraformer.tests.test_binding import metadata
 

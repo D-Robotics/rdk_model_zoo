@@ -11,12 +11,11 @@ from unittest.mock import patch
 SAMPLE = Path(__file__).resolve().parents[1]
 ROOT = SAMPLE.parents[2]
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(SAMPLE / 'runtime/python'))
 
 from utils.py_utils import assets
-from yolo_assets import manifest_asset, model_url
-from yolo_platform import resolve_platform
-import yolo_download
+from samples.vision.ultralytics_yolo.runtime.python.cli import manifest_asset, model_url
+from samples.vision.ultralytics_yolo.runtime.python.cli import resolve_platform
+from samples.vision.ultralytics_yolo.model import download as yolo_download
 
 # Fixed publication records from 6ee6ab7's legacy manifests, not active values.
 RELEASE = json.loads((SAMPLE / 'tests/fixtures/yolo26_detect_release.json').read_text())

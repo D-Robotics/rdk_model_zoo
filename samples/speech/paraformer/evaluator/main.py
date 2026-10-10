@@ -15,13 +15,10 @@ if __package__ in (None, ""):
 from utils.py_utils.assets import sha256_file
 from utils.py_utils.text_metrics import score_transcripts
 from samples.speech.paraformer.evaluator.inputs import read_manifest, load_feature
+from samples.speech.paraformer.runtime.python.cli import write_json
 from samples.speech.paraformer.evaluator.backends import Stage, tensor_names
-from samples.speech.paraformer.runtime.python.decoding import validate_vocabulary
-from samples.speech.paraformer.runtime.python.input_io import write_json
-from samples.speech.paraformer.runtime.python.model_binding import (
-    STAGES,
-    VOCABULARY_DIGEST,
-)
+from samples.speech.paraformer.runtime.python.pipeline import validate_vocabulary
+from samples.speech.paraformer.runtime.python.cli import STAGES, VOCABULARY_DIGEST
 from samples.speech.paraformer.runtime.python.pipeline import ParaformerPipeline
 
 

@@ -1,9 +1,9 @@
 """Run the YOLOWorld command-line sample.
 
 Parse options, construct the runner and the open-vocabulary task, call
-``predict``, and present the result. Option declarations, listing/dry-run,
-prompt parsing, and drawing live in ``cli.py``; the task stages live in
-``yoloworld.py``; the published asset contract in ``model_binding.py``.
+``predict``, and present the result. Option declarations, published asset
+selection, listing/dry-run, prompt parsing, and drawing live in ``cli.py``;
+the task stages and tensor binding live in ``yoloworld.py``.
 Help, listing, and dry-run stay model-free.
 """
 
@@ -25,7 +25,7 @@ from samples.vision.yoloworld.runtime.python.cli import (  # noqa: F401 - build_
     parse_prompts,
     save_image,
 )
-from samples.vision.yoloworld.runtime.python.model_binding import resolve_selection
+from samples.vision.yoloworld.runtime.python.cli import resolve_selection
 
 
 def main(argv=None) -> int:

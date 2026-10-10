@@ -113,7 +113,7 @@ YOLO26 detection visualization with class IDs and scores:
 - [evaluator](evaluator/README.md) — COCO/ImageNet/DOTA task evaluation and reference measurements.
 - [test_data](test_data/README.md) — Bundled input images, display-label tables and example visualizations.
 
-Read `main.py` for arguments/files/rendering, `yolo_dispatch.py` for task selection, runner/binding for SDK/tensors, and task classes for preprocessing/inference/postprocessing. Detection DFL and YOLO26 direct LTRB are separate protocols; see the [detection contract](DETECTION_CONTRACT.md). Input geometry resolves from metadata or an explicit fallback. YOLO26 OBB uses radians; X5 class-aware NMS/clipping differs from S.
+Read `main.py` for the visible construct-and-predict entry. ``cli.py`` owns option declarations, published-asset selection/listing, dry-run and result presentation; ``backend.py`` owns the runner, tensor binding and runtime metadata; the task files (`detect.py`/`segment.py`/`pose.py`/`obb.py`/`classify.py`) own preprocessing/inference/postprocessing and rendering inputs. Detection DFL and YOLO26 direct LTRB are separate protocols; see the [detection contract](DETECTION_CONTRACT.md). Input geometry resolves from metadata or an explicit fallback. YOLO26 OBB uses radians; X5 class-aware NMS/clipping differs from S.
 
 <a id="license"></a>
 ## License and provenance

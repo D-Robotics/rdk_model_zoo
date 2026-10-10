@@ -42,7 +42,8 @@ class ReadableEntryTests(unittest.TestCase):
         self.assertTrue(hasattr(cli, "run_prepare"))
 
     def test_execution_constructs_pipeline_and_predicts_with_injected_runners(self):
-        from samples.vision.paddle_ocr.runtime.python import main, model_runner
+        from samples.vision.paddle_ocr.runtime.python import backend as model_runner
+        from samples.vision.paddle_ocr.runtime.python import main
 
         detector_calls: list = []
         recognizer_calls: list = []

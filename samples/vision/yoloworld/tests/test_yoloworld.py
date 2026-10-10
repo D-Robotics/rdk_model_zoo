@@ -4,8 +4,8 @@
 import json, types, unittest, importlib.util, sys
 from pathlib import Path
 import numpy as np
-from samples.vision.yoloworld.runtime.python.model_binding import resolve_selection, bind_model
-from samples.vision.yoloworld.runtime.python.model_runner import RuntimeModelRunner
+from samples.vision.yoloworld.runtime.python.cli import resolve_selection
+from samples.vision.yoloworld.runtime.python.yoloworld import RuntimeModelRunner, bind_model
 from samples.vision.yoloworld.runtime.python.yoloworld import YOLOWorldTask
 from utils.py_utils.runtime_meta import RuntimeMetadata
 from unittest.mock import patch
@@ -136,7 +136,7 @@ class YOLOWorldTests(unittest.TestCase):
 
     def test_real_path_gates_before_sdk_and_the_seam_skips_the_gate(self):
         # The gate import is function-local, so patch the shared function itself.
-        import samples.vision.yoloworld.runtime.python.model_runner as runner_mod
+        import samples.vision.yoloworld.runtime.python.yoloworld as runner_mod
         sel = resolve_selection('x5')
         with patch('utils.py_utils.platforms.require_execution_target',
                    side_effect=ValueError('no board identity')) as shared_gate:

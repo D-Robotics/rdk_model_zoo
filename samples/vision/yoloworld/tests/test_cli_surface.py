@@ -68,7 +68,7 @@ class CliSurfaceTests(unittest.TestCase):
 
     def test_task_constructs_from_selection_with_injected_sdk(self):
         from test_yoloworld import FakeRuntime, SAMPLE as YOLOWORLD_SAMPLE
-        from samples.vision.yoloworld.runtime.python.model_binding import resolve_selection
+        from samples.vision.yoloworld.runtime.python.cli import resolve_selection
         from samples.vision.yoloworld.runtime.python.yoloworld import YOLOWorldTask
 
         runtime = FakeRuntime()

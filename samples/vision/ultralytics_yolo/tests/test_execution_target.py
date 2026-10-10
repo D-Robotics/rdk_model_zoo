@@ -13,9 +13,7 @@ ENTRY = Path(__file__).resolve().parents[1] / 'runtime/python/main.py'
 class ExecutionTargetTests(unittest.TestCase):
     def test_url_comes_from_manifest_not_filename_formula(self):
         from utils.py_utils import assets
-        sys.path.insert(0, str(ENTRY.parent))
-        from yolo_assets import model_url
-        from yolo_platform import resolve_platform
+        from samples.vision.ultralytics_yolo.runtime.python.cli import model_url, resolve_platform
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'docs/release/x5/models.yaml'
             path.parent.mkdir(parents=True)

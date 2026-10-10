@@ -381,11 +381,11 @@ class RunnerAndCLITests(unittest.TestCase):
 
 
 class VisualizationDefaultPathTests(unittest.TestCase):
-    vis_name = 'samples.vision.pointnet.runtime.python.visualization'
-    vis_path = ROOT/'samples/vision/pointnet/runtime/python/visualization.py'
+    vis_name = 'samples.vision.pointnet.runtime.python.cli'
+    vis_path = ROOT/'samples/vision/pointnet/runtime/python/cli.py'
 
     def plot_fixture(self):
-        """Recording matplotlib double covering exactly the calls visualization.py makes."""
+        """Recording matplotlib double covering exactly the calls the cli.py plot helpers make."""
         calls, axes = [], types.SimpleNamespace(
             set_xlim=lambda *a: calls.append(('xlim', a)),
             set_ylim=lambda *a: calls.append(('ylim', a)),
@@ -436,7 +436,11 @@ class VisualizationDefaultPathTests(unittest.TestCase):
             sys.modules.pop(self.vis_name, None)
             vis = importlib.import_module(self.vis_name)
             self.assertEqual(Path(vis.__file__), self.vis_path)
+            # cli.py keeps matplotlib lazy: importing it records no plotting calls.
+            self.assertEqual(calls, [])
             self.assertEqual(main(['--output-dir', tmp]), 0)
+            # The first plotting call still selects the Agg backend before pyplot use.
+            self.assertEqual(calls[0], ('use', ('Agg',)))
             report = json.loads((Path(tmp)/'result.json').read_text())
             labels = np.load(Path(tmp)/'labels.npy')
             saved = [c[1] for c in calls if c[0] == 'savefig']
@@ -455,14 +459,15 @@ class VisualizationDefaultPathTests(unittest.TestCase):
         self.assertEqual(parts, ['back', 'seat', 'leg', 'arm'])
         self.assertEqual(axes, {'xlabel': 'X', 'ylabel': 'Y', 'zlabel': 'Z'})
 
-    def test_visualization_imports_and_resolves_every_annotation(self):
+    def test_cli_imports_lazily_and_resolves_every_annotation(self):
         import ast, builtins
         calls, doubles = self.plot_fixture()
         with patch.dict(sys.modules, doubles):
             sys.modules.pop(self.vis_name, None)
             vis = importlib.import_module(self.vis_name)
             self.assertEqual(Path(vis.__file__), self.vis_path)
-            self.assertEqual(calls[0], ('use', ('Agg',)))
+            # No matplotlib call happens at import time; plots stay opt-in.
+            self.assertEqual(calls, [])
             for obj in [vis, *vars(vis).values()]:
                 if callable(obj):
                     getattr(obj, '__annotations__', None)  # forces deferred evaluation on 3.14+
@@ -481,7 +486,7 @@ class VisualizationDefaultPathTests(unittest.TestCase):
         roots = {t.id for node in annotations for t in ast.walk(node) if isinstance(t, ast.Name)}
         self.assertTrue(roots)
         self.assertEqual(roots - bound - set(dir(builtins)), set(),
-                         'annotation references a name visualization.py never imports')
+                         'annotation references a name cli.py never imports')
         self.assertNotIn('parse_args', vars(vis))
         from samples.vision.pointnet.runtime.python.main import build_parser
         self.assertTrue(callable(build_parser))

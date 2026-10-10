@@ -4,18 +4,18 @@ from dataclasses import replace
 from types import SimpleNamespace
 import unittest
 import numpy as np
-from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import (
     LTRBSegmentationContract,
     ModelSelection,
     RuntimeMetadata,
     bind_model,
 )
-from samples.vision.ultralytics_yolo.runtime.python.model_runner import ModelRunner
-from samples.vision.ultralytics_yolo.runtime.python.yolo26_seg import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import ModelRunner
+from samples.vision.ultralytics_yolo.runtime.python.segment import (
     YOLO26Seg,
     YOLO26SegConfig,
 )
-from samples.vision.ultralytics_yolo.runtime.python.yolo_seg import YoloSeg
+from samples.vision.ultralytics_yolo.runtime.python.segment import YoloSeg
 
 
 def fixture(target="s100", chw=False, classes=1, size=64):

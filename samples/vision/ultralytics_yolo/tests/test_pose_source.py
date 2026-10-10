@@ -10,12 +10,12 @@ import numpy as np
 from test_pose_binding import fixture
 import test_pose_binding as checks
 from source_reference import load_source, ROOT
-from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import (
     RuntimeMetadata,
     bind_model,
 )
-from samples.vision.ultralytics_yolo.runtime.python.model_runner import ModelRunner
-from samples.vision.ultralytics_yolo.runtime.python.yolo_pose import YoloPose
+from samples.vision.ultralytics_yolo.runtime.python.backend import ModelRunner
+from samples.vision.ultralytics_yolo.runtime.python.pose import YoloPose
 
 
 def x5_source_task(names):

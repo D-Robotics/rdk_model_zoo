@@ -49,9 +49,13 @@ from eval_common import (  # noqa: E402  (path is set up above)
     report_empty_predictions,
     resolve_platform_argument,
 )
-from yolo_assets import family_from_filename  # noqa: E402
-from samples.vision.ultralytics_yolo.runtime.python.detect import YoloDetect, YoloDetectConfig  # noqa: E402
-from samples.vision.ultralytics_yolo.runtime.python.yolo_v10detect import YoloV10Detect, YoloV10DetectConfig  # noqa: E402
+from samples.vision.ultralytics_yolo.runtime.python.cli import family_from_filename  # noqa: E402
+from samples.vision.ultralytics_yolo.runtime.python.detect import (  # noqa: E402
+    YoloDetect,
+    YoloDetectConfig,
+    YoloV10Detect,
+    YoloV10DetectConfig,
+)
 
 
 def build_model(args, platform):

@@ -8,16 +8,11 @@ import re
 import numpy as np
 from utils.py_utils.assets import sha256_file
 from utils.py_utils.yoloe26_geometry import letterbox
-from samples.vision.ultralytics_yolo.runtime.python.geometry import (
-    resize_with_transform,
-)
+from samples.vision.ultralytics_yolo.runtime.python.detect import resize_with_transform
 from samples.vision.yoloe.conversion.contract import inspect_graph
-from samples.vision.yoloe.runtime.python.model_binding import (
-    resolve_selection,
-    runtime_selection,
-)
-from samples.vision.yoloe.runtime.python.config import validate_config
-from samples.vision.yoloe.runtime.python.yoloe import decode_result
+from samples.vision.yoloe.runtime.python.cli import resolve_selection
+from samples.vision.yoloe.runtime.python.cli import validate_config
+from samples.vision.yoloe.runtime.python.yoloe import decode_result, runtime_selection
 from samples.vision.yoloe.runtime.python.yoloe import YOLOE
 
 NAMES = Path(__file__).resolve().parents[1] / "test_data/classes.names"

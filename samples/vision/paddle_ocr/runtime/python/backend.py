@@ -1,4 +1,217 @@
 # Copyright (c) 2026 D-Robotics Corporation
+# SPDX-License-Identifier: Apache-2.0
+"""Physical backend for the PaddleOCR two-stage pipeline.
+
+``backend.py`` owns the coherent SDK surface: the per-stage tensor contracts
+and their binding to observed metadata, the lazy stage runners with
+scheduling validation, and the default runtime factory. Published pair
+identity/listing lives in ``cli.py``; the readable two-stage composition and
+its decode/geometry/input math live in ``ocr.py``.
+"""
+
+import importlib
+from dataclasses import dataclass
+from typing import Any, Callable, Literal, Mapping, Optional, Sequence
+
+from utils.py_utils.runtime_meta import RuntimeMetadata, canonicalise_dtype
+
+from samples.vision.paddle_ocr.runtime.python.cli import (
+    BindingError,
+    StageContract,
+    MetadataMismatchError,
+    OCRPair,
+    UnsupportedAssetError,
+    resolve_pair,
+)
+
+# ======================================================================
+# Per-stage tensor contracts and metadata binding.
+# ======================================================================
+
+
+
+@dataclass(frozen=True)
+class StageBinding:
+    """Static contract plus the exact metadata observed at runtime."""
+
+    pair: OCRPair
+    stage: Literal["detector", "recognizer"]
+    contract: StageContract
+    model_name: str
+    input_names: tuple[str, ...]
+    input_shapes: Mapping[str, tuple[int, ...]]
+    input_dtypes: Mapping[str, str]
+    output_name: str
+    output_shape: tuple[int, ...]
+    output_dtype: str
+    runtime_metadata: RuntimeMetadata
+
+    @property
+    def runtime_input_shapes(self) -> Mapping[str, tuple[int, ...]]:
+        """Return the physical tensor shapes used by the runtime runner."""
+
+        return self.contract.runtime_input_shapes
+
+    @property
+    def runtime_input_dtypes(self) -> Mapping[str, str]:
+        """Return the physical tensor dtypes used by the runtime runner."""
+
+        return self.contract.runtime_input_dtypes
+
+
+def bind_stage(
+    pair: OCRPair,
+    stage: Literal["detector", "recognizer"] | str,
+    metadata: RuntimeMetadata | Mapping[str, Any],
+) -> StageBinding:
+    """Validate actual runtime metadata against the selected stage contract."""
+
+    if stage not in ("detector", "recognizer"):
+        raise BindingError(f"Unknown OCR stage {stage!r}.")
+    contract = pair.detector if stage == "detector" else pair.recognizer
+    facts = metadata if isinstance(metadata, RuntimeMetadata) else RuntimeMetadata.from_mapping(metadata)
+
+    if facts.model_name != contract.model_name:
+        raise MetadataMismatchError(
+            f"{stage} model name {facts.model_name!r} does not match the audited "
+            f"name {contract.model_name!r}."
+        )
+    if tuple(facts.input_names) != tuple(contract.input_names):
+        raise MetadataMismatchError(
+            f"{stage} input names {facts.input_names!r} do not match the audited "
+            f"names {contract.input_names!r}."
+        )
+    if tuple(facts.output_names) != (contract.output_name,):
+        raise MetadataMismatchError(
+            f"{stage} output names {facts.output_names!r} do not match the audited "
+            f"name {contract.output_name!r}."
+        )
+    for name in contract.input_names:
+        actual_shape = facts.input_shapes.get(name)
+        if tuple(actual_shape or ()) != tuple(contract.input_shapes[name]):
+            raise MetadataMismatchError(
+                f"{stage} input {name!r} shape {actual_shape!r} does not match "
+                f"{contract.input_shapes[name]!r}."
+            )
+        actual_dtype = canonicalise_dtype(facts.input_dtypes.get(name))
+        if actual_dtype is None:
+            raise MetadataMismatchError(
+                f"{stage} input {name!r} metadata is missing a dtype."
+            )
+        if actual_dtype != contract.input_dtypes[name]:
+            raise MetadataMismatchError(
+                f"{stage} input {name!r} dtype {actual_dtype!r} does not match "
+                f"the audited {contract.input_dtypes[name]!r} contract."
+            )
+
+    actual_output_shape = facts.output_shapes.get(contract.output_name)
+    if tuple(actual_output_shape or ()) != tuple(contract.output_shape):
+        raise MetadataMismatchError(
+            f"{stage} output {contract.output_name!r} shape {actual_output_shape!r} "
+            f"does not match {contract.output_shape!r}."
+        )
+    actual_output_dtype = canonicalise_dtype(facts.output_dtypes.get(contract.output_name))
+    if actual_output_dtype is None:
+        raise MetadataMismatchError(
+            f"{stage} output {contract.output_name!r} metadata is missing a dtype."
+        )
+    if actual_output_dtype != "float32":
+        raise MetadataMismatchError(
+            f"The OCR pilot accepts only F32 outputs; {stage} reported "
+            f"{actual_output_dtype!r}."
+        )
+    # SDK metadata may retain quantization descriptors for an F32 output.
+    # The shared raw_f32 contract uses the actual tensor dtype; applying a
+    # second dequantization here would change already decoded OCR scores.
+
+    return StageBinding(
+        pair=pair,
+        stage=stage,  # type: ignore[arg-type]
+        contract=contract,
+        model_name=facts.model_name,
+        input_names=facts.input_names,
+        input_shapes=facts.input_shapes,
+        input_dtypes=facts.input_dtypes,
+        output_name=contract.output_name,
+        output_shape=contract.output_shape,
+        output_dtype=actual_output_dtype,
+        runtime_metadata=facts,
+    )
+
+
+def validate_stage_inputs(
+    binding: StageBinding | StageContract,
+    inputs: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Validate and return a copy of one flat physical input mapping."""
+
+    expected_names = tuple(binding.input_names)
+    actual_names = tuple(inputs.keys())
+    if set(actual_names) != set(expected_names) or len(actual_names) != len(expected_names):
+        raise MetadataMismatchError(
+            f"{binding.stage} runner inputs {actual_names!r} do not match "
+            f"{expected_names!r}."
+        )
+    import numpy as np
+
+    result: dict[str, Any] = {}
+    for name in expected_names:
+        value = np.asarray(inputs[name])
+        expected_shape = binding.runtime_input_shapes[name]
+        expected_dtype = np.dtype(binding.runtime_input_dtypes[name])
+        if tuple(value.shape) != tuple(expected_shape):
+            raise MetadataMismatchError(
+                f"{binding.stage} input {name!r} runtime shape {value.shape!r} "
+                f"does not match {expected_shape!r}."
+            )
+        if value.dtype != expected_dtype:
+            raise MetadataMismatchError(
+                f"{binding.stage} input {name!r} dtype {value.dtype!r} does not "
+                f"match {expected_dtype!r}."
+            )
+        if not np.all(np.isfinite(value)):
+            raise MetadataMismatchError(
+                f"{binding.stage} input {name!r} contains NaN or infinity."
+            )
+        result[name] = value
+    return result
+
+
+def validate_stage_output(
+    binding: StageBinding | StageContract,
+    outputs: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Validate one flat F32 output mapping, including finite values."""
+
+    import numpy as np
+
+    if tuple(outputs.keys()) != (binding.output_name,):
+        raise MetadataMismatchError(
+            f"{binding.stage} runner outputs {tuple(outputs.keys())!r} do not "
+            f"match {(binding.output_name,)!r}."
+        )
+    value = np.asarray(outputs[binding.output_name])
+    if tuple(value.shape) != tuple(binding.output_shape):
+        raise MetadataMismatchError(
+            f"{binding.stage} output {binding.output_name!r} runtime shape "
+            f"{value.shape!r} does not match {binding.output_shape!r}."
+        )
+    if value.dtype != np.dtype("float32"):
+        raise MetadataMismatchError(
+            f"{binding.stage} output {binding.output_name!r} dtype {value.dtype!r} "
+            "does not match the F32 contract."
+        )
+    if not np.all(np.isfinite(value)):
+        raise MetadataMismatchError(
+            f"{binding.stage} output {binding.output_name!r} contains NaN or infinity."
+        )
+    return {binding.output_name: value}
+
+# ======================================================================
+# Lazy, metadata-bound stage runners.
+# ======================================================================
+
+# Copyright (c) 2026 D-Robotics Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +225,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Lazy, metadata-bound runtime runners for the two OCR stages."""
 
-from __future__ import annotations
 
 import importlib
 from collections.abc import Callable, Mapping
@@ -22,15 +233,14 @@ from typing import Any
 
 import numpy as np
 
-from samples.vision.paddle_ocr.runtime.python.model_binding import (
-    MetadataMismatchError,
-    OCRPair,
+from samples.vision.paddle_ocr.runtime.python.backend import (
     RuntimeMetadata,
     StageBinding,
     bind_stage,
     validate_stage_inputs,
     validate_stage_output,
 )
+from samples.vision.paddle_ocr.runtime.python.cli import MetadataMismatchError, OCRPair
 
 
 class RuntimeUnavailableError(RuntimeError):

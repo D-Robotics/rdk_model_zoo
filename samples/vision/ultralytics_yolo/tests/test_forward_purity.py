@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import numpy as np
 
-from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+from samples.vision.ultralytics_yolo.runtime.python.backend import (
     BindingError,
     DFLDetectionContract,
     LTRBDetectionContract,
@@ -15,13 +15,13 @@ from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
     RuntimeMetadata,
     bind_model,
 )
-from samples.vision.ultralytics_yolo.runtime.python.model_runner import ModelRunner
+from samples.vision.ultralytics_yolo.runtime.python.backend import ModelRunner
 from samples.vision.ultralytics_yolo.runtime.python.detect import (
     YoloDetect,
     YoloDetectConfig,
 )
-from samples.vision.ultralytics_yolo.runtime.python.tensor_io import normalize_dtype
-from samples.vision.ultralytics_yolo.runtime.python.decode import decode_dfl
+from samples.vision.ultralytics_yolo.runtime.python.backend import normalize_dtype
+from samples.vision.ultralytics_yolo.runtime.python.detect import decode_dfl
 
 
 def fixture(*, sdk=False, channels=False, ltrb=False):

@@ -99,11 +99,8 @@ class ModelOwnedConstructionTests(unittest.TestCase):
     """ASR.from_model owns runner construction/load; main stays high-level."""
 
     def test_from_model_loads_and_runs_nonzero_pipeline(self):
-        from samples.speech.asr.runtime.python.model_binding import (
-            SAMPLE_DIR,
-            resolve_selection,
-        )
-        from samples.speech.asr.runtime.python.vocabulary import load_vocabulary
+        from samples.speech.asr.runtime.python.cli import SAMPLE_DIR, resolve_selection
+        from samples.speech.asr.runtime.python.cli import load_vocabulary
 
         vocabulary = load_vocabulary(SAMPLE_DIR / "test_data/vocab.json")
         with tempfile.TemporaryDirectory() as temp:
@@ -132,7 +129,7 @@ class ModelOwnedConstructionTests(unittest.TestCase):
             )
 
     def test_from_model_gates_board_before_sdk_factory(self):
-        from samples.speech.asr.runtime.python.model_binding import resolve_selection
+        from samples.speech.asr.runtime.python.cli import resolve_selection
 
         with patch(
             "samples.speech.asr.runtime.python.asr.require_execution_target",
@@ -147,9 +144,9 @@ class ModelOwnedConstructionTests(unittest.TestCase):
         factory.assert_not_called()
 
     def test_main_constructs_exactly_once_through_from_model(self):
-        from samples.speech.asr.runtime.python import audio_io
+        from samples.speech.asr.runtime.python import cli as audio_io
         from samples.speech.asr.runtime.python.main import main
-        from samples.speech.asr.runtime.python.model_binding import resolve_selection
+        from samples.speech.asr.runtime.python.cli import resolve_selection
 
         original = asr_module.ASR.from_model
         constructed = []

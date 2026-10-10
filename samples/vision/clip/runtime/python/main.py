@@ -31,6 +31,8 @@ from samples.vision.clip.runtime.python.cli import (  # noqa: E402
 
 
 def main(argv=None):
+    """Run the CLIP matching CLI: resolve the published asset for the target, match one image against text prompts, and print the per-prompt cosine scores."""
+
     args = build_parser().parse_args(argv)
     try:
         if args.list_models:

@@ -1,10 +1,12 @@
 """YOLOv5 command surface: options, listing, dry-run, and result rendering.
 
 The entry point (``main.py``) parses arguments, constructs the runner and
-task, and calls ``predict``; everything presentational lives here — the
-parser with the published defaults, the model-free ``--list-models`` and
+task, and calls ``predict``; everything around selection and presentation
+lives here — the published YOLOv5/ByteTrack asset identities and resolver,
+the parser with the published defaults, the model-free ``--list-models`` and
 ``--dry-run`` modes, option validation, and the annotated-image drawing.
 Nothing in this module loads the board SDK, NumPy, or OpenCV at import time.
+The tensor contract, decode math and task stages live in ``detection.py``.
 """
 
 from __future__ import annotations
@@ -14,12 +16,79 @@ import json
 import math
 from pathlib import Path
 
-from samples.vision.yolov5.runtime.python.model_binding import (
-    ANCHORS,
-    SAMPLE_DIR,
-    STRIDES,
-    list_available_assets,
-)
+from dataclasses import dataclass
+from pathlib import Path
+
+from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.platforms import resolve_target
+
+
+
+
+# ======================================================================
+# Published YOLOv5/ByteTrack detector identities and selection.
+# Decoder anchor/stride constants also serve as the parser defaults.
+STRIDES = (8,16,32)
+ANCHORS = (10,13,16,30,33,23,30,61,62,45,59,119,116,90,156,198,373,326)
+
+# ======================================================================
+
+SAMPLE_DIR = Path(__file__).resolve().parents[2]
+
+
+X5_VARIANTS = ('n-v7.0','s-v2.0','m-v2.0','l-v2.0','x-v2.0','s-v7.0','m-v7.0','l-v7.0','x-v7.0')
+
+
+def _x5_filename(variant):
+    size,tag=variant.split('-v');return f'yolov5{size}_tag_v{tag}_detect_640x640_bayese_nv12.bin'
+
+
+@dataclass(frozen=True)
+class ModelSelection:
+    asset: Asset
+    target: str
+    model_path: Path
+    variant: str
+    consumer: str = 'yolov5'
+
+
+def list_available_assets(target=None, *, consumer='yolov5'):
+    """List finite source-published assets; does not inspect hardware or fetch data."""
+    if consumer not in ('yolov5','bytetrack'):raise ValueError('Unknown detector consumer.')
+    if target not in (None,'auto','x5','s100','s100p','s600'):raise ValueError('Unknown target.')
+    groups=('x5','s') if consumer=='yolov5' else ('s',)
+    assets=[]
+    for group in groups:
+        rows=list_assets(group,consumer)
+        expected=({_x5_filename(v) for v in X5_VARIANTS} if group=='x5' else
+                  {f'{t}/yolov5x_672x672_nv12.hbm' for t in (('s100','s600') if consumer=='yolov5' else ('s100','s100p','s600'))})
+        if {a.filename for a in rows}!=expected or any(a.format!=('bin' if group=='x5' else 'hbm') for a in rows):
+            raise ValueError(f'{consumer} publication changed; review its finite contracts.')
+        assets.extend(a for a in rows if target in (None,'auto') or (group=='x5' and target=='x5') or (group=='s' and a.filename.startswith(target+'/')))
+    return tuple(assets)
+
+
+def resolve_selection(target='auto', *, variant=None, asset_id=None, model_path=None, consumer='yolov5', soc_name=None, board_type=None):
+    """Resolve an exact target/variant. Custom paths require the matching asset ID."""
+    target=resolve_target(target,soc_name=soc_name,board_type=board_type)
+    assets=list_available_assets(target,consumer=consumer)
+    if not assets:raise ValueError(f'No published {consumer} asset for {target}.')
+    if model_path is not None and asset_id is None:raise ValueError('External model-path requires an exact asset-id.')
+    if asset_id is not None:
+        matches=[a for a in assets if a.reference==asset_id]
+        if len(matches)!=1:raise ValueError(f'Unknown or mismatched {consumer} asset-id: {asset_id}.')
+        asset=matches[0]
+        inferred=next((v for v in X5_VARIANTS if _x5_filename(v)==asset.filename),'x-672')
+        if variant is not None and variant!=inferred:raise ValueError('variant and asset-id mismatch.')
+        variant=inferred
+    else:
+        variant=variant or ('n-v7.0' if target=='x5' else 'x-672')
+        if target=='x5' and variant in X5_VARIANTS:filename=_x5_filename(variant)
+        elif target!='x5' and variant=='x-672':filename=f'{target}/yolov5x_672x672_nv12.hbm'
+        else:raise ValueError(f'Unsupported {target} variant: {variant}.')
+        asset=next(a for a in assets if a.filename==filename)
+    root=SAMPLE_DIR if consumer=='yolov5' else SAMPLE_DIR.parent/'bytetrack'
+    return ModelSelection(asset,target,Path(model_path).expanduser() if model_path is not None else root/'model'/asset.filename,variant,consumer)
 
 
 def build_parser() -> argparse.ArgumentParser:

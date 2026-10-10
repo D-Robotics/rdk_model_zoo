@@ -17,8 +17,7 @@ python/
 ├── cli.py  # 参数、模型选择与结果交付
 ├── main.py  # 命令行入口：构造模型并调用 predict
 ├── pointnet.py  # 模型初始化与推理阶段
-├── run.sh  # 运行示例
-└── visualization.py  # 结果渲染与图片保存
+└── run.sh  # 运行示例
 ```
 
 从 [main.py](main.py) 开始：入口构造 `PointNetSegmenter` 并调用 `predict`。[pointnet.py](pointnet.py) 实现模型初始化及推理阶段；[cli.py](cli.py) 负责参数、模型选择和结果交付。模型初始化会加载 Runtime，应用可复用同一个实例执行多次预测。

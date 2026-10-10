@@ -15,7 +15,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PYTHON_SCRIPT="${SCRIPT_DIR}/../runtime/python/yolo_download.py"
+PYTHON_SCRIPT="${SCRIPT_DIR}/download.py"
 
 if ! command -v python3 >/dev/null 2>&1; then
   echo "[Error] python3 is required to resolve model assets." >&2

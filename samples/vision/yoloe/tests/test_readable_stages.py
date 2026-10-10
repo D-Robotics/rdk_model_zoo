@@ -16,8 +16,8 @@ import unittest
 import numpy as np
 
 from test_runtime import fake_runtime
-from samples.vision.yoloe.runtime.python.model_binding import resolve_selection
-from samples.vision.yoloe.runtime.python.model_runner import build_runner
+from samples.vision.yoloe.runtime.python.cli import resolve_selection
+from samples.vision.yoloe.runtime.python.yoloe import build_runner
 from samples.vision.yoloe.runtime.python.yoloe import YOLOE
 
 

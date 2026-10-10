@@ -47,7 +47,7 @@ from eval_common import (  # noqa: E402  (path is set up above)
     report_empty_predictions,
     resolve_platform_argument,
 )
-from samples.vision.ultralytics_yolo.runtime.python.yolo_pose import YoloPose, YoloPoseConfig  # noqa: E402
+from samples.vision.ultralytics_yolo.runtime.python.pose import YoloPose, YoloPoseConfig  # noqa: E402
 
 
 def flatten_keypoints(kpts_xy, kpts_score, *, yolo26_platform=None, visibility_threshold=0.5) -> list:
@@ -122,7 +122,7 @@ def main(argv=None) -> int:
     if args.nms_thres is not None:
         common["nms_thres"] = args.nms_thres
     Model,Config=evaluation_types(args,platform,"pose")
-    from yolo_assets import family_from_filename
+    from samples.vision.ultralytics_yolo.runtime.python.cli import family_from_filename
     family = args.family or family_from_filename(platform,args.model_path)
     common.update(evaluation_options(args,"pose"))
     model = Model(Config(**common))

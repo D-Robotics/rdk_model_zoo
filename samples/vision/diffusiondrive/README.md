@@ -67,7 +67,7 @@ bash samples/vision/diffusiondrive/runtime/python/run.sh --target s600 --output 
 Run all five source cases, or add `--dry-run` for command/input inspection:
 
 ```bash
-bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s600 --output outputs/diffusiondrive_cases
+bash samples/vision/diffusiondrive/evaluator/run_all_cases.sh --target s600 --output outputs/diffusiondrive_cases
 ```
 
 For S100P, select `--target s100p` in both download and runtime commands. Its HBM is distinct; changing a filename does not retarget a model. See [runtime parameters and integration](runtime/python/README.md) before using external model paths.

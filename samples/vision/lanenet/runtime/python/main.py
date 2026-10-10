@@ -28,6 +28,8 @@ from samples.vision.lanenet.runtime.python.cli import resolve_selection
 
 
 def main(argv=None):
+    """Run the lane-detection CLI: resolve the published asset, run one image, and present the lane embeddings and binary labels."""
+
     args = build_parser().parse_args(argv)
     try:
         if args.list_models:

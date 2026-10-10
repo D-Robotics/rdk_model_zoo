@@ -33,8 +33,8 @@ def _nv12_reference(image: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
 class TensorIoTests(unittest.TestCase):
     def test_x5_detection_is_linear_resize_and_one_packed_nv12_tensor(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import resolve_pair
-        from samples.vision.paddle_ocr.runtime.python.tensor_io import prepare_detection
+        from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
+        from samples.vision.paddle_ocr.runtime.python.ocr import prepare_detection
 
         image = _textured_image()
         tensors = prepare_detection(image, resolve_pair("x5"))
@@ -51,8 +51,8 @@ class TensorIoTests(unittest.TestCase):
         np.testing.assert_array_equal(packed, expected)
 
     def test_s100_detection_is_area_resize_and_split_nv12_planes(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import resolve_pair
-        from samples.vision.paddle_ocr.runtime.python.tensor_io import prepare_detection
+        from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
+        from samples.vision.paddle_ocr.runtime.python.ocr import prepare_detection
 
         image = _textured_image()
         tensors = prepare_detection(image, resolve_pair("s100"))
@@ -68,8 +68,8 @@ class TensorIoTests(unittest.TestCase):
         np.testing.assert_array_equal(tensors["x_uv"], expected_uv)
 
     def test_python_recognition_preparation_is_linear_rgb_f32_nchw_for_both_pairs(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import resolve_pair
-        from samples.vision.paddle_ocr.runtime.python.tensor_io import prepare_recognition
+        from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
+        from samples.vision.paddle_ocr.runtime.python.ocr import prepare_recognition
 
         image = _textured_image(11, 37)
         expected_hwc = cv2.resize(image, (320, 48), interpolation=cv2.INTER_LINEAR)
@@ -84,11 +84,8 @@ class TensorIoTests(unittest.TestCase):
                 np.testing.assert_array_equal(tensors["x"], expected)
 
     def test_input_validation_rejects_non_bgr_or_non_uint8_images(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import resolve_pair
-        from samples.vision.paddle_ocr.runtime.python.tensor_io import (
-            prepare_detection,
-            prepare_recognition,
-        )
+        from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
+        from samples.vision.paddle_ocr.runtime.python.ocr import prepare_detection, prepare_recognition
 
         with self.assertRaises(ValueError):
             prepare_detection(np.zeros((8, 8), dtype=np.uint8), resolve_pair("x5"))

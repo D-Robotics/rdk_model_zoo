@@ -6,7 +6,6 @@ import shutil, subprocess, tempfile
 S = Path(__file__).resolve().parents[1]
 R = S.parents[2]
 sys.path.insert(0, str(R))
-sys.path.insert(0, str(S / 'runtime/python'))
 
 CPP_DETECT = (S / 'runtime/cpp/detect/main.cc').read_text()
 CPP_DECODE = (S / 'runtime/cpp/common/decode.h').read_text()
@@ -17,7 +16,7 @@ CPP_SEGMENT = (S / 'runtime/cpp/segment/main.cc').read_text()
 
 class CppContractTests(unittest.TestCase):
     def test_detect_constants_match_python_contract(self):
-        from samples.vision.ultralytics_yolo.runtime.python.yolo26_det import YOLO26DetectConfig
+        from samples.vision.ultralytics_yolo.runtime.python.detect import YOLO26DetectConfig
         from samples.vision.ultralytics_yolo.runtime.python.detect import YoloDetectConfig
         self.assertIn('const int kClasses = 80;', CPP_DETECT)
         self.assertIn('const int kStrides[] = {8, 16, 32};', CPP_DETECT)

@@ -5,9 +5,10 @@ import unittest
 import numpy as np
 
 from utils.py_utils import postprocess as post
-from samples.vision.ultralytics_yolo.runtime.python.model_binding import RuntimeMetadata
-from samples.vision.yoloe.runtime.python.model_binding import resolve_selection, runtime_selection
-from samples.vision.yoloe.runtime.python.model_runner import bind_yoloe_outputs, YOLOERunner
+from samples.vision.ultralytics_yolo.runtime.python.backend import RuntimeMetadata
+from samples.vision.yoloe.runtime.python.cli import resolve_selection
+from samples.vision.yoloe.runtime.python.yoloe import runtime_selection
+from samples.vision.yoloe.runtime.python.yoloe import bind_yoloe_outputs, YOLOERunner
 from samples.vision.yoloe.runtime.python.yoloe import YOLOE
 
 

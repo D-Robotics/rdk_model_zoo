@@ -36,11 +36,11 @@ if str(ROOT) not in sys.path:
 from utils.py_utils.platforms import require_execution_target  # noqa: E402
 from utils.py_utils.runtime_meta import RuntimeMetadata, metadata_evidence  # noqa: E402
 from samples.vision.fcos.runtime.python.fcos import FCOSTask  # noqa: E402
-from samples.vision.fcos.runtime.python.model_binding import (  # noqa: E402
+from samples.vision.fcos.runtime.python.cli import (  # noqa: E402
     ModelSelection,
     resolve_selection,
 )
-from samples.vision.fcos.runtime.python.model_runner import RuntimeModelRunner  # noqa: E402
+from samples.vision.fcos.runtime.python.fcos import RuntimeModelRunner  # noqa: E402
 
 
 def _sha256(path: Path) -> str:
@@ -336,7 +336,7 @@ def run_comparison(
         source_data = _normalise_side(source_data)
         _save_side(directory / "source", source_data, arrays)
         if runtime_factory is None:
-            from samples.vision.fcos.runtime.python.model_runner import _default_runtime_factory
+            from samples.vision.fcos.runtime.python.fcos import _default_runtime_factory
 
             runtime_factory = _default_runtime_factory()
         unified_data = _run_unified(selection, image, resize_type=resize_type, conf_thres=conf_thres, iou_thres=iou_thres, priority=priority, bpu_cores=cores, runtime_factory=runtime_factory)

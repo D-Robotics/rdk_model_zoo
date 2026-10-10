@@ -57,7 +57,7 @@ class TextSession:
 def fixture():
     from samples.vision.clip.runtime.python.cli import resolve_selection
     from samples.vision.clip.runtime.python.matching import CLIPMatcher, RuntimeModelRunner
-    from samples.vision.clip.runtime.python.tokenization import PromptTokenizer
+    from samples.vision.clip.runtime.python.simple_tokenizer import PromptTokenizer
     image=ImageRuntime(); text=TextSession()
     runner=RuntimeModelRunner(resolve_selection('x5'), image_runtime=image, text_session=text)
     return CLIPMatcher(runner.selection, tokenizer=PromptTokenizer(), runner=runner),runner,image,text
@@ -75,7 +75,7 @@ class ClipTests(unittest.TestCase):
         with self.assertRaises(ValueError):resolve_selection('x5',image_asset_id='x5:clip:text_encoder.onnx')
 
     def test_actual_bpe_tokens_match_source_unicode_empty_and_truncation(self):
-        from samples.vision.clip.runtime.python.tokenization import PromptTokenizer
+        from samples.vision.clip.runtime.python.simple_tokenizer import PromptTokenizer
         tokenizer=PromptTokenizer();old=source_module()
         prompts=['a diagram','a dog','机器人 café &amp; dog','', ' whitespace\t text ']
         np.testing.assert_array_equal(tokenizer(prompts),old.tokenize(prompts))
@@ -188,14 +188,14 @@ class SimplifiedRuntimeTests(unittest.TestCase):
     Selection/catalog duties live in ``cli.py``; ``matching.py`` owns the
     named model class, the dual-runtime runner, and multimodal input
     preparation; the per-sample ``model_binding``/``model_runner``/
-    ``tensor_io`` forwarding modules are gone. ``tokenization.py`` and
-    ``simple_tokenizer.py`` stay: the preserved BPE tokenizer algorithm.
+    ``tensor_io`` forwarding modules are gone. ``simple_tokenizer.py`` stays:
+    the preserved BPE tokenizer algorithm and its 77-token prompt bridge.
     """
 
     def test_matcher_constructs_from_selection_and_runs_stages(self):
         from samples.vision.clip.runtime.python.cli import resolve_selection
         from samples.vision.clip.runtime.python.matching import CLIPMatcher, RuntimeModelRunner
-        from samples.vision.clip.runtime.python.tokenization import PromptTokenizer
+        from samples.vision.clip.runtime.python.simple_tokenizer import PromptTokenizer
         image, text = ImageRuntime(), TextSession()
         model = CLIPMatcher(resolve_selection('x5'), tokenizer=PromptTokenizer(),
                             runner=RuntimeModelRunner(resolve_selection('x5'),

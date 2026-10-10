@@ -12,15 +12,10 @@
 
 ```text
 python/
-├── asr.py  # 模型阶段与预测
-├── audio_io.py  # 音频文件读取
-├── cli.py  # 参数、模型选择与结果展示
-├── decoding.py  # 词元解码
-├── frontend.py  # 音频特征准备
+├── asr.py  # 前端、解码器、张量绑定、Runner 与模型阶段
+├── cli.py  # 发布选择、参数、音频流、词表与报告
 ├── main.py  # 命令行入口：构造模型并调用 predict
-├── model_binding.py  # 模型选择与物理张量契约
-├── run.sh  # 定位 Python 入口并转发参数
-└── vocabulary.py  # 词表加载与校验
+└── run.sh  # 定位 Python 入口并转发参数
 ```
 
 <a id="environment"></a>
@@ -70,9 +65,9 @@ python3 samples/speech/asr/runtime/python/main.py --target s600 --decode-mode ct
 ## 集成示例
 在 S100 的仓库根目录执行，先按模型文档准备模型。录音和词表已随仓库提供；S600 将选择目标改为 `s600`。
 ```python
-from samples.speech.asr.runtime.python.model_binding import resolve_selection, SAMPLE_DIR
-from samples.speech.asr.runtime.python.vocabulary import load_vocabulary
-from samples.speech.asr.runtime.python.audio_io import read_chunks
+from samples.speech.asr.runtime.python.cli import resolve_selection, SAMPLE_DIR
+from samples.speech.asr.runtime.python.cli import load_vocabulary
+from samples.speech.asr.runtime.python.cli import read_chunks
 from samples.speech.asr.runtime.python.asr import ASR
 
 selection = resolve_selection("s100")

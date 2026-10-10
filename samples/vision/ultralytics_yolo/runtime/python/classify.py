@@ -11,27 +11,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""YOLO image classification: stages and Softmax/Top-K decode.
 
-"""Classification stages: image preparation, raw inference, Softmax/Top-K."""
+:class:`YoloCls` owns the readable classification stages (preprocess →
+infer → postprocess) with the validated floating logit transport; below the
+class lives the numeric Softmax/Top-K postprocess.  The shared image
+transport comes from ``detect.py``; the classification contract and runner
+come from ``backend.py``.
+"""
 
 from dataclasses import dataclass
+from numbers import Integral
 from typing import Optional, Tuple
-from samples.vision.ultralytics_yolo.runtime.python.yolo_platform import PlatformProfile
-from samples.vision.ultralytics_yolo.runtime.python.model_binding import (
+
+import numpy as np
+from scipy.special import softmax
+
+from samples.vision.ultralytics_yolo.runtime.python.backend import (
     ClassificationContract,
     ModelSelection,
+    build_runner,
 )
-from samples.vision.ultralytics_yolo.runtime.python.model_runner import build_runner
-from samples.vision.ultralytics_yolo.runtime.python.detection_io import (
-    _prepare_image,
+from samples.vision.ultralytics_yolo.runtime.python.cli import PlatformProfile
+from samples.vision.ultralytics_yolo.runtime.python.detect import (
     _forward_runner,
+    _prepare_image,
     _set_scheduling_params,
     _size_from_runner,
 )
-from samples.vision.ultralytics_yolo.runtime.python.classification_decode import (
-    classification_topk,
-)
 
+# ====================================================================
+# The classification task class.
+# ====================================================================
 
 @dataclass
 class YoloClsConfig:
@@ -132,3 +143,34 @@ class YoloCls:
     def post_process(self, outputs, topk=None):
         """Compatibility alias for :meth:`postprocess`."""
         return self.postprocess(outputs, topk)
+
+# ====================================================================
+# Numeric decode: classification Softmax/Top-K; no SDK, labels or I/O.
+# ====================================================================
+
+def classification_topk(logits, topk):
+    """Apply the source Softmax/sort rule; clamp positive K to the class count.
+
+    Exact ties follow NumPy's existing argsort order, not a new class-ID policy.
+    Scalar Python results cannot alias a reusable SDK output buffer.
+    """
+    if (
+        isinstance(topk, (bool, np.bool_))
+        or not isinstance(topk, Integral)
+        or topk <= 0
+    ):
+        raise ValueError("topk must be a positive integer.")
+    values = np.asarray(logits)
+    if (
+        not np.issubdtype(values.dtype, np.floating)
+        or not values.size
+        or not np.all(np.isfinite(values))
+    ):
+        raise ValueError(
+            "Classification logits must be nonempty finite floating values."
+        )
+    probabilities = softmax(values.reshape(-1))
+    indices = np.argsort(probabilities)[::-1][:topk]
+    return [(int(index), float(probabilities[index])) for index in indices]
+
+__all__ = ["YoloCls", "YoloClsConfig", "classification_topk"]

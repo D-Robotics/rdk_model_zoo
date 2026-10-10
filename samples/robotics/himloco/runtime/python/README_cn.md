@@ -13,9 +13,7 @@
 ```text
 python/
 ├── cli.py  # 参数、模型选择与结果展示
-├── input_io.py  # 输入文件与数据记录
 ├── main.py  # 命令行入口：构造模型并调用 predict
-├── model_binding.py  # 模型选择与物理张量契约
 ├── policy.py  # 模型阶段与预测
 └── run.sh  # 定位 Python 入口并转发参数
 ```
@@ -112,7 +110,7 @@ CLI 成功返回 0，生成按源索引命名的 `000000.bin` 等小端 float32 
 ```python
 from pathlib import Path
 import numpy as np
-from samples.robotics.himloco.runtime.python.model_binding import resolve_selection
+from samples.robotics.himloco.runtime.python.cli import resolve_selection
 from samples.robotics.himloco.runtime.python.policy import HimLocoTask
 
 selection = resolve_selection("x5")

@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest.mock import patch
 import numpy as np
 from samples.vision.yolov5.tests.test_yolov5 import FakeRuntime
-from samples.vision.yolov5.runtime.python.model_binding import resolve_selection
+from samples.vision.yolov5.runtime.python.cli import resolve_selection
 from samples.vision.yolov5.evaluator.compare import run_comparison
 
 

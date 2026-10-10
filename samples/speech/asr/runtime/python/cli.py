@@ -2,27 +2,146 @@
 # SPDX-License-Identifier: Apache-2.0
 """Command-line surface for the ASR sample.
 
-Option declarations, the model-free listing/dry-run rendering and the
-streaming report records live here so ``main.py`` can stay a thin, readable
-entry: parse arguments, construct the chunk model, call ``predict`` per
-chunk, show the result. Nothing in this module decodes audio or loads a
-board SDK.
+Everything around selection and delivery lives here: the published S100/S600
+asset identities and resolver, option declarations, the model-free
+listing/dry-run rendering, bounded audio-file streaming, the published
+vocabulary loading and the streaming report records, so ``main.py`` can stay
+a thin, readable entry: parse arguments, construct the chunk model, call
+``predict`` per chunk, show the result. Nothing in this module decodes audio
+or loads a board SDK; the frontend, decoders, tensor binding and task stages
+live in ``asr.py`` (imported lazily where the streaming helpers need them).
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
+import numpy as np
+
+from utils.py_utils.assets import Asset, list_assets
 from utils.py_utils.runtime_meta import metadata_evidence
-from samples.speech.asr.runtime.python.asr import ChunkPrediction
-from samples.speech.asr.runtime.python.audio_io import AudioChunk
-from samples.speech.asr.runtime.python.model_binding import (
-    SAMPLE_DIR,
-    list_available_assets,
-)
-from samples.speech.asr.runtime.python.vocabulary import SHA256
+
+if TYPE_CHECKING:
+    # Presentation-hint only; importing the model module here would create an
+    # eager cli->asr cycle the streaming helpers deliberately avoid.
+    from samples.speech.asr.runtime.python.asr import ChunkPrediction
+
+# ======================================================================
+# Published S100/S600 ASR identity and selection; no SDK import.
+# ======================================================================
+
+SAMPLE_DIR = Path(__file__).resolve().parents[2]
+
+
+TARGETS = ("s100", "s600")
+
+
+@dataclass(frozen=True)
+class Selection:
+    target: str
+    asset: Asset
+    model_path: Path
+    explicit_model_path: bool = False
+
+
+def list_available_assets(target="auto"):
+    if target not in ("auto", "s100", "s100p", "s600", "x5"):
+        raise ValueError(f"Unknown target {target!r}")
+    assets = tuple(list_assets("s", "asr"))
+    if {a.reference for a in assets} != {f"s:asr:{t}/asr.hbm" for t in TARGETS}:
+        raise ValueError("Expected exact S100/S600 ASR publications")
+    return tuple(
+        a for a in assets if target == "auto" or a.filename.startswith(target + "/")
+    )
+
+
+def resolve_selection(target="auto", *, asset_id=None, model_path=None):
+    if target == "auto":
+        from utils.py_utils.platforms import detect_target
+
+        target = detect_target()
+    if target not in TARGETS:
+        raise ValueError("ASR is published only for s100 and s600")
+    asset = list_available_assets(target)[0]
+    if asset_id is not None and asset_id != asset.reference:
+        raise ValueError(f"Expected asset-id {asset.reference}")
+    if model_path is not None and asset_id is None:
+        raise ValueError("An external model path requires the exact --asset-id")
+    return Selection(
+        target,
+        asset,
+        (
+            Path(model_path).expanduser()
+            if model_path
+            else SAMPLE_DIR / "model" / asset.filename
+        ),
+        model_path is not None,
+    )
+
+# ======================================================================
+# Bounded audio-file streaming outside ASR task math.
+# ======================================================================
+
+@dataclass(frozen=True)
+class AudioChunk:
+    waveform: np.ndarray
+    sample_rate: int
+    source_start: int
+    index: int
+
+
+def read_chunks(path, config=None):
+    from samples.speech.asr.runtime.python.asr import Config, source_chunk_size
+
+    if config is None:
+        config = Config()
+    import soundfile as sf
+
+    with sf.SoundFile(Path(path).expanduser(), "r") as stream:
+        rate = int(stream.samplerate)
+        size = source_chunk_size(rate, config)
+        if stream.frames <= 0:
+            raise ValueError("Audio file contains no frames")
+        start = 0
+        index = 0
+        while True:
+            data = stream.read(size, dtype="float32")
+            if len(data) == 0:
+                break
+            yield AudioChunk(data, rate, start, index)
+            start += len(data)
+            index += 1
+
+# ======================================================================
+# The exact published 3503-token mapping, outside inference stages.
+# ======================================================================
+
+SHA256 = "33fea3444869c2cd2433f59da079b04ce91515f946d21fe1b0ff3825398bcec7"
+
+
+def load_vocabulary(path):
+    raw = Path(path).expanduser().read_bytes()
+    if hashlib.sha256(raw).hexdigest() != SHA256:
+        raise ValueError("Vocabulary bytes differ from the published ASR token mapping")
+    mapping = json.loads(raw)
+    if (
+        not isinstance(mapping, dict)
+        or len(mapping) != 3503
+        or any(type(i) is not int for i in mapping.values())
+        or set(mapping.values()) != set(range(3503))
+    ):
+        raise ValueError("Vocabulary IDs must be unique and contiguous from 0 to 3502")
+    tokens = [""] * 3503
+    for token, i in mapping.items():
+        tokens[i] = token
+    from samples.speech.asr.runtime.python.asr import validate_vocabulary
+
+    return validate_vocabulary(tokens)
 
 
 def build_parser():
@@ -135,7 +254,7 @@ def build_report(selection, config, model, *, decode_mode, audio_sha256,
     }
 
 
-def record_chunk(report: dict, chunk: AudioChunk, prediction: ChunkPrediction) -> None:
+def record_chunk(report: dict, chunk: "AudioChunk", prediction: "ChunkPrediction") -> None:
     """Append one chunk's record from that chunk's own prediction details."""
 
     report["chunks"].append(
@@ -162,10 +281,17 @@ def complete_report(report: dict, output_dir: Path) -> None:
 
 
 __all__ = [
+    "AudioChunk",
+    "SHA256",
+    "Selection",
     "build_parser",
     "build_report",
     "complete_report",
+    "list_available_assets",
+    "load_vocabulary",
+    "read_chunks",
     "record_chunk",
+    "resolve_selection",
     "run_dry_run",
     "run_list_models",
 ]

@@ -78,7 +78,7 @@ python3 -m samples.vision.diffusiondrive.runtime.python.main --target s600 --inp
 指定目标和新的批量目录运行五个案例：
 
 ```bash
-bash samples/vision/diffusiondrive/runtime/python/run_all_cases.sh --target s600 --output outputs/diffusiondrive_cases
+bash samples/vision/diffusiondrive/evaluator/run_all_cases.sh --target s600 --output outputs/diffusiondrive_cases
 ```
 
 主机检查可在批量命令追加 `--dry-run`，它验证五份输入并打印命令，不执行 SDK、不创建输出目录。批量运行在首个失败案例处停止，保留已完成记录，不将后续案例记为通过。具备 S100P 板卡时使用 `--target s100p` 和对应独立模型。不自动下载，不回退到其他板卡目标。

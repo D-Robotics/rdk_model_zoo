@@ -8,7 +8,7 @@ import numpy as np
 
 
 def _runtime_for_x5_detector(output=None):
-    from samples.vision.paddle_ocr.runtime.python.model_binding import resolve_pair
+    from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
 
     pair = resolve_pair("x5")
     contract = pair.detector
@@ -45,9 +45,7 @@ def _runtime_for_x5_detector(output=None):
 
 class ModelRunnerTests(unittest.TestCase):
     def test_injected_runtime_is_lazy_and_returns_flat_output(self):
-        from samples.vision.paddle_ocr.runtime.python.model_runner import (
-            RuntimeStageRunner,
-        )
+        from samples.vision.paddle_ocr.runtime.python.backend import RuntimeStageRunner
 
         pair, runtime_type = _runtime_for_x5_detector()
         runtime = runtime_type()
@@ -59,9 +57,7 @@ class ModelRunnerTests(unittest.TestCase):
         self.assertEqual(runtime.calls[0][pair.detector.model_name].keys(), {"x"})
 
     def test_scheduling_is_applied_after_lazy_load(self):
-        from samples.vision.paddle_ocr.runtime.python.model_runner import (
-            RuntimeStageRunner,
-        )
+        from samples.vision.paddle_ocr.runtime.python.backend import RuntimeStageRunner
 
         pair, runtime_type = _runtime_for_x5_detector()
         runtime = runtime_type()
@@ -81,12 +77,8 @@ class ModelRunnerTests(unittest.TestCase):
         )
 
     def test_factory_is_not_called_until_execution_and_bad_output_is_rejected(self):
-        from samples.vision.paddle_ocr.runtime.python.model_binding import (
-            MetadataMismatchError,
-        )
-        from samples.vision.paddle_ocr.runtime.python.model_runner import (
-            RuntimeStageRunner,
-        )
+        from samples.vision.paddle_ocr.runtime.python.cli import MetadataMismatchError
+        from samples.vision.paddle_ocr.runtime.python.backend import RuntimeStageRunner
 
         pair, runtime_type = _runtime_for_x5_detector(
             np.zeros((1, 1, 640, 639), dtype=np.float32)
@@ -104,10 +96,7 @@ class ModelRunnerTests(unittest.TestCase):
         self.assertEqual(len(created), 1)
 
     def test_create_stage_runners_keeps_both_callables_injectable(self):
-        from samples.vision.paddle_ocr.runtime.python.model_runner import (
-            RuntimeStageRunner,
-            create_stage_runners,
-        )
+        from samples.vision.paddle_ocr.runtime.python.backend import RuntimeStageRunner, create_stage_runners
 
         pair, runtime_type = _runtime_for_x5_detector()
         detector, recognizer = create_stage_runners(

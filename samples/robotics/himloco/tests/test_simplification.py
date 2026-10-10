@@ -73,10 +73,10 @@ class SimplifiedLayoutTests(unittest.TestCase):
         self.assertTrue(hasattr(policy, "RuntimeModelRunner"))
         self.assertTrue(hasattr(policy, "HimLocoTask"))
 
-    def test_justified_modules_are_retained(self):
+    def test_merged_modules_are_gone(self):
         package = "samples.robotics.himloco.runtime.python"
         for name in ("input_io", "model_binding"):
-            self.assertIsNotNone(
+            self.assertIsNone(
                 importlib.util.find_spec(f"{package}.{name}"), name
             )
 
@@ -122,7 +122,7 @@ class ModelOwnedConstructionTests(unittest.TestCase):
     """HimLocoTask.from_model owns runner construction/load and evidence."""
 
     def test_from_model_loads_and_runs_nonzero_pipeline(self):
-        from samples.robotics.himloco.runtime.python.model_binding import (
+        from samples.robotics.himloco.runtime.python.cli import (
             resolve_selection,
         )
 
@@ -151,7 +151,7 @@ class ModelOwnedConstructionTests(unittest.TestCase):
         )
 
     def test_from_model_gates_board_before_sdk_factory(self):
-        from samples.robotics.himloco.runtime.python.model_binding import (
+        from samples.robotics.himloco.runtime.python.cli import (
             resolve_selection,
         )
 

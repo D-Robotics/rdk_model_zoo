@@ -29,7 +29,7 @@ class StubRunner:
 
     def __call__(self, tensors):
         return self._raw
-from samples.vision.lanenet.runtime.python.visualization import (
+from samples.vision.lanenet.runtime.python.cli import (
     embedding_image,
     binary_image,
 )
@@ -354,8 +354,8 @@ class SimplifiedRuntimeTests(unittest.TestCase):
     Selection/catalog duties live in ``cli.py``; ``lanenet.py`` owns the
     named model class that loads via the shared transport; the per-sample
     ``model_binding``/``model_runner``/``tensor_io`` forwarding modules are
-    gone. ``image_preprocess.py`` stays: source input arithmetic shared with
-    the conversion calibration script.
+    gone. The source input arithmetic shared with the conversion calibration
+    script lives in ``lanenet.py`` as ``image_to_tensor``.
     """
 
     def test_segmenter_constructs_from_selection_and_runs_stages(self):

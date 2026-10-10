@@ -6,9 +6,8 @@
 construction loads the BPU image encoder and CPU ONNX text encoder through
 the sample's lazy dual runtime, and each ``predict`` call runs
 preprocess -> infer -> postprocess visible in this file. Catalog selection
-and presentation live in ``cli.py``; the BPE tokenizer algorithm lives in
-``tokenization.py``/``simple_tokenizer.py``; rendering lives in
-``cli.py``.
+and presentation live in ``cli.py``; the preserved BPE tokenizer and its
+fixed 77-token prompt bridge live in ``simple_tokenizer.py``.
 
 Protocol provenance: ac115717197920355fc390bb04299b20e6436864,
 CLIP conversion README and runtime. Tensor names are obtained from actual
@@ -313,7 +312,7 @@ class CLIPMatcher:
             RuntimeError: Board identity or encoder loading fails.
         """
         if tokenizer is None:
-            from samples.vision.clip.runtime.python.tokenization import PromptTokenizer
+            from samples.vision.clip.runtime.python.simple_tokenizer import PromptTokenizer
             tokenizer = PromptTokenizer()
         if not callable(tokenizer):
             raise TypeError('tokenizer must be callable.')

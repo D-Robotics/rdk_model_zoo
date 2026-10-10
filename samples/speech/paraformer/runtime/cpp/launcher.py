@@ -15,13 +15,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from utils.py_utils.assets import sha256_file, verify_asset_file
 from utils.py_utils.platforms import require_execution_target
-from samples.speech.paraformer.runtime.python.model_binding import (
-    SAMPLE_DIR,
-    STAGES,
-    VOCABULARY_DIGEST,
-    resolve_selections,
-)
-from samples.speech.paraformer.runtime.python.decoding import validate_vocabulary
+from samples.speech.paraformer.runtime.python.cli import SAMPLE_DIR, STAGES, VOCABULARY_DIGEST, resolve_selections
+from samples.speech.paraformer.runtime.python.pipeline import validate_vocabulary
 from samples.speech.paraformer.runtime.cpp.native_report import validate_report
 
 
