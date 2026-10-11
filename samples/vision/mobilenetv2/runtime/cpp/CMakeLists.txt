@@ -9,12 +9,11 @@ endif()
 
 # Board target. "auto" resolves the SoC only when configuring natively on the
 # board; cross compilation must pass an explicit target and never reads the
-# build host's SoC identity. This runtime ships S100 and S600 artifacts only
-# (the launcher's identity gate rejects S100P before the build is reached).
-set(RDK_TARGET "auto" CACHE STRING "Board target: s100|s600|auto (auto only for native on-board configuration)")
+# build host's SoC identity. This runtime ships S100, S100P and S600 artifacts.
+set(RDK_TARGET "auto" CACHE STRING "Board target: s100|s100p|s600|auto (auto only for native on-board configuration)")
 if(RDK_TARGET STREQUAL "auto")
     if(CMAKE_CROSSCOMPILING)
-        message(FATAL_ERROR "RDK_TARGET=auto would read the build host SoC identity while cross-compiling; pass an explicit target: -DRDK_TARGET=s100 or -DRDK_TARGET=s600")
+        message(FATAL_ERROR "RDK_TARGET=auto would read the build host SoC identity while cross-compiling; pass an explicit target: -DRDK_TARGET=s100, s100p or s600")
     endif()
     file(READ "/sys/class/boardinfo/soc_name" SOC_NAME_RAW)
     string(STRIP "${SOC_NAME_RAW}" SOC_NAME_RAW)
@@ -22,8 +21,8 @@ if(RDK_TARGET STREQUAL "auto")
 else()
     string(TOUPPER "${RDK_TARGET}" SOC_NAME_UPPER)
 endif()
-if(NOT SOC_NAME_UPPER MATCHES "^(S100|S600)$")
-    message(FATAL_ERROR "Unsupported RDK board target '${RDK_TARGET}' (resolved '${SOC_NAME_UPPER}'): this runtime supports s100 and s600")
+if(NOT SOC_NAME_UPPER MATCHES "^(S100|S100P|S600)$")
+    message(FATAL_ERROR "Unsupported RDK board target '${RDK_TARGET}' (resolved '${SOC_NAME_UPPER}'): this runtime supports s100, s100p and s600")
 endif()
 add_definitions(-DSOC_${SOC_NAME_UPPER})
 

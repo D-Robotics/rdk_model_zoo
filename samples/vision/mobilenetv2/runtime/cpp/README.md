@@ -61,8 +61,8 @@ mkdir -p build && cd build && cmake .. && make -j"$(nproc)"
 
 `CMakeLists.txt` selects the board at configure time: natively on a board
 it reads `/sys/class/boardinfo/soc_name` (`-DRDK_TARGET=auto`, the
-default) and defines `SOC_S100`/`SOC_S600`; cross compilation must pass an
-explicit `-DRDK_TARGET=s100|s600` (auto is rejected while cross-compiling,
+default) and defines `SOC_S100`/`SOC_S100P`/`SOC_S600`; cross compilation must pass an
+explicit `-DRDK_TARGET=s100|s100p|s600` (auto is rejected while cross-compiling,
 and unsupported targets fail the configure). On small-RAM boards, build
 with `make -j1` or `BUILD_JOBS=1 bash run.sh`.
 

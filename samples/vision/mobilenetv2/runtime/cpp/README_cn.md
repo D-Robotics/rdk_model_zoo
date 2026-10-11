@@ -62,7 +62,7 @@ mkdir -p build && cd build && cmake .. && make -j"$(nproc)"
 
 `CMakeLists.txt` 在配置期选择板卡：板卡上原生配置时读取
 `/sys/class/boardinfo/soc_name`（`-DRDK_TARGET=auto`，默认值）并定义
-`SOC_S100`/`SOC_S600`；交叉编译必须显式传 `-DRDK_TARGET=s100|s600`
+`SOC_S100`/`SOC_S100P`/`SOC_S600`；交叉编译必须显式传 `-DRDK_TARGET=s100|s100p|s600`
 （交叉编译下 auto 直接报错，不支持的目标同样报错终止配置）。小内存板
 满并行编译可能被 OOM 杀死——请改用 `make -j1` 或 `BUILD_JOBS=1 bash run.sh`。
 

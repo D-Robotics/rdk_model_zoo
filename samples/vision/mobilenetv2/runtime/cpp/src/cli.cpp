@@ -20,6 +20,8 @@ std::string default_model_path()
 {
 #if defined(SOC_S600)
     return "../../model/s600/mobilenetv2_100_nashp_224x224_nv12.hbm";
+#elif defined(SOC_S100P)
+    return "../../model/s100p/mobilenetv2_100_nashm_224x224_nv12.hbm";
 #else
     return "../../model/s100/mobilenetv2_100_nashe_224x224_nv12.hbm";
 #endif

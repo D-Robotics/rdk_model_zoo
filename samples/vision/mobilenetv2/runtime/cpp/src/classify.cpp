@@ -28,6 +28,9 @@
 
 #include "hobot/dnn/hb_dnn.h"
 #include "hobot/hb_ucp.h"
+// hbDNNGetErrorDesc/hbUCPGetErrorDesc: the board SDK headers above do not include these.
+#include "hobot/dnn/hb_dnn_status.h"
+#include "hobot/hb_ucp_status.h"
 
 #include <opencv2/imgproc.hpp>
 
