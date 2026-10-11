@@ -2,7 +2,7 @@
 
 Regression coverage for the board-found defect (X5 smoke, 2026-09-21) where
 ``download_target`` resolved its manifest reference without forwarding the
-variant, so ``--variant medium`` fetched the small artifact.  These tests pin
+variant, so a non-default ``--variant`` fetched the default artifact.  These tests pin
 the exact published reference every supported combination must resolve to,
 with the network downloader stubbed out.
 """
@@ -17,13 +17,17 @@ from samples.vision.mobilenetv4.model import download as download_mod
 
 EXPECTED_REFERENCES = {
     ('x5', 'small'): 'x5:mobilenetv4:mobilenetv4_conv_small_bayese_224x224_nv12.bin',
-    ('x5', 'medium'): 'x5:mobilenetv4:mobilenetv4_conv_medium_bayese_224x224_nv12.bin',
     ('s100', 'small'): 's:mobilenetv4:s100/mobilenetv4_conv_small_nashe_224x224_nv12.hbm',
-    ('s100', 'medium'): 's:mobilenetv4:s100/mobilenetv4_conv_medium_nashe_224x224_nv12.hbm',
     ('s100p', 'small'): 's:mobilenetv4:s100p/mobilenetv4_conv_small_nashm_224x224_nv12.hbm',
-    ('s100p', 'medium'): 's:mobilenetv4:s100p/mobilenetv4_conv_medium_nashm_224x224_nv12.hbm',
     ('s600', 'small'): 's:mobilenetv4:s600/mobilenetv4_conv_small_nashp_224x224_nv12.hbm',
+    ('x5', 'medium'): 'x5:mobilenetv4:mobilenetv4_conv_medium_bayese_224x224_nv12.bin',
+    ('s100', 'medium'): 's:mobilenetv4:s100/mobilenetv4_conv_medium_nashe_224x224_nv12.hbm',
+    ('s100p', 'medium'): 's:mobilenetv4:s100p/mobilenetv4_conv_medium_nashm_224x224_nv12.hbm',
     ('s600', 'medium'): 's:mobilenetv4:s600/mobilenetv4_conv_medium_nashp_224x224_nv12.hbm',
+    ('x5', 'large'): 'x5:mobilenetv4:mobilenetv4_conv_large_bayese_256x256_nv12.bin',
+    ('s100', 'large'): 's:mobilenetv4:s100/mobilenetv4_conv_large_nashe_256x256_nv12.hbm',
+    ('s100p', 'large'): 's:mobilenetv4:s100p/mobilenetv4_conv_large_nashm_256x256_nv12.hbm',
+    ('s600', 'large'): 's:mobilenetv4:s600/mobilenetv4_conv_large_nashp_256x256_nv12.hbm',
 }
 
 

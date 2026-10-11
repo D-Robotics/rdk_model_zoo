@@ -5,6 +5,34 @@ English | [简体中文](README_cn.md)
 For the pinned timm checkpoint workflow, use [`evaluate.py`](evaluate.py) and the [shared host workflow](../../../../utils/tools/mobilenet/README.md). It records the exact checkpoint, center-crop preprocessing, batch-one logits contract, and full-dataset evaluation inputs. The existing artifact commands below retain their own contracts.
 Use the bundled image for a single-image classification check. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
 
+
+## Pinned board evaluation
+
+`evaluate_board.py` loads one compiled model and evaluates every image in the
+frozen ImageNetV2 MatchedFrequency manifest. Use the matching artifact for the
+board (X5 `.bin`; S100, S100P or S600 `.hbm`), with NV12 `bt601_video` input
+and float32 logits, and select the checkpoint's preprocessing contract with
+`--variant` (`v2-100` or `v2-140`). The evaluator uses PIL bicubic
+shorter-edge resize (256 for 100, 256 for 140) and a center crop to the model input (224),
+followed by the sample's OpenCV NV12 conversion; this is the same geometry
+the runtime applies with `--resize-type 2`. The required campaign binds
+labels, geometry and the expected 10,000 images; every image and model hash is
+checked.
+
+```bash
+python3 samples/vision/mobilenetv2/evaluator/evaluate_board.py \
+  --target s100 --variant v2-100 \
+  --model samples/vision/mobilenetv2/model/s100/mobilenetv2_100_nashe_224x224_nv12.hbm \
+  --model-sha256 <sha256-from-model/README.md> \
+  --campaign /path/to/campaign.json --manifest /path/to/manifest.json \
+  --data-root /path/to/imagenetv2/images --output /path/to/new-evaluation
+```
+
+The new output directory contains full predictions, tensor metadata, three
+fixed-input outputs and `evaluation.json` with Top-1/Top-5 and source hashes.
+For C++ performance timing and its image boundary, see
+[the benchmark instructions](../../../../utils/tools/mobilenet/cpp/README.md).
+
 <a id="dataset"></a>
 
 ## Dataset
@@ -16,7 +44,9 @@ The functional check uses the bundled test image. Dataset-level accuracy uses Im
 ```text
 evaluator/
 ├── README.md  # English instructions
-└── README_cn.md  # Chinese instructions
+├── README_cn.md  # Chinese instructions
+├── evaluate.py  # FP32 ONNX evaluation (shared host workflow)
+└── evaluate_board.py  # Board evaluation of a compiled artifact
 ```
 
 <a id="environment"></a>
@@ -39,20 +69,20 @@ python3 -m unittest discover -s samples/vision/mobilenetv2/tests -v
 ```
 
 Functional board check on X5 (prerequisite:
-`bash samples/vision/mobilenetv2/model/download.sh x5`; success: exit 0 and the expected Top-K):
+`bash samples/vision/mobilenetv2/model/download.sh x5 100`; success: exit 0 and the expected Top-K):
 
 ```bash
 python3 samples/vision/mobilenetv2/runtime/python/main.py \
   --target x5 \
-  --asset-id x5:mobilenetv2:mobilenetv2_224x224_nv12.bin \
-  --model-path samples/vision/mobilenetv2/model/mobilenetv2_224x224_nv12.bin \
+  --asset-id x5:mobilenetv2:mobilenetv2_100_bayese_224x224_nv12.bin \
+  --model-path samples/vision/mobilenetv2/model/mobilenetv2_100_bayese_224x224_nv12.bin \
   --test-img samples/vision/mobilenetv2/test_data/Scottish_deerhound.JPEG \
   --label-file datasets/imagenet/imagenet_classes.names \
   --top-k 5
 ```
 
-On S100/S600 substitute the `s:` reference and the `s100/`/`s600/`
-artifact path; the labels file is shared. For a same-board comparison between runs, keep the compared run fixed —
+On S100, S100P and S600 substitute the `s:` reference and the `s100/`,
+`s100p/` or `s600/` artifact path; the labels file is shared. For a same-board comparison between runs, keep the compared run fixed —
 same image, model bytes, labels, resize type, and Top-K — and compare
 class IDs and raw scores before label formatting; expect identical IDs
 and scores within 1e-5. Comparing X5 against S results is not a
@@ -80,15 +110,27 @@ output, image path, resize type, and command line.
 <a id="reference-results"></a>
 ## Reference results
 
-Figures published in the X5 release (x5-v1.1.3):
+Accuracy of the published models, measured with the pinned board evaluation
+above on the complete ImageNetV2 MatchedFrequency set (10,000 images). This is
+not the ILSVRC2012 validation set, so the values are not comparable with
+ImageNet-1k validation figures. "FP32" is the ONNX export of the same
+checkpoint on the same crops.
 
-| Model | Size | Classes | Params (M) | Float Top-1 | Quant Top-1 | Latency (ms) | FPS |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| MobileNetV2 | 224x224 | 1000 | 3.4 | 72.0% | 68.17% | 1.42 | 1152.07 |
+| Model | Target | FP32 Top-1 | Board Top-1 | FP32 Top-5 | Board Top-5 |
+| --- | --- | --- | --- | --- | --- |
+| MobileNetV2-100 | X5 | 60.18% | 59.55% | 82.05% | 81.48% |
+| MobileNetV2-100 | S100 | 60.18% | 59.61% | 82.05% | 81.61% |
+| MobileNetV2-100 | S100P | 60.18% | 59.61% | 82.05% | 81.61% |
+| MobileNetV2-100 | S600 | 60.18% | 59.55% | 82.05% | 81.42% |
+| MobileNetV2-140 | X5 | 63.71% | 63.11% | 84.68% | 84.44% |
+| MobileNetV2-140 | S100 | 63.71% | 63.13% | 84.68% | 84.41% |
+| MobileNetV2-140 | S100P | 63.71% | 63.13% | 84.68% | 84.41% |
+| MobileNetV2-140 | S600 | 63.71% | 63.09% | 84.68% | 84.51% |
 
-For S100/S600 artifacts from release `s-v1.1.2`, run the selected artifact
-on the matching board and use [Dataset-level evaluation](#boundaries) to
-calculate accuracy and timing.
+Latency and throughput of the same artifacts, with the measurement
+conditions, are in the [sample README](../README.md#performance). 
+The X5 and X3 figures below belong to earlier builds (different weights and
+preprocessing) and are kept as history.
 
 ### RDK X5 / X5 Module performance
 

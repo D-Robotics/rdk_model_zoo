@@ -2,8 +2,8 @@
 
 # MobileNetV2 图像分类（C++，S 系列）
 
-本 C++ 流程在 S 系列 BPU 上运行量化 MobileNetV2 HBM 模型，打印 Top-K
-类别标签与置信度。它是 S 系列 `hbDNNInferV2` 实现（`src/` 与 `inc/`
+本 C++ 流程在 S100、S100P、S600 的 BPU 上运行量化 MobileNetV2 HBM 模型（变体
+`100` 或 `140`），打印 Top-K 类别标签与置信度。它是 S 系列 `hbDNNInferV2` 实现（`src/` 与 `inc/`
 原样保留）；X5 交付线只提供 Python，因此本流程的适用范围为 S 系列。
 
 <a id="overview"></a>
@@ -32,12 +32,13 @@ cpp/
 <a id="supported-boards"></a>
 ## 适用板卡
 
-仅 S100 与 S600。启动器一次性读取 `/sys/class/boardinfo/soc_name` 与
+S100、S100P 与 S600。启动器一次性读取 `/sys/class/boardinfo/soc_name` 与
 `/sys/class/boardinfo/board_type`（`board_type` 变体），身份判定与 Python
 流程一致（`utils/py_utils/platforms.py`，登记于
-`docs/release/platforms.json`）。S100P 以其两种登记形式被拒绝（soc_name
-`s100p`；或 soc_name `s100` 且 board_type `s100p`/`rdk s100p`），未知或
-不可读的身份文件按未知板卡拒绝——均显式报错，绝不静默回退 s100 制品。
+`docs/release/platforms.json`），并选用该板自己的制品（`nashe`、`nashm` 或
+`nashp`）。S100P 以其两种登记形式识别（soc_name `s100p`；或 soc_name `s100`
+且 board_type `s100p`/`rdk s100p`）；未知或不可读的身份文件按未知板卡拒绝，
+绝不静默回退其他板卡的制品。
 `SOC_NAME_FILE`/`BOARD_TYPE_FILE` 供主机 fixture
 测试（`tests/test_cpp_launcher_identity.py`）覆盖身份来源；板卡上不要
 设置。
@@ -75,10 +76,10 @@ mkdir -p build && cd build && cmake .. && make -j"$(nproc)"
 bash samples/vision/mobilenetv2/runtime/cpp/run.sh
 ```
 
-启动器构建到 `runtime/cpp/build/` 并以准备好的模型、
-`test_data/zebra_cls.jpg` 与 `test_data/imagenet1000_labels.txt` 执行
-二进制。环境变量覆盖：`MODEL_PATH`、`TEST_IMAGE`、`LABEL_FILE`、`TOP_K`、
-`BUILD_DIR`、`BUILD_JOBS`。它绝不下载模型：缺制品时显式报错并给出下载
+启动器构建到 `runtime/cpp/build/` 并以 `VARIANT` 对应的已准备模型（默认 `100`；
+`VARIANT=140 bash run.sh` 选择另一宽度）、`test_data/zebra_cls.jpg` 与
+`test_data/imagenet1000_labels.txt` 执行二进制。环境变量覆盖：`VARIANT`、
+`MODEL_PATH`、`TEST_IMAGE`、`LABEL_FILE`、`TOP_K`、`BUILD_DIR`、`BUILD_JOBS`。它绝不下载模型：缺制品时显式报错并给出下载
 命令。
 
 <a id="parameters"></a>
@@ -86,20 +87,20 @@ bash samples/vision/mobilenetv2/runtime/cpp/run.sh
 
 | 参数 | 说明 | 默认值（来自启动器） |
 | --- | --- | --- |
-| `--model-path` | `.hbm` 制品路径 | sample 相对 `model/<soc>/mobilenetv2_224x224_nv12.hbm` |
+| `--model-path` | `.hbm` 制品路径 | sample 相对 `model/<soc>/mobilenetv2_<variant>_<march>_224x224_nv12.hbm` |
 | `--test-img` | 测试图路径 | sample 相对 `test_data/zebra_cls.jpg` |
 | `--label-file` | 标签文件路径 | sample 相对 `test_data/imagenet1000_labels.txt` |
 | `--top-k` | 打印的 Top-K 数量 | `5` |
+| `--resize-shorter` | 中心裁剪前的短边尺寸，`int(224 / crop_pct)` | `256`（两个变体相同） |
 
 选项名为与 Python 运行时一致的 kebab-case，同时接受 `--flag value` 与
-`--flag=value` 两种写法。二进制编译期内建默认值指向
-`/opt/hobot/model/...`；启动器始终显式传参，因此除非自行传参，不会使用
-系统模型位置。
+`--flag=value` 两种写法。二进制编译期内建的模型默认值为 sample `model/<board>/`
+下的变体 100 制品；启动器始终显式传参。
 
 <a id="interface-lifecycle"></a>
 ## 接口与生命周期
 
-`main.cpp` 解析选项后构造 `MobileNetV2 model(model_path)` —— 构造函数加载
+`main.cpp` 解析选项后构造 `MobileNetV2 model(model_path, resize_shorter)` —— 构造函数加载
 HBM 包、读取并校验张量元数据并分配可复用张量缓冲 —— 随后调用
 `model.predict(image, top_k)` 并打印返回的类别。所有 DNN 与 UCP 类型都
 留在 `src/classify.cpp` 的私有 `Impl` 中，`inc/classify.hpp` 仅依赖
@@ -108,14 +109,15 @@ OpenCV 与标准库。
 模型单独暴露预处理、推理与后处理三个阶段，各阶段返回调用方自持有的
 数据：
 
-- `MobileNetV2Prepared preprocess(const cv::Mat&)`：按模型输入分辨率
-  letterbox 缩放并完成 BGR→NV12 转换，得到自持有的 Y/UV 平面；
+- `MobileNetV2Prepared preprocess(const cv::Mat&)`：抗锯齿双三次短边缩放到
+  `resize_shorter`（逐位移植 Pillow 实现，与 `utils/tools/mobilenet/cpp/geometry.hpp`
+  共用）、中心裁剪到模型输入并完成 BGR→NV12 转换，得到自持有的 Y/UV 平面，
+  几何与 Python 运行一致；
 - `MobileNetV2Raw infer(const MobileNetV2Prepared&)`：将平面按行宽上传到
   模型输入张量（按行 stride 寻址），执行一次 `hbDNNInferV2` BPU 任务，
-  把 F32 输出拷贝为自持有的概率向量（在后续推理后依然有效）；
+  把 F32 输出拷贝为自持有的 logits 向量（在后续推理后依然有效）；
 - `std::vector<Classification> postprocess(const MobileNetV2Raw&, int top_k)`：
-  直接读取概率（模型输出节点已是 softmax 之后的分布，不做再次归一化）
-  并做 Top-K 选取；
+  对 logits 施加数值稳定的 softmax 并做 Top-K 选取；
 - `predict` 按上述顺序组合三个阶段。
 
 错误以 C++ 异常抛出（含 SDK 错误描述）；入口打印错误并以状态码 2 退出。
@@ -126,16 +128,17 @@ OpenCV 与标准库。
 ## 结果解读
 
 成功时打印 `TOP-n: label=..., prob=...` 行，标签取自标签文件，分数为
-制品 softmax 之后的输出。rdk_s @s-v1.1.2 在 S100 上使用
-`zebra_cls.jpg` 的记录：
+softmax 之后的值。在 S100 上用已发布构建执行 `bash run.sh`（变体 `100`、
+`zebra_cls.jpg`）的输出：
 
 ```text
-TOP-1: label=zebra, prob=0.992246
-TOP-2: label=tiger, Panthera tigris, prob=0.00404656
-TOP-3: label=hartebeest, prob=0.00133707
-TOP-4: label=tiger cat, prob=0.000722661
-TOP-5: label=impala, Aepyceros melampus, prob=0.000539704
+TOP-1: label=zebra, prob=0.808423
+TOP-2: label=tiger, Panthera tigris, prob=0.00355534
+TOP-3: label=hartebeest, prob=0.00321221
+TOP-4: label=tiger cat, prob=0.00207029
+TOP-5: label=ostrich, Struthio camelus, prob=0.00169806
 ```
 
-正确的运行应在分数噪声内复现该排序；使用随附 zebra 图片时 TOP-1 为
-`zebra`。分数全零或 NaN 说明制品/输入配对错误，不是调参问题。
+S100P 输出相同；S600 的 TOP-1 为 `zebra`，分数 0.797359。`VARIANT=140` 时三块板
+的 TOP-1 均为 `zebra`（0.942 左右）。分数与同一板卡上的 Python 运行一致，因为
+两者使用同一前处理。分数全零或 NaN 说明制品/输入配对错误，不是调参问题。

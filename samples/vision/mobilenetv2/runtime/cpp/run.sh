@@ -12,8 +12,8 @@ SAMPLE_DIR="$SCRIPT_DIR/../.."
 # soc_name plus the board_type variant that distinguishes S100P from S100
 # (docs/release/platforms.json registers soc_name=s100 with
 # board_type=s100p/"rdk s100p" as S100P).  Both registered S100P identity
-# forms and unknown boards are rejected instead of silently falling back to
-# the s100 artifact (the legacy source launcher did fall back).
+# forms select the s100p artifact; unknown boards are rejected instead of
+# silently falling back to another target's artifact.
 # SOC_NAME_FILE/BOARD_TYPE_FILE exist so host tests can fixture the identity
 # sources; on a board the defaults below are the real sysfs files.
 SOC_NAME_FILE="${SOC_NAME_FILE:-/sys/class/boardinfo/soc_name}"
@@ -32,20 +32,23 @@ if [[ "$SOC_RAW" == "s100" && ( "$BOARD_RAW" == "s100p" || "$BOARD_RAW" == "rdks
   SOC_RAW="s100p"
 fi
 case "$SOC_RAW" in
-  s100|s600) ;;
-  s100p)
-    echo "error: detected s100p (soc_name/board_type identity); this C++ flow" \
-         "supports s100/s600 only and no s100p artifact is published" >&2
-    exit 2
-    ;;
+  s100) MARCH=nashe ;;
+  s100p) MARCH=nashm ;;
+  s600) MARCH=nashp ;;
   *)
     echo "error: unrecognized or unsupported SoC '${SOC_RAW:-unknown}';" \
-         "this C++ flow supports s100/s600 only" >&2
+         "this C++ flow supports s100/s100p/s600 only" >&2
     exit 2
     ;;
 esac
+# VARIANT selects the published width multiplier: 100 (default) or 140.
+VARIANT="${VARIANT:-100}"
+case "$VARIANT" in
+  100|140) ;;
+  *) echo "error: unsupported VARIANT '$VARIANT'; published: 100, 140" >&2; exit 2 ;;
+esac
 
-MODEL_PATH="${MODEL_PATH:-$SAMPLE_DIR/model/$SOC_RAW/mobilenetv2_224x224_nv12.hbm}"
+MODEL_PATH="${MODEL_PATH:-$SAMPLE_DIR/model/$SOC_RAW/mobilenetv2_${VARIANT}_${MARCH}_224x224_nv12.hbm}"
 TEST_IMAGE="${TEST_IMAGE:-$SAMPLE_DIR/test_data/zebra_cls.jpg}"
 LABEL_FILE="${LABEL_FILE:-$SAMPLE_DIR/test_data/imagenet1000_labels.txt}"
 
@@ -88,7 +91,7 @@ if value="$(option_value --top-k "$@")"; then TOP_K="$value"; fi
 
 if [[ ! -f "$MODEL_PATH" ]]; then
   echo "Model not found: $MODEL_PATH" >&2
-  echo "Prepare it explicitly with samples/vision/mobilenetv2/model/download.sh $SOC_RAW." >&2
+  echo "Prepare it explicitly with samples/vision/mobilenetv2/model/download.sh $SOC_RAW $VARIANT." >&2
   exit 2
 fi
 if [[ ! -f "$TEST_IMAGE" ]]; then

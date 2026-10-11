@@ -27,8 +27,11 @@ python/
 ## Environment
 
 Run on the target board's Python environment with the matching
-`hbm_runtime`, NumPy, and OpenCV-Python; PyYAML is needed for manifest
-reading. `hbm_runtime` is supplied by the board image and is imported lazily.
+`hbm_runtime`, NumPy, OpenCV-Python, and Pillow; PyYAML is needed for manifest
+reading. Pillow performs the antialiased bicubic resize of the shorter-edge
+center crop the published models expect (install it with
+`python3 -m pip install pillow` if the board image lacks it).
+`hbm_runtime` is supplied by the board image and is imported lazily.
 `--help`, `--list-models`, and `--dry-run` inspect the selection without
 executing a model. Host-side test dependencies are listed in the sample's
 `requirements-host.txt`.
@@ -48,19 +51,19 @@ python3 samples/vision/mobilenetv1/runtime/python/main.py --list-models --target
 A full run on a prepared X5 board:
 
 ```bash
-# prerequisites: bash samples/vision/mobilenetv1/model/download.sh x5
+# prerequisites: bash samples/vision/mobilenetv1/model/download.sh x5 100
 # success: exit 0 and a printed Top-5 list
 python3 samples/vision/mobilenetv1/runtime/python/main.py \
   --target x5 \
-  --asset-id x5:mobilenetv1:mobilenetv1_224x224_nv12.bin \
-  --model-path samples/vision/mobilenetv1/model/mobilenetv1_224x224_nv12.bin \
+  --asset-id x5:mobilenetv1:mobilenetv1_100_bayese_224x224_nv12.bin \
+  --model-path samples/vision/mobilenetv1/model/mobilenetv1_100_bayese_224x224_nv12.bin \
   --test-img samples/vision/mobilenetv1/test_data/bulbul.JPEG \
   --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-For S100/S600 substitute the `s:` reference (for example
-`s:mobilenetv1:s100/mobilenetv1_224x224_nv12.hbm`) and the `s100/`/`s600/` artifact path; the labels file is
-shared. `--dry-run --target x5` resolves a selection without board access,
+For S100, S100P and S600 substitute the `s:` reference (for example
+`s:mobilenetv1:s100p/mobilenetv1_100_nashm_224x224_nv12.hbm`) and the
+`s100/`, `s100p/` or `s600/` artifact path; the labels file is shared. `--dry-run --target x5` resolves a selection without board access,
 model loading, or download.
 
 <a id="parameters"></a>
@@ -68,6 +71,7 @@ model loading, or download.
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
+| `--variant` | choice | null | model variant: `100`, `125` (`100` default when omitted; see `--list-models` for published combinations) |
 | `--target` | choice | auto | execution target: `auto`, `x5`, `s100`, `s100p`, `s600`; an execution target must match detected hardware |
 | `--asset-id` | string | null | complete `group:sample:filename` reference from the manifest |
 | `--model-path` | string | null | existing `.bin`/`.hbm`; must be paired with `--asset-id`; defaults to the `model/` location for the resolved reference when omitted |
@@ -75,7 +79,7 @@ model loading, or download.
 | `--label-file` | string | datasets/imagenet/imagenet_classes.names | one-label-per-line ImageNet labels |
 | `--top-k` | int | 5 | number of printed results |
 | `--topk` | int | 5 | alias of `--top-k` |
-| `--resize-type` | int | null | `0` direct stretch or `1` letterbox with BGR 127 padding; default follows the bound source |
+| `--resize-type` | int | null | `0` direct stretch, `1` letterbox with BGR 127 padding, or `2` shorter-edge resize + center crop (needs Pillow); default follows the bound model (`2`) |
 | `--priority` | int | 0 | runtime scheduling priority (0-255) |
 | `--bpu-cores` | int list | [0] | runtime BPU core indexes |
 | `--img-save-path` | string | null | optional annotated output image path |
@@ -91,11 +95,11 @@ The command prints the stable Top-K as class IDs, scores, and labels
 (`ClassificationResult(class_ids, scores, labels)`), and writes an
 annotated image only when `--img-save-path` is given. X5 receives the packed
 NV12 buffer as the flat 1-D uint8 array of `H*W*3/2` bytes
-(224x224 -> 75,264 bytes; same bytes as the former `(1,336,224,1)` view);
-S100/S600 receive Y `(1,224,224,1)` and UV `(1,112,112,2)` uint8
-arrays.
-The published artifacts already return post-softmax probabilities; the
-task applies no further softmax and preserves the raw values exactly.
+(224x224 -> 75,264 bytes);
+S100/S100P/S600 receive Y `(1,224,224,1)` and UV `(1,112,112,2)` uint8
+arrays (every variant is 224x224 on every target).
+The published artifacts return raw logits; the task applies a stable
+softmax before Top-K on both platforms.
 Output shapes follow the rank rule: any singleton-batch/spatial spelling
 that squeezes to `(1000,)` binds (the published artifacts declare the
 `raw_f32` transform; quantized artifacts would require a declared `dequant`
@@ -104,8 +108,8 @@ contract).
 <a id="integration-example"></a>
 ## Integration example
 
-Prerequisites: artifact prepared (see [model/README.md](../../model/README.md))
-and OpenCV-Python importable. Every input variable is defined in the example:
+Prerequisites: artifact prepared (see [model/README.md](../../model/README.md)),
+and OpenCV-Python and Pillow importable. Every input variable is defined in the example:
 
 ```python
 from samples.vision.mobilenetv1.runtime.python.classify import MobileNetV1Classifier
@@ -113,8 +117,8 @@ from samples.vision.mobilenetv1.runtime.python.cli import resolve_selection
 
 selection = resolve_selection(
     "x5",
-    asset_id="x5:mobilenetv1:mobilenetv1_224x224_nv12.bin",
-    model_path="samples/vision/mobilenetv1/model/mobilenetv1_224x224_nv12.bin",
+    asset_id="x5:mobilenetv1:mobilenetv1_100_bayese_224x224_nv12.bin",
+    model_path="samples/vision/mobilenetv1/model/mobilenetv1_100_bayese_224x224_nv12.bin",
 )
 contract = selection.contract
 model = MobileNetV1Classifier(
@@ -123,6 +127,7 @@ model = MobileNetV1Classifier(
     class_count=contract.class_count, top_k=5,
     resize_type=contract.resize_type,
     resize_interpolation=contract.resize_interpolation,
+    resize_shorter=contract.resize_shorter,
     score_policy=contract.output_score_policy,
     output_transform=contract.output_transform,
 )
@@ -140,7 +145,7 @@ steps.
 
 | Stage | Input | Output |
 | --- | --- | --- |
-| `preprocess` (`pre_process`) | image path or one BGR `uint8` array (any size) | `PreparedInput.tensors` (target-shaped NV12 tensors) + `PreparedInput.transform` (frozen per-call resize context) |
+| `preprocess` (`pre_process`) | image path or one BGR `uint8` array (any size) | `PreparedInput.tensors` (target-shaped NV12 tensors) + `PreparedInput.transform` (frozen per-call resize context, including the crop offsets) |
 | `infer` (`forward`) | `PreparedInput` | raw output dict (X5 F32 `[1,1000,1,1]`; S F32 `[1,1000]`) — raw SDK tensors before score processing |
 | `postprocess` (`post_process`) | raw outputs (no context: classification consumes no geometry) | `ClassificationResult(class_ids, scores, labels)`, stable descending Top-K under the declared score policy |
 | `predict` | image path or BGR `uint8` array | chains the three stages, same `ClassificationResult` |
@@ -150,6 +155,7 @@ steps.
 
 | Symptom | Check |
 | --- | --- |
+| `Pillow is required for resize_type 2` | Install Pillow in the board's Python environment (`python3 -m pip install pillow`). |
 | `Cannot identify this board` | Select a target supported by the sample and run inference on the matching board. |
 | `model_path requires --asset-id` | Pass the exact qualified reference from `--list-models` with `--asset-id`. |
 | input shape or dtype mismatch | Check that the artifact reference and target use the expected packed X5 or split S tensor layout. |

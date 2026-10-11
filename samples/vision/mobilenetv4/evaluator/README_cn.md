@@ -10,9 +10,8 @@
 
 `evaluate_board.py` 加载一次模型，对冻结的 ImageNetV2 MatchedFrequency 清单逐图评测。
 使用与板卡匹配的制品（X5 `.bin`；S100、S100P 或 S600 `.hbm`），输入为
-`bt601_video` NV12，输出为 float32 logits，并用 `--variant`（`v4-small` 或
-`v4-medium-224`）选择检查点的预处理合同。前处理为 PIL bicubic 短边缩放
-（Small 为 256，Medium 为 235）、中心裁剪 224，再调用样例的 OpenCV NV12 转换；
+`bt601_video` NV12，输出为 float32 logits，并用 `--variant`（`v4-small`、`v4-medium-224`、`v4-large-256`）选择检查点的预处理合同。前处理为 PIL bicubic 短边缩放
+（small 为 256，medium 为 235，large 为 269）、中心裁剪到模型输入尺寸（224 / 256），再调用样例的 OpenCV NV12 转换；
 这与 runtime 使用 `--resize-type 2` 时的几何相同。campaign 固定标签顺序、
 几何变换和完整 10,000 张图片数量；程序校验每张图片与模型的 SHA256。
 
@@ -39,7 +38,9 @@ python3 samples/vision/mobilenetv4/evaluator/evaluate_board.py \
 ```text
 evaluator/
 ├── README.md  # 英文说明
-└── README_cn.md  # 中文说明
+├── README_cn.md  # 中文说明
+├── evaluate.py  # FP32 ONNX 评测（公共主机流程）
+└── evaluate_board.py  # 编译制品的板端评测
 ```
 
 <a id="environment"></a>
@@ -109,6 +110,10 @@ Top-K，在标签格式化之前比较类别 ID 与原始分数；预期类别 I
 | MobileNetV4-Conv-Medium | S100 | 67.35% | 66.94% | 87.86% | 87.65% |
 | MobileNetV4-Conv-Medium | S100P | 67.35% | 66.94% | 87.86% | 87.65% |
 | MobileNetV4-Conv-Medium | S600 | 67.35% | 66.75% | 87.86% | 87.56% |
+| MobileNetV4-Conv-Large | X5 | 70.79% | 69.85% | 89.15% | 89.13% |
+| MobileNetV4-Conv-Large | S100 | 70.79% | 69.66% | 89.15% | 89.04% |
+| MobileNetV4-Conv-Large | S100P | 70.79% | 69.66% | 89.15% | 89.04% |
+| MobileNetV4-Conv-Large | S600 | 70.79% | 69.62% | 89.15% | 89.16% |
 
 相同制品的延迟与吞吐及测量条件见 [sample README](../README_cn.md#performance)。
 下面的 X3 数据属于早期的 X3 构建，仅作历史保留。

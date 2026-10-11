@@ -37,7 +37,7 @@ from utils.py_utils.platform_profile import (
 #: Targets the shared classification machinery can address.
 SUPPORTED_TARGETS = _SHARED_TARGETS
 #: MobileNetV4 variants published across the manifests.
-SUPPORTED_VARIANTS = ('small', 'medium')
+SUPPORTED_VARIANTS = ('small', 'medium', 'large')
 _SAMPLE_DIR = Path(__file__).resolve().parents[2]
 
 #: Platform deployment profiles for this sample (H5).  X5 publishes flat
@@ -47,19 +47,25 @@ PLATFORMS = classification_profiles(
     url_prefix_s="rdk_s100/MobileNet",
 )
 
+#: Published variants: name -> (square input size, shorter-edge resize).  The
+#: resize is ``int(size / crop_pct)`` of the pinned timm checkpoint.
+_VARIANTS = {
+    'small': (224, 256),  # mobilenetv4_conv_small
+    'medium': (224, 235),  # mobilenetv4_conv_medium
+    'large': (256, 269),  # mobilenetv4_conv_large
+}
 
-def _crop_facts(resize_shorter: int) -> VariantFacts:
-    """Return the contract for a 224x224 model fed by shorter-edge center crop.
 
-    ``resize_shorter`` is ``int(224 / crop_pct)`` of the checkpoint: 256 for the
-    Small checkpoint (crop_pct 0.875) and 235 for Medium (crop_pct 0.95).
+def _crop_facts(size: int, resize_shorter: int) -> VariantFacts:
+    """Return the contract for a square model fed by shorter-edge center crop.
+
     ``resize_interpolation`` is unused by this policy, which always resizes
     with antialiased PIL bicubic.
     """
 
     return VariantFacts(
-        input_height=224,
-        input_width=224,
+        input_height=size,
+        input_width=size,
         output_score_policy="softmax",
         output_semantics="source_declared_logits",
         resize_type=2,  # shorter-edge resize + center crop (timm evaluation)
@@ -69,8 +75,8 @@ def _crop_facts(resize_shorter: int) -> VariantFacts:
 
 
 _FACTS = {
-    (variant, target): facts
-    for variant, facts in (("small", _crop_facts(256)), ("medium", _crop_facts(235)))
+    (variant, target): _crop_facts(size, shorter)
+    for variant, (size, shorter) in _VARIANTS.items()
     for target in SUPPORTED_TARGETS
 }
 
@@ -82,13 +88,17 @@ BINDING_TABLE = SampleBindingTable(
     ),
     filename_variants={
         'mobilenetv4_conv_small_bayese_224x224_nv12.bin': 'small',
-        'mobilenetv4_conv_medium_bayese_224x224_nv12.bin': 'medium',
         's100/mobilenetv4_conv_small_nashe_224x224_nv12.hbm': 'small',
-        's100/mobilenetv4_conv_medium_nashe_224x224_nv12.hbm': 'medium',
         's100p/mobilenetv4_conv_small_nashm_224x224_nv12.hbm': 'small',
-        's100p/mobilenetv4_conv_medium_nashm_224x224_nv12.hbm': 'medium',
         's600/mobilenetv4_conv_small_nashp_224x224_nv12.hbm': 'small',
+        'mobilenetv4_conv_medium_bayese_224x224_nv12.bin': 'medium',
+        's100/mobilenetv4_conv_medium_nashe_224x224_nv12.hbm': 'medium',
+        's100p/mobilenetv4_conv_medium_nashm_224x224_nv12.hbm': 'medium',
         's600/mobilenetv4_conv_medium_nashp_224x224_nv12.hbm': 'medium',
+        'mobilenetv4_conv_large_bayese_256x256_nv12.bin': 'large',
+        's100/mobilenetv4_conv_large_nashe_256x256_nv12.hbm': 'large',
+        's100p/mobilenetv4_conv_large_nashm_256x256_nv12.hbm': 'large',
+        's600/mobilenetv4_conv_large_nashp_256x256_nv12.hbm': 'large',
     },
     default_variant='small',
     facts=_FACTS,

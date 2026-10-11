@@ -12,8 +12,8 @@ Use the bundled image for a single-image classification check. For dataset accur
 frozen ImageNetV2 MatchedFrequency manifest. Use the matching artifact for the
 board (X5 `.bin`; S100, S100P or S600 `.hbm`), with NV12 `bt601_video` input
 and float32 logits, and select the checkpoint's preprocessing contract with
-`--variant` (`v4-small` or `v4-medium-224`). The evaluator uses PIL bicubic
-shorter-edge resize (256 for Small, 235 for Medium) and a 224 center crop,
+`--variant` (`v4-small` or `v4-medium-224` or `v4-large-256`). The evaluator uses PIL bicubic
+shorter-edge resize (256 for small, 235 for medium, 269 for large) and a center crop to the model input (224 / 256),
 followed by the sample's OpenCV NV12 conversion; this is the same geometry
 the runtime applies with `--resize-type 2`. The required campaign binds
 labels, geometry and the expected 10,000 images; every image and model hash is
@@ -44,7 +44,9 @@ The functional check uses the bundled test image. Dataset-level accuracy uses Im
 ```text
 evaluator/
 ├── README.md  # English instructions
-└── README_cn.md  # Chinese instructions
+├── README_cn.md  # Chinese instructions
+├── evaluate.py  # FP32 ONNX evaluation (shared host workflow)
+└── evaluate_board.py  # Board evaluation of a compiled artifact
 ```
 
 <a id="environment"></a>
@@ -124,6 +126,10 @@ checkpoint on the same crops.
 | MobileNetV4-Conv-Medium | S100 | 67.35% | 66.94% | 87.86% | 87.65% |
 | MobileNetV4-Conv-Medium | S100P | 67.35% | 66.94% | 87.86% | 87.65% |
 | MobileNetV4-Conv-Medium | S600 | 67.35% | 66.75% | 87.86% | 87.56% |
+| MobileNetV4-Conv-Large | X5 | 70.79% | 69.85% | 89.15% | 89.13% |
+| MobileNetV4-Conv-Large | S100 | 70.79% | 69.66% | 89.15% | 89.04% |
+| MobileNetV4-Conv-Large | S100P | 70.79% | 69.66% | 89.15% | 89.04% |
+| MobileNetV4-Conv-Large | S600 | 70.79% | 69.62% | 89.15% | 89.16% |
 
 Latency and throughput of the same artifacts, with the measurement
 conditions, are in the [sample README](../README.md#performance). The X3

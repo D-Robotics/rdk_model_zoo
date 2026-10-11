@@ -8,15 +8,15 @@
  *
  * The DNN/UCP handles, tensor buffers and task lifetime live in the private
  * Impl in this file; the public header exposes only owned stage-data types.
- * preprocess produces the letterboxed NV12 planes (letterbox_resize geometry,
- * BGR→I420 conversion, interleaved UV packing); infer uploads the planes into
- * the reusable SDK tensors row-stride aware, runs one BPU task and copies the
- * F32 output into an owned probability vector; postprocess reads those
- * probabilities directly (the model output is already a distribution) and
- * applies Top-K selection.
+ * preprocess produces the center-cropped NV12 planes (Pillow-compatible
+ * shorter-edge resize and center crop, BGR→I420 conversion, interleaved UV
+ * packing); infer uploads the planes into the reusable SDK tensors
+ * row-stride aware, runs one BPU task and copies the F32 output into an owned
+ * logits vector; postprocess applies a stable softmax and Top-K selection.
  */
 
 #include "classify.hpp"
+#include "geometry.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -83,6 +83,7 @@ struct MobileNetV2::Impl
     int input_h{0};                                  ///< Input height (pixels).
     int input_w{0};                                  ///< Input width (pixels).
     int output_len{0};                               ///< F32 values in output 0.
+    int resize_shorter{256};                         ///< Shorter edge before the crop.
 
     ~Impl()
     {
@@ -97,8 +98,9 @@ struct MobileNetV2::Impl
     }
 };
 
-MobileNetV2::MobileNetV2(const std::string& model_path) : impl_(new Impl)
+MobileNetV2::MobileNetV2(const std::string& model_path, int resize_shorter) : impl_(new Impl)
 {
+    impl_->resize_shorter = resize_shorter;
     // Load the packed model from disk; everything after this point is owned
     // by Impl and released by its destructor on any failure.
     const char* path = model_path.c_str();
@@ -259,11 +261,13 @@ MobileNetV2Prepared MobileNetV2::preprocess(const cv::Mat& image) const
     if (impl_->input_h % 2 || impl_->input_w % 2)
         throw std::invalid_argument("model input height and width must be even");
 
-    // Letterbox to the model input resolution (aspect-preserving resize with
-    // the shared 127-gray padding).
-    cv::Mat resized;
-    resized.create(impl_->input_h, impl_->input_w, image.type());
-    letterbox_resize(image, resized);
+    // Shorter-edge antialiased bicubic resize and center crop to the model
+    // input: the geometry the published models were calibrated and evaluated
+    // with, identical to the Python runtime.
+    if (impl_->input_h != impl_->input_w || impl_->resize_shorter < impl_->input_w)
+        throw std::invalid_argument(
+            "center crop needs a square input and resize_shorter >= input size");
+    const cv::Mat resized = mobilenet::center_crop(image, impl_->input_w, impl_->resize_shorter);
 
     // Convert BGR -> I420 (Y + U + V planar) and keep the planes as owned
     // NV12 bytes.
@@ -372,25 +376,31 @@ MobileNetV2Raw MobileNetV2::infer(const MobileNetV2Prepared& input)
     MobileNetV2Raw raw;
     const float* data =
         static_cast<const float*>(impl_->output_tensors[0].sysMem.virAddr);
-    raw.probabilities.assign(data, data + impl_->output_len);
+    raw.logits.assign(data, data + impl_->output_len);
     return raw;
 }
 
 std::vector<Classification> MobileNetV2::postprocess(const MobileNetV2Raw& raw,
                                                      int top_k) const
 {
-    // The model output node already contains a probability distribution: no
-    // normalization is applied, values are read by class index and ranked.
-    const int tensor_len = static_cast<int>(raw.probabilities.size());
+    // The model outputs logits: a numerically stable softmax turns them into
+    // probabilities before the classes are ranked.
+    const int tensor_len = static_cast<int>(raw.logits.size());
     if (tensor_len <= 0)
         throw std::invalid_argument("postprocess requires a nonempty output vector");
+
+    const float max_logit = *std::max_element(raw.logits.begin(), raw.logits.end());
+    double sum = 0.0;
+    for (float value : raw.logits)
+        sum += std::exp(static_cast<double>(value - max_logit));
 
     std::vector<Classification> results;
     results.reserve(tensor_len);
     for (int i = 0; i < tensor_len; ++i) {
         Classification cls;
         cls.class_id = i;
-        cls.probability = raw.probabilities[i];
+        cls.probability = static_cast<float>(
+            std::exp(static_cast<double>(raw.logits[i] - max_logit)) / sum);
         results.emplace_back(cls);
     }
 

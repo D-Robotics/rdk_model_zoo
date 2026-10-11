@@ -69,7 +69,7 @@ class MobileNetV4Classifier:
             runner: Optional injected runner. Its loaded binding supplies the model
                 contract instead of model_path, target, and tensor settings.
             resize_shorter: Shorter-edge size for resize_type 2: int(input / crop_pct),
-                256 for the Small and 235 for the Medium model; ignored otherwise.
+                256 for small, 235 for medium, 269 for large; ignored otherwise.
 
         Returns:
             None.

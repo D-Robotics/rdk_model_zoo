@@ -17,6 +17,10 @@ Prepare the model artifact with the downloader, which resolves its URL and forma
 | `s100/mobilenetv4_conv_medium_nashe_224x224_nv12.hbm` | s100 | medium | single | download (`s:mobilenetv4:s100/mobilenetv4_conv_medium_nashe_224x224_nv12.hbm`) |
 | `s100p/mobilenetv4_conv_medium_nashm_224x224_nv12.hbm` | s100p | medium | single | download (`s:mobilenetv4:s100p/mobilenetv4_conv_medium_nashm_224x224_nv12.hbm`) |
 | `s600/mobilenetv4_conv_medium_nashp_224x224_nv12.hbm` | s600 | medium | single | download (`s:mobilenetv4:s600/mobilenetv4_conv_medium_nashp_224x224_nv12.hbm`) |
+| `mobilenetv4_conv_large_bayese_256x256_nv12.bin` | x5 | large | single | download (`x5:mobilenetv4:mobilenetv4_conv_large_bayese_256x256_nv12.bin`) |
+| `s100/mobilenetv4_conv_large_nashe_256x256_nv12.hbm` | s100 | large | single | download (`s:mobilenetv4:s100/mobilenetv4_conv_large_nashe_256x256_nv12.hbm`) |
+| `s100p/mobilenetv4_conv_large_nashm_256x256_nv12.hbm` | s100p | large | single | download (`s:mobilenetv4:s100p/mobilenetv4_conv_large_nashm_256x256_nv12.hbm`) |
+| `s600/mobilenetv4_conv_large_nashp_256x256_nv12.hbm` | s600 | large | single | download (`s:mobilenetv4:s600/mobilenetv4_conv_large_nashp_256x256_nv12.hbm`) |
 
 Each reference is an exact row of `docs/release/x5/models.yaml` or
 `docs/release/s/models.yaml`; the manifest is the authority for URL and
@@ -45,7 +49,7 @@ From the repository root:
 # success: exit 0, observed digest printed; no partial files left behind
 bash samples/vision/mobilenetv4/model/download.sh x5 small
 bash samples/vision/mobilenetv4/model/download.sh x5 medium
-bash samples/vision/mobilenetv4/model/download.sh s100p medium
+bash samples/vision/mobilenetv4/model/download.sh s100p large
 ```
 
 The Python form is equivalent:
@@ -83,12 +87,16 @@ locations.
 | `s100/mobilenetv4_conv_medium_nashe_224x224_nv12.hbm` | nash-e `.hbm`, split Y/UV input (224x224), F32 `[1,1000]` logits output | `adec594b442eb5efcd2ff1694b86f087d630e2a933871bffaeebea7ae956ffca` |
 | `s100p/mobilenetv4_conv_medium_nashm_224x224_nv12.hbm` | nash-m `.hbm`, split Y/UV input (224x224), F32 `[1,1000]` logits output | `b95804313b774a49c3ebc48a3f3ca278964c93df456822ac47b9ee6abc133107` |
 | `s600/mobilenetv4_conv_medium_nashp_224x224_nv12.hbm` | nash-p `.hbm`, split Y/UV input (224x224), F32 `[1,1000]` logits output | `5b1b0abc231e6d0272a39de32885ef46eb3755e808763def5efbccaaa73d415b` |
+| `mobilenetv4_conv_large_bayese_256x256_nv12.bin` | bayes-e `.bin`, packed NV12 input (256x256), F32 `[1,1000,1,1]` logits output | `c33b013dd058c6c41224c8f9e157a3066c5988cdf962dc49f4d0846a2d68d099` |
+| `s100/mobilenetv4_conv_large_nashe_256x256_nv12.hbm` | nash-e `.hbm`, split Y/UV input (256x256), F32 `[1,1000]` logits output | `36f75f4edccbf6aaa57895371ae88e8c8b3479c081b98c198732cc9ccb485994` |
+| `s100p/mobilenetv4_conv_large_nashm_256x256_nv12.hbm` | nash-m `.hbm`, split Y/UV input (256x256), F32 `[1,1000]` logits output | `dc363c87bb8e6c7c7789df2e5987f21aa096215205b73b027746c7d9a4bd31ae` |
+| `s600/mobilenetv4_conv_large_nashp_256x256_nv12.hbm` | nash-p `.hbm`, split Y/UV input (256x256), F32 `[1,1000]` logits output | `b46b194684b9d3e91789109729077e4919883328eb54af832a274a6b7d03abd7` |
 
 Every artifact is a post-training INT8 quantization of a pinned
 [timm](https://github.com/huggingface/pytorch-image-models) checkpoint
-(`mobilenetv4_conv_small.e2400_r224_in1k` and
-`mobilenetv4_conv_medium.e500_r224_in1k`, Apache-2.0), compiled with the
+(`mobilenetv4_conv_small.e2400_r224_in1k`, `mobilenetv4_conv_medium.e500_r224_in1k` and
+`mobilenetv4_conv_large.e500_r256_in1k`, Apache-2.0), compiled with the
 file name's march token: `bayese` (bayes-e, X5), `nashe` (nash-e, S100),
 `nashm` (nash-m, S100P) and `nashp` (nash-p, S600). The network input is
-normalized in the model; the runtime feeds NV12 produced from a 224x224
-center crop (see [conversion](../conversion/README.md#preprocessing)).
+normalized in the model; the runtime feeds NV12 produced from the
+center crop at the model input size (see [conversion](../conversion/README.md#preprocessing)).

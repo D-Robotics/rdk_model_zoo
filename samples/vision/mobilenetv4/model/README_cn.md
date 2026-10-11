@@ -18,6 +18,10 @@ model 目录不提交任何二进制；制品由 下载器按平台发布 Manife
 | `s100/mobilenetv4_conv_medium_nashe_224x224_nv12.hbm` | s100 | medium | 单阶段 | 下载（`s:mobilenetv4:s100/mobilenetv4_conv_medium_nashe_224x224_nv12.hbm`） |
 | `s100p/mobilenetv4_conv_medium_nashm_224x224_nv12.hbm` | s100p | medium | 单阶段 | 下载（`s:mobilenetv4:s100p/mobilenetv4_conv_medium_nashm_224x224_nv12.hbm`） |
 | `s600/mobilenetv4_conv_medium_nashp_224x224_nv12.hbm` | s600 | medium | 单阶段 | 下载（`s:mobilenetv4:s600/mobilenetv4_conv_medium_nashp_224x224_nv12.hbm`） |
+| `mobilenetv4_conv_large_bayese_256x256_nv12.bin` | x5 | large | 单阶段 | 下载（`x5:mobilenetv4:mobilenetv4_conv_large_bayese_256x256_nv12.bin`） |
+| `s100/mobilenetv4_conv_large_nashe_256x256_nv12.hbm` | s100 | large | 单阶段 | 下载（`s:mobilenetv4:s100/mobilenetv4_conv_large_nashe_256x256_nv12.hbm`） |
+| `s100p/mobilenetv4_conv_large_nashm_256x256_nv12.hbm` | s100p | large | 单阶段 | 下载（`s:mobilenetv4:s100p/mobilenetv4_conv_large_nashm_256x256_nv12.hbm`） |
+| `s600/mobilenetv4_conv_large_nashp_256x256_nv12.hbm` | s600 | large | 单阶段 | 下载（`s:mobilenetv4:s600/mobilenetv4_conv_large_nashp_256x256_nv12.hbm`） |
 
 每个引用对应 `docs/release/x5/models.yaml` 或 `docs/release/s/models.yaml`
 中的一行；URL 与格式以 Manifest 为权威。X5 消费一个 packed NV12 张量；
@@ -47,7 +51,7 @@ model/
 # 成功判据：退出码 0，打印观察 digest；不留半成品文件
 bash samples/vision/mobilenetv4/model/download.sh x5 small
 bash samples/vision/mobilenetv4/model/download.sh x5 medium
-bash samples/vision/mobilenetv4/model/download.sh s100p medium
+bash samples/vision/mobilenetv4/model/download.sh s100p large
 ```
 
 Python 形式等价：
@@ -86,11 +90,14 @@ SHA-256 校验，原子落盘且不覆盖已有文件（校验失败时保留原
 | `s100/mobilenetv4_conv_medium_nashe_224x224_nv12.hbm` | nash-e `.hbm`，split Y/UV 输入 (224x224), F32 `[1,1000]` logits 输出 | `adec594b442eb5efcd2ff1694b86f087d630e2a933871bffaeebea7ae956ffca` |
 | `s100p/mobilenetv4_conv_medium_nashm_224x224_nv12.hbm` | nash-m `.hbm`，split Y/UV 输入 (224x224), F32 `[1,1000]` logits 输出 | `b95804313b774a49c3ebc48a3f3ca278964c93df456822ac47b9ee6abc133107` |
 | `s600/mobilenetv4_conv_medium_nashp_224x224_nv12.hbm` | nash-p `.hbm`，split Y/UV 输入 (224x224), F32 `[1,1000]` logits 输出 | `5b1b0abc231e6d0272a39de32885ef46eb3755e808763def5efbccaaa73d415b` |
+| `mobilenetv4_conv_large_bayese_256x256_nv12.bin` | bayes-e `.bin`，packed NV12 输入 (256x256), F32 `[1,1000,1,1]` logits 输出 | `c33b013dd058c6c41224c8f9e157a3066c5988cdf962dc49f4d0846a2d68d099` |
+| `s100/mobilenetv4_conv_large_nashe_256x256_nv12.hbm` | nash-e `.hbm`，split Y/UV 输入 (256x256), F32 `[1,1000]` logits 输出 | `36f75f4edccbf6aaa57895371ae88e8c8b3479c081b98c198732cc9ccb485994` |
+| `s100p/mobilenetv4_conv_large_nashm_256x256_nv12.hbm` | nash-m `.hbm`，split Y/UV 输入 (256x256), F32 `[1,1000]` logits 输出 | `dc363c87bb8e6c7c7789df2e5987f21aa096215205b73b027746c7d9a4bd31ae` |
+| `s600/mobilenetv4_conv_large_nashp_256x256_nv12.hbm` | nash-p `.hbm`，split Y/UV 输入 (256x256), F32 `[1,1000]` logits 输出 | `b46b194684b9d3e91789109729077e4919883328eb54af832a274a6b7d03abd7` |
 
 所有制品都是对固定版本 [timm](https://github.com/huggingface/pytorch-image-models)
-检查点（`mobilenetv4_conv_small.e2400_r224_in1k` 与
-`mobilenetv4_conv_medium.e500_r224_in1k`，Apache-2.0）做训练后 INT8 量化的结果，
+检查点（`mobilenetv4_conv_small.e2400_r224_in1k`、`mobilenetv4_conv_medium.e500_r224_in1k`、`mobilenetv4_conv_large.e500_r256_in1k`，Apache-2.0）做训练后 INT8 量化的结果，
 并按文件名中的 march 标记编译：`bayese`（bayes-e，X5）、`nashe`（nash-e，
 S100）、`nashm`（nash-m，S100P）、`nashp`（nash-p，S600）。网络输入的归一化
-已编译进模型；runtime 送入的是由 224x224 中心裁剪图转换的 NV12
+已编译进模型；runtime 送入的是由模型输入尺寸的中心裁剪图转换的 NV12
 （见[转换说明](../conversion/README_cn.md#preprocessing)）。

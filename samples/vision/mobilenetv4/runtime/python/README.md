@@ -51,7 +51,7 @@ python3 samples/vision/mobilenetv4/runtime/python/main.py --list-models --target
 A full run on a prepared X5 board:
 
 ```bash
-# prerequisites: bash samples/vision/mobilenetv4/model/download.sh x5 --variant small
+# prerequisites: bash samples/vision/mobilenetv4/model/download.sh x5 small
 # success: exit 0 and a printed Top-5 list
 python3 samples/vision/mobilenetv4/runtime/python/main.py \
   --target x5 \
@@ -71,7 +71,7 @@ model loading, or download.
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
-| `--variant` | choice | null | model variant (`small` default when omitted; see `--list-models` for published combinations) |
+| `--variant` | choice | null | model variant: `small`, `medium`, `large` (`small` default when omitted; see `--list-models` for published combinations) |
 | `--target` | choice | auto | execution target: `auto`, `x5`, `s100`, `s100p`, `s600`; an execution target must match detected hardware |
 | `--asset-id` | string | null | complete `group:sample:filename` reference from the manifest |
 | `--model-path` | string | null | existing `.bin`/`.hbm`; must be paired with `--asset-id`; defaults to the `model/` location for the resolved reference when omitted |
@@ -95,9 +95,9 @@ The command prints the stable Top-K as class IDs, scores, and labels
 (`ClassificationResult(class_ids, scores, labels)`), and writes an
 annotated image only when `--img-save-path` is given. X5 receives the packed
 NV12 buffer as the flat 1-D uint8 array of `H*W*3/2` bytes
-(224x224 -> 75,264 bytes; same bytes as the former `(1,336,224,1)` view);
-S100/S100P/S600 receive Y `(1,224,224,1)` and UV `(1,112,112,2)` uint8
-arrays (both variants are 224x224 on every target).
+(224x224 -> 75,264 bytes; 256x256 -> 98,304 bytes);
+S100/S100P/S600 receive Y `(1,H,W,1)` and UV `(1,H/2,W/2,2)` uint8
+arrays (Small and Medium are 224x224, Large is 256x256 on every target).
 The published artifacts return raw logits; the task applies a stable
 softmax before Top-K on both platforms.
 Output shapes follow the rank rule: any singleton-batch/spatial spelling

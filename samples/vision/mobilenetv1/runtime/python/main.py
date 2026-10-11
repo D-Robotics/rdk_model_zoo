@@ -87,6 +87,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             labels=default_labels(args.label_file),
             resize_type=contract.resize_type if args.resize_type is None else args.resize_type,
             resize_interpolation=contract.resize_interpolation,
+            resize_shorter=contract.resize_shorter,
             score_policy=contract.output_score_policy,
             output_transform=contract.output_transform,
         )

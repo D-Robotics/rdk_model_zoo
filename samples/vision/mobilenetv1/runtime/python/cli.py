@@ -37,39 +37,46 @@ from utils.py_utils.platform_profile import (
 #: Targets the shared classification machinery can address.
 SUPPORTED_TARGETS = _SHARED_TARGETS
 #: MobileNetV1 variants published across the manifests.
-SUPPORTED_VARIANTS = ('mobilenetv1',)
+SUPPORTED_VARIANTS = ('100', '125')
 _SAMPLE_DIR = Path(__file__).resolve().parents[2]
 
 #: Platform deployment profiles for this sample (H5).  X5 publishes flat
-#: ``.bin`` artifacts; S100/S600 publish ``.hbm`` artifacts under the shared
-#: ``MobileNet`` archive directory; S100P publishes none (the legacy S
-#: download script silently fell back to s100, which this sample rejects).
+#: ``.bin`` artifacts; S100, S100P and S600 publish ``.hbm`` artifacts under
+#: ``s100/``, ``s100p/`` and ``s600/``.
 PLATFORMS = classification_profiles(
     url_prefix_s="rdk_s100/MobileNet",
 )
 
-_NONE_224_DIRECT_LINEAR_FACTS = VariantFacts(
-    input_height=224,
-    input_width=224,
-    output_score_policy="none",
-    output_semantics="source_declared_probabilities",
-    resize_type=0,  # direct resize (source default)
-    resize_interpolation="linear",
-)
+#: Published variants: name -> (square input size, shorter-edge resize).  The
+#: resize is ``int(size / crop_pct)`` of the pinned timm checkpoint.
+_VARIANTS = {
+    '100': (224, 256),  # mobilenetv1_100
+    '125': (224, 248),  # mobilenetv1_125
+}
 
-_NONE_224_LETTERBOX_NEAREST_FACTS = VariantFacts(
-    input_height=224,
-    input_width=224,
-    output_score_policy="none",
-    output_semantics="source_declared_probabilities",
-    resize_type=1,  # letterbox (source default)
-    resize_interpolation="nearest",
-)
+
+def _crop_facts(size: int, resize_shorter: int) -> VariantFacts:
+    """Return the contract for a square model fed by shorter-edge center crop.
+
+    ``resize_interpolation`` is unused by this policy, which always resizes
+    with antialiased PIL bicubic.
+    """
+
+    return VariantFacts(
+        input_height=size,
+        input_width=size,
+        output_score_policy="softmax",
+        output_semantics="source_declared_logits",
+        resize_type=2,  # shorter-edge resize + center crop (timm evaluation)
+        resize_interpolation="cubic",
+        resize_shorter=resize_shorter,
+    )
+
 
 _FACTS = {
-        ('mobilenetv1', 'x5'): _NONE_224_DIRECT_LINEAR_FACTS,
-        ('mobilenetv1', 's100'): _NONE_224_LETTERBOX_NEAREST_FACTS,
-        ('mobilenetv1', 's600'): _NONE_224_LETTERBOX_NEAREST_FACTS,
+    (variant, target): _crop_facts(size, shorter)
+    for variant, (size, shorter) in _VARIANTS.items()
+    for target in SUPPORTED_TARGETS
 }
 
 BINDING_TABLE = SampleBindingTable(
@@ -79,12 +86,18 @@ BINDING_TABLE = SampleBindingTable(
         ('s', 'mobilenetv1'),
     ),
     filename_variants={
-        'mobilenetv1_224x224_nv12.bin': 'mobilenetv1',
-        's100/mobilenetv1_224x224_nv12.hbm': 'mobilenetv1',
-        's600/mobilenetv1_224x224_nv12.hbm': 'mobilenetv1',
+        'mobilenetv1_100_bayese_224x224_nv12.bin': '100',
+        's100/mobilenetv1_100_nashe_224x224_nv12.hbm': '100',
+        's100p/mobilenetv1_100_nashm_224x224_nv12.hbm': '100',
+        's600/mobilenetv1_100_nashp_224x224_nv12.hbm': '100',
+        'mobilenetv1_125_bayese_224x224_nv12.bin': '125',
+        's100/mobilenetv1_125_nashe_224x224_nv12.hbm': '125',
+        's100p/mobilenetv1_125_nashm_224x224_nv12.hbm': '125',
+        's600/mobilenetv1_125_nashp_224x224_nv12.hbm': '125',
     },
-    default_variant='mobilenetv1',
+    default_variant='100',
     facts=_FACTS,
+    s_filename_targets=('s100', 's100p', 's600'),
 )
 
 
@@ -92,8 +105,7 @@ def list_available_assets(target: Optional[str] = None) -> tuple[AssetRecord, ..
     """Return the finite sample assets read from the existing manifests.
 
     ``target=None`` or ``target="auto"`` is intentionally host-independent so
-    the listing command can run on a workstation.  ``s100p`` returns no rows:
-    no MobileNetV1 asset for that target is present in the source manifest.
+    the listing command can run on a workstation.
     """
 
     return cls_binding.list_assets(BINDING_TABLE, target)
@@ -166,6 +178,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Exact manifest reference group:sample:filename; see --list-models.",
     )
     parser.add_argument(
+        "--variant",
+        choices=SUPPORTED_VARIANTS,
+        default=None,
+        help="Model variant (default: 100; see --list-models for the "
+        "published variant/target combinations).",
+    )
+    parser.add_argument(
         "--model-path",
         help="Path to an existing compiled artifact; no download is performed.",
     )
@@ -190,9 +209,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--resize-type",
         type=int,
-        choices=(0, 1),
+        choices=(0, 1, 2),
         default=None,
-        help="0 direct resize or 1 letterbox; default follows the bound source.",
+        help="0 direct resize, 1 letterbox, or 2 shorter-edge resize + center crop "
+        "(needs Pillow); default follows the bound model (2).",
     )
     parser.add_argument(
         "--priority",
@@ -293,6 +313,10 @@ def run_dry_run(args: argparse.Namespace) -> int:
     print(
         "  input_geometry: "
         f"{selection.contract.input_width}x{selection.contract.input_height}"
+    )
+    print(
+        f"  preprocess: resize_type={selection.contract.resize_type}, "
+        f"resize_shorter={selection.contract.resize_shorter}"
     )
     print(f"  output_transform: {selection.contract.output_transform}")
     print(f"  output_rank_rule: squeeze -> ({selection.contract.class_count},)")

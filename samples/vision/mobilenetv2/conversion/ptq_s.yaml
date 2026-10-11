@@ -1,17 +1,17 @@
-# MobileNetV4 PTQ configuration for RDK S100 / S100P / S600 (OE S v3.7.0,
+# MobileNetV2 PTQ configuration for RDK S100 / S100P / S600 (OE S v3.7.0,
 # hb_compile). Compile parameters are those used for the published artifacts;
 # only the placeholders differ (see README.md, "Compile"):
 #   @TARGET@  s100, s100p or s600
 #   @MARCH@   nash-e (S100), nash-m (S100P) or nash-p (S600)
 #   @WORK@    the work directory of one model variant
-#   @SIZE@    the model input size (224, or 256 for MobileNetV4 large)
+#   @SIZE@    the model input size (224)
 # The normalization is compiled into the model: mean = mean x 255,
 # scale = 1 / (255 x std).
 model_parameters:
   onnx_model: @WORK@/export/model.onnx
   march: @MARCH@
   working_dir: @WORK@/@TARGET@/build
-  output_model_file_prefix: mobilenetv4_@TARGET@
+  output_model_file_prefix: mobilenetv2_@TARGET@
   debug_mode: ''
   output_nodes: ''
   remove_node_name: ''

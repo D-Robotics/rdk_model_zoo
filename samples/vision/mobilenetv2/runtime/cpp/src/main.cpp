@@ -27,7 +27,7 @@ int main(int argc, char** argv)
         }
 
         // Construction loads the model, queries tensors and allocates buffers.
-        MobileNetV2 model(options.model_path);
+        MobileNetV2 model(options.model_path, options.resize_shorter);
 
         // One synchronous classification of the test image.
         const auto image = mobilenetv2::load_image(options.test_img);

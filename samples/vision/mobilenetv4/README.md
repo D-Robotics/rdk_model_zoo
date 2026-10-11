@@ -29,7 +29,7 @@ Feature summary:
 
 - **Universal Inverted Bottleneck**: unifies inverted bottleneck, ConvNeXt-style blocks, FFN-style blocks, and ExtraDW variants.
 - **Mobile Multi-Query Attention**: an attention structure optimized for mobile accelerators.
-- **Model variants**: this sample ships the Conv-Small and Conv-Medium deployment models.
+- **Model variants**: this sample ships the Conv-Small, Conv-Medium and Conv-Large deployment models.
 
 ![MobileNetV4 UIB blocks](./test_data/MobileNetV4_architecture.png)
 
@@ -61,12 +61,16 @@ mobilenetv4/
 | --- | --- | --- | --- |
 | x5 | small | python | supported |
 | x5 | medium | python | supported |
+| x5 | large | python | supported |
 | s100 | small | python | supported |
 | s100 | medium | python | supported |
+| s100 | large | python | supported |
 | s100p | small | python | supported |
 | s100p | medium | python | supported |
+| s100p | large | python | supported |
 | s600 | small | python | supported |
 | s600 | medium | python | supported |
+| s600 | large | python | supported |
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -98,7 +102,7 @@ manifest's model server.
 # 1. Prepare the artifact (input: manifest row x5:mobilenetv4:mobilenetv4_conv_small_bayese_224x224_nv12.bin)
 #    output: samples/vision/mobilenetv4/model/mobilenetv4_conv_small_bayese_224x224_nv12.bin
 #    success: downloader exits 0 and prints the observed digest
-bash samples/vision/mobilenetv4/model/download.sh x5 --variant small
+bash samples/vision/mobilenetv4/model/download.sh x5 small
 
 # 2. Run classification (input: the artifact above plus the bundled test image)
 #    output: Top-5 class ids, scores, labels on stdout
@@ -120,16 +124,15 @@ same root `datasets/imagenet/` labels. Full commands:
 
 The Python run prints a stable Top-K (default 5) of class IDs, scores, and
 labels and exits 0; Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. With the bundled `great_grey_owl.JPEG` the Top-1 is class 24 (`great grey owl`)
-and with `zebra_cls.jpg` it is class 340 (`zebra`), for both variants on X5, S100, S100P
+and with `zebra_cls.jpg` it is class 340 (`zebra`), for all three variants on X5, S100, S100P
 and S600 (checked on each board with the published builds). Select a target and variant listed in the [Support matrix](#support-matrix), prepare that exact manifest artifact with the model downloader, and run the sample on the matching board.
 
 <a id="performance"></a>
 ## Performance data
 
 All numbers were measured on real boards with the published artifacts
-(INT8, 224x224, batch 1). The models are 3.77 M parameters / 0.37 GFLOPs
-(Small) and 9.72 M parameters / 1.66 GFLOPs (Medium); GFLOPs counts Conv and
-Gemm multiply-accumulates as two operations.
+(INT8, 224x224 or 256x256, batch 1). The models are 3.77 M parameters / 0.37 GFLOPs (Small), 9.72 M parameters / 1.66 GFLOPs (Medium) and 32.59 M parameters / 5.67 GFLOPs (Large);
+GFLOPs counts Conv and Gemm multiply-accumulates as two operations.
 
 **Accuracy.** Top-1 / Top-5 over the complete ImageNetV2 MatchedFrequency set
 (10,000 images, 1,000 classes). This is not the ILSVRC2012 validation set, so
@@ -147,6 +150,10 @@ the compiled model on the matching board.
 | MobileNetV4-Conv-Medium | S100 | 67.35% | 66.94% | 87.86% | 87.65% |
 | MobileNetV4-Conv-Medium | S100P | 67.35% | 66.94% | 87.86% | 87.65% |
 | MobileNetV4-Conv-Medium | S600 | 67.35% | 66.75% | 87.86% | 87.56% |
+| MobileNetV4-Conv-Large | X5 | 70.79% | 69.85% | 89.15% | 89.13% |
+| MobileNetV4-Conv-Large | S100 | 70.79% | 69.66% | 89.15% | 89.04% |
+| MobileNetV4-Conv-Large | S100P | 70.79% | 69.66% | 89.15% | 89.04% |
+| MobileNetV4-Conv-Large | S600 | 70.79% | 69.62% | 89.15% | 89.16% |
 
 **Speed.** Runtime numbers come from `hrt_model_exec perf` on BPU core 0 (the
 model only: no preprocessing or postprocessing); FPS is the total completed
@@ -166,6 +173,10 @@ streams.
 | MobileNetV4-Conv-Medium | S100 | 0.607 | 1,595 / 2,831 | 366 / 431 | 1.5 / 1.0 | 6 |
 | MobileNetV4-Conv-Medium | S100P | 0.530 | 1,829 / 3,174 | 461 / 551 | 2.0 / 1.5 | 6 |
 | MobileNetV4-Conv-Medium | S600 | 0.407 | 2,381 / 4,605 | 707 / 980 | 2.1 / 1.5 | 18 |
+| MobileNetV4-Conv-Large | X5 | 5.423 | 184 / 195 | 71 / 87 | 1.5 / 1.0 | 8 |
+| MobileNetV4-Conv-Large | S100 | 1.147 | 858 / 1,120 | 285 / 359 | 1.5 / 1.0 | 6 |
+| MobileNetV4-Conv-Large | S100P | 1.063 | 926 / 1,188 | 346 / 458 | 2.0 / 1.5 | 6 |
+| MobileNetV4-Conv-Large | S600 | 0.631 | 1,553 / 2,829 | 582 / 1,017 | 2.1 / 1.5 | 18 |
 
 The CPU governor was `performance` and the CPUs ran at the clock listed (all
 online cores) during each measurement; the boards differ in CPU and BPU clocks,

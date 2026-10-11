@@ -33,6 +33,7 @@ include_directories(
     /usr/include/hobot/dnn
     /usr/include/hobot
     ../../../../../utils/c_utils/inc
+    ../../../../../utils/tools/mobilenet/cpp
     inc/
 )
 

@@ -26,7 +26,7 @@ ConvNeXt 风格块、FFN 风格块或 ExtraDW 变体；移动端多查询注意�
 
 - **Universal Inverted Bottleneck**：统一 inverted bottleneck、ConvNeXt 风格模块、FFN 风格模块和 ExtraDW 变体。
 - **Mobile Multi-Query Attention**：面向移动端加速器优化的注意力结构。
-- **模型变体**：本 sample 提供 Conv-Small 和 Conv-Medium 两个部署模型。
+- **模型变体**：本 sample 提供 Conv-Small、Conv-Medium 和 Conv-Large 三个部署模型。
 
 ![MobileNetV4 UIB 块](./test_data/MobileNetV4_architecture.png)
 
@@ -58,12 +58,16 @@ mobilenetv4/
 | --- | --- | --- | --- |
 | x5 | small | python | supported |
 | x5 | medium | python | supported |
+| x5 | large | python | supported |
 | s100 | small | python | supported |
 | s100 | medium | python | supported |
+| s100 | large | python | supported |
 | s100p | small | python | supported |
 | s100p | medium | python | supported |
+| s100p | large | python | supported |
 | s600 | small | python | supported |
 | s600 | medium | python | supported |
+| s600 | large | python | supported |
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -92,7 +96,7 @@ python3 -c "import cv2, numpy, yaml, PIL; print('host dependencies: ok')"
 # 1. 准备制品（输入：Manifest 行 x5:mobilenetv4:mobilenetv4_conv_small_bayese_224x224_nv12.bin）
 #    输出：samples/vision/mobilenetv4/model/mobilenetv4_conv_small_bayese_224x224_nv12.bin
 #    成功判据：退出码 0 并打印观察 digest
-bash samples/vision/mobilenetv4/model/download.sh x5 --variant small
+bash samples/vision/mobilenetv4/model/download.sh x5 small
 
 # 2. 运行分类（输入：上一步制品与内置测试图）
 #    输出：stdout 上的 Top-5 类别 ID、分数、标签
@@ -113,16 +117,15 @@ S100、S100P、S600 换用对应的 `s:` 引用（见 `--list-models`）与根�
 ## 预期结果
 
 Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并退出 0；除非给出
-`--img-save-path`，否则不写任何输出文件。X5 上使用内置测试图
-`great_grey_owl.JPEG` 时，Top-1 为 class 24（`great grey owl`）；使用
-`zebra_cls.jpg` 时 Top-1 为 class 340（`zebra`），X5、S100、S100P、S600 上的两个
-变体都是如此（已用发布的构建在每块板上核对）。按支持矩阵选择目标并准备对应制品；运行时会在加载模型前核验板卡身份。
+`--img-save-path`，否则不写任何输出文件。使用内置测试图 `great_grey_owl.JPEG` 时，Top-1 为
+class 24（`great grey owl`）；使用 `zebra_cls.jpg` 时 Top-1 为 class 340（`zebra`），X5、S100、S100P、S600 上的
+三个变体都是如此（已用发布的构建在每块板上核对）。按支持矩阵选择目标并准备对应制品；运行时会在加载模型前核验板卡身份。
 
 <a id="performance"></a>
 ## 性能数据
 
-下列数字均在真实板卡上用已发布制品测得（INT8，224x224，batch 1）。模型规模为
-3.77 M 参数 / 0.37 GFLOPs（Small）与 9.72 M 参数 / 1.66 GFLOPs（Medium）；
+下列数字均在真实板卡上用已发布制品测得（INT8，224x224、256x256，batch 1）。模型规模为
+3.77 M 参数 / 0.37 GFLOPs（Small）、9.72 M 参数 / 1.66 GFLOPs（Medium）、32.59 M 参数 / 5.67 GFLOPs（Large）；
 GFLOPs 按每次 Conv 与 Gemm 乘加计 2 次运算。
 
 **精度。** 在完整的 ImageNetV2 MatchedFrequency 集合（10,000 张图像，1,000
@@ -140,6 +143,10 @@ GFLOPs 按每次 Conv 与 Gemm 乘加计 2 次运算。
 | MobileNetV4-Conv-Medium | S100 | 67.35% | 66.94% | 87.86% | 87.65% |
 | MobileNetV4-Conv-Medium | S100P | 67.35% | 66.94% | 87.86% | 87.65% |
 | MobileNetV4-Conv-Medium | S600 | 67.35% | 66.75% | 87.86% | 87.56% |
+| MobileNetV4-Conv-Large | X5 | 70.79% | 69.85% | 89.15% | 89.13% |
+| MobileNetV4-Conv-Large | S100 | 70.79% | 69.66% | 89.15% | 89.04% |
+| MobileNetV4-Conv-Large | S100P | 70.79% | 69.66% | 89.15% | 89.04% |
+| MobileNetV4-Conv-Large | S600 | 70.79% | 69.62% | 89.15% | 89.16% |
 
 **速度。** Runtime 数字来自 BPU 核 0 上的 `hrt_model_exec perf`（只含模型：
 不含前处理与后处理）；FPS 为 3 次运行（每次 200 帧、先热身 20 帧）完成的
@@ -157,6 +164,10 @@ GFLOPs 按每次 Conv 与 Gemm 乘加计 2 次运算。
 | MobileNetV4-Conv-Medium | S100 | 0.607 | 1,595 / 2,831 | 366 / 431 | 1.5 / 1.0 | 6 |
 | MobileNetV4-Conv-Medium | S100P | 0.530 | 1,829 / 3,174 | 461 / 551 | 2.0 / 1.5 | 6 |
 | MobileNetV4-Conv-Medium | S600 | 0.407 | 2,381 / 4,605 | 707 / 980 | 2.1 / 1.5 | 18 |
+| MobileNetV4-Conv-Large | X5 | 5.423 | 184 / 195 | 71 / 87 | 1.5 / 1.0 | 8 |
+| MobileNetV4-Conv-Large | S100 | 1.147 | 858 / 1,120 | 285 / 359 | 1.5 / 1.0 | 6 |
+| MobileNetV4-Conv-Large | S100P | 1.063 | 926 / 1,188 | 346 / 458 | 2.0 / 1.5 | 6 |
+| MobileNetV4-Conv-Large | S600 | 0.631 | 1,553 / 2,829 | 582 / 1,017 | 2.1 / 1.5 | 18 |
 
 每次测量时 CPU 调频策略为 `performance`，所有在线核心运行在表中所列频率；
 各板卡的 CPU 与 BPU 频率不同，比较不同 target 时需谨慎。C++ 流水线使用对

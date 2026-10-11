@@ -24,8 +24,8 @@ class PolicyTests(unittest.TestCase):
 
         target = "x5"
         protocol = "x5" if target == "x5" else "s"
-        selection = resolve_selection(target, variant="small")
-        binding = bind_model(selection, runtime_metadata(protocol, variant="small"))
+        selection = resolve_selection(target, variant='small')
+        binding = bind_model(selection, runtime_metadata(protocol, variant='small'))
         policy = binding.contract.output_score_policy
 
         raw = np.full((1, 1000), 0.001, dtype=np.float32)
@@ -57,8 +57,8 @@ class PolicyTests(unittest.TestCase):
 
         The published contract resizes the shorter edge and center-crops (type 2).
         Preparing the host evaluation crop and feeding it through a plain direct
-        resize (a no-op at 224x224) must yield identical NV12 tensors, for both
-        variants and both input protocols.
+        resize (a no-op at the model size) must yield identical NV12 tensors, for
+        every published variant and both input protocols.
         """
 
         try:
@@ -76,16 +76,18 @@ class PolicyTests(unittest.TestCase):
 
         rng = np.random.default_rng(7)
         bgr = rng.integers(0, 256, size=(300, 400, 3), dtype=np.uint8)
-        for variant, crop_pct in (("small", 0.875), ("medium", 0.95)):
+        from testsupport import PUBLISHED, VARIANTS
+
+        for variant, (size, shorter, _) in VARIANTS.items():
             contract = {
-                "size": 224, "crop_pct": crop_pct, "geometry": "resize_shorter_center_crop",
+                "size": size, "crop_pct": size / (shorter + 0.5), "geometry": "resize_shorter_center_crop",
                 "interpolation": "pil_bicubic", "color": "RGB", "layout": "NCHW",
                 "dtype": "float32", "mean": [0.485, 0.456, 0.406],
                 "std": [0.229, 0.224, 0.225], "batch": 1, "class_count": 1000,
                 "output": "logits",
             }
             evaluation_crop = prepare_rgb(Image.fromarray(bgr[:, :, ::-1]), contract)[:, :, ::-1]
-            for target in ("x5", "s100", "s100p", "s600"):
+            for target in [t for (v, t) in PUBLISHED if v == variant]:
                 with self.subTest(variant=variant, target=target):
                     binding = bind_model(
                         resolve_selection(target, variant=variant),
@@ -116,8 +118,8 @@ class PolicyTests(unittest.TestCase):
         )
         from testsupport import runtime_metadata
 
-        selection = resolve_selection("s100", variant="small")
-        binding = bind_model(selection, runtime_metadata("s", variant="small"))
+        selection = resolve_selection("s100", variant='small')
+        binding = bind_model(selection, runtime_metadata("s", variant='small'))
         observed = {}
         scores = np.full((1, 1000), 0.0005, dtype=np.float32)
         scores[0, 42] = 0.99
@@ -141,8 +143,8 @@ class PolicyTests(unittest.TestCase):
         )
         from testsupport import runtime_metadata
 
-        selection = resolve_selection("x5", variant="small")
-        binding = bind_model(selection, runtime_metadata("x5", variant="small"))
+        selection = resolve_selection("x5", variant='small')
+        binding = bind_model(selection, runtime_metadata("x5", variant='small'))
         observed = {}
         scores = np.full((1, 1000), 0.0005, dtype=np.float32)
         scores[0, 5] = 0.99

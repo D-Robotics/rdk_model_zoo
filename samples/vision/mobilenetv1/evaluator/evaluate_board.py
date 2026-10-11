@@ -1,4 +1,4 @@
-"""Evaluate a pinned MobileNetV4 board artifact (small, medium, large) on its frozen dataset."""
+"""Evaluate a pinned MobileNetV1 board artifact (100, 125) on its frozen dataset."""
 
 from pathlib import Path
 import sys

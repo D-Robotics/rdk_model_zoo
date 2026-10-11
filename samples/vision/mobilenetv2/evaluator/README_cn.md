@@ -5,6 +5,28 @@
 固定版本 timm checkpoint 流程使用 [`evaluate.py`](evaluate.py)，命令见[公共主机流程](../../../../utils/tools/mobilenet/README_cn.md)。该流程明确记录权重、中心裁剪预处理、batch=1 logits 合同和全量评测输入；下文既有制品命令按各自合同使用。
 使用随附图片进行单图分类检查。计算数据集精度时，准备对应验证集及逐图真值类别索引，并将其与运行时返回的 Top-1 类别 ID 对照。
 
+
+## 固定制品的板端评测
+
+`evaluate_board.py` 加载一次模型，对冻结的 ImageNetV2 MatchedFrequency 清单逐图评测。
+使用与板卡匹配的制品（X5 `.bin`；S100、S100P 或 S600 `.hbm`），输入为
+`bt601_video` NV12，输出为 float32 logits，并用 `--variant`（`v2-100`、`v2-140`）选择检查点的预处理合同。前处理为 PIL bicubic 短边缩放
+（100 为 256，140 为 256）、中心裁剪到模型输入尺寸（224），再调用样例的 OpenCV NV12 转换；
+这与 runtime 使用 `--resize-type 2` 时的几何相同。campaign 固定标签顺序、
+几何变换和完整 10,000 张图片数量；程序校验每张图片与模型的 SHA256。
+
+```bash
+python3 samples/vision/mobilenetv2/evaluator/evaluate_board.py \
+  --target s100 --variant v2-100 \
+  --model samples/vision/mobilenetv2/model/s100/mobilenetv2_100_nashe_224x224_nv12.hbm \
+  --model-sha256 <model/README_cn.md 中的 sha256> \
+  --campaign /path/to/campaign.json --manifest /path/to/manifest.json \
+  --data-root /path/to/imagenetv2/images --output /path/to/new-evaluation
+```
+
+新输出目录包含全量预测、张量元信息、三个固定输入的输出，以及记录 Top-1/Top-5 和源码哈希的
+`evaluation.json`。C++ 性能计时与输入边界见[评测说明](../../../../utils/tools/mobilenet/cpp/README.md)。
+
 <a id="dataset"></a>
 
 ## 数据集
@@ -16,7 +38,9 @@
 ```text
 evaluator/
 ├── README.md  # 英文说明
-└── README_cn.md  # 中文说明
+├── README_cn.md  # 中文说明
+├── evaluate.py  # FP32 ONNX 评测（公共主机流程）
+└── evaluate_board.py  # 编译制品的板端评测
 ```
 
 <a id="environment"></a>
@@ -35,19 +59,19 @@ evaluator/
 python3 -m unittest discover -s samples/vision/mobilenetv2/tests -v
 ```
 
-X5 功能板卡检查（前置：`bash samples/vision/mobilenetv2/model/download.sh x5`；成功判据：退出码 0 且 Top-K 符合预期）：
+X5 功能板卡检查（前置：`bash samples/vision/mobilenetv2/model/download.sh x5 100`；成功判据：退出码 0 且 Top-K 符合预期）：
 
 ```bash
 python3 samples/vision/mobilenetv2/runtime/python/main.py \
   --target x5 \
-  --asset-id x5:mobilenetv2:mobilenetv2_224x224_nv12.bin \
-  --model-path samples/vision/mobilenetv2/model/mobilenetv2_224x224_nv12.bin \
+  --asset-id x5:mobilenetv2:mobilenetv2_100_bayese_224x224_nv12.bin \
+  --model-path samples/vision/mobilenetv2/model/mobilenetv2_100_bayese_224x224_nv12.bin \
   --test-img samples/vision/mobilenetv2/test_data/Scottish_deerhound.JPEG \
   --label-file datasets/imagenet/imagenet_classes.names \
   --top-k 5
 ```
 
-S100/S600 替换 `s:` 引用与 `s100/`/`s600/` 制品路径；标签文件共用。同板多次运行对照时，固定同一图像、制品字节、标签、resize 类型与
+S100、S100P、S600 替换 `s:` 引用与 `s100/`、`s100p/`、`s600/` 制品路径；标签文件共用。同板多次运行对照时，固定同一图像、制品字节、标签、resize 类型与
 Top-K，在标签格式化之前比较类别 ID 与原始分数；预期类别 ID 相同、
 分数差在 1e-5 内。对照双方使用相同板型。
 
@@ -72,17 +96,23 @@ Top-K，在标签格式化之前比较类别 ID 与原始分数；预期类别 I
 <a id="reference-results"></a>
 ## 参考结果
 
-| 项目 | 数值 | 来源 |
-| --- | --- | --- |
+已发布模型的精度，用上面的固定板端评测在完整 ImageNetV2 MatchedFrequency 集合
+（10,000 张图像）上测得。它不是 ILSVRC2012 验证集，因此数值不能与 ImageNet-1k
+验证集的结果相比。“FP32”是同一检查点的 ONNX 导出在相同裁剪图上的结果。
 
-X5 发布（x5-v1.1.3）的已发布数值：
+| 模型 | Target | FP32 Top-1 | 板端 Top-1 | FP32 Top-5 | 板端 Top-5 |
+| --- | --- | --- | --- | --- | --- |
+| MobileNetV2-100 | X5 | 60.18% | 59.55% | 82.05% | 81.48% |
+| MobileNetV2-100 | S100 | 60.18% | 59.61% | 82.05% | 81.61% |
+| MobileNetV2-100 | S100P | 60.18% | 59.61% | 82.05% | 81.61% |
+| MobileNetV2-100 | S600 | 60.18% | 59.55% | 82.05% | 81.42% |
+| MobileNetV2-140 | X5 | 63.71% | 63.11% | 84.68% | 84.44% |
+| MobileNetV2-140 | S100 | 63.71% | 63.13% | 84.68% | 84.41% |
+| MobileNetV2-140 | S100P | 63.71% | 63.13% | 84.68% | 84.41% |
+| MobileNetV2-140 | S600 | 63.71% | 63.09% | 84.68% | 84.51% |
 
-| 模型 | 尺寸 | 类别数 | 参数量 (M) | Float Top-1 | Quant Top-1 | 延迟 (ms) | FPS |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| MobileNetV2 | 224x224 | 1000 | 3.4 | 72.0% | 68.17% | 1.42 | 1152.07 |
-
-对 `s-v1.1.2` 的 S100/S600 制品，在匹配板卡上运行，并按[数据集级评估](#boundaries)
-计算精度与计时。
+相同制品的延迟与吞吐及测量条件见 [sample README](../README_cn.md#performance)。
+下面的 X5 与 X3 数据属于早期构建（权重与前处理不同），仅作历史保留。
 
 ### RDK X5 / X5 Module 性能
 

@@ -27,6 +27,7 @@ struct CliOptions
     std::string test_img;               ///< BGR test image path.
     std::string label_file;             ///< One class name per line.
     int top_k{5};                       ///< Number of printed classes.
+    int resize_shorter{256};            ///< Shorter edge before the center crop.
     bool help{false};                   ///< Print usage and exit.
 };
 

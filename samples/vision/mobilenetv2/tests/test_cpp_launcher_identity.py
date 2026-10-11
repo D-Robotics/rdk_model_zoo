@@ -2,8 +2,8 @@
 
 The launcher resolves board identity from sysfs files; its
 SOC_NAME_FILE/BOARD_TYPE_FILE overrides let these tests point it at
-fixture files, so the S100P rejection matrix is provable on a host with
-no board attached. The expected semantics mirror
+fixture files, so the S100/S100P/S600 selection matrix is provable on a
+host with no board attached. The expected semantics mirror
 utils/py_utils/platforms.py:match_target — soc_name=s100 subdivides on
 board_type (s100p / "rdk s100p" → S100P), while soc_name=s600 ignores
 board_type entirely.
@@ -23,7 +23,6 @@ RUN_SH = (
     ROOT / "samples" / "vision" / "mobilenetv2" / "runtime" / "cpp" / "run.sh"
 )
 
-S100P_ERROR = "detected s100p"
 UNKNOWN_ERROR = "unrecognized or unsupported SoC"
 
 
@@ -62,7 +61,6 @@ class CppLauncherIdentityTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 2, completed.stderr)
         self.assertIn("Model not found", completed.stderr)
         self.assertIn(f"download.sh {expected_target}", completed.stderr)
-        self.assertNotIn(S100P_ERROR, completed.stderr)
         self.assertNotIn(UNKNOWN_ERROR, completed.stderr)
 
     def _assert_gate_rejected(self, completed, expected_error):
@@ -90,17 +88,28 @@ class CppLauncherIdentityTests(unittest.TestCase):
         completed = self._run_launcher("s600\n", "rdk s100p\n")
         self._assert_gate_accepted(completed, "s600")
 
-    def test_explicit_s100p_soc_name_rejected(self):
+    def test_explicit_s100p_soc_name_selects_s100p(self):
         completed = self._run_launcher("s100p\n", None)
-        self._assert_gate_rejected(completed, S100P_ERROR)
+        self._assert_gate_accepted(completed, "s100p")
 
-    def test_s100_soc_with_s100p_board_type_rejected(self):
+    def test_s100_soc_with_s100p_board_type_selects_s100p(self):
         # Both registered board_type spellings, plus mixed case with the
         # "rdk " prefix as seen on real boards.
         for board_type in ("s100p\n", "rdk s100p\n", "RDK S100P\n"):
             with self.subTest(board_type=board_type):
                 completed = self._run_launcher("s100\n", board_type)
-                self._assert_gate_rejected(completed, S100P_ERROR)
+                self._assert_gate_accepted(completed, "s100p")
+
+    def test_unknown_variant_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            soc_file = Path(tmp) / "soc_name"
+            soc_file.write_text("s100\n", encoding="utf-8")
+            env = dict(os.environ, SOC_NAME_FILE=str(soc_file),
+                       BOARD_TYPE_FILE=str(Path(tmp) / "board_type"), VARIANT="075")
+            completed = subprocess.run(["bash", str(RUN_SH)], env=env, text=True,
+                                       capture_output=True, timeout=120)
+        self.assertEqual(completed.returncode, 2, completed.stderr)
+        self.assertIn("unsupported VARIANT", completed.stderr)
 
     def test_missing_identity_files_reported_as_unknown(self):
         completed = self._run_launcher(None, None)

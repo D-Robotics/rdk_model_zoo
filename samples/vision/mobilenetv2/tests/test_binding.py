@@ -22,7 +22,9 @@ class BindingTableTests(unittest.TestCase):
                 table.facts,
                 f"filename {filename!r} maps to no facts entry",
             )
-        self.assertIn(table.default_variant, ('mobilenetv2',))
+        from testsupport import VARIANTS
+
+        self.assertIn(table.default_variant, VARIANTS)
 
     def test_published_listing_matches_table_and_profiles(self):
         from samples.vision.mobilenetv2.runtime.python.cli import (
@@ -55,38 +57,62 @@ class BindingTableTests(unittest.TestCase):
                 f"unexpected manifest source: {record.source_manifest}",
             )
 
-    def test_s100p_publishes_nothing_and_rejects_selection(self):
+    def test_listing_equals_the_published_matrix(self):
         from samples.vision.mobilenetv2.runtime.python.cli import (
-            BindingError,
             list_available_assets,
             resolve_selection,
         )
+        from testsupport import PUBLISHED
 
-        self.assertEqual(list_available_assets("s100p"), ())
-        with self.assertRaises(BindingError):
-            resolve_selection("s100p")
+        for target in ("x5", "s100", "s100p", "s600"):
+            records = list_available_assets(target)
+            self.assertEqual(
+                {(r.variant, r.filename) for r in records},
+                {(v, f) for (v, t), f in PUBLISHED.items() if t == target},
+                target,
+            )
+        for (variant, target) in PUBLISHED:
+            selection = resolve_selection(target, variant=variant)
+            self.assertEqual(selection.target, target)
+            expected_protocol = "packed_nv12" if target == "x5" else "split_nv12"
+            self.assertEqual(selection.contract.input_protocol, expected_protocol)
+            if target != "x5":
+                self.assertEqual(selection.model_path.parent.name, target)
+
+    def test_every_published_asset_has_hash_and_oss_url(self):
+        from samples.vision.mobilenetv2.runtime.python.cli import list_available_assets
+        from utils.py_utils.assets import resolve_asset
+        from testsupport import VARIANTS
+
+        for target in ("x5", "s100", "s100p", "s600"):
+            for record in list_available_assets(target):
+                asset = resolve_asset(record.asset_id)
+                self.assertRegex(asset.sha256 or "", r"^[0-9a-f]{64}$", record.asset_id)
+                self.assertTrue(
+                    asset.url.startswith(
+                        "https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/"
+                        f"mobilenetv2/mobilenetv2/cls/{VARIANTS[record.variant][2]}/{target}/"
+                    ),
+                    asset.url,
+                )
 
     def test_per_target_contracts_match_source_facts(self):
         from samples.vision.mobilenetv2.runtime.python.cli import resolve_selection
+        from testsupport import PUBLISHED, VARIANTS
 
-        expected = {('mobilenetv2', 'x5'): (224, 224, 'none', 'source_declared_probabilities', 1, 'linear'), ('mobilenetv2', 's100'): (224, 224, 'none', 'source_declared_probabilities', 1, 'nearest'), ('mobilenetv2', 's600'): (224, 224, 'none', 'source_declared_probabilities', 1, 'nearest')}
-        for (variant, target), (height, width, policy, semantics, resize, interp) in expected.items():
-            selection = resolve_selection(target, variant=variant)
-            contract = selection.contract
-            self.assertEqual(
-                (contract.input_height, contract.input_width), (height, width),
-                f"{variant}/{target} geometry",
-            )
-            self.assertEqual(contract.output_score_policy, policy, f"{variant}/{target} policy")
-            self.assertEqual(contract.output_semantics, semantics, f"{variant}/{target} semantics")
-            self.assertEqual(contract.resize_type, resize, f"{variant}/{target} resize")
-            self.assertEqual(
-                contract.resize_interpolation, interp, f"{variant}/{target} interp"
-            )
+        # Every published model uses the timm evaluation geometry (resize type 2):
+        # shorter edge int(size / crop_pct), then a center crop to the input size.
+        for (variant, target) in PUBLISHED:
+            size, shorter, _ = VARIANTS[variant]
+            contract = resolve_selection(target, variant=variant).contract
+            label = f"{variant}/{target}"
+            self.assertEqual((contract.input_height, contract.input_width), (size, size), label)
+            self.assertEqual(contract.output_score_policy, "softmax", label)
+            self.assertEqual(contract.output_semantics, "source_declared_logits", label)
+            self.assertEqual(contract.resize_type, 2, label)
+            self.assertEqual(contract.resize_shorter, shorter, label)
             self.assertEqual(contract.class_count, 1000)
             self.assertEqual(contract.output_transform, "raw_f32")
-            expected_protocol = "packed_nv12" if target == "x5" else "split_nv12"
-            self.assertEqual(contract.input_protocol, expected_protocol)
 
     def test_bind_model_accepts_source_metadata_shapes(self):
         from samples.vision.mobilenetv2.runtime.python.cli import (
@@ -95,11 +121,13 @@ class BindingTableTests(unittest.TestCase):
         )
         from testsupport import runtime_metadata
 
-        for (variant, target) in self._table().facts:
+        from testsupport import PUBLISHED
+
+        for (variant, target) in PUBLISHED:
             protocol = "x5" if target == "x5" else "s"
             selection = resolve_selection(target, variant=variant)
             binding = bind_model(
-                selection, runtime_metadata(protocol)
+                selection, runtime_metadata(protocol, variant=variant)
             )
             if target == "x5":
                 self.assertEqual(len(binding.input_names), 1)
@@ -114,11 +142,13 @@ class BindingTableTests(unittest.TestCase):
         )
         from testsupport import runtime_metadata
 
-        variant, target = ('mobilenetv2', 'x5')
+        from testsupport import PUBLISHED
+
+        variant, target = next(iter(PUBLISHED))
         protocol = "x5" if target == "x5" else "s"
         selection = resolve_selection(target, variant=variant)
         with self.assertRaises(MetadataMismatchError):
-            bind_model(selection, runtime_metadata(protocol, wrong_geometry=True))
+            bind_model(selection, runtime_metadata(protocol, variant=variant, wrong_geometry=True))
 
     def test_bind_model_keeps_vestigial_quant_descriptor_on_f32_output(self):
         # Board evidence (X5 smoke, 2026-09-21): published artifacts ship F32
@@ -131,12 +161,14 @@ class BindingTableTests(unittest.TestCase):
         )
         from testsupport import runtime_metadata
 
-        for (variant, target) in self._table().facts:
+        from testsupport import PUBLISHED
+
+        for (variant, target) in PUBLISHED:
             protocol = "x5" if target == "x5" else "s"
             selection = resolve_selection(target, variant=variant)
             binding = bind_model(
                 selection,
-                runtime_metadata(protocol, quant_descriptor=True),
+                runtime_metadata(protocol, variant=variant, quant_descriptor=True),
             )
             self.assertEqual(binding.output_dtype, "float32")
             self.assertIn(binding.output_name, binding.output_quants)
@@ -149,14 +181,16 @@ class BindingTableTests(unittest.TestCase):
         )
         from testsupport import runtime_metadata
 
-        variant, target = ('mobilenetv2', 'x5')
+        from testsupport import PUBLISHED
+
+        variant, target = next(iter(PUBLISHED))
         protocol = "x5" if target == "x5" else "s"
         selection = resolve_selection(target, variant=variant)
         with self.assertRaises(MetadataMismatchError) as ctx:
             bind_model(
                 selection,
                 runtime_metadata(
-                    protocol, output_dtype="I8", quant_descriptor=True
+                    protocol, variant=variant, output_dtype="I8", quant_descriptor=True
                 ),
             )
         self.assertIn("accepts only F32", str(ctx.exception))

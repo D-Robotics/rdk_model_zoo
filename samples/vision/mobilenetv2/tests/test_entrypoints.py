@@ -31,30 +31,39 @@ class EntrypointTests(unittest.TestCase):
         self.assertIn("--target", completed.stdout)
 
     def test_list_models_publishes_every_manifest_filename(self):
+        from testsupport import PUBLISHED
+
         completed = self._run("--list-models", "--target", "auto")
         self.assertEqual(completed.returncode, 0, completed.stderr)
-        for filename in ('mobilenetv2_224x224_nv12.bin', 's100/mobilenetv2_224x224_nv12.hbm', 's600/mobilenetv2_224x224_nv12.hbm'):
+        for filename in PUBLISHED.values():
             self.assertIn(filename, completed.stdout)
 
     def test_dry_run_per_target_reports_source_contract(self):
-        for target, variant, expected in (('x5', 'mobilenetv2', {'protocol': 'packed_nv12', 'geometry': '224x224', 'policy': 'none'}), ('s100', 'mobilenetv2', {'protocol': 'split_nv12', 'geometry': '224x224', 'policy': 'none'}), ('s600', 'mobilenetv2', {'protocol': 'split_nv12', 'geometry': '224x224', 'policy': 'none'})):
-            completed = self._run(
-                "--dry-run", "--target", target
-            )
-            self.assertEqual(completed.returncode, 0, completed.stderr)
-            self.assertIn(f"input_protocol: {expected['protocol']}", completed.stdout)
-            self.assertIn(f"input_geometry: {expected['geometry']}", completed.stdout)
-            self.assertIn(
-                f"output_score_policy: {expected['policy']}", completed.stdout
-            )
-            self.assertIn("No model is downloaded", completed.stdout)
-            self.assertNotIn("hbm_runtime", completed.stdout)
+        from testsupport import PUBLISHED, VARIANTS
+
+        for (variant, target) in PUBLISHED:
+            size, shorter, _ = VARIANTS[variant]
+            self._check_dry_run(target, variant, {
+                'protocol': 'packed_nv12' if target == 'x5' else 'split_nv12',
+                'geometry': f'{size}x{size}', 'policy': 'softmax',
+                'preprocess': f'resize_type=2, resize_shorter={shorter}'})
+
+    def _check_dry_run(self, target, variant, expected):
+        completed = self._run("--dry-run", "--target", target, "--variant", variant)
+        label = f"{variant}/{target}"
+        self.assertEqual(completed.returncode, 0, f"{label}: {completed.stderr}")
+        self.assertIn(f"input_protocol: {expected['protocol']}", completed.stdout, label)
+        self.assertIn(f"input_geometry: {expected['geometry']}", completed.stdout, label)
+        self.assertIn(f"output_score_policy: {expected['policy']}", completed.stdout, label)
+        self.assertIn(f"preprocess: {expected['preprocess']}", completed.stdout, label)
+        self.assertIn("No model is downloaded", completed.stdout, label)
+        self.assertNotIn("hbm_runtime", completed.stdout, label)
 
     def test_missing_model_is_a_visible_error_without_implicit_download(self):
         completed = self._run(
-            "--target", "x5",
-            "--asset-id", "x5:mobilenetv2:mobilenetv2_224x224_nv12.bin",
-            "--model-path", str(ROOT / "missing-mobilenetv2-model.bin"),
+            "--target", "s600",
+            "--asset-id", "s:mobilenetv2:s600/mobilenetv2_140_nashp_224x224_nv12.hbm",
+            "--model-path", str(ROOT / "missing-mobilenetv2-model.hbm"),
         )
         self.assertNotEqual(completed.returncode, 0)
         self.assertIn("model file not found", completed.stderr.lower())

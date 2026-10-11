@@ -19,7 +19,9 @@ OpenExplorer（OE）工具链容器中运行。
     `331fb803779522b685cf942e15f914fb6741c1eb`
   - `medium`：`timm/mobilenetv4_conv_medium.e500_r224_in1k`，revision
     `02a09fbfb82b289e871ba8255f9da58c056fb13b`
-- 对应关系：检查点即 timm 发布的 MobileNetV4 Conv-Small、Conv-Medium
+  - `large`：`timm/mobilenetv4_conv_large.e500_r256_in1k`，revision
+    `033de0bd74b5261f7339c5de242a2e4785808aa3`
+- 对应关系：检查点即 timm 发布的 MobileNetV4-Conv-Small、MobileNetV4-Conv-Medium、MobileNetV4-Conv-Large
   ImageNet-1k 分类模型，权重不做修改。许可证：Apache-2.0（检查点 model card）。
 
 <a id="preprocessing"></a>
@@ -31,11 +33,12 @@ OpenExplorer（OE）工具链容器中运行。
 | --- | --- | --- | --- |
 | small | 0.875 | 256（`int(224 / 0.875)`） | 224x224 中心裁剪 |
 | medium | 0.95 | 235（`int(224 / 0.95)`） | 224x224 中心裁剪 |
+| large | 0.95 | 269（`int(256 / 0.95)`） | 256x256 中心裁剪 |
 
 缩放为抗锯齿双三次（Pillow）。像素为 RGB；ONNX 输入 `data` 是按 ImageNet
-均值/标准差归一化的 float32 `[1,3,224,224]`，输出 `logits` 为 `[1,1000]`。
+均值/标准差归一化的 float32 `[1,3,S,S]`（S = 224 或 256），输出 `logits` 为 `[1,1000]`。
 部署模型把归一化编译进去（`mean_value` = 均值 x 255，`scale_value` =
-1 / (255 x 标准差)），因此 runtime 送入由 224x224 裁剪图转换的 NV12。NV12
+1 / (255 x 标准差)），因此 runtime 送入由 SxS 裁剪图转换的 NV12。NV12
 转换使用 OpenCV 的有限范围 BT.601 变换，所以两种配置都设置
 `input_space_and_range: bt601_video`。
 
@@ -73,7 +76,7 @@ conversion/
 <a id="export"></a>
 ## 导出（ONNX）
 
-下面的命令构建 `small`；构建 `medium` 时使用 `--model v4-medium-224` 和单独的
+下面的命令构建 `small`；构建 `medium`、`large` 时使用 `--model v4-medium-224`、`--model v4-large-256` 和单独的
 工作目录。`WORK` 是仓库之外的绝对路径目录。
 
 ```bash
@@ -87,7 +90,8 @@ python3 samples/vision/mobilenetv4/conversion/export.py --model v4-small \
   --images samples/vision/mobilenetv4/test_data/great_grey_owl.JPEG \
            samples/vision/mobilenetv4/test_data/zebra_cls.jpg \
   --opset 11 --simplify --output $WORK/export
-# 预期：$WORK/export/model.onnx（data float32 [1,3,224,224] -> logits [1,1000]）
+# 预期：$WORK/export/model.onnx（data float32 [1,3,224,224] -> logits [1,1000]；
+#       large 为 [1,3,256,256]）
 #       以及 status 为 "passed" 的 export.json
 ```
 
@@ -120,16 +124,18 @@ python3 utils/tools/mobilenet/workflow.py calibrate --model v4-small \
 <a id="compile"></a>
 ## 编译
 
-填充参考配置中的占位符；编译参数（优化级别、latency 模式、单核、NV12 输入）由
-该配置固定：
+填充参考配置中的占位符（`SIZE` 为模型输入尺寸：small 为 224，medium 为 224，large 为 256）；编译参数（优化级别、
+latency 模式、单核、NV12 输入）由该配置固定：
 
 ```bash
 # cwd：$WORK
-sed "s#@WORK@#$WORK#g" \
+export SIZE=224
+sed -e "s#@WORK@#$WORK#g" -e "s#@SIZE@#$SIZE#g" \
   $REPO/samples/vision/mobilenetv4/conversion/ptq_x5.yaml > x5/config.yaml
 for pair in s100:nash-e s100p:nash-m s600:nash-p; do
   target=${pair%%:*}; march=${pair##*:}
   sed -e "s#@WORK@#$WORK#g" -e "s#@TARGET@#$target#g" -e "s#@MARCH@#$march#g" \
+      -e "s#@SIZE@#$SIZE#g" \
     $REPO/samples/vision/mobilenetv4/conversion/ptq_s.yaml > $target/config.yaml
 done
 ```
@@ -143,7 +149,7 @@ docker run --rm --user "$(id -u):$(id -g)" --shm-size 15g \
   -v "$WORK:$WORK" -w "$WORK/x5" \
   registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8 \
   bash -c "hb_mapper checker --model-type onnx --march bayes-e \
-             --model $WORK/export/model.onnx --input-shape data 1x3x224x224 && \
+             --model $WORK/export/model.onnx --input-shape data 1x3x${SIZE}x${SIZE} && \
            hb_mapper makertbin --config config.yaml --model-type onnx"
 
 # S100、S100P、S600：cwd 为 $WORK/<target>，镜像 ..._s100_s600_gpu:v3.7.0
@@ -158,13 +164,15 @@ docker run --rm --user "$(id -u):$(id -g)" --shm-size 15g \
 ## 转换后验证
 
 1. 在匹配的板卡上用 `hrt_model_exec model_info --model_file <file>` 检查制品。
-   输入 shape 按目标区分，两个变体相同：
+   输入 shape 按目标与变体区分：
 
    | 目标 / 变体 | metadata 暴露的输入 | 输出 |
    | --- | --- | --- |
-   | x5，small 与 medium | 一个 packed NV12 输入，224x224（`mobilenetv4_conv_{small,medium}_bayese_224x224_nv12.bin`） | F32 `[1,1000,1,1]` |
+   | x5，small 与 medium | 一个 packed NV12 输入，224x224（`mobilenetv4_{conv_small,conv_medium}_bayese_224x224_nv12.bin`） | F32 `[1,1000,1,1]` |
+   | x5，large | 一个 packed NV12 输入，256x256（`mobilenetv4_conv_large_bayese_256x256_nv12.bin`） | F32 `[1,1000,1,1]` |
    | s100/s100p/s600，small | Y `[1,224,224,1]`、UV `[1,112,112,2]`（`mobilenetv4_conv_small_nash{e,m,p}_224x224_nv12.hbm`） | F32 `[1,1000]` |
    | s100/s100p/s600，medium | Y `[1,224,224,1]`、UV `[1,112,112,2]`（`mobilenetv4_conv_medium_nash{e,m,p}_224x224_nv12.hbm`） | F32 `[1,1000]` |
+   | s100/s100p/s600，large | Y `[1,256,256,1]`、UV `[1,128,128,2]`（`mobilenetv4_conv_large_nash{e,m,p}_256x256_nv12.hbm`） | F32 `[1,1000]` |
 
    输出为原始 logits，由 runtime 任务施加 softmax。
 2. 用新制品执行 sample 快速开始做冒烟测试：退出码 0 并打印 Top-5 列表
@@ -179,13 +187,17 @@ docker run --rm --user "$(id -u):$(id -g)" --shm-size 15g \
 | 产物 | 目标 | 落盘位置 |
 | --- | --- | --- |
 | `mobilenetv4_conv_small_bayese_224x224_nv12.bin` | x5 | `model/` |
-| `mobilenetv4_conv_medium_bayese_224x224_nv12.bin` | x5 | `model/` |
 | `mobilenetv4_conv_small_nashe_224x224_nv12.hbm` | s100 | `model/s100/` |
-| `mobilenetv4_conv_medium_nashe_224x224_nv12.hbm` | s100 | `model/s100/` |
 | `mobilenetv4_conv_small_nashm_224x224_nv12.hbm` | s100p | `model/s100p/` |
-| `mobilenetv4_conv_medium_nashm_224x224_nv12.hbm` | s100p | `model/s100p/` |
 | `mobilenetv4_conv_small_nashp_224x224_nv12.hbm` | s600 | `model/s600/` |
+| `mobilenetv4_conv_medium_bayese_224x224_nv12.bin` | x5 | `model/` |
+| `mobilenetv4_conv_medium_nashe_224x224_nv12.hbm` | s100 | `model/s100/` |
+| `mobilenetv4_conv_medium_nashm_224x224_nv12.hbm` | s100p | `model/s100p/` |
 | `mobilenetv4_conv_medium_nashp_224x224_nv12.hbm` | s600 | `model/s600/` |
+| `mobilenetv4_conv_large_bayese_256x256_nv12.bin` | x5 | `model/` |
+| `mobilenetv4_conv_large_nashe_256x256_nv12.hbm` | s100 | `model/s100/` |
+| `mobilenetv4_conv_large_nashm_256x256_nv12.hbm` | s100p | `model/s100p/` |
+| `mobilenetv4_conv_large_nashp_256x256_nv12.hbm` | s600 | `model/s600/` |
 
 清单与 [model/README_cn.md](../model/README_cn.md) 一致。
 
@@ -200,4 +212,4 @@ docker run --rm --user "$(id -u):$(id -g)" --shm-size 15g \
 - 编译某个目标不需要板卡，但验证需要：使用与目标匹配的板卡（S100P 与 S600
   是不同于 S100 的独立板卡）。
 - 本流程之前发布的模型（权重不同，且 S medium 为 256x256 输入）不再随本 sample
-  分发。
+  分发。Conv-Large 只以其 256x256 训练分辨率发布。

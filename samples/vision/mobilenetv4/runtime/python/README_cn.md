@@ -47,7 +47,7 @@ python3 samples/vision/mobilenetv4/runtime/python/main.py --list-models --target
 在已准备制品的 X5 板卡上的完整运行：
 
 ```bash
-# 前置：bash samples/vision/mobilenetv4/model/download.sh x5 --variant small
+# 前置：bash samples/vision/mobilenetv4/model/download.sh x5 small
 # 成功判据：退出码 0 且打印 Top-5 列表
 python3 samples/vision/mobilenetv4/runtime/python/main.py \
   --target x5 \
@@ -67,7 +67,7 @@ S100、S100P、S600 替换为对应的 `s:` 引用（例如
 
 | 参数 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| `--variant` | choice | null | 模型变体（省略时默认 `small`；发布组合见 `--list-models`） |
+| `--variant` | choice | null | 模型变体：`small`、`medium`、`large`（省略时默认 `small`；发布组合见 `--list-models`） |
 | `--target` | choice | auto | 执行目标：`auto`、`x5`、`s100`、`s100p`、`s600`；执行目标必须与检测到的硬件一致 |
 | `--asset-id` | string | null | 完整的 `group:sample:filename` Manifest 引用 |
 | `--model-path` | string | null | 已存在的 `.bin`/`.hbm`；必须与 `--asset-id` 配对；省略时默认取解析引用对应的 `model/` 位置 |
@@ -88,9 +88,8 @@ S100、S100P、S600 替换为对应的 `s:` 引用（例如
 ## 结果
 
 命令打印稳定的 Top-K（`ClassificationResult(class_ids, scores, labels)`），
-仅当给出 `--img-save-path` 时写出标注图像。X5 收到 packed NV12 的 一维 uint8 缓冲（`H*W*3/2` 字节；224x224 即 75,264 字节，与源实现的
-`(1,336,224,1)` 视图字节一致）；S100/S100P/S600 收到 Y `(1,224,224,1)` 与 UV
-`(1,112,112,2)` uint8 数组（两个变体在所有平台上都是 224x224）。
+仅当给出 `--img-save-path` 时写出标注图像。X5 收到 packed NV12 的 一维 uint8 缓冲（`H*W*3/2` 字节；224x224 即 75,264 字节，256x256 即 98,304 字节）；S100/S100P/S600 收到 Y `(1,H,W,1)` 与 UV
+`(1,H/2,W/2,2)` uint8 数组（Small 与 Medium 为 224x224，Large 为 256x256，所有平台一致）。
 发布制品返回原始 logits；任务在 Top-K 前施加数值稳定的 softmax（两个平台一致）。
 输出 shape 遵循 rank 规则：任何能 squeeze 到 `(1000,)` 的单例批次/空间拼写
 均可绑定（发布制品声明 `raw_f32` 变换；量化制品需要显式 `dequant` 契约）。

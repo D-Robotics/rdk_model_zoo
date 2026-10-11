@@ -22,7 +22,9 @@ class BindingTableTests(unittest.TestCase):
                 table.facts,
                 f"filename {filename!r} maps to no facts entry",
             )
-        self.assertIn(table.default_variant, ('small', 'medium'))
+        from testsupport import VARIANTS
+
+        self.assertIn(table.default_variant, VARIANTS)
 
     def test_published_listing_matches_table_and_profiles(self):
         from samples.vision.mobilenetv4.runtime.python.cli import (
@@ -55,63 +57,62 @@ class BindingTableTests(unittest.TestCase):
                 f"unexpected manifest source: {record.source_manifest}",
             )
 
-    def test_s100p_publishes_both_variants(self):
+    def test_listing_equals_the_published_matrix(self):
         from samples.vision.mobilenetv4.runtime.python.cli import (
             list_available_assets,
             resolve_selection,
         )
-
-        records = list_available_assets("s100p")
-        self.assertEqual(
-            {(r.variant, r.filename) for r in records},
-            {
-                ("small", "s100p/mobilenetv4_conv_small_nashm_224x224_nv12.hbm"),
-                ("medium", "s100p/mobilenetv4_conv_medium_nashm_224x224_nv12.hbm"),
-            },
-        )
-        for variant in ("small", "medium"):
-            selection = resolve_selection("s100p", variant=variant)
-            self.assertEqual(selection.target, "s100p")
-            self.assertEqual(selection.contract.input_protocol, "split_nv12")
-            self.assertEqual(selection.model_path.parent.name, "s100p")
-
-    def test_every_target_publishes_both_variants_with_hash(self):
-        from samples.vision.mobilenetv4.runtime.python.cli import list_available_assets
-        from utils.py_utils.assets import resolve_asset
+        from testsupport import PUBLISHED
 
         for target in ("x5", "s100", "s100p", "s600"):
             records = list_available_assets(target)
-            self.assertEqual({r.variant for r in records}, {"small", "medium"}, target)
-            for record in records:
+            self.assertEqual(
+                {(r.variant, r.filename) for r in records},
+                {(v, f) for (v, t), f in PUBLISHED.items() if t == target},
+                target,
+            )
+        for (variant, target) in PUBLISHED:
+            selection = resolve_selection(target, variant=variant)
+            self.assertEqual(selection.target, target)
+            expected_protocol = "packed_nv12" if target == "x5" else "split_nv12"
+            self.assertEqual(selection.contract.input_protocol, expected_protocol)
+            if target != "x5":
+                self.assertEqual(selection.model_path.parent.name, target)
+
+    def test_every_published_asset_has_hash_and_oss_url(self):
+        from samples.vision.mobilenetv4.runtime.python.cli import list_available_assets
+        from utils.py_utils.assets import resolve_asset
+        from testsupport import VARIANTS
+
+        for target in ("x5", "s100", "s100p", "s600"):
+            for record in list_available_assets(target):
                 asset = resolve_asset(record.asset_id)
                 self.assertRegex(asset.sha256 or "", r"^[0-9a-f]{64}$", record.asset_id)
                 self.assertTrue(
                     asset.url.startswith(
                         "https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/"
-                        f"mobilenetv4/mobilenetv4/cls/conv-{record.variant}-224/{target}/"
+                        f"mobilenetv4/mobilenetv4/cls/{VARIANTS[record.variant][2]}/{target}/"
                     ),
                     asset.url,
                 )
 
     def test_per_target_contracts_match_source_facts(self):
         from samples.vision.mobilenetv4.runtime.python.cli import resolve_selection
+        from testsupport import PUBLISHED, VARIANTS
 
-        # Every published model is 224x224 and uses the timm evaluation geometry
-        # (resize type 2): shorter edge int(224 / crop_pct), then a center crop.
-        shorter = {"small": 256, "medium": 235}
-        for variant in ("small", "medium"):
-            for target in ("x5", "s100", "s100p", "s600"):
-                contract = resolve_selection(target, variant=variant).contract
-                label = f"{variant}/{target}"
-                self.assertEqual((contract.input_height, contract.input_width), (224, 224), label)
-                self.assertEqual(contract.output_score_policy, "softmax", label)
-                self.assertEqual(contract.output_semantics, "source_declared_logits", label)
-                self.assertEqual(contract.resize_type, 2, label)
-                self.assertEqual(contract.resize_shorter, shorter[variant], label)
-                self.assertEqual(contract.class_count, 1000)
-                self.assertEqual(contract.output_transform, "raw_f32")
-                expected_protocol = "packed_nv12" if target == "x5" else "split_nv12"
-                self.assertEqual(contract.input_protocol, expected_protocol)
+        # Every published model uses the timm evaluation geometry (resize type 2):
+        # shorter edge int(size / crop_pct), then a center crop to the input size.
+        for (variant, target) in PUBLISHED:
+            size, shorter, _ = VARIANTS[variant]
+            contract = resolve_selection(target, variant=variant).contract
+            label = f"{variant}/{target}"
+            self.assertEqual((contract.input_height, contract.input_width), (size, size), label)
+            self.assertEqual(contract.output_score_policy, "softmax", label)
+            self.assertEqual(contract.output_semantics, "source_declared_logits", label)
+            self.assertEqual(contract.resize_type, 2, label)
+            self.assertEqual(contract.resize_shorter, shorter, label)
+            self.assertEqual(contract.class_count, 1000)
+            self.assertEqual(contract.output_transform, "raw_f32")
 
     def test_bind_model_accepts_source_metadata_shapes(self):
         from samples.vision.mobilenetv4.runtime.python.cli import (
@@ -120,7 +121,9 @@ class BindingTableTests(unittest.TestCase):
         )
         from testsupport import runtime_metadata
 
-        for (variant, target) in self._table().facts:
+        from testsupport import PUBLISHED
+
+        for (variant, target) in PUBLISHED:
             protocol = "x5" if target == "x5" else "s"
             selection = resolve_selection(target, variant=variant)
             binding = bind_model(
@@ -139,7 +142,9 @@ class BindingTableTests(unittest.TestCase):
         )
         from testsupport import runtime_metadata
 
-        variant, target = ('small', 'x5')
+        from testsupport import PUBLISHED
+
+        variant, target = next(iter(PUBLISHED))
         protocol = "x5" if target == "x5" else "s"
         selection = resolve_selection(target, variant=variant)
         with self.assertRaises(MetadataMismatchError):
@@ -156,7 +161,9 @@ class BindingTableTests(unittest.TestCase):
         )
         from testsupport import runtime_metadata
 
-        for (variant, target) in self._table().facts:
+        from testsupport import PUBLISHED
+
+        for (variant, target) in PUBLISHED:
             protocol = "x5" if target == "x5" else "s"
             selection = resolve_selection(target, variant=variant)
             binding = bind_model(
@@ -174,7 +181,9 @@ class BindingTableTests(unittest.TestCase):
         )
         from testsupport import runtime_metadata
 
-        variant, target = ('small', 'x5')
+        from testsupport import PUBLISHED
+
+        variant, target = next(iter(PUBLISHED))
         protocol = "x5" if target == "x5" else "s"
         selection = resolve_selection(target, variant=variant)
         with self.assertRaises(MetadataMismatchError) as ctx:
