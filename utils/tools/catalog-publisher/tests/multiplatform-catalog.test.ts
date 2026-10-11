@@ -90,10 +90,15 @@ describe("multi-platform variant catalog", () => {
     // canonical grouping changes 603 configurations to 595, with 57 families.
     // On 2026-10-10 the S MobileNetV4 models were replaced (two older builds became six: small and
     // medium 224 on S100, S100P and S600), which moves the totals to 597 variants and 816 benchmark rows.
+    // On 2026-10-11 MobileNetV1/V2 were replaced by two widths each on all four targets (one X5 and two
+    // S builds per family became eight) and MobileNetV4 Conv-Large 256 was added on all four (+14); the
+    // audited X5 benchmark rows of the superseded V1/V2 builds no longer share a variant with an asset
+    // and stand alone (+2): 613 variants. The S PTQ reference row of MobileNetV2 became fifteen measured
+    // rows: 830 benchmark rows.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(57);
-    expect(variants).toHaveLength(597);
-    expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(816);
+    expect(variants).toHaveLength(613);
+    expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(830);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
   });
@@ -193,7 +198,7 @@ describe("multi-platform variant catalog", () => {
     // Qualified manifest identities are unique; different models may legally
     // share a URL, while two URLs cannot make one duplicate identity valid.
     expect(new Set(x5Entries).size).toBe(x5Entries.length);
-    expect(x5Entries).toHaveLength(185);
+    expect(x5Entries).toHaveLength(188);
     expect(x5Models.summary.asset_count).toBe(x5Entries.length);
   });
 
