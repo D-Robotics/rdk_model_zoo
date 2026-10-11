@@ -1,0 +1,1772 @@
+{
+  "schema_version": 1,
+  "generated_from_run": "v4-large-256-p4-20261011-s600-attempt-01-bt601",
+  "generated_at": "2026-10-11T00:00:00+08:00",
+  "model": {
+    "sample": "mobilenetv4",
+    "family": "mobilenetv4",
+    "task": "cls",
+    "size": "conv-large-256"
+  },
+  "target": {
+    "platform": "s600",
+    "march": "nash-p"
+  },
+  "toolchain": {
+    "hbdk": "4.7.5",
+    "hmct": "2.6.5",
+    "hb_compile": "3.5.3"
+  },
+  "io": {
+    "inputs": [
+      {
+        "name": "data_y",
+        "shape": [
+          1,
+          256,
+          256,
+          1
+        ],
+        "dtype": "uint8"
+      },
+      {
+        "name": "data_uv",
+        "shape": [
+          1,
+          128,
+          128,
+          2
+        ],
+        "dtype": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "logits",
+        "shape": [
+          1,
+          1000
+        ],
+        "dtype": "float32"
+      }
+    ]
+  },
+  "quantization": {
+    "summary": {
+      "total_nodes": 177,
+      "unit_counts": {
+        "BPU": 177
+      },
+      "dtype_counts": {
+        "si8": 175,
+        "f32": 2
+      },
+      "measured_nodes": 177,
+      "weakest_node": {
+        "name": "/blocks/blocks.4/blocks.4.0/conv/Conv",
+        "cosine": 0.882989
+      },
+      "weakest_nodes": [
+        {
+          "name": "/blocks/blocks.4/blocks.4.0/conv/Conv",
+          "cosine": 0.882989
+        },
+        {
+          "name": "/blocks/blocks.4/blocks.4.0/bn1/act/Relu",
+          "cosine": 0.882989
+        },
+        {
+          "name": "...blocks.3/blocks.3.12/pw_exp/conv/Conv",
+          "cosine": 0.886653
+        },
+        {
+          "name": "...ocks.3/blocks.3.12/pw_exp/bn/act/Relu",
+          "cosine": 0.886653
+        },
+        {
+          "name": "...blocks.3/blocks.3.11/pw_exp/conv/Conv",
+          "cosine": 0.894385
+        }
+      ],
+      "cosine_percentiles": {
+        "p10": 0.920034,
+        "median": 0.95437
+      }
+    },
+    "nodes": [
+      {
+        "name": "/conv_stem/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.994543,
+        "calibrated_cosine": 0.999788,
+        "threshold": 2.64,
+        "dtype": "si8"
+      },
+      {
+        "name": "/bn1/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.994543,
+        "calibrated_cosine": 0.998836,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...cks/blocks.0/blocks.0.0/conv_exp/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.994054,
+        "calibrated_cosine": 0.998897,
+        "threshold": 17.139917,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.0/blocks.0.0/bn1/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.994054,
+        "calibrated_cosine": 0.998143,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...cks/blocks.0/blocks.0.0/conv_pwl/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.989068,
+        "calibrated_cosine": 0.995195,
+        "threshold": 12.306128,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.1/blocks.1.0/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.984049,
+        "calibrated_cosine": 0.994255,
+        "threshold": 19.442738,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.1/blocks.1.0/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.975932,
+        "calibrated_cosine": 0.989209,
+        "threshold": 14.520734,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.1/blocks.1.0/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.975932,
+        "calibrated_cosine": 0.988169,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.1/blocks.1.0/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.99173,
+        "calibrated_cosine": 0.994891,
+        "threshold": 19.688766,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.1/blocks.1.0/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.99173,
+        "calibrated_cosine": 0.995382,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.1/blocks.1.0/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.961878,
+        "calibrated_cosine": 0.977235,
+        "threshold": 13.227103,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.1/blocks.1.1/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.979115,
+        "calibrated_cosine": 0.984101,
+        "threshold": 18.773447,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.1/blocks.1.1/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.980262,
+        "calibrated_cosine": 0.984822,
+        "threshold": 17.73683,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.1/blocks.1.1/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.980262,
+        "calibrated_cosine": 0.98281,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.1/blocks.1.1/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.985342,
+        "calibrated_cosine": 0.983967,
+        "threshold": 16.905661,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.1/blocks.1.1/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.985342,
+        "calibrated_cosine": 0.987194,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.1/blocks.1.1/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.94689,
+        "calibrated_cosine": 0.955357,
+        "threshold": 9.904007,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.1/blocks.1.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.94689,
+        "calibrated_cosine": 0.959594,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.0/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.960472,
+        "calibrated_cosine": 0.968346,
+        "threshold": 20.690554,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.0/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.955925,
+        "calibrated_cosine": 0.960391,
+        "threshold": 11.566937,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.0/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.955925,
+        "calibrated_cosine": 0.963148,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.0/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.989396,
+        "calibrated_cosine": 0.988696,
+        "threshold": 13.91752,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.0/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.989396,
+        "calibrated_cosine": 0.990588,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.2/blocks.2.0/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.952235,
+        "calibrated_cosine": 0.95804,
+        "threshold": 11.885765,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.1/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.952881,
+        "calibrated_cosine": 0.955846,
+        "threshold": 25.9774,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.1/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.966987,
+        "calibrated_cosine": 0.967113,
+        "threshold": 12.508991,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.1/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.966987,
+        "calibrated_cosine": 0.969016,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.1/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.937308,
+        "calibrated_cosine": 0.974014,
+        "threshold": 12.851493,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.1/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.937308,
+        "calibrated_cosine": 0.942315,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.2/blocks.2.1/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.942932,
+        "calibrated_cosine": 0.859853,
+        "threshold": 6.942167,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.2/blocks.2.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.942932,
+        "calibrated_cosine": 0.947653,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.2/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.942091,
+        "calibrated_cosine": 0.948102,
+        "threshold": 23.845335,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.2/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.961787,
+        "calibrated_cosine": 0.961498,
+        "threshold": 11.088943,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.2/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.961787,
+        "calibrated_cosine": 0.965836,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.2/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.895275,
+        "calibrated_cosine": 0.971291,
+        "threshold": 11.935128,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.2/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.895275,
+        "calibrated_cosine": 0.928849,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.2/blocks.2.2/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.934746,
+        "calibrated_cosine": 0.884106,
+        "threshold": 5.288286,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.2/blocks.2.2/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.934746,
+        "calibrated_cosine": 0.942089,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.3/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.950917,
+        "calibrated_cosine": 0.954837,
+        "threshold": 23.468512,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.3/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.960929,
+        "calibrated_cosine": 0.963522,
+        "threshold": 10.680973,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.3/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.960929,
+        "calibrated_cosine": 0.965165,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.3/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.920034,
+        "calibrated_cosine": 0.975949,
+        "threshold": 10.003445,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.3/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.920034,
+        "calibrated_cosine": 0.921628,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.2/blocks.2.3/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.92898,
+        "calibrated_cosine": 0.874661,
+        "threshold": 6.58478,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.2/blocks.2.3/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.92898,
+        "calibrated_cosine": 0.937667,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.4/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.942576,
+        "calibrated_cosine": 0.946382,
+        "threshold": 23.084347,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.4/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.945144,
+        "calibrated_cosine": 0.942505,
+        "threshold": 9.439091,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.4/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.945144,
+        "calibrated_cosine": 0.955346,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.4/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.933855,
+        "calibrated_cosine": 0.97562,
+        "threshold": 12.683155,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.4/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.933855,
+        "calibrated_cosine": 0.945367,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.2/blocks.2.4/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.929471,
+        "calibrated_cosine": 0.910378,
+        "threshold": 5.400661,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.2/blocks.2.4/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.929471,
+        "calibrated_cosine": 0.939334,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.5/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.956977,
+        "calibrated_cosine": 0.960458,
+        "threshold": 23.313719,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.5/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.965308,
+        "calibrated_cosine": 0.970026,
+        "threshold": 9.815571,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.5/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.965308,
+        "calibrated_cosine": 0.9703,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.5/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.967972,
+        "calibrated_cosine": 0.982814,
+        "threshold": 9.732737,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.5/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.967972,
+        "calibrated_cosine": 0.971964,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.2/blocks.2.5/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.930632,
+        "calibrated_cosine": 0.926526,
+        "threshold": 6.464289,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.2/blocks.2.5/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.930632,
+        "calibrated_cosine": 0.940836,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.6/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.964001,
+        "calibrated_cosine": 0.968263,
+        "threshold": 23.653864,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.6/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.965187,
+        "calibrated_cosine": 0.977342,
+        "threshold": 10.632236,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.6/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.965187,
+        "calibrated_cosine": 0.971097,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.6/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.973271,
+        "calibrated_cosine": 0.982896,
+        "threshold": 7.305825,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.6/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.973271,
+        "calibrated_cosine": 0.975924,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.2/blocks.2.6/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.933242,
+        "calibrated_cosine": 0.939118,
+        "threshold": 9.793324,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.2/blocks.2.6/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.933242,
+        "calibrated_cosine": 0.942785,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.7/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.96635,
+        "calibrated_cosine": 0.970557,
+        "threshold": 24.130648,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.7/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.960604,
+        "calibrated_cosine": 0.981136,
+        "threshold": 9.934222,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.7/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.960604,
+        "calibrated_cosine": 0.968545,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.7/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.973399,
+        "calibrated_cosine": 0.986676,
+        "threshold": 8.476355,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.7/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.973399,
+        "calibrated_cosine": 0.980285,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.2/blocks.2.7/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.936415,
+        "calibrated_cosine": 0.936977,
+        "threshold": 9.030429,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.2/blocks.2.7/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.936415,
+        "calibrated_cosine": 0.946624,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.8/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.968682,
+        "calibrated_cosine": 0.974597,
+        "threshold": 28.285019,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.8/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.964455,
+        "calibrated_cosine": 0.984487,
+        "threshold": 10.677865,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.8/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.964455,
+        "calibrated_cosine": 0.973049,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.8/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.974713,
+        "calibrated_cosine": 0.988126,
+        "threshold": 6.852581,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.8/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.974713,
+        "calibrated_cosine": 0.980748,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.2/blocks.2.8/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.940175,
+        "calibrated_cosine": 0.93936,
+        "threshold": 9.69243,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.2/blocks.2.8/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.940175,
+        "calibrated_cosine": 0.95102,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.9/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.969546,
+        "calibrated_cosine": 0.975058,
+        "threshold": 35.124264,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.9/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.96232,
+        "calibrated_cosine": 0.985514,
+        "threshold": 9.309719,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.9/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.96232,
+        "calibrated_cosine": 0.972492,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.2/blocks.2.9/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.979413,
+        "calibrated_cosine": 0.991029,
+        "threshold": 6.547919,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.9/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.979413,
+        "calibrated_cosine": 0.984899,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.2/blocks.2.9/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.943587,
+        "calibrated_cosine": 0.954075,
+        "threshold": 9.724834,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.2/blocks.2.9/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.943587,
+        "calibrated_cosine": 0.954641,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ocks.2/blocks.2.10/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.959176,
+        "calibrated_cosine": 0.964673,
+        "threshold": 43.86232,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.2/blocks.2.10/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.905521,
+        "calibrated_cosine": 0.99022,
+        "threshold": 10.668901,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ocks.2/blocks.2.10/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.905521,
+        "calibrated_cosine": 0.926448,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.2/blocks.2.10/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.939067,
+        "calibrated_cosine": 0.928204,
+        "threshold": 2.409189,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.2/blocks.2.10/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.939067,
+        "calibrated_cosine": 0.952988,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.0/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.947772,
+        "calibrated_cosine": 0.956244,
+        "threshold": 53.257481,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.0/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.940556,
+        "calibrated_cosine": 0.963195,
+        "threshold": 10.690595,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.0/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.940556,
+        "calibrated_cosine": 0.956022,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.0/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.991113,
+        "calibrated_cosine": 0.993319,
+        "threshold": 8.477709,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.0/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.991113,
+        "calibrated_cosine": 0.994665,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.3/blocks.3.0/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.936902,
+        "calibrated_cosine": 0.95914,
+        "threshold": 10.480608,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.1/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.950435,
+        "calibrated_cosine": 0.968035,
+        "threshold": 32.104179,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.1/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.960273,
+        "calibrated_cosine": 0.97731,
+        "threshold": 11.401395,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.1/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.960273,
+        "calibrated_cosine": 0.974853,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.1/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.957874,
+        "calibrated_cosine": 0.988983,
+        "threshold": 12.272107,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.1/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.957874,
+        "calibrated_cosine": 0.971199,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.3/blocks.3.1/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.93314,
+        "calibrated_cosine": 0.951764,
+        "threshold": 9.724338,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.93314,
+        "calibrated_cosine": 0.957562,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.2/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.950188,
+        "calibrated_cosine": 0.968493,
+        "threshold": 30.734201,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.2/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.961488,
+        "calibrated_cosine": 0.988621,
+        "threshold": 9.924735,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.2/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.961488,
+        "calibrated_cosine": 0.977222,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.2/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.982332,
+        "calibrated_cosine": 0.993935,
+        "threshold": 8.083709,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.2/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.982332,
+        "calibrated_cosine": 0.990342,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.3/blocks.3.2/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.932526,
+        "calibrated_cosine": 0.965089,
+        "threshold": 12.113023,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.2/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.932526,
+        "calibrated_cosine": 0.957908,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.3/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.948204,
+        "calibrated_cosine": 0.967777,
+        "threshold": 31.122972,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.3/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.955619,
+        "calibrated_cosine": 0.989812,
+        "threshold": 10.354059,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.3/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.955619,
+        "calibrated_cosine": 0.974782,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.3/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.980824,
+        "calibrated_cosine": 0.993504,
+        "threshold": 6.981308,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.3/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.980824,
+        "calibrated_cosine": 0.988544,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.3/blocks.3.3/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.932252,
+        "calibrated_cosine": 0.961942,
+        "threshold": 12.72762,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.3/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.932252,
+        "calibrated_cosine": 0.958516,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.4/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.949715,
+        "calibrated_cosine": 0.969884,
+        "threshold": 32.217228,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.4/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.911171,
+        "calibrated_cosine": 0.996648,
+        "threshold": 9.515448,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.4/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.911171,
+        "calibrated_cosine": 0.925809,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.3/blocks.3.4/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.932351,
+        "calibrated_cosine": 0.930784,
+        "threshold": 1.564709,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.4/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.932351,
+        "calibrated_cosine": 0.955496,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.5/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.947978,
+        "calibrated_cosine": 0.964623,
+        "threshold": 34.31448,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.5/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.97276,
+        "calibrated_cosine": 0.989878,
+        "threshold": 10.851546,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.5/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.97276,
+        "calibrated_cosine": 0.979467,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.5/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.976582,
+        "calibrated_cosine": 0.990815,
+        "threshold": 6.376782,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.5/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.976582,
+        "calibrated_cosine": 0.981482,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.3/blocks.3.5/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.928417,
+        "calibrated_cosine": 0.943862,
+        "threshold": 12.252593,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.5/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.928417,
+        "calibrated_cosine": 0.953276,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.6/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.950307,
+        "calibrated_cosine": 0.968601,
+        "threshold": 35.902962,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.6/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.916317,
+        "calibrated_cosine": 0.997156,
+        "threshold": 11.104693,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.6/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.916317,
+        "calibrated_cosine": 0.915578,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.3/blocks.3.6/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.928631,
+        "calibrated_cosine": 0.913658,
+        "threshold": 0.912646,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.6/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.928631,
+        "calibrated_cosine": 0.952146,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.7/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.949181,
+        "calibrated_cosine": 0.96699,
+        "threshold": 38.161751,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.7/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.973391,
+        "calibrated_cosine": 0.997245,
+        "threshold": 11.43576,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.7/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.973391,
+        "calibrated_cosine": 0.986065,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.3/blocks.3.7/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.932053,
+        "calibrated_cosine": 0.97526,
+        "threshold": 0.812395,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.7/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.932053,
+        "calibrated_cosine": 0.954718,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.8/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.952746,
+        "calibrated_cosine": 0.968951,
+        "threshold": 40.698879,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.8/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.9751,
+        "calibrated_cosine": 0.989417,
+        "threshold": 11.332668,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.8/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.9751,
+        "calibrated_cosine": 0.984709,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.8/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.984469,
+        "calibrated_cosine": 0.994992,
+        "threshold": 7.20194,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.8/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.984469,
+        "calibrated_cosine": 0.990088,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.3/blocks.3.8/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.931241,
+        "calibrated_cosine": 0.940492,
+        "threshold": 9.847454,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.8/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.931241,
+        "calibrated_cosine": 0.955,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.9/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.960938,
+        "calibrated_cosine": 0.972775,
+        "threshold": 41.867363,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.9/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.965552,
+        "calibrated_cosine": 0.983311,
+        "threshold": 11.771032,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.9/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.965552,
+        "calibrated_cosine": 0.98011,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": ".../blocks.3/blocks.3.9/dw_mid/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.984235,
+        "calibrated_cosine": 0.993234,
+        "threshold": 11.090853,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.9/dw_mid/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.984235,
+        "calibrated_cosine": 0.988738,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.3/blocks.3.9/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.928762,
+        "calibrated_cosine": 0.925563,
+        "threshold": 8.102739,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.9/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.928762,
+        "calibrated_cosine": 0.954198,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ocks.3/blocks.3.10/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.955049,
+        "calibrated_cosine": 0.971376,
+        "threshold": 42.744713,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.3/blocks.3.10/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.917715,
+        "calibrated_cosine": 0.996754,
+        "threshold": 9.163718,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ocks.3/blocks.3.10/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.917715,
+        "calibrated_cosine": 0.94482,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.10/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.927441,
+        "calibrated_cosine": 0.935862,
+        "threshold": 1.173217,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.10/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.927441,
+        "calibrated_cosine": 0.953244,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ocks.3/blocks.3.11/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.95126,
+        "calibrated_cosine": 0.968047,
+        "threshold": 45.192261,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.3/blocks.3.11/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.894385,
+        "calibrated_cosine": 0.996847,
+        "threshold": 8.40052,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ocks.3/blocks.3.11/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.894385,
+        "calibrated_cosine": 0.933565,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.11/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.926039,
+        "calibrated_cosine": 0.936445,
+        "threshold": 1.336309,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.11/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.926039,
+        "calibrated_cosine": 0.953258,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ocks.3/blocks.3.12/dw_start/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.95437,
+        "calibrated_cosine": 0.970598,
+        "threshold": 49.691071,
+        "dtype": "si8"
+      },
+      {
+        "name": "...blocks.3/blocks.3.12/pw_exp/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.886653,
+        "calibrated_cosine": 0.997179,
+        "threshold": 9.607931,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ocks.3/blocks.3.12/pw_exp/bn/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.886653,
+        "calibrated_cosine": 0.932091,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "...locks.3/blocks.3.12/pw_proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.926533,
+        "calibrated_cosine": 0.943121,
+        "threshold": 1.36655,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.12/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.926533,
+        "calibrated_cosine": 0.954065,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.4/blocks.4.0/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.882989,
+        "calibrated_cosine": 0.994131,
+        "threshold": 53.925789,
+        "dtype": "si8"
+      },
+      {
+        "name": "/blocks/blocks.4/blocks.4.0/bn1/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.882989,
+        "calibrated_cosine": 0.958331,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "/global_pool/pool/GlobalAveragePool",
+        "on": "BPU",
+        "type": "GlobalAveragePool",
+        "cosine": 0.968103,
+        "calibrated_cosine": 0.987366,
+        "threshold": 2.422424,
+        "dtype": "si8"
+      },
+      {
+        "name": "/conv_head/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.96662,
+        "calibrated_cosine": 0.989058,
+        "threshold": 0.497037,
+        "dtype": "si8"
+      },
+      {
+        "name": "/norm_head/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.96662,
+        "calibrated_cosine": 0.988306,
+        "threshold": null,
+        "dtype": "si8"
+      },
+      {
+        "name": "/classifier/Gemm",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.997178,
+        "calibrated_cosine": 0.999426,
+        "threshold": 2.579422,
+        "dtype": "f32"
+      },
+      {
+        "name": "/classifier/Gemm_reshape_output",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.997178,
+        "calibrated_cosine": 0.999426,
+        "threshold": null,
+        "dtype": "f32"
+      }
+    ],
+    "outputs": []
+  },
+  "subgraphs": [
+    {
+      "name": "subgraph_0",
+      "perf": {
+        "fps": 1109.32,
+        "latency_ms": 0.9,
+        "latency_us": 901.5,
+        "ddr_mb_per_frame": 32.419,
+        "bpu_ops_per_frame": 5670539264.0,
+        "core_number": 1,
+        "march": "nash-p"
+      },
+      "intervals": {
+        "count": 10,
+        "interval_ms": 0.1,
+        "utilization": [
+          0.844,
+          0.309,
+          0.211,
+          0.156,
+          0.177,
+          0.174,
+          0.168,
+          0.183,
+          0.135,
+          0.011
+        ],
+        "load_bandwidth_mbs": [
+          27899,
+          35839,
+          37407,
+          37504,
+          36172,
+          37482,
+          37646,
+          37564,
+          36638,
+          0
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          39
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "latency_ms": 0.9,
+    "fps_derived": 1111.11,
+    "ddr_mb_per_frame": 32.419,
+    "bpu_ops_per_frame": 5670539264.0,
+    "derivation": "latency = sum of subgraph latency; fps_derived = 1000 / latency (sequential subgraph execution assumption); values from hbdk static estimation, not board measurement"
+  },
+  "similarity_provenance": {
+    "stage": "ptq-simulation",
+    "method": "hb_compile node_info.csv calibrated/quantized cosine (x86 PTQ simulation)",
+    "calibration_samples": 200,
+    "source_log": "output/hb_compile.log"
+  },
+  "performance_provenance": {
+    "stage": "compiler-static-estimate",
+    "source": "hb_compile-json",
+    "method": "hbdk-cc static latency estimate of the compiled release artifact",
+    "note": "Estimates describe the compiled artifact; on-board measurements live in the model benchmark."
+  },
+  "board_measurement": null,
+  "provenance": {
+    "artifact_sha256": "b46b194684b9d3e91789109729077e4919883328eb54af832a274a6b7d03abd7",
+    "hb_compile_log_sha256": "5e761393c0ab614d5739d109b55464849ebb328a2afb0a68e83ced2881304a6c",
+    "oe_report_json_sha256": "121b2783456de241234143fb15849becbd28110cd02c0e34b3dfae98ec4c7bab"
+  }
+}

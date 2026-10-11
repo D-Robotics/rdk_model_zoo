@@ -1280,3 +1280,636 @@ variants:
         repo_id: timm/mobilenetv4_conv_medium.e500_r224_in1k
         revision: 02a09fbfb82b289e871ba8255f9da58c056fb13b
         model_safetensors_sha256: 10f9f8057d574f71d22c52d31cadab8af0bc325841fd93939c86d45d20998cad
+- size: conv-large-256
+  model:
+    parameter_count: 32590864
+    gflops: 5.670539264
+    gflops_method: FP32 simplified ONNX static batch=1 256x256; Conv and Gemm multiply-accumulate counted
+      as 2 FLOPs; excludes activation, pooling, additions and preprocessing
+  input:
+    width: 256
+    height: 256
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 256
+      - 256
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+      geometry: PIL bicubic shorter=269, center crop=256
+  platforms:
+  - platform: x5
+    status: released
+    released_at: '2026-10-11'
+    artifact:
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv4/mobilenetv4/cls/conv-large-256/x5/mobilenetv4_conv_large_bayese_256x256_nv12.bin
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv4/mobilenetv4/cls/conv-large-256/x5/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv4/mobilenetv4/cls/conv-large-256/x5/SHA256SUMS
+      size_bytes: 30939247
+      sha256: c33b013dd058c6c41224c8f9e157a3066c5988cdf962dc49f4d0846a2d68d099
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv4/mobilenetv4/cls/conv-large-256/x5/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.7079
+        top5: 0.8915
+      runtime:
+        top1: 0.6985
+        top5: 0.8913
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 5.423405
+        observed_min_latency_ms: 5.394
+        observed_max_latency_ms: 6.191
+        aggregate_fps: 184.14165895061967
+      - threads: 2
+        average_latency_ms: 10.202227666666667
+        observed_min_latency_ms: 6.354
+        observed_max_latency_ms: 11.128
+        aggregate_fps: 195.33837979185395
+      end_to_end:
+      - tool: mobilenet_benchmark
+        implementation: native_cpp_mobilenet_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 8489.793124
+        metrics_ms:
+          preprocess:
+            mean: 8.364505495
+            p50: 8.535316
+            p95: 8.741412500000001
+            min: 7.711189
+            max: 12.927287
+          runtime:
+            mean: 5.748342806666666
+            p50: 5.746058
+            p95: 5.77323955
+            min: 5.715933
+            max: 5.899684
+          postprocess:
+            mean: 0.030494785
+            p50: 0.030458
+            p95: 0.03183605
+            min: 0.027167
+            max: 0.068
+          end_to_end:
+            mean: 14.143343086666667
+            p50: 14.31679
+            p95: 14.51909165
+            min: 13.476163
+            max: 18.850929
+        throughput_fps: 70.67310018472011
+      - tool: mobilenet_benchmark
+        implementation: native_cpp_mobilenet_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 13858.999163000002
+        metrics_ms:
+          preprocess:
+            mean: 16.608652189166666
+            p50: 9.4691105
+            p95: 51.80782195
+            min: 7.77548
+            max: 54.431695
+          runtime:
+            mean: 6.176188065833333
+            p50: 5.7333704999999995
+            p95: 8.6160053
+            min: 5.637391
+            max: 10.954781
+          postprocess:
+            mean: 0.031355485
+            p50: 0.03075
+            p95: 0.034919099999999995
+            min: 0.02775
+            max: 0.220293
+          end_to_end:
+            mean: 22.81619574
+            p50: 15.2817725
+            p95: 59.996974200000004
+            min: 13.501871
+            max: 64.382808
+        throughput_fps: 86.58633901960933
+    provenance:
+      repository_commit: 6df122234c438b7e93ee9f943c1f42f8ff5ad901
+      build_id: v4-large-256-p4-20261011-x5-attempt-01-bt601
+      source_status: clean committed tree (inputs/source-p4-6df12223.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      onnx_sha256: 0a7c7fd8523531209dd36832fc330d7aa30b8e327eaf1db347a43e93a50736d2
+      config_sha256: 7219a2505781c7ad9d89b5312c9a74f51be884f2292c58c1fc5cababf41b7836
+      campaign_sha256: a2d8c838528bcea5c127a77fa962236a8f25c19fb252a3c6361280e0ba929683
+      checkpoint:
+        repo_id: timm/mobilenetv4_conv_large.e500_r256_in1k
+        revision: 033de0bd74b5261f7339c5de242a2e4785808aa3
+        model_safetensors_sha256: 9f86412962cd3360dab5759cbbc64495fefda68f7bae44b6b3142ac5853cb266
+  - platform: s100
+    status: released
+    released_at: '2026-10-11'
+    artifact:
+      format: hbm
+      march: nash-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv4/mobilenetv4/cls/conv-large-256/s100/mobilenetv4_conv_large_nashe_256x256_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv4/mobilenetv4/cls/conv-large-256/s100/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv4/mobilenetv4/cls/conv-large-256/s100/SHA256SUMS
+      size_bytes: 34516152
+      sha256: 36f75f4edccbf6aaa57895371ae88e8c8b3479c081b98c198732cc9ccb485994
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv4/mobilenetv4/cls/conv-large-256/s100/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.7079
+        top5: 0.8915
+      runtime:
+        top1: 0.6966
+        top5: 0.8904
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.1468366666666667
+        observed_min_latency_ms: 1.113
+        observed_max_latency_ms: 1.552
+        aggregate_fps: 858.4182213574453
+      - threads: 2
+        average_latency_ms: 1.75888
+        observed_min_latency_ms: 1.452
+        observed_max_latency_ms: 2.279
+        aggregate_fps: 1119.9107057863919
+      end_to_end:
+      - tool: mobilenet_benchmark
+        implementation: native_cpp_mobilenet_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 2103.807767
+        metrics_ms:
+          preprocess:
+            mean: 2.1502733266666665
+            p50: 2.1944179999999998
+            p95: 2.227706
+            min: 1.985755
+            max: 3.94471
+          runtime:
+            mean: 1.3455869616666667
+            p50: 1.316478
+            p95: 1.6924339999999998
+            min: 1.281003
+            max: 1.76743
+          postprocess:
+            mean: 0.007035811666666667
+            p50: 0.0068
+            p95: 0.008208749999999992
+            min: 0.005825
+            max: 0.03765
+          end_to_end:
+            mean: 3.5028961000000005
+            p50: 3.5182089999999997
+            p95: 3.7311252999999995
+            min: 3.287783
+            max: 5.704464
+        throughput_fps: 285.19715984107785
+      - tool: mobilenet_benchmark
+        implementation: native_cpp_mobilenet_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 3338.062447
+        metrics_ms:
+          preprocess:
+            mean: 3.987168941666667
+            p50: 2.5397935
+            p95: 9.82826775
+            min: 1.991555
+            max: 12.360705
+          runtime:
+            mean: 1.4060517208333334
+            p50: 1.334641
+            p95: 1.7638365499999997
+            min: 1.255478
+            max: 2.513281
+          postprocess:
+            mean: 0.007593538333333333
+            p50: 0.006975
+            p95: 0.0116
+            min: 0.005475
+            max: 0.0317
+          end_to_end:
+            mean: 5.4008142008333335
+            p50: 3.9141719999999998
+            p95: 11.158641999999999
+            min: 3.301833
+            max: 13.691358
+        throughput_fps: 359.48997930774783
+    provenance:
+      repository_commit: 6df122234c438b7e93ee9f943c1f42f8ff5ad901
+      build_id: v4-large-256-p4-20261011-s100-attempt-01-bt601
+      source_status: clean committed tree (inputs/source-p4-6df12223.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: 0a7c7fd8523531209dd36832fc330d7aa30b8e327eaf1db347a43e93a50736d2
+      config_sha256: db155e7db7aa4893ce8f31dc67f3331e11916b7b990ff9ba4714c71899fb8bb1
+      campaign_sha256: a2d8c838528bcea5c127a77fa962236a8f25c19fb252a3c6361280e0ba929683
+      checkpoint:
+        repo_id: timm/mobilenetv4_conv_large.e500_r256_in1k
+        revision: 033de0bd74b5261f7339c5de242a2e4785808aa3
+        model_safetensors_sha256: 9f86412962cd3360dab5759cbbc64495fefda68f7bae44b6b3142ac5853cb266
+  - platform: s100p
+    status: released
+    released_at: '2026-10-11'
+    artifact:
+      format: hbm
+      march: nash-m
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv4/mobilenetv4/cls/conv-large-256/s100p/mobilenetv4_conv_large_nashm_256x256_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv4/mobilenetv4/cls/conv-large-256/s100p/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv4/mobilenetv4/cls/conv-large-256/s100p/SHA256SUMS
+      size_bytes: 34527680
+      sha256: dc363c87bb8e6c7c7789df2e5987f21aa096215205b73b027746c7d9a4bd31ae
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv4/mobilenetv4/cls/conv-large-256/s100p/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.7079
+        top5: 0.8915
+      runtime:
+        top1: 0.6966
+        top5: 0.8904
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.0626183333333332
+        observed_min_latency_ms: 1.038
+        observed_max_latency_ms: 1.369
+        aggregate_fps: 925.9845144523032
+      - threads: 2
+        average_latency_ms: 1.661845
+        observed_min_latency_ms: 1.29
+        observed_max_latency_ms: 2.114
+        aggregate_fps: 1187.68842181942
+      end_to_end:
+      - tool: mobilenet_benchmark
+        implementation: native_cpp_mobilenet_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1731.8597869999999
+        metrics_ms:
+          preprocess:
+            mean: 1.64875125
+            p50: 1.673476
+            p95: 1.7152272499999999
+            min: 1.514925
+            max: 3.948502
+          runtime:
+            mean: 1.22850314
+            p50: 1.2087385
+            p95: 1.49211225
+            min: 1.17775
+            max: 1.549001
+          postprocess:
+            mean: 0.005915003333333333
+            p50: 0.0057
+            p95: 0.0078
+            min: 0.004475
+            max: 0.024425
+          end_to_end:
+            mean: 2.8831693933333336
+            p50: 2.887664
+            p95: 3.091044799999999
+            min: 2.709027
+            max: 5.224152
+        throughput_fps: 346.448369841386
+      - tool: mobilenet_benchmark
+        implementation: native_cpp_mobilenet_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 2618.8376710000002
+        metrics_ms:
+          preprocess:
+            mean: 2.9693996824999997
+            p50: 1.936351
+            p95: 6.3451218
+            min: 1.527475
+            max: 11.819956
+          runtime:
+            mean: 1.2890413150000002
+            p50: 1.2316129999999998
+            p95: 1.5713172499999999
+            min: 1.165226
+            max: 2.274001
+          postprocess:
+            mean: 0.006207171666666666
+            p50: 0.0057
+            p95: 0.0091
+            min: 0.00425
+            max: 0.04025
+          end_to_end:
+            mean: 4.264648169166667
+            p50: 3.2074395
+            p95: 7.595462749999999
+            min: 2.737951
+            max: 13.378557
+        throughput_fps: 458.2185498888831
+    provenance:
+      repository_commit: 6df122234c438b7e93ee9f943c1f42f8ff5ad901
+      build_id: v4-large-256-p4-20261011-s100p-attempt-01-bt601
+      source_status: clean committed tree (inputs/source-p4-6df12223.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: 0a7c7fd8523531209dd36832fc330d7aa30b8e327eaf1db347a43e93a50736d2
+      config_sha256: 195ccfd223e60da5b0a85ebc836efcc281d82f71a456a7d5ec7d5686b4d0a801
+      campaign_sha256: a2d8c838528bcea5c127a77fa962236a8f25c19fb252a3c6361280e0ba929683
+      checkpoint:
+        repo_id: timm/mobilenetv4_conv_large.e500_r256_in1k
+        revision: 033de0bd74b5261f7339c5de242a2e4785808aa3
+        model_safetensors_sha256: 9f86412962cd3360dab5759cbbc64495fefda68f7bae44b6b3142ac5853cb266
+  - platform: s600
+    status: released
+    released_at: '2026-10-11'
+    artifact:
+      format: hbm
+      march: nash-p
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv4/mobilenetv4/cls/conv-large-256/s600/mobilenetv4_conv_large_nashp_256x256_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv4/mobilenetv4/cls/conv-large-256/s600/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv4/mobilenetv4/cls/conv-large-256/s600/SHA256SUMS
+      size_bytes: 34447744
+      sha256: b46b194684b9d3e91789109729077e4919883328eb54af832a274a6b7d03abd7
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv4/mobilenetv4/cls/conv-large-256/s600/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.7079
+        top5: 0.8915
+      runtime:
+        top1: 0.6962
+        top5: 0.8916
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.6306633333333334
+        observed_min_latency_ms: 0.615
+        observed_max_latency_ms: 0.879
+        aggregate_fps: 1552.7508274867948
+      - threads: 2
+        average_latency_ms: 0.6899
+        observed_min_latency_ms: 0.627
+        observed_max_latency_ms: 1.464
+        aggregate_fps: 2828.574257145686
+      end_to_end:
+      - tool: mobilenet_benchmark
+        implementation: native_cpp_mobilenet_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1030.52363
+        metrics_ms:
+          preprocess:
+            mean: 0.8650895699999999
+            p50: 0.863838
+            p95: 0.91680295
+            min: 0.809454
+            max: 0.969895
+          runtime:
+            mean: 0.8452547216666666
+            p50: 0.8345644999999999
+            p95: 0.8954189999999997
+            min: 0.808654
+            max: 1.097912
+          postprocess:
+            mean: 0.005389731666666667
+            p50: 0.005174
+            p95: 0.0073262499999999986
+            min: 0.00465
+            max: 0.013799
+          end_to_end:
+            mean: 1.7157340233333331
+            p50: 1.706627
+            p95: 1.7951655
+            min: 1.630207
+            max: 2.000137
+        throughput_fps: 582.2282794233452
+      - tool: mobilenet_benchmark
+        implementation: native_cpp_mobilenet_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 1180.247245
+        metrics_ms:
+          preprocess:
+            mean: 1.0482839258333334
+            p50: 0.920107
+            p95: 1.0352336
+            min: 0.818588
+            max: 7.617278
+          runtime:
+            mean: 0.8893718341666667
+            p50: 0.867902
+            p95: 1.01730825
+            min: 0.815055
+            max: 1.41834
+          postprocess:
+            mean: 0.006409679166666666
+            p50: 0.0059
+            p95: 0.00922625
+            min: 0.0049
+            max: 0.030273
+          end_to_end:
+            mean: 1.9440654391666665
+            p50: 1.7984395000000002
+            p95: 2.0642578
+            min: 1.676032
+            max: 8.51362
+        throughput_fps: 1016.7361161686083
+    provenance:
+      repository_commit: 6df122234c438b7e93ee9f943c1f42f8ff5ad901
+      build_id: v4-large-256-p4-20261011-s600-attempt-01-bt601
+      source_status: clean committed tree (inputs/source-p4-6df12223.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: 0a7c7fd8523531209dd36832fc330d7aa30b8e327eaf1db347a43e93a50736d2
+      config_sha256: 0a8e6f7d5e4ccc0e7fd4676d4c583031cbe5e3856078d469ec2ff74c3fa5d6f1
+      campaign_sha256: a2d8c838528bcea5c127a77fa962236a8f25c19fb252a3c6361280e0ba929683
+      checkpoint:
+        repo_id: timm/mobilenetv4_conv_large.e500_r256_in1k
+        revision: 033de0bd74b5261f7339c5de242a2e4785808aa3
+        model_safetensors_sha256: 9f86412962cd3360dab5759cbbc64495fefda68f7bae44b6b3142ac5853cb266
