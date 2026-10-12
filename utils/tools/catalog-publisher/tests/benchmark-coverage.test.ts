@@ -230,8 +230,11 @@ describe("audited benchmark coverage", () => {
 
     expect(unet?.source.section).toBe("## Reference Results");
     expect(unet?.performance?.every(
-      (metric) => metric.scope?.includes("historical earlier ResNet18 checkpoint")
-        && metric.scope.includes("current board revalidation pending")
+      (metric) => metric.scope?.includes("earlier ResNet18 checkpoint")
+        && metric.scope.includes("hrt_model_exec")
+        && metric.scope.includes("one thread")
+        && metric.scope.includes("200 frames")
+        && metric.scope.includes("packed NV12 input")
     )).toBe(true);
   });
 

@@ -117,7 +117,7 @@ describe("X5 published evidence", () => {
       .every((record) => record.accuracy?.every((metric) => metric.scope?.includes("not current download revalidation"))))
       .toBe(true);
     expect(records.filter((record) => record.id.includes("release-reference"))
-      .every((record) => record.accuracy?.every((metric) => metric.scope?.includes("board runtime pending"))))
+      .every((record) => record.accuracy?.every((metric) => metric.scope?.includes("host-only results"))))
       .toBe(true);
   });
 
