@@ -90,6 +90,12 @@ identity and reason.
   nlohmann-json, gflags, iconv, pkg-config and Git with the full clone history
   for declared pins.
 - libsndfile and libsamplerate for the default ASR audio and CLI tests.
+- liblz4 for the LiteAvatar background-cache tests, loaded through the
+  production `ctypes` library-discovery path: `liblz4-1` on Ubuntu;
+  `brew install lz4` on macOS, where a python.org interpreter additionally
+  needs `DYLD_LIBRARY_PATH="$(brew --prefix lz4)/lib"` because ctypes
+  discovery does not search Homebrew. The workflow probes this exact path
+  before the suites run.
 - Node.js 22.12 or newer and below 23, plus `npm ci` in
   `utils/tools/catalog-publisher`.
 

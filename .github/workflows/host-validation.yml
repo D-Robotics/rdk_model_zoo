@@ -68,12 +68,48 @@ jobs:
             libgflags-dev \
             nlohmann-json3-dev \
             libsndfile1-dev \
-            libsamplerate0-dev
+            libsamplerate0-dev \
+            liblz4-1
       - name: Install native host dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
           brew install cmake pkg-config opencv gflags nlohmann-json \
-            libsndfile libsamplerate
+            libsndfile libsamplerate lz4
+          # The LiteAvatar tests load liblz4 through ctypes discovery, which
+          # does not search Homebrew on the python.org interpreter. Publish
+          # the brew libdir as an ORDINARY variable: SIP strips DYLD_* when
+          # the runner launches the protected /bin/bash of each step, so a
+          # DYLD_* value stored here would not survive. Steps that launch
+          # Python (the probe and the host run) export DYLD_LIBRARY_PATH
+          # themselves, right before Python starts, from this variable.
+          echo "LZ4_LIBDIR=$(brew --prefix lz4)/lib" >> "$GITHUB_ENV"
+      - name: Probe native liblz4 (production loader path, fail fast)
+        run: |
+          if [ "$(uname)" = "Darwin" ] && [ -n "${LZ4_LIBDIR:-}" ]; then
+            export DYLD_LIBRARY_PATH="${LZ4_LIBDIR}${DYLD_LIBRARY_PATH:+:${DYLD_LIBRARY_PATH}}"
+          fi
+          python - <<'PY'
+          import ctypes
+          import ctypes.util
+          import sys
+
+          path = ctypes.util.find_library("lz4")
+          if path is None:
+              sys.exit(
+                  "liblz4 is not discoverable via ctypes.util.find_library; "
+                  "install it (Ubuntu: liblz4-1; macOS: brew lz4 with "
+                  "DYLD_LIBRARY_PATH=\"$(brew --prefix lz4)/lib\" exported by "
+                  "the launching shell) before the LiteAvatar background-cache "
+                  "tests run"
+              )
+          lib = ctypes.CDLL(path)
+          lib.LZ4_compressBound.argtypes = [ctypes.c_int]
+          lib.LZ4_compressBound.restype = ctypes.c_int
+          bound = lib.LZ4_compressBound(64)
+          if bound <= 64:
+              sys.exit(f"liblz4 at {path} has an unusable LZ4_compressBound: {bound}")
+          print(f"liblz4 OK: {path} (LZ4_compressBound(64) = {bound})")
+          PY
       - name: Install core Python host dependencies
         run: python -m pip install -r utils/tools/host_validation/requirements.txt
       - name: Set up Node.js
@@ -87,10 +123,17 @@ jobs:
       - name: Run host validation
         env:
           HOST_VALIDATION_OUTPUT: ${{ runner.temp }}/host-validation-report
-        run: >
-          python utils/tools/host_validation/run.py
-          --repo "$GITHUB_WORKSPACE"
-          --report "$HOST_VALIDATION_OUTPUT/report.json"
+        run: |
+          # Re-export the brew liblz4 dir for this step's Python: SIP strips
+          # DYLD_* from the protected step shell, so the value must be set
+          # here, not inherited through GITHUB_ENV (see the macOS install
+          # step). run.py and its worker subprocesses inherit it unchanged.
+          if [ "$(uname)" = "Darwin" ] && [ -n "${LZ4_LIBDIR:-}" ]; then
+            export DYLD_LIBRARY_PATH="${LZ4_LIBDIR}${DYLD_LIBRARY_PATH:+:${DYLD_LIBRARY_PATH}}"
+          fi
+          python utils/tools/host_validation/run.py \
+            --repo "$GITHUB_WORKSPACE" \
+            --report "$HOST_VALIDATION_OUTPUT/report.json"
       - name: Upload host validation report
         if: always()
         uses: actions/upload-artifact@v4

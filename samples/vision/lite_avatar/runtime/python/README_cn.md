@@ -60,6 +60,11 @@ PATH 上的 `ffmpeg` 对**两种**编码器的视频输出都是必需的——�
 `encoder_worker.py` 同样经由 ffmpeg 把 H.264 码流与音频混流；
 `--no-encode` 不需要它。
 
+渲染器的背景缓存经 `ctypes` 库发现加载系统 liblz4：板端镜像自带
+（S100 已验证），Ubuntu 主机由 `liblz4-1` 包提供，macOS 主机
+`brew install lz4`（python.org 解释器还需
+`DYLD_LIBRARY_PATH="$(brew --prefix lz4)/lib"`）。
+
 x86 导出/校准主机使用另一套配方（`torch==2.3.1+cpu` 轮子），见
 [转换文档](../../conversion/README_cn.md#toolchain-targets)。`--help`、
 `--list-models` 与 `--dry-run` 在任意工作站上无需板端包即可运行。

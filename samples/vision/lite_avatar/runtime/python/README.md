@@ -63,6 +63,12 @@ software writer pipes raw frames into an ffmpeg libx264 process, and the
 hardware path's bundled `encoder_worker.py` muxes the H.264 stream with
 the audio through ffmpeg; `--no-encode` runs without it.
 
+The renderer's background cache loads the system liblz4 through `ctypes`
+library discovery: the board image provides it (verified on S100), Ubuntu
+hosts provide it via the `liblz4-1` package, and a macOS host needs
+`brew install lz4` (a python.org interpreter additionally needs
+`DYLD_LIBRARY_PATH="$(brew --prefix lz4)/lib"`).
+
 The x86 export/calibration host uses a separate recipe
 (`torch==2.3.1+cpu` wheels): see
 [conversion](../../conversion/README.md#toolchain-targets). `--help`,
