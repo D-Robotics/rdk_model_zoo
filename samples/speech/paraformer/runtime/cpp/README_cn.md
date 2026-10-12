@@ -80,8 +80,9 @@ PYTHON=python bash samples/speech/paraformer/runtime/cpp/run.sh --list-models
 PYTHON=python bash samples/speech/paraformer/runtime/cpp/run.sh --target s100 --dry-run
 ```
 
-激活 FunASR 解释器后，准备内置两份 WAV 特征。此 CPU 步骤不需要板卡或模型文件，
-输出目录必须是新目录：
+激活 FunASR 解释器后，准备内置两份 WAV 特征。此 CPU 步骤不需要板卡，也
+不需要下载阶段模型；音频预处理读取固定不变的 CMVN 文件 `model/am.mvn`，
+该文件随检出仓库内置，并按记录的 SHA-256 校验。输出目录必须是新目录：
 
 ```bash
 python samples/speech/paraformer/runtime/python/main.py --target s100 --preprocess-only --output-dir outputs/paraformer_features

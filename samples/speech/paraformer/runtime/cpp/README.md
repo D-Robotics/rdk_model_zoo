@@ -85,7 +85,9 @@ PYTHON=python bash samples/speech/paraformer/runtime/cpp/run.sh --target s100 --
 ```
 
 With the FunASR interpreter active, prepare the two bundled WAVs. This CPU step
-works without a board or model files. The output directory must be new:
+works without a board or downloaded stage models; audio preprocessing reads the
+pinned CMVN file `model/am.mvn`, which is bundled with the checkout and checked
+against its recorded SHA-256. The output directory must be new:
 
 ```bash
 python samples/speech/paraformer/runtime/python/main.py --target s100 --preprocess-only --output-dir outputs/paraformer_features

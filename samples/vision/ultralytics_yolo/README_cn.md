@@ -37,8 +37,12 @@ ultralytics_yolo/
 | Python other published scales/tasks | supported | supported | supported | supported |
 | Python YOLOv9 seg c/e | supported | supported | supported | not-supported |
 | Python YOLOv13 detect n/s/l/x | supported | not-supported | not-supported | not-supported |
-| C++ detect/classify/pose/segment reference contracts | supported | supported | supported | supported |
-| C++ OBB | not-supported | not-supported | not-supported | not-supported |
+| C++ detect / classify | supported | supported | supported | supported |
+| C++ segment / pose（YOLOv8/11/26 n/s/m/l/x） | 不兼容（已发布制品）* | supported | supported | supported |
+| C++ segment YOLOv9c/e | 不兼容（已发布制品）* | supported | supported | not-supported |
+| C++ obb（YOLO26 n/s/m/l/x） | 不兼容（已发布制品）* | supported | supported | supported |
+
+\* X5 上已发布的分割、姿态和旋转框 `.bin` 制品——分割 YOLOv8/11/26 n/s/m/l/x 与 YOLOv9c/e、姿态 YOLOv8/11/26 n/s/m/l/x、旋转框 YOLO26 n/s/m/l/x——无法通过 C++ 运行时的输出绑定（`Task output requires NHWC aligned geometry.`）。这些已发布制品请用上方 Python 运行时运行，或绑定未量化 FLOAT32 NHWC 输出的本地导出模型。YOLOv10 检测（无 NMS 接口）同样使用 Python 入口。详见 [C++ 输出契约](runtime/cpp/README_cn.md)。
 
 Python 发布组合详见 [模型清单](model/README_cn.md)：YOLOv5u/v10/12 为检测；YOLOv8/11 为 detect/seg/pose/cls；YOLOv9 分割仅 c/e，S600 无 t 检测及分割；YOLOv13 仅 X5。YOLO26 每个目标发布 25 个资产（五任务 × n/s/m/l/x）。C++ 支持范围及输入/head 契约见 [C++ 指南](runtime/cpp/README_cn.md)。
 

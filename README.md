@@ -40,14 +40,14 @@ The repository includes BPU-ready models across multiple AI domains and provides
 
 ### Hardware & System Support
 
-This `develop` branch is the unified source for all current boards: every sample selects its target at run time with `--target auto|x5|s100|s100p|s600`, and the per-sample README states which boards its published artifacts support. Platform artifacts are recorded in the manifests under `docs/release/x5/` and `docs/release/s/`. The `rdk_x5` and `rdk_s` branches are per-board delivery lines; RDK X3 material is archived on `rdk_x3`.
+The `samples/` tree is the unified source for all maintained boards. Choose the runtime and model for your board inside each sample: Python entries select the target with the `--target` or `--platform` option their README documents, native C++ entries take the arguments their README documents, and each README states which boards its published artifacts support. Platform artifacts are recorded in the manifests under `docs/release/x5/` and `docs/release/s/`. The `rdk_x5` and `rdk_s` branches are per-board delivery lines; RDK X3 material is archived on `rdk_x3`.
 
 | Target Hardware | Where | Description |
 | :--- | :--- | :--- |
-| RDK X5 | this branch, `--target x5` | Recommended system version: RDK OS >= 3.5.0, based on Ubuntu 22.04 aarch64 and TROS-Humble. |
-| RDK S100 | this branch, `--target s100` | Nash-E artifacts published under `docs/release/s/`. |
-| RDK S100P | this branch, `--target s100p` | Nash-M artifacts published under `docs/release/s/`. |
-| RDK S600 | this branch, `--target s600` | Nash-P artifacts published under `docs/release/s/`. |
+| RDK X5 | `samples/` tree, model target `x5` | Recommended system version: RDK OS >= 3.5.0, based on Ubuntu 22.04 aarch64 and TROS-Humble. |
+| RDK S100 | `samples/` tree, model target `s100` | Nash-E artifacts published under `docs/release/s/`. |
+| RDK S100P | `samples/` tree, model target `s100p` | Nash-M artifacts published under `docs/release/s/`. |
+| RDK S600 | `samples/` tree, model target `s600` | Nash-P artifacts published under `docs/release/s/`. |
 | Per-board delivery lines | [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) / [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | Board-specific release branches. |
 | RDK X3 (archive) | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | Historical archive only, not an adaptation target. |
 
@@ -161,6 +161,8 @@ python3 main.py \
 ---
 
 ## Model List
+
+The table lists each model family with its platforms and available models; choose the Python or C++ runtime and a compatible model artifact in each sample's support table.
 
 | Category | Model Name | Model Path | Supported Platform | Details |
 | :--- | :--- | :--- | :--- | :---: |

@@ -51,6 +51,27 @@ target; the same source compiles against both stacks.
 | classify | One unquantized FLOAT32 vector of 1000 logits | Stride-aware Top-5, no result image |
 | obb | YOLO26 direct-LTRB boxes plus a per-cell angle, nine outputs | Square stride-32 input, DOTA classes (default 15) |
 
+Published-artifact compatibility by board:
+
+| Task | X5 published `.bin` | S100 / S100P / S600 published `.hbm` |
+|---|---|---|
+| detect | supported | supported |
+| classify | supported | supported |
+| segment | not compatible (see note) | supported: YOLOv8 / YOLO11 / YOLO26 n/s/m/l/x, YOLOv9c/e (S100/S100P) |
+| pose | not compatible (see note) | supported: YOLOv8 / YOLO11 / YOLO26 n/s/m/l/x |
+| obb | not compatible (see note) | supported: YOLO26 n/s/m/l/x |
+
+On X5, the published segmentation, pose and oriented-box `.bin` artifacts —
+segment YOLOv8 / YOLO11 / YOLO26 n/s/m/l/x and YOLOv9c/e, pose YOLOv8 /
+YOLO11 / YOLO26 n/s/m/l/x, OBB YOLO26 n/s/m/l/x — fail this runtime's output
+binding: their task outputs do not expose the static rank-four unquantized
+FLOAT32 NHWC geometry the reader requires, and the program exits with
+`Task output requires NHWC aligned geometry.` Detect and classify artifacts
+are unaffected. Run X5 segmentation, pose and OBB through the
+[Python runtime](../python/README.md), or bind a locally exported model
+that keeps unquantized FLOAT32 NHWC task outputs as required by the output
+contracts below.
+
 Custom class/model layouts must match the labels and dimensions expected by
 the selected task. Use the linked Python entry for the YOLOv10 NMS-free task
 interface.
@@ -104,6 +125,8 @@ bash runtime/cpp/run.sh --task detect \
 For the other tasks, first prepare the corresponding artifact using
 [model instructions](../../model/README.md), then pass actual paths. S
 requires matching-march `.hbm` files; renaming X5 files does not convert them.
+On X5, use the Python entry for the published segment/pose/obb artifacts
+(see [Supported protocols](#supported-boards)).
 
 ```bash
 runtime/cpp/run.sh --task classify /models/classification.bin test_data/zebra_cls.jpg

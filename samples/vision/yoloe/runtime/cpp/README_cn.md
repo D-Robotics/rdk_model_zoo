@@ -30,12 +30,12 @@ cpp/
 
 | 目标 | 变体 / 默认值 | 模型前提 | 支持 |
 | --- | --- | --- | --- |
-| X5 | 11s/m/l；默认 11s | 已发布的浮点输出 BIN，匹配 X5 SDK | 支持 |
+| X5 | 11s/m/l；默认 11s | 自行转换、满足 NHWC 输出契约的浮点输出模型，显式提供 SHA-256 | 支持 |
 | S100 | 11s、26n/s/m/l/x；默认 11s | 自行转换的浮点输出 HBM，显式提供 SHA-256 | 支持 |
 | S100P | 26n/s/m/l/x；默认 26n | 自行转换的浮点输出 HBM，显式提供 SHA-256 | 支持 |
 | S600 | 无 | 无发布路线，显式拒绝 | 不支持 |
 
-14 个发布身份用于模型选择。S 已发布文件的输出为量化数据，本入口加载浮点输出；通过[转换流程](../../conversion/README_cn.md)准备 S 浮点制品，文件命名需与实际契约一致。
+已发布制品请在匹配板卡上通过 [Python 运行时](../python/README_cn.md)运行：X5 已发布 11s/m/l BIN 无法通过本入口的输出绑定（`Task output requires NHWC aligned geometry.`），S 已发布 HBM 的输出为量化数据。本入口运行自行转换、十个输出均为未量化 FLOAT32 NHWC 的模型——请通过[转换流程](../../conversion/README_cn.md)准备并记录其 SHA-256；重命名量化文件不会改变其契约。14 个发布身份仍是模型选择键；本地转换模型的发布身份即其架构参考。
 
 ## 选择、构建与运行
 
@@ -51,15 +51,13 @@ bash samples/vision/yoloe/runtime/cpp/run.sh --target s100p --variant 26n --dry-
 
 Dry-run 必须显式指定 target，`executed`、`downloaded`、`runtime_metadata_verified` 始终为 false。S 发布制品会提示需要先完成本地浮点转换才能执行。
 
-在具备匹配 SDK 和 C++ 依赖的 X5 上，先显式下载模型，再构建运行。板端命令：
-
-```sh
-python3 samples/vision/yoloe/model/download.py --target x5 --variant 11s
-bash samples/vision/yoloe/runtime/cpp/run.sh --target x5 --variant 11s \
-  --build --output outputs/yoloe_cpp_x5_11s_run1
-```
-
-S 侧先执行转换流程并保留记录，使用转换记录中的预期摘要。将下面两个占位符换为真实制品路径及其 64 位十六进制 SHA-256：
+在具备匹配 SDK 和 C++ 依赖的 X5 上，已发布的 11s/m/l BIN 无法通过本入口的
+输出绑定，运行这些制品请使用 Python 运行时（`python3
+samples/vision/yoloe/runtime/python/main.py --target x5 --variant 11s`）。
+本原生入口只绑定十个输出均为未量化 FLOAT32 NHWC 的模型，因此在 X5——与
+S 一样——先执行转换流程并保留记录，使用转换记录中的预期摘要。将下面两个
+占位符换为真实制品路径及其 64 位十六进制 SHA-256，并使用匹配的 target 与
+variant：
 
 ```sh
 bash samples/vision/yoloe/runtime/cpp/run.sh --target s100p --variant 26n \
@@ -68,7 +66,7 @@ bash samples/vision/yoloe/runtime/cpp/run.sh --target s100p --variant 26n \
   --build --output outputs/yoloe_cpp_s100p_26n_run1
 ```
 
-摘要绑定本地字节，不证明转换来源或 SDK 兼容性；十个输出仍需通过运行时 metadata 检查。本目录不提供兼容的 S 浮点 HBM。启动器不隐式下载、不提供板卡身份覆盖，也不静默回退 target。
+传入转换后的模型及其 SHA-256，并选择匹配的 target 和 variant。模型的十个输出张量须满足 FLOAT32 NHWC 契约。S 浮点输出 HBM 按[转换流程](../../conversion/README_cn.md)准备；在匹配板卡上使用 `--build` 构建原生程序。
 
 `--build` 配置 Release 构建，生成 `runtime/cpp/build/<target>/yoloe_demo`；不传则使用该位置的现有程序。自行构建时传 `--binary /absolute/path/yoloe_demo`，不能同时传 `--build`。在匹配的 SDK 环境中可显式配置依赖位置：
 

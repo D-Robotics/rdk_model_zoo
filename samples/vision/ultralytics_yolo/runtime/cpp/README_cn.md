@@ -50,6 +50,25 @@ S100/S100P/S600 使用 split Y/UV `.hbm` 输入。每个板端目标构建一次
 | classify | 单个未量化 FLOAT32 1000 logits 向量 | 按步长取 Top-5，无结果图 |
 | obb | YOLO26 直接 LTRB 框加逐单元角度，九个输出 | 方形 stride-32 输入，DOTA 类别（默认 15） |
 
+按板卡区分的发布制品兼容性：
+
+| 任务 | X5 发布 `.bin` | S100 / S100P / S600 发布 `.hbm` |
+|---|---|---|
+| detect | 支持 | 支持 |
+| classify | 支持 | 支持 |
+| segment | 不兼容（见说明） | 支持：YOLOv8 / YOLO11 / YOLO26 n/s/m/l/x，YOLOv9c/e（S100/S100P） |
+| pose | 不兼容（见说明） | 支持：YOLOv8 / YOLO11 / YOLO26 n/s/m/l/x |
+| obb | 不兼容（见说明） | 支持：YOLO26 n/s/m/l/x |
+
+在 X5 上，已发布的分割、姿态和旋转框 `.bin` 制品——分割 YOLOv8 /
+YOLO11 / YOLO26 n/s/m/l/x 与 YOLOv9c/e、姿态 YOLOv8 / YOLO11 / YOLO26
+n/s/m/l/x、旋转框 YOLO26 n/s/m/l/x——无法通过本运行时的输出绑定：其
+任务输出不满足读取端要求的静态四维未量化 FLOAT32 NHWC 几何，程序以
+`Task output requires NHWC aligned geometry.` 退出。detect 与 classify
+制品不受影响。X5 的分割、姿态和 OBB 请通过
+[Python 运行时](../python/README_cn.md)运行，或绑定保留未量化 FLOAT32 NHWC
+任务输出的本地导出模型（要求见下方输出契约）。
+
 自定义类别/模型布局必须与所选任务的标签和维度匹配。YOLOv10 无 NMS 任务
 接口请使用链接的 Python 入口。
 
@@ -99,6 +118,8 @@ bash runtime/cpp/run.sh --task detect \
 
 其他任务请先按[模型说明](../../model/README_cn.md)准备对应制品，再传入
 实际路径。S 需要匹配 march 的 `.hbm` 文件；重命名 X5 文件不能完成转换。
+在 X5 上，segment/pose/obb 的已发布制品请使用 Python 入口
+（见[支持的协议](#supported-boards)）。
 
 ```bash
 runtime/cpp/run.sh --task classify /models/classification.bin test_data/zebra_cls.jpg

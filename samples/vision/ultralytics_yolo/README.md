@@ -37,8 +37,12 @@ States distinguish task and language. `supported` marks combinations with a publ
 | Python other published scales/tasks | supported | supported | supported | supported |
 | Python YOLOv9 seg c/e | supported | supported | supported | not-supported |
 | Python YOLOv13 detect n/s/l/x | supported | not-supported | not-supported | not-supported |
-| C++ detect/classify/pose/segment reference contracts | supported | supported | supported | supported |
-| C++ OBB | not-supported | not-supported | not-supported | not-supported |
+| C++ detect / classify | supported | supported | supported | supported |
+| C++ segment / pose (YOLOv8/11/26 n/s/m/l/x) | not compatible (published artifacts)* | supported | supported | supported |
+| C++ segment YOLOv9c/e | not compatible (published artifacts)* | supported | supported | not-supported |
+| C++ obb (YOLO26 n/s/m/l/x) | not compatible (published artifacts)* | supported | supported | supported |
+
+\* On X5 the published segmentation, pose and oriented-box `.bin` artifacts — segment YOLOv8/11/26 n/s/m/l/x and YOLOv9c/e, pose YOLOv8/11/26 n/s/m/l/x, OBB YOLO26 n/s/m/l/x — fail the C++ runtime's output binding (`Task output requires NHWC aligned geometry.`). Run those published artifacts with the Python runtime above, or bind a locally exported model with unquantized FLOAT32 NHWC outputs. YOLOv10 detection (NMS-free interface) also runs through the Python entry. Details in the [C++ output contracts](runtime/cpp/README.md).
 
 See the [model inventory](model/README.md) for published combinations: YOLOv5u/v10/12 detection; YOLOv8/11 detect/seg/pose/cls; YOLOv9 segmentation only c/e, with no t detection or segmentation on S600; YOLOv13 X5 only. YOLO26 has 25 assets per target (five tasks × n/s/m/l/x). C++ scope follows its [input/head contracts and limitations](runtime/cpp/README.md).
 

@@ -30,12 +30,12 @@ cpp/
 
 | Target | Variants / default | Model requirement | Support |
 | --- | --- | --- | --- |
-| X5 | 11s/m/l; default 11s | Published floating-output BIN, matching X5 SDK | supported |
+| X5 | 11s/m/l; default 11s | Locally converted floating-output model meeting the NHWC output contract, with explicit SHA-256 | supported |
 | S100 | 11s, 26n/s/m/l/x; default 11s | Locally converted floating-output HBM with explicit SHA-256 | supported |
 | S100P | 26n/s/m/l/x; default 26n | Locally converted floating-output HBM with explicit SHA-256 | supported |
 | S600 | None | No published route; explicitly rejected | not-supported |
 
-The 14 publication identities describe model selection, **not 14 runnable native artifacts**. Published S files have quantized outputs and are rejected by this entry. Use the [conversion workflow](../../conversion/README.md) to prepare floating outputs; renaming a quantized file does not change its contract.
+Published artifacts run through the [Python runtime](../python/README.md) on their matching targets: the published X5 11s/m/l BINs fail this entry's output binding (`Task output requires NHWC aligned geometry.`), and the published S HBMs have quantized outputs. This entry runs locally converted models whose ten outputs are unquantized FLOAT32 NHWC — prepare them with the [conversion workflow](../../conversion/README.md), record their SHA-256, and note that renaming a quantized file does not change its contract. The 14 publication identities remain the model-selection keys; for a locally converted model the identity names its architecture reference.
 
 ## Select, build and run
 
@@ -51,15 +51,14 @@ bash samples/vision/yoloe/runtime/cpp/run.sh --target s100p --variant 26n --dry-
 
 A dry-run requires an explicit target. Its `executed`, `downloaded` and `runtime_metadata_verified` fields stay false. S publications report that a local floating-output conversion is required before execution.
 
-On an X5 with its matching SDK and C++ dependencies, explicitly download the model, then build and run. Run the following commands on that board:
-
-```sh
-python3 samples/vision/yoloe/model/download.py --target x5 --variant 11s
-bash samples/vision/yoloe/runtime/cpp/run.sh --target x5 --variant 11s \
-  --build --output outputs/yoloe_cpp_x5_11s_run1
-```
-
-For S, first run the conversion workflow and take the expected digest from its recorded evidence. Replace both placeholders below with the actual artifact path and its 64 hexadecimal SHA-256 digits:
+On an X5 with its matching SDK and C++ dependencies, the published 11s/m/l
+BINs are rejected by this entry's output binding, so running them stays with
+the Python runtime (`python3 samples/vision/yoloe/runtime/python/main.py
+--target x5 --variant 11s`). The native entry binds only models whose ten
+outputs are unquantized FLOAT32 NHWC, so on X5 — as on S — first run the
+conversion workflow and take the expected digest from its recorded evidence.
+Replace both placeholders below with the actual artifact path and its 64
+hexadecimal SHA-256 digits, using the matching target and variant:
 
 ```sh
 bash samples/vision/yoloe/runtime/cpp/run.sh --target s100p --variant 26n \
@@ -68,7 +67,7 @@ bash samples/vision/yoloe/runtime/cpp/run.sh --target s100p --variant 26n \
   --build --output outputs/yoloe_cpp_s100p_26n_run1
 ```
 
-The SHA binds the local bytes for selection. All ten output tensors must still pass runtime metadata checks, and conversion provenance/SDK compatibility is established by those checks plus a board run. Prepare S floating-output HBMs yourself via [conversion](../../conversion/README.md). The launcher never downloads implicitly and has no hardware-identity override or silent target fallback.
+Provide the converted model and its SHA-256 with the matching target and variant. Its ten output tensors must satisfy the FLOAT32 NHWC contract. Prepare S floating-output HBMs using the [conversion workflow](../../conversion/README.md). Use `--build` to build the native executable on the matching board.
 
 `--build` configures Release mode and creates `runtime/cpp/build/<target>/yoloe_demo`; without it, the existing executable at that path is used. Use `--binary /absolute/path/yoloe_demo` for a separately built executable; it cannot be combined with `--build`. To configure SDK discovery explicitly on a matching SDK installation:
 

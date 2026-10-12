@@ -40,14 +40,14 @@
 
 ### 硬件与系统支持
 
-当前 `develop` 分支是所有在维护板卡的统一源：每个 Sample 在运行时通过其文档声明的 `--target` / `--platform` 可选项选择目标板，各 Sample README 说明其发布制品支持的板卡；平台制品清单记录在 `docs/release/x5/` 与 `docs/release/s/`。`rdk_x5` 与 `rdk_s` 分支为分板卡交付线，RDK X3 资料归档在 `rdk_x3`。
+`samples/` 目录是所有在维护板卡的统一源。请在每个 Sample 中按板卡选择运行时与模型：Python 入口使用其 README 声明的 `--target` 或 `--platform` 选项选择目标板，原生 C++ 入口使用其 README 声明的参数，各 README 同时说明其发布制品支持的板卡。平台制品清单记录在 `docs/release/x5/` 与 `docs/release/s/`。`rdk_x5` 与 `rdk_s` 分支为分板卡交付线，RDK X3 资料归档在 `rdk_x3`。
 
 | 目标硬件 | 获取方式 | 说明 |
 | :--- | :--- | :--- |
-| RDK X5 | 本分支，`--target x5` | 推荐系统版本为 RDK OS >= 3.5.0，系统基于 Ubuntu 22.04 aarch64 和 TROS-Humble。 |
-| RDK S100 | 本分支，`--target s100` | Nash-E 制品发布于 `docs/release/s/`。 |
-| RDK S100P | 本分支，`--target s100p` | Nash-M 制品发布于 `docs/release/s/`。 |
-| RDK S600 | 本分支，`--target s600` | Nash-P 制品发布于 `docs/release/s/`。 |
+| RDK X5 | `samples/` 目录，模型目标 `x5` | 推荐系统版本为 RDK OS >= 3.5.0，系统基于 Ubuntu 22.04 aarch64 和 TROS-Humble。 |
+| RDK S100 | `samples/` 目录，模型目标 `s100` | Nash-E 制品发布于 `docs/release/s/`。 |
+| RDK S100P | `samples/` 目录，模型目标 `s100p` | Nash-M 制品发布于 `docs/release/s/`。 |
+| RDK S600 | `samples/` 目录，模型目标 `s600` | Nash-P 制品发布于 `docs/release/s/`。 |
 | 分板卡交付线 | [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) / [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | 按板卡发布的交付分支。 |
 | RDK X3（归档） | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | 仅作历史归档，不再作为适配目标。 |
 
@@ -165,6 +165,8 @@ python3 main.py \
 
 ## 模型列表
 
+下表列出各模型家族及其平台与可用模型；请在各样例的支持表中选择 Python 或 C++ 运行时及兼容的模型制品。
+
 | 类别 | 模型名称 | 模型路径 | 支持平台 | 详情 |
 | :--- | :--- | :--- | :--- | :---: |
 | 视频动作分类 | 3D ResNet | `samples/vision/3dresnet` | RDK S100 | [详情](./samples/vision/3dresnet) |
@@ -219,7 +221,7 @@ python3 main.py \
 | 视觉-语言模型 | Gemma4-E2B（原生 C++） | `samples/llm/gemma4-e2b` | RDK S100P / RDK S600 | [详情](./samples/llm/gemma4-e2b) |
 | 文本生成 | MiniCPM5-2B (native C++) | `samples/llm/minicpm5-2b` | RDK S100P / RDK S600 | [详情](./samples/llm/minicpm5-2b) |
 
-上游 VLA 集成（ACT 与 Pi0）另外以固定 Git 子模块形式提供于 `samples/vla/`，集成范围见 [VLA 总览](./samples/vla/README.md)。
+上游 VLA 集成（ACT 与 Pi0）另外以固定 Git 子模块形式提供于 `samples/vla/`，集成范围见 [VLA 总览](./samples/vla/README_cn.md)。
 
 ## 文档说明与学习资源
 
@@ -228,7 +230,7 @@ python3 main.py \
 - **模型说明**
   - 每个模型目录下的 `README.md` / `README_cn.md` 都包含整体介绍、运行方法和目录说明。
 - **源码参考**
-  - 如需了解代码级接口说明，请参考 **[源码文档说明](./docs/source_reference/README.md)**。
+  - 如需了解代码级接口说明，请参考 **[源码文档说明](./docs/source_reference/README_cn.md)**。
 - **开发规范**
   - 如需新增或开发 Sample，请先阅读 **[Model Zoo 仓库规范指南](./docs/Model_Zoo_Repository_Guidelines.md)**。
 - **Runtime 标准**

@@ -35,6 +35,22 @@ Unified source 2.0.0: X5 and S samples maintained in one `develop` tree.
   generated from (`sources.json` `link_ref: "HEAD"` resolved by the loader);
   artifact links are `blob/<full-commit>/...`, never `/tree/HEAD` or a
   branch name.
+- Native C++ reference runtimes ship beside the Python entries for the
+  delivered samples (Ultralytics YOLO five-task executable, YOLOE E11/E26,
+  Paraformer three-stage pipeline, ResNet, PaddleOCR, MobileNetV2, YOLOv5,
+  YOLO26-Depth, ASR, LaneNet, UNet-MobileNet, HIMLoco; Gemma4-E2B and
+  MiniCPM5-2B remain native-only). Each C++ runtime states its own
+  board/artifact compatibility in its README: the published X5
+  segmentation/pose/OBB `.bin` artifacts run through the Python entry, and
+  the YOLOE C++ entry runs locally converted unquantized-FLOAT32 models
+  while its published artifacts run through the Python entry.
+- Linux CI fixes: the YOLO C++ host-test fixtures resolve the correct SDK
+  header include paths, the Python host-test mocks are compatible with
+  Python 3.10, and the ResNet/PaddleOCR C++ sources include the SDK status
+  headers their board toolchains require.
+- Delivered-file cleanup: generated conversion-toolchain logs are removed
+  from the repository, and the README support tables describe per-runtime
+  published-artifact compatibility.
 
 ---
 
