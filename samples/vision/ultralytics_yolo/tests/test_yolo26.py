@@ -83,6 +83,8 @@ class Yolo26Contracts(unittest.TestCase):
                     self.assertEqual(model.export.call_args.kwargs['opset'],opset)
                     self.assertEqual(model.export.call_args.kwargs['simplify'],simplify)
                     self.assertIs(model.export.call_args.kwargs['dynamic'],False)
+                    if task != 'cls':
+                        self.assertIs(model.export.call_args.kwargs.get('nms'), False)
                     adapt.assert_called_once_with('output.onnx',task)
                     adapt.reset_mock()
             with patch.dict(sys.modules,modules),patch.object(sys,'argv',['export','--pt=mock.pt','--output','output.onnx','--platform','s600','--opset','17','--simplify','1']),patch.object(module,'adapt_calibration_batch8') as adapt:

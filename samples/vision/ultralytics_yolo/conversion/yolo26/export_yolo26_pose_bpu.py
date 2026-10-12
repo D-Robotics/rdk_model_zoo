@@ -86,7 +86,8 @@ def export_pose_bpu(model_path: str, output_name: str='yolo26_pose_bpu.onnx', im
     Pose.forward = bpu_pose_forward
     print(f'Starting export (imgsz={imgsz})...')
     try:
-        exported_path = model.export(format='onnx', imgsz=imgsz, dynamic=False, opset=opset, simplify=simplify)
+        # Keep one-to-one weights before Ultralytics fuses away the unused head.
+        exported_path = model.export(format='onnx', imgsz=imgsz, dynamic=False, opset=opset, simplify=simplify, nms=False)
     except Exception as e:
         print(f'Export exception: {e}')
         raise RuntimeError('YOLO26 export failed; see preceding error')

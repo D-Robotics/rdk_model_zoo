@@ -89,7 +89,8 @@ def export_seg_bpu(model_path: str, output_name: str='yolo26_seg_bpu.onnx', imgs
     Segment.forward = bpu_segment_forward
     print(f'Starting export (imgsz={imgsz})...')
     try:
-        exported_path = model.export(format='onnx', imgsz=imgsz, dynamic=False, opset=opset, simplify=simplify)
+        # Keep one-to-one weights before Ultralytics fuses away the unused head.
+        exported_path = model.export(format='onnx', imgsz=imgsz, dynamic=False, opset=opset, simplify=simplify, nms=False)
     except Exception as e:
         print(f'Export exception: {e}')
         raise RuntimeError('YOLO26 export failed; see preceding error')
