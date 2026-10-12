@@ -54,7 +54,7 @@ def bpu_detect_forward(self, x):
     res = []
     
     # YOLO26 Logic: Prefer one2one (End-to-End) branch weights if available
-    if hasattr(self, 'one2one_cv2') and hasattr(self, 'one2one_cv3'):
+    if all(getattr(self, name, None) is not None for name in ('one2one_cv2', 'one2one_cv3')):
         box_layers = self.one2one_cv2
         cls_layers = self.one2one_cv3
     else:
@@ -87,7 +87,9 @@ def export_bpu_onnx(model_path: str, output_name: str = "yolo26_bpu.onnx", imgsz
     
     print(f"Starting export (imgsz={imgsz})...")
     try:
+        # Keep one-to-one weights before Ultralytics fuses away the unused head.
         exported_path = model.export(
+            nms=False,
             format="onnx",
             imgsz=imgsz,
             dynamic=False, 
