@@ -190,7 +190,7 @@ python3 main.py \
 | 图像分类 | ResNeXt | `samples/vision/resnext` | RDK X5 | [详情](./samples/vision/resnext) |
 | 图像分类 | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [详情](./samples/vision/vargconvnet) |
 | 图像分类 | ViT | `samples/vision/vit` | RDK S100 | [详情](./samples/vision/vit) |
-| 多目标跟踪 | ByteTrack | `samples/vision/bytetrack` | RDK S100 | [详情](./samples/vision/bytetrack) |
+| 多目标跟踪 | ByteTrack | `samples/vision/bytetrack` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/bytetrack) |
 | 提示式图像分割 | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 / RDK S100 / RDK S100P | [详情](./samples/vision/efficient_sam) |
 | 提示式图像分割 | MobileSAM | `samples/vision/mobile_sam` | RDK X5 / RDK S100 / RDK S100P | [详情](./samples/vision/mobile_sam) |
 | 单目深度估计 | Depth Anything V2 | `samples/vision/depth_anything_v2` | RDK S100 | [详情](./samples/vision/depth_anything_v2) |

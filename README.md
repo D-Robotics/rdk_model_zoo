@@ -187,7 +187,7 @@ The table lists each model family with its platforms and available models; choos
 | Image Classification | ResNeXt | `samples/vision/resnext` | RDK X5 | [Details](./samples/vision/resnext) |
 | Image Classification | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [Details](./samples/vision/vargconvnet) |
 | Image Classification | ViT | `samples/vision/vit` | RDK S100 | [Details](./samples/vision/vit) |
-| Multi-Object Tracking | ByteTrack | `samples/vision/bytetrack` | RDK S100 | [Details](./samples/vision/bytetrack) |
+| Multi-Object Tracking | ByteTrack | `samples/vision/bytetrack` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/bytetrack) |
 | Promptable Image Segmentation | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 / RDK S100 / RDK S100P | [Details](./samples/vision/efficient_sam) |
 | Promptable Image Segmentation | MobileSAM | `samples/vision/mobile_sam` | RDK X5 / RDK S100 / RDK S100P | [Details](./samples/vision/mobile_sam) |
 | Monocular Depth Estimation | Depth Anything V2 | `samples/vision/depth_anything_v2` | RDK S100 | [Details](./samples/vision/depth_anything_v2) |
