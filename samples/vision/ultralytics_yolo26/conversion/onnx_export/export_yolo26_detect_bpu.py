@@ -54,7 +54,7 @@ def bpu_detect_forward(self, x):
     res = []
     
     # YOLO26 Logic: Prefer one2one (End-to-End) branch weights if available
-    if hasattr(self, 'one2one_cv2') and hasattr(self, 'one2one_cv3') and self.one2one_cv2 is not None and self.one2one_cv3 is not None:
+    if all(getattr(self, name, None) is not None for name in ('one2one_cv2', 'one2one_cv3')):
         box_layers = self.one2one_cv2
         cls_layers = self.one2one_cv3
     else:
@@ -92,6 +92,8 @@ def export_bpu_onnx(model_path: str, output_name: str = "yolo26_bpu.onnx", imgsz
             imgsz=imgsz,
             dynamic=False, 
             opset=19,
+            # Keep the original one-to-one head before export fusion removes unused branches.
+            nms=False,
             simplify=False
         )
     except Exception as e:
