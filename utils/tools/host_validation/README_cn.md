@@ -123,6 +123,10 @@ checkout 绝不可能通过：源码身份是前置条件，不是可选注记�
   audio/CLI 测试所需的 **libsndfile 与 libsamplerate**（`brew install
   libsndfile libsamplerate` / `apt install libsndfile1-dev
   libsamplerate0-dev`）、pkg-config、含完整历史与声明固定提交的 git clone。
+- LiteAvatar 背景缓存测试所需的 **liblz4**，经生产用的 `ctypes` 库发现路径
+  加载：Ubuntu 安装 `liblz4-1`；macOS `brew install lz4`，python.org 解释器
+  下还需 `DYLD_LIBRARY_PATH="$(brew --prefix lz4)/lib"`（ctypes 发现不搜索
+  Homebrew）。工作流在套件运行前按同一路径做前置探测。
 - Node.js ≥ 22.12 且 < 23，并在 `utils/tools/catalog-publisher` 执行过 `npm ci`
   （catalog 部分需要；执行器自身从不安装任何东西；Node 不在声明的
   `engines` 范围内时该部分直接失败，而不是声称一次不受支持的通过）。

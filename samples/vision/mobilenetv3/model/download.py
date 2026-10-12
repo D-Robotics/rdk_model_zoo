@@ -1,6 +1,6 @@
 """Download one published MobileNetV3 artifact through the shared manifest.
 
-The script deliberately contains only stable target-to-reference
+The script deliberately contains only stable target/variant-to-reference
 mappings. URL, format, and optional publisher hash facts are read from the
 platform manifest by ``utils.py_utils.assets``. It is safe to import this
 module on a host without the board SDK; network access occurs only when
@@ -25,25 +25,30 @@ from utils.py_utils.assets import download_asset, resolve_asset
 
 
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent
-VARIANTS = ('mobilenetv3',)
+VARIANTS = ('large', 'small')
+# Input sizes: large 224x224, small 224x224.  File names carry the toolchain march token
+# (bayese, nashe, nashm, nashp), so each file identifies its chip.
 ASSET_REFERENCES = {
-    ('x5', 'mobilenetv3'): 'x5:mobilenetv3:MobileNetV3_224x224_nv12.bin',
-    ('s100', 'mobilenetv3'): 's:mobilenetv3:s100/mobilenetv3_224x224_nv12.hbm',
-    ('s600', 'mobilenetv3'): 's:mobilenetv3:s600/mobilenetv3_224x224_nv12.hbm',
+    ('s100', 'large'): 's:mobilenetv3:s100/mobilenetv3_large_100_nashe_224x224_nv12.hbm',
+    ('s100p', 'large'): 's:mobilenetv3:s100p/mobilenetv3_large_100_nashm_224x224_nv12.hbm',
+    ('s600', 'large'): 's:mobilenetv3:s600/mobilenetv3_large_100_nashp_224x224_nv12.hbm',
+    ('s100', 'small'): 's:mobilenetv3:s100/mobilenetv3_small_100_nashe_224x224_nv12.hbm',
+    ('s100p', 'small'): 's:mobilenetv3:s100p/mobilenetv3_small_100_nashm_224x224_nv12.hbm',
+    ('s600', 'small'): 's:mobilenetv3:s600/mobilenetv3_small_100_nashp_224x224_nv12.hbm',
 }
-TARGETS = ("x5", "s100", "s600")
+TARGETS = ('s100', 's100p', 's600')
 
 
-def asset_reference(target: str) -> str:
-    """Return the exact manifest reference for a supported target."""
+def asset_reference(target: str, variant: str = 'large') -> str:
+    """Return the exact manifest reference for a supported target/variant."""
 
-    key = (str(target).strip().lower(), "mobilenetv3")
+    key = (str(target).strip().lower(), str(variant).strip().lower())
     try:
         return ASSET_REFERENCES[key]
     except KeyError as exc:
         available = ", ".join("/".join(k) for k in ASSET_REFERENCES)
         raise ValueError(
-            f"Unsupported MobileNetV3 target {target}; "
+            f"Unsupported MobileNetV3 target/variant {target}; "
             f"published combinations: {available}."
         ) from exc
 
@@ -51,15 +56,17 @@ def asset_reference(target: str) -> str:
 def download_target(
     target: str,
     output_dir: Optional[str | Path] = None,
+    *,
+    variant: str = 'large',
 ) -> str:
     """Download an exact target artifact and return its observed SHA-256.
 
-    ``output_dir`` preserves the source sample's layout: X5 is flat while the
-    S-series artifact remains under ``s100/`` or ``s600/``. Existing files are
+    ``output_dir`` preserves the sample's layout: X5 is flat while the S-series
+    artifact stays under ``s100/``, ``s100p/`` or ``s600/``. Existing files are
     verified by the shared downloader and are never silently replaced.
     """
 
-    asset = resolve_asset(asset_reference(target))
+    asset = resolve_asset(asset_reference(target, variant))
     root = Path(output_dir).expanduser() if output_dir is not None else DEFAULT_OUTPUT_DIR
     destination = root / Path(asset.filename)
     digest = download_asset(asset, destination)
@@ -79,8 +86,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--target",
         choices=TARGETS,
-        default="x5",
-        help="Target artifact to fetch (default: x5).",
+        default='s100',
+        help="Target artifact to fetch (default: s100).",
+    )
+    parser.add_argument(
+        "--variant",
+        choices=VARIANTS,
+        default='large',
+        help="Model variant to fetch (default: large).",
     )
     parser.add_argument(
         "--output-dir",
@@ -96,7 +109,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     args = build_parser().parse_args(argv)
     try:
-        download_target(args.target, args.output_dir)
+        download_target(args.target, args.output_dir, variant=args.variant)
     except (OSError, ValueError) as exc:
         print(f"error: {exc}")
         return 2

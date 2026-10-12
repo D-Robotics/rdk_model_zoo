@@ -1,4 +1,4 @@
-"""Host-only runtime metadata fixtures for the MobileNetV3 sample tests.
+"""Host-only runtime metadata fixtures and the published matrix for the MobileNetV3 sample tests.
 
 The tensor names below are synthetic host fixtures; the binding machinery
 matches input roles by declared shape, not by name, and the published
@@ -9,9 +9,25 @@ from __future__ import annotations
 
 from samples.vision.mobilenetv3.runtime.python.cli import RuntimeMetadata
 
+#: variant -> (square input size, shorter-edge resize, OSS directory)
+VARIANTS = {
+    'large': (224, 256, 'large-100-224'),
+    'small': (224, 256, 'small-100-224'),
+}
+#: (variant, target) -> manifest filename of every published artifact
+PUBLISHED = {
+    ('large', 's100'): 's100/mobilenetv3_large_100_nashe_224x224_nv12.hbm',
+    ('large', 's100p'): 's100p/mobilenetv3_large_100_nashm_224x224_nv12.hbm',
+    ('large', 's600'): 's600/mobilenetv3_large_100_nashp_224x224_nv12.hbm',
+    ('small', 's100'): 's100/mobilenetv3_small_100_nashe_224x224_nv12.hbm',
+    ('small', 's100p'): 's100p/mobilenetv3_small_100_nashm_224x224_nv12.hbm',
+    ('small', 's600'): 's600/mobilenetv3_small_100_nashp_224x224_nv12.hbm',
+}
+DEFAULT_VARIANT = 'large'
 
-def runtime_metadata(protocol: str, wrong_geometry: bool = False, output_dtype: str = "F32", quant_descriptor: bool = False) -> RuntimeMetadata:
-    """Return the observed metadata shape for one source family.
+
+def runtime_metadata(protocol: str, variant: str = DEFAULT_VARIANT, wrong_geometry: bool = False, output_dtype: str = "F32", quant_descriptor: bool = False) -> RuntimeMetadata:
+    """Return the observed metadata shape for one source family and variant.
 
     ``wrong_geometry=True`` offsets the declared height/width by eight pixels
     to prove that bind_model rejects metadata that contradicts the contract.
@@ -21,14 +37,15 @@ def runtime_metadata(protocol: str, wrong_geometry: bool = False, output_dtype: 
     dtype and keep the descriptor visible instead of rejecting it.
     """
 
-    height = width = 224
+    height = width = VARIANTS[variant][0]
     if wrong_geometry:
         height += 8
         width += 8
+    name = f"mobilenetv3_{variant}_{height}x{width}_nv12"
     if protocol == "x5":
         return RuntimeMetadata.from_mapping(
             {
-                "model_name": "MobileNetV3_224x224_nv12",
+                "model_name": name,
                 "input_names": ["data"],
                 "input_shapes": {"data": (1, 3, height, width)},
                 "input_dtypes": {"data": "U8"},
@@ -40,7 +57,7 @@ def runtime_metadata(protocol: str, wrong_geometry: bool = False, output_dtype: 
         )
     return RuntimeMetadata.from_mapping(
         {
-            "model_name": "MobileNetV3_224x224_nv12",
+            "model_name": name,
             "input_names": ["input_y", "input_uv"],
             "input_shapes": {
                 "input_y": (1, height, width, 1),

@@ -22,10 +22,10 @@ class PolicyTests(unittest.TestCase):
         )
         from testsupport import runtime_metadata
 
-        target = "x5"
+        target = "s100"
         protocol = "x5" if target == "x5" else "s"
-        selection = resolve_selection(target)
-        binding = bind_model(selection, runtime_metadata(protocol))
+        selection = resolve_selection(target, variant='large')
+        binding = bind_model(selection, runtime_metadata(protocol, variant='large'))
         policy = binding.contract.output_score_policy
 
         raw = np.full((1, 1000), 0.001, dtype=np.float32)
@@ -52,6 +52,54 @@ class PolicyTests(unittest.TestCase):
                 result.scores, expected[0, [3, 11]], rtol=1e-5
             )
 
+    def test_published_preprocessing_feeds_the_evaluation_bytes(self):
+        """The runtime applies the geometry the models were evaluated with.
+
+        The published contract resizes the shorter edge and center-crops (type 2).
+        Preparing the host evaluation crop and feeding it through a plain direct
+        resize (a no-op at the model size) must yield identical NV12 tensors, for
+        every published variant and both input protocols.
+        """
+
+        try:
+            from PIL import Image
+        except ImportError:
+            self.skipTest("Pillow is required for the shorter-edge center crop")
+
+        from samples.vision.mobilenetv3.runtime.python.cli import (
+            bind_model,
+            resolve_selection,
+        )
+        from utils.py_utils.classification_host import prepare_rgb
+        from utils.py_utils.tensor_io import prepare_nv12
+        from testsupport import runtime_metadata
+
+        rng = np.random.default_rng(7)
+        bgr = rng.integers(0, 256, size=(300, 400, 3), dtype=np.uint8)
+        from testsupport import PUBLISHED, VARIANTS
+
+        for variant, (size, shorter, _) in VARIANTS.items():
+            contract = {
+                "size": size, "crop_pct": size / (shorter + 0.5), "geometry": "resize_shorter_center_crop",
+                "interpolation": "pil_bicubic", "color": "RGB", "layout": "NCHW",
+                "dtype": "float32", "mean": [0.485, 0.456, 0.406],
+                "std": [0.229, 0.224, 0.225], "batch": 1, "class_count": 1000,
+                "output": "logits",
+            }
+            evaluation_crop = prepare_rgb(Image.fromarray(bgr[:, :, ::-1]), contract)[:, :, ::-1]
+            for target in [t for (v, t) in PUBLISHED if v == variant]:
+                with self.subTest(variant=variant, target=target):
+                    binding = bind_model(
+                        resolve_selection(target, variant=variant),
+                        runtime_metadata("x5" if target == "x5" else "s", variant=variant))
+                    self.assertEqual(binding.contract.resize_type, 2)
+                    published = prepare_nv12(bgr, binding)
+                    evaluated = prepare_nv12(
+                        np.ascontiguousarray(evaluation_crop), binding, resize_type=0)
+                    self.assertEqual(set(published.tensors), set(evaluated.tensors))
+                    for name, tensor in published.tensors.items():
+                        np.testing.assert_array_equal(tensor, evaluated.tensors[name])
+
     def test_topk_from_scores_softmax_false_preserves_raw_values(self):
         from utils.py_utils.classification import topk_from_scores
 
@@ -70,8 +118,8 @@ class PolicyTests(unittest.TestCase):
         )
         from testsupport import runtime_metadata
 
-        selection = resolve_selection("s100")
-        binding = bind_model(selection, runtime_metadata("s"))
+        selection = resolve_selection("s100", variant='large')
+        binding = bind_model(selection, runtime_metadata("s", variant='large'))
         observed = {}
         scores = np.full((1, 1000), 0.0005, dtype=np.float32)
         scores[0, 42] = 0.99
@@ -87,31 +135,14 @@ class PolicyTests(unittest.TestCase):
         self.assertIn(binding.y_input_name, observed)
         self.assertIn(binding.uv_input_name, observed)
 
-    def test_packed_input_uses_canonical_flat_buffer(self):
-        from utils.py_utils.classification import ClassificationTask
-        from samples.vision.mobilenetv3.runtime.python.cli import (
-            bind_model,
-            resolve_selection,
-        )
-        from testsupport import runtime_metadata
+    def test_x5_has_no_published_build(self):
+        """MobileNetV3 is published for the S series only: selecting X5 fails explicitly, with no fallback."""
+        from samples.vision.mobilenetv3.runtime.python.cli import UnsupportedAssetError, resolve_selection
+        from testsupport import VARIANTS
 
-        selection = resolve_selection("x5")
-        binding = bind_model(selection, runtime_metadata("x5"))
-        observed = {}
-        scores = np.full((1, 1000), 0.0005, dtype=np.float32)
-        scores[0, 5] = 0.99
-
-        def runner(inputs):
-            observed.update(inputs)
-            return {binding.output_name: scores.reshape(1, 1000, 1, 1)}
-
-        result = ClassificationTask(runner, binding, top_k=1).predict(
-            np.zeros((10, 20, 3), dtype=np.uint8)
-        )
-        self.assertEqual(result.class_ids.tolist(), [5])
-        # H2: packed NV12 feeds the canonical flat 1-D byte buffer.
-        expected_bytes = binding.contract.input_height * 3 // 2 * binding.contract.input_width
-        self.assertEqual(tuple(observed[binding.input_names[0]].shape), (expected_bytes,))
+        for variant in VARIANTS:
+            with self.subTest(variant=variant), self.assertRaises(UnsupportedAssetError):
+                resolve_selection("x5", variant=variant)
 
 
 if __name__ == "__main__":

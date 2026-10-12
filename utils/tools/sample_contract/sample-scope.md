@@ -54,3 +54,4 @@
 | 50 | gemma4-e2b | llm | — | done | checked sample |
 | 51 | minicpm5-2b | llm | — | done | checked sample |
 | 52 | fasterrcnn | vision | — | done | checked sample |
+| 53 | lite_avatar | vision | — | done | checked sample |

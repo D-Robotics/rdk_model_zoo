@@ -15,14 +15,14 @@ release:
 summary:
   sample_count: 35
   download_script_count: 31
-  asset_count: 391
-  downloadable_asset_count: 382
-  manual_asset_count: 9
-  sha256_recorded_count: 72
-  sha256_unrecorded_count: 319
-  benchmark_count: 548
-  performance_metric_count: 1489
-  accuracy_metric_count: 2773
+  asset_count: 399
+  downloadable_asset_count: 386
+  manual_asset_count: 13
+  sha256_recorded_count: 82
+  sha256_unrecorded_count: 317
+  benchmark_count: 553
+  performance_metric_count: 1535
+  accuracy_metric_count: 2796
 models:
   - id: act
     name: ACT (Action Chunking Transformer)
@@ -356,6 +356,37 @@ models:
         format: hbm
         url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Lanenet/lanenet256x512.hbm
         sha256: null
+  - id: lite_avatar
+    name: LiteAvatar
+    tasks:
+      - audio-driven-talking-avatar
+    sample_path: samples/vision/lite_avatar
+    download_scripts: []
+    availability: manual
+    assets:
+      - filename: s100/lite_avatar_encoder_400x560_s100.hbm
+        format: hbm
+        url: null
+        sha256: 0a6833a1e24d9f407e4a7662c305c6b292f2d947aef03adce2043bec1091aef0
+      - filename: s100/lite_avatar_audio2mouth_30x50x512_s100.hbm
+        format: hbm
+        url: null
+        sha256: ddded3350ef1e9c8e068263d841b3a15a1a5f59b027c7d50f6dd3c8985fa50e5
+      - filename: s100/lite_avatar_net_encode_384x384_s100.hbm
+        format: hbm
+        url: null
+        sha256: b244f61b63bbfdfb219bf03270cb19b9a7a0d8e1604dbbc6fb0591956b673ecb
+      - filename: s100/lite_avatar_net_decode_inorm_fullrange_384x384_s100.hbm
+        format: hbm
+        url: null
+        sha256: 27e46cf9d6514f587d54c16cfa813583d89e59c9d5b5d4138efdf51e4d20df3c
+    notes: Audio-driven talking-avatar pipeline of four artifacts (INT16 BPU
+      convolutions plus an FP32 CPU InstanceNorm subgraph inside the decoder).
+      Availability is manual; prepare artifacts per the sample's model/README.md
+      (OpenExplorer self-compilation, or a local rebuild identified through the
+      --models-manifest hash file). am.mvn ships inside the sample and the
+      avatar background/reference data download from the MIT-licensed upstream
+      sample_data.zip.
   - id: mobile_sam
     name: MobileSAM
     tasks:
@@ -465,16 +496,32 @@ models:
     download_scripts:
       - samples/vision/mobilenetv3/model/download.sh
     availability: download
-    notes: Download the selected board model with samples/vision/mobilenetv3/model/download.sh; see the model README for variants and arguments.
+    notes: 'Replaced by the unified mobilenetv3 builds (timm checkpoints mobilenetv3_large_100 and mobilenetv3_small_100, 224x224 NV12, INT16 activations with INT8 weights, S100/S100P/S600 only), published under models/mobilenetv3/mobilenetv3/cls/ with SHA-256. The large and small variants are selected via --variant. X5 is not supported: its toolchain cannot run stride-2 depthwise convolutions or SE pooling in INT16, and INT8 loses 18-100% of Top-1.'
     assets:
-      - filename: s100/mobilenetv3_224x224_nv12.hbm
+      - filename: s100/mobilenetv3_large_100_nashe_224x224_nv12.hbm
         format: hbm
-        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/MobileNet/mobilenetv3_224x224_nv12.hbm
-        sha256: null
-      - filename: s600/mobilenetv3_224x224_nv12.hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv3/mobilenetv3/cls/large-100-224/s100/mobilenetv3_large_100_nashe_224x224_nv12.hbm
+        sha256: 9190d5334b2f1488bbfa3cc4f918bb21ec788d4fcc08a55074b5287cb7baf24d
+      - filename: s100p/mobilenetv3_large_100_nashm_224x224_nv12.hbm
         format: hbm
-        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/MobileNet/mobilenetv3_224x224_nv12.hbm
-        sha256: null
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv3/mobilenetv3/cls/large-100-224/s100p/mobilenetv3_large_100_nashm_224x224_nv12.hbm
+        sha256: 96e6bda58009330c96d139bdf858326ddf5481299b68d6ecadd3b2b3bc7a1658
+      - filename: s600/mobilenetv3_large_100_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv3/mobilenetv3/cls/large-100-224/s600/mobilenetv3_large_100_nashp_224x224_nv12.hbm
+        sha256: 9b2b2422566214ebdbad27cedebbbaf5668edd9272c3efc51adb1113be8dbad4
+      - filename: s100/mobilenetv3_small_100_nashe_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv3/mobilenetv3/cls/small-100-224/s100/mobilenetv3_small_100_nashe_224x224_nv12.hbm
+        sha256: c8cfa5cfe34d46b99e235d9823bbbf464e67808d59d9e3281593c87cc07bd6fc
+      - filename: s100p/mobilenetv3_small_100_nashm_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv3/mobilenetv3/cls/small-100-224/s100p/mobilenetv3_small_100_nashm_224x224_nv12.hbm
+        sha256: a67df2c4154d44c9ebe25e5250d16409a9a1ad31c953cc311b703f396151bcec
+      - filename: s600/mobilenetv3_small_100_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv3/mobilenetv3/cls/small-100-224/s600/mobilenetv3_small_100_nashp_224x224_nv12.hbm
+        sha256: 8f2177eacf3496aeea1c4234146ea73eaad99882ff74b0bd0afa47b266849b08
   - id: mobilenetv4
     name: MobileNetV4
     tasks:

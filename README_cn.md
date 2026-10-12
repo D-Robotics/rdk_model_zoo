@@ -96,6 +96,7 @@ rdk_model_zoo/
 |   |   |-- googlenet/             # Image classification
 |   |   |-- hgnetv2/               # Image classification
 |   |   |-- lanenet/               # Lane detection
+|   |   |-- lite_avatar/           # Audio-driven talking avatar
 |   |   |-- lprnet/                # License plate recognition
 |   |   |-- mobile_sam/            # Promptable image segmentation
 |   |   |-- mobilenetv1/           # Image classification
@@ -213,6 +214,7 @@ python3 main.py \
 | 图文多模态匹配 | CLIP | `samples/vision/clip` | RDK X5 | [详情](./samples/vision/clip) |
 | 视觉特征编码 | DINOv2 | `samples/vision/dinov2` | RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/dinov2) |
 | 视觉-语言编码 | SigLIP | `samples/vision/siglip` | RDK S100 / RDK S100P | [详情](./samples/vision/siglip) |
+| 音频驱动数字人 | LiteAvatar | `samples/vision/lite_avatar` | RDK S100 | [详情](./samples/vision/lite_avatar) |
 | 语音识别 | ASR (Wav2Vec2) | `samples/speech/asr` | RDK S100 / RDK S600 | [详情](./samples/speech/asr) |
 | 关键词检测 | KWS | `samples/speech/kws` | RDK S100 | [详情](./samples/speech/kws) |
 | 语音识别 | Paraformer | `samples/speech/paraformer` | RDK S100 | [详情](./samples/speech/paraformer) |

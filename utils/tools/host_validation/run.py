@@ -644,21 +644,20 @@ def _validate_inventory_rows(rows):
 
 
 def validate_sample_coverage(repo: Path, discovery):
-    """Validate discovery against the accepted native sample inventory.
+    """Validate discovery against the maintained native sample inventory.
 
     The inventory (``utils/tools/host_validation/sample-inventory.json``)
-    is the Codex-reviewed 52-row record of in-repo samples and is
-    **required**: every expected sample
+    lists every in-repo sample and is **required**: every expected sample
     directory must exist and carry a discovered ``tests`` directory, and no
     extra first-party sample may appear beside them — so a sample or
     ``tests`` directory the inventory lists can never be deleted without
-    the gate failing.  The enforced scope follows the reviewed inventory
-    itself (no sample count is hardcoded here): an intentional future
-    scope change updates that record, and this validation enforces
+    the gate failing.  The enforced scope follows the inventory itself
+    (no sample count is hardcoded here): an intentional future scope
+    change updates the inventory, and this validation enforces
     whatever it lists.  A checkout
     without the inventory, or with an empty/unparseable/malformed one,
-    fails with an explicit structured reason (missing proof is never
-    success).  Every non-ok status carries a ``reasons`` list the report
+    fails with an explicit structured reason (a missing inventory is
+    never a pass).  Every non-ok status carries a ``reasons`` list the report
     aggregates.
     """
     required_reason = (

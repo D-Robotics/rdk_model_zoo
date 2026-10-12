@@ -5,10 +5,14 @@ import { describe, expect, it } from "vitest";
 import { platformBenchmarks, platformSlice, repositoryCatalog, repositoryRoot } from "./helpers/repository";
 import type { BenchmarkRecord, MetricRecord } from "../src/catalog/types";
 
-const EXPECTED_MODEL_COUNT = 37;
-const EXPECTED_BENCHMARK_RECORD_COUNT = 239;
-const EXPECTED_PERFORMANCE_METRIC_COUNT = 636;
-const EXPECTED_ACCURACY_METRIC_COUNT = 419;
+// On 2026-10-12 MobileNetV3 left X5 (published on S100/S100P/S600 only): its X5 sample entry and its
+// one audited X5 record (two performance and two accuracy metrics) were removed.
+// On 2026-10-13 Faster R-CNN joined with two manual X5 assets and no X5 benchmark rows: the model
+// count gains one while the audited record and metric totals stay at the MobileNetV3-exit values.
+const EXPECTED_MODEL_COUNT = 36;
+const EXPECTED_BENCHMARK_RECORD_COUNT = 238;
+const EXPECTED_PERFORMANCE_METRIC_COUNT = 634;
+const EXPECTED_ACCURACY_METRIC_COUNT = 417;
 // YOLO26 rows resolve under the unified ultralytics_yolo sample (the separate
 // yolo26 directory no longer exists on develop), and the OCR pilot lives at
 // samples/vision/paddle_ocr; the audited directory count shrank accordingly.
@@ -32,7 +36,6 @@ const EXPECTED_MODEL_PATHS = new Map([
   ["mobile_sam", "samples/vision/mobile_sam"],
   ["mobilenetv1", "samples/vision/mobilenetv1"],
   ["mobilenetv2", "samples/vision/mobilenetv2"],
-  ["mobilenetv3", "samples/vision/mobilenetv3"],
   ["mobilenetv4", "samples/vision/mobilenetv4"],
   ["mobileone", "samples/vision/mobileone"],
   ["modnet", "samples/vision/modnet"],
