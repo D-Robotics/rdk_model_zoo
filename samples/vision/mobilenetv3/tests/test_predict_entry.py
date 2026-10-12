@@ -28,7 +28,7 @@ from samples.vision.mobilenetv3.runtime.python.cli import (
 
 _ROOT = Path(__file__).resolve().parents[4]
 _IMAGE = _ROOT / "samples" / "vision" / "mobilenetv3" / "test_data" / "kit_fox.JPEG"
-_TARGETS = ("x5", "s100")
+_TARGETS = ("s100",)
 
 
 def _runtime_metadata(selection):

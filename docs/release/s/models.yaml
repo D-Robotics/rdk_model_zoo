@@ -15,11 +15,11 @@ release:
 summary:
   sample_count: 34
   download_script_count: 31
-  asset_count: 385
-  downloadable_asset_count: 382
+  asset_count: 389
+  downloadable_asset_count: 386
   manual_asset_count: 3
-  sha256_recorded_count: 66
-  sha256_unrecorded_count: 319
+  sha256_recorded_count: 72
+  sha256_unrecorded_count: 317
   benchmark_count: 548
   performance_metric_count: 1489
   accuracy_metric_count: 2773
@@ -428,16 +428,32 @@ models:
     download_scripts:
       - samples/vision/mobilenetv3/model/download.sh
     availability: download
-    notes: Download the selected board model with samples/vision/mobilenetv3/model/download.sh; see the model README for variants and arguments.
+    notes: 'Replaced by the unified mobilenetv3 builds (timm checkpoints mobilenetv3_large_100 and mobilenetv3_small_100, 224x224 NV12, INT16 activations with INT8 weights, S100/S100P/S600 only), published under models/mobilenetv3/mobilenetv3/cls/ with SHA-256. The large and small variants are selected via --variant. X5 is not supported: its toolchain cannot run stride-2 depthwise convolutions or SE pooling in INT16, and INT8 loses 18-100% of Top-1.'
     assets:
-      - filename: s100/mobilenetv3_224x224_nv12.hbm
+      - filename: s100/mobilenetv3_large_100_nashe_224x224_nv12.hbm
         format: hbm
-        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/MobileNet/mobilenetv3_224x224_nv12.hbm
-        sha256: null
-      - filename: s600/mobilenetv3_224x224_nv12.hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv3/mobilenetv3/cls/large-100-224/s100/mobilenetv3_large_100_nashe_224x224_nv12.hbm
+        sha256: 9190d5334b2f1488bbfa3cc4f918bb21ec788d4fcc08a55074b5287cb7baf24d
+      - filename: s100p/mobilenetv3_large_100_nashm_224x224_nv12.hbm
         format: hbm
-        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/MobileNet/mobilenetv3_224x224_nv12.hbm
-        sha256: null
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv3/mobilenetv3/cls/large-100-224/s100p/mobilenetv3_large_100_nashm_224x224_nv12.hbm
+        sha256: 96e6bda58009330c96d139bdf858326ddf5481299b68d6ecadd3b2b3bc7a1658
+      - filename: s600/mobilenetv3_large_100_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv3/mobilenetv3/cls/large-100-224/s600/mobilenetv3_large_100_nashp_224x224_nv12.hbm
+        sha256: 9b2b2422566214ebdbad27cedebbbaf5668edd9272c3efc51adb1113be8dbad4
+      - filename: s100/mobilenetv3_small_100_nashe_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv3/mobilenetv3/cls/small-100-224/s100/mobilenetv3_small_100_nashe_224x224_nv12.hbm
+        sha256: c8cfa5cfe34d46b99e235d9823bbbf464e67808d59d9e3281593c87cc07bd6fc
+      - filename: s100p/mobilenetv3_small_100_nashm_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv3/mobilenetv3/cls/small-100-224/s100p/mobilenetv3_small_100_nashm_224x224_nv12.hbm
+        sha256: a67df2c4154d44c9ebe25e5250d16409a9a1ad31c953cc311b703f396151bcec
+      - filename: s600/mobilenetv3_small_100_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/mobilenetv3/mobilenetv3/cls/small-100-224/s600/mobilenetv3_small_100_nashp_224x224_nv12.hbm
+        sha256: 8f2177eacf3496aeea1c4234146ea73eaad99882ff74b0bd0afa47b266849b08
   - id: mobilenetv4
     name: MobileNetV4
     tasks:

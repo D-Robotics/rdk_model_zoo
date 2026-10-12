@@ -2,230 +2,215 @@ English | [简体中文](README_cn.md)
 
 # MobileNetV3 model conversion
 
-For the pinned timm checkpoint workflow, use [`export.py`](export.py) and the [shared host workflow](../../../../utils/tools/mobilenet/README.md). It records the exact checkpoint, center-crop preprocessing, batch-one logits contract, and full-dataset evaluation inputs. The existing artifact commands below retain their own contracts.
-
-Conversion runs on an x86 Linux host in the RDK OpenExplore (OE)
-environment. Use the export scripts, calibration helpers, and target-specific
-configurations below to prepare deployment models.
+This recipe rebuilds the published MobileNetV3 deployment models from pinned
+timm checkpoints: FP32 ONNX export, INT8 post-training quantization (PTQ), and
+a compile for each RDK target. It runs on an x86 Linux host with Docker. The
+export, calibration, and configuration steps use the shared
+[host workflow](../../../../utils/tools/mobilenet/README.md); each compile runs
+in the matching OpenExplorer (OE) toolchain container.
 
 <a id="source-model"></a>
 ## Source model
 
-timm `mobilenetv3_large_100` with pretrained weights (MobileNetV3-Large),
-fixed by `get_mobilenetv3_onnx.py`; NCHW input `[1,3,224,224]` on
-both platforms.
+- Framework: PyTorch 2.8.0 with timm 1.0.20 (versions pinned in
+  `utils/tools/mobilenet/requirements.lock.txt`).
+- Weights, pinned by Hugging Face revision and file SHA-256 in
+  `utils/tools/mobilenet/checkpoints.json`:
+  - `large`: `timm/mobilenetv3_large_100.ra_in1k`, revision
+    `96f46a1c52932f27492dff66c72378eb99b443a7`
+  - `small`: `timm/mobilenetv3_small_100.lamb_in1k`, revision
+    `1824797e7887cbec1990e4adbd6675960a36c589`
+- Correspondence: the checkpoints are the upstream timm releases of the
+  MobileNetV3-Large-100, MobileNetV3-Small-100 ImageNet-1k classifiers; the weights
+  are used unchanged. License: Apache-2.0 (the checkpoint model cards).
+
+<a id="preprocessing"></a>
+### Preprocessing contract
+
+Calibration, evaluation, and the runtime share one geometry, which follows the
+checkpoint's own evaluation settings (`crop_pct`):
+
+| Variant | `crop_pct` | Shorter edge resized to | Crop |
+| --- | --- | --- | --- |
+| large | 0.875 | 256 (`int(224 / 0.875)`) | 224x224 center crop |
+| small | 0.875 | 256 (`int(224 / 0.875)`) | 224x224 center crop |
+
+The resize is antialiased bicubic (Pillow). Pixels are RGB; the ONNX input
+`data` is normalized float32 `[1,3,224,224]` with the ImageNet mean/std and
+the output `logits` is `[1,1000]`. In the deployed model the normalization is
+compiled in (`mean_value` = mean x 255, `scale_value` = 1 / (255 x std)), so the
+runtime feeds NV12 produced from the 224x224 crop. NV12 conversion uses
+OpenCV's limited-range BT.601 transform, hence `input_space_and_range:
+bt601_video` in both configurations.
 
 <a id="directory"></a>
 ## Directory structure
 
 ```text
 conversion/
-├── MobileNetV3_config.yaml  # Configuration
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── get_calibration_data.py  # Python script
-├── get_mobilenetv3_onnx.py  # Python script
-├── mobilenetv3_s_config.yaml  # Configuration
-└── timm2onnx_local.py  # Python script
+├── export.py  # Pinned timm checkpoint -> verified FP32 ONNX
+└── ptq_s.yaml  # S100 / S100P / S600 compile configuration (placeholders)
 ```
+
+Calibration inputs and the OE configuration are produced by
+`utils/tools/mobilenet/workflow.py`; `ptq_*.yaml` are the reference compile
+configurations of the published artifacts.
 
 <a id="toolchain-targets"></a>
-## Toolchain and targets
+## Toolchain & Targets
 
-Use the OE Docker/toolchain release matching the target board and record
-its image tag, OE version, and host date. Authoritative references:
-[RDK S toolchain overview](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview),
+Compile with the OE container matching the target and keep its image tag and
+digest with the build. Versions used for the published artifacts:
+
+| Target | march | Toolchain image | Tools | Config |
+| --- | --- | --- | --- | --- |
+| s100 | nash-e | `registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0` | hb_compile 3.5.3, HMCT 2.6.5, HBDK 4.7.5 | `ptq_s.yaml` |
+| s100p | nash-m | same image as s100 | same as s100 | `ptq_s.yaml` |
+| s600 | nash-p | same image as s100 | same as s100 | `ptq_s.yaml` |
+
+There is no X5 build (see [Compile](#compile)).
+
+Documentation: [RDK S toolchain overview](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview),
 [D-Robotics toolchain download](https://toolchain.d-robotics.cc/).
-Targets: X5 compiles with `hb_mapper` using march `bayes-e`; S100 uses
-`hb_compile` with `nash-e`, S600 with `nash-p`. Mount the repository at
-`/workspace` in the container with enough shared memory
-(`--shm-size=15g`).
 
 <a id="export"></a>
-## Export
+## Export (ONNX)
 
-Inside the OE container (or any host with `torch`, `timm`, `onnx`, and
-`onnxsim`), cwd `samples/vision/mobilenetv3/conversion`:
-
-```bash
-# input: timm pretrained weights (downloads when not cached)
-# output: the .onnx files below — output: onnx simplification check passes
-python3 get_mobilenetv3_onnx.py    # -> ./mobilenetv3_large_100.onnx
-```
-
-The exporter uses onnx-simplifier and reports the parameter count
-(5,470,832 parameters for `mobilenetv3_large_100`); the expected metadata
-print is `mean (0.485, 0.456, 0.406)`, `std (0.229, 0.224, 0.225)`,
-"Simplified model is valid.".
-
-Install the export dependencies:
+The commands below build `large`; use `--model v3-small-100` and a separate
+work directory for `small`. `WORK` is an absolute directory outside the
+repository.
 
 ```bash
-pip install timm onnx onnxsim
-huggingface-cli login
-python3 get_mobilenetv3_onnx.py
+# cwd: repository root; python 3.10 with the locked requirements installed
+export REPO=$(pwd)
+export WORK=/abs/path/mobilenetv3-large
+python3 utils/tools/mobilenet/workflow.py fetch --model v3-large-100 \
+  --output $WORK/weights
+python3 samples/vision/mobilenetv3/conversion/export.py --model v3-large-100 \
+  --source-dir $WORK/weights \
+  --images samples/vision/mobilenetv3/test_data/kit_fox.JPEG \
+           samples/vision/mobilenetv3/test_data/zebra_cls.jpg \
+  --opset 11 --simplify --output $WORK/export
+# expect: $WORK/export/model.onnx (data float32 [1,3,224,224] -> logits [1,1000])
+#         and export.json with status "passed"
 ```
 
-Use the login command above when the selected Hugging Face weights require authentication.
-
-### ONNX export example
-
-Run this example in the x86 export environment with PyTorch installed. The simplification step also requires `onnxsim`. Match the exported filename to `onnx_model` in the selected YAML.
-
-The onnx model is transformed using models from the timm library (PyTorch Image Models). Install the required packages using the following command:
-
-```shell
-pip install timm onnx
-```
-
-Model transformation takes mobilenetv3_large_100 as an example:
-
-```Python
-import torch
-import torch.onnx
-import onnx
-from onnxsim import simplify
-from timm.models import create_model
-
-from timm.models.mobilenetv3 import mobilenetv3_large_100
-
-def count_parameters(onnx_model_path):
-    # Load the ONNX model
-    model = onnx.load(onnx_model_path)
-    # Get the initializers (weights in the model)
-    initializer = model.graph.initializer
-
-    # Calculate the total number of parameters
-    total_params = 0
-    for tensor in initializer:
-        # Get the dimensions of each weight
-        dims = tensor.dims
-        # Calculate the number of parameters in this weight (product of all dimensions)
-        params = 1
-        for dim in dims:
-            params *= dim
-        total_params += params
-
-    return total_params
-
-if __name__ == "__main__":
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = create_model('mobilenetv3_large_100', pretrained=True)
-    model.eval()
-
-    # print the model structure
-
-    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
-    onnx_file_path = "mobilenetv3_large_100.onnx"
-
-    torch.onnx.export(
-        model,
-        dummy_input,
-        onnx_file_path,
-        opset_version=11,
-        verbose=True,
-        input_names=["data"],  # Input name
-        output_names=["output"],  # Output name
-    )
-
-    # Simplify the ONNX model
-    model_simp, check = simplify(onnx_file_path)
-
-    if check:
-        print("Simplified model is valid.")
-        simplified_onnx_file_path = "mobilenetv3_large_100.onnx"
-        onnx.save(model_simp, simplified_onnx_file_path)
-        print(f"Simplified model saved to {simplified_onnx_file_path}")
-    else:
-        print("Simplified model is invalid!")
-
-    onnx_model_path = simplified_onnx_file_path  # Replace with your ONNX model path
-    total_params = count_parameters(onnx_model_path)
-    print(f"Total number of parameters in the model: {total_params}")
-```
+`export.py` verifies the checkpoint hashes, loads it strictly, simplifies the
+graph, and compares real-image logits and Top-5 with PyTorch. `export.json`
+records the maximum absolute error per image and binds the ONNX SHA-256 to
+the checkpoint, the preprocessing contract, and the dependency versions.
 
 <a id="calibration"></a>
 ## Calibration
 
-The calibration helper reads `ILSVRC2012_val_*.JPEG` from the configured
-`src_image_dir`. The default is
-`../../../open_explorer/samples/ai_toolchain/horizon_model_convert_sample/01_common/calibration_data/imagenet/`;
-set `src_image_dir` to your local ImageNet validation directory before running it. Preprocessing produces BGR data with padded center crop
-224, resize, HWC→CHW, `RGB2BGRTransformer`, ×255, mean
-`103.94 116.78 123.68`, and ×0.017, written to `./calibration_data_bgr/`.
-Select and record the validation images used for the calibration set.
+- Dataset: a fixed 200-image subset of COCO 2017 train2017 (selection seed 42),
+  listed with SHA-256 in a manifest. The set shares no image with the
+  evaluation set, which `workflow.py calibrate` verifies.
+- Preprocessing: the contract above; the S series takes the normalized ONNX
+  input as float32 `.npy`.
 
-Prepare inputs for each YAML as follows:
-
-| Config (target) | `cal_data_dir` | Layout and values | Preparation |
-| --- | --- | --- | --- |
-| `mobilenetv3_s_config.yaml` (s100; s600 changes march only) | `./calibration_data_bgr` | BGR, mean `103.53 116.28 123.675` | Set `src_image_dir` to the local validation directory and align the helper mean constants (`103.94 116.78 123.68`) with the YAML values before generating the BGR data. |
-| `MobileNetV3_config.yaml` (x5) | `./calibration_data_rgb_f32` | RGB, mean `123.675 116.28 103.53` | Prepare float32 RGB calibration arrays at 224x224 using the X5 YAML's channel order and normalization; use a separate RGB preprocessing chain. |
+```bash
+# cwd: repository root; run once per target: s100, s100p, s600
+python3 utils/tools/mobilenet/workflow.py calibrate --model v3-large-100 \
+  --platform s100 \
+  --manifest /abs/calibration/manifest.json \
+  --images-root /abs/calibration \
+  --expected-images 200 \
+  --evaluation-manifest /abs/imagenetv2/manifest.json \
+  --output $WORK/s100/calibration
+# expect: $WORK/s100/calibration/data (200 files) and calibration.json
+```
 
 <a id="compile"></a>
 ## Compile
 
-Build configurations:
-
-| Config | Target | Inputs the config names | Command (inside the OE container) |
-| --- | --- | --- | --- |
-| `MobileNetV3_config.yaml` | x5 | `./mobilenetv3_large_100.onnx`, `./calibration_data_rgb_f32` (prepare as described in Calibration) | `hb_mapper makertbin --config MobileNetV3_config.yaml` |
-| `mobilenetv3_s_config.yaml` | s100 (s600: change march to `nash-p`) | `./mobilenetv3_large_100.onnx` (matches), `./calibration_data_bgr` (script-produced after the source-dir edit) | `hb_compile --config mobilenetv3_s_config.yaml` |
-
-The march values are read from the YAML files themselves (`bayes-e` X5,
-`nash-e` S100). For each rebuild, compare the target, input metadata, output
-shape/dtype, and numerical results before deployment.
-Use the exact target config filename: `mobilenetv3_s_config.yaml` for S100/S600
-and `MobileNetV3_config.yaml` for X5. Keep the case distinction when selecting
-the target YAML.
-
-The S100 compiler also accepts an ONNX graph directly. For a calibrated NV12 deployment, use the target YAML shown above:
+Fill the placeholders of the reference configuration (`SIZE` is the model input:
+224); the compile parameters (optimization level, latency mode, one
+core, NV12 input) are fixed by it:
 
 ```bash
-hb_compile --model mobilenetv3_large_100.onnx --march nash-e
-hb_compile --config mobilenetv3_s_config.yaml
+# cwd: $WORK
+export SIZE=224
+for pair in s100:nash-e s100p:nash-m s600:nash-p; do
+  target=${pair%%:*}; march=${pair##*:}
+  sed -e "s#@WORK@#$WORK#g" -e "s#@TARGET@#$target#g" -e "s#@MARCH@#$march#g" \
+      -e "s#@SIZE@#$SIZE#g" \
+    $REPO/samples/vision/mobilenetv3/conversion/ptq_s.yaml > $target/config.yaml
+done
 ```
+
+Mount `$WORK` into the container at the same absolute path and run the
+toolchain there, for example for S100:
+
+```bash
+# cwd: $WORK/s100; the published builds used --gpus all --shm-size 15g
+docker run --rm --user "$(id -u):$(id -g)" --gpus all --shm-size 15g \
+  -v "$WORK:$WORK" -w "$WORK/s100" \
+  registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0 \
+  hb_compile --config config.yaml
+
+# S100P and S600: the same with cwd $WORK/<target>
+# expect: <target>/build/mobilenetv3_<target>.hbm
+```
+
+Rename each output to its published name (see [Artifacts](#artifacts)); the
+name carries the march token: `nashe`, `nashm`, `nashp`.
+
+`ptq_s.yaml` sets `quant_config.model_config.all_node_type: int16`: every
+activation is INT16 and the weights stay INT8. With INT8 activations the
+S builds lose 17.7% (Large) and 99.7% (Small) of the FP32 Top-1; with INT16
+activations 0.3% and 1.9-2.2%. There is no X5 build: the X5 toolchain keeps
+MobileNetV3's stride-2 depthwise convolutions and SE pooling in INT8 even when
+all nodes are set to INT16, and none of its configurations (INT8 with KL, max
+or per-channel calibration, bias correction, node-level or full INT16) kept
+the Top-1 loss under 5%.
 
 <a id="validation"></a>
-## Validation
+## Post-Conversion Validation
 
-For a regenerated artifact, run `hb_perf` and `hrt_model_exec` per the OE
-manual and keep the complete output; then confirm on the matching board
-with the runtime that the contract holds: X5 exposes one packed
-NV12 input and an F32 `[1,1000,1,1]` output; S100/S600 expose Y
-`[1,224,224,1]`, UV `[1,112,112,2]`, and an F32 `[1,1000]` output; the
-output semantics are raw logits (softmax applied by the runtime task).
+1. Inspect the artifact with `hrt_model_exec model_info --model_file <file>`
+   on the matching board. The input shapes are per target and variant:
 
-Published quantization record of the original S build (cosine similarity
-after quantization):
+   | Target / variant | Input the metadata exposes | Output |
+   | --- | --- | --- |
+   | s100/s100p/s600, large | Y `[1,224,224,1]`, UV `[1,112,112,2]` (`mobilenetv3_large_100_nash{e,m,p}_224x224_nv12.hbm`) | F32 `[1,1000]` |
+   | s100/s100p/s600, small | Y `[1,224,224,1]`, UV `[1,112,112,2]` (`mobilenetv3_small_100_nash{e,m,p}_224x224_nv12.hbm`) | F32 `[1,1000]` |
 
-```text
-TensorName: output
-Calibrated Cosine: 0.911233
-Quantized Cosine: 0.909042
-```
-
-Toolchain performance reference of the original S build:
-
-```text
-FPS (1 core): 2616.81
-latency: 0.38 ms (382.1 us)
-BPU conv original OPs per run: 433,179,520
-```
+   The output is raw logits; the runtime task applies softmax.
+2. Smoke test with the sample quick start using the fresh artifact: exit 0 and
+   a Top-5 list (see [Expected results](../README.md#expected-results)).
+3. Measure the full-set accuracy with the [evaluator](../evaluator/README.md)
+   and compare it with the FP32 ONNX baseline of the same checkpoint; the
+   published results and the acceptance rule are in the
+   [sample README](../README.md#performance).
 
 <a id="artifacts"></a>
-## Conversion files
+## Artifacts
 
-- `get_mobilenetv3_onnx.py`
-- `timm2onnx_local.py`
-- `get_calibration_data.py`
-- `MobileNetV3_config.yaml`
-- `mobilenetv3_s_config.yaml`
+| Artifact | Target | Lands at |
+| --- | --- | --- |
+| `mobilenetv3_large_100_nashe_224x224_nv12.hbm` | s100 | `model/s100/` |
+| `mobilenetv3_large_100_nashm_224x224_nv12.hbm` | s100p | `model/s100p/` |
+| `mobilenetv3_large_100_nashp_224x224_nv12.hbm` | s600 | `model/s600/` |
+| `mobilenetv3_small_100_nashe_224x224_nv12.hbm` | s100 | `model/s100/` |
+| `mobilenetv3_small_100_nashm_224x224_nv12.hbm` | s100p | `model/s100p/` |
+| `mobilenetv3_small_100_nashp_224x224_nv12.hbm` | s600 | `model/s600/` |
+
+The list matches [model/README.md](../model/README.md).
 
 <a id="known-gaps"></a>
-## Additional preparation
+## Additional Preparation
 
-- Before S-side export on a case-insensitive filesystem, use the YAML filename `mobilenetv3_s_config.yaml` shown above.
-- For X5, prepare `./calibration_data_rgb_f32` in RGB order for `MobileNetV3_config.yaml`; the calibration helper produces BGR data, so convert channel order and apply the X5 YAML's RGB normalization rather than renaming the BGR directory.
-- Set the calibration helper's source-image directory to the local ImageNet directory before running it. The helper's mean constants differ slightly from the S YAML's `mean_value`; keep the selected target's calibration values aligned with its config.
-- Use the board runtime after compilation to check the emitted model contract.
+- Calibration and evaluation data are external. The COCO train2017 subset and
+  the ImageNetV2 MatchedFrequency set (10,000 images) must be obtained from
+  their owners; the manifest format and its checks are described in the
+  [host workflow](../../../../utils/tools/mobilenet/README.md).
+- The OE toolchain images need access to `registry.d-robotics.cc`; log in with
+  your own credentials (`docker login`). Credentials never belong in these
+  files.
+- Compiling for a target needs no board, but validation does: use the board
+  that matches the target (S100P and S600 are separate boards from S100).
+- The models published before this recipe (different weights, preprocessing and
+  a probability output) are no longer distributed with this sample.
