@@ -11,7 +11,7 @@ downloads models, never initializes VLA submodules, never touches board SDKs
 and never runs on a board.  It executes, in isolated subprocesses:
 
 * every first-party Python ``unittest`` directory under ``samples/`` (all
-  52 samples listed in the accepted coverage inventory, including nested
+  53 samples listed in the maintained sample inventory, including nested
   suites such as
   ``samples/vision/yoloe/conversion/tests`` and ``evaluator/tests``), the
   shared suites (including ``test_vla_integration.py``, a parent-repo
@@ -137,11 +137,11 @@ _CONDITIONAL_REASONS = (
 PARAFORMER_EXPORT_SUITE_DIR = "samples/speech/paraformer/tests"
 PARAFORMER_EXPORT_MODULE_PREFIX = "test_export_stages."
 
-#: The accepted 52-row native sample inventory (Codex-reviewed readable-
-#: runtime coverage record).  It is required proof of sample coverage: the
-#: maintained gate validates discovery against it, so a checkout that does
-#: not carry it — or carries an empty/malformed one — fails with an
-#: explicit reason and can never claim full CI equivalence.
+#: The maintained native sample inventory: one row per in-repo sample with
+#: a Python test suite.  The coverage gate validates discovery against it,
+#: so a checkout that does not carry it — or carries an empty/malformed
+#: one — fails with an explicit reason and can never claim full CI
+#: equivalence.
 SAMPLE_INVENTORY_RELPATH = (
     "utils/tools/host_validation/sample-inventory.json")
 #: First-party sample domains (``vla`` holds excluded pinned gitlinks).

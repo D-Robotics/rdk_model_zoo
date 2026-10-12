@@ -2942,11 +2942,11 @@ class RealRepositoryTests(unittest.TestCase):
         sources = {entry["pin"] for entry in self.module.declared_pins(REPO)}
         self.assertIn(REAL_PIN, sources)
 
-    def test_sample_coverage_validates_all_52_inventory_rows(self):
+    def test_sample_coverage_validates_all_53_inventory_rows(self):
         discovery = self.module.discover_python_suites(REPO)
         coverage = self.module.validate_sample_coverage(REPO, discovery)
         self.assertEqual(coverage["status"], "ok", coverage)
-        self.assertEqual(coverage["expected_samples"], 52)
+        self.assertEqual(coverage["expected_samples"], 53)
         self.assertEqual(coverage["missing_samples"], [])
         self.assertEqual(coverage["missing_tests_dirs"], [])
         self.assertEqual(coverage["extra_samples"], [])
