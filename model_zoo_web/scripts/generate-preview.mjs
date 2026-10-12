@@ -436,7 +436,7 @@ for (const record of catalog.models || []) {
       // holds the superseded sample, so linking to it would show users code that no longer matches the models.
       const releasedDevelopTask = !candidatePreview && (
         (record.family === 'yolo26' && ['cls', 'seg', 'pose', 'obb'].includes(record.task))
-        || ['mobilenetv1', 'mobilenetv2', 'mobilenetv4'].includes(record.family));
+        || ['mobilenetv1', 'mobilenetv2', 'mobilenetv3', 'mobilenetv4'].includes(record.family));
       // Drafts link the existing upstream develop sample; their own source
       // changes are not pushed yet.
       const sourceUrl = localRecord ? `${officialRepositoryUrl}/tree/develop/${record.sample_path}` : candidatePreview
