@@ -48,17 +48,17 @@ def bpu_pose_forward(self, x):
         Layout is NHWC.
     """
     res = []
-    use_one2one = hasattr(self, 'one2one_cv2')
+    use_one2one = all(getattr(self, name, None) is not None for name in ('one2one_cv2', 'one2one_cv3', 'one2one_cv4'))
     
     if use_one2one:
         box_layers, cls_layers = self.one2one_cv2, self.one2one_cv3
-        if hasattr(self, 'one2one_cv4_kpts'):
+        if getattr(self, 'one2one_cv4_kpts', None) is not None:
             pose_feat_layers, kpts_head_layers, is_pose26 = self.one2one_cv4, self.one2one_cv4_kpts, True
         else:
             kpt_layers, is_pose26 = self.one2one_cv4, False
     else:
         box_layers, cls_layers = self.cv2, self.cv3
-        if hasattr(self, 'cv4_kpts'):
+        if getattr(self, 'cv4_kpts', None) is not None:
             pose_feat_layers, kpts_head_layers, is_pose26 = self.cv4, self.cv4_kpts, True
         else:
             kpt_layers, is_pose26 = self.cv4, False
@@ -89,7 +89,9 @@ def export_pose_bpu(model_path: str, output_name: str = "yolo26_pose_bpu.onnx", 
     
     print(f"Starting export (imgsz={imgsz})...")
     try:
+        # Keep one-to-one weights before Ultralytics fuses away the unused head.
         exported_path = model.export(
+            nms=False,
             format="onnx", imgsz=imgsz, dynamic=False, opset=11, simplify=True
         )
     except Exception as e:
