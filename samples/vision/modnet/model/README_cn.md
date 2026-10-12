@@ -5,7 +5,7 @@
 <a id="artifacts"></a>
 ## 制品清单
 
-| target | stage | asset ID | 文件 | 获取方式 |
+| 目标板卡 | 阶段 | asset ID | 文件 | 获取方式 |
 |---|---|---|---|---|
 | X5 | matting | `x5:modnet:modnet_512x512_rgb.bin` | `modnet_512x512_rgb.bin` | 外部手工制品 |
 
@@ -26,7 +26,7 @@ model/
 <a id="preparation"></a>
 ## 准备步骤
 
-active manifest 没有公开 URL。通过授权模型提供方取得外部模型，确认身份为 `x5:modnet:modnet_512x512_rgb.bin`，并放到 `samples/vision/modnet/model/modnet_512x512_rgb.bin`。仓库 helper 刻意不下载：
+active 清单没有公开 URL。通过授权模型提供方取得外部模型，确认身份为 `x5:modnet:modnet_512x512_rgb.bin`，并放到 `samples/vision/modnet/model/modnet_512x512_rgb.bin`。下方准备命令会提示模型放置位置：
 
 ```bash
 # cwd：仓库根目录
@@ -46,9 +46,9 @@ python3 -m samples.vision.modnet.model.download \
 <a id="local-paths"></a>
 ## 本地路径
 
-runtime 默认路径为 `samples/vision/modnet/model/modnet_512x512_rgb.bin`。外部路径必须配合精确 `--asset-id x5:modnet:modnet_512x512_rgb.bin`；单凭文件名不能确定协议身份。
+运行时默认路径为 `samples/vision/modnet/model/modnet_512x512_rgb.bin`。外部路径必须配合精确 `--asset-id x5:modnet:modnet_512x512_rgb.bin`；单凭文件名不能确定协议身份。
 
 <a id="formats-checksums"></a>
 ## 格式与校验值
 
-期望制品是 X5 `bin` 部署模型。manifest 记录 `url: null` 和 `sha256: null (unknown)`。任何本地观测都不视为发布者认证。
+期望制品是 X5 `bin` 部署模型。清单记录 `url: null` 和 `sha256: null (unknown)`。任何本地观测都不视为发布者认证。

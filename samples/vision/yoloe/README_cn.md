@@ -5,11 +5,11 @@
 <a id="overview"></a>
 ## 概述
 
-YOLOE 在本 sample 中提供固定 4585 类词表的 Prompt-Free（PF）实例分割。11（E11）使用 DFL16 框回归——64 个框通道在 stride 8/16/32 上按 LTRB 四边各解码为 16-bin 分布——随后做类别内 NMS。26（E26）不使用 DFL（reg_max=1）：框头对每边直接输出一个 LTRB 距离，候选筛选取全局 Top-K 分数，不做 NMS。模型词表固定，不提供任意文字或视觉提示输入。
+YOLOE 在本示例中提供固定 4585 类词表的 Prompt-Free（PF）实例分割。11（E11）使用 DFL16 框回归——64 个框通道在 stride 8/16/32 上按 LTRB 四边各解码为 16-bin 分布——随后做类别内 NMS。26（E26）不使用 DFL（reg_max=1）：框头对每边直接输出一个 LTRB 距离，候选筛选取全局 Top-K 分数，不做 NMS。模型词表固定，不提供任意文字或视觉提示输入。
 
 两版的实例掩码组合方式相同：每个保留候选携带 32 个掩码系数，与模型 32 通道 160×160 原型特征线性组合，再按 sigmoid 中点二值化。
 
-本 sample 位于 `samples/vision/yoloe`。
+本示例位于 `samples/vision/yoloe`。
 
 来源出处：
 
@@ -26,7 +26,6 @@ yoloe/
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 └── README_cn.md  # 中文说明
 ```
@@ -55,7 +54,7 @@ yoloe/
 
 Python 3.10+，NumPy、OpenCV、SciPy、PyYAML；实际推理由匹配板卡系统提供 `hbm_runtime`。主机可运行帮助、列表、dry-run 和合成张量测试。
 
-X5 使用提供 `hbm_runtime` 的系统镜像即可，本 sample 不固定最低镜像版本。S26 源记录使用 RDK OS 4.0.5-Beta、UCP 3.13.6、HBRT 4.7.5、OE 3.7.0。每张图分类头共约 154 MB float32，另有中间张量和掩码；板端内存预算以目标板实际运行为准。
+X5 使用提供 `hbm_runtime` 的系统镜像即可，本示例不固定最低镜像版本。S26 参考记录使用 RDK OS 4.0.5-Beta、UCP 3.13.6、HBRT 4.7.5、OE 3.7.0。每张图分类头共约 154 MB float32，另有中间张量和掩码；板端内存预算以目标板实际运行为准。
 
 <a id="quickstart"></a>
 ## 快速开始
@@ -85,7 +84,7 @@ dry-run 解析选择并以 JSON 预览显示，不加载模型、不连接板卡
 
 下表为 Runtime 性能（不含前后处理）；端到端性能另含各阶段主机侧开销：
 
-| 模型（源记录） | 目标 | Runtime 延迟 / FPS |
+| 模型（参考记录） | 目标 | Runtime 延迟 / FPS |
 | --- | --- | --- |
 | YOLOE-11s PF | X5 | 146.16 ms / 6.84 |
 | YOLOE-11m PF | X5 | 177.14 ms / 5.65 |
@@ -108,17 +107,17 @@ X5 为源单线程 libdnn Runtime 记录。S100 为源 2026-09-08、200 帧、wa
 
 S26 源交付发布的示例：已发布 S100 量化 YOLOE-26n PF 模型在随附 `office_desk.jpg` 上的实测输出，标签按 PF 检查点类别 ID 顺序导出，与源图注一致。
 
-两图均为源发布的量化 S 结果（基于随附图片）；当前输出来自实际运行本 sample，精度指标来自[评估器](evaluator/README_cn.md)。
+两图均为源发布的量化 S 结果（基于随附图片）；当前输出来自实际运行本示例，精度指标来自[评估器](evaluator/README_cn.md)。
 
 <a id="entry-points"></a>
 ## 入口
 
 - [Model](model/README_cn.md) — 制品身份、下载、哈希。
-- [转换](conversion/README_cn.md) — 权重导出、浮点输出检查、各平台校准、编译命令与制品记录；包含原始 X5 E11、S E11、S E26 配方——S 源配方产生量化输出，本准备入口保留浮点输出节点，实际编译精度以编译产物 metadata 为准。
+- [转换](conversion/README_cn.md) — 权重导出、浮点输出检查、各平台校准、编译命令与制品记录；包含原始 X5 E11、S E11、S E26 配方——S 源配方产生量化输出，本准备入口保留浮点输出节点，实际编译精度以编译产物元数据为准。
 - [评估](evaluator/README_cn.md) — 显式 PF 映射、CPU/板端后端、COCO 指标、来源与历史性能。
 - [Python](runtime/python/README_cn.md) — 参数、协议、库接口与排障。
 - [C++ 运行时](runtime/cpp/README_cn.md) — 可复用三阶段 C++ 库，包含独立持有的 NV12 输入、浮点绑定和 E11/E26 解码与掩码；SDK 适配器、板卡/模型/词表核验、发布制品选择、CLI 及结果记录一并提供；SDK 构建与板端运行按 C++ 流程指南执行。
-- [Test data](test_data/README_cn.md) — 图片、词表与源记录结果插图来源。
+- [Test data](test_data/README_cn.md) — 图片、词表与参考记录结果插图来源。
 
 <a id="license"></a>
 ## 许可

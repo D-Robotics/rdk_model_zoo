@@ -61,7 +61,7 @@ python3 onnx_export/export_unet.py \
 ```
 
 The numerical check must pass before `mapper.py` accepts the export report.
-`--skip-runtime-check` is only a structural preflight and deliberately marks
+`--skip-runtime-check` is only a structural preflight and marks
 the ONNX as not ready for X5 PTQ.
 
 <a id="calibration"></a>

@@ -59,7 +59,7 @@ python3 samples/vision/dinov2/runtime/python/main.py --target s100 --output cls_
 # expect: JSON summary for cls_feat and cosine_similarity for the second image; exit code 0
 ```
 
-The convenience `runtime/python/run.sh` accepts the positional output (`cls_feat` or `patch_feat`) followed by named options. It never downloads a model. The source-compatible `model/download_model.sh` delegates to the explicit target script and requires `s100`, `s100p`, or `s600`.
+The convenience `runtime/python/run.sh` accepts the positional output (`cls_feat` or `patch_feat`) followed by named options. It never downloads a model. The `model/download_model.sh` delegates to the explicit target script and requires `s100`, `s100p`, or `s600`.
 
 <a id="expected-results"></a>
 ## Expected Results

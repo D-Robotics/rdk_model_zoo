@@ -39,7 +39,7 @@ python main.py --model_name minicpm5-2b --march nash-e   --input_model_path "$MO
 python retarget.py   --source-hbm ./output/s100/minicpm5-2b_chunk_256_cache_4096_q8.hbm   --output-hbm ./output/s100p/minicpm5-2b_chunk_256_cache_4096_q8.hbm   --march nash-m --jobs 8
 ```
 
-Calibration verifies a pinned WikiText2 TRAIN SHA256, joins text with two newlines, encodes without extra special tokens and decodes the first 50 consecutive 256-token chunks into JSON text records. The filename `test-train-source.parquet` accommodates SDK file discovery; its contents are TRAIN. TEST is excluded. All 50 records were checked against the calibration used for the distributed artifacts.
+Calibration verifies a pinned WikiText2 TRAIN SHA256, joins text with two newlines, encodes without extra special tokens and decodes the first 50 consecutive 256-token chunks into JSON text records. The filename `test-train-source.parquet` accommodates SDK file discovery; its contents are TRAIN. TEST is excluded.
 
 `retarget.py` independently converts original `.prefill.bc` and `.decode.bc` for the selected march, removes quantization IO, compiles and links. Never feed Nash-e converted BC into Nash-m conversion. Sequential targets reduce peak memory and allow board testing while compiling the second target.
 

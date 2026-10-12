@@ -99,11 +99,11 @@ print(score)
 <a id="stage-io"></a>
 ## Stage and lifetime contract
 
-`preprocess` accepts a nonempty finite mono float32 `[N]` waveform with amplitudes in [-1,1] and rate 16000. It copies the first 60000 samples and pads the remainder with zeros. No hidden resampling/channel averaging is performed. PaddleAudio fbank uses 25 ms frames, 10 ms shifts, 80 bins and source defaults (including dither=0 and snip_edges=True), producing 373 frames. The named `[1,373,80]` tensor owns contiguous data.
+`preprocess` accepts a nonempty finite mono float32 `[N]` waveform with amplitudes in [-1,1] and rate 16000. It copies the first 60000 samples and pads the remainder with zeros. Prepare mono 16 kHz audio before calling it. PaddleAudio fbank uses 25 ms frames, 10 ms shifts, 80 bins and source defaults (including dither=0 and snip_edges=True), producing 373 frames. The named `[1,373,80]` tensor owns contiguous data.
 
 `infer` performs one shared runner call and returns raw output; it has no sigmoid, dequantization, file access or reduction. The runner validates names/shapes/dtypes/finite values and copies SDK output so it survives later calls. `postprocess` validates the bound output, applies shared SCALE conversion only to integer data, requires probabilities in [0,1] and returns their maximum. Float output is not transformed even if metadata carries a vestigial quant descriptor. No additional sigmoid is applied.
 
-`predict` composes the stages and caches no last-image/audio state. The established `pre_process`, `forward`, and `post_process` names remain importable thin aliases of `preprocess`, `infer`, and `postprocess` — one implementation, two names. One instance is intended for serial use; SDK concurrency is not promised. `kws.py` prepares features (fixed MDTC frontend), owns scoring and runtime initialization; `cli.py` reads audio files, resolves selection and writes reports.
+`predict` composes the stages. `pre_process`, `forward` and `post_process` are aliases for `preprocess`, `infer` and `postprocess`. Call one instance serially. `kws.py` provides the MDTC frontend, scoring and runtime initialization; `cli.py` reads audio, selects the model and writes reports.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

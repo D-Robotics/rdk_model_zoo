@@ -59,7 +59,7 @@ python3 samples/vision/paddle_ocr/runtime/python/main.py \
   --json-output /tmp/paddleocr-x5.json
 ```
 
-完整 S100 推理（target、引用、路径、测试图作为一个整体一起切换）：
+完整 S100 推理（目标板卡、引用、路径、测试图作为一个整体一起切换）：
 
 ```bash
 python3 samples/vision/paddle_ocr/runtime/python/main.py \
@@ -74,7 +74,7 @@ python3 samples/vision/paddle_ocr/runtime/python/main.py \
 
 `--prepare` 配合 `--model-dir` 是显式取模操作（见
 [模型准备](../../model/README.md#preparation)）。入口拒绝不完整的路径
-组合、跨 target 的引用、运行时元数据不匹配、非 F32 输出以及无法识别
+组合、跨目标板卡的引用、运行时元数据不匹配、非 F32 输出以及无法识别
 的执行目标——绝不按文件名猜测。即使元数据带有量化描述符，float32
 输出仍保留 SDK 返回的数值，不重复反量化；整数输出仍不满足 F32 契约。
 
@@ -147,22 +147,22 @@ print(result.texts)
 <a id="stage-io"></a>
 ## 阶段 I/O
 
-本 sample 是仓库的多阶段参照：每个阶段有显式数据契约，pipeline 以
+本示例是仓库的多阶段参照：每个阶段有显式数据契约，pipeline 以
 可读顺序组合它们。
 
 | 阶段 | 输入 | 输出 | 契约 |
 | --- | --- | --- | --- |
 | `tensor_io.prepare_detection`（检测预处理） | BGR 图像 | packed NV12 `[1,960,640,1]` U8（X5，linear 缩放）或 split `x_y [1,640,640,1]` + `x_uv [1,320,320,2]` U8（S100，area 缩放） | 无 CLI、无下载、无文件写入 |
-| 检测 `forward` | 上述 NV12 张量 | 原始 F32 score map（如 `[1,1,640,640]`） | 懒加载 `HB_HBMRuntime`；元数据对照 binding 校验；此处不解码 |
-| 检测 `post_process` | 原始 score map、本次调用的几何 context | 阈值化轮廓 → 有序多边形框与裁剪 | 阈值 `0.5`；膨胀与最小面积过滤按 target 本地规则；context 只携带本次调用的缩放信息 |
+| 检测 `forward` | 上述 NV12 张量 | 原始 F32 score map（如 `[1,1,640,640]`） | 懒加载 `HB_HBMRuntime`；元数据对照模型绑定校验；此处不解码 |
+| 检测 `post_process` | 原始 score map、本次调用的几何上下文 | 阈值化轮廓 → 有序多边形框与裁剪 | 阈值 `0.5`；膨胀与最小面积过滤按目标板卡本地规则；上下文只携带本次调用的缩放信息 |
 | `tensor_io.prepare_recognition`（识别预处理） | BGR 裁剪 | RGB F32 NCHW `[1,3,48,320]`，值域 `[0,1]`，linear 缩放 | 与检测预处理同纪律 |
 | 识别 `forward` | 上述 RGB 张量 | F32 `[1,40,C]`（X5 `C=97`，S100 `C=18710`） | 懒加载第二阶段；校验物理张量 |
 | 识别 `post_process` | 原始 `[1,40,C]`、模型对词典 | 解码字符串，每裁剪一个 | CTC 最佳路径：blank 重置、重复折叠、按词典顺序；无文件 I/O |
 | `OCRPipeline.predict` | BGR 图像 | 对齐 `boxes`/`texts` 的结果 | 恰好串联上述阶段；无第二套算法 |
 
 阶段错误归属也是契约的一部分：检测阶段失败归检测器（制品、元数据、
-target），识别阶段失败归识别器——pipeline 不混淆两者。零检测是合法
-结果，直接跳过识别。每次调用的几何信息保存在 prepared context 中，
+目标板卡），识别阶段失败归识别器——pipeline 不混淆两者。零检测是合法
+结果，直接跳过识别。每次调用的几何信息保存在 prepared 上下文中，
 绝不放入会被下次调用覆盖的实例字段，因此不同尺寸图像交错处理不会
 互相污染。
 

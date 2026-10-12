@@ -36,7 +36,7 @@ model/
 <a id="preparation"></a>
 ## 准备步骤
 
-从仓库根目录运行，并选择具体 target。脚本不会猜测 target，也不会回退到 S100。
+从仓库根目录运行，通过 target 指定 `s100`、`s100p` 或 `s600`。
 
 ```bash
 # cwd：仓库根目录；来源：上表精确 manifest URL
@@ -48,7 +48,7 @@ bash samples/vision/dinov2/model/download.sh s600 /tmp/dinov2-model
 # 预期：/tmp/dinov2-model/nash-p/dinov2_vits14_224_int16_nashp.hbm
 ```
 
-`download_model.sh` 是位置快捷入口，使用同样的必需 target 参数。manifest 的 SHA-256 均未知；下载器会打印观测 digest，并说明无法独立验证来源。I/O、选择或下载错误退出 2。
+`download_model.sh` 是位置快捷入口，使用同样的必需 target 参数。manifest 的 SHA-256 均未知；下载器打印下载文件的 SHA-256。I/O、选择或下载错误退出 2。
 
 <a id="accompanying-files"></a>
 ## 伴随文件

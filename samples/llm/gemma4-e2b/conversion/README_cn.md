@@ -8,10 +8,10 @@ PTQ 量化与 HBM 编译在**开发 PC**上完成，不在板端执行。
 <a id="source-model"></a>
 ## 源模型与配方
 
-本目录保留 S 源发布的 Gemma4-E2B 转换方案：原始权重、Gemma4 的 leap_llm 适配、
+本目录提供 Gemma4-E2B 转换流程：原始权重、Gemma4 的 leap_llm 适配、
 Vision/Text 校准、PTQ 编译和验证工具。模型来源为 `google/gemma-4-e2b`；获取权重与访问条件按完整教程 §3.4 执行。
 本文命令从 `samples/llm/gemma4-e2b`（sample 根目录）运行，除非代码块显式切换目录。
-量化方案即教程自身流程；准备制品时在 OE 环境中执行。
+按教程准备 OE 环境后执行量化。
 
 <a id="directory"></a>
 ## 目录结构
@@ -48,8 +48,7 @@ conversion/
 | `s600` | `nash-p` | 4 | 2 / 2 |
 
 动态量化、`opt=1`、HPC 和 decode no-padding 只在 `nash-p` 启用，S100/S100P
-继续保持原来的单核行为。实测 S600 板端可用内存为 23 GiB（标称 24 GB），
-不是 64 GB。
+继续保持原来的单核行为。S600 板端配置可用内存为 23 GiB（标称 24 GB）。
 
 ## 目录内容
 
@@ -74,7 +73,7 @@ bash conversion/leap_llm_gemma4/install.sh
 ```
 
 此流程由 OE-LLM 的模型适配与编译入口承接图导出，不提供独立 ONNX 导出步骤。
-完整架构和 Vision/Text 接口分别见完整教程 §2、§5、§6；不要将其他 Sample 的 ONNX 命令套入本流程。
+完整架构和 Vision/Text 接口分别见完整教程 §2、§5、§6。
 
 <a id="calibration"></a>
 ## 校准数据
@@ -118,18 +117,18 @@ Vision 脚本会校验 `images_coco_manifest.json`，拒绝合成图或未登记
 ## 验证流程导航
 
 [评测说明](../evaluator/README_cn.md) 保留 PC 的 BC/浮点对照和板端 golden 输入对齐命令。
-完整教程说明精度观察和排查流程；这些方案由使用者在 OE 环境中执行。
+按完整教程在 OE 环境中进行精度对照和故障排查。
 
 <a id="artifacts"></a>
 ## 输出制品
 
 Vision 和 Text 分别输出到 `conversion/output/gemma4_e2b_vision_<target>/` 与
 `conversion/output/gemma4_e2b_text_<target>/`。板端使用 `gemma4-e2b_vit_ptq.hbm` 与
-`gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm`，另外需要 embedding 和 tokenizer；目录及源校验记录见
+`gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm`，另外需要 embedding 和 tokenizer；目录及发布校验值见
 [模型说明](../model/README_cn.md)。`.bc` 为开发 PC 验证产物，不能作为板端 HBM 传入。
 
 <a id="known-gaps"></a>
-## 使用边界
+## 补充准备
 
 配方原有前提不变：权重、SDK 与文本校准语料需提前准备；Vision 使用带清单的真实图像。
 该配方生成文档说明的 4096-token Vision/Text HBM。其他上下文长度需要使用匹配的 `CACHE_LEN` 重新编译，并在重建运行时前同步 `kChunkSize`/`kCacheLen`；详见[编译](../runtime/cpp/README_cn.md#build)。

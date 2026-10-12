@@ -33,7 +33,7 @@ center crop the published models expect (install it with
 `python3 -m pip install pillow` if the board image lacks it).
 `hbm_runtime` is supplied by the board image and is imported lazily.
 `--help`, `--list-models`, and `--dry-run` inspect the selection without
-executing a model. Host-side test dependencies are listed in the sample's
+executing a model. Host Python dependencies are listed in the sample's
 `requirements-host.txt`.
 
 <a id="usage"></a>
@@ -44,7 +44,7 @@ flags is not executable without a board and artifact, so the minimal
 SDK-free invocation is the listing mode):
 
 ```bash
-# success: prints all published references, exit 0, no SDK loaded
+# output: prints all published references, exit 0, no SDK loaded
 python3 samples/vision/mobilenetv1/runtime/python/main.py --list-models --target auto
 ```
 
@@ -52,7 +52,7 @@ A full run on a prepared X5 board:
 
 ```bash
 # prerequisites: bash samples/vision/mobilenetv1/model/download.sh x5 100
-# success: exit 0 and a printed Top-5 list
+# output: exit 0 and a printed Top-5 list
 python3 samples/vision/mobilenetv1/runtime/python/main.py \
   --target x5 \
   --asset-id x5:mobilenetv1:mobilenetv1_100_bayese_224x224_nv12.bin \
@@ -100,16 +100,13 @@ S100/S100P/S600 receive Y `(1,224,224,1)` and UV `(1,112,112,2)` uint8
 arrays (every variant is 224x224 on every target).
 The published artifacts return raw logits; the task applies a stable
 softmax before Top-K on both platforms.
-Output shapes follow the rank rule: any singleton-batch/spatial spelling
-that squeezes to `(1000,)` binds (the published artifacts declare the
-`raw_f32` transform; quantized artifacts would require a declared `dequant`
-contract).
+The output must reduce to `(1000,)` after removing dimensions of size 1. Published artifacts use `raw_f32`; integer outputs require `dequant` and matching quantization metadata.
 
 <a id="integration-example"></a>
 ## Integration example
 
 Prerequisites: artifact prepared (see [model/README.md](../../model/README.md)),
-and OpenCV-Python and Pillow importable. Every input variable is defined in the example:
+and OpenCV-Python and Pillow importable. Run:
 
 ```python
 from samples.vision.mobilenetv1.runtime.python.classify import MobileNetV1Classifier

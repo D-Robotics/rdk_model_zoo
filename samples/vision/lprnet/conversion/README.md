@@ -29,7 +29,7 @@ Prepare an ONNX/checkpoint export pipeline with `input float32 NCHW (1,3,24,94)`
 <a id="calibration"></a>
 ## Calibration
 
-No calibration dataset or source calibration producer is included. The checked-in `test_input.dat` is a runtime input fixture, not a calibration set. It must not be described as image data or reused as a representative calibration dataset.
+No calibration dataset or source calibration producer is included. The checked-in `test_input.dat` is a runtime input fixture, not a calibration set. Prepare a separate set of representative calibration inputs.
 
 <a id="compile"></a>
 ## Compile

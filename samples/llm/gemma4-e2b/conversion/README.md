@@ -8,11 +8,11 @@ PTQ quantization and HBM compilation run on a **development PC**, not on the boa
 <a id="source-model"></a>
 ## Source model and recipe
 
-This directory carries the Gemma4-E2B conversion recipe from the source S release: original weights,
+This directory provides the Gemma4-E2B conversion recipe: original weights,
 Gemma4 leap_llm adaptation, Vision/Text calibration, PTQ compilation and verification tools.
 The model source is `google/gemma-4-e2b`; follow full tutorial §3.4 for weight acquisition and access requirements.
 Commands here start in `samples/llm/gemma4-e2b` (sample root) unless a code block changes directory explicitly.
-The quantization workflow is the tutorial's own; run it in the OE environment when preparing artifacts.
+Run quantization in the OE environment described in the tutorial.
 
 <a id="directory"></a>
 ## Directory structure
@@ -50,8 +50,7 @@ defaults to `s100p` by default.
 
 S600-specific dynamic quantization, `opt=1`, HPC and decode no-padding options
 are enabled only for `nash-p`; S100/S100P retain the original single-core
-behavior. The tested S600 board has 23 GiB usable RAM (24 GB nominal), not
-64 GB.
+behavior. The S600 configuration has 23 GiB usable RAM (24 GB nominal).
 
 ## Contents
 
@@ -76,7 +75,7 @@ bash conversion/leap_llm_gemma4/install.sh
 ```
 
 Graph export is handled by the OE-LLM model adaptation and compiler entry points; this recipe has no separate ONNX export step.
-See full tutorial §2, §5 and §6 for architecture and Vision/Text interfaces; do not substitute another sample's ONNX commands.
+See full tutorial §2, §5 and §6 for architecture and Vision/Text interfaces.
 
 <a id="calibration"></a>
 ## Calibration data
@@ -122,7 +121,7 @@ See the step-by-step guide with pitfalls and solutions:
 ## Verification workflow
 
 The [evaluator guide](../evaluator/README.md) provides PC BC/float comparison and board golden-input alignment commands.
-The full tutorial explains accuracy observations and troubleshooting; those workflows are executed by the user in the OE environment.
+Follow the full tutorial for accuracy comparison and troubleshooting in the OE environment.
 
 <a id="artifacts"></a>
 ## Produced artifacts
@@ -130,12 +129,12 @@ The full tutorial explains accuracy observations and troubleshooting; those work
 Vision and Text use `conversion/output/gemma4_e2b_vision_<target>/` and
 `conversion/output/gemma4_e2b_text_<target>/`. Board inference uses `gemma4-e2b_vit_ptq.hbm` and
 `gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm`, plus embedding and tokenizer files.
-See [model preparation](../model/README.md) for layout and source checksum records.
+See [model preparation](../model/README.md) for layout and published checksums.
 A `.bc` is a PC verification artifact, not a board HBM.
 
 <a id="known-gaps"></a>
-## Usage boundaries
+## Additional preparation
 
-The original prerequisites remain: weights, SDK and text calibration corpus must be prepared; Vision uses real images with a manifest.
+Prepare the weights, SDK and text calibration corpus; use real Vision images with a manifest.
 S100P and S600 publish HBMs; on S100, supply the HBM artifacts yourself (see [model](../model/README.md)).
 The recipe produces the documented 4096-token Vision/Text HBMs. For other context sizes, recompile with matching `CACHE_LEN` and synchronize `kChunkSize`/`kCacheLen` before rebuilding the runtime; see [Compilation](../runtime/cpp/README.md#build).

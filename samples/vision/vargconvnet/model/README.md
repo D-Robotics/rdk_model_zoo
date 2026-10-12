@@ -33,7 +33,7 @@ bash samples/vision/vargconvnet/model/download.sh x5 vargconvnet
 python3 samples/vision/vargconvnet/model/download.py --target x5 --variant vargconvnet
 ```
 
-Success: exit 0, filename and observed SHA-256 printed. Download writes a temporary file then installs without overwriting existing bytes. Size/hash failure exits with an error. If the server is unavailable, transfer the matching published file manually into `model/`; preserve its source and observed digest. Do not substitute a different variant.
+Output: exit 0, filename and observed SHA-256 printed. Download writes a temporary file then installs without overwriting existing bytes. Size/hash failure exits with an error. If the server is unavailable, transfer the matching published file manually into `model/`; preserve its source and observed digest. Do not substitute a different variant.
 
 <a id="accompanying-files"></a>
 ## Accompanying files

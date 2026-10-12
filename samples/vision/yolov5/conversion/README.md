@@ -168,7 +168,7 @@ hb_mapper checker --model-type onnx --march bayes-e --model yolov5n_tag_v7.0_det
 hb_mapper makertbin --model-type onnx --config yolov5_detect_bayese_640x640_nv12.yaml
 ```
 
-The expected artifacts are the YAML prefix under the YAML working directory, e.g. `yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin`. The NCHW YAML is retained as a source reference; its runtime input declaration is NCHW while the published X5 artifact/runtime path is NV12, so select the config intentionally.
+The expected artifacts are the YAML prefix under the YAML working directory, e.g. `yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin`. The NCHW YAML is retained as a source reference; its runtime input declaration is NCHW while the published X5 artifact/runtime path is NV12, select the configuration matching the runtime input.
 
 <a id="validation"></a>
 

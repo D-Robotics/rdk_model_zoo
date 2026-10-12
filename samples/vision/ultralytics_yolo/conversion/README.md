@@ -62,7 +62,7 @@ model `forward` method must not be modified. Per-target compiler entry:
 
 The mapper checks that the compiler is sourced, the ONNX model has exactly one
 static `tensor(float)` rank-4 input, and the calibration directory contains
-JPG, JPEG, or PNG files. It does not silently install a missing dependency.
+JPG, JPEG, or PNG files. Install missing dependencies before running the mapper.
 The compiler environment and the board runtime image are separate; do not
 copy `hb_mapper` or `hb_compile` installation steps into a board setup.
 
@@ -535,7 +535,7 @@ directory, and `bpu_model_output/` under the reported unique workspace child.
 
 ## Conversion scripts and APIs
 
-The conversion code path is intentionally small:
+Conversion scripts and entry points:
 
 ```text
 export_monkey_patch.py
@@ -565,7 +565,7 @@ protocol.
   OpenExplore environment and rerun its version/help command. The board image
   is not a compiler environment.
 * **ONNX input is dynamic, not float32, or has multiple inputs:** export a
-  static batch-one NCHW graph. The mapper intentionally stops before writing
+  static batch-one NCHW graph. The mapper stops before writing
   calibration data when the input contract is unknown.
 * **No calibration images:** use JPG/JPEG/PNG files directly in
   `--cal-images`; files with other extensions are ignored. Use
@@ -774,8 +774,8 @@ hrt_model_exec model_info --model_file bpu_outputs/yolo13n_detect_nashe_640x640_
 <a id="known-gaps"></a>
 ## Additional preparation
 
-- Each produced artifact requires its own binding check, matching-board smoke run and applicable dataset/reference comparisons; published-artifact board records do not transfer to a fresh conversion.
+- Each produced artifact requires its own binding check, matching-board inference run and applicable dataset/reference comparisons; published-artifact board records do not transfer to a fresh conversion.
 - No pinned calibration image set/dataset version or complete source-checkpoint hash set is bundled. The 20–50 image guidance is a script recommendation. Defaults are `--cal-sample true --cal-sample-num 20`; `--cal-sample false` uses the whole eligible image pool. Save selected filenames and digests for reproducibility.
 - `--quantized` defaults to int8, with int16 available; `--jobs` defaults to 16 and `--save-cache` to false. Inspect target-specific optimization choices using `mapper.py --platform x5 --toolchain-help` or the appropriate S target. Use the compiler version specified for the selected target.
 - The container images linked in this guide are the documented environment examples for the targets they cover; select an image matching your target's toolchain requirements and record the actual image identity and version output.
-- Validate fresh artifacts with the binding check, a matching-board smoke run and applicable dataset/reference comparisons (see [Validation](#validation)).
+- Validate fresh artifacts with the binding check, a matching-board inference run and applicable dataset/reference comparisons (see [Validation](#validation)).

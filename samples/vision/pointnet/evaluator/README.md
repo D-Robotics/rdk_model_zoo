@@ -8,7 +8,7 @@ English | [简体中文](README_cn.md)
 `../test_data/chair.pts` is a single delivered XYZ cloud, not a labeled evaluation
 split. There is no dataset downloader, label array, split version or dataset-wide
 accuracy evaluator in the source. Use the delivered file unchanged for the
-functional smoke command; prepare external labeled data separately for real metrics.
+example inference command; prepare external labeled data separately for real metrics.
 
 <a id="directory"></a>
 ## Directory structure
@@ -32,7 +32,7 @@ Run in the RDK S100 HBM/SDK environment. Use Python 3.10+, NumPy and PyYAML; plo
 python3 samples/vision/pointnet/runtime/python/main.py --target s100 --no-plot --output-dir outputs/pointnet-check
 ```
 
-Smoke options: `--target s100` (parser default auto→s100), `--no-plot` (default
+Example options: `--target s100` (parser default auto→s100), `--no-plot` (default
 false), `--output-dir outputs/pointnet-check` (default outputs/pointnet).
 Input defaults to the delivered chair; other options are in the
 [complete runtime table](../runtime/python/README.md#parameters).
@@ -78,5 +78,5 @@ see the [quantization results](../conversion/README.md#calibration).
 No labeled dataset evaluator or BPU benchmark helper is bundled; reproducing
 the source-recorded performance requires the artifact, environment and command
 identity listed above. S100P/S600 have no published
-PointNet asset and are not silently mapped to S100. Code follows
+PointNet asset and are unsupported. Code follows
 [Apache-2.0](../../../../LICENSE).

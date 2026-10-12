@@ -5,9 +5,9 @@
 <a id="source-model"></a>
 ## 源模型
 
-source 文档描述了将 PyTorch `torchvision.models.video.r3d_18` 动作分类模型导出为 ONNX，再生成 Kinetics 400 类输出。模型输入是 `(1,3,16,112,112)` 的准备片段；runtime 使用 `test_data/video0.npy` 中已经归一化的片段。
+参考文档描述了将 PyTorch `torchvision.models.video.r3d_18` 动作分类模型导出为 ONNX，再生成 Kinetics 400 类输出。模型输入是 `(1,3,16,112,112)` 的准备片段；运行时使用 `test_data/video0.npy` 中已经归一化的片段。
 
-官方论文和参考实现见[样例总览](../README_cn.md#overview)。本目录没有 source checkpoint 文件名、checkpoint hash、导出脚本或源权重获取记录。
+官方论文和参考实现见[样例总览](../README_cn.md#overview)。本目录没有参考权重文件文件名、权重文件摘要、导出脚本或源权重获取记录。
 
 模型图结构：
 
@@ -25,9 +25,9 @@ conversion/
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-source 记录使用 RDK S 算法工具链 OpenExplorer 3.5.0 和 S100 目标。记录显示工具链支持 `Conv3D`，但不支持原始 3D `GlobalAveragePooling` 路径；因此将该 pooling 路径替换为等价的 2D `ReduceMean` 后再编译 HBM。
+参考记录使用 RDK S 算法工具链 OpenExplorer 3.5.0 和 S100 目标。记录显示工具链支持 `Conv3D`，但不支持原始 3D `GlobalAveragePooling` 路径；因此将该 pooling 路径替换为等价的 2D `ReduceMean` 后再编译 HBM。
 
-当前 manifest 只发布 `s100/r3d_18.hbm`，不提供 S100P、S600 或 x5 转换目标。
+当前清单只发布 `s100/r3d_18.hbm`，不提供 S100P、S600 或 x5 转换目标。
 
 模型转换在 x86 Linux 主机上的 RDK S100 OpenExplore 环境中执行，不在板卡上运行：
 
@@ -52,17 +52,17 @@ sudo docker run -it --rm --network host --shm-size=15g \
 <a id="export"></a>
 ## 导出
 
-source README 描述了 ONNX 导出的概念，但没有可执行导出脚本、Python 环境锁定、checkpoint 路径或可核对产物的命令。因此导出阶段**无法从仓库内容复现**，列为已知缺口。
+自行转换时，先准备 torchvision R3D-18 权重与 ONNX 导出脚本，输入采用已归一化的 RGB float32 `(1,3,16,112,112)`，输出为 Kinetics-400 分类分数。本目录未提供权重或导出脚本；可直接使用下方已发布 HBM 的下载命令。
 
 <a id="calibration"></a>
 ## 校准
 
-没有校准数据集、样本数量、量化配置、校准命令或生成的校准制品。source 转换记录称多数算子相似度大于 0.99、最终量化相似度约为 0.99。
+没有校准数据集、样本数量、量化配置、校准命令或生成的校准制品。参考转换记录称多数算子相似度大于 0.99、最终量化相似度约为 0.99。
 
 <a id="compile"></a>
 ## 编译
 
-没有 compiler YAML、mapper、编译命令、workspace 或 checkpoint 到 HBM 的完整配方。仓库中唯一可执行的准备路径是下载已经发布的 HBM：
+没有 compiler YAML、mapper、编译命令、workspace 或权重文件到 HBM 的完整配方。仓库中唯一可执行的准备路径是下载已经发布的 HBM：
 
 ```bash
 # cwd：仓库根目录
@@ -76,7 +76,6 @@ bash samples/vision/3dresnet/model/download.sh s100
 ## 转换后验证
 
 
-
 在板端执行已下载制品时，使用 [Python runtime](../runtime/python/README_cn.md) 在 S100 板卡上运行。
 
 <a id="artifacts"></a>
@@ -86,20 +85,16 @@ bash samples/vision/3dresnet/model/download.sh s100
 | --- | --- | --- | --- |
 | `r3d_18.hbm` | S100 | `model/s100/r3d_18.hbm` | 已发布/可下载；转换配方缺失 |
 
-没有提供 ONNX、checkpoint、校准或 compiler workspace 制品。
+没有提供 ONNX、权重文件、校准或 compiler workspace 制品。
 
 <a id="known-gaps"></a>
 ## 补充准备
 
-- 没有可执行 ONNX 导出脚本或固定 source checkpoint。
-- 没有校准数据集、样本数量、量化 YAML 或校准命令。
-- 没有 OE 编译 YAML、mapper 或产物生成命令。
-- 没有可复现的转换输出 hash；当前 HBM manifest SHA 为 `null`。
-- 没有 S100P、S600 或 x5 制品。
+自行转换需准备固定版本的 torchvision 权重、ONNX 导出脚本、代表性视频校准数据及 S100 OpenExplorer 编译配置。已发布 HBM 的 SHA-256 未提供。X5、S100P 和 S600 无对应制品。
 
-转换结果截图：
+以下图片展示池化算子的替换和转换结果：
 
-![Original pooling error](../test_data/readme_img/image-1.png)
-![Original 3D pooling](../test_data/readme_img/image.png)
-![Pooling replacement](../test_data/readme_img/image-2.png)
-![Conversion result](../test_data/readme_img/image-3.png)
+![原池化错误](../test_data/readme_img/image-1.png)
+![三维池化](../test_data/readme_img/image.png)
+![池化替换](../test_data/readme_img/image-2.png)
+![转换结果](../test_data/readme_img/image-3.png)

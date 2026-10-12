@@ -19,7 +19,6 @@ unetmobilenet/
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 └── README_cn.md  # 中文说明
 ```
@@ -57,7 +56,7 @@ python3 samples/vision/unetmobilenet/runtime/python/main.py --dry-run --target s
 <a id="expected-results"></a>
 ## 预期结果
 
-Python 成功返回 0，在 cwd 输出 result.jpg、unetmobilenet_mask.npy（原图尺寸 int32 类别 0..18）与 unetmobilenet_report.json。alpha_f=0.75 是原图权重，1 为原图、0 为彩色 mask。实际类别取决于真实推理，不承诺固定结果。下图来自源分支记录。
+Python 成功返回 0，在 cwd 输出 result.jpg、unetmobilenet_mask.npy（原图尺寸 int32 类别 0..18）与 unetmobilenet_report.json。alpha_f=0.75 是原图权重，1 为原图、0 为彩色掩码。实际类别取决于模型和输入。下图来自参考实现记录。
 
 ![参考效果图](test_data/result.jpg)
 

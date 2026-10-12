@@ -52,8 +52,8 @@ evaluator/
 ## 环境
 
 默认主机路径需要 Python、NumPy 和 OpenCV，不导入板端 SDK。
-数据集指标保留源公式，以 float64 累积。
-可选 `--resize-backend torch` 保留源评估器 `align_corners=False` 插值，仅使用时导入 Torch；
+数据集指标以 float64 累积。
+可选 `--resize-backend torch` 使用 `align_corners=False` 插值，仅使用时导入 Torch；
 默认 OpenCV 插值与统一运行时一致；数值累积与源 Torch float32 归约在浮点舍入内一致。
 可选 Torch 后端按需启用。
 
@@ -71,7 +71,7 @@ python prepare_sunrgbd.py --source-root /work/sunrgbd \
 
 默认生成三种协议，可重复指定 `--protocol` 只准备所需项以减少存储。
 每个张量记录摘要、几何和类型。screen 子集按 sensor 确定性分层抽样；数量小于 sensor 数量
-或为零也受支持。screen 是选择元数据，评估器不会据此静默丢弃其他输出记录。
+或为零也受支持。screen 记录选择信息；评估器仍处理提供的全部输出记录。
 
 请在匹配的导出或运行环境中分别生成浮点和编译模型的原始输出，本工具不代为推理。
 保存两个 NPZ，包含一维、唯一整数 `indices` 和按该顺序排列的数组：
@@ -133,11 +133,11 @@ python eval_numeric.py --image /work/depth/input.png \
 指标按所有选中图像的有效像素汇总，不是每张图无权重平均。
 
 保留不对齐和 median 对齐两组指标。数据集对齐使用偶数样本的**较小中位数**，
-与源 `torch.median` 一致；单图比较保留源 NumPy 的**两个中间值平均数**。
+与源 `torch.median` 一致；单图比较使用 NumPy 的**两个中间值平均数**。
 二者可能给出不同尺度，报告会明确各自定义。
 
 原始输出和还原深度的 fidelity 包含 MAE、RMSE、最大绝对误差、相对误差和 cosine。
-空数组、非有限数值、形状或样本集合不匹配都会报错，不会静默删除问题值。
+输入数组须非空、数值有限，形状和样本集合须一致，否则返回错误。
 零范数 cosine 为 `null`；无有效真值时指标为 `null` 且 `valid_pixels=0`，不是完美成绩。
 工具输出 cosine 等指标；候选是否通过由你的发布门槛判定。
 
@@ -154,9 +154,9 @@ python eval_numeric.py --image /work/depth/input.png \
 文件名使用 reference/candidate，不再把所有输入错误标注为 X5。
 
 <a id="reference-results"></a>
-## 源记录结果
+## 参考记录结果
 
-X5 源记录为 OE 1.2.8 / Mapper 1.24.3、768 输入、max percentile 0.9999、
+X5 参考记录为 OE 1.2.8 / Mapper 1.24.3、768 输入、max percentile 0.9999、
 O3 latency 和尾部卷积 int16。HRT 数值只包含模型执行：
 
 | 变体 | X5 单线程延迟 ms | 单线程 FPS | 双线程总 FPS |
@@ -177,7 +177,7 @@ S 源 evaluator 的 HRT 延迟表如下，单位 ms：
 | l | 9.790 | 7.090 | 4.881 |
 | x | 19.059 | 12.853 | 9.097 |
 
-该文档的示例选择 lite n，而发布方案 n/s/m 为 NV12；源记录未逐行绑定制品摘要，
+该文档的示例选择 lite n，而发布方案 n/s/m 为 NV12；参考记录未逐行绑定制品摘要，
 因此不能将此表重新标为已确认的发布制品延迟。
 其 log cosine 0.9985–0.9998 声明也不同于根 README 混合方案表；根表 s=0.9984
 又低于同页“全部通过”的 0.999 门槛。各条数值均按各自的记录条件

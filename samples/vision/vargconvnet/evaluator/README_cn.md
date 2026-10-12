@@ -1,12 +1,12 @@
 [English](README.md) | 简体中文
 
 # VargConvNet 评测
-使用随附图片进行单图分类检查。计算数据集精度时，准备对应验证集及逐图真值类别索引，并将其与运行时返回的 Top-1 类别 ID 对照。
+使用随附图片进行单图分类。计算数据集精度时，准备对应验证集及逐图真值类别索引，并将其与运行时返回的 Top-1 类别 ID 对照。
 
 <a id="dataset"></a>
 
 ## 数据集
-功能检查使用随附测试图。数据集级精度使用 ImageNet ILSVRC2012 验证集（50,000 张、1,000 类）。准备逐图到模型零起始类别索引的真值映射，并与运行时返回的 Top-1 类别 ID 对照。`datasets/imagenet/imagenet_classes.names` 将输出索引映射为显示名称；逐图真值取自数据集标注。参见 [ImageNet 数据准备](../../../../datasets/imagenet/README_cn.md)。
+单图分类使用随附测试图。数据集级精度使用 ImageNet ILSVRC2012 验证集（50,000 张、1,000 类）。准备逐图到模型零起始类别索引的真值映射，并与运行时返回的 Top-1 类别 ID 对照。`datasets/imagenet/imagenet_classes.names` 将输出索引映射为显示名称；逐图真值取自数据集标注。参见 [ImageNet 数据准备](../../../../datasets/imagenet/README_cn.md)。
 
 <a id="directory"></a>
 ## 目录结构
@@ -25,12 +25,8 @@ evaluator/
 <a id="command"></a>
 ## 命令
 
-```bash
-# cwd: repository root; expected: unittest OK, exit 0
-python3 -m unittest discover -s samples/vision/vargconvnet/tests -v
-```
 
-板端功能检查：
+板端分类：
 
 ```bash
 # cwd: repository root
@@ -49,7 +45,7 @@ python3 samples/vision/vargconvnet/runtime/python/main.py \
 <a id="metrics"></a>
 ## 指标
 
-在匹配板卡上运行功能检查，并按[参考结果](#reference-results)中的测量条件与已发布数值对照。计算数据集 Top-1 精度时，将逐图真值类别 ID 与运行时返回的 Top-1 ID 比较；测量延迟或 FPS 时记录推理阶段、线程数、并发量和工作模式。
+在匹配板卡上运行单图分类，并按[参考结果](#reference-results)中的测量条件与已发布数值对照。计算数据集 Top-1 精度时，将逐图真值类别 ID 与运行时返回的 Top-1 ID 比较；测量延迟或 FPS 时记录推理阶段、线程数、并发量和工作模式。
 
 <a id="outputs"></a>
 ## 输出
@@ -59,7 +55,7 @@ python3 samples/vision/vargconvnet/runtime/python/main.py \
 <a id="reference-results"></a>
 ## 参考结果
 
-在匹配板卡上运行功能检查，并用 ImageNet 验证集计算数据集精度；在板卡
+在匹配板卡上运行单图分类，并用 ImageNet 验证集计算数据集精度；在板卡
 上测量推理延迟，记录预处理、线程数、并发量和工作模式（见[数据集](#dataset)）。
 
 <a id="boundaries"></a>

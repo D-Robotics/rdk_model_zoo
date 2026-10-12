@@ -5,7 +5,7 @@
 <a id="source-model"></a>
 ## 源模型
 
-已发布制品是基于 Google 来源 HuggingFace 权重的 SigLIP 视觉编码器。源 README 和发布 manifest 没有记录精确上游权重版本、commit、导出版本或制品级许可证。模型家族论文见 [Sigmoid Loss for Language Image Pre-Training](https://arxiv.org/abs/2303.15343)。本 sample 提供可部署 HBM 引用，不提供源 checkpoint 或可复现导出器。
+已发布制品是基于 Google 来源 HuggingFace 权重的 SigLIP 视觉编码器。源 README 和发布清单没有记录精确上游权重版本、commit、导出版本或制品级许可证。模型家族论文见 [Sigmoid Loss for Language Image Pre-Training](https://arxiv.org/abs/2303.15343)。本示例提供可部署 HBM 引用，不提供源权重文件或可复现导出器。
 
 <a id="directory"></a>
 ## 目录结构
@@ -19,7 +19,7 @@ conversion/
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-源资料只说明 Nash BPU 部署，没有 OE 发布版本、编译器构建版本、`march` 命令或按 target 的配置文件。通用 OE 资源：[OE 环境文档](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview) 和[工具链下载](https://toolchain.d-robotics.cc/)。支持映射为 S100 → Nash-E、S100P → Nash-M；八个发布制品均引用 `s100/` 路径。
+源资料只说明 Nash BPU 部署，没有 OE 发布版本、编译器构建版本、`march` 命令或按目标板卡的配置文件。通用 OE 资源：[OE 环境文档](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview) 和[工具链下载](https://toolchain.d-robotics.cc/)。支持映射为 S100 → Nash-E、S100P → Nash-M；八个发布制品均引用 `s100/` 路径。
 
 | Target | march | OE 版本 | 配置 |
 | --- | --- | --- | --- |
@@ -29,7 +29,7 @@ conversion/
 <a id="export"></a>
 ## 导出（ONNX）
 
-本 sample 未发布导出脚本或可复现的源 checkpoint 流程，因此不提供 ONNX 命令、导出器版本或已验证的 ONNX shape。已知可部署输入契约为：`_input_0`、float32 RGB NCHW `(1,3,size,size)`、值域 `[-1,1]`。
+本示例未发布导出脚本或可复现的源权重文件流程，因此不提供 ONNX 命令、导出器版本或已验证的 ONNX 形状。已知可部署输入契约为：`_input_0`、float32 RGB NCHW `(1,3,size,size)`、值域 `[-1,1]`。
 
 <a id="calibration"></a>
 ## 校准
@@ -53,7 +53,7 @@ hrt_model_exec perf --thread_num 1 --model_name pooler_output --model_file sampl
 hrt_model_exec perf --thread_num 1 --model_name last_hidden_state --model_file samples/vision/siglip/model/s100/bpu-siglip-base-patch16-224.hbm
 ```
 
-对其余七个制品替换文件名，执行相同的三条命令。参考测量见评估表；新转换使用下述命令验证。验证应绑定打包的两个子模型，检查 `_input_0` metadata 及所选 `_output_0` shape/dtype，然后在 S100、S100P 上分别运行 [`../runtime/python/README_cn.md`](../runtime/python/README_cn.md) 的板端冒烟路径。
+对其余七个制品替换文件名，执行相同的三条命令。参考测量见评估表；新转换使用下述命令验证。验证应绑定打包的两个子模型，检查 `_input_0` 元数据及所选 `_output_0` shape/dtype，然后在 S100、S100P 上分别运行 [`../runtime/python/README_cn.md`](../runtime/python/README_cn.md) 的板端冒烟路径。
 
 <a id="artifacts"></a>
 ## 产物
@@ -74,7 +74,7 @@ hrt_model_exec perf --thread_num 1 --model_name last_hidden_state --model_file s
 
 - 缺少精确源 checkpoint/版本和导出脚本。
 - 缺少 OE 版本、编译器构建版本、`march` 配置、校准数据/配置和编译命令。
-- 缺少权重/导出许可证 metadata 和制品 hash（model README 记为 `sha256: null (unknown)`）。
+- 缺少权重/导出许可证元数据和制品摘要（model README 记为 `sha256: null (unknown)`）。
 - 当前可复现边界是制品选择、输入/输出契约文档和使用已发布 HBM；本目录无法重新生成 HBM。
 
 ## 许可

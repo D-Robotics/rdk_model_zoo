@@ -19,7 +19,6 @@ pp_liteseg/
 ├── model/  # Model files and download scripts
 ├── runtime/  # Python and native inference implementations
 ├── test_data/  # Example inputs
-├── tests/  # Automated tests
 ├── README.md  # English instructions
 └── README_cn.md  # Chinese instructions
 ```

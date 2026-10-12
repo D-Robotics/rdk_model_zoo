@@ -87,7 +87,7 @@ python3 scripts/download_assets.py --target x5 --workspace ./workspace
 # then place the checkpoint at ./workspace/EfficientSAM/weights/efficient_sam_vitt.pt
 ```
 
-The X5 helper first tries `git clone`; if that fails it downloads the upstream `main` source ZIP and safely extracts only the `EfficientSAM-main/` tree in a private staging directory before moving it into the workspace. It then downloads `efficient_sam_vitt.pt` when the existing file is absent or smaller than 10,000,000 bytes. These are explicit user-invoked actions; the upstream `main` ZIP is not a pinned source revision. The S source has no equivalent helper and therefore has no automatic source or checkpoint download path.
+The X5 helper first tries `git clone`; if that fails it downloads the upstream `main` source ZIP and safely extracts only the `EfficientSAM-main/` tree in a private staging directory before moving it into the workspace. It then downloads `efficient_sam_vitt.pt` when the existing file is absent or smaller than 10,000,000 bytes. the upstream `main` ZIP is not a pinned source revision. The S source has no equivalent helper and therefore has no automatic source or checkpoint download path.
 
 Export the encoder and fixed-prompt decoder. Every command declares its target and output.
 

@@ -86,7 +86,7 @@ at `/workspace`:
 
 ```bash
 # input: TorchVision weights (downloads when not cached)
-# output: $WORK/resnet18.onnx — success: onnx.checker passes, exit 0
+# output: $WORK/resnet18.onnx — output: onnx.checker passes, exit 0
 export WORK="${WORK:-/workspace/resnet18-conversion}"
 mkdir -p "$WORK"
 python3 samples/vision/resnet/conversion/export_resnet18_onnx.py \
@@ -130,7 +130,7 @@ output_calib_dir = './calibration_data_rgb/'  # matches resnet152_config.yaml ca
 ```bash
 # cwd: this conversion directory (inside the OE container)
 # input: src_image_dir with >=100 ILSVRC2012_val_*.JPEG
-# output: ./calibration_data_rgb/*.npy (float32, RGB, NCHW) — success: 100 files printed
+# output: ./calibration_data_rgb/*.npy (float32, RGB, NCHW) — output: 100 files printed
 python3 get_calibration_data.py
 ```
 
@@ -160,7 +160,7 @@ ResNet18 — inside the OE container, with `$WORK/resnet18.onnx` and
 `$OE_CONFIG` (the OE sample's YAML) prepared. X5 block:
 
 ```bash
-# output: *.bin under $WORK — success: hb_mapper exits 0
+# output: *.bin under $WORK — output: hb_mapper exits 0
 export X5_MARCH="${X5_MARCH:-bayes-e}"
 hb_mapper --version
 hb_mapper checker --model-type onnx --march "$X5_MARCH" --model "$WORK/resnet18.onnx"
@@ -172,7 +172,7 @@ S100/S600 block (the YAML must contain the matching Nash target — `nash-e`
 for S100, `nash-p` for S600):
 
 ```bash
-# output: *.hbm under $WORK — success: hb_compile exits 0
+# output: *.hbm under $WORK — output: hb_compile exits 0
 hb_compile --help
 hb_compile --config "$OE_CONFIG"
 find "$WORK" -type f -name '*.hbm' -print
@@ -183,7 +183,7 @@ place (cwd: this conversion directory, inside the OE container):
 
 ```bash
 # inputs: ./resnet152.onnx, ./calibration_data_rgb (see Calibration)
-# output: ./model_output/resnet152_224x224_nv12.hbm — success: hb_compile exits 0
+# output: ./model_output/resnet152_224x224_nv12.hbm — output: hb_compile exits 0
 hb_compile --config resnet152_config.yaml
 ```
 
@@ -328,8 +328,7 @@ Rules and guarantees:
   preprocessing.
 - Compile the resulting ONNX with the existing OE configurations
   documented under [Toolchain and targets](#toolchain-targets) (X5
-  `hb_mapper` → `.bin`, S100/S600 `hb_compile` → `.hbm`); no published
-  artifact recipe is implied for self-trained outputs.
+  `hb_mapper` → `.bin`, S100/S600 `hb_compile` → `.hbm`); adjust the configuration to the custom model’s class count and preprocessing.
 - Runtime contract: load the compiled artifact with
   `classify.ResNetClassifier(model_path, target=target,
   input_size=(224, 224), class_count=<num-classes>)` and

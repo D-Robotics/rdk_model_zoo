@@ -72,7 +72,7 @@ python3 samples/vision/pp_liteseg/runtime/python/main.py --target x5 --test-img 
 <a id="results"></a>
 ## 结果
 
-3078×548 图像包含三个 1024×512 面板、分隔条及 36 像素标题栏。labels.npy 保存 512×1024 int32 类别 0..18。JSON/stdout 字段为 target、asset_id、model_path、input_path、publisher_sha256、runtime_version、metadata、class_ids、class_names、mask_shape、output_shape、output、mask_save_path。不返回置信度、原图尺寸 mask、延迟或 mIoU。
+3078×548 图像包含三个 1024×512 面板、分隔条及 36 像素标题栏。labels.npy 保存 512×1024 int32 类别 0..18。JSON/stdout 字段为目标板卡、asset_id、model_path、input_path、publisher_sha256、runtime_version、元数据、class_ids、class_names、mask_shape、output_shape、output、mask_save_path。不返回置信度、原图尺寸掩码、延迟或 mIoU。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -98,9 +98,9 @@ print(mask.shape, mask.dtype)  # (512, 1024), int32
 <a id="stage-io"></a>
 ## 阶段 I/O
 
-preprocess 接收非空 HWC BGR uint8，以 INTER_LINEAR 拉伸到 1024×512，再打包为连续 NV12 uint8 `(768,1024)`；不做 CPU 归一化或 letterbox。返回 context 独立携带原图尺寸，不写入任务可变状态。infer 原样返回 int32 `(1,512,1024,1)`。postprocess 校验类别 0..18 并返回拥有独立内存的 int32 `(512,1024)`；不做 softmax、argmax、反量化或尺寸恢复。binding 接受 NV12 逻辑 NCHW/NHWC 或物理 packed 元数据；logits 导出、错误 dtype/尺寸会明确拒绝。既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
+preprocess 接收非空 HWC BGR uint8，以 INTER_LINEAR 拉伸到 1024×512，再打包为连续 NV12 uint8 `(768,1024)`；不做 CPU 归一化或 letterbox。返回上下文独立携带原图尺寸，不写入任务可变状态。infer 原样返回 int32 `(1,512,1024,1)`。postprocess 校验类别 0..18 并返回拥有独立内存的 int32 `(512,1024)`；不做 softmax、argmax、反量化或尺寸恢复。模型绑定接受 NV12 逻辑 NCHW/NHWC 或物理 packed 元数据；logits 导出、错误 dtype/尺寸会明确拒绝。`pre_process`、`forward`、`post_process` 分别是 `preprocess`、`infer`、`postprocess` 的别名。
 
 <a id="troubleshooting"></a>
 ## 故障排查
 
-缺少 BIN：先显式准备。缺少 SDK：使用 X5 板端镜像，不在主机伪装运行环境。S 系列无制品，不能回退至 X5。输出元数据不匹配：检查实际部署图，不要给已经解码的类别图再加 argmax。保持 1024×512 几何。图片缺失：使用随附的 street.png，不是 street.jpg。外部文件须提供精确 asset-id，并独立保留文件来源记录。
+缺少 BIN：先显式准备。缺少 SDK：使用 X5 板端镜像，在匹配板卡上运行推理。S 系列无制品，不能回退至 X5。输出元数据不匹配：检查实际部署图，不要给已经解码的类别图再加 argmax。保持 1024×512 几何。图片缺失：使用随附的 street.png，不是 street.jpg。外部文件须提供精确 asset-id，并独立保留文件来参考记录。

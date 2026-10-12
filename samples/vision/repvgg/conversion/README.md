@@ -163,7 +163,7 @@ python3 samples/vision/repvgg/runtime/python/main.py --target x5 \
   --test-img samples/vision/repvgg/test_data/gooze.JPEG
 ```
 
-Use the qualified reference that matches the artifact and target. Record the build hash and graph provenance, compare source and unified raw outputs, and evaluate accuracy before delivery.
+Select the artifact's matching target and qualified reference. Compare the compiled model's outputs and dataset accuracy with the float model before using it.
 
 <a id="artifacts"></a>
 ## Artifacts

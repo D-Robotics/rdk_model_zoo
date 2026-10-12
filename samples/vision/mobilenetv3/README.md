@@ -71,12 +71,12 @@ mobilenetv3/
 
 Board Python execution needs the board image's matching `hbm_runtime`,
 NumPy, and OpenCV-Python; the SDK is imported only when a model executes
-(`--help`, `--list-models`, `--dry-run`, and host tests need no SDK).
+(`--help`, `--list-models`, `--dry-run` need no SDK).
 Manifest reading also needs PyYAML. On a development host, install the
 user-space dependencies from `requirements-host.txt`:
 
 ```bash
-# cwd: repository root — success: "host dependencies: ok"
+# cwd: repository root — output: "host dependencies: ok"
 python3 -m venv .venv-mobilenetv3
 source .venv-mobilenetv3/bin/activate
 python3 -m pip install -r samples/vision/mobilenetv3/requirements-host.txt
@@ -93,12 +93,12 @@ manifest's model server.
 ```bash
 # 1. Prepare the artifact (input: manifest row x5:mobilenetv3:MobileNetV3_224x224_nv12.bin)
 #    output: samples/vision/mobilenetv3/model/MobileNetV3_224x224_nv12.bin
-#    success: downloader exits 0 and prints the observed digest
+#    output: downloader exits 0 and prints the observed digest
 bash samples/vision/mobilenetv3/model/download.sh x5
 
 # 2. Run classification (input: the artifact above plus the bundled test image)
 #    output: Top-5 class ids, scores, labels on stdout
-#    success: exit code 0 and a printed Top-5 list
+#    output: exit code 0 and a printed Top-5 list
 python3 samples/vision/mobilenetv3/runtime/python/main.py \
   --target x5 \
   --asset-id x5:mobilenetv3:MobileNetV3_224x224_nv12.bin \
@@ -115,7 +115,7 @@ same root `datasets/imagenet/` labels. Full commands:
 ## Expected results
 
 The Python run prints a stable Top-K (default 5) of class IDs, scores, and
-labels and exits 0; Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. On X5 with the bundled `kit_fox.JPEG` the Top-1 matches the
+labels and exits 0. Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. On X5 with the bundled `kit_fox.JPEG` the Top-1 matches the
 image subject (a kit fox); on S100/S600 with `zebra_cls.jpg` the
 Top-5 includes `zebra`. Select a target and variant listed in the [Support matrix](#support-matrix), prepare that exact manifest artifact with the model downloader, and run the sample on the matching board.
 

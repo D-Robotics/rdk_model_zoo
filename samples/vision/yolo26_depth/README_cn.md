@@ -21,7 +21,6 @@ yolo26_depth/
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 └── README_cn.md  # 中文说明
 ```
@@ -81,7 +80,7 @@ bash samples/vision/yolo26_depth/runtime/python/run.sh --target s600 --variant l
 使用 `--variant n|s|m|l|x` 选择模型尺度。
 
 <a id="expected-results"></a>
-## 输出与源记录参考
+## 输出与参考记录参考
 
 Python 写出 `log_depth.npy`（192×192 F32）、`depth_native.npy`（原图 H×W F32）、
 `depth.png`、`overlay.png` 和 `report.json`；S lite 另写 `raw_logit.npy`。
@@ -89,7 +88,7 @@ X5 原生还保留 `depth_native.f32`。绘图采用 2%/98% 分位范围、反�
 叠加权重为原图 0.45 / 深度颜色 0.55。报告包含模型选择和实际本地摘要；SDK 未提供版本时记为 `unknown`。
 精度与米制距离以数值指标为准，可视化图像仅用于快速检查。
 
-源 S 根目录给出以下混合方案单图表，作为**源记录信息**保留：
+以下为 S 系列混合方案的单图参考结果：
 
 | 变体 | 方案 | raw cosine vs FP32 | S100 延迟 ms | S100P 延迟 ms | S600 延迟 ms |
 |---|---|---:|---:|---:|---:|
@@ -111,14 +110,14 @@ S 另一张表记录在 evaluator README。源图边界描述把 exp/resize 写�
 - [Python](runtime/python/README_cn.md)：CLI、三阶段 API、张量契约和错误。
 - [C++](runtime/cpp/README_cn.md)：原生依赖、生命周期、构建执行及验证范围。
 - [转换](conversion/README_cn.md)：权重边界、校准、实际编译输入及缺口。
-- [评估](evaluator/README_cn.md)：数组格式、协议、指标定义与源记录表格。
+- [评估](evaluator/README_cn.md)：数组格式、协议、指标定义与参考记录表格。
 
 API 集成使用 `RuntimeModelRunner` 加 `Yolo26DepthTask`，`predict` 严格串联
-pre_process → forward → post_process，不另写一套处理。
+pre_process → 前向推理 → post_process，不另写一套处理。
 自转换制品显式组合 `--converted-model`、`--model-path` 及精确 `--asset-id` 契约参照。
 新文件标为 user-converted，不继承发布方摘要或实测精度；S lite 校准系数必须与声明权重一致。
 
-模型准备、推理与深度指标分别按上述 model、runtime、conversion 和 evaluator 指南执行。
+模型准备、推理与深度指标分别按上述 model、运行时、conversion 和 evaluator 指南执行。
 
 <a id="license"></a>
 ## 许可证

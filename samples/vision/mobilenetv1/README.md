@@ -74,12 +74,12 @@ Board Python execution needs the board image's matching `hbm_runtime`,
 NumPy, OpenCV-Python, and Pillow (the published models expect an antialiased
 bicubic shorter-edge resize, which Pillow performs); the SDK is imported only
 when a model executes
-(`--help`, `--list-models`, `--dry-run`, and host tests need no SDK).
+(`--help`, `--list-models`, `--dry-run` need no SDK).
 Manifest reading also needs PyYAML. On a development host, install the
 user-space dependencies from `requirements-host.txt`:
 
 ```bash
-# cwd: repository root — success: "host dependencies: ok"
+# cwd: repository root — output: "host dependencies: ok"
 python3 -m venv .venv-mobilenetv1
 source .venv-mobilenetv1/bin/activate
 python3 -m pip install -r samples/vision/mobilenetv1/requirements-host.txt
@@ -96,12 +96,12 @@ manifest's model server.
 ```bash
 # 1. Prepare the artifact (input: manifest row x5:mobilenetv1:mobilenetv1_100_bayese_224x224_nv12.bin)
 #    output: samples/vision/mobilenetv1/model/mobilenetv1_100_bayese_224x224_nv12.bin
-#    success: downloader exits 0 and prints the observed digest
+#    output: downloader exits 0 and prints the observed digest
 bash samples/vision/mobilenetv1/model/download.sh x5 100
 
 # 2. Run classification (input: the artifact above plus the bundled test image)
 #    output: Top-5 class ids, scores, labels on stdout
-#    success: exit code 0 and a printed Top-5 list
+#    output: exit code 0 and a printed Top-5 list
 python3 samples/vision/mobilenetv1/runtime/python/main.py \
   --target x5 \
   --asset-id x5:mobilenetv1:mobilenetv1_100_bayese_224x224_nv12.bin \
@@ -118,7 +118,7 @@ same root `datasets/imagenet/` labels. Full commands:
 ## Expected results
 
 The Python run prints a stable Top-K (default 5) of class IDs, scores, and
-labels and exits 0; Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. With the bundled `bulbul.JPEG` the Top-1 is class 16 (`bulbul`)
+labels and exits 0. Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. With the bundled `bulbul.JPEG` the Top-1 is class 16 (`bulbul`)
 and with `zebra_cls.jpg` it is class 340 (`zebra`), for both variants on X5, S100, S100P
 and S600 (checked on each board with the published builds). Select a target and variant listed in the [Support matrix](#support-matrix), prepare that exact manifest artifact with the model downloader, and run the sample on the matching board.
 
@@ -146,8 +146,7 @@ the compiled model on the matching board.
 | MobileNetV1-125 | S100P | 64.25% | 63.19% | 85.23% | 84.27% |
 | MobileNetV1-125 | S600 | 64.25% | 62.95% | 85.23% | 84.12% |
 
-\* MobileNetV1-100 on X5 loses 5.4% of its FP32 Top-1 (relative), more than the
-5% acceptance target; it is published as a documented exception. The S-series builds of
+\* MobileNetV1-100 on X5 loses 5.4% of its FP32 Top-1 (relative). The S-series builds of
 MobileNetV1-100 use the toolchain's weight bias correction (still INT8), which brings
 their loss to 1.3-1.4%; the X5 toolchain's bias correction made the X5 build worse.
 

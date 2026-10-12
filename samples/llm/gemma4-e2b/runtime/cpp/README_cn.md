@@ -120,7 +120,7 @@ S100 保留手动 HBM 分支，没有默认公共 HBM。不同板目标使用不
 预览以 JSON 输出所选目标、计划执行的命令和设置，`executed=false`。
 实际命令保留原生退出码；启动器预检失败返回 2，并提示缺失可执行文件或目标不符。
 
-第三方准备脚本需要 Git/网络及显式安装的稳定版 Rust 1.80+ 工具链；不会安装或升级 Rust。启动器和 CMake 都不会自动调用该脚本。
+先安装 Git 和稳定版 Rust 1.80+，再联网执行第三方依赖准备脚本，然后构建。
 编译 Rust 依赖仍可能访问包仓库；离线构建需要提前准备全部依赖缓存。
 独立 Abseil 可通过 `GEMMA4_ABSL_PREFIX=/opt/abseil ./run.sh --target s600 --build` 指定。
 
@@ -299,7 +299,7 @@ ChatBox 中选择 OpenAI 兼容接口，Base URL 填 `http://板端IP:8000/v1`�
 任意 binary 加 `--help` 可查看 gflags 自动生成的完整帮助。
 
 <a id="interface-lifecycle"></a>
-## 核心设计
+## 模型行为
 
 1. **Vision 原样注入** — ViT 输出 `[280, 1536]` 直接替换 image soft-token 位置（token ID 249560）的 `inputs_embeds`，不做 L2-norm 缩放，不乘 √1536。
 
@@ -315,26 +315,11 @@ ChatBox 中选择 OpenAI 兼容接口，Base URL 填 `http://板端IP:8000/v1`�
 
 7. **统一双模型生命周期** — `main` 启动时统一按 Vision→Text 顺序加载两个模型，并在整个进程内常驻。该顺序避免 S600 跨 core IOVA 映射冲突，同时 S100/S100P/S600 共用完全相同的聊天主流程；板型差异只体现在匹配的 HBM、CMake SoC 宏和 `run.sh` 环境设置。
 
-### 交互式对话入口：模型 + CLI，薄入口
+### 对话 API
 
-`main` 在模型/展示边界上拆分。`src/cli.hpp/.cpp` 是 CLI 层：
-`ParseOptions` 负责解析 gflags、解析 `$GEMMA4_HOME` 默认路径并校验生成参数
-（返回 `ChatOptions` 值），`ParseCommand` 将每条归一化后的终端输入行分类为
-`TerminalCommand`；同一模块还持有 banner/help、REPL 提示符、UTF-8/GB18030
-终端编码归一与结果/图片/上下文输出行。`src/main.cpp` 是薄入口：调用
-`ParseOptions` 后显式构造具名模型 `gemma4::Gemma4`（`gemma4.hpp/.cpp`），
-并运行读取-分发循环——每个对话轮次调用一次 `model.predict(...)`，图文轮次
-调用 `model.LoadImage(...)`。无法解码的终端输入打印终端配置错误、重新提示
-并保持会话存活；只有输入结束或 `/quit` 才退出。模型构造函数按
-Vision→Text 顺序加载两个引擎与 tokenizer，自身不做控制台 IO：加载进度与
-`[context]` 提示经注入的 sink 输出，生成片段经调用方持有的 token sink 送达。
-模型持有全部会话职责——对话历史 JSON、按 4096-token 预算裁剪最旧轮次、前缀
-失配重置、图像特征保留——并以值返回 `ChatTurnResult`，携带报告所需事实
-（回复文本、流式 token 数、耗时、tok/s、输出预算、裁剪状态）。模型计算仍在
-真正的运行时类中：文本生成
-委托给 `TextEngine::ContinueGenerateStream`（图文轮次配合
-`BuildPromptHidden`），图像编码委托给 `PredictVision` + `VisionEngine::Infer`。
-不存在执行控制台 IO 的模型或引擎 API，引擎自身也从不会隐式打印。
+`gemma4::Gemma4`（`gemma4.hpp`）管理一个对话会话，构造时依次加载 Vision、Text 和分词器。每轮调用一次 `model.predict(...)`，图片轮次先调用 `model.LoadImage(...)`。模型管理对话历史、4096-token 预算内的完整轮次裁剪、前缀重置及图片特征。
+
+返回的 `ChatTurnResult` 独立持有回复、流式 token 数、耗时、token/s、输出预算和裁剪状态。通过回调接收加载进度、上下文提示与流式文本。文本生成调用 `TextEngine::ContinueGenerateStream`，图片编码使用 `PredictVision` 与 `VisionEngine::Infer`。
 
 ### Vision 库接口与职责
 
@@ -408,48 +393,6 @@ target_link_libraries(vision_example PRIVATE gemma4_runtime)
 `ALL PASSED` 对应退出码 0；不匹配或异常为 1。完整数据前提见 [评测说明](../../evaluator/README_cn.md)。
 每个 TextEngine 持有一个会话及其 KV 状态，调用方应串行访问；不要把交互会话当成无状态、可并发共享的推理函数。
 
-### 无 SDK 的主机回归
-
-仅检查算法边界与源前处理一致性，使用已安装的 OpenCV C++ 库；不安装依赖、不准备模型：
-
-```bash
-# From repository root; set OpenCV_DIR if OpenCV is not on CMake's search path.
-cmake -S samples/llm/gemma4-e2b/tests/native -B /tmp/gemma-vision-tests -DCMAKE_BUILD_TYPE=Release
-cmake --build /tmp/gemma-vision-tests --parallel
-ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
-```
-
-测试套件覆盖 Vision 三阶段/源图前处理/张量存储、KV 分配/Reset/追加/别名/前缀保留、
-Text 所有权（含注入分配失败下的张量采用）、张量契约、生成流程与阶段/会话行为，
-外加可运行的 README 示例。Release 构建仍启用断言。测试运行于显式离线 runner；
-真实 SDK 描述符与板端数值以本指南的板端命令为准。
-
-交互式对话入口另有专属主机检查：编译生产模型源码 `src/gemma4.cpp`、CLI 源码
-`src/cli.cpp` 与真实 `src/main.cpp`，链接 `tests/native/chat_app_doubles.cpp`
-引擎替身、`tests/native/sdk_fixtures` 的 SDK 头替身，以及
-`tests/native/app_stubs/` 中明确标注的 tokenizers-cpp / OpenCV 第三方头编译桩。
-场景驱动直接调用 Gemma4 模型 API（每轮一次 `predict`，图文轮次 `LoadImage`）；
-入口二进制通过重定向 stdin 驱动真实 REPL：
-
-```bash
-python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_chat_app.py -v
-```
-
-该检查覆盖会话逻辑全链路：引擎构造信息、流式回显、`/reset` `/context`
-`/image`/`/quit` 命令、图文轮次接线（一次 `LoadImage`/`PredictVision`/`Infer`
-链路并注入 prompt hidden）、超长 prompt 拒绝、最旧轮次裁剪、每轮重建模式、
-跨轮上下文增长、GB18030 终端编码转换，以及迁移后的入口/CLI 边界：参数默认值
-与校验、无效输入行后接有效输入行（不可解码行重新提示且会话继续）、`/image`
-参数错误。它运行于
-显式标注的替身之上；真实 SDK/OpenCV/tokenizers-cpp 栈与生成在板端执行。
-`GEMMA_CXX` 选择编译器。nlohmann-json 头文件依次从
-`GEMMA_JSON_INCLUDE` 覆盖、`pkg-config nlohmann_json` 或标准系统包含根
-（`/usr/include`、`/usr/local/include`、`/opt/homebrew/include`）获取；入口
-检查同样链接真实主机 gflags，来源为 `GFLAGS_INCLUDE_DIR` +
-`GFLAGS_LIB_DIR`（须成对设置）、`pkg-config gflags` 或标准系统路径。
-依赖缺失时相关主机检查以原因显式跳过，无效覆盖则直接失败。iconv 仅在
-macOS 链接 `-liconv`；Linux 使用 libc 中的 iconv。
-
 ### SDK 失败处理
 
 Vision 构造失败时会释放已经取得的输入/输出 buffer 和 packed model；成功但返回空 handle/buffer 会显式报错。
@@ -459,11 +402,6 @@ Vision 构造失败时会释放已经取得的输入/输出 buffer 和 packed mo
 取得 task 之后的失败（包括 infer 返回错误但已给出 task）都会触发释放；正常路径的 release 错误继续上抛，不重复释放同一 handle。
 选择性刷新的索引语义、S600 的编译核数选择和可选 V3 入口均使用同一 task 生命周期。
 
-主机资源测试使用 SDK 接口替身，在 S100/S600 两个编译分支下检查错误处理中的内存/handle 所有权。可从仓库根目录运行：
-
-```bash
-python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_resources.py -v
-```
 
 ### Vision 张量传输契约
 
@@ -481,8 +419,6 @@ vision 引擎源码集中负责物理描述符校验、F16 存储打包与带 st
 输入按 F32→F16 截断写入，写入前清零 padding；输出分别按行和列 stride 提取，自有 float 向量不含 padding。
 未知或整数输出会被拒绝，不会强制解释为 float。F16/F32 是运行时存储转换，不涉及修改或重跑量化方案。
 
-主机集成测试实际调用生产 `VisionEngine::Infer`，由 SDK 替身检查输入存储并填充带行/元素间隙的 F16/F32 输出，
-同时注入非法类型、量化标记、形状、stride、推理后容量变更和非有限输出。真实发布 HBM 的描述符以板端运行验证。
 
 ### KV 缓存状态与所有权
 
@@ -508,10 +444,6 @@ Append 的源输出内存必须与缓存分离，并至少包含 `(rows-1)*row_s
 通过 Reset、Append 和 CompactShift 维护位置与数据一致。
 TextEngine 的 `ContextShift` 会调用前缀保留，后续由调用方重新 prefill 需要保留的后缀。
 
-独立主机测试入口：
-```bash
-python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_kv.py -v
-```
 
 ### Text 初始化与张量所有权
 
@@ -549,18 +481,6 @@ mask 的 int16 量化、logits 的 `kLogitScale` 反量化与 int8 KV 存储均�
 携带量化 metadata 的描述符会被拒绝；写入路径先清零 padding，再按描述符 stride 复制。
 贪心 argmax 将 int16 存储乘以 `kLogitScale` 并保留首个最大值；平票取首个最大位置，全零行解码为 token 0。
 
-主机覆盖包括：一项 helper 契约测试（padding、单例轴、dtype/形状/stride/容量/量化拒绝、argmax 行寻址与平票语义），
-以及一项生成流程测试——用说这套契约的 SDK 替身驱动生产引擎，校验生成 token、经借用 KV 输入的缓存搬运、
-推理失败清理、推理后描述符漂移和构造期拒绝矩阵。
-
-主机测试入口：
-```bash
-python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_text_tensors.py -v
-```
-
-主机测试仅替换 SDK 调用与 embedding 加载：通过注入失败点、检查 6 类非法描述符及正常销毁，
-确认没有残留的张量/模型分配。独立所有权测试覆盖部分构造、移动、重复清理及借用缓存不被释放。
-所有权测试不加载权重，也不调用推理。
 
 ### Text 流水线阶段
 
@@ -654,8 +574,3 @@ int main(int argc, char **argv) {
 `CollectKvOutputs` 返回的行借用输出 tensor，仅在下一次推理之前有效。`TextEngine`
 （以及对 `ModelIo` 操作的各阶段）都不是线程安全——需串行化访问；阶段函数本身不持有全局状态。
 推理失败以异常上抛，task 已释放、所有 buffer 仍被持有，因此会话可以 `ResetSession` 后继续。
-
-主机测试入口：
-```bash
-python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_text_stages.py -v
-```

@@ -4,7 +4,7 @@ English | [简体中文](README_cn.md)
 
 
 `2007_000033.jpg` is the Pascal VOC 2012 validation image used by the Python
-Runtime by default. It is intended only as a smoke input for image loading,
+Runtime by default. It is intended only as a example input for image loading,
 NV12 preprocessing, BPU inference, and result visualization.
 
 ## Directory structure
@@ -15,8 +15,6 @@ test_data/
 ├── README.md  # English instructions
 └── README_cn.md  # Chinese instructions
 ```
-
-
 
 
 - Original size: 500 × 366

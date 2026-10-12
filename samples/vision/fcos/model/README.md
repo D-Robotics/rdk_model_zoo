@@ -53,7 +53,7 @@ The shell helpers resolve `download.py` beside themselves and call the board ima
 | File | Role | Required |
 | --- | --- | --- |
 | `runtime/python/main.py` | Runtime entrypoint and output visualization | yes |
-| `test_data/bus.jpg` | Bundled BGR smoke input | no, user input may replace it |
+| `test_data/bus.jpg` | Bundled BGR example input | no, user input may replace it |
 | `datasets/coco/coco_classes.names` | Optional class labels for drawn output | no, numeric IDs are still printed |
 
 <a id="local-paths"></a>

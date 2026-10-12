@@ -30,7 +30,7 @@ Run on the target board's Python environment with the matching
 `hbm_runtime`, NumPy, and OpenCV-Python; PyYAML is needed for manifest
 reading. `hbm_runtime` is supplied by the board image and is imported lazily.
 `--help`, `--list-models`, and `--dry-run` inspect the selection without
-executing a model. Host-side test dependencies are listed in the sample's
+executing a model. Host Python dependencies are listed in the sample's
 `requirements-host.txt`.
 
 <a id="usage"></a>
@@ -39,7 +39,7 @@ executing a model. Host-side test dependencies are listed in the sample's
 cwd: repository root. The minimal SDK-free invocation is the listing mode:
 
 ```bash
-# success: prints all 13 published references, exit 0, no SDK loaded
+# output: prints all 13 published references, exit 0, no SDK loaded
 python3 samples/vision/efficientnet/runtime/python/main.py --list-models --target auto
 ```
 
@@ -47,7 +47,7 @@ A full run on a prepared X5 board:
 
 ```bash
 # prerequisites: bash samples/vision/efficientnet/model/download.sh x5 b2
-# success: exit 0 and a printed Top-5 list
+# output: exit 0 and a printed Top-5 list
 python3 samples/vision/efficientnet/runtime/python/main.py \
   --target x5 \
   --asset-id x5:efficientnet:EfficientNet_B2_224x224_nv12.bin \
@@ -107,16 +107,13 @@ Y `(1,224,224,1)`, UV `(1,112,112,2)`; lite4 380 -> Y `(1,380,380,1)`, UV
 applies a stable softmax before Top-K on both platforms. Default resize is
 letterbox (type 1) on both platforms; the interpolation differs by source —
 X5 resizes with linear interpolation, S with nearest-neighbor.
-Output shapes follow the rank rule: any singleton-batch/spatial spelling
-that squeezes to `(1000,)` binds (the published artifacts declare the
-`raw_f32` transform; quantized artifacts would require a declared `dequant`
-contract).
+The output must reduce to `(1000,)` after removing dimensions of size 1. Published artifacts use `raw_f32`; integer outputs require `dequant` and matching quantization metadata.
 
 <a id="integration-example"></a>
 ## Integration example
 
 Prerequisites: artifact prepared (see [model/README.md](../../model/README.md))
-and OpenCV-Python importable. Every input variable is defined in the example:
+and OpenCV-Python importable. Run:
 
 ```python
 from samples.vision.efficientnet.runtime.python.classify import EfficientNetClassifier

@@ -1,7 +1,6 @@
 [English](README.md) | 简体中文
 
-# KWS test audio
-
+# KWS 示例音频
 
 
 ## 目录结构

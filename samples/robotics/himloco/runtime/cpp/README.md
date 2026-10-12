@@ -20,7 +20,7 @@ cpp/
 ├── src/  # Implementation
 │   ├── cli.cpp  # Argument parsing, input IO, incremental report
 │   ├── main.cpp  # Entry: gate, model construction, per-record predict
-│   └── policy.cpp  # Policy stages, admission gate, X5 SDK runtime
+│   └── policy.cpp  # Policy stages, model checks, X5 SDK runtime
 ├── tests/  # Automated tests
 ├── CMakeLists.txt  # Build
 ├── launcher.py  # Python script
@@ -30,19 +30,17 @@ cpp/
 ```
 
 <a id="supported-boards"></a>
-## Supported boards and verification
+## Supported boards
 
-The native runtime includes the four-stage policy, SDK adapter, offline CLI and
-build launcher. It implements the X5 source release's float32 input/output
-semantics, without extra normalization, action scaling or robot control.
+Run offline X5 inference with float32 observations and raw float32 policy actions.
 
 | Target | Artifact | Status |
 | --- | --- | --- |
 | X5 | Bayes-e fused Go2 BIN | Supported (build and run via this guide) |
 | S100 / S100P / S600 | No matching publication | Not supported |
 
-The source board environment was RDK OS 3.5.0-beta, DNN Runtime 1.24.5 and
-HBRT 3.15.55; source measurements are recorded in the
+The board environment is RDK OS 3.5.0-beta, DNN Runtime 1.24.5 and
+HBRT 3.15.55; reference measurements are recorded in the
 [evaluator guide](../../evaluator/README.md).
 
 <a id="dependencies"></a>
@@ -51,27 +49,19 @@ HBRT 3.15.55; source measurements are recorded in the
 - Host core: C++17, CMake ≥ 3.18; direct compilation with `c++` also works.
 - Native executable: X5 BSP `dnn/hb_dnn.h`, `dnn/hb_sys.h`, libdnn and
   `nlohmann/json.hpp` (usually from `nlohmann-json3-dev`). No gflags or OpenCV.
-- Host CLI check (`tests/test_cpp_cli.py`): the same `nlohmann/json.hpp` is
-  resolved by the shared host dependency discovery (pkg-config or standard
-  system include roots). Set `NLOHMANN_JSON_INCLUDE` to an include directory
-  to override; an invalid override fails the check and a host without the
-  header skips it explicitly. No personal directory is consulted.
 - Python launcher: Python, NumPy, PyYAML for publication selection and board checks;
   no Python inference SDK is loaded. Set `PYTHON` to choose its interpreter.
 
 Published model inference requires neither Torch nor a quantization toolchain.
-Fixture headers are only for host tests and must not replace the vendor SDK.
 
 <a id="build"></a>
 ## Build
 
-Run all commands from repository root. Without a board, build the core and host check:
+Run all commands from repository root. Build the `himloco_policy` static library:
 
 ```bash
-cmake -S samples/robotics/himloco/runtime/cpp -B /tmp/himloco-host \
-  -DHIMLOCO_BUILD_TESTS=ON
+cmake -S samples/robotics/himloco/runtime/cpp -B /tmp/himloco-host
 cmake --build /tmp/himloco-host --parallel 2
-ctest --test-dir /tmp/himloco-host --output-on-failure
 ```
 
 The launcher builds the native executable automatically on X5. For a manual build
@@ -154,9 +144,7 @@ a manifest is allowed and reports null manifest provenance. See the
 <a id="interface-lifecycle"></a>
 ## Interface and resource lifecycle
 
-`HimLoco(Runner)` stores the supplied callable and does not open a model or allocate
-SDK buffers; `HimLoco(NativeConfig, gate)` loads the native runtime through the
-admission gate. Its public inference surface is limited to four stages:
+`HimLoco(NativeConfig, gate)` loads the native runtime after checking the board and model. The inference API provides these methods:
 
 ```cpp
 auto prepared = task.preprocess(observation);
@@ -171,27 +159,14 @@ invokes the runner once, then validates its returned actions and timing.
 `postprocess` returns an owned copy without clipping, normalization or the
 controller's 0.25 rad action scaling. `predict` composes the three stages.
 
-Invalid sizes, NaN/Inf values, invalid timing or an empty runner raise
-`std::invalid_argument`. Runner failures propagate to the application. Returning
-values instead of modifying caller-owned output parameters prevents a failed
-prediction from presenting an earlier result as a new successful one.
+Invalid sizes, NaN/Inf values, invalid timing or an empty runner raise `std::invalid_argument`; runner failures propagate. Stage results own their vectors and timing values. Use one native SDK runner serially.
 
-All stage containers own their vectors. A later call cannot overwrite an earlier
-raw output or its duration; preprocessing and postprocessing do not call the
-runner. The task stores no mutable per-call state. Thread safety still depends
-on the supplied runner; do not invoke a shared native SDK runner concurrently.
-The model owns SDK loading, metadata, resource lifetime and target/model identity
-checks in `src/policy.cpp`; `src/cli.cpp` owns options, input/output and reports;
-`src/main.cpp` admits the model, constructs `HimLoco` visibly and calls `predict`
-per record.
-
-### Native runtime and admission gate
+### Native runtime and model checks
 
 `HimLoco(NativeConfig, gate)` first validates scheduling priority, then runs the
-admission gate — actual board identity, X5 required, and the explicit local
+model checks — actual board identity, X5 required, and the explicit local
 `.bin` path checked against the published SHA-256 — before loading the SDK.
-The default gate is `verify_native_model`; host tests inject their own.
-There is no download, environment override or S-platform fallback.
+Use `verify_native_model` for the board and model checks.
 `NativeConfig::priority` defaults to `-1` (SDK default), with `[0,255]` accepted;
 `model_path` must be supplied explicitly.
 
@@ -221,8 +196,8 @@ boundary. No live control loop is included.
 The core reports the duration supplied with each `RawOutputs`; it does not add
 preprocessing or postprocessing time. The native runner measures `hbDNNInfer` plus `hbDNNWaitTaskDone`, excluding
 cache maintenance, input copying, output extraction and file I/O. The [evaluator guide](../../evaluator/README.md) records
-the source measurements and their scopes.
-Offline numerical agreement alone does not establish closed-loop behavior.
+the reference measurements and their scopes.
+
 
 Code follows the repository [Apache-2.0 license](../../../../../LICENSE).
 

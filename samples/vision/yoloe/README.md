@@ -26,7 +26,6 @@ yoloe/
 ├── model/  # Model files and download scripts
 ├── runtime/  # Python and native inference implementations
 ├── test_data/  # Example inputs
-├── tests/  # Automated tests
 ├── README.md  # English instructions
 └── README_cn.md  # Chinese instructions
 ```
@@ -115,7 +114,7 @@ Both figures show source-published quantized S results over the bundled image; c
 
 - [Model](model/README.md) — Publication identity, preparation and checksums.
 - [Conversion](conversion/README.md) — Checkpoint export, float-output checks, target-specific calibration, compiler commands and artifact records; includes the original X5 E11, S E11 and S E26 recipes — the S source recipes produce quantized outputs, while this preparation entry retains float-output nodes and compiled precision is read from the artifact metadata.
-- [Evaluation](evaluator/README.md) — Explicit PF mapping, CPU/board backends, COCO metrics, provenance and historical benchmarks.
+- [Evaluation](evaluator/README.md) — Explicit PF mapping, CPU/board backends, COCO metrics, model provenance and reference benchmarks.
 - [Python](runtime/python/README.md) — Options, protocols, library API and troubleshooting.
 - [C++ runtime](runtime/cpp/README.md) — Reusable three-stage C++ library with owned NV12 inputs, float binding and E11/E26 decoding/masks; includes the SDK adapter, board/model/vocabulary preflight, publication selection, CLI and result records; SDK compilation and board runs follow the C++ workflow guide.
 - [Test data](test_data/README.md) — Image/vocabulary provenance and source-recorded figures.

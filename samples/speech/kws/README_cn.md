@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# KWS — MDTC keyword spotting
+# KWS：MDTC 唤醒词检测
 
 <a id="overview"></a>
 ## 概述
@@ -11,7 +11,7 @@
 
 已发布的 S100 制品实现 PaddlePaddle + PaddleAudio 语音栈中的 MDTC（Multi-Scale Dynamic Temporal Convolution）。其公开描述采用多尺度时序卷积捕获不同时间尺度的语音特征，并通过动态卷积适配不同说话人与环境。
 
-部署流程：单声道 16 kHz float32 音频截取前 60000 个采样点（3.75 秒，短音频补零），PaddleAudio fbank 前端（25 ms 帧、10 ms 帧移、80 mel bin）生成 `[1, 373, 80]` 特征张量，BPU 上的 MDTC 模型输出关键词概率，后处理取最大值而不叠加 sigmoid。应用层判定为 `score >= threshold`（默认 `0.5`）。应使用带标签的正负音频为实际场景设定阈值。任务实现 preprocess → infer → postprocess 并由 predict 串联；音频文件、SDK 传输、特征提取和数值评分位于独立模块。
+部署流程：单声道 16 kHz float32 音频截取前 60000 个采样点（3.75 秒，短音频补零），PaddleAudio fbank 前端（25 ms 帧、10 ms 帧移、80 mel bin）生成 `[1, 373, 80]` 特征张量，BPU 上的 MDTC 模型输出关键词概率，后处理取最大值而不叠加 sigmoid。应用层判定为 `score >= threshold`（默认 `0.5`）。应使用带标签的正负音频为实际场景设定阈值。调用 `predict` 完成特征提取、推理和评分。
 
 <a id="directory"></a>
 ## 目录结构
@@ -71,7 +71,7 @@ bash samples/speech/kws/runtime/python/run.sh --target s100 \
 <a id="expected-results"></a>
 ## 结果判读
 
-成功退出码为 0，写入 `result.json`：分数、阈值、`detected`、实际 SDK metadata、输入/模型摘要及补零/截断数量。判定条件为 `score >= threshold`，默认 0.5。源 S100 对随附“hey snips”片段的记录分数约为 0.985。失败退出码为 2。
+成功退出码为 0，写入 `result.json`：分数、阈值、`detected`、实际 SDK metadata、输入/模型摘要及补零/截断数量。判定条件为 `score >= threshold`，默认 0.5。S100 对随附“hey snips”片段的记录分数约为 0.985。失败退出码为 2。
 
 <a id="entry-points"></a>
 ## 导航
@@ -79,7 +79,7 @@ bash samples/speech/kws/runtime/python/run.sh --target s100 \
 - [模型准备](model/README_cn.md)
 - [Python 运行、参数及 API](runtime/python/README_cn.md)
 - [转换可用性](conversion/README_cn.md)
-- [指标与历史性能](evaluator/README_cn.md)
+- [指标与性能](evaluator/README_cn.md)
 - [测试音频](test_data/README_cn.md)
 
 <a id="license"></a>

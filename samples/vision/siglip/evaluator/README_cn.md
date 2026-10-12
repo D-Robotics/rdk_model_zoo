@@ -22,9 +22,9 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-- 源记录测量：RDK S100 和 S100P，CPU/BPU 设置见下文。
-- 对照流程：同一块板卡、板端 `hbm_runtime`、runtime 依赖（`numpy`、`opencv-python`、`PyYAML`）和本 sample 的 runtime。
-- 板端及 runtime 版本：未固定。
+- 参考记录测量：RDK S100 和 S100P，CPU/BPU 设置见下文。
+- 对照流程：同一块板卡、板端 `hbm_runtime`、运行时依赖（`numpy`、`opencv-python`、`PyYAML`）和本示例的运行时。
+- 板端及运行时版本：未固定。
 
 <a id="command"></a>
 ## 评估命令
@@ -45,20 +45,20 @@ python3 samples/vision/siglip/evaluator/evaluate.py \
 
 `pooler_output` 要求：重复输入 cosine ≥ 0.99999，轻度变换 cosine ≥ 0.95，正例 cosine 减负例 cosine > 0.05。`last_hidden_state` 保留 token 位置，要求展平后的重复输入 cosine ≥ 0.99999，轻度变换 cosine ≥ 0.95，轻度变换 cosine 减无关图片 cosine > 0.05。其 token 均值图像排序作为诊断数据保存。轻度变换为 `clip(BGR * 0.9 + 5, 0, 255).astype(uint8)`。`result.json` 记录阈值、逐角色检查、元数据与输入/模型哈希；逐角色 `.npz` 保存基准、重复、变换、正例和负例特征。所有角色通过时返回 0；关系检查失败或模型/数值错误时记录结果并返回 1。
 
-runtime CLI 也提供单个 embedding（见 [runtime/python](../runtime/python/README_cn.md)）。同板对照可在相同图片和 HBM 上重复运行 runtime CLI，并比较两次的 JSON 输出与保存的 embedding。
+运行时 CLI 也提供单个嵌入特征（见 [runtime/python](../runtime/python/README_cn.md)）。同板对照可在相同图片和 HBM 上重复运行运行时 CLI，并比较两次的 JSON 输出与保存的嵌入特征。
 
 <a id="metrics"></a>
 ## 指标
 
 | 指标 | 定义 | 条件 |
 | --- | --- | --- |
-| `pooler_output` 延迟 | 全局特征子模型的一次 BPU `perf` 测量。 | 单线程；输入分辨率和输出 shape 见表；使用下述板端 CPU/BPU 设置。 |
-| `last_hidden_state` 延迟 | patch 特征子模型的一次 BPU `perf` 测量。 | 单线程；输入分辨率和输出 shape 见表；使用下述板端 CPU/BPU 设置。 |
+| `pooler_output` 延迟 | 全局特征子模型的一次 BPU `perf` 测量。 | 单线程；输入分辨率和输出形状见表；使用下述板端 CPU/BPU 设置。 |
+| `last_hidden_state` 延迟 | patch 特征子模型的一次 BPU `perf` 测量。 | 单线程；输入分辨率和输出形状见表；使用下述板端 CPU/BPU 设置。 |
 | TOP1/TOP5 | 由全局嵌入得到的 ImageNet 零样本分类准确率。 | ImageNet-1k val，50,000 张；浮点和 BPU 路径都使用 RGB `(127,127,127)` letterbox。 |
 | Cosine Similarity | patch 特征相对参照的平均/最小~最大及 1% low 相似度。 | COCO2014 val，5,000 张；相同 RGB letterbox。 |
 | MSE | patch 特征相对参照的平均/最小~最大及 1% low 均方误差。 | COCO2014 val，5,000 张；相同 RGB letterbox。 |
 
-源记录板端设置：
+参考记录板端设置：
 
 - S100：CPU `6 x A78AE @ 1.5GHz`，BPU `1 x Nash-E @ 1.0GHz`。
 - S100P：CPU `6 x A78AE @ 2.0GHz`，BPU `1 x Nash-M @ 1.5GHz`。
@@ -93,7 +93,7 @@ runtime CLI 也提供单个 embedding（见 [runtime/python](../runtime/python/R
 <a id="outputs"></a>
 ## 输出
 
-评估结果写入命令中的 `--output-dir`：`result.json`（schema `rdk-model-zoo/embedding-relations/v1`）记录 target、asset ID、模型/输入 SHA-256、轻度变换定义、各 role 的 metadata、判定标准、cosine 数值与逐项检查；同目录下 `pooler_output.npz` 与 `last_hidden_state.npz` 分别保存该 role 的五个特征数组（`anchor`、`repeat`、`mild`、`positive`、`negative`），JSON 中另有 `feature_shape`/`feature_dtype`。全部 role 通过返回 0；关系不成立或模型/数值错误记录后返回 1。
+评估结果写入命令中的 `--output-dir`：`result.json`（schema `rdk-model-zoo/embedding-relations/v1`）记录目标板卡、asset ID、模型/输入 SHA-256、轻度变换定义、各 role 的元数据、判定标准、cosine 数值与逐项检查；同目录下 `pooler_output.npz` 与 `last_hidden_state.npz` 分别保存该 role 的五个特征数组（`anchor`、`repeat`、`mild`、`positive`、`negative`），JSON 中另有 `feature_shape`/`feature_dtype`。全部 role 通过返回 0；关系不成立或模型/数值错误记录后返回 1。
 
 <a id="reference-results"></a>
 ## 参考结果
@@ -130,9 +130,9 @@ runtime CLI 也提供单个 embedding（见 [runtime/python](../runtime/python/R
 ## 适用范围
 
 - `evaluate.py` 检查两个打包子模型上的指定图像关系。
-- 四张表是源记录，本身不标识当前制品字节或 runtime 版本。
-- 本 sample 仅评估视觉特征编码器，不覆盖文本编码器、文本 tokenizer、图文分数、校准配方或 C++ 评估器。
+- 四张表是参考记录，本身不标识当前制品字节或运行时版本。
+- 本示例仅评估视觉特征编码器，不覆盖文本编码器、文本 tokenizer、图文分数、校准配方或 C++ 评估器。
 
 ## 许可
 
-评估文档和对照 helper 遵循仓库 [LICENSE](../../../../LICENSE) 的 Apache-2.0。保留源贡献者署名：Cauchy @吴超。
+评估文档和对照辅助脚本遵循仓库 [LICENSE](../../../../LICENSE) 的 Apache-2.0。保留源贡献者署名：Cauchy @吴超。

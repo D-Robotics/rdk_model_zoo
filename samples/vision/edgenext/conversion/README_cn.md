@@ -34,7 +34,7 @@ conversion/
 ## 工具链与目标
 
 模型转换在 x86 Linux 主机的 RDK X5 OpenExplorer Docker 内执行
-（march `bayes-e`），从不在板上运行。请准备含 `hb_mapper`、`hb_perf`、`hrt_model_exec` 的工具链；离线 Docker 镜像可从地瓜机器人开发者论坛（[topic 35229](https://forum.d-robotics.cc/t/topic/35229)）获取。
+（march `bayes-e`）。请准备含 `hb_mapper`、`hb_perf`、`hrt_model_exec` 的工具链；离线 Docker 镜像可从地瓜机器人开发者论坛（[topic 35229](https://forum.d-robotics.cc/t/topic/35229)）获取。
 
 <a id="export"></a>
 ## 导出
@@ -150,7 +150,7 @@ hb_mapper makertbin --config EdgeNeXt_base_config.yaml
 ```
 
 四份 YAML 均设 `compile_mode: 'latency'` / `optimize_level: 'O3'`，并通过
-`node_info` 将交叉协方差注意力（xca）Softmax 节点以 int16 I/O 摆上 BPU
+`node_info` 将交叉协方差注意力（xca）Softmax 节点以 int16 I/O 部署到 BPU
 ——每份 3 处（stages 1/2/3）；xx-small 另加 13 处（共 16 处）。均不带
 `debug_mode` 与 `set_all_nodes_int16`。
 

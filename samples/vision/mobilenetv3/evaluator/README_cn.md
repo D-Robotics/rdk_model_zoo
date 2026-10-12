@@ -2,13 +2,13 @@
 
 # MobileNetV3 评估
 
-固定版本 timm checkpoint 流程使用 [`evaluate.py`](evaluate.py)，命令见[公共主机流程](../../../../utils/tools/mobilenet/README_cn.md)。该流程明确记录权重、中心裁剪预处理、batch=1 logits 合同和全量评测输入；下文既有制品命令按各自合同使用。
-使用随附图片进行单图分类检查。计算数据集精度时，准备对应验证集及逐图真值类别索引，并将其与运行时返回的 Top-1 类别 ID 对照。
+使用 [`evaluate.py`](evaluate.py) 在主机上评估指定 timm 权重导出的 FP32 ONNX。安装和运行步骤见[公共主机流程](../../../../utils/tools/mobilenet/README_cn.md)；使用对应权重的中心裁剪预处理，以 batch=1 生成 logits 并统计全量数据集精度。
+使用随附图片进行单图分类。计算数据集精度时，准备对应验证集及逐图真值类别索引，并将其与运行时返回的 Top-1 类别 ID 对照。
 
 <a id="dataset"></a>
 
 ## 数据集
-功能检查使用随附测试图。数据集级精度使用 ImageNet ILSVRC2012 验证集（50,000 张、1,000 类）。准备逐图到模型零起始类别索引的真值映射，并与运行时返回的 Top-1 类别 ID 对照。`datasets/imagenet/imagenet_classes.names` 将输出索引映射为显示名称；逐图真值取自数据集标注。参见 [ImageNet 数据准备](../../../../datasets/imagenet/README_cn.md)。
+单图分类使用随附测试图。数据集级精度使用 ImageNet ILSVRC2012 验证集（50,000 张、1,000 类）。准备逐图到模型零起始类别索引的真值映射，并与运行时返回的 Top-1 类别 ID 对照。`datasets/imagenet/imagenet_classes.names` 将输出索引映射为显示名称；逐图真值取自数据集标注。参见 [ImageNet 数据准备](../../../../datasets/imagenet/README_cn.md)。
 
 <a id="directory"></a>
 ## 目录结构
@@ -22,20 +22,14 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-主机检查需要 sample 根目录 `requirements-host.txt` 的用户态 Python 依赖，
-不需要板卡 SDK。功能板卡检查需要目标板卡及其 `hbm_runtime` 镜像、已准备
-制品与标签文件。数据集级评估还需随结果声明 OE/板卡工具链。
+主机 FP32 ONNX 评估使用 `evaluate.py`，需要 Python 3.10 和 `utils/tools/mobilenet/requirements.lock.txt` 中的依赖；安装与运行方法见[公共主机流程](../../../../utils/tools/mobilenet/README_cn.md)。
+
+板端分类需要目标板卡的 `hbm_runtime` 镜像、NumPy、OpenCV-Python、PyYAML、模型文件和标签文件。依赖安装见[Python 运行说明](../runtime/python/README_cn.md#environment)。
 
 <a id="command"></a>
 ## 命令
 
-主机检查（cwd：仓库根目录；成功判据：全部 OK，退出码 0）：
-
-```bash
-python3 -m unittest discover -s samples/vision/mobilenetv3/tests -v
-```
-
-X5 功能板卡检查（前置：`bash samples/vision/mobilenetv3/model/download.sh x5`；成功判据：退出码 0 且 Top-K 符合预期）：
+X5 板端分类（前置：`bash samples/vision/mobilenetv3/model/download.sh x5`；输出：退出码 0 并打印 Top-K 类别和分数）：
 
 ```bash
 python3 samples/vision/mobilenetv3/runtime/python/main.py \
@@ -56,7 +50,6 @@ Top-K，在标签格式化之前比较类别 ID 与原始分数；预期类别 I
 
 | 指标 | 定义 | 条件 |
 | --- | --- | --- |
-| 契约通过 | 运行时接受制品，张量名称/shape/dtype 与绑定一致，返回一个 F32 分数向量 | 匹配板卡上的任一已准备制品 |
 | Top-K 一致 | 同一制品重复运行 softmax 后 Top-K 类别 ID 相同，分数差在 1e-5 内 | 同板、同制品字节、同图、同缩放、同 Top-K |
 | Top-1 精度 | argmax 正确比例 | 在准备好的 ImageNet ILSVRC2012 验证集上度量 |
 | 延迟 / FPS | 在匹配板卡上的推理计时 | 与[参考结果](#reference-results)的已发布数值按其声明的条件对照 |
@@ -64,10 +57,7 @@ Top-K，在标签格式化之前比较类别 ID 与原始分数；预期类别 I
 <a id="outputs"></a>
 ## 输出
 
-主机检查打印 unittest 结果。功能板卡检查在 stdout 打印 Top-K（类别 ID、
-分数、标签），可选以 `--img-save-path` 写标注图。作为证据需保存：板卡
-身份、模型引用、运行时 metadata、raw F32 分数张量、Top-K 输出、图像路径、
-缩放方式与命令行。
+板端命令在终端打印 Top-K 类别 ID、分数和标签。使用 `--img-save-path` 保存标注图。比较结果时，一并记录板卡、模型、命令、输入图像、缩放方式和原始分数。
 
 <a id="reference-results"></a>
 ## 参考结果
@@ -88,9 +78,9 @@ X5 发布（x5-v1.1.3）的已发布数值：
 
 数据版本：`rdk_x5_legacy @ cb86079ae5befcef9ca50fb46c8a6d8980106dec`.
 
-表后四线程/八线程说明沿用源数据的测试条件。其中双核和 X3 八线程说明对应 X3；X5 的硬件配置为 1×Bayes-e。
+X5 的 BPU 为 1×Bayes-e。下文八线程条件对应 X3 数据。
 
-以下表格是在 RDK X5 & RDK X5 Module 上实际测试得到的性能数据，可以根据自己推理实际需要的性能和精度，对模型的大小做权衡取舍。
+RDK X5 与 RDK X5 Module 的发布性能：
 
 
 | 模型           | 尺寸(像素)  | 类别数  | 参数量(M) | 浮点Top-1  | 量化Top-1  | 延迟/吞吐量(单线程) | 延迟/吞吐量(多线程) | 帧率      |
@@ -99,10 +89,10 @@ X5 发布（x5-v1.1.3）的已发布数值：
 
 
 说明:
-1. X5的状态为最佳状态：CPU为8xA55@1.8G, 全核心Performance调度, BPU为1xBayes-e@1G, 共10TOPS等效int8算力。
-2. 单线程延迟为单帧，单线程，单BPU核心的延迟，BPU推理一个任务最理想的情况。
-3. 4线程工程帧率为4个线程同时向双核心BPU塞任务，一般工程中4个线程可以控制单帧延迟较小，同时吃满所有BPU到100%，在吞吐量(FPS)和帧延迟间得到一个较好的平衡。
-4. 8线程极限帧率为8个线程同时向X3的双核心BPU塞任务，目的是为了测试BPU的极限性能，一般来说4核心已经占满，如果8线程比4线程还要好很多，说明模型结构需要提高"计算/访存"比，或者编译时选择优化DDR带宽。
+1. X5：CPU 8xA55@1.8G，全核 Performance 调度；BPU 1xBayes-e@1G，10TOPS INT8 算力。
+2. 单线程延迟统计单帧、单线程、单 BPU 核的推理时间。
+3. 四线程帧率使用四个线程并发提交任务，BPU 利用率为 100%。
+4. X3 八线程数据使用八个线程，向两个 BPU 核并发提交任务。
 5. 浮点/定点Top-1：浮点Top-1使用的是模型未量化前onnx的 Top-1 推理精度，量化Top-1则为量化后模型实际推理的精度。
 
 <a id="boundaries"></a>

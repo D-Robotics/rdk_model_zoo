@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# KWS conversion availability
+# KWS 模型转换准备
 
 <a id="source-model"></a>
 ## 源模型
@@ -44,7 +44,7 @@ S100 编译需明确目标、特征输入布局、量化精度和最终输出语
 <a id="artifacts"></a>
 ## 转换输出
 
-记录权重/源码身份、导出命令、图契约、校准清单与特征、编译配置及日志、产物摘要和浮点/编译对照结果。已发布 HBM 的下载和源性能见[模型](../model/README_cn.md)及[评估](../evaluator/README_cn.md)说明。
+记录权重/源码身份、导出命令、图契约、校准清单与特征、编译配置及日志、产物摘要和浮点/编译对照结果。已发布 HBM 的下载和参考性能见[模型](../model/README_cn.md)及[评估](../evaluator/README_cn.md)说明。
 
 <a id="known-gaps"></a>
 ## 已发布运行制品

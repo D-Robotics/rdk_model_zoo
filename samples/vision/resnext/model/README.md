@@ -33,7 +33,7 @@ bash samples/vision/resnext/model/download.sh x5 50_32x4d
 python3 samples/vision/resnext/model/download.py --target x5 --variant 50_32x4d
 ```
 
-Success: exit 0, filename and observed SHA-256 printed. Download writes a temporary file then installs without overwriting existing bytes. Size/hash failure exits with an error. If the server is unavailable, transfer the matching published file manually into `model/`; preserve its source and observed digest. Do not substitute a different variant.
+Output: exit 0, filename and observed SHA-256 printed. Download writes a temporary file then installs without overwriting existing bytes. Size/hash failure exits with an error. If the server is unavailable, transfer the matching published file manually into `model/`; preserve its source and observed digest. Do not substitute a different variant.
 
 <a id="accompanying-files"></a>
 ## Accompanying files

@@ -7,8 +7,8 @@
 ## 数据集
 
 源没有精度数据集或标签文件。可复现输入是 `../test_data/test_input.dat`（float32
-`1x3x24x94`），即源 runtime 读取的同一个预打包张量。`../test_data/example.jpg` 展示另一块
-车牌；DAT 的车牌参照为 `渝A999U9`。它是单个输入 fixture，不是车牌精度基准集。
+`1x3x24x94`），即源运行时读取的同一个预打包张量。`../test_data/example.jpg` 展示另一块
+车牌；DAT 的车牌参照为 `渝A999U9`。它是单个输入示例输入，不是车牌精度基准集。
 
 <a id="directory"></a>
 ## 目录结构
@@ -25,10 +25,10 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-`compare.py` 在板端自行运行两边：锁定的原始 脚本（从 Git 历史加载）与本 sample
+`compare.py` 在板端自行运行两边：锁定的原始脚本（从 Git 历史加载）与本示例
 `samples/vision/lprnet/runtime/python` 的任务。它需要 X5
-runtime（在身份 gate 之后惰性导入）、已准备的 `lpr.bin` 与 `.dat` 输入。主机上
-不导入 SDK，也不下载任何内容。源记录性能保留如下。
+运行时（在身份检查之后惰性导入）、已准备的 `lpr.bin` 与 `.dat` 输入。主机上
+不导入 SDK，也不下载任何内容。参考记录性能保留如下。
 
 | 模型 | 测试帧数 | FPS | 平均延迟 | BPU 使用率 | ION 内存 |
 |---|---:|---:|---:|---:|---:|
@@ -74,10 +74,10 @@ logits 使用 `atol=1e-5`。仅当全部检查通过时返回 `0`，两边不一
 ## 输出
 
 `comparison.json` 用 SHA-256 绑定 `target`、`asset_id`、模型/输入/代码摘要，记录
-两边的实际 runtime metadata、`argv`、`cwd`、`started_utc`/`finished_utc` 与
+两边的实际运行时元数据、`argv`、`cwd`、`started_utc`/`finished_utc` 与
 `return_code`，并逐个列出保存的数组文件及其自身摘要。每个输入、raw logits 与结果
 数组都写入同目录下的独立 `.npy` 文件。执行失败时仍写出带 `error`、
-`return_code: 2`、`passed: false` 的 manifest。
+`return_code: 2`、`passed: false` 的清单。
 
 <a id="reference-results"></a>
 ## 参考结果

@@ -1,12 +1,12 @@
 [English](README.md) | 简体中文
 
-# PointNet 验证与源记录结果
+# PointNet 验证与参考记录结果
 
 <a id="dataset"></a>
 ## 输入数据
 
 `../test_data/chair.pts` 是交付的一份 XYZ 点云，不是带标签评估子集。源中没有数据集下载器、
-标签数组、split 版本或全数据集精度评估器。功能 smoke 使用未修改的交付文件；真实指标需另行准备带标签数据。
+标签数组、split 版本或全数据集精度评估器。示例推理使用未修改的交付文件；真实指标需另行准备带标签数据。
 
 <a id="directory"></a>
 ## 目录结构
@@ -30,20 +30,20 @@ evaluator/
 python3 samples/vision/pointnet/runtime/python/main.py --target s100 --no-plot --output-dir outputs/pointnet-check
 ```
 
-Smoke 参数：`--target s100`（parser 默认 auto→s100）、`--no-plot`（默认 false）、
+示例参数：`--target s100`（参数解析器默认 auto→s100）、`--no-plot`（默认 false）、
 `--output-dir outputs/pointnet-check`（默认 outputs/pointnet）。输入默认交付椅子点云；
 其余参数见[完整运行时表](../runtime/python/README_cn.md#parameters)。
 
 <a id="metrics"></a>
 ## 指标解释
 
-功能运行应得到 N 个 0..3 标签，计数之和为 N。可通过下方源记录图对照点云区域。
-每份点云必须出现四种颜色不是通用成功条件，也不是精度指标。数据集 mIoU 和逐部件 IoU 需要点级真值标签。源记录的 trans/pred 没有明确指标定义，不能称作 mIoU。
+功能运行应得到 N 个 0..3 标签，计数之和为 N。可通过下方参考记录图对照点云区域。
+每份点云必须出现四种颜色不是通用成功条件，也不是精度指标。数据集 mIoU 和逐部件 IoU 需要点级真值标签。参考记录的 trans/pred 没有明确指标定义，不能称作 mIoU。
 
 <a id="outputs"></a>
 ## 输出
 
-`outputs/pointnet-check/labels.npy` 保存点标签，`result.json` 保存计数、归一化和 metadata。
+`outputs/pointnet-check/labels.npy` 保存点标签，`result.json` 保存计数、归一化和元数据。
 去掉 `--no-plot` 还会生成 `result_orig.png`、`result.png`，不从图像虚构指标摘要。
 
 ![原始椅子](../test_data/readme_img/chair.png)
@@ -67,6 +67,6 @@ Smoke 参数：`--target s100`（parser 默认 auto→s100）、`--no-plot`（�
 <a id="boundaries"></a>
 ## 适用范围
 
-本目录未捆绑带标签数据集评估器或 BPU benchmark 封装；复现源记录性能需要补齐
-制品/环境/命令身份。S100P/S600 无已发布 PointNet 制品，不能静默映射至 S100。
+本目录未捆绑带标签数据集评估器或 BPU benchmark 封装；复现参考记录性能需要补齐
+制品/环境/命令身份。S100P/S600 无已发布 PointNet 制品，仅支持 S100。
 代码遵循 [Apache-2.0](../../../../LICENSE)。

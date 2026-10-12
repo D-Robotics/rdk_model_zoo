@@ -53,7 +53,7 @@ hrt_model_exec perf --thread_num 1 --model_name pooler_output --model_file sampl
 hrt_model_exec perf --thread_num 1 --model_name last_hidden_state --model_file samples/vision/siglip/model/s100/bpu-siglip-base-patch16-224.hbm
 ```
 
-Apply the same three commands to the other seven artifacts by replacing the file name. See the evaluator tables for reference measurements, then validate a new conversion with the commands below. A validation must bind both packed submodels, check `_input_0` metadata and the selected `_output_0` shape/dtype, then run the board smoke path in [`../runtime/python/README.md`](../runtime/python/README.md) on both S100 and S100P.
+Apply the same three commands to the other seven artifacts by replacing the file name. See the evaluator tables for reference measurements, then validate a new conversion with the commands below. A validation must bind both packed submodels, check `_input_0` metadata and the selected `_output_0` shape/dtype, then run the board inference path in [`../runtime/python/README.md`](../runtime/python/README.md) on both S100 and S100P.
 
 <a id="artifacts"></a>
 ## Artifacts

@@ -30,16 +30,15 @@ cpp/
 <a id="supported-boards"></a>
 ## 适用板卡
 
-原生运行时包含四阶段策略、SDK 适配器、离线 CLI 和构建启动器。实现 X5 源发布的
-float32 输入／输出语义，不增加归一化、动作缩放或机器人控制。
+本程序在 X5 上执行离线推理，接收 float32 观测并返回原始 float32 策略动作。
 
 | 目标 | 制品 | 状态 |
 | --- | --- | --- |
 | X5 | Bayes-e 融合 Go2 BIN | 支持（构建与运行见本指南） |
 | S100／S100P／S600 | 无匹配发布制品 | 不支持 |
 
-源板测环境为 RDK OS 3.5.0-beta、DNN Runtime 1.24.5、HBRT 3.15.55；
-源测量数据见[评测说明](../../evaluator/README_cn.md)。
+板端环境为 RDK OS 3.5.0-beta、DNN Runtime 1.24.5、HBRT 3.15.55；
+参考测量数据见[评测说明](../../evaluator/README_cn.md)。
 
 <a id="dependencies"></a>
 ## 依赖
@@ -47,25 +46,19 @@ float32 输入／输出语义，不增加归一化、动作缩放或机器人控
 - 主机核心：C++17、CMake ≥ 3.18；直接使用 `c++` 编译核心也可以。
 - 原生可执行程序：X5 BSP 的 `dnn/hb_dnn.h`、`dnn/hb_sys.h`、libdnn，以及
   `nlohmann/json.hpp`（通常由 `nlohmann-json3-dev` 提供）。不需要 gflags 或 OpenCV。
-- 主机 CLI 检查（`tests/test_cpp_cli.py`）：同样的 `nlohmann/json.hpp` 由共享的
-  主机依赖发现（pkg-config 或标准系统 include 路径）解析。可用
-  `NLOHMANN_JSON_INCLUDE` 显式指定 include 目录；无效的 override 会使检查失败，
-  缺少该头文件的主机显式跳过。不回退到任何个人目录。
 - Python 启动器：Python、NumPy、PyYAML，用于制品选择与板型检查；
   不加载 Python 推理 SDK。可通过 `PYTHON` 指定解释器。
 
-使用发布模型不需要 Torch 或量化工具链。测试替身头只用于主机检查，不能替代真实 SDK。
+使用发布模型不需要 Torch 或量化工具链。
 
 <a id="build"></a>
 ## 构建
 
-以下命令均在仓库根目录执行。无板卡时，仅构建核心并运行主机检查：
+以下命令均在仓库根目录执行。构建 `himloco_policy` 静态库：
 
 ```bash
-cmake -S samples/robotics/himloco/runtime/cpp -B /tmp/himloco-host \
-  -DHIMLOCO_BUILD_TESTS=ON
+cmake -S samples/robotics/himloco/runtime/cpp -B /tmp/himloco-host
 cmake --build /tmp/himloco-host --parallel 2
-ctest --test-dir /tmp/himloco-host --output-on-failure
 ```
 
 板端启动器自动执行原生构建。若需要手动构建（X5 或配置好的交叉编译环境）：
@@ -141,9 +134,7 @@ bash samples/robotics/himloco/runtime/cpp/run.sh --target x5 \
 <a id="interface-lifecycle"></a>
 ## 接口与资源生命周期
 
-`HimLoco(Runner)` 保存传入的可调用对象，不打开模型、不分配 SDK 缓冲区；
-`HimLoco(NativeConfig, gate)` 通过准入门禁加载原生运行时。
-公开推理接口仅包含四个阶段：
+`HimLoco(NativeConfig, gate)` 检查板型与模型后加载原生运行时。推理 API 提供以下方法：
 
 ```cpp
 auto prepared = task.preprocess(observation);
@@ -157,22 +148,13 @@ auto complete = task.predict(observation);
 耗时。`postprocess` 返回独立副本，不裁剪、不归一化、不应用控制器的 0.25 rad
 动作缩放。`predict` 顺序组合前三个阶段。
 
-尺寸错误、NaN／Inf、非法耗时或空 runner 抛出 `std::invalid_argument`；runner 异常
-继续传播给应用。接口返回值而不修改调用者输出参数，避免预测失败时将旧结果误当成
-本次成功结果。
+尺寸错误、NaN／Inf、非法耗时或空 runner 抛出 `std::invalid_argument`；runner 异常继续传播。各阶段结果独立持有数组和耗时，使用同一个原生 SDK runner 时应串行调用。
 
-各阶段容器独立持有 vector，后续调用不会覆盖早先的原始输出或耗时；前处理与后处理
-均不调用 runner。任务不保存可变的逐次推理状态，但线程安全仍取决于 runner，
-不要并发使用同一个原生 SDK runner。SDK 加载、元数据、资源生命周期及板型／模型身份
-检查由模型在 `src/policy.cpp` 中负责；`src/cli.cpp` 负责选项、输入输出和报告；
-`src/main.cpp` 通过门禁准入后显式构造 `HimLoco` 并逐条调用 `predict`。
+### 原生运行时与模型检查
 
-### 原生运行时与准入门禁
-
-`HimLoco(NativeConfig, gate)` 构造时先校验调度优先级，再执行准入门禁——读取实际
+`HimLoco(NativeConfig, gate)` 构造时先校验调度优先级，再执行模型检查：读取实际
 板型并要求 X5、校验显式本地 `.bin` 路径与发布 SHA-256；通过后才加载 SDK。
-默认门禁为 `verify_native_model`，主机测试可注入自定义门禁。没有下载、
-环境变量绕过或自动 S 平台回退。`NativeConfig::priority` 默认 `-1`（SDK 默认），
+使用 `verify_native_model` 检查板型与模型。`NativeConfig::priority` 默认 `-1`（SDK 默认），
 可指定 `[0,255]`；`model_path` 必须显式提供。
 
 ```cpp
@@ -195,8 +177,8 @@ auto result = model.predict(observation);
 `default_joint_position + 0.25 * actions`，本例不包含实时控制环。
 
 核心传递每份 `RawOutputs` 自带的耗时，不添加前后处理时间；原生 runner 的计时范围为 `hbDNNInfer` 加 `hbDNNWaitTaskDone`，
-不含缓存维护、输入复制、输出提取和文件 I/O。源测量数据及其口径见
-[评测说明](../../evaluator/README_cn.md)。离线数值一致不能证明闭环行为。
+不含缓存维护、输入复制、输出提取和文件 I/O。参考测量数据及其口径见
+[评测说明](../../evaluator/README_cn.md)。
 
 代码遵循仓库 [Apache-2.0 许可](../../../../../LICENSE)。
 
@@ -205,7 +187,7 @@ auto result = model.predict(observation);
 动作文件按源索引命名，例如 `000003.bin`，每个 48 字节（12 个小端 float32）。
 报告记录模型／输入清单摘要、每条输入输出摘要、SDK 元数据、预热完成次数、调度和计时。
 `status: completed` 表示本次全部完成；`failed` 保留错误、当前源索引及已完成记录，
-不声明整批延迟。成功汇总含 min/mean/p50/p95/max，mean 大于零时附顺序 FPS。
+不包含整批延迟。成功汇总含 min/mean/p50/p95/max，mean 大于零时附顺序 FPS。
 退出码 0 表示完成或帮助，2 表示执行或参数错误；启动器构建失败也返回 2。
 
 文件以独占方式创建，不覆盖已有结果。模型或清单在执行中发生变化会导致失败。

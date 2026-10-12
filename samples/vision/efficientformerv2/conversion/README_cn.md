@@ -4,9 +4,7 @@
 
 本目录提供转换资产：三份参考 PTQ YAML
 （`EfficientFormerv2_s0_config.yaml`、`EfficientFormerv2_s1_config.yaml`、
-`EfficientFormerv2_s2_config.yaml`）。目录**不带导出脚本，也不带校准
-数据生产脚本**，因此这是参考配置集而非完全可复现的流程；可复现边界见
-[补充准备](#known-gaps)。
+`EfficientFormerv2_s2_config.yaml`）。按下文导出步骤准备 ONNX，并按 YAML 要求生成校准数据；文件路径和归一化配置见[补充准备](#known-gaps)。
 
 <a id="source-model"></a>
 ## 源模型
@@ -15,8 +13,7 @@ EfficientFormerV2-S0/S1/S2（论文 [EfficientFormerV2: Rethinking Vision
 Transformers for MobileNet Size and
 Speed](https://arxiv.org/abs/2212.08059)）。三份 YAML 期望
 `./efficientformerv2_s0.onnx`、`./efficientformerv2_s1.onnx`、
-`./efficientformerv2_s2.onnx`，但没有记录导出配方，也未固定权重
-——ONNX 出处未经验证。
+`./efficientformerv2_s2.onnx`。按下文导出步骤生成所选变体的 ONNX，并记录权重版本。
 
 <a id="directory"></a>
 ## 目录结构
@@ -34,7 +31,7 @@ conversion/
 ## 工具链与目标
 
 模型转换在 x86 Linux 主机上的 RDK X5 OpenExplorer Docker（march
-`bayes-e`）中执行，绝不在板卡上运行。请准备含 `hb_mapper`、`hb_perf`、
+`bayes-e`）中执行。请准备含 `hb_mapper`、`hb_perf`、
 `hrt_model_exec` 的工具链；离线 Docker 镜像可从 D-Robotics 开发者论坛
 （[topic 35229](https://forum.d-robotics.cc/t/topic/35229)）获取。
 
@@ -159,7 +156,7 @@ hb_mapper makertbin --config EfficientFormerv2_s0_config.yaml
 Manifest 基名（`EfficientFormerv2_s0_224x224_nv12.bin`……），无需改名，
 且每个变体编译进各自的 `working_dir`，无冲突。三份 YAML 均设置
 `compile_mode: 'latency'` / `optimize_level: 'O3'`，并携带 `node_info`
-Softmax int16 摆放（S0/S1 为 5 个节点，S2 为 10 个）。S0 额外设置
+Softmax int16 配置（S0/S1 为 5 个节点，S2 为 10 个）。S0 额外设置
 `debug_mode: "dump_calibration_data"` 与
 `optimization: "set_all_nodes_int16"`；S1/S2 未设置这两项。
 

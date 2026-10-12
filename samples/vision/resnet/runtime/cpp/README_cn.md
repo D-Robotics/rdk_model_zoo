@@ -55,7 +55,7 @@ CMake 读取 `/sys/class/boardinfo/soc_name` 并定义对应的 SoC 宏；
 启动脚本会自动构建；手动构建（cwd：仓库根目录）：
 
 ```bash
-# 成功判据：build 目录中生成 resnet18 二进制
+# 输出：build 目录中生成 resnet18 二进制
 cmake -S samples/vision/resnet/runtime/cpp \
   -B samples/vision/resnet/runtime/cpp/build
 cmake --build samples/vision/resnet/runtime/cpp/build --parallel
@@ -77,7 +77,7 @@ cmake --build /tmp/resnet18-alt-build --parallel
 
 ```bash
 # 输入：model/s100 制品、随仓 zebra_cls.jpg、S 系列 ImageNet 标签
-# 输出：stdout 上的 Top-K 行 — 成功判据：退出码 0
+# 输出：stdout 上的 Top-K 行 — 输出：退出码 0
 bash samples/vision/resnet/runtime/cpp/run.sh
 ```
 

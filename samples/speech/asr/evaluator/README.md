@@ -72,5 +72,5 @@ The S source records this S100 command: `hrt_model_exec perf --model_file asr.hb
 The figures show model-execution performance, a transcription example and a quantization comparison. The bundled 4.59-second WAV is processed as three independent windows. For corpus CER, align full-file transcripts with independent utterance references using the schema above.
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 CTC and legacy decode the same logits differently, so report their results separately. Chunking, resampling and final padding affect transcription. For system comparisons, use complete transcripts with matched references and record the target, model, decoder, dataset split and runtime configuration.

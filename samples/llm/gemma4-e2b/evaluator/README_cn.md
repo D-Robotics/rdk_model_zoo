@@ -120,9 +120,7 @@ Golden 结果逐项打印 OK/FAIL、误差及最终 `ALL PASSED`/`SOME FAILED`�
 <a id="reference-results"></a>
 ## 参考测量
 
-源 README 与完整教程保留 S100P 演示、约 6.9 tok/s 文本截图和 S600 源回归说明。
-这些数值与 golden 文档中的预期输出均来自 S 源发布的记录。
-板端对比按上述运行时命令进行。
+S100P 文本演示约为 6.9 tok/s。按上文 golden 输入命令比较板端输出与参考张量；参考环境见完整教程。
 
 <a id="boundaries"></a>
 ## 适用范围

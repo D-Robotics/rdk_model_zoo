@@ -6,7 +6,7 @@
 ## 源模型与网络
 
 源交付参考[S100 PointNet 项目](https://gitee.com/chenguanzhong/rdk_-s100_-point-net_-official)，
-未固定训练 commit、框架版本、checkpoint 身份或权重校验值。已发布 HBM 不附带可复现转换配方。
+未固定训练 commit、框架版本、权重文件身份或权重校验值。已发布 HBM 不附带可复现转换配方。
 PointNet 通过共享 MLP、最大值聚合和局部/全局特征拼接预测逐点标签，本例只包含四种椅子部件。
 
 ![网络结构](../test_data/readme_img/image-1.png)
@@ -35,7 +35,7 @@ conversion/
 <a id="export"></a>
 ## ONNX 导出
 
-未提供 checkpoint、导出脚本或固定导出环境。原算子说明包含 Conv、BatchNorm、ReLU；
+未提供权重文件、导出脚本或固定导出环境。原算子说明包含 Conv、BatchNorm、ReLU；
 下图展示模型算子信息。运行边界是 float32 `(1,3,N)` 输入、
 `(1,N,4)` 部件 logits；N 由编译制品固定，不是运行时可随意设置的选项。
 
@@ -63,7 +63,7 @@ conversion/
 python3 samples/vision/pointnet/runtime/python/main.py --target s100 --no-plot --output-dir outputs/pointnet-check
 ```
 
-这是统一入口的功能 smoke 命令。新编译制品须先建立来源、目标和张量契约；
+这是统一入口的示例推理命令。新编译制品须先建立来源、目标和张量契约；
 形状检查确认的是接口；与发布模型的等价性以相同点序、归一化方法下对固定浮点参考的逐点标签对照为准。
 
 <a id="artifacts"></a>

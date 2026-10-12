@@ -37,7 +37,7 @@ Prepare an artifact with [`../../model/README.md`](../../model/README.md), then 
 ```bash
 # cwd: repository root; model: target-specific HBM already prepared under samples/vision/dinov2/model/
 python3 samples/vision/dinov2/runtime/python/main.py
-# success: exit code 0, JSON summary for cls_feat and cosine similarity for bus.jpg
+# output: exit code 0, JSON summary for cls_feat and cosine similarity for bus.jpg
 ```
 
 Select patch features and save the complete returned tensor at an exact path:
@@ -47,10 +47,10 @@ Select patch features and save the complete returned tensor at an exact path:
 python3 samples/vision/dinov2/runtime/python/main.py \
   --target s100p --output patch_feat \
   --output-file /tmp/dinov2-patch.npy
-# success: exit code 0, JSON summary with shape [1,256,384], and /tmp/dinov2-patch.npy; no extension is appended
+# output: exit code 0, JSON summary with shape [1,256,384], and /tmp/dinov2-patch.npy; no extension is appended
 ```
 
-`run.sh` accepts the source positional output (`cls_feat` or `patch_feat`) followed by named options and does not download. `--list-models` and explicit-target `--dry-run` work without SDK loading; host dry-run with `--target auto` exits 2.
+`run.sh` accepts the positional output (`cls_feat` or `patch_feat`) followed by named options and does not download. `--list-models` and explicit-target `--dry-run` work without SDK loading; host dry-run with `--target auto` exits 2.
 
 <a id="parameters"></a>
 ## Parameters
@@ -122,9 +122,9 @@ print({"output": output, "shape": composed_result.shape,
 <a id="stage-io"></a>
 ## Three-Stage I/O
 
-- `preprocess`: BGR `uint8` `H×W×3` → `PreparedInput`; OpenCV converts RGB, bicubic-resizes the short side to 256, center-crops 224, scales by `/255`, applies ImageNet mean/std, and emits owned contiguous float32 `{"input": (1,3,224,224)}`. `context` records original/resized shape and crop origin.
+- `preprocess`: BGR `uint8` `H×W×3` → `PreparedInput`; OpenCV converts RGB, bicubic-resizes the short side to 256, center-crops 224, scales by `/255`, applies ImageNet mean/std, and emits 独立且连续的 float32 数组 `{"input": (1,3,224,224)}`. `context` records original/resized shape and crop origin.
 - `infer`: input mapping → raw mapping containing exactly `cls_feat` `(1,384)` and `patch_feat` `(1,256,384)`. The runner validates names, shape, and native metadata dtype and returns raw values unchanged.
-- `postprocess`: raw dual-output mapping → the selected output as an owned float32 ndarray. Float32 output stays raw; integer output uses only its bound quantization metadata for dequantization. No softmax or L2 normalization is applied.
+- `postprocess`: raw dual-output mapping → the selected output as an 独立的 float32 ndarray. Float32 output stays raw; integer output uses only its bound quantization metadata for dequantization. No softmax or L2 normalization is applied.
 - `predict(image)` composes the three stages for the task's selected output. It does not download, write files, or evaluate.
 
 <a id="troubleshooting"></a>

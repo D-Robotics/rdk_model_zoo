@@ -40,8 +40,7 @@ load `hbm_runtime`, use `--dry-run` or `--list-models` with an explicit
 
 The board image needs Python 3, NumPy, OpenCV, SciPy, and its matching
 `hbm_runtime` module. Model files and the test image must be readable by the
-calling user. The runtime never silently falls back to another platform or
-model when a requested artifact is missing.
+calling user. Prepare the selected target’s model before inference.
 
 <a id="usage"></a>
 ## Shortest detection run
@@ -220,15 +219,7 @@ stay thin aliases of the readable stage methods (one implementation).
 <a id="stage-io"></a>
 ## Code flow
 
-`YoloDetect` (in `detect.py`) and `YOLO26Detect` compose exactly three stages.
-They keep no
-last-image context. Preparing B after A does not overwrite A's geometry; retain
-each prepared object and use its own transform. SDK calls require external
-serialization.
-Every task class — detect, cls, seg, pose, OBB, in both the DFL and YOLO26
-families — spells the stages `preprocess` / `infer` / `postprocess` with
-`pre_process` / `forward` / `post_process` as thin aliases (one implementation
-per stage, visible in each task module).
+`YoloDetect` and `YOLO26Detect` process inputs through `preprocess` → `infer` → `postprocess`. Retain the transform returned by each `preprocess` call and pass it to the corresponding `postprocess`; call one model instance serially. Detection, classification, segmentation, pose and OBB use these stage names, with `pre_process`, `forward` and `post_process` as aliases.
 
 - `preprocess(img_or_path, image_format="BGR")` (alias `pre_process`) requires nonempty uint8 H×W×3 BGR, or a readable local image path. It returns `PreparedDetection.tensors` and a frozen `.transform` containing original/model/resized sizes, actual integer padding and per-axis scale. X5 tensors are packed NV12; S tensors are Y `(1,H,W,1)` and UV `(1,H/2,W/2,2)`, using metadata-derived H/W.
 - `infer(prepared)` (alias `forward`) calls the runner once and returns role-keyed `RawOutputs`. The bound runner validates physical shape, dtype and finite values; it does not dequantize, activate, decode or change layout. Arrays still have the SDK dtype and borrow SDK buffers. Finish postprocessing before another SDK call, or explicitly copy retained raw arrays.
@@ -701,8 +692,7 @@ adds π/2. The exporter produces angles in radians.
 
 Library defaults are confidence 0.25, NMS 0.2 and letterbox resize. Confidence
 must be finite in `(0,1)`, NMS in `[0,1]`, and angle controls finite. OpenCV
-intersection errors propagate to the caller instead of silently becoming zero
-overlap. Inverse mapping uses actual integer padding and per-axis scales,
+intersection errors propagate to the caller. Inverse mapping uses actual integer padding and per-axis scales,
 correcting rounded-letterbox coordinates. Width and height are scaled axis-wise
 with the angle unchanged: under unequal X/Y scales this is an
 **approximate rotated rectangle**, not an exact transformed polygon.

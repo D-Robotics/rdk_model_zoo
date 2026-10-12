@@ -29,7 +29,6 @@ cpp/
 │   ├── main.cpp  # thin entry: parse options, construct model, predict, save
 │   ├── cli.cpp  # option parsing, depth colorization, NPY/F32/PNG/report writing
 │   └── depth.cpp  # preprocess/infer/postprocess, letterbox/NV12, SDK handles
-├── tests/  # (sample tests/) native contract, resources and CLI host tests
 ├── CMakeLists.txt  # RDK_TARGET-gated build definition
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
@@ -89,8 +88,7 @@ cmake --build samples/vision/yolo26_depth/runtime/cpp/build/x5 --parallel 2
 CMake requires an explicit `RDK_TARGET` of `x5` (auto is refused while
 cross-compiling because it would read the build host's SoC identity) and
 accepts its standard `DNN_INCLUDE_DIR` and `DNN_LIBRARY` cache overrides
-for an explicitly prepared SDK. A standalone successful compile is not proof of
-board behavior or runtime compatibility.
+for an explicitly prepared SDK. Run the compiled executable on the matching board with the prepared model.
 
 <a id="run"></a>
 ## Run or inspect without execution
@@ -165,9 +163,7 @@ one timed forward and returns the raw calibrated log-depth beside a
 `RunMetadata{latency_ms, warmup}`; the timer brackets the full forward only
 (buffer copy, cache operations, SDK run, raw output copy), never the restore.
 Each call returns owned data that survives the next predict. The model is
-noncopyable; use separate instances for concurrent clients and make no SDK
-concurrency claim. The optional C++ execution-gate constructor argument is a
-host-test injection seam, not a command-line bypass.
+noncopyable; use a separate model instance for each concurrent client.
 
 | Stage | Contract |
 |---|---|
@@ -181,7 +177,7 @@ one resized dimension fail clearly. SDK output must be F32/NONE, NHWC or NCHW
 single-channel 192-square. Positive byte strides or aligned-shape-derived strides
 are validated against allocation capacity; padded outputs are copied correctly.
 Input requires compact NV12 pyramid geometry; padded logical input geometry is
-explicitly unsupported rather than silently copied incorrectly.
+unsupported.
 
 The model releases packed handles, allocated buffers and the finished task
 exactly once on the success path (a failed release is reported), with a guard

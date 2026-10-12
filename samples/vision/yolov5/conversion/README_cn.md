@@ -11,7 +11,7 @@ X5 源转换 Ultralytics YOLOv5 `v2.0` 与 `v7.0` 分支模型及匹配的预训
 - v2.0：[分支](https://github.com/ultralytics/yolov5/tree/v2.0)，权重 `yolov5s_tag2.0.pt`
 - v7.0：[分支](https://github.com/ultralytics/yolov5/tree/v7.0)，权重 `yolov5n.pt`
 
-上游 commit 未锁定，本 sample 也不附带 exporter 脚本或 checkpoint；下文的分支/权重配对和检测头修改即源流程。
+上游 commit 未锁定，本示例也不附带 exporter 脚本或权重文件；下文的分支/权重配对和检测头修改即源流程。
 
 <a id="directory"></a>
 ## 目录结构
@@ -36,7 +36,7 @@ conversion/
 
 ## 导出
 
-在上游仓库的外部 clone 中操作，不在本 sample 目录内。
+在上游仓库的外部 clone 中操作，不在本示例目录内。
 
 ### YOLOv5 tag v2.0
 
@@ -150,7 +150,7 @@ torch.onnx.export(
 
 ## 校准
 
-YAML 指向 `./calibration_data_rgb_f32_coco_640`，声明 `cal_data_type: float32`、`calibration_type: default`。未随附校准数据生成器；该目录与代表性 COCO tensor 是外部前置，不能把随附推理图当校准集。
+YAML 指向 `./calibration_data_rgb_f32_coco_640`，声明 `cal_data_type: float32`、`calibration_type: default`。未随附校准数据生成器；该目录与代表性 COCO 张量是外部前置，不能把随附推理图当校准集。
 
 <a id="compile"></a>
 
@@ -168,7 +168,7 @@ hb_mapper checker --model-type onnx --march bayes-e --model yolov5n_tag_v7.0_det
 hb_mapper makertbin --model-type onnx --config yolov5_detect_bayese_640x640_nv12.yaml
 ```
 
-预期产物是 YAML 工作目录下按前缀命名的文件，例如 `yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin`。NCHW YAML 作为源参考保留；其 runtime 输入声明是 NCHW，而发布的 X5 runtime 路径是 NV12，必须有意选择配置。
+预期产物是 YAML 工作目录下按前缀命名的文件，例如 `yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin`。NCHW YAML 作为源参考保留；其运行时输入声明是 NCHW，而发布的 X5 运行时路径是 NV12，应选择与运行时输入匹配的配置。
 
 <a id="validation"></a>
 
@@ -181,13 +181,13 @@ hb_perf yolov5s_tag_v2.0_detect_640x640_bayese_nv12.bin
 hrt_model_exec model_info --model_file yolov5s_tag_v2.0_detect_640x640_bayese_nv12.bin
 ```
 
-成功条件是三个 `(1,H/stride,W/stride,255)` head、640 输入 metadata 与所选目标路径的输出行为一致。`model/README_cn.md` 中的 使用[推理指南](../runtime/python/README_cn.md)中的匹配命令检查编译模型。
+成功条件是三个 `(1,H/stride,W/stride,255)` head、640 输入元数据与所选目标路径的输出行为一致。`model/README_cn.md` 中的使用[推理指南](../runtime/python/README_cn.md)中的匹配命令检查编译模型。
 
 <a id="artifacts"></a>
 
 ## 产物
 
-`yolov5_detect_bayese_640x640_nchw.yaml` 和 `yolov5_detect_bayese_640x640_nv12.yaml` 分别定义 X5 NCHW 与 NV12 转换配置。发布 runtime 制品见 `model/README_cn.md`。
+`yolov5_detect_bayese_640x640_nchw.yaml` 和 `yolov5_detect_bayese_640x640_nv12.yaml` 分别定义 X5 NCHW 与 NV12 转换配置。发布运行时制品见 `model/README_cn.md`。
 
 
 ### 模型信息与 Mapper 报告示例
@@ -493,6 +493,6 @@ UNIT_CONV_FOR_/model.8/m/m.0/Add                    BPU  id(0)     Conv         
 
 ## 缺失项
 
-- 没有锁定上游 commit、checkpoint、exporter、校准生成器或 S 转换配方。
-- X5 Python 与 S 的物理 tensor 协议、NMS 和反量化不同，不能用一段共享转换说明替代 target-specific metadata。
-- manifest 发布 SHA-256 未知。
+- 没有锁定上游 commit、权重文件、exporter、校准生成器或 S 转换配方。
+- X5 Python 与 S 的物理张量协议、NMS 和反量化不同，不能用一段共享转换说明替代 target-specific 元数据。
+- 清单发布 SHA-256 未知。

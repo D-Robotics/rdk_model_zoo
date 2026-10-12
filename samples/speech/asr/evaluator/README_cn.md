@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# ASR transcript evaluation
+# ASR 转写评估
 
 <a id="dataset"></a>
 ## 数据集
@@ -63,7 +63,7 @@ CER 为全部语音的 `(替换 + 删除 + 插入) / 参考字符总数`，不�
 
 <a id="reference-results"></a>
 ## 参考结果
-S 源记录了 S100 命令 `hrt_model_exec perf --model_file asr.hbm --frame_count 100`：模型执行 100 帧，平均延迟 34.426 ms，29.008 FPS。这些数值描述模型执行，不是端到端音频延迟。
+S100 参考测量使用命令 `hrt_model_exec perf --model_file asr.hbm --frame_count 100`：模型执行 100 帧，平均延迟 34.426 ms，29.008 FPS。这些数值描述模型执行，不是端到端音频延迟。
 
 ![参考性能](../test_data/readme_img/perf.jpg)
 ![参考转录](../test_data/readme_img/print.jpg)

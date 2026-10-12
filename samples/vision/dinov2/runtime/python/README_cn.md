@@ -37,7 +37,7 @@ python/
 ```bash
 # cwd：仓库根目录；模型：samples/vision/dinov2/model/ 下已准备的目标 HBM
 python3 samples/vision/dinov2/runtime/python/main.py
-# 成功：退出码 0，打印 cls_feat 摘要和 bus.jpg 的 cosine similarity
+# 输出：退出码 0，打印 cls_feat 摘要和 bus.jpg 的 cosine similarity
 ```
 
 选择 patch 特征并按精确路径保存完整返回 tensor：
@@ -47,10 +47,10 @@ python3 samples/vision/dinov2/runtime/python/main.py
 python3 samples/vision/dinov2/runtime/python/main.py \
   --target s100p --output patch_feat \
   --output-file /tmp/dinov2-patch.npy
-# 成功：退出码 0，JSON shape 为 [1,256,384]，生成 /tmp/dinov2-patch.npy；不追加扩展名
+# 输出：退出码 0，JSON shape 为 [1,256,384]，生成 /tmp/dinov2-patch.npy；不追加扩展名
 ```
 
-`run.sh` 接收源位置输出参数（`cls_feat` 或 `patch_feat`），后面可接命名参数，不会下载。`--list-models` 和显式 target 的 `--dry-run` 不加载 SDK；主机使用 `--target auto` 做 dry-run 会退出 2。
+`run.sh` 接收位置输出参数（`cls_feat` 或 `patch_feat`），后面可接命名参数，不会下载。`--list-models` 和显式 target 的 `--dry-run` 不加载 SDK；主机使用 `--target auto` 做 dry-run 会退出 2。
 
 <a id="parameters"></a>
 ## 参数
@@ -74,7 +74,7 @@ python3 samples/vision/dinov2/runtime/python/main.py \
 <a id="results"></a>
 ## 结果
 
-CLI 打印 JSON 字段 `output`、`shape`、`dtype`、`mean`、`std`、`min`、`max`、`l2_norm`。使用第二张图时还打印 `second_image`、`cosine_similarity`；文件缺失时状态为 `skipped_missing`。`cls_feat` 为 `(1,384)`，`patch_feat` 为 `(1,256,384)`，结果均为 owned float32。整数 HBM 输出依据 output quantization metadata 反量化；不执行 softmax、L2 归一化、patch pooling 或其他特征变换。
+CLI 打印 JSON 字段 `output`、`shape`、`dtype`、`mean`、`std`、`min`、`max`、`l2_norm`。使用第二张图时还打印 `second_image`、`cosine_similarity`；文件缺失时状态为 `skipped_missing`。`cls_feat` 为 `(1,384)`，`patch_feat` 为 `(1,256,384)`，结果均为独立存储的 float32 数组。整数 HBM 输出依据输出的量化元数据反量化；不执行 softmax、L2 归一化、patch pooling 或其他特征变换。
 
 入口按可读性拆分：`main.py` 解析选择、构造 `DINOv2Embedder`、逐图调用 `predict` 并输出
 JSON 摘要；参数声明、`--list-models`/`--dry-run` 模式、特征摘要/余弦相似度辅助与可选
@@ -120,10 +120,10 @@ print({"output": output, "shape": composed_result.shape,
 <a id="stage-io"></a>
 ## 三阶段 I/O
 
-- `preprocess`：BGR `uint8` `H×W×3` → `PreparedInput`；OpenCV 转 RGB，bicubic 将短边 resize 到 256，中心 crop 224，执行 `/255` 和 ImageNet mean/std，生成 owned contiguous float32 `{"input": (1,3,224,224)}`。`context` 保存原图/缩放尺寸和 crop 起点。
-- `infer`：输入 mapping → 精确包含 `cls_feat` `(1,384)` 和 `patch_feat` `(1,256,384)` 的原始 mapping。runner 校验名称、shape 和原生 metadata dtype，原样返回。
-- `postprocess`：原始双输出 mapping → 所选 output 的 owned float32 ndarray。float32 输出保持 raw；整数输出只依据绑定 quantization metadata 反量化。不执行 softmax 或 L2 归一化。
-- `predict(image)` 为所选 output 串联三个阶段；不会下载、写文件或评估。
+- `preprocess`：BGR `uint8` `H×W×3` → `PreparedInput`；OpenCV 转 RGB，bicubic 将短边 resize 到 256，中心 crop 224，执行 `/255` 和 ImageNet mean/std，生成 独立且连续的 float32 数组 `{"input": (1,3,224,224)}`。`context` 保存原图/缩放尺寸和 crop 起点。
+- `infer`：输入映射 → 精确包含 `cls_feat` `(1,384)` 和 `patch_feat` `(1,256,384)` 的原始映射。runner 校验名称、shape 和原生 元数据 dtype，原样返回。
+- `postprocess`：原始双输出映射 → 所选输出的独立 float32 数组。float32 输出保持原值；整数输出依据模型的量化元数据反量化。不执行 softmax 或 L2 归一化。
+- `predict(image)` 为所选输出 串联三个阶段；不会下载、写文件或评估。
 
 既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
 
@@ -136,7 +136,7 @@ print({"output": output, "shape": composed_result.shape,
 | `No published DINOv2 support for x5` | target 超出三个 S 系列发布范围。 | 使用 `s100`、`s100p` 或 `s600`。 |
 | `Host dry-run requires --target s100, s100p, or s600` | 主机无法为 dry-run 推断板卡。 | 显式传入 target。 |
 | `An external model-path requires the exact manifest asset-id.` | 传入自定义路径但没有发布身份。 | 添加匹配的 `--asset-id`。 |
-| `DINOv2... differs from bound metadata` | HBM I/O metadata 不符合固定契约。 | 使用准确的目标制品；不要 reshape 或 cast tensor。 |
+| `DINOv2... differs from bound metadata` | HBM I/O 元数据 不符合固定契约。 | 使用准确的目标制品；不要 reshape 或 cast tensor。 |
 
 ## 许可
 

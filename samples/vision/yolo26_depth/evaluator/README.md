@@ -79,8 +79,7 @@ python prepare_sunrgbd.py --source-root /work/sunrgbd \
 By default all three protocols are generated; repeat `--protocol` to select a
 subset and reduce storage. Every tensor has a recorded hash, geometry and dtype.
 The screen subset is deterministic and stratified by sensor; requesting fewer
-samples than sensors or zero samples is supported. Screen selection is metadata,
-not an instruction for the evaluator to silently discard other output records.
+samples than sensors or zero samples is supported. Screen selection is recorded as metadata; all output records remain available to evaluation.
 
 Produce floating and compiled-model outputs separately in their matching
 export/runtime environments. Their inference is not performed by these tools.
@@ -156,8 +155,7 @@ values** instead. These policies can produce different scales; the reports name
 them explicitly.
 
 Raw-domain and restored-depth fidelity report MAE, RMSE, max absolute error,
-relative error and cosine. Empty/nonfinite/mismatched arrays fail rather than
-silently dropping values. Zero-norm cosine is `null`. No-valid-GT accuracy is
+relative error and cosine. Arrays must be nonempty, finite and matching; invalid inputs return an error. Zero-norm cosine is `null`. No-valid-GT accuracy is
 `null` with `valid_pixels=0`, not a perfect score. The tool reports cosine and
 the other metrics; the accept decision belongs to your thresholds.
 

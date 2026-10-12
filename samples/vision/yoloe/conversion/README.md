@@ -14,7 +14,6 @@ Recipes for the three routes — X5 E11, S E11 and S E26 — are provided below.
 
 ```text
 conversion/
-├── tests/  # Automated tests
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
 ├── calibration.py  # Python script
@@ -148,12 +147,12 @@ docker run --rm -it --shm-size=2g \
 | Padding | pyramid input | input/output no-padding | input no-padding, output padding permitted |
 | Output-removal requests | none | none | none |
 
-The X5 int16 attention override is added only for actual ONNX nodes: `/model.10/m/m.0/attn/Softmax` for all E11 sizes and additionally `/model.10/m/m.1/attn/Softmax` for 11l. Each missing expected node is named in a `source attention node absent:...` warning. Do not silently rename a different node into that override. The S E11 quantized recipe `config_ultralytics_YOLOE_Seg_YUV420SP_NV12.yaml` uses NV12 runtime input with `scale_value 0.003921568627451`, default calibration with a softmax-int8 `quant_config`, latency/O2, `jobs: 15`, `advice: 1`, and input/output no-padding; its active `remove_node_name` list uses the v8 head numbering (`/model.23/...`) while YOLOE-11 heads live under `/model.22/...`, so those removal names do not match an 11-series graph. The float route omits removal entirely. [S model modification rules](https://developer.d-robotics.cc/oe_s_doc/guide/model_deployment_guidance/model_deployment_principle_process/model_modify) explain how those options remove boundary operators. Omission expresses float-output intent; final compiler metadata must still verify it.
+The X5 int16 attention override is added only for actual ONNX nodes: `/model.10/m/m.0/attn/Softmax` for all E11 sizes and additionally `/model.10/m/m.1/attn/Softmax` for 11l. Each missing expected node is named in a `source attention node absent:...` warning. Use the override only with the matching graph node. The S E11 quantized recipe `config_ultralytics_YOLOE_Seg_YUV420SP_NV12.yaml` uses NV12 runtime input with `scale_value 0.003921568627451`, default calibration with a softmax-int8 `quant_config`, latency/O2, `jobs: 15`, `advice: 1`, and input/output no-padding; its active `remove_node_name` list uses the v8 head numbering (`/model.23/...`) while YOLOE-11 heads live under `/model.22/...`, so those removal names do not match an 11-series graph. The float route omits removal entirely. [S model modification rules](https://developer.d-robotics.cc/oe_s_doc/guide/model_deployment_guidance/model_deployment_principle_process/model_modify) explain how those options remove boundary operators. Omission expresses float-output intent; final compiler metadata must still verify it.
 
 <a id="validation"></a>
 ## Validation
 
-Exit codes: 0 for preparation or an exit-zero compiler producing a nonempty artifact, 1 for a captured compiler failure/missing artifact, 2 for invalid inputs or unavailable dependencies/compiler. A successful compile reports **`compiled_unverified`**, with `observed_output_dtype=null`, `board` and `dataset_accuracy` unset. The `_float` filename suffix is an intended contract, not proof of actual precision.
+Exit codes: 0 for preparation or an exit-zero compiler producing a nonempty artifact, 1 for a captured compiler failure/missing artifact, 2 for invalid inputs or unavailable dependencies/compiler. A successful compile reports **`compiled_unverified`**, with `observed_output_dtype=null`, `board` and `dataset_accuracy` unset. Check output types with the runtime metadata before inference.
 
 For the published X5 E11 artifacts, validate with the `hb_perf` visualization plus the `hrt_model_exec model_info` inspection (run on a matching X5 image after preparing the BIN):
 
@@ -171,21 +170,12 @@ python3 samples/vision/yoloe/runtime/python/main.py \
   --local-float-sha256 REPLACE_WITH_64_HEX_SHA256
 ```
 
-Host tests exercise real ONNX validation with synthetic graphs, calibration pixels, all 14 target/variant configurations, and fake compiler success/failure capture. Run them after installing host dependencies:
-
-```bash
-# cwd: repository root
-python3 -m unittest discover -s samples/vision/yoloe/tests
-# Additionally, in the export environment:
-python3 -m unittest discover -s samples/vision/yoloe/conversion/tests
-```
-
 <a id="artifacts"></a>
 ## Artifacts
 
 Each preparation directory contains `source/model.onnx`, `source/classes.names`, `calibration/`, `calibration.json`, `config.yaml` and `conversion.json`. Records bind original images, generated tensors, ONNX, vocabulary and YAML with SHA-256. Compilation adds the complete combined stdout/stderr `compile.log`, exact argv/cwd/UTC timestamps/return code and, on success, the artifact path/hash/size in `conversion.json`.
 
-Expected output is `compiler_output/yoloe_<variant>_seg_pf_<march-without-hyphen>_640x640_nv12_float.bin` (X5) or `.hbm` (S). Keep these local conversions separate from the [published artifacts](../model/README.md); no new publication identity or board result is created automatically.
+Expected output is `compiler_output/yoloe_<variant>_seg_pf_<march-without-hyphen>_640x640_nv12_float.bin` (X5) or `.hbm` (S). Keep these local conversions separate from the [published artifacts](../model/README.md); use the generated model path and checksum when running it.
 
 <a id="known-gaps"></a>
 ## Preparation requirements

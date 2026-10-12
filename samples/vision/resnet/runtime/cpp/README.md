@@ -39,7 +39,7 @@ cpp/
 | X5 | not-supported |
 
 The CMake file reads `/sys/class/boardinfo/soc_name` and defines the matching
-SoC macro; an unreadable identity file is an error, not a fallback.
+SoC macro; configuration fails if the identity file cannot be read.
 
 <a id="dependencies"></a>
 ## Dependencies
@@ -58,7 +58,7 @@ The launcher builds automatically; to build manually (cwd: repository
 root):
 
 ```bash
-# success: build directory contains the resnet18 binary
+# output: build directory contains the resnet18 binary
 cmake -S samples/vision/resnet/runtime/cpp \
   -B samples/vision/resnet/runtime/cpp/build
 cmake --build samples/vision/resnet/runtime/cpp/build --parallel
@@ -80,7 +80,7 @@ S600 artifact). From any working directory:
 
 ```bash
 # input: model/s100 artifact, bundled zebra_cls.jpg, S ImageNet labels
-# output: Top-K lines on stdout — success: exit 0
+# output: Top-K lines on stdout — output: exit 0
 bash samples/vision/resnet/runtime/cpp/run.sh
 ```
 

@@ -5,7 +5,7 @@
 <a id="source-model"></a>
 ## 源模型
 
-源交付提供 X5 部署制品和协议说明，但没有仓库内 ONNX 导出脚本、checkpoint、校准集或 PTQ YAML。源 conversion README 使用外部 OE 包和用户提供的 `your_lprnet_config.yaml`；该占位文件不在本仓库，不能视为可复现配方。
+源交付提供 X5 部署制品和协议说明，但没有仓库内 ONNX 导出脚本、权重文件、校准集或 PTQ YAML。源 conversion README 使用外部 OE 包和用户提供的 `your_lprnet_config.yaml`；该占位文件不在本仓库，不能视为可复现配方。
 
 <a id="directory"></a>
 ## 目录结构
@@ -24,12 +24,12 @@ conversion/
 <a id="export"></a>
 ## 导出
 
-没有导出配方。用户必须自行提供 ONNX/checkpoint 流程，并产出 `input float32 NCHW (1,3,24,94)`、`output float32 (1,68,18,1)` 的部署图——即发布版 `lpr.bin` 的 native logits；CTC 解码在移除单元素轴后消费 `(68,18)` 载荷。
+没有导出配方。用户必须自行提供 ONNX/checkpoint 流程，并产出 `input float32 NCHW (1,3,24,94)`、`output float32 (1,68,18,1)` 的部署图——即发布版 `lpr.bin` 的原生 logits；CTC 解码在移除单元素轴后消费 `(68,18)` 载荷。
 
 <a id="calibration"></a>
 ## 校准
 
-没有校准数据集或校准生成器。已提交的 `test_input.dat` 是 runtime 输入 fixture，不是校准集，不能称为图像数据或代表性校准数据。
+没有校准数据集或校准生成器。已提交的 `test_input.dat` 是运行时输入示例输入，不是校准集，不能称为图像数据或代表性校准数据。
 
 <a id="compile"></a>
 ## 编译
@@ -43,21 +43,21 @@ hb_mapper makertbin --model-type onnx --config ./your_lprnet_config.yaml
 # 成功需 OE 工具报告成功并生成 X5 .bin 制品
 ```
 
-确切输出文件名、校准选项、量化设置和源 checkpoint 均未知。
+确切输出文件名、校准选项、量化设置和源权重文件均未知。
 
 <a id="validation"></a>
 ## 转换后验证
 
-可用 `hrt_model_exec model_info --model_file ./lpr.bin` 检查生成模型，再与 runtime binding 对照。转换后在板端运行[评估器](../evaluator/README_cn.md)对照器检查两套实现的 logits 一致性；转换配方的重建以本目录列出的前提为准。
+可用 `hrt_model_exec model_info --model_file ./lpr.bin` 检查生成模型，再与运行时模型绑定对照。转换后在板端运行[评估器](../evaluator/README_cn.md)对照器检查两套实现的 logits 一致性；转换配方的重建以本目录列出的前提为准。
 
 <a id="artifacts"></a>
 ## 产物
 
-唯一的 manifest 制品是 `x5:lprnet:lpr.bin`；runtime 期望路径为 `../model/lpr.bin`。ONNX、checkpoint、校准数据和编译日志属于外部输入，不纳入仓库。
+唯一的清单制品是 `x5:lprnet:lpr.bin`；运行时期望路径为 `../model/lpr.bin`。ONNX、权重文件、校准数据和编译日志属于外部输入，不纳入仓库。
 
 <a id="known-gaps"></a>
 ## 补充准备
 
-- 源没有导出脚本、checkpoint 版本、校准生成器、PTQ YAML 或可复现 OE 包。
+- 源没有导出脚本、权重文件版本、校准生成器、PTQ YAML 或可复现 OE 包。
 - `your_lprnet_config.yaml` 是源占位符，不是仓库文件。
 - 发布者 SHA-256 未知。已发布制品的板端一致性记录在 evaluator README 中，不延伸到重建。

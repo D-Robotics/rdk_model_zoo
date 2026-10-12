@@ -70,7 +70,7 @@ bash run.sh -- --prompt="What is the capital of France?" --follow_up="Translate 
 <a id="interface-lifecycle"></a>
 ## 接口与生命周期
 
-inc/minicpm5.hpp 定义 Config、Result、生成阶段函数和顺序调用的模型类；src/minicpm5.cpp 实现各阶段，并负责模型文件校验、OELLM JSON 配置与临时配置文件；src/cli.cpp 负责 gflags 参数及 RESULT 输出；src/main.cpp 构造具名模型并对每一轮调用一次 `predict`。生成的代码文本不会被执行。
+`inc/minicpm5.hpp` 提供 `Config`、`Result`、生成阶段函数与 `MiniCPM5`。包含该头文件后，创建会话并调用生成接口。
 
 公开阶段函数为 `preprocess`（构建并校验一个 OELLM 请求，不调用 SDK）、`infer`（一次同步推理调用加响应形态校验）与 `postprocess`（提取文本、token 和状态，并读取与校验请求指标）；`MiniCPM5::predict` 按此串联每次请求。分词与模板渲染保留在 runtime 内部；SDK 未暴露分词接口。临时 runtime JSON 由 RAII 守护持有，在成功、SDK 错误返回和异常路径上都会删除。
 
@@ -94,7 +94,7 @@ int main() {
 }
 ```
 
-`preprocess` 是公开函数，因此其参数约束在函数内部强制执行：空 prompt 或超出 1–4096 的 `max_new_tokens` 对所有调用方直接抛错，与构造函数在加载模型前的校验相互独立。runtime 负责分词、BPU 执行与解码；生成的代码文本不会被执行。
+`preprocess` 要求 prompt 非空，`max_new_tokens` 在 1–4096 之间；参数不符合要求时抛出异常。runtime 完成分词、BPU 推理与文本解码。
 
 <a id="results-interpretation"></a>
 ## 结果解释

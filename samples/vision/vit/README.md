@@ -65,7 +65,7 @@ python3 -m pip install -r samples/vision/vit/requirements-host.txt
 <a id="quickstart"></a>
 ## Quick start
 
-On S100, prepare the model explicitly, then run. Success: exit 0 and five class IDs/scores/labels. Prepare the target-specific artifact with the model downloader before inference.
+On S100, prepare the model explicitly, then run. Output: exit 0 and five class IDs/scores/labels. Prepare the target-specific artifact with the model downloader before inference.
 
 ```bash
 # cwd: repository root

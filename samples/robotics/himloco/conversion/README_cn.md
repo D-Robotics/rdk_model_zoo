@@ -5,7 +5,7 @@
 <a id="source-model"></a>
 ## 源模型
 
-使用 [himloco_lab](https://github.com/IsaacZH/himloco_lab) 的融合 Go2 estimator/actor TorchScript `policy.pt`。训练检查点和 rollout 由使用者提供；独立训练的权重不能视为同一发布制品。脚本与方案继承 X5 固定提交 `ac115717197920355fc390bb04299b20e6436864`，本次仅整理目录和说明，未重新执行量化。发布 BIN 的身份见[模型说明](../model/README_cn.md)。
+使用 [himloco_lab](https://github.com/IsaacZH/himloco_lab) 的融合 Go2 estimator/actor TorchScript `policy.pt`。训练检查点和 rollout 由使用者提供；独立训练的权重不能视为同一发布制品。按下文导出、校准并编译融合策略。发布 BIN 的身份见[模型说明](../model/README_cn.md)。
 
 本目录将融合 HIMLoco TorchScript 策略导出为静态 ONNX，并编译为 RDK X5 Bayes-e
 `.bin` 模型。
@@ -155,7 +155,7 @@ compile_mix_o3/
 <a id="validation"></a>
 ## 验证结果
 
-源发布记录的 MIX/O3 构建结果：
+参考数据的 MIX/O3 构建结果：
 
 | 指标 | 结果 |
 | --- | ---: |
@@ -179,11 +179,11 @@ compile_mix_o3/
 | `mapper.py` | `--onnx`, `--calibration`, `--output` | `--jobs 8`; `--optimize-level O3`; `--calibration-type mix`; `--max-percentile 1.0` |
 
 <a id="known-gaps"></a>
-## 使用边界
+## 补充准备
 
-本仓库不附带训练权重或完整 rollout。方案保留源实现；重建制品时按本页步骤执行导出、校准、编译与板测。
+训练权重和完整轨迹数据需自行准备。按本页步骤导出、校准、编译，再检查板端输出。
 
-- 使用代表性 rollout 状态；随机高斯输入不能作为发布级校准替代；
+- 使用有代表性的轨迹状态进行校准；
 - 校准与独立评测 rollout 不得重叠；
 - 生成模型、校准数据、日志和报告必须存放在仓库外；
 - Mapper 未报告输出相似度或 `hb_model_info` 未确认 `bayes-e` 时不得发布模型。

@@ -5,7 +5,7 @@
 <a id="dataset"></a>
 ## 数据集
 
-WikiText2 TEST 与校准 TRAIN 分开；固定 checkpoint/tokenizer 和 TEST 摘要沿用源记录。完整口径为 140 × 2048-token 片段，不能把一段接线检查当成全量评估。下文结果均来自固定 S 源记录。
+WikiText2 TEST 与校准 TRAIN 分开；固定 checkpoint/tokenizer 和 TEST 摘要沿用源记录。完整口径为 140 × 2048-token 片段，不能把一段接线检查当成全量评估。下文参考数据注明了模型与运行环境。
 
 <a id="directory"></a>
 ## 目录结构
@@ -72,11 +72,11 @@ HBM SHA256：`7c54a0934b95c26ec378f93716618f17eb58d3efd5d5b3de7b016040513ed0ee`�
 
 ## 生成验证
 
-[六条提示词及 token 对照](../test_data/generation-reference.json)全部匹配官方 HF 贪心输出，并以 EOS 结束。另有 53/45-token 两轮对话、填充后 2048/3840-token 输入的代码检索和 50 次重复请求。重复测试平均 decode 53.2503 token/s、首 token 延迟 147.8602 ms，不含冷启动加载时间。这是短时单请求场景，不含老化或并发覆盖；prefill 计数包含 chunk 填充。
+[六条提示词及 token 对照](../test_data/generation-reference.json)全部匹配官方 HF 贪心输出，并以 EOS 结束。另有 53/45-token 两轮对话、填充后 2048/3840-token 输入的代码检索和 50 次重复请求。重复测试平均 decode 53.2503 token/s、首 token 延迟 147.8602 ms，不含冷启动加载时间。该场景顺序执行短请求；prefill 计数包含 chunk 填充。
 
-## S100 / S100P 全量验证（2026-09-09）
+## S100 / S100P 测量数据（2026-09-09）
 
-使用独立的 [OELLM 1.0.0 评估入口](legacy/README_cn.md)，对应 SDK 1.0.0、UCP/DNN 3.7.3、HBRT 4.2.11。两块板各自的 HBM 均完成相同的 140 × 2048-token TEST 输入与 286580 个预测目标。**两板 PPL 均为 17.91995474675122，相对浮点上升 27.83167%，未达到 ≤3% 精度目标。** 完整性与数学一致性检查通过；共用验证器会按精度阈值拒绝该结果。
+使用独立的 [OELLM 1.0.0 评估入口](legacy/README_cn.md)，对应 SDK 1.0.0、UCP/DNN 3.7.3、HBRT 4.2.11。两块板各自的 HBM 均完成相同的 140 × 2048-token TEST 输入与 286580 个预测目标。**两板 PPL 均为 17.91995474675122，相对浮点上升 27.83167%，未达到 ≤3% 精度目标。** 共用验证器对超过此阈值的结果返回失败。
 
 | 板卡 | 全量 PPL | 评估秒数 | 参考文本完全一致 | 连续请求 |
 |---|---:|---:|---:|---:|
@@ -87,7 +87,7 @@ HBM SHA256：`7c54a0934b95c26ec378f93716618f17eb58d3efd5d5b3de7b016040513ed0ee`�
 
 50 次请求平均端到端耗时为 S100 671.37 ms、S100P 543.22 ms，不含模型加载；这是墙钟时间，不是 TTFT。此前短请求日志 decode 约 12.1/13.0 token/s，不把全零回调字段当成性能测量。工具调用、思考、多模态、并发与长时间压力不在本评估范围内，部署前请另行验证。
 
-[首片段诊断](results/legacy-first-segment-diagnostic.json)：HF float32 PPL 10.75668，legacy 适配器 float32 10.75612，实际 HBM 14.01536。全部八个掩码与 SDK 校准辅助函数逐项一致；输入哈希与 S600 相同，也核验了实际执行的两份 HBM 哈希。评估脚本在两板分别复现首段 NLL 5404.3955137729645。上文 S600 结果沿用源发布记录。
+[首片段诊断](results/legacy-first-segment-diagnostic.json)：HF float32 PPL 10.75668，legacy 适配器 float32 10.75612，实际 HBM 14.01536。全部八个掩码与 SDK 校准辅助函数逐项一致；输入哈希与 S600 相同，也核验了实际执行的两份 HBM 哈希。评估脚本在两板分别复现首段 NLL 5404.3955137729645。上文 S600 结果沿用参考数据。
 
 <a id="boundaries"></a>
 ## 判据与边界

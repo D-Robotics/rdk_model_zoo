@@ -5,7 +5,7 @@
 <a id="source-model"></a>
 ## 源模型
 
-发布制品对由 X5 BPU 图像 encoder（`img_encoder.bin`）和 CPU ONNX 文本 encoder（`text_encoder.onnx`）组成。未随附上游 checkpoint 版本、导出脚本、转换 YAML 或校准数据集；原始 CLIP BPE 词表和模型协议保持不变。
+发布制品对由 X5 BPU 图像编码器（`img_encoder.bin`）和 CPU ONNX 文本编码器（`text_encoder.onnx`）组成。未随附上游权重文件版本、导出脚本、转换 YAML 或校准数据集；原始 CLIP BPE 词表和模型协议保持不变。
 
 <a id="directory"></a>
 ## 目录结构
@@ -19,7 +19,7 @@ conversion/
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-重新生成图像 `.bin` 需要 OpenExplorer Docker 或对应的 OE 包编译环境。没有记录编译器版本、`march` 配置、文本 ONNX 导出版本或按 target 的 YAML。发布目标只有 X5。
+重新生成图像 `.bin` 需要 OpenExplorer Docker 或对应的 OE 包编译环境。没有记录编译器版本、`march` 配置、文本 ONNX 导出版本或按目标板卡的 YAML。发布目标只有 X5。
 
 | Target | march | OE 版本 | 配置 |
 | --- | --- | --- | --- |
@@ -30,7 +30,7 @@ conversion/
 <a id="export"></a>
 ## 导出（ONNX）
 
-没有提供导出命令或源 checkpoint。文本 encoder 保持发布的 ONNX 制品，图像 encoder 保持发布的 `.bin`。已知部署契约为：
+没有提供导出命令或源权重文件。文本编码器保持发布的 ONNX 制品，图像编码器保持发布的 `.bin`。已知部署契约为：
 
 | Encoder | 输入 | 输出 |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ conversion/
 <a id="compile"></a>
 ## 编译
 
-没有发布两个 encoder 的转换 YAML 或编译命令。模型下载器只准备已发布的制品，不负责编译。
+没有发布两个编码器的转换 YAML 或编译命令。模型下载器只准备已发布的制品，不负责编译。
 
 <a id="validation"></a>
 ## 转换后验证
@@ -63,9 +63,9 @@ conversion/
 <a id="known-gaps"></a>
 ## 补充准备
 
-- 没有源 checkpoint、图像 ONNX 导出脚本、文本 ONNX 导出脚本、转换 YAML、编译器/版本矩阵或校准数据集。
-- 可依据 manifest 准备已发布 `.bin`、`.onnx`，但无法从本 sample 复现转换过程。
-- active manifest 中两个制品的 SHA-256 均为 `sha256: null (unknown)`。
+- 没有源权重文件、图像 ONNX 导出脚本、文本 ONNX 导出脚本、转换 YAML、编译器/版本矩阵或校准数据集。
+- 可依据清单准备已发布 `.bin`、`.onnx`，但无法从本示例复现转换过程。
+- active 清单中两个制品的 SHA-256 均为 `sha256: null (unknown)`。
 
 ## 许可
 

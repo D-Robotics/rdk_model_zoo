@@ -48,20 +48,16 @@ Torch 或音频库头文件。主机构建支持 macOS arm64／Apple Clang。真
 使用单独说明的 [Python 环境](../python/README_cn.md#environment)。
 
 <a id="build"></a>
-## 构建并运行主机检查
+## 构建数值库
 
 从仓库根目录执行，使用新的构建目录：
 
 ```bash
-cmake -S samples/speech/paraformer/runtime/cpp -B /tmp/rdk-paraformer-core -DCMAKE_BUILD_TYPE=Release -DPARAFORMER_BUILD_TESTS=ON -DPARAFORMER_SANITIZERS=ON
+cmake -S samples/speech/paraformer/runtime/cpp -B /tmp/rdk-paraformer-core -DCMAKE_BUILD_TYPE=Release
 cmake --build /tmp/rdk-paraformer-core -j 2
-ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
 ```
 
-成功标准是四个 CTest 检查通过：数值契约、合成三模型编排、隔离 API 替身下的 SDK
-控制流以及整组预检。上述命令在 Clang/GNU
-下启用地址／未定义行为检查，Release 测试也保留断言。生产构建产物为静态
-`paraformer_pipeline` 模型库，测试可执行文件不是推理 CLI。
+构建生成 `paraformer_pipeline` 静态库，供应用链接。
 
 <a id="run"></a>
 
@@ -70,8 +66,7 @@ ctest --test-dir /tmp/rdk-paraformer-core --output-on-failure
 
 以下以仓库根目录为 cwd。启动器需要 Python、NumPy、PyYAML，不加载 Python 推理 SDK。
 实际 C++ 执行需要 S100 和匹配的 UCP SDK；特征生成另需已验证的
-[FunASR 环境](../python/README_cn.md#environment)。不会自动下载模型、安装依赖、回退板型
-或用测试后端替代真实推理。
+[FunASR 环境](../python/README_cn.md#environment)。启动前准备好 S100 模型与依赖。
 
 任意主机均可预览声明的模型组和原生命令：
 
@@ -96,8 +91,8 @@ bash samples/speech/paraformer/model/download_model.sh --target s100
 PYTHON=python bash samples/speech/paraformer/runtime/cpp/run.sh --target s100 --build --manifest outputs/paraformer_features/prepared-manifest.json
 ```
 
-`--build` 以 Release 配置真实 SDK、I/O、CLI，关闭测试，然后构建
-`runtime/cpp/build/s100/paraformer_demo`。按后文提供 SDK／JSON 依赖，CMake 失败也会留证。
+`--build` 以 Release 配置真实 SDK、I/O、CLI，然后构建
+`runtime/cpp/build/s100/paraformer_demo`。按后文提供 SDK／JSON 依赖，构建失败时可查看保存的 CMake 日志。
 后续可省略 `--build` 使用该二进制，或通过 `--binary /absolute/path/to/paraformer_demo`
 指定已有程序。每轮使用新的输出目录；`--max-utts 1` 仅处理第一条，0 表示全部。
 
@@ -145,11 +140,7 @@ ID／token 数、decoder 执行状态和阶段耗时。
 阶段计时不含前端、文件 I/O 或 runner／CIF 调用之外的工作。CIF 精确为空时跳过
  decoder，文本和 ID 为空，decoder 耗时为 null。
 
-`main.cpp` 用已验证模型组和门可见地构造命名 `paraformer::Pipeline` 模型，再对每条
-语音调用一次 `pipeline.predict(features, item.valid_frames)`；调用方不出现任何 SDK
-runner 构造或阶段接线。运行报告生命周期由 `RunWorkspace`（`inc/cli.hpp`）持有：
-预留新输出目录、记录实测阶段元数据与每条预测、完成时重校验清单／特征摘要，
-并原子写入 `result.json`／`failed.json`。
+用已检查的模型组与预检回调构造 `paraformer::Pipeline`，然后对每条语音调用 `pipeline.predict(features, item.valid_frames)`。`RunWorkspace`（`inc/cli.hpp`）管理输出目录，写入 `result.json` 或 `failed.json`。
 
 两层均拒绝已有输出目录。创建目录前的预检／解析失败为 rc=2、stderr 报错，不创建
 结果目录。之后的原生失败写 `result/failed.json`，含已完成的部分记录、当前语音 ID
@@ -158,21 +149,16 @@ runner 构造或阶段接线。运行报告生命周期由 `RunWorkspace`（`inc
 `inference_executed` 在调用前为 false，首条调用失败时为 null（可能已发生部分模型
 执行），任一语音完整处理后为 true。部分输出不能当作整轮成功。
 
-接受成功前，启动器拒绝 `host-fixture`，检查退出码和结果文件，依据 Python 绑定核验
-模型身份、物理形状／类型／角色／字节步长，核对每条所选输入和结果、文本／token／
-耗时一致性，并重新计算输入／模型／词表摘要。这些一致性检查用于将报告绑定到本次执行。
-主机 CLI 替身不会作为公开二进制安装，也不会被接受为原生成功。
+启动器报告成功前，会检查退出码、结果文件、模型张量元数据和输入／模型／词表摘要。
 
 ## 构建选项与当前入口
 
 | 选项 | 默认值 | 含义 |
 | --- | --- | --- |
-| `PARAFORMER_BUILD_TESTS` | `OFF` | 构建并注册四个主机测试 |
-| `PARAFORMER_SANITIZERS` | `OFF` | 在 Clang/GNU 下启用 ASan/UBSan 并传播链接选项 |
 | `PARAFORMER_BUILD_CLI` | `OFF` | 构建 `paraformer_demo`；须同时开启 SDK 和 I/O 选项 |
-| `PARAFORMER_BUILD_IO` | `OFF` | 启用清单／NPY 读取与 CLI（nlohmann JSON）；开启测试时增加对应主机检查 |
+| `PARAFORMER_BUILD_IO` | `OFF` | 启用清单／NPY 读取与 CLI（nlohmann JSON） |
 | `PARAFORMER_BUILD_SDK` | `OFF` | 使用真实厂商头文件／库把 UCP 适配编入 `paraformer_pipeline` |
-| `CMAKE_BUILD_TYPE` | CMake 默认 | 文档检查使用 `Release` |
+| `CMAKE_BUILD_TYPE` | CMake 默认 | 示例使用 `Release` |
 
 完整 CLI 与启动器参数见下文。嵌入其他 CMake 项目时，通过 `add_subdirectory` 加入目录并
 链接 `paraformer_pipeline`，公共头文件为 `pipeline.hpp` 和 `cif.hpp`。
@@ -204,11 +190,11 @@ CIF 在累计前屏蔽有效帧及之后的权重。无触发返回零数组与�
 返回 ID 仍包含文本渲染过滤掉的特殊 token；即使只使用有效前缀，也要求所有 logits 有限。
 
 `Pipeline(encoder, predictor, decoder, vocabulary).predict(features, valid_frames)`
-是应用编排，不是将 CPU CIF 混入多个 SDK 调用之间的单模型 forward。
+组合模型阶段与 CPU CIF。
 有效帧须为 1–400，按 encoder → predictor → CIF → decoder 执行，计数为零时跳过
 最后一段。回调必须同步返回独立持有的原始数组；DecoderInput 引用仅在回调期间有效，
 不能保存供异步使用。调用方须保证捕获的 SDK 资源存活，非线程安全资源需协调访问。
-数值库不加载模型、不选板型、不读写文件、不设置调度，也不编译假 SDK 回退。
+模型执行与 SDK 资源由传入的回调管理。
 
 第二种原生构造 `Pipeline(models, preflight, vocabulary)` 自持有全部三个阶段的
 `SdkRunner`：从已验证的 `ModelGroup` 中为每个阶段选定制品，把阶段回调接到这些
@@ -251,43 +237,35 @@ int main() {
               << result.acoustic[512] << "\n";
 }
 CPP
-c++ -std=c++17 -fsanitize=address,undefined -Isamples/speech/paraformer/runtime/cpp/inc /tmp/rdk-paraformer-core/example.cc /tmp/rdk-paraformer-core/libparaformer_pipeline.a -o /tmp/rdk-paraformer-core/example
+c++ -std=c++17 -Isamples/speech/paraformer/runtime/cpp/inc /tmp/rdk-paraformer-core/example.cc /tmp/rdk-paraformer-core/libparaformer_pipeline.a -o /tmp/rdk-paraformer-core/example
 /tmp/rdk-paraformer-core/example
 ```
 
 预期输出为 `2 3 8`。
-[test_pipeline.cc](tests/test_pipeline.cc) 另提供明确使用合成模型输出的可执行编排示例。
 Python `--preprocess-only` 已能生成内置音频特征，下文可选 I/O 库可直接读取准备清单。
 
 <a id="troubleshooting"></a>
-## 验证与限制
+## 故障排查
 
-CTest 套件覆盖分数积分、padding、空输出、100 次触发截断、非法契约、
-重复／特殊／BPE token、平局 ID、回调顺序、零 token 跳过与错误中间张量。
 
-Sanitizer 运行库构建失败时应检查编译／链接器支持；`PARAFORMER_SANITIZERS=OFF`
-可关闭插桩，但不能据此宣称完成 sanitizer 检查。SDK 适配器在加载时核验
-形状／类型／名称／身份。SDK 构建、板端推理、OE 与 CER 按各自指南执行；
-身份／制品预检工厂见[预检](#preflight)章节。
+加载时如提示张量不匹配，按下表核对模型的名称、形状、类型与步长。板型或模型文件不匹配时，按[预检](#preflight)章节检查。
 
 <a id="sdk-adapter"></a>
 ## S100 SDK 适配器
 
 可选 UCP 适配器由 `PARAFORMER_BUILD_SDK=ON` 编入 `paraformer_pipeline`，该选项设置
-显式编译定义 `PARAFORMER_ENABLE_UCP=1`。仅头文件可见不会启用 SDK 绑定；无 SDK 的
-库构建改以链接明确抛错的拒绝传输占位。适配器需要真实 S 系列 UCP 头文件
+显式编译定义 `PARAFORMER_ENABLE_UCP=1`。原生模型执行需要启用此 SDK 构建选项。适配器需要真实 S 系列 UCP 头文件
 `dnn/hb_dnn.h`、`hb_ucp.h`、
 `hb_ucp_sys.h` 及 `dnn`／`hbucp` 库。在匹配的 SDK 开发环境中，使用独立目录配置：
 `cmake -S samples/speech/paraformer/runtime/cpp -B /tmp/rdk-paraformer-sdk -DPARAFORMER_BUILD_SDK=ON`，
 然后执行 `cmake --build /tmp/rdk-paraformer-sdk -j 2`。非标准 SDK 路径可通过
 `CMAKE_PREFIX_PATH` 或 CMake 缓存变量 `PARAFORMER_DNN_INCLUDE`、
 `PARAFORMER_UCP_INCLUDE`、`PARAFORMER_UCP_SYS_INCLUDE`、`PARAFORMER_DNN_LIBRARY`、
-`PARAFORMER_UCP_LIBRARY` 指定。不会自动安装 SDK。缺真实依赖时配置失败；主机 API
-替身仅用于 `test_sdk`，不会作为此库的回退。
+`PARAFORMER_UCP_LIBRARY` 指定。配置 CMake 前先准备 SDK；缺少依赖时配置失败。
 
 每个阶段单独构造 `SdkRunner(SdkModel{path, "s100", Stage::Encoder}, preflight)`。
 回调必填，先于所有 SDK 调用执行，必须拒绝本机身份以及阶段／发布制品／模型摘要
-不匹配。空操作回调仅适合隔离的主机测试。请使用下文的具体 `make_preflight` 工厂；
+不匹配。请使用下文的 `make_preflight` 工厂创建回调；
 下文启动器将此 API 接入完整 CLI。每份制品必须只包含一个有名称的模型；绑定按名称进行，
 不依赖张量顺序：
 
@@ -308,8 +286,7 @@ Sanitizer 运行库构建失败时应检查编译／链接器支持；`PARAFORME
 解码负责在数值处理前校验输出有限性。单个 runner 应串行使用，或由调用方外部加锁。
 调度采用同步调用的默认优先级和任意 BPU 核心。
 
-以下完整嵌入函数已针对公开头文件编译检查。它需要调用方传入模型组、词表及已核验特征，
-内部创建真实预检回调；不是合成推理结果，也不是独立板端应用：
+以下函数供板端应用调用。传入模型组、词表及准备好的特征，函数内部创建预检回调：
 
 ```cpp
 #include "pipeline.hpp"
@@ -360,9 +337,7 @@ std::vector<float> encode_features(const paraformer::ModelGroup &models,
 以及各 runner 构造时都会计算三文件摘要，每次推理不重算。加载与推理期间须保持制品
 不变；预检不会锁定文件以阻止并发替换。
 
-`verify_group(group, vocabulary, actual)` 是主机测试使用的显式身份底层检查器；
-客户部署应使用 `make_preflight` 读取实际身份，不应填写虚构身份。没有绕过开关或
-隐式 S100P 回退。
+`verify_group(group, vocabulary, actual)` 按传入的板型检查模型组。部署时使用 `make_preflight`，从本机系统读取实际板型。
 
 <a id="prepared-features"></a>
 ## 读取 Python 准备的特征
@@ -370,20 +345,11 @@ std::vector<float> encode_features(const paraformer::ModelGroup &models,
 准备清单／NPY 读取位于 `src/cli.cpp`（声明于 `cli.hpp`），直接读取
 [Python `--preprocess-only` 流程](../python/README_cn.md)
 生成的 `prepared-manifest.json` 和 `.npy`。它不重新计算或近似替代 FunASR、不重采样音频、
-不加载模型，也不改写原始清单。先安装或提供 nlohmann JSON 头文件库（已验证 3.11.3）；
+不加载模型，也不改写原始清单。先安装或提供 nlohmann JSON 头文件库（3.11.3）；
 NumPy 是生成特征的依赖，不是此 C++ 读取库的依赖。CMake 不自动安装依赖。
 非标准路径使用 `CMAKE_PREFIX_PATH` 或 `-DPARAFORMER_JSON_INCLUDE=/path/to/include`。
 
-在仓库根目录使用独立构建目录：
-
-```bash
-cmake -S samples/speech/paraformer/runtime/cpp -B /tmp/rdk-paraformer-io -DCMAKE_BUILD_TYPE=Release -DPARAFORMER_BUILD_IO=ON -DPARAFORMER_BUILD_TESTS=ON -DPARAFORMER_SANITIZERS=ON
-cmake --build /tmp/rdk-paraformer-io -j 2
-ctest --test-dir /tmp/rdk-paraformer-io --output-on-failure
-```
-
-应有六项测试通过，包括读取两份已持久化的真实前端特征。`feature_probe` 是主机验证
-工具，不是推理可执行程序。以下是完整的特征读取嵌入函数：
+应用中可使用以下函数读取已准备的特征：
 
 ```cpp
 #include "cli.hpp"
@@ -394,7 +360,7 @@ std::vector<float> first_features(const std::string &manifest) {
 ```
 
 CMake 应用将 `src/cli.cpp` 与 `paraformer_pipeline` 模型库及 nlohmann JSON 头文件一起
-编译（`feature_probe` 测试目标展示了准确接法）。实际推理应将所选记录的 `valid_frames`
+编译。实际推理应将所选记录的 `valid_frames`
 与读取值一起交给 `Pipeline::predict`，不能把短语音的有效帧数替换为 400。
 此示例只返回数组以演示读取，不执行模型。
 
@@ -406,7 +372,7 @@ CMake 应用将 `src/cli.cpp` 与 `paraformer_pipeline` 模型库及 nlohmann JS
 | 字段 | 契约 |
 | --- | --- |
 | `utt_id` | 唯一非空文件名主体；不能含斜杠、反斜杠、NUL、点／双点或首尾 ASCII 空白 |
-| `feat_length` | 1–400 的整数；不对缺失长度做默认回退 |
+| `feat_length` | 必填，1–400 的整数 |
 | `original_frames` | 正整数，不超过 C++ 有符号 int 上限 |
 | `truncated` | 布尔值，等于 `original_frames > 400` |
 | `feature_file` | 指向普通 NPY 文件的非空路径 |

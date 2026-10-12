@@ -7,7 +7,7 @@
 <a id="source-model"></a>
 ## 源模型
 
-源项目是 [ChaoningZhang/MobileSAM](https://github.com/ChaoningZhang/MobileSAM)，checkpoint 为 `weights/mobile_sam.pt`。固定源没有锁定上游 commit 或 checkpoint digest。编码器输入 `normalized_images` `(1,3,512,512)`、float32、RGB NCHW，输出 `image_embeddings` `(1,256,32,32)`、float32。解码器输入 `image_embeddings` `(1,256,32,32)` 和运行时 `boxes` `(1,4)` float32，输出 `low_res_masks` `(1,3,128,128)` 与 `iou_predictions`（最终 rank 必须以 decoder metadata 确认）。
+源项目是 [ChaoningZhang/MobileSAM](https://github.com/ChaoningZhang/MobileSAM)，权重文件为 `weights/mobile_sam.pt`。参考版本没有锁定上游 commit 或权重文件 digest。编码器输入 `normalized_images` `(1,3,512,512)`、float32、RGB NCHW，输出 `image_embeddings` `(1,256,32,32)`、float32。解码器输入 `image_embeddings` `(1,256,32,32)` 和运行时 `boxes` `(1,4)` float32，输出 `low_res_masks` `(1,3,128,128)` 与 `iou_predictions`（最终 rank 必须以解码器元数据确认）。
 
 预处理为 RGB 缩放到 512×512，再按通道应用 ImageNet 归一化：mean `[123.675,116.28,103.53]`，std `[58.395,57.12,57.375]`。源默认 box 是 512 像素坐标中的 `[185,120,380,445]`。box 是运行时输入，没有固定到 ONNX 图中。
 
@@ -51,9 +51,9 @@ sudo docker run -it --rm --network host --shm-size=15g \
   <docker-image-name> /bin/bash
 ```
 
-也可以在线拉取镜像：`docker pull registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`。下载链接失效时，请在 OE 在线文档查看最新地址。发布资产名称及 SHA 以 `docs/release/x5/models.yaml`、`docs/release/s/models.yaml` 为准；源 manifest 中 SHA 为未知（`null`）。
+也可以在线拉取镜像：`docker pull registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`。下载链接失效时，请在 OE 在线文档查看最新地址。发布资产名称及 SHA 以 `docs/release/x5/models.yaml`、`docs/release/s/models.yaml` 为准；源清单中 SHA 为未知（`null`）。
 
-导出与浮点 embedding 生成依赖主机 PyTorch、ONNX、ONNX Runtime、NumPy、OpenCV。随导出模型记录所选框架版本和上游仓库版本。在导出环境检查导入：
+导出与浮点嵌入特征生成依赖主机 PyTorch、ONNX、ONNX Runtime、NumPy、OpenCV。随导出模型记录所选框架版本和上游仓库版本。在导出环境检查导入：
 
 ```bash
 # cwd: 本 conversion 目录；在选定主机导出环境中执行
@@ -72,7 +72,7 @@ sudo docker run --rm hello-world
 <a id="export"></a>
 ## 导出 ONNX
 
-X5 源提供上游 checkout helper。固定 S 源没有等价 helper，因此 S 目标需手工准备 checkout 和 checkpoint。
+X5 源提供上游 checkout 辅助脚本。固定 S 源没有等价辅助脚本，因此 S 目标需手工准备 checkout 和权重文件。
 
 ```bash
 python3 scripts/download_assets.py --target x5 --workspace ./workspace
@@ -80,7 +80,7 @@ python3 scripts/download_assets.py --target x5 --workspace ./workspace
 # ./workspace/MobileSAM/weights/mobile_sam.pt
 ```
 
-X5 helper 在 `mobile_sam.pt` 不存在或小于 1,000,000 字节时下载它，并在此之前 clone 或复用 checkout。S 源没有等价 helper，因此源代码和 checkpoint 仍是手工前置条件。
+X5 辅助脚本在 `mobile_sam.pt` 不存在或小于 1,000,000 字节时下载它，并在此之前 clone 或复用 checkout。S 源没有等价辅助脚本，因此源代码和权重文件仍是手工前置条件。
 
 从本目录导出两个图：
 
@@ -96,12 +96,12 @@ python3 scripts/export_decoder_onnx.py --target x5 \
   --box 185 120 380 445
 ```
 
-S100/S100P/S600 只需替换 `--target`。导出默认尺寸为 512、opset 为 11；可显式指定 `--size`、`--opset` 和 decoder 的 `--box`。脚本不会自行下载 checkpoint。
+S100/S100P/S600 只需替换 `--target`。导出默认尺寸为 512、opset 为 11；可显式指定 `--size`、`--opset` 和解码器的 `--box`。脚本不会自行下载权重文件。
 
 <a id="calibration"></a>
 ## 校准
 
-编码器校准读取代表性 RGB 图片，缩放至 512×512，转换为 NCHW，并使用上面的 ImageNet mean/std。X5 写 raw `.rgbchw`，S 写 `.npy`。producer 的数量是输出文件数量，不能证明输入彼此独立或具有代表性。
+编码器校准读取代表性 RGB 图片，缩放至 512×512，转换为 NCHW，并使用上面的 ImageNet mean/std。X5 写 raw `.rgbchw`，S 写 `.npy`。生成数量指输出文件数量。请从应用场景选择不同且有代表性的输入图片。
 
 ```bash
 python3 scripts/prepare_calibration.py --target x5 \
@@ -129,11 +129,11 @@ python3 scripts/prepare_decoder_calibration.py --target s100 \
   --num 30 --box 185 120 380 445
 ```
 
-这会生成 `./calibration_data_norm_512/normalized_images/*.npy`、`./decoder_calibration/image_embeddings/*.npy` 和 `./decoder_calibration/boxes/*.npy`。dump helper 运行浮点 encoder ONNX 并使用源 ImageNet 变换，需要主机 `onnxruntime`（`pip install onnxruntime`）。
+这会生成 `./calibration_data_norm_512/normalized_images/*.npy`、`./decoder_calibration/image_embeddings/*.npy` 和 `./decoder_calibration/boxes/*.npy`。dump 辅助脚本运行浮点编码器 ONNX 并使用源 ImageNet 变换，需要主机 `onnxruntime`（`pip install onnxruntime`）。
 
-编码器校准使用 20 到 50 张有代表性的 RGB 图片。解码器的校准输入是一份真实编码器 embedding（`1×256×32×32`，float32），而不是图片；它只能在编码器运行之后产生，因此两个模型必须严格按顺序准备。生成 `./encoder_embedding.bin` 有两条路线：
+编码器校准使用 20 到 50 张有代表性的 RGB 图片。解码器的校准输入是一份真实编码器嵌入特征（`1×256×32×32`，float32），而不是图片；它只能在编码器运行之后产生，因此两个模型必须严格按顺序准备。生成 `./encoder_embedding.bin` 有两条路线：
 
-- **主机上运行浮点编码器**（最简单，无需板卡）：`dump_encoder_embedding.py` 在导出的浮点编码器 ONNX 上跑一张图，把 `image_embeddings` 输出写成原始 `.bin`。该 helper 只执行浮点 ONNX，不是编译模型运行器。
+- **主机上运行浮点编码器**（最简单，无需板卡）：`dump_encoder_embedding.py` 在导出的浮点编码器 ONNX 上跑一张图，把 `image_embeddings` 输出写成原始 `.bin`。该辅助脚本只执行浮点 ONNX，不是编译模型运行器。
 - **板端运行已编译编码器**（保真度最高）：让解码器按量化后编码器的真实输出分布校准。先单独编译编码器，在板端用 `hrt_model_exec` 运行一次并把 `image_embeddings` 输出 dump 成同一个 `.bin`，再准备解码器校准数据并编译解码器：
 
   ```bash
@@ -144,9 +144,9 @@ python3 scripts/prepare_decoder_calibration.py --target s100 \
   python3 scripts/quantize.py --target s100 --config configs/s100/mobile_sam_decoder_512_nashe_config.yaml
   ```
 
-`--embedding` 必须是原始 float32 数组，恰好 `1×256×32×32`（262144）个值——是编码器输出，不是图片或 `.npy` 文件；数值个数不符会在 reshape 时失败。脚本对该原始浮点 tensor 的算子加工是固定的：`--num` 份样本按 `1.0 + (index - num // 2) * 0.001` 缩放 embedding、按 `(index % 5) - 2` 个像素在两个轴上扰动框，写出 float32 校准 tensor；int16 目标精度由提交配置中的 `set_all_nodes_int16` 在编译时应用。框提示是运行时输入，因此解码器校准同时保留 `image_embeddings` 与 `boxes` 两个输入。
+`--embedding` 必须是原始 float32 数组，恰好 `1×256×32×32`（262144）个值——是编码器输出，不是图片或 `.npy` 文件；数值个数不符会在 reshape 时失败。脚本对该原始浮点张量的算子加工是固定的：`--num` 份样本按 `1.0 + (index - num // 2) * 0.001` 缩放嵌入特征、按 `(index % 5) - 2` 个像素在两个轴上扰动框，写出 float32 校准张量；int16 目标精度由提交配置中的 `set_all_nodes_int16` 在编译时应用。框提示是运行时输入，因此解码器校准同时保留 `image_embeddings` 与 `boxes` 两个输入。
 
-dump 示例在 ONNX 导出后使用已提交的 `../test_data/dogs.jpg`，输入文件可直接定位；实际量化应换成有代表性的校准图片。该 helper 源自 S 分支，按同一 tensor 协议可读取两类目标的浮点 encoder ONNX。`calibration_images/` 数据集由用户准备，仓库不提供。单份 embedding 缩放、框扰动只保留源演示配方，不等同于代表性校准数据集。提交配置与 runtime 仅覆盖 size 512；改变导出 `--size` 还需要对应的新配置与 runtime binding。
+dump 示例在 ONNX 导出后使用已提交的 `../test_data/dogs.jpg`，输入文件可直接定位；实际量化应换成有代表性的校准图片。该辅助脚本按相同张量协议读取两类目标的浮点编码器 ONNX。`calibration_images/` 数据集由用户准备，仓库不提供。实际校准请从代表性图片和提示框生成嵌入特征。提交配置与运行时仅覆盖 size 512；改变导出 `--size` 还需要对应的新配置与运行时模型绑定。
 
 <a id="compile"></a>
 ## 编译
@@ -160,16 +160,16 @@ python3 scripts/quantize.py --target s100p
 python3 scripts/quantize.py --target s600
 ```
 
-`--target <target> --config <path>` 可只编译一份 YAML。X5 调用 `hb_mapper makertbin --model-type onnx`；S 调用 `hb_compile --config`。X5 输出在 `bpu_model_output_norm_512_allint16/` 和 `bpu_model_output_decoder_default/`；S 输出在各目标编码器/解码器工作目录，文件名以 YAML 和 manifest 为准。提交的 S 路径如下：
+`--target <target> --config <path>` 可只编译一份 YAML。X5 调用 `hb_mapper makertbin --model-type onnx`；S 调用 `hb_compile --config`。X5 输出在 `bpu_model_output_norm_512_allint16/` 和 `bpu_model_output_decoder_default/`；S 输出在各目标编码器/解码器工作目录，文件名以 YAML 和清单为准。提交的 S 路径如下：
 
 | 目标 | 角色 | ONNX | 校准目录 | 工作目录 | 输出前缀 |
 |---|---|---|---|---|---|
-| S100 | encoder | `mobile_sam_image_encoder_norm_512_op11.onnx` | `./calibration_data_norm_512/normalized_images` | `bpu_model_output_encoder_nashe` | `mobile_sam_image_encoder_norm_512x512_nashe` |
-| S100 | decoder | `mobile_sam_decoder_512_op11.onnx` | `./decoder_calibration/image_embeddings;./decoder_calibration/boxes` | `bpu_model_output_decoder_nashe` | `mobile_sam_decoder_512_nashe` |
-| S100P | encoder | `mobile_sam_image_encoder_norm_512_op11.onnx` | `./calibration_data_norm_512/normalized_images` | `bpu_model_output_encoder_nashm` | `mobile_sam_image_encoder_norm_512x512_nashm` |
-| S100P | decoder | `mobile_sam_decoder_512_op11.onnx` | `./decoder_calibration/image_embeddings;./decoder_calibration/boxes` | `bpu_model_output_decoder_nashm` | `mobile_sam_decoder_512_nashm` |
-| S600 | encoder | `mobile_sam_image_encoder_norm_512_op11.onnx` | `./calibration_data_norm_512/normalized_images` | `bpu_model_output_encoder_nashp` | `mobile_sam_image_encoder_norm_512x512_nashp` |
-| S600 | decoder | `mobile_sam_decoder_512_op11.onnx` | `./decoder_calibration/image_embeddings;./decoder_calibration/boxes` | `bpu_model_output_decoder_nashp` | `mobile_sam_decoder_512_nashp` |
+| S100 | 编码器 | `mobile_sam_image_encoder_norm_512_op11.onnx` | `./calibration_data_norm_512/normalized_images` | `bpu_model_output_encoder_nashe` | `mobile_sam_image_encoder_norm_512x512_nashe` |
+| S100 | 解码器 | `mobile_sam_decoder_512_op11.onnx` | `./decoder_calibration/image_embeddings;./decoder_calibration/boxes` | `bpu_model_output_decoder_nashe` | `mobile_sam_decoder_512_nashe` |
+| S100P | 编码器 | `mobile_sam_image_encoder_norm_512_op11.onnx` | `./calibration_data_norm_512/normalized_images` | `bpu_model_output_encoder_nashm` | `mobile_sam_image_encoder_norm_512x512_nashm` |
+| S100P | 解码器 | `mobile_sam_decoder_512_op11.onnx` | `./decoder_calibration/image_embeddings;./decoder_calibration/boxes` | `bpu_model_output_decoder_nashm` | `mobile_sam_decoder_512_nashm` |
+| S600 | 编码器 | `mobile_sam_image_encoder_norm_512_op11.onnx` | `./calibration_data_norm_512/normalized_images` | `bpu_model_output_encoder_nashp` | `mobile_sam_image_encoder_norm_512x512_nashp` |
+| S600 | 解码器 | `mobile_sam_decoder_512_op11.onnx` | `./decoder_calibration/image_embeddings;./decoder_calibration/boxes` | `bpu_model_output_decoder_nashp` | `mobile_sam_decoder_512_nashp` |
 
 各配置与预期编译输出（相对本 conversion 工作目录）：
 
@@ -184,9 +184,9 @@ python3 scripts/quantize.py --target s600
 | `configs/x5/mobile_sam_decoder_512_box_default_config.yaml` | `./mobile_sam_decoder_512_box_op11.onnx` | `./decoder_calibration/calibration_embeddings;./decoder_calibration/calibration_boxes` | `bpu_model_output_decoder_default/mobile_sam_decoder_512_box_default.bin` |
 | `configs/x5/mobile_sam_image_encoder_norm_512x512_config.yaml` | `./mobile_sam_image_encoder_norm_512_op11.onnx` | `./calibration_data_norm_512` | `bpu_model_output_norm_512_allint16/mobile_sam_image_encoder_norm_512x512_allint16.bin` |
 
-单配置命令必须同时显式指定匹配的 `--target`；脚本不从 YAML 推断编译器，省略 target 会默认 X5。例如：`python3 scripts/quantize.py --target s100 --config configs/s100/mobile_sam_decoder_512_nashe_config.yaml`。
+单配置命令必须同时显式指定匹配的 `--target`；脚本不从 YAML 推断编译器，省略目标板卡会默认 X5。例如：`python3 scripts/quantize.py --target s100 --config configs/s100/mobile_sam_decoder_512_nashe_config.yaml`。
 
-以下输入字段逐字取自各编译配置，不能视为实测 SDK metadata；转换后仍须读取模型 metadata 校验。X5 的 type 字段依次为 runtime / train，S 为 input_type。
+以下输入字段逐字取自各编译配置，不能视为实测 SDK 元数据；转换后仍须读取模型元数据校验。X5 的 type 字段依次为运行时 / train，S 为 input_type。
 
 | Config | input_name | input_shape | type |
 | --- | --- | --- | --- |
@@ -202,7 +202,7 @@ python3 scripts/quantize.py --target s600
 <a id="validation"></a>
 ## 转换后验证
 
-转换后读取两个子模型的 SDK 元数据，核对输入输出名称、秩、尺寸和数据类型。decoder box 使用 `(1,4)`，坐标与 512 像素预处理图像一致。记录运行使用的图片、box、模型、SDK 和资源配置。
+转换后读取两个子模型的 SDK 元数据，核对输入输出名称、秩、尺寸和数据类型。解码器 box 使用 `(1,4)`，坐标与 512 像素预处理图像一致。记录运行使用的图片、box、模型、SDK 和资源配置。
 
 <a id="artifacts"></a>
 ## 制品
@@ -214,16 +214,16 @@ python3 scripts/quantize.py --target s600
 | S100P | `mobile_sam_image_encoder_norm_512x512_nashm.hbm` | `mobile_sam_decoder_512_nashm.hbm` | `../model/nash-m/` |
 | S600 | `mobile_sam_image_encoder_norm_512x512_nashp.hbm` | `mobile_sam_decoder_512_nashp.hbm` | `../model/nash-p/` |
 
-生成 ONNX、校准 tensor、量化 metadata 和编译模型保持在版本控制之外。准确文件名以 active manifest 和目标 YAML 为准。
+生成 ONNX、校准张量、量化元数据和编译模型保持在版本控制之外。准确文件名以 active 清单和目标 YAML 为准。
 
 <a id="known-gaps"></a>
 ## 补充准备
 
-- 上游源版本和 checkpoint digest 没有被固定源锁定。
-- S 没有源 `download_assets.py`，获取 checkout 和 checkpoint 是手工前置条件。
-- X5 与 S 使用不同校准文件格式和目标配置布局；统一 producer 按 target 分支并保留源配方。
-- decoder 输出 rank 及所有编译制品 native dtype 需读取真实 SDK metadata 确认。
+- 上游源版本和权重文件 digest 没有被参考版本锁定。
+- S 没有源 `download_assets.py`，获取 checkout 和权重文件是手工前置条件。
+- X5 与 S 使用不同校准文件格式和目标配置布局；统一 producer 按目标板卡分支并保留源配方。
+- 解码器输出 rank 及所有编译制品原生数据类型需读取真实 SDK 元数据确认。
 
 ## 来源
 
-源文件到统一文件的映射及 SHA-256 记录在 [`SOURCE_MAP.json`](./SOURCE_MAP.json)。带有 Apache-2.0 标识的源文件保留其来源信息，脚本 遵循仓库许可证。
+源文件到统一文件的映射及 SHA-256 记录在 [`SOURCE_MAP.json`](./SOURCE_MAP.json)。带有 Apache-2.0 标识的源文件保留其来源信息，脚本遵循仓库许可证。

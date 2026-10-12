@@ -21,9 +21,7 @@ python/
 <a id="environment"></a>
 ## 环境
 
-核心仅依赖 Python 和 NumPy，不导入板端 SDK、Torch、机器人中间件或转换工具链。
-以下命令均从仓库根目录执行，使用已安装 NumPy 的仓库主机 Python 环境。
-实际 X5 推理需要与板端库匹配的 BSP `hbm_runtime`，核心不会安装或替代此依赖。
+使用 Python 和 NumPy。在 X5 上安装与板端库匹配的 BSP `hbm_runtime`，并准备模型文件。以下命令均从仓库根目录执行。
 
 <a id="usage"></a>
 ## 使用方式
@@ -69,26 +67,21 @@ python samples/robotics/himloco/runtime/python/main.py --target x5 \
 
 | API 输入 | 契约 |
 | --- | --- |
-| `runner` | 必填可调用对象，无默认值，不隐式创建 SDK |
+| `HimLocoTask.from_model(selection)` | 根据已选择的模型初始化 Runtime |
 | `observation` | 恰好 270 个有限实数，按输入顺序展平并转为 float32 |
 | `preprocess(...).tensors` | 独立存储、连续的 float32 `obs_history` `[1,270]` |
 | `infer(tensors)` | 准确命名的物理输入；返回含原始动作及本次耗时的 `RawOutputs` |
-| `postprocess(raw)` | 必须传入 `RawOutputs`，不依赖实例中的“上次结果” |
+| `postprocess(raw)` | 接收本次调用的 `RawOutputs`，返回动作与耗时 |
 
 扁平 `[270]`、批次 `[1,270]`、历史 `[6,45]` 均保持源实现展平规则。
-复数、布尔、字符串／对象、非有限值及 float32 溢出会拒绝。输入原始传感器数据
-不会自动构造训练时的观测量。
+复数、布尔、字符串／对象、非有限值及 float32 溢出会拒绝。调用前先将传感器数据转换为训练策略定义的观测量。
 
 <a id="results"></a>
 ## 结果
 
-`HimLocoResult.actions` 为独立存储的 float32 `[1,12]`，不裁剪、不激活、
-不重排、不反量化、不缩放。`latency_ms` 仅测同步 runner 调用，不含核心的复制、
-前处理和后处理，也不是纯加速器耗时。每次原始输出携带自身时间，先运行 A、再运行 B、
-最后处理 A，不会取错成 B 的耗时。SDK 异常直接传播，不生成备用动作。
+`HimLocoResult.actions` 是独立存储的 float32 `[1,12]` 数组，包含模型输出的原始动作值。`latency_ms` 记录同步 runner 调用的耗时，包含运行适配器开销，不含任务层的复制、前处理和后处理。SDK 调用失败时抛出异常。
 
-源部署在模型边界之外应用 `default_joint_position + 0.25 * actions`。
-本核心只返回动作数组，不发送机器人控制指令。
+机器人应用需自行实现控制循环；参考控制器将动作转换为 `default_joint_position + 0.25 * actions`。
 
 CLI 成功返回 0，生成按源索引命名的 `000000.bin` 等小端 float32 文件，每个 48 字节，
 以及 `completed` JSON 报告。报告包括模型／输入／输出摘要、清单来源、运行时元数据、
@@ -99,8 +92,7 @@ CLI 成功返回 0，生成按源索引命名的 `000000.bin` 等小端 float32 
 
 输入必须是数字命名的 BIN，每个恰好 1080 字节，按数值源索引排序；重复索引拒绝。
 若旁边存在 `../runtime-input-manifest.json`，须满足固定输入契约，并匹配选中文件的
-索引与摘要。没有清单时来源明确记录为 null，不伪造。摘要来自实际读入推理的同一份
-字节。不生成文本转写，也不执行控制器动作。
+索引与摘要。没有清单时，报告中的来源字段为 null。文件摘要按实际推理输入计算。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -129,18 +121,15 @@ staged_result = task.postprocess(raw)
 ```
 
 <a id="stage-io"></a>
-## 阶段语义与源对齐
+## 阶段语义
 
 每帧 45 维依次为速度指令（3）、角速度（3，源缩放 0.25）、投影重力（3）、
 相对关节位置（12）、相对关节速度（12，源缩放 0.05）、上次动作（12）。
-当前帧在前，之后是五帧历史。核心不会重复执行缩放、积累历史或选择关节顺序。
+当前帧在前，之后是五帧历史。调用前按训练策略完成缩放、历史堆叠和关节排序。
 
 `preprocess` 独立持有打包特征，`infer` 调用一次模型，`postprocess` 校验并独立持有动作数组，`predict` 串联三步。`pre_process`、`forward`、`post_process` 委托给相同的阶段实现。结果与计时记录按每次调用独立保存。
 
 <a id="troubleshooting"></a>
 ## 故障处理
 
-观测数量不符时，应按训练策略构建完整历史，不盲目补零或截断。输出名称／形状／类型
-不符时，应核对所绑定模型的接口，核心不会静默强转不兼容模型的输出。
-手动构造 `RawOutputs` 时，耗时须为有限非负数。原生运行见 [C++ 说明](../cpp/README_cn.md)，
-动作文件对照见[评测说明](../../evaluator/README_cn.md)。
+观测数量不符时，按训练策略重建六帧完整历史。输出名称、形状或类型不符时，核对模型文件与接口。手动构造 `RawOutputs` 时，耗时须为有限非负数。原生运行见 [C++ 说明](../cpp/README_cn.md)，动作文件对照见[评测说明](../../evaluator/README_cn.md)。

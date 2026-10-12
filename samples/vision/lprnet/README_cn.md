@@ -19,7 +19,6 @@ lprnet/
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 └── README_cn.md  # 中文说明
 ```
@@ -32,12 +31,12 @@ lprnet/
 | X5 | `lpr.bin` | 支持 | 不支持 | 用内置 `test_input.dat` 验证 |
 | S100/S100P/S600 | — | 不支持 | 不支持 | 无发布制品 |
 
-Runtime 语言：Python。板端运行使用内置 `test_input.dat`，输出 native `(1,68,18,1)` logits。
+Runtime 语言：Python。板端运行使用内置 `test_input.dat`，输出原生 `(1,68,18,1)` logits。
 
 <a id="prerequisites"></a>
 ## 环境前提
 
-板端运行需要 RDK OS `>=3.5.0`、匹配的 `hbm_runtime`、发布的 X5 `lpr.bin` 和带 NumPy 的 Python。随源提供的 `test_input.dat` 已经是 float32 tensor，LPR 任务不需要图像包。active manifest 中模型校验值为 `sha256: null (unknown)`。
+板端运行需要 RDK OS `>=3.5.0`、匹配的 `hbm_runtime`、发布的 X5 `lpr.bin` 和带 NumPy 的 Python。随源提供的 `test_input.dat` 已经是 float32 张量，LPR 任务不需要图像包。active 清单中模型校验值为 `sha256: null (unknown)`。
 
 <a id="quickstart"></a>
 ## 快速体验
@@ -51,25 +50,25 @@ python3 -m samples.vision.lprnet.model.download \
 python3 -m samples.vision.lprnet.runtime.python.main --target x5
 ```
 
-第一条命令将 `model/lpr.bin` 写入本地并报告观测 hash；发布者 hash 未知。第二条命令读取 `test_data/test_input.dat`、执行模型并打印含 `plate` 的 JSON。runtime 和 `run.sh` 都不会调用下载器。只做主机选择检查时运行 `python3 -m samples.vision.lprnet.runtime.python.main --dry-run --target x5`。
+第一条命令将 `model/lpr.bin` 写入本地并报告观测摘要；发布者摘要未知。第二条命令读取 `test_data/test_input.dat`、执行模型并打印含 `plate` 的 JSON。运行时和 `run.sh` 都不会调用下载器。只做主机选择检查时运行 `python3 -m samples.vision.lprnet.runtime.python.main --dry-run --target x5`。
 
 <a id="expected-results"></a>
 ## 预期结果
 
-成功推理退出码为 `0`，打印含 `target`、完整 `asset_id` 和解码后 `plate` 的 JSON。具体车牌由模型和输入决定，本说明不编造结果；`test_data/example.jpg` 只是源提供的可视参考，实际 runtime 输入是 `test_input.dat`。
+成功推理退出码为 `0`，打印含 `target`、完整 `asset_id` 和解码后 `plate` 的 JSON。具体车牌由模型和输入决定，结果取决于模型和输入；`test_data/example.jpg` 只是源提供的可视参考，实际运行时输入是 `test_input.dat`。
 
 CLI 读取预先打包的 float32 `test_input.dat`，重塑为 `(1,3,24,94)`。生成张量前完成车牌图片解码、缩放和归一化。
 
 <a id="entry-points"></a>
 ## 入口索引
 
-- [`model/README_cn.md`](./model/README_cn.md)：manifest 制品、下载、路径和校验值。
+- [`model/README_cn.md`](./model/README_cn.md)：清单制品、下载、路径和校验值。
 - [`runtime/python/README_cn.md`](./runtime/python/README_cn.md)：CLI 与 `LPRNetRecognizer` API。
 - [`conversion/README_cn.md`](./conversion/README_cn.md)：源 OE 命令和不可复现项。
 - [`evaluator/README_cn.md`](./evaluator/README_cn.md)：完整 raw/text 对照步骤。
 
 <a id="historical-performance"></a>
-## 源记录性能
+## 参考记录性能
 
 源 benchmark 记录：
 
@@ -80,4 +79,4 @@ CLI 读取预先打包的 float32 `test_input.dat`，重塑为 `(1,3,24,94)`。�
 <a id="license"></a>
 ## 许可
 
-源 sample 和仓库代码遵循仓库 Apache-2.0 许可。LPRNet 论文及上游工程仍归其作者所有；模型来源和未知发布校验值记录在 model README 中。
+源示例和仓库代码遵循仓库 Apache-2.0 许可。LPRNet 论文及上游工程仍归其作者所有；模型来源和未知发布校验值记录在 model README 中。

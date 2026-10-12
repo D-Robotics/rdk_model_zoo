@@ -6,8 +6,8 @@
 
 ## 数据集
 
-源没有抠图 benchmark 数据集或 ground-truth alpha mask。`../test_data/person.jpg` 和
-`../test_data/bg.jpg` 是一组推理/合成 fixture，不是精度数据集。
+源没有抠图 benchmark 数据集或 ground-truth alpha 掩码。`../test_data/person.jpg` 和
+`../test_data/bg.jpg` 是一组推理/合成示例输入，不是精度数据集。
 
 <a id="directory"></a>
 ## 目录结构
@@ -23,9 +23,9 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-`compare.py` 在板端自行运行两边：锁定的原始 脚本（从 Git 历史加载）与本 sample
+`compare.py` 在板端自行运行两边：锁定的原始脚本（从 Git 历史加载）与本示例
 `samples/vision/modnet/runtime/python` 的任务。它需要 X5
-runtime（在身份 gate 之后惰性导入）、手工准备的 `modnet_512x512_rgb.bin` 与一张
+运行时（在身份检查之后惰性导入）、手工准备的 `modnet_512x512_rgb.bin` 与一张
 BGR 图像。主机上不导入 SDK，也不下载任何内容。源性能数据表及条件如下。
 
 | 模型 | 尺寸 | 输入格式 | 延迟 (ms) | FPS |
@@ -49,7 +49,7 @@ python3 samples/vision/modnet/evaluator/compare.py \
 
 用 `--asset-id x5:modnet:modnet_512x512_rgb.bin --model-path <file>` 指向手工资产，
 用 `--test-img <file>` 换其它图像。输出目录必须尚不存在。ref-size 固定为 512，
-与部署 metadata 一致。
+与部署元数据一致。
 
 <a id="metrics"></a>
 ## 指标
@@ -63,10 +63,10 @@ matte，并报告每个张量的 shape/dtype/finite 检查与 `max_abs_diff`。�
 ## 输出
 
 `comparison.json` 用 SHA-256 绑定 `target`、`asset_id`、模型/图像/代码摘要，记录两边
-的实际 runtime metadata、`argv`、`cwd`、`started_utc`/`finished_utc` 与 `return_code`，
+的实际运行时元数据、`argv`、`cwd`、`started_utc`/`finished_utc` 与 `return_code`，
 并逐个列出保存的数组文件及其摘要。每个输入、raw matte 与结果 matte 都写入独立
-`.npy`。执行失败时仍写出带 `error`、`return_code: 2`、`passed: false` 的 manifest。
-合成图是独立的视觉制品，不参与 matte tensor 对照。
+`.npy`。执行失败时仍写出带 `error`、`return_code: 2`、`passed: false` 的清单。
+合成图是独立的视觉制品，不参与 matte 张量对照。
 
 <a id="reference-results"></a>
 ## 参考结果

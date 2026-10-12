@@ -52,7 +52,7 @@ environment; the launcher never calls apt.
 <a id="build"></a>
 ## Build
 
-Manual build (cwd: `samples/vision/mobilenetv2/runtime/cpp`; success:
+Manual build (cwd: `samples/vision/mobilenetv2/runtime/cpp`; output:
 `build/` contains the `mobilenetv2` binary):
 
 ```bash
@@ -70,7 +70,7 @@ with `make -j1` or `BUILD_JOBS=1 bash run.sh`.
 ## Run
 
 One-command form (cwd: anywhere; prerequisite: the artifact prepared per
-[model/README.md](../../model/README.md); success: exit 0 and a printed
+[model/README.md](../../model/README.md); output: exit 0 and a printed
 Top-5 list):
 
 ```bash

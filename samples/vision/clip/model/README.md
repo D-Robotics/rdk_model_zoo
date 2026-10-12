@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="artifacts"></a>
 ## Artifacts
 
-The sample requires two independent assets: a BPU image encoder and a CPU ONNX text encoder. Their asset IDs and paths are separate so an external path cannot silently replace a different published file.
+The sample requires two independent assets: a BPU image encoder and a CPU ONNX text encoder. Supply each encoder’s corresponding asset ID and model path.
 
 | Artifact | Format | Target | Stage(s) | Source |
 | --- | --- | --- | --- | --- |

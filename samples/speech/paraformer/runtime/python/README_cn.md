@@ -335,8 +335,7 @@ fbank。输入为已加载的有限 float32 数组 `[samples]` 或 `[samples,cha
 
 [pipeline.py](pipeline.py) 组合三个独立的原始模型调用对象。每个对象接收
 “物理输入名 → 数组”字典，返回“物理输出名 → 数组”字典。`TensorNames` 显式
-提供模型绑定解析出的准确名称，流程不按首个输出或子串猜测。这是应用层
-编排，不是在某个模型 `forward` 内夹入 CPU 处理和多次 SDK 调用。
+提供模型绑定解析出的准确名称，流程不按首个输出或子串猜测。此接口用于组合三个模型阶段与 CPU CIF。
 
 | 阶段 | 所需输入 | 所需输出 |
 | --- | --- | --- |
@@ -356,14 +355,11 @@ predictor 返回独立 `(weights, hidden)`，decoder 返回
 上方显式调用示例与 `predict` 使用同一组阶段。
 
 `infer` 只调用一次注入模型，并校验／复制原始值，不做激活、CIF 或解码。
-encoder／predictor 后处理不会执行下一个模型。CPU CIF 在 pipeline 中保持显式，
-零 token 时由 pipeline 跳过 decoder。准备后的数组归调用者所有且可修改，不是
-不可变快照；token 数量上下文是独立整数。除非注入 runner 自行提供并发保证，
-请串行使用，本 API 不会使 SDK 缓冲区自动具备线程安全性。
+流程在 predictor 与 decoder 之间执行 CPU CIF；token 数量为零时跳过 decoder。准备后的数组归调用者所有且可修改，token 数量上下文为独立整数。请串行调用各阶段；并发使用时需提供支持并发的 runner。
 
 阶段失败抛出 `StageError`（继承 `ValueError`），含 `.stage`、`.operation`，原异常
 保留为 `__cause__`；CIF 错误标为 `cif`／`integrate`。无论调用哪种拼写，operation
-标签保持既有措辞（`pre_process`、`forward`、`post_process`），既有报告看到的消息
+标签使用（`pre_process`、`forward`、`post_process`），既有报告看到的消息
 不变；CLI 失败信息保留这一归属。
 非法有效帧数在执行模型前拒绝。模型调用计时（`infer` 实现）包括原始数据校验／复制和适配器执行，
 并非独立加速器耗时；前后处理、前端、模型加载和文件 I/O 均不在其中。
@@ -431,17 +427,6 @@ PYCODE
 权重非负性及有效帧数不符合契约时直接报错，不自动转换类型或扩展 batch。
 `real_T=None` 保留源校准流程的无屏蔽分布，不能用来替代推理时的 padding 屏蔽。
 
-## 单元测试
-
-```bash
-python -m unittest discover -s samples/speech/paraformer/tests -v
-```
-
-单元测试检查 CIF 分数边界、空输出、推理掩码、校准模式、100 token 截断、输入所有权与非法张量契约。
-
-源清单仅发布 S100 模型；X5、S100P 或 S600 无对应资产。[专用主机评测](../../evaluator/README_cn.md) 提供 FP32/HMCT 入口及明确的 CER 报告；
-[转换工具](../../conversion/README_cn.md) 提供 FP32 导出、真实音频校准及显式 OE 编排命令。板端推理、OE 编译、数据集 CER 与延迟按各指南命令执行。
-
 <a id="troubleshooting"></a>
 ## 常见问题
 
@@ -451,5 +436,5 @@ python -m unittest discover -s samples/speech/paraformer/tests -v
 | Missing selected WAV | 修正清单或音频目录，不会隐式跳过 |
 | Paraformer requires 16000 Hz | 显式准备匹配音频，CLI 不重采样 |
 | Target mismatch／无板型身份 | 主机使用 preprocess-only，实际推理需要 S100 |
-| 词表或 CMVN 摘要不匹配 | 使用固定模型包，不能给其他模型文件改名冒充 |
+| 词表或 CMVN 摘要不匹配 | 重新准备匹配的模型包 |
 | 张量名／类型／形状不匹配 | 核对实际元数据和发布身份 |

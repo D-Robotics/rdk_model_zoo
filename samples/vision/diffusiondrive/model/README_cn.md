@@ -44,17 +44,17 @@ python3 -m samples.vision.diffusiondrive.model.download --target s600 --output-d
 | --- | --- | --- |
 | `--target` | 必填 | `s100p` 或 `s600` |
 | `--asset-id` | `null` | 按目标推断；显式值须精确匹配 |
-| `--output-dir` | 当前 sample 的 `model` 目录 | 自动追加目标相对文件名 |
+| `--output-dir` | 当前示例的 `model` 目录 | 自动追加目标相对文件名 |
 
 <a id="accompanying-files"></a>
 ## 配套文件
 
-[SHA256SUMS](SHA256SUMS) 保留自源分支。无需类别名称文件。[测试数据](../test_data/README_cn.md)提供已准备的四输入浮点 NPZ 与参考输出，不提供原始 NAVSIM 传感器加载器。对照时保持输入噪声不变。[转换目录](../conversion/README_cn.md)保留两份 PTQ 配置，并说明缺失的导出/校准前提。
+[SHA256SUMS](SHA256SUMS) 提供发布文件的校验和。无需类别名称文件。[测试数据](../test_data/README_cn.md)提供已准备的四输入浮点 NPZ 与参考输出，不提供原始 NAVSIM 传感器加载器。对照时保持输入噪声不变。[转换目录](../conversion/README_cn.md)保留两份 PTQ 配置，并说明缺失的导出/校准前提。
 
 <a id="local-paths"></a>
 ## 本地路径与外部副本
 
-默认解析到本 sample 下的 `model/s100p/diffusiondrive_r34_256x1024_s100p.hbm` 或 `model/s600/diffusiondrive_r34_256x1024_s600.hbm`。外部路径必须提供精确资产身份：
+默认解析到本示例下的 `model/s100p/diffusiondrive_r34_256x1024_s100p.hbm` 或 `model/s600/diffusiondrive_r34_256x1024_s600.hbm`。外部路径必须提供精确资产身份：
 
 ```bash
 python3 -m samples.vision.diffusiondrive.runtime.python.main --target s600 --asset-id s:diffusiondrive:s600/diffusiondrive_r34_256x1024_s600.hbm --model-path /data/diffusiondrive-models/s600/diffusiondrive_r34_256x1024_s600.hbm --dry-run

@@ -21,8 +21,7 @@ evaluator/
 The evaluator compares the pinned original X5 implementation (loaded from the
 recorded Git history) with this sample's implementation on one
 **real X5 execution target**. It uses the repository
-fixture `test_data/dog.jpeg` and an explicit comma-separated prompt list. Host
-Python tests use injected fake runtimes. The evaluator requires the board
+fixture `test_data/dog.jpeg` and an explicit comma-separated prompt list.  The evaluator requires the board
 identity gate, `hbm_runtime`, OpenCV,
 NumPy, and the exact `yolo_world.bin` asset. No dependency installation or
 model download is performed by this command.

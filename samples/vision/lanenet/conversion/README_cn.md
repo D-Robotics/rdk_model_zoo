@@ -8,9 +8,9 @@
 <a id="source-model"></a>
 ## 源模型与前提
 
-源 checkpoint 地址为
+源权重文件地址为
 [best_model.pth](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Lanenet/best_model.pth)，
-请取得匹配的 LaneNet 模型/导出代码及其 `test.py` 入口，并记录 checkpoint
+请取得匹配的 LaneNet 模型/导出代码及其 `test.py` 入口，并记录权重文件
 摘要、代码版本和模型结构。导出入口使用 `test.py --img... --model best_model.pth`，
 图结构与前处理需符合下文运行时契约。
 
@@ -55,7 +55,7 @@ YAML 引用 `../log/best_model.onnx`、`../cal_data` 和输出前缀
 使用调用者绝对路径和 `lanenet256x512` 前缀。prepare-only 检查 ONNX 文件和
 校准身份；图结构与输出语义在模型验证中检查。
 
-在匹配的 LaneNet 导出工程目录中安装上述依赖、取得 checkpoint，再执行 `test.py`。该脚本与 `source/data/source_image/input.jpg` 由导出工程提供：
+在匹配的 LaneNet 导出工程目录中安装上述依赖、取得权重文件，再执行 `test.py`。该脚本与 `source/data/source_image/input.jpg` 由导出工程提供：
 
 ```bash
 pip install torch torchvision numpy opencv-python pandas matplotlib
@@ -127,13 +127,13 @@ hb_compile -c source/yaml/config.yaml
 <a id="validation"></a>
 ## 验证与参考性能
 
-真实运行需检查公开张量名称/布局/类型，对相同输入比较原始 embedding、精确二值
+真实运行需检查公开张量名称/布局/类型，对相同输入比较原始嵌入特征、精确二值
 标签，记录所有辅助输出，并验证 S100 执行。评估车道实例精度时，需对嵌入进行实例聚类，
 再按匹配规则与数据集标签对照。
 
 已发布的三个输出对照说明其余弦相似度较高。HRT 参考性能使用
 200 帧、平均模型延迟 14.245 ms、69.894 FPS，固件、模型摘要和完整参数
-未注明；在板端测量本 sample 时需记录这些条件。
+未注明；在板端测量本示例时需记录这些条件。
 参见[评估](../evaluator/README_cn.md)。
 
 将生成模型复制到 S100，在模型所在目录运行：
@@ -159,5 +159,5 @@ hrt_model_exec perf --model_file lanenet256x512.hbm
 <a id="known-gaps"></a>
 ## 准备要求
 
-随模型准备导出代码/版本、checkpoint 摘要、校准清单、OE 版本和精度参考。
+随模型准备导出代码/版本、权重文件摘要、校准清单、OE 版本和精度参考。
 编译前检查生成配置，再验证 ONNX 输出及 S100 上的编译模型。

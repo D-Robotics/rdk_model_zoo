@@ -29,8 +29,7 @@ evaluator/
 ## Evaluation Commands
 
 
-
-S100 functional smoke command:
+S100 example inference command:
 
 ```bash
 # cwd: repository root; prerequisites: explicit model download and S100 board

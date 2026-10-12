@@ -32,16 +32,7 @@ cpp/
 <a id="supported-boards"></a>
 ## 适用板卡
 
-S100、S100P 与 S600。启动器一次性读取 `/sys/class/boardinfo/soc_name` 与
-`/sys/class/boardinfo/board_type`（`board_type` 变体），身份判定与 Python
-流程一致（`utils/py_utils/platforms.py`，登记于
-`docs/release/platforms.json`），并选用该板自己的制品（`nashe`、`nashm` 或
-`nashp`）。S100P 以其两种登记形式识别（soc_name `s100p`；或 soc_name `s100`
-且 board_type `s100p`/`rdk s100p`）；未知或不可读的身份文件按未知板卡拒绝，
-绝不静默回退其他板卡的制品。
-`SOC_NAME_FILE`/`BOARD_TYPE_FILE` 供主机 fixture
-测试（`tests/test_cpp_launcher_identity.py`）覆盖身份来源；板卡上不要
-设置。
+启动器在 S100、S100P 和 S600 上读取 `/sys/class/boardinfo/soc_name` 与 `/sys/class/boardinfo/board_type`，选择对应的 `nashe`、`nashm` 或 `nashp` 模型。S100P 支持两种标识：`soc_name` 为 `s100p`，或 `soc_name` 为 `s100` 且 `board_type` 为 `s100p`/`rdk s100p`。身份文件未知或不可读时，程序报错退出。板卡上使用系统身份文件，无需设置 `SOC_NAME_FILE` 或 `BOARD_TYPE_FILE`。
 
 <a id="dependencies"></a>
 ## 依赖
@@ -53,7 +44,7 @@ Horizon DNN 头文件/库。请使用板卡镜像自带的 SDK 开发包，并�
 <a id="build"></a>
 ## 构建
 
-手工构建（cwd：`samples/vision/mobilenetv2/runtime/cpp`；成功判据：
+手工构建（cwd：`samples/vision/mobilenetv2/runtime/cpp`；输出：
 `build/` 内有 `mobilenetv2` 二进制）：
 
 ```bash
@@ -70,7 +61,7 @@ mkdir -p build && cd build && cmake .. && make -j"$(nproc)"
 ## 运行
 
 一键形式（cwd：任意；前置：按 [model/README_cn.md](../../model/README_cn.md)
-准备制品；成功判据：退出码 0 且打印 Top-5 列表）：
+准备制品；输出：退出码 0 且打印 Top-5 列表）：
 
 ```bash
 bash samples/vision/mobilenetv2/runtime/cpp/run.sh

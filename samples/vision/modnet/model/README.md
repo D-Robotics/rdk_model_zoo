@@ -26,7 +26,7 @@ model/
 <a id="preparation"></a>
 ## Preparation
 
-The active manifest has no public URL. Obtain the external model through the authorized model owner, verify its identity as `x5:modnet:modnet_512x512_rgb.bin`, and place it at `samples/vision/modnet/model/modnet_512x512_rgb.bin`. The repository helper is deliberately non-downloading:
+The active manifest has no public URL. Obtain the external model through the authorized model owner, verify its identity as `x5:modnet:modnet_512x512_rgb.bin`, and place it at `samples/vision/modnet/model/modnet_512x512_rgb.bin`. The preparation command below reports where to place the model:
 
 ```bash
 # cwd: repository root

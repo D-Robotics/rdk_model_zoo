@@ -6,9 +6,9 @@
 
 ## 源模型
 
-- 框架：固定 X5 源记录了 FCOS EfficientNet-B0/B2/B3 部署制品，但没有训练 checkpoint 或导出脚本。
+- 框架：固定 X5 参考记录了 FCOS EfficientNet-B0/B2/B3 部署制品，但没有训练权重文件或导出脚本。
 - 权重：`platforms/x5` 固定快照 `ac115717197920355fc390bb04299b20e6436864`。
-- 对应关系：三个发布制品分别为 512、768、896 FCOS 变体；源 README 和截图没有给出 checkpoint 发布版或训练 commit。
+- 对应关系：三个发布制品分别为 512、768、896 FCOS 变体；源 README 和截图没有给出权重文件发布版或训练 commit。
 
 <a id="directory"></a>
 ## 目录结构
@@ -22,13 +22,13 @@ conversion/
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-| target | march | OE 版本 | 配置 |
+| 目标板卡 | march | OE 版本 | 配置 |
 | --- | --- | --- | --- |
 | x5 / B0 512 | bayes-e | 源未记录 | 源无 YAML |
 | x5 / B2 768 | bayes-e | 源未记录 | 源无 YAML |
 | x5 / B3 896 | bayes-e | 源未记录 | 源无 YAML |
 
-目录中的三个 PNG 是源 `hb_perf` 截图副本，记录各发布变体的部署数据流；本 checkout 的转换产物由上方命令生成。每张图记录一个已发布变体的部署数据流：packed NV12 输入先经 BPU `NV12TOYUV444` 节点转成 `YUV444, NHWC, INT8`，再以 `torch-jit-export_subgraph_0` 在 BPU 上执行，输出 15 个 INT32 张量——5 个 stride 层级 × 3 个分支（80 通道分类分数、4 通道框回归、1 通道 center-ness）。这就是源输出协议：5 路分类、5 路框回归、5 路 center-ness 输出；Python runtime 会先按固定张量 shape 重排这些输出，再执行解码，解码语义见 [runtime 说明](../runtime/python/README_cn.md)。
+下面三张 `hb_perf` 图展示各发布变体的部署数据流。每张图记录一个已发布变体的部署数据流：packed NV12 输入先经 BPU `NV12TOYUV444` 节点转成 `YUV444, NHWC, INT8`，再以 `torch-jit-export_subgraph_0` 在 BPU 上执行，输出 15 个 INT32 张量——5 个 stride 层级 × 3 个分支（80 通道分类分数、4 通道框回归、1 通道 center-ness）。这就是源输出协议：5 路分类、5 路框回归、5 路 center-ness 输出；Python 运行时会先按固定张量形状重排这些输出，再执行解码，解码语义见 [runtime 说明](../runtime/python/README_cn.md)。
 
 参考图（逐字源快照，非本 checkout 产物）：
 
@@ -45,11 +45,9 @@ FCOS EfficientNet-B2，768×768 输入：同样三个分支位于 96×96 至 6×
 FCOS EfficientNet-B3，896×896 输入：同样三个分支位于 112×112 至 7×7 层级。
 
 <a id="export"></a>
-## 导出（ONNX）
+## ONNX 导出
 
-```text
-固定源没有导出配方。重建前必须补充 ONNX checkpoint、导出 commit、输入前处理来源和输出命名契约。
-```
+准备所选 B0/B2/B3 变体的训练权重与导出脚本，固定输入预处理及十五个输出头的名称、形状和类型。本目录未提供权重或导出脚本。
 
 <a id="calibration"></a>
 ## 校准
@@ -61,19 +59,17 @@ FCOS EfficientNet-B3，896×896 输入：同样三个分支位于 112×112 至 7
 <a id="compile"></a>
 ## 编译
 
-```text
-没有已验证的编译命令。源文档中的 `hb_mapper makertbin --model-type onnx --config your_fcos_config.yaml` 是占位示例，缺少输入和配置，不能重现制品。
-```
+在匹配的 X5 OpenExplorer 环境中准备 ONNX 和量化 YAML，再运行 `hb_mapper makertbin --model-type onnx --config your_fcos_config.yaml`。将 `your_fcos_config.yaml` 替换为实际配置路径；本目录未提供该文件。
 
 <a id="validation"></a>
 ## 转换后验证
 
-在匹配 X5 上，对提供的制品运行 `hrt_model_exec model_info --model_file <exact-file>`，再按 runtime README 执行。将命令输出、15 个 raw tensor metadata 和结果 JSON 保存到同一 UTC 证据目录。[评估器](../evaluator/README_cn.md#reference-results)另提供已发布制品的已记录板端对拍运行。
+在匹配 X5 上，对提供的制品运行 `hrt_model_exec model_info --model_file <exact-file>`，再按运行时 README 执行。将命令输出、15 个 raw 张量元数据和结果 JSON 保存到同一 UTC 证据目录。[评估器](../evaluator/README_cn.md#reference-results)另提供已发布制品的已记录板端对拍运行。
 
 <a id="artifacts"></a>
 ## 产物
 
-| 制品 | target | 落盘 |
+| 制品 | 目标板卡 | 落盘 |
 | --- | --- | --- |
 | `fcos_efficientnetb0_detect_512x512_bayese_nv12.bin` | x5 | `model/` |
 | `fcos_efficientnetb2_detect_768x768_bayese_nv12.bin` | x5 | `model/` |
@@ -82,6 +78,4 @@ FCOS EfficientNet-B3，896×896 输入：同样三个分支位于 112×112 至 7
 <a id="known-gaps"></a>
 ## 补充准备
 
-- 没有 checkpoint、ONNX 导出、校准数据、量化 YAML、工具链版本或可复现源编译流程。
-- manifest 发布 hash 未知；三个源截图不能证明 tensor 数值或数值等价。
-- 因此无法从本仓库重建制品；当前可复现的是 runtime 协议、主机 fixture，以及已发布制品的已记录板端一致性（证据见 sample README 链接）。
+自行转换需另行准备 FCOS EfficientNet-B0/B2/B3 权重、ONNX 导出脚本、代表性校准图片、X5 量化 YAML 和匹配的 OpenExplorer 工具链。本目录没有完整重建流程。运行示例可直接下载已发布 BIN；发布清单未提供 SHA-256。

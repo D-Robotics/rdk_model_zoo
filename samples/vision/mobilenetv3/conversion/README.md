@@ -49,7 +49,7 @@ Inside the OE container (or any host with `torch`, `timm`, `onnx`, and
 
 ```bash
 # input: timm pretrained weights (downloads when not cached)
-# output: the .onnx files below — success: onnx simplification check passes
+# output: the .onnx files below — output: onnx simplification check passes
 python3 get_mobilenetv3_onnx.py    # -> ./mobilenetv3_large_100.onnx
 ```
 
@@ -148,7 +148,7 @@ if __name__ == "__main__":
 ## Calibration
 
 The calibration helper reads `ILSVRC2012_val_*.JPEG` from the configured
-`src_image_dir`. The source default is
+`src_image_dir`. The default is
 `../../../open_explorer/samples/ai_toolchain/horizon_model_convert_sample/01_common/calibration_data/imagenet/`;
 set `src_image_dir` to your local ImageNet validation directory before running it. Preprocessing produces BGR data with padded center crop
 224, resize, HWC→CHW, `RGB2BGRTransformer`, ×255, mean

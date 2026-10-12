@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-[`main.py`](main.py) 解析参数，显式构造 `ConvNeXtClassifier`，调用 `predict` 并展示结果。
+[`main.py`](main.py) 解析参数，创建 `ConvNeXtClassifier`，调用 `predict` 并展示结果。
 [`classify.py`](classify.py) 包含模型初始化、前处理、推理和后处理；
 [`cli.py`](cli.py) 集中管理命令行参数、发布模型选择和结果展示。
 图片读取、标签校验和 SDK 会话复用 `utils/py_utils/`。
@@ -28,8 +28,7 @@ python/
 
 在目标板卡的 Python 环境中运行，需要与镜像匹配的 `hbm_runtime`、NumPy
 和 OpenCV-Python；读取 Manifest 还需要 PyYAML。`hbm_runtime` 只存在于
-板端镜像，采用懒加载——`--help`、`--list-models`、`--dry-run` 和主机
-unittest 套件都不需要它。主机侧测试依赖见 sample 根的
+板端镜像，在模型执行时加载；`--help`、`--list-models`、`--dry-run` 都不需要它。主机 Python 依赖见 sample 根的
 `requirements-host.txt`。
 
 <a id="usage"></a>
@@ -38,7 +37,7 @@ unittest 套件都不需要它。主机侧测试依赖见 sample 根的
 cwd：仓库根目录。最小无 SDK 调用是清单模式：
 
 ```bash
-# 成功判据：打印已发布引用，退出码 0，不加载 SDK
+# 输出：打印已发布引用，退出码 0，不加载 SDK
 python3 samples/vision/convnext/runtime/python/main.py --list-models --target auto
 ```
 
@@ -46,7 +45,7 @@ python3 samples/vision/convnext/runtime/python/main.py --list-models --target au
 
 ```bash
 # 前置：bash samples/vision/convnext/model/download.sh x5
-# 成功判据：退出码 0 且打印 Top-5 列表
+# 输出：退出码 0 且打印 Top-5 列表
 python3 samples/vision/convnext/runtime/python/main.py \
   --target x5 \
   --asset-id x5:convnext:ConvNeXt_atto_224x224_nv12.bin \
@@ -87,12 +86,10 @@ python3 samples/vision/convnext/runtime/python/main.py \
 命令以类别 ID、分数、标签打印稳定的 Top-K
 （`ClassificationResult(class_ids, scores, labels)`），仅当给出
 `--img-save-path` 时写标注图。
-X5 侧以规范化的 flat 1-D uint8 数组（`H*W*3/2` 字节，224x224 → 75,264
-字节）接收 packed NV12 缓冲。已发布制品返回 raw logits；任务在 Top-K 前
+X5 侧以一维 uint8 数组（`H*W*3/2` 字节，224x224 → 75,264
+字节）接收打包 NV12 缓冲。已发布制品返回 raw logits；任务在 Top-K 前
 施加稳定 softmax。缺省 resize 为 letterbox（类型 1）加线性插值，与模型
-参考预处理一致。输出形状遵循 rank 规则：任何可 squeeze 到 `(1000,)` 的
-单例批次/空间拼写均可绑定（已发布制品声明 `raw_f32` 变换；量化制品需要
-显式 `dequant` 契约）。
+参考预处理一致。去除大小为 1 的维度后，输出应为 `(1000,)`。发布模型使用 `raw_f32`；整数输出需配置 `dequant` 并提供匹配的量化元数据。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -145,5 +142,5 @@ print(result.class_ids, result.scores, result.labels)
 | --- | --- |
 | `Cannot identify this board` | 按支持矩阵选择目标，并在匹配的板卡上运行推理。 |
 | `model_path requires --asset-id` | 从 `--list-models` 复制完整限定引用；不要使用裸文件名。 |
-| 输入形状或 dtype 不匹配 | 核对制品引用与运行时 metadata；不得跨平台复用 X5 制品。 |
+| 输入形状或 dtype 不匹配 | 核对制品引用与运行时元数据；不得跨平台复用 X5 制品。 |
 | 输出与参考运行不一致 | 先在同一制品、图像、resize 模式、Top-K 和原始输出上对照，再考虑分数语义。 |

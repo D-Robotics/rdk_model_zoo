@@ -2,7 +2,7 @@
 
 # RDK X5 UNet 模型转换
 
-本目录只保留五个 UNet ResNet 变体从浮点 checkpoint 到 X5 的转换链路；训练
+本目录只保留五个 UNet ResNet 变体从浮点权重文件到 X5 的转换链路；训练
 代码继续维护在 Model Zoo 仓库之外。
 
 ## 目录
@@ -24,7 +24,7 @@ conversion/
 <a id="source-model"></a>
 ## 源模型
 
-五个骨干共用本地 onnx_export/model 架构；来源、固定参考 commit 和 MIT 许可见[根 README](../README_cn.md#license)。需要与所选骨干匹配的训练 checkpoint，本仓不下载或捏造它。严格载入失败不能用 strict=False 绕过。
+五个骨干共用本地 onnx_export/model 架构；来源、固定参考 commit 和 MIT 许可见[根 README](../README_cn.md#license)。需要与所选骨干匹配的训练权重文件，本仓不下载或捏造它。严格载入失败不能用 strict=False 绕过。
 
 <a id="directory"></a>
 ## 目录结构
@@ -46,7 +46,7 @@ conversion/
 <a id="export"></a>
 ## 1. 导出 ONNX
 
-checkpoint 必须与所选 backbone 一致。导出器会严格加载权重，生成固定 shape
+权重文件必须与所选 backbone 一致。导出器会严格加载权重，生成固定形状
 的 opset 11 ONNX，执行 ONNX checker，并使用同一份确定性输入比较 PyTorch 与
 ONNX Runtime。已有 ONNX 和报告不会被覆盖。
 
@@ -65,7 +65,7 @@ python3 onnx_export/export_unet.py \
 ## 2. 准备校准张量
 
 建议选取约 100 张有代表性的 Pascal VOC 训练图像。每个校准文件必须是无文件
-头的小端 float32 `.bin`，保存一份 shape 为 `[3, 512, 512]` 的 RGB CHW 张量，
+头的小端 float32 `.bin`，保存一份形状为 `[3, 512, 512]` 的 RGB CHW 张量，
 数值范围为 `[0, 255]`。数据脚本不要除以 255；PTQ YAML 通过
 `data_scale=1/255` 统一承担归一化，板端 NV12 输入也使用同一规则。
 
@@ -114,14 +114,14 @@ python3 mapper.py \
          → 唯一 .bin → hb_model_info 确认 BPU march: bayes-e
 ```
 
-运行目录会保留解析后的 YAML、checker/build/model-info 日志、校准 manifest、
+运行目录会保留解析后的 YAML、checker/build/model-info 日志、校准清单、
 复制出的制品、哈希、工具版本与 `run-receipt.json`。编译成功后仍需使用
 `../evaluator/eval_unet.py` 完成精度评测和板端 Runtime 验证。
 
 <a id="validation"></a>
 ## 验证
 
-导出器默认执行确定性输入的 PyTorch/ORT 数值比较，skip-runtime-check 只允许结构预检，不能通过后续 PTQ gate。编译后用 evaluator 对同一 VOC manifest 测量精度；自编译模型通过其显式 --model 运行，不冒充发布哈希制品。
+导出器默认执行确定性输入的 PyTorch/ORT 数值比较，skip-runtime-check 只允许结构预检，不能通过后续 PTQ 检查。编译后用 evaluator 对同一 VOC 清单测量精度；自编译模型通过其显式 --model 运行，并记录实际文件摘要。
 
 ```bash
 # cwd: repository root; on X5 after a real successful compile, with a prepared VOC manifest
@@ -133,9 +133,9 @@ python3 samples/vision/unet/evaluator/eval_unet.py --backend x5 --backbone resne
 <a id="artifacts"></a>
 ## 制品
 
-输出保留 ONNX/report、已解析 YAML、校准 manifest、checker/build/model-info 日志、制品与哈希、run-receipt.json。五个发布 BIN 名称和 SHA-256 见[模型表](../model/README_cn.md#artifacts)，不能把发布哈希赋给重新编译的文件。
+输出保留 ONNX/report、已解析 YAML、校准清单、checker/build/model-info 日志、制品与哈希、run-receipt.json。五个发布 BIN 名称和 SHA-256 见[模型表](../model/README_cn.md#artifacts)，不能把发布哈希赋给重新编译的文件。
 
 <a id="known-gaps"></a>
 ## 缺失前提
 
-准备训练 checkpoint、完整 VOC 数据集及具有代表性的校准子集，并使用匹配的 OE 镜像与框架版本。上面的前 100 张图像用于演示文件准备方式；正式量化请按实际输入分布选择校准图像。
+准备训练权重文件、完整 VOC 数据集及具有代表性的校准子集，并使用匹配的 OE 镜像与框架版本。上面的前 100 张图像用于演示文件准备方式；正式量化请按实际输入分布选择校准图像。

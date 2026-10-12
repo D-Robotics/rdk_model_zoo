@@ -22,7 +22,7 @@ PF class IDs are **not COCO category IDs**. Supply a reviewed mapping that binds
 }
 ```
 
-Every annotation category must be covered; partial category scoring is not silently enabled. PF IDs must be unique, but multiple explicitly named PF classes may map to one dataset category. Such predictions are preserved separately: no additional NMS is applied after mapping. Unmapped PF predictions are excluded from the dataset results and counted in the report. Choose dataset mappings by class meaning and verify the category names.
+The category mapping must cover every annotation category. PF IDs must be unique, but multiple explicitly named PF classes may map to one dataset category. Such predictions are preserved separately: no additional NMS is applied after mapping. Unmapped PF predictions are excluded from the dataset results and counted in the report. Choose dataset mappings by class meaning and verify the category names.
 
 Images are processed by sorted numeric image ID. `--limit 0` selects all; a positive value selects the first N and labels the metrics as a subset. Duplicate JSON keys/IDs/image paths, paths outside `--image-dir`, unreadable images and annotation/image dimension differences fail. The evaluator does not skip difficult or invalid images. Use a fresh output directory on every run.
 
@@ -31,7 +31,6 @@ Images are processed by sorted numeric image ID. `--limit 0` selects all; a posi
 
 ```text
 evaluator/
-├── tests/  # Automated tests
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
 ├── backends.py  # Python script
@@ -56,7 +55,7 @@ python3 samples/vision/yoloe/evaluator/evaluate.py --help
 
 This includes ONNX/ONNX Runtime, NumPy, OpenCV, SciPy, PyYAML and pycocotools; PyTorch is needed only for [checkpoint export](../conversion/README.md). The board route uses the runtime prerequisites and the image-provided `hbm_runtime`; additionally install `pycocotools` there. RLE encoding requires pycocotools even in predictions-only mode. Help works without these packages or the SDK.
 
-The host ONNX backend uses `CPUExecutionProvider` and explicitly disables graph optimization, matching export verification. It receives float RGB NCHW input and **does not simulate an NV12 roundtrip, quantization or BPU execution**. `--target` selects the target-specific preprocessing/postprocessing protocol on the host; it is not a claim that the host is that board. The board backend checks the actual hardware target, file SHA-256 and ten float32 output roles. Published S quantized models are incompatible with that float entry.
+The host ONNX backend uses `CPUExecutionProvider` and explicitly disables graph optimization, matching export verification. It receives float RGB NCHW input and **does not simulate an NV12 roundtrip, quantization or BPU execution**. `--target` selects the target-specific preprocessing/postprocessing protocol on the host; it is used to choose the corresponding image and output geometry. The board backend checks the actual hardware target, file SHA-256 and ten float32 output roles. Published S quantized models are incompatible with that float entry.
 
 <a id="command"></a>
 ## Commands
@@ -76,7 +75,7 @@ python3 samples/vision/yoloe/evaluator/evaluate.py \
   --output-dir /work/evaluation-26n
 ```
 
-To export predictions without claiming accuracy, add `--predictions-only` and use a new output directory. An annotation-format image/category manifest is still required, but it may have no ground truth. For a smoke check, add `--limit 1`; remove that limit for the intended full split. A subset or predictions-only success is not a full-dataset accuracy result.
+To export predictions without calculating metrics, add `--predictions-only` and use a new output directory. An annotation-format image/category manifest is still required, but it may have no ground truth. For a smoke check, add `--limit 1`; remove that limit for the intended full split. A subset or predictions-only success is not a full-dataset accuracy result.
 
 Board evaluation, only after preparing a compatible float artifact and entering the matching board environment:
 
@@ -177,10 +176,4 @@ Each table retains its published model, board and measurement conditions. Measur
 
 Board/SDK/OE evaluation, held-out dataset mAP and new performance benchmarks run in their own environments. CPU RGB evaluation excludes NV12 conversion effects. The fixed vocabulary, mapping and model bytes must stay paired; arbitrary vocabulary edits do not teach new categories.
 
-```bash
-# cwd: repository root; evaluator host dependencies installed
-python3 -m unittest discover -s samples/vision/yoloe/evaluator/tests
-python3 -m unittest discover -s samples/vision/yoloe/tests
-```
-
-The test suite covers COCO scoring with synthetic masks, empty predictions, explicit category mappings, image/mask geometry and partial failures. For model AP, run the evaluator with labeled held-out images and report the dataset split, checkpoint, compiled model and class mapping.
+Compute model AP with labeled validation images and record the dataset split, checkpoint, compiled model and class mapping.

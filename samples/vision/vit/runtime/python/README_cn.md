@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-[`main.py`](main.py) 解析参数，显式构造 `ViTClassifier`，调用 `predict` 并展示结果。
+[`main.py`](main.py) 解析参数，创建 `ViTClassifier`，调用 `predict` 并展示结果。
 [`classify.py`](classify.py) 包含模型初始化、前处理、推理和后处理；
 [`cli.py`](cli.py) 集中管理命令行参数、发布模型选择和结果展示。
 图片读取、标签校验和 SDK 会话复用 `utils/py_utils/`。
@@ -45,7 +45,7 @@ python3 samples/vision/vit/runtime/python/main.py
 python3 samples/vision/vit/runtime/python/main.py --target s100 --variant int8 --test-img samples/vision/vit/test_data/airplane_0000.png --label-file samples/vision/vit/test_data/cifar10_classes.names --top-k 5
 ```
 
-纯主机检查：
+查看模型列表或解析配置：
 
 ```bash
 python3 samples/vision/vit/runtime/python/main.py --list-models
@@ -118,4 +118,4 @@ preprocess（pre_process）：图像路径或 BGR U8 H×W×3 → PreparedInput�
 <a id="troubleshooting"></a>
 ## 排错
 
-HBM 缺失：显式准备模型。目标不匹配：在 S100 运行，不覆盖 S100P 身份。类别数/形状/dtype 错误：核对制品引用和 metadata，改名不能绕过检查。图片不可读或 Top-K 非法：修正输入与 1..10 参数。外部模型路径需准确 asset-id。
+HBM 缺失：显式准备模型。目标不匹配：在 S100 运行，不覆盖 S100P 身份。类别数/形状/dtype 错误：核对制品引用和 元数据，改名不能绕过检查。图片不可读或 Top-K 非法：修正输入与 1..10 参数。外部模型路径需准确 asset-id。

@@ -61,7 +61,7 @@ hb_compile --config config_vit_nv12.yaml
 ## 验证
 
 原日志记录：Y [1,224,224,1] U8、UV [1,112,112,2] U8、output [1,10]
-F32。重新生成后需核对实际 metadata，再做同板数值对照和 CIFAR-10
+F32。重新生成后需核对实际 元数据，再做同板数值对照和 CIFAR-10
 精度评估。
 
 <a id="artifacts"></a>

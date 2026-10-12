@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# YOLOWorld Python runtime
+# YOLOWorld Python 运行时
 
 <a id="overview"></a>
 ## Python 推理
@@ -52,12 +52,12 @@ python3 samples/vision/yoloworld/runtime/python/main.py --target x5 --model-path
 
 dry-run 必须显式给 `--target`，真实加载前会把它与板卡身份比较。
 `--model-path` 与 `--asset-id` 用于精确模型身份。词表和图片路径默认指向
-sample 的 `test_data`。prompt 属于每次调用自己的 context，最多接受 32 个非空
+示例的 `test_data`。prompt 属于每次调用自己的上下文，最多接受 32 个非空
 词，最后一个词填充剩余文本槽；没有标签文件回退。
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
-| `--target` | str | `auto` | Requested target; dry-run requires explicit `x5`. |
+| `--target` | str | `auto` | Requested 目标板卡; dry-run requires explicit `x5`. |
 | `--model-path` | path | `None` | External model path; requires exact asset ID. |
 | `--asset-id` | str | `None` | Exact `x5:yoloworld:yolo_world.bin` identity. |
 | `--vocab-file` | path | samples/vision/yoloworld/test_data/offline_vocabulary_embeddings.json | Offline F32 embeddings. |
@@ -68,7 +68,7 @@ sample 的 `test_data`。prompt 属于每次调用自己的 context，最多接�
 | `--bpu-cores` | int list | `[0]` | Runtime BPU core indexes. |
 | `--score-thres` | float | `0.05` | Score filter. |
 | `--nms-thres` | float | `0.45` | Class-wise IoU threshold. |
-| `--list-models` | flag | `false` | Print manifest identity without SDK. |
+| `--list-models` | flag | `false` | Print 清单 identity without SDK. |
 | `--dry-run` | flag | `false` | Print protocol without board/SDK. |
 
 <a id="results"></a>
@@ -99,17 +99,17 @@ composed_result = task.predict(image, ['dog'])
 
 | 阶段 | 输入 | 输出和职责 |
 | --- | --- | --- |
-| `preprocess` (alias `pre_process`) | BGR HxWx3 uint8/F32 图片、prompt 序列 | 不可变图片 F32[1,3,640,640]、文本 F32[1,32,512,1]、缩放/原尺寸/prompt ID context |
-| `infer` (alias `forward`) | prepared tensors | 原生 raw F32[1,8400,32] 和 F32[1,8400,4]，不 reshape/dequant/NMS |
-| `postprocess` (alias `post_process`) | raw tensors 与该次 context | 槽位 argmax、分数阈值、按类 NMS、坐标还原和结果数组 |
+| `preprocess` (alias `pre_process`) | BGR HxWx3 uint8/F32 图片、prompt 序列 | 不可变图片 F32[1,3,640,640]、文本 F32[1,32,512,1]、缩放/原尺寸/prompt ID 上下文 |
+| `infer` (alias `forward`) | prepared 张量 | 原生 raw F32[1,8400,32] 和 F32[1,8400,4]，不 reshape/dequant/NMS |
+| `postprocess` (alias `post_process`) | raw 张量与该次上下文 | 槽位 argmax、分数阈值、按类 NMS、坐标还原和结果数组 |
 | `predict` | 图片和 prompts | 对一次调用严格编排上述三阶段 |
 
-runner 先校验实际 metadata，再执行且不改变原生输出；task 负责源 F32
+推理执行器先校验实际元数据，再执行且不改变原生输出；task 负责源 F32
 预处理、槽位填充、NMS 与坐标换算。
 
 <a id="troubleshooting"></a>
 ## 故障排查
 
-空 prompt、未知 prompt、非有限输入、错误 metadata 形状/类型、缺模型、未知
-板卡或 target 不匹配都会报错。缺模型时先运行显式模型命令。评估器要求新的
+空 prompt、未知 prompt、非有限输入、错误元数据形状/类型、缺模型、未知
+板卡或目标板卡不匹配都会报错。缺模型时先运行显式模型命令。评估器要求新的
 输出目录保存每次结果。

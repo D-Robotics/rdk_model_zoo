@@ -43,8 +43,8 @@ python samples/vision/yolo26_depth/runtime/python/main.py --target x5 --variant 
 内置图片路径以样例目录定位。输出目录必须尚不存在。
 
 `x5/s100/s100p/s600` 各有 `n/s/m/l/x` 五种变体。省略变体默认 `n`，但精确
-asset ID 可以推导其他变体。target、variant、asset ID 冲突会报错。
-生产加载器在 SDK 加载前检查板身份；选择 target 并不意味着可以跨板运行模型。
+asset ID 可以推导其他变体。目标板卡、variant、asset ID 冲突会报错。
+生产加载器在 SDK 加载前检查板身份；选择目标板卡并不意味着可以跨板运行模型。
 
 <a id="parameters"></a>
 ## 参数
@@ -58,7 +58,7 @@ asset ID 可以推导其他变体。target、variant、asset ID 冲突会报错�
 | `--converted-model` | `false` | 明确使用自行转换制品；必须指定模型路径和契约 asset ID |
 | `--test-img`、`--input` | `samples/vision/yolo26_depth/test_data/bus.jpg` | 可解码的 BGR 图片；默认内置 `test_data/bus.jpg` |
 | `--output` | `outputs/yolo26_depth` | 新输出目录；默认 `outputs/yolo26_depth` |
-| `--warmup` | `3` | 非负预热 forward 次数；默认 3 |
+| `--warmup` | `3` | 非负预热前向推理次数；默认 3 |
 | `--priority` | `null` | 0–255；S 默认 0，X5 未指定时保留 SDK 默认值 |
 | `--bpu-cores` | `null` | 一个或多个非负核编号；S 默认 `[0]`，X5 保留 SDK 默认值 |
 | `--list-models` | `false` | 列出清单制品，不加载 SDK |
@@ -68,7 +68,7 @@ asset ID 可以推导其他变体。target、variant、asset ID 冲突会报错�
 必须显式使用 `--converted-model`：asset ID 只选择张量契约，不认证这些字节。
 目标和元数据检查仍然有效；报告写入 `artifact_origin=user-converted`、
 `asset_id=null`、契约引用及实际文件摘要。参阅[自转换示例](../../model/README_cn.md)。
-源清单未提供 S 的发布者摘要，本地计算的摘要不能证明发布者身份。
+源清单未提供 S 的发布者摘要，本地计算的摘要用于标识文件版本。
 可用 BPU 核编号由实际 SDK 决定。
 
 <a id="results"></a>
@@ -79,10 +79,10 @@ asset ID 可以推导其他变体。target、variant、asset ID 冲突会报错�
 Lite 模型另写 `raw_logit.npy`（192×192 float32）。深度为相对量，不是米。
 颜色沿用源实现的 2%/98% 分位范围和反向 TURBO，仅用于可视化；精度以数值指标为准。
 
-报告记录模型/图片摘要、模型选择、运行时元数据和 forward 耗时。耗时包含 runner
+报告记录模型/图片摘要、模型选择、运行时元数据和前向推理耗时。耗时包含推理执行器
 校验与复制，不是纯 BPU 延迟，也不包含前后处理。未知运行时版本如实记为
 `unknown`。参考深度指标
-见[评测说明](../../evaluator/README_cn.md)中的源记录数字。
+见[评测说明](../../evaluator/README_cn.md)中的参考记录数字。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -126,7 +126,7 @@ CLI 单独设置调度参数；应用可在支持时调用
 | `postprocess(raw, context)` | 已绑定输出及匹配几何 → 拥有独立存储的相对深度数组 |
 | `predict(image)` | 顺序执行上述三个阶段一次；`warmup`/`return_details=True` 增加不计时预热前向并返回单次调用的 prepared/raw 数据、warmup 次数与单次前向延时 |
 
-既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
+`pre_process`、`forward`、`post_process` 分别是 `preprocess`、`infer`、`postprocess` 的别名。
 
 X5 全部变体及 S 的 `n/s/m` 使用 768×768 INTER_LINEAR letterbox，填充值 114，
 再转换为 NV12 uint8 字节。X5 使用单个 884736 字节的扁平数组；S full 模型
@@ -145,7 +145,7 @@ exp 与尺寸恢复在 CPU 执行。
 以及一个 float32 输出，输出形状为
 `[1,192,192,1]` 或 `[1,1,192,192]`。形状/类型错误、NaN/Inf、上下文不匹配、
 exp 溢出均报错。不要对已校准的 log depth 再套 lite 校准。task 隔离的是几何状态；
-SDK runner 的线程安全性以 SDK 说明为准，共享 runner 时请串行调用。
+SDK 推理执行器的线程安全性以 SDK 说明为准，共享推理执行器时请串行调用。
 
 <a id="troubleshooting"></a>
 ## 排查
@@ -156,4 +156,4 @@ SDK runner 的线程安全性以 SDK 说明为准，共享 runner 时请串行�
   改标为自转换来绕过检查。
 - **元数据不符：** 检查输入输出契约，改文件名不能修复布局或 raw/log 边界。
 - **输出已存在：** 换新目录，防止残留文件混入该次结果。
-- **图片无效/溢出：** 提供非空可解码 BGR 图片，并检查模型输出；无效值不会被静默裁剪。
+- **图片无效/溢出：** 提供非空可解码 BGR 图片，并检查模型输出；无效值会报错。

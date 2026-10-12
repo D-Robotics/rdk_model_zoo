@@ -19,7 +19,6 @@ pp_liteseg/
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 └── README_cn.md  # 中文说明
 ```
@@ -53,7 +52,7 @@ python3 samples/vision/pp_liteseg/runtime/python/main.py --dry-run --target x5
 <a id="expected-results"></a>
 ## 预期结果
 
-成功时返回 0，输出 `outputs/pp_liteseg/result.jpg`（3078×548，原图／叠加／分割三面板），同目录的 `labels.npy`（512×1024 int32，类别 0..18）和 `result.json`。JSON/stdout 记录实际类别名和运行时元数据。未完成真实推理前，不承诺 street 图片的具体类别列表或精度。错误返回 2。mask 坐标对应拉伸后的模型输入，不是原图尺寸。
+成功时返回 0，输出 `outputs/pp_liteseg/result.jpg`（3078×548，原图／叠加／分割三面板），同目录的 `labels.npy`（512×1024 int32，类别 0..18）和 `result.json`。JSON/stdout 记录实际类别名和运行时元数据。类别列表由输入图片和模型输出决定。错误返回 2。掩码坐标对应拉伸后的模型输入，不是原图尺寸。
 
 编译模型返回解码后的 int32 类别图。`postprocess` 校验类别 ID 并去掉 batch/channel 维，无需 CPU argmax。加载时会检查模型元数据。
 
@@ -65,4 +64,4 @@ python3 samples/vision/pp_liteseg/runtime/python/main.py --dry-run --target x5
 <a id="license"></a>
 ## 许可
 
-仓库代码遵循顶层 [LICENSE](../../../LICENSE)，保留的源文件声明继续适用。PaddleSeg、外部预训练权重和数据各有许可；manifest 不能证明预训练权重的许可，重新分发前请核对实际 checkpoint 来源。
+仓库代码遵循顶层 [LICENSE](../../../LICENSE)，保留的源文件声明继续适用。PaddleSeg、外部预训练权重和数据各有许可；重新分发预训练权重前，请核对权重来源和许可条款。

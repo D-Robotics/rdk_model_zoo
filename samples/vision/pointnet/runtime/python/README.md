@@ -129,16 +129,7 @@ runtime validates both tensors, then decodes `pred` regardless of output
 order. A single-logit export is also accepted; other output roles or
 transform shapes are rejected.
 
-
-N comes from compiled metadata and must match exactly; no resampling/padding.
-Frozen `prepared.context` stores centroid/radius/count per call and cannot be
-overwritten by a later call. Postprocess does not consume it because point order
-is unchanged. Integer outputs are affine-decoded in float64 so distinct int8
-through int32 raw values keep their ordering for argmax; float32 decoding would
-round large integers into artificial ties. Only
-exactly equal decoded scores tie, choosing the lowest ID. Integer outputs require
-finite positive SCALE metadata; missing/invalid metadata is rejected instead of
-guessing.
+N is fixed by the compiled model metadata; supply exactly N points. `prepared.context` stores the centroid, radius and count for that call, and labels follow the input point order. Integer outputs require finite positive SCALE parameters and use float64 affine decoding before argmax; float32 outputs remain unchanged. Equal decoded scores select the lowest class ID.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

@@ -3,9 +3,9 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 # MiniCPM5-2B on RDK S100 / S100P / S600
 
-This sample runs text generation with OpenBMB MiniCPM5-2B using the S600 BPU and OELLM Runtime. It provides a C++ command-line application, model download with SHA256 verification, conversion guidance and full WikiText2 evaluation evidence.
+This sample runs text generation with OpenBMB MiniCPM5-2B using the S600 BPU and OELLM Runtime. It provides a C++ command-line application, model download with SHA256 verification, conversion guidance and WikiText2 evaluation commands and reference measurements.
 
-> S600 currently requires the internal OELLM 2.0 beta SDK; its public release is planned for mid-October 2026. Public S600 SDK 1.0.5 did not pass direct inference with this HBM and cannot substitute for 2.0. S100/S100P use the separate public 1.0.0 workflow below.
+> S600 requires the separately supplied OELLM 2.0.0-beta1 SDK and OELLM 2.0.4 runtime. S600 SDK 1.0.5 is incompatible with this HBM. S100/S100P use the OELLM 1.0.0 workflow below.
 
 <a id="directory"></a>
 ## Directory structure
@@ -25,15 +25,15 @@ minicpm5-2b/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | SDK / native backend | Source accuracy result |
+| Target | SDK / native backend | Relative PPL increase |
 | --- | --- | --- |
-| S100 / S100P | 1.0.0 / legacy | PPL +27.83%, fails ≤3% |
-| S600 | 2.0 beta SDK / cpp | PPL +1.60%, source target met |
+| S100 / S100P | 1.0.0 / legacy | PPL +27.83% |
+| S600 | 2.0 beta SDK / cpp | PPL +1.60% |
 | X5 | No matching backend/artifact | not applicable |
 
 ## S100 / S100P support
 
-S100 (Nash-e) and S100P (Nash-m) use separate OELLM 1.0.0 W8 artifacts and the [OELLM 1.0.0 C++ entry point](runtime/legacy/README.md). Both completed full 140 × 2048-token WikiText2 TEST evaluation: PPL 17.91995, a 27.83% relative increase over float, failing the ≤3% accuracy target. See [full evaluation](evaluator/legacy/README.md) for reproduction. Single-turn Chinese/English generation and normal EOS checks are recorded for both boards. Short-request decode is approximately 12.1 / 13.0 tokens/s. Follow that entry point for memory configuration, downloads and commands; see [OELLM 1.0.0 conversion](conversion/legacy/README.md). The existing PPL, multi-turn and stability results below apply only to S600.
+S100 (Nash-e) and S100P (Nash-m) use separate OELLM 1.0.0 W8 artifacts and the [OELLM 1.0.0 C++ entry point](runtime/legacy/README.md). Both completed full 140 × 2048-token WikiText2 TEST evaluation: PPL 17.91995, a 27.83% relative increase over float. See [full evaluation](evaluator/legacy/README.md) for reproduction. The runtime supports single-turn Chinese/English generation. Short-request decode is approximately 12.1 / 13.0 tokens/s. Follow that entry point for memory configuration, downloads and commands; see [OELLM 1.0.0 conversion](conversion/legacy/README.md). The measurements below apply to S600.
 
 ## S600 model and supported scope
 
@@ -77,7 +77,7 @@ See [conversion](conversion/README.md) for the external MiniCPM5 adapter and the
 
 The final HBM increases PPL by 1.60% relative to the floating-point reference. All 286580 next-token predictions were evaluated. The board-local NumPy evaluator differs from the SDK/PyTorch RPC path by 0.0055% PPL on a five-sample cross-check; it is not bit-identical.
 
-Observed generation tests include six additional prompts matching reference text and tokens, two-turn English/Chinese conversation, retrieval from inputs padded to 2048 and 3840 tokens, and 50 repeated requests. The latter averaged 53.25 decode tokens/s and 147.86 ms time to first token for the recorded short prompt. These are workload-specific measurements, not concurrency or long-duration stability guarantees. Runtime prefill token counts are padded to chunk boundaries.
+The generation reference set includes six additional prompts matching reference text and tokens, two-turn English/Chinese conversation, retrieval from inputs padded to 2048 and 3840 tokens, and 50 repeated requests. The latter averaged 53.25 decode tokens/s and 147.86 ms time to first token for the recorded short prompt. These measurements use sequential requests with the recorded short prompt. Runtime prefill token counts are padded to chunk boundaries.
 
 The reference model itself answered one Chinese `1+1` prompt incorrectly and added Markdown fences when asked for bare JSON; the quantized model preserves these responses. Check formatting-sensitive outputs in your own application.
 

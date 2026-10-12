@@ -17,7 +17,6 @@ Run prompt-free YOLOE instance segmentation with the matching X5 or S model. The
 cpp/
 ├── inc/  # Model and CLI headers: detect.hpp, cli.hpp
 ├── src/  # Five-file runtime: detect.cpp, cli.cpp, main.cpp
-├── tests/  # Automated tests
 ├── CMakeLists.txt  # Build configuration
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
@@ -35,7 +34,7 @@ cpp/
 | S100P | 26n/s/m/l/x; default 26n | Locally converted floating-output HBM with explicit SHA-256 | supported |
 | S600 | None | No published route; explicitly rejected | not-supported |
 
-Published artifacts run through the [Python runtime](../python/README.md) on their matching targets: the published X5 11s/m/l BINs fail this entry's output binding (`Task output requires NHWC aligned geometry.`), and the published S HBMs have quantized outputs. This entry runs locally converted models whose ten outputs are unquantized FLOAT32 NHWC — prepare them with the [conversion workflow](../../conversion/README.md), record their SHA-256, and note that renaming a quantized file does not change its contract. The 14 publication identities remain the model-selection keys; for a locally converted model the identity names its architecture reference.
+Published artifacts run through the [Python runtime](../python/README.md) on their matching targets: the published X5 11s/m/l BINs fail this entry's output binding (`Task output requires NHWC aligned geometry.`), and the published S HBMs have quantized outputs. This entry runs locally converted models whose ten outputs are unquantized FLOAT32 NHWC — prepare them with the [conversion workflow](../../conversion/README.md), record their SHA-256. The 14 publication identities remain the model-selection keys; for a locally converted model the identity names its architecture reference.
 
 ## Select, build and run
 
@@ -79,7 +78,7 @@ cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-board-cli \
 cmake --build /tmp/yoloe-board-cli --parallel 2
 ```
 
-For UCP, also provide `YOLOE_UCP_LIBRARY` when discovery cannot find the matching `libhbucp`. Use `--binary /tmp/yoloe-board-cli/yoloe_demo` in the selected run command. The normal launcher verifies identity and inputs before building. Missing vendor dependencies fail explicitly; host test doubles must never be used as deployment dependencies.
+For UCP, also provide `YOLOE_UCP_LIBRARY` when discovery cannot find the matching `libhbucp`. Use `--binary /tmp/yoloe-board-cli/yoloe_demo` in the selected run command. The normal launcher verifies identity and inputs before building. Missing vendor dependencies fail explicitly; install the matching vendor SDK headers and libraries.
 
 ## Launcher parameters
 
@@ -120,9 +119,9 @@ outputs/yoloe_cpp_x5_11s_run1/
 
 `launch-report.json` records the selected publication reference, local/published model kind, expected/observed digests, effective options, binary digest, exact subprocess argv/cwd, UTC times, return codes and result-file digests. Raw stdout/stderr bytes are retained, including non-UTF-8 output. An observed digest is not publisher authentication when the manifest has no checksum; `publisher_checksum_verified` remains false. For custom models, the publication ID names the architecture reference, not the provenance of the new file.
 
-Native `report.json` uses schema `rdk-model-zoo/yoloe-native-run/v1`, with target/variant, model/image/vocabulary hashes, image shape, effective configuration and aligned instances. Each instance contains a zero-based class ID, fixed label, score, original-image `[x1,y1,x2,y2]` box and ROI mask path/shape. Stored PNG masks use 0/255; in-memory masks use 0/1. Zero-area instances keep their exact empty axes and `mask: null`, without an empty PNG. `annotated.png` is a presentation overlay, not an evaluation mask. **All native masks use ROI layout, including X5; Python X5 uses full-image probability masks.** Do not interchange their evaluation inputs without adapting the protocol.
+Native `report.json` uses schema `rdk-model-zoo/yoloe-native-run/v1`, with target/variant, model/image/vocabulary hashes, image shape, effective configuration and aligned instances. Each instance contains a zero-based class ID, fixed label, score, original-image `[x1,y1,x2,y2]` box and ROI mask path/shape. Stored PNG masks use 0/255; in-memory masks use 0/1. Zero-area instances keep their exact empty axes and `mask: null`, without an empty PNG. `annotated.png` is the presentation overlay; use the stored ROI masks for evaluation. **All native masks use ROI layout, including X5; Python X5 uses full-image probability masks.** Do not interchange their evaluation inputs without adapting the protocol.
 
-The native report is written last. A zero exit without a valid identity-matched report and its files is a launcher failure; metadata verification is recorded only after a successful native result. Build/inference/result-validation failures retain logs and a failed launch record; image saving can leave partial output. Preflight failures before output-directory creation print an error without creating a run folder. Pick a new output path for a retry. Native validation errors exit 2; the launcher retains a positive native exit code and maps signal termination to 2.
+After a successful run, read `report.json` and the result files. Build, inference or output failures leave available logs and failure records in the output directory; errors before directory creation print to the terminal. Retry with a new output path. Native validation errors return 2; the launcher preserves positive native exit codes and maps signal termination to 2.
 
 ## Modules and model contract
 
@@ -132,10 +131,6 @@ The native report is written last. A zero exit without a valid identity-matched 
 | `src/main.cpp` | CLI orchestration: preflight gate → inputs → `YOLOE` built from model/config/gate → `predict` → saved results |
 | `src/cli.cpp`, `inc/cli.hpp` | Strict option parsing, image/label byte-exact loading, fresh-output policy and report/mask writing |
 | `src/detect.cpp`, `inc/detect.hpp` | The whole YOLOE model in one unit: geometry, NV12 preparation, `bind_heads` role binding, E11/E26 decodes, ROI mask restoration, board/model/vocabulary preflight, the `preprocess`/`infer`/`postprocess`/`predict` stages and the board DNN adapter (compiled with `YOLOE_HAS_SDK`) |
-| `tests/test_float_heads.cc` | Shape/precision/stride/allocation and finite-value boundary tests |
-| `tests/test_e11_decode.cc` | DFL, same/different-class suppression, score/IoU equality and malformed outputs |
-| `tests/test_e26_decode.cc` | Candidate ordering, single/multi-label selection, thresholds and invalid outputs |
-| `tests/decode_probe.cc` | Host-only utility for comparison with saved raw float tensors; not an inference application |
 
 Float reads reuse Ultralytics' shared vocabulary header `inc/yolo.hpp`: `nhwc_float_plan` requires unquantized FLOAT32, batch-one NHWC, valid physical row/cell strides and a sufficient allocation, and `copy_float_output` removes physical padding and rejects nonfinite values. `bind_heads` binds the ten logical output roles by unique shape; dtype, stride and allocation requirements are enforced by these helpers, and model-family and vocabulary identity by the explicit selection rules below.
 
@@ -152,57 +147,24 @@ The caller explicitly selects E11 (64 box channels) or E26 (4); an incompatible 
 <a id="dependencies"></a>
 ## Dependencies
 
-Prerequisites: a C++17 compiler and the repository checkout. Host tests need OpenCV C++ core/imgproc/imgcodecs development libraries but no board SDK: the geometry/decode/preflight functions live in the same model translation unit as the OpenCV-backed preparation code, so even the core tests link the model core (and therefore OpenCV). The documented build/test commands need CMake/CTest 3.20+ (`ctest --test-dir`); set `OpenCV_DIR` to your installed OpenCV CMake package directory if it is not discoverable. Python opencv-python alone does not provide this C++ development environment.
-
-On macOS, sanitizer builds of the OpenCV-enabled test project (`YOLOE_TEST_OPENCV=ON` with `YOLOE_SANITIZERS=ON`) additionally resolve the real TBB that OpenCV was built against through CMake's standard TBB CONFIG package and link it directly to the OpenCV-linked test executables. Under ASan, an executable that loads libtbb only transitively through `libopencv_core` aborts at process exit in `tbb::detail::r1::__TBB_InitOnce::~__TBB_InitOnce`; a minimal empty `main` linked against OpenCV core alone reproduces the crash. The direct TBB reference keeps ASan+UBSan enabled; if CMake cannot discover the package, point `CMAKE_PREFIX_PATH` at the prefix that installed TBB. Linux and OpenCV-off builds take no such branch and need no TBB. This behavior applies to host sanitizer builds; board builds are unaffected.
+Install a C++17 compiler, CMake 3.20+ and OpenCV C++ core/imgproc/imgcodecs development libraries. Set `OpenCV_DIR` to the installed OpenCV CMake package if discovery fails. Board inference also requires the matching DNN SDK and, for UCP headers, `libhbucp`.
 
 <a id="build"></a>
-## Build host tests
+## Build the application library
+
+From the repository root, build the core static library:
 
 ```bash
-cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-core \
-  -DYOLOE_SANITIZERS=ON
-cmake --build /tmp/yoloe-native-core --parallel 4
-```
-
-Build all eleven tests with a real OpenCV installation (no board SDK):
-
-```bash
-cmake -S samples/vision/yoloe/runtime/cpp/tests -B /tmp/yoloe-native-opencv \
-  -DYOLOE_TEST_OPENCV=ON -DYOLOE_SANITIZERS=ON
-cmake --build /tmp/yoloe-native-opencv --parallel 4
-```
-
-Build the reusable stage library and all eleven tests from its own CMake project:
-
-```bash
-cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-stage-core \
-  -DYOLOE_BUILD_TESTS=ON -DYOLOE_TEST_OPENCV=ON -DYOLOE_SANITIZERS=ON
+cmake -S samples/vision/yoloe/runtime/cpp -B /tmp/yoloe-stage-core
 cmake --build /tmp/yoloe-stage-core --parallel 4
 ```
 
-The output is `libyoloe_core.a`, not a board executable. For a normal embedding build, omit `YOLOE_BUILD_TESTS` and `YOLOE_SANITIZERS` (both default OFF in the library project). A consumer can add this directory with CMake `add_subdirectory` and link `yoloe_core`; include paths and OpenCV dependencies are propagated. `YOLOE_TEST_OPENCV` controls the standalone test project; it does not remove OpenCV from the stage library.
+The output is `libyoloe_core.a`. Add this directory with CMake `add_subdirectory` and link `yoloe_core`; include paths and OpenCV dependencies propagate to the application. For board inference, use the `YOLOE_BUILD_SDK=ON` library build below or the `YOLOE_BUILD_CLI=ON` executable build above.
 
 <a id="run"></a>
-## Run host tests
+## Run
 
-```bash
-ctest --test-dir /tmp/yoloe-native-core --output-on-failure
-```
-
-Successful tests exit 0 with no output. The decoder test allocates the full 4585-class tensor geometry, so allow several hundred MB with sanitizers. A thrown assertion/contract error or sanitizer diagnostic is a failure. These commands verify the C++ math and float-memory utilities; SDK ABI compatibility is verified by the board build below.
-
-For the CMake build, run all eleven checks with failure output:
-
-```bash
-ctest --test-dir /tmp/yoloe-native-opencv --output-on-failure
-```
-
-Run the library project's eleven tests:
-
-```bash
-ctest --test-dir /tmp/yoloe-stage-core --output-on-failure
-```
+Prepare a floating-output model for the selected board and use the `run.sh` commands under “Select, build and run” above. X5, S100 and S100P require a locally converted model with ten unquantized FLOAT32 NHWC outputs and its SHA-256. Read the reports, image and ROI masks from the output directory; fields are described in the results section.
 
 <a id="parameters"></a>
 ## Candidate decoding
@@ -263,21 +225,12 @@ output caches and copies output data. It performs no decode or image rendering.
 **Preflight is mandatory and has no default.** The application supplies a
 `void(const SdkModel&)` callback that verifies the actual board, selected
 publication or custom float SHA-256, and vocabulary/conversion provenance. It
-runs before any SDK call; throwing stops construction. The adapter's shape,
-target/variant and stack checks cannot prove those identities. The built-in
+runs before any SDK call; throwing stops construction.  The built-in
 `make_preflight(expected_model_sha256, label_path)` supplies local board and
 byte verification. The launcher selects the publication or
 custom float file before invoking the executable with its verified digest.
 
-`make_preflight` reads real local sysfs/device-tree using shared target rules.
-It rejects unknown/mismatched boards, missing/empty models, malformed or
-mismatching model digests and any vocabulary other than the fixed ordered PF
-file. The 64-digit expected model digest is supplied explicitly, not silently
-computed from the same file and accepted. Model target/variant/SDK-stack and
-tensor contracts are additionally checked by `SdkRunner`. No identity override
-is exposed. For custom conversion, a matching digest proves bytes, not compiler
-provenance; the caller must retain conversion evidence. No compatible S float
-HBM is supplied by this API.
+Call `make_preflight(expected_model_sha256, label_path)` with the prepared model’s 64-digit SHA-256 and fixed ordered PF vocabulary. It checks local board identity, model existence and checksum, and vocabulary. `SdkRunner` checks the target, variant, SDK stack and tensor contract. For S targets, first prepare a compatible floating-output HBM using the conversion guide and save its conversion records.
 
 The second complete API example shows the preflight-gated native path; the
 task constructs and owns its board adapter:
@@ -309,23 +262,14 @@ CMake `add_subdirectory`, link the application to `yoloe_sdk`. Set
 `YOLOE_DNN_INCLUDE_DIR` to the directory containing `dnn/hb_dnn.h` and
 `YOLOE_DNN_LIBRARY` to the matching DNN library if discovery fails. UCP headers
 also require `YOLOE_UCP_LIBRARY`; exposing both hbSys and UCP headers is rejected.
-Do not use test-double include paths for a deployable library. OpenCV development
+Use vendor SDK include paths for deployment. OpenCV development
 files are still required. The default host build leaves `YOLOE_BUILD_SDK=OFF`.
-
-The OpenCV host configuration runs eleven tests: six numerical/stage checks,
-X5/UCP adapter checks, preflight, CLI I/O and fixture help. The explicit fixture
-also runs the actual executable entry with synthetic outputs; it is not a SDK backend. Preflight is part of the model core,
-which needs OpenCV but no SDK. The adapter tests run with production code instrumented by ASan/UBSan. They
-cover preflight rejection before SDK calls, metadata/precision rejection before
-allocation, partial allocation and failed initialization cleanup, task/cache
-errors, semantic output order and independence across inference calls. These
-use narrow API doubles, not vendor SDK headers/libraries.
 
 <a id="results-interpretation"></a>
 ## Deployment and result usage
 
 Build the native entry against the selected board SDK and OpenCV, prepare a float-output model with the [conversion guide](../../conversion/README.md), then run the documented launcher with the matching profile and the fixed 4585-entry class vocabulary.
 
-Each run records its full evidence: `result/report.json` (schema `rdk-model-zoo/yoloe-native-run/v1`) lists the aligned instances — zero-based class IDs, fixed labels, scores, original-image `[x1,y1,x2,y2]` boxes and ROI mask paths — while `launch-report.json` retains the selected publication, expected/observed digests, exact argv/cwd and exit codes. `annotated.png` is a presentation overlay; use the stored masks and report fields for downstream processing.
+Each run records its run outputs: `result/report.json` (schema `rdk-model-zoo/yoloe-native-run/v1`) lists the aligned instances — zero-based class IDs, fixed labels, scores, original-image `[x1,y1,x2,y2]` boxes and ROI mask paths — while `launch-report.json` retains the selected publication, expected/observed digests, exact argv/cwd and exit codes. `annotated.png` is a presentation overlay; use the stored masks and report fields for downstream processing.
 
 All native masks use ROI layout on every target, including X5; Python X5 uses full-image probability masks, so adapt the protocol before mixing evaluation inputs. Stored PNG masks use 0/255 and in-memory masks 0/1. Dataset-level accuracy comes from the [evaluator](../../evaluator/README.md) workflows.

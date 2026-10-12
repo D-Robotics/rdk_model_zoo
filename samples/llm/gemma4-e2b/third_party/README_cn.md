@@ -23,7 +23,7 @@ HuggingFace tokenizers 的 C++ 绑定 + sentencepiece，用于推理时的原生
 [mlc-ai/tokenizers-cpp](https://github.com/mlc-ai/tokenizers-cpp) 拉取
 固定 commit 的源码。
 
-启动器和 CMake 不会自动运行安装脚本。从 sample 根目录显式准备：
+构建前，从示例根目录运行依赖安装脚本：
 
 ```bash
 bash third_party/install_tokenizers_cpp.sh --dry-run

@@ -13,10 +13,7 @@ ONNX 图与 RGB float32 校准数据，再执行对应的 OE 编译命令。
 <a id="source-model"></a>
 ## 源模型
 
-FastViT S12/SA12/T12/T8（论文 [FastViT: A Fast Hybrid Vision Transformer
-using Structural
-Reparameterization](https://arxiv.org/abs/2303.14189)）。各 YAML 从共享 `01_common` 模型库消费 ONNX
-（见缺口 1），未记录导出配方、未固定权重——ONNX 来源未核实。
+FastViT S12/SA12/T12/T8，模型来源见论文 [FastViT: A Fast Hybrid Vision Transformer using Structural Reparameterization](https://arxiv.org/abs/2303.14189)。本目录提供 PTQ YAML；导出前需自行选择上游权重及版本，并将 ONNX 路径填入 YAML 的 `onnx_model`（见[补充准备](#known-gaps)）。
 
 <a id="directory"></a>
 ## 目录结构
@@ -35,7 +32,7 @@ conversion/
 ## 工具链与目标
 
 模型转换在 x86 Linux 主机的 RDK X5 OpenExplorer Docker 内执行
-（march `bayes-e`），从不在板上运行。请准备含 `hb_mapper`、`hb_perf`、`hrt_model_exec` 的工具链；离线 Docker 镜像可从地瓜机器人开发者论坛（[topic 35229](https://forum.d-robotics.cc/t/topic/35229)）获取。
+（march `bayes-e`）。请准备含 `hb_mapper`、`hb_perf`、`hrt_model_exec` 的工具链；离线 Docker 镜像可从地瓜机器人开发者论坛（[topic 35229](https://forum.d-robotics.cc/t/topic/35229)）获取。
 
 <a id="export"></a>
 ## 导出
@@ -152,7 +149,7 @@ hb_mapper makertbin --config FastViT_S12_config.yaml
 ```
 
 四份 YAML 均设 `compile_mode: 'latency'` / `optimize_level: 'O3'`，并通过
-`node_info` 将重参数化注意力/MLP 节点以 int16 I/O 摆上 BPU
+`node_info` 将重参数化注意力/MLP 节点以 int16 I/O 部署到 BPU
 （S12/SA12/T12/T8 各 5/6/4/10 处）。均不带 `debug_mode` 与
 `set_all_nodes_int16`。
 

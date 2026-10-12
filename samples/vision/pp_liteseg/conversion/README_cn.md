@@ -5,7 +5,7 @@
 <a id="source-model"></a>
 ## 源模型
 
-使用 PaddleSeg PP-LiteSeg-STDC1，配置 `configs/pp_liteseg/pp_liteseg_stdc1_cityscapes_1024x512_scale0.5_160k.yml`，输入为静态 NCHW RGB `(1,3,512,1024)`。从 [PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg) 或自己的训练取得权重，导出前记录所选 PaddleSeg 版本和 checkpoint。
+使用 PaddleSeg PP-LiteSeg-STDC1，配置 `configs/pp_liteseg/pp_liteseg_stdc1_cityscapes_1024x512_scale0.5_160k.yml`，输入为静态 NCHW RGB `(1,3,512,1024)`。从 [PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg) 或自己的训练取得权重，导出前记录所选 PaddleSeg 版本和权重文件。
 
 <a id="directory"></a>
 ## 目录结构
@@ -60,9 +60,9 @@ cd samples/vision/pp_liteseg/conversion
 PADDLESEG_DIR=/data/PaddleSeg CHECKPOINT=/data/checkpoints/pp_liteseg_stdc1_cityscapes.pdparams EXPORT_DIR="$PWD/inference_model/pp_liteseg_stdc1_cityscapes_1024x512" ONNX_DIR="$PWD/onnx" bash onnx_export/export_pp_liteseg_stdc1_onnx.sh
 ```
 
-进入 PaddleSeg 前解析 checkpoint 路径；CONFIG 如非绝对路径则相对于该外部仓库。上例 EXPORT_DIR/ONNX_DIR 使用绝对路径以消除 cwd 歧义。源 Paddle 3 配方假定 tools/export.py 产生 model.json/model.pdiparams，再以 opset 11 执行 paddle2onnx，并用 onnxsim 固定尺寸；须核对所选版本的实际文件名。缺少 checkpoint/config 会在导出前失败。预期 ONNX 为 `onnx/pp_liteseg_stdc1_cityscapes_1024x512_sim.onnx`。
+进入 PaddleSeg 前解析权重文件路径；CONFIG 如非绝对路径则相对于该外部仓库。上例 EXPORT_DIR/ONNX_DIR 使用绝对路径以消除 cwd 歧义。源 Paddle 3 配方假定 tools/export.py 产生 model.json/model.pdiparams，再以 opset 11 执行 paddle2onnx，并用 onnxsim 固定尺寸；须核对所选版本的实际文件名。缺少 checkpoint/config 会在导出前失败。预期 ONNX 为 `onnx/pp_liteseg_stdc1_cityscapes_1024x512_sim.onnx`。
 
-编译前核对输出名称、shape 和 dtype。统一运行时要求 `(1,512,1024,1)` int32 类别图；外部导出配方需先验证能产出这一部署边界。logits 输出需要明确验证的图适配或另行支持的运行时契约，改文件名或再做一次 argmax 不能解决契约不符。
+编译前核对输出名称、形状和数据类型。统一运行时要求 `(1,512,1024,1)` int32 类别图；外部导出配方需先验证能产出这一部署边界。logits 输出需要明确验证的图适配或另行支持的运行时契约，改文件名或再做一次 argmax 不能解决契约不符。
 
 <a id="calibration"></a>
 ## 校准
@@ -75,7 +75,7 @@ cd samples/vision/pp_liteseg/conversion
 python3 prepare_calibration.py --src /data/cityscapes/calibration_images --out calibration_data_rgb_f32_1024x512 --width 1024 --height 512 --num 50 --seed 0
 ```
 
-每个张量 6,291,456 字节。--num 默认 50，--seed 默认 0；递归收集 jpg/jpeg/png/bmp，排序后按需确定性无放回抽样。唯一文件名保留不同目录下同名图片。输出目录或同级 manifest 已存在时拒绝执行，新一轮须选择新目录。选中图片无法解码时直接失败，不静默减少数据集。同级 `calibration_data_rgb_f32_1024x512.manifest.json` 记录 shape、seed 和输入输出摘要，编译目录仅包含原始张量。这些检查验证数据准备，不证明校准质量。
+每个张量 6,291,456 字节。--num 默认 50，--seed 默认 0；递归收集 jpg/jpeg/png/bmp，排序后按需确定性无放回抽样。唯一文件名保留不同目录下同名图片。输出目录或同级清单已存在时拒绝执行，新一轮须选择新目录。选中图片无法解码时返回错误。同级 `calibration_data_rgb_f32_1024x512.manifest.json` 记录形状、seed 和输入输出摘要，编译目录仅包含原始张量。校准图片应能代表实际应用的输入分布。
 
 <a id="compile"></a>
 ## 编译
@@ -105,7 +105,7 @@ hrt_model_exec perf --model_file model/pp_liteseg_stdc1_cityscapes_1024x512_nv12
 <a id="artifacts"></a>
 ## 产物
 
-预期产物链：训练.pdparams → 推理 model.json/model.pdiparams → 原始／简化 ONNX → OE 日志和 *_output BIN → 本地验证报告。为本地编译模型保留 checkpoint、PaddleSeg 版本、环境版本、校准 manifest、模型摘要和日志。不要因文件名相同就覆盖发布模型。自定义文件可显式指定 runtime asset-id 请求相同张量契约，但未知的发布摘要不能认证文件来源。
+预期产物链：训练.pdparams → 推理 model.json/model.pdiparams → 原始／简化 ONNX → OE 日志和 *_output BIN → 本地验证报告。为本地编译模型保留权重文件、PaddleSeg 版本、环境版本、校准清单、模型摘要和日志。不要因文件名相同就覆盖发布模型。自定义文件可显式指定运行时 asset-id 请求相同张量契约，但未知的发布摘要不能认证文件来源。
 
 <a id="known-gaps"></a>
 ## 补充准备

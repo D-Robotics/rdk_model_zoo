@@ -19,7 +19,6 @@ lanenet/
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 └── README_cn.md  # 中文说明
 ```
@@ -30,7 +29,7 @@ lanenet/
 | 目标 | 已发布模型 | Python / C++ | 状态 |
 | --- | --- | --- | --- |
 | S100 | `s100/lanenet256x512.hbm` | Python 和 C++ | supported |
-| X5 / S100P / S600 | 无 LaneNet 资产 | 显式拒绝 | 不静默回退至 S100 |
+| X5 / S100P / S600 | 无 LaneNet 资产 | 显式拒绝 | 无对应制品 |
 
 使用 S100 对应的发布 HBM。`auto` 选择 S100；实际推理检查当前板卡身份。
 
@@ -78,13 +77,13 @@ bash samples/vision/lanenet/runtime/cpp/run.sh --target s100 --build --output ou
 
 嵌入 PNG 将特征裁剪至 [0,1]，乘 255 后舍入。它明确替换源 Python 的溢出回绕/截断显示行为，原始嵌入不变。二值 PNG 用 0/255 显示标签。不输出聚类结果、车道 ID、跟踪、曲线拟合、数据集精度或延迟。
 
-以下图片逐字节保留自原 S sample：
+以下图片逐字节保留自原 S 示例：
 
-| 源记录 Python 嵌入显示图 | 源记录 Python 二值显示图 |
+| 参考记录 Python 嵌入显示图 | 参考记录 Python 二值显示图 |
 | --- | --- |
 | ![源嵌入显示](test_data/instance_pred.png) | ![源二值显示](test_data/binary_pred.png) |
 
-另保留[源原生嵌入显示图](test_data/cpp_instance_pred.png)和[原生二值显示图](test_data/cpp_binary_pred.png)。显示差异本身不能证明原始数值不同，也不能证明已分离出不同车道实例。
+另保留[源原生嵌入显示图](test_data/cpp_instance_pred.png)和[原生二值显示图](test_data/cpp_binary_pred.png)。数值比较使用原始嵌入数组；车道实例需要进一步聚类。
 
 车道实例 ID 与拟合曲线需对嵌入执行聚类及曲线拟合。显示颜色本身不代表车道实例身份。
 
@@ -98,4 +97,4 @@ bash samples/vision/lanenet/runtime/cpp/run.sh --target s100 --build --output ou
 <a id="license"></a>
 ## 许可证
 
-本 sample 遵循仓库 [Apache-2.0 许可证](../../../LICENSE)。算法参考、上游 checkpoint 和外部下载资产遵循各自适用条款；授权与来源以其发布方记录为准。
+本示例遵循仓库 [Apache-2.0 许可证](../../../LICENSE)。算法参考、上游权重文件和外部下载资产遵循各自适用条款；授权与来源以其发布方记录为准。

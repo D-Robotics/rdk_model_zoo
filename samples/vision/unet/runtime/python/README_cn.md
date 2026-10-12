@@ -56,7 +56,7 @@ python3 samples/vision/unet/runtime/python/main.py --dry-run --target x5 --varia
 | `--variant` | choice | `None` | 默认 resnet18，或由精确 asset-id 推导 |
 | `--asset-id` | str | `None` | x5:unet:<filename>，必须与 variant 一致 |
 | `--model-path` | Path | `None` | 默认 model/ 下所选文件；外部副本必须给 asset-id |
-| `--test-img` | Path | `samples/vision/unet/test_data/2007_000033.jpg` | 默认解析为 sample 绝对路径，BGR 图片 |
+| `--test-img` | Path | `samples/vision/unet/test_data/2007_000033.jpg` | 默认解析为示例绝对路径，BGR 图片 |
 | `--mask-save-path` | Path | `unet_mask.png` | 类别 ID PNG |
 | `--img-save-path` | Path | `unet_result.png` | 彩色叠加图 |
 | `--report-path` | Path | `unet_runtime_report.json` | JSON 报告 |
@@ -66,12 +66,12 @@ python3 samples/vision/unet/runtime/python/main.py --dry-run --target x5 --varia
 | `--dry-run` | flag | `false` | 仅解析，不加载/下载模型 |
 | `--list-models` | flag | `false` | 只读清单，与 dry-run 互斥 |
 
-`--help` / `-h` 输出帮助。相对输出路径基于 cwd；同名结果会被替换。Dry-run 只做选择解析；文件、实际 metadata 与 SDK 校验在加载时进行。
+`--help` / `-h` 输出帮助。相对输出路径基于 cwd；同名结果会被替换。Dry-run 只做选择解析；文件、实际元数据与 SDK 校验在加载时进行。
 
 <a id="results"></a>
 ## 结果
 
-掩码固定为 512×512 uint8、VOC ID 0..20；彩色图同分辨率，以 `alpha` 混合输入缩放图和 VOC 调色板。不自动还原原图尺寸。JSON 包含 target、variant、asset_id、runtime_version、model_path、image_path、metadata、mask_shape、classes_present、elapsed_ms 和输出路径。计时覆盖三阶段，不是纯 BPU benchmark。
+掩码固定为 512×512 uint8、VOC ID 0..20；彩色图同分辨率，以 `alpha` 混合输入缩放图和 VOC 调色板。不自动还原原图尺寸。JSON 包含目标板卡、variant、asset_id、runtime_version、model_path、image_path、元数据、mask_shape、classes_present、elapsed_ms 和输出路径。计时覆盖三阶段，不是纯 BPU benchmark。
 
 <a id="integration-example"></a>
 ## 集成
@@ -96,11 +96,11 @@ print(mask.shape, mask.dtype)  # (512, 512), uint8
 <a id="stage-io"></a>
 ## 阶段 I/O / Stage IO
 
-前处理接受非空 BGR uint8 HWC，INTER_LINEAR 直接缩放至 512×512，再转换为连续 packed NV12 uint8 `(1,768,512,1)`。metadata 可表达逻辑 NCHW `(1,3,512,512)`、NHWC `(1,512,512,3)` 或物理 packed 形状，dtype 必须 NV12。每次返回独立冻结 context，记录原始尺寸。
+前处理接受非空 BGR uint8 HWC，INTER_LINEAR 直接缩放至 512×512，再转换为连续 packed NV12 uint8 `(1,768,512,1)`。元数据可表达逻辑 NCHW `(1,3,512,512)`、NHWC `(1,512,512,3)` 或物理 packed 形状，数据类型必须 NV12。每次返回独立冻结上下文，记录原始尺寸。
 
-infer 仅返回经 runner 校验的原始 logits，不做反量化或 argmax。postprocess 接受 `(1,21,512,512)` 或 `(1,512,512,21)`；整数需有效 SCALE 参数，float32 不重复反量化，即使带遗留 descriptor。随后按类别 argmax，平局取最小 ID。输出为模型分辨率，因此后处理无需 context；没有 softmax、自动拉回原图或文件 IO。既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
+infer 仅返回经推理执行器校验的原始 logits，不做反量化或 argmax。postprocess 接受 `(1,21,512,512)` 或 `(1,512,512,21)`；整数需有效 SCALE 参数，float32 不重复反量化，即使带遗留 descriptor。随后按类别 argmax，平局取最小 ID。输出为模型分辨率，因此后处理无需上下文；没有 softmax、自动拉回原图或文件 IO。`pre_process`、`forward`、`post_process` 分别是 `preprocess`、`infer`、`postprocess` 的别名。
 
 <a id="troubleshooting"></a>
 ## 排查
 
-模型缺失：先显式下载。哈希不符：核对发布文件，不绕过校验；自行编译文件使用 evaluator 的 --model，定制文件名同时给 --backbone。S100/S100P/S600 没有本样例制品，不能静默回退 X5。图片必须非空 uint8 三通道；metadata 不符需核对导出/制品，不更改类别数或尺寸来强行运行。
+模型缺失：先显式下载。哈希不符：核对发布文件，不绕过校验；自行编译文件使用 evaluator 的 --model，定制文件名同时给 --backbone。S100/S100P/S600 没有本样例制品，仅支持 X5。图片必须非空 uint8 三通道；元数据不符需核对导出/制品，不更改类别数或尺寸来强行运行。

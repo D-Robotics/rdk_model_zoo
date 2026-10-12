@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="dataset"></a>
 ## Dataset
 
-Cityscapes defines the 19-class task, but no labeled validation split or dataset runner is supplied by the source. segmentation.png is a smoke input and result.jpg a source-recorded illustration. Dataset evaluation needs licensed images/labels, explicit train-ID mapping, ignored-label policy and a recorded split.
+Cityscapes defines the 19-class task, but no labeled validation split or dataset runner is supplied by the source. segmentation.png is a example input and result.jpg a source-recorded illustration. Dataset evaluation needs licensed images/labels, explicit train-ID mapping, ignored-label policy and a recorded split.
 
 <a id="directory"></a>
 ## Directory structure

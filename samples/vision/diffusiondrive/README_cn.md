@@ -19,7 +19,6 @@ diffusiondrive/
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 └── README_cn.md  # 中文说明
 ```
@@ -79,7 +78,7 @@ S100P 的下载和推理均选择 `--target s100p`，它使用独立 HBM，修�
 
 可视化组合相机全景、BEV 语义与 LiDAR 栅格，橙色轨迹、红色筛选后 Agent、蓝色自车。灰色代表道路，大面积灰色不自动意味着色表错误。坐标和类别详情见[测试数据](test_data/README_cn.md)。
 
-S600 参考可视化（源记录）：
+S600 参考可视化（参考记录）：
 
 ![参考 S600 DiffusionDrive 显示](test_data/reference_result.png)
 
@@ -89,7 +88,7 @@ S600 参考可视化（源记录）：
 | 参考 case_073 | 参考 case_099 |
 | ![大道](test_data/case_073/result.png) | ![宽阔路口](test_data/case_099/result.png) |
 
-六组输入/参考附有 S600 可视化图片。[评估说明](evaluator/README_cn.md#reference-results)列出 S100P/S600 精度与性能，含单线程延迟、双线程总吞吐和 S100P 五案例均值；[测试数据说明](test_data/README_cn.md)给出 S600 五案例结果。源记录条件：数值对照使用 case_000，profiling 使用 case_017；源记录所有分段 CPU 0.0 ms、全部 BPU 执行。
+六组输入/参考附有 S600 可视化图片。[评估说明](evaluator/README_cn.md#reference-results)列出 S100P/S600 精度与性能，含单线程延迟、双线程总吞吐和 S100P 五案例均值；[测试数据说明](test_data/README_cn.md)给出 S600 五案例结果。参考记录条件：数值对照使用 case_000，profiling 使用 case_017；参考记录所有分段 CPU 0.0 ms、全部 BPU 执行。
 
 输入包括三相机 RGB 全景、LiDAR BEV 直方图、自车状态和显式扩散噪声。推理前准备这些 NAVSIM 特征。输出可用于轨迹可视化与浮点参考比较；完整 NAVSIM 得分需使用其数据集评估器。
 

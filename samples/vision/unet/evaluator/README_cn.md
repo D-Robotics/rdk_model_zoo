@@ -3,23 +3,23 @@
 # UNet 精度评测
 
 `eval_unet.py` 是五个 UNet ResNet 变体的统一精度入口，可以使用同一份
-Pascal VOC 图像与标签清单评测 PyTorch checkpoint、浮点 ONNX 或 RDK X5
+Pascal VOC 图像与标签清单评测 PyTorch 权重文件、浮点 ONNX 或 RDK X5
 `bayes-e` `.bin` 模型。
 
-评测脚本会把 RGB 图像和类别索引 mask 缩放到 `512x512`，保留 VOC 忽略标签
+评测脚本会把 RGB 图像和类别索引掩码缩放到 `512x512`，保留 VOC 忽略标签
 `255`，对 21 类 logits 执行 `argmax`，并输出 mIoU、Pixel Accuracy 和每类
-IoU。每次运行都会把模型和 manifest 哈希写入新的 JSON 报告。
+IoU。每次运行都会把模型和清单哈希写入新的 JSON 报告。
 
 <a id="dataset"></a>
 ## Manifest 格式
 
-每个非空行包含一个绝对图像路径和一个 mask 路径，中间使用单个 Tab 分隔：
+每个非空行包含一个绝对图像路径和一个掩码路径，中间使用单个 Tab 分隔：
 
 ```text
 /data/VOC2012/JPEGImages/2007_000033.jpg\t/data/VOC2012/SegmentationClass/2007_000033.png
 ```
 
-VOC 调色板 mask 必须按类别索引读取，评测前不能转换为灰度图。
+VOC 调色板掩码必须按类别索引读取，评测前不能转换为灰度图。
 
 <a id="directory"></a>
 ## 目录结构
@@ -34,23 +34,23 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-公共依赖为 Python 3.10+、NumPy、Pillow；PyTorch/ONNX 后端分别另需 torch/onnxruntime。X5 后端另需 OpenCV、PyYAML、配套 SDK，并校验实际 X5 身份与 OS 版本；它复用统一 runtime 三阶段。训练/ONNX 后端保留原始浮点输入规则。
+公共依赖为 Python 3.10+、NumPy、Pillow；PyTorch/ONNX 后端分别另需 torch/onnxruntime。X5 后端另需 OpenCV、PyYAML、配套 SDK，并校验实际 X5 身份与 OS 版本；它复用统一运行时三阶段。训练/ONNX 后端保留原始浮点输入规则。
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
 | --model | required |.pth /.onnx /.bin |
-| --manifest | required | image TAB mask absolute path pairs |
+| --manifest | required | image TAB 掩码 absolute path pairs |
 | --report | required | new JSON path; existing file rejected |
 | --backend | auto | suffix detection or pytorch/onnx/x5 |
 | --backbone | None | required for.pth or custom-named.bin |
-| --limit | None | first N manifest entries; positive |
+| --limit | None | first N 清单 entries; positive |
 | --progress-every | 50 | progress interval |
 | --min-miou | 0.0 | write report and return 2 if below threshold |
 
 标准发布文件名可推导骨干；自编译自定义文件名须传 --backbone，和文件名冲突时拒绝。--model 是显式评估输入，不验证发布哈希；报告保存实际模型 digest，不能把这条路径当作已认证下载。
 
 <a id="command"></a>
-## PyTorch checkpoint
+## PyTorch 权重文件
 
 在装有 PyTorch 和 Pillow 的开发机上执行：
 
@@ -98,12 +98,12 @@ python3 eval_unet.py \
 <a id="metrics"></a>
 ## 指标
 
-mIoU 对 union>0 的类别平均；像素准确率为非 ignore 像素中预测正确比例；class_iou 给出 21 类 IoU。标签 255 忽略，图像与掩码均缩放至 512×512（RGB 双线性、类别 mask 最近邻）。与原图分辨率评测不可直接比较；limit 子集也不能替代完整 1449 张记录。
+mIoU 对 union>0 的类别平均；像素准确率为非 ignore 像素中预测正确比例；class_iou 给出 21 类 IoU。标签 255 忽略，图像与掩码均缩放至 512×512（RGB 双线性、类别掩码最近邻）。与原图分辨率评测不可直接比较；limit 子集也不能替代完整 1449 张记录。
 
 <a id="outputs"></a>
 ## 输出
 
-新 JSON 保存后端、模型/manifest 哈希、样本数量和 input_contract；runtime 保存环境/模型 metadata，metrics 保存 miou、pixel_accuracy 和 class_iou；另有 min_miou、passed 和 elapsed_seconds。不序列化内部混淆矩阵。低于门槛仍写报告后退出 2，不能只看文件存在就认定成功。
+新 JSON 保存后端、模型/manifest 哈希、样本数量和 input_contract；运行时保存环境/模型元数据，metrics 保存 miou、pixel_accuracy 和 class_iou；另有 min_miou、passed 和 elapsed_seconds。不序列化内部混淆矩阵。低于门槛仍写报告后退出 2，不能只看文件存在就认定成功。
 
 <a id="reference-results"></a>
 ## 参考结果
@@ -113,4 +113,4 @@ mIoU 对 union>0 的类别平均；像素准确率为非 ignore 像素中预测�
 <a id="boundaries"></a>
 ## 适用范围
 
-评估前准备完整数据集、checkpoint、ONNX 和 X5 BIN。PyTorch 使用严格权重加载，ONNX 接收单输入并返回单输出。运行时耗时包含预处理、推理和后处理。
+评估前准备完整数据集、权重文件、ONNX 和 X5 BIN。PyTorch 使用严格权重加载，ONNX 接收单输入并返回单输出。运行时耗时包含预处理、推理和后处理。

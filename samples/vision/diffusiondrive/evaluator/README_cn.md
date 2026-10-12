@@ -7,9 +7,9 @@
 <a id="dataset"></a>
 ## 参考数据
 
-保留六组确定性输入/参考对：默认 `reference_inputs.npz` / `reference_outputs.npz`，以及五个 `case_*` 目录。形状、场景和源记录图片见[测试数据说明](../test_data/README_cn.md)。每份参考含 float32 的 `trajectory`、`agent_states`、`agent_labels`（logits）和 `bev_semantic_map`（logits）。它们是模型输出，不是数据集标签。
+保留六组确定性输入/参考对：默认 `reference_inputs.npz` / `reference_outputs.npz`，以及五个 `case_*` 目录。形状、场景和参考记录图片见[测试数据说明](../test_data/README_cn.md)。每份参考含 float32 的 `trajectory`、`agent_states`、`agent_labels`（logits）和 `bev_semantic_map`（logits）。它们是模型输出，不是数据集标签。
 
-噪声是显式输入。比较时应使用相同输入归档与固定噪声，重新生成噪声会改变规划问题。完整 NAVSIM 评估还需要本 sample 未提供的场景日志、传感器数据、地图与指标缓存。
+噪声是显式输入。比较时应使用相同输入归档与固定噪声，重新生成噪声会改变规划问题。完整 NAVSIM 评估还需要本示例未提供的场景日志、传感器数据、地图与指标缓存。
 
 <a id="directory"></a>
 ## 目录结构
@@ -63,7 +63,7 @@ python3 -m samples.vision.diffusiondrive.evaluator.compare_outputs --reference-n
 
 MAE 和最大误差使用 float64 累积。余弦使用展平后的 float64 向量；任一范数为零时 JSON 记为 `null` 并明确未定义，不通过给分母加小量将其当作普通分数。非零向量的有限结果裁剪到 [-1,1]，处理舍入误差。参考 sigmoid 将 logits 裁剪至 [-60,60]。
 
-BEV 指标包括像素一致率、类别分布、各类 IoU，以及在任一预测中出现的类别（含背景）的宏平均 IoU。两侧都不存在的类别不参与平均。少量稀有静态物体像素可明显影响宏平均 IoU，却几乎不改变像素一致率，应同时保留两者。Agent mask 只做契约检查，不评分：单个归档无法确定阈值设置，因此必须保留运行报告。
+BEV 指标包括像素一致率、类别分布、各类 IoU，以及在任一预测中出现的类别（含背景）的宏平均 IoU。两侧都不存在的类别不参与平均。少量稀有静态物体像素可明显影响宏平均 IoU，却几乎不改变像素一致率，应同时保留两者。Agent 掩码只做契约检查，不评分：单个归档无法确定阈值设置，因此必须保留运行报告。
 
 <a id="outputs"></a>
 ## 报告与证据
@@ -88,7 +88,7 @@ JSON 保存参考与候选文件的路径、SHA-256、张量与 BEV 指标、零
 | 双线程总吞吐 | 71.109 FPS | 143.767 FPS |
 | CPU 推理时间 | 0.0 ms | 0.0 ms |
 
-源 S100P 五案例均值：轨迹余弦 0.999785、Agent 状态余弦 0.997986、BEV 余弦 0.998799、像素一致率 0.955664、平均 IoU 0.819837。这些数值是源记录的对照结果，不是门槛，也不是标注数据集精度；源记录模型全部在 BPU 上执行。
+源 S100P 五案例均值：轨迹余弦 0.999785、Agent 状态余弦 0.997986、BEV 余弦 0.998799、像素一致率 0.955664、平均 IoU 0.819837。这些数值是参考记录的对照结果，不是门槛，也不是标注数据集精度；参考记录模型全部在 BPU 上执行。
 
 HRT profiling 中 `--thread_num` 表示并发提交任务的主机线程数，不是 CPU 核数；双线程总吞吐不是单请求延迟，不能用倒数换算。源 S600 各案例结果及稀有类别解释保留于测试数据说明。
 

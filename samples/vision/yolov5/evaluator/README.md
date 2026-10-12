@@ -42,15 +42,7 @@ The utility runs the pinned original implementation and this sample's implementa
 
 ### Native C++ implementation comparison (board)
 
-The Python command above drives the Python runtimes and cannot serve as final
-evidence for the C++ deliverables, whose preprocessing may differ. The native
-comparison under `evaluator/native/` runs the FIXED C++ sources themselves
-(X5 `main.cc` at `ac115717197920355fc390bb04299b20e6436864`, S
-`src/yolov5.cpp`/`src/main.cpp` at `380e1a2bf42041af54be6f34935e50197cfadff9`,
-SHA-pinned and fail-closed) as an instrumented copy that only adds read-only
-observation points; the original preprocessing, inference, decoding and NMS
-are untouched, and the unified decoder is never used as the legacy side. Each
-side runs its own complete inference on the same board, model and image.
+Use `evaluator/native/` to compare the C++ implementations on the same board, model, image and thresholds. The reference uses X5 `main.cc` at `ac115717197920355fc390bb04299b20e6436864` or S `src/yolov5.cpp`/`src/main.cpp` at `380e1a2bf42041af54be6f34935e50197cfadff9`. It captures each implementation’s preprocessing, raw outputs and decoded detections.
 
 On the target board, with the repo checked out and the model downloaded
 (X5 default: `yolov5s_tag_v2.0_detect_640x640_bayese_nv12.bin` with
@@ -119,35 +111,7 @@ python3 samples/vision/yolov5/evaluator/native/compare_native.py \
   --output /tmp/yolov5-native-comparison
 ```
 
-The comparison verifies BOTH sides' runner records (real exit code, argv,
-cwd, UTC, pre==post binary/model/image hashes, and the unified side's own
-record bound to the manifest binary hash) against the observer's
-capture-time hashes, the attested binaries and the unified manifest's own
-hashes and payload digests before any numerical stage. Board identity uses
-the repository's EXACT alias registry (docs/release/platforms.json, the same
-contract as utils/py_utils/platforms.py): S100P is a distinct target from
-s100, unknown strings such as S100Whatever are not identity, and X5 boards
-resolve through their socinfo names (X5U/X5H/X5M). A failed instrumentation
-audit never runs the source binary at all — run_capture.py aborts first and
-persists the failure record; the audit check validates the full protocol
-(schema, target, pinned commit, the exact pinned source set with every
-anchor matched once, the complete per-target closure, the observer header
-and CMake hashes). Structural requirements are enforced on BOTH sides —
-the target-appropriate input count, exactly three uniquely-shaped output
-heads and a complete shape bijection, matching dtypes and quantization
-kinds/axis/scale lengths (never masked by a float cast), finite values, and
-mandatory per-payload size+SHA on the unified manifest. Layout decoding
-additionally rejects channel strides that overlap (stride[3] < itemsize) or
-misalign (stride[3] not a multiple of itemsize) elements and pixel strides
-below channels*stride[3], while still decoding the real supported families
-(including channel padding at an aligned stride). Thresholds and scale
-descriptors compare by float32 BITS (native semantics): 0.45f serialized as
-0.44999998807907104 and the manifest string "0.450000" are the same value;
-different bits fail. Final-image coordinates (detections_original) are
-REQUIRED from both sides — a missing or one-sided capture fails the comparison
-rather than passing with a disclaimer. Layout decoding accepts only the two
-proven families (uniform-pitch strided, exact-size compact) and rejects
-anything else instead of guessing.
+The comparison requires matching target identities, tensor counts and shapes, dtypes, quantization parameters, thresholds and original-image detections. Input/output payloads, binaries, models and images are checked against their SHA-256 records. Supported layouts are uniform-pitch strided and exact-size compact arrays. Thresholds and scale descriptors are compared as float32 values; malformed layouts or missing captures return an error. Keep both process-record directories, payloads and `instrumentation-audit.json` together when copying results.
 
 The comparison restores logical arrays from each side's recorded physical
 layout (strides/dtype), so padded layouts compare correctly while
@@ -174,7 +138,7 @@ Inputs are exact; raw output arrays use shape/dtype checks and `rtol=0, atol=1e-
 <a id="outputs"></a>
 ## Outputs
 
-Each run directory contains `legacy_*` and `unified_*` `.npy` arrays plus `comparison.json`. Failed preload or mismatch runs retain an error/failed record and return nonzero; no mismatch is converted to pass. The arrays preserve all captured input/output tensors and decoded result fields.
+Each run directory contains `legacy_*` and `unified_*` `.npy` arrays plus `comparison.json`. Failed preload or mismatch runs retain an error/failed record and return nonzero; mismatches return a nonzero status. The arrays preserve all captured input/output tensors and decoded result fields.
 
 <a id="reference-results"></a>
 ## Reference results
@@ -248,8 +212,6 @@ Floating-point/fixed-point mAP: 50-95 accuracy calculated using pycocotools, fro
 4. On post-processing: At present, the post-processing of Python reconstruction on X5 only takes about 12ms from a single core and a single thread in serial, that is to say, it only takes 2 CPU cores (200% CPU occupancy, and the maximum CPU occupancy is 800%), and 166 frames of image post-processing can be completed every minute, and post-processing will not constitute a bottleneck.
 
 
-
-
 ## Additional reference measurements
 
 Each table retains its published model, board and measurement conditions. Measurements from different configurations are separate reference sets.
@@ -273,7 +235,7 @@ Each table retains its published model, board and measurement conditions. Measur
 
 Prepare the model and input images before comparison. X5 uses OpenCV XYXY-to-NMSBoxes; S uses class-wise XYXY NMS. Compare each target with its matching reference implementation.
 
-The source runner archives the exact pre-execution audit bytes as `instrumentation-audit.json` with `audit_file` and `audit_sha256` in the run record. It writes the copy after the child finishes to preserve the observer's empty-directory requirement. Keep the whole source capture and unified process-record directories: comparison rejects a missing or changed audit and missing unified stdout/stderr, and includes the audit plus both sides' logs under `originals/` in its output.
+Keep both capture directories, `instrumentation-audit.json` and stdout/stderr logs together. The comparison checks these files and copies them into `originals/` in its output directory.
 
 
 ### X3 and X3 Module COCO measurement set (Chinese source)

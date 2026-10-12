@@ -7,7 +7,7 @@ English | [简体中文](README_cn.md)
 ## Dataset
 
 - Dataset: COCO validation is the source reference; no version, annotations, or preparation script is included.
-- Smoke input: `samples/vision/fcos/test_data/bus.jpg` is one bundled BGR image, not a COCO evaluation set.
+- Example input: `samples/vision/fcos/test_data/bus.jpg` is one bundled BGR image, not a COCO evaluation set.
 
 <a id="directory"></a>
 ## Directory structure

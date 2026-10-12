@@ -24,7 +24,7 @@ conversion/
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-五份原样源 YAML 均面向 X5 `march: bayes-e`。构建时记录使用的 OE 版本。
+五份 YAML 均面向 X5，使用 `march: bayes-e`。构建时记录使用的 OE 版本。
 
 | Variant | Config | Required ONNX | Published filename |
 | --- | --- | --- | --- |
@@ -123,7 +123,7 @@ if __name__ == "__main__":
 <a id="calibration"></a>
 ## 校准
 
-所有配置读取 `./calibration_data_rgb_f32`，类型 float32，校准算法 default，训练输入 RGB/NCHW、运行输入 NV12。mean 为 123.675/116.28/103.53，scale 为 0.01712475/0.017507/0.01742919。缺少校准图选择、数量、预处理脚本和产物；这属于前提缺口，不是可执行准备配方。须确认浮点数据与图和 YAML 归一化一致，不能把 NV12 目录改名冒充 RGB 校准数据。
+各配置读取 `./calibration_data_rgb_f32`，数据类型为 float32，校准算法为 default，训练输入为 RGB/NCHW，运行输入为 NV12。mean 为 123.675/116.28/103.53，scale 为 0.01712475/0.017507/0.01742919。需自行选择校准图片并生成符合图和 YAML 归一化要求的 RGB 浮点数据；本目录未提供校准预处理脚本或数据。
 
 <a id="compile"></a>
 ## 编译
@@ -137,7 +137,7 @@ hb_mapper checker --model-type onnx --march bayes-e --model ./repghostnet_100.on
 hb_mapper makertbin --model-type onnx --config RepGhost_100.yaml
 ```
 
-所有配置的 working_dir 为 `RepGhost_224x224_nv12`，输出前缀也为 `RepGhost_224x224_nv12`，均不含变体。预期 bin 为 `RepGhost_224x224_nv12/RepGhost_224x224_nv12.bin`。各变体必须隔离工作目录或在下一次构建前保留输出。源编译选项为 latency/O3 并启用 dump_calibration_data，不能让多个变体并发写同一目录。
+所有配置的 working_dir 为 `RepGhost_224x224_nv12`，输出前缀也为 `RepGhost_224x224_nv12`，均不含变体。预期 bin 为 `RepGhost_224x224_nv12/RepGhost_224x224_nv12.bin`。各变体必须隔离工作目录或在下一次构建前保留输出。编译选项为 latency/O3 并启用 dump_calibration_data，不能让多个变体并发写同一目录。
 
 <a id="validation"></a>
 ## 转换后验证
@@ -152,14 +152,14 @@ python3 samples/vision/repghost/runtime/python/main.py --target x5 \
   --test-img samples/vision/repghost/test_data/ibex.JPEG
 ```
 
-引用只选择契约，不证明重建字节等于发布字节。单独记录重建哈希与来源，对照源实现并评估量化精度后再交付。
+选择与模型匹配的目标和引用，再将其输出和数据集精度与浮点模型比较。
 
 <a id="artifacts"></a>
 ## 产物
 
-逐变体发布文件名见上表，下载落在 `samples/vision/repghost/model/`。编译在工作目录生成共同基名；移动已验证构建时须保留变体身份，单纯改名不能证明图等价或精度一致。
+各变体的部署文件名见上表，下载目录为 `samples/vision/repghost/model/`。编译结果使用相同基名；为各变体使用独立工作目录，并按对应的部署文件名保存。
 
 <a id="known-gaps"></a>
 ## 补充准备
 
-每个变体选择对应的 PyTorch/timm 权重并记录其修订与摘要。在对应 YAML 旁导出 RGB/NCHW 模型图；由于 `input_shape` 和 `input_name` 为空，应检查实际输入输出 metadata。按 float32 RGB、`cal_data_type: float32`、`calibration: default`、mean `123.675/116.28/103.53` 与 scale `0.01712475/0.017507/0.01742919` 准备 `./calibration_data_rgb_f32`。每份 YAML 都写入 `RepGhost_224x224_nv12/RepGhost_224x224_nv12.bin`，各变体应使用独立工作区构建。
+每个变体选择对应的 PyTorch/timm 权重并记录其修订与摘要。在对应 YAML 旁导出 RGB/NCHW 模型图；由于 `input_shape` 和 `input_name` 为空，应检查实际输入输出 元数据。按 float32 RGB、`cal_data_type: float32`、`calibration: default`、mean `123.675/116.28/103.53` 与 scale `0.01712475/0.017507/0.01742919` 准备 `./calibration_data_rgb_f32`。每份 YAML 都写入 `RepGhost_224x224_nv12/RepGhost_224x224_nv12.bin`，各变体应使用独立工作区构建。

@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# MODNet Python runtime
+# MODNet Python 运行时
 
 <a id="overview"></a>
 ## Python 推理
@@ -25,7 +25,7 @@ python/
 <a id="environment"></a>
 ## 环境
 
-在带有 `hbm_runtime` 的 RDK X5 系统镜像上使用 Python 3、NumPy 和 OpenCV。runtime 在模型文件和板卡检查通过后才懒加载板端 SDK；`--help`、`--list-models`、`--dry-run` 不加载 SDK。绑定模型必须暴露 float32 `(1,3,512,512)` 输入和 float32 `(1,1,512,512)` 输出。
+在带有 `hbm_runtime` 的 RDK X5 系统镜像上使用 Python 3、NumPy 和 OpenCV。运行时在模型文件和板卡检查通过后才懒加载板端 SDK；`--help`、`--list-models`、`--dry-run` 不加载 SDK。绑定模型必须暴露 float32 `(1,3,512,512)` 输入和 float32 `(1,1,512,512)` 输出。
 
 <a id="usage"></a>
 ## 使用
@@ -51,18 +51,18 @@ python3 -m samples.vision.modnet.runtime.python.main --target x5 \
 | `--bg-img` | `samples/vision/modnet/test_data/bg.jpg` | 可选 BGR 背景；文件缺失则跳过合成 |
 | `--matte-save-path` | `samples/vision/modnet/test_data/matte.png` | uint8 灰度输出 |
 | `--img-save-path` | `samples/vision/modnet/test_data/result.png` | 合成图输出 |
-| `--priority` | `0` | runtime 调度优先级 |
+| `--priority` | `0` | 运行时调度优先级 |
 | `--bpu-cores` | `[0]` | BPU 核索引 |
 | `--ref-size` | `512` | 固定编译输入尺寸；其他值拒绝 |
-| `--list-models` | `false` | 不加载 SDK，列出 manifest 事实 |
+| `--list-models` | `false` | 不加载 SDK，列出清单事实 |
 | `--dry-run` | `false` | 不加载 SDK 或模型，打印契约 |
 
-`--list-models` 与 `--dry-run` 互斥。用户或 runtime 错误返回 `2`。
+`--list-models` 与 `--dry-run` 互斥。用户或运行时错误返回 `2`。
 
 <a id="results"></a>
 ## 结果
 
-`MODNetMatting.postprocess` 返回原图几何的 owned uint8 灰度 matte。可选合成使用源线性 alpha 公式并写出 BGR 图像。raw forward 结果保持 float32 `[0,1]`，runner 不保存也不再归一化。
+`MODNetMatting.postprocess` 返回原图几何的独立持有的 uint8 灰度 matte。可选合成使用源线性 alpha 公式并写出 BGR 图像。raw 前向推理结果保持 float32 `[0,1]`，推理执行器不保存也不再归一化。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -96,16 +96,16 @@ print(explicit_matte.shape, composed_result.shape)
 <a id="stage-io"></a>
 ## 三阶段 I/O
 
-- `preprocess(image)` 校验 BGR HWC，执行 BGR→RGB、`(pixel-127.5)/127.5`、长边 512 resize 和居中 zero padding，返回含 `tensors, context` 的 `PreparedInput`。
-- `infer(tensors)` 校验绑定 tensor，返回 owned raw float32 `(1,1,512,512)` matte。
+- `preprocess(image)` 校验 BGR HWC，执行 BGR→RGB、`(pixel-127.5)/127.5`、长边 512 缩放和居中 zero padding，返回含 `tensors, context` 的 `PreparedInput`。
+- `infer(tensors)` 校验绑定张量，返回独立持有的 raw float32 `(1,1,512,512)` matte。
 - `postprocess(raw, context)` 将源 `[0,1]` matte 转 uint8、去 padding 并恢复原图几何。
-- `predict(image)` 串联三个阶段；geometry 放在该次调用的冻结 context 中，不放入可变 task 字段。
-- 既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
+- `predict(image)` 串联三个阶段；geometry 放在该次调用的冻结上下文中，不放入可变 task 字段。
+- `pre_process`、`forward`、`post_process` 分别是 `preprocess`、`infer`、`postprocess` 的别名。
 
 <a id="troubleshooting"></a>
 ## 故障排查
 
 - 没有精确 `--asset-id x5:modnet:modnet_512x512_rgb.bin` 的模型路径会被拒绝。
 - 手工模型缺失或输入不可读时，在板端推理前返回 `2`。
-- metadata 名称、shape 或 dtype 错误会被拒绝；不会用 runtime cast 掩盖不匹配。
+- 元数据名称、形状或数据类型错误会被拒绝，请检查对应模型的输入输出协议。
 - `--ref-size` 必须保持 512，因为没有发布其他编译配置。

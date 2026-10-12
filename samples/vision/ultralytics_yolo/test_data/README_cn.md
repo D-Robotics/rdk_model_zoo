@@ -61,7 +61,7 @@ Python CLI 自动加载这些表。`main.py` 对 detect/seg/pose 默认使用 `c
 
 ### ultralytics_dota_classes.names
 
-15 行，命名 YOLO26 OBB 模型的 15 个输出列，顺序即该模型自身的输出顺序：`plane` 0、`ship` 1、`storage-tank` 2、`baseball-diamond` 3、`tennis-court` 4、`basketball-court` 5、`ground-track-field` 6、`harbor` 7、`bridge` 8、`large-vehicle` 9、`small-vehicle` 10、`helicopter` 11、`roundabout` 12、`soccer-ball-field` 13、`swimming-pool` 14。DOTA 原生标注没有官方数字类别 ID 表；这套编号只是模型输出顺序，别无他意。它与 [`datasets/dotav1/dota_classes.names`](../../../../datasets/dotav1/README.md)（本仓固定列表）的顺序**不同**：两者仅在索引 0 相同。用其中一份去命名按另一份顺序工作的输出，会静默错标 15 类中的 14 类。完整顺序警告见 [DOTA 数据集指南](../../../../datasets/dotav1/README.md)。
+15 行，命名 YOLO26 OBB 模型的 15 个输出列，顺序即该模型自身的输出顺序：`plane` 0、`ship` 1、`storage-tank` 2、`baseball-diamond` 3、`tennis-court` 4、`basketball-court` 5、`ground-track-field` 6、`harbor` 7、`bridge` 8、`large-vehicle` 9、`small-vehicle` 10、`helicopter` 11、`roundabout` 12、`soccer-ball-field` 13、`swimming-pool` 14。DOTA 原生标注没有官方数字类别 ID 表；这套编号只是模型输出顺序。它与 [`datasets/dotav1/dota_classes.names`](../../../../datasets/dotav1/README.md)（本仓固定列表）的顺序**不同**：两者仅在索引 0 相同。用其中一份去命名按另一份顺序工作的输出，会错标 15 类中的 14 类。完整顺序警告见 [DOTA 数据集指南](../../../../datasets/dotav1/README.md)。
 
 ### 自定义模型与不匹配行为
 
@@ -90,7 +90,7 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py \
   --test-img samples/vision/ultralytics_yolo/test_data/zebra_cls.jpg --topk 5
 ```
 
-使用自己的图片时，把路径传给 `--test-img`；下面是 runtime 指南中“自定义图片 + 显式本地模型”的既有示例形式：
+使用自己的图片时，把路径传给 `--test-img`；下面是运行时指南中“自定义图片 + 显式本地模型”的既有示例形式：
 
 ```bash
 python samples/vision/ultralytics_yolo/runtime/python/main.py \
@@ -140,8 +140,7 @@ C++ 参考程序接受同样的图片作为位置参数（其[文档](../runtime
 [评估器](../evaluator/README_cn.md#dataset)。
 
 校准样本按[转换配方](../conversion/README_cn.md#calibration)从代表性数据集选取。
-生成推理结果时指定新的输出路径，并比较本次成功运行写出的文件。主机回归测试的
-合成输入在 `../tests/` 中构造。
+生成推理结果时指定新的输出路径，并比较本次成功运行写出的文件。
 
 <a id="provenance"></a>
 ## 来源

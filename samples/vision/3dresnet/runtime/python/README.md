@@ -96,7 +96,7 @@ assembly live in `cli.py`. The classification algorithm itself lives in
 <a id="integration-example"></a>
 ## Integration Example
 
-The directory name `3dresnet` cannot appear in a `from... import...` statement. Run this example from the repository root and use `importlib.import_module` with the full package names; no runtime-directory `sys.path` injection is needed:
+The directory name `3dresnet` cannot appear in a `from... import...` statement. Run this example from the repository root and use `importlib.import_module` with the full package names; this loads the package by its full name:
 
 ```python
 import importlib
@@ -148,4 +148,4 @@ The input clip is already RGB and normalized. The task performs no image or vide
 - **Board identity rejected:** explicit `--target s100` selects the publication row; execution additionally requires detected S100 board identity.
 - **Model missing:** run `bash samples/vision/3dresnet/model/download.sh s100` from the repository root.
 - **Clip shape rejected:** use the prepared `.npy` clip with exact shape `(1,3,16,112,112)`; this runtime does not reshape or decode video.
-- **Tensor name mismatch:** the binding reads the unique runtime names. It rejects missing, extra, or reordered tensors rather than inventing `input` or `output` names.
+- **Tensor name mismatch:** the binding reads the unique runtime names. It rejects missing, extra, or reordered tensors using the names reported by the SDK.

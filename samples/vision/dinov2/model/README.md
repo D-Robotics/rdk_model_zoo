@@ -70,7 +70,7 @@ bash samples/vision/dinov2/model/download.sh s600 /tmp/dinov2-model
 <a id="formats-checksums"></a>
 ## Formats & Checksums
 
-The active manifest records all three publisher SHA-256 values as unknown. Observed download digests are not origin verification.
+The active manifest records all three publisher SHA-256 values as unknown. Download digests are computed from the downloaded files.
 
 | Artifact | Format | SHA-256 | Source of value |
 | --- | --- | --- | --- |

@@ -26,7 +26,7 @@ python/
 <a id="environment"></a>
 ## Environment
 
-Use X5 with its matching `hbm_runtime`, NumPy, OpenCV and PyYAML. Host imports/help/list/dry-run need no board SDK. Host test dependencies: `samples/vision/vargconvnet/requirements-host.txt`.
+Use X5 with its matching `hbm_runtime`, NumPy, OpenCV and PyYAML. Host imports/help/list/dry-run need no board SDK. Host Python dependencies: `samples/vision/vargconvnet/requirements-host.txt`.
 
 [Environment requirements](../../README.md#prerequisites). For board inference, use the matching board image with `hbm_runtime`.
 

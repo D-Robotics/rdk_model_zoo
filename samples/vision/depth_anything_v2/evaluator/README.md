@@ -70,8 +70,7 @@ up to floating-point rounding. Compare raw HBM depth arrays using the same input
 Keep input/model hashes, concrete board identity, runtime/firmware version,
 preprocessing mode, raw tensor metadata, full argv and stdout/stderr for each
 measurement. Preserve unnormalized float arrays and any ground-truth IDs/protocol.
-The CLI reports metadata and hashes but deliberately does not measure
-latency. Source HRT timing, end-to-end application timing and display IO must be
+The CLI reports metadata and hashes. Measure latency separately. Source HRT timing, end-to-end application timing and display IO must be
 reported separately. Observed hashes do not fill the missing publisher digest.
 
 <a id="reference-results"></a>

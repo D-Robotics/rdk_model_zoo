@@ -98,10 +98,10 @@ output order: `plane` 0, `ship` 1, `storage-tank` 2, `baseball-diamond` 3,
 `bridge` 8, `large-vehicle` 9, `small-vehicle` 10, `helicopter` 11,
 `roundabout` 12, `soccer-ball-field` 13, `swimming-pool` 14. DOTA's native
 annotations have no official numeric category-ID table; this numbering is the
-model output order, nothing else. It is **not** the same order as
+model output order. It is **not** the same order as
 [`datasets/dotav1/dota_classes.names`](../../../../datasets/dotav1/README.md)
 (the fixed repository listing): the two coincide only at index 0. Using one
-file to name outputs that follow the other silently mislabels 14 of the 15
+file to name outputs that follow the other mislabels 14 of the 15
 categories. See the [DOTA dataset guide](../../../../datasets/dotav1/README.md)
 for the full ordering warning.
 
@@ -229,7 +229,7 @@ entry exports predictions. Prepare datasets with the
 Select representative dataset samples using the
 [conversion calibration recipe](../conversion/README.md#calibration).
 Use a new output path for inference and compare files written by that successful
-run. Host regression tests construct synthetic inputs under `../tests/`.
+run.
 
 <a id="provenance"></a>
 ## Provenance

@@ -19,7 +19,6 @@ efficient_sam/
 ├── model/  # Model files and download scripts
 ├── runtime/  # Python and native inference implementations
 ├── test_data/  # Example inputs
-├── tests/  # Automated tests
 ├── README.md  # English instructions
 └── README_cn.md  # Chinese instructions
 ```
@@ -68,7 +67,7 @@ python3 samples/vision/efficient_sam/runtime/python/main.py --target s100
 <a id="expected-results"></a>
 ## Expected Results
 
-The default input is `test_data/dogs.jpg`. A successful run writes an overlay image and a binary `512x512` mask. The numeric IoU and selected mask index depend on the actual model execution; the committed `efficient_sam_binary_mask.png` is a source reference, not a new board result.
+The default input is `test_data/dogs.jpg`. A successful run writes an overlay image and a binary `512x512` mask. The numeric IoU and selected mask index depend on the actual model execution; the committed `efficient_sam_binary_mask.png` is a reference result.
 
 The decoder fixes positive points `(248,210)` and `(302,315)` on the resized 512×512 image. The encoder applies RGB `/255` and produces `(1,256,32,32)` embeddings. Of three decoder candidates, the highest-IoU mask is resized to 512×512 and thresholded at logits `>=0`. Results use this resized coordinate system.
 

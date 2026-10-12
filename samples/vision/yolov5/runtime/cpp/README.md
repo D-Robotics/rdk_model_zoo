@@ -195,7 +195,7 @@ Python and C++ runtime behavior:
   (`HB_UCP_BPU_CORE_0..3 = 1ULL<<0..3`, `HB_UCP_BPU_CORE_ANY = 1ULL<<7`);
   indices outside `-1..3` are rejected, and the raw index is never assigned to
   the backend field. X5 has no verified HB-DNN mapping for these flags, so
-  non-default values are rejected rather than silently ignored.
+  non-default values are rejected.
 - **Non-finite scores.** The decoder drops non-finite confidence values.
 
 <a id="results-interpretation"></a>
@@ -218,7 +218,7 @@ Python and C++ runtime behavior:
 - The input files hold the buffers actually submitted with the inference (the
   compact NV12 payload on X5, the compact Y/UV plane payload on S — exactly
   the valid row bytes the upload writes at the stride pitch);
-  uninitialized padding bytes are deliberately not dumped. X5 raw and
+  uninitialized padding bytes are not dumped. X5 raw and
   transformed tensors are the same native F32 heads; S raw tensors keep the
   full allocated extent (`alignedByteSize`, including pixel padding) and the
   transformed tensors are the dequantized floats, so a board comparison can

@@ -34,14 +34,14 @@ bash samples/vision/3dresnet/model/download.sh s100
 # expect: samples/vision/3dresnet/model/s100/r3d_18.hbm
 ```
 
-The downloader resolves `s:3dresnet:s100/r3d_18.hbm` from the shared S manifest and uses the shared atomic download/verification helper. The manifest records no publisher SHA-256, so the downloader reports the observed digest after download but cannot verify it against a published value. Existing files are verified and are not silently overwritten. `download_model.sh` is a launcher to the same explicit command. Runtime execution never downloads a model automatically.
+The command downloads `s:3dresnet:s100/r3d_18.hbm` using the S model manifest. It reports the local SHA-256; a publisher checksum is unavailable. Existing files are checked before reuse. `download_model.sh` runs the same preparation command. Prepare the model before starting inference.
 
 <a id="accompanying-files"></a>
 ## Accompanying Files
 
 | File | Required for | Purpose |
 | --- | --- | --- |
-| `../test_data/video0.npy` | runtime smoke test | Already normalized RGB float32 clip, shape `(1,3,16,112,112)` |
+| `../test_data/video0.npy` | example inference | Already normalized RGB float32 clip, shape `(1,3,16,112,112)` |
 | `../test_data/kinetics_classnames.json` | CLI label display | 400-entry `name → id` mapping, decoded into `id → name` (embedded quote characters in names are stripped) |
 
 The screenshot files under `../test_data/readme_img/` are documentation evidence only.

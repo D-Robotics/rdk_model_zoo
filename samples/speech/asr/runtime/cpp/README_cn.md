@@ -101,27 +101,6 @@ S600 应下载 s600 制品并替换 target，不复用 S100 文件。默认 auto
 
 输入补齐区域清零，浮点值按实际步长复制；检查输入缓存清理、同步 UCP 推理与输出缓存失效，并返回拥有独立内存的紧凑 logits。模型/张量所有者清理部分初始化，包括返回错误但取得非空地址的分配；返回成功但地址为空则拒绝。清理走不抛异常的析构路径：对已获得的 tensor 与模型句柄调用 `hbDNNRelease`/free 释放，不检查返回码、不报告错误。不要并发复用 SDK 实例，捕获它的 Runner 不能比实例存活更久。
 
-下面的 API 示例展示如何向 `ASR` 注入 `Runner` 并调用前处理、推理和解码阶段。编译需 `inc`、`src/frontend.cpp` 与 libsamplerate；板端运行由 `SdkRunner` 接入 UCP SDK。
-```cpp
-#include "asr.hpp"
-#include <iostream>
-int main() {
-  std::vector<std::string> vocabulary{"<pad>"};
-  for (size_t i = 1; i < 3503; ++i)
-    vocabulary.push_back("token" + std::to_string(i));
-  vocabulary[5] = "A";
-  asr::Runner fixture = [](const std::vector<float>&) {
-    std::vector<float> logits(4 * 3503, 0.f);
-    logits[5] = logits[3503 + 5] = logits[3 * 3503 + 5] = 1.f;
-    return logits;
-  };
-  asr::ASR task(fixture, 4, vocabulary);
-  asr::AudioChunk audio{{0.1f, 0.2f, 0.3f}, 16000, 1, 0, 0};
-  auto prepared = task.preprocess(audio);
-  auto raw = task.infer(prepared);
-  std::cout << task.postprocess(raw) << '\n';
-}
-```
 
 <a id="results-interpretation"></a>
 ## 结果解释
@@ -129,7 +108,7 @@ int main() {
 
 `result/result.json` 使用 `rdk-model-zoo/asr-native-run/v1`，包含后端、目标/制品、摘要、解码/前端/配置、实测模型/张量元数据及 `chunks`。每块记录索引、原始帧偏移/数量/采样率、有效目标点数和文本；`text` 不插入额外分隔符地拼接完整文件。原生输出目录创建后的失败写入 `failed.json`，包含已完成块和错误；启动器保留日志并标记失败。报告自身无法写入时，stderr 保留错误。结束时再次核对输入哈希以检测执行期间变化。结果不包含置信度或时间戳字段。
 
-窗口独立，不跨块保留语言模型、重叠或解码/重采样状态。末块补零后仍解码全部帧，因为模型元数据不提供有效帧数。Python Fourier 与 C++ sinc 前端使用不同算法，短窗口的差异更明显。[上游 simple API](https://libsndfile.github.io/libsamplerate/api_simple.html)介绍原生重采样器。源发布的性能数据及测量条件见[评估文档](../../evaluator/README_cn.md)。
+窗口独立，不跨块保留语言模型、重叠或解码/重采样状态。末块补零后仍解码全部帧，因为模型元数据不提供有效帧数。Python Fourier 与 C++ sinc 前端使用不同算法，短窗口的差异更明显。[上游 simple API](https://libsndfile.github.io/libsamplerate/api_simple.html)介绍原生重采样器。参考性能数据及测量条件见[评估文档](../../evaluator/README_cn.md)。
 
 ## 排错
 身份不符：使用精确支持板型。缺模型：按[模型文档](../../model/README_cn.md)准备。SDK 配置失败：补齐匹配头文件/库与编译器。词表摘要不符：使用随附词表。张量契约错误：按 FLOAT32 输入与步长要求检查制品和 SDK 元数据。目录已存在：改用新目录。

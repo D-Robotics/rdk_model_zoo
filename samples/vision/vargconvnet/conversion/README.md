@@ -44,7 +44,7 @@ For inference, prepare the published artifact as described in [model/README.md](
 <a id="validation"></a>
 ## Post-conversion validation
 
-Verify actual metadata, 224×224 packed NV12 and one F32 output squeezing to 1000 scores. A rebuilt model can be selected with the exact contract reference and an external path; keep its hash/provenance separate from the publisher artifact.
+Verify actual metadata, 224×224 packed NV12 and one F32 output squeezing to 1000 scores. A rebuilt model can be selected with the exact contract reference and an external path.
 
 ```bash
 # cwd: repository root on X5; published-artifact smoke

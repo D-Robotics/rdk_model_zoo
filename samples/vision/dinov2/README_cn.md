@@ -64,7 +64,7 @@ python3 samples/vision/dinov2/runtime/python/main.py --target s100 --output cls_
 <a id="expected-results"></a>
 ## 预期结果
 
-CLI 打印包含 `output`、`shape`、`dtype`、`mean`、`std`、`min`、`max`、`l2_norm` 的 JSON 摘要。默认第二张图存在时，还打印 `second_image` 和 `cosine_similarity`；缺失时报告 `skipped_missing`。`cls_feat` shape 为 `(1,384)`，`patch_feat` 为 `(1,256,384)`，均由 metadata 绑定的反量化后以 float32 返回。目标板实际运行前不声明具体数值。
+CLI 打印包含 `output`、`shape`、`dtype`、`mean`、`std`、`min`、`max`、`l2_norm` 的 JSON 摘要。默认第二张图存在时，还打印 `second_image` 和 `cosine_similarity`；缺失时报告 `skipped_missing`。`cls_feat` shape 为 `(1,384)`，`patch_feat` 为 `(1,256,384)`，均由 元数据 绑定的反量化后以 float32 返回。目标板实际运行前不声明具体数值。
 
 输出为 `cls_feat` `(1,384)` 和 `patch_feat` `(1,256,384)`，按元数据反量化后返回独立 float32 数组。运行时不执行 softmax 或 L2 归一化。主干包含 patch-14 stem 与 12 个 pre-LN Transformer block。
 
@@ -80,4 +80,4 @@ CLI 打印包含 `output`、`shape`、`dtype`、`mean`、`std`、`min`、`max`�
 <a id="license"></a>
 ## 许可说明
 
-DINOv2 源模型和 checkpoint 是 Meta AI 通过 [facebookresearch/dinov2](https://github.com/facebookresearch/dinov2) 发布的 Apache-2.0 制品。示例代码遵循仓库 [LICENSE](../../../LICENSE) 的 Apache-2.0。保留源贡献者署名：D-Robotics model zoo 团队。
+DINOv2 源模型和 checkpoint 是 Meta AI 通过 [facebookresearch/dinov2](https://github.com/facebookresearch/dinov2) 发布的 Apache-2.0 制品。示例代码遵循仓库 [LICENSE](../../../LICENSE) 的 Apache-2.0。原始贡献者：D-Robotics model zoo 团队。

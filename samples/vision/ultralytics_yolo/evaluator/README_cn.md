@@ -51,7 +51,7 @@ evaluator/
 python3 -m pip install pycocotools
 ```
 
-将该用户态依赖安装到实际使用的Python环境；脚本不会自动安装依赖。先按[模型准备](../model/README_cn.md)获取当前目标/任务/家族的制品。`--help`不会加载板端SDK。下面命令已对照parser检查，未作为新一轮板端精度测试执行。
+将该用户态依赖安装到实际使用的Python环境；脚本不会自动安装依赖。先按[模型准备](../model/README_cn.md)获取当前目标/任务/家族的制品。`--help`不会加载板端SDK。下面命令已对照参数解析器检查，未作为新一轮板端精度测试执行。
 
 <a id="command"></a>
 ## 执行评估
@@ -140,14 +140,14 @@ python3 samples/vision/ultralytics_yolo/evaluator/eval_batch.py \
 | `--topk`、`--log-interval` | 5、1000 | 分类返回数量及进度输出间隔 |
 | `--angle-sign`、`--angle-offset` | 1、0 | 旋转框角度变换 |
 
-各脚本`--help`列出任务专有协议参数。YOLO26采用直接LTRB，其他受支持检测家族使用DFL；S YOLOv10无NMS，X5保留NMS。不能强行选择不支持的家族/任务，也不能用阈值掩盖张量协议错误。
+各脚本`--help`列出任务专有协议参数。YOLO26采用直接LTRB，其他受支持检测家族使用DFL；S YOLOv10无NMS，X5保留NMS。选择匹配的模型家族和任务；张量协议错误时先检查模型输入输出。
 
 <a id="metrics"></a>
 ## 指标与比较条件
 
 COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所选图像ID。分类top1/top5为处理过且有标签图像的正确比例，不是百分数。OBB JSON是中间预测，不是精度指标。运行墙钟时间包含Python与数据处理，并非BPU推理延迟。
 
-记录源码提交、目标/系统/SDK、制品摘要、数据集/划分、实际处理数量、resize策略和阈值后再比较结果。这些条件改变时，不能直接对比历史表。数据集精度使用对应数据集评估命令计算。
+记录源码提交、目标/系统/SDK、制品摘要、数据集/划分、实际处理数量、缩放策略和阈值后再比较结果。这些条件改变时，不能直接对比历史表。数据集精度使用对应数据集评估命令计算。
 
 <a id="outputs"></a>
 ## 输出与成功判断
@@ -168,10 +168,10 @@ COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所
 - 缺pycocotools：安装到运行评估脚本的解释器，包括仅导出COCO预测的情况。
 - 缺真值或类别错位：核对named/ordered/synset、偏移和模型类别顺序，不猜测任意文件名的标签。
 - COCO文件名/ID错误：使用配套图像和标注；无标注导出要求数字文件名主体。
-- 空输出：先用runtime检查单图，再核对阈值、任务、制品；保留空输出事实，不能据此宣称精度。
+- 空输出：先用运行时检查单图，再核对阈值、任务、制品；保留空输出事实，不能据此宣称精度。
 - 写文件失败：创建可写父目录并显式指定输出路径。
 
-`eval_common.py`负责共享参数、类别映射与图像选择，`eval_yolo_*.py`分别负责指标/输出格式并调用runtime，`eval_batch.py`仅派发命令。导出与张量布局变更属于[conversion](../conversion/README_cn.md)及runtime binding，不应混入指标代码。
+`eval_common.py`负责共享参数、类别映射与图像选择，`eval_yolo_*.py`分别负责指标/输出格式并调用运行时，`eval_batch.py`仅派发命令。导出与张量布局变更属于[conversion](../conversion/README_cn.md)及运行时模型绑定，不应混入指标代码。
 
 
 ## BenchMark - Performance
@@ -233,7 +233,6 @@ COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所
 | YOLO11m-Seg | 640×640 | 80 | 50.3 ms / 19.9 FPS (1 thread  ) <br/> 90.2 ms / 22.1 FPS (2 threads)  | 20 ms | 22.4 M | 123.3 B |
 | YOLO11l-Seg | 640×640 | 80 | 60.6 ms / 16.5 FPS (1 thread  ) <br/> 110.8 ms / 18.0 FPS (2 threads) | 20 ms | 27.6 M | 142.2 B |
 | YOLO11x-Seg | 640×640 | 80 | 129.1 ms / 7.7 FPS (1 thread  ) <br/> 247.4 ms / 8.1 FPS (2 threads)  | 20 ms | 62.1 M | 319.0 B |
-
 
 
 #### 姿态估计 (Pose Estimation)
@@ -379,7 +378,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 5. Python接口和C/C++接口的精度结果有细微差异, 主要在于Python和C/C++的一些数据结构进行memcpy和转化的过程中, 对浮点数的处理方式不同, 导致的细微差异.
 6. 测试脚本请参考RDK Model Zoo的eval部分: https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/tools/eval_pycocotools
 7. 本表格是使用PTQ(训练后量化)使用50张图片进行校准和编译的结果, 用于模拟普通开发者第一次直接编译的精度情况, 并没有进行精度调优或者QAT(量化感知训练), 满足常规使用验证需求, 不代表精度上限.
-
 
 
 ## 补充参考数据
@@ -746,7 +744,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | X5       | YOLOv8x CLS | 640×640        |        80 | 13.12 ms / 76.18 FPS (1 thread ) <br/> 25.64 ms / 77.78 FPS (2 threads)   | 0.5 ms                         | 57.4 M      | 154.8 M    |
 
 
-
 ### RDK S100 Performance Data (Performance @ NV12)
 
 | Device | Model | Size <br> (Pixels) | Classes | BPU Task Latency / <br> BPU Throughput (Threads) | CPU Latency | Params <br> (M) | FLOPs <br> (G) |
@@ -776,7 +773,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S100 | YOLO26m Obb | 640x640 | 15 | 6.16 ms / 157.61 FPS (1 thread) <br> 11.27 ms / 175.02 FPS (2 threads) | - | 23.49 | 82.2 |
 | S100 | YOLO26l Obb | 640x640 | 15 | 7.46 ms / 130.74 FPS (1 thread) <br> 13.79 ms / 143.34 FPS (2 threads) | - | 27.90 | 100.6 |
 | S100 | YOLO26x Obb | 640x640 | 15 | 13.81 ms / 71.33 FPS (1 thread) <br> 26.95 ms / 73.69 FPS (2 threads) | - | 62.66 | 225.3 |
-
 
 
 ### RDK S600 Performance Data (Performance @ NV12)
@@ -810,7 +806,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S600 | YOLO26x Obb | 640x640 | 15 | 6.73 ms / 148.08 FPS (1 thread) <br> 19.31 ms / 604.86 FPS (12 threads) | - | 62.66 | 225.3 |
 
 
-
 ### RDK X5 Performance Data
 
 | Device | Model | Size <br> (Pixels) | Classes | BPU Task Latency / <br> BPU Throughput (Threads) | CPU Latency | params <br> (M) | FLOPs <br> (B) |
@@ -825,7 +820,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | X5 | YOLO26n Cls | 224x224 | 1000 | 1.1 ms / 906.0 FPS (1 thread) <br> 1.7 ms / 1156.8 FPS (2 threads) | - | - | - |
 
 
-
 ### 参数说明
 
 | 参数 | 说明 | 默认值 |
@@ -836,8 +830,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | `--json-save-path` | 推理结果保存路径 (.json) | yolo26_xxx_results.json |
 | `--conf-thres` | 置信度阈值 (建议设为 0.001 以获得准确 mAP) | 0.001 |
 | `--limit` | 限制处理的图片数量 (0 表示全部) | 0 |
-
-
 
 
 ## 补充参考数据
@@ -878,7 +870,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S600     | YOLOv5xu Detect | 0.466 / 0.454 (97.4 %)                                  | 0.281 / 0.246 (87.5 %)                                    | 0.523 / 0.517 (98.9 %)                                     | 0.645 / 0.647 (100.3 %)                                   |
 
 
-
 ### Instance Segmentation
 
 | Device   | Model       | Accuracy bbox-all mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-small mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-medium mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-large mAP@.50:.95 <br/> FP32 / BPU Python   |
@@ -891,7 +882,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S600     | YOLOv8m Seg | 0.431 / 0.420 (97.4 %)                                  | 0.228 / 0.209 (91.7 %)                                    | 0.486 / 0.478 (98.4 %)                                     | 0.608 / 0.605 (99.5 %)                                    |
 | S600     | YOLOv8l Seg | 0.453 / 0.435 (96.0 %)                                  | 0.258 / 0.223 (86.4 %)                                    | 0.502 / 0.496 (98.8 %)                                     | 0.626 / 0.611 (97.6 %)                                    |
 | S600     | YOLOv8x Seg | 0.465 / 0.454 (97.6 %)                                  | 0.268 / 0.236 (88.1 %)                                    | 0.520 / 0.514 (98.8 %)                                     | 0.641 / 0.633 (98.8 %)                                    |
-
 
 
 ### Instance Segmentation
@@ -908,7 +898,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S600     | YOLOv8x Seg | 0.358 / 0.338 (94.4 %)                                  | 0.139 / 0.122 (87.8 %)                                    | 0.409 / 0.382 (93.4 %)                                     | 0.562 / 0.529 (94.1 %)                                    |
 
 
-
 ### Pose Estimation
 
 | Device   | Model        | Accuracy pose-all mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy pose-medium mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy pose-large mAP@.50:.95 <br/> FP32 / BPU Python   |
@@ -923,7 +912,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S600     | YOLOv8m Pose | 0.630 / 0.605 (96.0 %)                                  | 0.578 / 0.552 (95.5 %)                                     | 0.724 / 0.703 (97.1 %)                                    |
 | S600     | YOLOv8l Pose | 0.657 / 0.633 (96.3 %)                                  | 0.607 / 0.581 (95.7 %)                                     | 0.747 / 0.719 (96.3 %)                                    |
 | S600     | YOLOv8x Pose | 0.671 / 0.651 (97.0 %)                                  | 0.624 / 0.603 (96.6 %)                                     | 0.757 / 0.739 (97.6 %)                                    |
-
 
 
 ### Image Classification
@@ -998,7 +986,7 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S100P    | YOLOv8l Seg | 0.453 / 0.426 (94.1 %)                                  | 0.258 / 0.220 (85.0 %)                                    | 0.502 / 0.483 (96.3 %)                                     | 0.626 / 0.607 (97.0 %)                                    |
 | S100P    | YOLOv8x Seg | 0.465 / 0.435 (93.5 %)                                  | 0.268 / 0.214 (79.7 %)                                    | 0.520 / 0.496 (95.2 %)                                     | 0.641 / 0.622 (97.1 %)                                    |
 
-##### mask
+##### 掩码
 
 ### Instance Segmentation
 
@@ -1050,7 +1038,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S100P    | YOLOv8m CLS | 0.768 / 0.703 (91.6 %)                  | 0.935 / 0.899 (96.2 %)                  |
 | S100P    | YOLOv8l CLS | 0.783 / 0.723 (92.3 %)                  | 0.942 / 0.910 (96.6 %)                  |
 | S100P    | YOLOv8x CLS | 0.790 / 0.742 (93.9 %)                  | 0.945 / 0.923 (97.6 %)                  |
-
 
 
 ### Obeject Detection
@@ -1108,7 +1095,7 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S100     | YOLOv8l Seg | 0.453 / 0.425 (93.9 %)                                  | 0.258 / 0.214 (83.0 %)                                    | 0.502 / 0.484 (96.4 %)                                     | 0.626 / 0.592 (94.6 %)                                    |
 | S100     | YOLOv8x Seg | 0.465 / 0.434 (93.4 %)                                  | 0.268 / 0.216 (80.6 %)                                    | 0.520 / 0.494 (95.0 %)                                     | 0.641 / 0.613 (95.6 %)                                    |
 
-##### mask
+##### 掩码
 
 ### Instance Segmentation
 
@@ -1160,7 +1147,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S100     | YOLOv8m CLS | 0.768 / 0.702 (91.4 %)                  | 0.935 / 0.899 (96.2 %)                  |
 | S100     | YOLOv8l CLS | 0.783 / 0.723 (92.3 %)                  | 0.942 / 0.909 (96.5 %)                  |
 | S100     | YOLOv8x CLS | 0.790 / 0.742 (93.9 %)                  | 0.945 / 0.921 (97.5 %)                  |
-
 
 
 ### Obeject Detection
@@ -1218,7 +1204,7 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | X5       | YOLOv8l Seg | 0.453 / 0.427 (94.2 %)                                  | 0.258 / 0.216 (83.5 %)                                    | 0.502 / 0.487 (96.9 %)                                     | 0.626 / 0.605 (96.6 %)                                    |
 | X5       | YOLOv8x Seg | 0.465 / 0.438 (94.3 %)                                  | 0.268 / 0.219 (81.6 %)                                    | 0.520 / 0.499 (96.0 %)                                     | 0.641 / 0.626 (97.8 %)                                    |
 
-##### mask
+##### 掩码
 
 ### Instance Segmentation
 
@@ -1283,7 +1269,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S100 | YOLO26x Detect | 0.484 / 0.449 (92.8 %) | 0.292 / 0.246 (84.2 %) | 0.528 / 0.488 (92.4 %) | 0.669 / 0.646 (96.6 %) |
 
 
-
 ### RDK S100P Accuracy Data (Accuracy @ RGB - Detection)
 
 | Device | Model | Accuracy bbox-all <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy bbox-small <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy bbox-medium <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy bbox-large <br> mAP @.50:.95 <br> (FP32 / BPU Python) |
@@ -1293,7 +1278,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S100P | YOLO26m Detect | 0.442 / 0.421 (95.2 %) | 0.242 / 0.224 (92.6 %) | 0.489 / 0.460 (94.0 %) | 0.629 / 0.603 (95.8 %) |
 | S100P | YOLO26l Detect | 0.456 / 0.437 (96.0 %) | 0.260 / 0.234 (89.8 %) | 0.499 / 0.484 (97.1 %) | 0.627 / 0.609 (97.0 %) |
 | S100P | YOLO26x Detect | 0.484 / 0.466 (96.2 %) | 0.292 / 0.271 (92.8 %) | 0.528 / 0.502 (95.1 %) | 0.669 / 0.654 (97.8 %) |
-
 
 
 ### RDK S600 Accuracy Data (Accuracy @ NV12 - Detection)
@@ -1307,7 +1291,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S600 | YOLO26x Detect | 0.484 / 0.452 (93.4 %) | 0.292 / 0.246 (84.2 %) | 0.528 / 0.490 (92.8 %) | 0.669 / 0.645 (96.4 %) |
 
 
-
 ### RDK S100 Accuracy Data (Accuracy @ NV12 - Pose Estimation)
 
 | Device | Model | Accuracy kpt-all <br> mAP @.50:.95 <br> (BPU Python) | Accuracy kpt-medium <br> mAP @.50:.95 <br> (BPU Python) | Accuracy kpt-large <br> mAP @.50:.95 <br> (BPU Python) |
@@ -1317,7 +1300,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S100 | YOLO26m Pose | 0.620 | 0.554 | 0.737 |
 | S100 | YOLO26l Pose | 0.646 | 0.579 | 0.744 |
 | S100 | YOLO26x Pose | 0.663 | 0.601 | 0.775 |
-
 
 
 ### RDK S600 Accuracy Data (Accuracy @ NV12 - Pose Estimation)
@@ -1331,7 +1313,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S600 | YOLO26x Pose | 0.665 | 0.604 | 0.769 |
 
 
-
 ### RDK S100 Accuracy Data (Accuracy @ NV12 - Segmentation)
 
 | Device | Model | Accuracy mask-all <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy mask-small <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy mask-medium <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy mask-large <br> mAP @.50:.95 <br> (FP32 / BPU Python) |
@@ -1341,7 +1322,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S100 | YOLO26m Seg | - / 0.356 | - / 0.148 | - / 0.399 | - / 0.536 |
 | S100 | YOLO26l Seg | - / 0.375 | - / 0.164 | - / 0.419 | - / 0.560 |
 | S100 | YOLO26x Seg | - / 0.381 | - / 0.176 | - / 0.426 | - / 0.576 |
-
 
 
 ### RDK S600 Accuracy Data (Accuracy @ NV12 - Segmentation)
@@ -1355,7 +1335,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S600 | YOLO26x Seg | - / 0.382 | - / 0.171 | - / 0.429 | - / 0.571 |
 
 
-
 ### RDK S100 Accuracy Data (Accuracy @ NV12 - Classification)
 
 | Device | Model | Top-1 Accuracy | Top-5 Accuracy |
@@ -1365,7 +1344,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S100 | YOLO26m Cls | 0.7194 | 0.9080 |
 | S100 | YOLO26l Cls | 0.7369 | 0.9168 |
 | S100 | YOLO26x Cls | 0.7432 | 0.9222 |
-
 
 
 ### RDK S600 Accuracy Data (Accuracy @ NV12 - Classification)
@@ -1379,7 +1357,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | S600 | YOLO26x Cls | 0.666 | 0.876 |
 
 
-
 ### RDK X5 Accuracy Data (Accuracy @ NV12 - Detection)
 
 | Device | Model | Accuracy bbox-all <br> mAP@.50:.95 <br> (FP32 / BPU Python) | Accuracy bbox-small <br> mAP@.50:.95 <br> (FP32 / BPU Python) | Accuracy bbox-medium <br> mAP@.50:.95 <br> (FP32 / BPU Python) | Accuracy bbox-large <br> mAP@.50:.95 <br> (FP32 / BPU Python) |
@@ -1391,13 +1368,11 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | X5 | YOLO26x Detect | 0.484 / 0.438 (90.5 %) | 0.292 / 0.230 (78.8 %) | 0.528 / 0.479 (90.7 %) | 0.669 / 0.635 (94.9 %) |
 
 
-
 ### RDK X5 Accuracy Data (Accuracy @ NV12 - Segmentation)
 
 | Device | Model | Accuracy mask-all <br> mAP@.50:.95 <br> (BPU Python) | Accuracy mask-small <br> mAP@.50:.95 <br> (BPU Python) | Accuracy mask-medium <br> mAP@.50:.95 <br> (BPU Python) | Accuracy mask-large <br> mAP@.50:.95 <br> (BPU Python) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | X5 | YOLO26n Seg | 0.285 | 0.090 | 0.307 | 0.464 |
-
 
 
 ### Detection (COCO2017)
@@ -1441,8 +1416,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | YOLOv13x | 0.551 | 0.526 (95.46%) |
 
 
-
-
 ## 补充参考数据
 
 各表按发布时的模型、板卡和测量条件列出，不同配置的数据分别保留。模型文件大小沿用表中注明的 MB 单位。
@@ -1457,7 +1430,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | YOLOv13x | 640x640 | 80 | 19.7 ms / 50.7 FPS (1 thread)<br>37.8 ms / 52.7 FPS (2 threads) | 2 ms | 64.0 | 199.2 |
 
 
-
 ### RDK S100 (S100 YOLOv13 iMoonLab)
 
 | Model | Size(Pixels) | Classes | BPU Task Latency /<br>BPU Throughput (Threads) | CPU Latency<br>(Single Core) | params(M) | FLOPs(B) |
@@ -1466,7 +1438,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | YOLOv13s | 640x640 | 80 | 5.8 ms / 169.5 FPS (1 thread)<br>9.7 ms / 204.9 FPS (2 threads) | 2 ms | 9.0 | 20.8 |
 | YOLOv13l | 640x640 | 80 | 16.6 ms / 59.8 FPS (1 thread)<br>31.1 ms / 63.9 FPS (2 threads) | 2 ms | 27.6 | 88.4 |
 | YOLOv13x | 640x640 | 80 | 26.9 ms / 37.1 FPS (1 thread)<br>51.6 ms / 38.6 FPS (2 threads) | 2 ms | 64.0 | 199.2 |
-
 
 
 ### Performance Data (Summary) (X3 historical benchmark)
@@ -1544,7 +1515,6 @@ sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling
 | YOLOv10b | 640×640 | 80 | 92.0 | 25.4 | 4.5 ms |
 | YOLOv10l | 640×640 | 80 | 120.3 | 20.0 | 4.5 ms |
 | YOLOv10x | 640×640 | 80 | 160.4 | 14.5 | 4.5 ms |
-
 
 
 ### Performance Data (X3 historical benchmark)
@@ -1703,13 +1673,13 @@ Object Detection (COCO2017)
 2. The evaluation uses all 5000 images from `COCO2017 val`, runs inference on board, dumps JSON results, and evaluates them with `pycocotools` using `score=0.25` and `nms=0.7`.
 3. `pycocotools` AP is usually lower than the Ultralytics built-in numbers due to different area calculation rules. The important signal here is the relative gap between floating-point and quantized models.
 4. Some accuracy loss appears when converting NCHW RGB888 inputs to YUV420SP inputs for BPU deployment because of color space conversion. This can be reduced if that transformation is considered during training.
-5. Python and C/C++ runtime accuracy may differ slightly because of differences in memory copy and floating-point handling.
+5. Python and C/C++ 运行时 accuracy may differ slightly because of differences in memory copy and floating-point handling.
 6. Evaluation scripts can be referenced here: <https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/tools/eval_pycocotools>
 7. The table reflects PTQ results compiled with 50 calibration images. It represents a practical first-pass compilation baseline instead of the upper bound of achievable accuracy.
 
 ## Result Check
 
-With the default `test_data/kite.jpg`, the runtime should output boxes that match the visible objects in the image and save a rendered result image. If the boxes are clearly misplaced, all classes are wrong, scores are abnormally low, or the result is empty, check:
+With the default `test_data/kite.jpg`, the 运行时 should output boxes that match the visible objects in the image and save a rendered result image. If the boxes are clearly misplaced, all classes are wrong, scores are abnormally low, or the result is empty, check:
 
 - the ONNX export output order
 - whether `remove_node_name` matches the current ONNX

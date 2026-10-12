@@ -71,7 +71,7 @@ Use the compiler configuration supplied with your model export and target toolch
 python3 samples/vision/pointnet/runtime/python/main.py --target s100 --no-plot --output-dir outputs/pointnet-check
 ```
 
-This is a functional smoke command for the unified entry.
+This is a example inference command for the unified entry.
 For a newly compiled artifact, first establish its provenance, target and tensor
 contract; passing shape checks alone cannot establish equivalence to the published
 model. Compare point IDs against a pinned floating reference using the same input

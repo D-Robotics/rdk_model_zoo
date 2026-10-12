@@ -24,7 +24,7 @@ cpp/
 │   ├── backend.hpp         # Shared DNN backend: stack probe, infer, RAII owners
 │   ├── cli.hpp             # Inline option parsing, benchmark math and entries
 │   └── imagenet_labels.hpp # 1000-entry ImageNet label order (classification)
-├── src/
+└── src/
 │   ├── main.cpp     # Constructs the task model, calls predict, reports
 │   ├── cli.cpp      # Image loading, rendering, benchmark drivers
 │   ├── backend.cpp  # SDK lifecycle: infer_sync, input probe, NV12 upload
@@ -33,7 +33,6 @@ cpp/
 │   ├── pose.cpp     # YoloPose model (17 COCO keypoints)
 │   ├── classify.cpp # YoloClassify model (1000-logit Top-K)
 │   └── obb.cpp      # YoloObb model (direct LTRB + angle, rotated NMS)
-└── test/  # Host unit tests (ctest; fake X5/UCP SDK doubles in test/fake_dnn_io)
 ```
 
 <a id="supported-boards"></a>
@@ -86,7 +85,7 @@ and the matching board DNN SDK. `YOLO_TARGET=auto` (default) first checks
 `/usr/hobot/lib` and links `hbucp`. Pin `-DYOLO_TARGET=x5|s100|s100p|s600` to
 select explicitly; the build never reads the host SoC. These files come from
 the matching board image/SDK; use the SDK version supplied for the target
-image. Host tests additionally use CTest ≥3.20 (`ctest --test-dir`).
+image.
 
 <a id="build"></a>
 ## Build
@@ -179,17 +178,7 @@ with `segment_result.jpg`/`pose_result.jpg`; classify uses
 <a id="interface-lifecycle"></a>
 ## Interfaces and resource lifetime
 
-This is a reference executable plus a readable model API, not a stable library
-contract identical to Python. `main.cpp` constructs the named model
-(`yolo::YoloDetect`, `YoloSegment`, `YoloPose`, `YoloClassify`, `YoloObb`)
-from a `Config`,
-fills a caller-owned `Input` (raw BGR pixels plus source geometry), calls
-`predict` and hands the returned `Prediction` to the CLI reporter. Each model
-owns its lifecycle: constructor loads the runtime (model handle, input
-protocol probe, output binding), `preprocess → infer → postprocess` are the
-model's own stages, and every call owns its input/output buffers — no hidden
-last-call state. The CLI owns options, image loading, rendering and the
-benchmark.
+`main.cpp` constructs `yolo::YoloDetect`, `YoloSegment`, `YoloPose`, `YoloClassify` or `YoloObb` from a `Config`. Fill a caller-owned `Input` with raw BGR pixels and source geometry, call `predict`, then use the returned `Prediction`. Each model owns its runtime handle and the `preprocess → infer → postprocess` stages. Each call owns its input/output buffers. The CLI handles options, image loading, rendering and benchmarking.
 
 Each concurrent benchmark stream owns its runtime context and tensors; do not
 reuse buffers across unfinished requests. The shared DNN backend

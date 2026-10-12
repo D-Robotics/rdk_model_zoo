@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-[`main.py`](main.py) 解析参数，显式构造 `EfficientNetClassifier`，调用 `predict` 并展示结果。
+[`main.py`](main.py) 解析参数，创建 `EfficientNetClassifier`，调用 `predict` 并展示结果。
 [`classify.py`](classify.py) 包含模型初始化、前处理、推理和后处理；
 [`cli.py`](cli.py) 集中管理命令行参数、发布模型选择和结果展示。
 图片读取、标签校验和 SDK 会话复用 `utils/py_utils/`。
@@ -28,8 +28,8 @@ python/
 
 在目标板卡的 Python 环境中运行，需要与板卡匹配的 `hbm_runtime`、
 NumPy 和 OpenCV-Python；读取 Manifest 需要 PyYAML。`hbm_runtime`
-只存在于板端镜像中，且为懒加载——`--help`、`--list-models`、
-`--dry-run` 和主机 unittest 套件都不需要它。主机侧测试依赖见 sample
+只存在于板端镜像中，在模型执行时加载；`--help`、`--list-models`、
+`--dry-run` 都不需要它。主机 Python 依赖见 sample
 的 `requirements-host.txt`。
 
 <a id="usage"></a>
@@ -38,7 +38,7 @@ NumPy 和 OpenCV-Python；读取 Manifest 需要 PyYAML。`hbm_runtime`
 cwd：仓库根目录。最小的不依赖 SDK 的调用是列表模式：
 
 ```bash
-# 成功判据：打印全部 13 条发布引用，退出码 0，不加载 SDK
+# 输出：打印全部 13 条发布引用，退出码 0，不加载 SDK
 python3 samples/vision/efficientnet/runtime/python/main.py --list-models --target auto
 ```
 
@@ -46,7 +46,7 @@ python3 samples/vision/efficientnet/runtime/python/main.py --list-models --targe
 
 ```bash
 # 前置：bash samples/vision/efficientnet/model/download.sh x5 b2
-# 成功判据：退出码 0 并打印 Top-5 列表
+# 输出：退出码 0 并打印 Top-5 列表
 python3 samples/vision/efficientnet/runtime/python/main.py \
   --target x5 \
   --asset-id x5:efficientnet:EfficientNet_B2_224x224_nv12.bin \
@@ -96,16 +96,13 @@ S600 换用 `s600/` 引用与路径。`--dry-run --target x5` 不接触板卡、
 
 命令打印稳定的 Top-K：类别 ID、分数与标签
 （`ClassificationResult(class_ids, scores, labels)`）；仅当给出
-`--img-save-path` 时才写标注图像。X5 收到 packed NV12 的规范化 flat
-1-D uint8 数组，长度 `H*W*3/2` 字节（224x224 -> 75,264 字节）；
+`--img-save-path` 时才写标注图像。X5 收到打包 NV12 的一维 uint8 数组，长度 `H*W*3/2` 字节（224x224 -> 75,264 字节）；
 S100/S600 收到 Y `(1,H,W,1)` 与 UV `(1,H/2,W/2,2)` uint8 数组，
 H=W 随变体——lite0 224 -> Y `(1,224,224,1)`、UV `(1,112,112,2)`；
 lite4 380 -> Y `(1,380,380,1)`、UV `(1,190,190,2)`。发布制品返回
 原始 logits；两个平台的任务都在 Top-K 前施加稳定 softmax。默认 resize
 两平台都是 letterbox（type 1）；插值随源不同——X5 用线性插值，S 用
-最近邻。输出形状遵循 rank 规则：任何 squeeze 后为 `(1000,)` 的
-单批次/空间拼写都可绑定（发布制品声明 `raw_f32` 变换；量化制品需要
-显式声明的 `dequant` 契约）。
+最近邻。去除大小为 1 的维度后，输出应为 `(1000,)`。发布模型使用 `raw_f32`；整数输出需配置 `dequant` 并提供匹配的量化元数据。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -158,5 +155,5 @@ print(result.class_ids, result.scores, result.labels)
 | --- | --- |
 | `Cannot identify this board` | 按支持矩阵选择目标，并在匹配的板卡上运行推理。 |
 | `model_path requires --asset-id` | 从 `--list-models` 复制完整限定引用；不要使用裸文件名。 |
-| 输入形状或 dtype 不匹配 | 核对制品引用与运行时 metadata；lite1 制品声明 240x240，会拒绝 224 的 metadata 而不是暗中缩放。 |
+| 输入形状或 dtype 不匹配 | 核对制品引用与运行时元数据；lite1 制品声明 240x240，会拒绝 224 的 元数据 而不是暗中缩放。 |
 | 输出与参考运行不同 | 先固定同一制品、图像、resize 模式、Top-K 并对比原始输出，再考虑分数语义。 |

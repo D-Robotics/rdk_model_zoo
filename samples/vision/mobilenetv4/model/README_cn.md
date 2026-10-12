@@ -48,7 +48,7 @@ model/
 
 ```bash
 # 输入：目标/变体对应的 Manifest 行 — 输出：本目录下的制品文件
-# 成功判据：退出码 0，打印观察 digest；不留半成品文件
+# 输出：退出码 0，打印观察 digest；不留半成品文件
 bash samples/vision/mobilenetv4/model/download.sh x5 small
 bash samples/vision/mobilenetv4/model/download.sh x5 medium
 bash samples/vision/mobilenetv4/model/download.sh s100p large

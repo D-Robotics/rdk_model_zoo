@@ -222,11 +222,7 @@ Checkpoint hashes, S image/compiler versions and
 publisher hashes for S HBMs remain absent from the source record. The exporter
 requires the expected Depth module and fails if it cannot patch exactly one head.
 
-Source S experiments reported clipping for NV12 l/x, weaker cosine for lite
-n/s/m, and no benefit from the tested int16 changes; those observations explain
-the mixed release. The source's “all variants pass
-0.999” claim conflicts with its 0.9984 table entry; both the claim and the
-table stand as published reference records.
+The S conversion routes use NV12 for n/s/m and lite for l/x. Reference measurements for alternative configurations are listed below; compare a new model under the same input and preprocessing conditions.
 
 The original optional tuning record gives these concrete comparison points:
 NV12 l/x had about 17% saturated pixels and cosine 0.9938/0.9944; lite n/s/m

@@ -130,12 +130,7 @@ if __name__ == "__main__":
 <a id="calibration"></a>
 ## Calibration
 
-All three YAMLs
-expect `./calibration_data_rgb_f32` (float32 RGB `.npy`) and use
-`calibration_type: 'default'`. Equivalent data must follow the YAML
-numerics (mean `123.675 116.28 103.53`, scale `0.01712475 0.017507
-0.01742919`, 224x224); this equivalence is a stated requirement, not a
-verified pipeline.
+All three YAMLs expect `./calibration_data_rgb_f32` (float32 RGB `.npy`) and use `calibration_type: 'default'`. Prepare 224x224 inputs using mean `123.675 116.28 103.53` and scale `0.01712475 0.017507 0.01742919`.
 
 <a id="compile"></a>
 ## Compile

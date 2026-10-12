@@ -129,12 +129,12 @@ hb_mapper checker --model-type onnx --march bayes-e --model ./ResNeXt50_32x4d.on
 hb_mapper makertbin --model-type onnx --config ResNeXt50_32x4d_config.yaml
 ```
 
-保留 latency/O3。输出基名与发布文件名一致，但名称一致不能证明图、字节或精度相同。
+使用 latency/O3 编译选项，输出基名与发布文件名相同。使用编译模型前，检查输入输出格式并评估精度。
 
 <a id="validation"></a>
 ## 转换后验证
 
-核对实际 metadata、224×224 packed NV12 与 squeeze 后 1000 分数的单 F32 输出。重建模型可用准确契约引用和外部路径选择，其哈希/来源必须与发布制品分开记录。
+核对实际 元数据、224×224 packed NV12 与 squeeze 后 1000 分数的单 F32 输出。重建模型可用对应模型引用和外部路径选择。
 
 ```bash
 # cwd: repository root on X5; published-artifact smoke

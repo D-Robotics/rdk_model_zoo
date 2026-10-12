@@ -105,7 +105,7 @@ python3 samples/vision/mobilenetv4/conversion/export.py --model v4-small \
 - 数据集：COCO 2017 train2017 中固定的 200 张图像子集（选取种子 42），
   在 manifest 中逐张记录 SHA-256。该集合与评测集没有共同图像，
   `workflow.py calibrate` 会校验这一点。
-- 预处理：上述合同，并按目标写出：X5 使用 [0,255] 的原始 RGB float32
+- 预处理：上述预处理要求，并按目标写出：X5 使用 [0,255] 的原始 RGB float32
   （`.rgb`，无头小端；RGB/NV12 转换由 X5 加载器完成）；S 系列使用归一化后的
   ONNX 输入，保存为 float32 `.npy`。
 
@@ -166,7 +166,7 @@ docker run --rm --user "$(id -u):$(id -g)" --shm-size 15g \
 1. 在匹配的板卡上用 `hrt_model_exec model_info --model_file <file>` 检查制品。
    输入 shape 按目标与变体区分：
 
-   | 目标 / 变体 | metadata 暴露的输入 | 输出 |
+   | 目标 / 变体 | 元数据 暴露的输入 | 输出 |
    | --- | --- | --- |
    | x5，small 与 medium | 一个 packed NV12 输入，224x224（`mobilenetv4_{conv_small,conv_medium}_bayese_224x224_nv12.bin`） | F32 `[1,1000,1,1]` |
    | x5，large | 一个 packed NV12 输入，256x256（`mobilenetv4_conv_large_bayese_256x256_nv12.bin`） | F32 `[1,1000,1,1]` |
@@ -174,11 +174,11 @@ docker run --rm --user "$(id -u):$(id -g)" --shm-size 15g \
    | s100/s100p/s600，medium | Y `[1,224,224,1]`、UV `[1,112,112,2]`（`mobilenetv4_conv_medium_nash{e,m,p}_224x224_nv12.hbm`） | F32 `[1,1000]` |
    | s100/s100p/s600，large | Y `[1,256,256,1]`、UV `[1,128,128,2]`（`mobilenetv4_conv_large_nash{e,m,p}_256x256_nv12.hbm`） | F32 `[1,1000]` |
 
-   输出为原始 logits，由 runtime 任务施加 softmax。
-2. 用新制品执行 sample 快速开始做冒烟测试：退出码 0 并打印 Top-5 列表
+   输出为原始 logits，由 runtime 程序应用 softmax。
+2. 用新模型执行样例快速开始中的命令：退出码 0 并打印 Top-5 列表
    （见[预期结果](../README_cn.md#expected-results)）。
 3. 用[评测器](../evaluator/README_cn.md)测量全量精度，并与同一检查点的 FP32
-   ONNX 基线比较；已发布结果与验收规则见
+   ONNX 基线比较；已发布结果见
    [sample README](../README_cn.md#performance)。
 
 <a id="artifacts"></a>

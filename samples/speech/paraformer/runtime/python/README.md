@@ -162,8 +162,7 @@ missing selected WAVs fail instead of silently reducing the evaluated set.
 - `failed.json`: failure after output-directory creation, with current utterance,
   completed earlier records, error type/message and identities collected so far.
   Preflight errors can occur before a directory exists and only print stderr.
-  A failure to write the failure record is also reported; there is no false promise
-  of evidence on a full/unwritable disk.
+  If the failure record cannot be written, check disk space and output permissions before retrying.
 
 `inference_attempted` records pipeline entry. `inference_executed` is false for
 preprocessing, true after a successful pipeline result, and null when the first
@@ -374,8 +373,7 @@ changing it changes dither and is outside the fixed-seed source comparison.
 callable consumes a mapping of physical input names to arrays and returns a
 mapping of physical output names to arrays. `TensorNames` supplies the exact
 names discovered by the model binder; there is no first-output or
-substring fallback in the pipeline. This interface is for application composition,
-not a model `forward` containing CPU processing between several SDK executions.
+substring fallback in the pipeline. Use this interface to compose the three model stages with CPU CIF.
 
 | Stage | Required input | Required output |
 | --- | --- | --- |
@@ -398,17 +396,14 @@ docstrings. The explicit example above runs the same stages as `predict`.
 
 `infer` performs exactly one injected model call and validates/copies raw values;
 it does not apply activation, CIF or decoding. Encoder/predictor postprocessing
-never executes the next model. CPU CIF remains visible in the pipeline, and the
-pipeline bypasses decoder for zero tokens. Prepared tensors are caller-owned,
-mutable arrays, not immutable snapshots; the count context is a separate integer.
-Use separate stage calls serially unless the injected runner provides its own
-concurrency guarantee; the API does not make SDK buffers thread-safe.
+never executes the next model. The pipeline runs CPU CIF between predictor and decoder and skips decoder when the token count is zero. Prepared tensors are caller-owned,
+mutable arrays; the count context is a separate integer.
+Call the stages serially, or use a runner that supports concurrent calls.
 
 Stage failures raise `StageError` (a `ValueError`) with `.stage`, `.operation` and
 the original exception as `__cause__`; CIF errors use stage `cif`/operation
-`integrate`. Operation labels keep their established wording (`pre_process`,
-`forward`, `post_process`) whichever spelling is called, so existing reports see
-identical messages. The CLI failure message retains this attribution. Invalid
+`integrate`. Operation labels use (`pre_process`,
+`forward`, `post_process`) whichever spelling is called, and appear in CLI failure messages. The CLI failure message retains this attribution. Invalid
 pipeline feature length is rejected before model execution. Timed model calls
 (the `infer` implementations) include
 raw validation/copy overhead and adapter execution, not isolated accelerator time;
@@ -439,9 +434,7 @@ their sum is not end-to-end latency.
 The source pipeline is audio → FunASR frontend → encoder → predictor → CPU CIF
 → decoder → token text. CIF takes predictor weights and hidden states and produces
 fixed-size acoustic embeddings plus the token count for the decoder. It performs
-no model execution, file access, token decoding or device selection. Keeping it
-in [cif.py](cif.py) allows inference and calibration to use the same arithmetic
-without adding unrelated helpers to a model inference class.
+no model execution, file access, token decoding or device selection. [cif.py](cif.py) provides this calculation for inference and calibration.
 
 ## Requirements and runnable host example
 
@@ -489,16 +482,6 @@ there is no implicit cast or batch-size expansion. Explicit `real_T=None` preser
 the source calibration's unmasked distribution and must not be used to replace
 inference masking.
 
-## Unit tests
-
-```bash
-python -m unittest discover -s samples/speech/paraformer/tests -v
-```
-
-The unit suite checks CIF fractional crossings, empty output, inference masking, calibration mode, the 100-token cap, input ownership and invalid tensor contracts.
-
-Use the [evaluator](../../evaluator/README.md) for FP32/HMCT execution and CER reporting, and the [conversion guide](../../conversion/README.md) for export, real-audio calibration and OE compilation. S100 inference uses the matching SDK and model package.
-
 <a id="troubleshooting"></a>
 ## Troubleshooting
 
@@ -508,7 +491,7 @@ Use the [evaluator](../../evaluator/README.md) for FP32/HMCT execution and CER r
 | Missing selected WAV | Fix the manifest/audio directory; no implicit skip |
 | Paraformer requires 16000 Hz | Prepare matching audio explicitly; CLI does not resample |
 | Target mismatch / missing board identity | Use preprocess-only on a host; actual inference requires S100 |
-| Vocabulary or CMVN differs from pin | Use the fixed package; do not rename another model's files |
+| Vocabulary or CMVN differs from pin | Prepare the matching model package |
 | Tensor name/type/shape mismatch | Inspect actual model metadata and publication identity |
 
 Choose a fresh output directory for each run and prepare 16 kHz audio with the pinned vocabulary and CMVN. The CLI supports a single WAV, manifest inputs and a prefix limit; see the parameter table above.

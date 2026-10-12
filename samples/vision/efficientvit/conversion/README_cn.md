@@ -2,10 +2,7 @@
 
 # EfficientViT 转换
 
-本目录提供转换资产：单份参考 PTQ YAML
-（`EfficientViT_MSRA_m5_config.yaml`）。目录**不带导出脚本，也不带
-校准数据生产脚本**，因此这是参考配置集而非完全可复现的流程；可复现
-边界见[补充准备](#known-gaps)。
+本目录提供 `EfficientViT_MSRA_m5_config.yaml` PTQ 配置。按下文导出步骤准备 ONNX，并按 YAML 指定的路径、格式和归一化值准备校准数据，再执行 OE 编译；具体准备要求见[补充准备](#known-gaps)。
 
 <a id="source-model"></a>
 ## 源模型
@@ -30,7 +27,7 @@ conversion/
 ## 工具链与目标
 
 模型转换在 x86 Linux 主机上的 RDK X5 OpenExplorer Docker（march
-`bayes-e`）中执行，绝不在板卡上运行。请准备含 `hb_mapper`、`hb_perf`、
+`bayes-e`）中执行。请准备含 `hb_mapper`、`hb_perf`、
 `hrt_model_exec` 的工具链；离线 Docker 镜像可从 D-Robotics 开发者论坛
 （[topic 35229](https://forum.d-robotics.cc/t/topic/35229)）获取。
 
@@ -72,7 +69,7 @@ hb_mapper makertbin --config EfficientViT_MSRA_m5_config.yaml
 ```
 
 YAML 设置 `compile_mode: 'latency'` / `optimize_level: 'O3'`，并通过
-`node_info` 将 28 个注意力 `Softmax` 节点以 int16 I/O 摆上 BPU（级联组
+`node_info` 将 28 个注意力 `Softmax` 节点以 int16 I/O 部署到 BPU（级联组
 注意力结构）。本配置不带 `debug_mode`，也没有 `set_all_nodes_int16`
 优化。
 

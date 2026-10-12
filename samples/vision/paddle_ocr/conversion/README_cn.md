@@ -13,7 +13,7 @@
 
 图文件、输出名、词典与输入协议均按目标区分。不要把 X5 检测器与
 S100 识别器组合，也不能互相替换词典。S100 YAML 也可以把 `march`
-改为 `nash-m`（S100P）或 `nash-p`（S600）重新编译；已发布 manifest
+改为 `nash-m`（S100P）或 `nash-p`（S600）重新编译；已发布清单
 行只覆盖 X5（PP-OCRv3）与 S100（PP-OCRv6），S100P/S600 制品需先经
 该编译路径准备后再使用。
 
@@ -108,7 +108,7 @@ paddle2onnx --model_dir ./inference/PP-OCRv6_rec_infer \
 
 X5 PP-OCRv3：本仓库无自有导出器。配方期望来自确切 PP-OCRv3 release
 的 `en_PP-OCRv3_det_infer.onnx` 与 `en_PP-OCRv3_rec_infer.onnx`；
-本 sample 不把猜测的命令伪装成受支持的 X5 导出配方。
+本示例不把猜测的命令伪装成受支持的 X5 导出配方。
 
 <a id="calibration"></a>
 ## 校准
@@ -145,8 +145,7 @@ python3 scripts/prepare_calibration.py \
 
 检测器张量缩放到 640×640 RGB float32；识别器张量缩放到 320×48
 RGB float32、值域 `[0,1]`，对应运行时的 `no_preprocess` 输入。X5
-输出扩展名 `.rgbchw`，S100 为 `.npy`。每个输出目录必须为空，第二个
-阶段无法静默复用残留张量。请使用来自模型训练域的代表性图像/裁剪；
+输出扩展名 `.rgbchw`，S100 为 `.npy`。每个阶段使用独立的空输出目录。请使用来自模型训练域的代表性图像/裁剪；
 本脚本不决定精度，也不决定所需样本数。
 
 <a id="compile"></a>
@@ -227,7 +226,7 @@ hrt_model_exec model_info --model_file \
   model_output/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm
 ```
 
-把张量名称、形状、dtype 与输出名同所选模型对的契约（见
+把张量名称、形状、数据类型与输出名同所选模型对的契约（见
 [阶段 I/O](../runtime/python/README.md#stage-io)）比对；只登记完整
 引用与元数据都匹配的制品。再在匹配板卡上用运行时与随仓测试图确认。
 

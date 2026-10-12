@@ -172,4 +172,4 @@ calls must be serialized unless the SDK warrants otherwise.
   renaming the file cannot repair layout or raw/log-boundary differences.
 - **Output already exists:** choose a new directory to prevent stale files.
 - **Invalid image/overflow:** supply a decodable nonempty BGR image and inspect
-  model output. Invalid values are rejected rather than silently clipped.
+  model output. Invalid values return an error.

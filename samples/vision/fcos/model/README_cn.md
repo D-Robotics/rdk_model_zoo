@@ -5,13 +5,13 @@
 <a id="artifacts"></a>
 ## 制品清单
 
-| 制品 | 格式 | target | 阶段 | 来源 |
+| 制品 | 格式 | 目标板卡 | 阶段 | 来源 |
 | --- | --- | --- | --- | --- |
-| `fcos_efficientnetb0_detect_512x512_bayese_nv12.bin` | bin | x5 | FCOS detector | manifest 下载 |
-| `fcos_efficientnetb2_detect_768x768_bayese_nv12.bin` | bin | x5 | FCOS detector | manifest 下载 |
-| `fcos_efficientnetb3_detect_896x896_bayese_nv12.bin` | bin | x5 | FCOS detector | manifest 下载 |
+| `fcos_efficientnetb0_detect_512x512_bayese_nv12.bin` | bin | x5 | FCOS detector | 清单下载 |
+| `fcos_efficientnetb2_detect_768x768_bayese_nv12.bin` | bin | x5 | FCOS detector | 清单下载 |
+| `fcos_efficientnetb3_detect_896x896_bayese_nv12.bin` | bin | x5 | FCOS detector | 清单下载 |
 
-精确引用为 `x5:fcos:<filename>`。本 sample 不提交模型二进制。
+精确引用为 `x5:fcos:<filename>`。本示例不提交模型二进制。
 
 <a id="directory"></a>
 ## 目录结构
@@ -43,9 +43,9 @@ bash samples/vision/fcos/model/fulldownload.sh --target x5
 bash samples/vision/fcos/model/download_model.sh --target x5 --variant efficientnetb2
 ```
 
-下载器使用 manifest 的 URL 和 hash。当前三行均为 `sha256: null (unknown)`，本地观察到的摘要不能证明发布来源；缺 URL 或已记录 hash 不匹配时会在安装前失败。
+下载器使用清单的 URL 和摘要。当前三行均为 `sha256: null (unknown)`，本地观察到的摘要用于标识下载文件；缺 URL 或已记录摘要不匹配时会在安装前失败。
 
-Shell 脚本 会从自身目录定位 `download.py`，调用板端镜像提供的 `python3`，不依赖仓库内主机 `.venv`。`download_model.sh` 是 `docs/release/x5/models.yaml` 登记的快捷入口。
+Shell 脚本会从自身目录定位 `download.py`，调用板端镜像提供的 `python3`，不依赖仓库内主机 `.venv`。`download_model.sh` 是 `docs/release/x5/models.yaml` 登记的快捷入口。
 
 <a id="accompanying-files"></a>
 ## 伴随文件
@@ -72,4 +72,4 @@ Shell 脚本 会从自身目录定位 `download.py`，调用板端镜像提供�
 | B2 768 | `.bin` | `null (unknown)`，见 `docs/release/x5/models.yaml` | `adf6436d9c2a4e8374b8124786e19ed9069827489ca7611aeabaee038a33e9ea` |
 | B3 896 | `.bin` | `null (unknown)`，见 `docs/release/x5/models.yaml` | `7044d6c96cdc9cd1afa0d7d73f354c47419d518dcf853caad8123a3d9d304099` |
 
-观测摘要标识记录下载的精确字节，可用于跨主机确认同一份文件；发布者 hash 未知，因此不用于来源认证。准备制品时请记录自己的摘要。
+观测摘要标识记录下载的精确字节，可用于跨主机确认同一份文件；发布者摘要未知，因此不用于来源认证。准备制品时请记录自己的摘要。

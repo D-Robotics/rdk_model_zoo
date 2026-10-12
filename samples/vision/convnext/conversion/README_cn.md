@@ -30,7 +30,7 @@ conversion/
 ## 工具链与目标
 
 模型转换在 x86 Linux 主机的 RDK X5 OpenExplorer Docker 内执行
-（march `bayes-e`），从不在板上运行。请准备含 `hb_mapper`、`hb_perf`、
+（march `bayes-e`）。请准备含 `hb_mapper`、`hb_perf`、
 `hrt_model_exec` 的工具链；离线 Docker 镜像可从地瓜机器人开发者论坛
 （[topic 35229](https://forum.d-robotics.cc/t/topic/35229)）获取。
 
@@ -125,10 +125,7 @@ if __name__ == "__main__":
 <a id="calibration"></a>
 ## 校准
 
-三份 YAML 均要求 `./calibration_data_rgb_f32`
-（float32 RGB `.npy`）并使用 `calibration_type: 'default'`。等价数据必须
-遵循 YAML 数值（mean `123.675 116.28 103.53`，scale `0.01712475
-0.017507 0.01742919`，224x224）；这是声明的要求，不是已验证的管线。
+三份 YAML 均要求 `./calibration_data_rgb_f32`（float32 RGB `.npy`），并使用 `calibration_type: 'default'`。按 YAML 准备 224x224 数据：mean 为 `123.675 116.28 103.53`，scale 为 `0.01712475 0.017507 0.01742919`。
 
 <a id="compile"></a>
 ## 编译
@@ -153,7 +150,7 @@ hb_mapper makertbin --config ConvNeXt_atto.yaml
 `rgb`（`NCHW` 布局）、归一化 `data_mean_and_scale`、前缀
 `ConvNeXt-deploy_224x224_nv12`；均设 `compile_mode: 'latency'` /
 `optimize_level: 'O3'`，并通过 `node_info` 将深度卷积/归一化节点以
-int16 I/O 摆上 BPU（atto 8 处、femto 5 处、nano 8 处；无 Softmax 摆放
+int16 I/O 部署到 BPU（atto 8 处、femto 5 处、nano 8 处；无 Softmax 摆放
 ——ConvNeXt 没有注意力 softmax），均不带 `debug_mode` 与
 `set_all_nodes_int16`。转换前请确认所选 YAML 的 `onnx_model`、
 `cal_data_dir`、`working_dir`、`output_model_file_prefix`。

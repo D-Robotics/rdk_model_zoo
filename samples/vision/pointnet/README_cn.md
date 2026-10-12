@@ -19,13 +19,12 @@ pointnet/
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 └── README_cn.md  # 中文说明
 ```
 
 板端推理
-需要 S100 板端 SDK 和已发布 HBM；下方图像和性能均为源记录。
+需要 S100 板端 SDK 和已发布 HBM；下方图像和性能均为参考记录。
 
 <a id="support-matrix"></a>
 ## 支持矩阵
@@ -56,13 +55,13 @@ python3 samples/vision/pointnet/runtime/python/main.py --target s100
 ```
 
 退出码 0 且生成 `outputs/pointnet/result.json` 表示命令完成。对照查看 `result.png` 和
-`result_orig.png`；图轴沿用源可视化的 X/Z/Y 排列。运行时校验点数与编译模型一致，不静默采样或补点。
+`result_orig.png`；图轴沿用源可视化的 X/Z/Y 排列。输入点数须与编译模型一致；运行时不进行采样或补点。
 
 <a id="expected-results"></a>
 ## 预期结果
 
 `labels.npy` 是 int32 `(N,)` 部件标签，顺序对应输入行；`result.json` 包含各类点数、归一化
-信息、制品身份和实际 metadata。计数之和为 N，但不要求任意输入都出现全部四类。
+信息、制品身份和实际元数据。计数之和为 N，但不要求任意输入都出现全部四类。
 图像看起来合理不能代替精度评估。
 
 ![参考椅子分割结果](test_data/readme_img/chair_res.png)

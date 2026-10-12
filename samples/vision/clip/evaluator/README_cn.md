@@ -7,7 +7,7 @@
 <a id="dataset"></a>
 ## 数据集
 
-默认验证输入为 `samples/vision/clip/test_data/dog.jpg`，prompt 为 `a diagram` 和 `a dog`。BPE 词表随 runtime 提供：`samples/vision/clip/runtime/python/bpe_simple_vocab_16e6.txt.gz`。没有发布更大的评估数据集或准备脚本。
+默认验证输入为 `samples/vision/clip/test_data/dog.jpg`，prompt 为 `a diagram` 和 `a dog`。BPE 词表随运行时提供：`samples/vision/clip/runtime/python/bpe_simple_vocab_16e6.txt.gz`。没有发布更大的评估数据集或准备脚本。
 
 ```text
 # cwd：仓库根目录
@@ -28,12 +28,12 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-使用 RDK X5 板端 `hbm_runtime` 执行图像编码器，以 CPU `onnxruntime` 执行文本编码器。Python 依赖为 NumPy、OpenCV、`ftfy==6.3.1` 和 `regex==2026.9.10`，词表随 runtime 提供。
+使用 RDK X5 板端 `hbm_runtime` 执行图像编码器，以 CPU `onnxruntime` 执行文本编码器。Python 依赖为 NumPy、OpenCV、`ftfy==6.3.1` 和 `regex==2026.9.10`，词表随运行时提供。
 
 <a id="command"></a>
 ## 评估命令
 
-验证入口是 `runtime/python/main.py` 和 `run.sh`。下面的显式命令运行本 sample 并写入用户选择的图片：
+验证入口是 `runtime/python/main.py` 和 `run.sh`。下面的显式命令运行本示例并写入用户选择的图片：
 
 ```bash
 # cwd：仓库根目录；前置：X5 两个模型制品已准备
@@ -53,12 +53,12 @@ python3 samples/vision/clip/runtime/python/main.py \
 | Cosine similarity | 每个文本特征与图像特征点积除以两者 L2 范数及 `1e-12` 稳定项。 | 一张图、N 个 prompt、float32 特征；分数保持 prompt 顺序。 |
 | Rank order | 对 cosine 分数执行降序 `argsort`。 | 使用当前 NumPy 版本的 argsort 平局排序规则。 |
 
-本 sample 没有发布延迟、top-k、检索或分类指标。
+本示例没有发布延迟、top-k、检索或分类指标。
 
 <a id="outputs"></a>
 ## 输出
 
-runtime 将标注图片按 `--img-save-path` 精确写出，并打印 JSON `scores`/`order`。
+运行时将标注图片按 `--img-save-path` 精确写出，并打印 JSON `scores`/`order`。
 
 <a id="reference-results"></a>
 ## 参考结果
@@ -73,8 +73,8 @@ runtime 将标注图片按 `--img-save-path` 精确写出，并打印 JSON `scor
 ## 适用范围
 
 - 没有独立数据集评估器或公开 benchmark。
-- 文本 encoder 是 CPU ONNX，板端需要 ONNX Runtime。
-- 本 sample 只覆盖图文相似度，不包含 C++、训练或文本生成任务。
+- 文本编码器是 CPU ONNX，板端需要 ONNX Runtime。
+- 本示例只覆盖图文相似度，不包含 C++、训练或文本生成任务。
 
 ## 许可
 

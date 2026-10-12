@@ -43,16 +43,14 @@ model/
 
 ```bash
 # 输入：目标对应的 Manifest 行 — 输出：本目录下的制品文件
-# 成功判据：退出码 0，打印观察 digest；不留半成品文件
+# 输出：退出码 0，打印观察 digest；不留半成品文件
 bash samples/vision/resnet/model/download.sh x5    # 或 s100 / s600
 ```
 
 Python 形式等价：
 `python3 samples/vision/resnet/model/download.py --target s100`。下载器先写
 同目录临时文件，存在发布者 SHA-256 时校验，原子落盘且不覆盖已有文件
-（校验失败时保留原文件供调查）。当前行没有发布者 SHA-256，因此下载器打印
-观察 digest 作为本地证据并说明来源未被证明。下载是显式操作，推理过程不会
-触发下载。
+（校验失败时保留原文件供调查）。这些模型的发布方 SHA-256 未记录；下载器打印下载文件的 SHA-256。请先运行下载命令，再执行推理。
 
 <a id="accompanying-files"></a>
 ## 伴随文件
@@ -83,5 +81,4 @@ Python 形式等价：
 | `s100/resnet152_224x224_nv12.hbm` | nash `.hbm`，split Y/UV 输入，F32 `[1,1000]` logits 输出 | null (unknown) |
 | `s600/resnet152_224x224_nv12.hbm` | nash `.hbm`，split Y/UV 输入，F32 `[1,1000]` logits 输出 | null (unknown) |
 
-这些 Manifest 行未记录发布者 SHA-256；未知值保持 `null (unknown)`，禁止
-跨制品复制。每次下载都会打印观察 digest 作为本地证据。
+这些 Manifest 行的 SHA-256 为 `null (unknown)`。下载器打印下载文件的 SHA-256，供本地记录。

@@ -10,8 +10,7 @@
 | `bayes-e/himloco_go2_bayese_1x270.bin` | BIN | 仅 X5 | 融合 estimator 与 actor；obs_history float32 [1,270] → actions float32 [1,12] |
 
 URL 与摘要以[活动 X5 清单](../../../../docs/release/x5/models.yaml)为准。
-S100／S100P／S600 没有匹配发布组合。此模型已经融合，不能将单独 encoder 或 policy
-改名后替代。
+S100／S100P／S600 没有匹配发布组合。请使用已融合的 estimator/actor 模型。
 
 <a id="directory"></a>
 ## 目录结构
@@ -35,8 +34,7 @@ bash samples/robotics/himloco/model/download_model.sh --target x5
 ```
 
 预览输出身份、URL、目标路径与预期摘要，不下载、不写文件。第二条命令显式准备模型。
-已有文件只检查、不覆盖；新下载使用临时文件，核对发布摘要后原子安装。摘要不符返回 2，
-不会留下新的、看似完整的 BIN。纠正输入／路径后重试，不通过改名替代模型。
+已有文件只检查、不覆盖；新下载使用临时文件，核对发布摘要后原子安装。摘要不符返回 2。核对下载地址与文件路径后，重新准备匹配的发布模型。
 可用 `PYTHON` 指定 shell 包装器的解释器。
 
 `--target` 仅接受并默认使用 `x5`。`--output-dir` 默认当前 model 目录，始终在其中

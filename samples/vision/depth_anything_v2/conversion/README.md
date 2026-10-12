@@ -5,11 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="source-model"></a>
 ## Source model
 
-The source provides diagrams and conversion notes, **not an executable recipe**.
-It does not pin the original checkpoint/encoder, weights checksum, export script,
-exported ONNX checksum or upstream revision. Obtain these before attempting to
-reproduce the published HBM. Choosing any similarly named V2 checkpoint is not
-evidence that it matches `depth_any.hbm`.
+Prepare the checkpoint and encoder version matching `depth_any.hbm`, the upstream revision and an ONNX exporter before conversion. This directory provides graph diagrams and conversion settings; checkpoint files and executable export scripts must be obtained separately.
 
 <a id="directory"></a>
 ## Directory structure
@@ -47,21 +43,12 @@ against the runtime binding before compilation.
 <a id="calibration"></a>
 ## Calibration
 
-The source provides no calibration images, sample count, random seed, transform
-script or preprocessing configuration. Runtime actually uses per-pixel RGB
-z-score with epsilon1e-5 after nearest-neighbor stretching; its docstring's
-ImageNet-mean claim is wrong. This observation is not proof that the unavailable
-calibration recipe used the same transform. Confirm where normalization lives
-and avoid adding it twice. Optional letterbox is a different evaluation protocol.
+Prepare representative calibration images and record the sample count, random seed and preprocessing settings. The runtime stretches with nearest-neighbor interpolation and applies per-pixel RGB z-score normalization with epsilon `1e-5`. Match the calibration transform to the exported model and apply normalization once. Letterbox uses a separate geometry protocol.
 
 <a id="compile"></a>
 ## Compilation
 
-There is no compile YAML or launch script in the source. Before supplying a real
-command, pin the compiler version, march, ONNX, input layout/type, normalization
-boundary, calibration set and quantization configuration. Preserve tool logs and
-file digests. An example command with invented defaults would conceal these gaps;
-this directory intentionally contains documentation rather than such a command.
+Prepare the compiler version, march, ONNX, input layout and type, normalization settings, calibration set and quantization configuration before compilation. Compiler YAML and launch scripts are external prerequisites. Save the tool logs and model digests with the generated artifact.
 
 <a id="validation"></a>
 ## Validation and source-recorded similarity

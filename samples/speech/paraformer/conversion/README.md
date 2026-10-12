@@ -126,8 +126,7 @@ A successful report has `status: completed`, source/feature/model SHA-256 values
 package versions, stage node counts and per-case maximum absolute differences.
 Each full output must satisfy `rtol=1e-4, atol=1e-4`, retain its dtype/shape and be
 finite. Parser/preflight failures return 2 before creating output; later errors
-return 2 and preserve partial files plus a `failed` report. Partial artifacts are
-not approved exports. A forcibly terminated process may leave incomplete state.
+return 2 and preserve partial files plus a `failed` report. Use outputs only after `export-report.json` reports `status: completed`. A forcibly terminated process may leave incomplete files.
 
 <a id="fixed-graph-contract"></a>
 ## Fixed input geometry and ONNX preparation
@@ -186,10 +185,7 @@ matching the source recipe's reference count. Fewer files are explicitly recorde
 sample rate, malformed audio or invalid stage outputs fail the run; no selected
 file is silently skipped. There is no implicit resampling or random calibration.
 
-The shared frontend averages multichannel audio, computes fbank/LFR/CMVN with
-CPU seed 191009, and pads/truncates to 400 frames. This reuses the documented
-runtime frontend rather than constructing an entire AutoModel just to extract
-features. Seed, dependencies and input hashes are recorded with each run;
+The shared runtime frontend averages multichannel audio, computes fbank/LFR/CMVN with CPU seed 191009, and pads/truncates to 400 frames. Seed, dependencies and input hashes are recorded with each run;
 actual/retained frame counts and truncation remain visible in each record.
 
 Encoder and predictor execute on CPU ONNX Runtime. Calibration then calls the
@@ -283,7 +279,7 @@ Use a new output directory to retry; earlier logs and partial artifacts remain.
 
 Export must complete all numerical/signature checks; calibration must pass its
 snapshot/array checks; compilation must retain successful stage logs and artifacts.
-These are separate checks: a nonempty HBM is not a model-output validation. Use the
+After compilation, check model output using the following steps. Use the
 [host evaluator](../evaluator/README.md) on FP32/PTQ graphs to obtain per-utterance
 transcripts and CER, then verify the HBM on S100.
 
@@ -296,7 +292,7 @@ hrt_model_exec perf --model_file predictor_int16.hbm --thread_num 1 --frame_coun
 hrt_model_exec perf --model_file decoder_int16.hbm  --thread_num 1 --frame_count 200
 ```
 
-Source-release records for this recipe (S100, single BPU core):
+Reference measurements for this recipe (S100, single BPU core):
 
 | Item | Encoder | Predictor | Decoder |
 | --- | --- | --- | --- |
@@ -381,15 +377,6 @@ for shorter sequences.
 The deployment comparison uses the unmodified upstream decoder export
 followed by the fixed-100 Range pass.
 
-## Graph tests
-
-```bash
-python -m unittest discover -s samples/speech/paraformer/tests -v
-```
-
-Run the suite in the export environment above; missing optional dependencies
-cause skips, so check the reported test counts.
-
 <a id="cif-shape-workaround"></a>
 ## CIF shape workaround
 
@@ -413,12 +400,11 @@ supported by the constant evaluator.
 | `gather_indices_int32(model)` | Gives each Gather index an INT32 representation while preserving constants used by other consumers. Rejects constant overflow, unresolved types and dynamic INT64 indices by default. |
 | `gather_indices_int32(model, allow_dynamic=True)` | Adds Cast for unresolved runtime INT64 values only under a **caller-established INT32 range contract**. It does not insert a runtime bounds check: out-of-range runtime values can wrap. Oversized direct constants are rejected, not silently treated as dynamic. |
 | `fold_constant_ranges(model)` | Replaces Range only when its value follows from supported deterministic constant operations or fixed shape metadata. Rejects data-dependent, unsupported or oversized results. Never freezes a Range from one example inference. |
-| `normalize_axes(model)` | Normalizes negative axes for supported input-rank operations, copying shared axis tensors per consumer. Rejects unknown rank when normalization is required. Unsqueeze is intentionally excluded because its axes use output rank. |
+| `normalize_axes(model)` | Normalizes negative axes for supported input-rank operations, copying shared axis tensors per consumer. Rejects unknown rank when normalization is required. Unsqueeze requires output-rank axis handling and is not supported by this function. |
 
 The last three functions run the ONNX checker before returning. Constant
 propagation uses a limited operator whitelist and a one-million-element cap for
-accepted constants/results. This is a supported-evaluation boundary, not a
-security sandbox or a guarantee about total process memory. Supplied shape
+accepted constants/results. The cap applies to individual accepted constants and results; other graph operations also consume memory. Supplied shape
 metadata must describe the actual model inputs; these passes do not establish
 that contract by observing runtime data.
 
@@ -460,10 +446,10 @@ When integrating a pass into a file workflow, validate the result and compare
 original/rewritten outputs using representative inputs before publishing a new
 file. Do not overwrite the source model. A dynamic-index cast additionally
 requires a range argument based on the model contract, not merely a few passing
-inputs. The API deliberately does not automate either decision.
+inputs.
 
 <a id="known-gaps"></a>
-## Known gaps
+## Additional preparation
 
 - HMCT/OE compilation runs in the OE toolchain environment per [compile](#compile);
   a generated HBM keeps status `compiled_unverified` until the board/SDK checks

@@ -37,7 +37,7 @@ bash samples/vision/repghost/model/download.sh x5 100
 python3 samples/vision/repghost/model/download.py --target x5 --variant 200
 ```
 
-成功判据：退出码 0，打印目标文件与观测 SHA-256。下载先写临时文件，不覆盖已有字节；大小或哈希不匹配时显式报错。服务器不可用时可手动传入匹配的发布文件至 `model/`，记录来源及观测哈希，不能用其他变体替代。
+输出：退出码 0，打印目标文件与观测 SHA-256。下载先写临时文件，不覆盖已有字节；大小或哈希不匹配时显式报错。服务器不可用时可手动传入匹配的发布文件至 `model/`，记录来源及观测哈希，不能用其他变体替代。
 
 <a id="accompanying-files"></a>
 ## 配套文件

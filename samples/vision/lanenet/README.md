@@ -19,7 +19,6 @@ lanenet/
 ├── model/  # Model files and download scripts
 ├── runtime/  # Python and native inference implementations
 ├── test_data/  # Example inputs
-├── tests/  # Automated tests
 ├── README.md  # English instructions
 └── README_cn.md  # Chinese instructions
 ```
@@ -76,7 +75,7 @@ Input preparation stretches the image to 512×256 with INTER_AREA, converts BGR 
 
 Both entries write `embedding.npy` (float32 CHW), `binary.npy` (uint8 labels 0/1), `instance_pred.png`, `binary_pred.png` and `report.json`. Python preserves every named raw output in `raw_outputs.npz` with a name/key map. C++ writes `raw_output_N.npy` and records actual metadata and role indices; its launcher additionally records digests and full output streams. See each runtime README before comparing results.
 
-The embedding PNG clips features to [0,1] and rounds after multiplying by 255. This intentionally replaces the source Python's wrapping/truncation behavior; raw embeddings remain unchanged. The binary PNG displays labels as 0/255. No clustering, lane IDs, tracking, curve fitting, dataset accuracy or latency is produced.
+The embedding PNG clips features to [0,1] and rounds after multiplying by 255. Raw embeddings remain unchanged. The binary PNG displays labels as 0/255. No clustering, lane IDs, tracking, curve fitting, dataset accuracy or latency is produced.
 
 Example LaneNet visualizations:
 

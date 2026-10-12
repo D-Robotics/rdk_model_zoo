@@ -1,12 +1,12 @@
 English | [简体中文](README_cn.md)
 
 # FasterNet evaluation
-Use the bundled image for a single-image classification check. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
+Use the bundled image for a single-image classification. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
 
 <a id="dataset"></a>
 
 ## Dataset
-The functional check uses the bundled test image. Dataset-level accuracy uses ImageNet ILSVRC2012 validation (50,000 images, 1,000 classes). Prepare a ground-truth mapping from each image to its zero-based model class index and compare it with the runtime’s Top-1 class ID. `datasets/imagenet/imagenet_classes.names` maps output indices to display names; per-image truth comes from the dataset annotations. See [ImageNet preparation](../../../../datasets/imagenet/README.md).
+The single-image classification uses the bundled test image. Dataset-level accuracy uses ImageNet ILSVRC2012 validation (50,000 images, 1,000 classes). Prepare a ground-truth mapping from each image to its zero-based model class index and compare it with the runtime’s Top-1 class ID. `datasets/imagenet/imagenet_classes.names` maps output indices to display names; per-image truth comes from the dataset annotations. See [ImageNet preparation](../../../../datasets/imagenet/README.md).
 
 <a id="directory"></a>
 ## Directory structure
@@ -20,23 +20,13 @@ evaluator/
 <a id="environment"></a>
 ## Environment
 
-Host checks need the repository's user-space Python dependencies
-(`requirements-host.txt` at the sample root) and no board SDK. The
-functional board check needs an X5 board with its `hbm_runtime` image, a
-prepared artifact, and the label file. The dataset-level evaluation would
-additionally need the OE/board toolchain stated with the result.
+Run on the matching board with its `hbm_runtime` image, NumPy, OpenCV-Python, PyYAML, a prepared model artifact, and the label file. See the runtime README for installation. Record the board image and toolchain versions with dataset results.
 
 <a id="command"></a>
 ## Command
 
-Host checks (cwd: repository root; success: all tests OK, exit 0):
-
-```bash
-python3 -m unittest discover -s samples/vision/fasternet/tests -v
-```
-
-Functional board check on X5 (prerequisite:
-`bash samples/vision/fasternet/model/download.sh x5 s`; success:
+Board classification on X5 (prerequisite:
+`bash samples/vision/fasternet/model/download.sh x5 s`; output:
 exit 0 and a Top-5 containing a drake-related class):
 
 ```bash
@@ -56,19 +46,14 @@ For a same-board comparison between runs, keep the compared run fixed — same i
 
 | Metric | Definition | Conditions |
 | --- | --- | --- |
-| contract pass | runtime accepts the artifact, tensor names/shapes/dtypes match the binding, one F32 score vector returns | any prepared artifact on its matching board |
 | Top-K agreement | identical post-softmax Top-K class IDs across repeated runs of the same artifact; scores within 1e-5 | same board, same artifact bytes, image, resize type, Top-K |
-| Top-1 accuracy | fraction of argmax-correct predictions over the prepared ImageNet ILSVRC2012 validation set | same artifact, same resize type and Top-K as the functional check |
+| Top-1 accuracy | fraction of argmax-correct predictions over the prepared ImageNet ILSVRC2012 validation set | same artifact, same resize type and Top-K as the single-image classification |
 | latency / FPS | inference timing on the matching board | compare with the published figures under [Reference results](#reference-results), measured under the conditions stated there |
 
 <a id="outputs"></a>
 ## Outputs
 
-Host checks print the unittest result. The functional board check prints
-the Top-K (class ids, scores, labels) on stdout and optionally writes an
-annotated image with `--img-save-path`. For evidence, save the board
-identity, model reference, runtime metadata, raw F32 score tensor, Top-K
-output, image path, resize type, and command line.
+The board command prints Top-K class IDs, scores, and labels to stdout. Use `--img-save-path` to save an annotated image. For comparisons, record the board, model, command, input image, resize mode, and raw scores with the results.
 
 <a id="reference-results"></a>
 ## Reference results
@@ -89,9 +74,9 @@ single-core, FPS multi-threaded; CPU 8xA55@1.8GHz performance mode, BPU
 
 Data version: `rdk_x5_legacy @ cb86079ae5befcef9ca50fb46c8a6d8980106dec`.
 
-The threading descriptions below are the conditions stated with these measurements. The dual-core and X3 eight-thread descriptions refer to X3; X5 has 1×Bayes-e.
+X5 uses 1×Bayes-e. The eight-thread condition below applies to X3 measurements.
 
-The following table shows the performance data obtained from actual testing on RDK X5 & RDK X5 Module. You can weigh the size of the model according to your own reasoning about the actual performance and accuracy required
+Published performance on RDK X5 and RDK X5 Module:
 
 
 | Model        | Size    | Categories | Parameter | Floating point precision | Quantization accuracy | Latency/throughput (single-threaded) | Latency/throughput (multi-threaded) | Frame rate(FPS) |
@@ -103,10 +88,10 @@ The following table shows the performance data obtained from actual testing on R
 
 
 Description:
-1. X5 is in the best state: CPU is 8xA55@1.8G, full core Performance scheduling, BPU is 1xBayes-e@1G, a total of 10TOPS equivalent int8 computing power.
-2. Single-threaded delay is the ideal situation for single frame, single-threaded, and single-BPU core delay, and BPU inference for a task.
-3. The frame rate of a 4-thread project is when 4 threads simultaneously send tasks to a dual-core BPU. In a typical project, 4 threads can control the single frame delay to be small, while consuming all BPUs to 100%, achieving a good balance between throughput (FPS) and frame delay.
-4. The maximum frame rate of 8 threads is for 8 threads to simultaneously load tasks into the dual-core BPU of X3. The purpose is to test the maximum performance of the BPU. Generally, 4 cores are already full. If 8 threads are much better than 4 threads, it indicates that the model structure needs to improve the "calculation/memory access" ratio or optimize the DDR bandwidth when compiling.
+1. X5: CPU 8xA55@1.8G with all cores using Performance scheduling; BPU 1xBayes-e@1G, 10TOPS INT8.
+2. Single-thread latency measures one frame on one BPU core.
+3. Four-thread FPS uses four concurrent task submissions, with BPU utilization at 100%.
+4. The X3 eight-thread measurement uses eight concurrent task submissions to its two BPU cores.
 5. Floating-point/fixed-point precision: Floating-point accuracy uses the Top-1 inference accuracy Level of onnx before the model is quantized, while quantized accuracy is the accuracy Level of the actual inference of the model after quantization.
 
 <a id="boundaries"></a>

@@ -35,8 +35,7 @@ Docker (march `bayes-e`). Prepare the toolchain with `hb_mapper`, `hb_perf`, and
 <a id="export"></a>
 ## Export
 
-The original FasterNet flow uses the
-official FasterNet source code to export ONNX models:
+Use the official FasterNet source code to export ONNX models:
 
 1. Obtain the official FasterNet source code and pretrained weights from
    the reference repository.

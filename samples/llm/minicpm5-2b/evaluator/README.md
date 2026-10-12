@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="dataset"></a>
 ## Dataset
 
-WikiText2 TEST is separate from calibration TRAIN; the pinned checkpoint/tokenizer and TEST digests follow the source records. A full run uses 140 × 2048-token segments; a one-segment wiring check is not a full evaluation. Results below are records from the source S release.
+WikiText2 TEST is separate from calibration TRAIN; the pinned checkpoint/tokenizer and TEST digests follow the source records. A full run uses 140 × 2048-token segments; a one-segment wiring check is not a full evaluation. The reference measurements below identify their model and runtime environment.
 
 <a id="directory"></a>
 ## Directory structure
@@ -74,9 +74,9 @@ HBM SHA256: `7c54a0934b95c26ec378f93716618f17eb58d3efd5d5b3de7b016040513ed0ee`.
 
 [Six prompt/token comparisons](../test_data/generation-reference.json) match official HF greedy output and terminate with EOS. Other recorded tests include a 53/45-token two-turn conversation, code retrieval at padded 2048/3840 input tokens, and 50 repeated requests. The repeat test averaged 53.2503 decode token/s and 147.8602 ms TTFT. Measurements exclude cold model loading and describe a short single-request workload, not soak/concurrency coverage. Prefill counts include chunk padding.
 
-## S100 / S100P full validation (2026-09-09)
+## S100 / S100P measurements (2026-09-09)
 
-Use the separate [OELLM 1.0.0 evaluator](legacy/README.md), with SDK 1.0.0, UCP/DNN 3.7.3 and HBRT 4.2.11. Both board-specific HBMs completed the same 140 × 2048-token TEST stream and 286580 predictions. **Both PPL results are 17.91995474675122, a 27.83167% relative increase over float; the ≤3% accuracy target FAILS.** Completeness and numerical-consistency checks pass; the shared validator intentionally rejects the accuracy result.
+Use the separate [OELLM 1.0.0 evaluator](legacy/README.md), with SDK 1.0.0, UCP/DNN 3.7.3 and HBRT 4.2.11. Both board-specific HBMs completed the same 140 × 2048-token TEST stream and 286580 predictions. **Both PPL results are 17.91995474675122, a 27.83167% relative increase over float; the increase exceeds the evaluator’s ≤3% threshold.** The shared validator reports a failure when this threshold is exceeded.
 
 | Board | Full PPL | Evaluation seconds | Reference text matches | Repeated requests |
 |---|---:|---:|---:|---:|
@@ -87,9 +87,9 @@ Both pass the English/Chinese two-turn conversation and retrieval from approxima
 
 The 50-request mean end-to-end times are 671.37 ms (S100) and 543.22 ms (S100P), excluding model loading. These are wall times, not TTFT. Earlier short-request runtime logs reported approximately 12.1/13.0 decode tokens/s; zero callback performance fields are not measurements. Tools, thinking, multimodal, concurrency and long-duration soak are outside this evaluation's coverage; validate them separately for your deployment.
 
-[First-segment diagnostic](results/legacy-first-segment-diagnostic.json): HF float32 PPL 10.75668, legacy adapter float32 10.75612, actual HBM 14.01536. All eight masks exactly match SDK calibration helpers. The prepared input digest is shared with S600; both executed HBM digests were checked. The packaged evaluator independently reproduces first-segment NLL 5404.3955137729645 on both boards; the S600 figures above come from the source release record.
+[First-segment diagnostic](results/legacy-first-segment-diagnostic.json): HF float32 PPL 10.75668, legacy adapter float32 10.75612, actual HBM 14.01536. All eight masks exactly match SDK calibration helpers. The prepared input digest is shared with S600; both executed HBM digests were checked. The packaged evaluator independently reproduces first-segment NLL 5404.3955137729645 on both boards; the S600 figures above apply to the S600 artifact.
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
 Report completeness, numerical consistency, accuracy threshold, reference text matching and throughput separately. S100/S100P completed full PPL evaluation but did not meet the accuracy target; their generation comparison shows 2/6 exact text matches. S600 token equality belongs to its own HBM. Record SDK/runtime and hardware versions alongside results. Concurrency, soak, tools, thinking and multimodal coverage are outside this evaluation; run board validation through the board commands.

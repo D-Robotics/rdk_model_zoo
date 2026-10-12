@@ -21,11 +21,7 @@ python/
 <a id="environment"></a>
 ## Environment
 
-The core requires Python and NumPy only. It imports no board SDK, Torch, robot
-middleware or conversion toolchain. Run the commands below from repository root.
-Use the repository's host Python environment with NumPy installed. Actual X5
-inference requires the BSP-provided `hbm_runtime` matching the board libraries;
-the core does not install or substitute that dependency.
+Use Python and NumPy. On X5, install the BSP-provided `hbm_runtime` matching the board libraries and prepare the model. Run the commands below from the repository root.
 
 <a id="usage"></a>
 ## Usage
@@ -77,25 +73,18 @@ Use the BSP runtime, not an unrelated PyPI package named hbm_runtime.
 | `observation` | Exactly 270 finite real numeric values, flattened in input order and converted to float32 |
 | `preprocess(...).tensors` | Owned, contiguous float32 `obs_history` `[1,270]` |
 | `infer(tensors)` | Exact named physical input; returns `RawOutputs` containing raw actions and this call's latency |
-| `postprocess(raw)` | Requires `RawOutputs`; no instance-level “last result” dependency |
+| `postprocess(raw)` | Accepts the call’s `RawOutputs` and returns actions and latency |
 
 Flat `[270]`, batch `[1,270]` and history `[6,45]` arrays preserve the source's
 flattening convention. Complex, boolean, string/object, non-finite and float32
-overflow inputs are rejected. Passing raw sensor data does not prepare the
-training observation automatically.
+overflow inputs are rejected. Convert sensor data to the training policy’s observation format before calling the model.
 
 <a id="results"></a>
 ## Results
 
-`HimLocoResult.actions` is an independently owned float32 `[1,12]` array.
-No clipping, activation, reordering, dequantization or scaling is applied.
-`latency_ms` measures the synchronous injected runner call, excluding the task's
-copies, preprocessing and postprocessing; it is not accelerator-only latency.
-Each raw result carries its own time, so processing A after running B cannot
-silently report B's time. SDK exceptions propagate; there is no fallback action.
+`HimLocoResult.actions` is an independently owned float32 `[1,12]` array of raw model actions. `latency_ms` records the synchronous runner call, including runtime adapter overhead and excluding task-level copies, preprocessing and postprocessing. SDK failures raise exceptions.
 
-The source deployment applies `default_joint_position + 0.25 * actions` outside
-the model boundary. This core returns actions only and does not issue robot commands.
+Robot applications must supply their own control loop. The reference controller converts actions with `default_joint_position + 0.25 * actions`.
 
 Successful CLI execution returns 0 and writes `000000.bin`-style source-indexed
 little-endian float32 files, 48 bytes each, plus a `completed` JSON report. The
@@ -110,9 +99,7 @@ treat it as incomplete.
 Inputs are numerically named BIN files, exactly 1080 bytes each, sorted by numeric
 source index. Duplicate indexes are rejected. A colocated
 `../runtime-input-manifest.json`, when present, must match the fixed input contract
-and each selected file's index/digest. Without one, the report records null source
-manifest provenance rather than inventing it. Files are hashed from the same bytes
-used for inference. No text transcript or controller action is produced.
+and each selected file's index/digest. Without one, the report records null manifest provenance. File digests cover the bytes used for inference.
 
 <a id="integration-example"></a>
 ## Integration example
@@ -141,22 +128,16 @@ staged_result = task.postprocess(raw)
 ```
 
 <a id="stage-io"></a>
-## Stage semantics and source fidelity
+## Stage semantics
 
 Each 45-value observation contains velocity commands (3), angular velocity (3,
 source scale 0.25), projected gravity (3), relative joint positions (12), relative
 joint velocities (12, source scale 0.05), and previous actions (12). The current
-observation comes first, followed by five earlier observations. This task does not
-apply those scales again, accumulate history or choose a joint ordering.
+observation comes first, followed by five earlier observations. Apply the training policy’s scales, history stacking and joint order before calling the task.
 
 `preprocess` owns the packed features; `infer` executes one model call; `postprocess` validates and owns the action array; `predict` composes the three stages. `pre_process`, `forward` and `post_process` delegate to the same stage implementations. Results and timing records belong to each call.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting
 
-Wrong observation count requires reconstructing the training-policy history, not
-padding or truncating blindly. Wrong output dtype/name/shape requires checking the
-bound model interface; the core will not silently cast an incompatible model's
-output. Latency attached to a hand-built `RawOutputs` must be finite and nonnegative.
-See the [C++ guide](../cpp/README.md) for native execution and the
-[evaluator guide](../../evaluator/README.md) for action-dump comparisons.
+For an incorrect observation count, reconstruct all six frames using the training policy’s format. For an output dtype, name or shape mismatch, check the model file and interface. Latency in a manually constructed `RawOutputs` must be finite and nonnegative. See the [C++ guide](../cpp/README.md) for native execution and the [evaluator guide](../../evaluator/README.md) for action-file comparisons.

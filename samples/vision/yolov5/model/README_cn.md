@@ -5,9 +5,9 @@
 <a id="artifacts"></a>
 ## 制品清单
 
-active manifest 发布 9 个 X5 制品和 2 个 S 制品。下表的 `{size}` 只是表示 `s`、`m`、`l`、`x` 四种大小的文档简写，不能原样作为文件名。
+active 清单发布 9 个 X5 制品和 2 个 S 制品。下表的 `{size}` 只是表示 `s`、`m`、`l`、`x` 四种大小的文档简写，不能原样作为文件名。
 
-| target | variant | filename | format | URL | SHA-256 |
+| 目标板卡 | variant | filename | format | URL | SHA-256 |
 |---|---|---|---|---|---|
 | X5 | n-v7.0 | `yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin` | bin | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin` | null (unknown) |
 | X5 | s-v2.0 | `yolov5s_tag_v2.0_detect_640x640_bayese_nv12.bin` | bin | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/yolov5s_tag_v2.0_detect_640x640_bayese_nv12.bin` | null (unknown) |
@@ -21,7 +21,7 @@ active manifest 发布 9 个 X5 制品和 2 个 S 制品。下表的 `{size}` �
 | S100 | x-672 | `s100/yolov5x_672x672_nv12.hbm` | hbm | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
 | S600 | x-672 | `s600/yolov5x_672x672_nv12.hbm` | hbm | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
 
-S100P 没有 YOLOv5 制品。所有 manifest 发布校验值均为 `sha256: null (unknown)`。
+S100P 没有 YOLOv5 制品。所有清单发布校验值均为 `sha256: null (unknown)`。
 
 <a id="directory"></a>
 ## 目录结构
@@ -46,7 +46,7 @@ python3 -m samples.vision.yolov5.model.download \
   --output-dir samples/vision/yolov5/model
 ```
 
-S100/S600 使用 `--target s100 --variant x-672` 或 `--target s600 --variant x-672`。脚本会创建目标子目录，并打印观测 digest 和发布值（`unknown`），只下载所选 manifest 行。`run.sh` 和 runtime 不会调用它。
+S100/S600 使用 `--target s100 --variant x-672` 或 `--target s600 --variant x-672`。脚本会创建目标子目录，并打印观测 digest 和发布值（`unknown`），只下载所选清单行。`run.sh` 和运行时不会调用它。
 
 <a id="accompanying-files"></a>
 ## 伴随文件
@@ -58,7 +58,7 @@ S100/S600 使用 `--target s100 --variant x-672` 或 `--target s600 --variant x-
 <a id="local-paths"></a>
 ## 本地路径
 
-执行上述命令后，X5 文件位于 `samples/vision/yolov5/model/`；S 文件位于 `samples/vision/yolov5/model/s100/` 或 `model/s600/`。自定义 `--model-path` 必须和精确匹配的 `--asset-id` 一起使用，不能仅凭文件名猜 target。
+执行上述命令后，X5 文件位于 `samples/vision/yolov5/model/`；S 文件位于 `samples/vision/yolov5/model/s100/` 或 `model/s600/`。自定义 `--model-path` 必须和精确匹配的 `--asset-id` 一起使用，不能仅凭文件名猜目标板卡。
 
 <a id="formats-checksums"></a>
 ## 格式与校验值
@@ -68,4 +68,4 @@ X5 制品为 640×640、Bayes-e、紧凑 NV12 的 `.bin`；S100/S600 使用目�
 <a id="license"></a>
 ## 许可
 
-仓库 helper 遵循 Apache-2.0；模型来源和上游权重许可仍以 manifest/源发布为准。
+仓库辅助脚本遵循 Apache-2.0；模型来源和上游权重许可仍以 manifest/源发布为准。

@@ -75,11 +75,11 @@ mobilenetv4/
 板端 Python 运行需要镜像中与板卡匹配的 `hbm_runtime`、NumPy、OpenCV-Python
 和 Pillow（已发布模型要求抗锯齿双三次的短边缩放，由 Pillow 完成）；
 只有真正执行模型时才导入 SDK（`--help`、`--list-models`、
-`--dry-run` 与主机测试均不需要 SDK）。读取 Manifest 还需要 PyYAML。开发主机
+`--dry-run` 均不需要 SDK）。读取 Manifest 还需要 PyYAML。开发主机
 可从 `requirements-host.txt` 安装用户态依赖：
 
 ```bash
-# cwd：仓库根目录 — 成功判据：输出 "host dependencies: ok"
+# cwd：仓库根目录 — 输出：输出 "host dependencies: ok"
 python3 -m venv .venv-mobilenetv4
 source .venv-mobilenetv4/bin/activate
 python3 -m pip install -r samples/vision/mobilenetv4/requirements-host.txt
@@ -95,12 +95,12 @@ python3 -c "import cv2, numpy, yaml, PIL; print('host dependencies: ok')"
 ```bash
 # 1. 准备制品（输入：Manifest 行 x5:mobilenetv4:mobilenetv4_conv_small_bayese_224x224_nv12.bin）
 #    输出：samples/vision/mobilenetv4/model/mobilenetv4_conv_small_bayese_224x224_nv12.bin
-#    成功判据：退出码 0 并打印观察 digest
+#    输出：退出码 0 并打印观察 digest
 bash samples/vision/mobilenetv4/model/download.sh x5 small
 
 # 2. 运行分类（输入：上一步制品与内置测试图）
 #    输出：stdout 上的 Top-5 类别 ID、分数、标签
-#    成功判据：退出码 0 且打印 Top-5 列表
+#    输出：退出码 0 且打印 Top-5 列表
 python3 samples/vision/mobilenetv4/runtime/python/main.py \
   --target x5 \
   --asset-id x5:mobilenetv4:mobilenetv4_conv_small_bayese_224x224_nv12.bin \
@@ -119,7 +119,7 @@ S100、S100P、S600 换用对应的 `s:` 引用（见 `--list-models`）与根�
 Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并退出 0；除非给出
 `--img-save-path`，否则不写任何输出文件。使用内置测试图 `great_grey_owl.JPEG` 时，Top-1 为
 class 24（`great grey owl`）；使用 `zebra_cls.jpg` 时 Top-1 为 class 340（`zebra`），X5、S100、S100P、S600 上的
-三个变体都是如此（已用发布的构建在每块板上核对）。按支持矩阵选择目标并准备对应制品；运行时会在加载模型前核验板卡身份。
+三个变体都是如此。按支持矩阵选择目标并准备对应制品；运行时会在加载模型前核验板卡身份。
 
 <a id="performance"></a>
 ## 性能数据

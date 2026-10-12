@@ -3,7 +3,7 @@
 # X5 C++ 深度推理
 
 本目录运行五种已发布 X5 YOLO26 Depth BIN。
-具名 `Yolo26Depth` 模型统一负责前处理、warmup 加一次计时 forward 以及已校准 log-depth 还原；
+具名 `Yolo26Depth` 模型统一负责前处理、warmup 加一次计时前向推理以及已校准 log-depth 还原；
 参数解析、绘图与报告写入位于 CLI 模块。
 二进制支持旗标与三个位置参数两种命令形式，并写出带 NumPy 文件头的数组，方便离线评估。
 
@@ -26,7 +26,6 @@ cpp/
 │   ├── main.cpp  # 薄入口：解析参数、构造模型、predict、保存
 │   ├── cli.cpp  # 参数解析、深度上色、NPY/F32/PNG/报告写入
 │   └── depth.cpp  # preprocess/infer/postprocess、letterbox/NV12、SDK 句柄
-├── tests/  # （位于示例 tests/）原生契约、资源与 CLI 主机测试
 ├── CMakeLists.txt  # RDK_TARGET 门控的构建定义
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
@@ -122,7 +121,7 @@ samples/vision/yolo26_depth/runtime/cpp/build/x5/yolo26_depth \
 | 启动器 | `--target`、`--variant`、`--asset-id` | 默认 x5/n，精确 ID 可推断变体；只有 X5 可执行 |
 | 启动器 | `--model-path`、`--converted-model` | 外部模型必须给出精确 ID；自转换模式显式区分来源 |
 | 两者 | `--test-img`、`--output` | 输入图与新输出目录；启动器默认附带 bus、`outputs/yolo26_depth_cpp` |
-| 两者 | `--warmup` | 一次计时前的非负 forward 次数；默认 0（Python 运行时默认 3） |
+| 两者 | `--warmup` | 一次计时前的非负前向推理次数；默认 0（Python 运行时默认 3） |
 | 启动器 | `--binary` | 显式指定已编译二进制，不能与 `--build` 同用 |
 | 启动器 | `--build` | 前置检查后显式配置、编译、执行 |
 | 启动器 | `--dry-run`、`--list-models` | 互斥主机查看模式 |
@@ -149,8 +148,8 @@ auto result = model.postprocess(raw, prepared.context);
 // model.predict(image) 串联完全相同的三个阶段。
 ```
 
-`infer` 先执行恰好 `DepthOptions::warmup` 次不计时 forward，再做一次计时 forward，
-返回已校准原始 log-depth 及 `RunMetadata{latency_ms, warmup}`；计时只覆盖完整 forward
+`infer` 先执行恰好 `DepthOptions::warmup` 次不计时前向推理，再做一次计时前向推理，
+返回已校准原始 log-depth 及 `RunMetadata{latency_ms, warmup}`；计时只覆盖完整前向推理
 （内存复制、缓存操作、SDK 运行、原始输出复制），不含还原阶段。每次调用返回独立拥有的数据，
 不受下一次 predict 影响。模型不可复制；并发处理时为每个工作线程创建独立实例，
 不作出任何 SDK 并发承诺。可选 C++ execution-gate 构造参数仅用于主机测试注入，不暴露为 CLI 绕过选项。
@@ -158,14 +157,14 @@ auto result = model.postprocess(raw, prepared.context);
 | 阶段 | 契约 |
 |---|---|
 | preprocess | 非空 BGR CV_8UC3 → 768 线性 letterbox，填充 114 → 独立打包 NV12 字节及逐次 ImageContext |
-| infer | 精确 warmup + 一次计时 forward；唯一输入/模型/输出；返回带 RunMetadata 的独立 F32 192 方形原始值，不做 exp、绘图或文件写入 |
+| infer | 精确 warmup + 一次计时前向推理；唯一输入/模型/输出；返回带 RunMetadata 的独立 F32 192 方形原始值，不做 exp、绘图或文件写入 |
 | postprocess | 有限 192×192 F32 → exp、放大到 768、按上下文去 padding、还原原图；拒绝不匹配的上下文 |
 | predict | 对一张图恰好串联 preprocess → infer → postprocess |
 
 几何取整与 Python 的 ties-to-even 一致；极端长宽比导致某一缩放尺寸为零时明确报错。
 SDK 输出必须是 F32/NONE、NHWC 或 NCHW 单通道 192 方形。
-正字节 stride 或由 aligned shape 推导的 stride 都会与分配容量核对，支持读取带 padding 的输出。
-输入要求紧凑 NV12 pyramid 几何；带 padding 的逻辑输入尺寸显式不支持，不会静默错误复制。
+正字节 stride 或由 aligned 形状推导的 stride 都会与分配容量核对，支持读取带 padding 的输出。
+输入要求紧凑 NV12 pyramid 几何；带 padding 的逻辑输入尺寸显式不支持。
 
 模型在成功路径恰好一次释放完成的任务句柄（释放失败会报错），guard 兜底全部异常路径；
 析构仅释放已取得的资源，构造失败不泄漏。
@@ -186,6 +185,6 @@ SDK 输出必须是 F32/NONE、NHWC 或 NCHW 单通道 192 方形。
 原生报告摘要及发布/自转换来源；已创建输出目录时另保存原生 stdout/stderr。
 早期失败可能仅有 stderr，部分输出目录不表示成功。
 
-`report.json` 的 `latency_ms` 覆盖一次完整 forward 的内存复制、缓存操作、SDK 调用及原始输出复制，
-且在恰好 `warmup` 次不计时 forward 之后；与 HRT 的纯 BPU 延迟比较时请注意口径差异。
+`report.json` 的 `latency_ms` 覆盖一次完整前向推理的内存复制、缓存操作、SDK 调用及原始输出复制，
+且在恰好 `warmup` 次不计时前向推理之后；与 HRT 的纯 BPU 延迟比较时请注意口径差异。
 深度为相对值，颜色不表示米制距离；精度以数值指标为准。

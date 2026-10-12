@@ -6,7 +6,7 @@
 
 ## 概览
 
-本 Sample 为 RDK X5、S100、S100P、S600 提供目标检测、实例分割、姿态估计、分类及 YOLO26 旋转框任务。YOLO 检测头在多个尺度预测类别与框，CPU 端解码、筛选和还原原图坐标；分割、姿态、OBB 还输出各自的 mask、关键点和角度。模型源项目为 [Ultralytics](https://github.com/ultralytics/ultralytics)。
+本 Sample 为 RDK X5、S100、S100P、S600 提供目标检测、实例分割、姿态估计、分类及 YOLO26 旋转框任务。YOLO 检测头在多个尺度预测类别与框，CPU 端解码、筛选和还原原图坐标；分割、姿态、OBB 还输出各自的掩码、关键点和角度。模型源项目为 [Ultralytics](https://github.com/ultralytics/ultralytics)。
 
 Python 按目标绑定输入、按模型系列选择任务协议，下载、绘图和评估共用。独立 YOLOv5、YOLOE 和 yolo26_depth 使用各自的模型与运行契约。
 
@@ -20,7 +20,6 @@ ultralytics_yolo/
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── tests/  # 自动化测试
 ├── DETECTION_CONTRACT.md  # 说明文档
 ├── README.md  # 英文说明
 └── README_cn.md  # 中文说明
@@ -53,7 +52,7 @@ Python 发布组合详见 [模型清单](model/README_cn.md)：YOLOv5u/v10/12 �
 | 制品 | `.bin` / bayese | `.hbm` / nashe、nashm、nashp |
 | NV12 输入 | 一个 packed 缓冲区 | NHWC Y + UV |
 | Python 检测 NMS 默认 | 0.70 | 0.45；YOLOv10 无 NMS |
-| 分类 CLI resize | YOLO26 拉伸；其余 letterbox | 拉伸 |
+| 分类 CLI 缩放 | YOLO26 拉伸；其余 letterbox | 拉伸 |
 | 分类文件名标记（不是输入覆盖） | YOLO26 224，其余 640 | 公开 URL 使用 224；S100/S100P v8/v11 保留 640 标识 |
 
 <a id="prerequisites"></a>
@@ -117,7 +116,7 @@ YOLO26 检测效果示例（类别 ID 与分数）：
 - [evaluator](evaluator/README_cn.md) — COCO/ImageNet/DOTA、逐任务评估与参考测量.
 - [test_data](test_data/README_cn.md) — 随仓输入图片、显示标签表与效果示例.
 
-源码阅读顺序：`main.py` 是可见的构造与 predict 入口。`cli.py` 负责参数声明、发布资产选择/列表、dry-run 与结果展示；`backend.py` 负责 Runner、张量绑定与运行时 metadata；任务文件（`detect.py`/`segment.py`/`pose.py`/`obb.py`/`classify.py`）处理前处理、推理、后处理。检测 DFL 与 YOLO26 direct LTRB 使用不同协议，详见 [检测契约](DETECTION_CONTRACT.md)。输入尺寸由元数据或显式回退解析。YOLO26 OBB 使用弧度，X5 类别内 NMS/裁剪与 S 路径有区别。
+源码阅读顺序：`main.py` 是可见的构造与 predict 入口。`cli.py` 负责参数声明、发布资产选择/列表、dry-run 与结果展示；`backend.py` 负责 Runner、张量绑定与运行时元数据；任务文件（`detect.py`/`segment.py`/`pose.py`/`obb.py`/`classify.py`）处理前处理、推理、后处理。检测 DFL 与 YOLO26 direct LTRB 使用不同协议，详见 [检测契约](DETECTION_CONTRACT.md)。输入尺寸由元数据或显式回退解析。YOLO26 OBB 使用弧度，X5 类别内 NMS/裁剪与 S 路径有区别。
 
 `--family yolov8|yolo11|yolo26|...` 选择检测、分割、姿态、分类与 OBB 任务。任务输出契约见各任务说明。
 
@@ -131,7 +130,7 @@ Sample 代码遵循仓库 [Apache-2.0 LICENSE](../../../LICENSE)，保留各文�
 <a id="readable-example"></a>
 ## 可读范例与自定义模型
 
-本 sample 是两个可读模型范例之一：完整 DFL 检测流程（初始化、`preprocess`、
+本示例是两个可读模型范例之一：完整 DFL 检测流程（初始化、`preprocess`、
 `infer`、`postprocess`、`predict`）在
 [`runtime/python/detect.py`](runtime/python/detect.py) 中可见；`main.py`
 保持薄入口，构造分派到的任务模型并调用 `predict`。各协议保留自身任务类
@@ -139,7 +138,7 @@ Sample 代码遵循仓库 [Apache-2.0 LICENSE](../../../LICENSE)，保留各文�
 模型经 conversion 流程编译后用 `--model-path`/`--family` 接入（自定义类别数
 配 `--classes-num` 与标签文件）；predict 接受图片路径或 BGR 数组。显式
 `--model-path` 视为自定义模型：未给 `--label-file` 时结果只显示类别 ID，
-不静默套用官方 COCO/ImageNet/DOTA 标签；显式标签数与已绑定模型类别数不符
+显式标签数与已绑定模型类别数不符
 时在推理前报错。图片路径 predict 便利适用于 DFL 检测
 （`detect.py`）；cls/seg/pose/obb 沿用既有数组接口。三条使用路径见
 [docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md)。

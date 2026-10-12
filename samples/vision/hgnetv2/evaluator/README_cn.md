@@ -1,7 +1,7 @@
 [English](README.md) | 简体中文
 
 # HGNetV2 评测
-本指南介绍 X5 单图功能检查和数据集级 Top-K 评估。数据集命令从 CSV 读取图像路径及逐图真值类别索引。
+本指南介绍 X5 单图单图分类和数据集级 Top-K 评估。数据集命令从 CSV 读取图像路径及逐图真值类别索引。
 
 <a id="dataset"></a>
 
@@ -31,17 +31,13 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-eval.py 在 X5 使用 HGNetV2Classifier 和共享 RuntimeModelRunner，依赖相同板端 SDK、NumPy、OpenCV、PyYAML，无额外推理框架。--help 及纯数据/指标测试不需 SDK。SciPy 仅用于源对照主机测试。
+`eval.py` 在 X5 上通过 `HGNetV2Classifier` 和 `RuntimeModelRunner` 执行推理，需要匹配的板端 SDK、NumPy、OpenCV 和 PyYAML。主机可直接运行 `--help`，无需 SDK。
 
 <a id="command"></a>
 ## 命令
 
-```bash
-# cwd: repository root; expected: unittest OK, exit 0
-python3 -m unittest discover -s samples/vision/hgnetv2/tests -v
-```
 
-板端功能检查：
+板端分类：
 
 ```bash
 # cwd: repository root
@@ -92,7 +88,7 @@ Top-1 为首位正确数/成功推理数；Top-K 为真值落在 K 个预测内�
 仅 K=5 时写入 top5_acc；topk_acc 对任意 K 都是命名准确的指标。FPS
 统计循环中的读图及前处理/推理/后处理，不含模型加载与 CSV/目录扫描，
 无预热——不能当作发布表的多线程吞吐。固定图对照使用 ID 一致、分数
-绝对差 <1e-5，完全平局须提供逐 ID 证据。
+绝对差 <1e-5，分数完全相同时逐项比较类别 ID 与分数。
 
 <a id="outputs"></a>
 ## 输出

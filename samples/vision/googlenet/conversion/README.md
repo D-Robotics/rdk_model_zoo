@@ -54,8 +54,7 @@ published artifact route in [model/README.md](../model/README.md).
 The runtime protocol for any rebuilt model is an input tensor of
 `1x3x224x224` before NV12 packing and an ImageNet-1k classification logits
 output (one F32 vector squeezing to 1000 scores). A rebuilt model can be
-selected with the exact contract reference and an external `--model-path`;
-keep its hash/provenance separate from the published artifact. The
+selected with the exact contract reference and an external `--model-path`. The
 functional check with the published artifact:
 
 ```bash

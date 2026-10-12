@@ -19,7 +19,6 @@ cpp/
 │   ├── main.cpp  # 薄入口：解析参数、构造模型、predict、保存
 │   ├── cli.cpp  # 参数解析、叠加渲染、图像/mask/报告写入
 │   └── segment.cpp  # preprocess/infer/postprocess、NV12 绑定、解码、SDK 句柄
-├── tests/  # 自动化测试（分数契约 + 伪 SDK 头的资源清理）
 ├── CMakeLists.txt  # RDK_TARGET 门控的构建定义
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
@@ -71,7 +70,7 @@ bash samples/vision/unetmobilenet/runtime/cpp/run.sh --target s600 --alpha-f 0.5
 | --- | --- | --- |
 | `--target` | `auto` | 启动器检测精确板身份；二进制须显式指定 s100/s600 |
 | `--asset-id` | `None` | 启动器的精确制品身份；外部 model-path 必须提供 |
-| `--model-path` | `None` | 启动器解析 model/<target>/ 下 HBM；二进制须提供路径 |
+| `--model-path` | `None` | 启动器解析 model/<目标板卡>/ 下 HBM；二进制须提供路径 |
 | `--test-img` | `samples/vision/unetmobilenet/test_data/segmentation.png` | 启动器默认值；二进制须提供路径 |
 | `--img-save-path` | `result.jpg` | 原图尺寸叠加图 |
 | `--mask-save-path` | `unetmobilenet_mask.png` | 无损 uint8 类别 0..18，须使用.png |
@@ -89,13 +88,13 @@ bash samples/vision/unetmobilenet/runtime/cpp/run.sh --target s600 --alpha-f 0.5
 <a id="interface-lifecycle"></a>
 ## 接口与生命周期
 
-`UnetMobileNet`（segment.hpp/segment.cpp）管理 packed/model 句柄、两块分离 NV12 输入缓冲与分数输出缓冲。构造时先以可注入的 gate（默认实现先读 /sys/class/boardinfo 再触碰任何 SDK 调用）核对请求目标与嵌入的构建目标，校验 priority 0..255 与 bpu-core -1 或 0..3，随后在任何分配前校验输入数量、分离 NV12 几何/顺序、行距、字节 stride、输出秩/类型以及分数容量与量化元数据。析构仅释放已取得的资源，构造失败不泄漏。
+`UnetMobileNet`（segment.hpp/segment.cpp）管理 packed/model 句柄、两块分离 NV12 输入缓冲与分数输出缓冲。构造时先以可注入的检查（默认实现先读 /sys/class/boardinfo 再触碰任何 SDK 调用）核对请求目标与嵌入的构建目标，校验 priority 0..255 与 bpu-core -1 或 0..3，随后在任何分配前校验输入数量、分离 NV12 几何/顺序、行距、字节 stride、输出秩/类型以及分数容量与量化元数据。析构仅释放已取得的资源，构造失败不泄漏。
 
-公开阶段为 preprocess(image) 返回独立 Y/UV Mat 与该次 ImageContext；infer(prepared) 返回拥有独立内存的 RawScores（含填充的字节与描述符，后续调用不会改动）；postprocess(raw, context) 返回原图尺寸 CV_32S 类别 ID；predict(image) 精确组合这三步。score_spec() 暴露绑定后的输出描述符。所有 SDK 返回值均被检查（含 submit/wait/release）；任务在成功路径恰好释放一次，异常路径由任务 guard 兜底。模型不可复制且非线程安全，多线程使用独立实例。
+公开阶段为 preprocess(image) 返回独立 Y/UV Mat 与该次 ImageContext；infer(prepared) 返回拥有独立内存的 RawScores（含填充的字节与描述符，后续调用不会改动）；postprocess(raw, 上下文) 返回原图尺寸 CV_32S 类别 ID；predict(image) 精确组合这三步。score_spec() 暴露绑定后的输出描述符。所有 SDK 返回值均被检查（含 submit/wait/release）；任务在成功路径恰好释放一次，异常路径由任务 guard 兜底。模型不可复制且非线程安全，多线程使用独立实例。
 
-`cli.cpp` 仅负责渲染与报告 IO：parse_options/print_help、load_image、render_overlay（19 色表、alpha 混合）与 save_results（叠加图、uint8 PNG mask、JSON 报告）。main.cpp 构造模型、调用一次 predict 并把结果交给 save_results；CLI 模块不含任何模型或 SDK 逻辑。
+`cli.cpp` 仅负责渲染与报告 IO：parse_options/print_help、load_image、render_overlay（19 色表、alpha 混合）与 save_results（叠加图、uint8 PNG 掩码、JSON 报告）。main.cpp 构造模型、调用一次 predict 并把结果交给 save_results；CLI 模块不含任何模型或 SDK 逻辑。
 
 <a id="results-interpretation"></a>
 ## 结果解释
 
-成功返回 0，错误返回 2。result.jpg 为原图上的叠加图；PNG mask 保存 uint8 ID，API mask 仍为 int32。读取为整数数组后可与 Python NPY 标签比较。JSON/stdout 记录 target、asset_id、model_path、input_path、publisher_sha256、runtime_version（未查询时为 unknown）、mask_shape、score_shape、score_dtype、scaled、alpha_f、priority、bpu_core 及输出路径。它是单图结果，不是性能或数据集基准。掩码由分数网格经最近邻整数映射直接恢复到原图尺寸。
+成功返回 0，错误返回 2。result.jpg 为原图上的叠加图；PNG 掩码保存 uint8 ID，API 掩码仍为 int32。读取为整数数组后可与 Python NPY 标签比较。JSON/stdout 记录目标板卡、asset_id、model_path、input_path、publisher_sha256、runtime_version（未查询时为 unknown）、mask_shape、score_shape、score_dtype、scaled、alpha_f、priority、bpu_core 及输出路径。它是单图结果，不是性能或数据集基准。掩码由分数网格经最近邻整数映射直接恢复到原图尺寸。

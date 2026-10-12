@@ -45,8 +45,7 @@ Feature summary:
 stride-2 block (right) downsamples without it, and only the final 1×1
 projection is linear.*
 
-The source tree also shipped the paper's block-evolution figure
-(`test_data/seperated_conv.png`):
+The figure below shows the paper's block evolution (`test_data/seperated_conv.png`):
 
 ![Evolution of separable convolution blocks](./test_data/seperated_conv.png)
 
@@ -98,12 +97,12 @@ Board Python execution needs the board image's matching `hbm_runtime`,
 NumPy, OpenCV-Python, and Pillow (the published models expect an antialiased
 bicubic shorter-edge resize, which Pillow performs); the SDK is imported only
 when a model executes
-(`--help`, `--list-models`, `--dry-run`, and host tests need no SDK).
+(`--help`, `--list-models`, `--dry-run` need no SDK).
 Manifest reading also needs PyYAML. On a development host, install the
 user-space dependencies from `requirements-host.txt`:
 
 ```bash
-# cwd: repository root — success: "host dependencies: ok"
+# cwd: repository root — output: "host dependencies: ok"
 python3 -m venv .venv-mobilenetv2
 source .venv-mobilenetv2/bin/activate
 python3 -m pip install -r samples/vision/mobilenetv2/requirements-host.txt
@@ -124,12 +123,12 @@ manifest's model server.
 ```bash
 # 1. Prepare the artifact (input: manifest row x5:mobilenetv2:mobilenetv2_100_bayese_224x224_nv12.bin)
 #    output: samples/vision/mobilenetv2/model/mobilenetv2_100_bayese_224x224_nv12.bin
-#    success: downloader exits 0 and prints the observed digest
+#    output: downloader exits 0 and prints the observed digest
 bash samples/vision/mobilenetv2/model/download.sh x5 100
 
 # 2. Run classification (input: the artifact above plus the bundled test image)
 #    output: Top-5 class ids, scores, labels on stdout
-#    success: exit code 0 and a printed Top-5 list
+#    output: exit code 0 and a printed Top-5 list
 python3 samples/vision/mobilenetv2/runtime/python/main.py \
   --target x5 \
   --asset-id x5:mobilenetv2:mobilenetv2_100_bayese_224x224_nv12.bin \
@@ -147,7 +146,7 @@ For the C++ flow (S100, S100P, S600) use `bash samples/vision/mobilenetv2/runtim
 ## Expected results
 
 The Python run prints a stable Top-K (default 5) of class IDs, scores, and
-labels and exits 0; Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. With the bundled `Scottish_deerhound.JPEG` the Top-1 is class 177 (`Scottish deerhound`)
+labels and exits 0. Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. With the bundled `Scottish_deerhound.JPEG` the Top-1 is class 177 (`Scottish deerhound`)
 and with `zebra_cls.jpg` it is class 340 (`zebra`), for both variants on X5, S100, S100P
 and S600 (checked on each board with the published builds). Select a target and variant listed in the [Support matrix](#support-matrix), prepare that exact manifest artifact with the model downloader, and run the sample on the matching board.
 

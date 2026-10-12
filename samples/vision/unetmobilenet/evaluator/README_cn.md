@@ -5,7 +5,7 @@
 <a id="dataset"></a>
 ## 数据集
 
-Cityscapes 定义 19 类任务，但源未提供带标签验证 split 或数据集执行器。segmentation.png 为冒烟输入，result.jpg 为源记录示意。数据集评估需要有许可的图片／标签、明确 train-ID 映射、忽略标签策略及记录的 split。
+Cityscapes 定义 19 类任务，但源未提供带标签验证 split 或数据集执行器。segmentation.png 为冒烟输入，result.jpg 为参考记录示意。数据集评估需要有许可的图片／标签、明确 train-ID 映射、忽略标签策略及记录的 split。
 
 <a id="directory"></a>
 ## 目录结构
@@ -41,17 +41,17 @@ bash samples/vision/unetmobilenet/runtime/cpp/run.sh --target s100 --build \
 <a id="metrics"></a>
 ## 指标
 
-将 Python NPY 和 C++ PNG 读取为整数类别 ID 数组，报告逐像素一致率。数据集 mIoU 需要 Cityscapes 真值 mask 与评估协议；类别 ID 不适合计算 logits 余弦相似度。
+将 Python NPY 和 C++ PNG 读取为整数类别 ID 数组，报告逐像素一致率。数据集 mIoU 需要 Cityscapes 真值掩码与评估协议；类别 ID 不适合计算 logits 余弦相似度。
 
 <a id="outputs"></a>
 ## 输出
 
-Python 输出 int32 NPY；C++ 输出无损 uint8 PNG ID，API mask 仍为 int32。两侧均保留原图尺寸，输出元数据报告和叠加图。应在可视化前比较数值 mask；JPEG 压缩不适合叠加图的逐像素精确比较。
+Python 输出 int32 NPY；C++ 输出无损 uint8 PNG ID，API 掩码仍为 int32。两侧均保留原图尺寸，输出元数据报告和叠加图。应在可视化前比较数值掩码；JPEG 压缩不适合叠加图的逐像素精确比较。
 
 <a id="reference-results"></a>
 ## 参考结果
 
-本示例源中没有 mIoU/FPS/延迟表。[参考效果图](../test_data/result.jpg) 来自源记录。
+本示例源中没有 mIoU/FPS/延迟表。[参考效果图](../test_data/result.jpg) 来自参考记录。
 
 <a id="boundaries"></a>
 ## 适用范围

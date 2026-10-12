@@ -5,7 +5,7 @@
 <a id="source-model"></a>
 ## 源模型
 
-从官方 [MODNet 工程](https://github.com/ZHKKKe/MODNet) 获取训练 checkpoint 并导出 ONNX。论文：[Is a Green Screen Really Necessary for Real-Time Portrait Matting?](https://arxiv.org/abs/2011.11961)。准备 checkpoint、导出代码、PTQ 配置和校准数据后，使用 X5 工具链编译。
+从官方 [MODNet 工程](https://github.com/ZHKKKe/MODNet) 获取训练权重文件并导出 ONNX。论文：[Is a Green Screen Really Necessary for Real-Time Portrait Matting?](https://arxiv.org/abs/2011.11961)。准备权重文件、导出代码、PTQ 配置和校准数据后，使用 X5 工具链编译。
 
 <a id="directory"></a>
 ## 目录结构
@@ -19,7 +19,7 @@ conversion/
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-源文档描述 RDK X5 OpenExplorer 工具 `hb_mapper`、`hb_perf` 和 `hrt_model_exec`。manifest 只有 X5 `bayes-e` 部署制品，没有 S 目标或 C++ 转换路径。
+源文档描述 RDK X5 OpenExplorer 工具 `hb_mapper`、`hb_perf` 和 `hrt_model_exec`。清单只有 X5 `bayes-e` 部署制品，没有 S 目标或 C++ 转换路径。
 
 <a id="export"></a>
 ## 导出
@@ -29,7 +29,7 @@ conversion/
 <a id="calibration"></a>
 ## 校准
 
-没有 PTQ YAML 或校准生成器。`test_data/person.jpg` 是推理 fixture，不是代表性校准集。
+没有 PTQ YAML 或校准生成器。`test_data/person.jpg` 是推理示例输入，不是代表性校准集。
 
 <a id="compile"></a>
 ## 编译
@@ -65,11 +65,11 @@ hrt_model_exec perf \
 <a id="artifacts"></a>
 ## 产物
 
-唯一 manifest 行是手工制品 `x5:modnet:modnet_512x512_rgb.bin`，runtime 期望路径为 `../model/modnet_512x512_rgb.bin`。ONNX、checkpoint、校准数据、YAML、日志和编译模型都是外部输入。
+唯一清单行是手工制品 `x5:modnet:modnet_512x512_rgb.bin`，运行时期望路径为 `../model/modnet_512x512_rgb.bin`。ONNX、权重文件、校准数据、YAML、日志和编译模型都是外部输入。
 
 <a id="known-gaps"></a>
 ## 补充准备
 
 - 源 README 提到的 `onnx_export/`、`ptq_yamls/` 未随附。
-- checkpoint 版本、导出参数、校准集、PTQ 设置和编译输出命名未知。
-- manifest 没有 URL 或发布者 SHA-256。
+- 权重文件版本、导出参数、校准集、PTQ 设置和编译输出命名未知。
+- 清单没有 URL 或发布者 SHA-256。

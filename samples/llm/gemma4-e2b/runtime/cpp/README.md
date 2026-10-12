@@ -307,7 +307,7 @@ For ChatBox, set the API type to OpenAI-compatible, the base URL to `http://BOAR
 Pass `--help` to any binary to see the gflags-generated full help.
 
 <a id="interface-lifecycle"></a>
-## Key Design Decisions
+## Model behavior
 
 1. **Vision injection is raw** — ViT output `[280, 1536]` is injected directly into `inputs_embeds` at image soft-token positions (token ID 249560). No L2-norm scaling, no √1536 multiplication.
 
@@ -323,32 +323,11 @@ Pass `--help` to any binary to see the gflags-generated full help.
 
 7. **Unified dual-model lifecycle** — `main` always loads Vision before Text and keeps both resident for the process lifetime. This order avoids the S600 cross-core IOVA mapping conflict while preserving identical chat control flow on S100, S100P, and S600; only the matching HBMs, CMake SoC macros, and `run.sh` environment setup differ.
 
-### Interactive chat entry: model + CLI, thin main
+### Chat API
 
-`main` is split at the model/presentation boundary. `src/cli.hpp/.cpp` is the
-CLI layer: `ParseOptions` owns the gflags command line, `$GEMMA4_HOME`
-default-path resolution and generation-flag validation (returning a
-`ChatOptions` value), `ParseCommand` classifies each normalized terminal line
-into a `TerminalCommand`, and the same module owns the banner/help, REPL
-prompt, UTF-8/GB18030 terminal normalization and result/image/context report
-lines. `src/main.cpp` is the thin entry: it calls `ParseOptions`, visibly
-constructs the named model — `gemma4::Gemma4` (`gemma4.hpp/.cpp`) — and runs
-the read-dispatch loop, calling `model.predict(...)` once per chat turn and
-`model.LoadImage(...)` for image turns. Undecodable terminal input prints the
-terminal-configuration error, re-prompts and keeps the session alive; only
-end-of-input or `/quit` exits. The model constructor loads Vision before Text
-plus the tokenizer and performs no console IO: load progress and `[context]`
-notices are emitted through injected sinks, generated fragments through a
-caller-owned token sink.
-The model owns the conversation (chat-history JSON, oldest-turn trimming
-against the 4096-token budget, prefix-mismatch resets, image-feature
-retention) and returns an owned `ChatTurnResult` carrying the report facts
-(reply, streamed-token count, elapsed time, tokens/sec, budget, trim status).
-Model execution stays in the real runtime classes:
-text generation is delegated to `TextEngine::ContinueGenerateStream` (with
-`BuildPromptHidden` for image turns) and image encoding to `PredictVision` +
-`VisionEngine::Infer`. No engine or model API performs console IO, and the
-engines themselves never print implicitly.
+`gemma4::Gemma4` (`gemma4.hpp`) owns a conversation and loads Vision, Text and the tokenizer at construction. Call `model.predict(...)` once per chat turn and `model.LoadImage(...)` for image turns. It manages chat history, complete-turn trimming within 4096 tokens, prefix resets and retained image features.
+
+The returned `ChatTurnResult` owns the reply, streamed-token count, elapsed time, tokens/sec, output budget and trim status. Supply sinks for loading/context notices and streamed text. Text generation uses `TextEngine::ContinueGenerateStream`; image encoding uses `PredictVision` and `VisionEngine::Infer`.
 
 ### Vision library interfaces and responsibilities
 
@@ -424,56 +403,6 @@ embedding maximum absolute error ≤1e-3, and zero error for both masks. Cosine 
 `ALL PASSED` corresponds to exit code 0; mismatches or exceptions return 1. See [evaluation prerequisites](../../evaluator/README.md).
 Each TextEngine owns one session and its KV state; callers must serialize access. An interactive session is not a stateless, concurrently shared inference function.
 
-### Host regression without the SDK
-
-Checks stage contracts and source preprocessing parity using already installed OpenCV C++ libraries; it installs no dependencies and prepares no models:
-
-```bash
-# From repository root; set OpenCV_DIR if OpenCV is not on CMake's search path.
-cmake -S samples/llm/gemma4-e2b/tests/native -B /tmp/gemma-vision-tests -DCMAKE_BUILD_TYPE=Release
-cmake --build /tmp/gemma-vision-tests --parallel
-ctest --test-dir /tmp/gemma-vision-tests --output-on-failure
-```
-
-The suite covers Vision stage/source-image/tensor checks, KV
-allocation/reset/append/aliasing/prefix-retention, Text ownership (including
-tensor adoption under injected allocation failure), tensor contracts,
-generation flow and stage/session behavior, plus the runnable README example.
-Assertions stay enabled in Release builds. The tests run against an explicit
-offline runner; real SDK descriptors and board numerical results come from
-the board commands in this guide.
-
-The interactive chat entry has its own host check, which compiles the production
-model source `src/gemma4.cpp`, the CLI source `src/cli.cpp` and the real
-`src/main.cpp` against the engine doubles in `tests/native/chat_app_doubles.cpp`,
-the SDK header double in `tests/native/sdk_fixtures` and clearly-marked compile
-stubs for the third-party tokenizers-cpp / OpenCV headers
-(`tests/native/app_stubs/`). The scenario driver calls the Gemma4 model API
-directly (one `predict` per turn, `LoadImage` for image turns); the entry
-binary exercises the real REPL through redirected stdin:
-
-```bash
-python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_chat_app.py -v
-```
-
-The check covers the session logic end to end: engine construction messages,
-streaming echo, `/reset` `/context` `/image`/`/quit` commands, image-turn wiring
-(`LoadImage`/`PredictVision`/`Infer` chain with prompt-hidden injection),
-oversize-prompt rejection, oldest-turn history trimming, per-turn rebuild
-mode, cross-turn context growth, GB18030 terminal conversion, and the moved
-entry/CLI boundary: flag defaults and validation, the invalid-line-then-valid
-line path (an undecodable line re-prompts and the session continues), and
-`/image` argument errors. It runs against marked doubles; the real
-SDK/OpenCV/tokenizers-cpp stack and generation run on the board.
-`GEMMA_CXX` selects the compiler. nlohmann-json headers come from the
-`GEMMA_JSON_INCLUDE` override, `pkg-config nlohmann_json`, or standard system
-include roots (`/usr/include`, `/usr/local/include`, `/opt/homebrew/include`);
-the entry check likewise links the real host gflags from
-`GFLAGS_INCLUDE_DIR` + `GFLAGS_LIB_DIR` (both together), `pkg-config gflags`,
-or standard system roots. A missing dependency skips the affected host checks
-with the recorded reason, while an invalid override fails the run. iconv links `-liconv` only on macOS; Linux
-uses the libc iconv.
-
 ### SDK failure handling
 
 Failed Vision construction releases acquired input/output buffers and the packed model; successful SDK calls returning null handles/buffers are rejected.
@@ -483,13 +412,6 @@ Full-flush and Text/KV selective-flush entries share one task lifecycle: input f
 Failures after task acquisition release it, including inference errors that still return a task. Normal-path release errors propagate without retrying the same handle.
 Selective-flush index semantics, S600 compiled-core selection and optional V3 dispatch use the same task lifecycle.
 
-Host resource tests run against SDK doubles on both the S100/S600 compile
-branches and check memory/handle ownership under error injection. From the
-repository root:
-
-```bash
-python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_resources.py -v
-```
 
 ### Vision tensor transport contract
 
@@ -507,11 +429,6 @@ Descriptors are validated before allocation and output properties are revalidate
 Input truncates F32 to F16 and zeroes padding before writing. Output extraction honors both row and column strides and returns owned floats without padding.
 Output tensors must use a supported F16/F32 dtype; unknown and integer outputs are rejected. F16/F32 storage conversion does not modify the quantization recipe.
 
-Host integration tests call the production `VisionEngine::Infer`; SDK doubles
-inspect packed inputs and populate F16/F32 outputs with row and element gaps,
-and inject invalid type, quantization flags, shape, stride, post-inference
-capacity changes and nonfinite output. Validate real published HBM
-descriptors through the board run.
 
 ### KV state and ownership
 
@@ -537,10 +454,6 @@ append and prefix retention move/copy rows, and the inference entry flushes CPU-
 Maintain cache data and positions with `Reset`, `Append` and `CompactShift`.
 `TextEngine::ContextShift` retains a prefix; callers then re-prefill the suffix they want.
 
-Independent host test entry:
-```bash
-python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_kv.py -v
-```
 
 ### Text initialization and tensor ownership
 
@@ -591,23 +504,6 @@ through the descriptor strides. Greedy argmax scales int16 storage by
 `kLogitScale` and keeps the first maximum; a tie keeps the first maximal
 position and an all-zero row decodes to token 0.
 
-Host coverage: a helper contract test (padding, singleton axes, dtype/shape/
-stride/capacity/quantization rejections, argmax row addressing and tie
-semantics), and a generation-flow test that drives the production engine
-against an SDK double speaking this contract — generated tokens, cache
-transport through the borrowed KV inputs, inference failure cleanup,
-post-inference descriptor drift and a constructor rejection matrix.
-
-Host test entry:
-```bash
-python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_text_tensors.py -v
-```
-
-Host tests replace only SDK calls and embedding loading: injected failure
-points, six invalid descriptor cases and normal teardown check that no tensor/model allocation remains. A
-separate owner test covers partial construction, moves, repeated clearing and
-borrowed-cache survival. No weights are loaded and no inference calls are made
-in the ownership tests.
 
 ### Text pipeline stages
 
@@ -713,8 +609,3 @@ stage operating on a `ModelIo`) is not thread-safe — serialize access; the
 stage functions themselves hold no global state. Inference failures propagate
 as exceptions with the task released and all buffers still owned, so a session
 can `ResetSession` and continue.
-
-Host test entry:
-```bash
-python3 -m unittest discover -s samples/llm/gemma4-e2b/tests -p test_cpp_text_stages.py -v
-```

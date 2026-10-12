@@ -140,8 +140,7 @@ hb_mapper makertbin --model-type onnx --config hgnetv2_${VARIANT}.yaml
 
 The runtime protocol is 224×224 packed NV12 input and one F32 output
 squeezing to 1000 scores. A rebuilt model can be selected with the exact
-contract reference and an external path; keep its hash/provenance separate
-from the published artifact. The functional check with the published
+contract reference and an external path. The functional check with the published
 artifact:
 
 ```bash

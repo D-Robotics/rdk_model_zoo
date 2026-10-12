@@ -72,12 +72,12 @@ resnet/
 
 Board Python execution needs the board image's matching `hbm_runtime`,
 NumPy, and OpenCV-Python; the SDK is imported only when a model executes
-(`--help`, `--list-models`, `--dry-run`, and host tests need no SDK).
+(`--help`, `--list-models`, `--dry-run` need no SDK).
 Manifest reading also needs PyYAML. On a development host, install the
 user-space dependencies from `requirements-host.txt`:
 
 ```bash
-# cwd: repository root — success: "host dependencies: ok"
+# cwd: repository root — output: "host dependencies: ok"
 python3 -m venv .venv-resnet
 source .venv-resnet/bin/activate
 python3 -m pip install -r samples/vision/resnet/requirements-host.txt
@@ -100,12 +100,12 @@ manifest's model server.
 ```bash
 # 1. Prepare the artifact (input: manifest row x5:resnet:resnet18_224x224_nv12.bin)
 #    output: samples/vision/resnet/model/resnet18_224x224_nv12.bin
-#    success: downloader exits 0 and prints the observed digest
+#    output: downloader exits 0 and prints the observed digest
 bash samples/vision/resnet/model/download.sh x5
 
 # 2. Run classification (input: the artifact above plus the bundled test image)
 #    output: Top-5 class ids, scores, labels on stdout
-#    success: exit code 0 and a printed Top-5 list
+#    output: exit code 0 and a printed Top-5 list
 python3 samples/vision/resnet/runtime/python/main.py \
   --target x5 \
   --asset-id x5:resnet:resnet18_224x224_nv12.bin \

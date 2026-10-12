@@ -2,7 +2,7 @@ English | [简体中文](README_cn.md)
 
 # ResNet evaluation (ResNet18/50/152)
 
-Use the bundled image for a functional board check. For dataset accuracy, prepare the matching labeled validation split and aggregate predictions using the metric definitions below. Reference tables list published measurements and their operating conditions.
+Use the bundled image for a board classification. For dataset accuracy, prepare the matching labeled validation split and aggregate predictions using the metric definitions below. Reference tables list published measurements and their operating conditions.
 
 <a id="dataset"></a>
 
@@ -25,25 +25,14 @@ evaluator/
 <a id="environment"></a>
 ## Environment
 
-Host checks need the repository's user-space Python dependencies
-(`requirements-host.txt` at the sample root) and no board SDK. The
-functional board check needs the target board with its `hbm_runtime`
-image, a prepared artifact, and the label file. The dataset-level
-evaluation additionally needs the OE/board toolchain stated with the
-result.
+Run on the matching board with its `hbm_runtime` image, NumPy, OpenCV-Python, PyYAML, a prepared model artifact, and the label file. See the runtime README for installation. Record the board image and toolchain versions with dataset results.
 
 <a id="command"></a>
 ## Command
 
-Host checks (cwd: repository root; success: all tests OK, exit 0):
-
-```bash
-python3 -m unittest discover -s samples/vision/resnet/tests -v
-```
-
-Functional board check — X5 (prerequisite:
-`bash samples/vision/resnet/model/download.sh x5 resnet18`; success: exit 0
-and the expected Top-K):
+Board classification — X5 (prerequisite:
+`bash samples/vision/resnet/model/download.sh x5 resnet18`; output: exit 0
+and the Top-K classes and scores):
 
 ```bash
 python3 samples/vision/resnet/runtime/python/main.py \
@@ -55,7 +44,7 @@ python3 samples/vision/resnet/runtime/python/main.py \
   --top-k 5
 ```
 
-Functional board check — S100 (S600 uses `s600` in the asset reference and
+Board classification — S100 (S600 uses `s600` in the asset reference and
 artifact path):
 
 ```bash
@@ -78,7 +67,6 @@ ResNet50/152 (S100/S600) follow the same command with their
 
 | Metric | Definition | Conditions |
 | --- | --- | --- |
-| contract pass | runtime accepts the artifact, tensor names/shapes/dtypes match the binding, one F32 score vector returns | any prepared artifact on its matching board |
 | Top-K output | class IDs, scores and labels printed for the bundled image; repeated runs return the same list | same board, artifact bytes, image, resize type, Top-K |
 | Top-1 accuracy | fraction of argmax-correct predictions | run on the prepared ImageNet val set; record the split with the result |
 | latency / FPS | inference timing | measure on the target board; record batch/thread settings with the result (see the reference conditions below) |
@@ -86,11 +74,7 @@ ResNet50/152 (S100/S600) follow the same command with their
 <a id="outputs"></a>
 ## Outputs
 
-Host checks print the unittest result. The functional board check prints
-the Top-K (class ids, scores, labels) on stdout and optionally writes an
-annotated image with `--img-save-path`. For evidence, save the board
-identity, model reference, runtime metadata, raw F32 score tensor, Top-K
-output, image path, resize type, and command line.
+The board command prints Top-K class IDs, scores, and labels to stdout. Use `--img-save-path` to save an annotated image. For comparisons, record the board, model, command, input image, resize mode, and raw scores with the results.
 
 <a id="reference-results"></a>
 ## Reference results
@@ -110,7 +94,7 @@ ResNet18/50/152.
 
 Data version: `rdk_x5_legacy @ cb86079ae5befcef9ca50fb46c8a6d8980106dec`.
 
-The threading descriptions below are the conditions stated with these measurements. The dual-core and X3 eight-thread descriptions refer to X3; X5 has 1×Bayes-e.
+X5 uses 1×Bayes-e. The eight-thread condition below applies to X3 measurements.
 
 The following table shows the performance data obtained from actual testing on RDK X5 & RDK X5 Module.
 
@@ -119,10 +103,10 @@ The following table shows the performance data obtained from actual testing on R
 | ResNet18 | 224x224 | 1000 | 11.2    | 71.49 | 70.50 | 2.95        | 8.81        | 448.79 |
 
 Description:
-1. X5 is in the best state: CPU is 8xA55@1.8G, full core Performance scheduling, BPU is 1xBayes-e@1G, a total of 10TOPS equivalent int8 computing power.
-2. Single-threaded delay is the ideal situation for single frame, single-threaded, and single-BPU core delay, and BPU inference for a task.
-3. The frame rate of a 4-thread project is when 4 threads simultaneously send tasks to a dual-core BPU. In a typical project, 4 threads can control the single frame delay to be small, while consuming all BPUs to 100%, achieving a good balance between throughput (FPS) and frame delay.
-4. The maximum frame rate of 8 threads is for 8 threads to simultaneously load tasks into the dual-core BPU of X3. The purpose is to test the maximum performance of the BPU. Generally, 4 cores are already full. If 8 threads are much better than 4 threads, it indicates that the model structure needs to improve the "calculation/memory access" ratio or optimize the DDR bandwidth when compiling.
+1. X5: CPU 8xA55@1.8G with all cores using Performance scheduling; BPU 1xBayes-e@1G, 10TOPS INT8.
+2. Single-thread latency measures one frame on one BPU core.
+3. Four-thread FPS uses four concurrent task submissions, with BPU utilization at 100%.
+4. The X3 eight-thread measurement uses eight concurrent task submissions to its two BPU cores.
 5. Floating-point/fixed-point precision: Floating-point accuracy uses the Top-1 inference accuracy Level of onnx before the model is quantized, while quantized accuracy is the accuracy Level of the actual inference of the model after quantization.
 
 ### RDK X3 / X3 Module performance
@@ -139,17 +123,12 @@ The following table shows the performance data obtained from actual testing on R
 
 Description:
 1. X3 is in the best state: CPU is 4xA53@1.5G, full core Performance scheduling, BPU is 2xBernoulli@1G, a total of 5TOPS equivalent int8 computing power.
-2. Single-threaded delay is the ideal situation for single frame, single-threaded, and single-BPU core delay, and BPU inference for a task.
-3. The frame rate of a 4-thread project is when 4 threads simultaneously send tasks to a dual-core BPU. In a typical project, 4 threads can control the single frame delay to be small, while consuming all BPUs to 100%, achieving a good balance between throughput (FPS) and frame delay.
-4. The maximum frame rate of 8 threads is for 8 threads to simultaneously load tasks into the dual-core BPU of X3. The purpose is to test the maximum performance of the BPU. Generally, 4 cores are already full. If 8 threads are much better than 4 threads, it indicates that the model structure needs to improve the "calculation/memory access" ratio or optimize the DDR bandwidth when compiling.
+2. Single-thread latency measures one frame on one BPU core.
+3. Four-thread FPS uses four concurrent task submissions, with BPU utilization at 100%.
+4. The X3 eight-thread measurement uses eight concurrent task submissions to its two BPU cores.
 5. Floating-point/fixed-point precision: Floating-point accuracy uses the Top-1 inference accuracy Level of onnx before the model is quantized, while quantized accuracy is the accuracy Level of the actual inference of the model after quantization.
 
 <a id="boundaries"></a>
 ## Boundaries
 
-The checked-in material covers host contract tests and the functional
-board check. Run dataset-level accuracy and latency through your own
-harness on the prepared ImageNet val data, and record the board identity,
-artifact, toolchain, batch and thread settings with every result. When a
-board is unreachable or an artifact is unavailable, record that item
-explicitly instead of dropping it.
+Use your own evaluation loop with the prepared ImageNet validation data to measure dataset accuracy and latency. Record the board, artifact, toolchain, batch size, and thread settings with each result.

@@ -12,17 +12,17 @@
 | `x5:yoloe:yoloe_11s_seg_pf_bayese_640x640_nv12.bin` | x5 | 11s | floating |
 | `x5:yoloe:yoloe_11m_seg_pf_bayese_640x640_nv12.bin` | x5 | 11m | floating |
 | `x5:yoloe:yoloe_11l_seg_pf_bayese_640x640_nv12.bin` | x5 | 11l | floating |
-| `s:yoloe11_seg:yoloe_11s_seg_pf_nashe_640x640_nv12.hbm` | s100 | 11s | native SCALE outputs (Python) |
-| `s:yoloe26_seg:nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26n | native SCALE outputs (Python) |
-| `s:yoloe26_seg:nash-e/yoloe_26s_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26s | native SCALE outputs (Python) |
-| `s:yoloe26_seg:nash-e/yoloe_26m_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26m | native SCALE outputs (Python) |
-| `s:yoloe26_seg:nash-e/yoloe_26l_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26l | native SCALE outputs (Python) |
-| `s:yoloe26_seg:nash-e/yoloe_26x_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26x | native SCALE outputs (Python) |
-| `s:yoloe26_seg:nash-m/yoloe_26n_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26n | native SCALE outputs (Python) |
-| `s:yoloe26_seg:nash-m/yoloe_26s_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26s | native SCALE outputs (Python) |
-| `s:yoloe26_seg:nash-m/yoloe_26m_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26m | native SCALE outputs (Python) |
-| `s:yoloe26_seg:nash-m/yoloe_26l_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26l | native SCALE outputs (Python) |
-| `s:yoloe26_seg:nash-m/yoloe_26x_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26x | native SCALE outputs (Python) |
+| `s:yoloe11_seg:yoloe_11s_seg_pf_nashe_640x640_nv12.hbm` | s100 | 11s | 原生 SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26n | 原生 SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-e/yoloe_26s_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26s | 原生 SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-e/yoloe_26m_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26m | 原生 SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-e/yoloe_26l_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26l | 原生 SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-e/yoloe_26x_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26x | 原生 SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-m/yoloe_26n_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26n | 原生 SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-m/yoloe_26s_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26s | 原生 SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-m/yoloe_26m_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26m | 原生 SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-m/yoloe_26l_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26l | 原生 SCALE outputs (Python) |
+| `s:yoloe26_seg:nash-m/yoloe_26x_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26x | 原生 SCALE outputs (Python) |
 
 <a id="directory"></a>
 ## 目录结构
@@ -59,7 +59,7 @@ bash samples/vision/yoloe/model/download.sh --target s100p --variant 26n
 <a id="local-paths"></a>
 ## 本地路径
 
-默认路径为 `model/<target>/<manifest filename>`，S26 保留 `nash-e/` 或 `nash-m/` 子目录；`--output-dir` 则在指定目录后直接拼接 manifest filename。`--model-path=null` 按选择推导。X5/S100 默认 11s，S100P 默认 26n；显式 asset-id 在未指定 variant 时优先。
+默认路径为 `model/<target>/<manifest filename>`，S26 保留 `nash-e/` 或 `nash-m/` 子目录；`--output-dir` 则在指定目录后直接拼接清单 filename。`--model-path=null` 按选择推导。X5/S100 默认 11s，S100P 默认 26n；显式 asset-id 在未指定 variant 时优先。
 
 自行转换浮点 HBM 时必须同时指定 `--model-path` 和 `--local-float-sha256`：摘要用于精确识别本地字节并完成选择，`source_asset_id` 记录该转换的协议来源。加载时核验目标平台和全部十个 NHWC float32 输出角色，目标兼容性由这些加载检查与板端运行共同确认。
 

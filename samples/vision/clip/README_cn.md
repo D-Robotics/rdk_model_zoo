@@ -17,7 +17,6 @@ clip/
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
 └── requirements-host.txt  # 源码或数据文件
@@ -26,7 +25,7 @@ clip/
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
-active manifest 只有 RDK X5 的制品对。没有 S100、S100P、S600 的 CLIP 制品，也未提供 C++ runtime。
+active 清单只有 RDK X5 的制品对。没有 S100、S100P、S600 的 CLIP 制品，也未提供 C++ 运行时。
 
 | Variant | x5 | s100 | s100p | s600 | Python | C++ |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -37,7 +36,7 @@ active manifest 只有 RDK X5 的制品对。没有 S100、S100P、S600 的 CLIP
 <a id="prerequisites"></a>
 ## 环境前提
 
-- 板端：RDK X5 镜像，需提供图像 encoder 的 `hbm_runtime` 和 CPU 文本 encoder 的 `onnxruntime`。未固定特定镜像或固件版本。
+- 板端：RDK X5 镜像，需提供图像编码器的 `hbm_runtime` 和 CPU 文本编码器的 `onnxruntime`。未固定特定镜像或固件版本。
 - 板端推理还需 `onnxruntime`、两个模型制品和内置 BPE 词表。
 
 <a id="quickstart"></a>

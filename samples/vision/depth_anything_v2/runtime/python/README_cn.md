@@ -27,7 +27,7 @@ python/
 
 需要兼容 S100 的 `hbm_runtime`、Python、NumPy、OpenCV、PyYAML。列出和 dry-run
 可在无板端 SDK 的主机执行。源环境记录为 NumPy 1.26.4、OpenCV 4.11.0.86、
-Torch 2.3.1（由其自带脚本安装）；本 runtime 不做任何自动安装。源中仅用于
+Torch 2.3.1（由其自带脚本安装）；本运行时不做任何自动安装。源中仅用于
 尺寸恢复的 Torch 依赖已移除。参见[模型准备](../../model/README_cn.md)。
 
 <a id="usage"></a>
@@ -76,9 +76,7 @@ python -m samples.vision.depth_anything_v2.runtime.python.main --target s100 \
 | `--list-models` | `false` | 列出匹配清单，不加载 SDK |
 | `--dry-run` | `false` | 解析选择，不下载、不推理 |
 
-路径默认 `null` 表示从样例推导 `model/s100/depth_any.hbm`。列出和 dry-run 互斥。
-目标选择不能绕过实际身份。调度保留源 priority0/core[0]，无隐式预热或计时。
-外部路径选择的是契约，不认证发布者字节；清单未提供预期摘要。
+路径为 `null` 时使用 `model/s100/depth_any.hbm`。列出模型和 dry-run 模式互斥。推理在匹配的 S100 板卡上执行，默认调度优先级为 0、BPU 核为 `[0]`；不进行预热或计时。外部模型需符合所选输入输出协议，清单未提供发布者摘要。
 
 <a id="results"></a>
 ## 结果
@@ -91,8 +89,7 @@ python -m samples.vision.depth_anything_v2.runtime.python.main --target s100 \
 | `depth_color.png` | INFERNO 显示图片 |
 | `report.json` | 模型/输入摘要、目标、元数据、运行时版本、归一化和调度 |
 
-报告不测延迟。未知运行时版本/发布者摘要保持未知。有限负值如实保留，不把它们
-静默解释为米制距离。恒定图变为零灰度，但零值着色是 colormap 最低颜色，不一定
+报告不测延迟。未知运行时版本/发布者摘要保持未知。深度为相对值，可以包含有限负值。恒定图变为零灰度，但零值着色是 colormap 最低颜色，不一定
 是黑色。无效/NaN/Inf 拒绝处理；拒绝已有输出，避免混入残留文件。
 
 <a id="integration-example"></a>
@@ -122,7 +119,7 @@ print(details.raw.shape, details.result.depth_native.shape)
 普通 `DepthResult`，task 不保存上一帧图像或输出。每帧保持匹配上下文，
 task 按当前图片尺寸处理。并发调用使用独立模型实例。
 
-API 返回浮点深度。显示 uint8 图像时，调用 `cli.normalize_depth(result.depth_native)` 或 `colorize_depth(...)`。每帧结果须保留对应 `ImageContext`，共享 runner 时须同步访问。
+API 返回浮点深度。显示 uint8 图像时，调用 `cli.normalize_depth(result.depth_native)` 或 `colorize_depth(...)`。每帧结果须保留对应 `ImageContext`，共享推理执行器时须同步访问。
 
 <a id="stage-io"></a>
 ## 阶段契约
@@ -134,11 +131,11 @@ API 返回浮点深度。显示 uint8 图像时，调用 `cli.normalize_depth(re
 | `postprocess` | 原始张量 + 匹配上下文 → 原图尺寸浮点 `DepthResult` |
 | `predict` | 三阶段执行一次；`return_details=True` 额外返回单次调用的 prepared 输入与原始输出；无计时、渲染、IO |
 
-既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
+`pre_process`、`forward`、`post_process` 分别是 `preprocess`、`infer`、`postprocess` 的别名。
 
-默认输入缩放为 INTER_NEAREST，保留源 helper 的实际行为。BGR→RGB 后，每像素三
+默认输入使用 INTER_NEAREST 缩放。BGR→RGB 后，每像素三
 通道使用 `(rgb - mean(rgb)) / sqrt(var(rgb) + 1e-5)`，再转置并转换 float32。
-这**不是 ImageNet 均值/标准差，也不是 `/255`**，源注释与实际代码不符。源对 uint8
+这**不是 ImageNet 均值/标准差，也不是 `/255`**，源对 uint8
 以 float64 统计计算，当前保留此顺序。
 
 Letterbox 使用向下取整尺寸、INTER_LINEAR、127填充，灰色填充归一化为零；缩放边

@@ -133,8 +133,7 @@ hb_mapper makertbin --model-type onnx --config hgnetv2_${VARIANT}.yaml
 ## 转换后验证
 
 运行时协议为 224×224 packed NV12 输入、squeeze 后 1000 分数的单 F32
-输出。重建模型可用准确契约引用加外部路径选择；其哈希/来源必须与
-发布制品分开记录。发布制品的功能检查：
+输出。重建模型可用对应模型引用加外部路径选择。发布制品的功能检查：
 
 ```bash
 # cwd：仓库根目录（X5 板卡）

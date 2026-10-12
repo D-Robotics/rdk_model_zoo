@@ -80,11 +80,7 @@ original dimensions. Use the same mode for reference/candidate comparisons.
 | `--list-models` | `false` | print matching manifest entries without SDK |
 | `--dry-run` | `false` | resolve selection without download or inference |
 
-The default `null` path means derive `model/s100/depth_any.hbm` from the sample.
-List and dry-run modes are mutually exclusive. Target selection cannot bypass
-actual board identity. Scheduling retains source priority0/core[0]. There is no
-implicit warmup or timing. An external path selects a contract, not authenticated
-publisher bytes; the manifest has no expected hash.
+A `null` path resolves to `model/s100/depth_any.hbm`. List and dry-run modes are mutually exclusive. Run inference on the matching S100 board; scheduling defaults to priority 0 and BPU cores `[0]`, without warmup or timing. External models must match the selected input/output contract; no publisher digest is supplied.
 
 <a id="results"></a>
 ## Results
@@ -98,8 +94,7 @@ publisher bytes; the manifest has no expected hash.
 | `report.json` | model/input digests, target, metadata, runtime version, normalization and scheduling |
 
 The report measures no latency. Unknown runtime version/publisher hash stays
-unknown. Negative finite depth values are retained rather than silently treated
-as metric distances. A constant map becomes zero grayscale; colorizing zero
+unknown. Depth values are relative and may include finite negative values. A constant map becomes zero grayscale; colorizing zero
 still yields the colormap's lowest color, not necessarily black. Invalid/NaN/Inf
 values are rejected. Existing outputs are refused to avoid stale-file confusion.
 
@@ -165,7 +160,7 @@ an incompatible output to make validation pass.
 ## Troubleshooting
 
 - **S100P or another target rejected:** only S100 has a published asset. The
-  source's unconditional S100 shell fallback was removed; do not override identity.
+  use a model published for your board.
 - **Missing SDK/model:** prepare the matching board runtime and model explicitly;
   host dry-run is not an inference test.
 - **Wrong metadata:** inspect the actual artifact/runtime version; internal

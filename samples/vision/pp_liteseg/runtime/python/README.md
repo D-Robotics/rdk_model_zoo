@@ -103,4 +103,4 @@ preprocess takes nonempty HWC BGR uint8, stretches to 1024×512 with INTER_LINEA
 <a id="troubleshooting"></a>
 ## Troubleshooting
 
-Missing BIN: run explicit preparation. Missing SDK: use the X5 board image, not a host workaround. S-series targets have no asset and cannot fall back to X5. Wrong output metadata: inspect the deployed graph; do not add argmax speculatively to an already-decoded map. Keep 1024×512 geometry. Missing image: use the delivered street.png (not street.jpg). For external files, supply the exact asset-id and retain the file provenance separately.
+Missing BIN: run explicit preparation. Missing SDK: use the X5 board image, with the matching board SDK. S-series targets have no asset and cannot fall back to X5. Wrong output metadata: inspect the deployed graph; do not add argmax speculatively to an already-decoded map. Keep 1024×512 geometry. Missing image: use the delivered street.png (not street.jpg). For external files, supply the exact asset-id and retain the file provenance separately.

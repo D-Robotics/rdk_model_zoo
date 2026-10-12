@@ -19,13 +19,12 @@ R3D-18 用于短视频片段的动作识别。它把 ResNet-18 的卷积扩展�
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
 └── requirements-host.txt  # 源码或数据文件
 ```
 
-本 sample 没有转换脚本、C++ runtime 或视频解码器。
+本示例没有转换脚本、C++ 运行时或视频解码器。
 
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
@@ -44,7 +43,7 @@ R3D-18 用于短视频片段的动作识别。它把 ResNet-18 的卷积扩展�
 <a id="prerequisites"></a>
 ## 环境前提
 
-- 板卡：RDK S100，使用提供 `hbm_runtime` Python 包的 S 系列系统镜像；镜像与 runtime 版本由部署环境选择。
+- 板卡：RDK S100，使用提供 `hbm_runtime` Python 包的 S 系列系统镜像；镜像与运行时版本由部署环境选择。
 - 转换：x86 Linux 主机上的 OpenExplorer 3.5.0（见[转换说明](conversion/README_cn.md)）；未包含完整的导出、校准和编译配方。
 - 磁盘：需要保存下载的 HBM 和随附的 2.4 MB `video0.npy`。
 
@@ -76,7 +75,7 @@ bash run.sh --target s100 --asset-id s:3dresnet:s100/r3d_18.hbm
 <a id="expected-results"></a>
 ## 预期结果
 
-默认片段是 `test_data/video0.npy`；source 记录其 Top-1 类别为 `archery`。CLI 输出如下形式的 JSON 结果：
+默认片段是 `test_data/video0.npy`；参考记录其 Top-1 类别为 `archery`。CLI 输出如下形式的 JSON 结果：
 
 ```json
 {
@@ -97,12 +96,12 @@ score 数值取决于编译产物，上面的数字仅示意字段结构。实�
 ## 入口索引
 
 - 模型准备：[`model/README_cn.md`](model/README_cn.md) — 一个精确的 S100 HBM 制品和显式下载命令。
-- Python runtime：[`runtime/python/README_cn.md`](runtime/python/README_cn.md) — CLI 与 `R3D18Classifier` API。
-- 转换：[`conversion/README_cn.md`](conversion/README_cn.md) — source 转换说明、截图及缺失配方边界。
+- Python 运行时：[`runtime/python/README_cn.md`](runtime/python/README_cn.md) — CLI 与 `R3D18Classifier` API。
+- 转换：[`conversion/README_cn.md`](conversion/README_cn.md) — 参考转换说明、截图及缺失配方边界。
 - 评测：[`evaluator/README_cn.md`](evaluator/README_cn.md) — 功能参考与已发布的性能记录。
 - Runtime 语言：Python。
 
 <a id="license"></a>
 ## 许可
 
-本 sample 代码使用仓库 Apache-2.0 许可，与 source 代码的 Apache 许可头一致。`r3d_18.hbm` 未记录 publisher SHA-256 和独立权重许可；再次分发前应向发布方确认权重许可和分发条款。
+本示例代码使用仓库 Apache-2.0 许可，与参考代码的 Apache 许可头一致。`r3d_18.hbm` 未记录 发布者 SHA-256 和独立权重许可；再次分发前应向发布方确认权重许可和分发条款。

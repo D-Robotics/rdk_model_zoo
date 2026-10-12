@@ -74,7 +74,7 @@ then run the matching exporter, for example:
 ```bash
 # input: timm checkpoint tf_efficientnet_lite0.in1k (downloaded by timm)
 # output: ./tf_efficientnet_lite0.onnx (opset 11, onnxsim-simplified)
-# success: script prints the parameter count and "Simplified model is valid."
+# output: script prints the parameter count and "Simplified model is valid."
 python3 get_efficientnet_lite0_onnx.py
 ```
 
@@ -174,18 +174,13 @@ cwd: this `conversion/` directory. One script serves all five variants:
 ```bash
 # input: ILSVRC2012_val_*.JPEG images (script uses the first 100 it finds)
 # output: ./calibration_data_rgb/*.npy (float32), matching the YAMLs' cal_data_dir
-# success: "成功生成 ... 个校准数据文件" (100 files listed)
+# output: "成功生成 ... 个校准数据文件" (100 files listed)
 python3 get_calibration_data.py
 ```
 
-The preprocessing chain is `ShortSideResize(224) → CenterCrop(224) →
-HWC2CHW → Scale(255.0) → Mean([127,127,127]) → Scale(0.007843)`, which was
-cross-checked against every YAML's `mean_value: 127 127 127` /
-`scale_value: 0.007843 0.007843 0.007843` — the script and the YAMLs are
-consistent (unlike the ResNet152 source recipe, whose script and YAML
-disagree; that discrepancy does not exist here).
+The preprocessing chain is `ShortSideResize(224) → CenterCrop(224) → HWC2CHW → Scale(255.0) → Mean([127,127,127]) → Scale(0.007843)`. Use the YAML values `mean_value: 127 127 127` and `scale_value: 0.007843 0.007843 0.007843`.
 
-Two source-recipe facts to know before running:
+Before preparing calibration data:
 
 1. The script's default `src_image_dir` points at the original
    OpenExplorer calibration directory

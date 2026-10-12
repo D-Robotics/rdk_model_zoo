@@ -19,7 +19,6 @@ modnet/
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 └── README_cn.md  # 中文说明
 ```
@@ -27,17 +26,17 @@ modnet/
 <a id="support-matrix"></a>
 ## 支持的模型
 
-| target | variant | Python | C++ | 状态 |
+| 目标板卡 | variant | Python | C++ | 状态 |
 |---|---|---|---|---|
 | X5 | `modnet_512x512_rgb.bin` | supported | not-supported | 制品需手工准备，见[模型准备](model/README_cn.md) |
 | S100/S100P/S600 | — | not-supported | not-supported | 没有源制品 |
 
-本 sample 没有 C++ 实现。
+本示例没有 C++ 实现。
 
 <a id="prerequisites"></a>
 ## 环境前提
 
-板端运行需要带 `hbm_runtime` 的 RDK X5、NumPy 和 OpenCV。必须精确准备外部模型 `x5:modnet:modnet_512x512_rgb.bin`；active manifest 没有 URL，且 `sha256: null (unknown)`。模型契约为 float32 RGB NCHW `(1,3,512,512)` 输入和 float32 `(1,1,512,512)` matte 输出。
+板端运行需要带 `hbm_runtime` 的 RDK X5、NumPy 和 OpenCV。必须精确准备外部模型 `x5:modnet:modnet_512x512_rgb.bin`；active 清单没有 URL，且 `sha256: null (unknown)`。模型契约为 float32 RGB NCHW `(1,3,512,512)` 输入和 float32 `(1,1,512,512)` matte 输出。
 
 <a id="quickstart"></a>
 ## 快速体验
@@ -65,7 +64,7 @@ matte 是与原图高宽相同的 8-bit 灰度 PNG；可选合成图是保持原
 - [`evaluator/README_cn.md`](./evaluator/README_cn.md)：完整保存 matte 的对照步骤。
 
 <a id="historical-performance"></a>
-## 源记录性能
+## 参考记录性能
 
 源数据表及测试条件：
 
@@ -79,4 +78,4 @@ matte 是与原图高宽相同的 8-bit 灰度 PNG；可选合成图是保持原
 <a id="license"></a>
 ## 许可
 
-本 sample 脚本 和仓库文件遵循 Apache-2.0。MODNet 源许可声明、论文和上游工程仍归其作者所有。外部 manual 模型没有随源提供模型许可或发布者 checksum。
+本示例脚本和仓库文件遵循 Apache-2.0。MODNet 源许可声明、论文和上游工程仍归其作者所有。外部 manual 模型没有随源提供模型许可或发布者 checksum。

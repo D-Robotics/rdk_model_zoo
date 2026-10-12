@@ -19,7 +19,6 @@ depth_anything_v2/
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 └── README_cn.md  # 中文说明
 ```
@@ -74,7 +73,7 @@ bash samples/vision/depth_anything_v2/runtime/python/run.sh --target s100 \
 `depth_color.png`、`report.json`。报告记录本地模型/输入摘要、选择、运行时元数据
 和前处理策略，不测延迟。未知发布者摘要和运行时版本如实保留。
 
-![源记录结果示例](test_data/readme_img/depth_color.png)
+![参考记录结果示例](test_data/readme_img/depth_color.png)
 
 颜色按每张图独立归一化，跨图比较深度请使用数组数值。恒定深度得到全零灰度，
 避免除零。

@@ -2,7 +2,7 @@
 
 # 模型转换 — DINOv2 ViT-S/14
 
-本目录的转换实现即随附的源能力：脚本、固定版本和分步命令。
+按下文命令将 DINOv2 导出为 ONNX、准备校准图像，并编译所选 Nash 目标的 HBM。
 
 <a id="source-model"></a>
 ## 源模型
@@ -26,7 +26,7 @@ conversion/
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-源配方目标为 OpenExplore 3.7.0、hmct 2.6.5 / hbdk 4.7.5 和三个 Nash march。OE 镜像提供 Torch 2.6；只安装固定版本的 ONNX 增量包。转换在 x86 Linux 上进行，不在板端运行。
+转换使用 OpenExplore 3.7.0、hmct 2.6.5 / hbdk 4.7.5 和三个 Nash march。OE 镜像提供 Torch 2.6；只安装固定版本的 ONNX 增量包。转换在 x86 Linux 上进行，不在板端运行。
 
 | Target | march | OE 版本 | 配置 |
 | --- | --- | --- | --- |
@@ -44,7 +44,7 @@ sudo docker run -it --rm --network host --shm-size=15g \
   /bin/bash
 ```
 
-### 准备固定源与权重
+### 准备指定版本的源码与权重
 
 以下在 OE 容器内执行，工作目录为 `samples/vision/dinov2/conversion`。需要网络获取上游材料。新建的 `dinov2/` 为上游源码检出目录。保留 OE 已有 Torch，仅安装固定 ONNX 包：
 
@@ -71,7 +71,7 @@ printf '%s  %s\n' \
 <a id="export"></a>
 ## 导出（ONNX）
 
-`onnx_export/export_dinov2.py` 校验固定源 checkout 和 checkpoint，构建 ViT-S/14，在 224 尺寸烘焙位置编码，将 attention 重写为显式 MatMul + Softmax + MatMul，并导出输入 `input` `(1,3,224,224)` float32 和两个输出 `cls_feat`、`patch_feat`。导出后还会运行 ONNXRuntime 对拍。源命令如下：
+`onnx_export/export_dinov2.py` 校验固定版本的源代码和权重文件，构建 ViT-S/14，固定 224 输入尺寸的位置编码，将 attention 重写为显式 MatMul + Softmax + MatMul，并导出输入 `input` `(1,3,224,224)` float32 和两个输出 `cls_feat`、`patch_feat`。导出后还会运行 ONNXRuntime 输出比较。执行：
 
 ```bash
 # cwd：samples/vision/dinov2/conversion；前置：OE 环境、本地源 clone、已校验 checkpoint
@@ -89,7 +89,7 @@ python3 onnx_export/export_dinov2.py \
 
 `mapper.py::prepare_calibration` 从 `--cal-images` 读取 JPG/JPEG/PNG/BMP，将 BGR 转 RGB，bicubic 按比例把短边 resize 到 256，中心 crop 224，执行 `/255` 和 ImageNet mean/std，写出 contiguous float32 NCHW `.npy` tensor，并在临时 workspace 写 `calibration_manifest.json`。源推荐 50 张多样真实照片；随机或合成图片不适合此模型。
 
-固定配方为 featuremap float32 输入、全节点 int16 且模型输出 int16，并使用 hmct 默认 modelwise KL 搜索（mapper 有意不写 `calibration_type`）。源实测 int8 激活与 max/percentile 校准会失败；使用上述固定配方。
+使用 featuremap float32 输入、全节点 int16 和 int16 模型输出，`calibration_type` 保持未设置，以使用 hmct 默认的 modelwise KL 校准。下表给出这一配置与 int8、max/percentile 配置的参考测量。
 
 ```bash
 # cwd：samples/vision/dinov2/conversion；前置：./cal_images 有真实照片
@@ -99,9 +99,9 @@ python3 mapper.py --cal-images ./cal_images --march nash-e --output-dir ./output
 ```
 
 
-### 固定源的量化配置对照（源记录，Nash-E）
+### 量化配置对照（Nash-E 参考数据）
 
-以下五行保留了成功配方和失败配方的区别。带 `(sim)` 的值是工具链模拟结果，不能代替表中失败的实际执行值。源对失败原因的记录：int8 激活无论何种校准都失败（实测 cosine 上限 0.91）；max+percentile 校准跌至约 0.18；attention 的 logits 减 max 后张量最小可达 -345，固定全 int16 featuremap/KL 配方避开了这些区间。
+下表比较五种量化配置，`(sim)` 表示工具链模拟值。在这些测量中，int8 激活的余弦相似度最高为 0.91，max+percentile 校准约为 0.18；attention logits 减去最大值后的张量最小达到 -345。请使用上述全 int16 featuremap/KL 配置。
 
 | Config | cls cosine | patch cosine | Verdict |
 |---|---|---|---|
@@ -111,7 +111,7 @@ python3 mapper.py --cal-images ./cal_images --march nash-e --output-dir ./output
 | int16, nv12, KL | 0.999 (sim) | 0.999 (sim) | FAIL (executed 0.01 / 0.12) |
 | int16, featuremap, KL (this recipe) | **0.9989** | **0.9983** | **PASS** |
 
-固定源还评估了 `_reg4` register-token 变体；其 per-tensor 校准后的 cosine 约 0.80，低于 plain 变体约 0.999，因此未发布该变体。
+`_reg4` register-token 变体在逐张量量化下的余弦相似度约为 0.80，普通变体约为 0.999。本配方使用普通 ViT-S/14 权重。
 
 <a id="compile"></a>
 ## 编译
@@ -137,7 +137,7 @@ S100P 或 S600 使用 `--march nash-m` 或 `nash-p`。mapper 其他默认值为 
 <a id="validation"></a>
 ## 转换后验证
 
-导出器执行 ONNXRuntime float 对拍并打印 cosine/max-absolute error；`mapper.py` 确认 `hb_compile` 生成预期 HBM。板端验证还应在相同预处理 tensor 上，将两路输出与 float ONNX 对拍。
+导出器执行 ONNXRuntime 浮点输出比较并打印 cosine/max-absolute error；`mapper.py` 确认 `hb_compile` 生成预期 HBM。板端验证还应在相同预处理 tensor 上，将两路输出与 float ONNX 比较。
 
 <a id="artifacts"></a>
 ## 产物
@@ -151,9 +151,8 @@ S100P 或 S600 使用 `--march nash-m` 或 `nash-p`。mapper 其他默认值为 
 <a id="known-gaps"></a>
 ## 补充准备
 
-- 执行该流程需要 OE 容器、用于获取固定 checkpoint 的网络，以及用于最终验证的板卡。
-- 提供固定源、checkpoint digest、OE 版本和真实校准目录后，源 pipeline 即可复现。
-- manifest HBM hash 均为 `sha256: null (unknown)`；下载器观测 digest 不能验证发布方来源。
+- 在指定的 OE 容器中执行转换，并准备可下载固定 checkpoint 的网络。使用对应板卡运行模型检查。
+- manifest HBM 哈希为 `sha256: null (unknown)`；下载器打印下载文件的 SHA-256。
 
 ## 许可
 

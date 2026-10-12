@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-[`main.py`](main.py) 解析参数，显式构造 `ResNetClassifier`，调用 `predict` 并展示结果。
+[`main.py`](main.py) 解析参数，创建 `ResNetClassifier`，调用 `predict` 并展示结果。
 [`classify.py`](classify.py) 包含模型初始化、前处理、推理和后处理；
 [`cli.py`](cli.py) 集中管理命令行参数、发布模型选择和结果展示。
 图片读取、标签校验和 SDK 会话复用 `utils/py_utils/`。

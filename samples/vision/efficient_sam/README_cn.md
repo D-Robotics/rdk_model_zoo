@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## 算法与来源
 
-EfficientSAM 使用轻量图像编码器完成提示式分割。本示例部署 ViT-Tiny 编码器与 mask 解码器，解码器的两个正点提示固定在模型中。
+EfficientSAM 使用轻量图像编码器完成提示式分割。本示例部署 ViT-Tiny 编码器与掩码解码器，解码器的两个正点提示固定在模型中。
 
 参考：<https://arxiv.org/abs/2312.00863>, <https://yformer.github.io/efficient-sam/>.
 
@@ -19,7 +19,6 @@ efficient_sam/
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 └── README_cn.md  # 中文说明
 ```
@@ -37,7 +36,7 @@ efficient_sam/
 <a id="prerequisites"></a>
 ## 环境前提
 
-使用 Python 3.10+、NumPy、OpenCV 和 PyYAML，以及目标 RDK 镜像提供的 `hbm_runtime`。运行前准备 encoder 与 decoder 两个模型文件；目标 OE 工具链说明见转换指南。
+使用 Python 3.10+、NumPy、OpenCV 和 PyYAML，以及目标 RDK 镜像提供的 `hbm_runtime`。运行前准备编码器与解码器两个模型文件；目标 OE 工具链说明见转换指南。
 
 板端 SDK 应由匹配的系统镜像提供，不从无关主机环境安装 `hbm_runtime`。在仓库根目录检查必要依赖：
 
@@ -46,12 +45,12 @@ efficient_sam/
 python3 -c "import numpy, cv2, yaml, hbm_runtime; print('runtime dependencies available')"
 ```
 
-在板端 SDK 使用的 Python 环境安装依赖（`python3 -m pip install numpy opencv-python PyYAML`）。为 encoder 和 decoder 同时驻留预留内存。
+在板端 SDK 使用的 Python 环境安装依赖（`python3 -m pip install numpy opencv-python PyYAML`）。为编码器和解码器同时驻留预留内存。
 
 <a id="quickstart"></a>
 ## 快速体验
 
-在仓库根目录先准备模型，再在匹配板卡上运行。将 `s100` 换成 `x5`、`s100p` 或 `s600` 时，应使用对应 target 的 asset ID 和路径。
+在仓库根目录先准备模型，再在匹配板卡上运行。将 `s100` 换成 `x5`、`s100p` 或 `s600` 时，应使用对应目标板卡的 asset ID 和路径。
 
 ```bash
 # cwd：仓库根目录；前置：仅此准备步骤需要网络
@@ -66,14 +65,14 @@ python3 samples/vision/efficient_sam/runtime/python/main.py --target s100
 <a id="expected-results"></a>
 ## 预期结果
 
-默认输入是 `test_data/dogs.jpg`。成功运行会生成 overlay 图和 `512x512` 二值 mask；IoU 和 mask index 取决于实际模型执行。提交的 `efficient_sam_binary_mask.png` 是 source 参考，不是新的板端结果。
+默认输入是 `test_data/dogs.jpg`。成功运行会生成叠加图图和 `512x512` 二值掩码；IoU 和掩码 index 取决于实际模型执行。提交的 `efficient_sam_binary_mask.png` 是参考参考，不是新的板端结果。
 
-解码器固定使用缩放后 512×512 图像中的正点 `(248,210)`、`(302,315)`。编码器采用 RGB `/255`，生成 `(1,256,32,32)` 嵌入。三个候选中选取 IoU 最高的 mask，缩放到 512×512 并以 logits `>=0` 二值化。结果使用缩放后的坐标系。
+解码器固定使用缩放后 512×512 图像中的正点 `(248,210)`、`(302,315)`。编码器采用 RGB `/255`，生成 `(1,256,32,32)` 嵌入。三个候选中选取 IoU 最高的掩码，缩放到 512×512 并以 logits `>=0` 二值化。结果使用缩放后的坐标系。
 
 <a id="entry-points"></a>
 ## 入口索引
 
-- [模型](model/README_cn.md)：target 制品、准备步骤和校验值。
+- [模型](model/README_cn.md)：目标板卡制品、准备步骤和校验值。
 - [Python runtime](runtime/python/README_cn.md)：CLI 与 `EfficientSAMPipeline` API。
 - [转换](conversion/README_cn.md)：导出、校准和编译材料。
 - [评测](evaluator/README_cn.md)：评测流程与参考记录。
@@ -82,4 +81,4 @@ python3 samples/vision/efficient_sam/runtime/python/main.py --target s100
 <a id="license"></a>
 ## 许可
 
-runtime 代码遵循仓库 Apache-2.0 许可。EfficientSAM checkpoint、ONNX 和模型制品遵循上游项目条款，再分发前应确认其许可。
+运行时代码遵循仓库 Apache-2.0 许可。EfficientSAM 权重文件、ONNX 和模型制品遵循上游项目条款，再分发前应确认其许可。

@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# KWS evaluation
+# KWS 评估
 
 <a id="dataset"></a>
 ## 数据集
@@ -53,7 +53,7 @@ python3 samples/speech/kws/evaluator/evaluate.py \
 `metrics.json` 使用 `rdk-model-zoo/kws-metrics/v1`，保留 provenance 和精确预测文件 SHA-256。schema 字段 `inference_executed=false`、`provenance_independently_verified=false`。示例记录得到两条正确判定。请和报告一起保存输入预测文件。
 
 <a id="reference-results"></a>
-## 源参考结果
+## 参考结果
 
 S100 参考测量：
 
@@ -62,7 +62,7 @@ S100 参考测量：
 | S100 `hrt_model_exec perf`，100 帧 | 平均延迟 1.176 ms；830.875 FPS |
 | 随附“hey snips”音频 | 约 0.985 置信度 |
 
-源性能命令为 `hrt_model_exec perf --model_file /root/kws/kws.hbm --frame_count 100`，测量 HBM 执行的 100 帧；音频读取和特征提取不包含在该命令中。
+参考性能命令为 `hrt_model_exec perf --model_file /root/kws/kws.hbm --frame_count 100`，测量 HBM 执行的 100 帧；音频读取和特征提取不包含在该命令中。
 
 <a id="boundaries"></a>
 ## 适用范围

@@ -70,7 +70,7 @@ bash download.sh --target x5 --variant all
 <a id="local-paths"></a>
 ## 本地路径
 
-默认模型在 `samples/vision/unet/model/unet_resnet18_voc_512x512_nv12.bin`，通过 sample 自身定位；`--variant` 可切换其余骨干。外部相同发布制品路径须同时提供精确 `--asset-id x5:unet:<filename>`，运行时仍校验发布哈希。自行编译的不同制品请走 evaluator 的显式 `--model` 入口，而不是冒充发布文件。
+默认模型在 `samples/vision/unet/model/unet_resnet18_voc_512x512_nv12.bin`，通过示例自身定位；`--variant` 可切换其余骨干。外部相同发布制品路径须同时提供精确 `--asset-id x5:unet:<filename>`，运行时仍校验发布哈希。自行编译的不同制品请走 evaluator 的显式 `--model` 入口，并使用该文件的实际摘要。
 
 <a id="formats-checksums"></a>
 ## 格式与校验

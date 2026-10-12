@@ -7,7 +7,7 @@
 按下述命令评估 X5 策略与量化结果。
 
 <a id="dataset"></a>
-## 数据合同
+## 数据格式
 
 独立评测 rollout 不得与 PTQ 校准数据重叠。推荐原生 `.pt` 结构：
 
@@ -64,7 +64,7 @@ python3 samples/robotics/himloco/evaluator/compare_jit_onnx.py \
   --report /work/himloco/evaluation/jit-vs-onnx.json
 ```
 
-默认门禁为逐样本最小 cosine `>= 0.999`、action 最大绝对误差 `<= 1e-4`。失败时仍会
+默认通过条件为逐样本最小余弦相似度 `>= 0.999`、action 最大绝对误差 `<= 1e-4`。失败时仍会
 写出报告，并返回非零退出码。
 
 ## 2. 准备 X5 输入
@@ -95,10 +95,7 @@ python3 samples/robotics/himloco/evaluator/compare_action_dumps.py \
 若 `actions` 确定由同一个导出策略记录，可省略 `--jit`，并使用
 `--action-key actions`。
 
-本策略没有图像或其他可人工判断的输出，因此保留 action dump Runtime 功能。每个带
-源行号的 48 字节文件在 X5 专用 Runtime 和主机 TorchScript evaluator 之间提供可移植
-边界，可独立计算哈希、比较 Python/C++，也无需在板端安装 PyTorch。它们是临时验证
-证据，不是提交文件。
+每个动作文件为 48 字节，以原始观测行号命名。将这些文件从 X5 复制到主机后，可与 TorchScript 输出比较，也可比较 Python 和 C++ 的动作输出。
 
 | Script | Required | Defaults |
 | --- | --- | --- |
@@ -106,7 +103,7 @@ python3 samples/robotics/himloco/evaluator/compare_action_dumps.py \
 | `prepare_runtime_inputs.py` | `--data`, `--output` | `--observation-key obs_history`; `--num-samples 0` (all); `--seed 20260820` |
 | `compare_action_dumps.py` | `--data`, `--candidate-dir`, `--report` | `--jit null`; `--observation-key obs_history`; `--action-key actions`; `--min-cosine 0.99`; `--max-abs null` |
 
-耗时随 rollout 大小和主机环境变化，源记录没有提供通用时长估计。
+耗时取决于轨迹数据量和主机配置。
 
 <a id="metrics"></a>
 ## 指标
@@ -122,7 +119,7 @@ python3 samples/robotics/himloco/evaluator/compare_action_dumps.py \
 <a id="reference-results"></a>
 ## RDK X5 性能数据
 
-以下为源发布测量数据，同一 MIX 模型、100 个输入、10 次预热：
+以下为参考测量数据，同一 MIX 模型、100 个输入、10 次预热：
 
 | Runtime | 计时范围 | Min | Mean | P50 | P95 | Max | 顺序 FPS |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -144,7 +141,7 @@ JIT 与 ONNX
   -> 有安全约束的真机验证
 ```
 
-离线数值一致是必要门禁，但不能证明控制安全。
+接入机器人时，另行验证观测构造、关节映射及闭环控制。
 
 ## 许可证
 

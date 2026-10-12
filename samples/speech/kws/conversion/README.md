@@ -37,7 +37,7 @@ Prepare representative positive/negative recordings on a permitted calibration s
 For S100 compilation, specify the target, feature input layout, quantization precision and final output semantics; retain compiler logs and output digest with the resulting HBM. Keep the artifact identity tied to S100.
 
 <a id="validation"></a>
-## Validation plan
+## Validate model outputs
 
 Compare the floating graph with its source on held-out positive/negative data, then compare compiled model metadata and scores with the floating graph. Report score tolerances, threshold decisions, false accepts/rejects and latency separately.
 

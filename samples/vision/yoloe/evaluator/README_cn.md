@@ -31,7 +31,6 @@ PF 类别 ID **不是 COCO category ID**。必须提供经过检查的映射，�
 
 ```text
 evaluator/
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
 ├── backends.py  # Python 脚本
@@ -117,9 +116,9 @@ python3 samples/vision/yoloe/evaluator/evaluate.py \
 
 预测为空时仍按空检测计分：存在真值则 AP 为零，不跳过。选中图片完全没有非 crowd 真值时，指标模式失败并提示使用 predictions-only；不会用无标注图片制造精度值。
 
-掩码按原图几何编码。ROI 必须严格匹配裁剪后、整数截断的框边界；整图掩码必须匹配图片宽高，不通过评估器自动缩放来掩盖运行时几何错误。框与掩码结果分文件保存，让 COCO 分割面积来自 RLE 像素，而非包围框面积。
+掩码按原图几何编码。ROI 必须严格匹配裁剪后、整数截断的框边界；整图掩码必须匹配图片宽高，尺寸不符时先检查运行时的几何还原设置。框与掩码结果分文件保存，让 COCO 分割面积来自 RLE 像素，而非包围框面积。
 
-比较两次运行时，模型/权重身份、图片、类别映射、目标协议、预处理、阈值和指标设置必须对应。主机浮点、板端量化和浮点舍入引起的 Top-K 排序差异是不同的对照。逐图墙钟时间覆盖前处理、forward、后处理和 COCO/RLE 编码，不含图片/JSON 文件 I/O，不是 BPU-only 延迟，也不是规范的性能基准。
+比较两次运行时，模型/权重身份、图片、类别映射、目标协议、预处理、阈值和指标设置必须对应。主机浮点、板端量化和浮点舍入引起的 Top-K 排序差异是不同的对照。逐图墙钟时间覆盖前处理、前向推理、后处理和 COCO/RLE 编码，不含图片/JSON 文件 I/O，不是 BPU-only 延迟，也不是规范的性能基准。
 
 <a id="outputs"></a>
 ## 输出与失败处理
@@ -177,10 +176,4 @@ predictions-only 模式为指定图片与类别清单导出检测和掩码。计
 
 真实板端/SDK/OE 评估、独立验证集 mAP 与性能测试在各自环境中执行。CPU RGB 评估不包含 NV12 转换影响；固定词表、映射与模型字节必须配套，编辑词表不会获得新类别。
 
-```bash
-# cwd: repository root; evaluator host dependencies installed
-python3 -m unittest discover -s samples/vision/yoloe/evaluator/tests
-python3 -m unittest discover -s samples/vision/yoloe/tests
-```
-
-测试套件覆盖合成掩码的 COCO 计分、空预测、显式类别映射、图像与掩码几何，以及部分失败记录。模型 AP 使用带标注的独立验证图片评测，并记录数据划分、权重、编译模型与类别映射。
+模型 AP 使用带标注的验证集计算，并记录数据划分、权重、编译模型与类别映射。

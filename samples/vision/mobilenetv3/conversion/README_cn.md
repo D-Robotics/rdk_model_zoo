@@ -4,8 +4,7 @@
 
 固定版本 timm checkpoint 流程使用 [`export.py`](export.py)，命令见[公共主机流程](../../../../utils/tools/mobilenet/README_cn.md)。该流程明确记录权重、中心裁剪预处理、batch=1 logits 合同和全量评测输入；下文既有制品命令按各自合同使用。
 
-模型转换在 x86 Linux 主机上的 RDK OpenExplore (OE) 环境中执行，不是板卡
-操作。使用下面的导出脚本、校准工具和目标板卡配置准备部署模型。
+模型转换在 x86 Linux 主机上的 RDK OpenExplore (OE) 环境中执行。使用下面的导出脚本、校准工具和目标板卡配置准备部署模型。
 
 <a id="source-model"></a>
 ## 源模型
@@ -47,12 +46,12 @@ cwd 为 `samples/vision/mobilenetv3/conversion`：
 
 ```bash
 # 输入：timm 预训练权重（未缓存时下载）
-# 输出：下列 .onnx 文件 — 成功判据：onnx 化简检查通过
+# 输出：下列 .onnx 文件 — 输出：onnx 化简检查通过
 python3 get_mobilenetv3_onnx.py    # -> ./mobilenetv3_large_100.onnx
 ```
 
 导出器使用 onnx-simplifier 并打印参数量（`mobilenetv3_large_100` 为
-5,470,832）；预期 metadata 输出为 `mean (0.485, 0.456, 0.406)`、
+5,470,832）；预期 元数据 输出为 `mean (0.485, 0.456, 0.406)`、
 `std (0.229, 0.224, 0.225)`、"Simplified model is valid."。
 
 安装导出依赖：
@@ -168,7 +167,7 @@ crop 224、resize、HWC→CHW、`RGB2BGRTransformer`、×255、mean
 | `MobileNetV3_config.yaml` | x5 | `./mobilenetv3_large_100.onnx`（与导出器输出一致）、`./calibration_data_rgb_f32`（按[校准](#calibration)准备） | `hb_mapper makertbin --config MobileNetV3_config.yaml` |
 | `mobilenetv3_s_config.yaml` | s100（s600：march 改 `nash-p`） | `./mobilenetv3_large_100.onnx`（一致）、`./calibration_data_bgr`（改源目录后由脚本产出） | `hb_compile --config mobilenetv3_s_config.yaml` |
 
-上表 march 取自 YAML 文件本身（X5 `bayes-e`，S100 `nash-e`）。对比目标、输入 metadata、输出
+上表 march 取自 YAML 文件本身（X5 `bayes-e`，S100 `nash-e`）。对比目标、输入 元数据、输出
 shape/dtype 与数值结果之后，才能把再生成制品视为与已发布制品等价。
 重命名说明：S 源文件名为 `mobilenetv3_config.yaml`；在不区分大小写
 的文件系统上与 X5 的 `MobileNetV3_config.yaml` 冲突，因此此处 S 副本
@@ -185,10 +184,10 @@ hb_compile --config mobilenetv3_s_config.yaml
 ## 验证
 
 对再生成制品，按 OE 手册执行 `hb_perf` 与 `hrt_model_exec` 并保留完整
-输出；随后在匹配板卡上用 运行时确认契约：X5 暴露一个 packed
+输出；随后在匹配板卡上用运行时检查模型输入输出：X5 暴露一个 packed
 NV12 输入与 F32 `[1,1000,1,1]` 输出；S100/S600 暴露 Y `[1,224,224,1]`、
 UV `[1,112,112,2]` 与 F32 `[1,1000]` 输出；输出语义为原始 logits
-（softmax 由运行时任务施加）。
+（softmax 由运行时程序应用）。
 
 原 S 构建的已发布量化记录（量化后余弦相似度）：
 
@@ -221,4 +220,4 @@ BPU conv original OPs per run: 433,179,520
 - 在不区分大小写的文件系统上执行 S 侧导出时，使用上文的 YAML 文件名 `mobilenetv3_s_config.yaml`。
 - X5 需按 `MobileNetV3_config.yaml` 准备 RGB 顺序的 `./calibration_data_rgb_f32`。现有校准辅助程序生成 BGR 数据，因此应转换通道顺序并使用 X5 YAML 的 RGB 归一化，不要仅重命名 BGR 目录。
 - 运行校准前，将辅助程序的源图像目录设置为本地 ImageNet 路径。辅助程序 mean 常量与 S YAML 的 `mean_value` 略有差异；按所选目标对齐校准值与配置。
-- 编译后使用板端运行时检查产物契约。
+- 编译后使用板端运行时检查模型输入输出。

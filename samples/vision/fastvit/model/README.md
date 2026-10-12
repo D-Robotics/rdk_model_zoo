@@ -37,7 +37,7 @@ From the repository root:
 
 ```bash
 # input: manifest row for the target/variant — output: file under this directory
-# success: exit 0, observed digest printed; no partial files left behind
+# output: exit 0, observed digest printed; no partial files left behind
 bash samples/vision/fastvit/model/download.sh x5 s12
 bash samples/vision/fastvit/model/download.sh x5 t8
 ```

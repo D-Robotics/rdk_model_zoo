@@ -25,7 +25,7 @@ legacy/
 
 ## 复现
 
-开发环境使用 Ubuntu 22.04、192 GiB 内存。编译主要消耗 CPU 和 RAM，GPU 仅用于兼容环境下的校准；原 SDK PyTorch 2.6/cu124 不支持本次 RTX 5090，下面明确使用 CPU。不要通过随意升级依赖修复兼容性。建议预留 100 GB 以上存储，包含原权重、两目标 BC/HBO/HBM 中间产物；具体峰值取决于并行度。
+开发环境使用 Ubuntu 22.04、192 GiB 内存。编译主要消耗 CPU 和 RAM，GPU 仅用于兼容环境下的校准；原 SDK PyTorch 2.6/cu124 不支持RTX 5090，下面明确使用 CPU。不要通过随意升级依赖修复兼容性。建议预留 100 GB 以上存储，包含原权重、两目标 BC/HBO/HBM 中间产物；具体峰值取决于并行度。
 
 ```bash
 # In the SDK 1.0.0 Python 3.10 environment; from conversion/legacy
@@ -39,7 +39,7 @@ python main.py --model_name minicpm5-2b --march nash-e   --input_model_path "$MO
 python retarget.py   --source-hbm ./output/s100/minicpm5-2b_chunk_256_cache_4096_q8.hbm   --output-hbm ./output/s100p/minicpm5-2b_chunk_256_cache_4096_q8.hbm   --march nash-m --jobs 8
 ```
 
-校准数据是已固定 SHA256 的 WikiText2 TRAIN，将文本用两个换行拼接，无额外 special tokens 编码，取前 50 个连续 256-token 片段并解码成 JSON text。文件名 `test-train-source.parquet` 是沿用 SDK 文件发现规则，内容仍是 TRAIN。TEST 不用于校准。该生成方式已与产物编译所用的 50 条记录逐项核对。
+校准数据是已固定 SHA256 的 WikiText2 TRAIN，将文本用两个换行拼接，无额外 special tokens 编码，取前 50 个连续 256-token 片段并解码成 JSON text。文件名 `test-train-source.parquet` 是沿用 SDK 文件发现规则，内容仍是 TRAIN。TEST 不用于校准。
 
 `retarget.py` 从原始 `.prefill.bc` / `.decode.bc` 分别针对新 march 转换、移除量化 IO、编译并链接；不能把 Nash-e 转换后的 BC 当作 Nash-m 输入。可先部署验证一块板，再使用这些原始 BC 编译另一块，以控制内存峰值。
 

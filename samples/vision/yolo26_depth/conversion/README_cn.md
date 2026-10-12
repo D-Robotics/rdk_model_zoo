@@ -4,7 +4,7 @@
 
 本目录统一 X5 Mapper 与 S 系列 `hb_compile` 入口，同时保留各自的数据格式。
 流程包括 ONNX 导出、确定性校准数据、解析后的编译配置、日志和制品摘要。
-Torch 导出与 OpenExplorer 编译在对应主机环境中执行；板端验证由 runtime sample 完成。
+Torch 导出与 OpenExplorer 编译在对应主机环境中执行；板端验证由运行时示例完成。
 
 <a id="source-model"></a>
 ## 源模型与计算图边界
@@ -14,7 +14,7 @@ Torch 导出与 OpenExplorer 编译在对应主机环境中执行；板端验证
 [训练](https://docs.ultralytics.com/modes/train/)、
 [快速开始](https://docs.ultralytics.com/quickstart/)；上游仓库
 <https://github.com/ultralytics/ultralytics.git>）。工具不附带或自动下载权重。
-源分支记录 `ultralytics==8.4.105`，X5 另记录 `torch==1.13.0`；原始依赖分别保留在
+参考实现记录 `ultralytics==8.4.105`，X5 另记录 `torch==1.13.0`；原始依赖分别保留在
 `requirements-x5-source.txt` 与 `requirements-s-source.txt`。这些版本描述源环境；
 新导出时应记录实际使用的版本。
 
@@ -24,9 +24,9 @@ Torch 导出与 OpenExplorer 编译在对应主机环境中执行；板端验证
 | S100/S100P/S600 n/s/m | 同上 | 同上，传入打包 NV12 | 同上 |
 | S100/S100P/S600 l/x | 原始 logit `[1,192,192,1]` | 768 方形线性拉伸，RGB float32 NCHW `/255` | clip `[-4,5]`、权重 scale/bias、exp、直接还原原图 |
 
-`export.py` 保留源 attention、area-attention 和 Depth 细化逻辑。
+`export.py` 导出 attention、area-attention 和 Depth 细化计算。
 log 边界止于 clip 与 scale/bias；**exp 和最终尺寸还原在 CPU 上执行**。
-原 S 文档将其写成图内处理，与实际导出及运行代码不符。
+
 
 导出报告会记录权重中的校准参数。已发布 S l/x 的运行时参数分别为
 `(cal_a, cal_b)=(1,-0.2498779296875)` / `(1,-0.316650390625)`。
@@ -113,7 +113,7 @@ S 可通过 `--boundary` 显式导出其他实验边界；X5 没有 lite 源配�
 <a id="calibration"></a>
 ## 校准数据
 
-两侧相同的 SUNRGBD ZIP 提取工具合并保留。请自行准备本地数据并遵守数据集条款，仓库不附带数据集。
+使用 SUNRGBD ZIP 提取工具准备数据。请自行准备本地数据并遵守数据集条款，仓库不附带数据集。
 
 ```bash
 python extract_sunrgbd_subset.py --archive /work/datasets/SUNRGBD.zip \
@@ -126,7 +126,7 @@ python prepare_calibration.py --target s100 --variant l \
   --images /work/depth/train100/images --output /work/depth/cal_s_lite --count 100
 ```
 
-X5 生成 RGB CHW uint8 `.bin`，由 Mapper 执行 `/255`；S 保留源流程，生成已 `/255` 的
+X5 生成 RGB CHW uint8 `.bin`，由 Mapper 执行 `/255`；S 生成已 `/255` 的
 RGB float32 NCHW `.npy`。S NV12 与 lite 分别采用 letterbox 和直接拉伸。
 校准预处理应与目标模型的 RGB 或 NV12 输入路径一致。
 
@@ -197,7 +197,7 @@ hrt_model_exec model_info --model_file /work/depth/compile_x5_n/artifacts/yolo26
 <a id="known-gaps"></a>
 ## 补充准备与源证据
 
-源记录缺少权重摘要、S 镜像/编译器精确版本以及 S HBM 发布方摘要。
+参考记录缺少权重摘要、S 镜像/编译器精确版本以及 S HBM 发布方摘要。
 导出器依赖预期的 Depth 模块，找不到唯一一个对应头时显式报错。
 
 源 S 实验记录显示 NV12 l/x 存在截断，lite n/s/m 的 cosine 较低，所测 int16 调整也未改善；
@@ -207,7 +207,7 @@ hrt_model_exec model_info --model_file /work/depth/compile_x5_n/artifacts/yolo26
 
 源可选调优记录中的具体对照为：NV12 l/x 约 17% 像素饱和，cosine 为
 0.9938/0.9944；S100 lite n/s/m 为 0.9903/0.9854/0.9529。
-max/0.9999 校准将 lite n 提高到 0.9975，未达到源记录门槛。
+max/0.9999 校准将 lite n 提高到 0.9975，未达到参考记录门槛。
 所述 S100 尾部卷积 int16 测试为 0.985449；全节点 int16 将模型约 13 MB 增至 25 MB、
 约 5.8 ms 增至 23.0 ms，cosine 反而降至 0.982804。
 这些是复现证据不完整的源观察。新实验应固定 ONNX、校准集、图像、板卡与前处理，

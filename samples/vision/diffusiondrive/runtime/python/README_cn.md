@@ -25,7 +25,7 @@ python/
 
 实际推理需要 S100P 或 S600、匹配的 `hbm_runtime`、Python、NumPy 和 OpenCV。两个目标使用独立发布模型，不存在 S100/X5 资产。[显式下载器](../../model/README_cn.md)负责准备并校验 HBM；推理不安装依赖、不下载模型。
 
-以下命令均从仓库根目录执行，Shell 包装入口也会切换到该目录。任务类只处理规划张量语义；SDK 传输由共享具名数组 runner 完成，数据 IO、变换与可视化分别在独立模块。
+以下命令均从仓库根目录执行，Shell 包装入口也会切换到该目录。任务类只处理规划张量语义；SDK 传输由共享具名数组推理执行器完成，数据 IO、变换与可视化分别在独立模块。
 
 <a id="usage"></a>
 ## 单案例与批量运行
@@ -60,7 +60,7 @@ bash samples/vision/diffusiondrive/evaluator/run_all_cases.sh --target s100p --o
 | --- | --- | --- |
 | `--target` / `--platform` | `auto` | 显式目标或可识别本机身份；未知主机不回退 S600 |
 | `--asset-id` | `null` | 按目标推断；auto 下可由它确定目标 |
-| `--model-path` | `null` | 解析至 sample model 目录的目标 HBM；外部路径须提供资产 ID |
+| `--model-path` | `null` | 解析至示例 model 目录的目标 HBM；外部路径须提供资产 ID |
 | `--input-npz` | `samples/vision/diffusiondrive/test_data/reference_inputs.npz` | 精确四份逻辑特征数组 |
 | `--output` | `outputs/diffusiondrive` | 新正式结果目录 |
 | `--output-npz` | `null` | 可选额外解码归档副本，正式归档始终保留 |
@@ -127,13 +127,13 @@ assert set(details.physical) == set(features) and set(details.raw) == set(detail
 | `postprocess` | 精确匹配元数据的四份原始数组 | 独立解码六数组结果 |
 | `predict` | 逻辑特征 | 组合上述三阶段；`return_details=True` 额外返回单次调用的物理输入与原始输出 |
 
-既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
+`pre_process`、`forward`、`post_process` 分别是 `preprocess`、`infer`、`postprocess` 的别名。
 
 逻辑输入：camera `[1,3,256,1024]`、lidar `[1,1,256,256]`、status `[1,8]`、noise `[1,20,8,2]`。源输出名称/形状：trajectory `[1,8,3]`、agent_states `[1,30,5]`、agent_labels `[1,30]`、bev_semantic_map `[1,7,128,256]`。绑定要求单模型和精确名称集合，名称顺序不影响绑定。
 
-物理类型可为 int8/uint8/int16/uint16/int32/uint32/float16/float32，须通过真实元数据和变换校验。整数要求显式正且有限的 SCALE 描述，输入 scale 只能是逐张量。浮点空量化信息表示类型转换/直通，NONE 描述允许值为零的零点占位；非空浮点 SCALE 保持源仿射行为。输出支持逐轴 scale，长度须匹配轴；单个零点广播到全部通道，修正源 reshape 错误。整数零点须为范围内整数。绑定保留变换值快照，不深拷贝 SDK 描述对象。
+物理类型可为 int8/uint8/int16/uint16/int32/uint32/float16/float32，须通过真实元数据和变换校验。整数要求显式正且有限的 SCALE 描述，输入 scale 只能是逐张量。浮点空量化信息表示类型转换/直通，NONE 描述允许值为零的零点占位；非空浮点 SCALE 保持源仿射行为。输出支持逐轴 scale，长度须匹配轴；单个零点广播到全部通道，支持逐通道零点广播。整数零点须为范围内整数。绑定保留变换值快照，不深拷贝 SDK 描述对象。
 
-输入量化保留源 float32 `rint(x/scale + zero)`；最终整数转换前用 float64 边界裁剪，避免 int32/uint32 上界回绕。缺少整数 scale、元数据错误、非有限输入/结果均失败。输出先反量化，再执行源 sigmoid（logits 裁剪 [-60,60]）、Agent 阈值和通道轴 BEV argmax。不插入未说明的传感器归一化、随机噪声或新规划算法。真实 HBM 元数据在板端加载时校验。
+输入量化使用 float32 `rint(x/scale + zero)`；最终整数转换前用 float64 边界裁剪，避免 int32/uint32 上界回绕。缺少整数 scale、元数据错误、非有限输入/结果均失败。输出先反量化，再执行 sigmoid（logits 裁剪 [-60,60]）、Agent 阈值和通道轴 BEV argmax。不插入未说明的传感器归一化、随机噪声或新规划算法。真实 HBM 元数据在板端加载时校验。
 
 <a id="troubleshooting"></a>
 ## 排障

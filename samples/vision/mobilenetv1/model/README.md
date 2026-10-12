@@ -42,7 +42,7 @@ From the repository root:
 
 ```bash
 # input: manifest row for the target/variant — output: file under this directory
-# success: exit 0, observed digest printed; no partial files left behind
+# output: exit 0, observed digest printed; no partial files left behind
 bash samples/vision/mobilenetv1/model/download.sh x5 100
 bash samples/vision/mobilenetv1/model/download.sh x5 125
 bash samples/vision/mobilenetv1/model/download.sh s100p 125

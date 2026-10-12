@@ -70,7 +70,7 @@ bash run.sh -- --prompt="What is the capital of France?" --follow_up="Translate 
 <a id="interface-lifecycle"></a>
 ## Interface and lifecycle
 
-`inc/minicpm5.hpp` defines Config, Result, the generation-stage functions and the sequential MiniCPM5 helper; `src/minicpm5.cpp` implements the stages and owns model-file validation, the OELLM JSON settings and the temporary configuration file; `src/cli.cpp` handles gflags and RESULT output; `src/main.cpp` constructs the named model and calls `predict` once per turn.
+`inc/minicpm5.hpp` exposes `Config`, `Result`, the generation-stage functions and `MiniCPM5`. Include it to create a session and generate responses.
 
 The public stage functions are `preprocess` (builds and validates one OELLM request; no SDK calls), `infer` (one synchronous runtime call plus a response-shape check) and `postprocess` (extracts text, tokens and status, then reads and validates request metrics); `MiniCPM5::predict` chains them per request. Tokenization and template rendering stay inside the runtime; the SDK exposes no tokenization API. The temporary runtime JSON is owned by an RAII guard and removed on success, SDK error return and exception paths alike.
 
@@ -94,7 +94,7 @@ int main() {
 }
 ```
 
-`pre_process` is public, so its own argument contract is enforced inside it: an empty prompt or a `max_new_tokens` outside 1–4096 throws there for every caller, independent of the constructor check that runs before model loading. The runtime performs tokenization, BPU execution and decoding; no generated text is executed as code.
+`pre_process` requires a nonempty prompt and `max_new_tokens` in 1–4096; invalid arguments raise an exception. The runtime performs tokenization, BPU execution and text decoding.
 
 <a id="results-interpretation"></a>
 ## Interpret results

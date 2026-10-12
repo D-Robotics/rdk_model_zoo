@@ -53,7 +53,7 @@ Predicted positive means score >= threshold. The report includes TP/TN/FP/FN, ac
 `metrics.json` uses `rdk-model-zoo/kws-metrics/v1`, preserving provenance and SHA-256 of the exact prediction file. Its schema records `inference_executed=false` and `provenance_independently_verified=false`. The example records produce two correct decisions. Keep the prediction file alongside the report.
 
 <a id="reference-results"></a>
-## Source reference results
+## Reference results
 
 S100 reference measurements:
 
@@ -65,6 +65,6 @@ S100 reference measurements:
 The source performance command was `hrt_model_exec perf --model_file /root/kws/kws.hbm --frame_count 100`. It measures HBM execution for 100 frames; audio loading and feature extraction are outside that command.
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
 These metrics describe clip/window decisions. Event rate per hour requires event timestamps and aggregation; board latency is recorded by the S100 runtime workflow. Record the code revision, target, SDK, model/input digests and frontend version with each prediction set.

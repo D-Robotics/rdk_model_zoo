@@ -72,7 +72,7 @@
 
 ## 语音
 
-| Sample | Conversion | Evaluation |
+| Sample | 转换 | 评估 |
 |---|---|---|
 | [asr](speech/asr/README_cn.md) | [conversion](speech/asr/conversion/README_cn.md) | [evaluator](speech/asr/evaluator/README_cn.md) |
 | [kws](speech/kws/README_cn.md) | [conversion](speech/kws/conversion/README_cn.md) | [evaluator](speech/kws/evaluator/README_cn.md) |
@@ -84,7 +84,7 @@
 |---|---|---|
 | [himloco](robotics/himloco/README_cn.md) | [conversion](robotics/himloco/conversion/README_cn.md) | [evaluator](robotics/himloco/evaluator/README_cn.md) |
 
-HIMLoco 使用准备好的六帧观测输出策略动作，不构造实时控制环或发送机器人指令。
+HIMLoco 读取准备好的六帧观测数据，保存预测的动作。
 
 ## 大模型
 
@@ -93,12 +93,12 @@ HIMLoco 使用准备好的六帧观测输出策略动作，不构造实时控制
 | [gemma4-e2b](llm/gemma4-e2b/README_cn.md) | [conversion](llm/gemma4-e2b/conversion/README_cn.md) | [evaluator](llm/gemma4-e2b/evaluator/README_cn.md) |
 | [minicpm5-2b](llm/minicpm5-2b/README_cn.md) | [conversion](llm/minicpm5-2b/conversion/README_cn.md) | [evaluator](llm/minicpm5-2b/evaluator/README_cn.md) |
 
-Gemma 提供五个原生入口（对话、HTTP 服务、单次推理、验证工具）及完整上游教程。MiniCPM5-2B 提供 S100/S100P（OELLM 1.0.0）与 S600（OELLM 2.0 beta）两套独立原生入口。两个样例支持的板卡见各自指南；模型资源与原生构建前提按样例文档准备。
+Gemma 提供对话、HTTP 服务和单次推理程序。MiniCPM5-2B 提供 S100/S100P（OELLM 1.0.0）与 S600（OELLM 2.0 beta）两套程序。支持的板卡、模型准备和构建命令见各 Sample 说明。
 
-## 固定第三方策略集成
+## ACT 与 Pi0
 
-ACT／Pi0 的完整上游 Git 子模块与 51 个本仓库 Sample 分开维护。参阅 [VLA 总览](vla/README_cn.md)、[ACT 板型选择](vla/guides/act_cn.md)、[Pi0 离线与实机边界](vla/guides/pi0_cn.md)。获取源码不会自动准备模型；模型资源按 VLA 指南由使用者准备。
+ACT 和 Pi0 通过 Git 子模块提供。先按 [VLA 总览](vla/README_cn.md)获取源码，再按板卡选择 [ACT](vla/guides/act_cn.md) 或 [Pi0](vla/guides/pi0_cn.md) 指南，准备模型并运行。
 
 ## 选择与扩展
 
-先读 Sample 总 README，再进入 model/runtime/conversion/evaluator。分类、视觉特征和图文匹配不是相同输出；EfficientSAM 的导出固定提示与 MobileSAM 的运行时框也不能混用。共享目标/制品机制见 [utils/py_utils](../utils/py_utils/README_cn.md)，代码职责与文档要求见 [Runtime 代码规范](../docs/sample-standards/runtime-code.md) 和 [README 契约](../docs/sample-standards/readme-contract.md)。
+先阅读 Sample 首页。`model/` 介绍模型准备，`runtime/` 介绍推理运行，`conversion/` 介绍自定义模型的导出与编译，`evaluator/` 介绍结果评估。开发自己的应用时，可参考[公共 Python 工具](../utils/py_utils/README_cn.md)和 [Runtime 代码规范](../docs/sample-standards/runtime-code.md)。

@@ -14,7 +14,6 @@
 
 ```text
 conversion/
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
 ├── calibration.py  # Python 脚本
@@ -74,15 +73,15 @@ python3 samples/vision/yoloe/conversion/export.py \
 
 `--weights`、`--variant`、`--output-dir` 必填；支持 11s/m/l、26n/s/m/l/x 八种变体。`--threads` 默认 2，必须为正整数。不传 `--test-image` 时使用 seed 0 的 CPU 随机输入；建议提供图片，让对照结果更有实际意义。不隐式下载权重或编译，拒绝复用已有输出目录。导出失败非零退出（已处理的输入/校验错误为 2）；开始准备后产生的失败会在 `export.json` 留下阶段状态，不写成成功。
 
-E11 使用源 cv2/cv3/cv5 分支、DFL16 和 opset 11；E26 使用 one2one 分支、直接 LTRB 和 opset 17。Linear 词表权重以等价 1×1 卷积执行，不替换权重参数；已有词表卷积直接保留。原始头返回全部 anchor 和十个 NHWC tensor，不做 proposal 筛选。骨干网络的层连接和 `model.<index>` 节点名保留，供 X5 attention 配置识别。
+E11 使用源 cv2/cv3/cv5 分支、DFL16 和 opset 11；E26 使用 one2one 分支、直接 LTRB 和 opset 17。Linear 词表权重以等价 1×1 卷积执行，不替换权重参数；已有词表卷积直接保留。原始头返回全部 anchor 和十个 NHWC 张量，不做 proposal 筛选。骨干网络的层连接和 `model.<index>` 节点名保留，供 X5 attention 配置识别。
 
-两类模型都先将全部原始 anchor、Top-K 前的解码 tensor 和原型与上游静态 PF 头比较（rtol/atol 1e-4），再检查 ONNX 图，并将十个 ONNX Runtime CPU 输出与 PyTorch 比较（rtol/atol 2e-3）。比较时设置 `ORT_DISABLE_ALL`，在关闭 CPU 融合的条件下检查导出图。生成 `yoloe_<variant>_seg_pf.onnx`、`yoloe_<variant>_seg_pf.names`、`export.json`；记录包含权重、输入、ONNX、词表哈希、依赖版本、逐输出最大绝对误差和 `status=float_checked`。导出与平台无关、不写入硬件 march；march 由后续按目标准备与编译步骤选择。
+两类模型都先将全部原始 anchor、Top-K 前的解码张量和原型与上游静态 PF 头比较（rtol/atol 1e-4），再检查 ONNX 图，并将十个 ONNX Runtime CPU 输出与 PyTorch 比较（rtol/atol 2e-3）。比较时设置 `ORT_DISABLE_ALL`，在关闭 CPU 融合的条件下检查导出图。生成 `yoloe_<variant>_seg_pf.onnx`、`yoloe_<variant>_seg_pf.names`、`export.json`；记录包含权重、输入、ONNX、词表哈希、依赖版本、逐输出最大绝对误差和 `status=float_checked`。导出与平台无关、不写入硬件 march；march 由后续按目标准备与编译步骤选择。
 
-E26 还要求选中的 `(anchor, class)` 集合与上游完全一致，再按这个身份比较选中值。浮点舍入引起的名次变化记录在 `order_identical=false` 和 `reordered_rows` 中。即使分数接近，只要新增/遗漏 anchor 或类别就失败。导出接口提供稠密 tensor；最终 Top-K 排序通过运行时及数据集评估器测量。
+E26 还要求选中的 `(anchor, class)` 集合与上游完全一致，再按这个身份比较选中值。浮点舍入引起的名次变化记录在 `order_identical=false` 和 `reordered_rows` 中。即使分数接近，只要新增/遗漏 anchor 或类别就失败。导出接口提供稠密张量；最终 Top-K 排序通过运行时及数据集评估器测量。
 
 以 E11s/m/l 与 E26n/s/m/l/x 八种权重及随附 `office_desk.jpg` 进行的参考性浮点导出对照，在 E26 m/l/x 上分别观察到 2/4/2 行 Top-K 名次变化，选中的 `(anchor, class)` 集合保持一致。该对照在 CPU 上使用单张图片。数据集精度及编译后 BIN/HBM 推理指标通过评估器测量。
 
-`prepare.py` 执行 ONNX checker，拒绝外置 tensor 文件和动态形状，并要求词表与 [classes.names](../test_data/classes.names) 逐字节一致。输出按唯一形状识别，不依赖物理输出排列：
+`prepare.py` 执行 ONNX checker，拒绝外置张量文件和动态形状，并要求词表与 [classes.names](../test_data/classes.names) 逐字节一致。输出按唯一形状识别，不依赖物理输出排列：
 
 | 角色 | E11 NHWC 形状 | E26 NHWC 形状 |
 | --- | --- | --- |
@@ -91,7 +90,7 @@ E26 还要求选中的 `(anchor, class)` 集合与上游完全一致，再按这
 | 掩码系数，步长 `s` | `[1,640/s,640/s,32]` | 同左 |
 | 原型 | `[1,160,160,32]` | 同左 |
 
-`s` 取 8、16、32，共十个 float32 输出。形状一致证明的是 tensor 接口；权重尺寸、架构、标签语义与精度由导出器检查和评估器验证。报告用 `variant_declared` 标记此阶段的尺寸为调用者声明；请将导出 metadata 与准备目录一并保存。
+`s` 取 8、16、32，共十个 float32 输出。形状一致证明的是张量接口；权重尺寸、架构、标签语义与精度由导出器检查和评估器验证。报告用 `variant_declared` 标记此阶段的尺寸为调用者声明；请将导出元数据与准备目录一并保存。
 
 <a id="calibration"></a>
 ## 校准
@@ -148,12 +147,12 @@ docker run --rm -it --shm-size=2g \
 | Padding | pyramid 输入 | 输入/输出无 padding | 输入无 padding，允许输出 padding |
 | 删除输出节点请求 | 无 | 无 | 无 |
 
-X5 只为真实 ONNX 中存在的节点添加 int16 attention 配置：所有 E11 尺寸使用 `/model.10/m/m.0/attn/Softmax`，11l 另需 `/model.10/m/m.1/attn/Softmax`。每个缺失节点都会在 `source attention node absent:...` 警告中单独列出。不能把另一节点改名来冒充。S E11 量化配方 `config_ultralytics_YOLOE_Seg_YUV420SP_NV12.yaml` 的设置为：NV12 运行时输入、`scale_value 0.003921568627451`、默认校准加 softmax-int8 的 `quant_config`、latency/O2、`jobs: 15`、`advice: 1`、输入/输出无 padding；其生效的 `remove_node_name` 名单沿用 v8 头部编号（`/model.23/...`），而 YOLOE-11 的头在 `/model.22/...` 下，这些删除名与 11 系列图不匹配。本浮点路线直接不请求删除。相关选项删除边界算子的含义见 [S 模型修改规则](https://developer.d-robotics.cc/oe_s_doc/guide/model_deployment_guidance/model_deployment_principle_process/model_modify)。不删除表达浮点输出意图，最终仍须读取编译制品的真实 metadata。
+X5 只为真实 ONNX 中存在的节点添加 int16 attention 配置：所有 E11 尺寸使用 `/model.10/m/m.0/attn/Softmax`，11l 另需 `/model.10/m/m.1/attn/Softmax`。每个缺失节点都会在 `source attention node absent:...` 警告中单独列出。请使用与目标网络匹配的节点配置。S E11 量化配方 `config_ultralytics_YOLOE_Seg_YUV420SP_NV12.yaml` 的设置为：NV12 运行时输入、`scale_value 0.003921568627451`、默认校准加 softmax-int8 的 `quant_config`、latency/O2、`jobs: 15`、`advice: 1`、输入/输出无 padding；其生效的 `remove_node_name` 名单沿用 v8 头部编号（`/model.23/...`），而 YOLOE-11 的头在 `/model.22/...` 下，这些删除名与 11 系列图不匹配。本浮点路线直接不请求删除。相关选项删除边界算子的含义见 [S 模型修改规则](https://developer.d-robotics.cc/oe_s_doc/guide/model_deployment_guidance/model_deployment_principle_process/model_modify)。不删除表达浮点输出意图，最终仍须读取编译制品的真实元数据。
 
 <a id="validation"></a>
 ## 验证
 
-退出码：准备完成或编译退出 0 且产生非空文件时为 0；捕获到编译失败或缺失制品为 1；输入无效、依赖/编译器缺失为 2。编译成功仅报告 **`compiled_unverified`**，保留 `observed_output_dtype=null`，`board` 与 `dataset_accuracy` 不设值。文件名 `_float` 是预期协议，不是实际精度证明。
+退出码：准备完成或编译退出 0 且产生非空文件时为 0；捕获到编译失败或缺失制品为 1；输入无效、依赖/编译器缺失为 2。编译成功仅报告 **`compiled_unverified`**，保留 `observed_output_dtype=null`，`board` 与 `dataset_accuracy` 不设值。推理前通过运行时元数据检查输出类型。
 
 对已发布的 X5 E11 制品，用 `hb_perf` 可视化加 `hrt_model_exec model_info` 检查验证（准备 BIN 后在匹配的 X5 镜像中运行）：
 
@@ -162,7 +161,7 @@ hb_perf samples/vision/yoloe/model/x5/yoloe_11s_seg_pf_bayese_640x640_nv12.bin
 hrt_model_exec model_info --model_file samples/vision/yoloe/model/x5/yoloe_11s_seg_pf_bayese_640x640_nv12.bin
 ```
 
-检查编译制品的实际 metadata，并用代表性输入比较十个输出与浮点模型。统一运行时进一步检查 target、NV12 输入和十个 NHWC float32 输出角色；整数输出、形状或平台不符直接拒绝，不在后处理中加入手动反量化。使用 `conversion.json` 中制品摘要显式指定本地文件：
+检查编译制品的实际元数据，并用代表性输入比较十个输出与浮点模型。统一运行时进一步检查目标板卡、NV12 输入和十个 NHWC float32 输出角色；整数输出、形状或平台不符直接拒绝，不在后处理中加入手动反量化。使用 `conversion.json` 中制品摘要显式指定本地文件：
 
 ```bash
 # cwd: repository root on the matching board; replace the path and digest
@@ -171,21 +170,12 @@ python3 samples/vision/yoloe/runtime/python/main.py \
   --local-float-sha256 REPLACE_WITH_64_HEX_SHA256
 ```
 
-主机测试使用合成图执行真实 ONNX 校验，检查校准像素、14 种配置和模拟编译器成功/失败捕获。安装准备依赖后运行：
-
-```bash
-# cwd: repository root
-python3 -m unittest discover -s samples/vision/yoloe/tests
-# Additionally, in the export environment:
-python3 -m unittest discover -s samples/vision/yoloe/conversion/tests
-```
-
 <a id="artifacts"></a>
 ## 产物
 
-每个准备目录包含 `source/model.onnx`、`source/classes.names`、`calibration/`、`calibration.json`、`config.yaml`、`conversion.json`。记录以 SHA-256 绑定原图、生成 tensor、ONNX、词表和 YAML。编译额外保存 stdout/stderr 合并完整日志 `compile.log`，记录精确 argv/cwd、UTC 起止时间和退出码；成功时在 `conversion.json` 写制品路径、哈希及字节数。
+每个准备目录包含 `source/model.onnx`、`source/classes.names`、`calibration/`、`calibration.json`、`config.yaml`、`conversion.json`。记录以 SHA-256 绑定原图、生成张量、ONNX、词表和 YAML。编译额外保存 stdout/stderr 合并完整日志 `compile.log`，记录精确 argv/cwd、UTC 起止时间和退出码；成功时在 `conversion.json` 写制品路径、哈希及字节数。
 
-预期路径为 `compiler_output/yoloe_<variant>_seg_pf_<march-without-hyphen>_640x640_nv12_float.bin`（X5）或 `.hbm`（S）。本地转换与[原始发布制品](../model/README_cn.md)分开保存，不会自动建立新的发布身份或板测记录。
+预期路径为 `compiler_output/yoloe_<variant>_seg_pf_<march-without-hyphen>_640x640_nv12_float.bin`（X5）或 `.hbm`（S）。本地转换与[原始发布制品](../model/README_cn.md)分开保存，运行时指定生成模型的路径和摘要。
 
 <a id="known-gaps"></a>
 ## 准备要求

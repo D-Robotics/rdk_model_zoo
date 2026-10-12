@@ -45,9 +45,9 @@ export PYTHONNOUSERSITE=1
 export PYTHONPATH="$PWD:$PWD/llm_compression/lightcompress${PYTHONPATH:+:$PYTHONPATH}"
 ```
 
-Perform the complete verification in section 7 of the bundled environment guide: torch operations, plugins, compiler, hbm-infer and actual CUDA computation, not imports alone. If.skillshare exists, install the documented CLI (tested v0.20.21), add claude/cursor/opencode targets when absent, then run `skillshare sync && skillshare status`. Use the bundled drobotics skills for quantization. Keep deps_version.conf unchanged; mirror selection must not change pinned package versions.
+Perform the complete verification in section 7 of the bundled environment guide: torch operations, plugins, compiler, hbm-infer and actual CUDA computation, not imports alone. If.skillshare exists, install the documented CLI (v0.20.21), add claude/cursor/opencode targets when absent, then run `skillshare sync && skillshare status`. Use the bundled drobotics skills for quantization. Keep deps_version.conf unchanged; mirror selection must not change pinned package versions.
 
-Verified host packages: torch2.8.0+cu128, horizon-plugin-pytorch3.3.5+cu128.torch280, profiler3.3.5, HBDK4 compiler/march4.11.7a2.dev202607040356+dcaae33.develop, hbm-infer3.15.3. Calibration uses CUDA; compilation is CPU work and the launcher hides CUDA for that stage. Allow substantial intermediate disk space beyond the SDK installation; compilation intermediates can exceed tens of GB.
+Host package versions: torch2.8.0+cu128, horizon-plugin-pytorch3.3.5+cu128.torch280, profiler3.3.5, HBDK4 compiler/march4.11.7a2.dev202607040356+dcaae33.develop, hbm-infer3.15.3. Calibration uses CUDA; compilation is CPU work and the launcher hides CUDA for that stage. Allow substantial intermediate disk space beyond the SDK installation; compilation intermediates can exceed tens of GB.
 
 <a id="export"></a>
 ## Weights and configuration preparation
@@ -102,7 +102,7 @@ The adapter validates bias-free Llama, restores RoPE theta=5000000 after Transfo
 See [board evaluation](../evaluator/README.md).
 
 <a id="known-gaps"></a>
-## Scope and known limits
+## Additional preparation
 
 ## S100 / S100P
 

@@ -152,8 +152,7 @@ python3 scripts/prepare_calibration.py \
 Detector tensors are resized to 640×640 RGB float32; recognizer tensors to
 320×48 RGB float32 in `[0,1]`, matching the runtime's `no_preprocess`
 input. The X5 output extension is `.rgbchw`, the S100 extension `.npy`.
-Each output directory must be empty, so a second stage cannot silently
-reuse residual tensors. Use representative images/crops from the model's
+Use a separate empty output directory for each stage. Use representative images/crops from the model's
 training domain; this helper does not determine an accuracy or a required
 sample count.
 

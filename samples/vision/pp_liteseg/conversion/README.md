@@ -75,7 +75,7 @@ cd samples/vision/pp_liteseg/conversion
 python3 prepare_calibration.py --src /data/cityscapes/calibration_images --out calibration_data_rgb_f32_1024x512 --width 1024 --height 512 --num 50 --seed 0
 ```
 
-Each tensor is 6,291,456 bytes. --num defaults to 50, --seed to 0; sorted recursive jpg/jpeg/png/bmp inputs are sampled deterministically without replacement when needed. Unique filenames preserve colliding basenames. Existing output directory or sibling manifest is rejected; choose a new directory for another run. Unreadable selected images fail rather than silently reducing the dataset. The sibling `calibration_data_rgb_f32_1024x512.manifest.json` records shape, seed and input/output hashes; only raw tensors enter the compiler directory. Select calibration images representative of the deployment inputs.
+Each tensor is 6,291,456 bytes. --num defaults to 50, --seed to 0; sorted recursive jpg/jpeg/png/bmp inputs are sampled deterministically without replacement when needed. Unique filenames preserve colliding basenames. Existing output directory or sibling manifest is rejected; choose a new directory for another run. Unreadable selected images return an error. The sibling `calibration_data_rgb_f32_1024x512.manifest.json` records shape, seed and input/output hashes; only raw tensors enter the compiler directory. Select calibration images representative of the deployment inputs.
 
 <a id="compile"></a>
 ## Compile

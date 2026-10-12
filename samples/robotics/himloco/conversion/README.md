@@ -21,9 +21,7 @@ conversion/
 └── README_cn.md
 ```
 
-`mapper.py` generates the complete YAML from validated CLI arguments. No static
-YAML template is maintained. The generated YAML is stored under each run's
-`config/` directory as the effective build record.
+`mapper.py` generates the complete YAML from validated CLI arguments. The generated YAML is stored under each run's `config/` directory.
 
 ## Model Protocol
 
@@ -67,10 +65,10 @@ conversion/
 ## Environments
 
 ONNX export runs in the training/export environment that can load `policy.pt`.
-The source-recorded versions were PyTorch 2.7.0, ONNX 1.22.0, and NumPy 1.26.0.
+The recipe uses PyTorch 2.7.0, ONNX 1.22.0, and NumPy 1.26.0.
 
 PTQ compilation runs on an x86 Linux host in the RDK X5 OpenExplorer
-environment. The source-recorded build used OpenExplorer v1.2.8 / Mapper 1.24.3.
+environment. The build uses OpenExplorer v1.2.8 / Mapper 1.24.3.
 Verify the required modules and tools before starting:
 
 ```bash
@@ -189,17 +187,15 @@ The compile directory contains `artifacts/himloco_go2_bayese_1x270.bin` for X5 a
 | `mapper.py` | `--onnx`, `--calibration`, `--output` | `--jobs 8`; `--optimize-level O3`; `--calibration-type mix`; `--max-percentile 1.0` |
 
 <a id="known-gaps"></a>
-## Boundaries
+## Scope
 
 Training weights and a full rollout are not bundled. Follow the export, calibration, compilation, and runtime steps below.
 
-- Use representative rollout states; random Gaussian calibration is not a
-  release-quality substitute.
+- Use representative rollout states for calibration.
 - Calibration and held-out evaluation rollouts must not overlap.
 - Store all generated models, calibration data, logs, and reports outside the
   repository.
-- Do not publish a build when Mapper does not report output similarity or
-  `hb_model_info` does not confirm `bayes-e`.
+- Check the output similarity reported by Mapper and confirm `bayes-e` with `hb_model_info` before deploying the model.
 
 ## License
 

@@ -50,7 +50,7 @@ To use a prepared external model and image:
 python3 -m samples.vision.lanenet.runtime.python.main --target s100 --asset-id s:lanenet:s100/lanenet256x512.hbm --model-path /data/models/lanenet256x512.hbm --test-img /data/road.jpg --output outputs/lanenet_external
 ```
 
-The model path requires an explicit asset ID. This declares the intended contract; absent a publisher checksum it does not authenticate the file. Unsupported targets fail rather than selecting S100 silently.
+The model path requires an explicit asset ID. This declares the intended contract; absent a publisher checksum it does not authenticate the file. Only S100 is supported.
 
 <a id="parameters"></a>
 ## Parameters

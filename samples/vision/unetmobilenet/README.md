@@ -19,7 +19,6 @@ unetmobilenet/
 ├── model/  # Model files and download scripts
 ├── runtime/  # Python and native inference implementations
 ├── test_data/  # Example inputs
-├── tests/  # Automated tests
 ├── README.md  # English instructions
 └── README_cn.md  # Chinese instructions
 ```
@@ -57,7 +56,7 @@ From the repository root, install general dependencies with `python3 -m pip inst
 <a id="expected-results"></a>
 ## Expected results
 
-Python success returns 0 and writes result.jpg, unetmobilenet_mask.npy (original-size int32 IDs 0..18) and unetmobilenet_report.json in cwd. alpha_f=0.75 weights the original image, so 1 shows the original and 0 the mask colors. Actual classes depend on real inference; no fixed result is promised. The figure below is the retained source illustration, not a new board result.
+Python success returns 0 and writes result.jpg, unetmobilenet_mask.npy (original-size int32 IDs 0..18) and unetmobilenet_report.json in cwd. alpha_f=0.75 weights the original image, so 1 shows the original and 0 the mask colors. Actual classes depend on real inference; results vary with the input and model. The figure below is the reference illustration.
 
 ![Reference source result](test_data/result.jpg)
 

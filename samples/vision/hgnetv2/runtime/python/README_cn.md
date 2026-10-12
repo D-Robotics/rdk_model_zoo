@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-[`main.py`](main.py) 解析参数，显式构造 `HGNetV2Classifier`，调用 `predict` 并展示结果。
+[`main.py`](main.py) 解析参数，创建 `HGNetV2Classifier`，调用 `predict` 并展示结果。
 [`classify.py`](classify.py) 包含模型初始化、前处理、推理和后处理；
 [`cli.py`](cli.py) 集中管理命令行参数、发布模型选择和结果展示。
 图片读取、标签校验和 SDK 会话复用 `utils/py_utils/`。
@@ -26,7 +26,7 @@ python/
 <a id="environment"></a>
 ## 环境
 
-X5 需要匹配的 `hbm_runtime`、NumPy、OpenCV 与 PyYAML。主机导入/help/list/dry-run 无需板端 SDK。主机测试依赖见 `samples/vision/hgnetv2/requirements-host.txt`。
+X5 需要匹配的 `hbm_runtime`、NumPy、OpenCV 与 PyYAML。主机导入/help/list/dry-run 无需板端 SDK。主机 Python 依赖见 `samples/vision/hgnetv2/requirements-host.txt`。
 
 [环境要求](../../README_cn.md#prerequisites)。使用包含匹配 `hbm_runtime` 的板端镜像。
 
@@ -83,7 +83,7 @@ python3 samples/vision/hgnetv2/runtime/python/main.py
 <a id="results"></a>
 ## 结果
 
-打印 Top-K 类别 ID/分数/标签；`ClassificationResult` 包含 int64 ID、float32 分数和标签 tuple。未指定 `--img-save-path` 不写文件。源声明为 logits 加 softmax，实际板端 metadata 待复验。完全平局使用 ID 升序，可能不同于旧 NumPy 的平局排序。
+打印 Top-K 类别 ID/分数/标签；`ClassificationResult` 包含 int64 ID、float32 分数和标签 tuple。未指定 `--img-save-path` 不写文件。源声明为 logits 加 softmax，实际板端 元数据 待复验。完全平局使用 ID 升序，可能不同于旧 NumPy 的平局排序。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -122,9 +122,9 @@ print(result.class_ids, result.scores, result.labels)
 | postprocess（post_process） | squeeze 后为 (1000,) 的 F32 分数 | softmax 与稳定 Top-K ClassificationResult |
 | predict | 图像路径或 BGR 图像 | 串联上述三个阶段 |
 
-默认前处理为线性 letterbox，填充值 BGR 127。分类后处理不消费几何上下文。runner 负责 SDK 加载、调度、metadata 检查；文件/标签读取与绘图留在 CLI 层（`cli.py`）。
+默认前处理为线性 letterbox，填充值 BGR 127。分类后处理不消费几何上下文。runner 负责 SDK 加载、调度、元数据 检查；文件/标签读取与绘图留在 CLI 层（`cli.py`）。
 
 <a id="troubleshooting"></a>
 ## 排障
 
-缺模型：先显式准备。`model_path requires --asset-id`：补全精确引用。未知板卡或目标不匹配：主机用 `--dry-run --target x5`，真实推理只在匹配 X5 上执行。S 选择失败：没有发布制品。张量不匹配：核对制品引用、目标与张量 metadata 是否符合样例契约。
+缺模型：先显式准备。`model_path requires --asset-id`：补全精确引用。未知板卡或目标不匹配：主机用 `--dry-run --target x5`，真实推理只在匹配 X5 上执行。S 选择失败：没有发布制品。张量不匹配：核对制品引用、目标与张量 元数据 是否符合样例契约。

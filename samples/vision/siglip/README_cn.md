@@ -19,7 +19,6 @@ siglip/
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
 └── requirements-host.txt  # 源码或数据文件
@@ -71,20 +70,20 @@ python3 samples/vision/siglip/runtime/python/main.py --target s100 --variant bas
 <a id="expected-results"></a>
 ## 预期结果
 
-CLI 为所选原始特征 tensor 打印一个 JSON 统计对象。`shape` 来自 HBM metadata：`pooler_output` 为 `(1,D)` 或 `(1,1,D)`，`last_hidden_state` 为 `(1,N,D)`；`D`、`N` 见 runtime README。保留制品原生 dtype；运行时不会反量化、softmax、归一化、squeeze 或其他数值变换。板端运行制品前，不声明具体数值。
+CLI 为所选原始特征张量打印一个 JSON 统计对象。`shape` 来自 HBM 元数据：`pooler_output` 为 `(1,D)` 或 `(1,1,D)`，`last_hidden_state` 为 `(1,N,D)`；`D`、`N` 见运行时 README。保留制品原生数据类型；运行时不会反量化、softmax、归一化、squeeze 或其他数值变换。具体数值取决于输入和模型。
 
 每个打包 HBM 包含 `pooler_output` 与 `last_hidden_state` 子模型，共用图像输入；每次推理只执行所选子模型。文本编码需另行准备模型与分词器。
 
 <a id="entry-points"></a>
 ## 入口索引
 
-- 模型准备：[`model/README_cn.md`](model/README_cn.md) —— 八个由 manifest 管理、同时支持 S100/S100P 的 HBM 制品。
-- Python 运行：[`runtime/python/README_cn.md`](runtime/python/README_cn.md) —— 预处理、metadata binding、选定子模型运行和 JSON 摘要 CLI。
+- 模型准备：[`model/README_cn.md`](model/README_cn.md) —— 八个由清单管理、同时支持 S100/S100P 的 HBM 制品。
+- Python 运行：[`runtime/python/README_cn.md`](runtime/python/README_cn.md) —— 预处理、元数据模型绑定、选定子模型运行和 JSON 摘要 CLI。
 - C++ 运行：未提供；C++ 为 `not-supported`。
 - 模型转换：[`conversion/README_cn.md`](conversion/README_cn.md) —— 源模型身份、工具链与目标、导出/校准/编译步骤及转换后验证。
-- 模型评估：[`evaluator/README_cn.md`](evaluator/README_cn.md) —— 源记录表格与数组捕获对照流程。
+- 模型评估：[`evaluator/README_cn.md`](evaluator/README_cn.md) —— 参考记录表格与数组捕获对照流程。
 
 <a id="license"></a>
 ## 许可说明
 
-示例代码遵循仓库 [LICENSE](../../../LICENSE) 的 Apache-2.0。manifest 指向 Google 来源的预编译 SigLIP 制品，但源发布记录没有记录每个权重/导出制品的具体许可证和版本，因此这里不额外断言模型许可证。保留源贡献者署名：Cauchy @吴超。
+示例代码遵循仓库 [LICENSE](../../../LICENSE) 的 Apache-2.0。清单指向 Google 来源的预编译 SigLIP 制品，但源发布记录没有记录每个权重/导出制品的具体许可证和版本，因此这里不额外断言模型许可证。保留源贡献者署名：Cauchy @吴超。

@@ -19,7 +19,6 @@ Google **Gemma4-E2B** 视觉语言模型在 **地瓜 RDK S100P / S600** 上的�
 
 > 支持平台：**RDK S100P / S600**。运行时共用同一套 C++ 代码，但必须使用与板端 SoC 匹配的 HBM。
 
-> 本文演示图与板端性能数据为源 S 发布的记录。
 
 ---
 
@@ -74,7 +73,7 @@ gemma4-e2b/
 | RDK S600 | ✅ | `nash-p`；使用公开的 S600 HBM，Vision 与 Text 在启动时各加载一次并常驻 |
 | RDK S100 | ⚠️ | Runtime 保留 SoC 分支；需自备匹配 HBM，板端运行按本指南命令执行 |
 
-S100 使用板型对应的 SoC 分支；请通过 `GEMMA4_MODEL_BASE_URL` 提供匹配的 S100 HBM（见[模型说明](model/README_cn.md)）。性能数据为 S600 源发布记录。
+S100 使用板型对应的 SoC 分支；请通过 `GEMMA4_MODEL_BASE_URL` 提供匹配的 S100 HBM（见[模型说明](model/README_cn.md)）。性能数据对应 S600。
 
 ---
 
@@ -84,7 +83,7 @@ S100 使用板型对应的 SoC 分支；请通过 `GEMMA4_MODEL_BASE_URL` 提供
 板端需要与目标匹配的 OE-LLM runtime、C++17 编译环境、OpenCV、gflags、JSON 头文件和 Rust 1.80+；
 启动器额外使用 Python 3 标准库。完整依赖命令见 [C++ 运行说明](runtime/cpp/README_cn.md#dependencies)。
 准备两份与目标 SoC 匹配的 HBM、共享 embedding 和 tokenizer；不同目标的 HBM 文件同名，数据目录应分开。
-模型体积与源记录校验值见 [模型说明](model/README_cn.md)。仅推理无需在开发 PC 上安装量化工具链。
+模型体积与发布校验值见 [模型说明](model/README_cn.md)。仅推理无需在开发 PC 上安装量化工具链。
 
 <a id="quickstart"></a>
 ## 快速体验（QuickStart）
@@ -104,7 +103,7 @@ cd runtime/cpp
 ./run.sh --target s600 main --max_tokens=512
 ```
 
-模型下载、第三方准备、构建和启动为独立步骤。`run.sh` 使用 Python 3 做目标识别与进程启动；实际分词与推理仍为 C++。启动不会安装依赖、下载模型或自动编译。无板主机可以运行 `./run.sh --target s600 --dry-run` 预览启动命令（不执行）。
+先准备模型和依赖，再构建并启动。`run.sh` 使用 Python 3 识别目标并启动进程，分词与推理使用 C++。无板主机可以运行 `./run.sh --target s600 --dry-run` 预览启动命令（不执行）。
 
 交互示例：
 

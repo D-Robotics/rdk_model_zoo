@@ -19,7 +19,6 @@ References: [A Closer Look at Spatiotemporal Convolutions for Action Recognition
 ├── model/  # Model files and download scripts
 ├── runtime/  # Python and native inference implementations
 ├── test_data/  # Example inputs
-├── tests/  # Automated tests
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
 └── requirements-host.txt  # Source or data file
@@ -98,7 +97,7 @@ The runtime reads the prepared RGB float32 clip `test_data/video0.npy` with shap
 
 - Model preparation: [`model/README.md`](model/README.md) — one exact S100 HBM asset and explicit download commands.
 - Python runtime: [`runtime/python/README.md`](runtime/python/README.md) — CLI and `R3D18Classifier` API.
-- Conversion: [`conversion/README.md`](conversion/README.md) — source conversion notes, screenshots, and missing-recipe boundaries.
+- Conversion: [`conversion/README.md`](conversion/README.md) — conversion prerequisites and model diagrams.
 - Evaluation: [`evaluator/README.md`](evaluator/README.md) — functional reference and the published performance record.
 - Runtime language: Python.
 

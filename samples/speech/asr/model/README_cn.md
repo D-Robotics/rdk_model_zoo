@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# ASR model preparation
+# ASR 模型准备
 
 <a id="artifacts"></a>
 ## 制品

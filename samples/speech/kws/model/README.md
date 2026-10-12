@@ -46,6 +46,6 @@ The default is resolved relative to the sample, independent of the caller's work
 <a id="formats-checksums"></a>
 ## Format and runtime contract
 
-HBM is an S100 compiled runtime file, not ONNX or a Paddle checkpoint. Input is finite float32 `[1,373,80]`, derived from 60000 mono samples at 16 kHz. Output must have batch one, positive static dimensions and finite data. Output shape is read from SDK metadata rather than guessed from a historical console score. Float32 probabilities are used directly; integer outputs require valid SCALE metadata and shared dequantization before max reduction. Values outside [0,1] are rejected; no extra sigmoid or implicit clipping is used.
+HBM is an S100 compiled runtime file, not ONNX or a Paddle checkpoint. Input is finite float32 `[1,373,80]`, derived from 60000 mono samples at 16 kHz. Output must have batch one, positive static dimensions and finite data. The SDK metadata provides the output shape. Float32 probabilities are used directly; integer outputs require valid SCALE metadata and shared dequantization before max reduction. Values outside [0,1] are rejected; no extra sigmoid or implicit clipping is used.
 
 Keep the downloaded file's SHA-256 with each run report to identify the exact model bytes used.

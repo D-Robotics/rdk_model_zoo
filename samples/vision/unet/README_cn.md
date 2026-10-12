@@ -21,12 +21,11 @@ unet/
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── tests/  # 自动化测试
 ├── README.md  # 英文说明
 └── README_cn.md  # 中文说明
 ```
 
-训练工具与生成的中间产物维护在本示例之外。仓库不提交 checkpoint、ONNX、
+训练工具与生成的中间产物维护在本示例之外。仓库不提交权重文件、ONNX、
 校准数据、编译后的 BIN 或完整评测数据集；预编译 BIN 通过 `model/` 中的脚本下载。
 
 <a id="support-matrix"></a>
@@ -57,11 +56,11 @@ unet/
 | ResNet101 | X5 预编译 BIN；Python 推理、ONNX 导出与 PTQ 配置 |
 | ResNet152 | X5 预编译 BIN；Python 推理、ONNX 导出与 PTQ 配置 |
 
-上游 ResNet50 VOC checkpoint 可从
+上游 ResNet50 VOC 权重文件可从
 [`unet-pytorch` v1.0 release](https://github.com/bubbliiiing/unet-pytorch/releases/download/v1.0/unet_resnet_voc.pth)
 下载，SHA256 为
 `556a74b8379c40cbc76af7a1faab84d1316f02b7d93290b5f1f724ff922faacb`。
-新训练变体使用 torchvision ImageNet encoder 初始化；训练收据必须记录准确的
+新训练变体使用 torchvision ImageNet 编码器初始化；训练收据必须记录准确的
 torchvision 版本与权重标识。
 
 新增 backbone 需要完整验证后才能视为受支持：每个变体都必须
@@ -87,12 +86,12 @@ python3 samples/vision/unet/runtime/python/main.py --target x5 --variant resnet1
 <a id="expected-results"></a>
 ## 预期结果
 
-掩码是固定 512×512 uint8 类别 ID 0..20，不自动恢复原图尺寸；叠加图也在模型分辨率。JSON 包含制品身份、实际 metadata、出现类别、输出路径和包括前后处理的耗时。该耗时不是纯 BPU 延迟。
+掩码是固定 512×512 uint8 类别 ID 0..20，不自动恢复原图尺寸；叠加图也在模型分辨率。JSON 包含制品身份、实际元数据、出现类别、输出路径和包括前后处理的耗时。该耗时不是纯 BPU 延迟。
 
 <a id="entry-points"></a>
 ## 模型转换（Model Conversion）
 
-仓库已经提供五个 backbone 的预编译模型，普通用户可以跳过转换。需要复现 checkpoint
+仓库已经提供五个 backbone 的预编译模型，普通用户可以跳过转换。需要复现权重文件
 导出、校准、checker 和 makertbin 的开发者请阅读[转换文档](./conversion/README_cn.md)。
 
 ## 模型推理（Runtime）
@@ -103,14 +102,14 @@ python3 samples/vision/unet/runtime/python/main.py --target x5 --variant resnet1
 
 ## 模型评估
 
-统一 evaluator 可以使用同一份 Pascal VOC manifest 评测 PyTorch checkpoint、
+统一 evaluator 可以使用同一份 Pascal VOC 清单评测 PyTorch 权重文件、
 ONNX 或 X5 BIN，详见[evaluator/README_cn.md](./evaluator/README_cn.md)。
 
 ## 参考结果
 
-以下结果来自验证部署链路的 ResNet18 基线 checkpoint，在完整 1,449 张
-Pascal VOC 验证集上测得。复测时使用相同的 ResNet18 checkpoint 与数据划分。
-已发布 ResNet18 可在 RDK X5 上正常下载并输出 mask 与 overlay；板端精度与
+以下结果来自验证部署链路的 ResNet18 基线权重文件，在完整 1,449 张
+Pascal VOC 验证集上测得。复测时使用相同的 ResNet18 权重文件与数据划分。
+已发布 ResNet18 可在 RDK X5 上正常下载并输出掩码与叠加图；板端精度与
 纯 BPU 性能复测按[评估说明](evaluator/README_cn.md)执行。
 
 | 后端 | mIoU | Pixel Accuracy |
@@ -135,7 +134,7 @@ RDK X5 上使用单线程、200 帧和真实 packed NV12 输入时，`hrt_model_
 | ResNet101 | 0.709437 | 0.935887 | 0.996384 | 待测 |
 | ResNet152 | 0.740002 | 0.942805 | 0.996070 | 待测 |
 
-ResNet50 相较上游 checkpoint 的 0.661483 mIoU 有提升，但没有超过 ResNet34。
+ResNet50 相较上游权重文件的 0.661483 mIoU 有提升，但没有超过 ResNet34。
 完整系列的下载地址和 SHA256 见[模型下载说明](./model/README_cn.md)。
 
 <a id="license"></a>

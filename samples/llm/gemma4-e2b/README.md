@@ -19,7 +19,6 @@ Real-time **Vision-Language Model** inference for Google **Gemma4-E2B** on **D-R
 
 > Supported platforms: **RDK S100P / S600**. Both use the same C++ runtime, but each board requires HBM files compiled for its SoC.
 
-> Screenshots and board performance figures below are records from the source S release.
 
 ---
 
@@ -76,7 +75,7 @@ gemma4-e2b/
 
 S100 uses its SoC branch; supply matching S100 HBMs through `GEMMA4_MODEL_BASE_URL`
 (see [model preparation](model/README.md)). The performance figures are S600
-source-release records.
+reference measurements.
 
 ---
 
@@ -86,7 +85,7 @@ source-release records.
 The board needs the matching OE-LLM runtime, C++17 build tools, OpenCV, gflags, JSON headers and Rust 1.80+.
 The launcher additionally uses the Python 3 standard library. See [native dependencies](runtime/cpp/README.md#dependencies) for installation commands.
 Prepare the two SoC-matched HBMs, shared embedding table and tokenizer. Keep targets in separate data directories because HBM filenames are identical.
-See [model preparation](model/README.md) for sizes and source-recorded checksums. Inference does not require a PC quantization toolchain.
+See [model preparation](model/README.md) for sizes and published checksums. Inference does not require a PC quantization toolchain.
 
 <a id="quickstart"></a>
 ## Quick Start
@@ -106,7 +105,7 @@ cd runtime/cpp
 ./run.sh --target s600 main --max_tokens=512
 ```
 
-Model download, dependency preparation, build and execution are separate steps. `run.sh` uses Python 3 for target detection and process launch; tokenization and inference remain C++. Launch never installs dependencies, downloads models or builds automatically. On a host, `./run.sh --target s600 --dry-run` prints the launch command without executing it.
+Prepare the models and dependencies, then build before launching. `run.sh` uses Python 3 for target detection and process launch; tokenization and inference use C++. On a host, `./run.sh --target s600 --dry-run` prints the launch command without executing it.
 
 Example session:
 

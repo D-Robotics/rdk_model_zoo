@@ -20,7 +20,6 @@ ultralytics_yolo/
 ├── model/  # Model files and download scripts
 ├── runtime/  # Python and native inference implementations
 ├── test_data/  # Example inputs
-├── tests/  # Automated tests
 ├── DETECTION_CONTRACT.md  # Documentation
 ├── README.md  # English instructions
 └── README_cn.md  # Chinese instructions
@@ -139,8 +138,7 @@ YOLOv10, cls/seg/pose/obb). Custom-trained detectors connect through the
 conversion flow plus `--model-path`/`--family` (and `--classes-num` with a
 matching label file); predict accepts an image path or BGR array. An explicit
 `--model-path` is treated as a custom model: without `--label-file` results
-render class IDs (official COCO/ImageNet/DOTA sets are never applied
-silently), and an explicit label file whose count differs from the bound
+render class IDs, and an explicit label file whose count differs from the bound
 model's classes fails before inference. The image-path predict convenience
 applies to the DFL detector (`detect.py`); cls/seg/pose/obb
 keep their array interfaces. Three usage paths are described in

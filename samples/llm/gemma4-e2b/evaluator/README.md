@@ -124,12 +124,10 @@ Prepare all five golden tensors before running the golden verifier. Interactive 
 <a id="reference-results"></a>
 ## Reference measurements
 
-The source README and full tutorial retain the S100P demonstrations, approximately 6.9 tok/s text screenshot and S600 source regression notes.
-They are records from the S source release; the documented golden expected output likewise comes from that record.
-Board comparisons run through the runtime commands above.
+The S100P text demonstration runs at approximately 6.9 tok/s. Use the golden-input commands above to compare board output with the reference tensors; see the full tutorial for the reference setup.
 
 <a id="boundaries"></a>
-## Boundaries
+## Scope
 
 Run the PC BC comparison over your prompt set for dataset-level accuracy, and
 use the board golden command to compare target-side tensor construction.

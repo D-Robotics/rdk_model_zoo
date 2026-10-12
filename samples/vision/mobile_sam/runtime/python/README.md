@@ -122,7 +122,7 @@ Each stage has its own three methods, exposed with the spellings `preprocess`/`i
 | Decoder masks | `[1,3,128,128]` | `[1,3,H,W]`; positive H/W read from actual metadata |
 | Decoder IoU | `[1,3,1,1]` | `[1,3]` or `[1,3,1,1]`, as observed |
 
-Accepted native output dtypes are `float16`, `float32`, `int8`, `uint8`, `int16`, `int32`; each array must exactly match its observed metadata. The source float32 cast is preserved without dequantization. IoU is the model's predicted mask-quality score, not a ground-truth dataset measurement. Result fields are `mask` (owned bool `[512,512]`), `iou` (float), `mask_index` (integer 0–2), and `low_res_masks` (owned float32 `[1,3,H,W]`). PNG files encode false/true as 0/255. Use a separate model instance for each concurrent worker.
+Accepted native output dtypes are `float16`, `float32`, `int8`, `uint8`, `int16`, `int32`; each array must exactly match its observed metadata. The outputs are cast to float32 without dequantization. IoU is the model's predicted mask-quality score, not a ground-truth dataset measurement. Result fields are `mask` (owned bool `[512,512]`), `iou` (float), `mask_index` (integer 0–2), and `low_res_masks` (owned float32 `[1,3,H,W]`). PNG files encode false/true as 0/255. Use a separate model instance for each concurrent worker.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

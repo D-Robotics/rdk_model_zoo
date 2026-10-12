@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# LPRNet Python runtime
+# LPRNet Python 运行时
 
 <a id="overview"></a>
 ## Python 推理
@@ -47,12 +47,12 @@ python3 -m samples.vision.lprnet.runtime.python.main --target x5
 | `--asset-id` | `null` | 精确 `x5:lprnet:lpr.bin`，外部模型路径必需 |
 | `--model-path` | `null` | 已存在模型路径；不下载 |
 | `--test-bin` | `samples/vision/lprnet/test_data/test_input.dat` | 预打包 float32 输入 |
-| `--priority` | `5` | runtime 调度优先级 |
+| `--priority` | `5` | 运行时调度优先级 |
 | `--bpu-cores` | `[0]` | 一个或多个 BPU 核索引 |
-| `--list-models` | `false` | 不加载 SDK，打印 manifest 制品 |
-| `--dry-run` | `false` | 不加载 SDK 或模型，打印 binding 契约 |
+| `--list-models` | `false` | 不加载 SDK，打印清单制品 |
+| `--dry-run` | `false` | 不加载 SDK 或模型，打印模型绑定契约 |
 
-`--list-models` 与 `--dry-run` 互斥。用户或 runtime 错误返回 `2`。
+`--list-models` 与 `--dry-run` 互斥。用户或运行时错误返回 `2`。
 
 <a id="results"></a>
 ## 结果
@@ -85,16 +85,16 @@ print(plate)
 <a id="stage-io"></a>
 ## 三阶段 I/O
 
-- `preprocess(test_bin)` 精确读取 `1*3*24*94` 个 float32 值，返回含 `tensors, context` 的 `PreparedInput`，只有一个 NCHW tensor，不做图像变换。
-- `infer(tensors)` 校验绑定的名称、shape、dtype，调用选定模型并返回 owned raw float32 数组，shape 为绑定的完整 native shape——发布版 `lpr.bin` 为 `(1,68,18,1)`；每次调用都必须与绑定 shape 严格一致。
-- `postprocess(raw)` 只移除绑定 native logits 的单元素轴（绝不 reshape 或重排轴），然后执行源 CTC 风格解码并返回 `str`。
-- `predict(test_bin)` 串联三个阶段；context 是该次输入路径，不写入可被下一次调用覆盖的 task 字段。
-- 既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
+- `preprocess(test_bin)` 精确读取 `1*3*24*94` 个 float32 值，返回含 `tensors, context` 的 `PreparedInput`，只有一个 NCHW 张量，不做图像变换。
+- `infer(tensors)` 校验绑定的名称、形状、数据类型，调用选定模型并返回独立持有的 raw float32 数组，形状为绑定的完整原生形状——发布版 `lpr.bin` 为 `(1,68,18,1)`；每次调用都必须与绑定形状严格一致。
+- `postprocess(raw)` 只移除绑定原生 logits 的单元素轴（绝不 reshape 或重排轴），然后执行源 CTC 风格解码并返回 `str`。
+- `predict(test_bin)` 串联三个阶段；上下文是该次输入路径，不写入可被下一次调用覆盖的 task 字段。
+- `pre_process`、`forward`、`post_process` 分别是 `preprocess`、`infer`、`postprocess` 的别名。
 
 <a id="troubleshooting"></a>
 ## 故障排查
 
 - 没有 `--asset-id x5:lprnet:lpr.bin` 的模型路径会被拒绝，避免按文件名猜协议。
 - 缺失或尺寸错误的 `.dat` 会在 SDK 执行前报错。
-- 输入/输出名称、shape 或 dtype 与 metadata 不符时 binding 失败；不会用 runtime cast 掩盖不匹配。
-- 输出 metadata shape 不在 `(1,68,18,1)`/`(1,68,18)` 之内——例如 `(1,18,68,1)` 或 `(1,68,18,2)`——绑定失败；运行时输出的 shape 与绑定 shape 漂移时在解码前报错。
+- 输入/输出名称、形状或数据类型与元数据不符时模型绑定失败，请检查对应模型的输入输出协议。
+- 输出元数据形状不在 `(1,68,18,1)`/`(1,68,18)` 之内——例如 `(1,18,68,1)` 或 `(1,68,18,2)`——绑定失败；运行时输出的形状与绑定形状漂移时在解码前报错。

@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# ASR Python runtime
+# ASR Python 推理
 
 <a id="overview"></a>
 ## Python 推理

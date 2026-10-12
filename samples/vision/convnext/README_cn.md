@@ -53,18 +53,18 @@ convnext/
 | Target | 变体 | 语言 | 状态 |
 | --- | --- | --- | --- |
 | x5 | atto | python | supported |
-| s100 / s100p / s600 | 任意 | python | not-supported（按支持矩阵选择目标与变体） |
+| s100 / s100p / s600 | 任意 | python | not-supported（这些目标没有可用的模型文件） |
 
 <a id="prerequisites"></a>
 ## 环境前提
 
 板端 Python 运行需要镜像中与板卡匹配的 `hbm_runtime`、NumPy 和
 OpenCV-Python；只有真正执行模型时才导入 SDK（`--help`、`--list-models`、
-`--dry-run` 与主机测试均不需要 SDK）。读取 Manifest 还需要 PyYAML。开发
+`--dry-run` 均不需要 SDK）。读取 Manifest 还需要 PyYAML。开发
 主机可从 `requirements-host.txt` 安装用户态依赖：
 
 ```bash
-# cwd：仓库根目录 — 成功判据：输出 "host dependencies: ok"
+# cwd：仓库根目录 — 输出：输出 "host dependencies: ok"
 python3 -m venv .venv-convnext
 source .venv-convnext/bin/activate
 python3 -m pip install -r samples/vision/convnext/requirements-host.txt
@@ -80,12 +80,12 @@ python3 -c "import cv2, numpy, yaml; print('host dependencies: ok')"
 ```bash
 # 1. 准备制品（输入：Manifest 行 x5:convnext:ConvNeXt_atto_224x224_nv12.bin）
 #    输出：samples/vision/convnext/model/ConvNeXt_atto_224x224_nv12.bin
-#    成功判据：下载器退出码 0 并打印实测摘要
+#    输出：下载器退出码 0 并打印实测摘要
 bash samples/vision/convnext/model/download.sh x5
 
 # 2. 运行分类（输入：上一步制品 + 随附测试图）
 #    输出：stdout 上的 Top-5 类别 ID、分数、标签
-#    成功判据：退出码 0 且打印 Top-5 列表
+#    输出：退出码 0 且打印 Top-5 列表
 python3 samples/vision/convnext/runtime/python/main.py \
   --target x5 \
   --asset-id x5:convnext:ConvNeXt_atto_224x224_nv12.bin \

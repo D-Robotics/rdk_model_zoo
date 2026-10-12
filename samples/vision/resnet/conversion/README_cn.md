@@ -2,7 +2,7 @@
 
 # ResNet 模型转换（ResNet18 / ResNet50 / ResNet152）
 
-转换在 x86 Linux 主机的 RDK OpenExplore（OE）环境完成，不是板端操作。本目录
+转换在 x86 Linux 主机的 RDK OpenExplore（OE）环境完成。本目录
 覆盖该 sample 发布的三个变体，各变体的转换流程不同：
 
 | 变体 | 本目录内容 | 转换流程 |
@@ -82,7 +82,7 @@ ResNet18——导出前置：PyTorch、TorchVision、ONNX（可选 ONNX Runtime 
 
 ```bash
 # 输入：TorchVision 权重（未缓存时下载）
-# 输出：$WORK/resnet18.onnx — 成功判据：onnx.checker 通过，退出码 0
+# 输出：$WORK/resnet18.onnx，导出后使用 onnx.checker 检查模型。
 export WORK="${WORK:-/workspace/resnet18-conversion}"
 mkdir -p "$WORK"
 python3 samples/vision/resnet/conversion/export_resnet18_onnx.py \
@@ -120,7 +120,7 @@ output_calib_dir = './calibration_data_rgb/'  # 与 resnet152_config.yaml 的 ca
 ```bash
 # cwd：本 conversion 目录（OE 容器内）
 # 输入：src_image_dir 内 >=100 张 ILSVRC2012_val_*.JPEG
-# 输出：./calibration_data_rgb/*.npy（float32、RGB、NCHW）— 成功判据：打印 100 个文件
+# 输出：./calibration_data_rgb/ 下的 100 个 .npy 文件（float32、RGB、NCHW）。
 python3 get_calibration_data.py
 ```
 
@@ -146,7 +146,7 @@ ResNet18——在 OE 容器内，备好 `$WORK/resnet18.onnx` 与 `$OE_CONFIG`
 （OE 示例的 YAML）后执行。X5 块：
 
 ```bash
-# 输出：$WORK 下的 *.bin — 成功判据：hb_mapper 退出码 0
+# 输出：$WORK 下的 *.bin
 export X5_MARCH="${X5_MARCH:-bayes-e}"
 hb_mapper --version
 hb_mapper checker --model-type onnx --march "$X5_MARCH" --model "$WORK/resnet18.onnx"
@@ -158,7 +158,7 @@ S100/S600 块（YAML 必须包含匹配的 Nash target——S100 为 `nash-e`，
 S600 为 `nash-p`）：
 
 ```bash
-# 输出：$WORK 下的 *.hbm — 成功判据：hb_compile 退出码 0
+# 输出：$WORK 下的 *.hbm
 hb_compile --help
 hb_compile --config "$OE_CONFIG"
 find "$WORK" -type f -name '*.hbm' -print
@@ -169,7 +169,7 @@ ResNet152——备好 `./resnet152.onnx` 与 `./calibration_data_rgb/`
 
 ```bash
 # 输入：./resnet152.onnx、./calibration_data_rgb（见校准一节）
-# 输出：./model_output/resnet152_224x224_nv12.hbm — 成功判据：hb_compile 退出码 0
+# 输出：./model_output/resnet152_224x224_nv12.hbm
 hb_compile --config resnet152_config.yaml
 ```
 
@@ -233,7 +233,7 @@ find "$WORK" -type f -name '*.bin' -print
 已发布文件名即本 sample 使用的 Manifest 行。导出器的 ONNX 输出名为
 `output`；已发布 X5 运行时元数据的输出名为 `prob`、形状
 `[1,1000,1,1]`，S 制品为 `output`、`[1,1000]`——这些名称与形状属于
-目标制品契约。
+目标模型的输入输出格式。
 
 已发布的 S 系列制品也可从模型服务器直接下载（S100 与 S600 文件名相同，
 仅归档子目录不同；规范准备路径仍是 [模型下载器](../model/README_cn.md#preparation)）：
@@ -284,20 +284,18 @@ python3 export_resnet18_onnx.py \
   两个权重选项都不给时保持官方 `IMAGENET1K_V1` 默认（1000 类输出）不变。
 - 结构：仅支持 TorchVision `resnet18`。分类头重建为
   `nn.Linear(512, num_classes)`，checkpoint 必须以 `strict=True` 加载——
-  来自其他 ResNet 变体或类别数不符的 checkpoint 会直接失败，而不是导出
-  半随机的图。不承诺任意 ResNet 结构或自定义输出头兼容。
+  使用分类头类别数与 `--num-classes` 一致的 ResNet18 checkpoint。
 - `--num-classes`（>= 2）决定 ONNX `output` 宽度；导出会打印所用
   torch/torchvision 版本，请随训练记录一并留存。
-- 图合同与官方导出完全一致：NCHW 输入 `data` `[1, 3, 224, 224]`
+- 图的输入输出格式与官方导出完全一致：NCHW 输入 `data` `[1, 3, 224, 224]`
   float32、输出 `output` `[1, num_classes]`、静态形状、TorchScript
   导出器（`dynamo=False`）。
 - 前处理：训练变换必须与编译所用的 OE 配置兼容（与官方制品相同：
   `--resize-type` 对应的 letterbox/直接缩放、OE 配置内置的归一化）；
   导出脚本不改动前处理。
 - 产物用 [工具链与目标](#toolchain-targets) 下的既有 OE 配置编译（X5
-  `hb_mapper` → `.bin`，S100/S600 `hb_compile` → `.hbm`）；不暗示任何
-  已发布制品配方适用于自训练输出。
-- 运行时合同：用 `classify.ResNetClassifier(model_path, target=target,
+  `hb_mapper` → `.bin`，S100/S600 `hb_compile` → `.hbm`）；使用自训练模型时，按其类别数和预处理要求调整配置。
+- 运行时接口：用 `classify.ResNetClassifier(model_path, target=target,
   input_size=(224, 224), class_count=<num-classes>)` 加载
   编译产物，标签可选（见 [自定义模型
   章节](../runtime/python/README_cn.md#custom-model)）；绑定会把实际输出

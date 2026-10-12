@@ -1,9 +1,9 @@
 [English](README.md) | 简体中文
 
-# YOLOv5 原生 C++ runtime
+# YOLOv5 原生 C++ 运行时
 
-本目录是 YOLOv5 样例的 C++ 原生 runtime，按普通五文件交付：`inc/detect.hpp` 与
-`src/detect.cpp` 负责检测模型（SDK 无关的张量 gate、数值解码器、S 反量化器，
+本目录是 YOLOv5 样例的 C++ 原生运行时，按普通五文件交付：`inc/detect.hpp` 与
+`src/detect.cpp` 负责检测模型（SDK 无关的张量检查、数值解码器、S 反量化器，
 以及同一编译单元内由编译期目标宏选择的 X5 HB-DNN 与 S UCP 后端）；
 `inc/cli.hpp` 与 `src/cli.cpp` 负责命令行、证据 dump 写入器与渲染输出；
 `src/main.cpp` 构造模型、执行 `predict` 并报告。发布事实由 `launcher.py`
@@ -51,7 +51,7 @@ S 目标的 alignment 宏不同。
 - OpenCV 开发头文件与库（仅用于渲染输出）。
 - Horizon DNN 头文件位于 `/usr/hobot/include`、库位于 `/usr/hobot/lib`；
   S 目标额外链接 `hbucp`。
-- `utils/c_utils` 中的共享 C++ helper（`preprocess`、`postprocess`、`nn_math`），
+- `utils/c_utils` 中的共享 C++ 辅助脚本（`preprocess`、`postprocess`、`nn_math`），
   由 CMake 目标以相对路径引用。
 - launcher 不安装软件包、不下载模型、不读板卡身份：`--help`、`--list-models`、
   `--dry-run` 无需 SDK 即可运行。
@@ -110,8 +110,8 @@ manifests 中精确的 `--asset-id` 一起给出。预期产物为 `result.jpg`�
 | --- | --- | --- |
 | `--target` | `auto` | `x5`、`s100`、`s100p` 或 `s600`；`auto` 由 launcher 按板卡身份解析 |
 | `--variant` | X5 `s-v2.0`，S `x-672` | 资产变体；默认值按板卡如中列所示 |
-| `--asset-id` | 省略 | 与 `--model-path` 成对出现，必须与 manifest 精确一致 |
-| `--model-path` | manifest 解析路径 | 模型文件；仅在给出 `--asset-id` 时有效 |
+| `--asset-id` | 省略 | 与 `--model-path` 成对出现，必须与清单精确一致 |
+| `--model-path` | 清单解析路径 | 模型文件；仅在给出 `--asset-id` 时有效 |
 | `--test-img` | 样例测试数据 | BGR 输入图像 |
 | `--label-file` | 无 | 每行一个类别标签，用于渲染 |
 | `--output` | `result.jpg` | 渲染输出图像 |
@@ -119,13 +119,13 @@ manifests 中精确的 `--asset-id` 一起给出。预期产物为 `result.jpg`�
 | `--score-thres` | `0.25` | 置信度阈值，`[0,1]` 内有限值 |
 | `--nms-thres` | `0.45` | NMS IoU 阈值，`[0,1]` 内有限值 |
 | `--priority` | `0` | 调度优先级；S 生效，X5 拒绝 |
-| `--bpu-core` | `-1` | BPU core（`-1` 为 runtime 默认）；S 生效，X5 拒绝 |
+| `--bpu-core` | `-1` | BPU core（`-1` 为运行时默认）；S 生效，X5 拒绝 |
 
 <a id="interface-lifecycle"></a>
 ## 接口与资源生命周期
 
 `yolov5::Yolov5`（声明于 `inc/detect.hpp`）是原生模型契约：构造函数执行构建
-身份与调度 gate 并加载 runtime（RAII；部分失败的初始化只释放已分配的资源），
+身份与调度检查并加载运行时（RAII；部分失败的初始化只释放已分配的资源），
 公开阶段为 `preprocess` → `infer` → `postprocess`，另有显式 `predict` 串联。
 `src/main.cpp` 直接构造模型，通过 CLI（`inc/cli.hpp`）加载图像，并把调用方持有
 的像素传给模型：`Input` 是 BGR 缓冲加源图几何；`preprocess` 在不接触 SDK 的
@@ -139,13 +139,13 @@ manifests 中精确的 `--asset-id` 一起给出。预期产物为 `result.jpg`�
 
 - X5：要求恰好一个 packed NV12 模型，输入为紧凑 `[1,3,640,640]`，三路输出为
   原生 F32、`NONE` 量化 NHWC 头，stride 必须恰为 8/16/32。X5 后端按紧凑
-  缓冲写入 NV12、按扁平 float 读头，因此 gate 要求上报的 aligned 布局与 valid
-  布局一致：带 padding 的制品会被带精确原因地拒绝而不是误读，dump manifest 会
+  缓冲写入 NV12、按扁平 float 读头，因此检查要求上报的 aligned 布局与 valid
+  布局一致：带 padding 的制品会被带精确原因地拒绝而不是误读，dump 清单会
   记录其 `alignedShape`/`stride`/`alignedByteSize` 供后续跟进。分配还必须覆盖
   紧凑 NV12 帧（头为 `height*width*channels` 个 float）。
 - S：要求一个 packed 模型，输入为 split `Y[1,672,672,1]` 与 `UV[1,336,336,2]`，
   三路输出由元数据描述。S SDK 不上报 `alignedShape`，存储布局由 `stride[]` 加
-  `alignedByteSize` 描述。任何读取之前，反量化 gate 会证明原生 dtype、描述符
+  `alignedByteSize` 描述。任何读取之前，反量化检查会证明原生数据类型、描述符
   长度，以及反量化器实际执行的寻址（元素 `(h,w,c)` 位于字节偏移
   `(h*W + w)*stride[2] + c*stride[3]`）：`stride[2]` 必须覆盖一个完整像素
   （`channels` 个元素——已发布 S100 模型 255 通道下 `stride[2]=1024` 的合法
@@ -154,7 +154,7 @@ manifests 中精确的 `--asset-id` 一起给出。预期产物为 `result.jpg`�
   标量 scale/zero-point 描述符（长度 1）被接受，因为模型私有反量化器对其做
   广播；共享 `c_utils` 的 `dequantizeTensorS32` 会按 `scale_data[c]` 越界
   读取，永远不会拿到这类张量。raw dump 保留完整 `alignedByteSize` 范围，并在
-  manifest 中记录 stride 与完整 scale/zero-point 数组，因此带 padding 的运行
+  清单中记录 stride 与完整 scale/zero-point 数组，因此带 padding 的运行
   仍可机器比对。
 - 所有权：两个后端都只释放真正分配成功的资源，部分失败的分配不会变成盲目
   free。X5 通过 RAII lease 释放 task 与缓存；S 的 guard 跳过 `sysMem` 从未赋值
@@ -165,35 +165,35 @@ manifests 中精确的 `--asset-id` 一起给出。预期产物为 `result.jpg`�
 Python 与 C++ Runtime 的行为区别：
 
 - **X5 默认变体。** 原生 launcher 在既未给 `--variant` 也未给 `--asset-id` 时
-  默认 `s-v2.0` 制品；Python runtime 默认 `n-v7.0`。
+  默认 `s-v2.0` 制品；Python 运行时默认 `n-v7.0`。
 - **NMS。** X5 执行按类 `cv::dnn::NMSBoxes`：score 必须严格大于
   `--score-thres`，每类最多保留 `top_k = 300` 个框。S 执行 `nms_bboxes`：等于
   `--score-thres` 的 score 保留，且无每类上限。
-- **预处理。** 两个原生 adapter 均使用 letterbox；Python runtime 默认 stretch。
+- **预处理。** 两个原生 adapter 均使用 letterbox；Python 运行时默认 stretch。
 - **调度。** S adapter 应用调用方的 `--priority`/`--bpu-core`。`--bpu-core`
   是核**索引**（`-1` = 任意，`0..3`），并显式转换为 SDK 的 backend 位掩码
   （`HB_UCP_BPU_CORE_0..3 = 1ULL<<0..3`，`HB_UCP_BPU_CORE_ANY = 1ULL<<7`）；
   超出 `-1..3` 的索引被拒绝，原始索引绝不会直接赋给 backend 字段。X5 没有
-  经验证的 HB-DNN 映射，因此非默认值被明确拒绝而不是静默忽略。
+  经验证的 HB-DNN 映射，因此仅接受默认值。
 - **非有限 score。** 解码器丢弃非有限置信度。
 
 <a id="results-interpretation"></a>
 ## 结果解读
 
 - 退出码 `0` 表示运行完成；`2` 表示被拒绝或失败。失败时若给出 `--dump-dir`，仍
-  会写出带 `return_code` 与 `error` 的 manifest，使失败可追溯。
+  会写出带 `return_code` 与 `error` 的清单，使失败可追溯。
 - 渲染图只是便利产物。机器比对以 dump 为准：`manifest.json` 用 SHA-256 绑定
   `target`、`build_target`、`asset_id`、`model_path`、`image_path` 以及运行中的
-  `binary_path`，记录观测到的输入/输出元数据（shape、dtype、量化类型、scale
+  `binary_path`，记录观测到的输入/输出元数据（形状、数据类型、量化类型、scale
   长度、完整 scale/zero-point 数值、`quantizeAxis`、`alignedByteSize`、上报的
   `stride[]`，以及 SDK 上报时的 `alignedShape`——未上报则为 null）、实际参数、
   UTC 时间戳、`argv`、`cwd`、`return_code`。张量负载按阶段分目录写入
-  `input/`、`raw/`、`transformed/`，各自带 shape、字节数、文件名与 SHA-256，
+  `input/`、`raw/`、`transformed/`，各自带形状、字节数、文件名与 SHA-256，
   因此同一输出的原始与变换后字节不可能互相覆盖。
 - input 文件保存该次推理实际提交的输入缓冲（X5 为紧凑 NV12 负载，S 为紧凑的
   Y/UV 平面负载——即上传时按 stride 步距写入的每行有效字节）；未初始化的
-  padding 字节有意不导出。X5 的原始与变换后
+  padding 字节不导出。X5 的原始与变换后
   张量同为原生 F32 头；S 的原始张量保留完整分配范围（`alignedByteSize`，含
   pixel padding）、变换后为反量化浮点，因此板端比对可以分别检查两个阶段，
-  并依据 manifest 中的 stride 解释带 padding 的布局。dump 记录的是本二进制
-  的产出本身；跨 runtime 的评估由板端 evaluator 另行执行。
+  并依据清单中的 stride 解释带 padding 的布局。dump 记录的是本二进制
+  的产出本身；跨运行时的评估由板端 evaluator 另行执行。

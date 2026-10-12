@@ -144,7 +144,7 @@ hb_mapper checker --model-type onnx --march bayes-e --model ./RepVGG-A0.onnx
 hb_mapper makertbin --model-type onnx --config RepVGG_A0_config.yaml
 ```
 
-该配置预期输出为 `RepVGG-A0_224x224_nv12/RepVGG-A0_224x224_nv12.bin`，各配置均使用 latency/O3。各变体目录/前缀不同，形式如 `RepVGG-A0`。编译文件名用连字符，而发布文件名用下划线。每份 YAML 还配置删除 Quantize/Dequantize/Transpose/Cast/Reshape 节点并启用 dump_calibration_data；这些变换后须验证图语义，改文件名不能证明等价。
+该配置预期输出为 `RepVGG-A0_224x224_nv12/RepVGG-A0_224x224_nv12.bin`，各配置均使用 latency/O3。各变体目录/前缀不同，形式如 `RepVGG-A0`。编译文件名用连字符，而发布文件名用下划线。每份 YAML 还配置删除 Quantize/Dequantize/Transpose/Cast/Reshape 节点并启用 dump_calibration_data；这些变换后须验证图语义，并与浮点模型比较输出。
 
 <a id="validation"></a>
 ## 转换后验证
@@ -160,12 +160,12 @@ python3 samples/vision/repvgg/runtime/python/main.py --target x5 \
   --test-img samples/vision/repvgg/test_data/gooze.JPEG
 ```
 
-准确引用用于选择契约，不证明重建字节等于发布字节。记录新哈希和图来源，对照源/统一输出，交付前评估精度。
+选择与模型匹配的目标和完整引用。使用编译模型前，将其输出和数据集精度与浮点模型比较。
 
 <a id="artifacts"></a>
 ## 产物
 
-编译路径见上表，逐变体发布文件与目标见[模型准备](../model/README_cn.md#artifacts)，下载落在 sample model 目录。移动已验证构建时保留变体与来源，改名本身不是修复。
+编译输出路径见上表，各变体的部署文件名与目标见[模型准备](../model/README_cn.md#artifacts)。将对应变体的编译结果复制到样例的 `model/` 目录。
 
 <a id="known-gaps"></a>
 ## 补充准备

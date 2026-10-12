@@ -27,7 +27,7 @@ Start with [main.py](main.py): it constructs `SigLIPEmbedder` and calls `predict
 
 - Execution target: RDK S100 (Nash-E) or S100P (Nash-M), with a board image that provides `hbm_runtime`. Use the Python environment supplied with that board image.
 - Python dependencies: Python 3.10+, `numpy`, `opencv-python`, and `PyYAML` from `../../requirements-host.txt` for model selection and inference.
-- `hbm_runtime` is board-image-only. `--help`, `--list-models`, and explicit-target `--dry-run` intentionally work without importing the SDK or loading a model.
+- `hbm_runtime` is board-image-only. `--help`, `--list-models`, and explicit-target `--dry-run` work without importing the SDK or loading a model.
 
 <a id="usage"></a>
 ## Usage

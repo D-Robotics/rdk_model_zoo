@@ -1,7 +1,7 @@
 English | [简体中文](README_cn.md)
 
 # HGNetV2 evaluation
-This guide covers a one-image functional check and dataset-level Top-K evaluation on X5. The dataset command reads image paths and per-image ground-truth class indices from a CSV.
+This guide covers a one-image single-image classification and dataset-level Top-K evaluation on X5. The dataset command reads image paths and per-image ground-truth class indices from a CSV.
 
 <a id="dataset"></a>
 
@@ -31,15 +31,11 @@ evaluator/
 <a id="environment"></a>
 ## Environment
 
-eval.py uses HGNetV2Classifier with the shared RuntimeModelRunner on X5. It needs the same board SDK, NumPy, OpenCV and PyYAML; no additional inference framework is used. --help and pure dataset/metric tests run on the host without SDK. SciPy is only used by source-comparison host tests.
+`eval.py` uses `HGNetV2Classifier` with `RuntimeModelRunner` on X5. Prepare the matching board SDK, NumPy, OpenCV and PyYAML. `--help` runs on a host without the SDK.
 
 <a id="command"></a>
 ## Commands
 
-```bash
-# cwd: repository root; expected: unittest OK, exit 0
-python3 -m unittest discover -s samples/vision/hgnetv2/tests -v
-```
 
 Functional board run:
 

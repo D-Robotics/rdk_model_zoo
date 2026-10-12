@@ -46,13 +46,13 @@ himloco/
 | X5 | Bayes-e BIN | supported | supported |
 | S100 / S100P / S600 | No published matching artifact | Not supported | Not supported |
 
-The source board environment was RDK OS 3.5.0-beta, DNN Runtime 1.24.5 and HBRT
+The board environment is RDK OS 3.5.0-beta, DNN Runtime 1.24.5 and HBRT
 3.15.55.
 
 <a id="prerequisites"></a>
 ## Prerequisites
 
-Host preview and core tests require Python, NumPy and PyYAML. Real inference
+Host preview requires Python, NumPy and PyYAML. Real inference
 requires an X5 with its matching BSP `hbm_runtime` and the exact published BIN.
 Do not install the unrelated PyPI package with the same name. Conversion tools,
 Torch and a training environment are not required to use the published model.
@@ -88,23 +88,21 @@ report location, warmup and library integration.
 The default run processes 21 source-indexed observations after 10 warmups and
 writes `000000.bin` through `000020.bin`, each 12 little-endian float32 actions,
 plus `report.json`. A complete report has `status: completed`; a writable failure
-report retains partial files and the failed index. Output files are numerical
-evidence, not model assets or actuator commands. No live control loop is included.
+report retains partial files and the failed index. Output files contain raw policy actions. The sample provides offline inference; robot control requires an application control loop.
 
 The source recorded MIX PTQ output cosine `0.999606` and these measurements on the
 same model, 100 inputs, 10 warmups:
 
-| Source runtime | Timing scope | Mean | Sequential throughput |
+| Runtime | Timing scope | Mean | Sequential throughput |
 | --- | --- | --- | --- |
 | Python | `HB_HBMRuntime.run` | 0.885 ms | 1129.37 FPS |
 | C++ | `hbDNNInfer` + `hbDNNWaitTaskDone` | 0.350 ms | 2853.09 FPS |
 
-The compiler estimate was 0.063 ms. These are source-release values. Timing
+The compiler estimate was 0.063 ms. These are reference values. Timing
 scopes differ; the Python task measures its bound runner including adapter
-validation/copy and must not be compared as device-only latency. Full source percentiles and evaluation semantics remain in the
+validation/copy and must not be compared as device-only latency. Full latency percentiles and evaluation semantics remain in the
 [evaluator guide](evaluator/README.md).
-Offline action agreement does not establish observation construction, joint
-mapping, control-loop behavior or closed-loop stability.
+For robot integration, implement observation construction, joint mapping and the control loop for your policy and robot.
 
 <a id="entry-points"></a>
 ## Entry points

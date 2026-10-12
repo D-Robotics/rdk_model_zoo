@@ -21,7 +21,7 @@ python/
 <a id="environment"></a>
 ## 环境
 
-主机需要 Python 3、NumPy 和 OpenCV；板端还需要匹配的 `hbm_runtime`。S 后处理使用 metadata 中的量化描述，CPU 检查还需要 sample 列出的依赖。`--help`、`--list-models` 和显式 target 的 `--dry-run` 不加载 SDK、不下载模型、不读取板卡身份。X5 绑定一个 packed uint8 NV12 tensor `(640*640*3/2,)`；S 绑定 Y `(1,672,672,1)` 与 UV `(1,336,336,2)`。
+主机需要 Python 3、NumPy 和 OpenCV；板端还需要匹配的 `hbm_runtime`。S 后处理使用元数据中的量化描述，CPU 检查还需要示例列出的依赖。`--help`、`--list-models` 和显式目标板卡的 `--dry-run` 不加载 SDK、不下载模型、不读取板卡身份。X5 绑定一个 packed uint8 NV12 张量 `(640*640*3/2,)`；S 绑定 Y `(1,672,672,1)` 与 UV `(1,336,336,2)`。
 
 <a id="usage"></a>
 ## 使用
@@ -51,7 +51,7 @@ python3 -m samples.vision.yolov5.runtime.python.main \
 |---|---|---|---|
 | `--target` | choice | `auto` | `auto`、`x5`、`s100`、`s100p`、`s600`；执行仍需有支持制品 |
 | `--variant` | string | `null` | X5 有效默认 `n-v7.0`，S 有效默认 `x-672` |
-| `--asset-id` | string | `null` | 自定义路径的精确 manifest 引用 |
+| `--asset-id` | string | `null` | 自定义路径的精确清单引用 |
 | `--model-path` | path | `null` | 已存在模型；必须匹配 asset ID |
 | `--test-img` | path | `null` | X5 有效路径 `test_data/bus.jpg`，S 有效路径 `test_data/kite.jpg` |
 | `--label-file` | path | `samples/vision/yolov5/test_data/coco_classes.names` | 可视化标签 |
@@ -64,15 +64,15 @@ python3 -m samples.vision.yolov5.runtime.python.main \
 | `--strides` | comma int list | `[8, 16, 32]` | 三个输出 stride |
 | `--priority` | int | `0` | 0..255 调度优先级 |
 | `--bpu-cores` | int list | `[0]` | 非负 BPU 核编号 |
-| `--list-models` | flag | `false` | 不加载 SDK 打印 manifest |
-| `--dry-run` | flag | `false` | 需显式 target，输出选择/协议，不加载 SDK |
+| `--list-models` | flag | `false` | 不加载 SDK 打印清单 |
+| `--dry-run` | flag | `false` | 需显式目标板卡，输出选择/协议，不加载 SDK |
 
-`--list-models` 与 `--dry-run` 互斥。用户或 runtime 错误返回 `2`。
+`--list-models` 与 `--dry-run` 互斥。用户或运行时错误返回 `2`。
 
 <a id="results"></a>
 ## 结果
 
-CLI 打印 `boxes`、`scores`、`class_ids`，并保存到 `--img-save-path`。`YOLOv5Task.infer`（别名 `forward`）原样返回 native 输出，不做反量化或 reshape；`postprocess`（别名 `post_process`）在需要时按 S metadata 反量化，然后完成 sigmoid/anchor 解码、阈值和 NMS、几何逆变换。X5 刻意保留源把 XYXY 传给 OpenCV `NMSBoxes`（其 Rect 解释为 XYWH）的 quirk；S 使用按类 XYXY NMS，这是目标协议差异。
+CLI 打印 `boxes`、`scores`、`class_ids`，并保存到 `--img-save-path`。`YOLOv5Task.infer`（别名 `forward`）原样返回原生输出，不做反量化或 reshape；`postprocess`（别名 `post_process`）在需要时按 S 元数据反量化，然后完成 sigmoid/anchor 解码、阈值和 NMS、几何逆变换。X5 将 XYXY 框传给 OpenCV `NMSBoxes`，该接口按 XYWH 解释。S 使用按类 XYXY NMS，因此两种目标的结果可能不同。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -109,15 +109,15 @@ print(explicit_result.boxes, explicit_result.scores, explicit_result.class_ids)
 <a id="stage-io"></a>
 ## 三阶段 I/O
 
-- `preprocess(image, resize_type=None)`（别名 `pre_process`）接受 HWC uint8 BGR，返回 `PreparedInput(tensors, context)`；转换为目标 NV12，并把原图高宽和 resize 模式放入不可变 context。
-- `infer(tensors)`（别名 `forward`）校验名称、shape、dtype 和有限值，返回 native 输出，不解码、反量化、reshape 或修改。
-- `postprocess(outputs, context, score_thres=None, nms_thres=None)`（别名 `post_process`）消费匹配 context，返回自有内存的 `DetectionResult(boxes, scores, class_ids)`。
-- `predict` 串联同样的阶段；context 按调用隔离，显式 0 阈值不会被替换。
+- `preprocess(image, resize_type=None)`（别名 `pre_process`）接受 HWC uint8 BGR，返回 `PreparedInput(tensors, context)`；转换为目标 NV12，并把原图高宽和缩放模式放入不可变上下文。
+- `infer(tensors)`（别名 `forward`）校验名称、形状、数据类型和有限值，返回原生输出，不解码、反量化、reshape 或修改。
+- `postprocess(outputs, context, score_thres=None, nms_thres=None)`（别名 `post_process`）消费匹配上下文，返回自有内存的 `DetectionResult(boxes, scores, class_ids)`。
+- `predict` 串联同样的阶段；上下文按调用隔离，显式 0 阈值不会被替换。
 
 <a id="troubleshooting"></a>
 ## 故障排查
 
 - 自定义路径缺少精确匹配的 `--asset-id` 会被拒绝。
 - X5 `--variant` 必须是 9 个发布 tag 之一；S100/S600 只接受 `x-672`。
-- 错误的 native 输出 shape/dtype/量化 metadata 会在推理前拒绝，不按名字猜布局。
-- X5 与 S 的输入容器和 resize 默认值不同，不能交叉使用 packed X5 tensor 与 split S tensor。
+- 错误的原生输出 shape/dtype/量化元数据会在推理前拒绝，不按名字猜布局。
+- X5 与 S 的输入容器和缩放默认值不同，不能交叉使用 packed X5 张量与 split S 张量。

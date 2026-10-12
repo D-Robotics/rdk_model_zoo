@@ -1,12 +1,12 @@
 English | [简体中文](README_cn.md)
 
 # ViT evaluation
-Use the bundled image for a single-image classification check. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
+Use the bundled image for a single-image classification. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
 
 <a id="dataset"></a>
 
 ## Dataset
-The functional check uses the ten bundled CIFAR-10 images, one per class. Dataset-level accuracy uses the complete CIFAR-10 test set. Prepare each test image with its ground-truth class index (0–9) and compare it with the runtime’s Top-1 class ID; the bundled examples provide one image for each class.
+The single-image classification uses the ten bundled CIFAR-10 images, one per class. Dataset-level accuracy uses the complete CIFAR-10 test set. Prepare each test image with its ground-truth class index (0–9) and compare it with the runtime’s Top-1 class ID; the bundled examples provide one image for each class.
 
 <a id="directory"></a>
 ## Directory structure
@@ -21,18 +21,14 @@ evaluator/
 ## Environment
 
 [Runtime prerequisites](../runtime/python/README.md#environment). The
-functional board check needs an S100 board with `hbm_runtime` and the
+board classification needs an S100 board with `hbm_runtime` and the
 prepared artifact; no OE environment is required for evaluation.
 
 <a id="command"></a>
 ## Commands
 
-```bash
-# cwd: repository root; expected: unittest OK, exit 0
-python3 -m unittest discover -s samples/vision/vit/tests -v
-```
 
-Prepare the model, then run the functional check on the matching board;
+Prepare the model, then run the single-image classification on the matching board;
 repeat with the int16 artifact and the other bundled images for broader
 functional coverage:
 
@@ -55,7 +51,6 @@ the tolerance.
 
 | Metric | Definition | Conditions |
 | --- | --- | --- |
-| contract pass | runtime accepts the artifact, tensor names/shapes/dtypes match the binding, one F32 score vector returns | prepared artifact on a matching S100 board |
 | Top-K agreement | identical post-softmax Top-K class IDs across repeated runs of the same artifact; scores within 1e-5 | same board, same artifact bytes, image, resize type, Top-K |
 | Top-1 / Top-5 accuracy | whether the ground-truth class is the rank-1 / among the K selected classes | measured over the user-prepared CIFAR-10 test set |
 | latency / FPS | inference timing on the matching board | measure with the runtime entry on the matching board |
@@ -63,11 +58,7 @@ the tolerance.
 <a id="outputs"></a>
 ## Outputs
 
-Tests print unittest results. The functional board check prints the Top-K
-(class ids, scores, labels) on stdout and optionally writes an annotated
-image with `--img-save-path`. When recording a run, save the board
-identity, model reference, command line, raw F32 score tensor and Top-K
-output alongside the image path and resize type.
+The board command prints Top-K class IDs, scores, and labels to stdout. Use `--img-save-path` to save an annotated image. For comparisons, record the board, model, command, input image, resize mode, and raw scores with the results.
 
 <a id="reference-results"></a>
 ## Reference results

@@ -179,11 +179,11 @@ name carries the march token: `bayese`, `nashe`, `nashm`, `nashp`.
    | s100/s100p/s600, 140 | Y `[1,224,224,1]`, UV `[1,112,112,2]` (`mobilenetv2_140_nash{e,m,p}_224x224_nv12.hbm`) | F32 `[1,1000]` |
 
    The output is raw logits; the runtime task applies softmax.
-2. Smoke test with the sample quick start using the fresh artifact: exit 0 and
+2. Run the sample quick start with the compiled artifact: exit 0 and
    a Top-5 list (see [Expected results](../README.md#expected-results)).
 3. Measure the full-set accuracy with the [evaluator](../evaluator/README.md)
    and compare it with the FP32 ONNX baseline of the same checkpoint; the
-   published results and the acceptance rule are in the
+   published results are in the
    [sample README](../README.md#performance).
 
 <a id="artifacts"></a>

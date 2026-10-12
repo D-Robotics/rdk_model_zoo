@@ -114,7 +114,7 @@ python samples/speech/paraformer/conversion/export.py \
 成功报告的 `status` 为 `completed`，含源文件/特征/模型 SHA-256、依赖版本、
 节点数和逐用例最大绝对差值。所有完整输出须满足 `rtol=1e-4, atol=1e-4`，
 类型和形状不变且数值有限。参数/预检失败返回 2 且不创建输出；之后发生错误
-则返回 2，保留部分文件和 `failed` 报告。部分制品不是可验收导出，强制中断
+则返回 2，保留部分文件和 `failed` 报告。请使用报告中 `status: completed` 的完整导出结果；强制中断
 进程也可能留下不完整状态。
 
 <a id="fixed-graph-contract"></a>
@@ -264,7 +264,7 @@ hrt_model_exec perf --model_file predictor_int16.hbm --thread_num 1 --frame_coun
 hrt_model_exec perf --model_file decoder_int16.hbm  --thread_num 1 --frame_count 200
 ```
 
-本配方的源发布记录（S100，单 BPU 核）：
+本配方的参考数据（S100，单 BPU 核）：
 
 | 项 | Encoder | Predictor | Decoder |
 | --- | --- | --- | --- |
@@ -341,14 +341,6 @@ decoder 编排参考 FunASR，并保留 [MIT 许可](LICENSE-FunASR)。固定宽
 短序列结果不能视为数值等价。部署对照采用未修改的上游 decoder 导出器，
 再执行固定 100 宽度的 Range 处理。
 
-## 图测试
-
-```bash
-python -m unittest discover -s samples/speech/paraformer/tests -v
-```
-
-请在上述导出环境中运行；可选依赖缺失时部分测试会跳过，请核对实际执行数量。
-
 <a id="cif-shape-workaround"></a>
 ## CIF 形状兼容写法
 
@@ -411,7 +403,7 @@ print("Gather-only rewrite validated; input model preserved")
 
 将这些函数接入文件流程时，应先检查新图，并用代表性输入比较原图与新图输出，
 再保存为新文件；不要覆盖源模型。动态索引的 Cast 还需要模型契约提供范围依据，
-几个测试输入通过不足以证明这一点。API 不自动替调用者作出这两个判断。
+几个测试输入通过不足以证明这一点。
 
 <a id="known-gaps"></a>
 ## 补充准备

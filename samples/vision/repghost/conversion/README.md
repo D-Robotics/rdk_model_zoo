@@ -129,7 +129,7 @@ if __name__ == "__main__":
 <a id="calibration"></a>
 ## Calibration
 
-All configs use `./calibration_data_rgb_f32`, `cal_data_type: float32`, calibration `default`, RGB/NCHW training input and runtime NV12. Mean: 123.675/116.28/103.53; scale: 0.01712475/0.017507/0.01742919. No calibration-image selection, count, preprocessing script or output files are provided. These are missing prerequisites, not a runnable preparation recipe. Ensure the prepared floats match the graph and YAML normalization exactly; do not rename an NV12 directory to satisfy the RGB path.
+All configs use `./calibration_data_rgb_f32`, `cal_data_type: float32`, calibration `default`, RGB/NCHW training input and runtime NV12. Mean: 123.675/116.28/103.53; scale: 0.01712475/0.017507/0.01742919. Select calibration images and generate RGB float data that matches the graph and YAML normalization. This directory does not include a calibration preprocessing script or dataset.
 
 <a id="compile"></a>
 ## Compile
@@ -158,7 +158,7 @@ python3 samples/vision/repghost/runtime/python/main.py --target x5 \
   --test-img samples/vision/repghost/test_data/ibex.JPEG
 ```
 
-Use the matching reference and target for each artifact. Save the build digest and provenance, compare source and rebuilt outputs, and evaluate quantization accuracy before release.
+Select the artifact's matching target and reference, then compare its outputs and dataset accuracy with the float model.
 
 <a id="artifacts"></a>
 ## Artifacts

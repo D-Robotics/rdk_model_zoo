@@ -235,7 +235,6 @@ The [sample guide](../README.md) describes the YOLOv8n and YOLO26n detection com
 | YOLO11x-Seg | 640×640 | 80 | 129.1 ms / 7.7 FPS (1 thread  ) <br/> 247.4 ms / 8.1 FPS (2 threads)  | 20 ms | 62.1 M | 319.0 B |
 
 
-
 #### Pose Estimation
 | Model | Size(Pixels) | Classes |  BPU Task Latency  /<br>BPU Throughput (Threads) | CPU Latency<br>(Single Core) | params(M) | FLOPs(B) |
 |----------|---------|----|---------|---------|----------|----------|
@@ -386,7 +385,6 @@ sudo bash -c "echo performance > /sys/devices/system/bpu/bpu0/devfreq/28108000.b
 5. There are slight differences between the accuracy results of the Python and C/C++ interfaces, mainly due to different ways of handling floating-point numbers during memcpy and conversion processes of data structures in Python and C/C++.
 6. Refer to the eval section of the RDK Model Zoo for the test script: https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/tools/eval_pycocotools
 7. This table presents the results of PTQ (Post-Training Quantization) using 50 images for calibration and compilation, simulating the accuracy scenario for a typical developer's first direct compilation. It does not involve accuracy tuning or QAT (Quantization-Aware Training) and meets regular usage validation needs but does not represent the accuracy upper limit.
-
 
 
 ## Additional reference measurements
@@ -753,7 +751,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | X5       | YOLOv8x CLS | 640×640        |        80 | 13.12 ms / 76.18 FPS (1 thread ) <br/> 25.64 ms / 77.78 FPS (2 threads)   | 0.5 ms                         | 57.4 M      | 154.8 M    |
 
 
-
 ### RDK S100 Performance Data (Performance @ NV12)
 
 | Device | Model | Size <br> (Pixels) | Classes | BPU Task Latency / <br> BPU Throughput (Threads) | CPU Latency | Params <br> (M) | FLOPs <br> (G) |
@@ -783,7 +780,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S100 | YOLO26m Obb | 640x640 | 15 | 6.16 ms / 157.61 FPS (1 thread) <br> 11.27 ms / 175.02 FPS (2 threads) | - | 23.49 | 82.2 |
 | S100 | YOLO26l Obb | 640x640 | 15 | 7.46 ms / 130.74 FPS (1 thread) <br> 13.79 ms / 143.34 FPS (2 threads) | - | 27.90 | 100.6 |
 | S100 | YOLO26x Obb | 640x640 | 15 | 13.81 ms / 71.33 FPS (1 thread) <br> 26.95 ms / 73.69 FPS (2 threads) | - | 62.66 | 225.3 |
-
 
 
 ### RDK S600 Performance Data (Performance @ NV12)
@@ -817,7 +813,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S600 | YOLO26x Obb | 640x640 | 15 | 6.73 ms / 148.08 FPS (1 thread) <br> 19.31 ms / 604.86 FPS (12 threads) | - | 62.66 | 225.3 |
 
 
-
 ### RDK X5 Performance Data
 
 | Device | Model | Size <br> (Pixels) | Classes | BPU Task Latency / <br> BPU Throughput (Threads) | CPU Latency | params <br> (M) | FLOPs <br> (B) |
@@ -832,7 +827,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | X5 | YOLO26n Cls | 224x224 | 1000 | 1.1 ms / 906.0 FPS (1 thread) <br> 1.7 ms / 1156.8 FPS (2 threads) | - | - | - |
 
 
-
 ### 参数说明
 
 | 参数 | 说明 | 默认值 |
@@ -843,8 +837,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | `--json-save-path` | 推理结果保存路径 (.json) | yolo26_xxx_results.json |
 | `--conf-thres` | 置信度阈值 (建议设为 0.001 以获得准确 mAP) | 0.001 |
 | `--limit` | 限制处理的图片数量 (0 表示全部) | 0 |
-
-
 
 
 ## Additional reference measurements
@@ -885,7 +877,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S600     | YOLOv5xu Detect | 0.466 / 0.454 (97.4 %)                                  | 0.281 / 0.246 (87.5 %)                                    | 0.523 / 0.517 (98.9 %)                                     | 0.645 / 0.647 (100.3 %)                                   |
 
 
-
 ### Instance Segmentation
 
 | Device   | Model       | Accuracy bbox-all mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-small mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-medium mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-large mAP@.50:.95 <br/> FP32 / BPU Python   |
@@ -898,7 +889,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S600     | YOLOv8m Seg | 0.431 / 0.420 (97.4 %)                                  | 0.228 / 0.209 (91.7 %)                                    | 0.486 / 0.478 (98.4 %)                                     | 0.608 / 0.605 (99.5 %)                                    |
 | S600     | YOLOv8l Seg | 0.453 / 0.435 (96.0 %)                                  | 0.258 / 0.223 (86.4 %)                                    | 0.502 / 0.496 (98.8 %)                                     | 0.626 / 0.611 (97.6 %)                                    |
 | S600     | YOLOv8x Seg | 0.465 / 0.454 (97.6 %)                                  | 0.268 / 0.236 (88.1 %)                                    | 0.520 / 0.514 (98.8 %)                                     | 0.641 / 0.633 (98.8 %)                                    |
-
 
 
 ### Instance Segmentation
@@ -915,7 +905,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S600     | YOLOv8x Seg | 0.358 / 0.338 (94.4 %)                                  | 0.139 / 0.122 (87.8 %)                                    | 0.409 / 0.382 (93.4 %)                                     | 0.562 / 0.529 (94.1 %)                                    |
 
 
-
 ### Pose Estimation
 
 | Device   | Model        | Accuracy pose-all mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy pose-medium mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy pose-large mAP@.50:.95 <br/> FP32 / BPU Python   |
@@ -930,7 +919,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S600     | YOLOv8m Pose | 0.630 / 0.605 (96.0 %)                                  | 0.578 / 0.552 (95.5 %)                                     | 0.724 / 0.703 (97.1 %)                                    |
 | S600     | YOLOv8l Pose | 0.657 / 0.633 (96.3 %)                                  | 0.607 / 0.581 (95.7 %)                                     | 0.747 / 0.719 (96.3 %)                                    |
 | S600     | YOLOv8x Pose | 0.671 / 0.651 (97.0 %)                                  | 0.624 / 0.603 (96.6 %)                                     | 0.757 / 0.739 (97.6 %)                                    |
-
 
 
 ### Image Classification
@@ -1059,7 +1047,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S100P    | YOLOv8x CLS | 0.790 / 0.742 (93.9 %)                  | 0.945 / 0.923 (97.6 %)                  |
 
 
-
 ### Obeject Detection
 
 | Device   | Model           | Accuracy bbox-all mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-small mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-medium mAP@.50:.95 <br/> FP32 / BPU Python   | Accuracy bbox-large mAP@.50:.95 <br/> FP32 / BPU Python   |
@@ -1167,7 +1154,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S100     | YOLOv8m CLS | 0.768 / 0.702 (91.4 %)                  | 0.935 / 0.899 (96.2 %)                  |
 | S100     | YOLOv8l CLS | 0.783 / 0.723 (92.3 %)                  | 0.942 / 0.909 (96.5 %)                  |
 | S100     | YOLOv8x CLS | 0.790 / 0.742 (93.9 %)                  | 0.945 / 0.921 (97.5 %)                  |
-
 
 
 ### Obeject Detection
@@ -1290,7 +1276,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S100 | YOLO26x Detect | 0.484 / 0.449 (92.8 %) | 0.292 / 0.246 (84.2 %) | 0.528 / 0.488 (92.4 %) | 0.669 / 0.646 (96.6 %) |
 
 
-
 ### RDK S100P Accuracy Data (Accuracy @ RGB - Detection)
 
 | Device | Model | Accuracy bbox-all <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy bbox-small <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy bbox-medium <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy bbox-large <br> mAP @.50:.95 <br> (FP32 / BPU Python) |
@@ -1300,7 +1285,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S100P | YOLO26m Detect | 0.442 / 0.421 (95.2 %) | 0.242 / 0.224 (92.6 %) | 0.489 / 0.460 (94.0 %) | 0.629 / 0.603 (95.8 %) |
 | S100P | YOLO26l Detect | 0.456 / 0.437 (96.0 %) | 0.260 / 0.234 (89.8 %) | 0.499 / 0.484 (97.1 %) | 0.627 / 0.609 (97.0 %) |
 | S100P | YOLO26x Detect | 0.484 / 0.466 (96.2 %) | 0.292 / 0.271 (92.8 %) | 0.528 / 0.502 (95.1 %) | 0.669 / 0.654 (97.8 %) |
-
 
 
 ### RDK S600 Accuracy Data (Accuracy @ NV12 - Detection)
@@ -1314,7 +1298,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S600 | YOLO26x Detect | 0.484 / 0.452 (93.4 %) | 0.292 / 0.246 (84.2 %) | 0.528 / 0.490 (92.8 %) | 0.669 / 0.645 (96.4 %) |
 
 
-
 ### RDK S100 Accuracy Data (Accuracy @ NV12 - Pose Estimation)
 
 | Device | Model | Accuracy kpt-all <br> mAP @.50:.95 <br> (BPU Python) | Accuracy kpt-medium <br> mAP @.50:.95 <br> (BPU Python) | Accuracy kpt-large <br> mAP @.50:.95 <br> (BPU Python) |
@@ -1324,7 +1307,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S100 | YOLO26m Pose | 0.620 | 0.554 | 0.737 |
 | S100 | YOLO26l Pose | 0.646 | 0.579 | 0.744 |
 | S100 | YOLO26x Pose | 0.663 | 0.601 | 0.775 |
-
 
 
 ### RDK S600 Accuracy Data (Accuracy @ NV12 - Pose Estimation)
@@ -1338,7 +1320,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S600 | YOLO26x Pose | 0.665 | 0.604 | 0.769 |
 
 
-
 ### RDK S100 Accuracy Data (Accuracy @ NV12 - Segmentation)
 
 | Device | Model | Accuracy mask-all <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy mask-small <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy mask-medium <br> mAP @.50:.95 <br> (FP32 / BPU Python) | Accuracy mask-large <br> mAP @.50:.95 <br> (FP32 / BPU Python) |
@@ -1348,7 +1329,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S100 | YOLO26m Seg | - / 0.356 | - / 0.148 | - / 0.399 | - / 0.536 |
 | S100 | YOLO26l Seg | - / 0.375 | - / 0.164 | - / 0.419 | - / 0.560 |
 | S100 | YOLO26x Seg | - / 0.381 | - / 0.176 | - / 0.426 | - / 0.576 |
-
 
 
 ### RDK S600 Accuracy Data (Accuracy @ NV12 - Segmentation)
@@ -1362,7 +1342,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S600 | YOLO26x Seg | - / 0.382 | - / 0.171 | - / 0.429 | - / 0.571 |
 
 
-
 ### RDK S100 Accuracy Data (Accuracy @ NV12 - Classification)
 
 | Device | Model | Top-1 Accuracy | Top-5 Accuracy |
@@ -1372,7 +1351,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S100 | YOLO26m Cls | 0.7194 | 0.9080 |
 | S100 | YOLO26l Cls | 0.7369 | 0.9168 |
 | S100 | YOLO26x Cls | 0.7432 | 0.9222 |
-
 
 
 ### RDK S600 Accuracy Data (Accuracy @ NV12 - Classification)
@@ -1386,7 +1364,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | S600 | YOLO26x Cls | 0.666 | 0.876 |
 
 
-
 ### RDK X5 Accuracy Data (Accuracy @ NV12 - Detection)
 
 | Device | Model | Accuracy bbox-all <br> mAP@.50:.95 <br> (FP32 / BPU Python) | Accuracy bbox-small <br> mAP@.50:.95 <br> (FP32 / BPU Python) | Accuracy bbox-medium <br> mAP@.50:.95 <br> (FP32 / BPU Python) | Accuracy bbox-large <br> mAP@.50:.95 <br> (FP32 / BPU Python) |
@@ -1398,13 +1375,11 @@ Each table retains its published model, board and measurement conditions. Measur
 | X5 | YOLO26x Detect | 0.484 / 0.438 (90.5 %) | 0.292 / 0.230 (78.8 %) | 0.528 / 0.479 (90.7 %) | 0.669 / 0.635 (94.9 %) |
 
 
-
 ### RDK X5 Accuracy Data (Accuracy @ NV12 - Segmentation)
 
 | Device | Model | Accuracy mask-all <br> mAP@.50:.95 <br> (BPU Python) | Accuracy mask-small <br> mAP@.50:.95 <br> (BPU Python) | Accuracy mask-medium <br> mAP@.50:.95 <br> (BPU Python) | Accuracy mask-large <br> mAP@.50:.95 <br> (BPU Python) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | X5 | YOLO26n Seg | 0.285 | 0.090 | 0.307 | 0.464 |
-
 
 
 ### Detection (COCO2017)
@@ -1448,8 +1423,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | YOLOv13x | 0.551 | 0.526 (95.46%) |
 
 
-
-
 ## Additional reference measurements
 
 Each table retains its published model, board and measurement conditions. Measurements from different configurations are separate reference sets. Model-file sizes use MB as stated in their source tables.
@@ -1464,7 +1437,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | YOLOv13x | 640x640 | 80 | 19.7 ms / 50.7 FPS (1 thread)<br>37.8 ms / 52.7 FPS (2 threads) | 2 ms | 64.0 | 199.2 |
 
 
-
 ### RDK S100 (S100 YOLOv13 iMoonLab)
 
 | Model | Size(Pixels) | Classes | BPU Task Latency /<br>BPU Throughput (Threads) | CPU Latency<br>(Single Core) | params(M) | FLOPs(B) |
@@ -1473,7 +1445,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | YOLOv13s | 640x640 | 80 | 5.8 ms / 169.5 FPS (1 thread)<br>9.7 ms / 204.9 FPS (2 threads) | 2 ms | 9.0 | 20.8 |
 | YOLOv13l | 640x640 | 80 | 16.6 ms / 59.8 FPS (1 thread)<br>31.1 ms / 63.9 FPS (2 threads) | 2 ms | 27.6 | 88.4 |
 | YOLOv13x | 640x640 | 80 | 26.9 ms / 37.1 FPS (1 thread)<br>51.6 ms / 38.6 FPS (2 threads) | 2 ms | 64.0 | 199.2 |
-
 
 
 ### Performance Data (Summary) (X3 historical benchmark)
@@ -1551,7 +1522,6 @@ sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling
 | YOLOv10b | 640×640 | 80 | 92.0 | 25.4 | 4.5 ms |
 | YOLOv10l | 640×640 | 80 | 120.3 | 20.0 | 4.5 ms |
 | YOLOv10x | 640×640 | 80 | 160.4 | 14.5 | 4.5 ms |
-
 
 
 ### Performance Data (X3 historical benchmark)

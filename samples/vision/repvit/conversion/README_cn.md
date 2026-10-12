@@ -135,7 +135,7 @@ hb_mapper checker --model-type onnx --march bayes-e --model ./repvit_m0_9.onnx
 hb_mapper makertbin --model-type onnx --config RepViT_m0_9_config.yaml
 ```
 
-该配置预期输出为 `RepViT_224x224_nv12/RepViT_224x224_nv12.bin`，各配置均使用 latency/O3。所有变体共用不含变体的工作目录和输出基名；构建须隔离以避免覆盖。YAML 删除 Quantize/Dequantize/Transpose/Cast/Reshape 节点；必须验证变换后的图，不能假定任意新导出图删节点后均等价。
+该配置预期输出为 `RepViT_224x224_nv12/RepViT_224x224_nv12.bin`，各配置均使用 latency/O3。所有变体共用不含变体的工作目录和输出基名；构建须隔离以避免覆盖。YAML 删除 Quantize/Dequantize/Transpose/Cast/Reshape 节点；编译后将输出与浮点模型比较，确认这些节点变换适合所选图。
 
 <a id="validation"></a>
 ## 转换后验证
@@ -151,12 +151,12 @@ python3 samples/vision/repvit/runtime/python/main.py --target x5 \
   --test-img samples/vision/repvit/test_data/yurt.JPEG
 ```
 
-准确引用用于选择契约，不证明重建字节等于发布字节。记录新哈希和图来源，对照源/统一输出，交付前评估精度。
+选择与模型匹配的目标和完整引用。使用编译模型前，将其输出和数据集精度与浮点模型比较。
 
 <a id="artifacts"></a>
 ## 产物
 
-编译路径见上表，逐变体发布文件与目标见[模型准备](../model/README_cn.md#artifacts)，下载落在 sample model 目录。移动已验证构建时保留变体与来源，改名本身不是修复。
+编译输出路径见上表，各变体的部署文件名与目标见[模型准备](../model/README_cn.md#artifacts)。将对应变体的编译结果复制到样例的 `model/` 目录。
 
 <a id="known-gaps"></a>
 ## 补充准备

@@ -66,7 +66,7 @@ The manifest has no publisher SHA-256 values. The downloader prints the observed
 | --- | --- | --- |
 | `download.py` | Resolves manifest identity and downloads one selected HBM. | No, if artifacts are already present; required for scripted preparation. |
 | `download.sh` | Positional launcher for `download.py`. | No. |
-| `../test_data/dog.jpg` | Runtime smoke input; it is not part of the HBM. | No, only for the sample CLI. |
+| `../test_data/dog.jpg` | Example input; it is not part of the HBM. | No, only for the sample CLI. |
 
 <a id="local-paths"></a>
 ## Local Paths

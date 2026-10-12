@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# ASR — chunked speech recognition
+# ASR: chunked speech recognition
 
 <a id="overview"></a>
 ## Overview

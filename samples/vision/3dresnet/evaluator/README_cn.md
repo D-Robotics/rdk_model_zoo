@@ -5,7 +5,7 @@
 <a id="dataset"></a>
 ## 数据集
 
-随附功能输入是预处理后的 `test_data/video0.npy`，shape `(1,3,16,112,112)`、dtype float32，内容为 16 帧射箭样例。`test_data/kinetics_classnames.json` 是 CLI 使用的 400 条 Kinetics name-to-id 映射；读取后转为 id-to-name 标签（名称中内嵌的引号字符会被去除）。
+随附功能输入是预处理后的 `test_data/video0.npy`，形状 `(1,3,16,112,112)`、数据类型 float32，内容为 16 帧射箭样例。`test_data/kinetics_classnames.json` 是 CLI 使用的 400 条 Kinetics name-to-id 映射；读取后转为 id-to-name 标签（名称中内嵌的引号字符会被去除）。
 
 本目录没有完整 Kinetics-400 数据集、视频解码器、抽帧代码或数据集下载命令。该片段原始获取和预处理命令未记录。
 
@@ -22,14 +22,13 @@ evaluator/
 ## 环境
 
 - 板端功能检查：RDK S100、匹配的 `hbm_runtime`、准备好的 `model/s100/r3d_18.hbm` 和可识别的 S100 身份。
-- 下面的性能表为发布记录，由 `hrt_model_exec` 测得；其完整命令、镜像、runtime 版本与 raw 输出未随附，复测时请记录这些条件。
+- 下面的性能表为发布记录，由 `hrt_model_exec` 测得；其完整命令、镜像、运行时版本与 raw 输出未随附，复测时请记录这些条件。
 
 <a id="command"></a>
 ## 评测命令
 
 
-
-S100 功能 smoke 命令：
+S100 示例推理命令：
 
 ```bash
 # cwd：仓库根目录；前置：显式下载模型和 S100 板卡
@@ -51,7 +50,7 @@ python3 samples/vision/3dresnet/runtime/python/main.py \
 
 - **Top-1：** 数值稳定 softmax 后按概率降序排列的第一个 class ID。
 - **Top-K：** 前 `K` 个 class ID 和 float32 概率，`K` 由 `--top-k` 控制，默认 5。
-- **功能标签检查：** `video0.npy` 的参考 Top-1 类别为 `archery`（source 记录）。
+- **功能标签检查：** `video0.npy` 的参考 Top-1 类别为 `archery`（参考记录）。
 - **性能：** thread-performance 记录（S100、`hrt_model_exec`）。“Total Latency”和“Average Latency”单位是毫秒，FPS 是吞吐率。
 
 | 线程数 | 帧数 | 总耗时 (ms) | 平均耗时 (ms) | FPS |
@@ -76,15 +75,15 @@ python3 samples/vision/3dresnet/runtime/python/main.py \
 
 | 参考项 | 来源 |
 | --- | --- |
-| `video0.npy` Top-1 `archery` | source evaluator README 和截图 |
-| 四行 thread-performance 表（上表） | source evaluator README |
-| BPU/ION/带宽备注（上文） | source evaluator README 和截图 |
+| `video0.npy` Top-1 `archery` | 参考 evaluator README 和截图 |
+| 四行 thread-performance 表（上表） | 参考 evaluator README |
+| BPU/ION/带宽备注（上文） | 参考 evaluator README 和截图 |
 
 <a id="boundaries"></a>
 ## 适用范围
 
-- 本 sample 没有完整数据集 evaluator 实现；评测即上面的单片段功能命令。
-- 没有完整 source `hrt_model_exec` 命令，因此仅凭仓库内容无法复现该性能记录。
+- 本示例没有完整数据集 evaluator 实现；评测即上面的单片段功能命令。
+- 没有完整参考 `hrt_model_exec` 命令，因此仅凭仓库内容无法复现该性能记录。
 
 同一记录的附加性能指标截图：
 

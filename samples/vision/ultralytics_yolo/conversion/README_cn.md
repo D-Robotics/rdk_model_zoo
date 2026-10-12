@@ -56,8 +56,7 @@ Ubuntu 22.04 + Python 3.10（训练用 CUDA GPU，先确认
 | S600 | `hb_compile --help` | `.hbm` | 除以 255 的 float32 `.npy` | `nash-p`，运行时 `nv12` |
 
 Mapper 会检查工具链是否已加载、ONNX 是否只有一个静态
-`tensor(float)` 四维输入，以及标定目录中是否有 JPG/JPEG/PNG。缺依赖时
-只报错，不会静默安装。工具链环境和板端运行时镜像是两套环境，不要把
+`tensor(float)` 四维输入，以及标定目录中是否有 JPG/JPEG/PNG。缺依赖时，先安装所需依赖再运行 Mapper。工具链环境和板端运行时镜像是两套环境，不要把
 `hb_mapper` 或 `hb_compile` 安装步骤放入板端部署流程。
 
 X5 的 mapper 也可以用 pip 包安装（hb_mapper 需 1.24.3 及以上）：
@@ -195,7 +194,7 @@ YOLO26 的 cls/seg/pose/obb 导出器不支持 `--require-local`；请在运行�
 batch 8 制品所需证据见
 [CONVERSION_CONTRACT.md](CONVERSION_CONTRACT.md#yolo26-task-export-and-calibration-batch)。
 
-将生成的 ONNX 交给下面的 mapper，YOLO26 添加 `--family yolo26`。预期输入为静态 batch-one float32 NCHW；检测 DFL 与直接 LTRB 输出不可互换。分割附带 mask 系数/prototype，姿态附带关键点，OBB 附带角度；分类输出 logits，运行端进行 Softmax。检查对应导出脚本的输出说明和运行时绑定，不要仅按输出数量判断兼容性。
+将生成的 ONNX 交给下面的 mapper，YOLO26 添加 `--family yolo26`。预期输入为静态 batch-one float32 NCHW；检测 DFL 与直接 LTRB 输出不可互换。分割附带掩码系数/prototype，姿态附带关键点，OBB 附带角度；分类输出 logits，运行端进行 Softmax。检查对应导出脚本的输出说明和运行时绑定，不要仅按输出数量判断兼容性。
 
 <a id="dataflow"></a>
 ## DFL 系列数据流：图的输出与运行时解码
@@ -309,9 +308,9 @@ NMS，都由 Python 后处理（`runtime/python/detect.py` 中的 `decode_dfl`�
 ![](./imgs/ultralytics_yolo_seg_dataflow.png)
 
 实例分割基于目标检测流程扩展而来。检测分支筛选出满足要求的 bbox 后，
-两次 GatherElements 取出该 Grid Cell 的 32 个 mask 系数，再与 proto
+两次 GatherElements 取出该 Grid Cell 的 32 个掩码系数，再与 proto
 分支输出做线性组合（加权求和，图中画为 MatMul；proto 为 `1×160×160×32`，
-即 stride 4），生成实例 mask。因此检测部分的 ReduceMax、
+即 stride 4），生成实例掩码。因此检测部分的 ReduceMax、
 Threshold(TopK)、GatherElements、DFL 和 Decode 优化仍然适用。运行时
 在浮点 head 上的后处理中执行同样的系数–proto 组合（`segmentation_decode`）。
 
@@ -734,8 +733,8 @@ hrt_model_exec model_info --model_file bpu_outputs/yolo13n_detect_nashe_640x640_
 <a id="known-gaps"></a>
 ## 额外准备
 
-- 每个新制品都需完成自己的绑定检查、匹配板卡 smoke 运行和必要的数据集/参考数值比较；已发布制品的板测记录不能转用于新转换。
+- 每个新制品都需完成自己的绑定检查、匹配板卡推理和必要的数据集/参考数值比较；已发布制品的板测记录不能转用于新转换。
 - 未随仓库提供已固定的数据集版本、校准图片集或全部源权重摘要；20–50 张是脚本建议。默认 `--cal-sample true --cal-sample-num 20`，`--cal-sample false` 使用全部符合扩展名的图片；复现时保存所选文件列表与摘要。
 - `--quantized` 默认 int8，可选 int16；`--jobs` 默认 16，`--save-cache` 默认 false。不同工具链的优化选项见 `mapper.py --platform x5 --toolchain-help` 或对应 S 目标；选择器不代替工具链兼容性验证。
 - 容器版本链接是环境示例；按实际使用的发布环境记录镜像标识及版本输出。
-- 新制品按[转换后验证](#validation)完成绑定检查、匹配板卡 smoke 与数据集/参考数值比较。
+- 新制品按[转换后验证](#validation)完成绑定检查、匹配板卡推理与数据集/参考数值比较。

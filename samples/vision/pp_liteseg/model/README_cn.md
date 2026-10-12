@@ -30,7 +30,7 @@ model/
 bash samples/vision/pp_liteseg/model/download.sh --target x5
 ```
 
-下载失败时可从[发布 URL](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/pp_liteseg/pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin) 获取相同文件，放到下述位置。不要通过改名把其他模型冒充为本制品。
+下载失败时可从[发布 URL](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/pp_liteseg/pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin) 获取相同文件，放到下述位置。使用与运行时输入输出协议匹配的模型。
 
 <a id="accompanying-files"></a>
 ## 伴随文件

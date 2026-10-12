@@ -35,7 +35,7 @@ bash samples/speech/asr/model/download.sh --target s100
 bash samples/speech/asr/model/download.sh --target s600
 ```
 
-Run only the command for the required target unless deliberately preparing both files. The downloader requires `--target`; optional `--asset-id` must match it. `--output-dir /path/to/models` stores `<target>/asr.hbm` below that directory. `PYTHON` selects the interpreter; failures return 2.
+Run only the command for the required target unless preparing both files. The downloader requires `--target`; optional `--asset-id` must match it. `--output-dir /path/to/models` stores `<target>/asr.hbm` below that directory. `PYTHON` selects the interpreter; failures return 2.
 
 <a id="accompanying-files"></a>
 ## Vocabulary and audio

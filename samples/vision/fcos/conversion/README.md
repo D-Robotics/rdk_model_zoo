@@ -28,9 +28,9 @@ conversion/
 | x5 / B2 768 | bayes-e | not recorded in source | no YAML in source |
 | x5 / B3 896 | bayes-e | not recorded in source | no YAML in source |
 
-The three PNG files in this directory are copied source `hb_perf` snapshots documenting each published variant's deployed dataflow; the conversion output of this checkout is produced by the commands above. Each graph records the deployed dataflow of one published variant: the packed NV12 input is converted by a BPU `NV12TOYUV444` node into `YUV444, NHWC, INT8`, executes as `torch-jit-export_subgraph_0` on BPU, and emits fifteen INT32 outputs — five stride levels × three branches (80-channel classification scores, 4-channel box regression, 1-channel center-ness). This is the source output protocol: 5 classification, 5 box-regression, and 5 center-ness outputs, which the Python runtime reorders by their fixed tensor shapes before decoding; decode semantics are documented in the [runtime guide](../runtime/python/README.md).
+The three `hb_perf` graphs below show the deployed dataflow for the published variants. Each graph records the deployed dataflow of one published variant: the packed NV12 input is converted by a BPU `NV12TOYUV444` node into `YUV444, NHWC, INT8`, executes as `torch-jit-export_subgraph_0` on BPU, and emits fifteen INT32 outputs — five stride levels × three branches (80-channel classification scores, 4-channel box regression, 1-channel center-ness). This is the source output protocol: 5 classification, 5 box-regression, and 5 center-ness outputs, which the Python runtime reorders by their fixed tensor shapes before decoding; decode semantics are documented in the [runtime guide](../runtime/python/README.md).
 
-Reference graphs (verbatim source snapshots, not produced by this checkout):
+Reference deployment graphs:
 
 ![FCOS EfficientNet-B0 hb_perf](./fcos_efficientnetb0_512x512_nv12.png)
 
@@ -45,13 +45,9 @@ FCOS EfficientNet-B2, 768×768 input: the same three branches on 96×96 down to 
 FCOS EfficientNet-B3, 896×896 input: the same three branches on 112×112 down to 7×7 levels.
 
 <a id="export"></a>
-## Export (ONNX)
+## ONNX export
 
-```text
-No export recipe is included in the fixed source. An ONNX checkpoint, export commit,
-input preprocessing provenance, and output naming contract must be supplied before
-rebuilding any artifact.
-```
+Prepare the checkpoint and exporter for the selected B0/B2/B3 variant. Record its input preprocessing and the names, shapes and types of all fifteen output heads. Checkpoints and export scripts are external prerequisites.
 
 <a id="calibration"></a>
 ## Calibration
@@ -63,9 +59,7 @@ rebuilding any artifact.
 <a id="compile"></a>
 ## Compile
 
-```text
-No verified compile command is available. The source's `hb_mapper makertbin --model-type onnx --config your_fcos_config.yaml` is only a placeholder and cannot reproduce these artifacts without missing inputs/configuration.
-```
+Prepare the ONNX and quantization YAML in the matching X5 OpenExplorer environment, then run `hb_mapper makertbin --model-type onnx --config your_fcos_config.yaml`. Replace `your_fcos_config.yaml` with the actual configuration path; that file is not supplied here.
 
 <a id="validation"></a>
 ## Post-Conversion Validation
@@ -84,6 +78,4 @@ On a matching X5, inspect a supplied artifact with `hrt_model_exec model_info --
 <a id="known-gaps"></a>
 ## Additional preparation
 
-- No checkpoint, ONNX export, calibration data, quantization YAML, toolchain version, or reproducible source compile pipeline is present.
-- Manifest publisher hashes are unknown. The three source screenshots cannot establish tensor values or numerical equivalence.
-- Rebuilding the artifacts from this repository is therefore not possible; what is reproducible here is the runtime protocol, the host fixture, and the recorded board parity of the published artifacts (evidence linked from the sample README).
+Custom conversion requires FCOS EfficientNet-B0/B2/B3 checkpoints, an ONNX exporter, representative calibration images, X5 quantization YAML and a matching OpenExplorer toolchain. A complete rebuild recipe is not included. To run the sample, download the published BIN; publisher SHA-256 values are unavailable.

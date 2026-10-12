@@ -84,7 +84,7 @@ Find models, conversion instructions and evaluation programs by task. There are 
 |---|---|---|
 | [himloco](robotics/himloco/README.md) | [conversion](robotics/himloco/conversion/README.md) | [evaluator](robotics/himloco/evaluator/README.md) |
 
-HIMLoco consumes prepared six-frame observations and returns policy actions; it does not construct a live control loop or send robot commands.
+HIMLoco reads prepared six-frame observations and saves the predicted actions.
 
 ## Language and vision-language models
 
@@ -93,12 +93,12 @@ HIMLoco consumes prepared six-frame observations and returns policy actions; it 
 | [gemma4-e2b](llm/gemma4-e2b/README.md) | [conversion](llm/gemma4-e2b/conversion/README.md) | [evaluator](llm/gemma4-e2b/evaluator/README.md) |
 | [minicpm5-2b](llm/minicpm5-2b/README.md) | [conversion](llm/minicpm5-2b/conversion/README.md) | [evaluator](llm/minicpm5-2b/evaluator/README.md) |
 
-Gemma provides five native entry points (chat, HTTP serving, single-shot inference, verification tools) plus the full upstream tutorials. MiniCPM5-2B ships separate S100/S100P (OELLM 1.0.0) and S600 (OELLM 2.0 beta) native entries. Both samples state their supported boards in their own guides; model resources and native build prerequisites are documented per sample.
+Gemma supports chat, HTTP serving and single-shot inference. MiniCPM5-2B provides separate S100/S100P (OELLM 1.0.0) and S600 (OELLM 2.0 beta) programs. See each sample for supported boards, model preparation and build commands.
 
-## Pinned third-party policy integrations
+## ACT and Pi0
 
-Complete upstream ACT/Pi0 Git submodules are maintained separately from the 51 in-repository samples. See [VLA overview](vla/README.md), [ACT target selection](vla/guides/act.md) and [Pi0 offline/live boundaries](vla/guides/pi0.md). Fetching the source does not prepare model assets; model resources are operator-supplied as documented in the VLA guide.
+ACT and Pi0 use Git submodules. Follow the [VLA overview](vla/README.md) to get the source, then prepare models and run the [ACT](vla/guides/act.md) or [Pi0](vla/guides/pi0.md) workflow for your board.
 
 ## Choose and extend
 
-Start with the sample README, then model/runtime/conversion/evaluator. Classification, feature extraction and image-text matching expose different outputs. EfficientSAM's export-fixed prompt and MobileSAM's runtime box are not interchangeable. Shared target/artifact mechanisms are in [utils/py_utils](../utils/py_utils/README.md); responsibilities and documentation requirements are in the [Runtime code standard](../docs/sample-standards/runtime-code.md) and [README contract](../docs/sample-standards/readme-contract.md).
+Start with the sample README. Use `model/` to prepare models, `runtime/` to run inference, `conversion/` to export and compile your own models, and `evaluator/` to evaluate results. To build an application, see [shared Python utilities](../utils/py_utils/README.md) and the [Runtime code standard](../docs/sample-standards/runtime-code.md).

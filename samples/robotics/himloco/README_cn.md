@@ -45,7 +45,7 @@ himloco/
 <a id="prerequisites"></a>
 ## 前提
 
-主机预览与核心测试需要 Python、NumPy、PyYAML；真实推理需要 X5、匹配的 BSP
+主机预览需要 Python、NumPy、PyYAML；真实推理需要 X5、匹配的 BSP
 `hbm_runtime` 和准确的发布 BIN，不安装 PyPI 上无关的同名包。使用发布模型不需要
 转换工具链、Torch 或训练环境。以下命令均在仓库根目录运行，虚拟环境可通过
 `PYTHON` 指定 shell 包装器解释器。
@@ -86,7 +86,7 @@ python samples/robotics/himloco/runtime/python/main.py --target x5 \
 | Python | `HB_HBMRuntime.run` | 0.885 ms | 1129.37 FPS |
 | C++ | `hbDNNInfer` + `hbDNNWaitTaskDone` | 0.350 ms | 2853.09 FPS |
 
-编译器估计为 0.063 ms。以上均为源发布记录；计时范围不同，Python
+编译器估计为 0.063 ms。以上均为参考数据；计时范围不同，Python
 任务计时还包含适配器校验／复制，不能当作纯设备耗时比较。完整源百分位数据与评测
 口径见[评测说明](evaluator/README_cn.md)。
 离线动作一致不能证明观测构造、关节映射、控制环行为或闭环稳定性。

@@ -96,7 +96,7 @@ python3 eval_unet.py \
   --min-miou 0.50
 ```
 
-Use `--limit` for a smoke run. A report below `--min-miou` is still written,
+Use `--limit` for a short run. A report below `--min-miou` is still written,
 but the command exits with status 2.
 
 <a id="metrics"></a>

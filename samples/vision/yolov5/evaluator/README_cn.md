@@ -5,7 +5,7 @@
 <a id="dataset"></a>
 ## 数据集
 
-源提供 X5 的 `test_data/bus.jpg`、S 的 `test_data/kite.jpg` 以及 `coco_classes.names`，没有带标签的 mAP benchmark harness。评估器在相同图片、target、制品和阈值下比较两套实现的完整运行，是一致性证据工具，不是 mAP 评估器。
+源提供 X5 的 `test_data/bus.jpg`、S 的 `test_data/kite.jpg` 以及 `coco_classes.names`，没有带标签的 mAP benchmark harness。评估器在相同图片、目标板卡、制品和阈值下比较两套实现的完整运行，是一致性证据工具，不是 mAP 评估器。
 
 <a id="directory"></a>
 ## 目录结构
@@ -22,7 +22,7 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-直接在已识别的目标板上运行，需要 Python、NumPy、OpenCV 和目标 `hbm_runtime`，并加载锁定的原始 runtime；它不是一台在外部驱动板卡的主机。主机单测注入 fake runtime，不能证明硬件或板端结果。评估器不会下载模型或图片。
+在目标板上安装 Python、NumPy、OpenCV 和配套 `hbm_runtime`，准备模型与图片后运行。评估器从固定 Git 版本加载参考实现，所需版本必须存在于本地仓库。
 
 <a id="command"></a>
 ## 评估命令
@@ -38,15 +38,11 @@ python3 samples/vision/yolov5/evaluator/compare.py \
   --output-dir /tmp/yolov5-evidence-unique
 ```
 
-工具运行锁定原始实现与本 sample 实现，把完整 native 输入/输出/结果数组保存为 `.npy`，在 `comparison.json` 记录 metadata、代码/模型/图片 hash、阈值和板卡身份；所有比较通过才返回 `0`。输出目录必须不存在。在准备好的板卡上按需运行——X5 命令覆盖全部九个变体，S100/S600 命令覆盖 `x-672` 模型（`kite.jpg`）；一次运行验证的是它所执行的工作树。
+工具运行锁定原始实现与本示例实现，把完整原生输入/输出/结果数组保存为 `.npy`，在 `comparison.json` 记录元数据、代码/模型/图片摘要、阈值和板卡身份；所有比较通过才返回 `0`。输出目录必须不存在。在准备好的板卡上按需运行——X5 命令覆盖全部九个变体，S100/S600 命令覆盖 `x-672` 模型（`kite.jpg`）；一次运行验证的是它所执行的工作树。
 
 ### 原生 C++ 实现对照（板端）
 
-上面的 Python 命令驱动 Python runtime，不能作为 C++ 交付的最终证据——两者的前处理可能不同。`evaluator/native/` 下的原生比较运行**固定 C++ 源本身**（X5 `main.cc` @
-`ac115717197920355fc390bb04299b20e6436864`，S `src/yolov5.cpp`/`src/main.cpp` @
-`380e1a2bf42041af54be6f34935e50197cfadff9`，SHA 固定、失配即拒绝），以插桩副本
-方式只加入**只读观测点**；原有预处理/推理/解码/NMS 不动，绝不把统一 decoder
-当作 legacy。两侧在同一板卡、同一模型、同一图片上各自独立完成推理。
+C++ 对照使用 `evaluator/native/`，在同一板卡、模型、图片和阈值下运行两套实现。参考版本为 X5 `main.cc` 的 `ac115717197920355fc390bb04299b20e6436864`，或 S `src/yolov5.cpp`/`src/main.cpp` 的 `380e1a2bf42041af54be6f34935e50197cfadff9`。工具保存各自的预处理、原始输出和解码检测结果。
 
 在目标板上（仓库已检出、模型已下载；X5 默认
 `yolov5s_tag_v2.0_detect_640x640_bayese_nv12.bin` + `test_data/bus.jpg`，S 默认
@@ -107,27 +103,7 @@ python3 samples/vision/yolov5/evaluator/native/compare_native.py \
   --output /tmp/yolov5-native-comparison
 ```
 
-比较阶段在任何数值比较之前校验**两侧**的 runner 记录（真实退出码、argv、
-cwd、UTC、binary/model/image 运行前后 hash 一致；统一侧记录与 manifest
-binary hash 绑定）与观测头捕获时 hash、被背书二进制、统一 manifest 自带
-hash 与逐 payload digest 的一致性。板卡身份采用仓库**精确别名注册表**
-（docs/release/platforms.json，与 utils/py_utils/platforms.py 同一契约）：
-S100P 与 s100 是不同 target，S100Whatever 等未知字符串不构成身份，X5 板经
-socinfo 名（X5U/X5H/X5M）解析。插桩 audit 校验失败时 run_capture.py **根本
-不运行**源二进制——先中止并持久化失败记录；audit 校验按完整协议执行
-（schema、target、固定 commit、精确固定源集合且每个 anchor 恰匹配一次、
-按 target 完整的闭包、观测头与 CMake hash）。结构要求
-在**两侧**强制——目标对应的输入数、恰好三个形状唯一的输出头与完整双射、
-dtype 与量化类型/axis/scale 长度一致（绝不被浮点转换掩盖）、值有限、统一
-manifest 逐 payload 必填 bytes+SHA。布局解码额外拒绝通道 stride 重叠
-（stride[3] < itemsize）或未按 itemsize 对齐、以及像素 stride 小于
-channels*stride[3] 的布局，同时仍解码真实受支持形态（含按对齐 stride 的通道
-padding）。阈值与 scale 描述符按 **float32 位值**
-比较（原生语义）：0.45f 序列化为 0.44999998807907104 与 manifest 字符串
-"0.450000" 是同一个值；位值不同即失败。最终原图坐标（detections_original）
-**双侧必备**——缺失或单侧缺失直接阻断比较，而不是以免责声明放行。布局
-解码只接受两种已证实形态（均匀行距 strided、精确尺寸 compact），其余显式
-拒绝，绝不猜着解码。
+比较要求两侧目标身份、张量数量和形状、数据类型、量化参数、阈值和原图坐标检测结果一致。输入输出、二进制程序、模型和图片按 SHA-256 记录核对。支持均匀行距和精确紧凑布局；阈值和 scale 按 float32 值比较。布局错误或捕获数据缺失会返回错误。复制结果时，完整保留双方进程记录目录、张量文件和 `instrumentation-audit.json`。
 
 比较按两侧记录的物理布局（stride/dtype）还原逻辑数组，因此 padded 布局正确
 比较，而未初始化 padding 字节保留在证据（`originals/`）中、不参与比较。固定判据、运行中不得调整：inputs 精确相等；raw 输出
@@ -136,8 +112,8 @@ padding）。阈值与 scale 描述符按 **float32 位值**
 归一（按 class_id、score、x1..y2）。检测在**模型输入空间**比较，并**强制**比较最终原图坐标（双侧
 `detections_original`——捕获端与统一 dump 都会产出）；最终坐标缺失
 或单侧缺失直接判整个比较失败，而不是以免责声明放行。任何材料缺失、运行
-非零返回码、模型/图片 hash 或阈值不一致都以非零返回码失败并保留已收集
-证据；native 失败绝不能以空数组通过。这些 native 对照步骤在真实板卡上执行
+非零返回码、模型/图片摘要或阈值不一致都以非零返回码失败并保留已收集
+证据；原生失败绝不能以空数组通过。这些原生对照步骤在真实板卡上执行
 （构建说明见 `runtime/cpp/README_cn.md`）。
 
 <a id="metrics"></a>
@@ -148,7 +124,7 @@ padding）。阈值与 scale 描述符按 **float32 位值**
 <a id="outputs"></a>
 ## 输出
 
-每个 run 目录含 `legacy_*`、`unified_*` `.npy` 数组和 `comparison.json`。模型预加载失败或比较不一致会保留 error/failed 记录并返回非零，不会把 mismatch 改成 pass。数组保留全部捕获的输入/输出 tensor 和解码结果字段。
+每个 run 目录含 `legacy_*`、`unified_*` `.npy` 数组和 `comparison.json`。模型预加载失败或比较不一致会保留 error/failed 记录并返回非零，比较不一致时返回非零状态。数组保留全部捕获的输入/输出张量和解码结果字段。
 
 <a id="reference-results"></a>
 ## 参考结果
@@ -199,7 +175,6 @@ padding）。阈值与 scale 描述符按 **float32 位值**
 注: 详细性能数据见文末.
 
 
-
 ## 补充参考数据
 
 各表按发布时的模型、板卡和测量条件列出，不同配置的数据分别保留。
@@ -221,9 +196,9 @@ padding）。阈值与 scale 描述符按 **float32 位值**
 <a id="boundaries"></a>
 ## 适用范围
 
-评估器不下载模型、不构建转换产物，也不会把主机测试写成板端兼容。X5 刻意保留源 OpenCV XYXY-to-NMSBoxes quirk，S 使用按类 XYXY NMS；不能跨 target 要求结果相等。
+运行评估器前准备模型。X5 将 XYXY 框传给按 XYWH 解释输入的 OpenCV `NMSBoxes`；S 使用按类 XYXY NMS。比较时使用同一目标板卡与模型。
 
-源端 runner 将运行前实际校验的审计字节归档为 `instrumentation-audit.json`，并在运行记录保存 `audit_file`、`audit_sha256`。副本在子进程结束后写入，以满足观测头要求输出目录初始为空的约束。请保留完整源捕获目录和统一入口进程记录目录：审计缺失或内容变化、统一入口 stdout/stderr 缺失均会拒绝比较；成功输出的 `originals/` 包含审计与双方日志。
+请完整保留双方捕获目录、`instrumentation-audit.json` 和 stdout/stderr 日志。比较工具会核对这些文件，并将它们复制到输出目录的 `originals/` 中。
 
 
 ### X3 与 X3 Module COCO 测量记录（中文来源）

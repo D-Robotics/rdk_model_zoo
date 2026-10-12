@@ -30,7 +30,7 @@ conversion/
 <a id="export"></a>
 ## ONNX 导出
 
-导出的 ONNX 图需满足 脚本 的运行时 I/O 契约：NV12 打包前为
+导出的 ONNX 图需满足脚本的运行时 输入输出要求：NV12 打包前为
 RGB/NCHW 224×224，输出为 1000 类分数。
 
 <a id="calibration"></a>
@@ -47,7 +47,7 @@ RGB/NCHW 224×224，输出为 1000 类分数。
 <a id="validation"></a>
 ## 转换后验证
 
-核对实际 metadata、224×224 packed NV12 与 squeeze 后 1000 分数的单 F32 输出。重建模型可用准确契约引用和外部路径选择，其哈希/来源必须与发布制品分开记录。
+核对实际 元数据、224×224 packed NV12 与 squeeze 后 1000 分数的单 F32 输出。重建模型可用对应模型引用和外部路径选择。
 
 ```bash
 # cwd: repository root on X5; published-artifact smoke
@@ -63,4 +63,4 @@ python3 samples/vision/vargconvnet/runtime/python/main.py --target x5 --variant 
 <a id="known-gaps"></a>
 ## 补充准备
 
-推理时按 [model/README_cn.md](../model/README_cn.md) 准备已发布 X5 制品。构建替代模型需提供符合 脚本 契约的 ONNX 图（名义 RGB/NCHW 224×224 输入、1,000 类分类分数）、匹配的 PTQ 配置，以及按模型归一化处理的校准数据。使用 X5 OE 工具链，并通过样例运行时检查编译结果。
+推理时按 [model/README_cn.md](../model/README_cn.md) 准备已发布 X5 制品。构建替代模型需提供符合脚本输入输出要求的 ONNX 图（名义 RGB/NCHW 224×224 输入、1,000 类分类分数）、匹配的 PTQ 配置，以及按模型归一化处理的校准数据。使用 X5 OE 工具链，并通过样例运行时检查编译结果。

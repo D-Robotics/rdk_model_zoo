@@ -131,7 +131,7 @@ ID／数量和阶段耗时。结束前再次检查模型、清单和词表摘要
 `current_utterance`，但 `metrics` 保持 null，不把部分结果包装成完整评测。
 
 <a id="reference-results"></a>
-## S 源结果
+## 参考结果
 
 S 源转换记录使用 AISHELL dev（speech_asr_aishell_devsets）300 条语音、
 40 位说话人及官方参考文本。流程为 fbank+LFR、三阶段 HBM 与 CPU CIF，

@@ -63,19 +63,19 @@ convnext/
 | Target | Variant | Language | Status |
 | --- | --- | --- | --- |
 | x5 | atto | python | supported |
-| s100 / s100p / s600 | any | python | not-supported (the S manifest publishes no ConvNeXt asset; selection is an explicit error, no cross-platform fallback) |
+| s100 / s100p / s600 | any | python | not-supported (no ConvNeXt artifact is available for these targets) |
 
 <a id="prerequisites"></a>
 ## Prerequisites
 
 Board Python execution needs the board image's matching `hbm_runtime`,
 NumPy, and OpenCV-Python; the SDK is imported only when a model executes
-(`--help`, `--list-models`, `--dry-run`, and host tests need no SDK).
+(`--help`, `--list-models`, `--dry-run` need no SDK).
 Manifest reading also needs PyYAML. On a development host, install the
 user-space dependencies from `requirements-host.txt`:
 
 ```bash
-# cwd: repository root — success: "host dependencies: ok"
+# cwd: repository root — output: "host dependencies: ok"
 python3 -m venv .venv-convnext
 source .venv-convnext/bin/activate
 python3 -m pip install -r samples/vision/convnext/requirements-host.txt
@@ -92,12 +92,12 @@ manifest's model server.
 ```bash
 # 1. Prepare the artifact (input: manifest row x5:convnext:ConvNeXt_atto_224x224_nv12.bin)
 #    output: samples/vision/convnext/model/ConvNeXt_atto_224x224_nv12.bin
-#    success: downloader exits 0 and prints the observed digest
+#    output: downloader exits 0 and prints the observed digest
 bash samples/vision/convnext/model/download.sh x5
 
 # 2. Run classification (input: the artifact above plus the bundled test image)
 #    output: Top-5 class ids, scores, labels on stdout
-#    success: exit code 0 and a printed Top-5 list
+#    output: exit code 0 and a printed Top-5 list
 python3 samples/vision/convnext/runtime/python/main.py \
   --target x5 \
   --asset-id x5:convnext:ConvNeXt_atto_224x224_nv12.bin \
@@ -113,7 +113,7 @@ The default variant is `atto`. Full commands:
 ## Expected results
 
 The Python run prints a stable Top-K (default 5) of class IDs, scores, and
-labels and exits 0; Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. With the bundled `cheetah.JPEG` the Top-5 contains cheetah-related
+labels and exits 0. Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. With the bundled `cheetah.JPEG` the Top-5 contains cheetah-related
 ImageNet classes. Select the target from the support matrix and prepare its matching artifact before inference; the runtime checks board identity before loading the model.
 
 The screenshot below shows a reference run from the X5 release: the demo

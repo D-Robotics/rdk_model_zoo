@@ -150,7 +150,7 @@ A failure preserves completed utterances and `current_utterance`, but `metrics` 
 null; partial results are not presented as a complete evaluation.
 
 <a id="reference-results"></a>
-## Source results
+## Reference results
 
 The S source conversion record reports AISHELL dev (speech_asr_aishell_devsets),
 300 utterances from 40 speakers, using official reference transcripts. The pipeline

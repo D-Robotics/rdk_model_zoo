@@ -23,7 +23,7 @@ cpp/
 │   ├── backend.hpp         # 共享 DNN 后端：栈探测、推理、RAII 所有者
 │   ├── cli.hpp             # 内联选项解析、benchmark 数学与入口
 │   └── imagenet_labels.hpp # 1000 项 ImageNet 标签顺序（分类）
-├── src/
+└── src/
 │   ├── main.cpp     # 构造任务模型、调用 predict、交给报告层
 │   ├── cli.cpp      # 图片加载、渲染、benchmark 驱动
 │   ├── backend.cpp  # SDK 生命周期：infer_sync、输入探测、NV12 上传
@@ -32,7 +32,6 @@ cpp/
 │   ├── pose.cpp     # YoloPose 模型（17 个 COCO 关键点）
 │   ├── classify.cpp # YoloClassify 模型（1000 logits Top-K）
 │   └── obb.cpp      # YoloObb 模型（直接 LTRB + 角度、旋转 NMS）
-└── test/  # 主机单元测试（ctest；test/fake_dnn_io 提供 X5/UCP SDK 替身）
 ```
 
 <a id="supported-boards"></a>
@@ -46,7 +45,7 @@ S100/S100P/S600 使用 split Y/UV `.hbm` 输入。每个板端目标构建一次
 |---|---|---|
 | detect | YOLO26 四通道 LTRB；YOLO11 系 64 通道 DFL | 支持显式指定 head |
 | pose | DFL/LTRB 框及对应关键点编码 | 功能参考 |
-| segment | DFL/LTRB 框及 mask 系数/原型 | 功能参考 |
+| segment | DFL/LTRB 框及掩码系数/原型 | 功能参考 |
 | classify | 单个未量化 FLOAT32 1000 logits 向量 | 按步长取 Top-5，无结果图 |
 | obb | YOLO26 直接 LTRB 框加逐单元角度，九个输出 | 方形 stride-32 输入，DOTA 类别（默认 15） |
 
@@ -80,13 +79,12 @@ DNN SDK。`YOLO_TARGET=auto`（默认）先检查 `/usr/include/dnn/hb_dnn.h` �
 `/usr/lib`；否则使用 `/usr/include/hobot`、`/usr/include/hobot/dnn`、
 `/usr/hobot/include`、`/usr/hobot/lib` 并链接 `hbucp`。可用
 `-DYOLO_TARGET=x5|s100|s100p|s600` 显式指定；构建过程绝不读取主机 SoC。
-这些文件来自匹配的板端镜像/SDK，请使用目标镜像对应的 SDK 版本。主机测试
-另需 CTest ≥3.20（`ctest --test-dir`）。
+这些文件来自匹配的板端镜像/SDK，请使用目标镜像对应的 SDK 版本。
 
 <a id="build"></a>
 ## 构建
 
-在目标板上的 sample 根目录（`samples/vision/ultralytics_yolo`）运行。
+在目标板上的示例根目录（`samples/vision/ultralytics_yolo`）运行。
 `run.sh` 在 `runtime/cpp/build/` 下配置树外构建、完成构建并执行二进制；
 所有参数原样转发：
 
@@ -106,7 +104,7 @@ cmake --build /tmp/ultralytics-cpp -j2
 <a id="run"></a>
 ## 运行
 
-每个任务都有各自的模型、图片和结果路径默认值，在 sample 根目录下仅带
+每个任务都有各自的模型、图片和结果路径默认值，在示例根目录下仅带
 `--task` 即可运行参考流程。以下 X5 路径显式准备模型并输出检测图：
 
 ```bash
@@ -198,7 +196,7 @@ stride 和有效形状，不要只抽取一次推理调用。
 不再固定将 axis 1 当成类别轴；其他类别数、整数输出、展开的空间图和
 batch>1 均明确拒绝。
 
-物理分配大小必须为正。X5 从 aligned shape 推导类别步长，S 读取字节
+物理分配大小必须为正。X5 从 aligned 形状推导类别步长，S 读取字节
 stride；跳过填充区域，并在读取前确认最后一类仍位于分配范围内。稳定
 softmax 使用双精度累加，Top-K 按概率降序，概率完全相等时按类别 ID 升序。
 标签遵循 `inc/imagenet_labels.hpp` 中的 1000 项
@@ -218,12 +216,12 @@ stretch，Python S 分类也默认 stretch。C++ 侧传 `--resize-type 0` 即可
 两者要求输入为边长可被 32 整除的方形、batch=1、未量化 FLOAT32 NHWC 输出。
 按空间形状和通道数匹配角色，不依赖 SDK 输出顺序：stride 8/16/32 各有分类
 （姿态 1 类、分割 80 类）、框（4 通道直接 LTRB 或 64 通道 DFL）、附加信息
-（姿态 51 个关键点值、分割 32 个 mask 系数）。三个尺度必须使用同一框编码。
+（姿态 51 个关键点值、分割 32 个掩码系数）。三个尺度必须使用同一框编码。
 分割还需要唯一的 stride-4、32 通道 NHWC 原型。缺失/重复角色、混合编码、
 整数或 SCALE 张量、不支持的布局和非有限值均明确拒绝。C++ 原型路径**不支持**
 Python 可接受的 NCHW 原型；请选择对应 NHWC 导出，或使用 Python 入口。
 
-按 X5 aligned shape 或 S 字节 stride 读取。缓存失效操作成功后，将有效值
+按 X5 aligned 形状或 S 字节 stride 读取。缓存失效操作成功后，将有效值
 复制到独立拥有内存的紧凑 NHWC 向量，跳过填充；这会增加一份有效输出的临时
 主机副本。分配或缓存操作失败会中止，所有退出路径释放已取得的输出和模型
 资源。DFL 和直接距离数学位于 `inc/yolo.hpp`（`decode_box_dfl`、
@@ -232,7 +230,7 @@ Python 可接受的 NCHW 原型；请选择对应 NHWC 导出，或使用 Python
 
 这两个任务仍是功能参考，行为比 Python 窄：两者都会丢弃越过模型输入边界
 的框。分割采用不区分类别的 NMS，输出的是**模型输入尺寸**的三联图（框、
-彩色 mask、叠加图），总宽为 `3 * input_width`。姿态使用原有缩放/填充运算
+彩色掩码、叠加图），总宽为 `3 * input_width`。姿态使用原有缩放/填充运算
 在原图绘制。结果图保存失败会非零退出。
 
 <a id="obb-output-contract"></a>
@@ -256,7 +254,7 @@ S 系列执行不区分类别的旋转 NMS，保留未裁剪几何。letterbox �
 <a id="results-interpretation"></a>
 ## 结果与验证
 
-框、mask 和关键点绘制进结果图；分类打印类别和概率。检查进程返回码并查看
+框、掩码和关键点绘制进结果图；分类打印类别和概率。检查进程返回码并查看
 输出图。分类 ID 索引模型内置类别顺序。数据集评分见 evaluator 指南。
 
 有限轮次 benchmark，所有任务可用：
@@ -294,7 +292,7 @@ I420 `upload` 委托到该路径。分配成功前上传或计划不匹配都会
 同步推理要求非空任务句柄，在创建/提交/等待失败时释放已返回的任务并保留
 首个错误码。UCP 提交选择 `HB_UCP_BPU_CORE_ANY`。请在目标板上用匹配的
 DNN/UCP SDK 头文件和库构建。如果模型绑定拒绝了某个制品，请核对它的目标
-板、任务、布局、dtype 和输出头与所选程序是否匹配。
+板、任务、布局、数据类型和输出头与所选程序是否匹配。
 
 共享的 `OutputTensorOwner` 在 SDK 分配返回错误但地址非空时保留该缓冲区
 以便清理，并在返回成功但地址为空时判定失败。

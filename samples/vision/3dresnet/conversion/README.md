@@ -52,7 +52,7 @@ sudo docker run -it --rm --network host --shm-size=15g \
 <a id="export"></a>
 ## Export
 
-The source README describes an ONNX export concept but provides no executable export script, Python environment lock, checkpoint path, or command with verifiable output. The export stage is therefore **not reproducible from repository contents** and is listed as a known gap.
+For a custom conversion, prepare a torchvision R3D-18 checkpoint and ONNX exporter. Use normalized RGB float32 `(1,3,16,112,112)` input and Kinetics-400 scores as output. The checkpoint and exporter are external prerequisites; use the published HBM download below to run inference without conversion.
 
 <a id="calibration"></a>
 ## Calibration
@@ -73,8 +73,7 @@ bash samples/vision/3dresnet/model/download.sh s100
 This command prepares a published artifact; it does not perform conversion.
 
 <a id="validation"></a>
-## Post-conversion Validation
-
+## Check the compiled model
 
 
 Board-side execution of the downloaded artifact uses the [Python runtime](../runtime/python/README.md) on an S100 board.
@@ -91,15 +90,11 @@ No ONNX, checkpoint, calibration, or compiler workspace artifact is supplied.
 <a id="known-gaps"></a>
 ## Additional preparation
 
-- No executable ONNX export script or pinned source checkpoint.
-- No calibration dataset, sample count, quantization YAML, or calibration command.
-- No OE compile YAML, mapper, or output-generation command.
-- No reproducible conversion output hash; the active HBM manifest SHA is `null`.
-- No S100P, S600, or x5 artifact.
+Custom conversion requires a pinned torchvision checkpoint, ONNX exporter, representative video calibration data and an S100 OpenExplorer compiler configuration. A publisher SHA-256 is unavailable for the HBM. No X5, S100P or S600 artifact is supplied.
 
-The four source conversion screenshots remain available for traceability:
+The figures show the pooling replacement and conversion result:
 
-![Original pooling error](../test_data/readme_img/image-1.png)
-![Original 3D pooling](../test_data/readme_img/image.png)
+![Pooling error](../test_data/readme_img/image-1.png)
+![3D pooling](../test_data/readme_img/image.png)
 ![Pooling replacement](../test_data/readme_img/image-2.png)
 ![Conversion result](../test_data/readme_img/image-3.png)

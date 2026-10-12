@@ -10,7 +10,7 @@
 | s100 | s100/unet_mobilenet_1024x2048_nv12.hbm | s:unetmobilenet:s100/unet_mobilenet_1024x2048_nv12.hbm |
 | s600 | s600/unet_mobilenet_1024x2048_nv12.hbm | s:unetmobilenet:s600/unet_mobilenet_1024x2048_nv12.hbm |
 
-两者均为发布清单中的 HBM 部署制品，文件名相同但字节互不通用；请按 target 对应取用。S100P/X5 暂无发布制品。
+两者均为发布清单中的 HBM 部署制品，文件名相同但字节互不通用；请按目标板卡对应取用。S100P/X5 暂无发布制品。
 
 <a id="directory"></a>
 ## 目录结构
@@ -43,9 +43,9 @@ bash samples/vision/unetmobilenet/model/download.sh --target s600
 <a id="local-paths"></a>
 ## 本地路径
 
-运行时默认按示例位置解析 model/<target>/unet_mobilenet_1024x2048_nv12.hbm，不依赖 cwd。下载器 --output-dir 修改根目录，但保留目标子目录。使用已有 /opt 副本时，同时指定 --model-path /opt/hobot/model/s100/basic/unet_mobilenet_1024x2048_nv12.hbm 与 --asset-id s:unetmobilenet:s100/unet_mobilenet_1024x2048_nv12.hbm，且目标须一致。
+运行时默认按示例位置解析 model/<目标板卡>/unet_mobilenet_1024x2048_nv12.hbm，不依赖 cwd。下载器 --output-dir 修改根目录，但保留目标子目录。使用已有 /opt 副本时，同时指定 --model-path /opt/hobot/model/s100/basic/unet_mobilenet_1024x2048_nv12.hbm 与 --asset-id s:unetmobilenet:s100/unet_mobilenet_1024x2048_nv12.hbm，且目标须一致。
 
 <a id="formats-checksums"></a>
 ## 格式与校验值
 
-两行 HBM 均为 `sha256: null (unknown)`。下载器打印本地 SHA-256。请选择目标板卡对应的发布模型；加载时校验模型输入输出的 shape 和 dtype。
+两行 HBM 均为 `sha256: null (unknown)`。下载器打印本地 SHA-256。请选择目标板卡对应的发布模型；加载时校验模型输入输出的形状和数据类型。

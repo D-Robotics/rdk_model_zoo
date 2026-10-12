@@ -1,12 +1,12 @@
 English | [简体中文](README_cn.md)
 
 # VargConvNet evaluation
-Use the bundled image for a single-image classification check. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
+Use the bundled image for a single-image classification. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
 
 <a id="dataset"></a>
 
 ## Dataset
-The functional check uses the bundled test image. Dataset-level accuracy uses ImageNet ILSVRC2012 validation (50,000 images, 1,000 classes). Prepare a ground-truth mapping from each image to its zero-based model class index and compare it with the runtime’s Top-1 class ID. `datasets/imagenet/imagenet_classes.names` maps output indices to display names; per-image truth comes from the dataset annotations. See [ImageNet preparation](../../../../datasets/imagenet/README.md).
+The single-image classification uses the bundled test image. Dataset-level accuracy uses ImageNet ILSVRC2012 validation (50,000 images, 1,000 classes). Prepare a ground-truth mapping from each image to its zero-based model class index and compare it with the runtime’s Top-1 class ID. `datasets/imagenet/imagenet_classes.names` maps output indices to display names; per-image truth comes from the dataset annotations. See [ImageNet preparation](../../../../datasets/imagenet/README.md).
 
 <a id="directory"></a>
 ## Directory structure
@@ -20,17 +20,13 @@ evaluator/
 <a id="environment"></a>
 ## Environment
 
-Host: sample requirements (SciPy for source comparison). Board: matching X5 runtime environment described in the runtime README. Use the classification runtime below to collect results for evaluation.
+Run on X5 with the environment described in the runtime README. Use the classification command below to collect results for evaluation.
 
 <a id="command"></a>
 ## Commands
 
-```bash
-# cwd: repository root; expected: unittest OK, exit 0
-python3 -m unittest discover -s samples/vision/vargconvnet/tests -v
-```
 
-Functional board check on the matching board:
+Board classification on the matching board:
 
 ```bash
 # cwd: repository root
@@ -53,15 +49,14 @@ the tolerance.
 
 | Metric | Definition | Conditions |
 | --- | --- | --- |
-| contract pass | runtime accepts the artifact, tensor names/shapes/dtypes match the binding, one F32 score vector returns | prepared artifact on a matching X5 board |
 | Top-K agreement | identical post-softmax Top-K class IDs across repeated runs of the same artifact; scores within 1e-5 | same board, same artifact bytes, image, resize type, Top-K |
-| Top-1 accuracy | fraction of argmax-correct predictions over the prepared ImageNet ILSVRC2012 validation set | same artifact, same resize type and Top-K as the functional check |
+| Top-1 accuracy | fraction of argmax-correct predictions over the prepared ImageNet ILSVRC2012 validation set | same artifact, same resize type and Top-K as the single-image classification |
 | latency / FPS | inference timing on the matching board | compare with the published figures under [Reference results](#reference-results), measured under the conditions stated there |
 
 <a id="outputs"></a>
 ## Outputs
 
-Repeat the functional check on the matching board and compare with the published figures under [Reference results](#reference-results), using the measurement conditions stated there.
+Repeat the single-image classification on the matching board and compare with the published figures under [Reference results](#reference-results), using the measurement conditions stated there.
 
 <a id="reference-results"></a>
 ## Reference results

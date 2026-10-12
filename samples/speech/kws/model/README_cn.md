@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# KWS model artifacts
+# KWS 模型文件
 
 <a id="artifacts"></a>
 ## 已发布制品
@@ -9,7 +9,7 @@
 | --- | --- | --- | --- |
 | `s:kws:s100/kws.hbm` | S100 | 本样例下 `model/s100/kws.hbm` | 未记录 |
 
-下载 URL 由[当前清单](../../../../docs/release/s/models.yaml)提供。S100P/S600/X5 无 KWS 发布制品，改名或强行更改板卡别名不能创建适配。
+下载 URL 由[当前清单](../../../../docs/release/s/models.yaml)提供。KWS 发布制品仅适用于 S100。
 
 <a id="directory"></a>
 ## 目录结构
@@ -46,6 +46,6 @@ bash samples/speech/kws/model/download.sh --target s100
 <a id="formats-checksums"></a>
 ## 格式及运行契约
 
-HBM 是 S100 已编译运行文件，不是 ONNX 或 Paddle 权重。输入为有限 float32 `[1,373,80]`，来自 16 kHz 下 60000 个单声道采样点。输出要求 batch=1、静态正维度且值有限；输出形状读取实际 SDK metadata，不从历史控制台分数猜测。Float32 概率直接使用；整数输出必须有有效 SCALE 描述符，经共享反量化后取最大值。超出 [0,1] 的结果直接拒绝，不再次 sigmoid 或静默裁剪。
+HBM 是 S100 已编译运行文件，不是 ONNX 或 Paddle 权重。输入为有限 float32 `[1,373,80]`，来自 16 kHz 下 60000 个单声道采样点。输出要求 batch=1、静态正维度且值有限；输出形状以 SDK 张量元数据为准。Float32 概率直接使用；整数输出必须有有效 SCALE 描述符，经共享反量化后取最大值。超出 [0,1] 的结果直接拒绝，不再次 sigmoid 或静默裁剪。
 
 每次运行都应保留下载文件的 SHA-256，以标识实际使用的模型字节。

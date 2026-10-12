@@ -5,8 +5,7 @@ English | [简体中文](README_cn.md)
 This directory compares the fused floating-point formats and validates X5
 policy outputs against a held-out native rollout.
 
-Scripts and historical data come from the X5 source release; evaluation and
-quantization recipes are the commands below.
+Use the commands below to compare floating-point models and X5 action outputs.
 
 <a id="dataset"></a>
 ## Data Contract
@@ -101,12 +100,7 @@ python3 samples/robotics/himloco/evaluator/compare_action_dumps.py \
 If `actions` was recorded by the exact exported policy, omit `--jit` and use
 `--action-key actions`.
 
-Action dumps are retained as a Runtime feature because this policy has no image
-or human-readable output. The 48-byte, source-indexed files provide a portable
-boundary between the X5-only Runtime and the host-side TorchScript evaluator,
-allow independent hashing and Python/C++ cross-checks, and avoid installing
-PyTorch on the board. They are generated validation evidence, not files to
-commit.
+Each action file contains 48 bytes and uses its source observation index as the filename. Copy these files from X5 to the host for TorchScript comparison or Python/C++ output comparison.
 
 | Script | Required | Defaults |
 | --- | --- | --- |
@@ -130,7 +124,7 @@ cosine, and equivalent joint-target errors using the `0.25` rad action scale.
 <a id="reference-results"></a>
 ## RDK X5 Performance Data
 
-The following are source-release measurements, taken with the same MIX model, 100 inputs and 10 warm-up calls:
+The following are reference measurements, taken with the same MIX model, 100 inputs and 10 warm-up calls:
 
 | Runtime | Timing scope | Min | Mean | P50 | P95 | Max | Sequential FPS |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -142,7 +136,7 @@ The timing scopes differ and exclude file I/O. Use `hrt_model_exec perf` for a
 standardized pure-model benchmark before publishing a formal performance claim.
 
 <a id="boundaries"></a>
-## Boundaries and validation workflow
+## Scope and validation workflow
 
 ```text
 JIT versus ONNX
@@ -152,7 +146,7 @@ JIT versus ONNX
   -> guarded robot validation
 ```
 
-Offline numerical agreement is necessary but does not establish control safety.
+For robot integration, evaluate the observation construction, joint mapping and closed-loop controller separately.
 
 ## License
 

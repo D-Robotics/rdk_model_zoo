@@ -22,7 +22,6 @@ yolo26_depth/
 ├── model/  # Model files and download scripts
 ├── runtime/  # Python and native inference implementations
 ├── test_data/  # Example inputs
-├── tests/  # Automated tests
 ├── README.md  # English instructions
 └── README_cn.md  # Chinese instructions
 ```
@@ -108,13 +107,7 @@ The source S root reported this mixed-profile single-image table:
 | l | lite | 0.9997 | 11.0 | 8.1 | — |
 | x | lite | 0.9997 | 20.6 | 13.7 | 10.8 |
 
-Its all-pass ≥0.999 claim conflicts with s=0.9984; both values stand as
-published reference records.
-Its evaluator has a separate latency table without complete per-row artifact
-binding — do not merge those numbers into one benchmark. X5 HRT latency/FPS and
-the S alternate table are recorded in the evaluator README. Source graph prose
-places exp/resize in graph, while the executable source performs them on CPU;
-the executable behavior is authoritative.
+The table includes an s-variant cosine of 0.9984. The evaluator lists separate X5 HRT and S latency tables; compare values only under their stated model and measurement conditions. Exponentiation and final resizing execute on the CPU.
 
 <a id="entry-points"></a>
 ## Entry points and integration

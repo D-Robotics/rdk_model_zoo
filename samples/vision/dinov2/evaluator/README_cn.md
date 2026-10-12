@@ -7,7 +7,7 @@
 <a id="dataset"></a>
 ## 数据集
 
-runtime 冒烟路径使用仓库 fixture：`samples/vision/dinov2/test_data/dog.jpg` 和 `bus.jpg`。PTQ 报告使用 50 张多样真实校准图，并说明另一组 50 张校准图配合独立导出脚本复现了相同数值。没有提供评估数据集准备脚本或固定数据集压缩包。校准准备由 `conversion/mapper.py` 实现，见 [`../conversion/README_cn.md`](../conversion/README_cn.md)。
+运行示例使用随附图像：`samples/vision/dinov2/test_data/dog.jpg` 和 `bus.jpg`。PTQ 报告使用 50 张多样真实校准图，并说明另一组 50 张校准图配合独立导出脚本复现了相同数值。没有提供评估数据集准备脚本或固定数据集压缩包。校准准备由 `conversion/mapper.py` 实现，见 [`../conversion/README_cn.md`](../conversion/README_cn.md)。
 
 ```text
 # cwd：仓库根目录
@@ -71,7 +71,7 @@ hrt_model_exec perf --model_file ../model/nash-p/dinov2_vits14_224_int16_nashp.h
 # 预期：锁定 performance governor 后，输出 200 帧的 BPU 延迟/吞吐
 ```
 
-精度评估需在主机用 ONNXRuntime 对相同预处理输入运行 float ONNX，在板端用 `hbm_runtime.HB_HBMRuntime(...).run` 运行 HBM，再分别计算 `cls_feat`、`patch_feat` 的 cosine。源 CLI 双图路径见 [`../runtime/python/README_cn.md`](../runtime/python/README_cn.md)。
+精度评估需在主机用 ONNXRuntime 对相同预处理输入运行 float ONNX，在板端用 `hbm_runtime.HB_HBMRuntime(...).run` 运行 HBM，再分别计算 `cls_feat`、`patch_feat` 的 cosine。CLI 双图用法见 [`../runtime/python/README_cn.md`](../runtime/python/README_cn.md)。
 
 | 参数 | 类型 | 示例默认值 | 说明 |
 | --- | --- | --- | --- |
@@ -89,14 +89,14 @@ hrt_model_exec perf --model_file ../model/nash-p/dinov2_vits14_224_int16_nashp.h
 | BPU 吞吐 | `hrt_model_exec perf` 报告的每秒帧数。 | 同一 200 帧运行；并发数按行给出。 |
 | Calibrated cosine | 校准/工具链输出与 float 参照之间每个 output 的 cosine。 | PTQ 报告，Nash-E，featuremap float32 输入、全 int16、默认 KL 校准。 |
 | Quantized cosine | 量化 output 与 float ONNX output 之间每个 output 的 cosine。 | PTQ 报告，仅 Nash-E；分别测量 `cls_feat`、`patch_feat`。 |
-| 板端 cosine 范围 | 板端 output 与 float ONNX 参照对拍的最小/最大 cosine。 | 相同预处理；分别记录 S100、S100P、S600。 |
+| 板端 cosine 范围 | 板端 output 与 float ONNX 参照比较的最小/最大 cosine。 | 相同预处理；分别记录 S100、S100P、S600。 |
 
 标准预处理为 OpenCV BGR→RGB，bicubic 将短边 resize 到 256，中心 crop 224，`/255`，ImageNet mean/std，contiguous float32 NCHW。比较发生在任何 softmax 或 L2 操作之前。
 
 <a id="outputs"></a>
 ## 输出
 
-评估结果写入命令中的 `--output-dir`：`result.json`（schema `rdk-model-zoo/embedding-relations/v1`）记录 target、asset ID、模型/输入 SHA-256、轻度变换定义、各 role 的 metadata、判定标准、cosine 数值与逐项检查；同目录下 `cls_feat.npz` 与 `patch_mean.npz` 分别保存该 role 的五个特征数组（`anchor`、`repeat`、`mild`、`positive`、`negative`）。全部 role 通过返回 0；关系不成立或模型/数值错误记录后返回 1。ONNX 精度需另行分别统计 cls_feat/patch_feat 的 cosine（无捆绑实现），用上文的板端复现命令执行。
+评估结果写入命令中的 `--output-dir`：`result.json`（schema `rdk-model-zoo/embedding-relations/v1`）记录 target、asset ID、模型/输入 SHA-256、轻度变换定义、各 role 的 元数据、判定标准、cosine 数值与逐项检查；同目录下 `cls_feat.npz` 与 `patch_mean.npz` 分别保存该 role 的五个特征数组（`anchor`、`repeat`、`mild`、`positive`、`negative`）。全部 role 通过返回 0；关系不成立或模型/数值错误记录后返回 1。ONNX 精度需另行分别统计 cls_feat/patch_feat 的 cosine（无捆绑实现），用上文的板端复现命令执行。
 
 <a id="reference-results"></a>
 ## 参考结果
@@ -124,7 +124,7 @@ hrt_model_exec perf --model_file ../model/nash-p/dinov2_vits14_224_int16_nashp.h
 
 记录说明，独立导出脚本和另一组 50 张校准图得到相同数值。
 
-### 板端 cosine 对拍 float ONNX
+### 板端与 float ONNX 的余弦相似度
 
 | Device | cls_feat | patch_feat |
 |---|---|---|

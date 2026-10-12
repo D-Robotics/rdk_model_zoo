@@ -7,7 +7,7 @@
 <a id="source-model"></a>
 ## 源模型
 
-源文档引用官方 [DiffusionDrive 项目](https://github.com/hustvl/DiffusionDrive)及 NAVSIM checkpoint，未固定 checkpoint URL/摘要、上游提交或导出器。[论文](https://openaccess.thecvf.com/content/CVPR2025/html/Liao_DiffusionDrive_Truncated_Diffusion_Model_for_End-to-End_Autonomous_Driving_CVPR_2025_paper.html)说明算法本身。如需复现重建，先取得匹配的模型代码、权重和导出流程。
+源文档引用官方 [DiffusionDrive 项目](https://github.com/hustvl/DiffusionDrive)及 NAVSIM 权重文件，未固定权重文件 URL/摘要、上游提交或导出器。[论文](https://openaccess.thecvf.com/content/CVPR2025/html/Liao_DiffusionDrive_Truncated_Diffusion_Model_for_End-to-End_Autonomous_Driving_CVPR_2025_paper.html)说明算法本身。如需复现重建，先取得匹配的模型代码、权重和导出流程。
 
 使用已发布资产推理时，直接按[模型准备](../model/README_cn.md)操作，无需自行转换。发布 HBM 的校验和认证这些发布文件；独立导出的模型需记录自己的摘要。
 
@@ -24,7 +24,7 @@ conversion/
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-源记录的 x86 Linux 工具链镜像：
+参考记录的 x86 Linux 工具链镜像：
 
 ```text
 registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0
@@ -35,7 +35,7 @@ registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0
 | S100P | `configs/diffusiondrive_r34_256x1024_s100p.yaml` | `nash-m` | `build/s100p/hbm/diffusiondrive_r34_256x1024_s100p.hbm` |
 | S600 | `configs/diffusiondrive_r34_256x1024_s600.yaml` | `nash-p` | `build/s600/hbm/diffusiondrive_r34_256x1024_s600.hbm` |
 
-两者均请求全图 INT16 激活/max 校准、O2/latency、1 核、32 个编译任务、开启缓存且输入/输出无 padding。源记录称 v3.7.0 不支持 INT16 GridSample，因此该算子保持 INT8。该图为 INT16 优先配置；各算子与公开 IO 张量的实际类型以编译产物 metadata 为准。配置仅覆盖 S100P/S600，无 S100/X5 配置。
+两者均请求全图 INT16 激活/max 校准、O2/latency、1 核、32 个编译任务、开启缓存且输入/输出无 padding。参考记录称 v3.7.0 不支持 INT16 GridSample，因此该算子保持 INT8。该图为 INT16 优先配置；各算子与公开 IO 张量的实际类型以编译产物元数据为准。配置仅覆盖 S100P/S600，无 S100/X5 配置。
 
 <a id="export"></a>
 ## 导出契约与缺失代码
@@ -51,7 +51,7 @@ registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0
 
 输出为轨迹 `[1,8,3]`、Agent 状态 `[1,30,5]`、Agent logits `[1,30]`、BEV logits `[1,7,128,256]`，名称见[运行契约](../runtime/python/README_cn.md#stage-io)。噪声保持显式输入。源说明要求将 ScatterND 式原位写入改为拼接，将固定自适应平均池化改为静态深度卷积。
 
-导出需完成上述改写，并提供相对本目录的 `build/diffusiondrive_navsim_bpu_clean_float.onnx`，与上文的输入/输出契约一致。PTQ 前应先将导出浮点输出与目标 checkpoint 验证对照。
+导出需完成上述改写，并提供相对本目录的 `build/diffusiondrive_navsim_bpu_clean_float.onnx`，与上文的输入/输出契约一致。PTQ 前应先将导出浮点输出与目标权重文件验证对照。
 
 <a id="calibration"></a>
 ## 校准准备
@@ -92,7 +92,7 @@ hrt_model_exec perf --model_file build/s100p/hbm/diffusiondrive_r34_256x1024_s10
 hrt_model_exec perf --model_file build/s100p/hbm/diffusiondrive_r34_256x1024_s100p.hbm --thread_num 2 --core_id 1 --input_file camera.bin,lidar.bin,status.bin,noise.bin
 ```
 
-源记录：全 INT8 BEV 余弦为 0.370948；只将四个 BEV 末端节点改为 INT16，余弦仍为 0.371840，平均 IoU 为 0.143013，剩余失真归因于上游 `/_backbone/Add_6` 融合特征。INT16 优先/max 后，S600 case_000 的 BEV 余弦、一致率、平均 IoU 为 0.998918、0.944061、0.868425；S100P 为 0.998913、0.943726、0.865501，五案例均值为 0.998799、0.955664、0.819837。
+参考记录：全 INT8 BEV 余弦为 0.370948；只将四个 BEV 末端节点改为 INT16，余弦仍为 0.371840，平均 IoU 为 0.143013，剩余失真归因于上游 `/_backbone/Add_6` 融合特征。INT16 优先/max 后，S600 case_000 的 BEV 余弦、一致率、平均 IoU 为 0.998918、0.944061、0.868425；S100P 为 0.998913、0.943726、0.865501，五案例均值为 0.998799、0.955664、0.819837。
 
 以下为源发布记录：所有分段在 BPU 执行、CPU 推理 0.0 ms；case_017 下 S100P 单线程14.370 ms /69.375 FPS、双线程总吞吐71.109 FPS；S600 为7.215 ms /138.247 FPS、双线程143.767 FPS。[评估说明](../evaluator/README_cn.md#reference-results)保留完整精度/性能表，并区分 case_000 数值对照和 case_017 profiling。
 
@@ -101,7 +101,7 @@ hrt_model_exec perf --model_file build/s100p/hbm/diffusiondrive_r34_256x1024_s10
 
 每个 HBM 保留在各自目标输出路径，同时保存编译日志以及 ONNX、校准、配置摘要清单。自定义转换的模型使用独立的资产身份与绑定：注册新资产、记录其摘要并显式验证。运行入口对发布路径验证发布 SHA-256，自定义制品通过其注册绑定与记录摘要运行；发布校验和保持不变。
 
-测试前检查实际名称、形状、类型、scale、zero point 和 axis。物理 HBM 元数据为权威依据，逻辑浮点参考仅用于数值对照。使用[离线评估器](../evaluator/README_cn.md)比较解码结果，同时保留原始张量与溯源记录。评估器报告描述性指标；发布门槛由你的发布流程确定。
+测试前检查实际名称、形状、类型、scale、zero point 和 axis。物理 HBM 元数据为权威依据，逻辑浮点参考仅用于数值对照。使用[离线评估器](../evaluator/README_cn.md)比较解码结果，同时保留原始张量与溯参考记录。评估器报告描述性指标；发布门槛由你的发布流程确定。
 
 <a id="known-gaps"></a>
 ## 补充准备

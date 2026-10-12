@@ -35,7 +35,7 @@ python3 samples/vision/pointnet/runtime/python/main.py --list-models
 
 有网络和 PyYAML 的主机或板端均可下载。下载器先写临时文件，再原子安装；不覆盖已有文件。
 发布方未给出 digest，因此无法独立认证已有文件。失败后恢复网络并重试显式命令，或向发布方
-取得同一个 HBM 放到默认位置。后缀或重命名不能证明目标兼容。
+取得同一个 HBM 放到默认位置。模型目标应为 S100。
 
 <a id="accompanying-files"></a>
 ## 伴随文件
@@ -46,7 +46,7 @@ back/seat/leg/arm 对应 0/1/2/3，无需额外下载类别词典、MVN 或配�
 <a id="local-paths"></a>
 ## 本地路径
 
-默认 `samples/vision/pointnet/model/s100/pointnet.hbm` 相对 sample 自身定位，不依赖 cwd。
+默认 `samples/vision/pointnet/model/s100/pointnet.hbm` 相对示例自身定位，不依赖 cwd。
 下载器 `--output-dir` 修改 `s100/pointnet.hbm` 的父目录。使用另一个确切制品路径时：
 
 ```bash
@@ -59,5 +59,5 @@ python3 samples/vision/pointnet/runtime/python/main.py --target s100 --asset-id 
 
 格式 `.hbm`；发布清单 `sha256: null (unknown)`。下载器输出的是观测 SHA-256，
 用于追踪，不能当作发布方校验值。加载要求单模型、float32 `(1,3,N)` 输入、`(1,N,4)` 输出。
-输出 dtype 取自 metadata 并校验；整数 logits 必须有有效 SCALE 参数。
+输出数据类型取自元数据并校验；整数 logits 必须有有效 SCALE 参数。
 这些检查用于选择与摘要校验；板端执行与 HBM 兼容性以实际加载为准。

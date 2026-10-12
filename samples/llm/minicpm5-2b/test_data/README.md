@@ -3,7 +3,7 @@ English | [简体中文](README_cn.md)
 # Generation reference data
 
 
-These prompts and measurements come from the source S release.
+Use these prompts to compare generated text and token IDs with the recorded references.
 
 ## Directory structure
 

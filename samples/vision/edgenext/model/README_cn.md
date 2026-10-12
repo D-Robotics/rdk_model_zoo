@@ -40,7 +40,7 @@ model/
 
 ```bash
 # 输入：目标/变体对应的 Manifest 行 — 输出：本目录下的文件
-# 成功判据：退出码 0，打印实测摘要；不残留半成品文件
+# 输出：退出码 0，打印实测摘要；不残留半成品文件
 bash samples/vision/edgenext/model/download.sh x5 base
 bash samples/vision/edgenext/model/download.sh x5 xx_small
 ```
@@ -49,8 +49,7 @@ Python 形式等价：
 `python3 samples/vision/edgenext/model/download.py --target x5 --variant small`。
 下载器经同目录临时文件写入，核对内容长度与 Manifest 记录的发布方
 SHA-256（如有），原子落盘且不覆盖已有文件（校验失败保留文件供排查）。
-当前各行没有发布方 SHA-256，下载器打印实测摘要作为本地证据。
-下载是显式动作，绝不发生在推理过程中。
+这些模型的发布方 SHA-256 未记录；下载器打印下载文件的 SHA-256。请先运行下载命令，再执行推理。
 
 <a id="accompanying-files"></a>
 ## 随伴文件
@@ -75,5 +74,4 @@ SHA-256（如有），原子落盘且不覆盖已有文件（校验失败保留�
 | `EdgeNeXt_x_small_224x224_nv12.bin` | bayes-e `.bin`，packed NV12 输入（224x224），F32 `[1,1000,1,1]` logits 输出 | null（未知） |
 | `EdgeNeXt_xx_small_224x224_nv12.bin` | bayes-e `.bin`，packed NV12 输入（224x224），F32 `[1,1000,1,1]` logits 输出 | null（未知） |
 
-Manifest 未记录这些行的发布方 SHA-256；未知值保持 `null（未知）`，
-绝不在制品间复制。下载器每次下载都打印实测摘要作为本地证据。
+Manifest 中的 SHA-256 为 `null (unknown)`。下载器打印下载文件的 SHA-256，供本地记录。

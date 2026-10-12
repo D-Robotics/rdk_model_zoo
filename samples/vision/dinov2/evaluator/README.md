@@ -7,7 +7,7 @@ Recorded performance and accuracy references for the exported artifacts, with th
 <a id="dataset"></a>
 ## Dataset
 
-The runtime smoke path uses the repository fixtures `samples/vision/dinov2/test_data/dog.jpg` and `bus.jpg`. The PTQ report used 50 diverse real calibration images; it also states that identical values were reproduced with an independent export and a different 50-image calibration set. No evaluator dataset preparation script or fixed dataset archive is supplied. Calibration preparation is implemented by `conversion/mapper.py` and documented in [`../conversion/README.md`](../conversion/README.md).
+The runtime command uses the bundled images `samples/vision/dinov2/test_data/dog.jpg` and `bus.jpg`. The PTQ report used 50 diverse real calibration images; it also states that identical values were reproduced with an independent export and a different 50-image calibration set. No evaluator dataset preparation script or fixed dataset archive is supplied. Calibration preparation is implemented by `conversion/mapper.py` and documented in [`../conversion/README.md`](../conversion/README.md).
 
 ```text
 # cwd: repository root
@@ -71,7 +71,7 @@ hrt_model_exec perf --model_file ../model/nash-p/dinov2_vits14_224_int16_nashp.h
 # expect: BPU latency/throughput over 200 frames, after locking the performance governor
 ```
 
-For accuracy, run the exported float ONNX with ONNXRuntime on the same preprocessed inputs, run the HBM with `hbm_runtime.HB_HBMRuntime(...).run` on the board, then compute cosine similarity separately for `cls_feat` and `patch_feat`. The source runtime CLI's two-image path is documented in [`../runtime/python/README.md`](../runtime/python/README.md).
+For accuracy, run the exported float ONNX with ONNXRuntime on the same preprocessed inputs, run the HBM with `hbm_runtime.HB_HBMRuntime(...).run` on the board, then compute cosine similarity separately for `cls_feat` and `patch_feat`. The runtime CLI's two-image usage is documented in [`../runtime/python/README.md`](../runtime/python/README.md).
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |

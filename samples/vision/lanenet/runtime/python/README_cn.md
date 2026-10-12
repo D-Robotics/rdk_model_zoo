@@ -50,7 +50,7 @@ bash samples/vision/lanenet/runtime/python/run.sh --target s100 --output outputs
 python3 -m samples.vision.lanenet.runtime.python.main --target s100 --asset-id s:lanenet:s100/lanenet256x512.hbm --model-path /data/models/lanenet256x512.hbm --test-img /data/road.jpg --output outputs/lanenet_external
 ```
 
-外部模型路径必须同时提供资产 ID。这只声明预期契约；缺少发布方校验和时，不能认证文件来源。不支持的目标显式失败，不静默选择 S100。
+外部模型路径必须同时提供资产 ID。这只声明预期契约；缺少发布方校验和时，不能认证文件来源。仅支持 S100。
 
 <a id="parameters"></a>
 ## 参数
@@ -59,17 +59,17 @@ python3 -m samples.vision.lanenet.runtime.python.main --target s100 --asset-id s
 | --- | --- | --- |
 | `--target` | `auto` | 解析为唯一已发布的 S100 契约；实际执行另检查物理身份 |
 | `--asset-id` | `null` | 自动推断精确发布身份；外部模型路径必填 |
-| `--model-path` | `null` | 解析至 sample 的 `model/s100/lanenet256x512.hbm` |
+| `--model-path` | `null` | 解析至示例的 `model/s100/lanenet256x512.hbm` |
 | `--test-img` | `samples/vision/lanenet/test_data/lane.jpg` | OpenCV BGR 输入图片 |
 | `--output` | `outputs/lanenet` | 新结果目录 |
-| `--instance-save-path` | `null` | 额外嵌入显示图路径；保留源参数 |
-| `--binary-save-path` | `null` | 额外二值显示图路径；保留源参数 |
+| `--instance-save-path` | `null` | 额外嵌入显示图路径 |
+| `--binary-save-path` | `null` | 额外二值显示图路径 |
 | `--priority` | `0` | SDK 优先级，校验 0..255 |
 | `--bpu-cores` | `[0]` | 一个或多个非负 SDK 核 ID；实际支持取决于运行库 |
 | `--list-models` | `false` | 只列清单，不执行 |
 | `--dry-run` | `false` | 只打印解析的身份与路径，不执行 |
 
-两个检查模式互斥。额外显示文件必须不存在、互不相同，不能覆盖正式结果。不隐式预热或计时。保留源 Python 的优先级 0、核 0 调度；原生入口使用源 UCP 默认调度。
+两个检查模式互斥。额外显示文件必须不存在、互不相同，不能覆盖正式结果。不隐式预热或计时。Python 默认使用优先级 0、BPU 核 0；原生入口使用 UCP 默认调度。
 
 <a id="results"></a>
 ## 结果
@@ -83,14 +83,14 @@ python3 -m samples.vision.lanenet.runtime.python.main --target s100 --asset-id s
 | `binary_pred.png` | 用 0/255 显示标签 |
 | `report.json` | 模型/输入摘要、真实元数据、调度、处理边界与可选显示路径 |
 
-不能直接把 NPZ 键当作语义名称，应使用报告中的映射。任务未消费的其他实际输出也保留原始值。源文案提到的第三个输出没有名称，本实现不虚构其身份。
+不能直接把 NPZ 键当作语义名称，应使用报告中的映射。任务未消费的其他实际输出也保留原始值。其他输出的名称以 SDK 元数据为准。
 
-显示时将嵌入渲染为彩色图：裁剪至 [0,1]，乘 255，按最近值、半数取偶舍入，并保留通道顺序；`embedding.npy` 不受影响。二值标签超出 0/1 时拒绝处理，不将其画成看似合理的掩码。结果保持 256×512，不插值回原图、不拟合车道。
+显示时将嵌入渲染为彩色图：裁剪至 [0,1]，乘 255，按最近值、半数取偶舍入，并保留通道顺序；`embedding.npy` 不受影响。二值标签超出 0/1 时拒绝处理，请检查模型输出类型和数值范围。结果保持 256×512，不插值回原图、不拟合车道。
 
 <a id="integration-example"></a>
 ## 应用集成
 
-在 S100 准备好默认模型后，从仓库根目录执行。使用与 CLI 相同的任务类和 runner，不绘图、不写结果文件：
+在 S100 准备好默认模型后，从仓库根目录执行。使用与 CLI 相同的任务类和推理执行器，不绘图、不写结果文件：
 
 ```python
 import cv2
@@ -114,7 +114,7 @@ assert set(details.raw) == set(task.binding.metadata.output_names)
 `LanePredictionDetails`（通过 `return_details=True` 显式开启）将常规结果与单次
 调用的 prepared 输入、原始输出打包返回，归档原始张量无需二次推理；默认
 `predict` 仍返回普通 `LaneResult`，task 不保存上一次输出。
-绘图与文件读写放在应用层。未建立应用层同步策略前，不应在并发调用间共享可变 SDK runner。
+绘图与文件读写放在应用层。未建立应用层同步策略前，不应在并发调用间共享可变 SDK 推理执行器。
 
 <a id="stage-io"></a>
 ## 阶段 IO 与绑定
@@ -126,7 +126,7 @@ assert set(details.raw) == set(task.binding.metadata.output_names)
 | `postprocess` | 与元数据匹配的原始映射 | `LaneResult`：CHW 浮点嵌入和 HW uint8 二值标签 |
 | `predict` | BGR 图像 | 组合上述三阶段；`return_details=True` 额外返回单次调用的 prepared 输入与原始输出 |
 
-既有的 `pre_process`、`forward`、`post_process` 名称保留为 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名字。
+`pre_process`、`forward`、`post_process` 分别是 `preprocess`、`infer`、`postprocess` 的别名。
 
 前处理保持源算术：BGR→RGB，INTER_AREA 拉伸到宽 512/高 256，/255，均值 `[0.485,0.456,0.406]`，标准差 `[0.229,0.224,0.225]`，转 CHW 并加 batch。校准数据复用同一纯图像函数。不增加 letterbox、sigmoid、softmax、argmax 或聚类。
 

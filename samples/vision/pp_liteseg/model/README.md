@@ -45,4 +45,4 @@ Default runtime path: `samples/vision/pp_liteseg/model/pp_liteseg_stdc1_cityscap
 <a id="formats-checksums"></a>
 ## Formats and checksums
 
-`sha256: null (unknown)`. The publisher manifest has no trusted digest. Download preparation prints an observed digest, which can track local copies but cannot independently authenticate the publisher. Runtime validates file availability and tensor metadata; exact asset-id asserts the requested contract, not proof of custom file provenance. BIN is for X5, not interchangeable with Nash HBM.
+`sha256: null (unknown)`. The publisher manifest has no trusted digest. Download preparation prints an observed digest, which can track local copies but cannot independently authenticate the publisher. Runtime validates file availability and tensor metadata; the asset ID selects the requested input/output contract. BIN is for X5, not interchangeable with Nash HBM.

@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# KWS Python runtime
+# KWS Python 推理
 
 <a id="overview"></a>
 ## Python 推理
@@ -99,11 +99,11 @@ print(score)
 <a id="stage-io"></a>
 ## 阶段及生命周期
 
-`preprocess` 接受非空、有限、单声道 float32 `[N]` 波形，幅值 [-1,1]，采样率 16000。复制前 60000 个点，短段补零，不暗中重采样或平均声道。PaddleAudio fbank 使用 25 ms 帧、10 ms 移动、80 bins 及源默认值（包括 dither=0、snip_edges=True），得到 373 帧。具名 `[1,373,80]` 张量独立持有连续数据。
+`preprocess` 接受非空、有限、单声道 float32 `[N]` 波形，幅值 [-1,1]，采样率 16000。复制前 60000 个点，短段补零，调用前准备好单声道 16 kHz 音频。PaddleAudio fbank 使用 25 ms 帧、10 ms 移动、80 bins 及源默认值（包括 dither=0、snip_edges=True），得到 373 帧。具名 `[1,373,80]` 张量独立持有连续数据。
 
 `infer` 仅调用一次共享 runner，返回原始输出，不做 sigmoid、反量化、文件访问或最大值计算。runner 核验名称/形状/类型/有限值并复制 SDK 输出，后续调用不会覆盖旧结果。`postprocess` 核验绑定输出，仅对整数用共享 SCALE 转换，要求结果在 [0,1] 后取最大值；float 输出即使附带历史量化描述符也不再转换，不额外 sigmoid。
 
-`predict` 仅组合三阶段，不缓存上一次音频状态。既有 `pre_process`、`forward`、`post_process` 名称仍是 `preprocess`、`infer`、`postprocess` 的可导入薄别名——同一实现，两个名称。实例用于串行执行，不承诺 SDK 并发安全。`kws.py` 准备特征（固定 MDTC 前端）、负责评分与 Runtime 初始化；`cli.py` 读取音频文件、解析发布选择并保存报告。
+`predict` 组合三个阶段。`pre_process`、`forward`、`post_process` 分别是 `preprocess`、`infer`、`postprocess` 的别名。同一实例应串行调用。`kws.py` 提供 MDTC 前端、评分及 Runtime 初始化；`cli.py` 读取音频、选择模型并保存报告。
 
 <a id="troubleshooting"></a>
 ## 排错

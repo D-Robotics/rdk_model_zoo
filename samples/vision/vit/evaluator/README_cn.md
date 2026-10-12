@@ -1,12 +1,12 @@
 [English](README.md) | 简体中文
 
 # ViT 评测
-使用随附图片进行单图分类检查。计算数据集精度时，准备对应验证集及逐图真值类别索引，并将其与运行时返回的 Top-1 类别 ID 对照。
+使用随附图片进行单图分类。计算数据集精度时，准备对应验证集及逐图真值类别索引，并将其与运行时返回的 Top-1 类别 ID 对照。
 
 <a id="dataset"></a>
 
 ## 数据集
-功能检查使用随附的十张 CIFAR-10 图片，每类一张。数据集级精度使用完整 CIFAR-10 测试集。为每张测试图准备其真值类别索引（0–9），并与运行时返回的 Top-1 类别 ID 对照；随附示例覆盖每个类别一张图片。
+单图分类使用随附的十张 CIFAR-10 图片，每类一张。数据集级精度使用完整 CIFAR-10 测试集。为每张测试图准备其真值类别索引（0–9），并与运行时返回的 Top-1 类别 ID 对照；随附示例覆盖每个类别一张图片。
 
 <a id="directory"></a>
 ## 目录结构
@@ -20,18 +20,14 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-[运行时前提](../runtime/python/README_cn.md#environment)。板端功能检查
+[运行时前提](../runtime/python/README_cn.md#environment)。板端分类
 需要带 `hbm_runtime` 的 S100 板卡与已准备的制品；评估不需要 OE 环境。
 
 <a id="command"></a>
 ## 命令
 
-```bash
-# cwd: repository root; expected: unittest OK, exit 0
-python3 -m unittest discover -s samples/vision/vit/tests -v
-```
 
-准备模型后在匹配板卡上执行功能检查；换用 int16 制品并遍历其余随附
+准备模型后在匹配板卡上执行单图分类；换用 int16 制品并遍历其余随附
 图片可扩大功能覆盖：
 
 ```bash
@@ -51,7 +47,6 @@ python3 samples/vision/vit/runtime/python/main.py --target s100 --variant int8 \
 
 | 指标 | 定义 | 条件 |
 | --- | --- | --- |
-| 契约通过 | 运行时接受制品，张量名/形状/dtype 与绑定一致，返回一个 F32 分数向量 | 已准备制品在匹配的 S100 板卡上 |
 | Top-K 一致 | 同一制品重复运行 softmax 后 Top-K 类别 ID 相同，分数差在 1e-5 内 | 同板、同制品字节、同图、同 resize、同 Top-K |
 | Top-1 / Top-5 精度 | 真值分别为 rank-1 / 落在选中的 K 个类别中 | 在用户准备的 CIFAR-10 测试集上度量 |
 | 延迟 / FPS | 在匹配板卡上的推理计时 | 使用匹配板卡运行样例入口并记录实测值 |
@@ -59,10 +54,7 @@ python3 samples/vision/vit/runtime/python/main.py --target s100 --variant int8 \
 <a id="outputs"></a>
 ## 输出
 
-主机测试输出 unittest 结果。板端功能检查在 stdout 打印 Top-K（类别
-ID、分数、标签），可用 `--img-save-path` 可选写标注图。记录运行时，
-保存板卡身份、模型引用、命令行、原始 F32 分数张量与 Top-K 输出，
-并附图像路径与 resize 类型。
+板端命令在终端打印 Top-K 类别 ID、分数和标签。使用 `--img-save-path` 保存标注图。比较结果时，一并记录板卡、模型、命令、输入图像、缩放方式和原始分数。
 
 <a id="reference-results"></a>
 ## 参考结果

@@ -72,7 +72,7 @@ python3 -m samples.vision.yolov5.runtime.python.main \
 <a id="results"></a>
 ## Results
 
-The CLI prints `boxes`, `scores`, and `class_ids`, then saves the image path given by `--img-save-path`. `YOLOv5Task.infer` (alias `forward`) returns native output arrays without dequantization or reshaping; `postprocess` (alias `post_process`) applies S metadata dequantization when required, sigmoid/anchor decoding, thresholding, NMS, and inverse geometry. X5 intentionally preserves the source quirk of passing XYXY boxes to OpenCV `NMSBoxes` (which treats the list as XYWH); S uses class-wise XYXY NMS. This visible difference is part of the target protocol.
+The CLI prints `boxes`, `scores`, and `class_ids`, then saves the image path given by `--img-save-path`. `YOLOv5Task.infer` (alias `forward`) returns native output arrays without dequantization or reshaping; `postprocess` (alias `post_process`) applies S metadata dequantization when required, sigmoid/anchor decoding, thresholding, NMS, and inverse geometry. X5 passes XYXY boxes to OpenCV `NMSBoxes`, which interprets them as XYWH. S uses class-wise XYXY NMS, so results can differ between targets.
 
 <a id="integration-example"></a>
 ## Integration example

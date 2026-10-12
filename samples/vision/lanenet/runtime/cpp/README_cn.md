@@ -34,7 +34,7 @@ cpp/
 | 目标 | 已发布契约 | 运行支持 |
 | --- | --- | --- |
 | S100 | `s:lanenet:s100/lanenet256x512.hbm` | supported |
-| S100P / S600 / X5 | 本 sample 无对应资产 | 显式拒绝，不回退至 S100 |
+| S100P / S600 / X5 | 本示例无对应资产 | 显式拒绝，不回退至 S100 |
 
 启动器与原生资源管理器均在调用 SDK 前检查板卡身份，启动器还会在构建前检查。`--dry-run` 和 `--list-models` 不需要板卡或 SDK。`auto` 解析到唯一已发布的 S100 契约；实际运行还需本机满足 S100 身份与 SDK 条件。
 
@@ -65,7 +65,7 @@ bash samples/vision/lanenet/runtime/cpp/run.sh --target s100 --build --output ou
 <a id="run"></a>
 ## 运行
 
-构建成功后，省略 `--build` 复用 sample 的二进制：
+构建成功后，省略 `--build` 复用示例的二进制：
 
 ```bash
 bash samples/vision/lanenet/runtime/cpp/run.sh --target s100 --output outputs/lanenet_cpp_next
@@ -88,7 +88,7 @@ python3 samples/vision/lanenet/runtime/cpp/launcher.py --target s100 --asset-id 
 | --- | --- | --- |
 | `--target` | `s100` | `auto` 或 S100 契约；其余可选目标显式拒绝 |
 | `--asset-id` | `null` | 自动选择已发布资产；指定外部模型时必填 |
-| `--model-path` | `null` | 解析至 sample 的 `model/s100/lanenet256x512.hbm` |
+| `--model-path` | `null` | 解析至示例的 `model/s100/lanenet256x512.hbm` |
 | `--test-img` | `samples/vision/lanenet/test_data/lane.jpg` | OpenCV 读取的 BGR 图像 |
 | `--output` | `outputs/lanenet_cpp` | 新结果目录 |
 | `--instance-save-path` | `null` | 可选的额外嵌入特征显示图 |
@@ -116,7 +116,7 @@ python3 samples/vision/lanenet/runtime/cpp/launcher.py --target s100 --asset-id 
 | `postprocess` | 原始张量向量 | `LaneResult`：独立持有的原始输出，加 float32 CHW `[3,256,512]` 嵌入特征和 uint8 `[256,512]` 标签（必须为 0 或 1） |
 | `predict` | BGR 图像 | 组合上述三阶段，不写文件或绘图 |
 
-原生输出必须有唯一的 float32 `[1,3,256,512]` 嵌入张量，以及唯一的 int64 `[1,1,256,512]` 或 `[1,256,512]` 二值张量。按唯一形状和类型绑定角色，不假设输出索引；有歧义则报错。其他实际观察到的数值输出按索引原样保留，不虚构名称或语义；原生实现不查询输出名称。[Python 入口](../python/README_cn.md)按其 SDK 暴露的两个必需名称绑定。
+原生输出必须有唯一的 float32 `[1,3,256,512]` 嵌入张量，以及唯一的 int64 `[1,1,256,512]` 或 `[1,256,512]` 二值张量。按唯一形状和类型绑定角色，不假设输出索引；有歧义则报错。其他实际观察到的数值输出按索引原样保留，名称和含义以实际模型元数据为准；原生实现不查询输出名称。[Python 入口](../python/README_cn.md)按其 SDK 暴露的两个必需名称绑定。
 
 张量复制检查所有字节步长，包括宽度填充，并拒绝重叠或越界布局。每条路径都检查 SDK 返回值——包括任务提交、等待与释放——已完成的任务恰好释放一次；作用域清理覆盖部分初始化、分配、提交和等待失败。错误以 C++ 异常抛出，入口打印后以退出码 2 退出。返回张量独立持有数据，推理任务释放后仍然有效。
 

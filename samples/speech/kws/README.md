@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# KWS — MDTC keyword spotting
+# KWS: MDTC keyword spotting
 
 <a id="overview"></a>
 ## Overview
@@ -11,7 +11,7 @@ This sample runs the published MDTC wake-word model on mono 16 kHz audio. It ret
 
 The published S100 asset implements MDTC (Multi-Scale Dynamic Temporal Convolution) from the PaddlePaddle + PaddleAudio speech stack. Its published description uses multi-scale temporal convolutions to capture features at different time scales and dynamic convolution to adapt weights across speakers and environments.
 
-The deployment pipeline cuts mono 16 kHz float32 audio to 60000 samples (3.75 seconds; shorter clips are zero-padded). PaddleAudio fbank uses 25 ms frames, 10 ms shift and 80 mel bins to produce `[1, 373, 80]`; the BPU model returns keyword probabilities, and post-processing takes their maximum without adding sigmoid. The application decision is `score >= threshold` (default `0.5`). Set the threshold for the intended application using labeled positive and negative clips. The task composes preprocess → infer → postprocess through predict; audio files, SDK transport, feature extraction and scoring have separate modules.
+The deployment pipeline cuts mono 16 kHz float32 audio to 60000 samples (3.75 seconds; shorter clips are zero-padded). PaddleAudio fbank uses 25 ms frames, 10 ms shift and 80 mel bins to produce `[1, 373, 80]`; the BPU model returns keyword probabilities, and post-processing takes their maximum without adding sigmoid. The application decision is `score >= threshold` (default `0.5`). Set the threshold for the intended application using labeled positive and negative clips. Call `predict` to run preprocessing, inference and scoring.
 
 <a id="directory"></a>
 ## Directory structure
@@ -79,7 +79,7 @@ Success exits 0 and writes `result.json`: score, threshold, `detected`, actual S
 - [Model preparation](model/README.md)
 - [Python run, parameters and API](runtime/python/README.md)
 - [Conversion availability](conversion/README.md)
-- [Metrics and historical performance](evaluator/README.md)
+- [Metrics and performance](evaluator/README.md)
 - [Test audio](test_data/README.md)
 
 <a id="license"></a>

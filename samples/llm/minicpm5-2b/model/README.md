@@ -76,4 +76,4 @@ HBM is the board model; the S600 FP16 embedding is companion data. Tokenizer and
 | `MODEL_DIR` | Defaults to `<board>` below this directory; use separate target directories |
 | `MINICPM5_MODEL_URL` | Override archive URL without changing pinned hashes; not for an arbitrary new model |
 
-Requires Bash, curl, tar and sha256sum. The SDK is not included. Versions, sizes and digests above are the source release's published records.
+Requires Bash, curl, tar and sha256sum. The SDK is not included. Versions, sizes and digests above describe the published archives.

@@ -34,7 +34,7 @@ test_data/
 
 ## 文件与参考输出
 
-默认数据为 `reference_inputs.npz`、`reference_outputs.npz`，`reference_result.png` 为源记录显示图。每个案例目录包含 `inputs.npz`、`reference_outputs.npz`、`result.png`。
+默认数据为 `reference_inputs.npz`、`reference_outputs.npz`，`reference_result.png` 为参考记录显示图。每个案例目录包含 `inputs.npz`、`reference_outputs.npz`、`result.png`。
 
 | 浮点参考张量 | 形状 | 含义 |
 | --- | --- | --- |
@@ -43,7 +43,7 @@ test_data/
 | `agent_labels` | `[1,30]` | Agent logits，不是概率 |
 | `bev_semantic_map` | `[1,7,128,256]` | 七类 BEV logits，不是标签 |
 
-源记录它们为 PyTorch 浮点输出，不是标注真值；上游 checkpoint/导出修订未随附发布。随附数组均为有限 float32，运行结果另有原始与解码两种契约。
+参考记录它们为 PyTorch 浮点输出，不是标注真值；上游 checkpoint/导出修订未随附发布。随附数组均为有限 float32，运行结果另有原始与解码两种契约。
 
 ## 五个 S600 示例
 
@@ -65,7 +65,7 @@ test_data/
 | case_073 | case_099 |
 | ![参考大道结果](case_073/result.png) | ![参考宽阔路口结果](case_099/result.png) |
 
-另保留[默认源记录结果](reference_result.png)和 [case_000 源记录结果](case_000/result.png)。
+另保留[默认参考记录结果](reference_result.png)和 [case_000 参考记录结果](case_000/result.png)。
 
 ## 运行示例
 

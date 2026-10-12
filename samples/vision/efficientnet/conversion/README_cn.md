@@ -70,7 +70,7 @@ cwd：本 `conversion/` 目录。先安装导出依赖（在合适的 Python 3 �
 ```bash
 # 输入：timm 权重 tf_efficientnet_lite0.in1k（由 timm 下载）
 # 输出：./tf_efficientnet_lite0.onnx（opset 11，经 onnxsim 化简）
-# 成功判据：脚本打印参数量并输出 "Simplified model is valid."
+# 输出：脚本打印参数量并输出 "Simplified model is valid."
 python3 get_efficientnet_lite0_onnx.py
 ```
 
@@ -169,7 +169,7 @@ cwd：本 `conversion/` 目录。一个脚本服务全部五个变体：
 ```bash
 # 输入：ILSVRC2012_val_*.JPEG 图像（脚本使用排序后的前 100 张）
 # 输出：./calibration_data_rgb/*.npy（float32），与 YAML 的 cal_data_dir 一致
-# 成功判据：打印 "成功生成 ... 个校准数据文件"（列出 100 个文件）
+# 输出：打印 "成功生成 ... 个校准数据文件"（列出 100 个文件）
 python3 get_calibration_data.py
 ```
 
@@ -185,7 +185,7 @@ Scale(255.0) → Mean([127,127,127]) → Scale(0.007843)`，已与每份 YAML �
    该相对路径在本仓库中**无法**解析——目录不存在。运行前请把
    `src_image_dir` 改为你自己的 ILSVRC2012 验证集 JPEG 目录。
 2. resize/crop 对**所有**变体固定为 224（包括 240/260/300/380 的
-   lite1..lite4）；配方对全部变体复用同一套校准数据，按交付原样。
+   lite1..lite4）；配方对全部变体复用同一套校准数据。
 
 <a id="compile"></a>
 ## 编译（S 配方）

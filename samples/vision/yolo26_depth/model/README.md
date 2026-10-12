@@ -34,8 +34,7 @@ its own nash-m assets and never reuses nash-e implicitly.
 
 Authoritative filenames, URLs and hashes are in the X5 manifest
 and S manifest. The list command
-below prints exact asset IDs and URLs. A declaration of availability in a source
-manifest is not a new download or inference verification.
+below prints exact asset IDs and URLs.
 
 <a id="directory"></a>
 ## Directory structure

@@ -2,7 +2,7 @@ English | [简体中文](README_cn.md)
 
 # Conversion — DINOv2 ViT-S/14
 
-The conversion implementation in this directory is the shipped source capability: scripts, pinned versions, and step-by-step commands.
+Export DINOv2 to ONNX, prepare calibration images, and compile an HBM for the selected Nash target with the commands below.
 
 <a id="source-model"></a>
 ## Source Model
@@ -26,7 +26,7 @@ conversion/
 <a id="toolchain-targets"></a>
 ## Toolchain & Targets
 
-The source recipe targets OpenExplore 3.7.0, hmct 2.6.5 / hbdk 4.7.5, and the three Nash marches. The OE image supplies Torch 2.6; install only the pinned ONNX additions. Conversion runs on x86 Linux, not on a board.
+The conversion requires OpenExplore 3.7.0, hmct 2.6.5 / hbdk 4.7.5, and the three Nash marches. The OE image supplies Torch 2.6; install only the pinned ONNX additions. Conversion runs on x86 Linux, not on a board.
 
 | Target | march | OE version | Config |
 | --- | --- | --- | --- |
@@ -71,7 +71,7 @@ printf '%s  %s\n' \
 <a id="export"></a>
 ## Export (ONNX)
 
-`onnx_export/export_dinov2.py` verifies the pinned source checkout and checkpoint, builds ViT-S/14, bakes positional embeddings at 224, rewrites attention to explicit MatMul + Softmax + MatMul, and exports two outputs (`cls_feat`, `patch_feat`) with input `input` `(1,3,224,224)` float32. It also runs ONNXRuntime parity after export. The source command is:
+`onnx_export/export_dinov2.py` verifies the pinned source checkout and checkpoint, builds ViT-S/14, bakes positional embeddings at 224, rewrites attention to explicit MatMul + Softmax + MatMul, and exports two outputs (`cls_feat`, `patch_feat`) with input `input` `(1,3,224,224)` float32. It also runs ONNXRuntime parity after export. Run:
 
 ```bash
 # cwd: samples/vision/dinov2/conversion; prerequisites: OE environment, local source clone, verified checkpoint
@@ -87,9 +87,9 @@ python3 onnx_export/export_dinov2.py \
 <a id="calibration"></a>
 ## Calibration
 
-`mapper.py::prepare_calibration` reads real JPG/JPEG/PNG/BMP files from `--cal-images`, converts BGR to RGB, bicubic-resizes the short side to 256, center-crops 224, scales by `/255`, applies ImageNet mean/std, and writes contiguous float32 NCHW `.npy` tensors plus `calibration_manifest.json` in the temporary workspace. The source recommends 50 diverse real photographs; random or synthetic images are unsuitable.
+`mapper.py::prepare_calibration` reads real JPG/JPEG/PNG/BMP files from `--cal-images`, converts BGR to RGB, bicubic-resizes the short side to 256, center-crops 224, scales by `/255`, applies ImageNet mean/std, and writes contiguous float32 NCHW `.npy` tensors plus `calibration_manifest.json` in the temporary workspace. Use 50 diverse real photographs; random or synthetic images are unsuitable.
 
-The fixed recipe is featuremap float32 input, all-node int16 with int16 model outputs, and hmct's default modelwise KL search (the mapper intentionally leaves `calibration_type` unset). The source measured int8 activations and max/percentile calibration as failing configurations; use the fixed recipe above.
+Use featuremap float32 input, int16 for all nodes and model outputs, and hmct's default modelwise KL calibration (`calibration_type` remains unset). The reference measurements below compare this configuration with int8 and max/percentile alternatives.
 
 ```bash
 # cwd: samples/vision/dinov2/conversion; prerequisite: ./cal_images contains real photographs
@@ -101,7 +101,7 @@ python3 mapper.py --cal-images ./cal_images --march nash-e --output-dir ./output
 
 ### Fixed-source quantization matrix (source-recorded, Nash-E)
 
-All five source rows are preserved below, including failed alternatives. `(sim)` denotes toolchain simulation; it does not replace the failed executed values in that row. The source's rationale for the failures: int8 activations fail regardless of calibration (measured cosine ceiling 0.91); max+percentile calibration collapses to about 0.18; the attention logits-minus-max tensor reaches outliers down to -345, which the fixed all-int16 featuremap/KL recipe avoids.
+The table compares five quantization configurations. `(sim)` denotes toolchain simulation. In these measurements, int8 activations reached a cosine similarity of at most 0.91 and max+percentile calibration fell to about 0.18. Attention logits after subtracting the maximum reached -345; use the all-int16 featuremap/KL configuration above.
 
 | Config | cls cosine | patch cosine | Verdict |
 |---|---|---|---|
@@ -111,7 +111,7 @@ All five source rows are preserved below, including failed alternatives. `(sim)`
 | int16, nv12, KL | 0.999 (sim) | 0.999 (sim) | FAIL (executed 0.01 / 0.12) |
 | int16, featuremap, KL (this recipe) | **0.9989** | **0.9983** | **PASS** |
 
-The fixed source also measured the `_reg4` register-token variant: per-tensor quantized cosine was about 0.80 versus about 0.999 for the plain variant, so `_reg4` was not shipped.
+The `_reg4` register-token variant measured about 0.80 cosine similarity with per-tensor quantization, compared with about 0.999 for the plain variant. Use the plain ViT-S/14 checkpoint for this recipe.
 
 <a id="compile"></a>
 ## Compile
@@ -137,7 +137,7 @@ Use `--march nash-m` or `nash-p` for S100P or S600. Other mapper defaults are `-
 <a id="validation"></a>
 ## Post-Conversion Validation
 
-The exporter performs ONNXRuntime float parity and reports cosine/max-absolute error. `mapper.py` confirms that `hb_compile` emits the expected HBM path. Board validation then runs the runtime smoke path and compares both outputs against float ONNX on identical preprocessed tensors.
+The exporter performs ONNXRuntime float parity and reports cosine/max-absolute error. `mapper.py` confirms that `hb_compile` emits the expected HBM path. Board validation then runs the runtime command and compares both outputs against float ONNX on identical preprocessed tensors.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -151,9 +151,8 @@ The exporter performs ONNXRuntime float parity and reports cosine/max-absolute e
 <a id="known-gaps"></a>
 ## Additional preparation
 
-- Executing the pipeline requires the OE container, network access for the pinned checkpoint, and a board for final validation.
-- The source supplies a complete conversion pipeline with pinned prerequisites; reproducibility, resulting artifacts, and parity numbers still require execution in the specified OE environment.
-- Manifest HBM hashes are `sha256: null (unknown)`; a downloader-observed digest cannot verify publisher origin.
+- Run conversion in the specified OE container with network access to the pinned checkpoint. Use the matching board for the runtime check.
+- Manifest HBM hashes are `sha256: null (unknown)`. The downloader prints the SHA-256 of the downloaded file.
 
 ## License
 

@@ -50,7 +50,7 @@ From the repository root:
 
 ```bash
 # input: manifest row for the target/variant — output: file under this directory
-# success: exit 0, observed digest printed; no partial files left behind
+# output: exit 0, observed digest printed; no partial files left behind
 bash samples/vision/efficientnet/model/download.sh x5 b2
 bash samples/vision/efficientnet/model/download.sh s100 lite4
 bash samples/vision/efficientnet/model/download.sh s600 lite0
@@ -58,7 +58,7 @@ bash samples/vision/efficientnet/model/download.sh s600 lite0
 
 The Python form is equivalent:
 `python3 samples/vision/efficientnet/model/download.py --target s100 --variant lite1`.
-Omitting the variant resolves each target's source default (x5 `b2`,
+Omitting the variant resolves each target's default (x5 `b2`,
 s100/s600 `lite0`), matching the runtime's omitted-variant behavior; an
 explicit `--variant` always selects exactly.
 The downloader checks content length and any manifest SHA-256, then installs the artifact atomically without overwriting an existing file. It prints the computed digest after transfer; the manifest SHA-256 is `null (unknown)` for these rows. Run the downloader before inference to place the selected artifact under this directory.

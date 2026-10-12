@@ -30,7 +30,7 @@ X5 构建模型。先准备 ONNX 图与 PTQ 配置，再使用 OE 包提供的
 <a id="export"></a>
 ## ONNX 导出
 
-导出的 GoogLeNet ONNX 图需满足 脚本 的运行时契约：NV12 打包前的
+导出的 GoogLeNet ONNX 图需满足脚本的运行时输入输出要求：NV12 打包前的
 RGB/NCHW 224×224 输入，以及 1000 类分数输出。
 
 <a id="calibration"></a>
@@ -41,7 +41,7 @@ RGB/NCHW 224×224 输入，以及 1000 类分数输出。
 <a id="compile"></a>
 ## 编译
 
-准备符合运行时契约的 ONNX 图与 PTQ 配置（见
+准备符合运行时输入输出要求的 ONNX 图与 PTQ 配置（见
 [补充准备](#known-gaps)），再使用上文 OE 编译命令。推理请使用
 [model/README_cn.md](../model/README_cn.md) 的发布制品路线。
 
@@ -50,8 +50,7 @@ RGB/NCHW 224×224 输入，以及 1000 类分数输出。
 
 重建模型的运行时协议为：NV12 打包前 `1x3x224x224` 输入、
 ImageNet-1k 分类 logits 输出（squeeze 后 1000 分数的单 F32 向量）。
-重建模型可用准确契约引用加外部 `--model-path` 选择；其哈希/来源必须
-与发布制品分开记录。发布制品的功能检查：
+重建模型可用对应模型引用加外部 `--model-path` 选择。发布制品的功能检查：
 
 ```bash
 # cwd: repository root on X5
@@ -67,4 +66,4 @@ python3 samples/vision/googlenet/runtime/python/main.py --target x5 --variant go
 <a id="known-gaps"></a>
 ## 补充准备
 
-推理时按 [model/download.sh](../model/README_cn.md) 准备已发布的 X5 模型。构建替代制品时，先准备符合[源模型](#source-model)运行时契约的 ONNX 图、匹配的校准数据与归一化配置，并为 X5 OE 工具链配置 PTQ YAML。编译后使用样例运行时运行该制品。
+推理时按 [model/download.sh](../model/README_cn.md) 准备已发布的 X5 模型。构建替代制品时，先准备符合[源模型](#source-model)运行时输入输出要求的 ONNX 图、匹配的校准数据与归一化配置，并为 X5 OE 工具链配置 PTQ YAML。编译后使用样例运行时运行该制品。

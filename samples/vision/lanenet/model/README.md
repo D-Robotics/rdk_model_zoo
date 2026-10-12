@@ -58,7 +58,7 @@ Default inference resolves this directory's `s100/lanenet256x512.hbm`. An extern
 python3 -m samples.vision.lanenet.runtime.python.main --target s100 --asset-id s:lanenet:s100/lanenet256x512.hbm --model-path /data/lanenet-models/s100/lanenet256x512.hbm --dry-run
 ```
 
-Dry-run does not open the HBM. Real loading checks board identity and actual model metadata. A matching asset ID is a caller declaration of the intended contract, not proof that arbitrary supplied bytes are the published model. Locally compiled artifacts also need full metadata and numerical validation; do not report their measured digest as a publisher checksum.
+Dry-run does not open the HBM. Real loading checks board identity and actual model metadata. Supply an asset ID matching the model input/output contract. Locally compiled artifacts also need full metadata and numerical validation; do not report their measured digest as a publisher checksum.
 
 <a id="formats-checksums"></a>
 ## Format and checksums

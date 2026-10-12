@@ -72,7 +72,7 @@ python -m samples.vision.depth_anything_v2.runtime.python.main --target s100 \
 ```
 
 An explicit model path requires the exact asset ID. That reference selects a
-contract, not proof that arbitrary file bytes are the published HBM. The runtime
+contract. Use the HBM matching that input/output contract. The runtime
 records the observed file digest and validates IO metadata. Custom artifacts
 with different normalization, geometry or semantics require a new binding; a
 filename change cannot make them compatible.

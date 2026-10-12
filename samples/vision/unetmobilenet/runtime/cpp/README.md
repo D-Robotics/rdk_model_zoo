@@ -22,7 +22,6 @@ cpp/
 │   ├── main.cpp  # thin entry: parse options, construct model, predict, save
 │   ├── cli.cpp  # option parsing, overlay rendering, image/mask/report writing
 │   └── segment.cpp  # preprocess/infer/postprocess, NV12 binding, decode, SDK handles
-├── tests/  # Automated tests (score contract + resource cleanup with fake SDK headers)
 ├── CMakeLists.txt  # RDK_TARGET-gated build definition
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions

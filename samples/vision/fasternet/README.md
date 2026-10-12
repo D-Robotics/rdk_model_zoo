@@ -85,12 +85,12 @@ fasternet/
 
 Board Python execution needs the board image's matching `hbm_runtime`,
 NumPy, and OpenCV-Python; the SDK is imported only when a model executes
-(`--help`, `--list-models`, `--dry-run`, and host tests need no SDK).
+(`--help`, `--list-models`, `--dry-run` need no SDK).
 Manifest reading also needs PyYAML. On a development host, install the
 user-space dependencies from `requirements-host.txt`:
 
 ```bash
-# cwd: repository root — success: "host dependencies: ok"
+# cwd: repository root — output: "host dependencies: ok"
 python3 -m venv .venv-fasternet
 source .venv-fasternet/bin/activate
 python3 -m pip install -r samples/vision/fasternet/requirements-host.txt
@@ -107,12 +107,12 @@ manifest's model server.
 ```bash
 # 1. Prepare the artifact (input: manifest row x5:fasternet:FasterNet_S_224x224_nv12.bin)
 #    output: samples/vision/fasternet/model/FasterNet_S_224x224_nv12.bin
-#    success: downloader exits 0 and prints the observed digest
+#    output: downloader exits 0 and prints the observed digest
 bash samples/vision/fasternet/model/download.sh x5 s
 
 # 2. Run classification (input: the artifact above plus the bundled test image)
 #    output: Top-5 class ids, scores, labels on stdout
-#    success: exit code 0 and a printed Top-5 list
+#    output: exit code 0 and a printed Top-5 list
 python3 samples/vision/fasternet/runtime/python/main.py \
   --target x5 \
   --asset-id x5:fasternet:FasterNet_S_224x224_nv12.bin \
@@ -129,7 +129,7 @@ python3 samples/vision/fasternet/runtime/python/main.py \
 ## Expected results
 
 The Python run prints a stable Top-K (default 5) of class IDs, scores, and
-labels and exits 0; Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. With the bundled `drake.JPEG` the Top-5 contains a
+labels and exits 0. Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. With the bundled `drake.JPEG` the Top-5 contains a
 drake-related ImageNet class. Select a target and variant listed in the [Support matrix](#support-matrix), prepare that exact manifest artifact with the model downloader, and run the sample on the matching board.
 
 The screenshot below shows a reference run from the X5 release: the demo

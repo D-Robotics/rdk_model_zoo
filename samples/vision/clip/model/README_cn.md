@@ -1,18 +1,18 @@
 [English](README.md) | 简体中文
 
-# 模型制品 — CLIP X5 encoder 对
+# 模型制品 — CLIP X5 编码器对
 
 <a id="artifacts"></a>
 ## 制品清单
 
-sample 需要两个独立制品：BPU 图像 encoder 和 CPU ONNX 文本 encoder。它们使用不同 asset ID 和路径，外部路径不能静默替换其他发布文件。
+示例需要两个独立制品：BPU 图像编码器和 CPU ONNX 文本编码器。分别提供图像编码器和文本编码器的 asset ID 与模型路径。
 
 | 制品 | 格式 | Target | 阶段 | 来源 |
 | --- | --- | --- | --- | --- |
-| `img_encoder.bin` | BIN | x5 | image encoder | download |
-| `text_encoder.onnx` | ONNX | x5 | text encoder | download |
+| `img_encoder.bin` | BIN | x5 | image 编码器 | download |
+| `text_encoder.onnx` | ONNX | x5 | text 编码器 | download |
 
-manifest 精确 URL：
+清单精确 URL：
 
 | Asset ID | 发布 URL |
 | --- | --- |
@@ -33,7 +33,7 @@ model/
 <a id="preparation"></a>
 ## 准备步骤
 
-从仓库根目录运行。target 是命名参数且只接受 `x5`；没有 variant 参数。`runtime/python/run.sh` 不会隐式执行下载。
+从仓库根目录运行。目标板卡是命名参数且只接受 `x5`；没有 variant 参数。`runtime/python/run.sh` 不会隐式执行下载。
 
 ```bash
 # cwd：仓库根目录；来源：上表精确 URL
@@ -45,15 +45,15 @@ bash samples/vision/clip/model/download.sh --target x5 --output-dir /tmp/clip-mo
 # 预期：/tmp/clip-model/img_encoder.bin 和 /tmp/clip-model/text_encoder.onnx
 ```
 
-manifest 将两个 SHA-256 均记录为未知。下载器打印观测 digest，并说明无法对照已发布数值校验。I/O 或选择错误退出 2。
+清单将两个 SHA-256 均记录为未知。下载器打印观测 digest，并说明无法对照已发布数值校验。I/O 或选择错误退出 2。
 
 <a id="accompanying-files"></a>
 ## 伴随文件
 
 | 文件 | 作用 | 必需 |
 | --- | --- | --- |
-| `download.py` | 下载两个精确 manifest 制品。 | 脚本准备时是；两个文件都存在时否。 |
-| `download.sh` | `download.py` 的命名参数 脚本。 | 否。 |
+| `download.py` | 下载两个精确清单制品。 | 脚本准备时是；两个文件都存在时否。 |
+| `download.sh` | `download.py` 的命名参数脚本。 | 否。 |
 | `../runtime/python/bpe_simple_vocab_16e6.txt.gz` | 文本 tokenizer 使用的源 BPE 词表。 | 文本编码时是。 |
 
 <a id="local-paths"></a>
@@ -74,4 +74,4 @@ manifest 将两个 SHA-256 均记录为未知。下载器打印观测 digest，�
 
 ## 许可
 
-准备代码遵循仓库 [LICENSE](../../../../LICENSE) 的 Apache-2.0。模型制品沿用发布记录中的来源和许可证 metadata；不在此新增断言。
+准备代码遵循仓库 [LICENSE](../../../../LICENSE) 的 Apache-2.0。模型制品沿用发布记录中的来源和许可证元数据；不在此新增断言。
