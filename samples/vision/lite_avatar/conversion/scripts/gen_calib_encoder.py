@@ -10,6 +10,10 @@ Usage (from repo root, weights/ populated):
     python conversion/scripts/gen_calib_encoder.py \
         --wav_dir funasr_local/runtime/triton_gpu/client/test_wavs \
         --out conversion/calib_data/encoder_avatar --n 50
+
+``--n`` only sizes a regenerated pool.  The prepared reference dataset for
+this sample carries 3 arrays — validation runs must pass a count that does
+not exceed what the dataset actually holds.
 """
 import os, sys, glob, argparse
 import numpy as np

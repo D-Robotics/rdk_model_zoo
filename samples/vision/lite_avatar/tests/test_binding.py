@@ -19,7 +19,9 @@ SAMPLE_DIR = Path(avatar.__file__).resolve().parents[2]
 CMVN = SAMPLE_DIR / "model" / "am.mvn"
 
 STAGE_BY_FILENAME = {
-    Path(cli.FILENAMES[stage]).name: stage for stage in cli.STAGES
+    Path(filename).name: stage
+    for target_files in cli.FILENAMES.values()
+    for stage, filename in target_files.items()
 }
 
 
@@ -50,28 +52,36 @@ def factory_for_stages(recorder=None):
 
 
 class SelectionTests(unittest.TestCase):
-    def test_only_the_published_s100_four_model_group_is_selected(self):
-        selections = cli.resolve_selections("s100")
-        self.assertEqual(
-            tuple(selection.stage for selection in selections),
-            ("audio_encoder", "audio2mouth", "facegen_encoder", "facegen_decoder"),
-        )
-        self.assertTrue(
-            all(s.asset.reference.startswith("s:lite_avatar:s100/") for s in selections)
-        )
-        self.assertTrue(all(s.target == "s100" for s in selections))
+    def test_every_published_target_selects_its_own_four_model_group(self):
+        for target in cli.PUBLISHED_TARGETS:
+            with self.subTest(target=target):
+                selections = cli.resolve_selections(target)
+                self.assertEqual(
+                    tuple(selection.stage for selection in selections),
+                    ("audio_encoder", "audio2mouth", "facegen_encoder", "facegen_decoder"),
+                )
+                self.assertTrue(
+                    all(
+                        s.asset.reference.startswith(f"s:lite_avatar:{target}/")
+                        for s in selections
+                    )
+                )
+                self.assertTrue(
+                    all(selection.target == target for selection in selections)
+                )
 
     def test_unpublished_targets_are_rejected(self):
-        for target in ("s100p", "s600", "x5", "invalid", ""):
+        for target in ("x5", "invalid", ""):
             with self.subTest(target=target), self.assertRaises(ValueError):
                 cli.resolve_selections(target)
 
     def test_every_manifest_digest_is_a_real_sha256(self):
-        for selection in cli.resolve_selections("s100"):
-            digest = selection.asset.sha256
-            self.assertIsInstance(digest, str)
-            self.assertEqual(len(digest), 64)
-            self.assertTrue(all(char in "0123456789abcdef" for char in digest))
+        for target in cli.PUBLISHED_TARGETS:
+            for selection in cli.resolve_selections(target):
+                digest = selection.asset.sha256
+                self.assertIsInstance(digest, str)
+                self.assertEqual(len(digest), 64)
+                self.assertTrue(all(char in "0123456789abcdef" for char in digest))
 
     def test_local_hash_manifest_identifies_explicit_rebuilds(self):
         golden = cli.resolve_selections("s100")
@@ -93,6 +103,19 @@ class SelectionTests(unittest.TestCase):
         rebuilt = cli.resolve_selections("s100", local_hashes=loaded)
         self.assertTrue(all(s.asset.sha256 == "0" * 64 for s in rebuilt))
         self.assertNotEqual(rebuilt[0].asset, golden[0].asset)
+
+    def test_local_hash_manifest_cannot_mix_targets(self):
+        # A rebuild manifest naming another target's files must not quietly
+        # relabel stages onto a different board's artifacts.
+        for target, other in (("s100", "s600"), ("s600", "s100")):
+            with self.subTest(run=target, foreign=other):
+                foreign = {
+                    filename: "0" * 64
+                    for filename in cli.FILENAMES[other].values()
+                }
+                with self.assertRaises(ValueError) as ctx:
+                    cli.resolve_selections(target, local_hashes=foreign)
+                self.assertIn("mix targets", str(ctx.exception))
 
 
 class BindingTests(unittest.TestCase):
@@ -180,14 +203,19 @@ class RunnerCompositionTests(unittest.TestCase):
         self.assertTrue(runners[0].loaded and runners[1].loaded)
         self.assertFalse(runners[2].loaded or runners[3].loaded)
 
-    def test_rejects_wrong_stage_order_or_non_s100_group(self):
+    def test_rejects_wrong_stage_order_foreign_target_or_mixed_group(self):
         selections = list(cli.resolve_selections("s100"))
         reordered = [selections[1], selections[0], selections[2], selections[3]]
         with self.assertRaises(ValueError):
             avatar.load_model_runners(reordered, runtime_factory=factory_for_stages())
-        foreign = [replace(selection, target="s600") for selection in selections]
+        foreign = [replace(selection, target="x5") for selection in selections]
         with self.assertRaises(ValueError):
             avatar.load_model_runners(foreign, runtime_factory=factory_for_stages())
+        # Stages from two published targets in one group are a mixed set.
+        mixed = selections[:2] + list(cli.resolve_selections("s600"))[2:]
+        with self.assertRaises(ValueError) as ctx:
+            avatar.load_model_runners(mixed, runtime_factory=factory_for_stages())
+        self.assertIn("one target", str(ctx.exception))
 
     def test_pipeline_composes_stages_and_releases_audio_models(self):
         pipeline, runners, names = self._pipeline()

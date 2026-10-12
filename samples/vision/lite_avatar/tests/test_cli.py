@@ -63,6 +63,10 @@ class NormalizeArgsTests(unittest.TestCase):
                 "hardware encoder on x5",
                 namespace(target="x5", encoder="hardware"),
             ),
+            (
+                "hardware encoder on s100p (unverified)",
+                namespace(target="s100p", encoder="hardware"),
+            ),
         )
         for label, args in cases:
             with self.subTest(case=label), self.assertRaises(ValueError):
@@ -84,13 +88,16 @@ class NormalizeArgsTests(unittest.TestCase):
 class EncoderResolutionTests(unittest.TestCase):
     def test_auto_resolves_to_the_verified_encoder_only_on_s100(self):
         self.assertEqual(cli.resolve_encoder("auto", "s100"), "hardware")
-        self.assertEqual(cli.resolve_encoder("auto", "x5"), "software")
+        self.assertEqual(cli.resolve_encoder("auto", "s100p"), "software")
         self.assertEqual(cli.resolve_encoder("auto", "s600"), "software")
+        self.assertEqual(cli.resolve_encoder("auto", "x5"), "software")
 
     def test_explicit_choices_are_never_silently_changed(self):
         self.assertEqual(cli.resolve_encoder("software", "x5"), "software")
         self.assertEqual(cli.resolve_encoder("software", "s100"), "software")
         self.assertEqual(cli.resolve_encoder("hardware", "s100"), "hardware")
+        with self.assertRaises(ValueError):
+            cli.resolve_encoder("hardware", "s100p")
         with self.assertRaises(ValueError):
             cli.resolve_encoder("hardware", "s600")
         with self.assertRaises(ValueError):
@@ -105,10 +112,22 @@ class ModelListingTests(unittest.TestCase):
             code = cli.print_model_list("s100")
         text = buffer.getvalue()
         self.assertEqual(code, 0)
-        for filename in cli.FILENAMES.values():
+        for filename in cli.FILENAMES["s100"].values():
             self.assertIn(filename, text)
         self.assertIn("s:lite_avatar:s100/", text)
         self.assertIn("prepare locally", text)
+
+    def test_auto_listing_covers_every_published_target(self):
+        buffer = io.StringIO()
+        code = 0
+        with redirect_stdout(buffer):
+            code = cli.print_model_list("auto")
+        text = buffer.getvalue()
+        self.assertEqual(code, 0)
+        for target in cli.PUBLISHED_TARGETS:
+            self.assertIn(f"[{target}]", text)
+            for filename in cli.FILENAMES[target].values():
+                self.assertIn(filename, text)
 
     def test_resolution_reports_missing_artifacts_with_a_failing_status(self):
         selections = cli.resolve_selections("s100")
@@ -123,6 +142,14 @@ class ModelListingTests(unittest.TestCase):
         self.assertIn("model_path_exists: False", buffer.getvalue())
         self.assertIn("Missing artifacts", buffer.getvalue())
         self.assertIn("No model is downloaded and no SDK is loaded", buffer.getvalue())
+
+    def test_dry_run_resolves_each_published_target(self):
+        for target in cli.PUBLISHED_TARGETS:
+            with self.subTest(target=target):
+                args = namespace(target=target, dry_run=True)
+                selections = cli.resolve_selections_for(args)
+                self.assertEqual(len(selections), 4)
+                self.assertTrue(all(s.target == target for s in selections))
 
     def test_dry_run_auto_requires_the_explicit_target(self):
         args = namespace(target="auto", dry_run=True)

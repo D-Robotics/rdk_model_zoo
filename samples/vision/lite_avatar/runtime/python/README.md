@@ -7,17 +7,19 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Overview
 
-Offline audio-driven talking-avatar rendering for S100: one Python runtime
-chains the four published HBM artifacts (audio encoder, audio2mouth, face
-encoder, face decoder) into a whole-clip `predict` and delivers the frames
-to a video writer. `main.py` keeps the flow visible — parse → select →
-construct → predict → deliver; the writers bound every resource (FFmpeg
-pipe, S100 hardware encoder worker with a shared-memory ring) and clean up
-on failure.
+Offline audio-driven talking-avatar rendering for S100, S100P and S600:
+one Python runtime chains the four published HBM artifacts (audio encoder,
+audio2mouth, face encoder, face decoder) into a whole-clip `predict` and
+delivers the frames to a video writer. `main.py` keeps the flow visible —
+parse → select → construct → predict → deliver; the writers bound every
+resource (FFmpeg pipe, S100 hardware encoder worker with a shared-memory
+ring) and clean up on failure.
 
-| Target | Language | Status |
-| --- | --- | --- |
-| s100 | python | supported |
+| Target | Language | Video encoder | Status |
+| --- | --- | --- | --- |
+| s100 | python | S100 hardware H.264 worker or FFmpeg pipe | supported |
+| s100p | python | FFmpeg pipe | supported |
+| s600 | python | FFmpeg pipe | supported |
 
 Thread policy (the measured board configuration): the entry exports
 `OPENBLAS_NUM_THREADS=1` and `OMP_NUM_THREADS=4` before the first heavy
@@ -48,8 +50,9 @@ Board execution needs the `hbm_runtime` SDK from the board image, the
 board Python stack, and `ffmpeg`:
 
 ```bash
-# on the board (Python 3.10, aarch64): one scoped venv on a user data disk,
-# pinned to the proven versions (standard aarch64 wheels from PyPI)
+# on the board (image Python: 3.10 on S100/S100P, 3.12 on S600; aarch64):
+# one scoped venv on a user data disk, pinned to the proven versions
+# (standard aarch64 wheels from PyPI)
 python3 -m venv --system-site-packages /mnt/sdcard/lite-avatar-venv
 /mnt/sdcard/lite-avatar-venv/bin/pip install \
     torch==2.3.1 torchaudio==2.3.1 numpy==1.26.4 \
@@ -66,7 +69,7 @@ the audio through ffmpeg; `--no-encode` runs without it.
 The renderer's background cache loads the system liblz4 through `ctypes`
 library discovery: the board image provides it (verified on S100), Ubuntu
 hosts provide it via the `liblz4-1` package, and a macOS host needs
-`brew install lz4` (a python.org interpreter additionally needs
+`brew install lz4` (a python.org interpreter also needs
 `DYLD_LIBRARY_PATH="$(brew --prefix lz4)/lib"`).
 
 The x86 export/calibration host uses a separate recipe
@@ -104,7 +107,7 @@ artifacts, which lists the exact paths to prepare).
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
-| `--target` | choice | auto | execution target: `auto`, `x5`, `s100`, `s100p`, `s600`; S100 is the only LiteAvatar build and must match detected hardware |
+| `--target` | choice | auto | execution target: `auto`, `x5`, `s100`, `s100p`, `s600`; LiteAvatar publishes s100/s100p/s600 sets and the target must match detected hardware |
 | `--list-models` | flag | false | list manifest-backed asset references without board access |
 | `--dry-run` | flag | false | resolve/check the four-model selection without loading an SDK |
 | `--audio` | string | null | input WAV (any sample rate; first channel of stereo is used) |
@@ -132,6 +135,13 @@ The run prints the audio/renderer phase timings, the render rate
 output is a decodable H.264 MP4 of the avatar's geometry — the background
 loop with the animated mouth ROI — at 30 fps with the input audio muxed.
 With `--no-encode` no file is written and only the render summary prints.
+
+Measured on the bundled example (166 frames, 890x1920): S100 renders at
+22.0 fps with the hardware encoder. S100P renders at **36.4 fps** with the
+software encoder (13.2 s end to end) and 38.0 fps with `--no-encode`; the
+software-encoded MP4 decodes back at a mean 38.7 dB face PSNR. S600 renders
+at **39.4 fps** with the software encoder and 40.9 fps with `--no-encode`
+(38.7 dB face PSNR on decode-back).
 
 <a id="integration-example"></a>
 ## Integration example
@@ -191,9 +201,9 @@ quantization is internal to the artifacts.
 
 | Symptom | Check |
 | --- | --- |
-| `Missing model artifacts` (exit 2) | Prepare the four files under `model/s100/` per [model/README.md](../../model/README.md); run `model/verify.py`. |
+| `Missing model artifacts` (exit 2) | Prepare the four files under `model/<target>/` per [model/README.md](../../model/README.md); run `model/verify.py --target <t>`. |
 | `--dry-run` exits 1 | Same preparation gap; the printed paths are the exact missing files. |
-| target selection error | LiteAvatar has one published set; `--target s100` on an S100 board (or `auto`), every other target fails explicitly. |
+| target selection error | LiteAvatar publishes one four-file set per target (`s100`, `s100p`, `s600`); the target must match the detected board (or use `auto`), and any other target fails explicitly. |
 | `FFmpeg is required for video output (not on PATH)` | Video output with **both** encoders needs `ffmpeg` on PATH (the hardware path remuxes through it too); install the board image's ffmpeg package, or run with `--no-encode`. |
 | `Hardware encoder worker exited ... (exit N)` | The bundled worker crashed mid-protocol; the run aborts with the worker log path — check `dmesg`/the log for the encoder device state and retry. |
 | output differs from a reference render | Compare the same artifacts, audio, avatar data and encoder before judging quality; use [evaluator/evaluate_frames.py](../../evaluator/evaluate_frames.py) against the reference frames. |

@@ -1061,7 +1061,8 @@ class LiteAvatarPipeline:
 
         Args:
             selections: Ordered audio_encoder, audio2mouth, facegen_encoder
-                and facegen_decoder selections targeting S100.
+                and facegen_decoder selections for one published target
+                (s100, s100p or s600).
             cmvn_path: Pinned ``am.mvn`` for the feature frontend.
             data_dir: Avatar data directory (background video, face box and
                 reference frames).
@@ -1243,8 +1244,19 @@ def load_model_runners(selections, *, runtime_factory=None):
 
     if tuple(selection.stage for selection in selections) != STAGES:
         raise ValueError("Expected ordered four LiteAvatar stage selections")
-    if any(selection.target != "s100" for selection in selections):
-        raise ValueError("LiteAvatar publishes the four-model set only for s100")
+    from samples.vision.lite_avatar.runtime.python.cli import PUBLISHED_TARGETS
+
+    targets = {selection.target for selection in selections}
+    if len(targets) != 1:
+        raise ValueError(
+            "LiteAvatar stages must come from one target's four-model set "
+            f"(got {sorted(targets)})"
+        )
+    if targets.pop() not in PUBLISHED_TARGETS:
+        raise ValueError(
+            "LiteAvatar publishes the four-model set for "
+            f"{', '.join(PUBLISHED_TARGETS)}"
+        )
     for selection in selections:
         validate_selection(selection)
     runners = tuple(

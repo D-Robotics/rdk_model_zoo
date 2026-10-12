@@ -2,8 +2,8 @@
 
 # LiteAvatar 音频驱动数字人
 
-在 RDK S100 上离线渲染音频驱动数字人：输入语音音频，输出合成好的数字人
-视频。
+在 RDK S100、S100P 与 S600 上离线渲染音频驱动数字人：输入语音音频，
+输出合成好的数字人视频。
 
 来源：[HumanAIGC/lite-avatar](https://github.com/HumanAIGC/lite-avatar)（MIT）
 
@@ -11,15 +11,15 @@
 
 ## 概述
 
-本示例面向 S100 提供一个 Python 运行时。`LiteAvatarPipeline` 类把四个已
+本示例面向 S100、S100P 与 S600 提供一个 Python 运行时。`LiteAvatarPipeline` 类把四个已
 发布 HBM 产物串成每个阶段清晰可读的 `preprocess → infer → postprocess`
 流程与一次整段音频的 `predict`：音频前端提取 Paraformer 特征（Kaldi
 fbank、7/6 低帧率堆叠、CMVN），音频编码器输出 50 路堆叠隐层状态，
 audio2mouth 把滑动的 30 帧窗口映射为嘴部参数（与上游完全一致的交叉淡化与
 Butterworth 平滑），人脸解码器以参考帧特征金字塔为条件逐帧渲染。合成阶段
 按原始羽化掩码与乒乓环顺序把解码出的嘴部区域贴回背景循环帧，随后 CLI 把
-帧交付给 S100 硬件 H.264 编码器（或 FFmpeg 管道），写入器资源有界并在
-失败时清理（见
+帧交付给 H.264 编码器（S100 硬件编码器，或 FFmpeg 管道），写入器资源有界
+并在失败时清理（见
 [运行时文档](runtime/python/README_cn.md)）。
 
 ### 算法背景
@@ -27,9 +27,9 @@ Butterworth 平滑），人脸解码器以参考帧特征金字塔为条件逐�
 LiteAvatar（HumanAIGC）用语音特征驱动轻量人脸生成网络：paraformer 编码器
 的中间隐层状态携带发音信息，小型 audio2mouth 网络将其解码为每个视频帧
 32 维嘴部参数；解码网络（InstanceNorm 风格模块与 x2 上采样）合成当前
-姿态下的嘴部区域并融合进背景视频。四个 S100 产物在 BPU 上运行 INT16
-激活；解码器中的 21 个 InstanceNorm 子图节点为保证数值一致性保留在 CPU
-上以 FP32 运行（见[转换文档](conversion/README_cn.md)）。
+姿态下的嘴部区域并融合进背景视频。按目标发布的四个产物全节点按配置 INT16 量化
+（编译器仍会给个别算子分配其他精度）；解码器的归一化路径经其 21 节点
+`run_on_cpu` 列表保持 FP32（见[转换文档](conversion/README_cn.md)）。
 
 <a id="directory"></a>
 ## 目录结构
@@ -50,15 +50,17 @@ lite_avatar/
 <a id="support-matrix"></a>
 ## 支持矩阵
 
-| 目标 | 语言 | 状态 |
-| --- | --- | --- |
-| s100 | python | supported |
+| 目标 | 语言 | 视频编码器 | 状态 |
+| --- | --- | --- | --- |
+| s100 | python | S100 硬件 H.264（默认 `auto`）或 FFmpeg 管道 | supported |
+| s100p | python | FFmpeg 管道 | supported |
+| s600 | python | FFmpeg 管道 | supported |
 
 <a id="prerequisites"></a>
 ## 环境要求
 
 - 按[模型准备](model/README_cn.md)完成校验的四个 HBM 产物，位于
-  `model/s100/`（本地包或自行编译）。
+  `model/<目标>/`（本地包或自行编译；`verify.py --target <t>`）。
 - 按上游固定版本 `sample_data.zip` 解压出的数字人数据目录（见
   [测试数据](test_data/README_cn.md)；默认位置 `test_data/preload`）。
 - [运行时文档](runtime/python/README_cn.md)中的板端依赖（`hbm_runtime`、
@@ -72,9 +74,9 @@ lite_avatar/
 在 S100 板上从仓库根目录执行的完整路径：
 
 ```bash
-# 1. 校验已准备好的产物集
+# 1. 校验已准备好的产物集（S100P/S600 加 --target s100p / s600）
 #    成功：verify.py 退出码 0 并逐项打印摘要匹配
-python3 samples/vision/lite_avatar/model/verify.py
+python3 samples/vision/lite_avatar/model/verify.py --target s100
 
 # 2. 准备数字人数据（一次性，约 5 MB）
 #    成功：shasum 输出 "sample_data.zip: OK"
@@ -91,9 +93,10 @@ bash samples/vision/lite_avatar/runtime/python/run.sh --target s100 \
     --audio samples/vision/lite_avatar/test_data/asr_example.wav
 ```
 
-默认 `--encoder auto` 在 S100 上解析为硬件 H.264 编码器；`--encoder
-software` 切换 FFmpeg 管道，`--no-encode` 只渲染不写盘。完整 CLI 与 API
-参考见[运行时文档](runtime/python/README_cn.md)。
+`--target` 选择产物集且须与板卡一致；默认 `--encoder auto` 在 S100 上
+解析为硬件 H.264 编码器，其他目标为 FFmpeg 管道。`--encoder
+software`/`hardware` 显式指定，`--no-encode` 只渲染不写盘。完整 CLI 与
+API 参考见[运行时文档](runtime/python/README_cn.md)。
 
 <a id="expected-results"></a>
 ## 预期结果
@@ -111,11 +114,13 @@ software` 切换 FFmpeg 管道，`--no-encode` 只渲染不写盘。完整 CLI �
 
 ### 性能
 
-以普通入口在 S100 上实测（torch 2.3.1、硬件编码器、默认线程策略）：
-捆绑的 166 帧语音渲染用时 **7.54 s——22.01 fps**（`Rendered 166
-frames ... in 7.54s (22.01 fps)`）。计时窗口覆盖全部 166 帧渲染加编码器
-排空与 MP4 混流；此前的音频前端与渲染器初始化等一次性离线阶段不在窗口
-内。
+以普通入口实测（torch 2.3.1、默认线程策略）：捆绑的 166 帧语音在 S100
+上以硬件编码器渲染用时 **7.54 s——22.01 fps**（`Rendered 166
+frames ... in 7.54s (22.01 fps)`）；在 S100P 上以软件编码器 **36.4 fps**
+（13.2 s，`--no-encode` 38.0 fps）；在 S600 上以软件编码器 **39.4 fps**
+（4.21 s，`--no-encode` 40.9 fps）。计时窗口覆盖全部 166 帧渲染加编码器
+排空与 MP4 混流；此前的
+音频前端与渲染器初始化等一次性离线阶段不在窗口内。
 
 <a id="entry-points"></a>
 ## 入口

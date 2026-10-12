@@ -24,6 +24,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import textwrap
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -250,7 +251,7 @@ class StdlibOnlyPrepareTests(unittest.TestCase):
             artifact = Path(tmp) / "artifact.bin"
             artifact.write_bytes(payload)
             proc = subprocess.run(
-                [sys.executable, "-S", "-c", self._PROBE,
+                [sys.executable, "-S", "-c", textwrap.dedent(self._PROBE),
                  str(PREPARE_PATH), str(artifact)],
                 capture_output=True, text=True)
 

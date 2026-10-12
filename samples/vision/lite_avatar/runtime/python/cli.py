@@ -2,15 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 """Command line surface for LiteAvatar: selection, options and video delivery.
 
-Option declarations and validation, the published S100 asset identities and
-selection (including explicitly identified local rebuilds), the model-free
-listing/dry-run rendering, and the two video writers — the cross-platform
-software FFmpeg pipe and the S100 hardware H.264 worker ring with its
-ACK/timeout/process-group discipline.  Nothing in this module loads a board
-SDK or imports NumPy at module level, so ``--help``, ``--list-models`` and
-``--dry-run`` stay usable on a workstation.  The stage/pipeline composition
-lives in ``avatar.py``; ``main.py`` keeps the visible
-parse -> select -> construct -> predict -> deliver flow.
+Option declarations and validation, the published per-target asset identities
+(S100/S100P/S600) and selection (including explicitly identified local
+rebuilds), the model-free listing/dry-run rendering, and the two video
+writers — the cross-platform software FFmpeg pipe and the S100 hardware
+H.264 worker ring with its ACK/timeout/process-group discipline.  Nothing in
+this module loads a board SDK or imports NumPy at module level, so ``--help``,
+``--list-models`` and ``--dry-run`` stay usable on a workstation.  The
+stage/pipeline composition lives in ``avatar.py``; ``main.py`` keeps the
+visible parse -> select -> construct -> predict -> deliver flow.
 """
 
 from __future__ import annotations
@@ -34,19 +34,44 @@ from pathlib import Path
 from utils.py_utils.assets import Asset, list_assets
 
 # ======================================================================
-# Published S100 asset identities, digests and selection.
+# Published asset identities, digests and selection.
 # ======================================================================
 
 SAMPLE_DIR = Path(__file__).resolve().parents[2]
 
 STAGES = ("audio_encoder", "audio2mouth", "facegen_encoder", "facegen_decoder")
 
+#: Targets with a published four-model set.  Every target selects all four
+#: stages from its own directory — stages are never mixed across targets.
+PUBLISHED_TARGETS = ("s100", "s100p", "s600")
+
 FILENAMES = {
-    "audio_encoder": "s100/lite_avatar_encoder_400x560_s100.hbm",
-    "audio2mouth": "s100/lite_avatar_audio2mouth_30x50x512_s100.hbm",
-    "facegen_encoder": "s100/lite_avatar_net_encode_384x384_s100.hbm",
-    "facegen_decoder": "s100/lite_avatar_net_decode_inorm_fullrange_384x384_s100.hbm",
+    "s100": {
+        "audio_encoder": "s100/lite_avatar_encoder_400x560_s100.hbm",
+        "audio2mouth": "s100/lite_avatar_audio2mouth_30x50x512_s100.hbm",
+        "facegen_encoder": "s100/lite_avatar_net_encode_384x384_s100.hbm",
+        "facegen_decoder": "s100/lite_avatar_net_decode_inorm_fullrange_384x384_s100.hbm",
+    },
+    "s100p": {
+        "audio_encoder": "s100p/lite_avatar_encoder_400x560_s100p.hbm",
+        "audio2mouth": "s100p/lite_avatar_audio2mouth_30x50x512_s100p.hbm",
+        "facegen_encoder": "s100p/lite_avatar_net_encode_384x384_s100p.hbm",
+        "facegen_decoder": "s100p/lite_avatar_net_decode_inorm_fullrange_384x384_s100p.hbm",
+    },
+    "s600": {
+        "audio_encoder": "s600/lite_avatar_encoder_400x560_s600.hbm",
+        "audio2mouth": "s600/lite_avatar_audio2mouth_30x50x512_s600.hbm",
+        "facegen_encoder": "s600/lite_avatar_net_encode_384x384_s600.hbm",
+        "facegen_decoder": "s600/lite_avatar_net_decode_inorm_fullrange_384x384_s600.hbm",
+    },
 }
+
+#: Every published filename across targets (rebuild-manifest entries are
+#: validated against this union; the per-target subset is checked at
+#: selection time so a manifest cannot mix stages across targets).
+ALL_FILENAMES = frozenset(
+    filename for target_files in FILENAMES.values() for filename in target_files.values()
+)
 
 #: Committed CMVN file pinned by digest (same bytes as the Paraformer sample).
 LOCAL_DIGESTS = {
@@ -92,13 +117,13 @@ def load_local_hash_manifest(path) -> dict[str, str]:
     records = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(records, dict) or not records:
         raise ValueError("Local hash manifest must be a nonempty JSON object")
-    known = set(FILENAMES.values())
+    known = sorted(ALL_FILENAMES)
     hashes = {}
     for filename, digest in records.items():
         if filename not in known:
             raise ValueError(
                 f"Local hash manifest names unknown asset {filename!r}; "
-                f"expected entries from {sorted(known)}"
+                f"expected entries from {known}"
             )
         hashes[filename] = _validated_digest(filename, digest)
     return hashes
@@ -107,16 +132,17 @@ def load_local_hash_manifest(path) -> dict[str, str]:
 def resolve_selections_for(args):
     """Resolve the four stage selections for the parsed arguments.
 
-    The model-free listing mode defaults an ``auto`` target to the published
-    S100 set; host dry-run requires the explicit target because no board
+    The model-free listing mode defaults an ``auto`` target to listing every
+    published set; host dry-run requires the explicit target because no board
     detection happens there.
     """
 
     target = args.target
-    if target == "auto" and args.list_models:
-        target = "s100"
     if target == "auto" and args.dry_run:
-        raise ValueError("Host dry-run requires --target s100")
+        raise ValueError(
+            "Host dry-run requires an explicit --target "
+            f"(one of {', '.join(PUBLISHED_TARGETS)})"
+        )
     return resolve_selections(
         target,
         model_dir=args.model_dir,
@@ -137,12 +163,15 @@ def resolve_selections(
     """Select the four published models for one target.
 
     Args:
-        target: ``auto`` (hardware detection) or an explicit board target.
+        target: ``auto`` (hardware detection) or an explicit board target
+            (one of :data:`PUBLISHED_TARGETS`).
         model_dir: Optional directory holding the manifest-relative paths
             (default: the sample's ``model/`` directory).
         local_hashes: Optional ``{filename: sha256}`` mapping from
             :func:`load_local_hash_manifest` (validated here as well, so
-            direct API callers get the same checks).  A partial mapping is
+            direct API callers get the same checks).  Entries must all come
+            from the selected target's four filenames — a manifest mixing
+            stages across targets is rejected.  A partial mapping is
             allowed: every listed filename switches to its recorded digest
             and is marked ``digest_source="local"``; unlisted files keep
             their published digests.
@@ -159,13 +188,22 @@ def resolve_selections(
         from utils.py_utils.platforms import detect_target
 
         target = detect_target()
-    if target != "s100":
-        raise ValueError("LiteAvatar publishes the four-model set only for s100")
-    if local_hashes is not None:
-        unknown = set(local_hashes) - set(FILENAMES.values())
-        if unknown:
+        if target is None:
             raise ValueError(
-                f"Local hashes reference files outside the published set: {sorted(unknown)}"
+                "No board detected for --target auto; pass an explicit "
+                f"--target (one of {', '.join(PUBLISHED_TARGETS)})"
+            )
+    if target not in FILENAMES:
+        raise ValueError(
+            "LiteAvatar publishes the four-model set for "
+            f"{', '.join(PUBLISHED_TARGETS)}; got {target!r}"
+        )
+    if local_hashes is not None:
+        foreign = set(local_hashes) - set(FILENAMES[target].values())
+        if foreign:
+            raise ValueError(
+                f"Local hashes mix targets for a {target} run: {sorted(foreign)} "
+                "do not belong to this target's four-model set"
             )
         for filename, digest in local_hashes.items():
             _validated_digest(filename, digest)
@@ -173,7 +211,7 @@ def resolve_selections(
     root = Path(model_dir).expanduser() if model_dir else SAMPLE_DIR / "model"
     selected = []
     for stage in STAGES:
-        asset = assets.get(FILENAMES[stage])
+        asset = assets.get(FILENAMES[target][stage])
         if asset is None or asset.format != "hbm":
             raise ValueError(f"Missing published {stage} HBM asset")
         local_digest = (local_hashes or {}).get(asset.filename)
@@ -243,7 +281,8 @@ def build_parser():
         "--target",
         choices=("auto", "x5", "s100", "s100p", "s600"),
         default="auto",
-        help="Execution target (auto, x5, s100, s100p or s600).",
+        help="Execution target (auto, x5, s100, s100p or s600); LiteAvatar "
+        "publishes s100, s100p and s600 builds.",
     )
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument(
@@ -359,24 +398,33 @@ def read_audio(path):
 
 
 def print_model_list(target) -> int:
-    """Print the manifest-backed references for ``target`` (SDK-free)."""
+    """Print the manifest-backed references for ``target`` (SDK-free).
 
-    try:
-        selections = resolve_selections(target)
-    except ValueError as error:
-        print(f"error: {error}", file=sys.stderr)
-        return 2
+    ``auto`` lists every published target's four-model set — there is no
+    board to detect in this mode.
+    """
+
+    targets = PUBLISHED_TARGETS if target == "auto" else (target,)
     print("Manifest-backed LiteAvatar asset references:")
-    for selection in selections:
-        asset = selection.asset
-        digest = asset.sha256 or "<no digest>"
-        state = "present" if selection.model_path.is_file() else "missing (prepare locally)"
-        print(f"  asset_id: {asset.reference}")
-        print(f"    stage: {selection.stage}")
-        print(f"    filename: {asset.filename}")
-        print(f"    format: {asset.format}")
-        print(f"    sha256: {digest}")
-        print(f"    local: {selection.model_path} [{state}]")
+    for index, listed in enumerate(targets):
+        if index:
+            print()
+        print(f"[{listed}]")
+        try:
+            selections = resolve_selections(listed)
+        except ValueError as error:
+            print(f"error: {error}", file=sys.stderr)
+            return 2
+        for selection in selections:
+            asset = selection.asset
+            digest = asset.sha256 or "<no digest>"
+            state = "present" if selection.model_path.is_file() else "missing (prepare locally)"
+            print(f"  asset_id: {asset.reference}")
+            print(f"    stage: {selection.stage}")
+            print(f"    filename: {asset.filename}")
+            print(f"    format: {asset.format}")
+            print(f"    sha256: {digest}")
+            print(f"    local: {selection.model_path} [{state}]")
     print("Availability is manual: prepare the artifacts per model/README.md.")
     return 0
 

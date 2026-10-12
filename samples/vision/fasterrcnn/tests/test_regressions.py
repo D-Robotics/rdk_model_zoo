@@ -327,14 +327,20 @@ class TrackVideoIORegressions(unittest.TestCase):
             self.assertFalse(out.parent.is_dir(), "no parent should be created")
 
     def test_relative_output_parent_resolves_against_cwd(self):
-        import contextlib
+        import os
         import tempfile
         from samples.vision.fasterrcnn.runtime.python.cli import track_video
 
         with tempfile.TemporaryDirectory() as tmp:
             video = self._make_video(Path(tmp))
-            with contextlib.chdir(tmp):
+            # contextlib.chdir needs Python 3.11; restore the cwd by hand so
+            # the suite also runs on the 3.10 CI matrix.
+            old_cwd = os.getcwd()
+            os.chdir(tmp)
+            try:
                 summary = track_video(_FakeTrackStream(), video, Path("rel/out.mp4"))
+            finally:
+                os.chdir(old_cwd)
             self.assertTrue((Path(tmp) / "rel" / "out.mp4").is_file())
             self.assertEqual(summary["result_path"], "rel/out.mp4")
 

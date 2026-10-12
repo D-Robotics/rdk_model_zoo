@@ -32,6 +32,27 @@ def load(name):
         return {k: data[k] for k in data.files}
 
 
+def assert_proposals_match(case, actual, expected, what):
+    """Decoded proposal coordinates are exp() arithmetic, not bit-exact.
+
+    ``decode_deltas`` evaluates ``exp`` in float32 and subtracts half
+    sizes, so numpy/libm last-bit differences surface as coordinate drift
+    measured across the support matrix (fixtures captured under numpy on
+    macOS; numpy 2.5/macOS, glibc CI, and the C++ libm harness on glibc):
+    max abs 3.05e-05 — two float32 ULP at the 320-px canvas scale — with
+    cancellation at small coordinates (~0.1 px) amplifying the ratio while
+    the absolute drift stays below 1e-6.  Real errors — a wrong box, a
+    reordering, a wrong clip — move coordinates by whole pixels.  The tail
+    decode below uses the same 1e-4 family for the same arithmetic.
+    """
+    case.assertEqual(actual.shape, expected.shape)
+    diff = np.abs(actual.astype(np.float64) - expected.astype(np.float64))
+    case.assertTrue(bool(np.all(diff <= 1e-4)),
+                    f"{what} differ by more than 1e-4 px "
+                    f"(max {float(diff.max()):.9g} at flat "
+                    f"{int(np.argmax(diff))})")
+
+
 class AnchorTests(unittest.TestCase):
     def test_anchor_table_matches_torchvision_exactly(self):
         fixture = load("rpn_stage.npz")
@@ -58,7 +79,27 @@ class RpnTests(unittest.TestCase):
                                     fixture["anchors"])
         self.assertEqual(n, int(fixture["n_valid"]))
         self.assertEqual(proposals.shape, (150, 4))
-        np.testing.assert_allclose(proposals, fixture["proposals"], atol=1e-5)
+        # Integer count and shape stay exact; the decoded coordinates are
+        # exp() arithmetic, so they carry the decode tolerance above
+        # instead of requiring bit equality across libm implementations.
+        assert_proposals_match(self, proposals, fixture["proposals"],
+                               "rpn proposals")
+
+    def test_proposal_tolerance_rejects_reordered_and_wrong_values(self):
+        # The tolerance must discriminate: a reordered selection or a
+        # coordinate off by a hundredth of a pixel fails it outright.
+        fixture = load("rpn_stage.npz")
+        expected = fixture["proposals"]
+        spread = np.abs(expected[:, None, :] - expected[None, :, :]).sum(-1)
+        i, j = np.unravel_index(np.argmax(spread), spread.shape)
+        order = list(range(expected.shape[0]))
+        order[i], order[j] = j, i
+        with self.assertRaises(AssertionError):
+            assert_proposals_match(self, expected[order], expected, "proposals")
+        drifted = expected.copy()
+        drifted[0, 0] += np.float32(0.01)
+        with self.assertRaises(AssertionError):
+            assert_proposals_match(self, drifted, expected, "proposals")
 
     def test_all_filtered_input_yields_zero_proposals(self):
         anchors = D.generate_anchors()

@@ -6,12 +6,13 @@ English | [简体中文](README_cn.md)
 
 This directory holds the recipe that converts the upstream
 [HumanAIGC/lite-avatar](https://github.com/HumanAIGC/lite-avatar) pipeline
-(audio-driven talking avatar) into the four S100 HBM artifacts the sample
-runtime consumes: ONNX export, two lossless graph transforms, calibration
+(audio-driven talking avatar) into the four per-target HBM artifacts the
+sample runtime consumes: ONNX export, two lossless graph transforms, calibration
 generation (including the runtime-exact decoder set), four `hb_compile`
 configs and the cosine/board validation scripts.
 
-The four artifacts (march `nash-e`, INT16 activations):
+The four artifacts (INT16 quantization configured on all nodes; march per
+target — `nash-e` S100, `nash-m` S100P, `nash-p` S600):
 
 | Stage | Model | Input(s) | Output(s) | Config |
 | --- | --- | --- | --- | --- |
@@ -20,9 +21,13 @@ The four artifacts (march `nash-e`, INT16 activations):
 | face encoder | `net_encode.onnx` | `image` [1,3,384,384] | `f0..f3` pyramid | `net_encode_int16_config.yaml` |
 | face decoder | `net_decode_deconv_inorm.onnx` | `f0;f1;f2;f3;mouth_param` | `mouth_image` [1,3,384,384] | `net_decode_deconv_inorm_fullrange_config.yaml` |
 
-The decoder is **not** a pure BPU model: 21 InstanceNorm-subgraph nodes run as
-FP32 on the CPU (`run_on_cpu` in the config) while the convolutions stay INT16
-on the BPU; see [decoder transforms](#export) for why.
+The decoder is **not** a pure INT16 BPU model: its normalization subgraph is
+kept FP32 by a 21-node `run_on_cpu` list in the config (the compiler's
+node report shows mixed placement across those nodes — some fused, some
+FP32-on-BPU, with the `Pow` variance ops on the CPU), while the
+major convolutions run INT16 on the BPU — a couple of pointwise convs
+get a different compiled precision per march; see [decoder
+transforms](#export) for why.
 
 <a id="source-model"></a>
 ## Source model and licenses
@@ -125,13 +130,16 @@ Two environments are used and never mixed:
 
 2. **OE toolchain** — Docker image
    `registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`
-   (hbdk 4.7.5 / hmct 2.6.5 / `hb_compile` 3.5.3, march `nash-e`) for the four
-   `hb_compile` runs. Run them **serially** (one compilation at a time); the
-   toolchain is licensed per concurrent instance. The decoder config sets
-   `jobs: 8`, the other three `jobs: 32`.
+   (hbdk 4.7.5 / hmct 2.6.5 / `hb_compile` 3.5.3) for the four `hb_compile`
+   runs; the image carries the `nash-e`/`nash-m`/`nash-p` marches. Run the
+   compiles **serially** (one at a time); the toolchain is licensed per
+   concurrent instance. The decoder config sets `jobs: 8`, the other three
+   `jobs: 32`.
 
-The only compile target is S100 (`nash-e`); no X5/S100P/S600 build exists or
-is claimed.
+The recipe builds one set per target — S100 (`nash-e`), S100P (`nash-m`),
+S600 (`nash-p`) — from the same graphs, transforms and calibration data; the
+per-target config copy changes `march`, the output prefix and the working
+directory (see [compile](#compile)). X5 has no build.
 
 <a id="export"></a>
 ## ONNX export and decoder transforms
@@ -179,9 +187,14 @@ resulting variance path INT16 on the BPU; a `run_on_cpu` flag on the composite
 node does not survive that decomposition (verified by byte-identical
 `node_info.csv`). Pre-decomposing into plain named ops lets the config's
 `run_on_cpu` list keep all 21 norm nodes (mean/centered/sq/var/vareps/invstd/
-apply per decoder block) in FP32 on the CPU — `Pow(x,-0.5)` replaces
-`Reciprocal(Sqrt())` to avoid a HzRsqrt fuse without a CPU implementation.
-The 13 convolutions plus gamma/beta denorm stay INT16 BPU.
+apply per decoder block) out of BPU INT16 — the node report shows the
+`Pow` variance ops executing FP32 on the CPU; the other listed nodes'
+placement is compiler-mixed (some fused, some FP32-on-BPU — on S600 the
+`Sub` ops compile to BPU FP32). `Pow(x,-0.5)` replaces `Reciprocal(Sqrt())`
+to avoid a HzRsqrt fuse without a CPU implementation. The convolution body
+stays integer-quantized on the BPU — si16 for the major convs, with a couple
+of pointwise convs whose compiled precision varies by march (si32 on
+S100/S100P, FP32-on-BPU on S600).
 
 <a id="calibration"></a>
 ## Calibration data
@@ -242,6 +255,23 @@ hb_compile -c net_encode_int16_config.yaml
 hb_compile -c net_decode_deconv_inorm_fullrange_config.yaml
 ```
 
+The configs ship with `march: nash-e` (S100). For each additional target copy
+the four configs (e.g. `net_encode_int16_s600_config.yaml`) and change four
+settings in the copy: under `model_parameters`, set `march` to `nash-m`
+(S100P) or `nash-p` (S600) and give the copy its own `working_dir` and
+`output_model_file_prefix` so the target sets cannot overwrite each other;
+under `compiler_parameters`, set `jobs: 8`:
+
+```yaml
+# net_encode_int16_s600_config.yaml — a copy of net_encode_int16_config.yaml
+model_parameters:
+  march: nash-p                   # nash-e -> nash-p (S600)
+  working_dir: ./net_encode_int16_s600_output
+  output_model_file_prefix: net_encode_int16_s600
+compiler_parameters:
+  jobs: 8
+```
+
 Each config writes `./<prefix>_output/<prefix>.hbm` plus
 `<prefix>_ptq_model.onnx` (quantized ONNX used by the cosine check). The
 decoder config keeps `max_percentile: 1.0`, `jobs: 8` and the 21-node
@@ -256,14 +286,23 @@ Multi-input gotchas recorded in the configs: semicolon-separated `input_name`
 <a id="validation"></a>
 ## Validation
 
-Cosine (quantized ONNX vs FP32 ONNX, onnxruntime CPU; gate 0.95 on the
-primary output):
+Cosine (quantized ONNX vs FP32 ONNX; gate 0.95 on the primary outputs —
+the ones the runtime consumes — declared with `--stage` per the sample's
+four-stage contracts, or `--primary` explicitly for other graphs;
+auxiliary outputs such as audio2mouth's `feat` are measured and reported
+with full statistics, never gated). Run it **inside the OE 3.7 toolchain
+container** — the quantized graph needs the horizon custom-op runtime only
+that environment provides. `--n` is mandatory and must not exceed the
+available samples (reference calibration datasets: audio_encoder 3,
+audio2mouth 17, facegen_encode 30, facegen_decoder 30 — the examples use
+those counts; a regenerated dataset may hold a different count):
 
 ```bash
 python conversion/scripts/cosine_eval_ptq.py \
     --fp32 conversion/net_encode.onnx \
     --ptq  conversion/net_encode_int16_output/net_encode_int16_ptq_model.onnx \
-    --calib conversion/calib_data/facegen_encode --n 50 --gate 0.95
+    --calib conversion/calib_data/facegen_encode \
+    --stage facegen_encoder --n 30 --gate 0.95
 # add --multi for the decoder's 5-subdir calib layout
 ```
 
@@ -280,7 +319,8 @@ python3 conversion/scripts/board_infer.py \
 python conversion/scripts/board_compare.py \
     --fp32 conversion/net_decode_deconv_inorm.onnx \
     --board_out conversion/board_out/net_decode \
-    --calib conversion/calib_data/facegen_decode --multi --n 30 --gate 0.95
+    --calib conversion/calib_data/facegen_decode --multi \
+    --stage facegen_decoder --n 30 --gate 0.95
 ```
 
 Artifact-matched board measurements for the shipped decoder
@@ -292,29 +332,31 @@ UCP/DNN 3.13.6, OE 3.7.0, nash-e, 2026-10-12; 166 frames of
 | Check | Result |
 | --- | --- |
 | decoder output vs FP32 reference | mean PSNR 48.94 dB, mean MAE 0.0052 on the decoder's normalized float output scale (a conversion-level tensor metric — a different scale from the uint8-frame PSNR/MAE of [evaluator/evaluate_frames.py](../evaluator/evaluate_frames.py)), no non-finite pixels |
-| decoder latency (incl. the 21 CPU norm nodes) | mean 24.69 ms/frame |
+| decoder latency (incl. the run_on_cpu norm path) | mean 24.69 ms/frame |
 
-The other three artifacts are validated with the same cosine/board scripts
-against their own calibration sets, and the sample's paired board
-verification compares every stage of the shipped set against the original
-pipeline (see the sample README).
+The other three artifacts — and the S100P/S600 builds of all four — are
+validated with the same cosine/board scripts against their own calibration
+sets, and the sample's paired board verification compares every stage of each
+shipped set against the original pipeline on the same target (see the sample
+README).
 
 <a id="artifacts"></a>
 ## Artifacts
 
-Each config writes `./<prefix>_output/<prefix>.hbm`. Copy the four HBMs into
-the sample layout with the published names —
-`s100/lite_avatar_encoder_400x560_s100.hbm` (from
-`encoder_avatar_output/`),
-`s100/lite_avatar_audio2mouth_30x50x512_s100.hbm` (from
-`audio2mouth_int16_output/`),
-`s100/lite_avatar_net_encode_384x384_s100.hbm` (from
-`net_encode_int16_output/`) and
-`s100/lite_avatar_net_decode_inorm_fullrange_384x384_s100.hbm` (from
-`net_decode_deconv_inorm_fullrange_output/`) — then run them per
-[model preparation](../model/README.md) route B: a self-built set records its
-own SHA-256 in a local rebuild manifest, while the published digests of the
-shipped set live in `docs/release/s/models.yaml`.
+Each config writes `./<prefix>_output/<prefix>.hbm` (a per-target config copy
+writes `./<prefix>_<target>_output/<prefix>_<target>.hbm`). Copy the four
+HBMs into the sample layout under `model/<target>/` with the published names:
+
+| Stage (output dir) | s100 | s100p | s600 |
+| --- | --- | --- | --- |
+| audio encoder (`encoder_avatar_output/`) | `lite_avatar_encoder_400x560_s100.hbm` | `lite_avatar_encoder_400x560_s100p.hbm` | `lite_avatar_encoder_400x560_s600.hbm` |
+| audio2mouth (`audio2mouth_int16_output/`) | `lite_avatar_audio2mouth_30x50x512_s100.hbm` | `lite_avatar_audio2mouth_30x50x512_s100p.hbm` | `lite_avatar_audio2mouth_30x50x512_s600.hbm` |
+| face encoder (`net_encode_int16_output/`) | `lite_avatar_net_encode_384x384_s100.hbm` | `lite_avatar_net_encode_384x384_s100p.hbm` | `lite_avatar_net_encode_384x384_s600.hbm` |
+| face decoder (`net_decode_deconv_inorm_fullrange_output/`) | `lite_avatar_net_decode_inorm_fullrange_384x384_s100.hbm` | `lite_avatar_net_decode_inorm_fullrange_384x384_s100p.hbm` | `lite_avatar_net_decode_inorm_fullrange_384x384_s600.hbm` |
+
+Then run them per [model preparation](../model/README.md) route B: a
+self-built set records its own SHA-256 in a local rebuild manifest, while the
+published digests of the shipped sets live in `docs/release/s/models.yaml`.
 
 <a id="known-gaps"></a>
 ## Known gaps
@@ -327,6 +369,6 @@ shipped set live in `docs/release/s/models.yaml`.
 - The untransformed decoder graph compiles with `Resize` on the CPU at
   ~157 ms/frame (measured mean); the Resize→ConvTranspose transform exists
   precisely to avoid that path.
-- Only the S100 (`nash-e`) target is compiled and validated; no X5/S100P/S600
-  build exists, and the OE image is licensed per concurrent instance (run
-  the four compiles serially).
+- X5 is not a target of this sample and no X5 build exists or is claimed.
+  The OE image is licensed per concurrent instance (run the four compiles
+  serially, per target).

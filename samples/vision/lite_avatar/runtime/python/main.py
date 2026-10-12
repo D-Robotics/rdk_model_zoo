@@ -41,9 +41,9 @@ def main(argv=None):
     try:
         normalize_args(args)
         if args.list_models:
-            # Listing is host-independent: an auto target lists the only
+            # Listing is host-independent: an auto target lists every
             # published set instead of probing for a board.
-            return print_model_list("s100" if args.target == "auto" else args.target)
+            return print_model_list(args.target)
         selections = resolve_selections_for(args)
         if args.dry_run:
             return print_resolution(args, selections)

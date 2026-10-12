@@ -14,6 +14,10 @@ Usage (run from lite-avatar repo root, with weights/ populated):
         --wav_dir funasr_local/runtime/triton_gpu/client/test_wavs \
         --paraformer_example_wav weights/speech_paraformer-*/example \
         --out conversion/calib_data/audio2mouth --n_windows 60
+
+``--n_windows`` only sizes a regenerated pool.  The prepared reference
+dataset for this sample carries 17 arrays — validation runs must pass a
+count that does not exceed what the dataset actually holds.
 """
 import os, sys, glob, argparse, pathlib
 import numpy as np

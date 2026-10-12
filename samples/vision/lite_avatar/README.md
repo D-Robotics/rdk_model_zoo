@@ -2,8 +2,8 @@ English | [简体中文](README_cn.md)
 
 # LiteAvatar audio-driven talking avatar
 
-Offline rendering of an audio-driven talking avatar on the RDK S100: speech
-audio in, a composited avatar video out.
+Offline rendering of an audio-driven talking avatar on the RDK S100, S100P
+and S600: speech audio in, a composited avatar video out.
 
 Sources: [HumanAIGC/lite-avatar](https://github.com/HumanAIGC/lite-avatar) (MIT)
 
@@ -13,7 +13,7 @@ Sources: [HumanAIGC/lite-avatar](https://github.com/HumanAIGC/lite-avatar) (MIT)
 
 ## Overview
 
-The sample ships one Python runtime for S100. The `LiteAvatarPipeline` class
+The sample ships one Python runtime for S100, S100P and S600. The `LiteAvatarPipeline` class
 chains the four published HBM artifacts through a readable
 `preprocess → infer → postprocess` flow per stage and one whole-clip
 `predict`: the audio frontend extracts Paraformer features (Kaldi fbank,
@@ -23,8 +23,8 @@ parameters (crossfaded and Butterworth-smoothed exactly as upstream), and
 the face decoder renders each frame conditioned on the reference-frame
 feature pyramids. Frames composite the decoded mouth over the background
 loop with the original feathered mask and ping-pong ring order, then the
-CLI delivers them to the S100 hardware H.264 encoder (or an FFmpeg pipe)
-with bounded, failure-cleaning writers
+CLI delivers them to an H.264 encoder (the S100 hardware worker, or an
+FFmpeg pipe) with bounded, failure-cleaning writers
 ([runtime/python/README.md](runtime/python/README.md)).
 
 ### Algorithm background
@@ -34,9 +34,10 @@ features: the paraformer encoder's intermediate hidden states carry
 articulation information that a small audio2mouth network decodes into
 32 mouth parameters per video frame; a decoder network (InstanceNorm-styled
 blocks with x2 upsamples) synthesizes the mouth region for the avatar's
-current pose, which is blended into the background video. The four S100
-artifacts run INT16 activations on the BPU; the decoder's 21 InstanceNorm
-subgraph nodes stay FP32 on the CPU for numerical fidelity (see
+current pose, which is blended into the background video. The four per-target
+artifacts are quantized with INT16 configured on all nodes (the compiler
+still assigns a few ops other dtypes); the decoder's normalization path
+stays FP32 through its 21-node `run_on_cpu` list (see
 [conversion](conversion/README.md)).
 
 <a id="directory"></a>
@@ -58,15 +59,18 @@ lite_avatar/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Language | Status |
-| --- | --- | --- |
-| s100 | python | supported |
+| Target | Language | Video encoder | Status |
+| --- | --- | --- | --- |
+| s100 | python | S100 hardware H.264 (default `auto`) or FFmpeg pipe | supported |
+| s100p | python | FFmpeg pipe | supported |
+| s600 | python | FFmpeg pipe | supported |
 
 <a id="prerequisites"></a>
 ## Prerequisites
 
-- The four HBM artifacts prepared under `model/s100/` — from a local bundle
-  or self-compilation, verified per [model preparation](model/README.md).
+- The four HBM artifacts prepared under `model/<target>/` — from a local
+  bundle or self-compilation, verified per
+  [model preparation](model/README.md) (`verify.py --target <t>`).
 - The avatar data directory extracted from the pinned upstream
   `sample_data.zip` per [test data](test_data/README.md) (default location:
   `test_data/preload`).
@@ -82,9 +86,9 @@ lite_avatar/
 One complete path on an S100 board, commands run from the repository root:
 
 ```bash
-# 1. Verify the prepared artifact set
+# 1. Verify the prepared artifact set (add --target s100p / s600 as needed)
 #    success: verify.py exits 0 and prints each digest match
-python3 samples/vision/lite_avatar/model/verify.py
+python3 samples/vision/lite_avatar/model/verify.py --target s100
 
 # 2. Prepare the avatar data (one-time, ~5 MB)
 #    success: shasum prints "sample_data.zip: OK"
@@ -101,9 +105,10 @@ bash samples/vision/lite_avatar/runtime/python/run.sh --target s100 \
     --audio samples/vision/lite_avatar/test_data/asr_example.wav
 ```
 
-`--encoder auto` (the default) resolves to the S100 hardware H.264 encoder;
-pass `--encoder software` for the FFmpeg pipe or `--no-encode` to render
-without writing. Full CLI and API reference:
+`--target` selects the artifact set and must match the board; `--encoder
+auto` (the default) resolves to the S100 hardware H.264 encoder and the
+FFmpeg pipe elsewhere. Pass `--encoder software`/`hardware` to pin one, or
+`--no-encode` to render without writing. Full CLI and API reference:
 [runtime/python/README.md](runtime/python/README.md).
 
 <a id="expected-results"></a>
@@ -125,12 +130,15 @@ validation of a self-compiled set is described in
 
 ### Performance
 
-Measured with the plain entry on S100 (torch 2.3.1, hardware encoder,
-default thread policy): the bundled 166-frame clip renders in **7.54 s —
-22.01 fps** (`Rendered 166 frames ... in 7.54s (22.01 fps)`). The timed
-window covers rendering all 166 frames plus encoder drain and MP4 muxing;
-the one-time offline audio-frontend and renderer-initialization phases
-before it are excluded.
+Measured with the plain entry (torch 2.3.1, default thread policy): the
+bundled 166-frame clip renders in **7.54 s — 22.01 fps** on S100 (hardware
+encoder; `Rendered 166 frames ... in 7.54s (22.01 fps)`), **36.4 fps** on
+S100P (software encoder, 13.2 s; 38.0 fps with `--no-encode`) and
+**39.4 fps** on S600 (software encoder, 4.21 s; 40.9 fps with
+`--no-encode`). The timed
+window covers rendering all 166 frames plus
+encoder drain and MP4 muxing; the one-time offline audio-frontend and
+renderer-initialization phases before it are excluded.
 
 <a id="entry-points"></a>
 ## Entry points

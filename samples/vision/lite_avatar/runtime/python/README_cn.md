@@ -7,15 +7,17 @@
 <a id="overview"></a>
 ## 概述
 
-面向 S100 的离线音频驱动数字人渲染：一个 Python 运行时把四个已发布 HBM
-产物（音频编码器、audio2mouth、人脸编码器、人脸解码器）串成整段音频的
-`predict`，并把帧交给视频写入器。`main.py` 保持流程可见——解析 → 选择 →
+面向 S100、S100P 与 S600 的离线音频驱动数字人渲染：一个 Python 运行时把
+四个已发布 HBM 产物（音频编码器、audio2mouth、人脸编码器、人脸解码器）
+串成整段音频的 `predict`，并把帧交给视频写入器。`main.py` 保持流程可见——解析 → 选择 →
 构建 → 预测 → 交付；写入器对所有资源（FFmpeg 管道、带共享内存环的 S100
 硬件编码 worker）设上界并在失败时清理。
 
-| 目标 | 语言 | 状态 |
-| --- | --- | --- |
-| s100 | python | supported |
+| 目标 | 语言 | 视频编码器 | 状态 |
+| --- | --- | --- | --- |
+| s100 | python | S100 硬件 H.264 worker 或 FFmpeg 管道 | supported |
+| s100p | python | FFmpeg 管道 | supported |
+| s600 | python | FFmpeg 管道 | supported |
 
 线程策略（实测板端配置）：入口在首个重导入之前导出
 `OPENBLAS_NUM_THREADS=1` 与 `OMP_NUM_THREADS=4`（显式导出的环境优先），
@@ -45,8 +47,8 @@ runtime/python/
 `ffmpeg`：
 
 ```bash
-# 板上执行（Python 3.10，aarch64）：在用户数据盘上建一个受限 venv，
-# 固定为已验证版本（PyPI 标准 aarch64 轮子）
+# 板上执行（镜像 Python：S100/S100P 为 3.10，S600 为 3.12；aarch64）：
+# 在用户数据盘上建一个受限 venv，固定为已验证版本（PyPI 标准 aarch64 轮子）
 python3 -m venv --system-site-packages /mnt/sdcard/lite-avatar-venv
 /mnt/sdcard/lite-avatar-venv/bin/pip install \
     torch==2.3.1 torchaudio==2.3.1 numpy==1.26.4 \
@@ -97,7 +99,7 @@ bash samples/vision/lite_avatar/runtime/python/run.sh --target s100 \
 
 | 参数 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| `--target` | choice | auto | 执行目标：`auto`、`x5`、`s100`、`s100p`、`s600`；LiteAvatar 只有 S100 构建，须与检测到的硬件一致 |
+| `--target` | choice | auto | 执行目标：`auto`、`x5`、`s100`、`s100p`、`s600`；LiteAvatar 发布 s100/s100p/s600 三套产物，须与检测到的硬件一致 |
 | `--list-models` | flag | false | 不上板列出清单支持的产物引用 |
 | `--dry-run` | flag | false | 不加载 SDK 解析/校验四模型选择 |
 | `--audio` | string | null | 输入 WAV（任意采样率；立体声取第一声道） |
@@ -123,6 +125,11 @@ bash samples/vision/lite_avatar/runtime/python/run.sh --target s100 \
 (encoder: hardware|software)`，随后退出码 0。输出为可解码的 H.264 MP4：
 背景循环帧与动画嘴部 ROI 的数字人几何，30 fps，输入音频已混流。
 `--no-encode` 时不写文件，仅打印渲染汇总。
+
+捆绑示例（166 帧，890x1920）实测：S100 硬件编码渲染 22.0 fps；S100P 软件
+编码渲染 **36.4 fps**（端到端 13.2 秒）、`--no-encode` 38.0 fps，软件编码
+MP4 回解码面部平均 PSNR 38.7 dB；S600 软件编码渲染 **39.4 fps**、
+`--no-encode` 40.9 fps，回解码面部平均 PSNR 38.7 dB。
 
 <a id="integration-example"></a>
 ## 集成示例
@@ -177,9 +184,9 @@ for frame in result.frames():   # uint8 BGR，30 fps 每帧一个
 
 | 现象 | 检查 |
 | --- | --- |
-| `Missing model artifacts`（退出码 2） | 按[模型文档](../../model/README_cn.md)准备 `model/s100/` 下四个文件；运行 `model/verify.py`。 |
+| `Missing model artifacts`（退出码 2） | 按[模型文档](../../model/README_cn.md)准备 `model/<目标>/` 下四个文件；运行 `model/verify.py --target <t>`。 |
 | `--dry-run` 退出码 1 | 同样的准备缺口；打印的路径即缺失文件。 |
-| 目标选择错误 | LiteAvatar 只有一套已发布产物；S100 板上用 `--target s100`（或 `auto`），其他目标显式报错。 |
+| 目标选择错误 | LiteAvatar 每个目标各发布一套四文件产物（`s100`、`s100p`、`s600`）；目标须与检测到的板卡一致（或用 `auto`），其他目标显式报错。 |
 | `FFmpeg is required for video output (not on PATH)` | **两种**编码器写视频都要求 PATH 上有 `ffmpeg`（硬件路径同样要经它混流）；安装板端镜像的 ffmpeg 软件包，或改用 `--no-encode`。 |
 | `Hardware encoder worker exited ... (exit N)` | 捆绑的 worker 在协议中途崩溃；运行会带 worker 日志路径中止——检查 `dmesg`/日志中的编码器设备状态后重试。 |
 | 输出与参考渲染不同 | 先对齐产物、音频、数字人数据与编码器再判断质量；用 [evaluator/evaluate_frames.py](../../evaluator/evaluate_frames.py) 对比参考帧。 |

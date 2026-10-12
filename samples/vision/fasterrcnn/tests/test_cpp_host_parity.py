@@ -16,6 +16,8 @@ import sys
 import unittest
 from pathlib import Path
 
+import numpy as np
+
 HERE = Path(__file__).resolve().parent
 RUNNER = HERE / "cpp" / "run_host_checks.py"
 
@@ -65,6 +67,24 @@ class CppHostParityTest(unittest.TestCase):
         self.assertEqual(self.failures, [],
                          "C++ host parity checks failed:\n" +
                          "\n".join(f"  - {f}" for f in (self.failures or [])))
+
+    def test_rpn_proposal_tolerance_is_absolute_and_discriminating(self):
+        # The tolerance must be a strict absolute 1e-4 px: 320 vs 319.997
+        # (0.003 px) fails outright — no relative term widens it at large
+        # coordinates.  Wrong shape and non-finite values fail too; an
+        # exact copy passes.  Ordering is enforced positionally by the same
+        # element-wise predicate (covered on the fixture by the numerics
+        # test that swaps the farthest-apart rows).
+        matches = self.module.proposals_match
+        expected = np.full((2, 4), 320.0, dtype=np.float32)
+        drifted = expected.copy()
+        drifted[0, 2] = np.float32(319.997)
+        self.assertFalse(matches(drifted, expected))
+        self.assertFalse(matches(np.zeros((3, 4), dtype=np.float32), expected))
+        nonfinite = expected.copy()
+        nonfinite[1, 1] = np.float32("nan")
+        self.assertFalse(matches(nonfinite, expected))
+        self.assertTrue(matches(expected.copy(), expected))
 
 
 if __name__ == "__main__":

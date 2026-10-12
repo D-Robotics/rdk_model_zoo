@@ -1,16 +1,21 @@
 """
-Board-side HBM inference for validation. Runs ON the S100 board using hbm_runtime.
-Loads one HBM, feeds calibration .npy inputs, runs inference on the real BPU,
-dequantizes outputs, and dumps them to .npy files for host-side cosine comparison.
+Board-side HBM inference for validation. Runs ON the RDK board (S100 / S100P /
+S600) using hbm_runtime. Loads one HBM, feeds calibration .npy inputs, runs
+inference on the real BPU, dequantizes outputs, and dumps them to .npy files
+for host-side cosine comparison.
 
-Prereq (on board):  hbm_runtime (pip install hbm_runtime  OR  hobot-dnn deb), numpy
-Run on board, e.g.:
+Prereq (on board): the hbm_runtime SDK and numpy as shipped in the RDK board
+image (no extra installation).
+Run on board, e.g. (--n must not exceed the available arrays — the prepared
+reference datasets carry audio_encoder 3, audio2mouth 17, facegen_encode 30,
+facegen_decoder 30 in the 5-subdir multi layout; fewer files than requested
+abort instead of silently running a subset):
   python3 board_infer.py --hbm /path/on/board/encoder_avatar.hbm \
-      --calib /path/on/board/calib_data/encoder_avatar --n 20 \
+      --calib /path/on/board/calib_data/encoder_avatar --n 3 \
       --out /path/on/board/board_out/encoder
   # multi-input (net_decode):
   python3 board_infer.py --hbm /path/on/board/net_decode.hbm \
-      --calib /path/on/board/calib_data/facegen_decode --multi --n 20 \
+      --calib /path/on/board/calib_data/facegen_decode --multi --n 30 \
       --out /path/on/board/board_out/net_decode
 """
 import os, sys, glob, argparse
@@ -25,18 +30,37 @@ HB_DTYPE_MAP = {
 
 def load_calib(calib_dir, input_names, multi, n):
     if not multi:
-        files = sorted(glob.glob(f"{calib_dir}/*.npy"))[:n]
+        files = sorted(glob.glob(f"{calib_dir}/*.npy"))
         if not files:
             raise SystemExit(f"no calib .npy in {calib_dir}")
+        if len(files) < n:
+            raise SystemExit(
+                f"calib has {len(files)} sample(s) < requested n={n}"
+            )
         name = input_names[0]
-        return [{name: np.load(f).astype(np.float32)} for f in files]
+        return [{name: np.load(f).astype(np.float32)} for f in files[:n]]
     sub = {nm: sorted(glob.glob(f"{calib_dir}/{nm}/*.npy")) for nm in input_names}
-    k = min(len(v) for v in sub.values())
-    if k == 0:
-        raise SystemExit(f"multi calib incomplete: { {n2: len(v) for n2, v in sub.items()} }")
-    k = min(k, n)
+    counts = {n2: len(v) for n2, v in sub.items()}
+    if min(counts.values()) == 0:
+        raise SystemExit(f"multi calib incomplete: {counts}")
+    k = min(counts.values())
+    if k < n:
+        raise SystemExit(f"multi calib has {k} complete sample(s) < requested n={n}: {counts}")
     return [{nm: np.load(sub[nm][i]).astype(np.float32) for nm in input_names}
-            for i in range(k)]
+            for i in range(n)]
+
+
+def collect_outputs(out, out_names):
+    """Fetch every expected named output; a missing name aborts — never
+    substitute a positional/first returned value for a named output."""
+    missing = [oname for oname in out_names if oname not in out]
+    if missing:
+        raise SystemExit(
+            f"SDK run returned keys {list(out.keys())}; expected output "
+            f"name(s) missing: {missing} — refusing to substitute a "
+            "positional value for a named output"
+        )
+    return {oname: out[oname] for oname in out_names}
 
 
 def dequant(arr, qinfo):
@@ -63,9 +87,24 @@ def main():
     p.add_argument("--hbm", required=True)
     p.add_argument("--calib", required=True)
     p.add_argument("--multi", action="store_true")
-    p.add_argument("--n", type=int, default=20)
+    p.add_argument("--n", type=int, default=None,
+                   help="sample count; every requested sample must exist "
+                        "(n <= available; reference datasets: audio_encoder 3, "
+                        "audio2mouth 17, facegen_encode 30, facegen_decoder 30); "
+                        "required — no silent default")
     p.add_argument("--out", required=True)
     args = p.parse_args()
+    if args.n is None:
+        raise SystemExit(
+            "--n is required: state the count explicitly (it must not "
+            "exceed the available samples; reference datasets: "
+            "audio_encoder 3, audio2mouth 17, facegen_encode 30, "
+            "facegen_decoder 30)"
+        )
+    if args.n <= 0:
+        raise SystemExit(
+            f"--n must be a positive sample count, got {args.n}"
+        )
 
     from hbm_runtime import HB_HBMRuntime
     model = HB_HBMRuntime(args.hbm)
@@ -95,15 +134,19 @@ def main():
             res = model.run(feed[ins[0]])
         else:
             res = model.run(feed)
-        out = res[mname]
+        res_all = res[mname]
+        if i == 0:
+            print("  returned_output_keys=", list(res_all.keys()))
+        out = collect_outputs(res_all, out_names)
         for oname in out_names:
-            arr = np.asarray(out[oname]) if oname in out else np.asarray(list(out.values())[0])
+            arr = np.asarray(out[oname])
             f = dequant(arr, out_quants.get(oname))
             np.save(os.path.join(args.out, f"{i:03d}_{oname}.npy"), f.astype(np.float32))
         if i == 0:
             for oname in out_names:
                 a = np.load(os.path.join(args.out, f"000_{oname}.npy"))
-                print(f"  sample0 {oname}: shape={a.shape} range=[{a.min():.4f},{a.max():.4f}]")
+                print(f"  sample0 {oname}: shape={a.shape} dtype={a.dtype} "
+                      f"finite={np.isfinite(a).all()} range=[{a.min():.4f},{a.max():.4f}]")
 
     print(f"done -> {args.out}")
 

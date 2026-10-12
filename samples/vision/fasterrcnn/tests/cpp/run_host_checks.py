@@ -239,6 +239,20 @@ def compile_harness(build_dir: Path) -> Path:
     return binary
 
 
+RPN_PROPOSALS_ATOL = 1e-4  # px, absolute — same bound as the Python-side check
+
+
+def proposals_match(actual: np.ndarray, expected: np.ndarray) -> bool:
+    """Absolute 1e-4 px RPN-proposal tolerance (rtol 0, matching the
+    Python fixture check): last-bit libm/numpy drift stays below 3.1e-5
+    across implementations, while a wrong box, a reordering, or a
+    non-finite coordinate exceeds 1e-4 outright (no relative term can
+    widen the bound at large coordinates)."""
+    return (actual.shape == expected.shape
+            and bool(np.allclose(actual, expected, rtol=0.0,
+                                 atol=RPN_PROPOSALS_ATOL)))
+
+
 def compare(out_dir: Path, expected: dict) -> list[str]:
     """Compare the harness outputs with the Python-computed expectations."""
     failures: list[str] = []
@@ -257,9 +271,17 @@ def compare(out_dir: Path, expected: dict) -> list[str]:
     check("anchor_table bit-exact",
           np.array_equal(load("anchors_out.f32", np.float32), expected["anchors"]),
           "differs from the fixture anchor table")
-    check("rpn_select proposals bit-exact",
-          np.array_equal(load("proposals_out.f32", np.float32).reshape(-1, 4),
-                         expected["proposals"]),
+    # The RPN decode is exp() arithmetic like the tail below: identical
+    # float32 math except that libm (C++ std::exp) and numpy's vectorized
+    # exp round the last bits differently.  Measured on glibc: 76/600
+    # coordinates differ, max abs 3.05e-05 (two float32 ULP at the 320-px
+    # canvas scale), with cancellation at small coordinates keeping the
+    # absolute drift below 1e-6.  Count and shape stay exact, and the
+    # element-wise tolerance keeps the ordering checked — a swap moves
+    # coordinates by whole pixels.
+    proposals = load("proposals_out.f32", np.float32).reshape(-1, 4)
+    check("rpn_select proposals match",
+          proposals_match(proposals, expected["proposals"]),
           "proposals differ from the Python RPN selection")
     check("rpn_select n_valid",
           int(load("n_valid_out.i64", np.int64)[0]) == expected["n_valid"],

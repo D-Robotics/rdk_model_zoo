@@ -101,9 +101,12 @@ describe("multi-platform variant catalog", () => {
     // On 2026-10-12 LiteAvatar joined with four manual S100 artifacts and no benchmark rows, and on
     // 2026-10-13 Faster R-CNN published eight manual assets (two per target, no download URLs, no
     // benchmark rows): 59 families and 628 variants, 834 benchmark rows unchanged.
+    // On 2026-10-13 LiteAvatar published its S100P and S600 artifact sets (four manual HBM files per
+    // target, no download URLs, no benchmark rows): 59 families and 636 variants, 834 benchmark rows
+    // unchanged.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(59);
-    expect(variants).toHaveLength(628);
+    expect(variants).toHaveLength(636);
     expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(834);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));

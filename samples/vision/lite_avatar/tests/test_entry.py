@@ -12,12 +12,15 @@ from samples.vision.lite_avatar.runtime.python import main as main_module
 
 
 class MainModelFreeModes(unittest.TestCase):
-    def test_list_models_lists_the_published_set(self):
+    def test_list_models_lists_every_published_set(self):
         buffer, errbuf = io.StringIO(), io.StringIO()
         with redirect_stdout(buffer), redirect_stderr(errbuf):
             code = main_module.main(["--list-models"])
         self.assertEqual(code, 0)
-        self.assertIn("s:lite_avatar:s100/", buffer.getvalue())
+        text = buffer.getvalue()
+        for target in ("s100", "s100p", "s600"):
+            self.assertIn(f"s:lite_avatar:{target}/", text)
+            self.assertIn(f"[{target}]", text)
         self.assertEqual(errbuf.getvalue(), "")
 
     def test_dry_run_resolves_and_reports_missing_artifacts(self):
