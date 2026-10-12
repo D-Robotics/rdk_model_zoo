@@ -21,7 +21,7 @@ conversion/
 
 X5 使用 [YOLOv5 转换配方](../../yolov5/conversion/README_cn.md)，其中包含 v2.0/v7.0 导出、校准数据准备和 NV12 编译配置。
 
-S100 对应 `s100/yolov5x_672x672_nv12.hbm` Nash-e，S100P 对应自己的 `s100p/...`，S600 对应自己的 `s600/...`。转换需在 x86 Linux 主机使用 RDK S OpenExplorer；源资源为 [OE overview](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview) 和 [toolchain manual](https://toolchain.d-robotics.cc/)。sample 没有 S YAML 或 exporter。
+S 系列模型需在 x86 Linux 主机上的 RDK S OpenExplorer 环境中转换。按板卡选择编译目标，模型路径分别为 `s100/`、`s100p/` 和 `s600/` 下的 `yolov5x_672x672_nv12.hbm`。环境配置见 [OE 概述](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview)和[工具链手册](https://toolchain.d-robotics.cc/)。S 系列的导出脚本及 YAML 配置需另行准备。
 
 <a id="export"></a>
 ## 导出

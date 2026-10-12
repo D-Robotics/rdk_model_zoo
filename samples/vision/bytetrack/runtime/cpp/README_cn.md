@@ -5,33 +5,33 @@
 <a id="overview"></a>
 ## C++ 推理
 
-本目录提供 C++ 推程所需的程序与操作说明。YOLOv5 在板端 BPU 上检测行人，C++ BYTETracker 在 CPU 上将检测关联为轨迹。`bytetrack` 可执行程序提供两种模式：`video`（板端构建）读取准备好的视频和检测模型，输出轨迹、可选的标注视频与可选的记录 TSV；`replay`（主机与板端构建）仅从文件读取检测序列并运行跟踪器。参数名与 Python CLI 的同义项一致（`--input`、`--model-path`、`--output`、`--records`、各阈值与调度参数）。
+YOLOv5 在 BPU 上检测行人，ByteTrack 在 CPU 上关联轨迹。运行 `bytetrack video` 可处理视频，保存带框视频和轨迹记录；运行 `bytetrack replay` 可读取已有检测结果，只执行跟踪。
 
-视频模式采用 YOLOv5 C++ 检测器的 letterbox 预处理与浮点坐标；Python X5 检测器采用直接缩放、裁剪并取整坐标，两种视频模式可能产生不同轨迹，见[结果解释](#results-interpretation)。已有检测器的应用可直接调用 `ByteTracker`，自行决定检测输入。
+已有检测器时，可直接将检测结果传给 `ByteTracker::update`。视频模式的预处理和坐标格式见[结果解释](#results-interpretation)。
 
 <a id="directory"></a>
 ## 目录结构
 
 ```text
 cpp/
-├── CMakeLists.txt  # 显式 target 构建：host、x5、s100、s100p、s600
-├── run.sh  # 按目标构建（一次）并运行
+├── CMakeLists.txt  # 按板卡构建：host、x5、s100、s100p、s600
+├── run.sh  # 构建并运行指定板卡程序
 ├── inc/
 │   ├── tracking.hpp  # ByteTracker 与 ByteTrackModel 公开接口（不含 SDK 头）
 │   ├── cli.hpp  # CLI 选项、回放读取、记录写出、视频读写
-│   ├── parallel.hpp  # 帧内并行使用的固定槽执行器
+│   ├── parallel.hpp  # 帧内并行使用的线程调度
 │   └── lapjv.h  # 内置线性分配求解器接口
 ├── src/
-│   ├── tracking.cpp  # BYTETracker 移植 + 板端模型组合（基于 YOLOv5）
+│   ├── tracking.cpp  # 轨迹关联与 YOLOv5 推理
 │   ├── lapjv.cpp  # 内置 lap 0.5.12 求解器（原样编译）
 │   ├── parallel.cpp  # ByteTracker 并行区间的线程池
 │   ├── cli.cpp  # 参数解析、回放 IO、记录 TSV、视频 IO 与渲染
-│   └── main.cpp  # 薄入口：解析 -> 构造模型 -> 逐帧 predict
+│   └── main.cpp  # 入口：解析 -> 构造模型 -> 逐帧 predict
 ├── THIRD_PARTY_LICENSES.md
 └── licenses/  # lap-LICENSE
 ```
 
-`inc/tracking.hpp` 与 `inc/cli.hpp` 不包含任何板端 SDK 头文件：SDK 类型只出现在 `.cpp` 编译单元内，应用可以直接包含公开头文件并链接库。
+集成到 C++ 应用时，包含 `inc/tracking.hpp` 并链接 `bytetrack_core`。视频读写接口位于 `inc/cli.hpp`。
 
 <a id="supported-boards"></a>
 ## 适用板卡
@@ -44,12 +44,12 @@ cpp/
 | S600 | `bytetrack video` / `replay` | OpenCV、系统 DNN/UCP SDK、`s600/yolov5x_672x672_nv12.hbm` |
 | 主机（无板卡） | `bytetrack replay` | C++17 编译器；无需 SDK 与 OpenCV |
 
-S 系列制品按目标区分：使用[模型说明](../../model/README_cn.md)中对应目标自己的 `.hbm` 行。
+按[模型说明](../../model/README_cn.md)选择对应板卡的模型文件。
 
 <a id="dependencies"></a>
 ## 依赖
 
-- 工具链：C++17 编译器——板端系统自带 GCC（实测 X5 为 GCC 11.2）或面向目标的 OE 交叉工具链。
+- 工具链：支持 C++17 的板端 GCC 或对应板卡的 OE 交叉编译器。
 - CMake ≥ 3.16，需要 `Threads`。
 - 板端构建：OpenCV 开发库（视频解码/编码与渲染）。
 - X5：系统 HB-DNN SDK（`libdnn`；头文件位于 `/usr/hobot/include` 与 `/usr/include/hobot/dnn`）。
@@ -59,7 +59,7 @@ S 系列制品按目标区分：使用[模型说明](../../model/README_cn.md)�
 <a id="build"></a>
 ## 构建
 
-target 必须显式指定；CMake 不探测 SoC，不做任何自动识别。`BYTETRACK_TARGET` 取 `host`、`x5`、`s100`、`s100p`、`s600` 之一，各目标使用独立构建目录，切换目标不会复用其他目标的目标文件：
+通过 `BYTETRACK_TARGET` 选择 `host`、`x5`、`s100`、`s100p` 或 `s600`。以下命令构建 X5 程序：
 
 ```bash
 # cwd：samples/vision/bytetrack/runtime/cpp
@@ -68,7 +68,7 @@ cmake --build build/x5 --target bytetrack -j
 # 预期：build/x5/bytetrack
 ```
 
-将 `-DBYTETRACK_TARGET=s100`（或 `s100p`、`s600`、`host`）同样使用即可；二进制位于 `build/<target>/bytetrack`。
+构建其他目标时，同时修改 `-B build/<target>` 和 `-DBYTETRACK_TARGET=<target>`。生成的程序位于 `build/<target>/bytetrack`。
 
 启动脚本封装了同样的两条命令（在仓库根目录执行）：
 
@@ -79,7 +79,7 @@ bash samples/vision/bytetrack/runtime/cpp/run.sh --target x5 -- --help
 <a id="run"></a>
 ## 运行
 
-先准备模型与视频（可执行程序不会下载任何东西）：按[模型说明](../../model/README_cn.md)与[Sample 快速体验](../../README_cn.md#quickstart)操作。然后在仓库根目录执行：
+按[模型说明](../../model/README_cn.md)与[快速体验](../../README_cn.md#quickstart)准备模型和视频，然后在仓库根目录执行：
 
 ```bash
 # X5：使用默认检测变体（n-v7.0）进行视频跟踪
@@ -90,7 +90,7 @@ bash samples/vision/bytetrack/runtime/cpp/run.sh --target x5 -- video \
 # 预期："video: <N> frames, <M> track rows"、result_x5.mp4、tracks_x5.tsv
 ```
 
-S 目标传入自己的模型行与目标名：
+S100 使用以下命令：
 
 ```bash
 bash samples/vision/bytetrack/runtime/cpp/run.sh --target s100 -- video \
@@ -99,7 +99,7 @@ bash samples/vision/bytetrack/runtime/cpp/run.sh --target s100 -- video \
   --output result_s100.mp4 --records tracks_s100.tsv
 ```
 
-其他 S 板将 `s100p`/`s600` 与对应的 `model/<target>/yolov5x_672x672_nv12.hbm` 替换即可。省略 `--output` 关闭渲染与视频编码；省略 `--records` 关闭 TSV 输出；两个写出器相互独立。
+S100P 和 S600 将命令中的 `s100` 替换为对应板卡名称，并使用相应模型文件。`--output` 用于保存带框视频，`--records` 用于保存轨迹记录，可分别选择。
 
 host 目标无需板端 SDK，仅从检测文件运行跟踪器：
 
@@ -112,7 +112,7 @@ bash samples/vision/bytetrack/runtime/cpp/run.sh --target host -- replay \
 <a id="parameters"></a>
 ## 参数
 
-`bytetrack <mode> [options]`，mode 为 `replay` 或 `video`（`video` 仅板端构建存在；主机二进制会拒绝）。默认值为代码实际定义的值：
+命令格式为 `bytetrack <mode> [options]`。板端支持 `video` 和 `replay`，主机支持 `replay`。
 
 | 参数 | 默认值 | 说明 |
 | --- | ---: | --- |
@@ -127,40 +127,45 @@ bash samples/vision/bytetrack/runtime/cpp/run.sh --target host -- replay \
 | `--track-buffer N` | 60 | 丢失轨迹保留窗口，按 `frame_rate / 30` 缩放 |
 | `--match-thresh F` | 0.8 | 第一轮关联最大匹配代价 |
 | `--frame-rate N` | 30 | 用于缩放保留窗口的输入帧率 |
-| `--mot20` | 关闭 | 源码可选匹配模式（不融合检测分数） |
+| `--mot20` | 关闭 | MOT20 匹配模式（不融合检测分数） |
 | `--bpu-cores I` | -1 | BPU 核心：-1 任意，或固定索引 0..3 |
 | `--priority I` | 0 | BPU 任务优先级，0..255 |
 | `--max-frames N` | 0 | 处理帧数上限；0 表示全部 |
 | `--threads N` | 1 | 跟踪器内部线程数，包含调用线程 |
 
-输出路径（`--records` 或 `--output`）若与输入（`--detections`、`--input`、`--model-path`）指向同一文件——同一路径、符号链接别名或等价的未存在路径——会在任何文件打开之前被拒绝。`--records` 与 `--output` 也必须指向不同文件。
+`--output` 和 `--records` 使用不同的文件路径，且不能覆盖输入视频、检测文件或模型。
 
 X5 使用默认的 `--priority 0` 和 `--bpu-cores -1`。S 系列的 C++ `--bpu-cores` 接收单个核心索引，Python CLI 则接收索引列表。
 
 <a id="interface-lifecycle"></a>
 ## 接口与资源生命周期
 
-`inc/tracking.hpp` 提供两个接口，均为 RAII——资源在构造函数中分配、析构函数中释放，没有 `init()`/`deinit()`。
+创建模型对象时加载资源，对象销毁时自动释放。按输入类型选择接口：
 
-- 配置：`TrackingConfig{track_thresh=.3, track_buffer=60, match_thresh=.8, frame_rate=30, mot20=false}`——`frame_rate` 按 `track_buffer/30` 缩放；越界值在构造函数抛出 `TrackingConfigError`。
-- 模型：`ByteTracker(config, threads)` 校验配置并建立跟踪状态；`update(detections, img_h, img_w)` 推进一帧并返回自有 `Track` 快照（`track_id`、原图像素 XYXY 双精度 `tlbr`、`score`、`frame_id`）；另有 `frame_id()`、`persistent_track_count()`、`parallel_usage()`、`reset()`。`update` 对 NaN 坐标/分数或非正框/尺寸抛出 `TrackingInputError`。
-- 模型：`ByteTrackModel::Options{model_path, score_thres=.25, nms_thres=.45, bpu_priority=0, bpu_core=-1, tracking, threads=1}`——仅板端构建。构造函数加载 YOLOv5 模型并分配 BPU 张量（失败抛出），析构函数释放。
-- 数据流：`preprocess(const Frame&) -> Prepared`（letterbox/张量准备）、`infer(const Prepared&) -> Raw`（BPU 前向）、`postprocess(const Raw&, const Prepared&) -> std::vector<Track>`（解码行人、COCO 类 0、一次跟踪器更新）；`predict(const Frame&)` 将三个阶段各执行一次。`detect(const Frame&)` 返回检测列表但不推进跟踪器。`Frame` 持有 HWC BGR 字节；`Prepared`/`Raw` 持有按 const 引用传递的检测器负载。
-- 线程：每条有序视频流一个实例；实例非线程安全。`--threads` 并行化帧内的逐轨迹 Kalman 预测与 IoU 行（任意线程数结果一致）；关联保持顺序。多路视频请为每路分配独立实例与线程。
-- 视频 IO（`inc/cli.hpp`）：`VideoReader` 在构造函数打开输入；`VideoSink` 在第一次 `write` 时延迟打开输出（mp4v、以该帧尺寸），路径不可写时抛出；两者都在析构函数释放 OpenCV 句柄。
+- 已有行人检测框：创建 `ByteTracker(config, threads)`，每帧调用 `update(detections, img_h, img_w)`。返回 `Track` 记录，包含目标 ID、原图坐标 `tlbr`、置信度和帧号。
+- 输入视频帧：创建 `ByteTrackModel(options)`，每帧调用 `predict(frame)`。`options` 指定模型路径、检测阈值、跟踪参数和线程数。
+- 只需要检测结果：调用 `ByteTrackModel::detect(frame)`，不更新轨迹。
 
-每条视频流使用独立实例并按帧序调用；空检测帧也调用 `update`。`reset()` 清除轨迹历史和帧号，保留递增的 ID 计数。ID 在各实例内独立，多路应用用 `(stream_id, track_id)` 标识目标。
+`TrackingConfig` 的默认值为 `track_thresh=.3`、`track_buffer=60`、`match_thresh=.8`、`frame_rate=30`、`mot20=false`。参数越界时，创建跟踪器会抛出 `TrackingConfigError`；输入坐标或置信度为 NaN、框或图像尺寸无效时，`update` 抛出 `TrackingInputError`。
+
+需要分步调用时，按 `preprocess(frame)` → `infer(prepared)` → `postprocess(raw, prepared)` 的顺序执行。`Frame` 保存 HWC 格式的 BGR 图像，`Prepared` 保存模型输入，`Raw` 保存推理输出。各返回对象持有自己的数据。
+
+`--threads` 控制帧内卡尔曼预测和 IoU 计算的线程数，默认是 `1`。多路视频分别使用独立的模型实例和线程。
+
+`VideoReader` 创建时打开视频；`VideoSink` 在首次 `write` 时打开输出文件，使用该帧的尺寸和 mp4v 编码。无法打开输入或输出文件时会抛出异常。
+
+按视频顺序逐帧调用，即使某帧没有检测框，也应调用 `update`。切换视频时调用 `reset()` 清空轨迹并重置帧号，新目标 ID 继续递增。各 C++ 实例独立分配 ID；保存多路结果时，用 `(stream_id, track_id)` 区分目标。
 
 <a id="results-interpretation"></a>
 ## 结果解释
 
-成功时程序打印一行摘要——`video: N frames, M track rows` 或 `replay: N frames, M track rows, final frame_id F`——并退出 `0`。退出码 `2` 表示命令行错误（消息附带用法）；退出码 `1` 表示运行时错误（模型加载、视频打开、记录写入）。记录写入失败会被报告，不会静默丢弃。
+运行完成后，程序打印 `video: N frames, M track rows` 或 `replay: N frames, M track rows, final frame_id F`，并返回退出码 `0`。命令行参数错误返回 `2`；模型加载、视频打开或记录写入失败返回 `1`。
 
 `--records` 写出带表头 `frame lane track_id x1 y1 x2 y2 score` 的 TSV：帧号从 1 开始，CLI 的 `lane` 为 0，坐标为原图像素（`%.17g`）。无输出轨迹的帧没有 TSV 行，但仍推进跟踪状态。`--output` 写出带轨迹框与 `ID:<n>` 标签的 MP4，配色与 Python 渲染一致。
 
 回放输入为小端二进制：8 字节 magic `BTCPP1\0\0`，四个 `uint32`（版本 1、帧数、图像高、图像宽）；每帧先写 `uint32` 检测数，再写每个检测的五个 `float32`（x1、y1、x2、y2、score）。坐标必须有限且框面积为正。
 
-当前行为，完整视频检测路径：C++ 视频模式使用 YOLOv5 C++ 检测器的 letterbox 预处理（线性缩放、灰 127 填充）并保留浮点、未裁剪坐标，而 Python X5 路径使用直接最近邻缩放、裁剪和整数截断。这些预处理和坐标约定可能使同一视频产生不同的检测框和轨迹。需要共用检测器时，将检测结果直接传给 `ByteTracker::update`。
+C++ 视频模式等比例缩放图像并以灰色 127 填充边缘（letterbox），输出浮点坐标。Python X5 模式直接缩放图像，将坐标裁剪到图像范围后取整。两种预处理方式可能产生不同的检测框和轨迹。共用检测结果时，直接调用 `ByteTracker::update`。
 
 <a id="x5-cpu-performance"></a>
 ### X5 CPU 性能
@@ -176,7 +181,7 @@ X5 使用默认的 `--priority 0` 和 `--bpu-cores -1`。S 系列的 C++ `--bpu-
 
 同板、同输入的 Python 平均延迟依次为 4.359、12.825、29.997、60.227 ms/帧；C++ 单线程对应约快 105、73、48、31.5 倍。Python 环境为 3.10.12、NumPy 1.26.4、SciPy 1.10.1、lap 0.5.13、cython-bbox 0.1.5，BLAS/OpenMP 线程数为 1。
 
-单核预算按 CPU 毫秒/帧 × FPS ÷ 10 计算。单线程进程 RSS 约 8.5–12.4 MiB，包含动态库、输入序列及计时记录；100 人档加载输入后的基线约 11.1 MiB，不能将整个 RSS 当作跟踪状态的独占内存。
+单核预算 = CPU 毫秒/帧 × FPS ÷ 10。单线程进程 RSS 约 8.5–12.4 MiB，包含动态库、输入序列、跟踪状态和计时记录；100 人档加载输入后的初始占用约为 11.1 MiB。
 
 100 人输入下，帧内线程数与独立视频流数的表现如下：
 
@@ -189,6 +194,6 @@ X5 使用默认的 `--priority 0` 和 `--bpu-cores -1`。S 系列的 C++ `--bpu-
 | 2 路，每路 1 线程 | 1.955 | 1.950 | 1020 |
 | 4 路，每路 1 线程 | 2.140 | 2.134 | 1864 |
 
-CPU 时间为整个进程计算窗口的 CPU 总时间除以总路帧数；多路总吞吐不等于单路帧率。100 人、8 线程配置未达到并行分块阈值，实际串行执行。四线程单路延迟仅下降约 3%，而四路独立跟踪的总吞吐约为单路的 3.57 倍。推荐保留默认 `--threads 1`，多路应用优先并行不同视频流。四路进程 RSS 约 15.7 MiB。
+CPU 时间按进程总 CPU 时间除以处理的总帧数计算；总吞吐为所有视频流每秒处理的帧数之和。100 人档中，单路 4 线程比单线程降低约 3% 延迟，4 路独立跟踪的总吞吐约为单路的 3.57 倍。多路应用可为每路保留默认 `--threads 1`，并行处理不同视频。4 路进程 RSS 约为 15.7 MiB。8 线程配置在此人数下仍使用串行计算。
 
 CPU 调频保持系统默认，运行时间较短的小人数档位容易受调频与调度影响。以上是纯跟踪吞吐，完整视频速度还取决于检测和视频输入输出。

@@ -27,7 +27,7 @@ ByteTrack 使用 YOLOv5 检测模型，跟踪部分在 CPU 上执行。X5 复用
 | S100P | `s:bytetrack:s100p/yolov5x_672x672_nv12.hbm` | `s100p/yolov5x_672x672_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100p/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
 | S600 | `s:bytetrack:s600/yolov5x_672x672_nv12.hbm` | `s600/yolov5x_672x672_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
 
-发布校验值见模型清单；未知校验值不用于完整性认证。
+表中 `null` 表示发布方未提供 SHA-256。
 
 <a id="directory"></a>
 ## 目录结构
@@ -44,7 +44,7 @@ model/
 <a id="preparation"></a>
 ## 准备步骤
 
-在仓库根目录选择 target，于允许联网的环境显式运行下载器：
+在可联网的环境中，从仓库根目录运行下载命令：
 
 ```bash
 python3 -m samples.vision.bytetrack.model.download --target x5 --variant n-v7.0
@@ -57,27 +57,27 @@ python3 -m samples.vision.bytetrack.model.download \
   --target s100 --output-dir samples/vision/bytetrack/model
 ```
 
-成功时会打印精确 asset ID、嵌套 `Saved:` 路径和观测 digest，并创建 `samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm`。其他制品使用 `s100p` 或 `s600`。下载器不会获取输入视频。
+下载完成后显示模型标识、保存路径和文件 SHA-256。上述 S100 命令将模型保存到 `samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm`。S100P 和 S600 分别使用 `--target s100p` 和 `--target s600`。
 
 <a id="accompanying-files"></a>
 ## 伴随文件
 
-- `../test_data/coco_classes.names`：detector/可视化使用的 COCO 标签。
+- `../test_data/coco_classes.names`：检测和画框使用的 COCO 标签。
 - `../test_data/bus.jpg`：示例静态图片。
-- `../test_data/readme_img/`：源参考 GIF/PNG。
-- `../requirements-host.txt`：CPU tracker 包版本；板端 SDK 独立。
+- `../test_data/readme_img/`：跟踪效果 GIF/PNG。
+- `../requirements-host.txt`：Python 跟踪依赖。
 
 <a id="local-paths"></a>
 ## 本地路径
 
-X5 模型保存在 `samples/vision/bytetrack/model/<BIN文件名>`；S 系列默认选择解析到 `samples/vision/bytetrack/model/<target>/yolov5x_672x672_nv12.hbm`。外部路径必须带同 target 的精确限定 asset ID。`track_test.mp4` 需另行放入 `test_data/` 或通过 `--input` 指定。
+X5 模型保存在 `samples/vision/bytetrack/model/<BIN文件名>`，S 系列保存在 `samples/vision/bytetrack/model/<target>/yolov5x_672x672_nv12.hbm`。使用其他路径时，传入 `--model-path` 和表中对应的完整 `--asset-id`。视频路径通过 `--input` 指定。
 
 <a id="formats-checksums"></a>
 ## 格式与校验值
 
-X5 制品为 640x640 packed-NV12 `.bin`；三个 S 制品都是 672x672、split-NV12 YOLOv5x 的 `.hbm`。manifest URL 和 `sha256: null (unknown)` 为权威记录；本地观测 digest 用于跨主机识别同一份字节，发布者认证以发布摘要为准。
+X5 使用 640×640 packed-NV12 `.bin` 模型，S 系列使用 672×672 split-NV12 `.hbm` 模型。下载器显示本地文件的 SHA-256；有发布校验值时，可用它核对下载文件。
 
 <a id="license"></a>
 ## 许可
 
-准备 helper 遵循 Apache-2.0；模型和上游 tracker 许可仍以各自来源为准。
+下载脚本采用 Apache-2.0 许可。模型权重和 ByteTrack 跟踪源码遵循各自的上游许可。

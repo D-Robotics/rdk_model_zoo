@@ -21,7 +21,7 @@ conversion/
 
 For X5, follow the [YOLOv5 conversion recipe](../../yolov5/conversion/README.md), including v2.0/v7.0 export, calibration data preparation, and NV12 compilation settings.
 
-S100 uses the `s100/yolov5x_672x672_nv12.hbm` Nash-e row, S100P uses its own `s100p/...` row, and S600 uses its own `s600/...` row. Conversion requires the RDK S OpenExplorer environment on an x86 Linux host; source resources are [OE overview](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview) and [toolchain manual](https://toolchain.d-robotics.cc/). No S YAML or exporter is in this sample.
+Convert S models on an x86 Linux host with RDK S OpenExplorer. Select the compilation target for your board; model paths are `yolov5x_672x672_nv12.hbm` under `s100/`, `s100p/`, or `s600/`. See the [OE overview](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview) and [toolchain manual](https://toolchain.d-robotics.cc/) for setup. Prepare the S export script and YAML configuration separately.
 
 <a id="export"></a>
 ## Export
