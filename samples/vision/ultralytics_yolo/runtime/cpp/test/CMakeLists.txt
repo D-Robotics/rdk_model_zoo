@@ -25,18 +25,22 @@ endforeach()
 
 # Compile both descriptor adapters against the fake stacks. These exercise
 # production binding/resource code (inc/backend.hpp), not actual SDK ABI
-# compatibility.
+# compatibility. The doubles directories are lowercase (x5/ucp); keep the
+# uppercase stack tag for target and test names only, so the include path
+# stays valid on case-sensitive filesystems.
 foreach(stack X5 UCP)
+  string(TOLOWER "${stack}" stack_dir)
   set(target test_classification_binding_${stack})
   add_executable(${target} test_classification_binding.cc)
-  target_include_directories(${target} BEFORE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/fake_dnn_io/${stack})
+  target_include_directories(${target} BEFORE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/fake_dnn_io/${stack_dir})
   add_test(NAME ${target} COMMAND ${target})
 endforeach()
 
 foreach(stack X5 UCP)
+  string(TOLOWER "${stack}" stack_dir)
   set(target test_task_output_binding_${stack})
   add_executable(${target} test_task_output_binding.cc)
-  target_include_directories(${target} BEFORE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/fake_dnn_io/${stack})
+  target_include_directories(${target} BEFORE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/fake_dnn_io/${stack_dir})
   add_test(NAME ${target} COMMAND ${target})
 endforeach()
 

@@ -549,9 +549,13 @@ class FcosContractTests(unittest.TestCase):
     def test_execution_identity_gate_precedes_default_sdk_factory(self):
         from samples.vision.fcos.runtime.python.cli import resolve_selection
         from samples.vision.fcos.runtime.python import fcos as model_runner
+        from utils.py_utils import platforms
 
         runner = model_runner.RuntimeModelRunner(resolve_selection("x5"))
-        with patch("utils.py_utils.platforms.require_execution_target", side_effect=ValueError("identity")), patch.object(model_runner, "_default_runtime_factory") as factory:
+        # Patch the module object directly: mock's string-target resolution
+        # walks getattr(utils, "py_utils") on Python 3.10, which fails for the
+        # repo-root namespace package; the module object is version-neutral.
+        with patch.object(platforms, "require_execution_target", side_effect=ValueError("identity")), patch.object(model_runner, "_default_runtime_factory") as factory:
             with self.assertRaisesRegex(ValueError, "identity"):
                 runner.load()
             factory.assert_not_called()
@@ -559,9 +563,10 @@ class FcosContractTests(unittest.TestCase):
     def test_execution_requires_existing_selected_model_before_sdk_factory(self):
         from samples.vision.fcos.runtime.python.cli import resolve_selection
         from samples.vision.fcos.runtime.python import fcos as model_runner
+        from utils.py_utils import platforms
 
         runner = model_runner.RuntimeModelRunner(resolve_selection("x5"))
-        with patch("utils.py_utils.platforms.require_execution_target", return_value="x5"), patch.object(model_runner, "_default_runtime_factory") as factory:
+        with patch.object(platforms, "require_execution_target", return_value="x5"), patch.object(model_runner, "_default_runtime_factory") as factory:
             with self.assertRaises(ValueError):
                 runner.load()
             factory.assert_not_called()
