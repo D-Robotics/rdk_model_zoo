@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="source-model"></a>
 ## Source model
 
-ByteTrack itself is post-processing. The only neural artifact is the upstream YOLOv5x detector HBM, with three target-specific manifest rows. No separate tracker export or checkpoint exists.
+ByteTrack runs association on the CPU; only the YOLOv5 detector requires conversion. X5 uses 640x640 packed-NV12 BIN models, and S targets use 672x672 split-NV12 HBM models.
 
 <a id="directory"></a>
 ## Directory structure
@@ -19,36 +19,36 @@ conversion/
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
+For X5, follow the [YOLOv5 conversion recipe](../../yolov5/conversion/README.md), including v2.0/v7.0 export, calibration data preparation, and NV12 compilation settings.
+
 S100 uses the `s100/yolov5x_672x672_nv12.hbm` Nash-e row, S100P uses its own `s100p/...` row, and S600 uses its own `s600/...` row. Conversion requires the RDK S OpenExplorer environment on an x86 Linux host; source resources are [OE overview](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview) and [toolchain manual](https://toolchain.d-robotics.cc/). No S YAML or exporter is in this sample.
 
 <a id="export"></a>
 ## Export
 
-There is no ByteTrack export: the tracker has no neural graph. To rebuild the detector, use the upstream YOLOv5 source/export procedure and produce a 672x672 detector with split Y/UV inputs and three output heads. No pinned checkpoint or export script is included.
+ByteTrack association runs on the CPU. Prepare the detector using the [YOLOv5 export procedure](../../yolov5/conversion/README.md#export): choose matching v2.0 or v7.0 weights with 640x640 input for X5, or a 672x672 YOLOv5x detector for S targets. Keep the three detection heads.
 
 <a id="calibration"></a>
 ## Calibration
 
-Calibration belongs to the upstream detector conversion. No calibration directory or producer is supplied here. The still images in `test_data` are not a representative calibration set.
+For X5, follow the [YOLOv5 calibration procedure](../../yolov5/conversion/README.md#calibration). For S targets, use the calibration configuration for the selected detector and toolchain. Include pedestrians, occlusions, and lighting conditions representative of the application.
 
 <a id="compile"></a>
 ## Compile
 
-After an external ONNX/checkpoint, target-specific YAML, and calibration set exist, run the OE compiler commands supplied by that environment. No exact source command or config is available, so no generic command is presented as a reproducible recipe. The result must bind the three target-relative HBM asset IDs and S split-NV12 metadata.
+For X5, follow the [YOLOv5 compilation procedure](../../yolov5/conversion/README.md#compile) with `yolov5_detect_bayese_640x640_nv12.yaml` to produce a packed-NV12 BIN. For S targets, compile the external ONNX, target-specific YAML, and calibration data in the matching RDK S OpenExplorer environment to produce a split-NV12 HBM. Input dimensions and detection-head layout must match the selected runtime variant.
 
 <a id="validation"></a>
-## Post-conversion validation
+## Model interface
 
-Validate detector metadata with the S YOLOv5 runtime, then run the tracker on a prepared video. Compare complete detector tensors and track IDs using `evaluator/compare.py`.
+The X5 model accepts one packed-NV12 input; S models accept separate Y and UV inputs. Outputs are three YOLOv5 detection heads at different scales. Select the matching board, input dimensions, and model variant when running inference.
 
 <a id="artifacts"></a>
 ## Artifacts
 
-The three external outputs are the manifest HBM rows in `model/README.md`; ByteTrack adds no compiled tracker artifact. `TRACKER_SOURCE_MAP.json` records source tracker file hashes and the one relative-import adaptation.
+See [model preparation](../model/README.md) for X5 BIN and S-target HBM filenames and paths. ByteTrack CPU association runs from the bundled source.
 
 <a id="known-gaps"></a>
 ## Additional preparation
 
-- No S export script, checkpoint pin, YAML, calibration producer, or compiler log is present.
-- The test video is not bundled; it is fetched from the archive URL given in the sample README.
-- No locally converted artifact is produced in this repository; use the published HBM rows. All publisher SHA-256 values are unknown.
+For published models, follow the [preparation steps](../model/README.md#preparation). To convert an S detector, prepare its ONNX, target-specific YAML, and calibration data. Select the input video with `--input`.

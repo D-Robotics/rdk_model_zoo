@@ -7,18 +7,18 @@ from utils.py_utils.assets import download_asset
 from samples.vision.bytetrack.runtime.python.cli import resolve_selection
 
 
-def download_target(target,output_dir=None,*,asset_id=None):
-    selection=resolve_selection(target,asset_id=asset_id)
+def download_target(target,output_dir=None,*,variant=None,asset_id=None):
+    selection=resolve_selection(target,variant=variant,asset_id=asset_id)
     path=Path(output_dir).expanduser()/selection.asset.filename if output_dir else selection.model_path
     digest=download_asset(selection.asset,path)
     return selection.asset,path,digest
 
 
 def main(argv=None):
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--target',required=True,choices=('s100','s100p','s600'));p.add_argument('--asset-id');p.add_argument('--output-dir')
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--target',required=True,choices=('x5','s100','s100p','s600'));p.add_argument('--variant');p.add_argument('--asset-id');p.add_argument('--output-dir')
     a=p.parse_args(argv)
     try:
-        asset,path,digest=download_target(a.target,a.output_dir,asset_id=a.asset_id)
+        asset,path,digest=download_target(a.target,a.output_dir,variant=a.variant,asset_id=a.asset_id)
         print(f'{asset.reference}\nSaved: {path}\nObserved SHA-256: {digest}\nPublisher SHA-256: {asset.sha256 or "unknown"}');return 0
     except (ValueError,OSError) as exc:print(f'Error: {exc}',file=sys.stderr);return 2
 

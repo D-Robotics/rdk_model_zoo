@@ -12,29 +12,51 @@ from __future__ import annotations
 
 import argparse
 import json
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 
 from samples.vision.yolov5.runtime.python import cli as detector
+from utils.py_utils.platforms import resolve_target
 
 SAMPLE_DIR = Path(__file__).resolve().parents[2]
 
 
 def resolve_selection(target='auto', **kwargs):
-    """Resolve only ByteTrack's exact s100/s100p/s600 detector assets.
+    """Resolve ByteTrack's exact detector assets for x5 and s100/s100p/s600.
+
+    X5 reuses the published YOLOv5 asset identities (``x5:yolov5:*`` .bin):
+    those rows are served through the shared catalog's yolov5 consumer (the
+    selection keeps that publisher identity), and a catalog-default local
+    copy is rebased under this sample's ``model/`` directory; an explicit
+    ``model_path`` argument passes through unchanged. S targets resolve
+    through ByteTrack's own manifest rows directly.
 
     Args:
-        target: ``auto`` resolves the executing board; S targets publish.
-        **kwargs: Optional asset-id/model-path filters forwarded to the
-            shared YOLOv5 resolver.
+        target: ``auto`` resolves the executing board; x5 and S targets publish.
+        **kwargs: Optional variant/asset-id/model-path filters forwarded to
+            the shared YOLOv5 resolver.
 
     Returns:
-        ModelSelection: Concrete target, manifest asset, and local path.
+        ModelSelection: Concrete target, manifest asset, and local path
+        (always under this sample's ``model/`` directory unless model-path
+        overrides it).
 
     Raises:
         ValueError: The target or asset combination is invalid.
     """
-    return detector.resolve_selection(target, consumer='bytetrack', **kwargs)
+    resolved = resolve_target(target, soc_name=kwargs.get('soc_name'),
+                              board_type=kwargs.get('board_type'))
+    consumer = 'yolov5' if resolved == 'x5' else 'bytetrack'
+    selection = detector.resolve_selection(target, consumer=consumer, **kwargs)
+    if consumer == 'yolov5' and kwargs.get('model_path') is None:
+        # Keep the yolov5 consumer identity (the asset's publisher — the
+        # detector's binding re-validates the reference against that
+        # consumer's rows) while managing the catalog-default local copy
+        # under this sample. An explicit model_path already returned by the
+        # shared resolver is the caller's choice and stays untouched.
+        selection = replace(selection,
+                            model_path=SAMPLE_DIR / 'model' / selection.asset.filename)
+    return selection
 
 
 def list_available_assets(target=None):
@@ -44,9 +66,14 @@ def list_available_assets(target=None):
         target: Concrete target filter; ``auto``/None lists all publications.
 
     Returns:
-        The shared catalog's exact asset rows for this consumer.
+        The exact asset rows this sample consumes. X5 rows reuse the YOLOv5
+        publication identity; S rows are ByteTrack's own.
     """
-    return detector.list_available_assets(target, consumer='bytetrack')
+    x5_rows = detector.list_available_assets('x5', consumer='yolov5') \
+        if target in (None, 'auto', 'x5') else ()
+    s_rows = detector.list_available_assets(target, consumer='bytetrack') \
+        if target in (None, 'auto', 's100', 's100p', 's600') else ()
+    return tuple(x5_rows) + tuple(s_rows)
 
 
 def build_parser():
@@ -59,6 +86,8 @@ def build_parser():
     p = argparse.ArgumentParser(
         description='Explicit prepared-video ByteTrack CLI; no automatic model/video installation.')
     p.add_argument('--target', default='auto', choices=('auto', 'x5', 's100', 's100p', 's600'))
+    p.add_argument('--variant',
+                   help='X5: n/s/m/l/x-v7.0 or s/m/l/x-v2.0; S: x-672. Omitted uses n-v7.0 / x-672.')
     p.add_argument('--asset-id')
     p.add_argument('--model-path')
     p.add_argument('--input', default=str(SAMPLE_DIR / 'test_data/track_test.mp4'),
@@ -107,7 +136,8 @@ def run_dry_run(selected, cfg, input_path: str) -> int:
     Returns:
         int: 0 after printing the preview.
     """
-    print(json.dumps(dict(target=selected.target, asset_id=selected.asset.reference,
+    print(json.dumps(dict(target=selected.target, variant=selected.variant,
+                          asset_id=selected.asset.reference,
                           model_path=str(selected.model_path), input=input_path,
                           video_status='user preparation required', board_status='not-run',
                           tracking=asdict(cfg)), indent=2))

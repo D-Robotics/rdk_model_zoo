@@ -22,13 +22,33 @@ class _BoardQuantParams:
 class EntryEvidenceTests(unittest.TestCase):
     def test_safe_cli_and_exact_manual_path_identity(self):
         script=ROOT/'samples/vision/bytetrack/runtime/python/main.py'
-        for args in [('--help',),('--list-models',),('--dry-run','--target','s100p')]:
+        for args in [('--help',),('--list-models',),('--list-models','--target','x5'),
+                     ('--dry-run','--target','s100p'),('--dry-run','--target','x5'),
+                     ('--dry-run','--target','x5','--variant','s-v7.0')]:
             p=subprocess.run([sys.executable,str(script),*args],cwd='/tmp',text=True,capture_output=True)
             self.assertEqual(p.returncode,0,p.stdout+p.stderr)
-        for args in [('--dry-run',),('--dry-run','--target','x5'),('--dry-run','--target','s100','--track-thresh','nan')]:
+        for args in [('--dry-run',),('--dry-run','--target','x5','--variant','x-672'),
+                     ('--dry-run','--target','s100','--track-thresh','nan')]:
             p=subprocess.run([sys.executable,str(script),*args],cwd='/tmp',text=True,capture_output=True);self.assertEqual(p.returncode,2,p.stdout+p.stderr)
         with self.assertRaises(ValueError):resolve_selection('s100',model_path='/tmp/model')
         with self.assertRaises(ValueError):resolve_selection('s100p',asset_id=resolve_selection('s100').asset.reference)
+
+    def test_x5_selection_reuses_yolov5_identity_into_bytetrack_storage(self):
+        from samples.vision.yolov5.runtime.python.cli import X5_VARIANTS
+        from samples.vision.bytetrack.runtime.python.cli import list_available_assets
+        rows=list_available_assets('x5')
+        self.assertEqual(len(rows),9)
+        self.assertEqual({a.sample_id for a in rows},{'yolov5'})
+        for variant in X5_VARIANTS:
+            selected=resolve_selection('x5',variant=variant)
+            self.assertEqual(selected.variant,variant)
+            self.assertEqual(selected.asset.reference,f'x5:yolov5:{selected.asset.filename}')
+            self.assertTrue(str(selected.model_path).endswith(f'samples/vision/bytetrack/model/{selected.asset.filename}'))
+        default=resolve_selection('x5')
+        self.assertEqual(default.variant,'n-v7.0')
+        self.assertEqual(default.model_path.name,'yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin')
+        with self.assertRaises(ValueError):resolve_selection('x5',variant='x-672')
+        with self.assertRaises(ValueError):resolve_selection('x5',model_path='/tmp/model')
 
     def test_download_and_shell_are_explicit_and_offline_fixtures(self):
         from samples.vision.bytetrack.model import download
@@ -40,6 +60,21 @@ class EntryEvidenceTests(unittest.TestCase):
             script=ROOT/'samples/vision/bytetrack/model/download_model.sh'
             p=subprocess.run(['bash',str(script),'--target','s100p'],env=env,cwd='/tmp',text=True,capture_output=True)
             self.assertEqual(p.returncode,0,p.stderr);self.assertEqual(log.read_text().splitlines()[1:],['--target','s100p'])
+
+    def test_x5_download_binds_every_variant_to_the_yolov5_manifest_source(self):
+        from samples.vision.bytetrack.model import download
+        from samples.vision.yolov5.runtime.python.cli import X5_VARIANTS,_x5_filename
+        with tempfile.TemporaryDirectory() as td,patch.object(download,'download_asset',return_value='fixture') as fetch:
+            for variant in X5_VARIANTS:
+                asset,path,digest=download.download_target('x5',td,variant=variant)
+                self.assertEqual(asset.filename,_x5_filename(variant))
+                self.assertEqual(asset.url,f'https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/{asset.filename}')
+                self.assertEqual(path,Path(td)/asset.filename);self.assertEqual(digest,'fixture')
+                fetch.assert_called_with(asset,path)
+            self.assertEqual(fetch.call_count,len(X5_VARIANTS))
+            default_asset,default_path,_=download.download_target('x5',None)
+            self.assertEqual(default_asset.filename,'yolov5n_tag_v7.0_detect_640x640_bayese_nv12.bin')
+            self.assertTrue(str(default_path).endswith(f'samples/vision/bytetrack/model/{default_asset.filename}'))
 
     def test_complete_stream_capture_and_difference_rejection(self):
         with tempfile.TemporaryDirectory() as td:

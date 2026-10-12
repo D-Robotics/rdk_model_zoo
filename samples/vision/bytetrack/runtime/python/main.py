@@ -22,6 +22,8 @@ from samples.vision.bytetrack.runtime.python.cli import (  # noqa: E402
 
 
 def main(argv=None):
+    """Run the tracking CLI: resolve the published detector assets, process one image sequence or video, and present or save the tracks."""
+
     a = build_parser().parse_args(argv)
     capture = writer = record_file = None
     try:
@@ -35,7 +37,7 @@ def main(argv=None):
             raise ValueError('Invalid max-frames or scheduling parameters.')
         if any(not math.isfinite(x) or not 0 <= x <= 1 for x in [a.score_thres, a.nms_thres]):
             raise ValueError('Detection thresholds must be finite [0,1].')
-        selected = resolve_selection(a.target, model_path=a.model_path, asset_id=a.asset_id)
+        selected = resolve_selection(a.target, variant=a.variant, model_path=a.model_path, asset_id=a.asset_id)
         if a.dry_run:
             return run_dry_run(selected, cfg, a.input)
         import cv2

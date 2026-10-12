@@ -22,7 +22,9 @@ import sys
 import importlib
 from unittest.mock import patch
 main = importlib.import_module('samples.vision.bytetrack.runtime.python.main')
-for argv in (['--help'], ['--list-models'], ['--dry-run', '--target', 's100']):
+for argv in (['--help'], ['--list-models'], ['--list-models', '--target', 'x5'],
+             ['--dry-run', '--target', 's100'], ['--dry-run', '--target', 'x5'],
+             ['--dry-run', '--target', 'x5', '--variant', 'x-v2.0']):
     with contextlib.redirect_stdout(io.StringIO()):
         try:
             status = main.main(argv)

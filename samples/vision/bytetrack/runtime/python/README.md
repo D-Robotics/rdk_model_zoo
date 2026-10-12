@@ -27,12 +27,21 @@ Start with [main.py](main.py): it constructs `ByteTrackTask.from_model` and call
 <a id="environment"></a>
 ## Environment
 
-Use Python 3, NumPy, OpenCV, SciPy, `lap==0.5.12`, and `cython-bbox==0.1.5`; the latter two are used by the CPU matching backend. Board inference additionally needs S `hbm_runtime`. `--help`, `--list-models`, and explicit-target `--dry-run` do not load SDK, model, video, or network resources. The detector is S split-NV12 672x672; the tracker consumes XYXY boxes, scores, and class IDs.
+Use Python 3, NumPy, OpenCV, SciPy, `lap==0.5.12`, and `cython-bbox==0.1.5`; the latter two are used by the CPU matching backend. X5 requires the board-provided `hbm_runtime`; S targets require `hbm_runtime`. `--help`, `--list-models`, and explicit-target `--dry-run` do not load SDK, model, video, or network resources. The X5 detector uses packed-NV12 640x640; S detectors use split-NV12 672x672; the tracker consumes XYXY boxes, scores, and class IDs.
 
 <a id="usage"></a>
 ## Usage
 
 The input video is not bundled. After explicit model/video preparation, run from the repository root:
+
+```bash
+python3 -m samples.vision.bytetrack.runtime.python.main \
+  --target x5 --variant n-v7.0 \
+  --input samples/vision/bytetrack/test_data/track_test.mp4 \
+  --output samples/vision/bytetrack/test_data/result_x5.mp4
+```
+
+S100:
 
 ```bash
 python3 -m samples.vision.bytetrack.runtime.python.main \
@@ -42,16 +51,17 @@ python3 -m samples.vision.bytetrack.runtime.python.main \
   --output samples/vision/bytetrack/test_data/result_unified.mp4
 ```
 
-Success writes a nonempty output video, prints `Saved <N> tracked frames...`, and exits `0`. Add `--records...jsonl` to save every frame's track snapshots. `--max-frames` bounds a smoke run; `0` means all frames.
+Success writes a nonempty output video, prints `Saved <N> tracked frames...`, and exits `0`. Add `--records tracks.jsonl` to save every frame's track snapshots. `--max-frames` limits the number of processed frames; `0` means all frames.
 
 <a id="parameters"></a>
 ## Parameters
 
 | option | type | default | meaning |
 |---|---|---|---|
-| `--target` | choice | `auto` | `auto`, `x5`, `s100`, `s100p`, `s600`; only S three targets resolve |
+| `--target` | choice | `auto` | `auto`, `x5`, `s100`, `s100p`, `s600` |
+| `--variant` | string | `null` | Detector variant; X5 defaults to `n-v7.0`, S targets to `x-672` |
 | `--asset-id` | string | `null` | exact detector identity |
-| `--model-path` | path | `null` | existing HBM; requires asset ID |
+| `--model-path` | path | `null` | existing BIN/HBM; requires asset ID |
 | `--input` | path | `samples/vision/bytetrack/test_data/track_test.mp4` | user-prepared video; not bundled in the repository |
 | `--output` | path | `samples/vision/bytetrack/test_data/result_unified.mp4` | output video |
 | `--records` | path | `null` | optional JSONL frame records |
@@ -73,12 +83,12 @@ Success writes a nonempty output video, prints `Saved <N> tracked frames...`, an
 <a id="results"></a>
 ## Results
 
-The CLI writes an MP4 annotated with person tracks and optional JSONL rows `{frame, tracks:[{track_id, tlbr, score, frame_id}]}`. `ByteTrackTask.postprocess` (alias `post_process`) filters class `0`, removes non-positive-width/height boxes before tracker update, and returns owned immutable `Track` snapshots. Empty detections still call `tracker.update` and advance frame state. IDs are process-global and monotonic; a fresh process starts its own counter.
+The CLI writes an MP4 annotated with person tracks and optional JSONL rows `{frame, tracks:[{track_id, tlbr, score, frame_id}]}`. `ByteTrackTask.postprocess` filters class `0`, removes non-positive-width/height boxes before tracker update, and returns owned immutable `Track` snapshots. Empty detections still call `tracker.update` and advance frame state. IDs are process-global and monotonic; a fresh process starts its own counter.
 
 <a id="integration-example"></a>
 ## Integration example
 
-After the exact HBM is prepared and the CPU dependencies are installed, this complete example defines all variables. It processes two frames in order and shows explicit stages:
+After the selected model is prepared and the CPU dependencies are installed, this complete example defines all variables. It processes two frames in order and shows explicit stages:
 
 ```python
 from pathlib import Path
@@ -87,14 +97,10 @@ import numpy as np
 from samples.vision.bytetrack.runtime.python.cli import resolve_selection
 from samples.vision.bytetrack.runtime.python.tracking import ByteTrackTask, TrackingConfig
 
-target = "s100"
-asset_id = "s:bytetrack:s100/yolov5x_672x672_nv12.hbm"
-model_path = Path("samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm")
-selection = resolve_selection(target, asset_id=asset_id, model_path=model_path)
+selection = resolve_selection("x5", variant="n-v7.0")
 task = ByteTrackTask.from_model(
     selection, config=TrackingConfig(), score_thres=0.25, nms_thres=0.45
 )
-task.detector.set_scheduling_params(priority=0, bpu_cores=[0])
 frame_path = Path("samples/vision/bytetrack/test_data/bus.jpg")
 frame = cv2.imread(str(frame_path), cv2.IMREAD_COLOR)
 if frame is None:
@@ -112,16 +118,16 @@ print(explicit_result, composed_result)
 <a id="stage-io"></a>
 ## Stage I/O
 
-- `preprocess(frame)` (alias `pre_process`) delegates the detector and returns its tensors plus immutable geometry context.
-- `infer(tensors)` (alias `forward`) delegates native detector inference and does not update tracker state.
-- `postprocess(outputs, context)` (alias `post_process`) decodes the detector, filters person class, removes invalid clipped boxes, updates tracker once, and returns `tuple[Track,...]`.
+- `preprocess(frame)` delegates the detector and returns its tensors plus immutable geometry context.
+- `infer(tensors)` delegates native detector inference and does not update tracker state.
+- `postprocess(outputs, context)` decodes the detector, filters person class, removes invalid clipped boxes, updates tracker once, and returns `tuple[Track,...]`.
 - `predict(frame)` composes one ordered frame. `reset` creates a fresh stream with `frame_index == 0` while preserving the process-global ID counter.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting
 
 - Missing video is an explicit error; prepare `track_test.mp4` first. No fallback download occurs.
-- A custom HBM path without its exact qualified asset ID is rejected.
+- A custom BIN/HBM path without its exact qualified asset ID is rejected.
 - `--dry-run` with `auto` is rejected because execution target must be explicit.
 - Letterbox padding can clip a box to zero area; the task drops such boxes, and the evaluator treats any non-finite record as a failed capture.
 - Do not share one task between independent videos or threads; tracker state is intentionally not thread-safe.

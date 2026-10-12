@@ -17,9 +17,9 @@ class FakeDetector:
         from samples.vision.yolov5.runtime.python.detection import DetectionContext,PreparedInput
         self.prepared=lambda x:PreparedInput({'image':x},DetectionContext(x.shape[:2],672,1))
         self.result=DetectionResult(np.array([[1,2,11,22],[20,30,40,50]],np.float32),np.array([.9,.8],np.float32),np.array([0,1],np.int32))
-    def pre_process(self,image):return self.prepared(image)
-    def forward(self,tensors):return tensors
-    def post_process(self,raw,context):return self.result
+    def preprocess(self,image):return self.prepared(image)
+    def infer(self,tensors):return tensors
+    def postprocess(self,raw,context):return self.result
 
 
 class FakeTracker:
@@ -43,7 +43,7 @@ class TrackingTests(unittest.TestCase):
 
     def test_stages_and_predict_have_one_state_transition_and_filter_person(self):
         task=ByteTrackTask(FakeDetector(),tracker_factory=FakeTracker);image=np.zeros((17,31,3),np.uint8)
-        prepared=task.pre_process(image);raw=task.forward(prepared.tensors);result=task.post_process(raw,prepared.context)
+        prepared=task.preprocess(image);raw=task.infer(prepared.tensors);result=task.postprocess(raw,prepared.context)
         self.assertEqual(task.frame_index,1);self.assertEqual(len(result),1);self.assertEqual(result[0].track_id,7)
         self.assertEqual(task.tracker.calls[0][0].shape,(1,5));self.assertEqual(task.tracker.calls[0][1:],((17,31),(17,31)))
         result2=task.predict(image);self.assertEqual(task.frame_index,2);self.assertEqual(result[0].tlbr,result2[0].tlbr)
@@ -61,6 +61,46 @@ class TrackingTests(unittest.TestCase):
         detector=YOLOv5Task(runner=lambda _:runtime.outputs,binding=bind_model(selection,runtime.facts))
         task=ByteTrackTask(detector,tracker_factory=FakeTracker);task.predict(np.zeros((97,151,3),np.uint8))
         self.assertEqual(task.frame_index,1);self.assertEqual(selection.asset.sample_id,'bytetrack')
+
+    def test_x5_default_rebases_model_dir_explicit_model_path_wins(self):
+        from samples.vision.bytetrack.runtime.python.cli import resolve_selection as bytetrack_selection
+        model_dir=ROOT/'samples/vision/bytetrack/model'
+        default=bytetrack_selection('x5')
+        # Catalog default lands under this sample's model/ dir, identity kept on yolov5.
+        self.assertEqual(default.model_path,model_dir/default.asset.filename)
+        self.assertEqual(default.consumer,'yolov5')
+        explicit=bytetrack_selection('x5',model_path='/tmp/external_yolov5n.bin',
+                                     asset_id=default.asset.reference)
+        self.assertEqual(explicit.model_path,Path('/tmp/external_yolov5n.bin'))
+        self.assertEqual(explicit.asset.reference,default.asset.reference)
+
+    def test_x5_fake_runtime_three_stages_feed_real_tracker_ids_empty_reset(self):
+        from samples.vision.bytetrack.runtime.python.cli import resolve_selection as bytetrack_selection
+        runtime=FakeRuntime('x5','float32')
+        task=ByteTrackTask.from_model(bytetrack_selection('x5'),runtime_factory=lambda _:runtime)
+        task.detector.set_scheduling_params(priority=1,bpu_cores=[0])
+        self.assertEqual(runtime.schedule,{'priority':{'detector':1},'bpu_cores':{'detector':[0]}})
+        image=np.zeros((97,151,3),np.uint8)
+        # X5 binding: one flat packed-NV12 tensor at 640x640, raw F32 heads.
+        prepared=task.preprocess(image)
+        (tensor,)=prepared.tensors.values()
+        self.assertEqual(tensor.shape,(640*640*3//2,));self.assertEqual(tensor.dtype,np.uint8)
+        staged=task.postprocess(task.infer(prepared.tensors),prepared.context)
+        composed=task.predict(image)
+        self.assertEqual(len(staged),1);self.assertEqual(len(composed),1)
+        self.assertEqual(staged[0].track_id,composed[0].track_id)
+        person_id=composed[0].track_id
+        # Empty frame: every score below the detector gate still advances the tracker.
+        saved={name:value.copy() for name,value in runtime.outputs.items()}
+        for value in runtime.outputs.values():value.fill(-30)
+        self.assertEqual(task.predict(image),())
+        # Restored detections re-activate the buffered track with the same ID.
+        for name,value in runtime.outputs.items():value[...]=saved[name]
+        self.assertEqual(task.predict(image)[0].track_id,person_id)
+        # Reset clears history; the process-global counter never reissues an ID.
+        task.reset();self.assertEqual(task.frame_index,0)
+        self.assertNotEqual(task.predict(image)[0].track_id,person_id)
+        self.assertGreater(task.frame_index,0)
 
     def test_frame_rate_controls_real_tracker_buffer(self):
         cfg=TrackingConfig(frame_rate=15,track_buffer=60)

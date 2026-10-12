@@ -972,8 +972,8 @@ struct SResourceGuard {
 struct Yolov5::Impl {
   explicit Impl(const Config& cfg) : config(cfg) {
     require_gate(check_target_matches_build(config.target, YOLOV5_TARGET_NAME));
-    if (config.target != "s100" && config.target != "s600")
-      throw std::invalid_argument("S adapter supports s100 and s600 YOLOv5 assets only");
+    if (config.target != "s100" && config.target != "s100p" && config.target != "s600")
+      throw std::invalid_argument("S adapter supports s100, s100p and s600 YOLOv5 assets only");
     if (!bpu_core_to_backend(config.bpu_core, &backend))
       throw std::invalid_argument("--bpu-core must be -1 (any) or a core index 0..3");
 
@@ -1205,6 +1205,15 @@ struct Yolov5::Impl {
                                          shape_of(meta), std::move(float_bytes)});
     }
     raw.heads = std::move(dequantized);
+    // One task per infer call. guard.task keeps RAII ownership while the
+    // submit/wait and the output reads above can still throw; once every
+    // output byte has been read the finished task is released here instead
+    // of overwriting the handle on the next call, which leaked every task
+    // but the last one until model release (the SDK then reported
+    // unreleased tasks).
+    const int released = hbUCPReleaseTask(guard.task);
+    guard.task = nullptr;  // cleared before the check: a failed release must not double-release in the dtor
+    if (released != 0) throw std::runtime_error("hbUCPReleaseTask failed");
     return raw;
   }
 

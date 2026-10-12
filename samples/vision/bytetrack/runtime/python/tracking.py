@@ -1,6 +1,12 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Stateful person tracking around the unified S YOLOv5 detector."""
+"""Stateful person tracking around the unified YOLOv5 detector.
+
+The detector publications differ by target — X5 packed-NV12 640x640 .bin
+(raw F32 heads) and S split-NV12 672x672 .hbm (declared dequant) — but the
+tracking stage is target-independent CPU code fed with original-pixel
+person detections.
+"""
 from dataclasses import dataclass
 import math
 
@@ -56,9 +62,8 @@ class ByteTrackTask:
     preprocess and infer do not advance tracking. postprocess decodes,
     keeps only COCO person (class 0), then updates the CPU tracker once, including
     on empty detections. predict composes exactly those three operations.
-    The detector stages are reached through their established public names
-    (``pre_process``/``forward``/``post_process``), which every detector
-    implementation keeps as aliases of the readable stages.
+    The detector stages are the unified YOLOv5 task interface
+    (``preprocess``/``infer``/``postprocess`` on ``YOLOv5Task``).
     Not thread safe; do not share a task across independent videos. reset clears
     history/frame index but does not reset the process-global ID counter. After
     a backend update exception, reset before reusing the stream.
@@ -67,7 +72,7 @@ class ByteTrackTask:
         """Wrap one detector with tracker state; see the class docstring.
 
         Args:
-            detector: Detector task exposing pre_process/forward/post_process
+            detector: Detector task exposing preprocess/infer/postprocess
                 (e.g. ``YOLOv5Task``); constructed for you by ``from_model``.
             config: Optional :class:`TrackingConfig`; source defaults apply.
             tracker_factory: Optional tracker constructor seam (host tests).
@@ -84,14 +89,21 @@ class ByteTrackTask:
                    tracker_factory=None,runtime_factory=None):
         """Construct the tracker from a resolved detector selection.
 
-        Builds and loads the unified S YOLOv5 detector for this ByteTrack
-        publication, then wraps it with tracker state; ``main`` uses this
-        named constructor instead of creating runners or bindings itself.
+        Builds and loads the unified YOLOv5 detector for this ByteTrack
+        publication — X5 (packed NV12 640, raw F32 heads) or S (split NV12
+        672, declared dequant) — then wraps it with tracker state; ``main``
+        uses this named constructor instead of creating runners or bindings
+        itself. Scheduling differences stay in the detector's shared runner,
+        which speaks the named-model container convention for every target.
 
         Args:
-            selection: Manifest-backed selection from ``cli.resolve_selection``.
+            selection: Manifest-backed selection from ``cli.resolve_selection``
+                (x5 assets reuse the YOLOv5 publication identity).
             config: Optional :class:`TrackingConfig`; source defaults apply.
             score_thres: Detection confidence threshold (source default .25).
+                It gates which detections reach the tracker and therefore
+                ByteTrack's low-score association pool; keep the source
+                default unless comparing against another configuration.
             nms_thres: Detection NMS IoU threshold (source default .45).
             tracker_factory: Optional tracker constructor seam (host tests).
             runtime_factory: Optional SDK-object factory seam (host tests).
@@ -119,17 +131,17 @@ class ByteTrackTask:
 
     def preprocess(self,image):
         """Prepare one HWC U8 BGR frame and immutable detector geometry context."""
-        return self.detector.pre_process(image)
+        return self.detector.preprocess(image)
 
     def infer(self,tensors):
         """Delegate native tensor inference only; no tracking/state transition."""
-        return self.detector.forward(tensors)
+        return self.detector.infer(tensors)
 
     def postprocess(self,outputs,context):
         """Decode detections, update tracker once, return tuple of owned Track snapshots."""
         import numpy as np
 
-        detections=self.detector.post_process(outputs,context)
+        detections=self.detector.postprocess(outputs,context)
         # Clipping a detection wholly in letterbox padding can leave zero area.
         # Kalman XYAH initialization divides by height; keep these out of state.
         person=(detections.class_ids==0) & (detections.boxes[:,2]>detections.boxes[:,0]) & (detections.boxes[:,3]>detections.boxes[:,1])
@@ -144,15 +156,3 @@ class ByteTrackTask:
         prepared=self.preprocess(image)
         raw=self.infer(prepared.tensors)
         return self.postprocess(raw,prepared.context)
-
-    def pre_process(self,image):
-        """Compatibility alias for :meth:`preprocess`."""
-        return self.preprocess(image)
-
-    def forward(self,tensors):
-        """Compatibility alias for :meth:`infer`."""
-        return self.infer(tensors)
-
-    def post_process(self,outputs,context):
-        """Compatibility alias for :meth:`postprocess`."""
-        return self.postprocess(outputs,context)
