@@ -1,9 +1,6 @@
 English | [简体中文](README_cn.md)
 
-<!-- Template: runtime/cpp README (English). Contract: readme-contract.md §4.4.
-     Keep anchors; replace ⟪…⟫; delete guidance when done. This README exists
-     only where a C++ implementation exists — its absence must never be papered
-     over by claiming dual-language support elsewhere. -->
+<!-- Keep section anchors, fill ⟪…⟫ and remove guidance before publishing. Maintain the Chinese version alongside this file. -->
 
 # C++ Runtime — ⟪model name⟫
 
@@ -66,8 +63,8 @@ cmake .. && make -j
 <a id="parameters"></a>
 ## Parameters
 
-> **Must answer:** every gflags parameter (snake_case) with the default that the
-> code actually defines — statically machine-checked.
+> **Must answer:** every CLI parameter, using the names and defaults defined by the
+> parser.
 
 | Parameter | Default | Description |
 | --- | --- | --- |
@@ -78,17 +75,17 @@ cmake .. && make -j
 
 > **Must answer:** the public surface (config struct + model class), when
 > resources are allocated/released (constructor vs `init()`/`deinit()`), the
-> free-function data flow (pre_process/infer/post_process by reference), and
+> free-function data flow (preprocess/infer/postprocess by reference), and
 > threading boundaries. Reference real symbols from the headers.
 
 - Config: `⟪XxxConfig⟫` — ⟪fields with defaults⟫
 - Model: `⟪XxxModel⟫` — ⟪init() loads model & allocates tensors; resources freed in ⟪deinit()/dtor⟫⟫
-- Data flow: `pre_process(…) → infer(…) → post_process(…)` passing tensors by reference
+- Data flow: `preprocess(…) → infer(…) → postprocess(…)` passing tensors by reference
 
 <a id="results-interpretation"></a>
 ## Interpreting Results
 
-> **Must answer:** what stdout/stdored files mean — formats, coordinate
+> **Must answer:** what stdout/stored files mean — formats, coordinate
 > conventions, exit codes.
 
 ⟪e.g. prints one line per detection: [x1,y1,x2,y2] score class_id (pixel

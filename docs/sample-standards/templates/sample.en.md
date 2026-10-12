@@ -1,9 +1,6 @@
 English | [简体中文](README_cn.md)
 
-<!-- Template: sample root README (English). Contract: docs/sample-standards/readme-contract.md §4.1.
-     Rules: keep every <a id="…"></a> anchor exactly as given; replace ⟪…⟫ placeholders;
-     delete guidance blockquotes when done; a section may only be dropped with a
-     not-applicable reason (contract §1). File must be paired with README_cn.md. -->
+<!-- Keep section anchors, fill ⟪…⟫ and remove guidance before publishing. Maintain the Chinese version alongside this file. -->
 
 # ⟪Model Name⟫ (⟪task⟫)
 
@@ -28,8 +25,7 @@ Sources: ⟪paper/upstream repository links⟫
 ## Support Matrix
 
 > **Must answer:** available targets × variants × languages, their artifacts
-> and any required SDK or model configuration. Keep test execution records in
-> a separate validation document.
+> and any required SDK or model configuration.
 
 | Target | Variant | Language | Artifact and environment |
 | --- | --- | --- | --- |
@@ -53,7 +49,7 @@ Sources: ⟪paper/upstream repository links⟫
 
 > **Must answer:** ONE complete path from model preparation to a visible result.
 > Every command states its cwd, where prerequisite files come from, parameters,
-> output, and how success is judged. Prepare models explicitly using the actual
+> output, and expected output. Prepare models explicitly using the actual
 > script and target-selection arguments.
 
 ```bash
@@ -63,7 +59,7 @@ Sources: ⟪paper/upstream repository links⟫
 
 # cwd: repository root
 python3 samples/⟪domain⟫/⟪name⟫/runtime/python/main.py ⟪actual target-selection arguments⟫ ⟪input⟫
-# expect: ⟪observable success criterion, e.g. Top-5 list printed / result file path⟫
+# expect: ⟪observable output, e.g. Top-5 list printed / result file path⟫
 ```
 
 ⟪If a run.sh convenience script exists, mention it AFTER the explicit path.⟫

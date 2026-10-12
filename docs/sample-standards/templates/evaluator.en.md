@@ -1,9 +1,6 @@
 English | [简体中文](README_cn.md)
 
-<!-- Template: evaluator/ README (English). Contract: readme-contract.md §4.6.
-     Keep anchors; replace ⟪…⟫; delete guidance when done. Reference results are
-     cited with their measurement conditions and sources. An empty
-     or placeholder-only evaluator does not count as an implementation. -->
+<!-- Keep section anchors, fill ⟪…⟫ and remove guidance before publishing. Maintain the Chinese version alongside this file. -->
 
 # Evaluator — ⟪model name⟫
 
@@ -56,7 +53,7 @@ English | [简体中文](README_cn.md)
 <a id="metrics"></a>
 ## Metrics
 
-> **Must answer:** the definition AND test conditions of every metric (topk,
+> **Must answer:** the definition AND measurement conditions of every metric (topk,
 > IoU thresholds, data subset) — results are comparable only with full
 > conditions stated.
 

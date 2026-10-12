@@ -1,8 +1,6 @@
 [English](README.md) | 简体中文
 
-<!-- 模板：runtime/python README（中文）。契约：readme-contract.md §4.3。
-     保持锚点；替换 ⟪…⟫；完成后删除引导。参数默认值与 build_parser 机器核对；
-     集成示例必须原样可运行（由 sample tests 按 runtime-code.md §10 验证）。 -->
+<!-- 使用模板时保留章节锚点，填写 ⟪…⟫，完成后删除引导文字。与英文版本同步维护。 -->
 
 # Python 运行 — ⟪模型名⟫
 
@@ -20,7 +18,7 @@
 ## 环境
 
 > **必须回答：** 板卡/系统要求、Python 版本、依赖（或“板端镜像自带”）；显式说明
-> `hbm_runtime` 仅存在于板端镜像（host 导入失败是设计行为）。
+> `hbm_runtime` 仅存在于板端镜像。
 
 - 板卡：⟪targets⟫，系统镜像 ≥ ⟪版本⟫
 - Python：⟪版本⟫；依赖：⟪清单或无⟫
@@ -29,19 +27,19 @@
 <a id="usage"></a>
 ## 使用
 
-> **必须回答：** cwd；默认命令（零额外参数）与自定义命令各一条；成功判据
+> **必须回答：** cwd；默认命令（零额外参数）与自定义命令各一条；预期结果
 > （退出码/打印输出/结果文件）。
 
 ```bash
 # cwd：仓库根目录
 python3 samples/⟪domain⟫/⟪name⟫/runtime/python/main.py --target ⟪target⟫ ⟪input⟫
-# 成功判据：⟪criterion⟫
+# 输出：⟪结果或文件路径⟫
 ```
 
 <a id="parameters"></a>
 ## 参数
 
-> **必须回答：** **全部** CLI 参数及 parser 实际默认值（机器核对）。kebab-case
+> **必须回答：** **全部** CLI 参数及 parser 实际默认值。kebab-case
 > 命名。不得出现 parser 未定义的参数，也不得遗漏。
 
 | 参数 | 类型 | 默认值 | 说明 |
@@ -61,8 +59,7 @@ python3 samples/⟪domain⟫/⟪name⟫/runtime/python/main.py --target ⟪targe
 ## 集成示例
 
 > **必须回答：** **完整可运行**的 Python 片段。输入/配置变量全部在示例内定义或指向
-> 已声明前置步骤准备的具体本地文件；无未定义引用。该片段由本 sample 的 tests 针对
-> fixture 执行验证。
+> 已声明前置步骤准备的具体本地文件。
 
 前置：⟪如已按 model/README.md 准备制品；测试图位于
 samples/⟪domain⟫/⟪name⟫/test_data/⟪image⟫⟫

@@ -1,8 +1,6 @@
 English | [简体中文](README_cn.md)
 
-<!-- Template: model/ README (English). Contract: readme-contract.md §4.2.
-     Keep anchors; replace ⟪…⟫; delete guidance when done. sha256 discipline:
-     unknown values stay `sha256: null (unknown)` — never guessed or copied. -->
+<!-- Keep section anchors, fill ⟪…⟫ and remove guidance before publishing. Maintain the Chinese version alongside this file. -->
 
 # Model Artifacts — ⟪model name⟫
 
@@ -51,7 +49,7 @@ which version, and where to place them.⟫
 ## Local Paths
 
 > **Must answer:** where files land after preparation and what the runtime
-> default parameters point to (these are machine-checked for consistency).
+> default parameters point to.
 
 - Artifacts: `samples/⟪domain⟫/⟪name⟫/model/⟪…⟫`
 - Runtime default `--model-path` (or equivalent): ⟪path⟫
@@ -60,8 +58,7 @@ which version, and where to place them.⟫
 ## Formats & Checksums
 
 > **Must answer:** format per artifact and its known SHA-256 **with source**.
-> Unknown values are written as `sha256: null (unknown)` — never fabricated,
-> never copied from a sibling artifact.
+> Write `sha256: null (unknown)` when the publisher has not supplied a checksum.
 
 | Artifact | Format | SHA-256 | Source of value |
 | --- | --- | --- | --- |

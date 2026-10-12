@@ -25,15 +25,13 @@
 
 ## 仓库简介 (Introduction)
 
-> **使命**：致力于为地瓜机器人开发者提供极致性能、开箱即用、覆盖全场景的 AI 部署验证体验。
-
 本仓库是 D-Robotics（地瓜机器人）官方提供的 BPU 模型示例与工具集合（Model Zoo），面向运行在 BPU（Brain Processing Unit）上的 AI 模型部署与应用开发，用于帮助开发者**快速上手 BPU**、**快速跑通模型推理流程**。
 
-仓库中收录了覆盖多个 AI 领域的 BPU 可运行模型，并提供从 **原始模型 (PyTorch/ONNX) -> 定点量化转换 -> 推理运行 -> 结果解析 -> 示例验证** 的完整参考实现，帮助用户以最小成本理解并使用 BPU 能力。
+各示例提供模型准备、转换指南和板端推理程序，涵盖前处理、BPU 执行、后处理与结果输出。支持的板卡和可用转换步骤见对应示例说明。
 
 ### 仓库核心价值
 
-- 🚀 **快速把 BPU 用起来**：提供开箱即用的推理 Pipeline，帮助用户在最短时间内完成 BPU 推理验证及性能评估。
+- 🚀 **快速把 BPU 用起来**：提供推理程序，以及模型下载和运行命令。
 - 🧩 **完整端到端示例**：覆盖从算法导出、定点量化转换到板端高效运行（`.bin` / `.hbm`）的全过程。包含模型加载、前处理、BPU 推理执行、后处理与结果可视化。
 - 📐 **规范化设计与接口文档**：提供统一的目录结构与示例代码规范，支持 Python（`hbm_runtime`）与 C/C++ 接口，便于快速理解和二次开发，降低集成与维护成本。
 - 🌐 **全场景覆盖**：涵盖分类、检测、分割、深度估计、OCR、语音以及多模态模型。
@@ -53,7 +51,7 @@
 
 **[浏览在线模型目录 →](https://d-robotics.github.io/rdk_model_zoo/)**
 
-在线模型目录以可搜索卡片展示已发布模型、模型资产、已经实测的性能与精度结果及其测试条件。缺失的性能或精度指标均表示尚未实测，不会根据其他指标推算或补造数值。
+在线模型目录提供模型搜索、模型文件下载，以及性能、精度指标和对应测量条件。
 
 ---
 
@@ -234,11 +232,11 @@ python3 main.py \
 - **开发规范**
   - 如需新增或开发 Sample，请先阅读 **[Model Zoo 仓库规范指南](./docs/Model_Zoo_Repository_Guidelines.md)**。
 - **Runtime 标准**
-  - [Runtime 代码规范](./docs/sample-standards/runtime-code.md)（§9–§10 含阶段、数据流与测试要求）与 [README 规范](./docs/sample-standards/readme-contract.md)。
+  - [Runtime 代码规范](./docs/sample-standards/runtime-code.md)（模型接口与数据流）与 [README 规范](./docs/sample-standards/readme-contract.md)。
 - **架构说明**
   - 可读模型示例模式见 [模型示例](./docs/architecture/model-examples.md)。
 - **版本发布**
-  - 发布流程与制品清单收录在 [docs/release](./docs/release)。
+  - 板卡身份与模型制品清单收录在 [docs/release](./docs/release)。
 - **工具链文档**
   - [RDK X5 算法工具链文档](https://developer.d-robotics.cc/api/v1/fileData/x5_doc-v126cn/index.html)
   - [RDK X3 算法工具链文档](https://developer.d-robotics.cc/api/v1/fileData/horizon_xj3_open_explorer_cn_doc/index.html)
@@ -289,10 +287,7 @@ python3 main.py \
 <summary><b>5. mAP 精度相比官方结果（如 Ultralytics）偏低是否正常？</b></summary>
 <br>
 
-一般属于正常现象，常见原因包括：
-- 官方测试通常使用动态 shape 和浮点精度，而部署版本使用固定 shape 与 INT8 量化。
-- `pycocotools` 评测脚本和官方评测实现之间可能存在细微差异。
-- 从 RGB 输入转换为 NV12 输入时会带来少量像素级误差。
+使用相同的数据集、输入分辨率、前处理、阈值和评测脚本比较结果。先检查浮点模型，再用相同输入比较量化模型；前处理对照应包含 RGB/NV12 转换。
 </details>
 
 <details>

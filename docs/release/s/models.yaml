@@ -11,8 +11,7 @@ release:
     hardware: RDK S100/S100P/S600
   validation:
     repository_wide_board_test: false
-    statement: This manifest inventories published model references and does not
-      certify runtime behavior or board compatibility.
+    statement: Published model files, download URLs and checksums. Runtime requirements are listed in each sample README.
 summary:
   sample_count: 34
   download_script_count: 31
@@ -135,9 +134,7 @@ models:
         format: json
         url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/gemma4_e2b/tokenizer/tokenizer_config.json
         sha256: null
-    notes: The source script has default HBM archives for S100P and S600. S100
-      requires a maintainer supplied GEMMA4_MODEL_BASE_URL; the manifest does
-      not invent one.
+    notes: HBM archives are provided for S100P and S600. S100 requires a separately supplied GEMMA4_MODEL_BASE_URL.
   - id: 3dresnet
     name: 3D ResNet-18
     tasks:
@@ -185,8 +182,7 @@ models:
         format: hbm
         url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/depth_any/depth_any.hbm
         sha256: null
-    notes: The model README publishes the S100 artifact; the root index also names
-      S100P, but no separate S100P asset is enumerated here.
+    notes: This entry provides the S100 model. Select the matching model and runtime described in samples/vision/depth_anything_v2/README.md.
   - id: diffusiondrive
     name: DiffusionDrive R34
     tasks:
@@ -361,7 +357,7 @@ models:
     download_scripts:
       - samples/vision/mobilenetv1/model/download.sh
     availability: download
-    notes: 'Replaced by the unified mobilenetv1 builds (timm checkpoints mobilenetv1_100 and mobilenetv1_125, INT8, 224x224 NV12 on every target), published under models/mobilenetv1/mobilenetv1/cls/ with SHA-256. The 100 and 125 variants are selected via --variant.'
+    notes: timm mobilenetv1_100 and mobilenetv1_125 checkpoints, INT8 with 224x224 NV12 input. Models and SHA-256 values are published under models/mobilenetv1/mobilenetv1/cls/. Select 100 or 125 with --variant.
     assets:
       - filename: s100/mobilenetv1_100_nashe_224x224_nv12.hbm
         format: hbm
@@ -395,7 +391,7 @@ models:
     download_scripts:
       - samples/vision/mobilenetv2/model/download.sh
     availability: download
-    notes: 'Replaced by the unified mobilenetv2 builds (timm checkpoints mobilenetv2_100 and mobilenetv2_140, INT8, 224x224 NV12 on every target), published under models/mobilenetv2/mobilenetv2/cls/ with SHA-256. The 100 and 140 variants are selected via --variant; the S-series C++ runtime lives under runtime/cpp.'
+    notes: timm mobilenetv2_100 and mobilenetv2_140 checkpoints, INT8 with 224x224 NV12 input. Models and SHA-256 values are published under models/mobilenetv2/mobilenetv2/cls/. Select 100 or 140 with --variant. C++ inference instructions are in runtime/cpp.
     assets:
       - filename: s100/mobilenetv2_100_nashe_224x224_nv12.hbm
         format: hbm
@@ -429,9 +425,7 @@ models:
     download_scripts:
       - samples/vision/mobilenetv3/model/download.sh
     availability: download
-    notes: Relocated to the unified mobilenetv3 sample on develop (B1); the
-      unified download.sh replaces the source-branch download_model.sh. Asset
-      filenames and URLs are unchanged from s-v1.1.2.
+    notes: Download the selected board model with samples/vision/mobilenetv3/model/download.sh; see the model README for variants and arguments.
     assets:
       - filename: s100/mobilenetv3_224x224_nv12.hbm
         format: hbm
@@ -449,7 +443,7 @@ models:
     download_scripts:
       - samples/vision/mobilenetv4/model/download.sh
     availability: download
-    notes: 'Replaced by the unified mobilenetv4 builds (timm checkpoints, INT8 NV12 on every target: conv-small and conv-medium at 224x224, conv-large at 256x256), published under models/mobilenetv4/mobilenetv4/cls/ with SHA-256. The small, medium and large variants are selected via --variant.'
+    notes: "timm checkpoints with INT8 NV12 input: conv-small and conv-medium at 224x224, conv-large at 256x256. Models and SHA-256 values are published under models/mobilenetv4/mobilenetv4/cls/. Select small, medium or large with --variant."
     assets:
       - filename: s100/mobilenetv4_conv_small_nashe_224x224_nv12.hbm
         format: hbm
@@ -495,10 +489,7 @@ models:
     sample_path: samples/vision/paddle_ocr
     download_scripts: []
     availability: download
-    notes: Relocated to the unified sample directory on develop. The source-branch
-      download_model.sh is not carried over; artifacts are obtained with
-      samples/vision/paddle_ocr/runtime/python/main.py --target auto --prepare,
-      which resolves the URLs recorded here through utils/py_utils/assets.py.
+    notes: Use samples/vision/paddle_ocr/model/README.md to download the model pair for the selected board.
     assets:
       - filename: s100/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm
         format: hbm
@@ -537,10 +528,7 @@ models:
     download_scripts:
       - samples/vision/resnet/model/download.sh
     availability: download
-    notes: Relocated to the unified resnet sample on develop; the resnet18
-      variant is selected there via --variant resnet18 and the unified
-      download.sh replaces the source-branch download_model.sh. Asset
-      filenames and URLs are unchanged from s-v1.1.2.
+    notes: Use samples/vision/resnet/model/download.sh for the selected board and --variant resnet18 in the runtime. Model preparation is described in the sample model README.
     assets:
       - filename: s100/resnet18_224x224_nv12.hbm
         format: hbm
@@ -558,10 +546,7 @@ models:
     download_scripts:
       - samples/vision/resnet/model/download.sh
     availability: download
-    notes: Relocated to the unified resnet sample on develop (B1); the
-      resnet50 variant is selected there via --variant resnet50 and the
-      unified download.sh replaces the source-branch download_model.sh.
-      Asset filenames and URLs are unchanged from s-v1.1.2.
+    notes: Use samples/vision/resnet/model/download.sh for the selected board and --variant resnet50 in the runtime. Model preparation is described in the sample model README.
     assets:
       - filename: s100/resnet50_224x224_nv12.hbm
         format: hbm
@@ -579,10 +564,7 @@ models:
     download_scripts:
       - samples/vision/resnet/model/download.sh
     availability: download
-    notes: Relocated to the unified resnet sample on develop (B1); the
-      resnet152 variant is selected there via --variant resnet152 and the
-      unified download.sh replaces the source-branch download_model.sh.
-      Asset filenames and URLs are unchanged from s-v1.1.2.
+    notes: Use samples/vision/resnet/model/download.sh for the selected board and --variant resnet152 in the runtime. Model preparation is described in the sample model README.
     assets:
       - filename: s100/resnet152_224x224_nv12.hbm
         format: hbm
@@ -634,10 +616,7 @@ models:
         format: hbm
         url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-so400m-patch16-256-i18n.hbm
         sha256: null
-    notes: The fixed S source explicitly supports both S100 (Nash-E) and S100P
-      (Nash-M) with these same eight s100/ artifacts. This shared filename is not
-      an implicit S100 fallback. The runtime exposes vision embeddings only;
-      historical image-text accuracy uses a text-side evaluation not shipped here.
+    notes: S100 (Nash-E) and S100P (Nash-M) use these eight files from the s100/ directory. The runtime returns vision embeddings. Image-text evaluation also requires a text encoder.
   - id: ultralytics_yolo
     name: Ultralytics YOLO
     tasks:
@@ -1710,10 +1689,7 @@ models:
         format: hbm
         url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/Ultralytics_YOLO_OE_3.7.0/nash-p/yolo26x_seg_nashp_640x640_nv12.hbm
         sha256: null
-    notes: Relocated to the unified ultralytics_yolo sample on develop; asset
-      filenames and URLs are unchanged from s-v1.1.2. The source download
-      script publishes YOLO26n artifacts. Evaluator rows for other sizes are
-      retained as documentation benchmarks without an invented asset mapping.
+    notes: YOLO26 runtime and model preparation are in samples/vision/ultralytics_yolo. Select the board, task and size using that sample model guide.
   - id: unetmobilenet
     name: UnetMobileNet
     tasks:
@@ -1884,16 +1860,7 @@ models:
         format: hbm
         url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yoloe26_seg/nash-m/yoloe_26x_seg_pf_nashm_640x640_nv12.hbm
         sha256: 2abf9d30dd487f2d5eb53444b7272a71d7be18265a39bd463cfd5b0cd6c14539
-    notes: Original publication ID retained from rdk_s 380e1a2. Canonical
-      Python sample and explicit download entry now live under samples/vision/yoloe.
-      These ten S100/S100P HBM artifacts have quantized outputs and cannot run
-      through the canonical floating-output route without separate conversion.
-      Publisher SHA-256 values were verified against captured manifest/JSON
-      sidecars on 2026-09-28; see unified-migration YOLOE source audit evidence.
-      The fixed 4585-class vocabulary is shared in canonical test_data. Source
-      JSON/names sidecars are preserved in audit evidence, not downloaded by the
-      canonical HBM-only downloader. S600 is excluded; conversion/C++ migration
-      and current board verification remain pending.
+    notes: These ten S100/S100P HBM models have quantized outputs. Use the Python runtime in samples/vision/yoloe; the C++ runtime requires separately converted models with FLOAT32 NHWC outputs. The 4585-class vocabulary is in the sample test_data directory. S600 is not supported.
   - id: yoloe11_seg
     name: YOLOe11-Seg
     tasks:
@@ -1908,15 +1875,7 @@ models:
         format: hbm
         url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ultralytics_YOLO/yoloe_11s_seg_pf_nashe_640x640_nv12.hbm
         sha256: null
-    notes: Original publication ID retained from rdk_s 380e1a2. Canonical
-      Python sample and explicit download entry now live under samples/vision/yoloe.
-      Only S100 has this source artifact; no S100P/S600 fallback is provided.
-      This final HBM has mixed output precision, unlike its floating intermediate
-      graph, and cannot run directly through the canonical floating-output route.
-      Publisher SHA-256 remains unknown. The canonical default download path is
-      model/s100/ plus this unchanged filename. A yoloe_v8s artifact is mentioned
-      by source conversion documentation but has no recorded download URL and is
-      not registered here. Separate float conversion/C++ migration remain pending.
+    notes: This model targets S100 and has mixed output precision. Use the Python runtime in samples/vision/yoloe; the C++ runtime requires a separately converted model with FLOAT32 NHWC outputs. The publisher SHA-256 is unknown. Downloads are saved under model/s100/ with the filename listed above.
   - id: minicpm5-2b
     name: MiniCPM5-2B
     tasks:
@@ -1938,13 +1897,4 @@ models:
         format: tar.gz
         url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/minicpm5-2b_s600_oellm2_w8_ctx4096_20260908.tar.gz
         sha256: 8f2bef6fc7d2290f05055570e7dcfb1cf4e8c07c9a6bb0d0acc24dd202a83841
-    notes: Registered from the rdk_s tip source (380e1a2), where the sample had
-      no manifest row. The sample now lives at this unified path, where the
-      B11 batch migrated its pinned source files and split launch orchestration
-      into explicit prepare/build/run steps, keeping the two SDK families
-      separate (S100/S100P OELLM 1.0.0 legacy, S600 OELLM 2.0 beta). The
-      digests are the archive SHA256 values the download script pins and
-      verifies against; each archive extracts to a per-board directory
-      containing the model files and a pinned SHA256SUMS manifest. S600 still
-      requires the internal OELLM 2.0 beta SDK per the sample README; board
-      tests and independent acceptance remain pending.
+    notes: S100/S100P use OELLM 1.0.0. S600 requires the separately supplied OELLM 2.0.0-beta1 SDK and OELLM 2.0.4 runtime. The downloader checks each archive SHA-256 and extracts model files and SHA256SUMS into a per-board directory. Follow samples/llm/minicpm5-2b/README.md for model preparation, build and run commands.

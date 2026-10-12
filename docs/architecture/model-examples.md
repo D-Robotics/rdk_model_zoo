@@ -7,16 +7,15 @@
 
 普通单任务 Sample 默认三个 Python 文件；多任务家族按任务划分模型文件
 （Ultralytics YOLO 覆盖 detect / segment / pose / classify / obb 五类任务，
-目标形态约 7–8 个 Python 文件，详见规范 §1）。
+按每任务一个模型文件组织，合计约 7–8 个 Python 文件，详见规范 §1）。
 
 - **main.py（薄入口）**：解析参数 → 显式构造模型对象 → 调用 `predict` → 交付结果。
-  入口可直接定位模型构造与 `predict`，不把构造藏进通用 dispatch。
+  模型构造与 `predict` 调用直接写在入口中。
 - **cli.py**：参数声明、发布模型选择、`--list-models`/`--dry-run`、结果展示与保存。
   同一选项只声明一次；帮助与列表不触发图像库或板端 SDK 加载。
 - **模型文件（按任务命名）**：具名模型类，初始化与
   `preprocess` / `infer` / `postprocess` / `predict` 主线在一个文件内可读。
-  复杂算法（NV12 打包、DFL/LTRB 解码、NMS、量化变换）继续留在共享模块，
-  不为了"文件完整"复制。
+  NV12 打包、DFL/LTRB 解码、NMS 和量化变换等公共算法由共享模块提供。
 
 ## 2. 调用链
 
@@ -27,10 +26,8 @@ CLI 输出与保存。真实入口见
 [main.py](../../samples/vision/resnet/runtime/python/main.py)，使用方式见
 [ResNet README](../../samples/vision/resnet/README.md)。
 
-- `predict` 显式串联三阶段；既有 `pre_process` / `forward` / `post_process`
-  名称是同一实现的薄别名，不维护第二份实现。
-- Context（尺寸、scale、padding 等几何信息）显式存放在 `prepared` 返回值中，
-  不放入会被下一次调用覆盖的实例字段。
+- `predict` 依次调用 `preprocess`、`infer` 和 `postprocess`。
+- `prepared` 保存本次输入的尺寸、缩放比例和填充量；后处理使用对应的几何信息。
 - 多阶段任务（OCR/SAM/Paraformer）：每个 stage 公开三步接口，
   `pipeline.predict` 显式编排；阶段次序在代码中直接可读。
 
@@ -39,7 +36,7 @@ CLI 输出与保存。真实入口见
 `utils/py_utils/runtime.py` 只承接 SDK 导入、模型实例创建与按目标身份检查。
 集成的 runner 复用会话的加载/身份边界后，直接在同一个已加载 SDK 对象上执行
 自身已校验的调用；运行时元信息读取与调度参数（`set_scheduling_params` 及其
-校验）保留在各 runner。公共库不隐藏模型前后处理，也不依赖某个 Sample 的入口。
+校验）保留在各 runner。模型前后处理由各 Sample 的模型类负责。
 
 ## 4. 板卡与模型选择
 
@@ -51,10 +48,8 @@ CLI 输出与保存。真实入口见
   manifest（`docs/release/{x5,s}/models.yaml`）是制品与 URL 的事实源。
 - 自定义模型路径通过 CLI 显式传入，经实际张量契约校验。
 
-## 5. 边界
+## 5. 运行环境
 
-- 薄 SDK 会话不是自研推理引擎；真实执行依赖板端安装的 `hbm_runtime`。
-- ONNX 导出、工具链量化编译与板端推理是独立环节，其执行状态在各 Sample
-  文档中单独记录；主机测试不替代板端证据。
-- 仅 C++ 运行时的 Sample（如 `samples/llm/*`）以其原生 generate/stream/reset
-  接口为明确等价形态，不伪造 Python Runtime。
+- Python BPU 推理使用板端的 `hbm_runtime`。
+- ONNX 导出和模型编译按 `conversion/` 指南在工具链环境完成；编译后的模型在匹配板卡上运行。
+- C++ LLM Sample 使用其文档列出的 `generate`、`stream` 或 `reset` 接口及相应厂商 SDK。

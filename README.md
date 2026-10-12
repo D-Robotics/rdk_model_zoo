@@ -25,15 +25,13 @@
 
 ## Introduction
 
-> **Mission**: Dedicated to providing D-Robotics developers with extreme performance, out-of-the-box, and full-scenario AI deployment validation experiences.
-
 This repository is the official collection of BPU model examples and tools (Model Zoo) provided by D-Robotics. It is oriented towards AI model deployment and application development on BPU (Brain Processing Unit), helping developers to **quickly get started with BPU** and **fast-track model inference workflows**.
 
-The repository includes BPU-ready models across multiple AI domains and provides complete reference implementations from **Original Model (PyTorch/ONNX) -> Fixed-point Quantization -> Inference Execution -> Result Parsing -> Example Validation**, helping users understand and utilize BPU capabilities at minimal cost.
+The samples provide model preparation, conversion guides and board-side inference programs, with preprocessing, BPU execution, postprocessing and result output. Each sample documents its supported boards and available conversion steps.
 
 ### Core Value
 
-- 🚀 **Quick BPU Adoption**: Provides out-of-the-box inference pipelines to help users complete BPU inference validation and performance evaluation in the shortest time.
+- 🚀 **Quick BPU Adoption**: Provides inference programs with model download and run commands.
 - 🧩 **Complete End-to-End Examples**: Covers the entire process from algorithm export and fixed-point quantization to efficient on-board execution (`.bin` / `.hbm`). Includes model loading, preprocessing, BPU inference execution, post-processing, and result visualization.
 - 📐 **Standardized Design & Documentation**: Provides unified directory structures and sample code specifications, supporting Python (`hbm_runtime`) and C/C++ interfaces for easy understanding, secondary development, and reduced integration/maintenance costs.
 - 🌐 **Full Scenario Coverage**: Covers classification, detection, segmentation, depth estimation, OCR, speech, and multi-modal models.
@@ -53,7 +51,7 @@ The `samples/` tree is the unified source for all maintained boards. Choose the 
 
 **[Browse the online model catalog →](https://d-robotics.github.io/rdk_model_zoo/)**
 
-The online catalog presents released models as searchable cards with model assets, measured performance and accuracy results, and their documented test conditions.
+The online catalog presents released models as searchable cards with model assets, measured performance and accuracy results, and their measurement conditions.
 
 ---
 
@@ -225,9 +223,9 @@ Upstream VLA integrations (ACT and Pi0) are additionally available under `sample
 - **Model Docs**: Each model's top-level `README.md` provides an overview and run guide.
 - **Source Reference**: For code-level interface details, see **[Source Documentation](./docs/source_reference/README.md)**.
 - **Guidelines**: To contribute or develop, please read the **[Model Zoo Repository Guidelines](./docs/Model_Zoo_Repository_Guidelines.md)**.
-- **Runtime Standards**: [Runtime code standard](./docs/sample-standards/runtime-code.md) (stages, data flow and tests in §9–§10) and [README standard](./docs/sample-standards/readme-contract.md).
+- **Runtime Standards**: [Runtime code standard](./docs/sample-standards/runtime-code.md) (model interfaces and data flow) and [README standard](./docs/sample-standards/readme-contract.md).
 - **Architecture**: The readable model-example pattern is described in [Model examples](./docs/architecture/model-examples.md).
-- **Release & Manifests**: Release procedure and manifests live under [docs/release](./docs/release).
+- **Release & Manifests**: Board identities and model manifests are listed under [docs/release](./docs/release).
 - **Toolchain Manuals**:
   - [RDK X5 Toolchain Doc](https://developer.d-robotics.cc/api/v1/fileData/x5_doc-v126cn/index.html)
   - [RDK X3 Toolchain Doc](https://developer.d-robotics.cc/api/v1/fileData/horizon_xj3_open_explorer_cn_doc/index.html)
@@ -276,9 +274,7 @@ The conversion settings no longer match the ONNX input size. Update the input re
 <summary><b>5. mAP accuracy is lower than official results (e.g., Ultralytics)?</b></summary>
 <br>
 
-- Deployment uses fixed shape and INT8 quantization, unlike dynamic shape/float official tests.
-- Slight implementation differences in evaluation scripts (e.g., `pycocotools`).
-- NCHW-RGB to NV12 conversion adds minimal pixel-level loss.
+Compare results with the same dataset, input resolution, preprocessing, thresholds and evaluation script. Check the floating-point model first, then compare the quantized model using the same inputs. Include RGB/NV12 conversion in the preprocessing comparison.
 </details>
 
 <details>

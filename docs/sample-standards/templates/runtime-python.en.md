@@ -1,9 +1,6 @@
 English | [简体中文](README_cn.md)
 
-<!-- Template: runtime/python README (English). Contract: readme-contract.md §4.3.
-     Keep anchors; replace ⟪…⟫; delete guidance when done. Parameter defaults are
-     machine-checked against build_parser; the integration example must run as-is
-     (verified by sample tests per runtime-code.md §10). -->
+<!-- Keep section anchors, fill ⟪…⟫ and remove guidance before publishing. Maintain the Chinese version alongside this file. -->
 
 # Python Runtime — ⟪model name⟫
 
@@ -22,7 +19,7 @@ Use this directory for python inference.
 
 > **Must answer:** board/system requirement, Python version, dependencies (or
 > “board image built-ins only”); explicit note that `hbm_runtime` exists only in
-> the board image (host import fails by design).
+> the board image.
 
 - Board: ⟪targets⟫ with system image ≥ ⟪version⟫
 - Python: ⟪version⟫; dependencies: ⟪list or none⟫
@@ -32,20 +29,18 @@ Use this directory for python inference.
 ## Usage
 
 > **Must answer:** cwd; one default command (zero extra args) and one customized
-> command; how success is judged (exit code / printed output / result files).
+> command; expected output (exit code / printed output / result files).
 
 ```bash
 # cwd: repository root
 python3 samples/⟪domain⟫/⟪name⟫/runtime/python/main.py --target ⟪target⟫ ⟪input⟫
-# success: ⟪criterion⟫
+# output: ⟪result or file path⟫
 ```
 
 <a id="parameters"></a>
 ## Parameters
 
-> **Must answer:** EVERY CLI argument with its actual default from the parser
-> (machine-checked). Kebab-case names. No parameter may be documented that the
-> parser does not define, and none omitted.
+> **Must answer:** EVERY CLI argument with its actual default from the parser. Use the parser's exact option names and include every supported parameter.
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -67,8 +62,7 @@ boxes in [x1,y1,x2,y2] pixel coords⟫
 
 > **Must answer:** a COMPLETE runnable Python snippet. Every input/config
 > variable is defined inside the example or points to a concrete local file
-> prepared in a stated prerequisite step. No undefined references. The snippet
-> is exercised by this sample's tests against a fixture.
+> prepared in a stated prerequisite step.
 
 Prerequisite: ⟪e.g. artifact downloaded per model/README.md; test image at
 samples/⟪domain⟫/⟪name⟫/test_data/⟪image⟫⟫

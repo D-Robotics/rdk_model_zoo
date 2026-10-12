@@ -1,8 +1,6 @@
 [English](README.md) | 简体中文
 
-<!-- 模板：runtime/cpp README（中文）。契约：readme-contract.md §4.4。
-     保持锚点；替换 ⟪…⟫；完成后删除引导。本 README 只在存在 C++ 实现时存在——
-     缺席时不得在其他层级声称双语言支持。 -->
+<!-- 使用模板时保留章节锚点，填写 ⟪…⟫，完成后删除引导文字。与英文版本同步维护。 -->
 
 # C++ 运行 — ⟪模型名⟫
 
@@ -62,7 +60,7 @@ cmake .. && make -j
 <a id="parameters"></a>
 ## 参数
 
-> **必须回答：** 全部 gflags 参数（snake_case）及代码实际定义的默认值——静态机器核对。
+> **必须回答：** 全部 CLI 参数（按实际解析器拼写）及代码实际定义的默认值。
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
@@ -72,12 +70,12 @@ cmake .. && make -j
 ## 接口与资源生命周期
 
 > **必须回答：** 对外接口面（config 结构体＋模型类）、资源分配/释放时序（构造函数 vs
-> `init()`/`deinit()`）、自由函数数据流（pre_process/infer/post_process 引用传参）、
+> `init()`/`deinit()`）、自由函数数据流（preprocess/infer/postprocess 引用传参）、
 > 线程边界。引用头文件中的真实符号。
 
 - 配置：`⟪XxxConfig⟫` —— ⟪字段与默认值⟫
 - 模型：`⟪XxxModel⟫` —— ⟪init() 加载模型并分配张量；资源在 ⟪deinit()/析构⟫ 释放⟫
-- 数据流：`pre_process(…) → infer(…) → post_process(…)`，张量引用传参
+- 数据流：`preprocess(…) → infer(…) → postprocess(…)`，张量引用传参
 
 <a id="results-interpretation"></a>
 ## 结果解释

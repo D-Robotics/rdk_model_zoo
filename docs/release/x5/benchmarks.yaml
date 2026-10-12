@@ -286,7 +286,7 @@ benchmarks:
     variant_id: unet-resnet18-voc-512
     display_name: UNet ResNet18 Pascal VOC 512x512
     environment: { hardware: RDK X5 }
-    performance: [ { metric: latency, value: 52.72, unit: ms, qualifier: exact, statistic: mean, concurrency: 1, scope: "historical earlier ResNet18 checkpoint; hrt_model_exec; one thread; 200 frames; packed NV12 input; current board revalidation pending" }, { metric: throughput, value: 18.96, unit: fps, qualifier: exact, concurrency: 1, scope: "historical earlier ResNet18 checkpoint; hrt_model_exec; one thread; 200 frames; packed NV12 input; current board revalidation pending" } ]
+    performance: [ { metric: latency, value: 52.72, unit: ms, qualifier: exact, statistic: mean, concurrency: 1, scope: "earlier ResNet18 checkpoint; hrt_model_exec; one thread; 200 frames; packed NV12 input" }, { metric: throughput, value: 18.96, unit: fps, qualifier: exact, concurrency: 1, scope: "earlier ResNet18 checkpoint; hrt_model_exec; one thread; 200 frames; packed NV12 input" } ]
     source: { ref: 1e1c64decba4beb7551b0fed20e325eb9eab923e, path: samples/vision/unet/README.md, section: "## Reference Results", provenance: existing-repository-documentation }
     input:
       shape:
@@ -2202,13 +2202,13 @@ benchmarks:
       - metric: miou
         value: 0.619695
         unit: ratio
-        scope: historical earlier ResNet18 checkpoint; PyTorch FP32;1449 Pascal VOC validation images;not current download revalidation
+        scope: earlier ResNet18 checkpoint; PyTorch FP32;1449 Pascal VOC validation images;not current download revalidation
         model_stage: float
         dataset: Pascal VOC
       - metric: pixel-accuracy
         value: 0.911532
         unit: ratio
-        scope: historical earlier ResNet18 checkpoint; PyTorch FP32;1449 Pascal VOC validation images;not current download revalidation
+        scope: earlier ResNet18 checkpoint; PyTorch FP32;1449 Pascal VOC validation images;not current download revalidation
         model_stage: float
         dataset: Pascal VOC
   - sample_id: unet
@@ -2224,13 +2224,13 @@ benchmarks:
       - metric: miou
         value: 0.619694
         unit: ratio
-        scope: historical earlier ResNet18 checkpoint; ONNX Runtime FP32;1449 Pascal VOC validation images;not current download revalidation
+        scope: earlier ResNet18 checkpoint; ONNX Runtime FP32;1449 Pascal VOC validation images;not current download revalidation
         model_stage: float
         dataset: Pascal VOC
       - metric: pixel-accuracy
         value: 0.911532
         unit: ratio
-        scope: historical earlier ResNet18 checkpoint; ONNX Runtime FP32;1449 Pascal VOC validation images;not current download revalidation
+        scope: earlier ResNet18 checkpoint; ONNX Runtime FP32;1449 Pascal VOC validation images;not current download revalidation
         model_stage: float
         dataset: Pascal VOC
   - sample_id: unet
@@ -2246,20 +2246,20 @@ benchmarks:
       - metric: miou
         value: 0.617198
         unit: ratio
-        scope: historical earlier ResNet18 checkpoint; RDK X5 PTQ;1449 Pascal VOC validation images;not current download revalidation
+        scope: earlier ResNet18 checkpoint; RDK X5 PTQ;1449 Pascal VOC validation images;not current download revalidation
         model_stage: quantized
         dataset: Pascal VOC
       - metric: pixel-accuracy
         value: 0.910332
         unit: ratio
-        scope: historical earlier ResNet18 checkpoint; RDK X5 PTQ;1449 Pascal VOC validation images;not current download revalidation
+        scope: earlier ResNet18 checkpoint; RDK X5 PTQ;1449 Pascal VOC validation images;not current download revalidation
         model_stage: quantized
         dataset: Pascal VOC
   - sample_id: unet
     input: *a1
     environment:
       hardware: RDK X5
-      runtime: Host PyTorch FP32 and bayes-e PTQ compilation;board runtime pending
+      runtime: Host PyTorch FP32 and bayes-e PTQ compilation; host-only results
     source:
       ref: a6b8f206702ac4d7d830891c08fa070158898c6d
       path: samples/vision/unet/README.md
@@ -2273,24 +2273,24 @@ benchmarks:
       - metric: miou
         value: 0.689319
         unit: ratio
-        scope: 1449 Pascal VOC validation images;host FP32 evaluation and PTQ compilation;board runtime pending
+        scope: 1449 Pascal VOC validation images;host FP32 evaluation and PTQ compilation; host-only results
         model_stage: float
         dataset: Pascal VOC
       - metric: pixel-accuracy
         value: 0.930947
         unit: ratio
-        scope: 1449 Pascal VOC validation images;host FP32 evaluation and PTQ compilation;board runtime pending
+        scope: 1449 Pascal VOC validation images;host FP32 evaluation and PTQ compilation; host-only results
         model_stage: float
         dataset: Pascal VOC
       - metric: ptq-output-cosine
         value: 0.998328
         unit: ratio
-        scope: PTQ compilation output;board runtime pending
+        scope: PTQ compilation output; host-only results
   - sample_id: unet
     input: *a1
     environment:
       hardware: RDK X5
-      runtime: Host PyTorch FP32 and bayes-e PTQ compilation;board runtime pending
+      runtime: Host PyTorch FP32 and bayes-e PTQ compilation; host-only results
     source:
       ref: a6b8f206702ac4d7d830891c08fa070158898c6d
       path: samples/vision/unet/README.md
@@ -2304,24 +2304,24 @@ benchmarks:
       - metric: miou
         value: 0.683826
         unit: ratio
-        scope: 1449 Pascal VOC validation images;host FP32 evaluation and PTQ compilation;board runtime pending
+        scope: 1449 Pascal VOC validation images;host FP32 evaluation and PTQ compilation; host-only results
         model_stage: float
         dataset: Pascal VOC
       - metric: pixel-accuracy
         value: 0.928404
         unit: ratio
-        scope: 1449 Pascal VOC validation images;host FP32 evaluation and PTQ compilation;board runtime pending
+        scope: 1449 Pascal VOC validation images;host FP32 evaluation and PTQ compilation; host-only results
         model_stage: float
         dataset: Pascal VOC
       - metric: ptq-output-cosine
         value: 0.995292
         unit: ratio
-        scope: PTQ compilation output;board runtime pending
+        scope: PTQ compilation output; host-only results
   - sample_id: unet
     input: *a1
     environment:
       hardware: RDK X5
-      runtime: Host PyTorch FP32 and bayes-e PTQ compilation;board runtime pending
+      runtime: Host PyTorch FP32 and bayes-e PTQ compilation; host-only results
     source:
       ref: a6b8f206702ac4d7d830891c08fa070158898c6d
       path: samples/vision/unet/README.md
@@ -2335,24 +2335,24 @@ benchmarks:
       - metric: miou
         value: 0.709437
         unit: ratio
-        scope: 1449 Pascal VOC validation images;host FP32 evaluation and PTQ compilation;board runtime pending
+        scope: 1449 Pascal VOC validation images;host FP32 evaluation and PTQ compilation; host-only results
         model_stage: float
         dataset: Pascal VOC
       - metric: pixel-accuracy
         value: 0.935887
         unit: ratio
-        scope: 1449 Pascal VOC validation images;host FP32 evaluation and PTQ compilation;board runtime pending
+        scope: 1449 Pascal VOC validation images;host FP32 evaluation and PTQ compilation; host-only results
         model_stage: float
         dataset: Pascal VOC
       - metric: ptq-output-cosine
         value: 0.996384
         unit: ratio
-        scope: PTQ compilation output;board runtime pending
+        scope: PTQ compilation output; host-only results
   - sample_id: unet
     input: *a1
     environment:
       hardware: RDK X5
-      runtime: Host PyTorch FP32 and bayes-e PTQ compilation;board runtime pending
+      runtime: Host PyTorch FP32 and bayes-e PTQ compilation; host-only results
     source:
       ref: a6b8f206702ac4d7d830891c08fa070158898c6d
       path: samples/vision/unet/README.md
@@ -2366,16 +2366,16 @@ benchmarks:
       - metric: miou
         value: 0.740002
         unit: ratio
-        scope: 1449 Pascal VOC validation images;host FP32 evaluation and PTQ compilation;board runtime pending
+        scope: 1449 Pascal VOC validation images;host FP32 evaluation and PTQ compilation; host-only results
         model_stage: float
         dataset: Pascal VOC
       - metric: pixel-accuracy
         value: 0.942805
         unit: ratio
-        scope: 1449 Pascal VOC validation images;host FP32 evaluation and PTQ compilation;board runtime pending
+        scope: 1449 Pascal VOC validation images;host FP32 evaluation and PTQ compilation; host-only results
         model_stage: float
         dataset: Pascal VOC
       - metric: ptq-output-cosine
         value: 0.99607
         unit: ratio
-        scope: PTQ compilation output;board runtime pending
+        scope: PTQ compilation output; host-only results

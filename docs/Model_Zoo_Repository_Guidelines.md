@@ -2,7 +2,7 @@
 
 本文档定义 Model Zoo 仓库的目录组织、命名约定与通用编码规则。具体规范链接各专门文档，不在本文重复：
 
-- [Runtime 代码规范](sample-standards/runtime-code.md)：main/cli/模型文件结构、阶段契约、公共 Runtime、测试要求
+- [Runtime 代码规范](sample-standards/runtime-code.md)：main/cli/模型文件结构、阶段接口、公共 Runtime、行为要求
 - [README 契约](sample-standards/readme-contract.md)：各级 README 必答内容、双语配对、模板
 - [模型示例架构](architecture/model-examples.md)：可读模型示例的当前形态
 
@@ -10,9 +10,9 @@
 
 ## 1. 仓库分层
 
-`develop` 是统一源：X5 与 S（S100/S100P/S600）的 sample 统一存放于 `samples/`，
-硬件通过每个 sample 的目标参数（`--target` 或 `--platform`）选择。平台身份只认板卡事实
-（`/sys/class/boardinfo/soc_name` → socinfo → device-tree），未知即报错、不静默回退。
+X5 与 S（S100/S100P/S600）的 Sample 存放于 `samples/`。通过各 Sample 的
+`--target` 或 `--platform` 选择板卡。自动识别依次读取
+`/sys/class/boardinfo/soc_name`、socinfo 和 device-tree；无法识别时返回错误。
 
 ## 2. 目录组织
 
@@ -78,9 +78,9 @@ samples/<领域>/<模型>/
 - 模型制品的目录与文件名以 manifest（`docs/release/{x5,s}/models.yaml`）声明的
   路径为准，不自行约定制品目录。
 
-## 6. 验收要点
+## 6. 文档与行为检查
 
 - 目录、命名与本规范一致；新 Sample 按 [README 契约](sample-standards/readme-contract.md)
   编写双语文档并通过 `utils/tools/sample_contract/check.py`。
 - 新增或修改的代码通过对应 Sample `tests/` 中的主机测试。
-- 保留有意义的数值与行为断言，不通过删除测试消除回归。
+- 测试覆盖输入输出格式、数值结果、错误处理与资源释放。

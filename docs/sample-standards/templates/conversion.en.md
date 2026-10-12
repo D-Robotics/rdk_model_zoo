@@ -1,9 +1,6 @@
 English | [简体中文](README_cn.md)
 
-<!-- Template: conversion/ README (English). Contract: readme-contract.md §4.5.
-     Keep anchors; replace ⟪…⟫; delete guidance when done. Missing recipe steps
-     MUST be listed under known-gaps — a generic command skeleton must never be
-     presented as a verified conversion flow. -->
+<!-- Keep section anchors, fill ⟪…⟫ and remove guidance before publishing. Maintain the Chinese version alongside this file. -->
 
 # Conversion — ⟪model name⟫
 
@@ -67,12 +64,12 @@ English | [简体中文](README_cn.md)
 ```
 
 <a id="validation"></a>
-## Post-Conversion Validation
+## Run the Converted Model
 
-> **Must answer:** how to confirm the artifact works (board smoke command,
-> reference comparison), with expected output and success criteria.
+> **Must answer:** how to inspect model metadata and run the converted artifact on its target board,
+> with expected output.
 
-- Smoke: ⟪command — same as sample quickstart with the fresh artifact⟫
+- Run: ⟪command — same as sample quickstart with the fresh artifact⟫
 - Expected result: ⟪exit status, output tensors or result file⟫
 
 <a id="artifacts"></a>

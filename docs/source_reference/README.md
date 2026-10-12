@@ -2,10 +2,8 @@ English | [简体中文](README_cn.md)
 
 # BPU Sample source documentation
 
-This directory provides **BPU Sample source API reference documentation** for the Python and C/C++ implementations under the repository-root `samples/` and `utils/` directories, delivered as a static HTML site:
-
-- Users: build the documentation from the source tree with the steps below (Python 3 + Sphinx/Doxygen).
-- Developers: rebuild and package the documentation locally.
+Build an HTML API reference for the Python and C/C++ code in `samples/` and `utils/`
+using Sphinx and Doxygen. Follow the build steps below, then open the generated site.
 
 ## 1. Browse the documentation
 
@@ -31,7 +29,7 @@ This directory provides **BPU Sample source API reference documentation** for th
 - **Python API** (`python/` + `autoapi/`): sphinx-autoapi statically scans all Python sources in the repository-root `samples/` and `utils/` directories, excluding `__pycache__`, `tests` and `dist`. Sample navigation has two levels: **task (vision / llm / robotics / speech / vla) → model**. The utils entry point is `python/utils/`.
 - **C/C++ API** (`doxygen_site/`): Doxygen recursively scans C/C++ source files (`*.c`, `*.cc`, `*.cpp`, `*.h`, `*.hpp`, etc.) under the repository-root `samples/` and `utils/` directories, excluding `build/` and `CMakeFiles/`. Enter from the site home or the `cpp/` page.
 
-## 2. Build the documentation
+## 3. Build the documentation
 
 ### Directory structure
 

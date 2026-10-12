@@ -1,8 +1,6 @@
 [English](README.md) | 简体中文
 
-<!-- 模板：sample 根 README（中文）。契约：docs/sample-standards/readme-contract.md §4.1。
-     规则：所有 <a id="…"></a> 锚点保持原样；替换 ⟪…⟫ 占位符；完成后删除引导块引用；
-     章节只能按契约 §1 的 not-applicable 理由删除。必须与英文 README.md 成对。 -->
+<!-- 使用模板时保留章节锚点，填写 ⟪…⟫，完成后删除引导文字。与英文版本同步维护。 -->
 
 # ⟪模型名称⟫（⟪任务⟫）
 
@@ -26,8 +24,7 @@
 ## 支持矩阵
 
 > **必须回答：** 提供哪些 target × variant × 语言组合、对应制品及所需 SDK 或模型配置。
-> 测试执行记录放在独立验证文档中。
-> 缺 C++ 必须在此可见——未提供 cpp 时任何位置不得声称双语言支持。
+> 按实际提供的 Python 和 C++ 入口填写。
 
 | Target | Variant | 语言 | 制品及环境要求 |
 | --- | --- | --- | --- |
@@ -58,7 +55,7 @@
 
 # cwd：仓库根目录
 python3 samples/⟪domain⟫/⟪name⟫/runtime/python/main.py ⟪实际目标选择参数⟫ ⟪input⟫
-# 预期：⟪可观察的成功判据，如打印 Top-5 / 生成结果文件 ⟪path⟫⟫
+# 预期：⟪输出内容，如打印 Top-5 / 生成结果文件 ⟪path⟫⟫
 ```
 
 ⟪若存在 run.sh 快捷脚本，在显式路径之后并列给出。⟫

@@ -2,14 +2,10 @@
 
 # BPU Sample 源码说明文档
 
-本目录提供 **BPU Sample 源码 API 参考文档**，覆盖仓库根目录 `samples/` 与 `utils/` 下的 Python 与 C/C++ 实现，以静态 HTML 站点形式交付：
+使用 Sphinx 和 Doxygen 为 `samples/` 与 `utils/` 中的 Python、C/C++ 代码生成 HTML API 参考文档。
+先按下方步骤构建，再打开生成的站点。
 
-- 普通用户：直接解压浏览已构建的文档包，无需任何构建环境。
-- 开发者：本地重建文档并打包。
-
-## 一、查看已构建文档（普通用户）
-
-### 1. 浏览文档
+## 一、浏览文档
 
 - 本地（有图形界面）：用浏览器直接打开
     `docs/source_reference/sphinx/build/html/index.html`。
@@ -33,7 +29,7 @@
 - **Python API**（`python/` + `autoapi/`）：由 sphinx-autoapi 静态扫描仓库根的 `samples/` 与 `utils/` 全部 Python 源码生成，跳过 `__pycache__`、`tests`、`dist` 目录；samples 导航按 **任务（vision / llm / robotics / speech / vla）→ 模型** 两级组织，utils 入口为 `python/utils/`。
 - **C/C++ API**（`doxygen_site/`）：由 Doxygen 递归扫描仓库根的 `samples/` 与 `utils/` 下的 C/C++ 源文件（`*.c`、`*.cc`、`*.cpp`、`*.h`、`*.hpp` 等），跳过 `build/`、`CMakeFiles/` 目录；从站点首页或 `cpp/` 页面进入。
 
-## 三、本地构建（开发者）
+## 三、构建文档
 
 ### 目录结构
 
