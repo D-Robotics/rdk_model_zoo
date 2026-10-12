@@ -175,10 +175,10 @@ The table lists each model family with its platforms and available models; choos
 | Image Classification | FastViT | `samples/vision/fastvit` | RDK X5 | [Details](./samples/vision/fastvit) |
 | Image Classification | GoogLeNet | `samples/vision/googlenet` | RDK X5 | [Details](./samples/vision/googlenet) |
 | Image Classification | HGNetV2 | `samples/vision/hgnetv2` | RDK X5 | [Details](./samples/vision/hgnetv2) |
-| Image Classification | MobileNetV1 | `samples/vision/mobilenetv1` | RDK X5 / RDK S100 / RDK S600 | [Details](./samples/vision/mobilenetv1) |
-| Image Classification | MobileNetV2 | `samples/vision/mobilenetv2` | RDK X5 / RDK S100 / RDK S600 | [Details](./samples/vision/mobilenetv2) |
+| Image Classification | MobileNetV1 | `samples/vision/mobilenetv1` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/mobilenetv1) |
+| Image Classification | MobileNetV2 | `samples/vision/mobilenetv2` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/mobilenetv2) |
 | Image Classification | MobileNetV3 | `samples/vision/mobilenetv3` | RDK X5 / RDK S100 / RDK S600 | [Details](./samples/vision/mobilenetv3) |
-| Image Classification | MobileNetV4 | `samples/vision/mobilenetv4` | RDK X5 / RDK S100 / RDK S600 | [Details](./samples/vision/mobilenetv4) |
+| Image Classification | MobileNetV4 | `samples/vision/mobilenetv4` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/mobilenetv4) |
 | Image Classification | MobileOne | `samples/vision/mobileone` | RDK X5 | [Details](./samples/vision/mobileone) |
 | Image Classification | RepGhost | `samples/vision/repghost` | RDK X5 | [Details](./samples/vision/repghost) |
 | Image Classification | RepVGG | `samples/vision/repvgg` | RDK X5 | [Details](./samples/vision/repvgg) |
@@ -188,8 +188,8 @@ The table lists each model family with its platforms and available models; choos
 | Image Classification | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [Details](./samples/vision/vargconvnet) |
 | Image Classification | ViT | `samples/vision/vit` | RDK S100 | [Details](./samples/vision/vit) |
 | Multi-Object Tracking | ByteTrack | `samples/vision/bytetrack` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/bytetrack) |
-| Promptable Image Segmentation | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 / RDK S100 / RDK S100P | [Details](./samples/vision/efficient_sam) |
-| Promptable Image Segmentation | MobileSAM | `samples/vision/mobile_sam` | RDK X5 / RDK S100 / RDK S100P | [Details](./samples/vision/mobile_sam) |
+| Promptable Image Segmentation | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/efficient_sam) |
+| Promptable Image Segmentation | MobileSAM | `samples/vision/mobile_sam` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/mobile_sam) |
 | Monocular Depth Estimation | Depth Anything V2 | `samples/vision/depth_anything_v2` | RDK S100 | [Details](./samples/vision/depth_anything_v2) |
 | Monocular Depth Estimation | YOLO26 Depth | `samples/vision/yolo26_depth` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/yolo26_depth) |
 | Semantic Segmentation | PP-LiteSeg | `samples/vision/pp_liteseg` | RDK X5 | [Details](./samples/vision/pp_liteseg) |
@@ -213,8 +213,8 @@ The table lists each model family with its platforms and available models; choos
 | Speech Recognition | Paraformer | `samples/speech/paraformer` | RDK S100 | [Details](./samples/speech/paraformer) |
 | Planning / End-to-End Driving | DiffusionDrive | `samples/vision/diffusiondrive` | RDK S100P / RDK S600 | [Details](./samples/vision/diffusiondrive) |
 | Legged Locomotion | HIMLoco (Unitree Go2) | `samples/robotics/himloco` | RDK X5 | [Details](./samples/robotics/himloco) |
-| Vision-Language Model | Gemma4-E2B (native C++) | `samples/llm/gemma4-e2b` | RDK S100P / RDK S600 | [Details](./samples/llm/gemma4-e2b) |
-| Text Generation | MiniCPM5-2B (native C++) | `samples/llm/minicpm5-2b` | RDK S100P / RDK S600 | [Details](./samples/llm/minicpm5-2b) |
+| Vision-Language Model | Gemma4-E2B (native C++) | `samples/llm/gemma4-e2b` | RDK S100 (user-supplied models) / RDK S100P / RDK S600 | [Details](./samples/llm/gemma4-e2b) |
+| Text Generation | MiniCPM5-2B (native C++) | `samples/llm/minicpm5-2b` | RDK S100 / RDK S100P / RDK S600 | [Details](./samples/llm/minicpm5-2b) |
 
 Upstream VLA integrations (ACT and Pi0) are additionally available under `samples/vla/` as pinned Git submodules; see the [VLA overview](./samples/vla/README.md) for their integration scope.
 

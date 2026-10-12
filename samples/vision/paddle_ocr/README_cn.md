@@ -32,7 +32,7 @@ paddle_ocr/
 | X5 | supported | not-supported（未提供 X5 C++ 实现） |
 | S100 | supported | supported |
 | S100P | not-supported（未发布 OCR 模型对） | not-supported |
-| S600 | supported | supported |
+| S600 | not-supported（S600 使用 C++） | supported |
 
 Python 默认与保持长宽比两条管线（含下载脚本）在 X5 与 S100 上运行，
 输出检测/识别阶段张量并解码为多边形框与识别文本；S100 C++ 构建将识别

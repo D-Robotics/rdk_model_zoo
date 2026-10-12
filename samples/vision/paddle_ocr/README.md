@@ -32,7 +32,7 @@ paddle_ocr/
 | X5 | supported | not-supported (no X5 C++ implementation provided) |
 | S100 | supported | supported |
 | S100P | not-supported (no OCR pair published) | not-supported |
-| S600 | supported | supported |
+| S600 | not-supported (use C++ on S600) | supported |
 
 The Python default and aspect-ratio pipelines (including the command-line
 helpers) run on X5 and S100 and emit the detector/recognizer stage tensors,

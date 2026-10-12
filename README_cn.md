@@ -178,10 +178,10 @@ python3 main.py \
 | 图像分类 | FastViT | `samples/vision/fastvit` | RDK X5 | [详情](./samples/vision/fastvit) |
 | 图像分类 | GoogLeNet | `samples/vision/googlenet` | RDK X5 | [详情](./samples/vision/googlenet) |
 | 图像分类 | HGNetV2 | `samples/vision/hgnetv2` | RDK X5 | [详情](./samples/vision/hgnetv2) |
-| 图像分类 | MobileNetV1 | `samples/vision/mobilenetv1` | RDK X5 / RDK S100 / RDK S600 | [详情](./samples/vision/mobilenetv1) |
-| 图像分类 | MobileNetV2 | `samples/vision/mobilenetv2` | RDK X5 / RDK S100 / RDK S600 | [详情](./samples/vision/mobilenetv2) |
+| 图像分类 | MobileNetV1 | `samples/vision/mobilenetv1` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/mobilenetv1) |
+| 图像分类 | MobileNetV2 | `samples/vision/mobilenetv2` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/mobilenetv2) |
 | 图像分类 | MobileNetV3 | `samples/vision/mobilenetv3` | RDK X5 / RDK S100 / RDK S600 | [详情](./samples/vision/mobilenetv3) |
-| 图像分类 | MobileNetV4 | `samples/vision/mobilenetv4` | RDK X5 / RDK S100 / RDK S600 | [详情](./samples/vision/mobilenetv4) |
+| 图像分类 | MobileNetV4 | `samples/vision/mobilenetv4` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/mobilenetv4) |
 | 图像分类 | MobileOne | `samples/vision/mobileone` | RDK X5 | [详情](./samples/vision/mobileone) |
 | 图像分类 | RepGhost | `samples/vision/repghost` | RDK X5 | [详情](./samples/vision/repghost) |
 | 图像分类 | RepVGG | `samples/vision/repvgg` | RDK X5 | [详情](./samples/vision/repvgg) |
@@ -191,8 +191,8 @@ python3 main.py \
 | 图像分类 | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [详情](./samples/vision/vargconvnet) |
 | 图像分类 | ViT | `samples/vision/vit` | RDK S100 | [详情](./samples/vision/vit) |
 | 多目标跟踪 | ByteTrack | `samples/vision/bytetrack` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/bytetrack) |
-| 提示式图像分割 | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 / RDK S100 / RDK S100P | [详情](./samples/vision/efficient_sam) |
-| 提示式图像分割 | MobileSAM | `samples/vision/mobile_sam` | RDK X5 / RDK S100 / RDK S100P | [详情](./samples/vision/mobile_sam) |
+| 提示式图像分割 | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/efficient_sam) |
+| 提示式图像分割 | MobileSAM | `samples/vision/mobile_sam` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/mobile_sam) |
 | 单目深度估计 | Depth Anything V2 | `samples/vision/depth_anything_v2` | RDK S100 | [详情](./samples/vision/depth_anything_v2) |
 | 单目深度估计 | YOLO26 Depth | `samples/vision/yolo26_depth` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/yolo26_depth) |
 | 语义分割 | PP-LiteSeg | `samples/vision/pp_liteseg` | RDK X5 | [详情](./samples/vision/pp_liteseg) |
@@ -216,8 +216,8 @@ python3 main.py \
 | 语音识别 | Paraformer | `samples/speech/paraformer` | RDK S100 | [详情](./samples/speech/paraformer) |
 | 端到端规划驾驶 | DiffusionDrive | `samples/vision/diffusiondrive` | RDK S100P / RDK S600 | [详情](./samples/vision/diffusiondrive) |
 | 足式机器人运动控制 | HIMLoco (Unitree Go2) | `samples/robotics/himloco` | RDK X5 | [详情](./samples/robotics/himloco) |
-| 视觉-语言模型 | Gemma4-E2B（原生 C++） | `samples/llm/gemma4-e2b` | RDK S100P / RDK S600 | [详情](./samples/llm/gemma4-e2b) |
-| 文本生成 | MiniCPM5-2B (native C++) | `samples/llm/minicpm5-2b` | RDK S100P / RDK S600 | [详情](./samples/llm/minicpm5-2b) |
+| 视觉-语言模型 | Gemma4-E2B（原生 C++） | `samples/llm/gemma4-e2b` | RDK S100（需自行提供模型）/ RDK S100P / RDK S600 | [详情](./samples/llm/gemma4-e2b) |
+| 文本生成 | MiniCPM5-2B (native C++) | `samples/llm/minicpm5-2b` | RDK S100 / RDK S100P / RDK S600 | [详情](./samples/llm/minicpm5-2b) |
 
 上游 VLA 集成（ACT 与 Pi0）另外以固定 Git 子模块形式提供于 `samples/vla/`，集成范围见 [VLA 总览](./samples/vla/README_cn.md)。
 
