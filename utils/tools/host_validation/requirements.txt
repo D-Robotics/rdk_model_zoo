@@ -12,18 +12,24 @@
 # Version bounds follow the constraints the samples declare themselves
 # (e.g. samples/vision/yoloe/conversion/requirements-host.txt,
 # samples/vision/yoloe/evaluator/requirements-host.txt, the tracker pins
-# in samples/vision/bytetrack/requirements-host.txt and the jsonschema
+# in samples/vision/bytetrack/requirements-host.txt, the soundfile floor
+# in samples/vision/lite_avatar/requirements-host.txt and the jsonschema
 # pin in skills/requirements.txt).  lap/cython-bbox are the ByteTrack
 # tracker's real CPU dependencies and jsonschema is what the skills
 # evidence validators require (they refuse to auto-install it) — all
 # three are mandatory core host dependencies, not optional extras.
+# soundfile is the LiteAvatar host test suite's WAV decode dependency
+# (its soundfile-dependent test skips when absent, so a gate without it
+# still passes — but the complete gate exercises it).
 #
 # Tested versions (Python 3.12.14, macOS arm64 host, 2026-10-05 full-gate
 # run): numpy 2.5.3, scipy 1.18.1, opencv-python-headless 4.14.0.94,
 # PyYAML 6.0.3, onnx 1.23.1, onnxruntime 1.30.0, pycocotools 2.0.11,
 # pillow 11.3.0, ftfy 6.3.1, regex 2026.9.29, lap 0.5.12, cython-bbox
 # 0.1.5, jsonschema 4.26.0.  The YOLOE evaluator scoring path was
-# additionally verified against pycocotools 2.0.10 (hermetic venv).
+# additionally verified against pycocotools 2.0.10 (hermetic venv), and
+# the LiteAvatar WAV tests against soundfile 0.14.0 (macOS host, 2026-10-12
+# targeted runs).
 #
 # scipy is split by environment marker: the 1.15.3 macOS arm64 wheel is
 # unusable (standalone `import scipy.sparse.linalg` fails with a Mach-O
@@ -57,3 +63,4 @@ regex>=2024
 lap==0.5.12
 cython-bbox==0.1.5
 jsonschema>=4,<5
+soundfile>=0.12,<1

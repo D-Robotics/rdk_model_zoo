@@ -88,6 +88,18 @@ class NamedArrayRunner:
             raise
         return self.binding
 
+    def unload(self) -> None:
+        """Release the loaded SDK runtime and binding for this model.
+
+        Multi-stage pipelines on memory-constrained boards free early-stage
+        models once later stages no longer need them; ``load()`` re-creates
+        the runtime (re-checking board identity and asset files) on the
+        next call.
+        """
+
+        self._runtime = None
+        self.binding = None
+
     def set_scheduling_params(
         self, *, priority: int | None = None, bpu_cores: list[int] | None = None
     ) -> None:

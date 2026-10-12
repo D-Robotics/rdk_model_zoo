@@ -15,6 +15,11 @@ import sys
 import tempfile
 import unittest
 
+# Optional-scope declaration: module-level framework imports let the host
+# gate record absent torch/ultralytics as explicit missing-module scope.
+import torch  # noqa: F401
+from ultralytics import YOLO  # noqa: F401
+
 
 @unittest.skipUnless(os.environ.get('YOLO26_TEST_WEIGHTS'), 'Set YOLO26_TEST_WEIGHTS to the weights directory')
 class OneToOneExportTest(unittest.TestCase):

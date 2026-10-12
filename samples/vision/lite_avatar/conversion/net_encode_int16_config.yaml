@@ -1,0 +1,49 @@
+# net_encode PTQ config — RDK S100 / nash-e (INT16 activations)
+#
+# Face-generator encoder stage: one reference frame -> the feature pyramid
+# f0..f3 the decoder conditions on. Runs once per reference frame at
+# runtime (not the per-output-frame hot path).
+#   input : image [1,3,384,384] RGB  (from data/preload TorchScript
+#           net_encode.pt, scripts/export_facegen.py)
+#   output: f0..f3 feature pyramid
+#
+# Calibration: ./calib_data/facegen_encode — net_encode images [1,3,384,384]
+# float32 (scripts/gen_calib_facegen.py). Precision: INT16 activations on all
+# nodes, max calibration at the 0.9999 percentile.
+#
+# Run serially (one hb_compile at a time):
+#   hb_compile -c net_encode_int16_config.yaml
+# Produces: ./net_encode_int16_output/net_encode_int16.hbm + ..._ptq_model.onnx
+
+model_parameters:
+  onnx_model: ./net_encode.onnx
+  march: nash-e
+  layer_out_dump: False
+  working_dir: ./net_encode_int16_output
+  output_model_file_prefix: net_encode_int16
+
+input_parameters:
+  input_name: image
+  input_shape: 1x3x384x384
+  input_type_rt: featuremap
+  input_type_train: featuremap
+  input_layout_train: NCHW
+  norm_type: no_preprocess
+  separate_batch: false
+
+calibration_parameters:
+  cal_data_dir: ./calib_data/facegen_encode
+  cal_data_type: 'float32'
+  calibration_type: 'max'
+  max_percentile: 0.9999
+  optimization: set_all_nodes_int16
+
+compiler_parameters:
+  optimize_level: 'O2'
+  compile_mode: 'latency'
+  core_num: 1
+  jobs: 32
+  cache_mode: disable
+  extra_params:
+    input_no_padding: true
+    output_no_padding: true

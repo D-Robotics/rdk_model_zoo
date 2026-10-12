@@ -1,0 +1,66 @@
+# net_decode PTQ config — RDK S100 / nash-e (face-generator decoder)
+#
+# Decoder stage: feature pyramid + mouth parameters -> the 384x384 mouth
+# image composited over the background for every output frame.
+#   inputs : f0 [1,3,384,384], f1 [1,16,192,192], f2 [1,32,96,96],
+#            f3 [1,64,48,48], mouth_param [1,32]
+#   output : mouth image [1,3,384,384]
+#   graph  : ./net_decode_deconv_inorm.onnx — Resize replaced by
+#            ConvTranspose (scripts/replace_resize_deconv.py) and the 3
+#            affine-free InstanceNorm nodes pre-decomposed into named plain
+#            ops (scripts/decompose_inorm.py; equivalence verified at
+#            cosine 1.000, max|diff| ~1e-6 against the source graph).
+#
+# Precision: INT16 activations on the BPU (the 13 convolutions plus the
+# gamma/beta denorm), while the 21 InstanceNorm-subgraph nodes listed in
+# run_on_cpu below execute FP32 on the CPU. This split is required: the
+# variance path of each norm must stay FP32, and run_on_cpu only matches
+# named plain ops — it does not survive hb_compile's own decomposition of
+# the composite InstanceNormalization node, which is why the graph ships
+# pre-decomposed (Pow(x,-0.5) instead of Reciprocal(Sqrt())). Do not
+# reorder or drop entries from the run_on_cpu list.
+#
+# Calibration: ./calib_data/facegen_decode — the runtime-exact decoder set
+# (real smoothed mouth params + net_encode.hbm reference features,
+# scripts/gen_real_calib.py; conversion/README.md step 9). Max calibration
+# over the full range (max_percentile 1.0), all nodes INT16.
+#
+# Run serially (one hb_compile at a time; jobs: 8 as verified — the other
+# three configs use 32):
+#   hb_compile -c net_decode_deconv_inorm_fullrange_config.yaml
+# Produces: ./net_decode_deconv_inorm_fullrange_output/
+#   net_decode_deconv_inorm_fullrange.hbm + ..._ptq_model.onnx
+
+model_parameters:
+  onnx_model: ./net_decode_deconv_inorm.onnx
+  march: nash-e
+  layer_out_dump: False
+  working_dir: ./net_decode_deconv_inorm_fullrange_output
+  output_model_file_prefix: net_decode_deconv_inorm_fullrange
+
+input_parameters:
+  input_name: f0;f1;f2;f3;mouth_param
+  input_shape: 1x3x384x384;1x16x192x192;1x32x96x96;1x64x48x48;1x32
+  input_type_rt: featuremap;featuremap;featuremap;featuremap;featuremap
+  input_layout_rt: NCHW;NCHW;NCHW;NCHW;NCHW
+  input_type_train: featuremap;featuremap;featuremap;featuremap;featuremap
+  input_layout_train: NCHW;NCHW;NCHW;NCHW;NCHW
+  norm_type: no_preprocess
+
+calibration_parameters:
+  cal_data_dir: ./calib_data/facegen_decode/f0;./calib_data/facegen_decode/f1;./calib_data/facegen_decode/f2;./calib_data/facegen_decode/f3;./calib_data/facegen_decode/mouth_param
+  cal_data_type: float32;float32;float32;float32;float32
+  calibration_type: 'max'
+  max_percentile: 1.0
+  optimization: set_all_nodes_int16
+  run_on_cpu: /dec/decoder/0/AAD2/norm/norm_mean;/dec/decoder/0/AAD2/norm/norm_centered;/dec/decoder/0/AAD2/norm/norm_sq;/dec/decoder/0/AAD2/norm/norm_var;/dec/decoder/0/AAD2/norm/norm_vareps;/dec/decoder/0/AAD2/norm/norm_invstd;/dec/decoder/0/AAD2/norm/norm_apply;/dec/decoder/1/AAD2/norm/norm_mean;/dec/decoder/1/AAD2/norm/norm_centered;/dec/decoder/1/AAD2/norm/norm_sq;/dec/decoder/1/AAD2/norm/norm_var;/dec/decoder/1/AAD2/norm/norm_vareps;/dec/decoder/1/AAD2/norm/norm_invstd;/dec/decoder/1/AAD2/norm/norm_apply;/dec/decoder/2/AAD2/norm/norm_mean;/dec/decoder/2/AAD2/norm/norm_centered;/dec/decoder/2/AAD2/norm/norm_sq;/dec/decoder/2/AAD2/norm/norm_var;/dec/decoder/2/AAD2/norm/norm_vareps;/dec/decoder/2/AAD2/norm/norm_invstd;/dec/decoder/2/AAD2/norm/norm_apply
+
+compiler_parameters:
+  optimize_level: 'O2'
+  compile_mode: 'latency'
+  core_num: 1
+  jobs: 8
+  cache_mode: disable
+  extra_params:
+    input_no_padding: true
+    output_no_padding: true

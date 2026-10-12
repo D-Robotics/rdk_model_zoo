@@ -95,6 +95,7 @@ rdk_model_zoo/
 |   |   |-- googlenet/             # Image classification
 |   |   |-- hgnetv2/               # Image classification
 |   |   |-- lanenet/               # Lane detection
+|   |   |-- lite_avatar/           # Audio-driven talking avatar
 |   |   |-- lprnet/                # License plate recognition
 |   |   |-- mobile_sam/            # Promptable image segmentation
 |   |   |-- mobilenetv1/           # Image classification
@@ -208,6 +209,7 @@ The table lists each model family with its platforms and available models; choos
 | Image-Text Multimodal Matching | CLIP | `samples/vision/clip` | RDK X5 | [Details](./samples/vision/clip) |
 | Vision Feature Encoder | DINOv2 | `samples/vision/dinov2` | RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/dinov2) |
 | Vision-Language Encoder | SigLIP | `samples/vision/siglip` | RDK S100 / RDK S100P | [Details](./samples/vision/siglip) |
+| Audio-Driven Talking Avatar | LiteAvatar | `samples/vision/lite_avatar` | RDK S100 | [Details](./samples/vision/lite_avatar) |
 | Speech Recognition | ASR (Wav2Vec2) | `samples/speech/asr` | RDK S100 / RDK S600 | [Details](./samples/speech/asr) |
 | Keyword Spotting | KWS | `samples/speech/kws` | RDK S100 | [Details](./samples/speech/kws) |
 | Speech Recognition | Paraformer | `samples/speech/paraformer` | RDK S100 | [Details](./samples/speech/paraformer) |

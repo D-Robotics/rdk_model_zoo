@@ -98,9 +98,11 @@ describe("multi-platform variant catalog", () => {
     // On 2026-10-12 MobileNetV3 became Large and Small on S100, S100P and S600 only (two older S builds
     // became six, the X5 build was withdrawn): 616 variants. Its S PTQ reference row became six measured
     // rows and the X5 row left with the X5 sample: 834 benchmark rows.
+    // On 2026-10-12 LiteAvatar joined as the 58th family with four manual S100 artifacts and no
+    // benchmark rows: 620 variants, 834 benchmark rows unchanged.
     // Explicit retirement/retention checks below guard more than these totals.
-    expect(catalog.models).toHaveLength(57);
-    expect(variants).toHaveLength(616);
+    expect(catalog.models).toHaveLength(58);
+    expect(variants).toHaveLength(620);
     expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(834);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));

@@ -53,3 +53,4 @@
 | 49 | paraformer | speech | — | done | checked sample |
 | 50 | gemma4-e2b | llm | — | done | checked sample |
 | 51 | minicpm5-2b | llm | — | done | checked sample |
+| 52 | lite_avatar | vision | — | done | checked sample |

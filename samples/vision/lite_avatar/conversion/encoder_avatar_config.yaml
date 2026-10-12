@@ -1,0 +1,51 @@
+# paraformer encoder PTQ config — RDK S100 / nash-e (INT16 activations)
+#
+# Audio-encoder stage: the paraformer encoder wrapped to expose all 50 block
+# hidden states — the `input_au` features audio2mouth consumes.
+#
+# Exported graph (scripts/probe_paraformer_encoder.py), single input/output:
+#   input : feats [1,400,560]             post-CMVN featuremap
+#   output: hidden_states [1,400,50,512]  50 stacked hidden-state streams
+# (feats_lengths is constant-folded at trace time; the wrapper's Python-level
+#  feats_lengths argument and olens return are not part of the compiled
+#  interface)
+#
+# Calibration: ./calib_data/encoder_avatar/*.npy — post-CMVN featuremaps
+# [1,400,560] float32 (scripts/gen_calib_encoder.py). Precision: INT16
+# activations on all nodes, max calibration.
+#
+# Run serially (one hb_compile at a time):
+#   hb_compile -c encoder_avatar_config.yaml
+# Produces: ./encoder_avatar_output/encoder_avatar.hbm + ..._ptq_model.onnx
+
+model_parameters:
+  onnx_model: ./encoder_avatar.onnx
+  march: nash-e
+  layer_out_dump: False
+  working_dir: ./encoder_avatar_output
+  output_model_file_prefix: encoder_avatar
+
+input_parameters:
+  input_name: feats
+  input_shape: 1x400x560
+  input_type_rt: featuremap
+  input_type_train: featuremap
+  input_layout_train: NCHW
+  separate_batch: false
+
+calibration_parameters:
+  cal_data_dir: ./calib_data/encoder_avatar
+  cal_data_type: 'float32'
+  calibration_type: 'max'
+  quant_config:
+    model_config:
+      all_node_type: int16
+    activation:
+      calibration_type: max
+
+compiler_parameters:
+  optimize_level: 'O2'
+  compile_mode: 'latency'
+  core_num: 1
+  jobs: 32
+  cache_mode: disable

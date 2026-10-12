@@ -1,0 +1,48 @@
+# audio2mouth PTQ config — RDK S100 / nash-e (INT16 activations)
+#
+# audio2mouth stage: sliding 30-frame windows of the encoder's 50 stacked
+# hidden states -> 32 mouth parameters per video frame.
+#   input : input_au [1,30,50,512]  (from ./model_1_folded.onnx — the
+#           constant-input-folded graph, scripts/fold_audio2mouth.py)
+#   output: mouth params [1,30,32] (+ feat)
+#
+# Calibration: ./calib_data/audio2mouth — real input_au windows [1,30,50,512]
+# float32 (scripts/gen_calib_audio2mouth.py). Precision: INT16 activations on
+# all nodes, max calibration at the 0.9999 percentile.
+#
+# Run serially (one hb_compile at a time):
+#   hb_compile -c audio2mouth_int16_config.yaml
+# Produces: ./audio2mouth_int16_output/audio2mouth_int16.hbm + ..._ptq_model.onnx
+
+model_parameters:
+  onnx_model: ./model_1_folded.onnx
+  march: nash-e
+  layer_out_dump: False
+  working_dir: ./audio2mouth_int16_output
+  output_model_file_prefix: audio2mouth_int16
+
+input_parameters:
+  input_name: input_au
+  input_shape: 1x30x50x512
+  input_type_rt: featuremap
+  input_type_train: featuremap
+  input_layout_train: NCHW
+  norm_type: no_preprocess
+  separate_batch: false
+
+calibration_parameters:
+  cal_data_dir: ./calib_data/audio2mouth
+  cal_data_type: 'float32'
+  calibration_type: 'max'
+  max_percentile: 0.9999
+  optimization: set_all_nodes_int16
+
+compiler_parameters:
+  optimize_level: 'O2'
+  compile_mode: 'latency'
+  core_num: 1
+  jobs: 32
+  cache_mode: disable
+  extra_params:
+    input_no_padding: true
+    output_no_padding: true
