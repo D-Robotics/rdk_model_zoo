@@ -51,4 +51,4 @@ See [model preparation](../model/README.md) for X5 BIN and S-target HBM filename
 <a id="known-gaps"></a>
 ## Additional preparation
 
-For published models, follow the [preparation steps](../model/README.md#preparation). To convert an S detector, prepare its ONNX, target-specific YAML, and calibration data. Select the input video with `--input`.
+Download X5, S100 and S600 detectors with the [preparation commands](../model/README.md#preparation). For S100P, prepare a matching nash-m detector locally. S conversion requires an external YOLOv5x 672×672 ONNX exporter, target-specific YAML and calibration data; a complete S conversion script and YAML are not included in this directory. Select the input video with `--input`.

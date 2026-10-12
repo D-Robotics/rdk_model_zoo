@@ -24,10 +24,10 @@ See the [YOLOv5 model catalog](../../yolov5/model/README.md) for download URLs a
 | target | asset ID | filename | URL | SHA-256 |
 |---|---|---|---|---|
 | S100 | `s:bytetrack:s100/yolov5x_672x672_nv12.hbm` | `s100/yolov5x_672x672_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
-| S100P | `s:bytetrack:s100p/yolov5x_672x672_nv12.hbm` | `s100p/yolov5x_672x672_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100p/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
+| S100P | `s:bytetrack:s100p/yolov5x_672x672_nv12.hbm` | `s100p/yolov5x_672x672_nv12.hbm` | not published (no archive file) | — |
 | S600 | `s:bytetrack:s600/yolov5x_672x672_nv12.hbm` | `s600/yolov5x_672x672_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
 
-`null` in the table means the publisher has not provided a SHA-256 checksum.
+`null` in the table means the publisher has not provided a SHA-256 checksum. No S100P detector file is published: convert a 672×672 YOLOv5x HBM for the nash-m march with the [conversion guide](../conversion/README.md) and run it with `--model-path` plus the S100P `--asset-id` above.
 
 <a id="directory"></a>
 ## Directory structure
@@ -57,7 +57,7 @@ python3 -m samples.vision.bytetrack.model.download \
   --target s100 --output-dir samples/vision/bytetrack/model
 ```
 
-After downloading, the script prints the model identifier, saved path, and file SHA-256. The S100 command above saves `samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm`. Use `--target s100p` or `--target s600` for the other S boards.
+After downloading, the script prints the model identifier, saved path, and file SHA-256. The S100 command above saves `samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm`. Use `--target s600` to download the S600 file. S100P has no published detector: convert the nash-m HBM as described in the [conversion guide](../conversion/README.md), place it at `samples/vision/bytetrack/model/s100p/yolov5x_672x672_nv12.hbm`, and pass `--model-path` with the S100P asset ID from the table.
 
 <a id="accompanying-files"></a>
 ## Accompanying files

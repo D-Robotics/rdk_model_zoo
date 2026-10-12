@@ -33,7 +33,7 @@ bash samples/vision/unetmobilenet/model/download.sh --target s100
 bash samples/vision/unetmobilenet/model/download.sh --target s600
 ```
 
-`download_model.sh` 为快捷入口，转发相同参数。下载失败可重试，或从 [S100](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/unetmobilenet/unet_mobilenet_1024x2048_nv12.hbm)／[S600](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/unetmobilenet/unet_mobilenet_1024x2048_nv12.hbm) 手动获取并放入对应子目录。
+`download_model.sh` 为快捷入口，转发相同参数。下载失败可重试，或从 [S100](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/unet_mobilenet/unet_mobilenet_1024x2048_nv12.hbm)／[S600](https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/unet_mobilenet/unet_mobilenet_1024x2048_nv12.hbm) 手动获取并放入对应子目录。
 
 <a id="accompanying-files"></a>
 ## 伴随文件

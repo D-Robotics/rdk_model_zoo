@@ -51,9 +51,7 @@ DNN/UCP 头文件与 `/usr/hobot/lib` 下的库。Debian 系开发镜像可显�
 sudo apt install libpolyclipping-dev libfreetype6-dev
 ```
 
-启动脚本不安装系统包、不修改 SDK、不下载模型。匹配的制品须位于
-`/opt/hobot/model/s100/basic`（或显式传入）；缺失时用 Python 入口的
-`--prepare` 准备（见[模型准备](../../model/README.md#preparation)）。
+启动前准备匹配的检测器和识别器。S100 可通过 Python `--prepare` 命令下载；S600 使用 S600 镜像或 BSP 模型包中的配套模型，默认位于 `/opt/hobot/model/s600/basic/`。两种板卡及自定义路径的准备方式见[模型准备](../../model/README_cn.md#preparation)。
 
 <a id="build"></a>
 ## 构建

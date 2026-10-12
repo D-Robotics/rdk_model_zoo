@@ -40,23 +40,19 @@ model/
 <a id="preparation"></a>
 ## Preparation
 
-From the repository root:
+From the repository root, run the command for your target and variant:
 
 ```bash
-# input: manifest row for the target — output: file under this directory
-# output: exit 0, observed digest printed; no partial files left behind
-bash samples/vision/resnet/model/download.sh x5    # or s100 / s600
+bash samples/vision/resnet/model/download.sh x5 resnet18
+bash samples/vision/resnet/model/download.sh s100 resnet18
+bash samples/vision/resnet/model/download.sh s100 resnet50
+bash samples/vision/resnet/model/download.sh s100 resnet152
+bash samples/vision/resnet/model/download.sh s600 resnet18
+bash samples/vision/resnet/model/download.sh s600 resnet50
+bash samples/vision/resnet/model/download.sh s600 resnet152
 ```
 
-The Python form is equivalent:
-`python3 samples/vision/resnet/model/download.py --target s100`. The
-downloader writes through a same-directory temporary file, checks the
-content length and the recorded publisher SHA-256 when present, and installs
-atomically without overwriting an existing file (a failed verification
-preserves the file for investigation). The current rows carry no publisher
-SHA-256, so the downloader prints the observed digest as local evidence and
-states that origin is unproven. Downloading is explicit and never happens
-during inference.
+The shell arguments are target then variant; omitting the variant selects `resnet18`. The Python form uses `--target` and `--variant`. Downloads are saved as the manifest filename under this model directory; S files use the target subdirectory. The command prints the path and SHA-256.
 
 <a id="accompanying-files"></a>
 ## Accompanying files

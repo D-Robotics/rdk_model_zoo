@@ -3,83 +3,78 @@
 # PaddleOCR 模型准备
 
 <a id="artifacts"></a>
+## 板卡与模型
 
-## 制品
+检测器和识别器须配套使用。X5、S100 模型可通过命令下载；S600 C++ 推理使用板卡镜像或 BSP 模型包提供的匹配模型。
 
-本目录不保存模型二进制。示例消费四条已发布清单行——每个模型对两条
-——且检测器与识别器在任何情况下都不跨对混用：
-
-| 目标 | 角色 | 完整引用 | 格式 |
+| 板卡 | 检测器 | 识别器 | 准备方式 |
 | --- | --- | --- | --- |
-| X5 | 检测器 | `x5:paddleocr:en_PP-OCRv3_det_640x640_nv12.bin` | `.bin`，march `bayes-e`，packed NV12 640×640 |
-| X5 | 识别器 | `x5:paddleocr:en_PP-OCRv3_rec_48x320_rgb.bin` | `.bin`，march `bayes-e`，RGB featuremap 48×320 |
-| S100 | 检测器 | `s:paddle_ocr:s100/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm` | `.hbm`，march `nash-e`，split NV12 640×640 |
-| S100 | 识别器 | `s:paddle_ocr:s100/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm` | `.hbm`，march `nash-e`，RGB 48×320 |
+| X5 | `en_PP-OCRv3_det_640x640_nv12.bin` | `en_PP-OCRv3_rec_48x320_rgb.bin` | Python `--prepare`，PP-OCRv3 英文模型 |
+| S100 | `PP-OCRv6_det_infer-deploy_640x640_nv12.hbm` | `PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm` | Python `--prepare`，PP-OCRv6 |
+| S600 | `PP-OCRv6_det_infer-deploy_640x640_nv12.hbm` | `PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm` | S600 BSP 模型，位于 `/opt/hobot/model/s600/basic/`；使用 C++ |
 
-这些行位于平台发布清单（
-`platforms/x5/docs/release/models.yaml` 与
-`platforms/s/docs/release/models.yaml`）。S100P 与 S600 没有对应的
-PaddleOCR 行，因此不对这两个目标声明任何制品。
+X5/S100 下载地址和校验值来自 `docs/release/x5/models.yaml` 和 `docs/release/s/models.yaml`。S600 模型从 S600 板卡镜像或配套模型包获取，选择 S600 编译版本。S100P 未提供可用模型对。
 
 <a id="directory"></a>
 ## 目录结构
 
 ```text
 model/
-├── README.md  # 英文说明
-└── README_cn.md  # 中文说明
+├── README.md
+└── README_cn.md
 ```
 
 <a id="preparation"></a>
-## 准备
+## 准备步骤
 
-准备是显式操作，统一由 Python 入口的 `--prepare` 模式承担——它是
-示例内唯一可联网的操作。该模式读取清单 URL、取回同一对的两个文件并
-打印实测 SHA-256（cwd：仓库根目录；成功：退出码 0，`--model-dir` 下
-两个文件）：
+在仓库根目录执行对应板卡的命令。主机安装 Python 和 PyYAML 后即可准备模型；命令会打印保存路径和文件 SHA-256。
+
+X5：
 
 ```bash
 python3 samples/vision/paddle_ocr/runtime/python/main.py --prepare \
   --target x5 \
   --det-asset-id x5:paddleocr:en_PP-OCRv3_det_640x640_nv12.bin \
   --rec-asset-id x5:paddleocr:en_PP-OCRv3_rec_48x320_rgb.bin \
-  --model-dir /tmp/rdk-models
+  --model-dir samples/vision/paddle_ocr/model
 ```
 
-S100 将两条引用换成 `s:paddle_ocr:s100/...`，`--model-dir` 例如
-`/opt/hobot/model/s100/basic`。常规推理不联网：要求两个本地路径已经
-存在（见[运行时参数](../runtime/python/README.md#parameters)）。手动
-复制先前下载过的制品同样是合法准备；首次使用时将实测摘要与
-`--prepare` 打印值核对即可。
+S100：
+
+```bash
+python3 samples/vision/paddle_ocr/runtime/python/main.py --prepare \
+  --target s100 \
+  --det-asset-id s:paddle_ocr:s100/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm \
+  --rec-asset-id s:paddle_ocr:s100/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm \
+  --model-dir samples/vision/paddle_ocr/model/s100
+```
+
+S600：在 S600 板卡上确认配套模型文件：
+
+```bash
+test -s /opt/hobot/model/s600/basic/PP-OCRv6_det_infer-deploy_640x640_nv12.hbm
+test -s /opt/hobot/model/s600/basic/PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm
+```
+
+文件缺失时，从 S600 镜像或 BSP 模型包获取匹配的模型对并放入上述路径。存放到其他目录时，将 `--det-model-path` 和 `--rec-model-path` 传给 [C++ 入口](../runtime/cpp/README_cn.md#run)。Python 准备命令接受 X5 和 S100。
 
 <a id="accompanying-files"></a>
-## 伴随文件
+## 配套文件
 
-每个识别器把字符词典作为模型对契约的一部分：
+| 板卡 | 词典 | 位置 |
+| --- | --- | --- |
+| X5 | 96 字符英文词表 | `runtime/python/cli.py` 中的 `X5_ALPHABET` |
+| S100 / S600 | PP-OCRv6 UTF-8 词典 | [`ppocrv6_dict.txt`](../test_data/s100/ppocrv6_dict.txt)，18,708 行 |
 
-| 目标 | 词典 | 位置 | 说明 |
-| --- | --- | --- | --- |
-| X5 | 固定 96 字符字母表 | 内嵌于 `runtime/python/cli.py`（`X5_ALPHABET`） | 非文件；解码时前置 blank 类 |
-| S100 | PP-OCRv6 UTF-8 词典 | [`test_data/s100/ppocrv6_dict.txt`](../test_data/s100/ppocrv6_dict.txt) | 18,708 行；加载时前置 blank、追加末尾空格 → 18,710 类 |
-
-`--vocabulary-path` 替换 S100 词典时，文件 SHA-256 必须命中下方记录的
-摘要；其他内容一律拒绝。S 系列 C++ 运行时另需 TrueType 字体渲染结果，
-字体自源交付携带于
-`samples/vision/paddle_ocr/test_data/FangSong.ttf`，可用
-C++ `--font_path` 指定。
+解码时加入 blank 类别，PP-OCRv6 另加末尾空格。Python `--vocabulary-path` 要求词典摘要与下表一致。C++ 渲染使用 `../test_data/FangSong.ttf`；通过 `--font-path` 选择其他字体。
 
 <a id="local-paths"></a>
-## 本地路径
+## 模型路径
 
-- X5 模型对：`--prepare --model-dir` 写入的位置，例如
-  `/tmp/rdk-models/en_PP-OCRv3_det_640x640_nv12.bin`；通过
-  `--det-model-path`/`--rec-model-path` 连同两条完整引用一起传入。
-- 默认查找：两个路径参数都缺省时，模型对解析到本目录
-  `samples/vision/paddle_ocr/model/<filename>`——把制品复制到这里即可
-  省去显式路径参数（自定义路径必须检测器+识别器成对提供）。
-- S100 模型对：RDK S 镜像在 `/opt/hobot/model/s100/basic/` 自带该
-  模型对；完整检出也可以在该目录缺失时 `--prepare` 写入。
-- 词典与测试图随仓入库，无需下载。
+- X5 Python 默认读取本示例下的 `model/<BIN 文件名>`。
+- S100 Python 默认读取 `model/s100/<HBM 文件名>`；上述下载命令保存到这些位置。
+- C++ 在 S100 或 S600 上默认读取 `/opt/hobot/model/<板卡>/basic/<HBM 文件名>`。
+- Python 使用自定义目录时，传入两个模型路径及对应资产 ID。准备命令的 `--model-dir` 设置保存目录，并按文件基本名保存模型对。
 
 <a id="formats-checksums"></a>
 ## 格式与校验值
@@ -92,7 +87,4 @@ C++ `--font_path` 指定。
 | `PP-OCRv6_rec_infer-deploy_48x320_rgb.hbm` | null | 未记录发布方摘要 |
 | `test_data/s100/ppocrv6_dict.txt` | `b5f2bfe2bdd9448429e3e82b51c789775d9b42f2403d082b00662eb77e401c5d` | 已记录；`--vocabulary-path` 替换时强制校验 |
 
-未知摘要保持 `null`，不复制、不猜测；板端运行需要溯源时，请把
-`--prepare` 打印的实测摘要记入自己的证据。各制品的运行时张量契约
-（名称、形状、数据类型）在加载时强制校验，文档见
-[运行时阶段 I/O](../runtime/python/README.md#stage-io)。
+发布方未提供模型校验值；准备命令会打印下载文件的 SHA-256。

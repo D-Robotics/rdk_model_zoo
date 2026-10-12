@@ -30,7 +30,7 @@ bytetrack/
 | target | variant | Python | C++ | note |
 |---|---|---|---|---|
 | S100 | YOLOv5x 672 | supported | supported | Target-specific HBM |
-| S100P | YOLOv5x 672 | supported | supported | Target-specific HBM |
+| S100P | YOLOv5x 672 | supported | supported | No published HBM; convert locally (nash-m) |
 | S600 | YOLOv5x 672 | supported | supported | Target-specific HBM |
 | X5 | YOLOv5 640, default n-v7.0 | supported | supported | Uses X5 YOLOv5 `.bin` models |
 

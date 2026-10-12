@@ -30,7 +30,7 @@ bytetrack/
 | 目标 | 变体 | Python | C++ | 说明 |
 |---|---|---|---|---|
 | S100 | YOLOv5x 672 | 支持 | 支持 | 对应板卡 HBM |
-| S100P | YOLOv5x 672 | 支持 | 支持 | 对应板卡 HBM |
+| S100P | YOLOv5x 672 | 支持 | 支持 | 无已发布 HBM，需按转换指南本地编译（nash-m） |
 | S600 | YOLOv5x 672 | 支持 | 支持 | 对应板卡 HBM |
 | X5 | YOLOv5 640，默认 n-v7.0 | 支持 | 支持 | 复用 X5 YOLOv5 `.bin` 模型 |
 

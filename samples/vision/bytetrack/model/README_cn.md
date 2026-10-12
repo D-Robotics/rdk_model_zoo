@@ -24,10 +24,10 @@ ByteTrack 使用 YOLOv5 检测模型，跟踪部分在 CPU 上执行。X5 复用
 | target | asset ID | filename | URL | SHA-256 |
 |---|---|---|---|---|
 | S100 | `s:bytetrack:s100/yolov5x_672x672_nv12.hbm` | `s100/yolov5x_672x672_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
-| S100P | `s:bytetrack:s100p/yolov5x_672x672_nv12.hbm` | `s100p/yolov5x_672x672_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100p/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
+| S100P | `s:bytetrack:s100p/yolov5x_672x672_nv12.hbm` | `s100p/yolov5x_672x672_nv12.hbm` | 未发布（无归档文件） | — |
 | S600 | `s:bytetrack:s600/yolov5x_672x672_nv12.hbm` | `s600/yolov5x_672x672_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
 
-表中 `null` 表示发布方未提供 SHA-256。
+表中 `null` 表示发布方未提供 SHA-256。S100P 检测模型没有发布文件：请按[转换指南](../conversion/README_cn.md)为 nash-m 架构转换 672×672 YOLOv5x HBM，并配合上表 S100P 的 `--asset-id` 与 `--model-path` 运行。
 
 <a id="directory"></a>
 ## 目录结构
@@ -57,7 +57,7 @@ python3 -m samples.vision.bytetrack.model.download \
   --target s100 --output-dir samples/vision/bytetrack/model
 ```
 
-下载完成后显示模型标识、保存路径和文件 SHA-256。上述 S100 命令将模型保存到 `samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm`。S100P 和 S600 分别使用 `--target s100p` 和 `--target s600`。
+下载完成后显示模型标识、保存路径和文件 SHA-256。上述 S100 命令将模型保存到 `samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm`。S600 使用 `--target s600` 下载。S100P 没有已发布检测模型：请按[转换指南](../conversion/README_cn.md)转换 nash-m HBM，放到 `samples/vision/bytetrack/model/s100p/yolov5x_672x672_nv12.hbm`，并传入 `--model-path` 与表中 S100P 的 asset ID。
 
 <a id="accompanying-files"></a>
 ## 伴随文件

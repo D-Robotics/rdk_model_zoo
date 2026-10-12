@@ -39,18 +39,19 @@ model/
 <a id="preparation"></a>
 ## 准备步骤
 
-在仓库根目录执行：
+在仓库根目录执行所需板卡和变体的命令：
 
 ```bash
-# 输入：目标对应的 Manifest 行 — 输出：本目录下的制品文件
-# 输出：退出码 0，打印观察 digest；不留半成品文件
-bash samples/vision/resnet/model/download.sh x5    # 或 s100 / s600
+bash samples/vision/resnet/model/download.sh x5 resnet18
+bash samples/vision/resnet/model/download.sh s100 resnet18
+bash samples/vision/resnet/model/download.sh s100 resnet50
+bash samples/vision/resnet/model/download.sh s100 resnet152
+bash samples/vision/resnet/model/download.sh s600 resnet18
+bash samples/vision/resnet/model/download.sh s600 resnet50
+bash samples/vision/resnet/model/download.sh s600 resnet152
 ```
 
-Python 形式等价：
-`python3 samples/vision/resnet/model/download.py --target s100`。下载器先写
-同目录临时文件，存在发布者 SHA-256 时校验，原子落盘且不覆盖已有文件
-（校验失败时保留原文件供调查）。这些模型的发布方 SHA-256 未记录；下载器打印下载文件的 SHA-256。请先运行下载命令，再执行推理。
+Shell 位置参数依次为板卡和变体；省略变体时选择 `resnet18`。Python 入口使用 `--target` 和 `--variant`。下载文件按清单文件名保存在本目录，S 系列使用对应板卡子目录。命令打印保存路径和 SHA-256。
 
 <a id="accompanying-files"></a>
 ## 伴随文件

@@ -51,4 +51,4 @@ X5 BIN 和 S 系列 HBM 的文件名与路径见 [模型说明](../model/README_
 <a id="known-gaps"></a>
 ## 补充准备
 
-使用已发布模型时，按 [模型准备步骤](../model/README_cn.md#preparation) 下载即可。自行转换 S 模型时需准备相应 ONNX、板卡 YAML 和校准数据。输入视频使用 `--input` 指定。
+X5、S100、S600 检测模型按[准备命令](../model/README_cn.md#preparation)下载。S100P 需准备匹配的本地 nash-m 检测模型。S 系列转换需要外部 YOLOv5x 672×672 ONNX 导出器、目标板卡 YAML 和校准数据；本目录未提供完整的 S 系列转换脚本及 YAML。输入视频使用 `--input` 指定。

@@ -27,11 +27,14 @@ model/
 <a id="preparation"></a>
 ## Preparation
 
-From the repository root, run the explicit target command using the board Python environment. It downloads both manifest assets into `samples/vision/efficient_sam/model/` (X5) or its `nash-e/`, `nash-m/`, `nash-p/` subdirectory (S) and reports observed digests. It requires network access and runs as an explicit preparation step before inference.
+From the repository root, run the explicit target command using Python and PyYAML on a host or board. It downloads both manifest assets into `samples/vision/efficient_sam/model/` (X5) or its `nash-e/`, `nash-m/`, `nash-p/` subdirectory (S) and reports observed digests. It requires network access and runs as an explicit preparation step before inference.
 
 ```bash
+python3 samples/vision/efficient_sam/model/download.py --target x5
 python3 samples/vision/efficient_sam/model/download.py --target s100
-# expect: two files under samples/vision/efficient_sam/model/nash-e/
+python3 samples/vision/efficient_sam/model/download.py --target s100p
+python3 samples/vision/efficient_sam/model/download.py --target s600
+# Run only the command for your target; each command prepares one encoder/decoder pair.
 ```
 
 Use the exact URLs and filename identities in the [X5 manifest](../../../../docs/release/x5/models.yaml) and [S manifest](../../../../docs/release/s/models.yaml). If download access fails, transfer the same two files from another machine into the paths listed above; the runtime never substitutes a different board's pair. Existing files are verified and are not overwritten. An observed digest identifies the local bytes; with the publisher SHA unknown, it does not independently prove their origin. Run `--list-models` on the sample runtime to obtain exact stage asset IDs for custom paths.

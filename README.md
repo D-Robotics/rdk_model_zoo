@@ -187,7 +187,7 @@ The table lists each model family with its platforms and available models; choos
 | Image Classification | ResNeXt | `samples/vision/resnext` | RDK X5 | [Details](./samples/vision/resnext) |
 | Image Classification | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [Details](./samples/vision/vargconvnet) |
 | Image Classification | ViT | `samples/vision/vit` | RDK S100 | [Details](./samples/vision/vit) |
-| Multi-Object Tracking | ByteTrack | `samples/vision/bytetrack` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/bytetrack) |
+| Multi-Object Tracking | ByteTrack | `samples/vision/bytetrack` | RDK X5 / RDK S100 / RDK S100P (local detector model) / RDK S600 | [Details](./samples/vision/bytetrack) |
 | Promptable Image Segmentation | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/efficient_sam) |
 | Promptable Image Segmentation | MobileSAM | `samples/vision/mobile_sam` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/mobile_sam) |
 | Monocular Depth Estimation | Depth Anything V2 | `samples/vision/depth_anything_v2` | RDK S100 | [Details](./samples/vision/depth_anything_v2) |
@@ -203,7 +203,7 @@ The table lists each model family with its platforms and available models; choos
 | Open-Vocabulary Object Detection | YOLOWorld | `samples/vision/yoloworld` | RDK X5 | [Details](./samples/vision/yoloworld) |
 | Point Cloud Segmentation | PointNet | `samples/vision/pointnet` | RDK S100 | [Details](./samples/vision/pointnet) |
 | Image Matting | MODNet | `samples/vision/modnet` | RDK X5 | [Details](./samples/vision/modnet) |
-| OCR Text Detection and Recognition | PaddleOCR | `samples/vision/paddle_ocr` | RDK X5 / RDK S100 / RDK S600 | [Details](./samples/vision/paddle_ocr) |
+| OCR Text Detection and Recognition | PaddleOCR | `samples/vision/paddle_ocr` | RDK X5 / RDK S100 / RDK S600 (C++; matching models required) | [Details](./samples/vision/paddle_ocr) |
 | License Plate Recognition | LPRNet | `samples/vision/lprnet` | RDK X5 | [Details](./samples/vision/lprnet) |
 | Image-Text Multimodal Matching | CLIP | `samples/vision/clip` | RDK X5 | [Details](./samples/vision/clip) |
 | Vision Feature Encoder | DINOv2 | `samples/vision/dinov2` | RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/dinov2) |

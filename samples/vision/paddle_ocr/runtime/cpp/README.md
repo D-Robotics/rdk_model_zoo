@@ -52,10 +52,7 @@ can be installed explicitly (some newer images name the FreeType package
 sudo apt install libpolyclipping-dev libfreetype6-dev
 ```
 
-The launcher installs nothing, modifies no SDK, and downloads no models.
-The matching artifacts must exist under `/opt/hobot/model/s100/basic` (or be
-passed explicitly); prepare them with the Python entrypoint's `--prepare`
-when absent (see [model preparation](../../model/README.md#preparation)).
+Prepare the matching detector and recognizer before launching. S100 models can be downloaded with the Python `--prepare` command. For S600, use the pair from the S600 image or BSP model package under `/opt/hobot/model/s600/basic/`. See [model preparation](../../model/README.md#preparation) for both boards and custom paths.
 
 <a id="build"></a>
 ## Build
