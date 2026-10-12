@@ -39,6 +39,8 @@ Success is exit code 0 and a printed top-5 list.
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
 | `--target` | choice | auto | execution target |
+| `--input` | str | input.jpg | input image |
+| `-i` | str | input.jpg | alias for `--input` |
 | `--top-k` / `--topk` | int | 5 | number of results |
 | `--priority` | int | 0 | scheduling priority |
 | `--bpu-cores` | int list | [0] | BPU core indexes |

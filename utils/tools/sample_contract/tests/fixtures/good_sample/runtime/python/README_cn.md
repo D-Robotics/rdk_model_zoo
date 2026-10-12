@@ -39,6 +39,8 @@ python3 samples/tools/fixture/good_sample/runtime/python/main.py --target x5
 | 参数 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
 | `--target` | choice | auto | 执行目标 |
+| `--input` | str | input.jpg | 输入图像 |
+| `-i` | str | input.jpg | `--input` 的别名 |
 | `--top-k` / `--topk` | int | 5 | 结果数量 |
 | `--priority` | int | 0 | 调度优先级 |
 | `--bpu-cores` | int 列表 | [0] | BPU 核索引 |

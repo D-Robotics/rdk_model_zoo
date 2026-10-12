@@ -296,6 +296,39 @@ class CliDriftTests(unittest.TestCase):
         self.assertNotIn("[en] default drift", output)
 
 
+class ShortOptionAliasTests(unittest.TestCase):
+    # A README may document a single-dash short alias (``-i``) as its own
+    # table row while the parser registers it on the long flag — the
+    # Faster R-CNN ``-i``/``--input`` layout.  The extraction must read the
+    # short row without inventing options from negative numbers, hyphenated
+    # prose, or the interior of ``--long`` flags.
+
+    def test_short_alias_row_and_parser_alias_verify_clean(self):
+        report = report_for("good_sample")
+        self.assertEqual(findings_for(report, CHECK.RULE_CLI), [])
+
+        readme = FIXTURES / "good_sample" / "runtime" / "python" / "README.md"
+        options, _, _ = CHECK.extract_parameter_table(readme)
+        self.assertEqual(options["--input"], "input.jpg")
+        self.assertEqual(options["-i"], "input.jpg")
+
+        main_py = FIXTURES / "good_sample" / "runtime" / "python" / "main.py"
+        parser = CHECK.import_build_parser(main_py)
+        self.assertEqual(
+            CHECK.collect_parser_defaults(parser)["-i"], "input.jpg")
+
+    def test_option_extraction_boundaries(self):
+        findall = CHECK.OPTION_RE.findall
+        self.assertEqual(findall("`-i`"), ["-i"])
+        self.assertEqual(findall("-i, --input"), ["-i", "--input"])
+        self.assertEqual(findall("`--input`"), ["--input"])
+        self.assertEqual(findall("`--reset-every`"), ["--reset-every"])
+        # Negative numbers, hyphenated prose and a lone dash are not options.
+        self.assertEqual(findall("-1"), [])
+        self.assertEqual(findall("end-to-end"), [])
+        self.assertEqual(findall("-"), [])
+
+
 class StagePurityTests(unittest.TestCase):
     def test_download_save_subprocess_calls_flagged_with_lines(self):
         report = report_for("bad_stage_purity")

@@ -2892,10 +2892,11 @@ class RealRepositoryTests(unittest.TestCase):
         # Nested YOLOE suites from the plan are first-class suites.
         self.assertIn("samples/vision/yoloe/conversion/tests", dirs)
         self.assertIn("samples/vision/yoloe/evaluator/tests", dirs)
-        # All 51 native samples with Python suites are discovered.
+        # All 52 native samples with Python suites are discovered.
         self.assertIn("samples/llm/gemma4-e2b/tests", dirs)
         self.assertIn("samples/llm/minicpm5-2b/tests", dirs)
         self.assertIn("samples/vision/ultralytics_yolo/tests", dirs)
+        self.assertIn("samples/vision/fasterrcnn/tests", dirs)
         # Declared extras: shared tools, skills and the runner's own tests.
         self.assertIn("utils/tools/board_validation/tests", dirs)
         self.assertIn("utils/tools/sample_contract/tests", dirs)
@@ -2940,11 +2941,11 @@ class RealRepositoryTests(unittest.TestCase):
         sources = {entry["pin"] for entry in self.module.declared_pins(REPO)}
         self.assertIn(REAL_PIN, sources)
 
-    def test_sample_coverage_validates_all_51_inventory_rows(self):
+    def test_sample_coverage_validates_all_52_inventory_rows(self):
         discovery = self.module.discover_python_suites(REPO)
         coverage = self.module.validate_sample_coverage(REPO, discovery)
         self.assertEqual(coverage["status"], "ok", coverage)
-        self.assertEqual(coverage["expected_samples"], 51)
+        self.assertEqual(coverage["expected_samples"], 52)
         self.assertEqual(coverage["missing_samples"], [])
         self.assertEqual(coverage["missing_tests_dirs"], [])
         self.assertEqual(coverage["extra_samples"], [])

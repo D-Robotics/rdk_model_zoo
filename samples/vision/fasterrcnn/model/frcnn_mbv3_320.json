@@ -1,0 +1,212 @@
+{
+  "sample": "fasterrcnn",
+  "profile": "fixed 320x320 letterbox canvas",
+  "source": {
+    "weights_enum": "torchvision 0.21.0 FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.COCO_V1",
+    "checkpoint": "fasterrcnn_mobilenet_v3_large_320_fpn-907ea3f9.pth",
+    "checkpoint_sha256": "907ea3f91ff92242bc1baea8049276a3e76bca48ce7560bd268cc029f37977b5",
+    "checkpoint_bytes": 77844807
+  },
+  "onnx": {
+    "parta_f0only_op11_sha256": "e6cdd7b8e3be85a0a0ce9a83bb3cc77ee1259a558e66587bfc22c9cec8675ce8",
+    "parta_f0only_op16_sha256": "aa0c36450dffdc6f73acf762e3a7e5c763ab02611599c7b3207ab222270a53b0",
+    "partb_batch150_op11_sha256": "91cf02335c229a9a564ad85810f1cededb816b5c17ec1998f9f2f9ae417072d2",
+    "partb_packed_op16_sha256": "95751d28b7597605a56820c5d84031e94dbc2ac98ef9decd37901496852e92bc",
+    "provenance": "exported 2026-10-12 from the torchvision COCO_V1 weights (weights_backbone=None); the digests pin the opset-11 and opset-16 PartA/PartB graphs"
+  },
+  "targets": {
+    "x5": {
+      "march": "bayes-e",
+      "toolchain": "OE X5 1.2.8 (hb_mapper makertbin, O3 latency)",
+      "compiler_latency_us": {
+        "parta": 1515.1,
+        "partb": 38389.8
+      },
+      "parta": {
+        "file": "frcnn_mbv3_320_parta.bin",
+        "sha256": "a6f6509e5ab3b42f709d10062cfdb0a930b9eebb3ceb1d1a4bff3baeda42af86",
+        "input": {
+          "name": "images",
+          "format": "packed nv12 uint8 320x320 (bt.601 limited)"
+        }
+      },
+      "partb": {
+        "file": "frcnn_mbv3_320_partb.bin",
+        "sha256": "2ade35e91d66debf616594a28e2cae051b5e1ede617dfa914b25d06c3255724e",
+        "layout": "pooled",
+        "input": {
+          "name": "pooled",
+          "shape": [
+            150,
+            256,
+            7,
+            7
+          ],
+          "dtype": "float32",
+          "quantization": "on-chip (fc6conv input calibration threshold 8.698317, symmetric threshold/127)"
+        },
+        "outputs": {
+          "class_logits": [
+            150,
+            91
+          ],
+          "box_regression": [
+            150,
+            364
+          ]
+        }
+      }
+    },
+    "s100": {
+      "march": "nash-e",
+      "toolchain": "OE S 3.7.0 (hb_compile HBDK 4.7.5, O2 latency)",
+      "compiler_latency_us": {
+        "parta": 419.3,
+        "partb": 2643.3
+      },
+      "parta": {
+        "file": "frcnn_mbv3_320_parta.hbm",
+        "sha256": "ca4c565497b3b027cad2241110e689c5eb54e24939a328f6e4fb8bd013e51337",
+        "input": {
+          "names": [
+            "images_y",
+            "images_uv"
+          ],
+          "format": "split nv12 uint8 (bt.601 limited)"
+        }
+      },
+      "partb": {
+        "file": "frcnn_mbv3_320_partb.hbm",
+        "sha256": "d4d21cebaece91c6195794b7062f607d665ef10c3055ce22d512ba14a5307ff4",
+        "layout": "packed",
+        "input": {
+          "name": "bank",
+          "shape": [
+            1,
+            256,
+            1050,
+            7
+          ],
+          "dtype": "float32",
+          "quantization": "on-chip (HzCalibration)"
+        },
+        "outputs": {
+          "cls_packed": [
+            1,
+            91,
+            150,
+            1
+          ],
+          "reg_packed": [
+            1,
+            364,
+            150,
+            1
+          ],
+          "dtype": "float32"
+        }
+      }
+    },
+    "s100p": {
+      "march": "nash-m",
+      "toolchain": "OE S 3.7.0 (hb_compile HBDK 4.7.5, O2 latency)",
+      "compiler_latency_us": {
+        "parta": 332.0,
+        "partb": 1773.4
+      },
+      "parta": {
+        "file": "frcnn_mbv3_320_parta.hbm",
+        "sha256": "e7f4611d5283ff71673f8b0d67953111e70d2878405b8054bf56536d12924710",
+        "input": {
+          "names": [
+            "images_y",
+            "images_uv"
+          ],
+          "format": "split nv12 uint8 (bt.601 limited)"
+        }
+      },
+      "partb": {
+        "file": "frcnn_mbv3_320_partb.hbm",
+        "sha256": "ed91c61f81f2ac21a2d9dd8d20170f6a85243fab4157247e0943c8af535809f7",
+        "layout": "packed",
+        "input": {
+          "name": "bank",
+          "shape": [
+            1,
+            256,
+            1050,
+            7
+          ],
+          "dtype": "float32",
+          "quantization": "on-chip (HzCalibration)"
+        },
+        "outputs": {
+          "cls_packed": [
+            1,
+            91,
+            150,
+            1
+          ],
+          "reg_packed": [
+            1,
+            364,
+            150,
+            1
+          ],
+          "dtype": "float32"
+        }
+      }
+    },
+    "s600": {
+      "march": "nash-p",
+      "toolchain": "OE S 3.7.0 (hb_compile HBDK 4.7.5, O2 latency)",
+      "compiler_latency_us": {
+        "parta": 275.3,
+        "partb": 1648.2
+      },
+      "parta": {
+        "file": "frcnn_mbv3_320_parta.hbm",
+        "sha256": "a0c857181e95b275190aca68c4149814c7381ceb7e3c9aac1cdd8a22cd2e0e84",
+        "input": {
+          "names": [
+            "images_y",
+            "images_uv"
+          ],
+          "format": "split nv12 uint8 (bt.601 limited)"
+        }
+      },
+      "partb": {
+        "file": "frcnn_mbv3_320_partb.hbm",
+        "sha256": "2ae5360e0b1bbc1d463cfd12f4764936e2c4e9dd5741cc35d0df705d848603ef",
+        "layout": "packed",
+        "input": {
+          "name": "bank",
+          "shape": [
+            1,
+            256,
+            1050,
+            7
+          ],
+          "dtype": "float32",
+          "quantization": "on-chip (HzCalibration)"
+        },
+        "outputs": {
+          "cls_packed": [
+            1,
+            91,
+            150,
+            1
+          ],
+          "reg_packed": [
+            1,
+            364,
+            150,
+            1
+          ],
+          "dtype": "float32"
+        }
+      }
+    }
+  },
+  "artifacts_provenance": "compiled 2026-10-12 from the exported ONNX graphs and the 22-sample calibration set with the per-target toolchain and march values listed above; compiler_latency_us are the toolchain latency estimates; the X5 PartB on-chip calibration threshold is 8.698317"
+}

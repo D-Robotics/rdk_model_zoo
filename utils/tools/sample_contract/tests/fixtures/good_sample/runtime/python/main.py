@@ -21,6 +21,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Execution target.",
     )
     parser.add_argument(
+        "--input",
+        "-i",
+        default="input.jpg",
+        help="Input image (default: input.jpg).",
+    )
+    parser.add_argument(
         "--top-k",
         "--topk",
         dest="top_k",

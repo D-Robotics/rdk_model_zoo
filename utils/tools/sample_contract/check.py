@@ -82,7 +82,13 @@ README_LEVELS: tuple[tuple[str, str], ...] = (
 
 ANCHOR_RE = re.compile(r"""<a\s+id=["']([a-z0-9-]+)["']\s*/?>""")
 LINK_RE = re.compile(r"""(!?)\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)""")
-OPTION_RE = re.compile(r"--[a-z0-9][a-z0-9-]*")
+# Option tokens in a parameters-table option column: ``--long`` flags and
+# single-dash short aliases such as ``-i``.  A short alias must stand alone —
+# not preceded by a word character or another dash, not followed by one — so
+# hyphenated prose (``end-to-end``), negative numbers (``-1``) and the
+# interior of a ``--long`` flag never match; the long alternative is tried
+# first so ``--input`` never also yields ``-i``.
+OPTION_RE = re.compile(r"--[a-z0-9][a-z0-9-]*|(?<![\w-])-[A-Za-z](?![\w-])")
 SCHEME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*:")
 
 # Fenced code blocks (CommonMark): an opening fence is 0-3 spaces of

@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { platformBenchmarks, platformSlice, repositoryCatalog, repositoryRoot } from "./helpers/repository";
 import type { BenchmarkRecord, MetricRecord } from "../src/catalog/types";
 
-const EXPECTED_MODEL_COUNT = 36;
+const EXPECTED_MODEL_COUNT = 37;
 const EXPECTED_BENCHMARK_RECORD_COUNT = 239;
 const EXPECTED_PERFORMANCE_METRIC_COUNT = 636;
 const EXPECTED_ACCURACY_METRIC_COUNT = 419;
@@ -21,6 +21,7 @@ const EXPECTED_MODEL_PATHS = new Map([
   ["efficientformerv2", "samples/vision/efficientformerv2"],
   ["efficientnet", "samples/vision/efficientnet"],
   ["efficientvit", "samples/vision/efficientvit"],
+  ["fasterrcnn", "samples/vision/fasterrcnn"],
   ["fasternet", "samples/vision/fasternet"],
   ["fastvit", "samples/vision/fastvit"],
   ["fcos", "samples/vision/fcos"],
@@ -52,6 +53,7 @@ const EXPECTED_MODEL_PATHS = new Map([
 ]);
 const EXPECTED_WITHOUT_PUBLISHED_BENCHMARKS = new Set([
   "clip",
+  "fasterrcnn",
   "vargconvnet",
   "yoloworld"
 ]);

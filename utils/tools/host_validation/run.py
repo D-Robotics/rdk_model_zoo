@@ -11,7 +11,7 @@ downloads models, never initializes VLA submodules, never touches board SDKs
 and never runs on a board.  It executes, in isolated subprocesses:
 
 * every first-party Python ``unittest`` directory under ``samples/`` (all
-  51 samples listed in the accepted coverage inventory, including nested
+  52 samples listed in the accepted coverage inventory, including nested
   suites such as
   ``samples/vision/yoloe/conversion/tests`` and ``evaluator/tests``), the
   shared suites (including ``test_vla_integration.py``, a parent-repo
@@ -137,7 +137,7 @@ _CONDITIONAL_REASONS = (
 PARAFORMER_EXPORT_SUITE_DIR = "samples/speech/paraformer/tests"
 PARAFORMER_EXPORT_MODULE_PREFIX = "test_export_stages."
 
-#: The accepted 51-row native sample inventory (Codex-reviewed readable-
+#: The accepted 52-row native sample inventory (Codex-reviewed readable-
 #: runtime coverage record).  It is required proof of sample coverage: the
 #: maintained gate validates discovery against it, so a checkout that does
 #: not carry it — or carries an empty/malformed one — fails with an
@@ -646,9 +646,9 @@ def _validate_inventory_rows(rows):
 def validate_sample_coverage(repo: Path, discovery):
     """Validate discovery against the accepted native sample inventory.
 
-    The inventory (``docs/releases/unified-migration/
-    2026-10-05-all-sample-coverage.json``) is the Codex-reviewed 51-row
-    record of in-repo samples and is **required**: every expected sample
+    The inventory (``utils/tools/host_validation/sample-inventory.json``)
+    is the Codex-reviewed 52-row record of in-repo samples and is
+    **required**: every expected sample
     directory must exist and carry a discovered ``tests`` directory, and no
     extra first-party sample may appear beside them — so a sample or
     ``tests`` directory the inventory lists can never be deleted without

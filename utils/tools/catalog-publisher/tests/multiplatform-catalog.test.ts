@@ -95,9 +95,11 @@ describe("multi-platform variant catalog", () => {
     // audited X5 benchmark rows of the superseded V1/V2 builds no longer share a variant with an asset
     // and stand alone (+2): 613 variants. The S PTQ reference row of MobileNetV2 became fifteen measured
     // rows: 830 benchmark rows.
+    // On 2026-10-13 the Faster R-CNN sample published eight manual assets (two per target, no download
+    // URLs, no benchmark rows): 58 families and 621 variants.
     // Explicit retirement/retention checks below guard more than these totals.
-    expect(catalog.models).toHaveLength(57);
-    expect(variants).toHaveLength(613);
+    expect(catalog.models).toHaveLength(58);
+    expect(variants).toHaveLength(621);
     expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(830);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
@@ -198,7 +200,7 @@ describe("multi-platform variant catalog", () => {
     // Qualified manifest identities are unique; different models may legally
     // share a URL, while two URLs cannot make one duplicate identity valid.
     expect(new Set(x5Entries).size).toBe(x5Entries.length);
-    expect(x5Entries).toHaveLength(188);
+    expect(x5Entries).toHaveLength(190);
     expect(x5Models.summary.asset_count).toBe(x5Entries.length);
   });
 

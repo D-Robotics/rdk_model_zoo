@@ -16,12 +16,12 @@ release:
     repository_wide_board_test: false
     statement: Published model files, download URLs and checksums. Runtime requirements are listed in each sample README.
 summary:
-  sample_count: 37
+  sample_count: 38
   download_script_count: 39
-  asset_count: 188
+  asset_count: 190
   downloadable_asset_count: 187
-  manual_asset_count: 1
-  sha256_recorded_count: 41
+  manual_asset_count: 3
+  sha256_recorded_count: 43
   sha256_unrecorded_count: 147
   benchmark_count: 239
   performance_metric_count: 636
@@ -171,6 +171,27 @@ models:
     format: bin
     url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EfficientViT_m5_224x224_nv12.bin
     sha256: null
+- id: fasterrcnn
+  name: Faster R-CNN (MobileNetV3-Large 320-FPN)
+  tasks:
+  - object-detection
+  - multi-object-tracking
+  sample_path: samples/vision/fasterrcnn
+  download_scripts: []
+  availability: manual
+  assets:
+  - filename: frcnn_mbv3_320_parta.bin
+    format: bin
+    url: null
+    sha256: a6f6509e5ab3b42f709d10062cfdb0a930b9eebb3ceb1d1a4bff3baeda42af86
+  - filename: frcnn_mbv3_320_partb.bin
+    format: bin
+    url: null
+    sha256: 2ade35e91d66debf616594a28e2cae051b5e1ede617dfa914b25d06c3255724e
+  notes: Compile the PartA/PartB pair with the conversion guide
+    (samples/vision/fasterrcnn/conversion) and install it with
+    samples/vision/fasterrcnn/model/prepare.py --target x5 --from-build
+    <build-dir>.
 - id: fasternet
   name: FasterNet
   tasks:
