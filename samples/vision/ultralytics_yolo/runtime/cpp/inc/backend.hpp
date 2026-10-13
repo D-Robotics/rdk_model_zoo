@@ -257,7 +257,14 @@ inline FloatOutputPlan bind_float_nhwc(const hbDNNTensorProperties& p) {
                          p.validShape.dimensionSize + 4);
   std::vector<size_t> strides(4);
 #if defined(YOLO_DNN_STACK_X5)
-  if (p.tensorLayout != HB_DNN_LAYOUT_NHWC || p.alignedShape.numDimensions != 4)
+  // hb_mapper tags dequantized Conv heads NHWC.  An exported NHWC transpose
+  // after a non-Conv op (the SiLU that ends the YOLOv8/YOLO11 prototype
+  // branch) keeps the NCHW tag although its shapes are already NHWC.  X5
+  // buffers are dense over the aligned shape in the reported dimension order,
+  // so both tags are read in that order, as the Python binding does; the
+  // caller still matches every (H, W, C) role by shape.
+  if ((p.tensorLayout != HB_DNN_LAYOUT_NHWC && p.tensorLayout != HB_DNN_LAYOUT_NCHW) ||
+      p.alignedShape.numDimensions != 4)
     throw std::invalid_argument("Task output requires NHWC aligned geometry.");
   size_t step = sizeof(float);
   for (int i = 3; i >= 0; --i) {

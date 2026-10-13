@@ -129,6 +129,25 @@ int main() {
       outputs.bind(nullptr, 64, 64, segment);
     });
   }
+#if defined(YOLO_DNN_STACK_X5)
+  // An X5 prototype tagged NCHW with NHWC dimensions binds by its shape; a
+  // genuinely NCHW prototype (channels first) still has no stride-4 role.
+  setup(true);
+  metadata[0].tensorLayout = HB_DNN_LAYOUT_NCHW;
+  {
+    yolo::TaskOutputs outputs;
+    outputs.bind(nullptr, 64, 64, true);
+    expect(outputs.heads.prototype == 0);
+  }
+  setup(true);
+  metadata[0].tensorLayout = HB_DNN_LAYOUT_NCHW;
+  metadata[0].validShape = {4, {1, 32, 16, 16}};
+  metadata[0].alignedShape = {4, {1, 32, 16, 17}};
+  rejects([&] {
+    yolo::TaskOutputs outputs;
+    outputs.bind(nullptr, 64, 64, true);
+  });
+#endif
   setup(false);
   metadata[0] = metadata[1];
   yolo::TaskOutputs invalid;
