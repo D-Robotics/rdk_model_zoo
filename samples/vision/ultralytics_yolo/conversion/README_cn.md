@@ -297,7 +297,7 @@ $$x_2 = (x+0.5+r)\times{Stride(i)},\quad y_2 = (y+0.5+b)\times{Stride(i)}$$
 box logits（`...×64`）——而 ReduceMax / 阈值筛选 / gather / ArgMax、DFL
 SoftMax 加期望 bin、dist2bbox 等阶段，以及在所选绑定需要时进行的按类别
 NMS，都由 Python 后处理（`runtime/python/detect.py` 中的 `decode_dfl`；协议见
-[`DETECTION_CONTRACT.md`](../DETECTION_CONTRACT.md)）完成。S 系列 YOLOv10
+[检测输入/输出](../runtime/python/README_cn.md#detection-io)）完成。S 系列 YOLOv10
 绑定是 NMS-free 例外：它复用同样的解码阶段并固定 `nms='none'`
 （见[运行时 README](../runtime/python/README.md)）。运行时只接受
 已反量化的浮点输出：整数张量或 SCALE 量化元数据在绑定期直接报错，
@@ -368,7 +368,7 @@ SoftMax 加 16-bin 期望阶段在该协议中不存在。`ltrb2xyxy.jpg` 插图
 DFL 协议的解码。YOLO26 解码器在 raw-logit 空间取最大类别，只对选中的
 类别做 Sigmoid，用同样的 cell 中心网格几何转换四个距离，再应用共用的
 按类别 NMS（`decode_ltrb`）。DFL 与直接 LTRB 制品不可互换，见上文导出
-一节和 [`DETECTION_CONTRACT.md`](../DETECTION_CONTRACT.md)。
+一节和运行时指南的[检测输入/输出](../runtime/python/README_cn.md#detection-io)一节。
 
 <a id="calibration"></a>
 ## 标定数据准备
@@ -498,7 +498,7 @@ Mapper dispatcher 接受各发布任务的 `--family` 值，并选择检测、�
 
 YOLOv8/YOLO11 检测使用三层 DFL 输出契约；YOLO26 检测使用直接 LTRB，两者
 不能互换。导出和编译自定义图后，运行时绑定检查会在板端推理前读取输入输出
-形状和类型。检测协议见 [`DETECTION_CONTRACT.md`](../DETECTION_CONTRACT.md)。
+形状和类型。检测协议见运行时指南的[检测输入/输出](../runtime/python/README_cn.md#detection-io)一节。
 
 ## 故障排查
 

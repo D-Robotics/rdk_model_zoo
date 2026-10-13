@@ -226,15 +226,30 @@ main.py
      下载准备与结果展示）
   -> cli.prepare_runtime_model -> Model(config) -> model.predict(image)
   -> ModelRunner + ModelBinding（输入/输出契约，共享 SDK 会话）
-  -> geometry.resize_with_transform + NV12 输入绑定
+  -> detect.resize_with_transform + NV12 输入绑定
   -> YoloDetect 或 YOLO26Detect 解码 + NMS
   -> DetectionResult -> cli.present_result -> --img-save-path
 ```
 
 `backend.py` 按既定形状/类型契约识别输出角色，编译器枚举名称
 只是物理名称。`detect.py` 记录实际整数缩放和 padding，使框还原使用
-同一个变换。检测张量协议见
-[`DETECTION_CONTRACT.md`](../../DETECTION_CONTRACT.md)。
+同一个变换。
+
+<a id="detection-io"></a>
+### 检测输入与输出
+
+`YoloDetect`（DFL）与 `YOLO26Detect`（直接 LTRB）共用输入绑定和结果类型，区别只在框张量与解码方式。
+
+输入为 batch 1、正偶数 H×W 的 `uint8` NV12。X5 绑定一个 packed 缓冲区；S100/S100P/S600 绑定命名的 NHWC 输入 `y=(1,H,W,1)` 和 `uv=(1,H/2,W/2,2)`，H/W 取自模型 metadata。检测输出为已是浮点的 NHWC 张量，每个模型 6 个：每个配置的 stride s（默认 8、16、32）各一组 (H/s, W/s) 网格，含一个分类张量和一个框张量。
+
+| 角色 | DFL 系列 | YOLO26 |
+|---|---|---|
+| `cls_<s>` | `(1,H/s,W/s,C)` 类别 logits，sigmoid 前 | 相同 |
+| `box_<s>` | `(1,H/s,W/s,4R)` DFL 分布 logits，R 为 `--reg` bin 数，默认 16 | `(1,H/s,W/s,4)` cell 单位的左/上/右/下直接距离 |
+
+DFL 解码对每条边在 R 个 bin 上做一次 softmax 并取期望 bin 序号；类别分数做一次 sigmoid，取每个格点最大的类别。YOLO26 解码不做 DFL softmax：四个通道是相对 cell 中心的直接距离，类别在 raw-logit 空间选取，只对选中类别做 sigmoid。随后两者都执行所配置的 NMS 策略（none/classwise/agnostic，默认按类别；S 系列 YOLOv10 无 NMS），并把框还原到原图坐标。
+
+公开结果为 `DetectionResult(boxes_xyxy, scores, class_ids)`：`(N,4)` float32 原图 xyxy 像素框、`(N,)` float32 分数、`(N,)` int64 从 0 开始的类别 ID。空检测保留这些维度和类型。
 
 <a id="segmentation-api"></a>
 ## DFL 分割库接口

@@ -241,16 +241,44 @@ main.py
      dry-run, download preparation and presentation)
   -> cli.prepare_runtime_model -> Model(config) -> model.predict(image)
   -> ModelRunner + ModelBinding (input/output contract, shared SDK session)
-  -> geometry.resize_with_transform + NV12 input binding
+  -> detect.resize_with_transform + NV12 input binding
   -> YoloDetect or YOLO26Detect decoder + NMS
   -> DetectionResult -> cli.present_result -> --img-save-path
 ```
 
 `backend.py` identifies output roles by established shape/dtype contracts;
 compiler enumeration names are opaque. `detect.py` records the actual
-integer resize and padding so inverse boxes use the same transform. The
-detection tensor protocols are in
-[`DETECTION_CONTRACT.md`](../../DETECTION_CONTRACT.md).
+integer resize and padding so inverse boxes use the same transform.
+
+<a id="detection-io"></a>
+### Detection input and output
+
+`YoloDetect` (DFL) and `YOLO26Detect` (direct LTRB) share the input binding
+and the result type; they differ in the box tensors and the decode.
+
+The input is batch one, positive even H×W, `uint8` NV12. X5 binds one packed
+buffer; S100/S100P/S600 bind named NHWC inputs `y=(1,H,W,1)` and
+`uv=(1,H/2,W/2,2)`, with H/W taken from model metadata. Detection outputs
+are already-floating NHWC tensors, six per model: at each configured stride s
+(defaults 8, 16, 32) with grid (H/s, W/s), one classification tensor plus one
+box tensor.
+
+| Role | DFL families | YOLO26 |
+|---|---|---|
+| `cls_<s>` | `(1,H/s,W/s,C)` class logits, before sigmoid | same |
+| `box_<s>` | `(1,H/s,W/s,4R)` DFL distribution logits, R=`--reg` bins, default 16 | `(1,H/s,W/s,4)` direct left/top/right/bottom distances in cell units |
+
+DFL decoding applies one softmax per box side over the R bins and takes the
+expected bin index; class scores use one sigmoid and the largest class per
+cell. YOLO26 decoding applies no DFL softmax: the four channels are direct
+distances from the cell center, the class is chosen in raw-logit space, and
+sigmoid is applied only to the selected class. Both then apply the configured
+NMS policy — `none`/`classwise`/`agnostic`, class-wise by default; S-series
+YOLOv10 runs NMS-free — and map the boxes back to original-image coordinates.
+
+The public result is `DetectionResult(boxes_xyxy, scores, class_ids)`:
+`(N,4)` float32 original-image xyxy pixel boxes, `(N,)` float32 scores and
+`(N,)` int64 zero-based class IDs. Empty detections keep these ranks/dtypes.
 
 <a id="segmentation-api"></a>
 ## DFL segmentation library interface

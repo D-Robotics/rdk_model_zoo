@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# Ultralytics YOLO — RDK X5 / S
+# Ultralytics YOLO
 
 <a id="overview"></a>
 
@@ -20,7 +20,6 @@ ultralytics_yolo/
 ├── model/  # 模型文件与下载脚本
 ├── runtime/  # 推理程序
 ├── test_data/  # 示例输入
-├── DETECTION_CONTRACT.md  # 说明文档
 ├── README.md  # 英文说明
 └── README_cn.md  # 中文说明
 ```
@@ -116,7 +115,7 @@ YOLO26 检测效果示例（类别 ID 与分数）：
 - [evaluator](evaluator/README_cn.md) — COCO/ImageNet/DOTA、逐任务评估与参考测量.
 - [test_data](test_data/README_cn.md) — 随仓输入图片、显示标签表与效果示例.
 
-源码阅读顺序：`main.py` 是可见的构造与 predict 入口。`cli.py` 负责参数声明、发布资产选择/列表、dry-run 与结果展示；`backend.py` 负责 Runner、张量绑定与运行时元数据；任务文件（`detect.py`/`segment.py`/`pose.py`/`obb.py`/`classify.py`）处理前处理、推理、后处理。检测 DFL 与 YOLO26 direct LTRB 使用不同协议，详见 [检测契约](DETECTION_CONTRACT.md)。输入尺寸由元数据或显式回退解析。YOLO26 OBB 使用弧度，X5 类别内 NMS/裁剪与 S 路径有区别。
+源码阅读顺序：`main.py` 是可见的构造与 predict 入口。`cli.py` 负责参数声明、发布资产选择/列表、dry-run 与结果展示；`backend.py` 负责 Runner、张量绑定与运行时元数据；任务文件（`detect.py`/`segment.py`/`pose.py`/`obb.py`/`classify.py`）处理前处理、推理、后处理。检测 DFL 与 YOLO26 direct LTRB 使用不同协议，详见 [检测输入/输出](runtime/python/README_cn.md#detection-io)。输入尺寸由元数据或显式回退解析。YOLO26 OBB 使用弧度，X5 类别内 NMS/裁剪与 S 路径有区别。
 
 `--family yolov8|yolo11|yolo26|...` 选择检测、分割、姿态、分类与 OBB 任务。任务输出契约见各任务说明。
 

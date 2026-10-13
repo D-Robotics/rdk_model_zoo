@@ -328,8 +328,9 @@ logits (`...×64`) — and the runtime performs the ReduceMax /
 threshold-filter / gather / ArgMax, DFL SoftMax-plus-expected-bin, and
 dist2bbox stages, followed by class-wise NMS where the selected binding
 requires one, in its Python post-processing (`decode_dfl` in
-`runtime/python/detect.py`; protocol in
-[`DETECTION_CONTRACT.md`](../DETECTION_CONTRACT.md)). The S-series YOLOv10
+`runtime/python/detect.py`; protocol in the
+[detection input/output](../runtime/python/README.md#detection-io)
+section). The S-series YOLOv10
 binding is the NMS-free exception: it reuses the same decode stages with
 `nms='none'` fixed (see the [runtime
 README](../runtime/python/README.md)). The runtime consumes
@@ -413,8 +414,9 @@ DFL protocol's decode. The YOLO26 decoder takes the maximum class in
 raw-logit space, applies Sigmoid to the selected class only, converts the
 four distances using the same cell-center grid geometry, and then applies
 the shared class-wise NMS (`decode_ltrb`). DFL and direct-LTRB artifacts are
-not interchangeable, as stated in the export section above and in
-[`DETECTION_CONTRACT.md`](../DETECTION_CONTRACT.md).
+not interchangeable, as stated in the export section above and in the
+[detection input/output](../runtime/python/README.md#detection-io) section
+of the runtime guide.
 
 <a id="calibration"></a>
 ## Calibration data preparation
@@ -555,9 +557,9 @@ segmentation, pose, classification and OBB, and selects each task's workflow.
 YOLOv8/YOLO11 detection uses the three-level DFL output contract.
 YOLO26 detection uses direct LTRB and is not interchangeable with DFL. Export
 and compile the custom graph, then run the runtime binding check to inspect its
-input/output shapes and dtypes before board inference. See
-[`DETECTION_CONTRACT.md`](../DETECTION_CONTRACT.md) for the runtime detection
-protocol.
+input/output shapes and dtypes before board inference. See the
+[detection input/output](../runtime/python/README.md#detection-io) section
+of the runtime README for the runtime detection protocol.
 
 ## Troubleshooting
 
