@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# S100 / S100P full evaluation
+# Legacy full evaluation
 
 Use the board-specific SDK 1.0.0 HBM and runtime libraries. This evaluator uses
 the board's `hbm_runtime.HB_HBMRuntime`, not the S600 RPC bundle. The tested boards

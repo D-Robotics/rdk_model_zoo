@@ -23,7 +23,6 @@ Input is a local Ultralytics PyTorch `.pt` checkpoint matching the selected task
 conversion/
 ├── imgs/  # Files for imgs
 ├── yolo26/  # Files for yolo26
-├── CONVERSION_CONTRACT.md  # Documentation
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
 ├── config_x5.yaml  # Configuration
@@ -205,9 +204,13 @@ YOLO26 cls/seg/pose/obb exporters do not accept `--require-local`. Check that th
 
 Every YOLO26 task exporter applies `yolo26/batch_flex.py` after export: internal
 attention `Reshape` targets accept batch eight for PTQ calibration, while graph
-inputs and outputs stay static batch one. See
-[CONVERSION_CONTRACT.md](CONVERSION_CONTRACT.md#yolo26-task-export-and-calibration-batch)
-for the rules and the evidence a batch-eight artifact needs.
+inputs and outputs stay static batch one. The adapter rewrites only recognized
+attention `Reshape` target constants, validates the ONNX and writes it back
+atomically, and fails closed when no matching node exists or a shape constant
+is shared unsafely. It does not change the calibration image list or count;
+mapper `--jobs` is compiler parallelism, not the calibration batch. Treat an
+artifact as batch-eight calibrated only when its toolchain log shows calibration
+at batch eight without a reset to one.
 
 Pass the generated ONNX to the mapper below, adding `--family yolo26` for YOLO26. Expected input is static batch-one float32 NCHW. Detection DFL and direct-LTRB outputs are not interchangeable; segmentation includes mask coefficients/prototypes, pose keypoints, OBB angles, and classification logits with runtime Softmax. Check each exporter's output description and runtime binding rather than inferring compatibility from tensor count alone.
 

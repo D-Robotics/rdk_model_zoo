@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# ResNet18 C++ runtime (S-series)
+# ResNet18 C++ runtime
 
 The S-series ResNet18 native runtime: the `hbDNNInferV2` inference flow,
 image preprocessing, NV12 tensor creation and Top-K output, built on the

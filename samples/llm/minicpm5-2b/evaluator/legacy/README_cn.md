@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# S100 / S100P 全量评估
+# 旧版全量评估
 
 使用对应板卡的 SDK 1.0.0 HBM 与运行库。评估通过板端
 `hbm_runtime.HB_HBMRuntime` 执行，不使用 S600 RPC 包。实测板卡已有

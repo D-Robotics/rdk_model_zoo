@@ -18,11 +18,8 @@
 conversion/
 ├── configs/  # configs 相关文件
 ├── scripts/  # scripts 相关文件
-├── QUANTIZATION_STATUS.md  # 说明文档
 ├── README.md  # 英文说明
-├── README_cn.md  # 中文说明
-├── SOURCE_MAP.json  # 结构化数据
-└── VALIDATION.md  # 说明文档
+└── README_cn.md  # 中文说明
 ```
 
 <a id="toolchain-targets"></a>
@@ -199,7 +196,7 @@ hrt_model_exec perf --model_file bpu_model_output_encoder_nashe/efficient_sam_vi
 hrt_model_exec perf --model_file bpu_model_output_decoder_nashe/efficient_sam_vitt_decoder_512_nashe.hbm --thread_num 1
 ```
 
-源 X5 量化记录保留在 [`QUANTIZATION_STATUS.md`](./QUANTIZATION_STATUS.md) 和 [`VALIDATION.md`](./VALIDATION.md)：编码器 cosine `0.968013`，解码器的 `low_res_masks=0.965641`、`iou_predictions=0.997313`。这些是参考记录值。S 源 evaluator 只有性能材料，没有数据集精度 harness。
+S 源 evaluator 只有性能材料，没有数据集精度 harness。
 
 使用编译制品前，读取 SDK 元数据并核对输入输出名称、维数、形状和原生数据类型。数据类型以编译模型的元数据为准。
 

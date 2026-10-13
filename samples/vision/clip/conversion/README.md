@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# Conversion — CLIP X5
+# Conversion — CLIP
 
 <a id="source-model"></a>
 ## Source Model

@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# S100 / S100P: OELLM 1.0.0 C++ runtime
+# Legacy OELLM 1.0.0 C++ runtime
 
 This entry point streams one greedy, non-thinking text response. `runtime/cpp` uses the separate S600 OELLM 2.0 API. Do not mix their SDKs or artifacts.
 

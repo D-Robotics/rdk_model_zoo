@@ -155,4 +155,4 @@ X5 使用 HBRT 3.15.55.0，模型构建版本为 3.15.54.0；S100 使用 UCP 3.1
 <a id="license"></a>
 ## 许可
 
-仓库脚本采用 Apache-2.0 许可。ByteTrack 跟踪源码及模型权重遵循各自的上游许可；跟踪源码来源见 [`runtime/python/TRACKER_SOURCE_MAP.json`](./runtime/python/TRACKER_SOURCE_MAP.json)。
+仓库脚本采用 Apache-2.0 许可。ByteTrack 跟踪源码及模型权重遵循各自的上游许可。`runtime/python/tracker_backend/` 跟踪源码来自上游 [ByteTrack 项目](https://github.com/ifzhang/ByteTrack)，保留原源码版权声明。

@@ -19,8 +19,7 @@ conversion/
 ├── configs/  # Files for configs
 ├── scripts/  # Files for scripts
 ├── README.md  # English instructions
-├── README_cn.md  # Chinese instructions
-└── SOURCE_MAP.json  # Structured data
+└── README_cn.md  # Chinese instructions
 ```
 
 <a id="toolchain-targets"></a>
@@ -223,7 +222,3 @@ Generated ONNX, calibration tensors, quantizer metadata, and compiled models rem
 - S has no source `download_assets.py`; acquiring its upstream checkout and checkpoint is a manual prerequisite.
 - X5 and S use different calibration file formats and target config layouts, so the unified producer branches on target while retaining the source recipes.
 - Decoder output rank and all compiled native dtypes require real SDK metadata inspection.
-
-## Provenance
-
-The source-to-unified mapping and SHA-256 records are in [`SOURCE_MAP.json`](./SOURCE_MAP.json). Existing Apache-2.0 source notices remain represented by the source-derived files; helper code follows the repository license.

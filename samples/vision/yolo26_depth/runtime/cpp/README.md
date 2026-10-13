@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# X5 C++ depth runtime
+# YOLO26 Depth C++ runtime
 
 Native inference for the five published X5 YOLO26 Depth BINs. The named
 `Yolo26Depth` model owns preprocessing, the warmup plus one timed forward, and

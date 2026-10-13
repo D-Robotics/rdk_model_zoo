@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# PaddleOCR C++ runtime (S series)
+# PaddleOCR C++ runtime
 
 <a id="overview"></a>
 ## C++ inference

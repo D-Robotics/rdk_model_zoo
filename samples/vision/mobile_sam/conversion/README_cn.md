@@ -19,8 +19,7 @@ conversion/
 ├── configs/  # configs 相关文件
 ├── scripts/  # scripts 相关文件
 ├── README.md  # 英文说明
-├── README_cn.md  # 中文说明
-└── SOURCE_MAP.json  # 结构化数据
+└── README_cn.md  # 中文说明
 ```
 
 <a id="toolchain-targets"></a>
@@ -223,7 +222,3 @@ python3 scripts/quantize.py --target s600
 - S 没有源 `download_assets.py`，获取 checkout 和权重文件是手工前置条件。
 - X5 与 S 使用不同校准文件格式和目标配置布局；统一 producer 按目标板卡分支并保留源配方。
 - 解码器输出 rank 及所有编译制品原生数据类型需读取真实 SDK 元数据确认。
-
-## 来源
-
-源文件到统一文件的映射及 SHA-256 记录在 [`SOURCE_MAP.json`](./SOURCE_MAP.json)。带有 Apache-2.0 标识的源文件保留其来源信息，脚本遵循仓库许可证。

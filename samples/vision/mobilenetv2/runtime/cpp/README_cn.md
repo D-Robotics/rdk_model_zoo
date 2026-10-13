@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# MobileNetV2 图像分类（C++，S 系列）
+# MobileNetV2 图像分类（C++）
 
 本 C++ 流程在 S100、S100P、S600 的 BPU 上运行量化 MobileNetV2 HBM 模型（变体
 `100` 或 `140`），打印 Top-K 类别标签与置信度。它是 S 系列 `hbDNNInferV2` 实现（`src/` 与 `inc/`

@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# S600 conversion
+# Model conversion
 
 <a id="source-model"></a>
 ## Source model

@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# S100 / S100P：OELLM 1.0.0 C++ Runtime
+# 旧版 OELLM 1.0.0 C++ Runtime
 
 本入口支持单轮、贪心、关闭思考的纯文本流式生成。`runtime/cpp` 是 S600 的 OELLM 2.0 入口；两个接口和模型包不能混用。
 

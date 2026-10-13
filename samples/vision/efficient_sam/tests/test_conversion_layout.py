@@ -1,24 +1,15 @@
 from __future__ import annotations
 
-import hashlib
 import importlib.util
-import json
 import tempfile
 import unittest
 import zipfile
 from pathlib import Path
 from unittest import mock
-from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # noqa: E402
 
 
-ROOT = Path(__file__).resolve().parents[4]
 CONVERSION = Path(__file__).resolve().parents[1] / "conversion"
-SOURCE_MAP = CONVERSION / "SOURCE_MAP.json"
 ANCHORS = ("source-model", "toolchain-targets", "export", "calibration", "compile", "validation", "artifacts", "known-gaps")
-
-
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def load_script(name: str):
@@ -31,37 +22,6 @@ def load_script(name: str):
 
 
 class ConversionLayoutTest(unittest.TestCase):
-    def test_source_map_json_and_source_hashes(self):
-        data = json.loads(SOURCE_MAP.read_text())
-        self.assertEqual(data["sample"], "efficient_sam")
-        mapped = set()
-        for entry in data["entries"]:
-            unified = CONVERSION / entry["unified"]
-            self.assertTrue(unified.is_file(), entry["unified"])
-            for source in entry["sources"]:
-                # The historical platforms/ tree now lives only in Git; the
-                # recorded hashes still pin the same bytes at the pin.
-                relative = source["path"][len("platforms/"):]
-                path = legacy_path(relative)
-                self.assertEqual(sha256(path), source["sha256"], source["path"])
-                mapped.add(relative)
-                if entry["kind"] == "verbatim":
-                    self.assertEqual(sha256(unified), source["sha256"], entry["unified"])
-                if "unified_sha256" in source:
-                    self.assertEqual(sha256(unified), source["unified_sha256"], entry["unified"])
-        for source in data["source_only"]:
-            relative = source["path"][len("platforms/"):]
-            path = legacy_path(relative)
-            self.assertEqual(sha256(path), source["sha256"], source["path"])
-            mapped.add(relative)
-        x5_tree = legacy_tree("x5/samples/vision/efficient_sam/conversion")
-        x5_prefix = f"x5/samples/vision/efficient_sam/conversion"
-        source_root = {f"{x5_prefix}/{p.relative_to(x5_tree)}" for p in x5_tree.rglob("*") if p.is_file() and "__pycache__" not in p.parts}
-        s_tree = legacy_tree("s/samples/vision/efficient_sam/conversion")
-        s_prefix = f"s/samples/vision/efficient_sam/conversion"
-        source_root |= {f"{s_prefix}/{p.relative_to(s_tree)}" for p in s_tree.rglob("*") if p.is_file() and "__pycache__" not in p.parts}
-        self.assertEqual(mapped, source_root)
-
     def test_bilingual_contract_anchors_match(self):
         en = (CONVERSION / "README.md").read_text()
         cn = (CONVERSION / "README_cn.md").read_text()
@@ -184,8 +144,6 @@ class ConversionLayoutTest(unittest.TestCase):
     def test_no_generated_conversion_artifacts_are_checked_in(self):
         forbidden_suffixes = {".onnx", ".bin", ".hbm", ".npy", ".rgbchw", ".json"}
         for path in CONVERSION.rglob("*"):
-            if path == SOURCE_MAP:
-                continue
             self.assertNotIn(path.suffix, forbidden_suffixes, path)
         for name in ("workspace", "calibration_data_rgbchw_512", "decoder_calibration", "bpu_model_output_512_default_none"):
             self.assertFalse((CONVERSION / name).exists(), name)

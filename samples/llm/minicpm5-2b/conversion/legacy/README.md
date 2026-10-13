@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# S100 / S100P quantization and compilation
+# Legacy quantization and compilation
 
 Use D-Robotics LLM S100 **1.0.0 SDK**, Python 3.10 and leap_llm. This is separate from the parent S600 OELLM 2.0/lightcompress workflow. Obtain the [SDK](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm_s100/1.0.0/D-Robotics_LLM_S100_1.0.0_SDK.tar.gz) and [manual](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm_s100/1.0.0/D-Robotics_LLM_S100_1.0.0_Doc.zip). Install requirements/compiler/leap_llm according to the bundled manual; do not edit version configuration or mix 2.0 wheels.
 

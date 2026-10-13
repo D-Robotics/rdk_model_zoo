@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# RDK X5 UNet 模型转换
+# UNet 模型转换
 
 本目录只保留五个 UNet ResNet 变体从浮点权重文件到 X5 的转换链路；训练
 代码继续维护在 Model Zoo 仓库之外。

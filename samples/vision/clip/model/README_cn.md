@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# 模型制品 — CLIP X5 编码器对
+# 模型制品 — CLIP 编码器对
 
 <a id="artifacts"></a>
 ## 制品清单

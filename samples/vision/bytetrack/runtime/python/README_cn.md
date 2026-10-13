@@ -15,7 +15,6 @@ python/
 ├── tracker_backend/  # 轨迹关联、卡尔曼滤波与匹配
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── TRACKER_SOURCE_MAP.json  # 跟踪源码来源
 ├── cli.py  # 参数、检测模型选择与结果预览
 ├── main.py  # 命令行入口：构造模型并调用 predict
 ├── run.sh  # 运行示例

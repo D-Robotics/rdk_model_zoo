@@ -20,7 +20,6 @@ YOLOv8/YOLO11 的 DFL 检测和 YOLO26 的直接 LTRB 检测；下文同时列�
 conversion/
 ├── imgs/  # imgs 相关文件
 ├── yolo26/  # yolo26 相关文件
-├── CONVERSION_CONTRACT.md  # 说明文档
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
 ├── config_x5.yaml  # 配置
@@ -190,9 +189,11 @@ python samples/vision/ultralytics_yolo/conversion/export_monkey_patch.py \
 YOLO26 的 cls/seg/pose/obb 导出器不支持 `--require-local`；请在运行前自行确认上述绝对路径存在，不能把该参数传给它们。
 
 所有 YOLO26 任务导出器在导出后都会调用 `yolo26/batch_flex.py`：内部 attention
-`Reshape` 目标允许 PTQ 校准以 batch 8 运行，图的输入输出仍是静态 batch 1。规则及
-batch 8 制品所需证据见
-[CONVERSION_CONTRACT.md](CONVERSION_CONTRACT.md#yolo26-task-export-and-calibration-batch)。
+`Reshape` 目标允许 PTQ 校准以 batch 8 运行，图的输入输出仍是静态 batch 1。适配器
+只改写可识别的 attention `Reshape` 目标常量，校验 ONNX 后原子写回；没有匹配节点
+或形状常量被共享时会直接失败。它不改变校准图片列表和数量；mapper 的 `--jobs`
+是编译并行度，不是校准 batch。只有工具链日志显示校准以 batch 8 运行且未回退到
+1，才把该制品视为 batch 8 校准。
 
 将生成的 ONNX 交给下面的 mapper，YOLO26 添加 `--family yolo26`。预期输入为静态 batch-one float32 NCHW；检测 DFL 与直接 LTRB 输出不可互换。分割附带掩码系数/prototype，姿态附带关键点，OBB 附带角度；分类输出 logits，运行端进行 Softmax。检查对应导出脚本的输出说明和运行时绑定，不要仅按输出数量判断兼容性。
 

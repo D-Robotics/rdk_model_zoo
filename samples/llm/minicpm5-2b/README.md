@@ -1,7 +1,7 @@
 English | [简体中文](README_cn.md)
 
 <a id="overview"></a>
-# MiniCPM5-2B on RDK S100 / S100P / S600
+# MiniCPM5-2B
 
 This sample runs text generation with OpenBMB MiniCPM5-2B using the S600 BPU and OELLM Runtime. It provides a C++ command-line application, model download with SHA256 verification, conversion guidance and WikiText2 evaluation commands and reference measurements.
 

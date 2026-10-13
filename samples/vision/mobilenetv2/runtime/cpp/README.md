@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# MobileNetV2 image classification (C++, S-series)
+# MobileNetV2 image classification (C++)
 
 This C++ flow runs the quantised MobileNetV2 HBM model (variant `100` or `140`)
 on an S100, S100P or S600 BPU and prints Top-K class labels with confidence

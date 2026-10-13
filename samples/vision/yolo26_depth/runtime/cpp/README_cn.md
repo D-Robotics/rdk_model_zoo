@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# X5 C++ 深度推理
+# YOLO26 Depth C++ 深度推理
 
 本目录运行五种已发布 X5 YOLO26 Depth BIN。
 具名 `Yolo26Depth` 模型统一负责前处理、warmup 加一次计时前向推理以及已校准 log-depth 还原；

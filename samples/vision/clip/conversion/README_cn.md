@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# 模型转换 — CLIP X5
+# 模型转换 — CLIP
 
 <a id="source-model"></a>
 ## 源模型

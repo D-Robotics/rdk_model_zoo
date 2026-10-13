@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# S600 模型转换
+# 模型转换
 
 <a id="source-model"></a>
 ## 源模型

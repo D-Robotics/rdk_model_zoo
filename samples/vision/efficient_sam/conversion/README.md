@@ -18,11 +18,8 @@ The decoder bakes two positive points `(248, 210)` and `(302, 315)` into ONNX. I
 conversion/
 ├── configs/  # Files for configs
 ├── scripts/  # Files for scripts
-├── QUANTIZATION_STATUS.md  # Documentation
 ├── README.md  # English instructions
-├── README_cn.md  # Chinese instructions
-├── SOURCE_MAP.json  # Structured data
-└── VALIDATION.md  # Documentation
+└── README_cn.md  # Chinese instructions
 ```
 
 <a id="toolchain-targets"></a>
@@ -208,7 +205,7 @@ hrt_model_exec perf --model_file bpu_model_output_encoder_nashe/efficient_sam_vi
 hrt_model_exec perf --model_file bpu_model_output_decoder_nashe/efficient_sam_vitt_decoder_512_nashe.hbm --thread_num 1
 ```
 
-The source X5 quantization records are preserved in [`QUANTIZATION_STATUS.md`](./QUANTIZATION_STATUS.md) and [`VALIDATION.md`](./VALIDATION.md), including encoder cosine `0.968013` and decoder cosines `low_res_masks=0.965641`, `iou_predictions=0.997313`. These are source record values. S source evaluator material is performance-only and has no dataset-level accuracy harness.
+The S source evaluator material is performance-only and has no dataset-level accuracy harness.
 
 Before using a compiled artifact, inspect the actual SDK metadata for every target/march and verify input names, ranks, shapes, native dtypes, output names, ranks, shapes, and native dtypes. The source does not provide compiled HBM metadata; runtime float casts cannot establish native dtype.
 

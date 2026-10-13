@@ -15,7 +15,6 @@ python/
 ├── tracker_backend/  # BYTETracker association, Kalman filtering and matching
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── TRACKER_SOURCE_MAP.json  # Tracker source attribution
 ├── cli.py  # Arguments, detector selection and preview
 ├── main.py  # CLI entry: construct model and call predict
 ├── run.sh  # Run the sample

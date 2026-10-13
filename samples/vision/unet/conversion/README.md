@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# UNet conversion for RDK X5
+# UNet conversion
 
 This directory contains only the float-checkpoint-to-X5 conversion path for the
 five UNet ResNet variants. Training remains outside the Model Zoo repository.

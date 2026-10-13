@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# PaddleOCR C++ 运行时（S 系列）
+# PaddleOCR C++ 运行时
 
 <a id="overview"></a>
 ## C++ 推理

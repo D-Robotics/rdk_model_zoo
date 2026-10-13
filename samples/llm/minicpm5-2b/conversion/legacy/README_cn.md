@@ -1,6 +1,6 @@
 [English](README.md) | 简体中文
 
-# S100 / S100P 量化与编译
+# 旧版量化与编译
 
 本目录针对 D-Robotics LLM S100 **1.0.0 SDK**（Python 3.10、leap_llm），与上层 S600 的 OELLM 2.0/lightcompress 流程独立。下载 [SDK](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm_s100/1.0.0/D-Robotics_LLM_S100_1.0.0_SDK.tar.gz) 和 [用户手册](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm_s100/1.0.0/D-Robotics_LLM_S100_1.0.0_Doc.zip)，严格按包内文档安装 requirements、编译器和 leap_llm，不能修改版本配置或混装 2.0 的 wheel。
 

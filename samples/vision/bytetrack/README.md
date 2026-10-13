@@ -155,4 +155,4 @@ Use the [C++ runtime](runtime/cpp/README.md) for crowded scenes or multiple vide
 <a id="license"></a>
 ## License
 
-Repository scripts use Apache-2.0. ByteTrack source and model weights retain their upstream licenses. See [`runtime/python/TRACKER_SOURCE_MAP.json`](./runtime/python/TRACKER_SOURCE_MAP.json) for tracker source attribution.
+Repository scripts use Apache-2.0. ByteTrack source and model weights retain their upstream licenses. The `runtime/python/tracker_backend/` tracker source originates from the upstream [ByteTrack project](https://github.com/ifzhang/ByteTrack); original source copyright notices are retained.

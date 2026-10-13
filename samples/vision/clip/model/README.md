@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# Model Artifacts — CLIP X5 encoder pair
+# Model Artifacts — CLIP encoder pair
 
 <a id="artifacts"></a>
 ## Artifacts

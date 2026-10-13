@@ -118,5 +118,5 @@ S100/S100P/S600 的 OE 容器、编译与安装命令见[转换指南](conversio
 <a id="license"></a>
 ## 许可
 
-示例代码遵循仓库 [LICENSE](../../../LICENSE)。TorchVision 源码采用 [BSD-3-Clause](https://github.com/pytorch/vision/blob/v0.21.0/LICENSE)，权重来自官方 COCO_V1 发布。ByteTrack 与 LAP 的来源见[跟踪器来源表](../bytetrack/runtime/python/TRACKER_SOURCE_MAP.json)及 [C++ 第三方许可](../bytetrack/runtime/cpp/THIRD_PARTY_LICENSES.md)。数据使用条件见 [COCO](https://cocodataset.org/#termsofuse)。
+示例代码遵循仓库 [LICENSE](../../../LICENSE)。TorchVision 源码采用 [BSD-3-Clause](https://github.com/pytorch/vision/blob/v0.21.0/LICENSE)，权重来自官方 COCO_V1 发布。ByteTrack 与 LAP 的来源见 [ByteTrack 示例许可说明](../bytetrack/README_cn.md#license)及 [C++ 第三方许可](../bytetrack/runtime/cpp/THIRD_PARTY_LICENSES.md)。数据使用条件见 [COCO](https://cocodataset.org/#termsofuse)。
 

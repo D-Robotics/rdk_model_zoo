@@ -1,7 +1,7 @@
 [English](README.md) | 简体中文
 
 <a id="overview"></a>
-# 在 RDK S100 / S100P / S600 上运行 MiniCPM5-2B
+# MiniCPM5-2B
 
 本示例使用 S600 BPU 和 OELLM Runtime 运行 OpenBMB MiniCPM5-2B 文本生成，提供 C++ 命令行程序、带 SHA256 校验的模型下载、转换说明和WikiText2 评估命令和参考数据。
 
