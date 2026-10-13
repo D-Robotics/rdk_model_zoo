@@ -52,6 +52,56 @@ variants:
     value:
       zh: MP4，H.264 High 890 × 1920 yuv420p @ 30 fps + AAC 16 kHz 单声道
       en: MP4, H.264 High 890x1920 yuv420p at 30 fps plus AAC 16 kHz mono
+  - label:
+      zh: 运行时
+      en: Runtime
+    value:
+      zh: 提供 Python 运行时；未提供 C++ 运行时。
+      en: Python runtime available; C++ runtime not provided.
+  - label:
+      zh: 编码器 encoder（每个语句窗口一次）
+      en: Encoder (once per utterance window)
+    value:
+      zh: 输入 [1,400,560]（NTF：400 个 LFR 特征 × 560 维 fbank 特征，LFR 步进 60 ms，约对应 24 秒音频）→ 输出 [1,400,50,512]（第 3 维为 50 个编码器层、512 隐藏维）；参数 157,974,624（导出图学习张量口径）；142.4973824 GFLOPs／每次窗口调用（FLOPs = 2×MACs）。
+      en: Input [1,400,560] (NTF — 400 LFR features x 560-dim fbank features at a 60 ms LFR step,
+        spanning ~24 s of audio) -> output [1,400,50,512] (axis 3 = 50 stacked encoder layers,
+        512-dim hidden); 157,974,624 parameters (exported-graph learned tensors); 142.4973824
+        GFLOPs per window call (FLOPs = 2 x MACs).
+  - label:
+      zh: 音频到嘴型 audio2mouth（滑窗调用）
+      en: Audio2Mouth (sliding-window calls)
+    value:
+      zh: 输入 [1,30,50,512]（批量 × 30 视频帧 × 50 编码器层 × 512）→ 输出 [1,30,32] 嘴型参数（另有运行时未使用的 [1,30,256] 辅助特征）；参数 32,599,456（上游 ONNX 导出图学习张量）；1.9516416 GFLOPs／每次滑窗调用（1 秒窗，标称步进 0.4 秒 = 12 帧，尾部重锚；捆绑 166 帧示例共 13 次调用）。
+      en: Input [1,30,50,512] (batch x 30 video frames x 50 encoder layers x 512) -> output
+        [1,30,32] mouth parameters (plus a runtime-unused [1,30,256] aux feat); 32,599,456
+        parameters (upstream ONNX exported-graph learned tensors); 1.9516416 GFLOPs per
+        sliding-window call (1 s window, nominal 0.4 s = 12-frame advance, tail re-anchor;
+        13 calls for the bundled 166-frame example).
+  - label:
+      zh: 参考帧编码 net_encode（初始化时一次）
+      en: Reference encoder net_encode (once at init)
+    value:
+      zh: 输入 [1,3,384,384] RGB → 输出 4 层特征金字塔 f0–f3；参数 3,342（训练源 TorchScript 口径）；0.02838528 GFLOPs／每个参考帧（渲染器初始化时计算一次并全程复用）。
+      en: Input [1,3,384,384] RGB -> 4-level feature pyramid f0-f3; 3,342 parameters (trained
+        TorchScript source); 0.02838528 GFLOPs per reference frame (computed once at renderer
+        init and reused for every output frame).
+  - label:
+      zh: 逐帧解码 net_decode（每输出帧一次）
+      en: Frame decoder net_decode (once per output frame)
+    value:
+      zh: 输入 f0–f3 金字塔 + [1,32] 嘴型参数 → 输出 [1,3,384,384] 嘴部图像；参数 244,764（训练源口径，不含 2,560 个非学习的替换反卷积权重）；2.00681472 GFLOPs／每输出帧（30 fps）。
+      en: Input f0-f3 pyramid + [1,32] mouth parameters -> [1,3,384,384] mouth image; 244,764
+        parameters (trained source, excluding the 2,560 non-learned replacement ConvTranspose
+        weights); 2.00681472 GFLOPs per output frame at 30 fps.
+  - label:
+      zh: 计算量口径
+      en: Compute accounting
+    value:
+      zh: 各 GFLOPs 均按 FLOPs = 2×MACs 统计该组件每次调用中的 Conv/ConvTranspose/Gemm/MatMul；整条管线的计算量取决于音频长度决定的滑窗次数与参考帧缓存（net_encode 仅初始化时执行一次）。
+      en: Each GFLOPs figure counts Conv/ConvTranspose/Gemm/MatMul at FLOPs = 2 x MACs for one call
+        of that component under its stated cadence; total pipeline work depends on the window
+        count set by the audio length and on the cached reference features (net_encode runs once
+        at renderer init).
   platforms:
   - platform: s100
     status: available
@@ -69,22 +119,32 @@ variants:
           license for the pretrained weights, which users must obtain themselves.
       guide_url: https://github.com/D-Robotics/rdk_model_zoo/tree/f77bcea4c203f935efbafe0374cb21c9f3d4cd28/samples/vision/lite_avatar/model
     verification:
-      zh: S100（nash-e）板端实测：run.sh 渲染 166 帧 890×1920 @ 30 fps 的 H.264+AAC MP4（exit 0）。渲染段 10.85 s（15.30
-        fps，覆盖 166 帧渲染、编码收尾与 FFmpeg 封装，不含背景解码、音频特征与模型阶段 1.28 s、渲染器初始化 10.25 s），整条 CLI 28.6
-        s；背景解码（整文件解码 1 次，151 次取图中 150 帧有效背景帧）与输出编码（166 帧硬件编码）均在 VPU（UCP 3.13.6 · BPULib
-        2.2.15 · DNN 3.13.6）。单次示例测量。
-      en: Measured on an S100 (nash-e) board, run.sh renders a 166-frame 890x1920 30 fps H.264+AAC
-        MP4 (exit 0). The render phase takes 10.85 s (15.30 fps, covering the 166 rendered frames,
-        the encoder drain and the FFmpeg remux; it excludes background decode, the 1.28 s
-        audio-features-and-models phase and the 10.25 s renderer init) while the whole CLI
-        invocation takes 28.6 s; background decode (one whole-file decode; 151 get_img calls yield
-        150 valid background frames) and output encoding (166 hardware-encoded frames) both run on
-        the VPU (UCP 3.13.6, BPULib 2.2.15, DNN 3.13.6). Single example measurement.
+      zh: S100（nash-e）实测：3 次冷 CLI 整条 29.373–32.152 s，编码渲染段 14.5–15.21 fps，输出逐字节一致；保留渲染器的 2 次调用为未编码帧生成，均值 21.873
+        fps（不含音频特征、初始化与编码）。结构化验证覆盖 80 个标定输入、187 个输出，全部有限且形状一致，4 阶段余弦门通过；166 帧全量对比 pre-encode 全帧 PSNR 57.6626（ROI
+        46.1668）、post-encode 组合路径全帧 PSNR 45.155，方法为 PSNR 相似度，非唇形同步精度或真值。提供 Python 运行时，未提供 C++ 运行时；逐阶段 SDK
+        吞吐（inf/s）与完整协议见 sample-evidence/lite-avatar-s100-python-validation.json。
+      en: Measured on an S100 (nash-e) board — three cold CLI runs take 29.373–32.152 s whole-CLI at a 14.5–15.21
+        fps encoded render phase with byte-identical outputs; the two retained-renderer calls do unencoded frame
+        generation at a 21.873 fps mean (excluding the audio-features phase, renderer init and encoding).
+        Structured validation covers 80 calibration inputs and 187 outputs, all finite with equal shapes, and the
+        four-stage cosine gate passes; the full 166-frame comparison reaches pre-encode full-frame PSNR 57.6626
+        (ROI 46.1668) and combined-path post-encode full-frame PSNR 45.155 — PSNR similarity, not lip-sync
+        accuracy or ground truth. Python runtime is provided; C++ runtime is not provided. Per-stage SDK
+        throughput (inferences/s) and full protocols ship in
+        sample-evidence/lite-avatar-s100-python-validation.json.
     evidence:
     - label:
         zh: 板端运行证据摘要
         en: Board run evidence summary
       url: sample-evidence/lite-avatar-s100.json
+    - label:
+        zh: Python 运行时逐阶段验证数据
+        en: Python runtime per-stage validation data
+      url: sample-evidence/lite-avatar-s100-python-validation.json
+    - label:
+        zh: 组件参数量与算力元数据
+        en: Component parameter and compute metadata
+      url: sample-evidence/lite-avatar-components.json
     quickstart:
     - title:
         zh: 宿主机一次性：下载并校验上游示例数据
@@ -129,22 +189,32 @@ variants:
           license for the pretrained weights, which users must obtain themselves.
       guide_url: https://github.com/D-Robotics/rdk_model_zoo/tree/f77bcea4c203f935efbafe0374cb21c9f3d4cd28/samples/vision/lite_avatar/model
     verification:
-      zh: S100P（nash-m）板端实测：run.sh 渲染 166 帧 890×1920 @ 30 fps 的 H.264+AAC MP4（exit 0）。渲染段 8.89 s（18.66
-        fps，覆盖 166 帧渲染、编码收尾与 FFmpeg 封装，不含背景解码、音频特征与模型阶段 0.87 s、渲染器初始化 9.10 s），整条 CLI 24.7
-        s；背景解码（整文件解码 1 次，151 次取图中 150 帧有效背景帧）与输出编码（166 帧硬件编码）均在 VPU（UCP 3.13.6 · BPULib
-        2.2.15 · DNN 3.13.6）。单次示例测量。
-      en: Measured on an S100P (nash-m) board, run.sh renders a 166-frame 890x1920 30 fps H.264+AAC
-        MP4 (exit 0). The render phase takes 8.89 s (18.66 fps, covering the 166 rendered frames,
-        the encoder drain and the FFmpeg remux; it excludes background decode, the 0.87 s
-        audio-features-and-models phase and the 9.10 s renderer init) while the whole CLI
-        invocation takes 24.7 s; background decode (one whole-file decode; 151 get_img calls yield
-        150 valid background frames) and output encoding (166 hardware-encoded frames) both run on
-        the VPU (UCP 3.13.6, BPULib 2.2.15, DNN 3.13.6). Single example measurement.
+      zh: S100P（nash-m）实测：3 次冷 CLI 整条 23.674–23.756 s，编码渲染段 18.59–18.68 fps，输出逐字节一致；保留渲染器的 2 次调用为未编码帧生成，均值 28.253
+        fps（不含音频特征、初始化与编码）。结构化验证覆盖 80 个标定输入、187 个输出，全部有限且形状一致，4 阶段余弦门通过；166 帧全量对比 pre-encode 全帧 PSNR 57.6817（ROI
+        46.1859）、post-encode 组合路径全帧 PSNR 45.157，方法为 PSNR 相似度，非唇形同步精度或真值。提供 Python 运行时，未提供 C++ 运行时；逐阶段 SDK
+        吞吐（inf/s）与完整协议见 sample-evidence/lite-avatar-s100p-python-validation.json。
+      en: Measured on an S100P (nash-m) board — three cold CLI runs take 23.674–23.756 s whole-CLI at an 18.59–18.68
+        fps encoded render phase with byte-identical outputs; the two retained-renderer calls do unencoded frame
+        generation at a 28.253 fps mean (excluding the audio-features phase, renderer init and encoding).
+        Structured validation covers 80 calibration inputs and 187 outputs, all finite with equal shapes, and the
+        four-stage cosine gate passes; the full 166-frame comparison reaches pre-encode full-frame PSNR 57.6817
+        (ROI 46.1859) and combined-path post-encode full-frame PSNR 45.157 — PSNR similarity, not lip-sync
+        accuracy or ground truth. Python runtime is provided; C++ runtime is not provided. Per-stage SDK
+        throughput (inferences/s) and full protocols ship in
+        sample-evidence/lite-avatar-s100p-python-validation.json.
     evidence:
     - label:
         zh: 板端运行证据摘要
         en: Board run evidence summary
       url: sample-evidence/lite-avatar-s100p.json
+    - label:
+        zh: Python 运行时逐阶段验证数据
+        en: Python runtime per-stage validation data
+      url: sample-evidence/lite-avatar-s100p-python-validation.json
+    - label:
+        zh: 组件参数量与算力元数据
+        en: Component parameter and compute metadata
+      url: sample-evidence/lite-avatar-components.json
     quickstart:
     - title:
         zh: 宿主机一次性：下载并校验上游示例数据
@@ -189,22 +259,32 @@ variants:
           license for the pretrained weights, which users must obtain themselves.
       guide_url: https://github.com/D-Robotics/rdk_model_zoo/tree/f77bcea4c203f935efbafe0374cb21c9f3d4cd28/samples/vision/lite_avatar/model
     verification:
-      zh: S600 64GB（nash-p）板端实测：run.sh 渲染 166 帧 890×1920 @ 30 fps 的 H.264+AAC MP4（exit 0）。渲染段 8.09
-        s（20.51 fps，覆盖 166 帧渲染、编码收尾与 FFmpeg 封装，不含背景解码、音频特征与模型阶段 1.10 s、渲染器初始化 8.84 s），整条 CLI
-        28.3 s；背景解码（整文件解码 1 次，151 次取图中 150 帧有效背景帧）与输出编码（166 帧硬件编码）均在 VPU（UCP 3.13.6 ·
-        BPULib 2.2.15 · DNN 3.13.6）。单次示例测量。
-      en: Measured on an S600 64GB (nash-p) board, run.sh renders a 166-frame 890x1920 30 fps
-        H.264+AAC MP4 (exit 0). The render phase takes 8.09 s (20.51 fps, covering the 166 rendered
-        frames, the encoder drain and the FFmpeg remux; it excludes background decode, the 1.10 s
-        audio-features-and-models phase and the 8.84 s renderer init) while the whole CLI
-        invocation takes 28.3 s; background decode (one whole-file decode; 151 get_img calls yield
-        150 valid background frames) and output encoding (166 hardware-encoded frames) both run on
-        the VPU (UCP 3.13.6, BPULib 2.2.15, DNN 3.13.6). Single example measurement.
+      zh: S600 64GB（nash-p）实测：3 次冷 CLI 整条 27.392–28.228 s，编码渲染段 20.34–20.47 fps，输出逐字节一致；保留渲染器的 2 次调用为未编码帧生成，均值
+        30.502 fps（不含音频特征、初始化与编码）。结构化验证覆盖 80 个标定输入、187 个输出，全部有限且形状一致，4 阶段余弦门通过；166 帧全量对比 pre-encode 全帧 PSNR
+        57.6823（ROI 46.1865）、post-encode 组合路径全帧 PSNR 45.157，方法为 PSNR 相似度，非唇形同步精度或真值。提供 Python 运行时，未提供 C++ 运行时；逐阶段
+        SDK 吞吐（inf/s）与完整协议见 sample-evidence/lite-avatar-s600-python-validation.json。
+      en: Measured on an S600 64GB (nash-p) board — three cold CLI runs take 27.392–28.228 s whole-CLI at a
+        20.34–20.47 fps encoded render phase with byte-identical outputs; the two retained-renderer calls do
+        unencoded frame generation at a 30.502 fps mean (excluding the audio-features phase, renderer init and
+        encoding). Structured validation covers 80 calibration inputs and 187 outputs, all finite with equal
+        shapes, and the four-stage cosine gate passes; the full 166-frame comparison reaches pre-encode full-frame
+        PSNR 57.6823 (ROI 46.1865) and combined-path post-encode full-frame PSNR 45.157 — PSNR similarity, not
+        lip-sync accuracy or ground truth. Python runtime is provided; C++ runtime is not provided. Per-stage SDK
+        throughput (inferences/s) and full protocols ship in
+        sample-evidence/lite-avatar-s600-python-validation.json.
     evidence:
     - label:
         zh: 板端运行证据摘要
         en: Board run evidence summary
       url: sample-evidence/lite-avatar-s600.json
+    - label:
+        zh: Python 运行时逐阶段验证数据
+        en: Python runtime per-stage validation data
+      url: sample-evidence/lite-avatar-s600-python-validation.json
+    - label:
+        zh: 组件参数量与算力元数据
+        en: Component parameter and compute metadata
+      url: sample-evidence/lite-avatar-components.json
     quickstart:
     - title:
         zh: 宿主机一次性：下载并校验上游示例数据
@@ -269,36 +349,15 @@ missing:
     zh: 正式渲染基准
     en: Formal render benchmark
   note:
-    zh: 现有数据为单次示例测量（渲染段与整条 CLI 两种口径均已记录）；预热后多次运行的均值与波动、以及并发口径未测量。30 fps 为输出视频封装帧率，不代表渲染性能。
-    en: The recorded numbers come from single example measurements (both the render-phase and
-      whole-CLI scopes); warmed repeated-run means and variance, and any concurrency protocol, are
-      not measured. The 30 fps value is the muxed output cadence, not render performance.
-- field: float-vs-board-quality
-  status: missing
-  title:
-    zh: 浮点与板端全量质量对比
-    en: Full float-vs-board quality
-  note:
-    zh: 已收录：PTQ 模拟 FP32 对比套件（各阶段示例数 3/17/30/30）、S100P 与 S600 板端 4 阶段对 FP32 单样本余弦相似度达标（门限
-      0.95）、音频前端特征 3 组逐位一致。本站尚未收录：S100 对应的板端阶段记录、全量帧级浮点对板端 PSNR/MAE 对比与唇形同步评测；唇形同步需单独的评测方法（随示例提供的帧评测器仅计算
-      PSNR/MAE）。
-    en: Collected here are the PTQ-simulation FP32 comparison suite (3/17/30/30 examples per
-      stage), single-sample 4-stage BPU-vs-FP32 cosine similarity passing the 0.95 gate on S100P
-      and S600, and bitwise-equal audio-frontend features in 3 cases. Not yet collected on this
-      site are the matching S100 on-board stage records, a full frame-level float-vs-board
-      PSNR/MAE comparison and a lip-sync evaluation; lip sync needs its own method (the shipped
-      frame evaluator computes PSNR/MAE only).
-- field: model-size-and-compute
-  status: missing
-  title:
-    zh: 四阶段模型参数量与计算量
-    en: Per-stage parameters and compute
-  note:
-    zh: 四个组件模型在各自的分块/逐帧输入口径下尚无已登记的 parameter_count/GFLOPs 数值，本站未收录，也不以估算值代替；与已发布模型的正式标准对齐前需实测补齐。
-    en: No registered parameter_count/GFLOPs figures exist for the four component models under
-      their explicit per-block/per-frame input contracts; they are not collected on this site and
-      no estimates stand in. Measured values are required before full alignment with the published
-      released-model standards.
+    zh: 已测量：3 个目标各 3 次冷 CLI（整条与渲染段两种口径，输出逐字节一致）、每目标 1 次初始 + 2 次保留渲染器调用（未编码生成，不含编码）、以及 native
+      SDK 并发 1/2（共享 runtime 工作线程）逐阶段 3 轮数据（见 lite-avatar-s100/s100p/s600-python-validation.json）。未测量：视频输入的整链路双流并发端到端口径（与
+      SDK 工作线程并发属不同口径）。30 fps 为输出视频封装帧率，不代表渲染性能。
+    en: Measured — three cold CLI runs per target (whole-CLI and render-phase scopes, byte-identical
+      outputs), one initial + two retained-renderer calls per target (unencoded generation,
+      excluding encoding), and per-stage native SDK concurrency-1/2 rounds on shared-runtime
+      workers (see lite-avatar-s100/s100p/s600-python-validation.json). Not measured — a two-stream
+      video-input full-pipeline end-to-end protocol, which differs from the SDK worker concurrency.
+      The 30 fps value is the muxed output cadence, not render performance.
 - field: oe-conversion-reports
   status: missing
   title:
@@ -318,10 +377,10 @@ missing:
     en: There is no stable public download; the four HBMs are prepared from a local bundle or
       self-compiled per the pinned preparation guide, which also carries their SHA-256 digests.
 - field: cpp-runtime
-  status: not-applicable
+  status: missing
   title:
     zh: C++ 运行时
     en: C++ runtime
   note:
-    zh: 本示例仅提供 Python 运行时，无 C++ 端到端口径。
-    en: This sample ships a Python runtime only; no C++ end-to-end protocol applies.
+    zh: 本示例当前提供 Python 运行时；C++ 运行时及其端到端基准仍缺失。
+    en: A Python runtime is provided; the C++ runtime and its end-to-end benchmark remain unavailable.

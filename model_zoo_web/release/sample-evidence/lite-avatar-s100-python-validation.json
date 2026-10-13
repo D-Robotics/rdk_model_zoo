@@ -1,0 +1,792 @@
+{
+ "sample": "lite_avatar",
+ "generated_date": "2026-10-13",
+ "scope_statement": "Delivery scope: Python runtime; C++ runtime is not provided. PSNR/MAE are numerical/visual similarity metrics, not lip-sync accuracy or ground truth.",
+ "publication_provenance": {
+  "summary_source_sha256": "00bcd4f8ea71d2e63ce30cb09ecc4f2fdc82445e8440a04a1f4ae56e85c28199",
+  "related_single_run_evidence": "sample-evidence/lite-avatar-s100.json",
+  "parity_review": "Root review 2026-10-13: 240 cases / 561 outputs verified finite with matching shapes; aggregates recomputed exactly (within 1e-7)",
+  "delivery_note": "Board results were produced from tested_source_commit f77bcea4c203f935efbafe0374cb21c9f3d4cd28. The doc-only delivery commit ac81e811517b5f3646e7bab4ab7d416d669a022f (docstring AST-equivalence, CI green on develop) postdates them; its bytes were not board-tested."
+ },
+ "source_identity": {
+  "tested_source_commit": "f77bcea4c203f935efbafe0374cb21c9f3d4cd28",
+  "runtime_python_sha256": {
+   "main.py": "c403ef87bf616b1e8efcabd7b3e50dde1c6e6f99935a34a087436eec263443c2",
+   "cli.py": "9dedfdffe03d1a51634019562765a0113420bc3c8a8a1155c3d1cb31cc4db61b",
+   "avatar.py": "a79bdcbb6b8a6d858edb33da59c46f0c6c6977887fc0187c57279fd837c90cd8",
+   "frontend.py": "03b8e8c5d1194a231a2c6f8309c17c56923d50fa9ec2f799e838b8807a21fc10",
+   "media_worker.py": "7dd096d4dd7903539388166c98ab800b7ad56633889fa91e82ec90f92ec5bc3c"
+  }
+ },
+ "runtime_environment": {
+  "hbm_runtime": {
+   "s100": "0.1.0.post1",
+   "s100p": "0.1.0.post1",
+   "s600": "0.2.0"
+  },
+  "banners": {
+   "UCP": "3.13.6",
+   "DNN": "3.13.6_(4.7.5 HBRT)",
+   "BPULib": "2.2.15 [f21ee84]"
+  },
+  "numpy": "1.26.4",
+  "board_python": {
+   "s100": "3.10.12",
+   "s100p": "3.10.12",
+   "s600": "3.12.3"
+  },
+  "thread_policy": "OPENBLAS_NUM_THREADS=1, OMP_NUM_THREADS=4, torch.set_num_threads(2) (the shipped entry's policy)"
+ },
+ "native_model_runtime": {
+  "attempt_basename": "attempt-20261013T094311Z-full",
+  "bench_script_sha256": "7cd82b70780b9cdcd76e368552b32341ae08157bd2689b654377a65c1f133a36",
+  "hbm_runtime_version": "0.1.0.post1",
+  "concurrency_note": "conc=2 mode: two Python worker threads submit to one shared loaded runtime; observed per-call latency roughly doubles while aggregate throughput stays similar (descriptive, no driver-trace causal claim)",
+  "stages": {
+   "audio_encoder": {
+    "input_case": "frozen calibration case 0 (sha-bound in raw JSON)",
+    "conc1": {
+     "timing_scope": "SDK-call wall (per-submission start to result ready)",
+     "protocol": "one loaded runtime: 20 warmup calls then 3 rounds x 200 measured submissions (serial)",
+     "rounds": [
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 39.6539,
+        "min": 39.1751,
+        "p50": 39.6382,
+        "p95": 40.1931,
+        "max": 42.3267
+       },
+       "throughput_inferences_per_s": 25.215
+      },
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 39.5838,
+        "min": 39.1688,
+        "p50": 39.6019,
+        "p95": 39.9184,
+        "max": 41.483
+       },
+       "throughput_inferences_per_s": 25.26
+      },
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 39.6465,
+        "min": 39.1509,
+        "p50": 39.6342,
+        "p95": 40.2632,
+        "max": 43.4482
+       },
+       "throughput_inferences_per_s": 25.22
+      }
+     ]
+    },
+    "conc2": {
+     "timing_scope": "SDK-call wall (per-submission start to result ready)",
+     "protocol": "one loaded runtime: 20 warmup calls then 3 rounds x 200 measured submissions (200 total per round; two Python worker threads, 100 timed submissions each, on the SAME runtime)",
+     "rounds": [
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 78.0555,
+        "min": 39.2213,
+        "p50": 79.0715,
+        "p95": 120.8891,
+        "max": 237.3825
+       },
+       "throughput_inferences_per_s": 25.23
+      },
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 77.866,
+        "min": 39.18,
+        "p50": 79.1018,
+        "p95": 120.857,
+        "max": 159.7556
+       },
+       "throughput_inferences_per_s": 25.234
+      },
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 75.622,
+        "min": 39.1826,
+        "p50": 79.0826,
+        "p95": 118.9754,
+        "max": 277.8265
+       },
+       "throughput_inferences_per_s": 25.253
+      }
+     ]
+    },
+    "tool_control_thread1": {
+     "scope": "cold-process hrt_model_exec perf control (load + first calls included; the tool exposes no same-process warmup flag); average-latency/FPS only, never a percentile source",
+     "average_latency_ms": 37.78,
+     "inferences_per_s": 26.442
+    },
+    "tool_control_thread2": {
+     "scope": "cold-process hrt_model_exec perf control (load + first calls included; the tool exposes no same-process warmup flag); average-latency/FPS only, never a percentile source",
+     "average_latency_ms": 74.535,
+     "inferences_per_s": 26.746
+    }
+   },
+   "audio2mouth": {
+    "input_case": "frozen calibration case 0 (sha-bound in raw JSON)",
+    "conc1": {
+     "timing_scope": "SDK-call wall (per-submission start to result ready)",
+     "protocol": "one loaded runtime: 20 warmup calls then 3 rounds x 200 measured submissions (serial)",
+     "rounds": [
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 2.9932,
+        "min": 2.812,
+        "p50": 2.9449,
+        "p95": 3.3425,
+        "max": 3.9326
+       },
+       "throughput_inferences_per_s": 333.631
+      },
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 2.9863,
+        "min": 2.8117,
+        "p50": 2.9565,
+        "p95": 3.286,
+        "max": 3.4963
+       },
+       "throughput_inferences_per_s": 334.404
+      },
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 3.0059,
+        "min": 2.8193,
+        "p50": 2.9528,
+        "p95": 3.3422,
+        "max": 4.9991
+       },
+       "throughput_inferences_per_s": 332.206
+      }
+     ]
+    },
+    "conc2": {
+     "timing_scope": "SDK-call wall (per-submission start to result ready)",
+     "protocol": "one loaded runtime: 20 warmup calls then 3 rounds x 200 measured submissions (200 total per round; two Python worker threads, 100 timed submissions each, on the SAME runtime)",
+     "rounds": [
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 5.7765,
+        "min": 2.8127,
+        "p50": 2.9985,
+        "p95": 14.824,
+        "max": 20.6054
+       },
+       "throughput_inferences_per_s": 334.437
+      },
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 5.9872,
+        "min": 2.8504,
+        "p50": 3.0563,
+        "p95": 15.3277,
+        "max": 33.2555
+       },
+       "throughput_inferences_per_s": 321.816
+      },
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 5.6521,
+        "min": 2.8379,
+        "p50": 3.0257,
+        "p95": 15.2896,
+        "max": 26.8475
+       },
+       "throughput_inferences_per_s": 327.194
+      }
+     ]
+    },
+    "tool_control_thread1": {
+     "scope": "cold-process hrt_model_exec perf control (load + first calls included; the tool exposes no same-process warmup flag); average-latency/FPS only, never a percentile source",
+     "average_latency_ms": 2.122,
+     "inferences_per_s": 467.038
+    },
+    "tool_control_thread2": {
+     "scope": "cold-process hrt_model_exec perf control (load + first calls included; the tool exposes no same-process warmup flag); average-latency/FPS only, never a percentile source",
+     "average_latency_ms": 3.631,
+     "inferences_per_s": 542.726
+    }
+   },
+   "facegen_encoder": {
+    "input_case": "frozen calibration case 0 (sha-bound in raw JSON)",
+    "conc1": {
+     "timing_scope": "SDK-call wall (per-submission start to result ready)",
+     "protocol": "one loaded runtime: 20 warmup calls then 3 rounds x 200 measured submissions (serial)",
+     "rounds": [
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 1.862,
+        "min": 1.5654,
+        "p50": 1.7595,
+        "p95": 2.64,
+        "max": 4.2023
+       },
+       "throughput_inferences_per_s": 534.708
+      },
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 1.8004,
+        "min": 1.5553,
+        "p50": 1.7581,
+        "p95": 2.1129,
+        "max": 3.6309
+       },
+       "throughput_inferences_per_s": 552.472
+      },
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 1.8098,
+        "min": 1.5846,
+        "p50": 1.7369,
+        "p95": 2.2116,
+        "max": 3.6855
+       },
+       "throughput_inferences_per_s": 550.138
+      }
+     ]
+    },
+    "conc2": {
+     "timing_scope": "SDK-call wall (per-submission start to result ready)",
+     "protocol": "one loaded runtime: 20 warmup calls then 3 rounds x 200 measured submissions (200 total per round; two Python worker threads, 100 timed submissions each, on the SAME runtime)",
+     "rounds": [
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 3.4231,
+        "min": 1.6061,
+        "p50": 1.8245,
+        "p95": 12.6828,
+        "max": 24.4796
+       },
+       "throughput_inferences_per_s": 543.978
+      },
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 3.0564,
+        "min": 1.5806,
+        "p50": 1.7858,
+        "p95": 12.8464,
+        "max": 19.4744
+       },
+       "throughput_inferences_per_s": 553.499
+      },
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 3.1842,
+        "min": 1.5707,
+        "p50": 1.8037,
+        "p95": 12.3992,
+        "max": 17.8851
+       },
+       "throughput_inferences_per_s": 544.16
+      }
+     ]
+    },
+    "tool_control_thread1": {
+     "scope": "cold-process hrt_model_exec perf control (load + first calls included; the tool exposes no same-process warmup flag); average-latency/FPS only, never a percentile source",
+     "average_latency_ms": 0.844,
+     "inferences_per_s": 1154.961
+    },
+    "tool_control_thread2": {
+     "scope": "cold-process hrt_model_exec perf control (load + first calls included; the tool exposes no same-process warmup flag); average-latency/FPS only, never a percentile source",
+     "average_latency_ms": 1.06,
+     "inferences_per_s": 1839.605
+    }
+   },
+   "facegen_decoder": {
+    "input_case": "frozen calibration case 0 (sha-bound in raw JSON)",
+    "conc1": {
+     "timing_scope": "SDK-call wall (per-submission start to result ready)",
+     "protocol": "one loaded runtime: 20 warmup calls then 3 rounds x 200 measured submissions (serial)",
+     "rounds": [
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 21.9977,
+        "min": 20.8293,
+        "p50": 21.8287,
+        "p95": 23.7107,
+        "max": 27.3933
+       },
+       "throughput_inferences_per_s": 45.45
+      },
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 21.877,
+        "min": 21.0641,
+        "p50": 21.6764,
+        "p95": 23.3841,
+        "max": 24.5726
+       },
+       "throughput_inferences_per_s": 45.7
+      },
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 21.9994,
+        "min": 20.8912,
+        "p50": 21.7898,
+        "p95": 23.737,
+        "max": 26.6576
+       },
+       "throughput_inferences_per_s": 45.446
+      }
+     ]
+    },
+    "conc2": {
+     "timing_scope": "SDK-call wall (per-submission start to result ready)",
+     "protocol": "one loaded runtime: 20 warmup calls then 3 rounds x 200 measured submissions (200 total per round; two Python worker threads, 100 timed submissions each, on the SAME runtime)",
+     "rounds": [
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 43.2513,
+        "min": 21.0573,
+        "p50": 43.562,
+        "p95": 67.6221,
+        "max": 113.539
+       },
+       "throughput_inferences_per_s": 45.652
+      },
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 43.2118,
+        "min": 21.0081,
+        "p50": 43.6038,
+        "p95": 68.2547,
+        "max": 109.0358
+       },
+       "throughput_inferences_per_s": 45.572
+      },
+      {
+       "status": "complete",
+       "completed": 200,
+       "submitted": 200,
+       "latency_ms": {
+        "mean": 42.7795,
+        "min": 21.0981,
+        "p50": 44.0675,
+        "p95": 70.0928,
+        "max": 218.5028
+       },
+       "throughput_inferences_per_s": 45.038
+      }
+     ]
+    },
+    "tool_control_thread1": {
+     "scope": "cold-process hrt_model_exec perf control (load + first calls included; the tool exposes no same-process warmup flag); average-latency/FPS only, never a percentile source",
+     "average_latency_ms": 20.228,
+     "inferences_per_s": 49.171
+    },
+    "tool_control_thread2": {
+     "scope": "cold-process hrt_model_exec perf control (load + first calls included; the tool exposes no same-process warmup flag); average-latency/FPS only, never a percentile source",
+     "average_latency_ms": 30.964,
+     "inferences_per_s": 64.21
+    }
+   }
+  },
+  "hbm_sha256": {
+   "lite_avatar_encoder_400x560_s100.hbm": "0a6833a1e24d9f407e4a7662c305c6b292f2d947aef03adce2043bec1091aef0",
+   "lite_avatar_audio2mouth_30x50x512_s100.hbm": "ddded3350ef1e9c8e068263d841b3a15a1a5f59b027c7d50f6dd3c8985fa50e5",
+   "lite_avatar_net_encode_384x384_s100.hbm": "b244f61b63bbfdfb219bf03270cb19b9a7a0d8e1604dbbc6fb0591956b673ecb",
+   "lite_avatar_net_decode_inorm_fullrange_384x384_s100.hbm": "27e46cf9d6514f587d54c16cfa813583d89e59c9d5b5d4138efdf51e4d20df3c"
+  }
+ },
+ "full_pipeline": {
+  "attempt_basename": "attempt-20261013T095349Z",
+  "cold_cli_production_path": {
+   "description": "3 independent cold CLI runs: main.py --target with bundled wav and prepared avatar data; hardware VPU H.264 encode + FFmpeg AAC mux",
+   "runs": [
+    {
+     "exit_code": 0,
+     "wall_s": 32.152,
+     "render_window_s": 10.91,
+     "render_fps": 15.21,
+     "audio_features_models_s": 1.67,
+     "renderer_init_s": 11.42,
+     "avatar_mp4_sha256": "29ad103bdc89d028fcaef65aa62505ff9a7794b670244b2fe49d437f8b60165e"
+    },
+    {
+     "exit_code": 0,
+     "wall_s": 31.53,
+     "render_window_s": 11.45,
+     "render_fps": 14.5,
+     "audio_features_models_s": 1.38,
+     "renderer_init_s": 10.82,
+     "avatar_mp4_sha256": "29ad103bdc89d028fcaef65aa62505ff9a7794b670244b2fe49d437f8b60165e"
+    },
+    {
+     "exit_code": 0,
+     "wall_s": 29.373,
+     "render_window_s": 11.14,
+     "render_fps": 14.91,
+     "audio_features_models_s": 1.28,
+     "renderer_init_s": 10.32,
+     "avatar_mp4_sha256": "29ad103bdc89d028fcaef65aa62505ff9a7794b670244b2fe49d437f8b60165e"
+    }
+   ]
+  },
+  "pipeline_object_calls": {
+   "description": "3 predict() calls through ONE pipeline object: one INITIAL call (cold renderer construction included) + TWO retained-renderer calls; every call's lazy frames exhausted to 166 unencoded (per-frame generation; no encoder in this scope). Audio models reload from disk on every call by design (S100 memory discipline); the reload cost is inside the measured audio phase.",
+   "initial_call": {
+    "predict_s": 12.2541,
+    "audio_features_models_reload_s": 1.4493,
+    "renderer_init_s": 10.7302,
+    "frames_exhausted": 166,
+    "unencoded_render_s": 7.6825,
+    "unencoded_render_fps": 21.608,
+    "audio_released_after_predict": true
+   },
+   "retained_renderer_calls": [
+    {
+     "predict_s": 1.5311,
+     "audio_features_models_reload_s": 1.4535,
+     "renderer_init_s": 0.0,
+     "frames_exhausted": 166,
+     "unencoded_render_s": 7.6066,
+     "unencoded_render_fps": 21.823,
+     "audio_released_after_predict": true
+    },
+    {
+     "predict_s": 1.3321,
+     "audio_features_models_reload_s": 1.2582,
+     "renderer_init_s": 0.0,
+     "frames_exhausted": 166,
+     "unencoded_render_s": 7.5719,
+     "unencoded_render_fps": 21.923,
+     "audio_released_after_predict": true
+    }
+   ],
+   "retained_renderer_aggregate": {
+    "calls": 2,
+    "audio_features_models_reload_s_mean": 1.3558,
+    "unencoded_render_s_mean": 7.5892,
+    "unencoded_render_fps_mean": 21.873,
+    "predict_s_mean": 1.4316
+   }
+  }
+ },
+ "calibration_vs_float": {
+  "comparison": "board BPU HBM outputs vs FP32 ONNX reference (CPU) on the same frozen case inputs",
+  "structured_metrics_script_sha256": "75440321d3cafac622ef66269c89a3df7937ddcec2de5c51b7587cda3d577b43",
+  "float_graphs_sha256": {
+   "encoder": "d9431b49a925e37424b742ec0ebe08bd0fe8da27060c69b51806126eb29be8c7",
+   "a2m": "0109019daaeb347e85f951708dad2f38cb7d2f85b1affe600d27e232be0b8dd4",
+   "net_encode": "e55599f2603666384a010a9346ad6590a948f60bf8be264af7eb192575bd67da",
+   "net_decode": "5a4ca10e39c0e63b74ed60a7285dc9cce9d46630e7593f372983393886d88e31"
+  },
+  "onnxruntime": "1.19.0",
+  "per_output": {
+   "audio_encoder": {
+    "cases": 3,
+    "outputs": {
+     "hidden_states": {
+      "cases": 3,
+      "cosine_mean": 0.9965333,
+      "cosine_min": 0.99275854,
+      "cosine_max": 0.99862682,
+      "mae_mean": 40.65620409,
+      "mae_max": 40.70031233,
+      "maxabs_max": 94274.71875,
+      "all_finite": true,
+      "shape": [
+       1,
+       400,
+       50,
+       512
+      ],
+      "dtype": "float32"
+     }
+    }
+   },
+   "audio2mouth": {
+    "cases": 17,
+    "outputs": {
+     "output": {
+      "cases": 17,
+      "cosine_mean": 0.99896685,
+      "cosine_min": 0.99767846,
+      "cosine_max": 0.99937677,
+      "mae_mean": 0.00408316,
+      "mae_max": 0.00590735,
+      "maxabs_max": 0.04281428,
+      "all_finite": true,
+      "shape": [
+       1,
+       30,
+       32
+      ],
+      "dtype": "float32"
+     },
+     "feat": {
+      "cases": 17,
+      "cosine_mean": 0.99939632,
+      "cosine_min": 0.99599358,
+      "cosine_max": 0.99997925,
+      "mae_mean": 0.00468863,
+      "mae_max": 0.0185126,
+      "maxabs_max": 1.36536473,
+      "all_finite": true,
+      "shape": [
+       1,
+       30,
+       256
+      ],
+      "dtype": "float32"
+     }
+    }
+   },
+   "facegen_encoder": {
+    "cases": 30,
+    "outputs": {
+     "f0": {
+      "cases": 30,
+      "cosine_mean": 1.0,
+      "cosine_min": 1.0,
+      "cosine_max": 1.0,
+      "mae_mean": 7.12e-06,
+      "mae_max": 7.14e-06,
+      "maxabs_max": 1.526e-05,
+      "all_finite": true,
+      "shape": [
+       1,
+       3,
+       384,
+       384
+      ],
+      "dtype": "float32"
+     },
+     "f1": {
+      "cases": 30,
+      "cosine_mean": 0.99995378,
+      "cosine_min": 0.99995276,
+      "cosine_max": 0.99995444,
+      "mae_mean": 0.00139189,
+      "mae_max": 0.00139962,
+      "maxabs_max": 0.19523631,
+      "all_finite": true,
+      "shape": [
+       1,
+       16,
+       192,
+       192
+      ],
+      "dtype": "float32"
+     },
+     "f2": {
+      "cases": 30,
+      "cosine_mean": 0.9993656,
+      "cosine_min": 0.99934897,
+      "cosine_max": 0.99937498,
+      "mae_mean": 0.00455916,
+      "mae_max": 0.00457457,
+      "maxabs_max": 0.61211443,
+      "all_finite": true,
+      "shape": [
+       1,
+       32,
+       96,
+       96
+      ],
+      "dtype": "float32"
+     },
+     "f3": {
+      "cases": 30,
+      "cosine_mean": 0.99759055,
+      "cosine_min": 0.99753579,
+      "cosine_max": 0.99762836,
+      "mae_mean": 0.00725726,
+      "mae_max": 0.00729972,
+      "maxabs_max": 0.62731063,
+      "all_finite": true,
+      "shape": [
+       1,
+       64,
+       48,
+       48
+      ],
+      "dtype": "float32"
+     }
+    }
+   },
+   "facegen_decoder": {
+    "cases": 30,
+    "outputs": {
+     "mouth_image": {
+      "cases": 30,
+      "cosine_mean": 0.99994768,
+      "cosine_min": 0.99993926,
+      "cosine_max": 0.99995275,
+      "mae_mean": 0.00487327,
+      "mae_max": 0.00526647,
+      "maxabs_max": 0.43588638,
+      "all_finite": true,
+      "shape": [
+       1,
+       3,
+       384,
+       384
+      ],
+      "dtype": "float32"
+     }
+    }
+   }
+  },
+  "gate_note": "the sample comparator's 0.95 cosine gate was applied separately and passed 12/12 (recorded control logs); no ground-truth accuracy is claimed by these statistics"
+ },
+ "frames_166_float_vs_board": {
+  "pinned_inputs": {
+   "feats_sha256": "f4bc2349e5c78bbb507bb5ea3001ab0526eceb081ec6c19ac3d29cb3f8aca766",
+   "background_combined_sha256": "290e25d65a90e6bfd812c9fda14b11ce1303966c8d1bac3b16034cf17b9ff416",
+   "background_combined_note": "150-frame combined digest over the production VPU-decoded background; identical across all three targets"
+  },
+  "comparison_a_preencode": {
+   "scope": "board BPU pre-encode render vs FP32 ONNX float reference on pinned identical inputs — the neural/composition path",
+   "frame_count": 166,
+   "width": 890,
+   "height": 1920,
+   "face_roi_box_note": "face_box.txt as y1 y2 x1 x2 (integer pixel coords in the 890x1920 frame)",
+   "face_roi_box": {
+    "y1": 355,
+    "y2": 644,
+    "x1": 278,
+    "x2": 697,
+    "width": 419,
+    "height": 289
+   },
+   "full_frame": {
+    "psnr": {
+     "mean": 57.6626,
+     "min": 48.4839,
+     "max": 60.0169,
+     "perfect_frames_psnr_infinite": 0,
+     "frames": 166
+    },
+    "mae": {
+     "mean": 0.0486,
+     "min": 0.0409,
+     "max": 0.0961,
+     "perfect_frames_psnr_infinite": 0,
+     "frames": 166
+    },
+    "maxabs": {
+     "mean": 21.7349,
+     "min": 10.0,
+     "max": 67.0,
+     "perfect_frames_psnr_infinite": 0,
+     "frames": 166
+    }
+   },
+   "face_roi": {
+    "psnr": {
+     "mean": 46.1668,
+     "min": 36.9881,
+     "max": 48.5211,
+     "perfect_frames_psnr_infinite": 0,
+     "frames": 166
+    },
+    "mae": {
+     "mean": 0.6861,
+     "min": 0.5767,
+     "max": 1.3561,
+     "perfect_frames_psnr_infinite": 0,
+     "frames": 166
+    },
+    "maxabs": {
+     "mean": 21.7349,
+     "min": 10.0,
+     "max": 67.0,
+     "perfect_frames_psnr_infinite": 0,
+     "frames": 166
+    }
+   }
+  },
+  "comparison_b_post_encode_combined_path": {
+   "scope": "float reference vs the hardware-H.264-encoded MP4 after decode — a COMBINED comparison over the neural/composition path PLUS the codec; NOT a pure codec-only loss. Observed PSNR drop vs comparison A is reported with fixed inputs, without a causal decomposition.",
+   "frames_decoded": 166,
+   "full_frame_psnr_mean_db": 45.155,
+   "full_frame_psnr_min_db": 43.651,
+   "full_frame_mae_mean": 0.9796,
+   "face_roi_psnr_mean_db": 40.663,
+   "face_roi_mae_mean": 1.7476,
+   "per_run_determinism": "3 independent cold runs per target identical to 4 decimals"
+  },
+  "interpretation_guard": "PSNR/MAE are numerical/visual similarity statistics; NOT lip-sync accuracy, NOT ground truth; no acceptance threshold applied"
+ },
+ "targets_tested": [
+  "s100",
+  "s100p",
+  "s600"
+ ]
+}

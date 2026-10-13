@@ -445,12 +445,78 @@ class LiteAvatarRegistrationTest(unittest.TestCase):
         missing = {item["field"]: item["status"] for item in self.record["missing"]}
         self.assertEqual(missing, {
             "warmed-render-benchmark": "missing",
-            "float-vs-board-quality": "missing",
-            "model-size-and-compute": "missing",
             "oe-conversion-reports": "missing",
             "published-model-downloads": "missing",
-            "cpp-runtime": "not-applicable",
+            "cpp-runtime": "missing",
         })
+
+    def test_component_contract_rows_cadences_and_cpp_gap_visibility(self):
+        """The published compute rows carry the approved numbers under the
+        correct feature cadence, and the page states in human-visible data
+        that C++ is not provided."""
+        contract = self.record["variants"][0]["input_contract"]
+        rows = {row["label"]["en"]: row["value"]["en"] for row in contract}
+        self.assertIn("Runtime", rows)
+        self.assertEqual(rows["Runtime"], "Python runtime available; C++ runtime not provided.")
+        encoder = rows["Encoder (once per utterance window)"]
+        self.assertIn("157,974,624", encoder)
+        self.assertIn("142.4973824", encoder)
+        self.assertIn("400 LFR features", encoder)
+        self.assertIn("60 ms LFR step", encoder)
+        self.assertNotIn("13.3", encoder)
+        audio2mouth = rows["Audio2Mouth (sliding-window calls)"]
+        self.assertIn("32,599,456", audio2mouth)
+        self.assertIn("12-frame advance", audio2mouth)
+        self.assertIn("13 calls for the bundled 166-frame example", audio2mouth)
+        net_encode = rows["Reference encoder net_encode (once at init)"]
+        self.assertIn("3,342", net_encode)
+        self.assertIn("0.02838528", net_encode)
+        net_decode = rows["Frame decoder net_decode (once per output frame)"]
+        self.assertIn("244,764", net_decode)
+        self.assertIn("2.00681472", net_decode)
+        self.assertIn("2,560 non-learned replacement ConvTranspose", net_decode)
+        accounting = rows["Compute accounting"]
+        self.assertIn("FLOPs = 2 x MACs", accounting)
+        self.assertIn("Conv/ConvTranspose/Gemm/MatMul", accounting)
+        evidence_urls = [link["url"] for link in self.record["variants"][0]["platforms"][0]["evidence"]]
+        self.assertIn("sample-evidence/lite-avatar-components.json", evidence_urls)
+
+    def test_python_validation_evidence_and_honest_gap_notes(self):
+        """Each platform links its shipped structured Python-validation summary,
+        the summaries keep the sanitized identity and carry the quantified
+        float-vs-board comparison, and the gap list neither claims stale gaps
+        nor waives real ones."""
+        platforms = self.record["variants"][0]["platforms"]
+        shipped_root = SCRIPT.parents[1] / "release"
+        tested = "f77bcea4c203f935efbafe0374cb21c9f3d4cd28"
+        for platform in platforms:
+            urls = [link["url"] for link in platform["evidence"]]
+            summary_rel = f"sample-evidence/lite-avatar-{platform['platform']}-python-validation.json"
+            self.assertIn(summary_rel, urls)
+            summary = json.loads((shipped_root / summary_rel).read_text())
+            self.assertEqual(summary["targets_tested"], ["s100", "s100p", "s600"])
+            self.assertEqual(summary["source_identity"]["tested_source_commit"], tested)
+            self.assertNotIn("worktree", json.dumps(summary))
+            background = summary["frames_166_float_vs_board"]["pinned_inputs"]["background_combined_sha256"]
+            self.assertRegex(background, r"^[0-9a-f]{64}$")
+            self.assertIn("inferences_per_s", json.dumps(summary["native_model_runtime"]["stages"]))
+            # the quantified float-vs-board comparison lives in the JSON
+            frames = summary["frames_166_float_vs_board"]["comparison_a_preencode"]
+            self.assertEqual(frames["frame_count"], 166)
+            self.assertIn("psnr", frames["full_frame"])
+            self.assertIn("face_roi", frames)
+            guard = summary["frames_166_float_vs_board"]["interpretation_guard"]
+            self.assertIn("NOT lip-sync", guard)
+            self.assertIn("NOT ground truth", guard)
+            # the page verification keeps C++ explicit without protocol dumps
+            verification = platform["verification"]
+            self.assertIn("C++ runtime is not provided", verification["en"])
+            self.assertNotIn("25.215", verification["en"])
+        missing = {item["field"]: item for item in self.record["missing"]}
+        self.assertNotIn("float-vs-board-quality", missing)
+        warmed = missing["warmed-render-benchmark"]
+        self.assertIn("retained-renderer", warmed["note"]["en"])
+        self.assertIn("two-stream", warmed["note"]["en"])
 
 
 def git_output(root, *args):
