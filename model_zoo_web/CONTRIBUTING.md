@@ -197,40 +197,6 @@ variants:
   OE 数据关联，只做格式与一致性检查，且不会显示在网页上。
 - `released_at` 使用实际发布日期，不填写未来日期。
 
-### 样例条目（`profile: sample`）
-
-Catalog 同样收录来自 `samples/` 的可部署样例（例如 CPU 跟踪器、尚未形成正式
-模型发布的检测样例）。样例与已发布模型同站展示，但使用独立结构，构建器会拒绝
-在样例中混入已发布模型字段：
-
-- `sample_commit` 是钉住的 40 位 develop 提交；构建器用 `git cat-file` 验证
-  `sample_commit:sample_path` 在仓库中真实为一个目录，避免源码链接 404。
-- `pipeline` 取 `cpu_tracker`、`detector_cpu_tracker` 或 `neural_detector`，
-  配合本地化 `pipeline_note` 说明数据流。
-- 平台状态只允许 `available`；variant 层的 `model`/`input`/`performance`/
-  `accuracy` 和平台层的 `artifact`/`reports`/`accuracy`/`performance`/
-  `released_at` 一律禁止，需要正式发布时改走已发布模型结构。
-- `model_availability.status` 三选一：
-  - `published-download`：平台 `artifacts` 列出制品，URL 仅允许
-    `archive.d-robotics.cc` 或 `codeload.github.com`；`sha256_provenance`
-    为 `not-provided` 时必须省略 `sha256`。
-    拆分检测器的 `parta`/`partb` 成对发布，缺一半即拒绝；`parta`/`partb`/
-    `detector` 的 `format` 必须与交付线一致（X5 为 `bin`，S 系列为 `hbm`）。
-    记录可声明 `artifact_descriptor`（`sample_path` 下的模型描述 JSON），
-    构建器从 `sample_commit` 读取它的 `targets.<platform>.<role>`，
-    逐一核对已发布制品的 `file` 与 `sha256`，防止过期或错标文件混入。
-  - `manual-compile`：必须给出 HTTPS `guide_url`（指向转换指南），且不携带
-    `artifacts`。
-  - `no-neural-artifact`：仅允许 `role: upstream-source` 的源码包，禁止
-    bin/hbm/onnx/pt 等可部署模型格式。
-- 每个平台必须提供 `quickstart`（或记录级 `quickstart` 兜底），命令必须与
-  所选平台一致；`missing[]` 每项带本地化 `title`，页面展示标题而不是内部
-  字段名，`status` 为 `missing` 或 `not-applicable`。
-- 板级证据以小体积摘要随站点发布在 `release/sample-evidence/`（JSON/log，
-  单文件小于 64 KiB），链接写 `sample-evidence/<file>`；构建器与发布校验
-  都会确认该文件真实存在，`--preview` 校验还会确认它被复制进构建产物。
-  不得虚构精度、性能或 OE 报告数据。
-
 ## 5. 精度与性能口径
 
 ### 精度
@@ -300,9 +266,6 @@ Catalog 同样收录来自 `samples/` 的可部署样例（例如 CPU 跟踪器�
 - 图片应直接体现任务，不使用纯装饰性背景代替模型结果。
 - 如果封面展示检测框、分割结果或关键点，叠加结果必须来自真实推理。
 - 检测框、标签和置信度样式保持简洁，并确保中英文界面均不遮挡主体。
-
-样例条目的封面同样来自真实输出：板端标注图，或由真实跟踪输出绘制的时空图。
-生成方式与每个封面的来源哈希记录在 `release/assets/sample-covers.json`。
 
 OE 报告要求：
 

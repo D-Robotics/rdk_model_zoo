@@ -18,7 +18,7 @@
   }[metric] || { zh: metric, en: metric });
   const threadLabel = threads => threads === 1 ? 'Runtime 单路' : `Runtime ${threads} 路并发`;
   const formats = m => [...new Set(m.assets.map(asset => asset.format.toUpperCase()))].join(' + ');
-  const hardwareOf = (model, data) => model.releaseHardware || model.benchmark?.environment?.hardware || data.release.compatibility.hardware;
+  const hardwareOf = (model, data) => model.benchmark?.environment?.hardware || data.release.compatibility.hardware;
   // Preferred hardware display order: strongest S-series first, X5 last.
   const platformDisplayOrder = hardware => ({
     'RDK S600': 0, 'RDK S100P': 1, 'RDK S100': 2, 'RDK X5': 3,
@@ -90,24 +90,6 @@
     const step = (index, title, command) => `<li class="mz-quickstart-step"><div class="mz-quickstart-label"><span>${index}</span>${title}</div><div class="mz-code"><pre><code data-no-i18n>${esc(command)}</code></pre><button type="button" class="mz-copy" data-copy-code aria-label="复制命令" title="复制命令">${icon('copy')}</button></div></li>`;
     return `<section class="mz-section mz-quickstart"><div class="mz-section-heading"><h2>快速上手</h2>${model.source ? `<a href="${esc(model.source)}#quickstart" target="_blank" rel="noopener">完整说明</a>` : ''}</div><ol class="mz-quickstart-steps">${step(1, '下载模型', download)}${step(2, '运行推理', run)}</ol></section>`;
   }
-  // Sample-profile quickstart steps ship in the catalog record: localized
-  // titles plus commands validated against the pinned sample source.
-  function sampleQuickstart(model) {
-    const steps = model.sampleProfile?.quickstart || [];
-    if (!steps.length) return '';
-    const step = (index, entry) => `<li class="mz-quickstart-step"><div class="mz-quickstart-label"><span>${index}</span><span data-i18n-zh="${esc(entry.title?.zh || '')}" data-i18n-en="${esc(entry.title?.en || entry.title?.zh || '')}">${esc(entry.title?.zh || '')}</span></div><div class="mz-code"><pre><code data-no-i18n>${esc(entry.command)}</code></pre><button type="button" class="mz-copy" data-copy-code aria-label="复制命令" title="复制命令">${icon('copy')}</button></div></li>`;
-    return `<section class="mz-section mz-quickstart"><div class="mz-section-heading"><h2>快速上手</h2>${model.source ? `<a href="${esc(model.source)}" target="_blank" rel="noopener">完整说明</a>` : ''}</div><ol class="mz-quickstart-steps">${steps.map((entry, index) => step(index + 1, entry)).join('')}</ol></section>`;
-  }
-  // Sample profiles without a neural artifact (a pure CPU tracker) fetch
-  // pinned source instead of a model; keep the released-model wording for
-  // everything else.
-  function acquireButton(model) {
-    if (!model.assets?.length) return '';
-    const neuralFormats = ['bin', 'hbm', 'onnx', 'pt'];
-    const label = model.sampleProfile && !model.assets.some(asset => neuralFormats.includes(asset.format))
-      ? '获取源码' : '获取模型';
-    return `<button class="button" type="button" data-open-download>${icon('download')}${label}</button>`;
-  }
   const isRdkSampleSource = model => Boolean(model.source && (
     model.sourceType === 'repository'
     || /^https?:\/\/github\.com\/D-Robotics\/rdk_model_zoo\/tree\/[^/]+\/samples\/vision\/ultralytics_yolo(?:\/|$)/i.test(model.source)
@@ -117,27 +99,6 @@
     return external(model.source, '模型仓库', cls);
   };
   const developerResourceLinks = model => {
-    if (model.sampleProfile) {
-      // Sample profiles publish their own localized link list. The avatar
-      // pipeline additionally surfaces its shipped evidence summaries here,
-      // so they stay reachable in every layout (deduped by URL against the
-      // profile's own resources; the arrays themselves are not mutated).
-      const entries = [...(model.sampleProfile.resources || [])];
-      if (model.sampleProfile.pipeline === 'avatar_pipeline') {
-        const seen = new Set(entries.map(entry => entry.url));
-        for (const link of model.sampleProfile.evidence || []) {
-          if (!seen.has(link.url)) {
-            seen.add(link.url);
-            entries.push(link);
-          }
-        }
-      }
-      return entries.map(entry => {
-        const label = entry.label || {};
-        const attrs = `data-i18n-zh="${esc(label.zh || '')}" data-i18n-en="${esc(label.en || label.zh || '')}"`;
-        return external(entry.url, `<span ${attrs}>${esc(label.zh || '')}</span>`);
-      }).join('');
-    }
     if (!model.source || (model.releaseStatus === 'candidate' && !isRdkSampleSource(model))) return '';
     return `${external(model.source, '模型仓库')}${external(model.source + '/runtime/python', '运行文档')}${external(model.source + '/conversion', '模型转换')}`;
   };
@@ -145,21 +106,6 @@
     const p = window.MODEL_PROPERTIES?.[model.id] || {};
     const shape = value => Array.isArray(value) ? value.join(' × ') : String(value).replace(/\s+x\s+/g, ' × ');
     const row = (label, value, title = '') => `<dt>${label}</dt><dd${title ? ` title="${esc(title)}"` : ''}>${esc(value)}</dd>`;
-    if (model.sampleProfile) {
-      // Sample profiles carry their own localized contract rows instead of
-      // the released-model parameter figures. Both the label and the value
-      // carry zh/en attributes so the English page stays English.
-      const profile = model.sampleProfile;
-      const rows = profile.inputContract.map(entry => {
-        const label = entry.label || {};
-        const value = entry.value || {};
-        return `<dt data-i18n-zh="${esc(label.zh || '')}" data-i18n-en="${esc(label.en || label.zh || '')}">${esc(label.zh || '')}</dt><dd data-i18n-zh="${esc(value.zh || '')}" data-i18n-en="${esc(value.en || value.zh || '')}">${esc(value.zh || '')}</dd>`;
-      });
-      if (profile.pipeline) rows.push(row('实现结构', { cpu_tracker: 'CPU 跟踪器', detector_cpu_tracker: '检测器 + CPU 关联', neural_detector: '神经网络检测器', avatar_pipeline: '语音驱动数字人管线' }[profile.pipeline] || profile.pipeline));
-      if (profile.provider) rows.push(row('上游提供方', profile.provider));
-      if (profile.sampleCommit) rows.push(row('源码提交', profile.sampleCommit.slice(0, 12), profile.sampleCommit));
-      return rows.join('');
-    }
     const rows = [];
     if (p.parameterCount) rows.push(row('参数量', `${Number((p.parameterCount / 1e6).toFixed(3))} M`, String(p.parameterCount)));
     if (p.parameterCountMillions) rows.push(row('参数量', `${p.parameterCountMillions} M`));
@@ -196,48 +142,6 @@
     return rows.join('');
   }
 
-  // Sample-profile detail section: platform support matrix, verification
-  // notes, downloadable evidence summaries and the truthful missing list.
-  function sampleSupportSection(m, variants, data) {
-    const profile = m.sampleProfile;
-    const hardware = hardwareOf(m, data);
-    const runtimeLabel = runtimes => (runtimes || []).map(name => name === 'python' ? 'Python' : 'C++').join(' / ');
-    const availabilityRow = entry => {
-      const p = entry.sampleProfile;
-      const note = p.availability?.note;
-      const guide = p.availability?.guideUrl
-        ? ` ${external(p.availability.guideUrl, '转换指南', 'mz-text-link')}` : '';
-      return `<div class="mz-support-cell"><span class="mz-availability-status" data-status="${esc(p.availability?.status || '')}">${esc(p.availability?.statusLabel || '')}</span>${guide}${note ? `<small class="mz-support-note" data-i18n-zh="${esc(note.zh)}" data-i18n-en="${esc(note.en || note.zh)}">${esc(note.zh)}</small>` : ''}</div>`;
-    };
-    const matrixRows = variants.map(other => {
-      const targetHardware = hardwareOf(other, data);
-      return `<tr class="${targetHardware === hardware ? 'is-active' : ''}"><th scope="row">${esc(targetHardware)}</th><td>${esc(runtimeLabel(other.sampleProfile?.runtimes))}</td><td>${availabilityRow(other)}</td><td>${other.sampleProfile?.verification ? `<small class="mz-support-note" data-i18n-zh="${esc(other.sampleProfile.verification.zh)}" data-i18n-en="${esc(other.sampleProfile.verification.en || other.sampleProfile.verification.zh)}">${esc(other.sampleProfile.verification.zh)}</small>` : ''}</td></tr>`;
-    }).join('');
-    const evidenceLinks = (profile.evidence || []).map(link => {
-      const label = link.label || {};
-      const isExternalUrl = /^https:\/\//.test(link.url || '');
-      const attrs = `data-i18n-zh="${esc(label.zh || '')}" data-i18n-en="${esc(label.en || label.zh || '')}"`;
-      return isExternalUrl
-        ? external(link.url, `<span ${attrs}>${esc(label.zh || '')}</span>`, 'mz-text-link')
-        : `<a class="mz-text-link" href="${esc(link.url)}" download ${attrs}>${esc(label.zh || '')}${icon('download')}</a>`;
-    }).join('');
-    const missingItems = (profile.missing || []).map(item => {
-      const title = item.title || {};
-      const note = item.note || {};
-      const statusZh = item.status === 'not-applicable' ? '不适用' : '缺失';
-      // The machine-readable field id stays in the data; readers see the
-      // localized title.
-      return `<li><span class="mz-missing-title" data-i18n-zh="${esc(title.zh || item.field)}" data-i18n-en="${esc(title.en || title.zh || item.field)}">${esc(title.zh || item.field)}</span><span class="mz-missing-status" data-status="${esc(item.status)}">${statusZh}</span><small data-i18n-zh="${esc(note.zh || '')}" data-i18n-en="${esc(note.en || note.zh || '')}">${esc(note.zh || '')}</small></li>`;
-    }).join('');
-    return `<section class="mz-benchmark mz-sample-support" aria-label="板级支持与验证"><div class="mz-benchmark-title"><h2>板级支持与验证</h2></div>
-      ${profile.pipelineNote ? `<p class="mz-pipeline-note" data-i18n-zh="${esc(profile.pipelineNote.zh)}" data-i18n-en="${esc(profile.pipelineNote.en || profile.pipelineNote.zh)}">${esc(profile.pipelineNote.zh)}</p>` : ''}
-      <div class="mz-configuration"><div><span>目标硬件</span>${dropdown('benchmark-hardware', '目标硬件', [...new Set(variants.map(other => hardwareOf(other, data)))].sort(byPlatformOrder).map(value => ({ value, label: value })), hardware)}</div><div><span>模型变体</span>${dropdown('benchmark-variant', '模型变体', variants.filter(other => hardwareOf(other, data) === hardware).sort((a, b) => sizeRank(a.modelSize) - sizeRank(b.modelSize)).map(other => ({ value: other.id, label: other.variantName || other.name })), m.id)}</div></div>
-      <div class="mz-benchmark-body"><div class="mz-performance"><table class="mz-support-table"><thead><tr><th>平台</th><th>运行时</th><th>模型获取</th><th>板端验证</th></tr></thead><tbody>${matrixRows}</tbody></table>
-      ${evidenceLinks ? `<div class="mz-evidence-links"><h3>验证证据</h3>${evidenceLinks}</div>` : ''}
-      ${missingItems ? `<div class="mz-missing-list"><h3>待补数据</h3><ul>${missingItems}</ul></div>` : ''}</div></div>
-      <div class="mz-report-actions"><span class="mz-report-placeholder" aria-disabled="true">OE 转换报告</span></div></section>`;
-  }
-
   function render({ model: m, models, data }) {
     const b = m.benchmark;
     const hardware = hardwareOf(m, data);
@@ -267,19 +171,12 @@
     const description = window.HubI18n?.locale === 'en' ? (m.descriptionEn || m.description) : m.description;
     const platformSizes = platform => downloadModels.filter(other => hardwareOf(other, data) === platform).length;
     const selectedAsset = selectedDownloadModel?.assets[0];
-    // Sample platforms may publish several files (PartA/PartB pairs, source
-    // tarballs); carry the whole per-file list so the dialog can list them.
-    const filesOf = model => JSON.stringify((model.assets || []).map(asset => ({
-      role: asset.role, filename: asset.filename, url: asset.url,
-      ...(asset.sha256 ? { sha256: asset.sha256 } : {}),
-      ...(asset.sizeBytes ? { sizeBytes: asset.sizeBytes } : {}),
-    })));
-    const downloadDialog = selectedDownloadModel ? `<dialog class="mz-download-dialog mz-store" id="${esc(dialogId)}" aria-labelledby="${esc(dialogId)}-title"><form method="dialog" class="mz-store-shell"><header class="mz-store-header"><div><span>获取模型</span><h2 id="${esc(dialogId)}-title">${esc(m.name)}</h2></div><button type="submit" value="cancel" class="mz-dialog-close" aria-label="关闭" title="关闭">${icon('x')}</button></header><div class="mz-store-body"><fieldset class="mz-store-step"><legend>选择芯片</legend><div class="mz-store-grid">${downloadPlatforms.map(platform => `<label class="mz-store-choice"><input type="radio" name="download-platform" value="${esc(platform)}" ${platform === selectedPlatform ? 'checked' : ''}><span class="mz-store-choice-main"><strong>${esc(platform)}</strong><small>${platformSizes(platform)} 个尺寸</small></span></label>`).join('')}</div></fieldset><fieldset class="mz-store-step"><legend>选择尺寸</legend><div class="mz-store-list">${downloadModels.map(model => { const platform = hardwareOf(model, data); const asset = model.assets[0]; return `<label class="mz-store-choice mz-model-choice" data-platform="${esc(platform)}" data-model-size="${esc(model.modelSize || '')}" ${platform === selectedPlatform ? '' : 'hidden'}><input type="radio" name="download-model" value="${esc(model.id)}" data-url="${esc(asset.url)}" data-files="${esc(filesOf(model))}" ${model.id === selectedDownloadModel.id ? 'checked' : ''}><span class="mz-store-choice-main"><strong>${esc(model.variantName || model.name)}</strong></span>${choiceStats(model, data)}</label>`; }).join('')}</div></fieldset></div><footer class="mz-store-summary"><div class="mz-store-files" data-download-links></div></footer></form></dialog>` : '';
+    const downloadDialog = selectedDownloadModel ? `<dialog class="mz-download-dialog mz-store" id="${esc(dialogId)}" aria-labelledby="${esc(dialogId)}-title"><form method="dialog" class="mz-store-shell"><header class="mz-store-header"><div><span>获取模型</span><h2 id="${esc(dialogId)}-title">${esc(m.name)}</h2></div><button type="submit" value="cancel" class="mz-dialog-close" aria-label="关闭" title="关闭">${icon('x')}</button></header><div class="mz-store-body"><fieldset class="mz-store-step"><legend>选择芯片</legend><div class="mz-store-grid">${downloadPlatforms.map(platform => `<label class="mz-store-choice"><input type="radio" name="download-platform" value="${esc(platform)}" ${platform === selectedPlatform ? 'checked' : ''}><span class="mz-store-choice-main"><strong>${esc(platform)}</strong><small>${platformSizes(platform)} 个尺寸</small></span></label>`).join('')}</div></fieldset><fieldset class="mz-store-step"><legend>选择尺寸</legend><div class="mz-store-list">${downloadModels.map(model => { const platform = hardwareOf(model, data); const asset = model.assets[0]; return `<label class="mz-store-choice mz-model-choice" data-platform="${esc(platform)}" data-model-size="${esc(model.modelSize || '')}" ${platform === selectedPlatform ? '' : 'hidden'}><input type="radio" name="download-model" value="${esc(model.id)}" data-url="${esc(asset.url)}" ${model.id === selectedDownloadModel.id ? 'checked' : ''}><span class="mz-store-choice-main"><strong>${esc(model.variantName || model.name)}</strong></span>${choiceStats(model, data)}</label>`; }).join('')}</div></fieldset></div><footer class="mz-store-summary"><a class="button mz-dialog-download" data-download-link href="${esc(selectedAsset.url)}" target="_blank" rel="noopener">${icon('download')}下载</a></footer></form></dialog>` : '';
     return `<nav class="mz-breadcrumb" aria-label="模型导航"><a class="back-link" href="#">Model Zoo</a><span aria-hidden="true">/</span><span>${m.name}</span></nav>
-      <section class="mz-overview"><div class="mz-introduction"><span class="mz-task">${m.task}</span><h1>${m.name}</h1><p data-i18n-zh="${esc(m.description)}" data-i18n-en="${esc(m.descriptionEn || m.description)}">${esc(description)}</p><div class="mz-primary-actions">${acquireButton(m)}<button class="button secondary mz-ask-model" type="button" data-ask-model><span class="mz-icon" style="--icon:url('assets/icons/sparkles.svg')" aria-hidden="true"></span>询问此模型</button>${repositoryLinks(m, 'mz-text-link')}</div></div><figure class="mz-demo"><img src="${esc(m.coverImage)}" alt="${esc(m.name + ' · ' + m.coverLabel)}"></figure></section>
-      ${m.sampleProfile ? sampleSupportSection(m, variants, data) : `<section class="mz-benchmark" aria-label="性能与精度"><div class="mz-benchmark-title"><h2>性能与精度</h2></div><div class="mz-configuration"><div><span>目标硬件</span>${dropdown('benchmark-hardware', '目标硬件', hardwareOptions.map(value => ({ value, label: value })), hardware)}</div><div><span>模型变体</span>${dropdown('benchmark-variant', '模型变体', variants.filter(other => hardwareOf(other, data) === hardware).sort((a, b) => sizeRank(a.modelSize) - sizeRank(b.modelSize)).map(other => ({ value: other.id, label: other.variantName || other.name })), m.id)}</div><div><span>Runtime 并发</span>${dropdown('benchmark-condition', 'Runtime 并发', conditions.map(value => ({ value: String(value), label: threadLabel(value) })), String(conditions[0] || ''), !conditions.length)}</div></div>
-      ${b ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid" id="detail-performance" aria-live="polite"></div></div></div>` : `<div class="mz-benchmark-empty"><div><h3>暂无性能汇总</h3></div>${external(m.source + '/evaluator', '查看评测说明')}</div>`}<div class="mz-report-actions">${m.reportDataUrl ? `<a class="mz-report-link" href="reports.html?report=${encodeURIComponent(m.id)}&from=${encodeURIComponent(m.id)}">${icon('scan-eye')}查看转换详情</a>` : (m.reportUrl || m.reportSourceUrl) ? external(m.reportUrl || m.reportSourceUrl, 'OE 转换报告') : '<span class="mz-report-placeholder" aria-disabled="true">OE 转换报告</span>'}</div></section>`}
-      <div class="mz-information"><div class="mz-main-column"><section class="mz-section"><h2>${m.sampleProfile ? '输入与输出' : '模型参数'}</h2><dl class="mz-specifications">${propertyRows(m)}</dl></section>${m.sampleProfile ? sampleQuickstart(m) : quickStart(m)}
+      <section class="mz-overview"><div class="mz-introduction"><span class="mz-task">${m.task}</span><h1>${m.name}</h1><p data-i18n-zh="${esc(m.description)}" data-i18n-en="${esc(m.descriptionEn || m.description)}">${esc(description)}</p><div class="mz-primary-actions">${m.assets?.length ? `<button class="button" type="button" data-open-download>${icon('download')}获取模型</button>` : ''}<button class="button secondary mz-ask-model" type="button" data-ask-model><span class="mz-icon" style="--icon:url('assets/icons/sparkles.svg')" aria-hidden="true"></span>询问此模型</button>${repositoryLinks(m, 'mz-text-link')}</div></div><figure class="mz-demo"><img src="${esc(m.coverImage)}" alt="${esc(m.name + ' · ' + m.coverLabel)}"></figure></section>
+      <section class="mz-benchmark" aria-label="性能与精度"><div class="mz-benchmark-title"><h2>性能与精度</h2></div><div class="mz-configuration"><div><span>目标硬件</span>${dropdown('benchmark-hardware', '目标硬件', hardwareOptions.map(value => ({ value, label: value })), hardware)}</div><div><span>模型变体</span>${dropdown('benchmark-variant', '模型变体', variants.filter(other => hardwareOf(other, data) === hardware).sort((a, b) => sizeRank(a.modelSize) - sizeRank(b.modelSize)).map(other => ({ value: other.id, label: other.variantName || other.name })), m.id)}</div><div><span>Runtime 并发</span>${dropdown('benchmark-condition', 'Runtime 并发', conditions.map(value => ({ value: String(value), label: threadLabel(value) })), String(conditions[0] || ''), !conditions.length)}</div></div>
+      ${b ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid" id="detail-performance" aria-live="polite"></div></div></div>` : `<div class="mz-benchmark-empty"><div><h3>暂无性能汇总</h3></div>${external(m.source + '/evaluator', '查看评测说明')}</div>`}<div class="mz-report-actions">${m.reportDataUrl ? `<a class="mz-report-link" href="reports.html?report=${encodeURIComponent(m.id)}&from=${encodeURIComponent(m.id)}">${icon('scan-eye')}查看转换详情</a>` : (m.reportUrl || m.reportSourceUrl) ? external(m.reportUrl || m.reportSourceUrl, 'OE 转换报告') : '<span class="mz-report-placeholder" aria-disabled="true">OE 转换报告</span>'}</div></section>
+      <div class="mz-information"><div class="mz-main-column"><section class="mz-section"><h2>模型参数</h2><dl class="mz-specifications">${propertyRows(m)}</dl></section>${quickStart(m)}
       </div>
       <aside class="mz-side-column"><section><h2>目标平台</h2><div class="mz-platform-list">${hardwareOptions.map(platform => { const target = variants.find(other => hardwareOf(other, data) === platform && other.modelSize === m.modelSize) || variants.find(other => hardwareOf(other, data) === platform); const active = platform === hardware; return `<button type="button" class="mz-platform-option${active ? ' is-active' : ''}" data-platform-target="${esc(target?.id || '')}" ${active || !target ? 'disabled' : ''} aria-label="切换到 ${esc(platform)}"><span class="mz-platform-mark">${icon('cpu')}</span><strong>${esc(platform)}</strong></button>`; }).join('')}</div></section><section><h2>开发资源</h2><div class="mz-resource-links">${developerResourceLinks(m)}</div></section><section><h2>模型许可</h2><div class="mz-resource-links">${m.licenseName && m.licenseUrl ? external(m.licenseUrl, esc(m.licenseName)) : '<span>未声明</span>'}</div></section></aside></div>
       ${related.length ? `<section class="mz-related"><div class="mz-section-heading"><h2>相关模型</h2><a href="#">查看全部模型</a></div><div class="mz-related-grid">${related.map(other => `<a href="#model/${other.id}" class="mz-related-model"><img src="${esc(other.coverImage)}" alt="${esc(other.name)}" loading="lazy"><div><h3>${other.name}</h3><span>${other.task}</span></div></a>`).join('')}</div></section>` : ''}
@@ -374,14 +271,6 @@
     const downloadDialog = root.querySelector('.mz-download-dialog');
     const openDownloadButton = root.querySelector('[data-open-download]');
     let downloadOpener = null;
-    // Sample platforms publish several files whose roles carry localized
-    // labels; released models render the single plain "下载" button.
-    const sampleFileRole = role => ({
-      parta: { zh: 'PartA 模型文件', en: 'PartA model file' },
-      partb: { zh: 'PartB 模型文件', en: 'PartB model file' },
-      detector: { zh: '检测模型文件', en: 'Detector model file' },
-      'upstream-source': { zh: '上游源码包', en: 'Upstream source package' },
-    }[role]);
     function syncDownloadDialog() {
       if (!downloadDialog) return;
       const selectedPlatform = downloadDialog.querySelector('input[name="download-platform"]:checked')?.value;
@@ -394,28 +283,8 @@
         selectedModel = (visible.find(choice => choice.dataset.modelSize === size) || visible[0])?.querySelector('input[name="download-model"]');
         if (selectedModel) selectedModel.checked = true;
       }
-      const linkHost = downloadDialog.querySelector('[data-download-links]');
-      if (!selectedModel || !linkHost) return;
-      let files = [];
-      try { files = JSON.parse(selectedModel.dataset.files || '[]'); } catch { files = []; }
-      if (!files.length && selectedModel.dataset.url) {
-        // Released models carry a single url; sample platforms list one entry
-        // per published file.
-        files = [{ url: selectedModel.dataset.url }];
-      }
-      linkHost.innerHTML = files.map((file, index) => {
-        if (files.length === 1) {
-          return `<a class="button mz-dialog-download" data-download-link data-file-index="${index}" href="${esc(file.url)}" target="_blank" rel="noopener">${icon('download')}下载</a>`;
-        }
-        const role = sampleFileRole(file.role);
-        const roleText = role
-          ? `<span data-i18n-zh="${esc(role.zh)}" data-i18n-en="${esc(role.en)}">${esc(role.zh)}</span>`
-          : `<span data-no-i18n>${esc(file.role || '')}</span>`;
-        return `<a class="button mz-dialog-download mz-dialog-download-file" data-download-link data-file-index="${index}" href="${esc(file.url)}" target="_blank" rel="noopener">${icon('download')}${roleText}<code data-no-i18n>${esc(file.filename || '')}</code></a>`;
-      }).join('');
-      // The links above were just rebuilt with zh text; re-apply the active
-      // locale so an EN visitor opening or switching platforms sees EN labels.
-      refresh();
+      if (!selectedModel) return;
+      downloadDialog.querySelector('[data-download-link]').href = selectedModel.dataset.url;
     }
     listen(openDownloadButton, 'click', () => {
       closeSelect();

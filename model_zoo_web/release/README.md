@@ -5,13 +5,7 @@ the published static site in a clean checkout.
 
 - `inputs.json` maps catalog records to their release assets.
 - `assets/` contains optimized website covers. Covers that show inference
-  overlays must be produced from real model output. Sample-entry covers (board
-  annotations or charts drawn from real tracker output) document their sources
-  and hashes in `assets/sample-covers.json`.
-- `sample-evidence/` contains small text summaries (JSON/log, each under
-  64 KiB) backing sample-profile entries: board verification payloads and
-  compile/build log excerpts. They are summaries, not full reports, and ship
-  with the site under `sample-evidence/`.
+  overlays must be produced from real model output.
 - `reports/` contains compact structured OE data used by the website report
   view. Complete OE HTML reports and deployment models remain in OSS.
 
