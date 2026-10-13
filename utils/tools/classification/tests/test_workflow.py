@@ -1,4 +1,4 @@
-"""Host-only MobileNet workflow integration tests; no weights or SDK needed."""
+"""Host-only classification workflow integration tests; no weights or SDK needed."""
 
 import argparse
 import json
@@ -12,7 +12,7 @@ from PIL import Image
 from timm.data import create_transform
 
 from utils.py_utils.classification_host import float_input, prepare_rgb, sha256_file
-from utils.tools.mobilenet.workflow import PINS, make_config, prepare_calibration, verify_export
+from utils.tools.classification.workflow import PINS, make_config, prepare_calibration, verify_export
 
 SPECS = json.loads(PINS.read_text())["models"]
 

@@ -114,7 +114,7 @@ separately, each returning data owned by the caller:
 
 - `MobileNetV2Prepared preprocess(const cv::Mat&)` — antialiased bicubic
   shorter-edge resize to `resize_shorter` (a bit-exact port of Pillow's,
-  shared with `utils/tools/mobilenet/cpp/geometry.hpp`), center crop to the
+  shared with `utils/tools/classification/cpp/geometry.hpp`), center crop to the
   model input and BGR→NV12 conversion into owned Y/UV planes, the same
   geometry as the Python runtime;
 - `MobileNetV2Raw infer(const MobileNetV2Prepared&)` — upload of the

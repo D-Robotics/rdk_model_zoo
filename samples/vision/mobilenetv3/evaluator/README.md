@@ -2,7 +2,7 @@ English | [简体中文](README_cn.md)
 
 # MobileNetV3 evaluation
 
-For the pinned timm checkpoint workflow, use [`evaluate.py`](evaluate.py) and the [shared host workflow](../../../../utils/tools/mobilenet/README.md). It records the exact checkpoint, center-crop preprocessing, batch-one logits contract, and full-dataset evaluation inputs. The existing artifact commands below retain their own contracts.
+For the pinned timm checkpoint workflow, use [`evaluate.py`](evaluate.py) and the [shared host workflow](../../../../utils/tools/classification/README.md). It records the exact checkpoint, center-crop preprocessing, batch-one logits contract, and full-dataset evaluation inputs. The existing artifact commands below retain their own contracts.
 Use the bundled image for a single-image classification check. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
 
 
@@ -31,7 +31,7 @@ python3 samples/vision/mobilenetv3/evaluator/evaluate_board.py \
 The new output directory contains full predictions, tensor metadata, three
 fixed-input outputs and `evaluation.json` with Top-1/Top-5 and source hashes.
 For C++ performance timing and its image boundary, see
-[the benchmark instructions](../../../../utils/tools/mobilenet/cpp/README.md).
+[the benchmark instructions](../../../../utils/tools/classification/cpp/README.md).
 
 <a id="dataset"></a>
 

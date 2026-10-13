@@ -2,7 +2,7 @@ English | [简体中文](README_cn.md)
 
 # MobileNetV1 evaluation
 
-Use [`evaluate.py`](evaluate.py) to evaluate the FP32 ONNX exported from the selected timm checkpoint on a host. Follow the [shared host workflow](../../../../utils/tools/mobilenet/README.md) for installation and commands. Apply the checkpoint’s center-crop preprocessing and evaluate batch-one logits over the complete dataset.
+Use [`evaluate.py`](evaluate.py) to evaluate the FP32 ONNX exported from the selected timm checkpoint on a host. Follow the [shared host workflow](../../../../utils/tools/classification/README.md) for installation and commands. Apply the checkpoint’s center-crop preprocessing and evaluate batch-one logits over the complete dataset.
 Use the bundled image for a single-image classification. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
 
 
@@ -31,7 +31,7 @@ python3 samples/vision/mobilenetv1/evaluator/evaluate_board.py \
 The new output directory contains full predictions, tensor metadata, three
 fixed-input outputs and `evaluation.json` with Top-1/Top-5 and source hashes.
 For C++ performance timing and its image boundary, see
-[the benchmark instructions](../../../../utils/tools/mobilenet/cpp/README.md).
+[the benchmark instructions](../../../../utils/tools/classification/cpp/README.md).
 
 <a id="dataset"></a>
 
@@ -52,7 +52,7 @@ evaluator/
 <a id="environment"></a>
 ## Environment
 
-Host FP32 ONNX evaluation uses `evaluate.py`, Python 3.10, and the dependencies in `utils/tools/mobilenet/requirements.lock.txt`. Follow the [shared host workflow](../../../../utils/tools/mobilenet/README.md) for installation and commands.
+Host FP32 ONNX evaluation uses `evaluate.py`, Python 3.10, and the dependencies in `utils/tools/classification/requirements.lock.txt`. Follow the [shared host workflow](../../../../utils/tools/classification/README.md) for installation and commands.
 
 Board classification and `evaluate_board.py` require the matching board image with `hbm_runtime`, NumPy, OpenCV-Python, Pillow, PyYAML, the model, and labels. See the [Python runtime environment](../runtime/python/README.md#environment).
 

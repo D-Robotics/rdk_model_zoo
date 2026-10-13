@@ -5,16 +5,16 @@
 本流程从固定版本的 timm 检查点重建已发布的 MobileNetV3 部署模型：导出 FP32
 ONNX、INT8 训练后量化（PTQ），并为每个 RDK 目标编译。它在带 Docker 的 x86
 Linux 主机上执行，不是板卡操作。导出、校准和配置步骤使用公共
-[主机流程](../../../../utils/tools/mobilenet/README_cn.md)；每次编译在对应的
+[主机流程](../../../../utils/tools/classification/README_cn.md)；每次编译在对应的
 OpenExplorer（OE）工具链容器中运行。
 
 <a id="source-model"></a>
 ## 源模型
 
 - 框架：PyTorch 2.8.0 与 timm 1.0.20（版本固定在
-  `utils/tools/mobilenet/requirements.lock.txt`）。
+  `utils/tools/classification/requirements.lock.txt`）。
 - 权重，按 Hugging Face revision 与文件 SHA-256 固定在
-  `utils/tools/mobilenet/checkpoints.json`：
+  `utils/tools/classification/checkpoints.json`：
   - `large`：`timm/mobilenetv3_large_100.ra_in1k`，revision
     `96f46a1c52932f27492dff66c72378eb99b443a7`
   - `small`：`timm/mobilenetv3_small_100.lamb_in1k`，revision
@@ -50,7 +50,7 @@ conversion/
 └── ptq_s.yaml  # S100 / S100P / S600 编译配置（含占位符）
 ```
 
-校准输入与 OE 配置由 `utils/tools/mobilenet/workflow.py` 生成；`ptq_*.yaml`
+校准输入与 OE 配置由 `utils/tools/classification/workflow.py` 生成；`ptq_*.yaml`
 是已发布制品使用的参考编译配置。
 
 <a id="toolchain-targets"></a>
@@ -80,7 +80,7 @@ conversion/
 # cwd：仓库根目录；Python 3.10，已安装锁定的依赖
 export REPO=$(pwd)
 export WORK=/abs/path/mobilenetv3-large
-python3 utils/tools/mobilenet/workflow.py fetch --model v3-large-100 \
+python3 utils/tools/classification/workflow.py fetch --model v3-large-100 \
   --output $WORK/weights
 python3 samples/vision/mobilenetv3/conversion/export.py --model v3-large-100 \
   --source-dir $WORK/weights \
@@ -105,7 +105,7 @@ python3 samples/vision/mobilenetv3/conversion/export.py --model v3-large-100 \
 
 ```bash
 # cwd：仓库根目录；对每个目标各执行一次：s100、s100p、s600
-python3 utils/tools/mobilenet/workflow.py calibrate --model v3-large-100 \
+python3 utils/tools/classification/workflow.py calibrate --model v3-large-100 \
   --platform s100 \
   --manifest /abs/calibration/manifest.json \
   --images-root /abs/calibration \
@@ -192,7 +192,7 @@ INT16，X5 工具链仍把 MobileNetV3 的 stride 2 depthwise 卷积与 SE 池�
 
 - 校准与评测数据是外部输入。COCO train2017 子集和 ImageNetV2 MatchedFrequency
   集合（10,000 张）需向其所有者获取；manifest 格式及其检查见
-  [主机流程](../../../../utils/tools/mobilenet/README_cn.md)。
+  [主机流程](../../../../utils/tools/classification/README_cn.md)。
 - OE 工具链镜像需要访问 `registry.d-robotics.cc`；请用自己的凭据执行
   `docker login`。凭据不得写入这些文件。
 - 编译某个目标不需要板卡，但验证需要：使用与目标匹配的板卡（S100P 与 S600

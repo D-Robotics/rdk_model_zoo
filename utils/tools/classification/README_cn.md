@@ -1,9 +1,9 @@
 [English](README.md) | 简体中文
 
-# 固定权重版本的 MobileNet 主机流程
+# 固定权重版本的 timm 分类主机流程
 
 本工具支持固定版本权重下载、batch=1 FP32 ONNX 导出、分平台校准数据生成、OE 配置生成和全量分类评测。
-四代 sample 分别提供 `conversion/export.py`、`evaluator/evaluate.py` 入口。
+各分类 sample 分别提供 `conversion/export.py`、`evaluator/evaluate.py` 入口。
 在仓库根目录执行命令；模型、数据集和运行结果保存到仓库外，每次使用新的输出目录。
 
 ## 模型和环境
@@ -20,7 +20,7 @@ Medium-224 对应全部四个平台，Medium-256 对应 S100/S100P/S600；其他
 每个 campaign 保存完整 `python -m pip freeze`，本机环境同时记录继承的基础环境和 wheel 安装报告。
 
 ```bash
-python -m pip install -r utils/tools/mobilenet/requirements.lock.txt
+python -m pip install -r utils/tools/classification/requirements.lock.txt
 ```
 
 ## 权重与预处理
@@ -33,7 +33,7 @@ python -m pip install -r utils/tools/mobilenet/requirements.lock.txt
 历史 manifest 制品可能采用其他来源、预处理、形状和概率输出，需要按各自合同使用。
 
 ```bash
-python utils/tools/mobilenet/workflow.py fetch --model v4-small \
+python utils/tools/classification/workflow.py fetch --model v4-small \
   --output /absolute/workbench/weights/v4-small
 
 python samples/vision/mobilenetv4/conversion/export.py \
@@ -58,8 +58,8 @@ Conv/Linear MACs 仅统计这两种算子，不能直接作为模型总 GFLOPs�
 类别映射、campaign 和 SHA256SUMS。
 
 ```bash
-python utils/tools/mobilenet/freeze.py \
-  --source-root /absolute/workbench/inputs/source_models/mobilenet \
+python utils/tools/classification/freeze.py \
+  --source-root /absolute/workbench/inputs/source_models/timm \
   --evaluation-manifest /absolute/workbench/imagenetv2/manifest.json \
   --evaluation-root /absolute/workbench/imagenetv2/images \
   --calibration-manifest /absolute/workbench/calibration/manifest.json \
@@ -83,13 +83,13 @@ X5 文件为无文件头的 little-endian float32 `.rgb`，S 文件为 `.npy`；
 不要对 X5 校准数据重复归一化。
 
 ```bash
-python utils/tools/mobilenet/workflow.py calibrate --model v4-small \
+python utils/tools/classification/workflow.py calibrate --model v4-small \
   --platform x5 --manifest /absolute/workbench/calibration/manifest.json \
   --images-root /absolute/workbench/calibration --expected-images 200 \
   --evaluation-manifest /absolute/workbench/imagenetv2/manifest.json \
   --output /absolute/workbench/run/x5/calibration
 
-python utils/tools/mobilenet/workflow.py config --model v4-small \
+python utils/tools/classification/workflow.py config --model v4-small \
   --platform x5 --export-dir /absolute/workbench/run/export \
   --calibration-dir /absolute/workbench/run/x5/calibration \
   --output /absolute/workbench/run/x5/config
@@ -99,7 +99,7 @@ python utils/tools/mobilenet/workflow.py config --model v4-small \
 Docker 中保持输入/输出绝对路径与宿主机一致。在对应镜像内只检查配置与 200 份数据加载：
 
 ```bash
-python3 /absolute/repository/utils/tools/mobilenet/check_toolchain.py \
+python3 /absolute/repository/utils/tools/classification/check_toolchain.py \
   --platform x5 --config /absolute/workbench/run/x5/config/config.yaml
 ```
 
@@ -126,7 +126,7 @@ python samples/vision/mobilenetv4/evaluator/evaluate.py \
 
 ```bash
 python -m unittest utils.py_utils.tests.test_classification_host -v
-python -m unittest discover -s utils/tools/mobilenet/tests -v
+python -m unittest discover -s utils/tools/classification/tests -v
 ```
 
 检查覆盖 timm 预处理一致性、归一化域、标签、样本数、数据交集、输出排序和制品身份。

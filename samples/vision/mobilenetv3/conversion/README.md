@@ -6,16 +6,16 @@ This recipe rebuilds the published MobileNetV3 deployment models from pinned
 timm checkpoints: FP32 ONNX export, INT8 post-training quantization (PTQ), and
 a compile for each RDK target. It runs on an x86 Linux host with Docker. The
 export, calibration, and configuration steps use the shared
-[host workflow](../../../../utils/tools/mobilenet/README.md); each compile runs
+[host workflow](../../../../utils/tools/classification/README.md); each compile runs
 in the matching OpenExplorer (OE) toolchain container.
 
 <a id="source-model"></a>
 ## Source model
 
 - Framework: PyTorch 2.8.0 with timm 1.0.20 (versions pinned in
-  `utils/tools/mobilenet/requirements.lock.txt`).
+  `utils/tools/classification/requirements.lock.txt`).
 - Weights, pinned by Hugging Face revision and file SHA-256 in
-  `utils/tools/mobilenet/checkpoints.json`:
+  `utils/tools/classification/checkpoints.json`:
   - `large`: `timm/mobilenetv3_large_100.ra_in1k`, revision
     `96f46a1c52932f27492dff66c72378eb99b443a7`
   - `small`: `timm/mobilenetv3_small_100.lamb_in1k`, revision
@@ -55,7 +55,7 @@ conversion/
 ```
 
 Calibration inputs and the OE configuration are produced by
-`utils/tools/mobilenet/workflow.py`; `ptq_*.yaml` are the reference compile
+`utils/tools/classification/workflow.py`; `ptq_*.yaml` are the reference compile
 configurations of the published artifacts.
 
 <a id="toolchain-targets"></a>
@@ -86,7 +86,7 @@ repository.
 # cwd: repository root; python 3.10 with the locked requirements installed
 export REPO=$(pwd)
 export WORK=/abs/path/mobilenetv3-large
-python3 utils/tools/mobilenet/workflow.py fetch --model v3-large-100 \
+python3 utils/tools/classification/workflow.py fetch --model v3-large-100 \
   --output $WORK/weights
 python3 samples/vision/mobilenetv3/conversion/export.py --model v3-large-100 \
   --source-dir $WORK/weights \
@@ -113,7 +113,7 @@ the checkpoint, the preprocessing contract, and the dependency versions.
 
 ```bash
 # cwd: repository root; run once per target: s100, s100p, s600
-python3 utils/tools/mobilenet/workflow.py calibrate --model v3-large-100 \
+python3 utils/tools/classification/workflow.py calibrate --model v3-large-100 \
   --platform s100 \
   --manifest /abs/calibration/manifest.json \
   --images-root /abs/calibration \
@@ -206,7 +206,7 @@ The list matches [model/README.md](../model/README.md).
 - Calibration and evaluation data are external. The COCO train2017 subset and
   the ImageNetV2 MatchedFrequency set (10,000 images) must be obtained from
   their owners; the manifest format and its checks are described in the
-  [host workflow](../../../../utils/tools/mobilenet/README.md).
+  [host workflow](../../../../utils/tools/classification/README.md).
 - The OE toolchain images need access to `registry.d-robotics.cc`; log in with
   your own credentials (`docker login`). Credentials never belong in these
   files.

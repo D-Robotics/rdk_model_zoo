@@ -155,7 +155,7 @@ static int resize_shorter = 256;  // set once from argv before any worker starts
 struct Row { int stream, frame, image; double preprocess, runtime, postprocess, e2e; std::array<int,5> top5; };
 static double ms(Clock::time_point a, Clock::time_point b) { return std::chrono::duration<double,std::milli>(b-a).count(); }
 static Row step(Session& session, const cv::Mat& image, int stream, int frame, int image_id, std::array<float,1000>* saved = nullptr) {
-  auto t0 = Clock::now(); auto crop = mobilenet::center_crop(image, session.size(), resize_shorter); auto bytes = mobilenet::nv12(crop); session.upload(bytes);
+  auto t0 = Clock::now(); auto crop = classification::center_crop(image, session.size(), resize_shorter); auto bytes = classification::nv12(crop); session.upload(bytes);
   auto t1 = Clock::now(); session.infer(); auto t2 = Clock::now(); auto scores = session.logits();
   std::array<int,1000> ids; std::iota(ids.begin(), ids.end(), 0);
   std::partial_sort(ids.begin(), ids.begin()+5, ids.end(), [&](int a,int b) { return scores[a] == scores[b] ? a < b : scores[a] > scores[b]; });
@@ -181,7 +181,7 @@ int main(int argc, char** argv) {
     for (int s=0;s<streams;++s) { auto ptr=std::make_unique<Session>();ptr->init(argv[1]);sessions.push_back(std::move(ptr)); }
     const int size=sessions[0]->size();
     if (resize_shorter < size) throw std::runtime_error("RESIZE_SHORTER must be at least the model input size");
-    for (size_t i=0;i<images.size();++i) cv::imwrite(prefix+"-crop-"+std::to_string(i)+".png",mobilenet::center_crop(images[i], size, resize_shorter));
+    for (size_t i=0;i<images.size();++i) cv::imwrite(prefix+"-crop-"+std::to_string(i)+".png",classification::center_crop(images[i], size, resize_shorter));
     std::vector<std::vector<Row>> rows(streams); std::vector<std::vector<std::array<float,1000>>> saved(streams);
     std::vector<std::exception_ptr> failures(streams); std::mutex mutex; std::condition_variable cv; int ready=0; bool start=false;
     std::vector<std::thread> workers;

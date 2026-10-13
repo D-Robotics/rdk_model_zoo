@@ -101,7 +101,7 @@ OpenCV 与标准库。
 数据：
 
 - `MobileNetV2Prepared preprocess(const cv::Mat&)`：抗锯齿双三次短边缩放到
-  `resize_shorter`（逐位移植 Pillow 实现，与 `utils/tools/mobilenet/cpp/geometry.hpp`
+  `resize_shorter`（逐位移植 Pillow 实现，与 `utils/tools/classification/cpp/geometry.hpp`
   共用）、中心裁剪到模型输入并完成 BGR→NV12 转换，得到自持有的 Y/UV 平面，
   几何与 Python 运行一致；
 - `MobileNetV2Raw infer(const MobileNetV2Prepared&)`：将平面按行宽上传到

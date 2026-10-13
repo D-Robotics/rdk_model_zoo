@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace mobilenet {
+namespace classification {
 struct FilterRow { int start; std::vector<int32_t> weights; };
 inline double cubic(double x) {
   x = std::abs(x);
@@ -74,4 +74,4 @@ inline std::vector<uint8_t> nv12(const cv::Mat& bgr) {
   }
   return result;
 }
-}  // namespace mobilenet
+}  // namespace classification

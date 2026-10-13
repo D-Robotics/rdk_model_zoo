@@ -270,7 +270,7 @@ MobileNetV2Prepared MobileNetV2::preprocess(const cv::Mat& image) const
     if (impl_->input_h != impl_->input_w || impl_->resize_shorter < impl_->input_w)
         throw std::invalid_argument(
             "center crop needs a square input and resize_shorter >= input size");
-    const cv::Mat resized = mobilenet::center_crop(image, impl_->input_w, impl_->resize_shorter);
+    const cv::Mat resized = classification::center_crop(image, impl_->input_w, impl_->resize_shorter);
 
     // Convert BGR -> I420 (Y + U + V planar) and keep the planes as owned
     // NV12 bytes.

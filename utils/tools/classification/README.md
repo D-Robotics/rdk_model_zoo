@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# Pinned MobileNet host workflow
+# Pinned timm classification host workflow
 
 Use this workflow to fetch an exact timm checkpoint, export batch-one FP32
 ONNX, prepare target-specific calibration, and evaluate a complete labeled
@@ -25,7 +25,7 @@ Keep a complete `python -m pip freeze` with each campaign; the local validated
 environment also records the inherited base environment and wheel install report.
 
 ```bash
-python -m pip install -r utils/tools/mobilenet/requirements.lock.txt
+python -m pip install -r utils/tools/classification/requirements.lock.txt
 ```
 
 ## Source and preprocessing
@@ -42,7 +42,7 @@ These are new checkpoint builds; historical manifest artifacts can have a
 different source, preprocessing, tensor shape, and probability output.
 
 ```bash
-python utils/tools/mobilenet/workflow.py fetch --model v4-small \
+python utils/tools/classification/workflow.py fetch --model v4-small \
   --output /absolute/workbench/weights/v4-small
 
 python samples/vision/mobilenetv4/conversion/export.py \
@@ -71,8 +71,8 @@ It copies manifests, checkpoint pins, a full dependency lock, toolchain image
 identity, and the label mapping into a new campaign directory with SHA256SUMS.
 
 ```bash
-python utils/tools/mobilenet/freeze.py \
-  --source-root /absolute/workbench/inputs/source_models/mobilenet \
+python utils/tools/classification/freeze.py \
+  --source-root /absolute/workbench/inputs/source_models/timm \
   --evaluation-manifest /absolute/workbench/imagenetv2/manifest.json \
   --evaluation-root /absolute/workbench/imagenetv2/images \
   --calibration-manifest /absolute/workbench/calibration/manifest.json \
@@ -100,13 +100,13 @@ Both YAMLs describe RGB training input and NV12 runtime input,
 with mean ×255 and scale 1/(255×std). Do not normalize the X5 data twice.
 
 ```bash
-python utils/tools/mobilenet/workflow.py calibrate --model v4-small \
+python utils/tools/classification/workflow.py calibrate --model v4-small \
   --platform x5 --manifest /absolute/workbench/calibration/manifest.json \
   --images-root /absolute/workbench/calibration --expected-images 200 \
   --evaluation-manifest /absolute/workbench/imagenetv2/manifest.json \
   --output /absolute/workbench/run/x5/calibration
 
-python utils/tools/mobilenet/workflow.py config --model v4-small \
+python utils/tools/classification/workflow.py config --model v4-small \
   --platform x5 --export-dir /absolute/workbench/run/export \
   --calibration-dir /absolute/workbench/run/x5/calibration \
   --output /absolute/workbench/run/x5/config
@@ -119,7 +119,7 @@ Inside the matching pinned container, check configuration and all 200 loader
 outputs without compiling:
 
 ```bash
-python3 /absolute/repository/utils/tools/mobilenet/check_toolchain.py \
+python3 /absolute/repository/utils/tools/classification/check_toolchain.py \
   --platform x5 --config /absolute/workbench/run/x5/config/config.yaml
 ```
 
@@ -150,7 +150,7 @@ this checkpoint contract.
 
 ```bash
 python -m unittest utils.py_utils.tests.test_classification_host -v
-python -m unittest discover -s utils/tools/mobilenet/tests -v
+python -m unittest discover -s utils/tools/classification/tests -v
 ```
 
 These checks cover timm preprocessing parity, normalization domains, labels,

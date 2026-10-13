@@ -1,4 +1,4 @@
-# MobileNet C++ benchmark
+# Classification C++ benchmark
 
 This native benchmark loads a model once per pipeline stream and measures
 batch-one inference on X5 (libdnn) or S100/S100P/S600 (libhbucp). The artifact must expose
@@ -9,10 +9,10 @@ shapes, strides, data types and memory sizes are checked before use.
 Build on the board with its installed matching SDK, CMake, g++ and OpenCV:
 
 ```bash
-cmake -S utils/tools/mobilenet/cpp -B /path/to/new-build \
+cmake -S utils/tools/classification/cpp -B /path/to/new-build \
   -DCMAKE_BUILD_TYPE=Release -DTARGET_S100=ON
 cmake --build /path/to/new-build -j2
-/path/to/new-build/mobilenet_benchmark \
+/path/to/new-build/classification_benchmark \
   /path/to/model.hbm /path/to/images.txt /path/to/new-output/run \
   2 200 20 6
 ```

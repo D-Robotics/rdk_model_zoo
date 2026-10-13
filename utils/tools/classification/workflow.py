@@ -1,4 +1,4 @@
-"""Reproducible MobileNet checkpoint, ONNX, calibration, and evaluation CLI.
+"""Reproducible timm classification checkpoint, ONNX, calibration, and evaluation CLI.
 
 Run from any directory. Large inputs and immutable run outputs belong outside
 the source checkout. This tool does not compile, publish, or claim board support.

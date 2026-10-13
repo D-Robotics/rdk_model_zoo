@@ -77,7 +77,7 @@ public:
      * @brief Center-crop a BGR image into owned NV12 planes.
      *
      * Antialiased bicubic shorter-edge resize to resize_shorter (a bit-exact
-     * port of Pillow's, shared with utils/tools/mobilenet/cpp/geometry.hpp),
+     * port of Pillow's, shared with utils/tools/classification/cpp/geometry.hpp),
      * center crop to the model input, BGR → YUV(I420), then repack U/V into
      * the interleaved NV12 UV plane: the geometry the published models were
      * calibrated and evaluated with, identical to the Python runtime.

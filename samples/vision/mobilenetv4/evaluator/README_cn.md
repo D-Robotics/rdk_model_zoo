@@ -2,7 +2,7 @@
 
 # MobileNetV4 评估
 
-使用 [`evaluate.py`](evaluate.py) 在主机上评估指定 timm 权重导出的 FP32 ONNX。安装和运行步骤见[公共主机流程](../../../../utils/tools/mobilenet/README_cn.md)；使用对应权重的中心裁剪预处理，以 batch=1 生成 logits 并统计全量数据集精度。
+使用 [`evaluate.py`](evaluate.py) 在主机上评估指定 timm 权重导出的 FP32 ONNX。安装和运行步骤见[公共主机流程](../../../../utils/tools/classification/README_cn.md)；使用对应权重的中心裁剪预处理，以 batch=1 生成 logits 并统计全量数据集精度。
 使用随附图片进行单图分类。计算数据集精度时，准备对应验证集及逐图真值类别索引，并将其与运行时返回的 Top-1 类别 ID 对照。
 
 
@@ -25,7 +25,7 @@ python3 samples/vision/mobilenetv4/evaluator/evaluate_board.py \
 ```
 
 新输出目录包含全量预测、张量元信息、三个固定输入的输出，以及记录 Top-1/Top-5 和源码哈希的
-`evaluation.json`。C++ 性能计时与输入边界见[评测说明](../../../../utils/tools/mobilenet/cpp/README.md)。
+`evaluation.json`。C++ 性能计时与输入边界见[评测说明](../../../../utils/tools/classification/cpp/README.md)。
 
 <a id="dataset"></a>
 
@@ -46,7 +46,7 @@ evaluator/
 <a id="environment"></a>
 ## 环境
 
-主机 FP32 ONNX 评估使用 `evaluate.py`，需要 Python 3.10 和 `utils/tools/mobilenet/requirements.lock.txt` 中的依赖；安装与运行方法见[公共主机流程](../../../../utils/tools/mobilenet/README_cn.md)。
+主机 FP32 ONNX 评估使用 `evaluate.py`，需要 Python 3.10 和 `utils/tools/classification/requirements.lock.txt` 中的依赖；安装与运行方法见[公共主机流程](../../../../utils/tools/classification/README_cn.md)。
 
 板端分类与 `evaluate_board.py` 需要目标板卡的 `hbm_runtime` 镜像、NumPy、OpenCV-Python、Pillow、PyYAML、模型文件和标签文件。依赖安装见[Python 运行说明](../runtime/python/README_cn.md#environment)。
 

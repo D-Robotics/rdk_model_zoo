@@ -1,4 +1,4 @@
-"""Freeze MobileNet host inputs after verifying source and dataset bytes.
+"""Freeze classification host inputs after verifying source and dataset bytes.
 
 This preparation receipt is not a board acceptance or publication receipt.
 """
@@ -14,7 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from utils.py_utils.classification_host import load_dataset, sha256_file, write_json
-from utils.tools.mobilenet.workflow import PINS, check_source, environment, provenance
+from utils.tools.classification.workflow import PINS, check_source, environment, provenance
 
 
 def main() -> None:

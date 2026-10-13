@@ -199,7 +199,7 @@ so compare targets with care. The C++ pipeline uses a scalar, bit-exact
 reimplementation of Pillow's bicubic resize, which dominates its preprocessing
 time; it is not an upper bound for an optimized pipeline. To reproduce the accuracy numbers see the
 [evaluator](evaluator/README.md); the C++ timing tool is described in the
-[benchmark instructions](../../../utils/tools/mobilenet/cpp/README.md).
+[benchmark instructions](../../../utils/tools/classification/cpp/README.md).
 
 ![Inference result](./test_data/inference.png)
 

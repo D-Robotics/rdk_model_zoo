@@ -15,7 +15,7 @@ from utils.py_utils.classification_host import (
 )
 
 ROOT = Path(__file__).resolve().parents[3]
-CONTRACT = json.loads((ROOT / "utils/tools/mobilenet/checkpoints.json").read_text())["models"]["v4-small"]["contract"]
+CONTRACT = json.loads((ROOT / "utils/tools/classification/checkpoints.json").read_text())["models"]["v4-small"]["contract"]
 
 
 class ClassificationHostTests(unittest.TestCase):
