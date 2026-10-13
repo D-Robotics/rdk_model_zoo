@@ -50,7 +50,14 @@ S100/S100P/S600 将构建目录与 `FRCNN_TARGET` 中的 `x5` 改为对应板卡
 <a id="run"></a>
 ## 运行
 
-先按[模型准备说明](../../model/README_cn.md#preparation)准备模型，在 `samples/vision/fasterrcnn/runtime/cpp` 运行：
+在仓库根目录下载 X5 模型。下载环境使用 Python 3.10 或更高版本；其他板卡将 `x5` 换为 `s100`、`s100p` 或 `s600`。
+```bash
+python3 -m venv .venv-model-download
+. .venv-model-download/bin/activate
+python3 -m pip install PyYAML==6.0.3
+python3 samples/vision/fasterrcnn/model/download.py --target x5
+```
+在板卡的 `samples/vision/fasterrcnn/runtime/cpp` 目录运行：
 ```bash
 ./build/x5/fasterrcnn
 ./build/x5/fasterrcnn --target x5 \

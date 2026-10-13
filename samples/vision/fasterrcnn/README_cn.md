@@ -13,7 +13,7 @@
 ```text
 fasterrcnn/
 ├── conversion/       # Weight export, calibration and board compilation
-├── model/            # Paired artifacts, target metadata and COCO labels
+├── model/            # Published-pair download and install, target metadata, COCO labels
 ├── runtime/python/   # main.py, cli.py, detect.py, tracking.py, run.sh
 ├── runtime/cpp/      # Three source files, two headers, CMakeLists.txt, run.sh
 └── test_data/        # bus.jpg image input
@@ -36,16 +36,34 @@ fasterrcnn/
 ```bash
 python3 -m venv --system-site-packages .venv-fasterrcnn
 . .venv-fasterrcnn/bin/activate
-python3 -m pip install Cython setuptools wheel
+python3 -m pip install Cython setuptools wheel PyYAML==6.0.3
 python3 -m pip install --no-build-isolation --no-deps lap==0.5.12 cython-bbox==0.1.5
 ```
 
-模型转换在装有 Docker 的 x86_64 Linux 电脑上进行，使用[转换指南](conversion/README_cn.md#toolchain-targets)中的 OE 镜像。两段模型使用同一板卡目标的编译产物。
+模型转换仅在自行编译时需要：在装有 Docker 的 x86_64 Linux 电脑上进行，使用[转换指南](conversion/README_cn.md#toolchain-targets)中的 OE 镜像。两段模型使用同一板卡目标的编译产物。
 
 <a id="quickstart"></a>
-## X5 快速运行
+## 快速运行
 
-在转换电脑的仓库根目录操作。先按 [X5 工具链说明](https://developer.d-robotics.cc/rdk_x_doc/en/Advanced_development/toolchain_development/intermediate/environment_config)与 [S 工具链说明](https://developer.d-robotics.cc/rdk_s_doc/en/Advanced_development/toolchain_development/algorithm_toolchain/overview)获取 OE 镜像，导出权重并准备校准数据：
+下载已发布的模型对，把仓库复制到板卡后运行 Python 推理。在可联网电脑的仓库根目录执行：
+下载电脑需要 Python 3.10 或更高版本。
+```bash
+python3 -m venv .venv-model-download
+. .venv-model-download/bin/activate
+python3 -m pip install PyYAML==6.0.3
+python3 samples/vision/fasterrcnn/model/download.py --target x5
+```
+该命令从公开档案站下载 `frcnn_mbv3_320_parta.bin` 与 `frcnn_mbv3_320_partb.bin` 到 `model/x5/`，并按 `model/frcnn_mbv3_320.json` 校验两个 SHA-256。`--target` 可接 `x5`、`s100`、`s100p`、`s600` 中的一个或多个，省略时下载全部四组。已存在的文件只做校验，不会被覆盖。`model/download.sh` 接受相同参数。
+
+将仓库连同 `model/x5/` 复制到 X5，在板卡的仓库根目录运行：
+```bash
+python3 samples/vision/fasterrcnn/runtime/python/main.py --target x5
+```
+终端输出 JSON 检测结果，并生成 `samples/vision/fasterrcnn/test_data/result.jpg`。其他板卡先下载对应目标，再使用匹配的 `--target s100`、`--target s100p` 或 `--target s600`。
+
+### 自行编译模型对（可选）
+
+已发布的模型对也可以从 TorchVision 源码重建。在转换电脑的仓库根目录操作。先按 [X5 工具链说明](https://developer.d-robotics.cc/rdk_x_doc/en/Advanced_development/toolchain_development/intermediate/environment_config)与 [S 工具链说明](https://developer.d-robotics.cc/rdk_s_doc/en/Advanced_development/toolchain_development/algorithm_toolchain/overview)获取 OE 镜像，导出权重并准备校准数据：
 ```bash
 docker run --rm -v "$PWD":/work \
   -w /work/samples/vision/fasterrcnn/conversion \
@@ -68,13 +86,13 @@ docker run --rm -v "$PWD":/work \
 python3 samples/vision/fasterrcnn/model/prepare.py --target x5 \
   --from-build samples/vision/fasterrcnn/conversion/build
 ```
-将仓库连同 `model/x5/` 复制到 X5，在板卡的仓库根目录运行：
+在 X5 板卡的仓库根目录运行自行编译的模型：
 ```bash
 python3 samples/vision/fasterrcnn/runtime/python/main.py --target x5 \
   --parta-path samples/vision/fasterrcnn/model/x5/frcnn_mbv3_320_parta.bin \
   --partb-path samples/vision/fasterrcnn/model/x5/frcnn_mbv3_320_partb.bin
 ```
-终端输出 JSON 检测结果，并生成 `samples/vision/fasterrcnn/test_data/result.jpg`。
+S100/S100P/S600 的 OE 容器、编译与安装命令见[转换指南](conversion/README_cn.md#compile)。
 
 <a id="expected-results"></a>
 ## 运行结果

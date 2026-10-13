@@ -50,7 +50,14 @@ For S100/S100P/S600, replace `x5` in the build directory and `FRCNN_TARGET` with
 <a id="run"></a>
 ## Run
 
-Prepare the pair using the [model guide](../../model/README.md#preparation). Run from `samples/vision/fasterrcnn/runtime/cpp`:
+Download the X5 pair from the repository root using Python 3.10 or newer. For another board, replace `x5` with `s100`, `s100p` or `s600`.
+```bash
+python3 -m venv .venv-model-download
+. .venv-model-download/bin/activate
+python3 -m pip install PyYAML==6.0.3
+python3 samples/vision/fasterrcnn/model/download.py --target x5
+```
+Run on the board from `samples/vision/fasterrcnn/runtime/cpp`:
 ```bash
 ./build/x5/fasterrcnn
 ./build/x5/fasterrcnn --target x5 \

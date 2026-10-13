@@ -25,15 +25,16 @@ Use the board image’s `hbm_runtime`, NumPy, OpenCV and SciPy. X5/S100/S100P us
 ```bash
 python3 -m venv --system-site-packages .venv-fasterrcnn
 . .venv-fasterrcnn/bin/activate
-python3 -m pip install Cython setuptools wheel
+python3 -m pip install Cython setuptools wheel PyYAML==6.0.3
 python3 -m pip install --no-build-isolation --no-deps lap==0.5.12 cython-bbox==0.1.5
 ```
 
 <a id="usage"></a>
 ## Run
 
-Prepare both files using the [model guide](../../model/README.md#preparation). The default command uses the local pair recorded in the target descriptor. For a pair compiled with your own recipe, pass both paths explicitly. From the repository root:
+Install the target's pair under `model/<target>/` by downloading it or compiling it; see the [model guide](../../model/README.md#preparation). The default command uses the local pair recorded in the target descriptor. For a pair compiled with your own recipe, pass both paths explicitly. From the repository root:
 ```bash
+python3 samples/vision/fasterrcnn/model/download.py --target x5
 cd samples/vision/fasterrcnn/runtime/python
 python3 main.py
 python3 main.py --target x5 \
@@ -79,7 +80,7 @@ Image JSON includes `boxes` (N×4 original-pixel xyxy), `scores` (N) and `labels
 <a id="integration-example"></a>
 ## Use in an application
 
-After preparing the X5 pair, run this from the repository root in the board Python environment:
+With the X5 pair installed under `model/x5/` (downloaded or self-compiled), run this from the repository root in the board Python environment:
 ```python
 from pathlib import Path
 import cv2
@@ -119,5 +120,5 @@ PartB takes float32: X5 `(150,256,7,7)`, S `(1,256,1050,7)`. Reuse one model ins
 <a id="troubleshooting"></a>
 ## Model and input setup
 
-Use `--list-models` to inspect local paths. If either file is missing, prepare the pair for the chosen target. A descriptor hash error requires checking the file source; pass both paths explicitly for your own compiled pair. If `auto` cannot identify the board, specify `--target`. For tracker import errors, activate the environment containing `lap` and `cython_bbox`.
+Use `--list-models` to inspect local paths. If either file is missing, download the pair for the chosen target with the [model downloader](../../model/README.md#preparation) or compile it. A descriptor hash error requires checking the file source; pass both paths explicitly for your own compiled pair. If `auto` cannot identify the board, specify `--target`. For tracker import errors, activate the environment containing `lap` and `cython_bbox`.
 

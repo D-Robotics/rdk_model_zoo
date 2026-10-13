@@ -13,7 +13,7 @@ English | [简体中文](README_cn.md)
 ```text
 fasterrcnn/
 ├── conversion/       # Weight export, calibration and board compilation
-├── model/            # Paired artifacts, target metadata and COCO labels
+├── model/            # Published-pair download and install, target metadata, COCO labels
 ├── runtime/python/   # main.py, cli.py, detect.py, tracking.py, run.sh
 ├── runtime/cpp/      # Three source files, two headers, CMakeLists.txt, run.sh
 └── test_data/        # bus.jpg image input
@@ -36,16 +36,34 @@ Use the board image’s `hbm_runtime`, NumPy, OpenCV and SciPy. X5/S100/S100P us
 ```bash
 python3 -m venv --system-site-packages .venv-fasterrcnn
 . .venv-fasterrcnn/bin/activate
-python3 -m pip install Cython setuptools wheel
+python3 -m pip install Cython setuptools wheel PyYAML==6.0.3
 python3 -m pip install --no-build-isolation --no-deps lap==0.5.12 cython-bbox==0.1.5
 ```
 
-Model conversion uses an x86_64 Linux computer with Docker and the OE images listed in the [conversion guide](conversion/README.md#toolchain-targets). Keep both model stages from the same target together.
+Model conversion is only needed when self-compiling; it uses an x86_64 Linux computer with Docker and the OE images listed in the [conversion guide](conversion/README.md#toolchain-targets). Keep both model stages from the same target together.
 
 <a id="quickstart"></a>
-## Quick start on X5
+## Quick start
 
-Start from the repository root on the conversion computer. Obtain the OE images from the [X5 toolchain guide](https://developer.d-robotics.cc/rdk_x_doc/en/Advanced_development/toolchain_development/intermediate/environment_config) and the [S toolchain guide](https://developer.d-robotics.cc/rdk_s_doc/en/Advanced_development/toolchain_development/algorithm_toolchain/overview). Export the weights and prepare calibration inputs:
+Download the published pair, copy the repository to the board and run the Python runtime. On a computer with internet access, from the repository root:
+The download computer needs Python 3.10 or newer.
+```bash
+python3 -m venv .venv-model-download
+. .venv-model-download/bin/activate
+python3 -m pip install PyYAML==6.0.3
+python3 samples/vision/fasterrcnn/model/download.py --target x5
+```
+The command downloads `frcnn_mbv3_320_parta.bin` and `frcnn_mbv3_320_partb.bin` from the public archive into `model/x5/` and verifies both SHA-256 digests against `model/frcnn_mbv3_320.json`. `--target` accepts one or more of `x5`, `s100`, `s100p`, `s600`; omitting it downloads all four pairs. Existing files are verified, never overwritten. `model/download.sh` accepts the same options.
+
+Copy this repository, including `model/x5/`, to X5. From the repository root on the board, run:
+```bash
+python3 samples/vision/fasterrcnn/runtime/python/main.py --target x5
+```
+The command prints a JSON detection result and saves `samples/vision/fasterrcnn/test_data/result.jpg`. On the other boards use the matching target — `--target s100`, `--target s100p` or `--target s600` — after downloading that target's pair.
+
+### Compile the pair yourself (optional)
+
+The published pairs can also be rebuilt from the TorchVision source. Start from the repository root on the conversion computer. Obtain the OE images from the [X5 toolchain guide](https://developer.d-robotics.cc/rdk_x_doc/en/Advanced_development/toolchain_development/intermediate/environment_config) and the [S toolchain guide](https://developer.d-robotics.cc/rdk_s_doc/en/Advanced_development/toolchain_development/algorithm_toolchain/overview). Export the weights and prepare calibration inputs:
 ```bash
 docker run --rm -v "$PWD":/work \
   -w /work/samples/vision/fasterrcnn/conversion \
@@ -68,13 +86,13 @@ Copy the pair into its model directory:
 python3 samples/vision/fasterrcnn/model/prepare.py --target x5 \
   --from-build samples/vision/fasterrcnn/conversion/build
 ```
-Copy this repository, including `model/x5/`, to X5. From the repository root on the board, run:
+Run the self-compiled pair from the repository root on X5:
 ```bash
 python3 samples/vision/fasterrcnn/runtime/python/main.py --target x5 \
   --parta-path samples/vision/fasterrcnn/model/x5/frcnn_mbv3_320_parta.bin \
   --partb-path samples/vision/fasterrcnn/model/x5/frcnn_mbv3_320_partb.bin
 ```
-The command prints a JSON detection result and saves `samples/vision/fasterrcnn/test_data/result.jpg`.
+For S100/S100P/S600, follow the OE container, compilation and installation commands in the [conversion guide](conversion/README.md#compile).
 
 <a id="expected-results"></a>
 ## Results

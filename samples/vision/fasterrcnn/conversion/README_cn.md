@@ -2,6 +2,8 @@
 
 # Faster R-CNN model conversion
 
+四个板卡目标的 PartA/PartB 模型对均已发布到公开档案站，可直接下载，见[模型准备说明](../model/README_cn.md#preparation)。本指南用于从 TorchVision 源码重建这些模型对。
+
 <a id="source-model"></a>
 ## 源模型
 

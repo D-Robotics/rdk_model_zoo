@@ -99,8 +99,9 @@ describe("multi-platform variant catalog", () => {
     // became six, the X5 build was withdrawn): 616 variants. Its S PTQ reference row became six measured
     // rows and the X5 row left with the X5 sample: 834 benchmark rows.
     // On 2026-10-12 LiteAvatar joined with four manual S100 artifacts and no benchmark rows, and on
-    // 2026-10-13 Faster R-CNN published eight manual assets (two per target, no download URLs, no
-    // benchmark rows): 59 families and 628 variants, 834 benchmark rows unchanged.
+    // 2026-10-13 Faster R-CNN published eight assets (two per target, no benchmark rows; their
+    // download URLs were added later the same day, which changes no counts): 59 families and 628
+    // variants, 834 benchmark rows unchanged.
     // On 2026-10-13 LiteAvatar published its S100P and S600 artifact sets (four manual HBM files per
     // target, no download URLs, no benchmark rows): 59 families and 636 variants, 834 benchmark rows
     // unchanged.

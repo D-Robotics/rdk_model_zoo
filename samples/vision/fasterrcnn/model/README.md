@@ -7,27 +7,44 @@ English | [简体中文](README_cn.md)
 
 | Target | march | PartA | PartB |
 | --- | --- | --- | --- |
-| x5 | bayes-e | `../conversion/build/x5/parta/frcnn_mbv3_320_parta.bin` | `../conversion/build/x5/partb/frcnn_mbv3_320_partb.bin` |
-| s100 | nash-e | `../conversion/build/s100/parta/frcnn_mbv3_320_parta.hbm` | `../conversion/build/s100/partb/frcnn_mbv3_320_partb.hbm` |
-| s100p | nash-m | `../conversion/build/s100p/parta/frcnn_mbv3_320_parta.hbm` | `../conversion/build/s100p/partb/frcnn_mbv3_320_partb.hbm` |
-| s600 | nash-p | `../conversion/build/s600/parta/frcnn_mbv3_320_parta.hbm` | `../conversion/build/s600/partb/frcnn_mbv3_320_partb.hbm` |
-Prepare one PartA/PartB pair from the [conversion recipe](../conversion/README.md) for each target you use.
+| x5 | bayes-e | `x5/frcnn_mbv3_320_parta.bin` | `x5/frcnn_mbv3_320_partb.bin` |
+| s100 | nash-e | `s100/frcnn_mbv3_320_parta.hbm` | `s100/frcnn_mbv3_320_partb.hbm` |
+| s100p | nash-m | `s100p/frcnn_mbv3_320_parta.hbm` | `s100p/frcnn_mbv3_320_partb.hbm` |
+| s600 | nash-p | `s600/frcnn_mbv3_320_parta.hbm` | `s600/frcnn_mbv3_320_partb.hbm` |
+Every pair is published in the public archive: download it as described below, or rebuild it with the [conversion recipe](../conversion/README.md).
 
 <a id="directory"></a>
 ## Directory structure
 
 ```text
-frcnn_mbv3_320.json  # Target layouts and reference digests
-prepare.py          # Install compiled pairs and inspect file digests
-coco91_labels.txt    # COCO category names
-x5/                 # .bin pair
-s100/               # .hbm pair
-s100p/              # .hbm pair
-s600/               # .hbm pair
+download.py           # Download published pairs and verify digests
+download.sh           # Shell entry for download.py
+frcnn_mbv3_320.json   # Target layouts and reference digests
+prepare.py            # Install compiled pairs and inspect file digests
+coco91_labels.txt     # COCO category names
+x5/                   # .bin pair
+s100/                 # .hbm pair
+s100p/                # .hbm pair
+s600/                 # .hbm pair
 ```
 
 <a id="preparation"></a>
 ## Prepare a pair
+
+### Download the published pair
+
+From the repository root, download the X5 pair:
+Downloading requires Python 3.10 or newer. `--output-dir DIR` places each target subdirectory under the chosen directory; omitting it uses this model directory.
+
+```bash
+python3 -m venv .venv-model-download
+. .venv-model-download/bin/activate
+python3 -m pip install PyYAML==6.0.3
+python3 samples/vision/fasterrcnn/model/download.py --target x5
+```
+`--target` accepts one or more of `x5`, `s100`, `s100p`, `s600`; omitting it downloads all four pairs into `model/<target>/`, which is the runtime's default lookup path. Each file is fetched from the release manifest, verified against the recorded SHA-256 and installed atomically; an existing file is verified and never overwritten. `download.sh` accepts the same options. The downloader needs Python 3 with PyYAML only, no board runtime packages.
+
+### Compile and install a pair (optional)
 
 Compile the target using the conversion guide. From the repository root, copy the X5 pair:
 ```bash
@@ -79,5 +96,5 @@ Runtime defaults read `model/<target>/frcnn_mbv3_320_parta.{bin,hbm}` and `frcnn
 | s600 | parta | `frcnn_mbv3_320_parta.hbm` | `a0c857181e95b275190aca68c4149814c7381ceb7e3c9aac1cdd8a22cd2e0e84` |
 | s600 | partb | `frcnn_mbv3_320_partb.hbm` | `2ae5360e0b1bbc1d463cfd12f4764936e2c4e9dd5741cc35d0df705d848603ef` |
 
-Reference digests are recorded in `frcnn_mbv3_320.json`. `sha256sum` prints your local file digests. Default selection checks the recorded pair; explicit paths use the supplied files and their live tensor metadata.
+Reference digests are recorded in `frcnn_mbv3_320.json` and the release manifests; they are the published-artifact digests, and `download.py` verifies each downloaded file against them. `sha256sum` prints your local file digests. Default selection checks the recorded pair; explicit paths use the supplied files and their live tensor metadata.
 

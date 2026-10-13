@@ -14,10 +14,10 @@ release:
     statement: Published model files, download URLs and checksums. Runtime requirements are listed in each sample README.
 summary:
   sample_count: 36
-  download_script_count: 31
+  download_script_count: 32
   asset_count: 407
-  downloadable_asset_count: 386
-  manual_asset_count: 21
+  downloadable_asset_count: 392
+  manual_asset_count: 15
   sha256_recorded_count: 90
   sha256_unrecorded_count: 317
   benchmark_count: 553
@@ -312,37 +312,39 @@ models:
       - object-detection
       - multi-object-tracking
     sample_path: samples/vision/fasterrcnn
-    download_scripts: []
-    availability: manual
+    download_scripts:
+      - samples/vision/fasterrcnn/model/download.sh
+    availability: download
     assets:
       - filename: s100/frcnn_mbv3_320_parta.hbm
         format: hbm
-        url: null
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/fasterrcnn/s100/frcnn_mbv3_320_parta.hbm
         sha256: ca4c565497b3b027cad2241110e689c5eb54e24939a328f6e4fb8bd013e51337
       - filename: s100/frcnn_mbv3_320_partb.hbm
         format: hbm
-        url: null
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/fasterrcnn/s100/frcnn_mbv3_320_partb.hbm
         sha256: d4d21cebaece91c6195794b7062f607d665ef10c3055ce22d512ba14a5307ff4
       - filename: s100p/frcnn_mbv3_320_parta.hbm
         format: hbm
-        url: null
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/fasterrcnn/s100p/frcnn_mbv3_320_parta.hbm
         sha256: e7f4611d5283ff71673f8b0d67953111e70d2878405b8054bf56536d12924710
       - filename: s100p/frcnn_mbv3_320_partb.hbm
         format: hbm
-        url: null
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/fasterrcnn/s100p/frcnn_mbv3_320_partb.hbm
         sha256: ed91c61f81f2ac21a2d9dd8d20170f6a85243fab4157247e0943c8af535809f7
       - filename: s600/frcnn_mbv3_320_parta.hbm
         format: hbm
-        url: null
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/fasterrcnn/s600/frcnn_mbv3_320_parta.hbm
         sha256: a0c857181e95b275190aca68c4149814c7381ceb7e3c9aac1cdd8a22cd2e0e84
       - filename: s600/frcnn_mbv3_320_partb.hbm
         format: hbm
-        url: null
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/fasterrcnn/s600/frcnn_mbv3_320_partb.hbm
         sha256: 2ae5360e0b1bbc1d463cfd12f4764936e2c4e9dd5741cc35d0df705d848603ef
-    notes: Compile the PartA/PartB pair for the board with the conversion
-      guide (samples/vision/fasterrcnn/conversion) and install it with
-      python3 samples/vision/fasterrcnn/model/prepare.py --target s100 s100p
-      s600 --from-build samples/vision/fasterrcnn/conversion/build.
+    notes: Download the PartA/PartB pair with the sample downloader
+      (samples/vision/fasterrcnn/model/download.sh --target s100 s100p
+      s600). Self-compiling the pair with the conversion guide
+      (samples/vision/fasterrcnn/conversion) and installing it with
+      prepare.py --from-build remains available.
   - id: lanenet
     name: LaneNet
     tasks:

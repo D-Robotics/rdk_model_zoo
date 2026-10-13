@@ -17,10 +17,10 @@ release:
     statement: Published model files, download URLs and checksums. Runtime requirements are listed in each sample README.
 summary:
   sample_count: 37
-  download_script_count: 38
+  download_script_count: 39
   asset_count: 189
-  downloadable_asset_count: 186
-  manual_asset_count: 3
+  downloadable_asset_count: 188
+  manual_asset_count: 1
   sha256_recorded_count: 43
   sha256_unrecorded_count: 146
   benchmark_count: 238
@@ -177,21 +177,23 @@ models:
   - object-detection
   - multi-object-tracking
   sample_path: samples/vision/fasterrcnn
-  download_scripts: []
-  availability: manual
+  download_scripts:
+  - samples/vision/fasterrcnn/model/download.sh
+  availability: download
   assets:
   - filename: frcnn_mbv3_320_parta.bin
     format: bin
-    url: null
+    url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fasterrcnn/frcnn_mbv3_320_parta.bin
     sha256: a6f6509e5ab3b42f709d10062cfdb0a930b9eebb3ceb1d1a4bff3baeda42af86
   - filename: frcnn_mbv3_320_partb.bin
     format: bin
-    url: null
+    url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fasterrcnn/frcnn_mbv3_320_partb.bin
     sha256: 2ade35e91d66debf616594a28e2cae051b5e1ede617dfa914b25d06c3255724e
-  notes: Compile the PartA/PartB pair with the conversion guide
-    (samples/vision/fasterrcnn/conversion) and install it with
-    python3 samples/vision/fasterrcnn/model/prepare.py --target x5
-    --from-build samples/vision/fasterrcnn/conversion/build.
+  notes: Download the PartA/PartB pair with the sample downloader
+    (samples/vision/fasterrcnn/model/download.sh --target x5).
+    Self-compiling the pair with the conversion guide
+    (samples/vision/fasterrcnn/conversion) and installing it with
+    prepare.py --from-build remains available.
 - id: fasternet
   name: FasterNet
   tasks:

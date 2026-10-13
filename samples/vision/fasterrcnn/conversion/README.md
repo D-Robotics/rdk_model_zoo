@@ -2,6 +2,8 @@ English | [简体中文](README_cn.md)
 
 # Faster R-CNN model conversion
 
+The PartA/PartB pairs for all four targets are published in the public archive and can be downloaded directly; see the [model guide](../model/README.md#preparation). This guide rebuilds those pairs from the TorchVision source.
+
 <a id="source-model"></a>
 ## Source model
 

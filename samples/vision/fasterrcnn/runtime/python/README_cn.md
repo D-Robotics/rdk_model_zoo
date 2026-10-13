@@ -25,15 +25,16 @@ run.sh        # Shell 入口
 ```bash
 python3 -m venv --system-site-packages .venv-fasterrcnn
 . .venv-fasterrcnn/bin/activate
-python3 -m pip install Cython setuptools wheel
+python3 -m pip install Cython setuptools wheel PyYAML==6.0.3
 python3 -m pip install --no-build-isolation --no-deps lap==0.5.12 cython-bbox==0.1.5
 ```
 
 <a id="usage"></a>
 ## 运行
 
-先按[模型准备说明](../../model/README_cn.md#preparation)准备两个文件。默认命令使用板卡目录中的模型组合；自行编译的模型通过两个路径参数一起指定。在仓库根目录执行：
+先按[模型准备说明](../../model/README_cn.md#preparation)将所选板卡的模型对下载或编译到 `model/<target>/`。默认命令使用板卡目录中的模型组合；自行编译的模型通过两个路径参数一起指定。在仓库根目录执行：
 ```bash
+python3 samples/vision/fasterrcnn/model/download.py --target x5
 cd samples/vision/fasterrcnn/runtime/python
 python3 main.py
 python3 main.py --target x5 \
@@ -79,7 +80,7 @@ python3 main.py --target x5 \
 <a id="integration-example"></a>
 ## 代码调用
 
-准备好 X5 模型组合后，在板端 Python 环境的仓库根目录运行：
+X5 模型组合（下载或自行编译）安装到 `model/x5/` 后，在板端 Python 环境的仓库根目录运行：
 ```python
 from pathlib import Path
 import cv2
@@ -119,5 +120,5 @@ PartB 接收 float32：X5 为 `(150,256,7,7)`，S 系列为 `(1,256,1050,7)`。�
 <a id="troubleshooting"></a>
 ## 模型与输入检查
 
-通过 `--list-models` 查看本地路径。缺少模型时，准备所选板卡的两段文件。出现模型哈希错误时检查文件来源，自行编译的组合通过两个路径参数一起指定。`auto` 无法识别板卡时，显式指定 `--target`。跟踪依赖无法导入时，激活安装了 `lap` 和 `cython_bbox` 的环境。
+通过 `--list-models` 查看本地路径。缺少模型时，用[模型下载器](../../model/README_cn.md#preparation)下载所选板卡的模型对，或自行编译。出现模型哈希错误时检查文件来源，自行编译的组合通过两个路径参数一起指定。`auto` 无法识别板卡时，显式指定 `--target`。跟踪依赖无法导入时，激活安装了 `lap` 和 `cython_bbox` 的环境。
 
