@@ -476,8 +476,9 @@ void report_detect(const Options& options, const YoloDetect::Prediction& run,
             << run.result.detections.size() << std::endl;
 
   if (options.save_result) {
-    cv::Mat rendered(source.rows(), source.cols(), CV_8UC3,
-                     const_cast<uint8_t*>(source.bgr().data()));
+    // Render on a copy: the benchmark that may follow reuses the source pixels.
+    cv::Mat rendered = cv::Mat(source.rows(), source.cols(), CV_8UC3,
+                               const_cast<uint8_t*>(source.bgr().data())).clone();
     draw_detections(&rendered, run.result.detections);
     if (!cv::imwrite(options.output_path, rendered))
       throw std::runtime_error("Cannot write result: " + options.output_path);
@@ -542,8 +543,9 @@ void report_pose(const Options& options, const YoloPose::Prediction& run,
   const float kpt_thres_raw =
       -std::log(1.0f / options.kpt_conf_threshold - 1.0f);
 
-  cv::Mat result_img(source.rows(), source.cols(), CV_8UC3,
-                     const_cast<uint8_t*>(source.bgr().data()));
+  // Render on a copy: the benchmark that follows reuses the source pixels.
+  cv::Mat result_img = cv::Mat(source.rows(), source.cols(), CV_8UC3,
+                               const_cast<uint8_t*>(source.bgr().data())).clone();
 
   for (const YoloPose::Detection& det : run.result.detections) {
     const int x1 = static_cast<int>(det.x1);
@@ -637,8 +639,9 @@ void report_obb(const Options& options, const YoloObb::Prediction& run,
   }
 
   if (options.save_result) {
-    cv::Mat rendered(source.rows(), source.cols(), CV_8UC3,
-                     const_cast<uint8_t*>(source.bgr().data()));
+    // Render on a copy: the benchmark that may follow reuses the source pixels.
+    cv::Mat rendered = cv::Mat(source.rows(), source.cols(), CV_8UC3,
+                               const_cast<uint8_t*>(source.bgr().data())).clone();
     draw_obb_detections(&rendered, run.result.detections);
     if (!cv::imwrite(options.output_path, rendered))
       throw std::runtime_error("Cannot write result: " + options.output_path);
