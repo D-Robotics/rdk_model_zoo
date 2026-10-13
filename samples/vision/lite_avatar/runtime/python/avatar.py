@@ -518,10 +518,15 @@ class Audio2MouthStage(RawStage):
         """Window loop with fragment crossfade and Butterworth smoothing.
 
         ``au_data`` is ``[frame_count,50,512]`` (one row per output frame at
-        30 fps).  Windows advance by ``A2M_WINDOW - A2M_CROSSFADE`` frames;
-        overlapping fragments blend linearly and the assembled parameter
-        track is low-pass filtered per dimension.  Equivalent to calling
-        this stage's preprocess/infer/postprocess per window.
+        30 fps).  Each call owns one nominal 1-second window (``A2M_WINDOW``
+        = 30 rows); consecutive windows normally advance 0.4 s = 12 frames,
+        because the next start rewinds ``A2M_CROSSFADE / 10`` seconds from
+        the previous end.  The trailing fragment rows are re-anchored
+        against the next window with a linear crossfade, and the final
+        window slides back so it ends at ``audio_length`` and emits through
+        the full window.  The assembled parameter track is low-pass
+        filtered per dimension.  Equivalent to calling this stage's
+        preprocess/infer/postprocess per window.
         """
 
         if (
