@@ -13,12 +13,12 @@ release:
     repository_wide_board_test: false
     statement: Published model files, download URLs and checksums. Runtime requirements are listed in each sample README.
 summary:
-  sample_count: 36
-  download_script_count: 32
-  asset_count: 407
-  downloadable_asset_count: 392
+  sample_count: 37
+  download_script_count: 33
+  asset_count: 408
+  downloadable_asset_count: 393
   manual_asset_count: 15
-  sha256_recorded_count: 90
+  sha256_recorded_count: 91
   sha256_unrecorded_count: 317
   benchmark_count: 553
   performance_metric_count: 1535
@@ -345,6 +345,24 @@ models:
       s600). Self-compiling the pair with the conversion guide
       (samples/vision/fasterrcnn/conversion) and installing it with
       prepare.py --from-build remains available.
+  - id: hobot_mot
+    name: HobotMot (IOU 2.0)
+    tasks:
+      - multi-object-tracking
+    sample_path: samples/vision/hobot_mot
+    download_scripts:
+      - samples/vision/hobot_mot/model/download.sh
+    availability: download
+    assets:
+      - filename: vendor/mot-0120205146d88c3474bfc2936522e349e169fa8d.tar.gz
+        format: tar.gz
+        role: dependency
+        url: https://codeload.github.com/D-Robotics/mot/tar.gz/0120205146d88c3474bfc2936522e349e169fa8d
+        sha256: a0bf3b9738af2f7c4be5885ac777cdf93dab6d4dd374a297ceebebe58268b54b
+    notes: CPU tracker over detector result sequences; there is no neural
+      model artifact. The download script fetches the pinned upstream
+      D-Robotics/mot source (Apache-2.0), verifies the SHA-256 and extracts
+      it for the on-board CMake build on s100, s100p and s600.
   - id: lanenet
     name: LaneNet
     tasks:

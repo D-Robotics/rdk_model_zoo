@@ -95,6 +95,7 @@ rdk_model_zoo/
 |   |   |-- fcos/                  # Object detection
 |   |   |-- googlenet/             # Image classification
 |   |   |-- hgnetv2/               # Image classification
+|   |   |-- hobot_mot/             # Multi-object tracking (CPU IOU 2.0)
 |   |   |-- lanenet/               # Lane detection
 |   |   |-- lite_avatar/           # Audio-driven talking avatar
 |   |   |-- lprnet/                # License plate recognition
@@ -190,6 +191,7 @@ The table lists each model family with its platforms and available models; choos
 | Image Classification | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [Details](./samples/vision/vargconvnet) |
 | Image Classification | ViT | `samples/vision/vit` | RDK S100 | [Details](./samples/vision/vit) |
 | Multi-Object Tracking | ByteTrack | `samples/vision/bytetrack` | RDK X5 / RDK S100 / RDK S100P (local detector model) / RDK S600 | [Details](./samples/vision/bytetrack) |
+| Multi-Object Tracking | HobotMot (IOU 2.0) | `samples/vision/hobot_mot` | RDK X5 / RDK S100 / RDK S100P / RDK S600 (CPU tracker over detector results) | [Details](./samples/vision/hobot_mot) |
 | Object Detection / Person Tracking | Faster R-CNN MobileNetV3-Large-320-FPN | `samples/vision/fasterrcnn` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/fasterrcnn) |
 | Promptable Image Segmentation | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/efficient_sam) |
 | Promptable Image Segmentation | MobileSAM | `samples/vision/mobile_sam` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/mobile_sam) |

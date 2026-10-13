@@ -16,12 +16,12 @@ release:
     repository_wide_board_test: false
     statement: Published model files, download URLs and checksums. Runtime requirements are listed in each sample README.
 summary:
-  sample_count: 37
-  download_script_count: 39
-  asset_count: 189
-  downloadable_asset_count: 188
+  sample_count: 38
+  download_script_count: 40
+  asset_count: 190
+  downloadable_asset_count: 189
   manual_asset_count: 1
-  sha256_recorded_count: 43
+  sha256_recorded_count: 44
   sha256_unrecorded_count: 146
   benchmark_count: 238
   performance_metric_count: 634
@@ -308,6 +308,24 @@ models:
     format: bin
     url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/hgnetv2/hgnetv2_b4_224x224_nv12.bin
     sha256: null
+- id: hobot_mot
+  name: HobotMot (IOU 2.0)
+  tasks:
+  - multi-object-tracking
+  sample_path: samples/vision/hobot_mot
+  download_scripts:
+  - samples/vision/hobot_mot/model/download.sh
+  availability: download
+  assets:
+  - filename: vendor/mot-0120205146d88c3474bfc2936522e349e169fa8d.tar.gz
+    format: tar.gz
+    role: dependency
+    url: https://codeload.github.com/D-Robotics/mot/tar.gz/0120205146d88c3474bfc2936522e349e169fa8d
+    sha256: a0bf3b9738af2f7c4be5885ac777cdf93dab6d4dd374a297ceebebe58268b54b
+  notes: CPU tracker over detector result sequences; there is no neural model
+    artifact. The download script fetches the pinned upstream D-Robotics/mot
+    source (Apache-2.0), verifies the SHA-256 and extracts it for the
+    on-board CMake build.
 - id: himloco
   name: HIMLoco (Unitree Go2)
   tasks:

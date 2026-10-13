@@ -105,8 +105,11 @@ describe("multi-platform variant catalog", () => {
     // On 2026-10-13 LiteAvatar published its S100P and S600 artifact sets (four manual HBM files per
     // target, no download URLs, no benchmark rows): 59 families and 636 variants, 834 benchmark rows
     // unchanged.
+    // On 2026-10-13 HobotMot joined both platforms as a CPU tracker family: one dependency asset
+    // (pinned upstream source tarball, no benchmarks) per platform, no model variants: 60 families,
+    // variants and benchmark rows unchanged.
     // Explicit retirement/retention checks below guard more than these totals.
-    expect(catalog.models).toHaveLength(59);
+    expect(catalog.models).toHaveLength(60);
     expect(variants).toHaveLength(636);
     expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(834);
     expect(new Set(variants.map((variant) => variant.hardware)))
@@ -207,8 +210,9 @@ describe("multi-platform variant catalog", () => {
     );
     // Qualified manifest identities are unique; different models may legally
     // share a URL, while two URLs cannot make one duplicate identity valid.
+    // 190 since HobotMot added its dependency source asset on 2026-10-13.
     expect(new Set(x5Entries).size).toBe(x5Entries.length);
-    expect(x5Entries).toHaveLength(189);
+    expect(x5Entries).toHaveLength(190);
     expect(x5Models.summary.asset_count).toBe(x5Entries.length);
   });
 

@@ -95,6 +95,7 @@ rdk_model_zoo/
 |   |   |-- fcos/                  # Object detection
 |   |   |-- googlenet/             # Image classification
 |   |   |-- hgnetv2/               # Image classification
+|   |   |-- hobot_mot/             # 多目标跟踪（CPU IOU 2.0）
 |   |   |-- lanenet/               # Lane detection
 |   |   |-- lite_avatar/           # Audio-driven talking avatar
 |   |   |-- lprnet/                # License plate recognition
@@ -193,6 +194,7 @@ python3 main.py \
 | 图像分类 | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [详情](./samples/vision/vargconvnet) |
 | 图像分类 | ViT | `samples/vision/vit` | RDK S100 | [详情](./samples/vision/vit) |
 | 多目标跟踪 | ByteTrack | `samples/vision/bytetrack` | RDK X5 / RDK S100 / RDK S100P（需准备本地检测模型）/ RDK S600 | [详情](./samples/vision/bytetrack) |
+| 多目标跟踪 | HobotMot（IOU 2.0） | `samples/vision/hobot_mot` | RDK X5 / RDK S100 / RDK S100P / RDK S600（基于检测框的 CPU 跟踪器） | [详情](./samples/vision/hobot_mot) |
 | 目标检测 / 行人跟踪 | Faster R-CNN MobileNetV3-Large-320-FPN | `samples/vision/fasterrcnn` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/fasterrcnn) |
 | 提示式图像分割 | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/efficient_sam) |
 | 提示式图像分割 | MobileSAM | `samples/vision/mobile_sam` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/mobile_sam) |

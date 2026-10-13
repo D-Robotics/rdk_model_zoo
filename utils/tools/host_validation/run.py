@@ -11,7 +11,7 @@ downloads models, never initializes VLA submodules, never touches board SDKs
 and never runs on a board.  It executes, in isolated subprocesses:
 
 * every first-party Python ``unittest`` directory under ``samples/`` (all
-  53 samples listed in the maintained sample inventory, including nested
+  54 samples listed in the maintained sample inventory, including nested
   suites such as
   ``samples/vision/yoloe/conversion/tests`` and ``evaluator/tests``), the
   shared suites (including ``test_vla_integration.py``, a parent-repo

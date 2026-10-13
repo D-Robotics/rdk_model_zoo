@@ -35,6 +35,7 @@ scope.
 | vision | fcos |
 | vision | googlenet |
 | vision | hgnetv2 |
+| vision | hobot_mot |
 | vision | lanenet |
 | vision | lite_avatar |
 | vision | lprnet |
