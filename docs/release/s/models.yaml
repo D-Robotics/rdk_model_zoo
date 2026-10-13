@@ -13,13 +13,13 @@ release:
     repository_wide_board_test: false
     statement: Published model files, download URLs and checksums. Runtime requirements are listed in each sample README.
 summary:
-  sample_count: 37
-  download_script_count: 33
-  asset_count: 408
-  downloadable_asset_count: 393
+  sample_count: 35
+  download_script_count: 31
+  asset_count: 417
+  downloadable_asset_count: 402
   manual_asset_count: 15
-  sha256_recorded_count: 91
-  sha256_unrecorded_count: 317
+  sha256_recorded_count: 106
+  sha256_unrecorded_count: 311
   benchmark_count: 553
   performance_metric_count: 1535
   accuracy_metric_count: 2796
@@ -659,60 +659,76 @@ models:
         format: hbm
         url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/PointNet/pointnet.hbm
         sha256: null
-  - id: resnet18
-    name: Resnet18
+  - id: resnet
+    name: ResNet
     tasks:
       - image-classification
     sample_path: samples/vision/resnet
     download_scripts:
       - samples/vision/resnet/model/download.sh
     availability: download
-    notes: Use samples/vision/resnet/model/download.sh for the selected board and --variant resnet18 in the runtime. Model preparation is described in the sample model README.
+    notes: timm resnet18, resnet34, resnet50, resnet101 and resnet152 a1_in1k checkpoints, INT8 with 224x224 NV12 input. Models and SHA-256 values are published under models/resnet/resnet/cls/. Select 18, 34, 50, 101 or 152 with --variant. C++ inference instructions are in runtime/cpp.
     assets:
-      - filename: s100/resnet18_224x224_nv12.hbm
+      - filename: s100/resnet18_nashe_224x224_nv12.hbm
         format: hbm
-        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet18_224x224_nv12.hbm
-        sha256: null
-      - filename: s600/resnet18_224x224_nv12.hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/s100/resnet18_nashe_224x224_nv12.hbm
+        sha256: be56e79b3b53920de23b41c6ffea9738ea1acdb1c36570aa2a48b04eb712d6fc
+      - filename: s100p/resnet18_nashm_224x224_nv12.hbm
         format: hbm
-        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet18_224x224_nv12.hbm
-        sha256: null
-  - id: resnet50
-    name: Resnet50
-    tasks:
-      - image-classification
-    sample_path: samples/vision/resnet
-    download_scripts:
-      - samples/vision/resnet/model/download.sh
-    availability: download
-    notes: Use samples/vision/resnet/model/download.sh for the selected board and --variant resnet50 in the runtime. Model preparation is described in the sample model README.
-    assets:
-      - filename: s100/resnet50_224x224_nv12.hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/s100p/resnet18_nashm_224x224_nv12.hbm
+        sha256: 1d38d8457e4fc63f7148244a5d36411a797d6671059d59f071fe7ef416858782
+      - filename: s600/resnet18_nashp_224x224_nv12.hbm
         format: hbm
-        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet50_224x224_nv12.hbm
-        sha256: null
-      - filename: s600/resnet50_224x224_nv12.hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/s600/resnet18_nashp_224x224_nv12.hbm
+        sha256: 488144886f10bfe6539b003fe1f7df594e33ee39fdf59b06f8a9efc8c2072f64
+      - filename: s100/resnet34_nashe_224x224_nv12.hbm
         format: hbm
-        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet50_224x224_nv12.hbm
-        sha256: null
-  - id: resnet152
-    name: Resnet152
-    tasks:
-      - image-classification
-    sample_path: samples/vision/resnet
-    download_scripts:
-      - samples/vision/resnet/model/download.sh
-    availability: download
-    notes: Use samples/vision/resnet/model/download.sh for the selected board and --variant resnet152 in the runtime. Model preparation is described in the sample model README.
-    assets:
-      - filename: s100/resnet152_224x224_nv12.hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/s100/resnet34_nashe_224x224_nv12.hbm
+        sha256: fbac49e060e2c39c1d971e844604c593f17482307b0b81d7665cf8a71e7e7abf
+      - filename: s100p/resnet34_nashm_224x224_nv12.hbm
         format: hbm
-        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet152_224x224_nv12.hbm
-        sha256: null
-      - filename: s600/resnet152_224x224_nv12.hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/s100p/resnet34_nashm_224x224_nv12.hbm
+        sha256: 5b3a8d906bcbc3fdcba3a11a6bb9636fd548c704948583345e9ec7af5c5b9a4b
+      - filename: s600/resnet34_nashp_224x224_nv12.hbm
         format: hbm
-        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet152_224x224_nv12.hbm
-        sha256: null
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/s600/resnet34_nashp_224x224_nv12.hbm
+        sha256: f57bf280157b858b553ccb4e8f9cd1f52f14f4fdacccc83ce4bf20943857b72f
+      - filename: s100/resnet50_nashe_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/s100/resnet50_nashe_224x224_nv12.hbm
+        sha256: 118bc79923f698afd91666f19f32ae8651ee46e3f1aedfdc1f11bff1e8eb74e9
+      - filename: s100p/resnet50_nashm_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/s100p/resnet50_nashm_224x224_nv12.hbm
+        sha256: 0bdfebc791334efcbe7b61e6551d3900786aade6f2239ccb214e30d3b6ee6375
+      - filename: s600/resnet50_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/s600/resnet50_nashp_224x224_nv12.hbm
+        sha256: 6bcd64de9dc28c87229d5c1f45046eddccec7ba3c331a4a1215ab22133a30877
+      - filename: s100/resnet101_nashe_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/s100/resnet101_nashe_224x224_nv12.hbm
+        sha256: 9ae4a198c1b5becdf1dd564eb5627a3f2b8ec9ecc29315d360ce41ac321c7142
+      - filename: s100p/resnet101_nashm_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/s100p/resnet101_nashm_224x224_nv12.hbm
+        sha256: 47f07158654e29c60336d9bb37634d0146fe86e924554b33d70cd29605732d72
+      - filename: s600/resnet101_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/s600/resnet101_nashp_224x224_nv12.hbm
+        sha256: 3662582a82aaace43d742924ecd74750d754385c5df8d55e0d0643e632f27495
+      - filename: s100/resnet152_nashe_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/s100/resnet152_nashe_224x224_nv12.hbm
+        sha256: a4b93d4659b0bc5e1bbdad9e0b6814291c837d24148ca29597bc1a9149c699f0
+      - filename: s100p/resnet152_nashm_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/s100p/resnet152_nashm_224x224_nv12.hbm
+        sha256: 892b1c9849ceb10cb555c1abf8a1b0a8abfec715c09962b74b9f1feb5c80ee34
+      - filename: s600/resnet152_nashp_224x224_nv12.hbm
+        format: hbm
+        url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/s600/resnet152_nashp_224x224_nv12.hbm
+        sha256: 382582948c00baafe070ee702b71104d3f4bd48aa9e4651bfb387e77c625c6f9
   - id: siglip
     name: SigLIP
     tasks:

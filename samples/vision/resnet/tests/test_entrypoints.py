@@ -1,4 +1,4 @@
-"""SDK-free command checks for the new entrypoint."""
+"""SDK-free command checks for the ResNet entrypoint."""
 
 from __future__ import annotations
 
@@ -30,20 +30,40 @@ class EntrypointTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertIn("--target", completed.stdout)
 
-    def test_list_and_dry_run_are_sdk_free_and_do_not_download(self):
-        listed = self._run("--list-models", "--target", "x5")
-        self.assertEqual(listed.returncode, 0, listed.stderr)
-        self.assertIn("asset_id: x5:resnet:resnet18_224x224_nv12.bin", listed.stdout)
+    def test_list_models_publishes_every_manifest_filename(self):
+        from testsupport import PUBLISHED
 
-        dry_run = self._run("--dry-run", "--target", "x5")
-        self.assertEqual(dry_run.returncode, 0, dry_run.stderr)
-        self.assertIn("No model is downloaded", dry_run.stdout)
-        self.assertNotIn("hbm_runtime", dry_run.stdout)
+        completed = self._run("--list-models", "--target", "auto")
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        for filename in PUBLISHED.values():
+            self.assertIn(filename, completed.stdout)
+
+    def test_dry_run_per_target_reports_source_contract(self):
+        from testsupport import PUBLISHED, VARIANTS
+
+        for (variant, target) in PUBLISHED:
+            size, shorter, _ = VARIANTS[variant]
+            self._check_dry_run(target, variant, {
+                'protocol': 'packed_nv12' if target == 'x5' else 'split_nv12',
+                'geometry': f'{size}x{size}', 'policy': 'softmax',
+                'preprocess': f'resize_type=2, resize_shorter={shorter}'})
+
+    def _check_dry_run(self, target, variant, expected):
+        completed = self._run("--dry-run", "--target", target, "--variant", variant)
+        label = f"{variant}/{target}"
+        self.assertEqual(completed.returncode, 0, f"{label}: {completed.stderr}")
+        self.assertIn(f"input_protocol: {expected['protocol']}", completed.stdout, label)
+        self.assertIn(f"input_geometry: {expected['geometry']}", completed.stdout, label)
+        self.assertIn(f"output_score_policy: {expected['policy']}", completed.stdout, label)
+        self.assertIn(f"preprocess: {expected['preprocess']}", completed.stdout, label)
+        self.assertIn("No model is downloaded", completed.stdout, label)
+        self.assertNotIn("hbm_runtime", completed.stdout, label)
 
     def test_missing_model_is_a_visible_error_without_implicit_download(self):
         completed = self._run(
-            "--target", "x5", "--asset-id", "x5:resnet:resnet18_224x224_nv12.bin",
-            "--model-path", str(ROOT / "missing-pilot-model.bin"),
+            "--target", "s600",
+            "--asset-id", "s:resnet:s600/resnet152_nashp_224x224_nv12.hbm",
+            "--model-path", str(ROOT / "missing-resnet-model.hbm"),
         )
         self.assertNotEqual(completed.returncode, 0)
         self.assertIn("model file not found", completed.stderr.lower())

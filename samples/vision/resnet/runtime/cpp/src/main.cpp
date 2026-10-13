@@ -1,15 +1,15 @@
-// Copyright (c) 2025, XiangshunZhao D-Robotics.
+// Copyright (c) 2025 D-Robotics Corporation
 // Copyright (c) 2026 D-Robotics Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 /**
  * @file main.cpp
- * @brief ResNet18 classification sample entry.
+ * @brief ResNet classification sample entry.
  *
- * Parses the command line, constructs the Resnet18 model (construction loads
- * the HBM runtime), classifies one image through predict, and prints the
- * Top-K classes. Options, image/label loading and presentation live in the
- * CLI helpers.
+ * Parses the command line, constructs the ResNet model (construction
+ * loads the HBM runtime), classifies one image through predict, and prints
+ * the Top-K classes. Options, image/label loading and presentation live in
+ * the CLI helpers.
  */
 
 #include <iostream>
@@ -27,7 +27,7 @@ int main(int argc, char** argv)
         }
 
         // Construction loads the model, queries tensors and allocates buffers.
-        Resnet18 model(options.model_path);
+        ResNet model(options.model_path, options.resize_shorter);
 
         // One synchronous classification of the test image.
         const auto image = resnet::load_image(options.test_img);

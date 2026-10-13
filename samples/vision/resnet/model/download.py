@@ -25,29 +25,44 @@ from utils.py_utils.assets import download_asset, resolve_asset
 
 
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent
-VARIANTS = ("resnet18", "resnet50", "resnet152")
+VARIANTS = ('18', '34', '50', '101', '152')
+# Input sizes: 18 224x224, 34 224x224, 50 224x224, 101 224x224, 152 224x224.  File names carry the toolchain march token
+# (bayese, nashe, nashm, nashp), so each file identifies its chip.
 ASSET_REFERENCES = {
-    ("x5", "resnet18"): "x5:resnet:resnet18_224x224_nv12.bin",
-    ("s100", "resnet18"): "s:resnet18:s100/resnet18_224x224_nv12.hbm",
-    ("s600", "resnet18"): "s:resnet18:s600/resnet18_224x224_nv12.hbm",
-    ("s100", "resnet50"): "s:resnet50:s100/resnet50_224x224_nv12.hbm",
-    ("s600", "resnet50"): "s:resnet50:s600/resnet50_224x224_nv12.hbm",
-    ("s100", "resnet152"): "s:resnet152:s100/resnet152_224x224_nv12.hbm",
-    ("s600", "resnet152"): "s:resnet152:s600/resnet152_224x224_nv12.hbm",
+    ('x5', '18'): 'x5:resnet:resnet18_bayese_224x224_nv12.bin',
+    ('s100', '18'): 's:resnet:s100/resnet18_nashe_224x224_nv12.hbm',
+    ('s100p', '18'): 's:resnet:s100p/resnet18_nashm_224x224_nv12.hbm',
+    ('s600', '18'): 's:resnet:s600/resnet18_nashp_224x224_nv12.hbm',
+    ('x5', '34'): 'x5:resnet:resnet34_bayese_224x224_nv12.bin',
+    ('s100', '34'): 's:resnet:s100/resnet34_nashe_224x224_nv12.hbm',
+    ('s100p', '34'): 's:resnet:s100p/resnet34_nashm_224x224_nv12.hbm',
+    ('s600', '34'): 's:resnet:s600/resnet34_nashp_224x224_nv12.hbm',
+    ('x5', '50'): 'x5:resnet:resnet50_bayese_224x224_nv12.bin',
+    ('s100', '50'): 's:resnet:s100/resnet50_nashe_224x224_nv12.hbm',
+    ('s100p', '50'): 's:resnet:s100p/resnet50_nashm_224x224_nv12.hbm',
+    ('s600', '50'): 's:resnet:s600/resnet50_nashp_224x224_nv12.hbm',
+    ('x5', '101'): 'x5:resnet:resnet101_bayese_224x224_nv12.bin',
+    ('s100', '101'): 's:resnet:s100/resnet101_nashe_224x224_nv12.hbm',
+    ('s100p', '101'): 's:resnet:s100p/resnet101_nashm_224x224_nv12.hbm',
+    ('s600', '101'): 's:resnet:s600/resnet101_nashp_224x224_nv12.hbm',
+    ('x5', '152'): 'x5:resnet:resnet152_bayese_224x224_nv12.bin',
+    ('s100', '152'): 's:resnet:s100/resnet152_nashe_224x224_nv12.hbm',
+    ('s100p', '152'): 's:resnet:s100p/resnet152_nashm_224x224_nv12.hbm',
+    ('s600', '152'): 's:resnet:s600/resnet152_nashp_224x224_nv12.hbm',
 }
-TARGETS = ("x5", "s100", "s600")
+TARGETS = ("x5", "s100", "s100p", "s600")
 
 
-def asset_reference(target: str, variant: str = "resnet18") -> str:
+def asset_reference(target: str, variant: str = '18') -> str:
     """Return the exact manifest reference for a supported target/variant."""
 
     key = (str(target).strip().lower(), str(variant).strip().lower())
     try:
         return ASSET_REFERENCES[key]
     except KeyError as exc:
-        available = ", ".join(f"{t}/{v}" for t, v in ASSET_REFERENCES)
+        available = ", ".join("/".join(k) for k in ASSET_REFERENCES)
         raise ValueError(
-            f"Unsupported ResNet target/variant {target}/{variant}; "
+            f"Unsupported ResNet target/variant {target}; "
             f"published combinations: {available}."
         ) from exc
 
@@ -56,12 +71,12 @@ def download_target(
     target: str,
     output_dir: Optional[str | Path] = None,
     *,
-    variant: str = "resnet18",
+    variant: str = '18',
 ) -> str:
     """Download an exact target artifact and return its observed SHA-256.
 
-    ``output_dir`` preserves the source sample's layout: X5 is flat while the
-    S-series artifact remains under ``s100/`` or ``s600/``. Existing files are
+    ``output_dir`` preserves the sample's layout: X5 is flat while the S-series
+    artifact stays under ``s100/``, ``s100p/`` or ``s600/``. Existing files are
     verified by the shared downloader and are never silently replaced.
     """
 
@@ -91,9 +106,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--variant",
         choices=VARIANTS,
-        default="resnet18",
-        help="Model variant to fetch (default: resnet18; resnet50/resnet152 "
-        "are S100/S600-only).",
+        default='18',
+        help="Model variant to fetch (default: 18).",
     )
     parser.add_argument(
         "--output-dir",

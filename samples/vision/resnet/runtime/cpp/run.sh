@@ -3,11 +3,54 @@ set -euo pipefail
 
 # Build and run only.  Toolchain/runtime dependencies and model preparation
 # are explicit README steps; this launcher never invokes apt, pip, or wget.
+# S-series C++ flow only (the X5 source delivered Python alone).
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="${BUILD_DIR:-$SCRIPT_DIR/build}"
-MODEL_PATH="${MODEL_PATH:-$SCRIPT_DIR/../../model/s100/resnet18_224x224_nv12.hbm}"
-TEST_IMAGE="${TEST_IMAGE:-$SCRIPT_DIR/../../test_data/zebra_cls.jpg}"
-LABEL_FILE="${LABEL_FILE:-$SCRIPT_DIR/../../../../../datasets/imagenet/imagenet_classes.names}"
+SAMPLE_DIR="$SCRIPT_DIR/../.."
+
+# Board identity is read once from the same sources the Python flow uses:
+# soc_name plus the board_type variant that distinguishes S100P from S100
+# (docs/release/platforms.json registers soc_name=s100 with
+# board_type=s100p/"rdk s100p" as S100P).  Both registered S100P identity
+# forms select the s100p artifact; unknown boards are rejected instead of
+# silently falling back to another target's artifact.
+# SOC_NAME_FILE/BOARD_TYPE_FILE exist so host tests can fixture the identity
+# sources; on a board the defaults below are the real sysfs files.
+SOC_NAME_FILE="${SOC_NAME_FILE:-/sys/class/boardinfo/soc_name}"
+BOARD_TYPE_FILE="${BOARD_TYPE_FILE:-/sys/class/boardinfo/board_type}"
+# An unreadable identity file yields "" (not a shell exit) so the case
+# below reports it as an unknown board — set -e/pipefail would otherwise
+# abort at the failed redirect with a bare rc=1.
+read_id_file() {
+  local path="$1" raw=""
+  [[ -r "$path" ]] && raw="$(tr -d '() \t\r\n' < "$path" | tr 'A-Z' 'a-z')"
+  printf '%s' "$raw"
+}
+SOC_RAW="$(read_id_file "$SOC_NAME_FILE")"
+BOARD_RAW="$(read_id_file "$BOARD_TYPE_FILE")"
+if [[ "$SOC_RAW" == "s100" && ( "$BOARD_RAW" == "s100p" || "$BOARD_RAW" == "rdks100p" ) ]]; then
+  SOC_RAW="s100p"
+fi
+case "$SOC_RAW" in
+  s100) MARCH=nashe ;;
+  s100p) MARCH=nashm ;;
+  s600) MARCH=nashp ;;
+  *)
+    echo "error: unrecognized or unsupported SoC '${SOC_RAW:-unknown}';" \
+         "this C++ flow supports s100/s100p/s600 only" >&2
+    exit 2
+    ;;
+esac
+# VARIANT selects the published depth: 18 (default), 34, 50, 101 or 152.
+VARIANT="${VARIANT:-18}"
+case "$VARIANT" in
+  18|34|50|101|152) ;;
+  *) echo "error: unsupported VARIANT '$VARIANT'; published: 18, 34, 50, 101, 152" >&2; exit 2 ;;
+esac
+
+MODEL_PATH="${MODEL_PATH:-$SAMPLE_DIR/model/$SOC_RAW/resnet${VARIANT}_${MARCH}_224x224_nv12.hbm}"
+TEST_IMAGE="${TEST_IMAGE:-$SAMPLE_DIR/test_data/zebra_cls.jpg}"
+LABEL_FILE="${LABEL_FILE:-$SAMPLE_DIR/test_data/imagenet1000_labels.txt}"
 
 has_option() {
   local name="$1"
@@ -48,7 +91,7 @@ if value="$(option_value --top-k "$@")"; then TOP_K="$value"; fi
 
 if [[ ! -f "$MODEL_PATH" ]]; then
   echo "Model not found: $MODEL_PATH" >&2
-  echo "Prepare it explicitly with samples/vision/resnet/model/download.sh s100." >&2
+  echo "Prepare it explicitly with samples/vision/resnet/model/download.sh $SOC_RAW $VARIANT." >&2
   exit 2
 fi
 if [[ ! -f "$TEST_IMAGE" ]]; then
@@ -76,4 +119,4 @@ fi
 if ! has_option --top-k "${NATIVE_ARGS[@]}"; then
   NATIVE_ARGS+=(--top-k "$TOP_K")
 fi
-exec "$BUILD_DIR/resnet18" "${NATIVE_ARGS[@]}"
+exec "$BUILD_DIR/resnet" "${NATIVE_ARGS[@]}"

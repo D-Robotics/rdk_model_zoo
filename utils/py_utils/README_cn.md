@@ -48,7 +48,7 @@ validate_labels(labels, 1000)
 
 ### 模型选择与下载
 
-`assets.py` 读取 `docs/release/{x5,s}/models.yaml`。模型引用由分组、Sample 和文件标识构成，例如 `x5:resnet:resnet18_224x224_nv12.bin`。使用对应 Sample 的下载命令准备模型。板卡标识与别名由 `docs/release/platforms.json` 定义。
+`assets.py` 读取 `docs/release/{x5,s}/models.yaml`。模型引用由分组、Sample 和文件标识构成，例如 `x5:resnet:resnet18_bayese_224x224_nv12.bin`。使用对应 Sample 的下载命令准备模型。板卡标识与别名由 `docs/release/platforms.json` 定义。
 
 ### 任务公共函数
 

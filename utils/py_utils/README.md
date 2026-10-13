@@ -48,7 +48,7 @@ See [ResNet](../../samples/vision/resnet/runtime/python/README.md) and [YOLO](..
 
 ### Model selection and downloads
 
-`assets.py` reads `docs/release/{x5,s}/models.yaml`. Asset references combine a group, sample and file identifier, for example `x5:resnet:resnet18_224x224_nv12.bin`. Use the sample's download command to prepare the selected artifact. Platform identities and aliases are defined in `docs/release/platforms.json`.
+`assets.py` reads `docs/release/{x5,s}/models.yaml`. Asset references combine a group, sample and file identifier, for example `x5:resnet:resnet18_bayese_224x224_nv12.bin`. Use the sample's download command to prepare the selected artifact. Platform identities and aliases are defined in `docs/release/platforms.json`.
 
 ### Task helpers
 

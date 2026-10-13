@@ -26,146 +26,134 @@ python/
 <a id="environment"></a>
 ## Environment
 
-The target board requires matching `hbm_runtime`, NumPy, OpenCV-Python, and PyYAML.
-
-| Board | Published models | Input |
-| --- | --- | --- |
-| RDK X5 | ResNet18 | packed NV12 |
-| RDK S100 | ResNet18, ResNet50, ResNet152 | split NV12 |
-| RDK S600 | ResNet18, ResNet50, ResNet152 | split NV12 |
-
-See [model files](../../model/README.md) for artifact preparation and
-[model conversion](../../conversion/README.md) for ONNX export and compilation.
+Run on the target board's Python environment with the matching
+`hbm_runtime`, NumPy, OpenCV-Python, and Pillow; PyYAML is needed for manifest
+reading. Pillow performs the antialiased bicubic resize of the shorter-edge
+center crop the published models expect (install it with
+`python3 -m pip install pillow` if the board image lacks it).
+`hbm_runtime` is supplied by the board image and is imported lazily.
+`--help`, `--list-models`, and `--dry-run` inspect the selection without
+executing a model. Host Python dependencies are listed in the sample's
+`requirements-host.txt`.
 
 <a id="usage"></a>
 ## Usage
 
-Run from the repository root. List models and inspect a target configuration:
+cwd: repository root. Default command (zero arguments beyond the mode
+flags is not executable without a board and artifact, so the minimal
+SDK-free invocation is the listing mode):
 
 ```bash
+# output: prints all published references, exit 0, no SDK loaded
 python3 samples/vision/resnet/runtime/python/main.py --list-models --target auto
-python3 samples/vision/resnet/runtime/python/main.py --dry-run --target x5
 ```
 
-Listing and dry-run work on a development host without loading the board SDK.
-After preparing the model, run on the corresponding board:
+A full run on a prepared X5 board:
 
 ```bash
-python3 samples/vision/resnet/runtime/python/main.py --target x5
-python3 samples/vision/resnet/runtime/python/main.py --target s100 --variant resnet50
-python3 samples/vision/resnet/runtime/python/main.py --target s600 --variant resnet152
-```
-
-`--target auto` selects the board from local hardware; the default model is
-ResNet18. An explicit target must match the executing board. To specify the
-model path, image, and labels:
-
-```bash
+# prerequisites: bash samples/vision/resnet/model/download.sh x5 18
+# output: exit 0 and a printed Top-5 list
 python3 samples/vision/resnet/runtime/python/main.py \
   --target x5 \
-  --asset-id x5:resnet:resnet18_224x224_nv12.bin \
-  --model-path samples/vision/resnet/model/resnet18_224x224_nv12.bin \
+  --asset-id x5:resnet:resnet18_bayese_224x224_nv12.bin \
+  --model-path samples/vision/resnet/model/resnet18_bayese_224x224_nv12.bin \
   --test-img samples/vision/resnet/test_data/white_wolf.JPEG \
   --label-file datasets/imagenet/imagenet_classes.names
 ```
+
+For S100, S100P and S600 substitute the `s:` reference (for example
+`s:resnet:s100p/resnet18_nashm_224x224_nv12.hbm`) and the
+`s100/`, `s100p/` or `s600/` artifact path; the labels file is shared. `--dry-run --target x5` resolves a selection without board access,
+model loading, or download.
 
 <a id="parameters"></a>
 ## Parameters
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
+| `--variant` | choice | null | model variant: `18`, `34`, `50`, `101`, `152` (`18` default when omitted; see `--list-models` for published combinations) |
 | `--target` | choice | auto | execution target: `auto`, `x5`, `s100`, `s100p`, `s600`; an execution target must match detected hardware |
 | `--asset-id` | string | null | complete `group:sample:filename` reference from the manifest |
-| `--variant` | choice | null | model variant (`resnet18` on x5/s100/s600; `resnet50`/`resnet152` on s100/s600 only) |
 | `--model-path` | string | null | existing `.bin`/`.hbm`; must be paired with `--asset-id`; defaults to the `model/` location for the resolved reference when omitted |
 | `--test-img` | string | samples/vision/resnet/test_data/white_wolf.JPEG | BGR input image |
-| `--label-file` | string | null | one-label-per-line labels file; default: the bundled ImageNet labels |
+| `--label-file` | string | datasets/imagenet/imagenet_classes.names | one-label-per-line ImageNet labels |
 | `--top-k` | int | 5 | number of printed results |
 | `--topk` | int | 5 | alias of `--top-k` |
-| `--resize-type` | int | null | `0` direct stretch or `1` letterbox with BGR 127 padding; default follows the model configuration |
+| `--resize-type` | int | null | `0` direct stretch, `1` letterbox with BGR 127 padding, or `2` shorter-edge resize + center crop (needs Pillow); default follows the bound model (`2`) |
 | `--priority` | int | 0 | runtime scheduling priority (0-255) |
 | `--bpu-cores` | int list | [0] | runtime BPU core indexes |
 | `--img-save-path` | string | null | optional annotated output image path |
 | `--list-models` | flag | false | list manifest-backed references without board access |
 | `--dry-run` | flag | false | resolve/check a selection without loading a model or SDK |
 
+Defaults above are the values defined in `build_parser` ([cli.py](cli.py)).
+
 <a id="results"></a>
 ## Results
 
-The command prints Top-K class IDs, labels, and scores. Add
-`--img-save-path result.jpg` to save an annotated image. The library returns
-`ClassificationResult(class_ids, scores, labels)`.
-
-Published models use 224×224 inputs with letterbox resizing and BGR 127 padding
-by default. X5 receives a flat uint8 NV12 array of 75,264 bytes; S100/S600 receive
-Y `(1,224,224,1)` and UV `(1,112,112,2)` uint8 arrays. Published model outputs are
-F32 score vectors; softmax is applied before stable descending Top-K selection.
+The command prints the stable Top-K as class IDs, scores, and labels
+(`ClassificationResult(class_ids, scores, labels)`), and writes an
+annotated image only when `--img-save-path` is given. X5 receives the packed
+NV12 buffer as the flat 1-D uint8 array of `H*W*3/2` bytes
+(224x224 -> 75,264 bytes);
+S100/S100P/S600 receive Y `(1,224,224,1)` and UV `(1,112,112,2)` uint8
+arrays (every variant is 224x224 on every target).
+The published artifacts return raw logits; the task applies a stable
+softmax before Top-K on both platforms.
+The output must reduce to `(1000,)` after removing dimensions of size 1. Published artifacts use `raw_f32`; integer outputs require `dequant` and matching quantization metadata.
 
 <a id="integration-example"></a>
 ## Integration example
 
-Import and reuse the classifier on the target board:
+Prerequisites: artifact prepared (see [model/README.md](../../model/README.md)),
+and OpenCV-Python and Pillow importable. Run:
 
 ```python
 from samples.vision.resnet.runtime.python.classify import ResNetClassifier
+from samples.vision.resnet.runtime.python.cli import resolve_selection
 
+selection = resolve_selection(
+    "x5",
+    asset_id="x5:resnet:resnet18_bayese_224x224_nv12.bin",
+    model_path="samples/vision/resnet/model/resnet18_bayese_224x224_nv12.bin",
+)
+contract = selection.contract
 model = ResNetClassifier(
-    "samples/vision/resnet/model/resnet18_224x224_nv12.bin",
-    target="x5", top_k=5,
+    selection.model_path, target=selection.target,
+    input_size=(contract.input_height, contract.input_width),
+    class_count=contract.class_count, top_k=5,
+    resize_type=contract.resize_type,
+    resize_interpolation=contract.resize_interpolation,
+    resize_shorter=contract.resize_shorter,
+    score_policy=contract.output_score_policy,
+    output_transform=contract.output_transform,
 )
 result = model.predict("samples/vision/resnet/test_data/white_wolf.JPEG")
 print(result.class_ids, result.scores, result.labels)
 ```
 
-The CLI selects ResNet50 with `--target s100 --variant resnet50`; the library
-accepts its `.hbm` path and `target="s100"`. `predict` accepts
-an image path or a BGR uint8 NumPy array. Supply class names through `labels`;
-without them, `result.labels` contains class ID strings. Input arrays remain unchanged.
-
-<a id="custom-model"></a>
-## Self-trained models
-
-Declare the compiled artifact's board, input dimensions, and class count:
-
-```python
-from samples.vision.resnet.runtime.python.classify import ResNetClassifier
-
-model = ResNetClassifier(
-    "mymodels/my_resnet_4class.bin", target="x5",
-    input_size=(224, 224), class_count=4, top_k=2,
-    labels=["cat", "dog", "bus", "ship"],
-)
-result = model.predict("samples/vision/resnet/test_data/white_wolf.JPEG")
-print(result.class_ids, result.scores, result.labels)
-```
-
-`ResNetClassifier` defaults to F32 output with softmax. For outputs that are
-already probabilities, set `score_policy="none"`; for quantized outputs,
-set the corresponding `output_transform="dequant"`. The runtime checks actual
-tensor shapes, types, and class count against the declaration. A label sequence
-must contain one entry per class.
+`predict` accepts a local image path or BGR `uint8` NumPy array; the input array remains unchanged. The three stages can also be driven explicitly:
+`prepared = model.preprocess(source)`, `outputs = model.infer(prepared)`,
+`result = model.postprocess(outputs)` — `predict` chains exactly these
+steps.
 
 <a id="stage-io"></a>
-## Stage interfaces
+## Stage I/O
 
-| Method | Input | Output |
+| Stage | Input | Output |
 | --- | --- | --- |
-| `preprocess` | Image path or BGR uint8 array | `PreparedInput`: NV12 tensors and per-image resize information |
-| `infer` | `PreparedInput` | Raw output tensor dictionary |
-| `postprocess` | Raw output tensor dictionary | Top-K `ClassificationResult` |
-| `predict` | Image path or BGR uint8 array | Runs the three stages and returns `ClassificationResult` |
-
-`infer` calls `hbm_runtime` through the shared `RuntimeModelRunner`; the shared
-`RuntimeSession` loads the model and checks board identity. Applications can call
-the three stages separately to access intermediate data.
+| `preprocess` (`pre_process`) | image path or one BGR `uint8` array (any size) | `PreparedInput.tensors` (target-shaped NV12 tensors) + `PreparedInput.transform` (frozen per-call resize context, including the crop offsets) |
+| `infer` (`forward`) | `PreparedInput` | raw output dict (X5 F32 `[1,1000,1,1]`; S F32 `[1,1000]`) — raw SDK tensors before score processing |
+| `postprocess` (`post_process`) | raw outputs (no context: classification consumes no geometry) | `ClassificationResult(class_ids, scores, labels)`, stable descending Top-K under the declared score policy |
+| `predict` | image path or BGR `uint8` array | chains the three stages, same `ClassificationResult` |
 
 <a id="troubleshooting"></a>
 ## Troubleshooting
 
-| Symptom | Action |
+| Symptom | Check |
 | --- | --- |
-| `Cannot identify this board` | Run inference on a supported board; inspect configuration on a host with `--dry-run --target x5`. |
-| `model file not found` | Prepare the artifact from the model files guide, or specify `--asset-id` and `--model-path`. |
-| `model_path requires --asset-id` | Copy the full reference from `--list-models`. |
-| No published model for S100P | Published models support X5, S100, and S600; declare a self-trained S100P model with `ResNetClassifier`. |
-| Input/output shape or type mismatch | Check the compilation target, input protocol, output class count, and selected model configuration. |
+| `Pillow is required for resize_type 2` | Install Pillow in the board's Python environment (`python3 -m pip install pillow`). |
+| `Cannot identify this board` | Select a target supported by the sample and run inference on the matching board. |
+| `model_path requires --asset-id` | Pass the exact qualified reference from `--list-models` with `--asset-id`. |
+| input shape or dtype mismatch | Check that the artifact reference and target use the expected packed X5 or split S tensor layout. |
+| output differs from a reference run | Compare the same artifact, image, resize mode, Top-K, and raw output before changing score semantics. |

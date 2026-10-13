@@ -1,37 +1,52 @@
 [English](README.md) | 简体中文
 
-# ResNet 模型转换（ResNet18 / ResNet50 / ResNet152）
+# ResNet 模型转换
 
-转换在 x86 Linux 主机的 RDK OpenExplore（OE）环境完成。本目录
-覆盖该 sample 发布的三个变体，各变体的转换流程不同：
-
-| 变体 | 本目录内容 | 转换流程 |
-| --- | --- | --- |
-| ResNet18（x5+s） | `export_resnet18_onnx.py` | 先在主机运行本目录提供的 ONNX 导出器，校准数据与 YAML 取自 OE `13_resnet18` 示例 |
-| ResNet50（仅 s） | — | 经 OE `13_resnet50` 示例的配方转换 |
-| ResNet152（仅 s） | `resnet152_config.yaml`、`get_calibration_data.py`、`x86_inference.py` | 已发布 ONNX + 用户自备校准图，配合上述三个文件在 OE 内完成转换 |
+本流程从固定版本的 timm 检查点重建已发布的 ResNet 部署模型：导出 FP32
+ONNX、INT8 训练后量化（PTQ），并为每个 RDK 目标编译。它在带 Docker 的 x86
+Linux 主机上执行，不是板卡操作。导出、校准和配置步骤使用公共
+[主机流程](../../../../utils/tools/classification/README_cn.md)；每次编译在对应的
+OpenExplorer（OE）工具链容器中运行。
 
 <a id="source-model"></a>
 ## 源模型
 
-三个变体均为 TorchVision ResNet 系列 ImageNet-1k 分类器：
-[ResNet18](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html)、
-[ResNet50](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet50.html)、
-[ResNet152](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet152.html)。
+- 框架：PyTorch 2.8.0 与 timm 1.0.20（版本固定在
+  `utils/tools/classification/requirements.lock.txt`）。
+- 权重，按 Hugging Face revision 与文件 SHA-256 固定在
+  `utils/tools/classification/checkpoints.json`：
+  - `18`：`timm/resnet18.a1_in1k`，revision
+    `491b427b45c94c7fb0e78b5474cc919aff584bbf`
+  - `34`：`timm/resnet34.a1_in1k`，revision
+    `0e8757122c4c09b15fb9300c0fd09b3fe89e28bf`
+  - `50`：`timm/resnet50.a1_in1k`，revision
+    `767268603ca0cb0bfe326fa87277f19c419566ef`
+  - `101`：`timm/resnet101.a1_in1k`，revision
+    `d90ce63ac1b05b22614f11dcea68fcedfc2c4dee`
+  - `152`：`timm/resnet152.a1_in1k`，revision
+    `5529f135ee86e1bff01db5688add74a2c27ee16a`
+- 对应关系：检查点即 timm 发布的 ResNet-18/34/50/101/152 ImageNet-1k
+  分类模型 `a1_in1k` 版本（按“ResNet strikes back”的 A1 方案训练），权重不做修改。许可证：Apache-2.0（检查点 model card）。
 
-- ResNet18：本地导出，固定 NCHW 输入 `[1,3,224,224]`、输出名 `output`、
-  ImageNet-1k 类别数。导出器使用 TorchScript ONNX 导出
-  （`dynamo=False`）以保持图稳定。`--weights IMAGENET1K_V1` 选择官方
-  预训练权重；`--weights none` 生成随机权重图，仅用于离线结构检查。
-- ResNet50：经 OE `13_resnet50` 分类示例转换——ONNX、校准和编译步骤从该示例
-  开始。
-- ResNet152：有已发布 ONNX——在 OE 容器内（或任何可访问该链接的 x86
-  主机）：
+<a id="preprocessing"></a>
+### 预处理合同
 
-```bash
-# cwd：本 conversion 目录 — 输出：./resnet152.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet152.onnx
-```
+校准、评测与 runtime 使用同一几何，跟随检查点自带的评测设置（`crop_pct`）：
+
+| 变体 | `crop_pct` | 短边缩放到 | 裁剪 |
+| --- | --- | --- | --- |
+| 18 | 0.95 | 235（`int(224 / 0.95)`） | 224x224 中心裁剪 |
+| 34 | 0.95 | 235（`int(224 / 0.95)`） | 224x224 中心裁剪 |
+| 50 | 0.95 | 235（`int(224 / 0.95)`） | 224x224 中心裁剪 |
+| 101 | 0.95 | 235（`int(224 / 0.95)`） | 224x224 中心裁剪 |
+| 152 | 0.95 | 235（`int(224 / 0.95)`） | 224x224 中心裁剪 |
+
+缩放为抗锯齿双三次（Pillow）。像素为 RGB；ONNX 输入 `data` 是按 ImageNet
+均值/标准差归一化的 float32 `[1,3,224,224]`，输出 `logits` 为 `[1,1000]`。
+部署模型把归一化编译进去（`mean_value` = 均值 x 255，`scale_value` =
+1 / (255 x 标准差)），因此 runtime 送入由 224x224 裁剪图转换的 NV12。NV12
+转换使用 OpenCV 的有限范围 BT.601 变换，所以两种配置都设置
+`input_space_and_range: bt601_video`。
 
 <a id="directory"></a>
 ## 目录结构
@@ -40,263 +55,174 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resne
 conversion/
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── export_resnet18_onnx.py  # Python 脚本
-├── get_calibration_data.py  # Python 脚本
-├── resnet152_config.yaml  # 配置
-└── x86_inference.py  # Python 脚本
+├── export.py  # 固定版本 timm 检查点 -> 已校验的 FP32 ONNX
+├── ptq_s.yaml  # S100 / S100P / S600 编译配置（含占位符）
+└── ptq_x5.yaml  # X5 编译配置（含占位符）
 ```
+
+校准输入与 OE 配置由 `utils/tools/classification/workflow.py` 生成；`ptq_*.yaml`
+是已发布制品使用的参考编译配置。
 
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-使用与目标板卡匹配的 OE Docker/工具链版本，并记录镜像 tag、OE 版本与
-主机日期。权威参考：
-[RDK S 工具链概览](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview)、
+使用与目标匹配的 OE 容器编译，并把镜像 tag 与 digest 和该次构建一起保存。
+已发布制品所用版本：
+
+| 目标 | march | 工具链镜像 | 工具 | 配置 |
+| --- | --- | --- | --- | --- |
+| x5 | bayes-e | `registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8` | hb_mapper 1.24.3、HBDK 3.49.15、horizon_nn 1.1.0 | `ptq_x5.yaml` |
+| s100 | nash-e | `registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0` | hb_compile 3.5.3、HMCT 2.6.5、HBDK 4.7.5 | `ptq_s.yaml` |
+| s100p | nash-m | 与 s100 相同的镜像 | 同 s100 | `ptq_s.yaml` |
+| s600 | nash-p | 与 s100 相同的镜像 | 同 s100 | `ptq_s.yaml` |
+
+文档：[RDK S 工具链概览](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview)、
 [D-Robotics 工具链下载](https://toolchain.d-robotics.cc/)。
-通用的加载与挂载流程：
-
-```bash
-# 输入：OE 镜像压缩包 — 其余命令在容器内 /workspace 执行
-export OE_IMAGE_TAR=/absolute/path/to/oe-image.tar
-test -s "$OE_IMAGE_TAR"
-docker load -i "$OE_IMAGE_TAR"
-docker images
-: "${OE_IMAGE:?Set OE_IMAGE to the loaded OE image:tag}"
-export REPOSITORY_ROOT="${REPOSITORY_ROOT:-$PWD}"
-docker run --rm -it --network host --shm-size=15g \
-  -v "$REPOSITORY_ROOT":/workspace --workdir /workspace \
-  "$OE_IMAGE" /bin/bash
-```
-
-目标：X5 用 `hb_mapper` 按 march `bayes-e` 编译（以所选 OE 版本为准）；
-S100 用 `hb_compile`（`nash-e`），S600 用 `nash-p`。涉及的 OE
-分类示例：
-`samples/ai_toolchain/horizon_model_convert_sample/03_classification/`
-下的 `13_resnet18` 与 `13_resnet50`。
 
 <a id="export"></a>
-## 导出
+## 导出（ONNX）
 
-ResNet18——导出前置：PyTorch、TorchVision、ONNX（可选 ONNX Runtime 做
-主机图冒烟）。在 OE 容器内 `/workspace` 执行：
+下面的命令构建 `18`；构建其他深度时使用 `--model resnet34`、`resnet50`、
+`resnet101` 或 `resnet152` 和单独的工作目录。`WORK` 是仓库之外的绝对路径目录。
 
 ```bash
-# 输入：TorchVision 权重（未缓存时下载）
-# 输出：$WORK/resnet18.onnx，导出后使用 onnx.checker 检查模型。
-export WORK="${WORK:-/workspace/resnet18-conversion}"
-mkdir -p "$WORK"
-python3 samples/vision/resnet/conversion/export_resnet18_onnx.py \
-  --output "$WORK/resnet18.onnx" \
-  --opset 11 \
-  --weights IMAGENET1K_V1
+# cwd：仓库根目录；Python 3.10，已安装锁定的依赖
+export REPO=$(pwd)
+export WORK=/abs/path/resnet-18
+python3 utils/tools/classification/workflow.py fetch --model resnet18 \
+  --output $WORK/weights
+python3 samples/vision/resnet/conversion/export.py --model resnet18 \
+  --source-dir $WORK/weights \
+  --images samples/vision/resnet/test_data/white_wolf.JPEG \
+           samples/vision/resnet/test_data/zebra_cls.jpg \
+  --opset 11 --simplify --output $WORK/export
+# 预期：$WORK/export/model.onnx（data float32 [1,3,224,224] -> logits [1,1000]）
+#       以及 status 为 "passed" 的 export.json
 ```
 
-离线冒烟可用 `--weights none`（随机权重，无精度含义）。仅当由其他记录
-过的工具校验时才用 `--no-check` 跳过 `onnx.checker`。在 Torch 2.7.1、
-TorchVision 0.22.1、ONNX 1.19、ONNX Runtime 1.23.2 下的主机导出检查
-输出 `[1,1000]`，与同种子 PyTorch 图在 `1e-4` 内一致。
-
-ResNet50——导出在 OE `13_resnet50` 示例内完成。ResNet152——用[源模型](#source-model)一节的已发布 ONNX；没有要运行的导出器。
+`export.py` 校验检查点哈希，严格加载权重，简化计算图，并用真实图像把 logits
+与 Top-5 同 PyTorch 对比。`export.json` 记录每张图像的最大绝对误差，并把 ONNX
+的 SHA-256 与检查点、预处理合同和依赖版本绑定。
 
 <a id="calibration"></a>
 ## 校准
 
-ResNet18——本目录提供导出器；校准数据与 YAML 取自 OE `13_resnet18`
-示例。从 OE 示例复制对应的 `13_resnet18` 文件并按其文档执行预处理与
-校准，同时记录确切校准数据。本目录的 ResNet152 配置是 ResNet152 的
-配方——不是 ResNet18 的配方，不得混用。
-
-ResNet152——`get_calibration_data.py`（在 OE 容器内、cwd 为本
-conversion 目录）把 100 张 ImageNet 验证集图片转成 float32 RGB 校准
-数据。两个输入需要用户自备并在脚本中先行修改；脚本默认路径指向
-旧目录树，需要替换：
-
-```python
-# get_calibration_data.py — 用户需修改的输入
-src_image_dir = '../../../open_explorer/samples/ai_toolchain/horizon_model_convert_sample/01_common/calibration_data/imagenet/'  # 改为你的 ILSVRC2012_val_*.JPEG 目录
-output_calib_dir = './calibration_data_rgb/'  # 与 resnet152_config.yaml 的 cal_data_dir 一致
-```
+- 数据集：COCO 2017 train2017 中固定的 200 张图像子集（选取种子 42），
+  在 manifest 中逐张记录 SHA-256。该集合与评测集没有共同图像，
+  `workflow.py calibrate` 会校验这一点。
+- 预处理：上述预处理要求，并按目标写出：X5 使用 [0,255] 的原始 RGB float32
+  （`.rgb`，无头小端；RGB/NV12 转换由 X5 加载器完成）；S 系列使用归一化后的
+  ONNX 输入，保存为 float32 `.npy`。
 
 ```bash
-# cwd：本 conversion 目录（OE 容器内）
-# 输入：src_image_dir 内 >=100 张 ILSVRC2012_val_*.JPEG
-# 输出：./calibration_data_rgb/ 下的 100 个 .npy 文件（float32、RGB、NCHW）。
-python3 get_calibration_data.py
+# cwd：仓库根目录；对每个目标各执行一次：x5、s100、s100p、s600
+python3 utils/tools/classification/workflow.py calibrate --model resnet18 \
+  --platform x5 \
+  --manifest /abs/calibration/manifest.json \
+  --images-root /abs/calibration \
+  --expected-images 200 \
+  --evaluation-manifest /abs/imagenetv2/manifest.json \
+  --output $WORK/x5/calibration
+# 预期：$WORK/x5/calibration/data（200 个文件）与 calibration.json
 ```
-
-相对路径在本 cwd 内闭环衔接：脚本写出 `./calibration_data_rgb/`，
-即 `resnet152_config.yaml` 的 `cal_data_dir`；YAML 的 `onnx_model`
-`./resnet152.onnx` 是[源模型](#source-model)一步下载到本目录的文
-件；其 `working_dir`/`output_model_file_prefix` 产出
-`./model_output/resnet152_224x224_nv12.hbm`，与[编译](#compile)一节
-的声明一致。
-
-脚本与 YAML 的归一化常量**并不一致**：两者 mean 相同
-（`123.675 116.28 103.53`），但脚本统一乘 `0.017`，YAML 声明逐通道
-`scale_value: 0.01712475 0.017507 0.01742919`。再生成时让脚本与 YAML
-使用同一组 scale；YAML 的逐通道值与发布记录的
-Mean/Scale 行一致（见[转换后验证](#validation)）。
-
-ResNet50——校准在 OE `13_resnet50` 示例内完成；本目录无对应步骤。
 
 <a id="compile"></a>
 ## 编译
 
-ResNet18——在 OE 容器内，备好 `$WORK/resnet18.onnx` 与 `$OE_CONFIG`
-（OE 示例的 YAML）后执行。X5 块：
+填充参考配置中的占位符（`SIZE` 为模型输入尺寸：224）；编译参数（优化级别、
+latency 模式、单核、NV12 输入）由该配置固定：
 
 ```bash
-# 输出：$WORK 下的 *.bin
-export X5_MARCH="${X5_MARCH:-bayes-e}"
-hb_mapper --version
-hb_mapper checker --model-type onnx --march "$X5_MARCH" --model "$WORK/resnet18.onnx"
-hb_mapper makertbin --model-type onnx --config "$OE_CONFIG"
-find "$WORK" -type f -name '*.bin' -print
+# cwd：$WORK
+export SIZE=224
+sed -e "s#@WORK@#$WORK#g" -e "s#@SIZE@#$SIZE#g" \
+  $REPO/samples/vision/resnet/conversion/ptq_x5.yaml > x5/config.yaml
+for pair in s100:nash-e s100p:nash-m s600:nash-p; do
+  target=${pair%%:*}; march=${pair##*:}
+  sed -e "s#@WORK@#$WORK#g" -e "s#@TARGET@#$target#g" -e "s#@MARCH@#$march#g" \
+      -e "s#@SIZE@#$SIZE#g" \
+    $REPO/samples/vision/resnet/conversion/ptq_s.yaml > $target/config.yaml
+done
 ```
 
-S100/S600 块（YAML 必须包含匹配的 Nash target——S100 为 `nash-e`，
-S600 为 `nash-p`）：
+把 `$WORK` 以相同的绝对路径挂载进容器，并在容器内运行工具链，例如 X5：
 
 ```bash
-# 输出：$WORK 下的 *.hbm
-hb_compile --help
-hb_compile --config "$OE_CONFIG"
-find "$WORK" -type f -name '*.hbm' -print
+# cwd：$WORK/x5；已发布构建使用 --shm-size 15g（X5），
+# S 系列镜像另外使用 --gpus all
+docker run --rm --user "$(id -u):$(id -g)" --shm-size 15g \
+  -v "$WORK:$WORK" -w "$WORK/x5" \
+  registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8 \
+  bash -c "hb_mapper checker --model-type onnx --march bayes-e \
+             --model $WORK/export/model.onnx --input-shape data 1x3x${SIZE}x${SIZE} && \
+           hb_mapper makertbin --config config.yaml --model-type onnx"
+
+# S100、S100P、S600：cwd 为 $WORK/<target>，镜像 ..._s100_s600_gpu:v3.7.0
+#   hb_compile --config config.yaml
+# 预期：<target>/build/resnet_<target>.bin（x5）或 .hbm（S）
 ```
 
-ResNet152——备好 `./resnet152.onnx` 与 `./calibration_data_rgb/`
-（cwd：本 conversion 目录，OE 容器内）：
-
-```bash
-# 输入：./resnet152.onnx、./calibration_data_rgb（见校准一节）
-# 输出：./model_output/resnet152_224x224_nv12.hbm
-hb_compile --config resnet152_config.yaml
-```
-
-`resnet152_config.yaml` 默认 `march: nash-e`（S100）。为 S600 重编译时
-把 `march` 改为 `nash-p`，其余字段不动。预期输出前缀
-`resnet152_224x224_nv12`（与 Manifest 文件名
-`resnet152_224x224_nv12.hbm` 一致）。
-
-ResNet50——经 OE `13_resnet50` 示例编译；本目录未提供配置。只执行与
-目标制品对应的块。若 OE 示例的命令拼写不同，按其确切命令执行并
-随结果记录。
-
-ONNX 路径保存在 `ONNX` 变量时，可使用同一套 X5 检查和编译命令：
-
-```bash
-export ONNX="$WORK/resnet18.onnx"
-export X5_MARCH="${X5_MARCH:-bayes-e}"
-hb_mapper --version
-hb_mapper checker --model-type onnx --march "$X5_MARCH" --model "$ONNX"
-hb_mapper makertbin --model-type onnx --config "$OE_CONFIG"
-find "$WORK" -type f -name '*.bin' -print
-```
+把每个输出重命名为发布名称（见[产物](#artifacts)）；名称中带有 march 标记：
+`bayese`、`nashe`、`nashm`、`nashp`。
 
 <a id="validation"></a>
 ## 转换后验证
 
-用 OE 示例的 `hb_perf` 与 `hrt_model_exec` 对生成制品执行并完整记录
-输出。ResNet152 可用 `x86_inference.py`（OE 容器内执行）在 x86 上以
-相同的 padded-crop 预处理对照 ONNX / HBIR（`.bc`）/ HBM 输出。
+1. 在匹配的板卡上用 `hrt_model_exec model_info --model_file <file>` 检查制品。
+   输入 shape 按目标与变体区分：
 
-再在匹配板卡上用 运行时确认：X5 元数据为单一 packed NV12
-输入加名为 `prob` 的 F32 `[1,1000,1,1]` 输出；S100/S600 为 Y
-`[1,224,224,1]`、UV `[1,112,112,2]` 与 F32 `[1,1000]` 输出；同图、
-同缩放、同标签、同 Top-K 得到预期的类别 ID 与分数顺序。
+   | 目标 / 变体 | 元数据 暴露的输入 | 输出 |
+   | --- | --- | --- |
+   | x5，18、34、50、101 与 152 | 一个 packed NV12 输入，224x224（`resnet{18,34,50,101,152}_bayese_224x224_nv12.bin`） | F32 `[1,1000,1,1]` |
+   | s100/s100p/s600，18 | Y `[1,224,224,1]`、UV `[1,112,112,2]`（`resnet18_nash{e,m,p}_224x224_nv12.hbm`） | F32 `[1,1000]` |
+   | s100/s100p/s600，34 | Y `[1,224,224,1]`、UV `[1,112,112,2]`（`resnet34_nash{e,m,p}_224x224_nv12.hbm`） | F32 `[1,1000]` |
+   | s100/s100p/s600，50 | Y `[1,224,224,1]`、UV `[1,112,112,2]`（`resnet50_nash{e,m,p}_224x224_nv12.hbm`） | F32 `[1,1000]` |
+   | s100/s100p/s600，101 | Y `[1,224,224,1]`、UV `[1,112,112,2]`（`resnet101_nash{e,m,p}_224x224_nv12.hbm`） | F32 `[1,1000]` |
+   | s100/s100p/s600，152 | Y `[1,224,224,1]`、UV `[1,112,112,2]`（`resnet152_nash{e,m,p}_224x224_nv12.hbm`） | F32 `[1,1000]` |
 
-源发布对 ResNet152 公开的转换记录：
-
-| 项目 | 数值（记录） |
-| --- | --- |
-| 运行时输入 / 训练输入 | NV12 / RGB（NCHW） |
-| Mean / Scale | `123.675 116.28 103.53` / `0.01712475 0.017507 0.01742919` |
-| March | `nash-e` |
-| 校准相似度 | `0.994397` |
-| 量化相似度 | `0.992285` |
-| 工具链 FPS / 延迟 | `449.03` / `2.23 ms` |
-
-再生成制品需要执行 OE 编译，并按[验证](#validation)一节在板端复验。
+   输出为原始 logits，由 runtime 程序应用 softmax。
+2. 用新模型执行样例快速开始中的命令：退出码 0 并打印 Top-5 列表
+   （见[预期结果](../README_cn.md#expected-results)）。
+3. 用[评测器](../evaluator/README_cn.md)测量全量精度，并与同一检查点的 FP32
+   ONNX 基线比较；已发布结果见
+   [sample README](../README_cn.md#performance)。
 
 <a id="artifacts"></a>
 ## 产物
 
-| 阶段 | 需保留的产物 |
-| --- | --- |
-| export | `resnet18.onnx`、导出参数、Torch/TorchVision/ONNX 版本；ResNet152：下载的 `resnet152.onnx` 及来源 URL |
-| calibration | ResNet18：OE 示例的校准目录/清单与预处理记录；ResNet152：`calibration_data_rgb/` 与确切源图清单 |
-| checker | checker 命令、目标配置、日志 |
-| compile | 目标配置、OE 版本、生成输出目录 |
-| deployment | X5 `resnet18_224x224_nv12.bin` 或 S `resnet{18,50,152}_224x224_nv12.hbm`（Manifest 文件名） |
-| validation | `hb_perf`/`hrt_model_exec`/`x86_inference.py` 输出、raw 输出、延迟、精度输入 |
+| 产物 | 目标 | 落盘位置 |
+| --- | --- | --- |
+| `resnet18_bayese_224x224_nv12.bin` | x5 | `model/` |
+| `resnet18_nashe_224x224_nv12.hbm` | s100 | `model/s100/` |
+| `resnet18_nashm_224x224_nv12.hbm` | s100p | `model/s100p/` |
+| `resnet18_nashp_224x224_nv12.hbm` | s600 | `model/s600/` |
+| `resnet34_bayese_224x224_nv12.bin` | x5 | `model/` |
+| `resnet34_nashe_224x224_nv12.hbm` | s100 | `model/s100/` |
+| `resnet34_nashm_224x224_nv12.hbm` | s100p | `model/s100p/` |
+| `resnet34_nashp_224x224_nv12.hbm` | s600 | `model/s600/` |
+| `resnet50_bayese_224x224_nv12.bin` | x5 | `model/` |
+| `resnet50_nashe_224x224_nv12.hbm` | s100 | `model/s100/` |
+| `resnet50_nashm_224x224_nv12.hbm` | s100p | `model/s100p/` |
+| `resnet50_nashp_224x224_nv12.hbm` | s600 | `model/s600/` |
+| `resnet101_bayese_224x224_nv12.bin` | x5 | `model/` |
+| `resnet101_nashe_224x224_nv12.hbm` | s100 | `model/s100/` |
+| `resnet101_nashm_224x224_nv12.hbm` | s100p | `model/s100p/` |
+| `resnet101_nashp_224x224_nv12.hbm` | s600 | `model/s600/` |
+| `resnet152_bayese_224x224_nv12.bin` | x5 | `model/` |
+| `resnet152_nashe_224x224_nv12.hbm` | s100 | `model/s100/` |
+| `resnet152_nashm_224x224_nv12.hbm` | s100p | `model/s100p/` |
+| `resnet152_nashp_224x224_nv12.hbm` | s600 | `model/s600/` |
 
-已发布文件名即本 sample 使用的 Manifest 行。导出器的 ONNX 输出名为
-`output`；已发布 X5 运行时元数据的输出名为 `prob`、形状
-`[1,1000,1,1]`，S 制品为 `output`、`[1,1000]`——这些名称与形状属于
-目标模型的输入输出格式。
-
-已发布的 S 系列制品也可从模型服务器直接下载（S100 与 S600 文件名相同，
-仅归档子目录不同；规范准备路径仍是 [模型下载器](../model/README_cn.md#preparation)）：
-
-```bash
-# ResNet18
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet18_224x224_nv12.hbm
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet18_224x224_nv12.hbm
-# ResNet50
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet50_224x224_nv12.hbm
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet50_224x224_nv12.hbm
-# ResNet152
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet152_224x224_nv12.hbm
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet152_224x224_nv12.hbm
-```
+清单与 [model/README_cn.md](../model/README_cn.md) 一致。
 
 <a id="known-gaps"></a>
-## 额外准备
+## 补充准备
 
-- ResNet18：校准集、YAML 与预处理记录从 OE `13_resnet18` 示例获取。
-- ResNet50：ONNX、校准数据与 YAML 从 OE `13_resnet50` 示例获取，并在该
-  示例内完成转换。
-- ResNet152：校准图片由用户自备——把 `get_calibration_data.py` 的
-  `src_image_dir` 改为你的 ILSVRC2012 验证集目录；脚本统一 `0.017`
-  scale 与 YAML 逐通道 `scale_value` 不同，再生成时让脚本与 YAML 使用
-  同一组一致的 scale。
-- 每个已发布制品实际使用的权重与 OE 配置未记录；同名的再生成文件在
-  比较 target、输入元数据、输出 shape/dtype 与数值结果之前不等价。
-
-<a id="self-trained"></a>
-## 自训练 TorchVision ResNet18 checkpoint
-
-默认导出脚本面向官方 `IMAGENET1K_V1` 权重；自训练 `state_dict` 走同一固定
-合同导出：
-
-```bash
-# conversion 环境（已装 PyTorch + TorchVision）；cwd：本目录
-python3 export_resnet18_onnx.py \
-  --checkpoint /path/to/my_resnet18.pth \
-  --num-classes 4 \
-  --output my_resnet18_4class.onnx
-```
-
-规则与保证：
-
-- CLI 约定：`--checkpoint` 与 `--weights` 互斥（argparse 直接拒绝组合）；
-  `--num-classes` 仅随 `--checkpoint` 使用，缺失或单独给出都明确报错；
-  两个权重选项都不给时保持官方 `IMAGENET1K_V1` 默认（1000 类输出）不变。
-- 结构：仅支持 TorchVision `resnet18`。分类头重建为
-  `nn.Linear(512, num_classes)`，checkpoint 必须以 `strict=True` 加载——
-  使用分类头类别数与 `--num-classes` 一致的 ResNet18 checkpoint。
-- `--num-classes`（>= 2）决定 ONNX `output` 宽度；导出会打印所用
-  torch/torchvision 版本，请随训练记录一并留存。
-- 图的输入输出格式与官方导出完全一致：NCHW 输入 `data` `[1, 3, 224, 224]`
-  float32、输出 `output` `[1, num_classes]`、静态形状、TorchScript
-  导出器（`dynamo=False`）。
-- 前处理：训练变换必须与编译所用的 OE 配置兼容（与官方制品相同：
-  `--resize-type` 对应的 letterbox/直接缩放、OE 配置内置的归一化）；
-  导出脚本不改动前处理。
-- 产物用 [工具链与目标](#toolchain-targets) 下的既有 OE 配置编译（X5
-  `hb_mapper` → `.bin`，S100/S600 `hb_compile` → `.hbm`）；使用自训练模型时，按其类别数和预处理要求调整配置。
-- 运行时接口：用 `classify.ResNetClassifier(model_path, target=target,
-  input_size=(224, 224), class_count=<num-classes>)` 加载
-  编译产物，标签可选（见 [自定义模型
-  章节](../runtime/python/README_cn.md#custom-model)）；绑定会把实际输出
-  宽度与 `class_count` 核对。
+- 校准与评测数据是外部输入。COCO train2017 子集和 ImageNetV2 MatchedFrequency
+  集合（10,000 张）需向其所有者获取；manifest 格式及其检查见
+  [主机流程](../../../../utils/tools/classification/README_cn.md)。
+- OE 工具链镜像需要访问 `registry.d-robotics.cc`；请用自己的凭据执行
+  `docker login`。凭据不得写入这些文件。
+- 编译某个目标不需要板卡，但验证需要：使用与目标匹配的板卡（S100P 与 S600
+  是不同于 S100 的独立板卡）。
+- 本流程之前发布的模型（权重、前处理不同，且输出为概率）不再随本 sample 分发。

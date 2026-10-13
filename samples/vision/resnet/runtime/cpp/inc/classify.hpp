@@ -1,18 +1,19 @@
-// Copyright (c) 2025, XiangshunZhao D-Robotics.
+// Copyright (c) 2025 D-Robotics Corporation
 // Copyright (c) 2026 D-Robotics Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 /**
  * @file classify.hpp
- * @brief ResNet18 classification model interface.
+ * @brief ResNet classification model interface.
  *
- * Resnet18 owns the loaded HBM runtime. Each stage exchanges owned per-call
- * data: preprocess letterboxes a BGR image into owned NV12 planes, infer
- * uploads one prepared input into the reusable SDK buffers and returns the
- * owned raw logits copied out of the output tensor, and postprocess applies
- * the stable softmax and Top-K selection. predict is the explicit
- * composition of the three stages. SDK handle and tensor types stay inside
- * the implementation; nothing in this header requires the DNN SDK.
+ * ResNet owns the loaded HBM runtime. Each stage exchanges owned
+ * per-call data: preprocess resizes the shorter edge of a BGR image and
+ * center-crops it into owned NV12 planes, infer uploads one prepared input
+ * into the reusable SDK buffers and returns the owned raw logits copied out of
+ * the output tensor, and postprocess applies softmax and selects the Top-K
+ * classes. predict is the explicit composition of the three
+ * stages. SDK handle and tensor types stay inside the implementation; nothing
+ * in this header requires the DNN SDK.
  */
 
 #pragma once
@@ -27,20 +28,22 @@
 #include "model_types.hpp"
 
 /** Owned NV12 planes for one call: Y (h×w) and interleaved UV (h/2×w/2×2). */
-struct Resnet18Prepared
+struct ResNetPrepared
 {
     std::vector<uint8_t> y;   ///< Y plane bytes, tightly packed rows.
     std::vector<uint8_t> uv;  ///< Interleaved UV plane bytes (U,V per sample).
 };
 
-/** Owned raw model output for one call: F32 logits as produced by the BPU. */
-struct Resnet18Raw
+/**
+ * Owned raw model output for one call: F32 logits as produced by the BPU.
+ */
+struct ResNetRaw
 {
     std::vector<float> logits;  ///< Flat logits, class index by position.
 };
 
 /**
- * @brief ResNet18 inference model.
+ * @brief ResNet inference model.
  *
  * Construction loads the packed HBM model, queries tensor properties and
  * allocates the input/output tensor buffers; any failure throws
@@ -50,37 +53,41 @@ struct Resnet18Raw
  * owned data, so results stay valid across subsequent predicts. Instances
  * are neither copyable nor thread-safe.
  */
-class Resnet18
+class ResNet
 {
 public:
     /**
      * @brief Load the model and prepare its tensors.
      *
      * @param model_path Path to the quantized *.hbm model file.
+     * @param resize_shorter Shorter edge before the center crop,
+     *        int(input / crop_pct): 235 for every published variant.
      * @throws std::runtime_error when any DNN/UCP step or tensor allocation
      *         fails, or the model exposes no usable input/output tensor.
      */
-    explicit Resnet18(const std::string& model_path);
+    explicit ResNet(const std::string& model_path, int resize_shorter = 235);
 
     /// Release tensor memory and model handles acquired at construction.
-    ~Resnet18();
+    ~ResNet();
 
-    Resnet18(const Resnet18&) = delete;
-    Resnet18& operator=(const Resnet18&) = delete;
+    ResNet(const ResNet&) = delete;
+    ResNet& operator=(const ResNet&) = delete;
 
     /**
-     * @brief Letterbox-resize a BGR image into owned NV12 planes.
+     * @brief Center-crop a BGR image into owned NV12 planes.
      *
-     * Uniform-scale letterbox with 127-gray padding, BGR → YUV(I420), then
-     * repack U/V into the interleaved NV12 UV plane. The geometry is computed
-     * per call; nothing is cached on the instance.
+     * Antialiased bicubic shorter-edge resize to resize_shorter (a bit-exact
+     * port of Pillow's, shared with utils/tools/classification/cpp/geometry.hpp),
+     * center crop to the model input, BGR → YUV(I420), then repack U/V into
+     * the interleaved NV12 UV plane: the geometry the published models were
+     * calibrated and evaluated with, identical to the Python runtime.
      *
      * @param image BGR uint8 image; not modified.
      * @return Owned prepared input for infer.
-     * @throws std::invalid_argument for an empty image or odd model input
-     *         dimensions.
+     * @throws std::invalid_argument for an empty image, odd or non-square
+     *         model input dimensions, or resize_shorter below the input size.
      */
-    Resnet18Prepared preprocess(const cv::Mat& image) const;
+    ResNetPrepared preprocess(const cv::Mat& image) const;
 
     /**
      * @brief Upload one prepared input and run a synchronous BPU inference.
@@ -96,21 +103,21 @@ public:
      * @throws std::runtime_error when any SDK step fails; the message carries
      *         the SDK error description.
      */
-    Resnet18Raw infer(const Resnet18Prepared& input);
+    ResNetRaw infer(const ResNetPrepared& input);
 
     /**
-     * @brief Convert raw logits into Top-K classes.
+     * @brief Select the Top-K classes from the raw output.
      *
-     * Applies the stable softmax over the whole logit vector and keeps the
-     * top_k highest probabilities (an over-large top_k is clamped to the
-     * class count, matching the shared Top-K helper).
+     * A numerically stable softmax turns the logits into probabilities; an
+     * over-large top_k is clamped to the class count (matching the shared
+     * Top-K helper).
      *
      * @param raw   Raw output from infer.
      * @param top_k Number of classes to keep.
-     * @return Top-K results sorted by descending probability; empty when the
-     *         raw output is empty or the softmax sum degenerates to zero.
+     * @return Top-K results sorted by descending probability.
+     * @throws std::invalid_argument when the raw output is empty.
      */
-    std::vector<Classification> postprocess(const Resnet18Raw& raw,
+    std::vector<Classification> postprocess(const ResNetRaw& raw,
                                             int top_k) const;
 
     /**

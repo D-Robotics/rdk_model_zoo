@@ -1,21 +1,22 @@
-// Copyright (c) 2025, XiangshunZhao D-Robotics.
+// Copyright (c) 2025 D-Robotics Corporation
 // Copyright (c) 2026 D-Robotics Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 /**
  * @file classify.cpp
- * @brief ResNet18 model implementation: runtime lifecycle and stage math.
+ * @brief ResNet model implementation: runtime lifecycle and stage math.
  *
  * The DNN/UCP handles, tensor buffers and task lifetime live in the private
  * Impl in this file; the public header exposes only owned stage-data types.
- * preprocess produces the letterboxed NV12 planes (letterbox_resize geometry,
- * BGR→I420 conversion, interleaved UV packing); infer uploads the planes into
- * the reusable SDK tensors row-stride aware, runs one BPU task and copies the
- * F32 output into an owned logits vector; postprocess applies the stable
- * softmax and Top-K selection to that owned vector.
+ * preprocess produces the center-cropped NV12 planes (Pillow-compatible
+ * shorter-edge resize and center crop, BGR→I420 conversion, interleaved UV
+ * packing); infer uploads the planes into the reusable SDK tensors
+ * row-stride aware, runs one BPU task and copies the F32 output into an owned
+ * logits vector; postprocess applies a stable softmax and Top-K selection.
  */
 
 #include "classify.hpp"
+#include "geometry.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -75,7 +76,7 @@ struct TaskGuard
 }  // namespace
 
 /** SDK state: packed/model handles plus the reusable tensor buffers. */
-struct Resnet18::Impl
+struct ResNet::Impl
 {
     hbDNNPackedHandle_t packed_dnn_handle{nullptr};  ///< Packed model handle.
     hbDNNHandle_t dnn_handle{nullptr};               ///< Selected model handle.
@@ -85,6 +86,7 @@ struct Resnet18::Impl
     int input_h{0};                                  ///< Input height (pixels).
     int input_w{0};                                  ///< Input width (pixels).
     int output_len{0};                               ///< F32 values in output 0.
+    int resize_shorter{235};                         ///< Shorter edge before the crop.
 
     ~Impl()
     {
@@ -99,8 +101,9 @@ struct Resnet18::Impl
     }
 };
 
-Resnet18::Resnet18(const std::string& model_path) : impl_(new Impl)
+ResNet::ResNet(const std::string& model_path, int resize_shorter) : impl_(new Impl)
 {
+    impl_->resize_shorter = resize_shorter;
     // Load the packed model from disk; everything after this point is owned
     // by Impl and released by its destructor on any failure.
     const char* path = model_path.c_str();
@@ -252,20 +255,22 @@ Resnet18::Resnet18(const std::string& model_path) : impl_(new Impl)
     }
 }
 
-Resnet18::~Resnet18() = default;
+ResNet::~ResNet() = default;
 
-Resnet18Prepared Resnet18::preprocess(const cv::Mat& image) const
+ResNetPrepared ResNet::preprocess(const cv::Mat& image) const
 {
     if (image.empty() || image.type() != CV_8UC3)
         throw std::invalid_argument("preprocess expects a nonempty BGR uint8 image");
     if (impl_->input_h % 2 || impl_->input_w % 2)
         throw std::invalid_argument("model input height and width must be even");
 
-    // Letterbox to the model input resolution (aspect-preserving resize with
-    // the shared 127-gray padding).
-    cv::Mat resized;
-    resized.create(impl_->input_h, impl_->input_w, image.type());
-    letterbox_resize(image, resized);
+    // Shorter-edge antialiased bicubic resize and center crop to the model
+    // input: the geometry the published models were calibrated and evaluated
+    // with, identical to the Python runtime.
+    if (impl_->input_h != impl_->input_w || impl_->resize_shorter < impl_->input_w)
+        throw std::invalid_argument(
+            "center crop needs a square input and resize_shorter >= input size");
+    const cv::Mat resized = classification::center_crop(image, impl_->input_w, impl_->resize_shorter);
 
     // Convert BGR -> I420 (Y + U + V planar) and keep the planes as owned
     // NV12 bytes.
@@ -278,7 +283,7 @@ Resnet18Prepared Resnet18::preprocess(const cv::Mat& image) const
     const int uv_height = input_h / 2;
     const int uv_width = input_w / 2;
 
-    Resnet18Prepared prepared;
+    ResNetPrepared prepared;
     prepared.y.assign(yuv_data, yuv_data + input_h * input_w);
     prepared.uv.resize(static_cast<size_t>(uv_height) * uv_width * 2);
 
@@ -294,7 +299,7 @@ Resnet18Prepared Resnet18::preprocess(const cv::Mat& image) const
     return prepared;
 }
 
-Resnet18Raw Resnet18::infer(const Resnet18Prepared& input)
+ResNetRaw ResNet::infer(const ResNetPrepared& input)
 {
     auto& y_tensor = impl_->input_tensors[0];
     auto& uv_tensor = impl_->input_tensors[1];
@@ -371,34 +376,26 @@ Resnet18Raw Resnet18::infer(const Resnet18Prepared& input)
     // stay owned by the caller across subsequent inferences. The constructor
     // validated the length against the allocated buffer size. A quantized
     // output (quantiType != NONE) is outside this runtime's contract.
-    Resnet18Raw raw;
+    ResNetRaw raw;
     const float* data =
         static_cast<const float*>(impl_->output_tensors[0].sysMem.virAddr);
     raw.logits.assign(data, data + impl_->output_len);
     return raw;
 }
 
-std::vector<Classification> Resnet18::postprocess(const Resnet18Raw& raw,
-                                                  int top_k) const
+std::vector<Classification> ResNet::postprocess(const ResNetRaw& raw,
+                                                     int top_k) const
 {
-    // Stable softmax over the whole owned logit vector: float max, double sum
-    // of exp(logit - max), float-cast probabilities. Input contract errors
-    // are exceptions for the caller (the CLI) to report.
+    // The model outputs logits: a numerically stable softmax turns them into
+    // probabilities before the classes are ranked.
     const int tensor_len = static_cast<int>(raw.logits.size());
     if (tensor_len <= 0)
-        throw std::invalid_argument("postprocess requires a nonempty logits vector");
+        throw std::invalid_argument("postprocess requires a nonempty output vector");
 
-    float max_logit = raw.logits[0];
-    for (int i = 1; i < tensor_len; ++i)
-        if (raw.logits[i] > max_logit)
-            max_logit = raw.logits[i];
-
-    double sum_exp = 0.0;
-    for (int i = 0; i < tensor_len; ++i)
-        sum_exp += std::exp(static_cast<double>(raw.logits[i] - max_logit));
-
-    if (sum_exp <= 0.0)
-        throw std::runtime_error("softmax denominator is zero");
+    const float max_logit = *std::max_element(raw.logits.begin(), raw.logits.end());
+    double sum = 0.0;
+    for (float value : raw.logits)
+        sum += std::exp(static_cast<double>(value - max_logit));
 
     std::vector<Classification> results;
     results.reserve(tensor_len);
@@ -406,7 +403,7 @@ std::vector<Classification> Resnet18::postprocess(const Resnet18Raw& raw,
         Classification cls;
         cls.class_id = i;
         cls.probability = static_cast<float>(
-            std::exp(static_cast<double>(raw.logits[i] - max_logit)) / sum_exp);
+            std::exp(static_cast<double>(raw.logits[i] - max_logit)) / sum);
         results.emplace_back(cls);
     }
 
@@ -415,12 +412,12 @@ std::vector<Classification> Resnet18::postprocess(const Resnet18Raw& raw,
     return topk_results;
 }
 
-std::vector<Classification> Resnet18::predict(const cv::Mat& image,
-                                              int top_k)
+std::vector<Classification> ResNet::predict(const cv::Mat& image,
+                                                 int top_k)
 {
     return postprocess(infer(preprocess(image)), top_k);
 }
 
-int Resnet18::input_width() const { return impl_->input_w; }
+int ResNet::input_width() const { return impl_->input_w; }
 
-int Resnet18::input_height() const { return impl_->input_h; }
+int ResNet::input_height() const { return impl_->input_h; }

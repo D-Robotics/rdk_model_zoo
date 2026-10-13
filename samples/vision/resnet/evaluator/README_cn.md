@@ -1,17 +1,36 @@
 [English](README.md) | 简体中文
 
-# ResNet 评估（ResNet18/50/152）
+# ResNet 评估
 
-使用随仓图片进行板端分类。数据集精度评估需准备匹配的带标注验证集，并按下述指标统计预测；参考表列出发布测量及其运行条件。
+使用 [`evaluate.py`](evaluate.py) 在主机上评估指定 timm 权重导出的 FP32 ONNX。安装和运行步骤见[公共主机流程](../../../../utils/tools/classification/README_cn.md)；使用对应权重的中心裁剪预处理，以 batch=1 生成 logits 并统计全量数据集精度。
+使用随附图片进行单图分类。计算数据集精度时，准备对应验证集及逐图真值类别索引，并将其与运行时返回的 Top-1 类别 ID 对照。
+
+
+## 固定制品的板端评测
+
+`evaluate_board.py` 加载一次模型，对ImageNetV2 MatchedFrequency 清单逐图评测。
+使用与板卡匹配的制品（X5 `.bin`；S100、S100P 或 S600 `.hbm`），输入为
+`bt601_video` NV12，输出为 float32 logits，并用 `--variant`（`resnet18`、`resnet34`、`resnet50`、`resnet101`、`resnet152`）选择检查点的预处理配置。前处理为 PIL bicubic 短边缩放
+（所有变体均为 235）、中心裁剪到模型输入尺寸（224），再调用样例的 OpenCV NV12 转换；
+这与 runtime 使用 `--resize-type 2` 时的几何相同。campaign 固定标签顺序、
+几何变换和完整 10,000 张图片数量；程序校验每张图片与模型的 SHA256。
+
+```bash
+python3 samples/vision/resnet/evaluator/evaluate_board.py \
+  --target s100 --variant resnet18 \
+  --model samples/vision/resnet/model/s100/resnet18_nashe_224x224_nv12.hbm \
+  --model-sha256 <model/README_cn.md 中的 sha256> \
+  --campaign /path/to/campaign.json --manifest /path/to/manifest.json \
+  --data-root /path/to/imagenetv2/images --output /path/to/new-evaluation
+```
+
+新输出目录包含全量预测、张量元信息、三个固定输入的输出，以及记录 Top-1/Top-5 和源码哈希的
+`evaluation.json`。C++ 性能计时与输入边界见[评测说明](../../../../utils/tools/classification/cpp/README.md)。
 
 <a id="dataset"></a>
 
 ## 数据集
-
-单图分类使用随仓测试图执行。进行数据集级评估时，按
-[datasets/imagenet](../../../../datasets/imagenet/README_cn.md) 准备
-ImageNet 验证集（50,000 张，ILSVRC2012 val）；数据集由用户自备（本目录
-不附带下载脚本）。
+单图分类使用随附测试图。上面的 `evaluate_board.py` 使用 ImageNetV2 MatchedFrequency（10,000 张）。下文逐图统计方法使用 ImageNet ILSVRC2012 验证集（50,000 张、1,000 类）。准备逐图到模型零起始类别索引的真值映射，并与运行时返回的 Top-1 类别 ID 对照。`datasets/imagenet/imagenet_classes.names` 将输出索引映射为显示名称；逐图真值取自数据集标注。参见 [ImageNet 数据准备](../../../../datasets/imagenet/README_cn.md)。
 
 <a id="directory"></a>
 ## 目录结构
@@ -19,55 +38,45 @@ ImageNet 验证集（50,000 张，ILSVRC2012 val）；数据集由用户自备�
 ```text
 evaluator/
 ├── README.md  # 英文说明
-└── README_cn.md  # 中文说明
+├── README_cn.md  # 中文说明
+├── evaluate.py  # FP32 ONNX 评测（公共主机流程）
+└── evaluate_board.py  # 编译制品的板端评测
 ```
 
 <a id="environment"></a>
 ## 环境
 
-在目标板卡上运行，准备对应的 `hbm_runtime` 镜像、NumPy、OpenCV-Python、PyYAML、模型文件和标签文件。依赖安装见运行说明；记录数据集结果时附上板卡镜像与工具链版本。
+主机 FP32 ONNX 评估使用 `evaluate.py`，需要 Python 3.10 和 `utils/tools/classification/requirements.lock.txt` 中的依赖；安装与运行方法见[公共主机流程](../../../../utils/tools/classification/README_cn.md)。
+
+板端分类与 `evaluate_board.py` 需要目标板卡的 `hbm_runtime` 镜像、NumPy、OpenCV-Python、Pillow、PyYAML、模型文件和标签文件。依赖安装见[Python 运行说明](../runtime/python/README_cn.md#environment)。
 
 <a id="command"></a>
-## 评估命令
+## 命令
 
-X5 板端分类（前置：`bash samples/vision/resnet/model/download.sh x5 resnet18`；
-输出：退出码 0 并打印 Top-K 类别和分数）：
+X5 板端分类（前置：`bash samples/vision/resnet/model/download.sh x5 18`；输出：退出码 0 并打印 Top-K 类别和分数）：
 
 ```bash
 python3 samples/vision/resnet/runtime/python/main.py \
   --target x5 \
-  --asset-id x5:resnet:resnet18_224x224_nv12.bin \
-  --model-path samples/vision/resnet/model/resnet18_224x224_nv12.bin \
+  --asset-id x5:resnet:resnet18_bayese_224x224_nv12.bin \
+  --model-path samples/vision/resnet/model/resnet18_bayese_224x224_nv12.bin \
   --test-img samples/vision/resnet/test_data/white_wolf.JPEG \
   --label-file datasets/imagenet/imagenet_classes.names \
   --top-k 5
 ```
 
-S100 板端分类（S600 将资产引用与制品路径中的 `s100` 换为 `s600`）：
-
-```bash
-python3 samples/vision/resnet/runtime/python/main.py \
-  --target s100 \
-  --asset-id s:resnet18:s100/resnet18_224x224_nv12.hbm \
-  --model-path samples/vision/resnet/model/s100/resnet18_224x224_nv12.hbm \
-  --test-img samples/vision/resnet/test_data/zebra_cls.jpg \
-  --label-file datasets/imagenet/imagenet_classes.names \
-  --top-k 5
-```
-
-ResNet50/152（S100/S600）使用相同的命令，替换为对应
-`s:resnet50|resnet152:<target>/...` 引用、制品路径并指定
-`--variant resnet50|resnet152`。S 系列 C++ 检查执行
-`bash samples/vision/resnet/runtime/cpp/run.sh`。
+S100、S100P、S600 替换 `s:` 引用与 `s100/`、`s100p/`、`s600/` 制品路径；标签文件共用。同板多次运行对照时，固定同一图像、制品字节、标签、resize 类型与
+Top-K，在标签格式化之前比较类别 ID 与原始分数；预期类别 ID 相同、
+分数差在 1e-5 内。对照双方使用相同板型。
 
 <a id="metrics"></a>
 ## 指标
 
 | 指标 | 定义 | 条件 |
 | --- | --- | --- |
-| Top-K 输出 | 打印随仓图片的类别 ID、分数与标签；重复运行结果一致 | 同板、同制品字节、同图、同缩放、同 Top-K |
-| Top-1 精度 | argmax 正确预测占比 | 在准备好的 ImageNet val 上统计；随结果记录数据划分 |
-| 延迟 / FPS | 推理耗时 | 在目标板卡上测量；随结果记录批量/线程设置（参考条件见下） |
+| Top-K 一致 | 同一制品重复运行 softmax 后 Top-K 类别 ID 相同，分数差在 1e-5 内 | 同板、同制品字节、同图、同缩放、同 Top-K |
+| Top-1 精度 | argmax 正确比例 | 在准备好的 ImageNet ILSVRC2012 验证集上度量 |
+| 延迟 / FPS | 在匹配板卡上的推理计时 | 与[参考结果](#reference-results)的已发布数值按其声明的条件对照 |
 
 <a id="outputs"></a>
 ## 输出
@@ -77,14 +86,35 @@ ResNet50/152（S100/S600）使用相同的命令，替换为对应
 <a id="reference-results"></a>
 ## 参考结果
 
-X5 发布（x5-v1.1.3）的 ResNet18 记录：
+已发布模型的精度，用上面的固定板端评测在完整 ImageNetV2 MatchedFrequency 集合
+（10,000 张图像）上测得。它不是 ILSVRC2012 验证集，因此数值不能与 ImageNet-1k
+验证集的结果相比。“FP32”是同一检查点的 ONNX 导出在相同裁剪图上的结果。
 
-| 模型 | 尺寸 | 类别数 | 参数量 (M) | 浮点 Top-1 | 量化 Top-1 | 延迟 (ms) | FPS | 线程条件 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ResNet18 | 224x224 | 1000 | 11.2 | 71.5% | 70.5% | 2.95 | 449+ | —（源未注明） |
+| 模型 | Target | FP32 Top-1 | 板端 Top-1 | FP32 Top-5 | 板端 Top-5 |
+| --- | --- | --- | --- | --- | --- |
+| ResNet-18 | X5 | 59.35% | 58.91% | 80.94% | 80.56% |
+| ResNet-18 | S100 | 59.35% | 58.79% | 80.94% | 80.46% |
+| ResNet-18 | S100P | 59.35% | 58.79% | 80.94% | 80.46% |
+| ResNet-18 | S600 | 59.35% | 58.88% | 80.94% | 80.58% |
+| ResNet-34 | X5 | 64.92% | 64.30% | 85.06% | 84.71% |
+| ResNet-34 | S100 | 64.92% | 64.26% | 85.06% | 84.75% |
+| ResNet-34 | S100P | 64.92% | 64.26% | 85.06% | 84.75% |
+| ResNet-34 | S600 | 64.92% | 64.23% | 85.06% | 84.75% |
+| ResNet-50 | X5 | 68.84% | 66.90% | 87.59% | 86.25% |
+| ResNet-50 | S100 | 68.84% | 67.01% | 87.59% | 86.40% |
+| ResNet-50 | S100P | 68.84% | 67.01% | 87.59% | 86.40% |
+| ResNet-50 | S600 | 68.84% | 66.94% | 87.59% | 86.41% |
+| ResNet-101 | X5 | 70.32% | 68.59% | 88.35% | 87.66% |
+| ResNet-101 | S100 | 70.32% | 68.64% | 88.35% | 87.67% |
+| ResNet-101 | S100P | 70.32% | 68.64% | 88.35% | 87.67% |
+| ResNet-101 | S600 | 70.32% | 68.65% | 88.35% | 87.56% |
+| ResNet-152 | X5 | 70.87% | 69.34% | 88.16% | 87.78% |
+| ResNet-152 | S100 | 70.87% | 69.27% | 88.16% | 87.74% |
+| ResNet-152 | S100P | 70.87% | 69.27% | 88.16% | 87.74% |
+| ResNet-152 | S600 | 70.87% | 69.22% | 88.16% | 87.74% |
 
-ImageNet val 精度与延迟按上文准备数据集后测量，并随结果记录工具链、批量与
-线程设置。S 发布未提供 ResNet18/50/152 的精度或延迟数据。
+相同制品的延迟与吞吐及测量条件见 [sample README](../README_cn.md#performance)。
+下面的 X5 与 X3 数据属于早期构建（权重与前处理不同），请按各表的权重和预处理条件比较。
 
 ### RDK X5 / X5 Module 性能
 
@@ -129,6 +159,6 @@ X5 的 BPU 为 1×Bayes-e。下文八线程条件对应 X3 数据。
 5. 浮点/定点Top-1：浮点Top-1使用的是模型未量化前onnx的 Top-1 推理精度，量化Top-1则为量化后模型实际推理的精度。
 
 <a id="boundaries"></a>
-## 适用范围
+## 数据集级评估
 
-在准备好的 ImageNet 验证集上，通过自行编写的评估循环统计精度和延迟。每份结果附上板卡、模型、工具链、批量大小和线程设置。
+计算数据集 Top-1 精度时，将每张验证图像通过 `--test-img` 传给运行时入口，把返回的 Top-1 类别 ID 与该图像的模型真值索引对照，再用正确预测数除以已评测的带标签图像数。对照运行时固定制品、resize 模式、Top-K、板卡镜像和调度设置。测量延迟或 FPS 时，在匹配板卡上计时推理阶段，并记录线程数和工作模式。

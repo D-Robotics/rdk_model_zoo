@@ -3,7 +3,7 @@
 
 /**
  * @file cli.cpp
- * @brief ResNet18 CLI implementation: parsing, defaults, loading, printing.
+ * @brief ResNet CLI implementation: parsing, defaults, loading, printing.
  */
 
 #include "cli.hpp"
@@ -19,9 +19,11 @@ namespace resnet {
 std::string default_model_path()
 {
 #if defined(SOC_S600)
-    return "/opt/hobot/model/s600/basic/resnet18_224x224_nv12.hbm";
+    return "../../model/s600/resnet18_nashp_224x224_nv12.hbm";
+#elif defined(SOC_S100P)
+    return "../../model/s100p/resnet18_nashm_224x224_nv12.hbm";
 #else
-    return "/opt/hobot/model/s100/basic/resnet18_224x224_nv12.hbm";
+    return "../../model/s100/resnet18_nashe_224x224_nv12.hbm";
 #endif
 }
 
@@ -65,6 +67,12 @@ CliOptions parse_options(int argc, char** argv)
             options.top_k = std::stoi(value, &parsed);
             if (parsed != value.size() || options.top_k < 1)
                 throw std::invalid_argument("--top-k must be a positive integer");
+        } else if (flag == "--resize-shorter") {
+            const std::string value = require_value();
+            size_t parsed = 0;
+            options.resize_shorter = std::stoi(value, &parsed);
+            if (parsed != value.size() || options.resize_shorter < 1)
+                throw std::invalid_argument("--resize-shorter must be a positive integer");
         } else {
             throw std::invalid_argument("Unknown option: " + flag);
         }
@@ -76,14 +84,16 @@ void print_help(const char* program)
 {
     std::cout << "Usage: " << program
               << " [--model-path HBM] [--test-img IMAGE] [--label-file FILE]"
-                 " [--top-k N]\n"
+                 " [--top-k N] [--resize-shorter N]\n"
               << "  --model-path   HBM model path (default follows the board: "
-                 "/opt/hobot/model/<board>/basic/resnet18_224x224_nv12.hbm)\n"
+                 "../../model/<board>/resnet18_<march>_224x224_nv12.hbm)\n"
               << "  --test-img     BGR test image (default: "
                  "../../../test_data/zebra_cls.jpg)\n"
               << "  --label-file   one class name per line (default: "
-                 "datasets/imagenet/imagenet_classes.names)\n"
-              << "  --top-k        number of printed classes (default: 5)\n";
+                 "../../../test_data/imagenet1000_labels.txt)\n"
+              << "  --top-k        number of printed classes (default: 5)\n"
+              << "  --resize-shorter  shorter edge before the 224 center crop, "
+                 "int(224 / crop_pct) (default: 235)\n";
 }
 
 cv::Mat load_image(const std::string& path)

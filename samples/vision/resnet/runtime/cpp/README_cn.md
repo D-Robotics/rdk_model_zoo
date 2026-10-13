@@ -1,10 +1,10 @@
 [English](README.md) | 简体中文
 
-# ResNet18 C++ 运行时
+# ResNet 图像分类（C++）
 
-S 系列 ResNet18 原生运行时：`hbDNNInferV2` 推理流程、图像预处理、
-NV12 张量构建与 Top-K 输出，基于共享的 `utils/c_utils`
-源码构建。
+本 C++ 流程在 S100、S100P、S600 的 BPU 上运行量化 ResNet HBM 模型（变体
+`18`、`34`、`50`、`101` 或 `152`），打印 Top-K 类别标签与置信度。它是 S 系列 `hbDNNInferV2` 实现（`src/` 与 `inc/`
+原样保留）；X5 交付线只提供 Python，因此本流程的适用范围为 S 系列。
 
 <a id="overview"></a>
 ## C++ 推理
@@ -17,7 +17,7 @@ NV12 张量构建与 Top-K 输出，基于共享的 `utils/c_utils`
 ```text
 cpp/
 ├── inc/
-│   ├── classify.hpp  # Resnet18 模型类与各阶段自持有数据类型
+│   ├── classify.hpp  # ResNet 模型类与各阶段自持有数据类型
 │   └── cli.hpp       # 命令行选项与辅助函数
 ├── src/
 │   ├── classify.cpp  # 运行时生命周期与 preprocess/infer/postprocess
@@ -32,95 +32,67 @@ cpp/
 <a id="supported-boards"></a>
 ## 适用板卡
 
-| 板卡 | 状态 |
-| --- | --- |
-| S100 | supported |
-| S600 | supported |
-| X5 | not-supported |
-
-CMake 读取 `/sys/class/boardinfo/soc_name` 并定义对应的 SoC 宏；
-身份文件不可读视为错误，不做回退。
+启动器在 S100、S100P 和 S600 上读取 `/sys/class/boardinfo/soc_name` 与 `/sys/class/boardinfo/board_type`，选择对应的 `nashe`、`nashm` 或 `nashp` 模型。S100P 支持两种标识：`soc_name` 为 `s100p`，或 `soc_name` 为 `s100` 且 `board_type` 为 `s100p`/`rdk s100p`。身份文件未知或不可读时，程序报错退出。板卡上使用系统身份文件，无需设置 `SOC_NAME_FILE` 或 `BOARD_TYPE_FILE`。
 
 <a id="dependencies"></a>
 ## 依赖
 
-板端镜像需要：CMake 与 C++17 编译器；OpenCV 开发头文件/库；`fmt` 开发
-库；`/usr/hobot/include` 下的 Horizon DNN 头文件与 `/usr/hobot/lib`
-下的库（`hbDNN`、`hbucp`）。工具实现来自 CMake 目标引用的共享
-`utils/c_utils` 文件。启动脚本不安装系统包、不修改 SDK、不下载模型。
+CMake、C++17 编译器、OpenCV 开发包、`fmt` 开发库以及板卡镜像的
+Horizon DNN 头文件/库。请使用板卡镜像自带的 SDK 开发包，并在该环境中完成完整构建（启动器
+绝不调用 apt）。
 
 <a id="build"></a>
 ## 构建
 
-启动脚本会自动构建；手动构建（cwd：仓库根目录）：
+手工构建（cwd：`samples/vision/resnet/runtime/cpp`；输出：
+`build/` 内有 `resnet` 二进制）：
 
 ```bash
-# 输出：build 目录中生成 resnet18 二进制
-cmake -S samples/vision/resnet/runtime/cpp \
-  -B samples/vision/resnet/runtime/cpp/build
-cmake --build samples/vision/resnet/runtime/cpp/build --parallel
+mkdir -p build && cd build && cmake .. && make -j"$(nproc)"
 ```
 
-换一个构建目录选择的是同一个目标：
-
-```bash
-cmake -S samples/vision/resnet/runtime/cpp \
-  -B /tmp/resnet18-alt-build
-cmake --build /tmp/resnet18-alt-build --parallel
-```
+`CMakeLists.txt` 在配置期选择板卡：板卡上原生配置时读取
+`/sys/class/boardinfo/soc_name`（`-DRDK_TARGET=auto`，默认值）并定义
+`SOC_S100`/`SOC_S100P`/`SOC_S600`；交叉编译必须显式传 `-DRDK_TARGET=s100|s100p|s600`
+（交叉编译下 auto 直接报错，不支持的目标同样报错终止配置）。小内存板
+满并行编译可能被 OOM 杀死——请改用 `make -j1` 或 `BUILD_JOBS=1 bash run.sh`。
 
 <a id="run"></a>
 ## 运行
 
-前置条件：`bash samples/vision/resnet/model/download.sh s100`（或 S600
-制品）。可在任意工作目录执行：
+一键形式（cwd：任意；前置：按 [model/README_cn.md](../../model/README_cn.md)
+准备制品；输出：退出码 0 且打印 Top-5 列表）：
 
 ```bash
-# 输入：model/s100 制品、随仓 zebra_cls.jpg、S 系列 ImageNet 标签
-# 输出：stdout 上的 Top-K 行 — 输出：退出码 0
 bash samples/vision/resnet/runtime/cpp/run.sh
 ```
 
-S600 需显式选择制品；同一检出目录服务两块板时使用独立 build 目录：
-
-```bash
-MODEL_PATH="$PWD/samples/vision/resnet/model/s600/resnet18_224x224_nv12.hbm" \
-BUILD_DIR="$PWD/samples/vision/resnet/runtime/cpp/build-s600" \
-bash samples/vision/resnet/runtime/cpp/run.sh
-```
-
-启动脚本先检查模型、图片与标签文件，再调用 CMake、构建 `resnet18`，
-并传入绝对路径使命令在任意目录可用。
+启动器构建到 `runtime/cpp/build/` 并以 `VARIANT` 对应的已准备模型（默认 `18`；
+例如 `VARIANT=50 bash run.sh` 选择其他深度）、`test_data/zebra_cls.jpg` 与
+`test_data/imagenet1000_labels.txt` 执行二进制。环境变量覆盖：`VARIANT`、
+`MODEL_PATH`、`TEST_IMAGE`、`LABEL_FILE`、`TOP_K`、`BUILD_DIR`、`BUILD_JOBS`。它绝不下载模型：缺制品时显式报错并给出下载
+命令。
 
 <a id="parameters"></a>
 ## 参数
 
-`resnet18` 二进制的选项，与 Python 运行时的 kebab-case 命名一致（启动
-脚本会用 sample 的绝对路径覆盖前三项）：
-
-| 参数 | 默认值 | 说明 |
+| 参数 | 说明 | 默认值（来自启动器） |
 | --- | --- | --- |
-| `--model-path` | 按 SoC：`/opt/hobot/model/s100/basic/resnet18_224x224_nv12.hbm`（S100）或 `/opt/hobot/model/s600/basic/resnet18_224x224_nv12.hbm`（S600） | HBM 模型路径 |
-| `--test-img` | `../../../test_data/zebra_cls.jpg`（相对进程工作目录） | BGR 测试图 |
-| `--label-file` | 仓库内 S 系列 ImageNet 标签路径 | 逐行一个标签 |
-| `--top-k` | `5` | 打印的类别数量 |
-| `--help` / `-h` | — | 打印用法 |
+| `--model-path` | `.hbm` 制品路径 | sample 相对 `model/<soc>/resnet_<variant>_<march>_224x224_nv12.hbm` |
+| `--test-img` | 测试图路径 | sample 相对 `test_data/zebra_cls.jpg` |
+| `--label-file` | 标签文件路径 | sample 相对 `test_data/imagenet1000_labels.txt` |
+| `--top-k` | 打印的 Top-K 数量 | `5` |
+| `--resize-shorter` | 中心裁剪前的短边尺寸，`int(224 / crop_pct)` | `235`（所有变体相同） |
 
-通过启动脚本覆盖的示例：
-
-```bash
-bash samples/vision/resnet/runtime/cpp/run.sh \
-  --model-path /opt/hobot/model/s100/basic/resnet18_224x224_nv12.hbm \
-  --test-img /tmp/zebra_cls.jpg \
-  --label-file /tmp/imagenet_classes.names \
-  --top-k 5
-```
+选项名为与 Python 运行时一致的 kebab-case，同时接受 `--flag value` 与
+`--flag=value` 两种写法。二进制编译期内建的模型默认值为 sample `model/<board>/`
+下的变体 18 制品；启动器始终显式传参。
 
 <a id="interface-lifecycle"></a>
 ## 接口与生命周期
 
-`main.cpp` 解析选项后构造 `Resnet18 model(model_path)` —— 构造函数加载
-HBM 包、读取张量元数据并分配可复用张量缓冲 —— 随后调用
+`main.cpp` 解析选项后构造 `ResNet model(model_path, resize_shorter)` —— 构造函数加载
+HBM 包、读取并校验张量元数据并分配可复用张量缓冲 —— 随后调用
 `model.predict(image, top_k)` 并打印返回的类别。所有 DNN 与 UCP 类型都
 留在 `src/classify.cpp` 的私有 `Impl` 中，`inc/classify.hpp` 仅依赖
 OpenCV 与标准库。
@@ -128,13 +100,15 @@ OpenCV 与标准库。
 模型单独暴露预处理、推理与后处理三个阶段，各阶段返回调用方自持有的
 数据：
 
-- `Resnet18Prepared preprocess(const cv::Mat&)`：按模型输入分辨率 letterbox
-  缩放并完成 BGR→NV12 转换，得到自持有的 Y/UV 平面；
-- `Resnet18Raw infer(const Resnet18Prepared&)`：将平面按行宽上传到模型输入
-  张量（按行 stride 寻址），执行一次 `hbDNNInferV2` BPU 任务，把 F32 输出
-  拷贝为自持有的 logits 向量（在后续推理后依然有效）；
-- `std::vector<Classification> postprocess(const Resnet18Raw&, int top_k)`：
-  稳定 softmax 与 Top-K 选取；
+- `ResNetPrepared preprocess(const cv::Mat&)`：抗锯齿双三次短边缩放到
+  `resize_shorter`（逐位移植 Pillow 实现，与 `utils/tools/classification/cpp/geometry.hpp`
+  共用）、中心裁剪到模型输入并完成 BGR→NV12 转换，得到自持有的 Y/UV 平面，
+  几何与 Python 运行一致；
+- `ResNetRaw infer(const ResNetPrepared&)`：将平面按行宽上传到
+  模型输入张量（按行 stride 寻址），执行一次 `hbDNNInferV2` BPU 任务，
+  把 F32 输出拷贝为自持有的 logits 向量（在后续推理后依然有效）；
+- `std::vector<Classification> postprocess(const ResNetRaw&, int top_k)`：
+  对 logits 施加数值稳定的 softmax 并做 Top-K 选取；
 - `predict` 按上述顺序组合三个阶段。
 
 错误以 C++ 异常抛出（含 SDK 错误描述）；入口打印错误并以状态码 2 退出。
@@ -142,8 +116,20 @@ OpenCV 与标准库。
 进程执行一次同步推理。
 
 <a id="results-interpretation"></a>
-## 结果解释
+## 结果解读
 
-二进制按标签文件逐行打印 Top-K 类别，每行含类别 ID、分数与标签；成功
-退出码为 0。分别记录每次 S100 或 S600 运行的板卡身份、制品引用、完整
-构建/运行命令与 Top-K 输出。
+成功时打印 `TOP-n: label=..., prob=...` 行，标签取自标签文件，分数为
+softmax 之后的值。在 S100 上用已发布构建执行 `bash run.sh`（变体 `18`、
+`zebra_cls.jpg`）的输出：
+
+```text
+TOP-1: label=zebra, prob=0.999971
+TOP-2: label=tiger cat, prob=1.51841e-06
+TOP-3: label=tiger, Panthera tigris, prob=1.13116e-06
+TOP-4: label=artichoke, globe artichoke, prob=8.02899e-07
+TOP-5: label=impala, Aepyceros melampus, prob=5.7573e-07
+```
+
+S100P 输出相同；S600 的 TOP-1 为 `zebra`，分数 0.999974。`VARIANT=34`、`50`、
+`101` 或 `152` 时三块板的 TOP-1 均为 `zebra`（分数不低于 0.999）。分数与同一板卡上的 Python 运行一致，因为
+两者使用同一前处理。分数全零或 NaN 说明制品/输入配对错误，不是调参问题。

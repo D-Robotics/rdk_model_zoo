@@ -1,253 +1,199 @@
-"""Host contract tests for the ResNet pilot binding.
-
-The fixtures model the metadata exposed by the existing ``hbm_runtime``
-wrappers.  They are deliberately small and do not pretend to be board
-execution evidence.
-"""
+"""Contract-table and profile-coherence tests for the ResNet binding."""
 
 from __future__ import annotations
 
-from samples.vision.resnet.runtime.python.cli import BINDING_TABLE
-
+from pathlib import PurePosixPath
 import unittest
 
 
-class _EnumLike:
-    def __init__(self, name: str) -> None:
-        self.name = name
+class BindingTableTests(unittest.TestCase):
+    def _table(self):
+        from samples.vision.resnet.runtime.python.cli import BINDING_TABLE
 
+        return BINDING_TABLE
 
-class _QuantInfo:
-    """Synthetic descriptor mirroring the runtime ``output_quants`` entries."""
+    def test_every_published_filename_has_contract_facts(self):
+        table = self._table()
+        for filename, variant in table.filename_variants.items():
+            suffix = "bin" if "/" not in filename else "hbm"
+            target = "x5" if suffix == "bin" else filename.split("/")[0]
+            self.assertIn(
+                (variant, target),
+                table.facts,
+                f"filename {filename!r} maps to no facts entry",
+            )
+        from testsupport import VARIANTS
 
-    def __init__(self, *, scale, zero_point, axis=0, quant_type="SCALE") -> None:
-        import numpy as np
+        self.assertIn(table.default_variant, VARIANTS)
 
-        self.quant_type = _EnumLike(quant_type)
-        self.scale = np.asarray(scale, dtype=np.float32)
-        self.zero_point = np.asarray(zero_point, dtype=np.float32)
-        self.axis = axis
-
-
-def _metadata(*, protocol: str = "x5", output_shape=None,
-              output_dtype: str = "float32", output_semantics: str | None = None,
-              output_quants: dict | None = None):
-    from utils.py_utils.cls_binding import RuntimeMetadata
-
-    if protocol == "x5":
-        inputs = {"data": (1, 3, 224, 224)}
-        input_names = ["data"]
-        output_name = "prob"
-        if output_shape is None:
-            output_shape = (1, 1000, 1, 1)
-    else:
-        inputs = {
-            "input_y": (1, 224, 224, 1),
-            "input_uv": (1, 112, 112, 2),
-        }
-        input_names = ["input_y", "input_uv"]
-        output_name = "output"
-        if output_shape is None:
-            output_shape = (1, 1000)
-    values = {
-        "model_name": "resnet18_224x224_nv12",
-        "input_names": input_names,
-        "input_shapes": inputs,
-        "input_dtypes": {
-            name: ("NV12" if protocol == "x5" else "U8")
-            for name in input_names
-        },
-        "output_names": [output_name],
-        "output_shapes": {output_name: output_shape},
-        "output_dtypes": {output_name: output_dtype},
-    }
-    if output_semantics is not None:
-        values["output_semantics"] = output_semantics
-    if output_quants is not None:
-        values["output_quants"] = output_quants
-    return RuntimeMetadata.from_mapping(values)
-
-
-class BindingTests(unittest.TestCase):
-    def test_x5_asset_binds_to_packed_nv12_and_unverified_scores(self):
-        from utils.py_utils.cls_binding import bind_model
-        from samples.vision.resnet.runtime.python.cli import resolve_selection
-
-        selection = resolve_selection("x5")
-        binding = bind_model(BINDING_TABLE, selection, _metadata(protocol="x5"))
-
-        self.assertEqual(binding.contract.input_protocol, "packed_nv12")
-        self.assertEqual(binding.input_names, ("data",))
-        self.assertEqual(binding.output_name, "prob")
-        self.assertEqual(binding.contract.output_semantics, "unverified_score_vector")
-        self.assertEqual(binding.contract.output_score_policy, "legacy_softmax")
-
-    def test_x5_accepts_runtime_nv12_dtype_token(self):
-        from utils.py_utils.cls_binding import bind_model
-        from samples.vision.resnet.runtime.python.cli import resolve_selection
-
-        metadata = _metadata(protocol="x5")
-        metadata = metadata.from_mapping(
-            {
-                "model_name": metadata.model_name,
-                "input_names": metadata.input_names,
-                "input_shapes": metadata.input_shapes,
-                "input_dtypes": {"data": "hbDNNDataType.NV12"},
-                "output_names": metadata.output_names,
-                "output_shapes": metadata.output_shapes,
-                "output_dtypes": metadata.output_dtypes,
-            }
+    def test_published_listing_matches_table_and_profiles(self):
+        from samples.vision.resnet.runtime.python.cli import (
+            PLATFORMS,
+            list_available_assets,
         )
-        binding = bind_model(BINDING_TABLE, resolve_selection("x5"), metadata)
-        self.assertEqual(binding.input_names, ("data",))
 
-    def test_direct_runtime_metadata_defaults_are_safe_mappings(self):
-        from utils.py_utils.cls_binding import RuntimeMetadata, bind_model
-        from samples.vision.resnet.runtime.python.cli import resolve_selection
+        records = list_available_assets("auto")
+        self.assertTrue(records)
+        table = self._table()
+        for record in records:
+            self.assertEqual(
+                record.variant, table.filename_variants[record.filename]
+            )
+            profile = PLATFORMS[record.target]
+            # H5 coherence: manifest rows and platform profiles agree on the
+            # published artifact format and directory layout.
+            self.assertEqual(
+                record.model_format, profile.model_format.lstrip(".")
+            )
+            parent = PurePosixPath(record.filename).parent
+            parent_str = "" if parent == PurePosixPath(".") else parent.as_posix()
+            self.assertEqual(parent_str, profile.model_subdir)
+            # The row was read from the platform-group manifest that owns it.
+            expected_group = "x5" if record.target == "x5" else "s"
+            self.assertTrue(
+                record.source_manifest.replace("\\", "/").endswith(
+                    f"{expected_group}/models.yaml"
+                ),
+                f"unexpected manifest source: {record.source_manifest}",
+            )
 
-        metadata = RuntimeMetadata(
-            model_name="resnet18_224x224_nv12",
-            input_names=("data",),
-            input_shapes={"data": (1, 3, 224, 224)},
-            output_names=("prob",),
-            output_shapes={"prob": (1, 1000, 1, 1)},
-            input_dtypes={"data": "nv12"},
-            output_dtypes={"prob": "float32"},
+    def test_listing_equals_the_published_matrix(self):
+        from samples.vision.resnet.runtime.python.cli import (
+            list_available_assets,
+            resolve_selection,
         )
-        self.assertEqual(bind_model(BINDING_TABLE, resolve_selection("x5"), metadata).output_name, "prob")
+        from testsupport import PUBLISHED
 
-    def test_missing_runtime_dtypes_are_rejected(self):
-        from utils.py_utils.cls_binding import MetadataMismatchError, RuntimeMetadata, bind_model
+        for target in ("x5", "s100", "s100p", "s600"):
+            records = list_available_assets(target)
+            self.assertEqual(
+                {(r.variant, r.filename) for r in records},
+                {(v, f) for (v, t), f in PUBLISHED.items() if t == target},
+                target,
+            )
+        for (variant, target) in PUBLISHED:
+            selection = resolve_selection(target, variant=variant)
+            self.assertEqual(selection.target, target)
+            expected_protocol = "packed_nv12" if target == "x5" else "split_nv12"
+            self.assertEqual(selection.contract.input_protocol, expected_protocol)
+            if target != "x5":
+                self.assertEqual(selection.model_path.parent.name, target)
+
+    def test_every_published_asset_has_hash_and_oss_url(self):
+        from samples.vision.resnet.runtime.python.cli import list_available_assets
+        from utils.py_utils.assets import resolve_asset
+        from testsupport import VARIANTS
+
+        for target in ("x5", "s100", "s100p", "s600"):
+            for record in list_available_assets(target):
+                asset = resolve_asset(record.asset_id)
+                self.assertRegex(asset.sha256 or "", r"^[0-9a-f]{64}$", record.asset_id)
+                self.assertTrue(
+                    asset.url.startswith(
+                        "https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/"
+                        f"resnet/resnet/cls/{VARIANTS[record.variant][2]}/{target}/"
+                    ),
+                    asset.url,
+                )
+
+    def test_per_target_contracts_match_source_facts(self):
         from samples.vision.resnet.runtime.python.cli import resolve_selection
+        from testsupport import PUBLISHED, VARIANTS
 
-        metadata = RuntimeMetadata.from_mapping(
-            {
-                "model_name": "resnet18_224x224_nv12",
-                "input_names": ["data"],
-                "input_shapes": {"data": (1, 3, 224, 224)},
-                "output_names": ["prob"],
-                "output_shapes": {"prob": (1, 1000, 1, 1)},
-            }
+        # Every published model uses the timm evaluation geometry (resize type 2):
+        # shorter edge int(size / crop_pct), then a center crop to the input size.
+        for (variant, target) in PUBLISHED:
+            size, shorter, _ = VARIANTS[variant]
+            contract = resolve_selection(target, variant=variant).contract
+            label = f"{variant}/{target}"
+            self.assertEqual((contract.input_height, contract.input_width), (size, size), label)
+            self.assertEqual(contract.output_score_policy, "softmax", label)
+            self.assertEqual(contract.output_semantics, "source_declared_logits", label)
+            self.assertEqual(contract.resize_type, 2, label)
+            self.assertEqual(contract.resize_shorter, shorter, label)
+            self.assertEqual(contract.class_count, 1000)
+            self.assertEqual(contract.output_transform, "raw_f32")
+
+    def test_bind_model_accepts_source_metadata_shapes(self):
+        from samples.vision.resnet.runtime.python.cli import (
+            bind_model,
+            resolve_selection,
         )
+        from testsupport import runtime_metadata
+
+        from testsupport import PUBLISHED
+
+        for (variant, target) in PUBLISHED:
+            protocol = "x5" if target == "x5" else "s"
+            selection = resolve_selection(target, variant=variant)
+            binding = bind_model(
+                selection, runtime_metadata(protocol, variant=variant)
+            )
+            if target == "x5":
+                self.assertEqual(len(binding.input_names), 1)
+            else:
+                self.assertEqual(len(binding.input_names), 2)
+
+    def test_bind_model_rejects_wrong_geometry(self):
+        from samples.vision.resnet.runtime.python.cli import (
+            MetadataMismatchError,
+            bind_model,
+            resolve_selection,
+        )
+        from testsupport import runtime_metadata
+
+        from testsupport import PUBLISHED
+
+        variant, target = next(iter(PUBLISHED))
+        protocol = "x5" if target == "x5" else "s"
+        selection = resolve_selection(target, variant=variant)
         with self.assertRaises(MetadataMismatchError):
-            bind_model(BINDING_TABLE, resolve_selection("x5"), metadata)
+            bind_model(selection, runtime_metadata(protocol, variant=variant, wrong_geometry=True))
 
-    def test_s100_and_s600_assets_bind_to_split_nv12(self):
-        from utils.py_utils.cls_binding import bind_model
-        from samples.vision.resnet.runtime.python.cli import resolve_selection
-
-        for target in ("s100", "s600"):
-            with self.subTest(target=target):
-                selection = resolve_selection(target)
-                binding = bind_model(BINDING_TABLE, selection, _metadata(protocol="s"))
-                self.assertEqual(binding.contract.input_protocol, "split_nv12")
-                self.assertEqual(binding.y_input_name, "input_y")
-                self.assertEqual(binding.uv_input_name, "input_uv")
-
-    def test_unpublished_target_and_unknown_asset_are_rejected(self):
-        from utils.py_utils.cls_binding import UnsupportedAssetError
-        from samples.vision.resnet.runtime.python.cli import resolve_selection
-
-        with self.assertRaises(UnsupportedAssetError):
-            resolve_selection("s100p", asset_id="resnet18")
-        with self.assertRaises(UnsupportedAssetError):
-            resolve_selection("x5", asset_id="made-up-resnet")
-
-    def test_wrong_output_shape_or_semantics_is_rejected(self):
-        from utils.py_utils.cls_binding import MetadataMismatchError, bind_model
-        from samples.vision.resnet.runtime.python.cli import resolve_selection
-
-        selection = resolve_selection("x5")
-        with self.assertRaises(MetadataMismatchError):
-            bind_model(BINDING_TABLE, selection, _metadata(output_shape=(1, 999)))
-        with self.assertRaises(MetadataMismatchError):
-            bind_model(BINDING_TABLE, selection, _metadata(output_semantics="not-a-score-vector"))
-
-    def test_integer_output_without_declared_scale_is_rejected(self):
-        from utils.py_utils.cls_binding import MetadataMismatchError, bind_model
-        from samples.vision.resnet.runtime.python.cli import resolve_selection
-
-        selection = resolve_selection("x5")
-        with self.assertRaises(MetadataMismatchError):
-            bind_model(BINDING_TABLE, selection, _metadata(output_dtype="int8"))
-
-    def test_explicit_custom_path_requires_a_known_contract(self):
-        from utils.py_utils.cls_binding import UnsupportedAssetError
-        from samples.vision.resnet.runtime.python.cli import resolve_selection
-
-        with self.assertRaises(UnsupportedAssetError):
-            resolve_selection("x5", model_path="custom.bin")
-
-    def test_output_rank_rule_accepts_all_singleton_spellings(self):
-        # H4: X5 (1,1000,1,1), S (1,1000) and a bare vector are one contract.
-        from utils.py_utils.cls_binding import bind_model
-        from samples.vision.resnet.runtime.python.cli import resolve_selection
-
-        selection = resolve_selection("x5")
-        for shape in ((1, 1000, 1, 1), (1, 1000), (1000,), (1, 1, 1000)):
-            with self.subTest(shape=shape):
-                binding = bind_model(BINDING_TABLE, selection, _metadata(output_shape=shape))
-                self.assertEqual(binding.output_shape, shape)
-                self.assertEqual(binding.output_transform, "raw_f32")
-
-    def test_output_rank_rule_rejects_ambiguous_layouts(self):
-        from utils.py_utils.cls_binding import MetadataMismatchError, bind_model
-        from samples.vision.resnet.runtime.python.cli import resolve_selection
-
-        selection = resolve_selection("x5")
-        for shape in ((1, 999), (2, 1000), (1, 500, 2), (), (1,)):
-            with self.subTest(shape=shape):
-                with self.assertRaises(MetadataMismatchError):
-                    bind_model(BINDING_TABLE, selection, _metadata(output_shape=shape))
-
-    def test_declared_raw_f32_keeps_vestigial_quant_descriptor(self):
-        # Contract refinement driven by board evidence (X5 smoke, 2026-09-21):
-        # published X5 mobilenet artifacts ship F32 outputs that still carry a
-        # compiler quant descriptor.  The raw_f32 contract gates on dtype (see
-        # the int8 rejection test above), snapshots the descriptor for the
-        # record, and never applies it — legacy consumers ignored it too.
-        from utils.py_utils.cls_binding import bind_model
-        from samples.vision.resnet.runtime.python.cli import resolve_selection
-
-        selection = resolve_selection("x5")
-        descriptor = _QuantInfo(scale=0.5, zero_point=3)
-        binding = bind_model(BINDING_TABLE,
-            selection,
-            _metadata(output_quants={"prob": descriptor}),
+    def test_bind_model_keeps_vestigial_quant_descriptor_on_f32_output(self):
+        # Board evidence (X5 smoke, 2026-09-21): published artifacts ship F32
+        # outputs that still carry a compiler quant descriptor.  The raw_f32
+        # contract gates on dtype, snapshots the descriptor, and never applies
+        # it - legacy consumers ignored it too.
+        from samples.vision.resnet.runtime.python.cli import (
+            bind_model,
+            resolve_selection,
         )
-        self.assertEqual(binding.output_dtype, "float32")
-        self.assertIs(binding.output_quants["prob"], descriptor)
+        from testsupport import runtime_metadata
 
-    def test_declared_dequant_contract_binds_int8_output_with_descriptor(self):
-        # H1: a contract that declares 'dequant' binds an S-style artifact
-        # whose output is int8 plus an output_quants descriptor.  The
-        # published ResNet artifacts do not use this contract; the mechanism
-        # is exercised with a replaced contract and a synthetic fixture.
-        import dataclasses
+        from testsupport import PUBLISHED
 
-        from utils.py_utils.cls_binding import bind_model
-        from samples.vision.resnet.runtime.python.cli import resolve_selection
+        for (variant, target) in PUBLISHED:
+            protocol = "x5" if target == "x5" else "s"
+            selection = resolve_selection(target, variant=variant)
+            binding = bind_model(
+                selection,
+                runtime_metadata(protocol, variant=variant, quant_descriptor=True),
+            )
+            self.assertEqual(binding.output_dtype, "float32")
+            self.assertIn(binding.output_name, binding.output_quants)
 
-        selection = resolve_selection("x5")
-        dequant_selection = dataclasses.replace(
-            selection,
-            contract=dataclasses.replace(
-                selection.contract, output_transform="dequant"
-            ),
+    def test_bind_model_rejects_quantized_output_dtype_for_raw_f32(self):
+        from samples.vision.resnet.runtime.python.cli import (
+            MetadataMismatchError,
+            bind_model,
+            resolve_selection,
         )
-        descriptor = _QuantInfo(scale=0.25, zero_point=2)
-        binding = bind_model(BINDING_TABLE,
-            dequant_selection,
-            _metadata(output_dtype="int8", output_quants={"prob": descriptor}),
-        )
-        self.assertEqual(binding.output_transform, "dequant")
-        self.assertIs(binding.output_quants["prob"], descriptor)
+        from testsupport import runtime_metadata
 
-        # The declared dequant contract still requires a descriptor.
-        from utils.py_utils.cls_binding import MetadataMismatchError
+        from testsupport import PUBLISHED
 
-        with self.assertRaises(MetadataMismatchError):
-            bind_model(BINDING_TABLE, dequant_selection, _metadata(output_dtype="int8"))
+        variant, target = next(iter(PUBLISHED))
+        protocol = "x5" if target == "x5" else "s"
+        selection = resolve_selection(target, variant=variant)
+        with self.assertRaises(MetadataMismatchError) as ctx:
+            bind_model(
+                selection,
+                runtime_metadata(
+                    protocol, variant=variant, output_dtype="I8", quant_descriptor=True
+                ),
+            )
+        self.assertIn("accepts only F32", str(ctx.exception))
 
 
 if __name__ == "__main__":

@@ -1,1 +1,1 @@
-"""Runtime implementations for the unified ResNet pilot."""
+"""Runtime packages for the ResNet sample."""

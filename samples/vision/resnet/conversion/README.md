@@ -1,40 +1,56 @@
 English | [简体中文](README_cn.md)
 
-# ResNet model conversion (ResNet18 / ResNet50 / ResNet152)
+# ResNet model conversion
 
-Conversion runs on an x86 Linux host in the RDK OpenExplore (OE)
-environment; it is not a board operation. This directory covers the three
-variants this sample ships, each with its own conversion workflow:
-
-| Variant | In this directory | Conversion workflow |
-| --- | --- | --- |
-| ResNet18 (x5 + s) | `export_resnet18_onnx.py` | run the supplied ONNX exporter on the host, then take calibration data and YAML from the OE `13_resnet18` example |
-| ResNet50 (s only) | — | converted with the OE `13_resnet50` recipe |
-| ResNet152 (s only) | `resnet152_config.yaml`, `get_calibration_data.py`, `x86_inference.py` | published ONNX plus user-provided calibration images, run through the three files above inside OE |
+This recipe rebuilds the published ResNet deployment models from pinned
+timm checkpoints: FP32 ONNX export, INT8 post-training quantization (PTQ), and
+a compile for each RDK target. It runs on an x86 Linux host with Docker. The
+export, calibration, and configuration steps use the shared
+[host workflow](../../../../utils/tools/classification/README.md); each compile runs
+in the matching OpenExplorer (OE) toolchain container.
 
 <a id="source-model"></a>
 ## Source model
 
-All three variants are TorchVision ResNet family ImageNet-1k
-classifiers: [ResNet18](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html),
-[ResNet50](https://pytorch.org/vision/main/models/generated/torchvision.models.resnet50.html),
-[ResNet152](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet152.html).
+- Framework: PyTorch 2.8.0 with timm 1.0.20 (versions pinned in
+  `utils/tools/classification/requirements.lock.txt`).
+- Weights, pinned by Hugging Face revision and file SHA-256 in
+  `utils/tools/classification/checkpoints.json`:
+  - `18`: `timm/resnet18.a1_in1k`, revision
+    `491b427b45c94c7fb0e78b5474cc919aff584bbf`
+  - `34`: `timm/resnet34.a1_in1k`, revision
+    `0e8757122c4c09b15fb9300c0fd09b3fe89e28bf`
+  - `50`: `timm/resnet50.a1_in1k`, revision
+    `767268603ca0cb0bfe326fa87277f19c419566ef`
+  - `101`: `timm/resnet101.a1_in1k`, revision
+    `d90ce63ac1b05b22614f11dcea68fcedfc2c4dee`
+  - `152`: `timm/resnet152.a1_in1k`, revision
+    `5529f135ee86e1bff01db5688add74a2c27ee16a`
+- Correspondence: the checkpoints are the upstream timm `a1_in1k` releases
+  of the ResNet-18/34/50/101/152 ImageNet-1k classifiers (trained with the
+  "ResNet strikes back" A1 recipe); the weights are used unchanged. License: Apache-2.0 (the checkpoint model cards).
 
-- ResNet18: exported locally with fixed NCHW input `[1,3,224,224]`,
-  output name `output`, ImageNet-1k classes. The exporter uses
-  the TorchScript ONNX exporter (`dynamo=False`) for graph stability.
-  `--weights IMAGENET1K_V1` selects the official pretrained weights;
-  `--weights none` produces a random-weight graph for offline structure
-  checks only.
-- ResNet50: converted with the OE `13_resnet50` classification example —
-  start there for the ONNX, calibration and compile steps.
-- ResNet152: a published ONNX exists — inside the OE container (or any
-  x86 host with the link reachable):
+<a id="preprocessing"></a>
+### Preprocessing contract
 
-```bash
-# cwd: this conversion directory — output: ./resnet152.onnx
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet152.onnx
-```
+Calibration, evaluation, and the runtime share one geometry, which follows the
+checkpoint's own evaluation settings (`crop_pct`):
+
+| Variant | `crop_pct` | Shorter edge resized to | Crop |
+| --- | --- | --- | --- |
+| 18 | 0.95 | 235 (`int(224 / 0.95)`) | 224x224 center crop |
+| 34 | 0.95 | 235 (`int(224 / 0.95)`) | 224x224 center crop |
+| 50 | 0.95 | 235 (`int(224 / 0.95)`) | 224x224 center crop |
+| 101 | 0.95 | 235 (`int(224 / 0.95)`) | 224x224 center crop |
+| 152 | 0.95 | 235 (`int(224 / 0.95)`) | 224x224 center crop |
+
+The resize is antialiased bicubic (Pillow). Pixels are RGB; the ONNX input
+`data` is normalized float32 `[1,3,224,224]` with the ImageNet mean/std and
+the output `logits` is `[1,1000]`. In the deployed model the normalization is
+compiled in (`mean_value` = mean x 255, `scale_value` = 1 / (255 x std)), so the
+runtime feeds NV12 produced from the 224x224 crop. NV12 conversion uses
+OpenCV's limited-range BT.601 transform, hence `input_space_and_range:
+bt601_video` in both configurations.
 
 <a id="directory"></a>
 ## Directory structure
@@ -43,295 +59,184 @@ wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resne
 conversion/
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── export_resnet18_onnx.py  # Python script
-├── get_calibration_data.py  # Python script
-├── resnet152_config.yaml  # Configuration
-└── x86_inference.py  # Python script
+├── export.py  # Pinned timm checkpoint -> verified FP32 ONNX
+├── ptq_s.yaml  # S100 / S100P / S600 compile configuration (placeholders)
+└── ptq_x5.yaml  # X5 compile configuration (placeholder)
 ```
+
+Calibration inputs and the OE configuration are produced by
+`utils/tools/classification/workflow.py`; `ptq_*.yaml` are the reference compile
+configurations of the published artifacts.
 
 <a id="toolchain-targets"></a>
-## Toolchain and targets
+## Toolchain & Targets
 
-Use the OE Docker/toolchain release matching the target board and record
-its image tag, OE version, and host date. Authoritative references:
-[RDK S toolchain overview](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview),
+Compile with the OE container matching the target and keep its image tag and
+digest with the build. Versions used for the published artifacts:
+
+| Target | march | Toolchain image | Tools | Config |
+| --- | --- | --- | --- | --- |
+| x5 | bayes-e | `registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8` | hb_mapper 1.24.3, HBDK 3.49.15, horizon_nn 1.1.0 | `ptq_x5.yaml` |
+| s100 | nash-e | `registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0` | hb_compile 3.5.3, HMCT 2.6.5, HBDK 4.7.5 | `ptq_s.yaml` |
+| s100p | nash-m | same image as s100 | same as s100 | `ptq_s.yaml` |
+| s600 | nash-p | same image as s100 | same as s100 | `ptq_s.yaml` |
+
+Documentation: [RDK S toolchain overview](https://developer.d-robotics.cc/rdk_doc/rdk_s/Advanced_development/toolchain_development/overview),
 [D-Robotics toolchain download](https://toolchain.d-robotics.cc/).
-A generic load-and-mount sequence:
-
-```bash
-# inputs: OE image archive — run the rest inside the container at /workspace
-export OE_IMAGE_TAR=/absolute/path/to/oe-image.tar
-test -s "$OE_IMAGE_TAR"
-docker load -i "$OE_IMAGE_TAR"
-docker images
-: "${OE_IMAGE:?Set OE_IMAGE to the loaded OE image:tag}"
-export REPOSITORY_ROOT="${REPOSITORY_ROOT:-$PWD}"
-docker run --rm -it --network host --shm-size=15g \
-  -v "$REPOSITORY_ROOT":/workspace --workdir /workspace \
-  "$OE_IMAGE" /bin/bash
-```
-
-Targets: X5 compiles with `hb_mapper` using march `bayes-e` (confirm
-against the selected OE release); S100 uses `hb_compile` with `nash-e`,
-S600 with `nash-p`. OE classification examples used by these workflows:
-`13_resnet18` and `13_resnet50` under
-`samples/ai_toolchain/horizon_model_convert_sample/03_classification/`.
 
 <a id="export"></a>
-## Export
+## Export (ONNX)
 
-ResNet18 — exporter prerequisites: PyTorch, TorchVision, ONNX (ONNX
-Runtime optional for a host graph smoke test). Inside the OE container
-at `/workspace`:
+The commands below build `18`; use `--model resnet34`, `resnet50`,
+`resnet101` or `resnet152` and a separate work directory for the other depths. `WORK` is an absolute directory outside the
+repository.
 
 ```bash
-# input: TorchVision weights (downloads when not cached)
-# output: $WORK/resnet18.onnx — output: onnx.checker passes, exit 0
-export WORK="${WORK:-/workspace/resnet18-conversion}"
-mkdir -p "$WORK"
-python3 samples/vision/resnet/conversion/export_resnet18_onnx.py \
-  --output "$WORK/resnet18.onnx" \
-  --opset 11 \
-  --weights IMAGENET1K_V1
+# cwd: repository root; python 3.10 with the locked requirements installed
+export REPO=$(pwd)
+export WORK=/abs/path/resnet-18
+python3 utils/tools/classification/workflow.py fetch --model resnet18 \
+  --output $WORK/weights
+python3 samples/vision/resnet/conversion/export.py --model resnet18 \
+  --source-dir $WORK/weights \
+  --images samples/vision/resnet/test_data/white_wolf.JPEG \
+           samples/vision/resnet/test_data/zebra_cls.jpg \
+  --opset 11 --simplify --output $WORK/export
+# expect: $WORK/export/model.onnx (data float32 [1,3,224,224] -> logits [1,1000])
+#         and export.json with status "passed"
 ```
 
-`--weights none` variant for an offline smoke test (random weights, no
-accuracy meaning). `--no-check` skips `onnx.checker` only when validation
-is performed by another recorded tool. A host export check with Torch
-2.7.1, TorchVision 0.22.1, ONNX 1.19 and ONNX Runtime 1.23.2 produces a
-`[1,1000]` output matching the same seeded PyTorch graph within `1e-4`.
-
-ResNet50 — export runs in the OE `13_resnet50` example. ResNet152 — use
-the published ONNX from [Source model](#source-model); there is no
-exporter to run.
+`export.py` verifies the checkpoint hashes, loads it strictly, simplifies the
+graph, and compares real-image logits and Top-5 with PyTorch. `export.json`
+records the maximum absolute error per image and binds the ONNX SHA-256 to
+the checkpoint, the preprocessing contract, and the dependency versions.
 
 <a id="calibration"></a>
 ## Calibration
 
-ResNet18 — this directory supplies the exporter; calibration data and
-YAML come from the OE `13_resnet18` example. Copy the matching
-`13_resnet18` files from the OE sample and follow its documented
-preprocessing and calibration procedure; record the exact calibration
-data. The ResNet152 configuration in this directory is a ResNet152
-recipe — it is not a ResNet18 recipe and must not be reused as one.
-
-ResNet152 — `get_calibration_data.py` (run inside the OE container, cwd:
-this conversion directory) converts 100 ImageNet validation images to
-float32 RGB calibration data. Two inputs are user-provided and must be
-edited in the script before running; the script's default paths point into
-an external OE example tree; set them for your local data:
-
-```python
-# get_calibration_data.py — user-edited inputs
-src_image_dir = '../../../open_explorer/samples/ai_toolchain/horizon_model_convert_sample/01_common/calibration_data/imagenet/'  # EDIT: point at your ILSVRC2012_val_*.JPEG directory
-output_calib_dir = './calibration_data_rgb/'  # matches resnet152_config.yaml cal_data_dir
-```
+- Dataset: a fixed 200-image subset of COCO 2017 train2017 (selection seed 42),
+  listed with SHA-256 in a manifest. The set shares no image with the
+  evaluation set, which `workflow.py calibrate` verifies.
+- Preprocessing: the contract above, written per target: X5 takes raw RGB
+  float32 in [0,255] (`.rgb`, headerless little-endian; the X5 loader performs
+  the RGB/NV12 transformation); the S series takes the normalized ONNX input
+  as float32 `.npy`.
 
 ```bash
-# cwd: this conversion directory (inside the OE container)
-# input: src_image_dir with >=100 ILSVRC2012_val_*.JPEG
-# output: ./calibration_data_rgb/*.npy (float32, RGB, NCHW) — output: 100 files printed
-python3 get_calibration_data.py
+# cwd: repository root; run once per target: x5, s100, s100p, s600
+python3 utils/tools/classification/workflow.py calibrate --model resnet18 \
+  --platform x5 \
+  --manifest /abs/calibration/manifest.json \
+  --images-root /abs/calibration \
+  --expected-images 200 \
+  --evaluation-manifest /abs/imagenetv2/manifest.json \
+  --output $WORK/x5/calibration
+# expect: $WORK/x5/calibration/data (200 files) and calibration.json
 ```
-
-The relative paths chain within this cwd: the script writes
-`./calibration_data_rgb/`, which is exactly `resnet152_config.yaml`'s
-`cal_data_dir`; the YAML's `onnx_model` `./resnet152.onnx` is the file
-the [Source model](#source-model) step downloads into this directory,
-and its `working_dir`/`output_model_file_prefix` produce
-`./model_output/resnet152_224x224_nv12.hbm` as stated under
-[Compile](#compile).
-
-The normalization constants are **not identical** between the script and
-the YAML: both use the same mean
-(`123.675 116.28 103.53`), but the script multiplies by a uniform
-`0.017` while the YAML declares per-channel `scale_value: 0.01712475
-0.017507 0.01742919`. When regenerating, keep the script and the YAML on
-one scale set; the YAML's per-channel values are the set that matches the
-published record's Mean/Scale row (see [Validation](#validation)).
-
-ResNet50 — calibration runs in the OE `13_resnet50` example; nothing to
-run in this directory.
 
 <a id="compile"></a>
 ## Compile
 
-ResNet18 — inside the OE container, with `$WORK/resnet18.onnx` and
-`$OE_CONFIG` (the OE sample's YAML) prepared. X5 block:
+Fill the placeholders of the reference configuration (`SIZE` is the model input:
+224); the compile parameters (optimization level, latency mode, one
+core, NV12 input) are fixed by it:
 
 ```bash
-# output: *.bin under $WORK — output: hb_mapper exits 0
-export X5_MARCH="${X5_MARCH:-bayes-e}"
-hb_mapper --version
-hb_mapper checker --model-type onnx --march "$X5_MARCH" --model "$WORK/resnet18.onnx"
-hb_mapper makertbin --model-type onnx --config "$OE_CONFIG"
-find "$WORK" -type f -name '*.bin' -print
+# cwd: $WORK
+export SIZE=224
+sed -e "s#@WORK@#$WORK#g" -e "s#@SIZE@#$SIZE#g" \
+  $REPO/samples/vision/resnet/conversion/ptq_x5.yaml > x5/config.yaml
+for pair in s100:nash-e s100p:nash-m s600:nash-p; do
+  target=${pair%%:*}; march=${pair##*:}
+  sed -e "s#@WORK@#$WORK#g" -e "s#@TARGET@#$target#g" -e "s#@MARCH@#$march#g" \
+      -e "s#@SIZE@#$SIZE#g" \
+    $REPO/samples/vision/resnet/conversion/ptq_s.yaml > $target/config.yaml
+done
 ```
 
-S100/S600 block (the YAML must contain the matching Nash target — `nash-e`
-for S100, `nash-p` for S600):
+Mount `$WORK` into the container at the same absolute path and run the
+toolchain there, for example for X5:
 
 ```bash
-# output: *.hbm under $WORK — output: hb_compile exits 0
-hb_compile --help
-hb_compile --config "$OE_CONFIG"
-find "$WORK" -type f -name '*.hbm' -print
+# cwd: $WORK/x5; the published builds used --shm-size 15g (X5) and,
+# for the S images, --gpus all as well
+docker run --rm --user "$(id -u):$(id -g)" --shm-size 15g \
+  -v "$WORK:$WORK" -w "$WORK/x5" \
+  registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8 \
+  bash -c "hb_mapper checker --model-type onnx --march bayes-e \
+             --model $WORK/export/model.onnx --input-shape data 1x3x${SIZE}x${SIZE} && \
+           hb_mapper makertbin --config config.yaml --model-type onnx"
+
+# S100, S100P and S600: cwd $WORK/<target>, image ..._s100_s600_gpu:v3.7.0
+#   hb_compile --config config.yaml
+# expect: <target>/build/resnet_<target>.bin (x5) or .hbm (S)
 ```
 
-ResNet152 — with `./resnet152.onnx` and `./calibration_data_rgb/` in
-place (cwd: this conversion directory, inside the OE container):
-
-```bash
-# inputs: ./resnet152.onnx, ./calibration_data_rgb (see Calibration)
-# output: ./model_output/resnet152_224x224_nv12.hbm — output: hb_compile exits 0
-hb_compile --config resnet152_config.yaml
-```
-
-`resnet152_config.yaml` defaults to `march: nash-e` (S100). For S600,
-change `march` to `nash-p` and keep every other field. The expected
-output prefix is `resnet152_224x224_nv12` (matches the manifest
-filename `resnet152_224x224_nv12.hbm`).
-
-ResNet50 — compile via the OE `13_resnet50` example; this directory
-ships no ResNet50 config. Run only the block for the artifact being
-regenerated. If
-the OE sample uses a different command spelling, run that exact
-command and record it with the result.
-
-For an ONNX path stored in `ONNX`, use the same X5 checker and compiler:
-
-```bash
-export ONNX="$WORK/resnet18.onnx"
-export X5_MARCH="${X5_MARCH:-bayes-e}"
-hb_mapper --version
-hb_mapper checker --model-type onnx --march "$X5_MARCH" --model "$ONNX"
-hb_mapper makertbin --model-type onnx --config "$OE_CONFIG"
-find "$WORK" -type f -name '*.bin' -print
-```
+Rename each output to its published name (see [Artifacts](#artifacts)); the
+name carries the march token: `bayese`, `nashe`, `nashm`, `nashp`.
 
 <a id="validation"></a>
-## Validation
+## Post-Conversion Validation
 
-Use the OE sample's `hb_perf` and `hrt_model_exec` invocations with the
-generated artifact and record their complete output. For ResNet152,
-`x86_inference.py` (run inside the OE container) compares ONNX / HBIR
-(`.bc`) / HBM outputs on x86 with the same padded-crop preprocessing.
+1. Inspect the artifact with `hrt_model_exec model_info --model_file <file>`
+   on the matching board. The input shapes are per target and variant:
 
-Then confirm on the matching board with the runtime: X5
-metadata exposes one packed NV12 input and an F32 `[1,1000,1,1]` output
-named `prob`; S100/S600 expose Y `[1,224,224,1]`, UV `[1,112,112,2]`,
-and an F32 `[1,1000]` output; the same image, resize type, label file,
-and Top-K produce the expected class IDs and score ordering.
+   | Target / variant | Input the metadata exposes | Output |
+   | --- | --- | --- |
+   | x5, 18, 34, 50, 101 and 152 | one packed NV12 input, 224x224 (`resnet{18,34,50,101,152}_bayese_224x224_nv12.bin`) | F32 `[1,1000,1,1]` |
+   | s100/s100p/s600, 18 | Y `[1,224,224,1]`, UV `[1,112,112,2]` (`resnet18_nash{e,m,p}_224x224_nv12.hbm`) | F32 `[1,1000]` |
+   | s100/s100p/s600, 34 | Y `[1,224,224,1]`, UV `[1,112,112,2]` (`resnet34_nash{e,m,p}_224x224_nv12.hbm`) | F32 `[1,1000]` |
+   | s100/s100p/s600, 50 | Y `[1,224,224,1]`, UV `[1,112,112,2]` (`resnet50_nash{e,m,p}_224x224_nv12.hbm`) | F32 `[1,1000]` |
+   | s100/s100p/s600, 101 | Y `[1,224,224,1]`, UV `[1,112,112,2]` (`resnet101_nash{e,m,p}_224x224_nv12.hbm`) | F32 `[1,1000]` |
+   | s100/s100p/s600, 152 | Y `[1,224,224,1]`, UV `[1,112,112,2]` (`resnet152_nash{e,m,p}_224x224_nv12.hbm`) | F32 `[1,1000]` |
 
-The published conversion record for ResNet152:
-
-| Item | Value (published record) |
-| --- | --- |
-| Runtime input / train input | NV12 / RGB (NCHW) |
-| Mean / Scale | `123.675 116.28 103.53` / `0.01712475 0.017507 0.01742919` |
-| March | `nash-e` |
-| Calibration similarity | `0.994397` |
-| Quantization similarity | `0.992285` |
-| Toolchain FPS / latency | `449.03` / `2.23 ms` |
-
-Regenerating any artifact requires the OE compilation and the board checks
-under [Validation](#validation).
+   The output is raw logits; the runtime task applies softmax.
+2. Run the sample quick start with the compiled artifact: exit 0 and
+   a Top-5 list (see [Expected results](../README.md#expected-results)).
+3. Measure the full-set accuracy with the [evaluator](../evaluator/README.md)
+   and compare it with the FP32 ONNX baseline of the same checkpoint; the
+   published results are in the
+   [sample README](../README.md#performance).
 
 <a id="artifacts"></a>
 ## Artifacts
 
-| Stage | Artifact to retain |
-| --- | --- |
-| export | `resnet18.onnx`, exporter arguments, Torch/TorchVision/ONNX versions; ResNet152: downloaded `resnet152.onnx` and its origin URL |
-| calibration | ResNet18: the OE sample's calibration directory/list and preprocessing record; ResNet152: `calibration_data_rgb/` and the exact source image list |
-| checker | checker command, target config, log |
-| compile | target config, OE version, generated output directory |
-| deployment | X5 `resnet18_224x224_nv12.bin` or S `resnet{18,50,152}_224x224_nv12.hbm` (manifest filenames) |
-| validation | `hb_perf`/`hrt_model_exec`/`x86_inference.py` output, raw output, latency, accuracy input |
+| Artifact | Target | Lands at |
+| --- | --- | --- |
+| `resnet18_bayese_224x224_nv12.bin` | x5 | `model/` |
+| `resnet18_nashe_224x224_nv12.hbm` | s100 | `model/s100/` |
+| `resnet18_nashm_224x224_nv12.hbm` | s100p | `model/s100p/` |
+| `resnet18_nashp_224x224_nv12.hbm` | s600 | `model/s600/` |
+| `resnet34_bayese_224x224_nv12.bin` | x5 | `model/` |
+| `resnet34_nashe_224x224_nv12.hbm` | s100 | `model/s100/` |
+| `resnet34_nashm_224x224_nv12.hbm` | s100p | `model/s100p/` |
+| `resnet34_nashp_224x224_nv12.hbm` | s600 | `model/s600/` |
+| `resnet50_bayese_224x224_nv12.bin` | x5 | `model/` |
+| `resnet50_nashe_224x224_nv12.hbm` | s100 | `model/s100/` |
+| `resnet50_nashm_224x224_nv12.hbm` | s100p | `model/s100p/` |
+| `resnet50_nashp_224x224_nv12.hbm` | s600 | `model/s600/` |
+| `resnet101_bayese_224x224_nv12.bin` | x5 | `model/` |
+| `resnet101_nashe_224x224_nv12.hbm` | s100 | `model/s100/` |
+| `resnet101_nashm_224x224_nv12.hbm` | s100p | `model/s100p/` |
+| `resnet101_nashp_224x224_nv12.hbm` | s600 | `model/s600/` |
+| `resnet152_bayese_224x224_nv12.bin` | x5 | `model/` |
+| `resnet152_nashe_224x224_nv12.hbm` | s100 | `model/s100/` |
+| `resnet152_nashm_224x224_nv12.hbm` | s100p | `model/s100p/` |
+| `resnet152_nashp_224x224_nv12.hbm` | s600 | `model/s600/` |
 
-The published filenames are the manifest rows used by this sample. The
-exporter names its ONNX output `output`; the released X5 runtime metadata
-names its output `prob` with shape `[1,1000,1,1]`, S artifacts expose
-`output` with `[1,1000]` — these names and shapes are part of the target
-artifact contract.
-
-Published S-series artifacts can also be fetched directly from the model
-server (S100 and S600 share the filename; only the archive sub-directory
-differs — the manifest-driven [model downloader](../model/README.md#preparation)
-remains the preparation path):
-
-```bash
-# ResNet18
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet18_224x224_nv12.hbm
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet18_224x224_nv12.hbm
-# ResNet50
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet50_224x224_nv12.hbm
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet50_224x224_nv12.hbm
-# ResNet152
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ResNet/resnet152_224x224_nv12.hbm
-wget https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ResNet/resnet152_224x224_nv12.hbm
-```
+The list matches [model/README.md](../model/README.md).
 
 <a id="known-gaps"></a>
-## Additional preparation
+## Additional Preparation
 
-- ResNet18: obtain the calibration set, YAML and preprocessing record
-  from the OE `13_resnet18` example.
-- ResNet50: obtain the ONNX, calibration data and YAML from the OE
-  `13_resnet50` example and run the conversion there.
-- ResNet152: calibration images are user-provided — edit `src_image_dir`
-  in `get_calibration_data.py` to point at your ILSVRC2012 validation
-  directory; the script's uniform `0.017` scale differs from the YAML's
-  per-channel `scale_value` — keep the script and the YAML on one
-  consistent scale set when regenerating.
-- The exact weights and OE configuration used for each published
-  artifact are unrecorded; a regenerated file with the same basename is
-  not equivalent until target, input metadata, output shape/dtype, and
-  numerical results are compared.
-
-<a id="self-trained"></a>
-## Self-trained TorchVision ResNet18 checkpoints
-
-The default exporter targets official `IMAGENET1K_V1` weights. A
-self-trained `state_dict` exports through the same fixed contract:
-
-```bash
-# conversion environment (PyTorch + TorchVision installed); cwd: this directory
-python3 export_resnet18_onnx.py \
-  --checkpoint /path/to/my_resnet18.pth \
-  --num-classes 4 \
-  --output my_resnet18_4class.onnx
-```
-
-Rules and guarantees:
-
-- CLI contract: `--checkpoint` and `--weights` are mutually exclusive
-  (argparse rejects combining them); `--num-classes` is required with
-  `--checkpoint` and rejected without it; when neither weight option is
-  given, the official `IMAGENET1K_V1` default (1000-class output)
-  applies unchanged.
-- Architecture: TorchVision `resnet18` only. The classifier head is
-  rebuilt as `nn.Linear(512, num_classes)` and the checkpoint must load
-  with `strict=True`. Use a ResNet18 checkpoint whose classifier head
-  has the requested class count.
-- `--num-classes` (>= 2) sets the ONNX `output` width; the exporter
-  prints the torch/torchvision versions of the exporting environment —
-  record them with your training provenance.
-- Fixed graph contract, identical to the official export: one NCHW
-  input `data` `[1, 3, 224, 224]` float32, one output `output`
-  `[1, num_classes]`, static shapes, TorchScript exporter
-  (`dynamo=False`).
-- Preprocessing: training must use a transform compatible with the OE
-  conversion configuration you compile with — the same one the official
-  artifact uses (letterbox/direct resize per `--resize-type`, the
-  normalization baked into the OE config). The exporter does not alter
-  preprocessing.
-- Compile the resulting ONNX with the existing OE configurations
-  documented under [Toolchain and targets](#toolchain-targets) (X5
-  `hb_mapper` → `.bin`, S100/S600 `hb_compile` → `.hbm`); adjust the configuration to the custom model’s class count and preprocessing.
-- Runtime contract: load the compiled artifact with
-  `classify.ResNetClassifier(model_path, target=target,
-  input_size=(224, 224), class_count=<num-classes>)` and
-  optional labels (see the [custom models
-  section](../runtime/python/README.md#custom-model)); the binding
-  validates the actual output width against `class_count`.
+- Calibration and evaluation data are external. The COCO train2017 subset and
+  the ImageNetV2 MatchedFrequency set (10,000 images) must be obtained from
+  their owners; the manifest format and its checks are described in the
+  [host workflow](../../../../utils/tools/classification/README.md).
+- The OE toolchain images need access to `registry.d-robotics.cc`; log in with
+  your own credentials (`docker login`). Credentials never belong in these
+  files.
+- Compiling for a target needs no board, but validation does: use the board
+  that matches the target (S100P and S600 are separate boards from S100).
+- The models published before this recipe (different weights, preprocessing and
+  a probability output) are no longer distributed with this sample.

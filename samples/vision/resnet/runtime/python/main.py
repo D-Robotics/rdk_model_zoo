@@ -1,31 +1,41 @@
-"""Run the ResNet command-line sample.
+"""People and Agent entrypoint for the ResNet classification sample.
 
-Parse options, construct ResNetClassifier, call predict, and present results.
-CLI helpers supply model listing, dry-run, label loading, and image output.
+This file stays deliberately small: parse the arguments, resolve the model,
+construct the classifier, call ``predict``, show the result.  Option
+declarations and the model-free listing/dry-run modes live in ``cli.py``;
+the classification flow itself (preprocess → infer → postprocess) lives in
+``classify.py``.  Listing and dry-run are deliberately model-free; model
+preparation remains an explicit user action.
 """
-
 
 from __future__ import annotations
 
 from pathlib import Path
 import sys
+from typing import Sequence
 
 _ROOT = Path(__file__).resolve().parents[5]
 if str(_ROOT) not in sys.path:
+    # Direct ``python samples/.../main.py`` is a supported full-checkout entry.
+    # This compatibility adjustment is kept at the entry boundary only.
     sys.path.insert(0, str(_ROOT))
 
-from utils.py_utils.cls_binding import BindingError
-from utils.py_utils.image import read_bgr_image
-from utils.py_utils.labels import load_labels as _load_labels
-from samples.vision.resnet.runtime.python.classify import ResNetClassifier
-from samples.vision.resnet.runtime.python.cli import (
-    build_parser, list_models, dry_run, resolve_selection, print_result, save_result_image,
+from samples.vision.resnet.runtime.python.cli import (  # noqa: E402
+    build_parser,  # re-exported here: the contract checker imports it from main
+    default_labels,
+    print_classification_result,
+    read_bgr_image,
+    run_dry_run,
+    run_list_models,
+    save_result_image,
+)
+from samples.vision.resnet.runtime.python.cli import (  # noqa: E402
+    BindingError,
+    resolve_selection,
 )
 
-_DEFAULT_LABELS = _ROOT / "datasets/imagenet/imagenet_classes.names"
 
-
-def main(argv=None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     """Run the requested ResNet command and return its exit status.
 
     Args:
@@ -42,33 +52,61 @@ def main(argv=None) -> int:
         List and dry-run modes do not load a model. Inference prints Top-K
         results and writes an annotated image only when --img-save-path is set.
     """
+
     args = build_parser().parse_args(argv)
+    if args.list_models:
+        return run_list_models(args.target)
+    if args.dry_run:
+        return run_dry_run(args)
+
     try:
-        if args.list_models:
-            return list_models(args.target)
-        if args.dry_run:
-            return dry_run(args)
-        label_path = Path(args.label_file).expanduser() if args.label_file else _DEFAULT_LABELS
-        labels = _load_labels(label_path) if args.label_file or label_path.is_file() else None
-        selection = resolve_selection(args.target, variant=args.variant,
-                                      asset_id=args.asset_id, model_path=args.model_path)
+        selection = resolve_selection(
+            args.target,
+            asset_id=args.asset_id,
+            variant=getattr(args, "variant", None),
+            model_path=args.model_path,
+        )
+        if not selection.model_path.is_file():
+            raise FileNotFoundError(f"model file not found: {selection.model_path}")
+
+        # A path existing on disk is not execution authorization.  Require the
+        # exact detected board before touching hbm_runtime.
+        from utils.py_utils.platforms import require_execution_target
+
+        require_execution_target(selection.target)
+
+        # Imported inside real execution: OpenCV and hbm_runtime load only
+        # after the selection, file, and board checks above have passed.
+        from samples.vision.resnet.runtime.python.classify import ResNetClassifier
+
         contract = selection.contract
         model = ResNetClassifier(
-            selection.model_path, target=selection.target, top_k=args.top_k, labels=labels,
+            selection.model_path, target=selection.target,
+            input_size=(contract.input_height, contract.input_width),
+            class_count=contract.class_count, top_k=args.top_k,
+            labels=default_labels(args.label_file),
             resize_type=contract.resize_type if args.resize_type is None else args.resize_type,
             resize_interpolation=contract.resize_interpolation,
-            score_policy=contract.output_score_policy)
+            resize_shorter=contract.resize_shorter,
+            score_policy=contract.output_score_policy,
+            output_transform=contract.output_transform,
+        )
         model.set_scheduling_params(priority=args.priority, bpu_cores=args.bpu_cores)
+
         result = model.predict(args.test_img)
-        print_result(result, selection, args.top_k)
+        print_classification_result(result, selection, top_k=args.top_k)
+
         if args.img_save_path:
-            save_result_image(Path(args.img_save_path).expanduser(), read_bgr_image(args.test_img), result)
+            save_result_image(
+                Path(args.img_save_path).expanduser(),
+                read_bgr_image(args.test_img),
+                result,
+            )
             print(f"Saved result image: {args.img_save_path}")
         return 0
-    except (BindingError, OSError, RuntimeError, ValueError) as exc:
+    except (BindingError, FileNotFoundError, OSError, RuntimeError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-
 
 
 if __name__ == "__main__":
