@@ -2,6 +2,7 @@
 
 import io
 import sys
+import tempfile
 import unittest
 from contextlib import redirect_stdout, redirect_stderr
 from pathlib import Path
@@ -57,15 +58,7 @@ class NormalizeArgsTests(unittest.TestCase):
             ("negative bpu core", namespace(bpu_cores=[0, -2])),
             (
                 "no-encode with encoder",
-                namespace(no_encode=True, encoder="software"),
-            ),
-            (
-                "hardware encoder on x5",
-                namespace(target="x5", encoder="hardware"),
-            ),
-            (
-                "hardware encoder on s100p (unverified)",
-                namespace(target="s100p", encoder="hardware"),
+                namespace(no_encode=True, encoder="hardware"),
             ),
         )
         for label, args in cases:
@@ -86,30 +79,40 @@ class NormalizeArgsTests(unittest.TestCase):
 
 
 class EncoderResolutionTests(unittest.TestCase):
-    def test_auto_resolves_to_the_verified_encoder_only_on_s100(self):
-        self.assertEqual(cli.resolve_encoder("auto", "s100"), "hardware")
-        self.assertEqual(cli.resolve_encoder("auto", "s100p"), "software")
-        self.assertEqual(cli.resolve_encoder("auto", "s600"), "software")
-        self.assertEqual(cli.resolve_encoder("auto", "x5"), "software")
+    def test_auto_and_hardware_resolve_identically_on_published_targets(self):
+        # Video encoding is hardware-only on every published target; the
+        # three VPUs were each exercised by the full CLI run.
+        for target in cli.PUBLISHED_TARGETS:
+            with self.subTest(target=target):
+                self.assertEqual(cli.resolve_encoder("auto", target), "hardware")
+                self.assertEqual(cli.resolve_encoder("hardware", target), "hardware")
 
-    def test_explicit_choices_are_never_silently_changed(self):
-        self.assertEqual(cli.resolve_encoder("software", "x5"), "software")
-        self.assertEqual(cli.resolve_encoder("software", "s100"), "software")
-        self.assertEqual(cli.resolve_encoder("hardware", "s100"), "hardware")
-        with self.assertRaises(ValueError):
-            cli.resolve_encoder("hardware", "s100p")
-        with self.assertRaises(ValueError):
-            cli.resolve_encoder("hardware", "s600")
-        with self.assertRaises(ValueError):
-            cli.resolve_encoder("ffmpeg", "s100")
+    def test_targets_without_a_published_set_have_no_encoder(self):
+        for target in ("x5", "x3", "rdk_x5"):
+            with self.subTest(target=target), self.assertRaises(ValueError) as raised:
+                cli.resolve_encoder("auto", target)
+            self.assertIn("publishes s100, s100p and s600", str(raised.exception))
+
+    def test_unknown_encoder_choice_is_rejected(self):
+        for value in ("software", "ffmpeg", "opencv"):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                cli.resolve_encoder(value, "s100")
 
 
 class ModelListingTests(unittest.TestCase):
+    def setUp(self):
+        # An empty model dir keeps the listing/resolution tests independent
+        # of whether real artifacts happen to sit in the checkout's model/
+        # (a board's tree has them; a fresh clone does not).
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.empty_models = Path(self.tmp.name)
+
     def test_listing_names_every_published_reference_without_an_sdk(self):
         buffer = io.StringIO()
         code = 0
         with redirect_stdout(buffer):
-            code = cli.print_model_list("s100")
+            code = cli.print_model_list("s100", model_dir=self.empty_models)
         text = buffer.getvalue()
         self.assertEqual(code, 0)
         for filename in cli.FILENAMES["s100"].values():
@@ -130,9 +133,9 @@ class ModelListingTests(unittest.TestCase):
                 self.assertIn(filename, text)
 
     def test_resolution_reports_missing_artifacts_with_a_failing_status(self):
-        selections = cli.resolve_selections("s100")
+        selections = cli.resolve_selections("s100", model_dir=self.empty_models)
         missing = cli.missing_models(selections)
-        # The host test tree ships only am.mvn: every artifact is missing.
+        # Every artifact is missing under the empty model dir.
         self.assertEqual(len(missing), 4)
         args = namespace(list_models=False, dry_run=True)
         buffer, errbuf = io.StringIO(), io.StringIO()

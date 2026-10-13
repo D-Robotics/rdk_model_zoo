@@ -1,9 +1,10 @@
 """Video writer protocols under injected failures (no board, no real codec).
 
-The software writer runs against a fake ``ffmpeg`` shell script on PATH; the
-hardware writer drives its real ACK/ring protocol against a fake worker
+The hardware writer drives its real ACK/ring protocol against a fake worker
 script through the ``worker_command``/``ring_dir`` seams (board defaults are
-untouched).  Every case checks both the raised error and the cleanup state.
+untouched); the factory rejects every non-hardware kind — there is no
+software video encoder in the runtime to fall back to.  Every case checks
+both the raised error and the cleanup state.
 """
 
 import os
@@ -27,13 +28,6 @@ def make_script(path, body):
     path.chmod(path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
     return path
 
-
-GOOD_FFMPEG = "#!/bin/sh\ncat > /dev/null\nexit 0\n"
-EXIT_FFMPEG = "#!/bin/sh\nsleep 0.2\nexit 3\n"
-# A plain (non-``exec``) child is the real leak shape: SIGKILL of the shell
-# alone leaves ``sleep`` holding the pipe read-end open, so the writer must
-# kill the whole process group for its thread to drain.
-STALL_FFMPEG = "#!/bin/sh\nsleep 30\n"
 
 GOOD_WORKER = """#!/bin/sh
 echo READY
@@ -69,110 +63,18 @@ done
 """
 
 
-class SoftwareWriterTests(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.root = Path(self.tmp.name)
-        make_script(self.root / "bin" / "ffmpeg", GOOD_FFMPEG)
-        self.audio = self.root / "a.wav"
-        self.audio.write_bytes(b"")
-        patcher = mock.patch.dict(
-            os.environ, {"PATH": f"{self.root / 'bin'}:{os.environ['PATH']}"}
-        )
-        patcher.start()
-        self.addCleanup(patcher.stop)
-        self.out = self.root / "video.mp4"
+class WriterFactoryTests(unittest.TestCase):
+    def test_unknown_kinds_are_rejected_never_fallen_back_from(self):
+        for kind in ("software", "opencv", "ffmpeg", ""):
+            with self.subTest(kind=kind), self.assertRaises(ValueError) as raised:
+                cli.make_writer(kind, Path("v.mp4"), Path("a.wav"), 16, 12)
+            self.assertIn("Unknown video writer kind", str(raised.exception))
 
-    def test_happy_path_submits_and_closes(self):
-        writer = cli.SoftwareVideoWriter(self.out, self.audio, 16, 12)
-        for value in range(3):
-            writer.submit(f"frame{value}".encode())
-        writer.close()
-        self.assertTrue(writer.log.closed)
-        self.assertEqual(writer.proc.returncode, 0)
-        writer.close()  # idempotent: a second close is a no-op
-
-    def test_early_encoder_exit_surfaces_as_an_error(self):
-        make_script(self.root / "bin" / "ffmpeg", EXIT_FFMPEG)
-        writer = cli.SoftwareVideoWriter(self.out, self.audio, 16, 12)
-        writer.STALL_TIMEOUT = 10
-        # Frames far larger than the pipe + queue keep submit in flight when
-        # the encoder exits, so the failure must surface instead of blocking.
-        blob = b"x" * (1 << 18)
-        with self.assertRaises(RuntimeError):
-            for index in range(10):
-                writer.submit(blob)
-        writer.abort()
-        self.assertTrue(writer.log.closed)
-
-    def test_stalled_encoder_times_out_and_aborts(self):
-        make_script(self.root / "bin" / "ffmpeg", STALL_FFMPEG)
-        writer = cli.SoftwareVideoWriter(self.out, self.audio, 16, 12)
-        writer.STALL_TIMEOUT = 0.5
-        blob = b"x" * (1 << 18)
-        with self.assertRaises(TimeoutError):
-            for index in range(10):
-                writer.submit(blob)
-        writer.abort()
-        self.assertTrue(writer.log.closed)
-        self.assertFalse(writer.thread.is_alive())
-        # The parent's pipe write-end is closed too, not just the log.
-        self.assertTrue(writer.proc.stdin.closed)
-        # The whole encoder process group is gone: the non-exec ``sleep``
-        # child cannot survive and hold the pipe read-end open.
-        self._assert_group_reaped(writer)
-
-    def _assert_group_reaped(self, writer):
-        """No live member remains in the encoder's process group.
-
-        A killed grandchild may linger as a zombie until the init process
-        reaps it — not a leak: the pipe read-end closed when the process
-        died. Zombies still answer ``killpg``, so on Linux (``/proc``
-        available) zombie members are ignored; on macOS the host init
-        reaps adopted orphans promptly and ``killpg`` is exact.
-        """
-
-        import time as _time
-        from pathlib import Path as _Path
-
-        def group_has_live_members():
-            try:
-                os.killpg(writer.proc.pid, 0)
-            except ProcessLookupError:
-                return False
-            # The group answered; a zombie answering is not a live member.
-            for stat in _Path("/proc").glob("[0-9]*/stat"):
-                try:
-                    _, rest = stat.read_text().rsplit(")", 1)
-                    fields = rest.split()
-                    # stat layout after (comm): state ppid pgrp session ...
-                    if (int(fields[2]) == writer.proc.pid
-                            and fields[0] != "Z"):
-                        return True
-                except (OSError, ValueError, IndexError):
-                    continue  # /proc entry vanished mid-scan
-            return False
-
-        for _ in range(50):  # init reaping can lag a moment
-            if not group_has_live_members():
-                return
-            _time.sleep(0.1)
-        self.fail(
-            f"process group {writer.proc.pid} still has live members "
-            "after abort"
-        )
-
-    def test_constructor_failure_leaves_no_log_file(self):
-        with mock.patch.dict(os.environ, {"PATH": "/nonexistent-dir-only"}):
-            with self.assertRaises(FileNotFoundError):
-                cli.SoftwareVideoWriter(self.out, self.audio, 16, 12)
-        self.assertFalse(Path(f"{self.out}.ffmpeg.log").exists())
-
-    def test_make_writer_requires_ffmpeg_on_path(self):
+    def test_hardware_writer_requires_ffmpeg_on_the_path(self):
         with mock.patch("shutil.which", return_value=None):
-            with self.assertRaises(RuntimeError):
-                cli.make_writer("software", self.out, self.audio, 16, 12)
+            with self.assertRaises(RuntimeError) as raised:
+                cli.make_writer("hardware", Path("v.mp4"), Path("a.wav"), 16, 12)
+            self.assertIn("FFmpeg", str(raised.exception))
 
 
 class HardwareWriterTests(unittest.TestCase):
@@ -281,6 +183,19 @@ class HardwareWriterTests(unittest.TestCase):
         self.assertEqual(self._ring_files(), [])
         writer.abort()  # idempotent after cleanup: no error, no stray kill
         self.assertEqual(writer.proc.returncode, 3)
+
+    def test_abort_removes_the_partial_elementary_stream(self):
+        # An aborted run must not leave the worker's scratch behind: the
+        # ring and the partial .h264 are gone, the encoder log stays for
+        # diagnostics.
+        writer = cli.HardwareVideoWriter(self.out, self.audio, 16, 12, **self.kwargs)
+        writer.submit(np.zeros((12, 16, 3), np.uint8))
+        partial = Path(f"{self.out}.h264")
+        partial.write_bytes(b"partial elementary stream")
+        writer.abort()
+        self.assertEqual(self._ring_files(), [])
+        self.assertFalse(partial.exists())
+        self.assertTrue(Path(f"{self.out}.encoder.log").exists())
 
     def test_ansi_noise_lines_are_stripped_and_logged(self):
         make_script(self.worker, ANSI_WORKER)

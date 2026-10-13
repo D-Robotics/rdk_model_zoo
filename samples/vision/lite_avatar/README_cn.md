@@ -15,12 +15,12 @@
 发布 HBM 产物串成每个阶段清晰可读的 `preprocess → infer → postprocess`
 流程与一次整段音频的 `predict`：音频前端提取 Paraformer 特征（Kaldi
 fbank、7/6 低帧率堆叠、CMVN），音频编码器输出 50 路堆叠隐层状态，
-audio2mouth 把滑动的 30 帧窗口映射为嘴部参数（与上游完全一致的交叉淡化与
-Butterworth 平滑），人脸解码器以参考帧特征金字塔为条件逐帧渲染。合成阶段
-按原始羽化掩码与乒乓环顺序把解码出的嘴部区域贴回背景循环帧，随后 CLI 把
-帧交付给 H.264 编码器（S100 硬件编码器，或 FFmpeg 管道），写入器资源有界
-并在失败时清理（见
-[运行时文档](runtime/python/README_cn.md)）。
+audio2mouth 把滑动的 30 帧窗口映射为嘴部参数（交叉淡化与
+Butterworth 平滑），人脸解码器以参考帧特征金字塔为条件逐帧渲染。
+每帧按羽化掩膜合成到背景循环帧上，交给板端 VPU 的 H.264 编码器；
+FFmpeg 把输入音频以 AAC 混入 MP4，`ffprobe` 校验交付文件确实同时
+持有两条轨道。完整 CLI 与 API 参考见
+[运行时文档](runtime/python/README_cn.md)。
 
 ### 算法背景
 
@@ -39,7 +39,7 @@ lite_avatar/
 ├── conversion/  # 导出、变换、量化校准与编译配置
 ├── evaluator/   # 帧级输出质量对比
 ├── model/       # 已发布产物的身份、准备与校验
-├── runtime/     # Python 推理（main.py、cli.py、avatar.py、frontend.py）
+├── runtime/     # Python 推理（main.py、cli.py、avatar.py、frontend.py、media_worker.py）
 ├── test_data/   # 捆绑的示例音频；数字人数据准备
 ├── tests/       # 宿主机测试（SDK 替身，无需上板）
 ├── README.md    # 英文说明
@@ -50,11 +50,11 @@ lite_avatar/
 <a id="support-matrix"></a>
 ## 支持矩阵
 
-| 目标 | 语言 | 视频编码器 | 状态 |
-| --- | --- | --- | --- |
-| s100 | python | S100 硬件 H.264（默认 `auto`）或 FFmpeg 管道 | supported |
-| s100p | python | FFmpeg 管道 | supported |
-| s600 | python | FFmpeg 管道 | supported |
+| 目标 | 语言 | 背景解码 | 视频编码器 | 状态 |
+| --- | --- | --- | --- | --- |
+| s100 | python | VPU H.264（文件模式） | VPU H.264 工作进程 | supported |
+| s100p | python | VPU H.264（文件模式） | VPU H.264 工作进程 | supported |
+| s600 | python | VPU H.264（文件模式） | VPU H.264 工作进程 | supported |
 
 <a id="prerequisites"></a>
 ## 环境要求
@@ -62,23 +62,25 @@ lite_avatar/
 - 按[模型准备](model/README_cn.md)完成校验的四个 HBM 产物，位于
   `model/<目标>/`（本地包或自行编译；`verify.py --target <t>`）。
 - 按上游固定版本 `sample_data.zip` 解压出的数字人数据目录（见
-  [测试数据](test_data/README_cn.md)；默认位置 `test_data/preload`）。
+  [测试数据](test_data/README_cn.md)；默认位置 `test_data/preload`），外加
+  **一次性主机背景预处理**：自带的 `bg_video.mp4` 为 MPEG-4 Part 2，需在
+  主机上转码一次生成 `bg_video.h264` 与 `bg_video.json` sidecar（见
+  [运行时背景预处理](runtime/python/README_cn.md#background-prep)）。
 - [运行时文档](runtime/python/README_cn.md)中的板端依赖（`hbm_runtime`、
-  Torch 2.3.1/torchaudio、NumPy、SciPy、OpenCV、soundfile），以及 PATH 上的
-  `ffmpeg`——**两种**编码器写视频都需要（硬件路径同样经由 ffmpeg 混流
-  H.264 码流）；仅 `--no-encode` 不需要。
+  `hobot_vio`、Torch 2.3.1/torchaudio、NumPy、SciPy、Pillow、soundfile）、
+  系统 `liblz4`，以及 PATH 上的 `ffmpeg`（含 `ffprobe`）——写视频需要；
+  仅 `--no-encode` 不需要。
 
 <a id="quickstart"></a>
 ## 快速开始
 
-在 S100 板上从仓库根目录执行的完整路径：
+命令均从仓库根目录执行。第 1–2 步在任意有 FFmpeg 的主机上准备数据；
+第 3–4 步在拷贝好数据的板卡上运行。
+
+在主机上：
 
 ```bash
-# 1. 校验已准备好的产物集（S100P/S600 加 --target s100p / s600）
-#    成功：verify.py 退出码 0 并逐项打印摘要匹配
-python3 samples/vision/lite_avatar/model/verify.py --target s100
-
-# 2. 准备数字人数据（一次性，约 5 MB）
+# 1. 下载并校验数字人数据（一次性，约 5 MB）
 #    成功：shasum 输出 "sample_data.zip: OK"
 cd <任意目录>
 wget https://github.com/HumanAIGC/lite-avatar/raw/5b7ec850945e03d56fb290b05fb68440c359fa86/data/sample_data.zip
@@ -86,17 +88,30 @@ echo "d1c77b2df48b7fd7f19e6eef52bc5107e3131dd9777162faf2576f9451f69d7b  sample_d
 unzip sample_data.zip -d <repo>/samples/vision/lite_avatar/test_data/
 cd <repo>
 
-# 3. 渲染捆绑的示例语音
+# 2. 一次性准备背景（脚本只读原始 .mp4）
+#    成功：bg_video.h264 + bg_video.json 位于 test_data/preload/
+python3 samples/vision/lite_avatar/test_data/prepare_background.py \
+    --data samples/vision/lite_avatar/test_data/preload
+```
+
+把预处理好的数字人数据（含 `bg_video.h264` 与 `bg_video.json`）和模型
+产物拷到板上，然后在板上：
+
+```bash
+# 3. 校验产物集（S100P/S600 加 --target s100p / s600）
+#    成功：verify.py 退出码 0 并逐项打印摘要匹配
+python3 samples/vision/lite_avatar/model/verify.py --target s100
+
+# 4. 渲染捆绑的示例语音
 #    输出：outputs/lite_avatar/avatar.mp4（166 帧 @ 30 fps，已混音）
 #    成功：退出码 0 且出现 "Video written" 汇总行
 bash samples/vision/lite_avatar/runtime/python/run.sh --target s100 \
     --audio samples/vision/lite_avatar/test_data/asr_example.wav
 ```
 
-`--target` 选择产物集且须与板卡一致；默认 `--encoder auto` 在 S100 上
-解析为硬件 H.264 编码器，其他目标为 FFmpeg 管道。`--encoder
-software`/`hardware` 显式指定，`--no-encode` 只渲染不写盘。完整 CLI 与
-API 参考见[运行时文档](runtime/python/README_cn.md)。
+`--target` 选择产物集且须与板卡一致（其他板卡用 `s100p` / `s600`）；
+默认 `--encoder auto` 在所有受支持目标上解析为 VPU H.264 编码器，
+`--no-encode` 只渲染不写盘。
 
 <a id="expected-results"></a>
 ## 预期结果
@@ -114,13 +129,17 @@ API 参考见[运行时文档](runtime/python/README_cn.md)。
 
 ### 性能
 
-以普通入口实测（torch 2.3.1、默认线程策略）：捆绑的 166 帧语音在 S100
-上以硬件编码器渲染用时 **7.54 s——22.01 fps**（`Rendered 166
-frames ... in 7.54s (22.01 fps)`）；在 S100P 上以软件编码器 **36.4 fps**
-（13.2 s，`--no-encode` 38.0 fps）；在 S600 上以软件编码器 **39.4 fps**
-（4.21 s，`--no-encode` 40.9 fps）。计时窗口覆盖全部 166 帧渲染加编码器
-排空与 MP4 混流；此前的
-音频前端与渲染器初始化等一次性离线阶段不在窗口内。
+捆绑 166 帧语音以普通入口实测（torch 2.3.1，所有目标硬件编码）：
+
+| 目标 | 渲染速率（166 帧窗口） | 端到端耗时 |
+| --- | --- | --- |
+| s100p | 18.7 fps | 24.7 秒 |
+| s600 | 20.5 fps | 28.3 秒 |
+| s100 | 15.3 fps | 28.6 秒 |
+
+渲染速率窗口覆盖全部 166 帧渲染加硬件编码器排空与 MP4 封装；此前的
+背景硬件解码、音频前端与渲染器初始化等一次性阶段不在窗口内。端到端
+耗时为完整 CLI 运行，含初始化。
 
 <a id="entry-points"></a>
 ## 入口

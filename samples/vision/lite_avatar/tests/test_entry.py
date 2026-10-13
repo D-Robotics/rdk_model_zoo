@@ -2,6 +2,7 @@
 
 import io
 import sys
+import tempfile
 import unittest
 from contextlib import redirect_stdout, redirect_stderr
 from pathlib import Path
@@ -24,9 +25,15 @@ class MainModelFreeModes(unittest.TestCase):
         self.assertEqual(errbuf.getvalue(), "")
 
     def test_dry_run_resolves_and_reports_missing_artifacts(self):
-        buffer = io.StringIO()
-        with redirect_stdout(buffer):
-            code = main_module.main(["--target", "s100", "--dry-run"])
+        # An empty --model-dir keeps the expectation independent of real
+        # artifacts sitting in the checkout's model/ (a board tree has
+        # them; a fresh clone does not).
+        with tempfile.TemporaryDirectory() as empty:
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                code = main_module.main(
+                    ["--target", "s100", "--dry-run", "--model-dir", empty]
+                )
         self.assertEqual(code, 1)
         self.assertIn("stage: audio_encoder", buffer.getvalue())
         self.assertIn("Missing artifacts", buffer.getvalue())
@@ -38,8 +45,12 @@ class MainModelFreeModes(unittest.TestCase):
             / "asr_example.wav"
         )
         buffer, errbuf = io.StringIO(), io.StringIO()
-        with redirect_stdout(buffer), redirect_stderr(errbuf):
-            code = main_module.main(["--target", "s100", "--audio", str(wav)])
+        with tempfile.TemporaryDirectory() as empty:
+            with redirect_stdout(buffer), redirect_stderr(errbuf):
+                code = main_module.main(
+                    ["--target", "s100", "--audio", str(wav),
+                     "--model-dir", empty]
+                )
         self.assertEqual(code, 2)
         self.assertIn("Missing model artifacts", errbuf.getvalue())
         self.assertIn("model/README.md", errbuf.getvalue())

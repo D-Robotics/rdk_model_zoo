@@ -365,7 +365,9 @@ class PipelinePredictTests(unittest.TestCase):
 
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
-        self.data_dir = build_avatar_data(Path(self.tmp.name) / "avatar")
+        self.data_dir, self.bg_frames = build_avatar_data(
+            Path(self.tmp.name) / "avatar"
+        )
         self.encoder_calls = []
 
         def encoder_transform(feed):
@@ -401,7 +403,12 @@ class PipelinePredictTests(unittest.TestCase):
             selections, runtime_factory=factory
         )
         self.pipeline = avatar.LiteAvatarPipeline(
-            ArrayFrontend(CMVN), self.runners, self.names, self.data_dir, self.quants
+            ArrayFrontend(CMVN),
+            self.runners,
+            self.names,
+            self.data_dir,
+            self.quants,
+            background_frames=self.bg_frames,
         )
 
     def _predict(self):

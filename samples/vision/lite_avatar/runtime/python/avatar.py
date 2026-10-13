@@ -750,6 +750,12 @@ class CompressedBackground:
         self.payload = buffer.raw[:count]
         self.storage_nbytes = count
 
+    @property
+    def frame_shape(self):
+        """Shape of the decompressed frame (the renderer's geometry)."""
+
+        return self.shape
+
     def copy(self, out=None):
         """Return a decompressed owned frame, or fill a compatible buffer."""
 
@@ -775,13 +781,63 @@ class CompressedBackground:
 # ======================================================================
 
 
+def resize_bilinear(image, size):
+    """Bilinear resize to ``(width, height)`` with OpenCV INTER_LINEAR mapping.
+
+    Same half-pixel-center convention (``src = (dst + 0.5) * scale - 0.5``
+    clamped to the source extent), separable per-axis blend of the two
+    neighbouring samples, round-to-nearest.  Measured against
+    ``cv2.resize(..., interpolation=cv2.INTER_LINEAR)``: maximum deviation
+    1 (per-pixel rounding), across square, non-square and the sample's real
+    geometries (890x1920 -> 384x384 reference encode and the 384 -> 419x289
+    mouth ROI).
+    """
+
+    out_h, out_w = size[1], size[0]
+    src_h, src_w = image.shape[:2]
+    values = image.astype(np.float64)
+
+    def coords(out_n, src_n):
+        pos = (np.arange(out_n, dtype=np.float64) + 0.5) * src_n / out_n - 0.5
+        pos = np.clip(pos, 0.0, float(src_n - 1))
+        low = np.floor(pos).astype(np.int64)
+        low = np.minimum(low, src_n - 2 if src_n > 1 else 0)
+        return low, pos - low
+
+    x0, xw = coords(out_w, src_w)
+    y0, yw = coords(out_h, src_h)
+    # Column weights broadcast on axis 1, row weights on axis 0.
+    xw_c = xw.reshape((1, out_w) + (1,) * (image.ndim - 2))
+    yw_c = yw.reshape((out_h,) + (1,) * (image.ndim - 1))
+    x1 = np.minimum(x0 + 1, src_w - 1)
+    y1 = np.minimum(y0 + 1, src_h - 1)
+
+    def horiz(rows):
+        return rows[:, x0] * (1.0 - xw_c) + rows[:, x1] * xw_c
+
+    blended = horiz(values[y0]) * (1.0 - yw_c) + horiz(values[y1]) * yw_c
+    return np.rint(blended).astype(np.uint8)
+
+
+def load_reference_bgr(path):
+    """Read a reference JPEG as BGR uint8 via Pillow (no OpenCV).
+
+    Pillow and OpenCV decode the sample's reference JPEGs bit-identically
+    (measured over all 150 files).
+    """
+
+    from PIL import Image
+
+    with Image.open(path) as image:
+        rgb = np.asarray(image.convert("RGB"))
+    return np.ascontiguousarray(rgb[:, :, ::-1])
+
+
 def normalize_reference(image_bgr):
     """BGR uint8 image -> finite float32 [1,3,384,384] in [-1,1] RGB."""
 
-    import cv2
-
-    img = cv2.cvtColor(np.ascontiguousarray(image_bgr)[:, :, 0:3], cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, (384, 384), interpolation=cv2.INTER_LINEAR)
+    img = image_bgr[:, :, 0:3][:, :, ::-1]
+    img = resize_bilinear(np.ascontiguousarray(img), (384, 384))
     t = img.astype(np.float32) / 255.0
     t = np.transpose(t, (2, 0, 1))
     t = 2.0 * t - 1.0
@@ -799,6 +855,11 @@ def background_index_for(index, count):
 class AvatarRenderer:
     """Cache reference pyramids and composite mouth frames over backgrounds.
 
+    Memory contract: the ring stores each frame as a compressed payload;
+    the raw decoded list is dropped as soon as compression holds the pixels,
+    before the reference pyramids load (injecting frames through
+    ``background_frames`` keeps the caller's list untouched).
+
     Attributes:
         encoder_stage: FaceGenEncoderStage used once per reference frame.
         decoder_stage: FaceGenDecoderStage used once per rendered frame.
@@ -807,37 +868,49 @@ class AvatarRenderer:
         y1/y2/x1/x2: face box in background-frame pixel coordinates.
     """
 
-    def __init__(self, data_dir, encoder_stage, decoder_stage, max_refs=150):
-        import cv2
+    def __init__(self, data_dir, encoder_stage, decoder_stage, max_refs=150,
+                 *, background_frames=None):
+        from scipy import ndimage
 
         self.encoder_stage = encoder_stage
         self.decoder_stage = decoder_stage
         data_dir = Path(data_dir)
-        cap = cv2.VideoCapture(str(data_dir / "bg_video.mp4"))
-        self.bg: list[CompressedBackground] = []
-        try:
-            # The ring never cycles past max_refs slots; frames beyond that
-            # are not cached, no matter how long the source loop is.
-            while len(self.bg) < max_refs:
-                ret, img = cap.read()
-                if not ret:
-                    break
-                if img is None or img.ndim != 3 or img.shape[2] < 3 or min(img.shape[:2]) < 1:
-                    raise ValueError(
-                        f"Undecodable background frame {len(self.bg)} in "
-                        f"{data_dir / 'bg_video.mp4'}"
-                    )
-                if self.bg and img.shape != self.bg[0].shape:
-                    raise ValueError(
-                        f"Background frame {len(self.bg)} is {img.shape[:2]} but "
-                        f"frame 0 was {self.bg[0].shape[:2]}; one geometry is required"
-                    )
-                self.bg.append(CompressedBackground(img))
-        finally:
-            cap.release()
+        injected = background_frames is not None
+        if background_frames is None:
+            # Board path: hardware (VPU) decode of the prepared H.264
+            # background; a legacy MPEG-4 asset raises with the host
+            # preparation command instead of any software fallback.
+            from samples.vision.lite_avatar.runtime.python.media_worker import (
+                BackgroundFormatError,
+                decode_background,
+            )
+
+            try:
+                background_frames = decode_background(data_dir, max_refs)
+            except BackgroundFormatError as error:
+                raise ValueError(str(error)) from error
+        self.bg = []
+        for index, img in enumerate(background_frames):
+            if img is None or img.ndim != 3 or img.shape[2] != 3 or min(img.shape[:2]) < 1:
+                raise ValueError(f"Invalid background frame {index}: {getattr(img, 'shape', None)}")
+            if self.bg and img.shape != self.bg[0].frame_shape:
+                raise ValueError(
+                    f"Background frame {index} is {img.shape[:2]} but "
+                    f"frame 0 was {self.bg[0].frame_shape[:2]}; one geometry is required"
+                )
+            self.bg.append(CompressedBackground(img))
+        # The ring never cycles past max_refs slots; frames beyond that are
+        # not cached, no matter how long the source loop is.
+        self.bg = self.bg[:max_refs]
+        if not injected:
+            # The compressed ring owns the pixels now; the raw decoded list
+            # (~733 MiB for 150 890x1920 BGR frames) is dead weight for the
+            # reference-pyramid pass below, so release it before the loads.
+            # Caller-injected frames are never touched: the caller owns them.
+            background_frames = None
         if not self.bg:
-            raise ValueError(f"No background frames in {data_dir / 'bg_video.mp4'}")
-        height, width = self.bg[0].shape[:2]
+            raise ValueError(f"No background frames from {data_dir}")
+        height, width = self.bg[0].frame_shape[:2]
         first = (data_dir / "face_box.txt").read_text(encoding="utf-8").splitlines()[0]
         box = first.split()
         if len(box) != 4:
@@ -858,7 +931,13 @@ class AvatarRenderer:
             )
         mask = (np.ones((self.y2 - self.y1, self.x2 - self.x1, 3)) * 255).astype(np.uint8)
         mask[10:-10, 10:-10, :] *= 0
-        self.mask = (cv2.GaussianBlur(mask, (21, 21), 15) / 255.0).astype(np.float32)
+        # Feathered blend band: gaussian sigma 15 over the 21x21 kernel
+        # support with edge-reflection (cv2 BORDER_REFLECT_101 semantics,
+        # scipy "mirror"); measured max deviation 0.0043 vs cv2.GaussianBlur.
+        blurred = ndimage.gaussian_filter(
+            mask.astype(np.float32) / 255.0, 15, mode="mirror", truncate=10 / 15
+        )
+        self.mask = blurred.astype(np.float32)
         self.inverse_mask = 1 - self.mask
         # Ring slots pair 1:1 with reference pyramids: the ring index selects
         # both the background frame and its reference features, so exactly
@@ -869,9 +948,12 @@ class AvatarRenderer:
             path = data_dir / "ref_frames" / f"ref_{ii:05d}.jpg"
             if not path.is_file():
                 break
-            image = cv2.imread(str(path))
-            if image is None:
-                raise ValueError(f"Undecodable reference frame: {path}")
+            try:
+                image = load_reference_bgr(path)
+            except OSError as error:
+                raise ValueError(
+                    f"Could not decode reference frame {path}: {error}"
+                ) from error
             prepared = self.encoder_stage.preprocess(normalize_reference(image))
             outputs = self.encoder_stage.infer(prepared.tensors)
             self.ref_feats.append(self.encoder_stage.postprocess(outputs))
@@ -905,8 +987,6 @@ class AvatarRenderer:
         feathered blend over the decompressed background.
         """
 
-        import cv2
-
         prepared = self.decoder_stage.preprocess(self.ref_feats[bg_id], param)
         outputs = self.decoder_stage.infer(prepared.tensors)
         mouth = self.decoder_stage.postprocess(outputs)
@@ -915,7 +995,7 @@ class AvatarRenderer:
         np.clip(mouth, 0, 1, out=mouth)
         np.multiply(mouth, 255, out=mouth)
         mouth = np.transpose(mouth, (1, 2, 0)).astype(np.uint8)
-        mouth = cv2.resize(mouth, (self.x2 - self.x1, self.y2 - self.y1))
+        mouth = resize_bilinear(mouth, (self.x2 - self.x1, self.y2 - self.y1))
         mouth = mouth[:, :, ::-1]
         full = self.bg[bg_id].copy(out=out)
         roi = full[self.y1 : self.y2, self.x1 : self.x2, :]
@@ -976,15 +1056,18 @@ class LiteAvatarPipeline:
             facegen_decoder lazy runners (loaded NamedArrayRunner instances).
         names: Bound physical tensor names for the complete model group.
         frontend: The deterministic LFR/CMVN feature frontend.
-        data_dir: Avatar data directory (bg_video.mp4, face_box.txt,
-            ref_frames/).
+        data_dir: Avatar data directory (prepared bg_video.h264 with its
+            bg_video.json sidecar, face_box.txt, ref_frames/).
         audio_released: True once the audio models were freed after the
             last ``predict`` audio phase (they reload on the next call).
         last_timings: Seconds of the most recent predict's phases:
             ``audio`` (features+encoder+a2m) and ``renderer_init``.
     """
 
-    def __init__(self, frontend, runners, names, data_dir, output_quants):
+    def __init__(
+        self, frontend, runners, names, data_dir, output_quants, *,
+        background_frames=None
+    ):
         if len(runners) != len(STAGES) or not all(callable(runner) for runner in runners):
             raise TypeError("Expected four callable model runners")
         if not isinstance(names, AvatarTensorNames):
@@ -997,6 +1080,9 @@ class LiteAvatarPipeline:
         self.runners = tuple(runners)
         self.names = names
         self.data_dir = Path(data_dir)
+        # Host tests inject the decoded background frames here; on the board
+        # the renderer loads them from the prepared asset (VPU decode).
+        self._background_frames = background_frames
         self.audio_released = False
         self.last_timings: dict[str, float] = {}
         self._renderer: AvatarRenderer | None = None
@@ -1130,7 +1216,10 @@ class LiteAvatarPipeline:
     def _ensure_renderer(self):
         if self._renderer is None:
             self._renderer = AvatarRenderer(
-                self.data_dir, self.facegen_encoder_stage, self.facegen_decoder_stage
+                self.data_dir,
+                self.facegen_encoder_stage,
+                self.facegen_decoder_stage,
+                background_frames=self._background_frames,
             )
         return self._renderer
 

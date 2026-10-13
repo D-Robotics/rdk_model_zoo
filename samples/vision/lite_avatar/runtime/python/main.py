@@ -62,18 +62,16 @@ def main(argv=None):
 
         # Thread policy of the measured board configuration (the source
         # deployment's values): the BLAS/OpenMP caps must land before the
-        # first NumPy/Torch import below, and Torch/OpenCV thread pools are
+        # first NumPy/Torch import below, and the Torch thread pool is
         # bounded to 2 so the Python renderer, the BPU runtime and the
         # encoder worker stay off each other's cores.  ``setdefault`` keeps
         # an explicitly exported environment in control, and none of this
         # runs on import of the pipeline API — only this entry sets it.
         os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
         os.environ.setdefault("OMP_NUM_THREADS", "4")
-        import cv2
         import torch
 
         torch.set_num_threads(2)
-        cv2.setNumThreads(2)
 
         # Imported inside real execution: Torch/torchaudio (frontend and
         # interpolation), scipy (smoothing) and hbm_runtime (models) load

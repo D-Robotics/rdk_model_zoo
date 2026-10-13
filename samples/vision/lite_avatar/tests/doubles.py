@@ -124,28 +124,28 @@ def numpy_interpolate(hidden_states, frame_count):
 
 
 def build_avatar_data(directory, frames=6, width=64, height=48, refs=None, box=None):
-    """Write a minimal synthetic avatar data directory (cv2, real files)."""
+    """Write a minimal synthetic avatar data directory and its bg frames.
+
+    The data directory holds ``face_box.txt`` and real reference JPEGs (the
+    renderer reads them through Pillow).  Background frames are returned
+    in memory instead of an MPEG-4 video: the runtime decodes backgrounds
+    on the board's hardware decoder, so host tests inject the decoded
+    frames through ``AvatarRenderer(background_frames=...)`` — exactly the
+    list the hardware loader produces.  Returns ``(directory, frames)``.
+    """
 
     import cv2
 
     directory = Path(directory)
     (directory / "ref_frames").mkdir(parents=True, exist_ok=True)
-    writer = cv2.VideoWriter(
-        str(directory / "bg_video.mp4"),
-        cv2.VideoWriter_fourcc(*"mp4v"),
-        30,
-        (width, height),
-    )
-    if not writer.isOpened():
-        raise RuntimeError("cv2 could not open an mp4 writer for the test data")
+    bg_frames = []
     for index in range(frames):
         tile = np.full((height, width, 3), 40 + index * 8, np.uint8)
         tile[:, : width // 4] = 200
-        writer.write(tile)
-    writer.release()
+        bg_frames.append(tile)
     y1, y2, x1, x2 = box or (10, height - 10, 12, width - 12)
     (directory / "face_box.txt").write_text(f"{y1} {y2} {x1} {x2}\n", encoding="utf-8")
     for index in range(frames if refs is None else refs):
         reference = np.full((height, width, 3), 30 + index * 5, np.uint8)
         cv2.imwrite(str(directory / "ref_frames" / f"ref_{index:05d}.jpg"), reference)
-    return directory
+    return directory, bg_frames

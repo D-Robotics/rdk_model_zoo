@@ -4,13 +4,15 @@
 
 Option declarations and validation, the published per-target asset identities
 (S100/S100P/S600) and selection (including explicitly identified local
-rebuilds), the model-free listing/dry-run rendering, and the two video
-writers — the cross-platform software FFmpeg pipe and the S100 hardware
-H.264 worker ring with its ACK/timeout/process-group discipline.  Nothing in
-this module loads a board SDK or imports NumPy at module level, so ``--help``,
-``--list-models`` and ``--dry-run`` stay usable on a workstation.  The
-stage/pipeline composition lives in ``avatar.py``; ``main.py`` keeps the
-visible parse -> select -> construct -> predict -> deliver flow.
+rebuilds), the model-free listing/dry-run rendering, and the hardware H.264
+video writer — a board VPU encoder owned by a worker process, driven over a
+shared-memory ring with ACK/timeout/process-group discipline (FFmpeg only
+remuxes with the video stream copied; there is no software video codec in
+the runtime).  Nothing in this module loads a board SDK or imports NumPy at
+module level, so ``--help``, ``--list-models`` and ``--dry-run`` stay usable
+on a workstation.  The stage/pipeline composition lives in ``avatar.py``;
+``main.py`` keeps the visible parse -> select -> construct -> predict ->
+deliver flow.
 """
 
 from __future__ import annotations
@@ -78,8 +80,9 @@ LOCAL_DIGESTS = {
     "am.mvn": "29b3c740a2c0cfc6b308126d31d7f265fa2be74f3bb095cd2f143ea970896ae5",
 }
 
-#: Video encoders this sample can drive.  ``hardware`` is verified on S100.
-ENCODERS = ("auto", "software", "hardware")
+#: Video encoders this sample can drive.  ``hardware`` is the VPU H.264
+#: encoder, verified on S100, S100P and S600.
+ENCODERS = ("auto", "hardware")
 
 
 @dataclass(frozen=True)
@@ -248,21 +251,20 @@ def missing_models(selections) -> tuple[Path, ...]:
 def resolve_encoder(value, target):
     """Map the encoder choice to a concrete writer for one target.
 
-    ``auto`` resolves to the hardware H.264 encoder on S100 (the only board
-    where it is verified) and to software elsewhere.  An explicit choice is
-    never silently changed: ``hardware`` on an unverified target is an error.
+    Video encoding is hardware-only (the S-series VPU H.264 encoder,
+    verified on S100, S100P and S600); there is deliberately no software
+    video codec in the runtime.  ``auto`` and ``hardware`` are equivalent on
+    the published targets; any other pairing is an explicit error.
     """
 
     if value not in ENCODERS:
         raise ValueError(f"--encoder must be one of {ENCODERS}")
-    if value == "auto":
-        return "hardware" if target == "s100" else "software"
-    if value == "hardware" and target != "s100":
+    if target not in ("s100", "s100p", "s600"):
         raise ValueError(
-            "The hardware H.264 encoder is verified on S100 only; use "
-            "--encoder software on other targets"
+            f"LiteAvatar publishes s100, s100p and s600 builds; target "
+            f"{target!r} has no video encoder"
         )
-    return value
+    return "hardware"
 
 
 # ======================================================================
@@ -304,7 +306,8 @@ def build_parser():
         "--avatar-data",
         type=Path,
         default=SAMPLE_DIR / "test_data" / "preload",
-        help="Avatar data directory (bg_video.mp4, face_box.txt, ref_frames/).",
+        help="Avatar data directory (prepared bg_video.h264 + bg_video.json, "
+        "face_box.txt, ref_frames/; see README for one-time host prep).",
     )
     parser.add_argument(
         "--cmvn-path",
@@ -322,8 +325,8 @@ def build_parser():
         "--encoder",
         choices=ENCODERS,
         default="auto",
-        help="Video encoder: auto (hardware on S100, software elsewhere), "
-        "software (FFmpeg pipe) or hardware (S100 H.264 worker).",
+        help="Video encoder: hardware H.264 on the board VPU (auto selects "
+        "it; there is no software video codec in the runtime).",
     )
     parser.add_argument(
         "--no-encode",
@@ -374,11 +377,6 @@ def normalize_args(args) -> None:
         raise ValueError("--audio is required for a real run")
     if not args.audio.is_file():
         raise ValueError(f"Missing audio file: {args.audio}")
-    if args.encoder == "hardware" and args.target not in ("auto", "s100"):
-        raise ValueError(
-            "The hardware H.264 encoder is verified on S100 only; use "
-            "--encoder software on other targets"
-        )
 
 
 def read_audio(path):
@@ -397,11 +395,12 @@ def read_audio(path):
 # ======================================================================
 
 
-def print_model_list(target) -> int:
+def print_model_list(target, *, model_dir=None) -> int:
     """Print the manifest-backed references for ``target`` (SDK-free).
 
     ``auto`` lists every published target's four-model set — there is no
-    board to detect in this mode.
+    board to detect in this mode.  ``model_dir`` overrides where the
+    artifacts are looked for (tests point it at an empty directory).
     """
 
     targets = PUBLISHED_TARGETS if target == "auto" else (target,)
@@ -411,7 +410,7 @@ def print_model_list(target) -> int:
             print()
         print(f"[{listed}]")
         try:
-            selections = resolve_selections(listed)
+            selections = resolve_selections(listed, model_dir=model_dir)
         except ValueError as error:
             print(f"error: {error}", file=sys.stderr)
             return 2
@@ -449,153 +448,14 @@ def print_resolution(args, selections) -> int:
 
 
 # ======================================================================
-# Video writers.  The software pipe is the cross-platform default; the
-# hardware writer keeps the validated ring/ACK worker protocol.
+# Video writer: the hardware H.264 ring (a worker process owns the VPU
+# encoder; FFmpeg only remuxes with video copied).  There is no software
+# video encoder in the runtime.
 # ======================================================================
 
 
-class SoftwareVideoWriter:
-    """Bounded raw-frame pipe; FFmpeg (libx264) encodes concurrently.
-
-    The encoder runs in its own session so the whole process group can be
-    killed on abort: killing only the FFmpeg parent would leave any child
-    holding the stdin pipe open, and the writer thread would block on it
-    past its join timeout.
-    """
-
-    #: Hard ceiling for one frame waiting on a stalled encoder (seconds).
-    STALL_TIMEOUT = 120
-
-    def __init__(self, path, audio, width, height):
-        import queue as _queue
-
-        self.log = open(f"{path}.ffmpeg.log", "wb")
-        command = [
-            "ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo",
-            "-pixel_format", "bgr24", "-video_size", f"{width}x{height}",
-            "-framerate", "30", "-i", "pipe:0", "-i", str(audio),
-            "-c:v", "libx264", "-preset", "ultrafast",
-            "-tune", "zerolatency", "-crf", "18", "-pix_fmt", "yuv420p",
-            "-threads", "2", "-c:a", "aac", "-shortest", str(path),
-        ]
-        # POSIX only: the boards, the mac host and Linux CI all are.
-        popen_kwargs = (
-            {"start_new_session": True} if os.name == "posix" else {}
-        )
-        try:
-            self.proc = subprocess.Popen(
-                command, stdin=subprocess.PIPE, stderr=self.log,
-                **popen_kwargs,
-            )
-        except BaseException:
-            self.log.close()
-            Path(f"{path}.ffmpeg.log").unlink(missing_ok=True)
-            raise
-        self.frames = _queue.Queue(maxsize=2)
-        self.error = None
-        self._done = False
-        self.thread = threading.Thread(target=self._write, daemon=True)
-        self.thread.start()
-
-    def _kill(self):
-        """Kill the encoder's whole process group, then reap the parent."""
-
-        if os.name == "posix":
-            try:
-                os.killpg(self.proc.pid, process_signal.SIGKILL)
-            except (ProcessLookupError, PermissionError):
-                pass
-        else:  # pragma: no cover - non-POSIX hosts are not delivery targets
-            self.proc.kill()
-        try:
-            self.proc.wait(timeout=10)
-        except Exception:
-            pass
-
-    def _close_stdin(self):
-        """Close the parent's pipe write-end; a no-op after a clean drain."""
-
-        stream = self.proc.stdin
-        if stream is not None and not stream.closed:
-            try:
-                stream.close()
-            except (BrokenPipeError, OSError):
-                pass
-
-    def _write(self):
-        try:
-            while True:
-                frame = self.frames.get()
-                if frame is None:
-                    break
-                self.proc.stdin.write(memoryview(frame))
-            self.proc.stdin.close()
-        except Exception as error:
-            self.error = error
-
-    def submit(self, frame):
-        deadline = time.perf_counter() + self.STALL_TIMEOUT
-        while True:
-            if self.error is not None:
-                raise RuntimeError("Video encoder failed") from self.error
-            if self.proc.poll() is not None:
-                # Give the writer thread a moment to record its error, then
-                # surface the early exit instead of blocking on a full queue.
-                self.thread.join(timeout=1.0)
-                if self.error is not None:
-                    raise RuntimeError("Video encoder failed") from self.error
-                raise RuntimeError(
-                    f"Video encoder exited early with code {self.proc.returncode}"
-                )
-            remaining = deadline - time.perf_counter()
-            if remaining <= 0:
-                raise TimeoutError(
-                    f"Video encoder stalled for more than {self.STALL_TIMEOUT} s"
-                )
-            try:
-                self.frames.put(frame, timeout=min(0.1, remaining))
-                return
-            except queue.Full:
-                continue
-
-    def close(self):
-        if self._done:
-            return
-        self._done = True
-        try:
-            self.submit(None)
-            self.thread.join(timeout=30)
-            if self.thread.is_alive():
-                self._kill()
-                raise RuntimeError("Video encoder did not drain within 30 seconds")
-            code = self.proc.wait(timeout=30)
-            if self.error is not None or code:
-                raise RuntimeError(
-                    f"Video encoder failed (exit {code})"
-                ) from self.error
-        finally:
-            if self.thread.is_alive():
-                self._kill()
-            self._close_stdin()
-            self.log.close()
-
-    def abort(self):
-        if self._done and not self.thread.is_alive():
-            return
-        self._done = True
-        self._kill()
-        try:
-            self.frames.put_nowait(None)  # unblock the writer thread
-        except queue.Full:
-            pass
-        self.thread.join(timeout=5)
-        self._close_stdin()
-        if not self.log.closed:
-            self.log.close()
-
-
 class HardwareVideoWriter:
-    """S100 hardware H.264 ring: a worker process owns the encoder.
+    """S-series hardware H.264 ring: a worker process owns the encoder.
 
     A bounded shared-memory ring separates encoding from the renderer's
     GIL.  The worker acknowledges each consumed slot (``ACK <index>``); a
@@ -610,6 +470,7 @@ class HardwareVideoWriter:
     def __init__(self, path, audio, width, height, *, worker_command=None, ring_dir="/dev/shm"):
         import numpy as np
 
+        self.path = str(path)
         self.encoded_at = None
         self._done = False
         self.file = tempfile.NamedTemporaryFile(
@@ -632,7 +493,7 @@ class HardwareVideoWriter:
                 worker_command
                 or [
                     sys.executable,
-                    str(Path(__file__).resolve().parent / "encoder_worker.py"),
+                    str(Path(__file__).resolve().parent / "media_worker.py"),
                     "--ring", self.file.name,
                     "--width", str(width),
                     "--height", str(height),
@@ -790,26 +651,37 @@ class HardwareVideoWriter:
             pass
         self.reader.join(timeout=2)
         self._release()
+        # A run that aborted leaves no partial elementary stream behind (the
+        # worker was killed before its remux could consume it); the encoder
+        # log stays for diagnostics.
+        try:
+            os.unlink(f"{self.path}.h264")
+        except OSError:
+            pass
 
 
 def make_writer(kind, path, audio, width, height):
-    """Construct the requested writer; FFmpeg presence is checked first."""
+    """Construct the requested writer; FFmpeg presence is checked first.
 
+    The hardware writer is the only implementation; an unknown kind is an
+    explicit error (never a silent fallback to a software encoder).
+    """
+
+    if kind != "hardware":
+        raise ValueError(f"Unknown video writer kind: {kind!r}")
     if shutil.which("ffmpeg") is None:
         raise RuntimeError("FFmpeg is required for video output (not on PATH)")
-    if kind == "hardware":
-        return HardwareVideoWriter(path, audio, width, height)
-    return SoftwareVideoWriter(path, audio, width, height)
+    return HardwareVideoWriter(path, audio, width, height)
 
 
 def deliver_frames(result, writer) -> float:
     """Render every frame and drain the writer; abort on any failure.
 
     Hardware-writer runs render straight into the next free ring slot;
-    software-writer runs render an owned frame then submit it.  Any
-    exception aborts the writer (bounded, idempotent cleanup) before
-    propagating, so the original error is never masked by cleanup noise.
-    Returns the delivery wall time in seconds.
+    other writers render an owned frame then submit it.  Any exception
+    aborts the writer (bounded, idempotent cleanup) before propagating, so
+    the original error is never masked by cleanup noise.  Returns the
+    delivery wall time in seconds.
     """
 
     start = time.perf_counter()
@@ -860,7 +732,6 @@ __all__ = [
     "STAGES",
     "SAMPLE_DIR",
     "Selection",
-    "SoftwareVideoWriter",
     "build_parser",
     "deliver_frames",
     "load_local_hash_manifest",

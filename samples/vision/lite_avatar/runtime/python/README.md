@@ -10,23 +10,27 @@ English | [简体中文](README_cn.md)
 Offline audio-driven talking-avatar rendering for S100, S100P and S600:
 one Python runtime chains the four published HBM artifacts (audio encoder,
 audio2mouth, face encoder, face decoder) into a whole-clip `predict` and
-delivers the frames to a video writer. `main.py` keeps the flow visible —
-parse → select → construct → predict → deliver; the writers bound every
-resource (FFmpeg pipe, S100 hardware encoder worker with a shared-memory
-ring) and clean up on failure.
+delivers the frames to the video encoder. Video I/O runs on the VPU: the
+prepared background is decoded by the hardware H.264 `Decoder`, every
+output frame is encoded by the hardware H.264 `Encoder` in a worker
+process, and NumPy/Pillow/SciPy do the resize, color conversion and
+compositing between the two. FFmpeg muxes the encoded elementary stream
+into MP4 with the video copied (`-c:v copy`) and the input audio as AAC;
+`ffprobe` then checks that the delivered file holds both tracks before
+the run reports success.
 
-| Target | Language | Video encoder | Status |
-| --- | --- | --- | --- |
-| s100 | python | S100 hardware H.264 worker or FFmpeg pipe | supported |
-| s100p | python | FFmpeg pipe | supported |
-| s600 | python | FFmpeg pipe | supported |
+| Target | Language | Background decode | Video encode | Status |
+| --- | --- | --- | --- | --- |
+| s100 | python | VPU H.264 (file mode) | VPU H.264 worker | supported |
+| s100p | python | VPU H.264 (file mode) | VPU H.264 worker | supported |
+| s600 | python | VPU H.264 (file mode) | VPU H.264 worker | supported |
 
 Thread policy (the measured board configuration): the entry exports
 `OPENBLAS_NUM_THREADS=1` and `OMP_NUM_THREADS=4` before the first heavy
 import (an explicitly exported environment wins) and pins
-`torch.set_num_threads(2)` / `cv2.setNumThreads(2)`, keeping the Python
-renderer, the BPU runtime and the encoder worker off each other's cores.
-Importing the pipeline API alone changes no process-wide setting.
+`torch.set_num_threads(2)`; this caps CPU thread counts, and CPU affinity
+is not set. Importing the pipeline API alone changes no process-wide
+setting.
 
 <a id="directory"></a>
 ## Directory structure
@@ -36,18 +40,18 @@ runtime/python/
 ├── README.md         # English instructions
 ├── README_cn.md      # Chinese instructions
 ├── main.py           # Entry: parse -> select -> construct -> predict -> deliver
-├── cli.py            # Options, published selection, video writers, delivery
+├── cli.py            # Options, published selection, hardware writer, delivery
 ├── avatar.py         # Stages, pipeline, renderer, tensor contracts
 ├── frontend.py       # Pinned Paraformer audio frontend (fbank, LFR, CMVN)
-├── encoder_worker.py # S100 hardware H.264 encoder worker (ring/ACK protocol)
+├── media_worker.py   # VPU decode helpers + hardware H.264 encoder worker
 └── run.sh            # Launcher
 ```
 
 <a id="environment"></a>
 ## Environment
 
-Board execution needs the `hbm_runtime` SDK from the board image, the
-board Python stack, and `ffmpeg`:
+Board execution needs the `hbm_runtime` and `hobot_vio` SDK modules from
+the board image, the board Python stack, and `ffmpeg` (with `ffprobe`):
 
 ```bash
 # on the board (image Python: 3.10 on S100/S100P, 3.12 on S600; aarch64):
@@ -56,15 +60,15 @@ board Python stack, and `ffmpeg`:
 python3 -m venv --system-site-packages /mnt/sdcard/lite-avatar-venv
 /mnt/sdcard/lite-avatar-venv/bin/pip install \
     torch==2.3.1 torchaudio==2.3.1 numpy==1.26.4 \
-    opencv-python==4.11.0.86 scipy soundfile pyyaml
+    scipy soundfile pillow
 . /mnt/sdcard/lite-avatar-venv/bin/activate
-# (--system-site-packages keeps the image SDK, hbm_runtime, importable)
+# (--system-site-packages keeps the image SDK modules, hbm_runtime and
+#  hobot_vio, importable)
 ```
 
-`ffmpeg` on PATH is required for video output with **both** encoders — the
-software writer pipes raw frames into an ffmpeg libx264 process, and the
-hardware path's bundled `encoder_worker.py` muxes the H.264 stream with
-the audio through ffmpeg; `--no-encode` runs without it.
+`ffmpeg` (with its `ffprobe`) on PATH is required for video output: it
+writes the MP4 container with the AAC audio, and `ffprobe` verifies both
+delivered tracks after muxing. `--no-encode` runs without it.
 
 The renderer's background cache loads the system liblz4 through `ctypes`
 library discovery: the board image provides it (verified on S100), Ubuntu
@@ -78,6 +82,30 @@ The x86 export/calibration host uses a separate recipe
 `--list-models` and `--dry-run` run on any workstation without board
 packages.
 
+<a id="background-prep"></a>
+## Preparing the background asset (one time, on a host)
+
+The avatar data's bundled `bg_video.mp4` is MPEG-4 Part 2, which the RDK
+video decoder does not support. Once per avatar, run the preparation
+script on any host with FFmpeg. It transcodes the `.mp4` (which it only
+reads) into `bg_video.h264`, measures the produced stream (frame count,
+geometry, SHA-256) and writes the matching `bg_video.json` sidecar beside
+it:
+
+```bash
+# on the host
+python3 samples/vision/lite_avatar/test_data/prepare_background.py \
+    --data samples/vision/lite_avatar/test_data/preload
+```
+
+Then copy `bg_video.h264` and `bg_video.json` into the avatar data
+directory on the board. The runtime checks every sidecar field (`codec`,
+visible `width`, `coded_width`, `height`, `fps`, `frames`, `sha256`)
+before decoding and refuses a stream whose digest does not match. The
+visible width is padded to a 16-pixel multiple to match the decoder's
+NV12 luma stride (890 becomes 896 for the bundled asset); the pad columns
+are cropped back off when the MP4 is written.
+
 <a id="usage"></a>
 ## Usage
 
@@ -90,11 +118,12 @@ bash samples/vision/lite_avatar/runtime/python/run.sh --list-models
 # resolve the four-model selection without loading an SDK
 bash samples/vision/lite_avatar/runtime/python/run.sh --target s100 --dry-run
 
-# full render with the verified defaults (hardware encoder on S100)
+# full render with the verified defaults
 # input: prepared artifacts + avatar data; output: outputs/lite_avatar/avatar.mp4
 # success: exit 0 and the "Video written" summary line
 bash samples/vision/lite_avatar/runtime/python/run.sh --target s100 \
     --audio samples/vision/lite_avatar/test_data/asr_example.wav \
+    --avatar-data /path/to/prepared-avatar-data \
     --output outputs/lite_avatar/avatar.mp4
 ```
 
@@ -111,10 +140,10 @@ artifacts, which lists the exact paths to prepare).
 | `--list-models` | flag | false | list manifest-backed asset references without board access |
 | `--dry-run` | flag | false | resolve/check the four-model selection without loading an SDK |
 | `--audio` | string | null | input WAV (any sample rate; first channel of stereo is used) |
-| `--avatar-data` | string | samples/vision/lite_avatar/test_data/preload | avatar data directory (`bg_video.mp4`, `face_box.txt`, `ref_frames/`) |
+| `--avatar-data` | string | samples/vision/lite_avatar/test_data/preload | avatar data directory (`bg_video.h264` + `bg_video.json`, `face_box.txt`, `ref_frames/`) |
 | `--cmvn-path` | string | samples/vision/lite_avatar/model/am.mvn | CMVN file for the audio frontend (pinned `am.mvn`) |
 | `--output` | string | outputs/lite_avatar/avatar.mp4 | output video path |
-| `--encoder` | choice | auto | `auto` (hardware on S100, software elsewhere), `software` (FFmpeg pipe) or `hardware` (S100 H.264 worker) |
+| `--encoder` | choice | auto | `auto` or `hardware` (VPU H.264) |
 | `--no-encode` | flag | false | skip video writing entirely (renderer-only run) |
 | `--model-dir` | string | null | directory holding the manifest-relative model paths |
 | `--models-manifest` | string | null | JSON `{filename: sha256}` manifest identifying local rebuilds |
@@ -131,17 +160,26 @@ every reload.
 
 The run prints the audio/renderer phase timings, the render rate
 (`Rendered 166 frames ... in ...s (... fps)` for the bundled example) and
-`Video written: <output> (encoder: hardware|software)`, then exits 0. The
-output is a decodable H.264 MP4 of the avatar's geometry — the background
-loop with the animated mouth ROI — at 30 fps with the input audio muxed.
-With `--no-encode` no file is written and only the render summary prints.
+`Video written: <output> (encoder: hardware)`, then exits 0. The output
+is an H.264 High MP4 — 890x1920 at 30 fps, limited-range BT.601, 166
+frames for the bundled example — with the input audio as AAC.
 
-Measured on the bundled example (166 frames, 890x1920): S100 renders at
-22.0 fps with the hardware encoder. S100P renders at **36.4 fps** with the
-software encoder (13.2 s end to end) and 38.0 fps with `--no-encode`; the
-software-encoded MP4 decodes back at a mean 38.7 dB face PSNR. S600 renders
-at **39.4 fps** with the software encoder and 40.9 fps with `--no-encode`
-(38.7 dB face PSNR on decode-back).
+Measured on the bundled example with the plain entry (torch 2.3.1,
+hardware encode on all targets):
+
+| Target | Render rate (166-frame window) | End-to-end wall |
+| --- | --- | --- |
+| s100p | 18.7 fps | 24.7 s |
+| s600 | 20.5 fps | 28.3 s |
+| s100 | 15.3 fps | 28.6 s |
+
+The render-rate window covers rendering the 166 frames plus hardware
+encoder drain and MP4 muxing; the one-time background decode, audio
+frontend and renderer setup before it are excluded. The wall time is the
+full CLI run, setup included.
+
+Frame-level output comparison against a reference render:
+[evaluator/evaluate_frames.py](../../evaluator/evaluate_frames.py).
 
 <a id="integration-example"></a>
 ## Integration example
@@ -171,19 +209,21 @@ for frame in result.frames():   # uint8 BGR, one per 30 fps output frame
     ...
 ```
 
-`result.render_frame(i)` and `result.frames()` return owned frames;
-compositing arithmetic is preserved from the original pipeline. Session
-semantics: `predict` runs the audio stages, releases the audio models
-(they reload, with scheduling restored, on the next `predict`), and lazily
-builds the renderer (reference pyramids encoded once, reused across
-predicts; the decoder loads per rendered frame).
+`result.render_frame(i)` and `result.frames()` return owned frames.
+Session semantics: `predict` runs the audio stages, releases the audio
+models (they reload, with scheduling restored, on the next `predict`),
+and builds the renderer lazily. The background is hardware-decoded once
+and held compressed; the decoded frame list is released before the
+reference pyramids load, so peak memory stays bounded. Reference pyramids
+are encoded once and reused across predicts; the decoder loads per
+rendered frame.
 
 <a id="stage-io"></a>
 ## Stage I/O
 
-The pipeline is four named stages, each with the readable
-`preprocess → infer → postprocess` chain inside
-[avatar.py](avatar.py); `predict` chains exactly these steps.
+The pipeline is four named stages, each with a readable
+`preprocess → infer → postprocess` chain inside [avatar.py](avatar.py);
+`predict` chains exactly these steps.
 
 | Stage | Input | Output |
 | --- | --- | --- |
@@ -204,6 +244,8 @@ quantization is internal to the artifacts.
 | `Missing model artifacts` (exit 2) | Prepare the four files under `model/<target>/` per [model/README.md](../../model/README.md); run `model/verify.py --target <t>`. |
 | `--dry-run` exits 1 | Same preparation gap; the printed paths are the exact missing files. |
 | target selection error | LiteAvatar publishes one four-file set per target (`s100`, `s100p`, `s600`); the target must match the detected board (or use `auto`), and any other target fails explicitly. |
-| `FFmpeg is required for video output (not on PATH)` | Video output with **both** encoders needs `ffmpeg` on PATH (the hardware path remuxes through it too); install the board image's ffmpeg package, or run with `--no-encode`. |
-| `Hardware encoder worker exited ... (exit N)` | The bundled worker crashed mid-protocol; the run aborts with the worker log path — check `dmesg`/the log for the encoder device state and retry. |
-| output differs from a reference render | Compare the same artifacts, audio, avatar data and encoder before judging quality; use [evaluator/evaluate_frames.py](../../evaluator/evaluate_frames.py) against the reference frames. |
+| `No prepared background ... only a bg_video.mp4 file is present` | The avatar data has no prepared background yet; run the one-time host preparation above and place `bg_video.h264` + `bg_video.json` beside the data. |
+| `bg_video.h264 SHA-256 ... does not match the sidecar` | The stream and the sidecar come from different transcodes (partial copy, edited file); re-run the host preparation so both files are produced together. |
+| `FFmpeg is required for video output (not on PATH)` | The final mux needs `ffmpeg`; install the board image's ffmpeg package, or run with `--no-encode`. |
+| `Hardware decoder close failed ...` / `Hardware encoder worker exited ... (exit N)` | The VPU reported a teardown/protocol failure; the run aborts with the worker log path — check `dmesg`/the log for the codec device state and retry. |
+| output differs from a reference render | Compare the same artifacts, audio, avatar data and target before judging quality; use [evaluator/evaluate_frames.py](../../evaluator/evaluate_frames.py) against the reference frames. |
