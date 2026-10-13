@@ -118,8 +118,20 @@
   };
   const developerResourceLinks = model => {
     if (model.sampleProfile) {
-      // Sample profiles publish their own localized link list.
-      const entries = model.sampleProfile.resources || [];
+      // Sample profiles publish their own localized link list. The avatar
+      // pipeline additionally surfaces its shipped evidence summaries here,
+      // so they stay reachable in every layout (deduped by URL against the
+      // profile's own resources; the arrays themselves are not mutated).
+      const entries = [...(model.sampleProfile.resources || [])];
+      if (model.sampleProfile.pipeline === 'avatar_pipeline') {
+        const seen = new Set(entries.map(entry => entry.url));
+        for (const link of model.sampleProfile.evidence || []) {
+          if (!seen.has(link.url)) {
+            seen.add(link.url);
+            entries.push(link);
+          }
+        }
+      }
       return entries.map(entry => {
         const label = entry.label || {};
         const attrs = `data-i18n-zh="${esc(label.zh || '')}" data-i18n-en="${esc(label.en || label.zh || '')}"`;

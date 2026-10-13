@@ -193,3 +193,70 @@ test('i18n covers the new sample strings', () => {
     assert.equal(english(zh), en, `${zh} must translate`);
   }
 });
+
+test('avatar pipeline surfaces its evidence links in the developer resources', () => {
+  // Public behavior: the avatar pipeline's three shipped evidence summaries
+  // must be reachable through the developer-resources area (the only place
+  // every layout renders links), appended to the profile's own resources,
+  // deduped by URL, with localized labels and escaped hrefs. Samples with
+  // other pipelines and released models are unaffected.
+  const avatarSample = {
+    ...baseSample,
+    id: 'lite-avatar-lite-avatar-avatar-s100',
+    catalogId: 'lite_avatar/lite_avatar/avatar',
+    name: 'LiteAvatar',
+    family: 'lite_avatar',
+    task: '语音驱动数字人',
+    taskId: 'audio-driven-talking-avatar',
+    tasks: ['audio-driven-talking-avatar'],
+    sampleProfile: {
+      ...baseSample.sampleProfile,
+      pipeline: 'avatar_pipeline',
+      resources: [
+        { label: { zh: '模型准备指南', en: 'Model preparation guide' }, url: 'https://github.com/D-Robotics/rdk_model_zoo/tree/f77bcea4/samples/vision/lite_avatar/model' },
+        // same URL as the first evidence entry: the merge must dedupe it
+        { label: { zh: '板端运行证据摘要', en: 'Board run evidence summary' }, url: 'sample-evidence/lite-avatar-s100.json' },
+      ],
+      evidence: [
+        { label: { zh: '板端运行证据摘要', en: 'Board run evidence summary' }, url: 'sample-evidence/lite-avatar-s100.json' },
+        { label: { zh: '组件参数量与算力元数据', en: 'Component parameter and compute metadata' }, url: 'sample-evidence/lite-avatar-components.json' },
+        { label: { zh: 'Python 运行时逐阶段验证数据', en: 'Python runtime per-stage validation data' }, url: 'sample-evidence/lite-avatar-s100-python-validation.json' },
+        // escaping probe: label quote and URL ampersand must render escaped
+        { label: { zh: '转义"探针', en: 'escape"probe' }, url: 'sample-evidence/probe.json?a=1&b=2' },
+      ],
+    },
+  };
+  const html = renderDetail(avatarSample);
+  const areas = html.match(/<h2>开发资源<\/h2><div class="mz-resource-links">([\s\S]*?)<\/div>/g) || [];
+  const resources = areas.join('\n');
+  assert.ok(resources.length > 0, 'a developer-resources area rendered');
+  // dedupe: the board-proof URL appears exactly once across the area
+  assert.equal(resources.split('href="sample-evidence/lite-avatar-s100.json"').length - 1, 1,
+    'duplicate URLs must render once');
+  for (const url of ['sample-evidence/lite-avatar-components.json', 'sample-evidence/lite-avatar-s100-python-validation.json']) {
+    assert.ok(resources.includes(`href="${url}"`), `${url} must render in developer resources`);
+  }
+  for (const label of ['模型准备指南', '组件参数量与算力元数据', 'Python 运行时逐阶段验证数据']) {
+    assert.ok(resources.includes(`>${label}<`), `${label} visible in developer resources`);
+  }
+  assert.match(resources, /data-i18n-en="Component parameter and compute metadata"/,
+    'labels carry their localized en attribute');
+  assert.match(resources, /data-i18n-zh="转义&quot;探针"/, 'label quotes are escaped');
+  assert.match(resources, /href="sample-evidence\/probe\.json\?a=1&amp;b=2"/, 'URL ampersands are escaped');
+  // other pipelines: evidence is NOT appended (baseSample carries evidence but a
+  // detector pipeline) — its developer-resources area stays empty
+  const detector = renderDetail(baseSample).match(/<h2>开发资源<\/h2><div class="mz-resource-links">([\s\S]*?)<\/div>/);
+  assert.equal(detector[1].trim(), '', 'non-avatar sample keeps its own resources only');
+  // released models: unchanged repo/runtime/conversion trio, no evidence URLs
+  const released = renderDetail({
+    ...baseSample,
+    entryKind: 'released-model',
+    releaseStatus: 'available',
+    source: 'https://github.com/D-Robotics/rdk_model_zoo/tree/c8eb9d56/samples/vision/bytetrack',
+    sampleProfile: undefined,
+  });
+  const releasedAreas = released.match(/<h2>开发资源<\/h2><div class="mz-resource-links">([\s\S]*?)<\/div>/g) || [];
+  const releasedText = releasedAreas.join('\n');
+  assert.match(releasedText, /模型仓库/);
+  assert.doesNotMatch(releasedText, /sample-evidence\//, 'released models gain no sample-evidence links');
+});
