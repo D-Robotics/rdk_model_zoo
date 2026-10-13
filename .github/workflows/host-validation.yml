@@ -1,6 +1,6 @@
 name: host-validation
 
-# Maintainer host gate: the complete supported host suites (all 52 native
+# Maintainer host gate: the complete supported host suites (all native
 # samples plus nested conversion/evaluator suites, shared suites including
 # the safe parent-repo VLA gitlink integrity guard test_vla_integration.py
 # — gitlinks stay uninitialized and upstream ACT/Pi0 code is never run,
@@ -69,12 +69,13 @@ jobs:
             nlohmann-json3-dev \
             libsndfile1-dev \
             libsamplerate0-dev \
-            liblz4-1
+            liblz4-1 \
+            ffmpeg
       - name: Install native host dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
           brew install cmake pkg-config opencv gflags nlohmann-json \
-            libsndfile libsamplerate lz4
+            libsndfile libsamplerate lz4 ffmpeg
           # The LiteAvatar tests load liblz4 through ctypes discovery, which
           # does not search Homebrew on the python.org interpreter. Publish
           # the brew libdir as an ORDINARY variable: SIP strips DYLD_* when
@@ -110,6 +111,19 @@ jobs:
               sys.exit(f"liblz4 at {path} has an unusable LZ4_compressBound: {bound}")
           print(f"liblz4 OK: {path} (LZ4_compressBound(64) = {bound})")
           PY
+      - name: Probe FFmpeg with libx264 (host test fixtures, fail fast)
+        run: |
+          # The LiteAvatar host suites transcode real lavfi fixtures with
+          # libx264 and remux/verify them with ffprobe (host-only test
+          # dependencies; the production runtime keeps using the board
+          # VPU codecs). Both binaries must be on PATH and the encoder
+          # must actually work, or those tests would skip.
+          command -v ffmpeg
+          command -v ffprobe
+          ffmpeg -hide_banner -loglevel error \
+            -f lavfi -i testsrc2=size=64x64:rate=30 \
+            -t 0.2 -c:v libx264 -pix_fmt yuv420p -f null -
+          echo "ffmpeg/ffprobe OK: $(ffmpeg -version | head -1)"
       - name: Install core Python host dependencies
         run: python -m pip install -r utils/tools/host_validation/requirements.txt
       - name: Set up Node.js

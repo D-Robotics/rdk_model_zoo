@@ -74,7 +74,10 @@ Skip policy (strict by default, matching CI):
   iconv or CMake.  Rejected in strict mode; ``--allow-native-skips`` records
   them instead (the report then says ``ci_equivalent: false``).
 * ``conditional`` — legitimately conditional skips (e.g. a board SDK being
-  installed makes an import-failure path unreachable).  Allowed, recorded.
+  installed makes an import-failure path unreachable, or the HobotMot
+  board-built ``libhobot_mot_capi.so`` being absent on a host — accepted
+  only for that one native-tracking module's exact skip reason).  Allowed,
+  recorded.
 * anything else is ``unexpected`` and always fails the run.
 
 Source identity is content-based, not HEAD-based: a deterministic sha256
@@ -136,6 +139,17 @@ _CONDITIONAL_REASONS = (
 #: must fail, not silently pass.
 PARAFORMER_EXPORT_SUITE_DIR = "samples/speech/paraformer/tests"
 PARAFORMER_EXPORT_MODULE_PREFIX = "test_export_stages."
+
+#: The native-tracking module whose board-only C library makes every test
+#: in it legitimately conditional on a host: ``libhobot_mot_capi.so``
+#: links the prebuilt ARM64 ``iou_based_mot`` core and is built on the
+#: board (runtime/cpp/README.md), so an x86_64/macOS host can never carry
+#: it.  The skip is ``conditional`` only for this exact suite directory,
+#: module prefix and reason text; the same words in another suite or
+#: module, or any other reason in this module, stay ``unexpected``.
+HOBOT_MOT_NATIVE_SUITE_DIR = "samples/vision/hobot_mot/tests"
+HOBOT_MOT_NATIVE_MODULE_PREFIX = "test_track_native."
+HOBOT_MOT_NATIVE_SKIP_REASON = "libhobot_mot_capi.so not built (board)"
 
 #: The maintained native sample inventory: one row per in-repo sample with
 #: a Python test suite.  The coverage gate validates discovery against it,
@@ -322,6 +336,12 @@ def classify_skip(test_id: str, reason: str, suite_dir: str = None) -> str:
     by both the suite directory and the module-relative test id).  Loader-
     level optional misses (conversion test directories) are handled
     separately as ``optional_missing`` records.
+
+    ``conditional`` applies to identity-scoped board conditions the same
+    way: the HobotMot native-tracking module skips with one exact reason
+    when the board-built ``libhobot_mot_capi.so`` is absent; that reason,
+    module or suite anywhere else is not the same condition and stays
+    ``unexpected``.
     """
     category = classify_skip_reason(reason)
     if category != "unexpected":
@@ -330,6 +350,10 @@ def classify_skip(test_id: str, reason: str, suite_dir: str = None) -> str:
             and suite_dir == PARAFORMER_EXPORT_SUITE_DIR
             and test_id.startswith(PARAFORMER_EXPORT_MODULE_PREFIX)):
         return "optional_export"
+    if (suite_dir == HOBOT_MOT_NATIVE_SUITE_DIR
+            and test_id.startswith(HOBOT_MOT_NATIVE_MODULE_PREFIX)
+            and reason == HOBOT_MOT_NATIVE_SKIP_REASON):
+        return "conditional"
     return "unexpected"
 
 

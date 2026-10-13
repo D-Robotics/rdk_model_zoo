@@ -77,7 +77,10 @@ case-sensitively).
 
 Skip categories are `optional_export` (framework imports in conversion tests
 and the conditional Paraformer export-stage suite), `native_prerequisite`
-(compiler, CMake, nlohmann-json, gflags or iconv), and `conditional`. Other
+(compiler, CMake, nlohmann-json, gflags or iconv), and `conditional`
+(identity-scoped board conditions, e.g. the board-built HobotMot
+`libhobot_mot_capi.so` being absent on a host — accepted only for that one
+native-tracking module's exact skip reason). Other
 skips are reported as unexpected. `--allow-native-skips` makes native
 prerequisite skips reportable; optional and conditional skips include their
 identity and reason.
@@ -96,6 +99,13 @@ identity and reason.
   needs `DYLD_LIBRARY_PATH="$(brew --prefix lz4)/lib"` because ctypes
   discovery does not search Homebrew. The workflow probes this exact path
   before the suites run.
+- FFmpeg with `ffprobe` and the libx264 encoder for the LiteAvatar host
+  fixture suites (remux/both-track verification and background
+  preparation run real lavfi transcodes; the production runtime keeps
+  using the board VPU codecs): the `ffmpeg` package on Ubuntu,
+  `brew install ffmpeg` on macOS. The workflow probes both binaries and a
+  tiny libx264 encode before the suites run, so a missing FFmpeg fails
+  the gate instead of skipping those tests.
 - Node.js 22.12 or newer and below 23, plus `npm ci` in
   `utils/tools/catalog-publisher`.
 

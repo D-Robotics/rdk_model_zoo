@@ -2466,6 +2466,48 @@ class PureFunctionTests(unittest.TestCase):
                      suite_dir=paraformer[0]),
             "native_prerequisite")
 
+    def test_classify_skip_scopes_hobot_mot_board_library_by_identity(self):
+        classify = self.module.classify_skip
+        hobot = ("samples/vision/hobot_mot/tests",
+                 "test_track_native.IdentitySemanticsTest."
+                 "test_persistent_objects_keep_their_ids")
+        # Exact suite + module + reason: the board-built C library cannot
+        # exist on a host, so the whole native-tracking module is
+        # legitimately conditional there.
+        self.assertEqual(
+            classify(hobot[1], "libhobot_mot_capi.so not built (board)",
+                     suite_dir=hobot[0]),
+            "conditional")
+        # Same words in the wrong suite directory: rejected.
+        self.assertEqual(
+            classify(hobot[1], "libhobot_mot_capi.so not built (board)",
+                     suite_dir="samples/vision/eps/tests"),
+            "unexpected")
+        # Another module in the same suite: the host-side coverage tests
+        # never inherit the board-library condition.
+        self.assertEqual(
+            classify("test_config_and_cli_host.ConfigTests.test_x",
+                     "libhobot_mot_capi.so not built (board)",
+                     suite_dir=hobot[0]),
+            "unexpected")
+        # Edited reason text in the right module: rejected both when it
+        # names the library without the board condition and when it names
+        # an unrelated board condition.
+        self.assertEqual(
+            classify(hobot[1], "libhobot_mot_capi.so not built",
+                     suite_dir=hobot[0]),
+            "unexpected")
+        self.assertEqual(
+            classify(hobot[1], "board library not present",
+                     suite_dir=hobot[0]),
+            "unexpected")
+        # Unrelated backend naming the same library: rejected.
+        self.assertEqual(
+            classify("test_runtime.RuntimeTests.test_x",
+                     "libhobot_mot_capi.so not built (board)",
+                     suite_dir="samples/vision/yoloe/tests"),
+            "unexpected")
+
     def test_format_error_accepts_exc_info_and_bare_exception(self):
         format_error = self.module._format_error
         try:
@@ -2942,11 +2984,24 @@ class RealRepositoryTests(unittest.TestCase):
         sources = {entry["pin"] for entry in self.module.declared_pins(REPO)}
         self.assertIn(REAL_PIN, sources)
 
-    def test_sample_coverage_validates_all_53_inventory_rows(self):
+    def test_sample_coverage_matches_the_maintained_inventory(self):
         discovery = self.module.discover_python_suites(REPO)
         coverage = self.module.validate_sample_coverage(REPO, discovery)
         self.assertEqual(coverage["status"], "ok", coverage)
-        self.assertEqual(coverage["expected_samples"], 53)
+        # The expected count is whatever the maintained inventory declares,
+        # read independently here — a future sample updates the inventory,
+        # not this assertion, so the count can never silently drift.
+        document = json.loads(
+            (REPO / self.module.SAMPLE_INVENTORY_RELPATH).read_text())
+        rows = document["rows"]
+        declared = [row["sample"] for row in rows]
+        self.assertEqual(len(declared), len(set(declared)),
+                         "inventory rows must stay unique for this check")
+        self.assertEqual(coverage["expected_samples"], len(rows))
+        # Membership anchors: the samples added most recently stay listed,
+        # so a new sample that forgets the inventory fails right here.
+        self.assertIn("vision/hobot_mot", declared)
+        self.assertIn("vision/lite_avatar", declared)
         self.assertEqual(coverage["missing_samples"], [])
         self.assertEqual(coverage["missing_tests_dirs"], [])
         self.assertEqual(coverage["extra_samples"], [])

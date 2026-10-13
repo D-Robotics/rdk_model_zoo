@@ -63,7 +63,7 @@ checkout 绝不可能通过：源码身份是前置条件，不是可选注记�
 | --- | --- | --- |
 | `optional_export` | 恰好是已声明的可选导出范围：`*/conversion/tests` 目录下的 Torch/FunASR/Ultralytics 导入失败（记录为 `optional_missing`），以及 Paraformer 导出阶段套件的条件性框架 skip（`samples/speech/paraformer/tests/test_export_stages`） | 允许；始终记录身份与原因，绝不计入已执行测试数 |
 | `native_prerequisite` | 缺少 C++ 编译器、nlohmann-json、gflags、iconv 或 CMake | **拒绝**（运行失败）；`--allow-native-skips` 可改为仅记录 |
-| `conditional` | 合法的条件性 skip（例如安装了板端 SDK 导致导入失败路径不可达） | 允许并记录 |
+| `conditional` | 合法的身份限定的板端条件（例如安装了板端 SDK 导致导入失败路径不可达；又如板端构建的 HobotMot `libhobot_mot_capi.so` 在主机上不存在——仅接受该原生跟踪模块以确切原因文本跳过） | 允许并记录 |
 | 其他 | 未声明的 skip——包括无关运行时/模型/原生套件中以 torch/funasr/ultralytics 为名的 skip：可选范围绝不掩盖依赖回归 | **拒绝** |
 
 发现 0 个测试、声明的目录缺失、无法解释的测试目录、worker 崩溃、加载器崩溃、
@@ -127,6 +127,11 @@ checkout 绝不可能通过：源码身份是前置条件，不是可选注记�
   加载：Ubuntu 安装 `liblz4-1`；macOS `brew install lz4`，python.org 解释器
   下还需 `DYLD_LIBRARY_PATH="$(brew --prefix lz4)/lib"`（ctypes 发现不搜索
   Homebrew）。工作流在套件运行前按同一路径做前置探测。
+- LiteAvatar 主机 fixture 套件所需的 **FFmpeg**（含 `ffprobe` 与 libx264
+  编码器）：remux/双轨道校验与背景预处理测试会跑真实的 lavfi 转码（生产
+  运行时仍只使用板端 VPU 编解码器）。Ubuntu 安装 `ffmpeg` 包，macOS
+  `brew install ffmpeg`。工作流在套件运行前探测两个可执行文件并做一次
+  最小 libx264 编码，缺失 FFmpeg 会让门禁直接失败而不是跳过这些测试。
 - Node.js ≥ 22.12 且 < 23，并在 `utils/tools/catalog-publisher` 执行过 `npm ci`
   （catalog 部分需要；执行器自身从不安装任何东西；Node 不在声明的
   `engines` 范围内时该部分直接失败，而不是声称一次不受支持的通过）。
