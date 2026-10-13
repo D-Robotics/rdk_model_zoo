@@ -25,7 +25,9 @@ class CandidateReleaseGuardTest(unittest.TestCase):
         self.assertFalse(any("candidate-staging" in model["source_file"] for model in parsed["models"]))
         self.assertTrue(all(model["source_file"].startswith("model_zoo_web/data/")
                             for model in parsed["models"]))
-        self.assertTrue(all(platform["status"] == "released"
+        # Sample-profile entries mark their platforms "available"; released
+        # models stay "released" and nothing else may appear.
+        self.assertTrue(all(platform["status"] == ("available" if model.get("profile") == "sample" else "released")
                             for model in parsed["models"]
                             for variant in model["variants"]
                             for platform in variant["platforms"]))

@@ -67,7 +67,14 @@ if (preview) {
     assert(model.licenseName, `${model.id}: licenseName is required`);
     assert.match(model.licenseUrl || '', /^https:\/\//, `${model.id}: licenseUrl must use HTTPS`);
     for (const asset of model.assets || []) {
-      assert(asset.url && asset.sha256 && asset.sizeBytes, `${model.id}: assets need url, sha256 and size_bytes`);
+      if (model.entryKind === 'sample') {
+        // Sample artifacts come from publisher manifests; a digest may be
+        // legitimately absent (sha256_provenance: not-provided upstream).
+        assert(asset.url && asset.filename, `${model.id}: sample assets need url and filename`);
+        assert(!asset.sha256 || /^[0-9a-f]{64}$/.test(asset.sha256), `${model.id}: sample asset sha256 must be hex`);
+      } else {
+        assert(asset.url && asset.sha256 && asset.sizeBytes, `${model.id}: assets need url, sha256 and size_bytes`);
+      }
     }
     if (model.reportDataUrl) {
       const dataPath = path.join(root, model.reportDataUrl);
@@ -95,6 +102,70 @@ if (preview) {
     modelsWithData === 0 || reportEntries.some(entry => entry.dataUrl),
     'Models reference report data but no report entry carries it',
   );
+
+  // Sample-profile entries render their own support payload instead of the
+  // released-model benchmark data; hold them to the sample contract.
+  const sampleEntries = data.models.filter(model => model.entryKind === 'sample');
+  assert.equal(
+    data.catalog.summary.sample_profile_count, sampleEntries.length,
+    'catalog.summary.sample_profile_count must match the sample entries',
+  );
+  const neuralFormats = ['bin', 'hbm', 'onnx', 'pt'];
+  for (const model of sampleEntries) {
+    assert(model.sampleProfile, `${model.id}: sample entries carry a sampleProfile payload`);
+    assert(!model.benchmark, `${model.id}: sample entries must not carry benchmark data`);
+    assert.match(model.releaseStatus, /available/, `${model.id}: sample platforms are available, never released`);
+    const availability = model.sampleProfile.availability || {};
+    if (availability.status === 'manual-compile') {
+      assert.match(availability.guideUrl || '', /^https:\/\//, `${model.id}: manual-compile needs an HTTPS guide`);
+      // data.js runs in a vm context; copy into a host array before comparing.
+      assert.deepEqual(Array.from(model.assets || []), [], `${model.id}: manual-compile publishes no artifact`);
+    } else if (availability.status === 'published-download') {
+      assert(model.assets.length >= 1, `${model.id}: published-download lists its artifacts`);
+      // Mirror the catalog's split-detector contract in the built preview: a
+      // pair ships both halves, and neural artifacts keep the delivery line's
+      // published format (bin on X5, hbm on the S series).
+      const roles = model.assets.map(asset => asset.role);
+      const pairPresent = !roles.includes('parta') && !roles.includes('partb')
+        || (roles.includes('parta') && roles.includes('partb'));
+      assert(pairPresent, `${model.id}: a published split detector carries both parta and partb`);
+      const expectedFormat = model.releasePlatform === 'X5' ? 'bin' : 'hbm';
+      for (const asset of model.assets) {
+        if (['parta', 'partb', 'detector'].includes(asset.role)) {
+          assert.equal(asset.format, expectedFormat,
+            `${model.id}: ${asset.role} must be a ${expectedFormat} file on ${model.releasePlatform}`);
+        }
+      }
+    } else if (availability.status === 'no-neural-artifact') {
+      assert(model.assets.every(asset => asset.role === 'upstream-source' && !neuralFormats.includes(asset.format)),
+        `${model.id}: a platform without a neural artifact only ships its pinned source`);
+    }
+    for (const asset of model.assets || []) {
+      assert(asset.format !== 'pt' || availability.status !== 'no-neural-artifact',
+        `${model.id}: no fake neural artifacts on CPU trackers`);
+    }
+    for (const link of model.sampleProfile.evidence || []) {
+      if (link.url.startsWith('sample-evidence/')) {
+        assert(fs.statSync(path.join(root, link.url)).size > 0,
+          `${model.id}: evidence asset ${link.url} is missing from the build`);
+      }
+    }
+  }
+  // ByteTrack S100P has no published detector: the page must say so.
+  const s100p = sampleEntries.find(model => /^bytetrack-bytetrack-tracking-.*-s100p$/.test(model.id));
+  if (s100p) {
+    assert.equal(s100p.sampleProfile.availability.status, 'manual-compile');
+    assert.match(s100p.sampleProfile.availability.guideUrl, /conversion$/, 'the S100P guide points at the conversion directory');
+  }
+  // Evidence stays a summary layer: small text payloads only, no log dumps.
+  const evidenceDir = path.join(root, 'sample-evidence');
+  if (fs.existsSync(evidenceDir)) {
+    for (const filename of fs.readdirSync(evidenceDir)) {
+      assert(/[.]json$|[.]log$/.test(filename), `sample-evidence ships only json/log summaries: ${filename}`);
+      const size = fs.statSync(path.join(evidenceDir, filename)).size;
+      assert(size > 0 && size < 64 * 1024, `sample-evidence payload is not a small summary: ${filename}`);
+    }
+  }
 } else {
   assert.deepEqual(Array.from(data.models), [], 'The pre-migration catalog must contain no models');
   assert.equal(data.catalog.status, 'migration-pending');

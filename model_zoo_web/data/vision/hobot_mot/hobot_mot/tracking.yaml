@@ -1,0 +1,216 @@
+schema_version: 1
+profile: sample
+id: hobot_mot/hobot_mot/tracking
+name: HobotMot (IOU 2.0)
+domain: vision
+source: hobot_mot
+provider: D-Robotics/mot
+family: hobot_mot
+task: tracking
+task_ids:
+- multi-object-tracking
+description:
+  zh: 封装 D-Robotics/mot 上游库的 IOU 2.0 多目标跟踪器：输入为检测框序列（class_id、框、分数、时间戳），IoU 匹配与可选卡尔曼滤波在 CPU 上运行，输出逐帧 track id、检测框与状态。
+  en: An IOU 2.0 multi-object tracker wrapping the D-Robotics/mot upstream library. It consumes detection sequences (class id, box, score, timestamp), runs IoU matching with optional Kalman filtering on the CPU, and emits per-frame track ids, boxes and states.
+license:
+  name: Apache-2.0
+  url: https://github.com/D-Robotics/mot/blob/0120205146d88c3474bfc2936522e349e169fa8d/LICENSE
+sample_path: samples/vision/hobot_mot
+sample_commit: c8eb9d56264fbaf8f78265139d053e027bd32b28
+pipeline: cpu_tracker
+pipeline_note:
+  zh: 纯 CPU 跟踪器，无神经网络制品、无 BPU 转换步骤；下载脚本按 SHA-256 获取固定的上游源码包。
+  en: A pure CPU tracker with no neural artifact and no BPU conversion step; the download script fetches the SHA-256-pinned upstream source tarball.
+variants:
+- size: default
+  input_contract:
+  - label:
+      zh: 输入
+      en: Input
+    value:
+      zh: 检测框 JSONL（class_id、bbox、score、timestamp_ms）
+      en: Detection JSONL rows (class_id, bbox, score, timestamp_ms)
+  - label:
+      zh: 输出
+      en: Output
+    value:
+      zh: 逐帧 track id、bbox、score、状态（valid / invalid）
+      en: Per-frame track id, bbox, score and state (valid / invalid)
+  - label:
+      zh: 配置
+      en: Config
+    value:
+      zh: iou2（默认）与 iou2_kalman（卡尔曼滤波）两套 JSON 配置
+      en: iou2 (default) and iou2_kalman (Kalman filter) JSON configs
+  platforms:
+  - platform: x5
+    status: available
+    runtimes:
+    - python
+    - cpp
+    model_availability:
+      status: no-neural-artifact
+      note:
+        zh: 无神经网络模型；下载脚本按 SHA-256 获取固定的上游 D-Robotics/mot 源码包并本地编译。
+        en: No neural model is involved; the download script fetches the pinned upstream D-Robotics/mot source tarball by SHA-256 and builds it locally.
+    artifacts:
+    - role: upstream-source
+      filename: vendor/mot-0120205146d88c3474bfc2936522e349e169fa8d.tar.gz
+      format: tar.gz
+      url: https://codeload.github.com/D-Robotics/mot/tar.gz/0120205146d88c3474bfc2936522e349e169fa8d
+      sha256: a0bf3b9738af2f7c4be5885ac777cdf93dab6d4dd374a297ceebebe58268b54b
+      sha256_provenance: publisher
+    verification:
+      zh: X5 8GB 板端：72 帧检测序列上 Python、C++ 与直接链接上游库的参考实现输出一致（默认与 Kalman 两套配置，各 163 行，数值差为 0，C++ 与参考输出 SHA-256 相同）；板载单测 50 项通过。整段 CLI 计时（72 帧，含进程启动与打印）：C++ 48 ms，Python 365 ms。
+      en: On an X5 8GB board, Python, C++ and a reference binary linking the upstream library directly agree over the 72-frame detection sequence for both configs (163 rows each, numeric delta 0; the C++ and reference outputs share one SHA-256); the on-board unit suite passes 50 tests. Whole-CLI timing over 72 frames including startup and printing is 48 ms (C++) and 365 ms (Python).
+    evidence:
+    - label:
+        zh: 四板一致性与计时证据摘要
+        en: Four-board parity and timing evidence summary
+      url: sample-evidence/hobot-mot-x5.json
+    - label:
+        zh: C++ 构建日志节选（板端编译，非模型转换）
+        en: C++ build log excerpts (on-board compile, not model conversion)
+      url: sample-evidence/hobot-mot-x5-build-excerpt.log
+  - platform: s100
+    status: available
+    runtimes:
+    - python
+    - cpp
+    model_availability:
+      status: no-neural-artifact
+      note:
+        zh: 无神经网络模型；下载脚本按 SHA-256 获取固定的上游 D-Robotics/mot 源码包并本地编译。
+        en: No neural model is involved; the download script fetches the pinned upstream D-Robotics/mot source tarball by SHA-256 and builds it locally.
+    artifacts:
+    - role: upstream-source
+      filename: vendor/mot-0120205146d88c3474bfc2936522e349e169fa8d.tar.gz
+      format: tar.gz
+      url: https://codeload.github.com/D-Robotics/mot/tar.gz/0120205146d88c3474bfc2936522e349e169fa8d
+      sha256: a0bf3b9738af2f7c4be5885ac777cdf93dab6d4dd374a297ceebebe58268b54b
+      sha256_provenance: publisher
+    verification:
+      zh: S100 板端：72 帧检测序列上 Python、C++ 与直接链接上游库的参考实现输出一致（两套配置，各 163 行，数值差为 0）；板载单测 50 项通过。整段 CLI 计时（72 帧，含进程启动与打印）：C++ 14 ms，Python 125 ms。
+      en: On an S100 board, Python, C++ and the direct-upstream reference agree over the 72-frame sequence for both configs (163 rows each, numeric delta 0); the on-board unit suite passes 50 tests. Whole-CLI timing over 72 frames including startup and printing is 14 ms (C++) and 125 ms (Python).
+    evidence:
+    - label:
+        zh: 四板一致性与计时证据摘要
+        en: Four-board parity and timing evidence summary
+      url: sample-evidence/hobot-mot-s100.json
+    - label:
+        zh: C++ 构建日志节选（板端编译，非模型转换）
+        en: C++ build log excerpts (on-board compile, not model conversion)
+      url: sample-evidence/hobot-mot-s100-build-excerpt.log
+  - platform: s100p
+    status: available
+    runtimes:
+    - python
+    - cpp
+    model_availability:
+      status: no-neural-artifact
+      note:
+        zh: 无神经网络模型；下载脚本按 SHA-256 获取固定的上游 D-Robotics/mot 源码包并本地编译。
+        en: No neural model is involved; the download script fetches the pinned upstream D-Robotics/mot source tarball by SHA-256 and builds it locally.
+    artifacts:
+    - role: upstream-source
+      filename: vendor/mot-0120205146d88c3474bfc2936522e349e169fa8d.tar.gz
+      format: tar.gz
+      url: https://codeload.github.com/D-Robotics/mot/tar.gz/0120205146d88c3474bfc2936522e349e169fa8d
+      sha256: a0bf3b9738af2f7c4be5885ac777cdf93dab6d4dd374a297ceebebe58268b54b
+      sha256_provenance: publisher
+    verification:
+      zh: S100P 板端：72 帧检测序列上 Python、C++ 与直接链接上游库的参考实现输出一致（两套配置，各 163 行，数值差为 0）；板载单测 50 项通过。整段 CLI 计时（72 帧，含进程启动与打印）：C++ 11 ms，Python 91 ms。
+      en: On an S100P board, Python, C++ and the direct-upstream reference agree over the 72-frame sequence for both configs (163 rows each, numeric delta 0); the on-board unit suite passes 50 tests. Whole-CLI timing over 72 frames including startup and printing is 11 ms (C++) and 91 ms (Python).
+    evidence:
+    - label:
+        zh: 四板一致性与计时证据摘要
+        en: Four-board parity and timing evidence summary
+      url: sample-evidence/hobot-mot-s100p.json
+    - label:
+        zh: C++ 构建日志节选（板端编译，非模型转换）
+        en: C++ build log excerpts (on-board compile, not model conversion)
+      url: sample-evidence/hobot-mot-s100p-build-excerpt.log
+  - platform: s600
+    status: available
+    runtimes:
+    - python
+    - cpp
+    model_availability:
+      status: no-neural-artifact
+      note:
+        zh: 无神经网络模型；下载脚本按 SHA-256 获取固定的上游 D-Robotics/mot 源码包并本地编译。
+        en: No neural model is involved; the download script fetches the pinned upstream D-Robotics/mot source tarball by SHA-256 and builds it locally.
+    artifacts:
+    - role: upstream-source
+      filename: vendor/mot-0120205146d88c3474bfc2936522e349e169fa8d.tar.gz
+      format: tar.gz
+      url: https://codeload.github.com/D-Robotics/mot/tar.gz/0120205146d88c3474bfc2936522e349e169fa8d
+      sha256: a0bf3b9738af2f7c4be5885ac777cdf93dab6d4dd374a297ceebebe58268b54b
+      sha256_provenance: publisher
+    verification:
+      zh: S600 64GB 板端：72 帧检测序列上 Python、C++ 与直接链接上游库的参考实现输出一致（两套配置，各 163 行，数值差为 0）；板载单测 50 项通过。整段 CLI 计时（72 帧，含进程启动与打印）：C++ 10 ms，Python 89 ms。
+      en: On an S600 64GB board, Python, C++ and the direct-upstream reference agree over the 72-frame sequence for both configs (163 rows each, numeric delta 0); the on-board unit suite passes 50 tests. Whole-CLI timing over 72 frames including startup and printing is 10 ms (C++) and 89 ms (Python).
+    evidence:
+    - label:
+        zh: 四板一致性与计时证据摘要
+        en: Four-board parity and timing evidence summary
+      url: sample-evidence/hobot-mot-s600.json
+    - label:
+        zh: C++ 构建日志节选（板端编译，非模型转换）
+        en: C++ build log excerpts (on-board compile, not model conversion)
+      url: sample-evidence/hobot-mot-s600-build-excerpt.log
+quickstart:
+- title:
+    zh: 获取固定的上游源码
+    en: Fetch the pinned upstream source
+  command: python3 samples/vision/hobot_mot/model/download.py
+- title:
+    zh: 构建原生跟踪库
+    en: Build the native tracker library
+  command: cmake -B samples/vision/hobot_mot/runtime/cpp/build -S samples/vision/hobot_mot/runtime/cpp && cmake --build samples/vision/hobot_mot/runtime/cpp/build
+- title:
+    zh: 回放 72 帧示例序列（Python）
+    en: Replay the 72-frame sample sequence (Python)
+  command: ./samples/vision/hobot_mot/runtime/python/run.sh
+resources:
+- label:
+    zh: 模型仓库
+    en: Sample repository
+  url: https://github.com/D-Robotics/rdk_model_zoo/tree/c8eb9d56264fbaf8f78265139d053e027bd32b28/samples/vision/hobot_mot
+- label:
+    zh: 运行文档（Python）
+    en: Runtime guide (Python)
+  url: https://github.com/D-Robotics/rdk_model_zoo/tree/c8eb9d56264fbaf8f78265139d053e027bd32b28/samples/vision/hobot_mot/runtime/python
+- label:
+    zh: 运行文档（C++）
+    en: Runtime guide (C++)
+  url: https://github.com/D-Robotics/rdk_model_zoo/tree/c8eb9d56264fbaf8f78265139d053e027bd32b28/samples/vision/hobot_mot/runtime/cpp
+- label:
+    zh: 上游 D-Robotics/mot（固定提交）
+    en: Upstream D-Robotics/mot (pinned commit)
+  url: https://github.com/D-Robotics/mot/tree/0120205146d88c3474bfc2936522e349e169fa8d
+missing:
+- field: mot-accuracy
+  status: missing
+  title:
+    zh: 跟踪精度
+    en: Tracking accuracy
+  note:
+    zh: MOTA / IDF1 / HOTA 待 MOT 数据集评测。
+    en: MOTA / IDF1 / HOTA evaluation on a MOT dataset is pending.
+- field: per-frame-tracking-benchmark
+  status: missing
+  title:
+    zh: 逐帧 CPU 跟踪性能
+    en: Per-frame CPU tracking performance
+  note:
+    zh: 逐帧 CPU 跟踪基准待测量；现有计时为整段 CLI 72 帧（含启动与打印）。
+    en: A per-frame CPU tracking benchmark is pending; current timings are whole-CLI 72-frame runs including startup and printing.
+- field: oe-html-report
+  status: not-applicable
+  title:
+    zh: OE 转换报告
+    en: OE conversion report
+  note:
+    zh: CPU 跟踪器无 BPU 转换步骤，OE 报告不适用。
+    en: A CPU tracker has no BPU conversion step, so an OE report does not apply.

@@ -1,0 +1,52 @@
+# Faster R-CNN (MobileNetV3-Large 320-FPN) conversion evidence excerpts
+# Platform: RDK S600 64GB (march nash-p)
+# Sources: the product-conversion workspace whose build outputs hash to the
+# published artifacts; the receipt below binds each part to its SHA-256.
+# sample_commit: c8eb9d56264fbaf8f78265139d053e027bd32b28
+#
+# ---- build receipt source:
+# local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/product_artifact_hashes.txt
+# sha256 a8171b0c05b8a94174571e03506f2ad645a9971008b8c2e0cf0dc440421dd2a2
+a0c857181e95b275190aca68c4149814c7381ceb7e3c9aac1cdd8a22cd2e0e84  build/s600/parta/frcnn_mbv3_320_parta.hbm  (published artifact)
+2ae5360e0b1bbc1d463cfd12f4764936e2c4e9dd5741cc35d0df705d848603ef  build/s600/partb/frcnn_mbv3_320_partb.hbm  (published artifact)
+#
+# ---- PartA recipe: local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/build/s600/parta/config.yaml
+# sha256 541c0f9e92714e161349af01505dccd494013c31c8434a4727e2203208628580
+  onnx_model: /work/product-conversion/onnx/part_a_f0only.op16.onnx
+  march: nash-p
+  working_dir: /work/product-conversion/build/s600/parta
+  output_model_file_prefix: frcnn_mbv3_320_parta
+  input_name: images
+  input_type_rt: nv12
+  input_shape: 1x3x320x320
+  optimize_level: O2
+  compile_mode: latency
+#
+# ---- PartA compile log: local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/build/s600/parta/config.compile.log
+# sha256 5b5988f8a8f8447f6eec7fd2213d53d72f509b2c8951751e5c26d4f0c1e1538e
+  FPS=3632.3899999999999, latency = 275.30000000000001 us, DDR = 6913280 bytes, Compiling HBDK version = "4.7.5"   (see /work/product-conversion/build/s600/parta/frcnn_mbv3_320_parta.html)
+A total of 1 graphs were processed.
+HBDK hbm perf SUCCESS
+#
+# ---- PartB recipe: local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/build/s600/partb/config.yaml
+# sha256 116def91f4769334fc82b417bb685628ded3ca61b8b8685bf9a2042441c864d9
+  onnx_model: /work/product-conversion/onnx/part_b_packed.op16.onnx
+  march: nash-p
+  working_dir: /work/product-conversion/build/s600/partb
+  output_model_file_prefix: frcnn_mbv3_320_partb
+  input_name: bank
+  input_type_rt: featuremap
+  input_shape: 1x256x1050x7
+  optimize_level: O2
+  compile_mode: latency
+#
+# ---- PartB compile log: local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/build/s600/partb/config.compile.log
+# sha256 1264d3f2770cb0db5e533329702808fb84de11362252d8b1985ac0543d410a0e
+  FPS=606.71000000000004, latency = 1648.2 us, DDR = 22618048 bytes, Compiling HBDK version = "4.7.5"   (see /work/product-conversion/build/s600/partb/frcnn_mbv3_320_partb.html)
+A total of 1 graphs were processed.
+HBDK hbm perf SUCCESS
+#
+# PartA 输入 split nv12 uint8 (bt.601 limited)；PartB 输入 bank 1x256x1050x7 float32（packed），两图之间的候选框选择与 RoI 对齐在 CPU 运行。
+# PartA consumes split nv12 uint8 (bt.601 limited); PartB consumes bank 1x256x1050x7 float32 (packed); proposal selection and RoI
+# alignment between the two graphs run on the CPU. FPS figures are per compiled graph
+# invocation, not end-to-end image FPS.

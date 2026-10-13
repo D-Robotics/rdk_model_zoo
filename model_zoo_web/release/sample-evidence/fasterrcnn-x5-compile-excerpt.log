@@ -1,0 +1,50 @@
+# Faster R-CNN (MobileNetV3-Large 320-FPN) conversion evidence excerpts
+# Platform: RDK X5 8GB (march bayes-e)
+# Sources: the product-conversion workspace whose build outputs hash to the
+# published artifacts; the receipt below binds each part to its SHA-256.
+# sample_commit: c8eb9d56264fbaf8f78265139d053e027bd32b28
+#
+# ---- build receipt source:
+# local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/product_artifact_hashes.txt
+# sha256 a8171b0c05b8a94174571e03506f2ad645a9971008b8c2e0cf0dc440421dd2a2
+a6f6509e5ab3b42f709d10062cfdb0a930b9eebb3ceb1d1a4bff3baeda42af86  build/x5/parta/frcnn_mbv3_320_parta.bin  (published artifact)
+2ade35e91d66debf616594a28e2cae051b5e1ede617dfa914b25d06c3255724e  build/x5/partb/frcnn_mbv3_320_partb.bin  (published artifact)
+#
+# ---- PartA recipe: local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/build/x5/parta/config.yaml
+# sha256 031f6c5275892624895237d1ac12d80de8e3fc34443a5074395303052a24747f
+  onnx_model: /work/product-conversion/onnx/part_a_f0only.op11.onnx
+  march: bayes-e
+  working_dir: /work/product-conversion/build/x5/parta
+  output_model_file_prefix: frcnn_mbv3_320_parta
+  input_name: images
+  input_type_rt: nv12
+  input_shape: 1x3x320x320
+  optimize_level: O3
+  compile_mode: latency
+#
+# ---- PartB recipe: local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/build/x5/partb/config.yaml
+# sha256 6cc3e742a330c9ee62ae9a2cbed3bf0a8129342ea253333b9f06763562b48136
+  onnx_model: /work/product-conversion/onnx/part_b_batch150.op11.onnx
+  march: bayes-e
+  working_dir: /work/product-conversion/build/x5/partb
+  output_model_file_prefix: frcnn_mbv3_320_partb
+  input_name: pooled
+  input_type_rt: featuremap
+  input_shape: 150x256x7x7
+  optimize_level: O3
+  compile_mode: latency
+#
+# ---- PartB compile log: local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/hb_mapper_makertbin.log
+# sha256 1d8444ce78c6d6978063e9c641855b1adbf645217f0568d249b5ab1ff9cc3f3a
+2026-10-12 21:48:26,324 file: mapper_conf_parser.py func: mapper_conf_parser line No: 260 Using onnx model file: /work/product-conversion/onnx/part_b_batch150.op11.onnx
+  input_shape: 150x256x7x7
+2026-10-12 21:48:37,212 file: model_builder.py func: model_builder line No: 35 Start to compile the model with march bayes-e.
+2026-10-12 21:48:37,275 file: hbdk_cc.py func: hbdk_cc line No: 127 hbdk-cc command used:hbdk-cc -f hbir -m /tmp/tmpvobrshpt/main_graph_subgraph_0.hbir -o /tmp/tmpvobrshpt/main_graph_subgraph_0.hbm --march bayes-e --progressbar --O3 --debug --core-num 1 --fast --input-layout NHWC --output-layout NHWC --input-source ddr
+2026-10-12 21:48:41,150 file: tool_utils.py func: tool_utils line No: 326 FPS=3907.29, latency = 38389.8 us, DDR = 294799 bytes   (see main_graph_subgraph_0.html)
+2026-10-12 21:48:41,316 file: model_builder.py func: model_builder line No: 38 End to compile the model with march bayes-e.
+2026-10-12 21:48:42,277 file: hb_mapper_makertbin.py func: hb_mapper_makertbin line No: 783 Convert to runtime bin file successfully!
+#
+# PartA 输入 packed nv12 uint8 320x320 (bt.601 limited)；PartB 输入 pooled 150x256x7x7 float32（pooled），两图之间的候选框选择与 RoI 对齐在 CPU 运行。
+# PartA consumes packed nv12 uint8 320x320 (bt.601 limited); PartB consumes pooled 150x256x7x7 float32 (pooled); proposal selection and RoI
+# alignment between the two graphs run on the CPU. FPS figures are per compiled graph
+# invocation, not end-to-end image FPS.

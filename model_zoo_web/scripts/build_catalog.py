@@ -32,6 +32,30 @@ SAMPLE_REF_ENV = "MODEL_ZOO_SAMPLE_REF"
 SAMPLE_REF_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$")
 BUILD_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 SIZE_ORDER = {name: index for index, name in enumerate(("n", "s", "m", "l", "x"))}
+# Sample-profile records describe deployable repository samples (for example CPU
+# trackers or detector samples without a formal model release yet). They render
+# on the same dashboard but never pass as released neural models: their platform
+# status is "available" and the released-model fields stay forbidden below.
+SAMPLE_PROFILE = "sample"
+SAMPLE_STATUS = "available"
+SAMPLE_PLATFORMS = ("x5", "s100", "s100p", "s600")
+SAMPLE_PIPELINE_KINDS = ("cpu_tracker", "detector_cpu_tracker", "neural_detector")
+SAMPLE_ARTIFACT_HOSTS = ("archive.d-robotics.cc", "codeload.github.com")
+# Release manifests at the sample commit are what the samples' download
+# scripts fetch from; descriptor-bound records must publish the same URLs.
+SAMPLE_RELEASE_MANIFESTS = {
+    "x5": "docs/release/x5/models.yaml",
+    "s100": "docs/release/s/models.yaml",
+    "s100p": "docs/release/s/models.yaml",
+    "s600": "docs/release/s/models.yaml",
+}
+SAMPLE_COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
+# Fields that only a released neural-model record may carry. A sample profile
+# that lists any of them is rejected instead of silently ignoring the data.
+SAMPLE_FORBIDDEN_VARIANT_FIELDS = ("model", "input", "performance", "accuracy")
+SAMPLE_FORBIDDEN_PLATFORM_FIELDS = (
+    "artifact", "reports", "accuracy", "performance", "released_at",
+)
 ACCURACY_SCHEMA_PATH = WEB_ROOT / "accuracy-metrics.json"
 ACCURACY_SCHEMA = json.loads(ACCURACY_SCHEMA_PATH.read_text(encoding="utf-8"))
 
@@ -114,6 +138,24 @@ def validate_sample_path(value: Any, label: str) -> str:
     if kind.returncode != 0 or kind.stdout.strip() != "tree":
         raise CatalogError(f"{label} does not exist locally or in {ref}: {sample_path}")
     return sample_path
+
+
+def verify_commit_tree(commit: str, sample_path: str, label: str) -> None:
+    """Bind sample_commit:sample_path to a real git tree, not just a shape.
+
+    The pinned commit must exist in this repository (CI fetches develop) and
+    the sample path must resolve inside it, otherwise the detail-page source
+    link 404s while the catalog still validates.
+    """
+    kind = subprocess.run(
+        ["git", "-C", str(ROOT), "cat-file", "-t", f"{commit}:{sample_path}"],
+        capture_output=True, text=True, check=False,
+    )
+    if kind.returncode != 0 or kind.stdout.strip() != "tree":
+        raise CatalogError(
+            f"{label}: {commit}:{sample_path} is not a tree in this repository; "
+            "sample_commit must be a real commit that contains sample_path"
+        )
 
 
 def validate_artifact(
@@ -299,10 +341,413 @@ def validate_accuracy(value: Any, task: str, label: str) -> None:
                 raise CatalogError(f"{metric_label} must be a ratio between 0 and 1")
 
 
+def validate_localized_note(value: Any, label: str, *, required: bool = True) -> None:
+    if value is None:
+        if required:
+            raise CatalogError(f"{label} is required")
+        return
+    validate_localized_text(value, label)
+
+
+def validate_sample_artifact(artifact: dict[str, Any], label: str) -> None:
+    require_string(artifact.get("role"), f"{label}.role")
+    require_string(artifact.get("filename"), f"{label}.filename")
+    filename = PurePosixPath(artifact["filename"])
+    if filename.is_absolute() or ".." in filename.parts:
+        raise CatalogError(f"{label}.filename must be a safe relative file name")
+    require_string(artifact.get("format"), f"{label}.format")
+    url = require_string(artifact.get("url"), f"{label}.url")
+    parsed = urlparse(url)
+    if parsed.scheme != "https" or parsed.netloc not in SAMPLE_ARTIFACT_HOSTS or parsed.query or parsed.fragment:
+        raise CatalogError(
+            f"{label}.url must be a direct stable HTTPS URL on one of "
+            f"{', '.join(SAMPLE_ARTIFACT_HOSTS)}"
+        )
+    provenance = artifact.get("sha256_provenance")
+    if provenance not in ("publisher", "observed-on-board", "not-provided"):
+        raise CatalogError(
+            f"{label}.sha256_provenance must be publisher, observed-on-board or not-provided"
+        )
+    sha256 = artifact.get("sha256")
+    if provenance == "not-provided":
+        if sha256 is not None:
+            raise CatalogError(f"{label}.sha256 must be omitted when the provenance is not-provided")
+    else:
+        if not isinstance(sha256, str) or not SHA256_RE.fullmatch(sha256):
+            raise CatalogError(
+                f"{label}.sha256 must be 64 lowercase hexadecimal characters "
+                f"(provenance {provenance})"
+            )
+    size_bytes = artifact.get("size_bytes")
+    if size_bytes is not None and (isinstance(size_bytes, bool) or not isinstance(size_bytes, int) or size_bytes <= 0):
+        raise CatalogError(f"{label}.size_bytes must be a positive integer or omitted")
+
+
+def validate_sample_link(link: dict[str, Any], label: str) -> None:
+    validate_localized_note(link.get("label"), f"{label}.label")
+    url = require_string(link.get("url"), f"{label}.url")
+    parsed = urlparse(url)
+    if parsed.scheme == "https" and parsed.netloc:
+        return
+    if parsed.scheme or parsed.netloc or url.startswith("/") or ".." in PurePosixPath(url).parts:
+        raise CatalogError(f"{label}.url must be an absolute HTTPS URL or a site-relative path")
+    parts = PurePosixPath(url).parts
+    if len(parts) != 2 or parts[0] != "sample-evidence" or not parts[1].endswith((".json", ".log")):
+        raise CatalogError(f"{label}.url must be an HTTPS URL or a sample-evidence/<file> asset path")
+    # The link ships with the site; fail at catalog time when the file is absent.
+    if not (WEB_ROOT / "release" / url).is_file():
+        raise CatalogError(f"{label}.url: {url} does not exist in model_zoo_web/release")
+
+
+def validate_sample_platform(platform_record: dict[str, Any], platform_label: str) -> None:
+    platform = require_string(platform_record.get("platform"), f"{platform_label}.platform")
+    if platform not in SAMPLE_PLATFORMS:
+        raise CatalogError(
+            f"{platform_label}.platform must be one of {', '.join(SAMPLE_PLATFORMS)} "
+            "(x3 is archive-only)"
+        )
+    if platform_record.get("status") != SAMPLE_STATUS:
+        raise CatalogError(
+            f"{platform_label}.status must be {SAMPLE_STATUS}; a sample profile never marks "
+            "a platform released. Promote the record to the released-model schema instead."
+        )
+    forbidden = [key for key in SAMPLE_FORBIDDEN_PLATFORM_FIELDS if key in platform_record]
+    if forbidden:
+        raise CatalogError(
+            f"{platform_label} must not carry released-model fields: {', '.join(forbidden)}. "
+            "Sample profiles and released models are separate records."
+        )
+    runtimes = platform_record.get("runtimes")
+    if not isinstance(runtimes, list) or not runtimes or any(item not in ("python", "cpp") for item in runtimes):
+        raise CatalogError(f"{platform_label}.runtimes must list python and/or cpp")
+    availability = require_mapping(
+        platform_record.get("model_availability"), f"{platform_label}.model_availability"
+    )
+    status = availability.get("status")
+    if status not in ("published-download", "manual-compile", "no-neural-artifact"):
+        raise CatalogError(
+            f"{platform_label}.model_availability.status must be published-download, "
+            "manual-compile or no-neural-artifact"
+        )
+    validate_localized_note(availability.get("note"), f"{platform_label}.model_availability.note")
+    if status == "published-download":
+        artifacts = platform_record.get("artifacts")
+        if not isinstance(artifacts, list) or not artifacts:
+            raise CatalogError(
+                f"{platform_label}.artifacts must list at least one published artifact "
+                "when model_availability.status is published-download"
+            )
+        for index, artifact_value in enumerate(artifacts):
+            artifact = require_mapping(artifact_value, f"{platform_label}.artifacts[{index}]")
+            validate_sample_artifact(artifact, f"{platform_label}.artifacts[{index}]")
+        # A split detector publishes its PartA/PartB pair or nothing: one half
+        # alone is unusable on the board. Neural artifacts follow the delivery
+        # line's published format (bin on x5, hbm on the S series) so a file
+        # cannot be registered against the wrong target.
+        pair_roles = {artifact["role"] for artifact in artifacts if artifact["role"] in ("parta", "partb")}
+        if pair_roles and pair_roles != {"parta", "partb"}:
+            raise CatalogError(
+                f"{platform_label}: a published split detector must carry both parta and partb"
+            )
+        expected_format = "bin" if platform == "x5" else "hbm"
+        for artifact in artifacts:
+            if artifact["role"] in ("parta", "partb", "detector") and artifact["format"] != expected_format:
+                raise CatalogError(
+                    f"{platform_label}.artifacts: {artifact['role']} must be a {expected_format} file "
+                    f"on {platform}, not {artifact['format']}"
+                )
+    elif status == "no-neural-artifact":
+        artifacts = platform_record.get("artifacts")
+        if artifacts is not None:
+            # A tracker without a neural model may still publish its pinned
+            # upstream source, but nothing that looks like a deployable model.
+            if not isinstance(artifacts, list) or not artifacts:
+                raise CatalogError(
+                    f"{platform_label}.artifacts must be a non-empty list when present"
+                )
+            for index, artifact_value in enumerate(artifacts):
+                artifact = require_mapping(artifact_value, f"{platform_label}.artifacts[{index}]")
+                if artifact.get("role") != "upstream-source":
+                    raise CatalogError(
+                        f"{platform_label}.artifacts[{index}].role must be upstream-source "
+                        "for a platform without a neural artifact"
+                    )
+                if artifact.get("format") in ("bin", "hbm", "onnx", "pt"):
+                    raise CatalogError(
+                        f"{platform_label}.artifacts[{index}] must not look like a "
+                        "deployable model artifact"
+                    )
+                validate_sample_artifact(artifact, f"{platform_label}.artifacts[{index}]")
+    elif platform_record.get("artifacts") is not None:
+        raise CatalogError(
+            f"{platform_label}.artifacts must be omitted unless the platform offers a "
+            "published download"
+        )
+    if status == "manual-compile":
+        guide_url = availability.get("guide_url")
+        if not isinstance(guide_url, str) or not guide_url.strip():
+            raise CatalogError(
+                f"{platform_label}.model_availability.guide_url is required for manual-compile"
+            )
+        parsed_guide = urlparse(guide_url)
+        if parsed_guide.scheme != "https" or not parsed_guide.netloc:
+            raise CatalogError(
+                f"{platform_label}.model_availability.guide_url must be an absolute HTTPS URL"
+            )
+    validate_localized_note(platform_record.get("verification"), f"{platform_label}.verification")
+    evidence = platform_record.get("evidence")
+    if not isinstance(evidence, list) or not evidence:
+        raise CatalogError(f"{platform_label}.evidence must be a non-empty list of links")
+    for index, link_value in enumerate(evidence):
+        link = require_mapping(link_value, f"{platform_label}.evidence[{index}]")
+        validate_sample_link(link, f"{platform_label}.evidence[{index}]")
+    platform_quickstart = platform_record.get("quickstart")
+    if platform_quickstart is not None:
+        # Platforms may override the record-level steps so the shown commands
+        # match the selected hardware (e.g. manual model preparation on S100P).
+        if not isinstance(platform_quickstart, list) or not platform_quickstart:
+            raise CatalogError(f"{platform_label}.quickstart must be a non-empty list when present")
+        for index, entry_value in enumerate(platform_quickstart):
+            entry = require_mapping(entry_value, f"{platform_label}.quickstart[{index}]")
+            validate_localized_note(entry.get("title"), f"{platform_label}.quickstart[{index}].title")
+            require_string(entry.get("command"), f"{platform_label}.quickstart[{index}].command")
+
+
+def validate_sample_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]:
+    relative_source = source_path.relative_to(ROOT).as_posix()
+    if record.get("schema_version") != 1:
+        raise CatalogError(f"{relative_source}: schema_version must be 1")
+
+    record_id = require_string(record.get("id"), f"{relative_source}.id")
+    domain = require_string(record.get("domain"), f"{relative_source}.domain")
+    source = require_string(record.get("source"), f"{relative_source}.source")
+    provider = require_string(record.get("provider"), f"{relative_source}.provider")
+    family = require_string(record.get("family"), f"{relative_source}.family")
+    task = require_string(record.get("task"), f"{relative_source}.task")
+    require_string(record.get("name"), f"{relative_source}.name")
+    validate_localized_text(record.get("description"), f"{relative_source}.description")
+    license_info = require_mapping(record.get("license"), f"{relative_source}.license")
+    require_string(license_info.get("name"), f"{relative_source}.license.name")
+    license_url = require_string(license_info.get("url"), f"{relative_source}.license.url")
+    parsed_license_url = urlparse(license_url)
+    if parsed_license_url.scheme != "https" or not parsed_license_url.netloc:
+        raise CatalogError(f"{relative_source}.license.url must be an absolute HTTPS URL")
+    expected_id = f"{source}/{family}/{task}"
+    if record_id != expected_id:
+        raise CatalogError(f"{relative_source}.id must be {expected_id}")
+    expected_source = DATA_ROOT / domain / source / family / f"{task}.yaml"
+    if source_path != expected_source:
+        raise CatalogError(f"{relative_source}: expected path {expected_source.relative_to(ROOT)}")
+    validate_sample_path(record.get("sample_path"), f"{relative_source}.sample_path")
+    sample_commit = require_string(record.get("sample_commit"), f"{relative_source}.sample_commit")
+    if not SAMPLE_COMMIT_RE.fullmatch(sample_commit):
+        raise CatalogError(
+            f"{relative_source}.sample_commit must be the pinned 40-character develop commit"
+        )
+    verify_commit_tree(sample_commit, record["sample_path"], relative_source)
+    descriptor_rel = record.get("artifact_descriptor")
+    if descriptor_rel is not None:
+        descriptor_rel = require_string(descriptor_rel, f"{relative_source}.artifact_descriptor")
+        pure_descriptor = PurePosixPath(descriptor_rel)
+        sample_parts = PurePosixPath(record["sample_path"]).parts
+        if pure_descriptor.is_absolute() or ".." in pure_descriptor.parts \
+                or pure_descriptor.parts[: len(sample_parts)] != sample_parts:
+            raise CatalogError(
+                f"{relative_source}.artifact_descriptor must be a path below sample_path"
+            )
+    if record.get("pipeline") not in SAMPLE_PIPELINE_KINDS:
+        raise CatalogError(
+            f"{relative_source}.pipeline must be one of {', '.join(SAMPLE_PIPELINE_KINDS)}"
+        )
+    validate_localized_note(record.get("pipeline_note"), f"{relative_source}.pipeline_note")
+    task_ids = record.get("task_ids")
+    if task_ids is not None:
+        if not isinstance(task_ids, list) or not task_ids:
+            raise CatalogError(f"{relative_source}.task_ids must be a non-empty list when present")
+        for index, task_id in enumerate(task_ids):
+            if not isinstance(task_id, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)+", task_id):
+                raise CatalogError(
+                    f"{relative_source}.task_ids[{index}] must be a kebab-case task id"
+                )
+
+    variants = require_list(record.get("variants"), f"{relative_source}.variants")
+    seen_sizes: set[str] = set()
+    published_by_platform: dict[str, dict[str, tuple[str, str]]] = {}
+    for variant_index, variant_value in enumerate(variants):
+        variant_label = f"{relative_source}.variants[{variant_index}]"
+        variant = require_mapping(variant_value, variant_label)
+        size = require_string(variant.get("size"), f"{variant_label}.size")
+        if size in seen_sizes:
+            raise CatalogError(f"{relative_source}: duplicate variant size {size}")
+        seen_sizes.add(size)
+        forbidden = [key for key in SAMPLE_FORBIDDEN_VARIANT_FIELDS if key in variant]
+        if forbidden:
+            raise CatalogError(
+                f"{variant_label} must not carry released-model fields: {', '.join(forbidden)}"
+            )
+        spec_rows = variant.get("input_contract")
+        if spec_rows is not None:
+            if not isinstance(spec_rows, list) or not spec_rows:
+                raise CatalogError(f"{variant_label}.input_contract must be a non-empty list")
+            for row_index, row_value in enumerate(spec_rows):
+                row = require_mapping(row_value, f"{variant_label}.input_contract[{row_index}]")
+                # Contract rows render on both the zh and en pages, so both the
+                # label and the value must be localized mappings.
+                validate_localized_text(
+                    row.get("label"), f"{variant_label}.input_contract[{row_index}].label"
+                )
+                validate_localized_text(
+                    row.get("value"), f"{variant_label}.input_contract[{row_index}].value"
+                )
+        platforms = require_list(variant.get("platforms"), f"{variant_label}.platforms")
+        seen_platforms: set[str] = set()
+        for platform_index, platform_value in enumerate(platforms):
+            platform_label = f"{variant_label}.platforms[{platform_index}]"
+            platform_record = require_mapping(platform_value, platform_label)
+            platform = require_string(platform_record.get("platform"), f"{platform_label}.platform")
+            if platform in seen_platforms:
+                raise CatalogError(f"{variant_label}: duplicate platform {platform}")
+            seen_platforms.add(platform)
+            validate_sample_platform(platform_record, platform_label)
+            if record.get("quickstart") is None and platform_record.get("quickstart") is None:
+                raise CatalogError(
+                    f"{platform_label}: no quickstart; provide it on the platform or the record "
+                    "so the shown commands match the selected hardware"
+                )
+            roles = published_by_platform.setdefault(platform, {})
+            for artifact in platform_record.get("artifacts") or []:
+                # Artifacts without a digest (sha256_provenance: not-provided)
+                # cannot be hash-bound to the descriptor; skip them here.
+                if artifact.get("role") in ("parta", "partb", "detector") and artifact.get("sha256"):
+                    roles[artifact["role"]] = (artifact["filename"], artifact["sha256"], artifact["url"])
+
+    if descriptor_rel is not None:
+        # Bind every published neural artifact to the descriptor pinned in the
+        # sample source, so a stale or mislabelled file cannot register.
+        show = subprocess.run(
+            ["git", "-C", str(ROOT), "show", f"{sample_commit}:{descriptor_rel}"],
+            capture_output=True, text=True, check=False,
+        )
+        if show.returncode != 0:
+            raise CatalogError(
+                f"{relative_source}.artifact_descriptor: {sample_commit}:{descriptor_rel} "
+                "cannot be read from this repository"
+            )
+        try:
+            descriptor = json.loads(show.stdout)
+        except json.JSONDecodeError:
+            raise CatalogError(f"{relative_source}.artifact_descriptor must be a JSON file") from None
+        targets = descriptor.get("targets") if isinstance(descriptor, dict) else None
+        if not isinstance(targets, dict):
+            raise CatalogError(
+                f"{relative_source}.artifact_descriptor must carry targets.<platform>.<role> "
+                "entries with file and sha256"
+            )
+        manifest_cache: dict[str, dict[str, dict[str, Any]]] = {}
+        for platform, roles in sorted(published_by_platform.items()):
+            target = targets.get(platform)
+            if not isinstance(target, dict):
+                raise CatalogError(
+                    f"{relative_source}.artifact_descriptor has no targets.{platform} entry"
+                )
+            for role, (filename, sha256, _url) in sorted(roles.items()):
+                entry = target.get(role)
+                # The descriptor stores bare file names; a record may prefix the
+                # platform subdirectory. The digest is the binding that matters.
+                if not isinstance(entry, dict) or entry.get("file") != PurePosixPath(filename).name \
+                        or entry.get("sha256") != sha256:
+                    raise CatalogError(
+                        f"{relative_source}: published {role} on {platform} does not match the "
+                        f"pinned descriptor {descriptor_rel}"
+                    )
+            # The download URL must come from the delivery manifest the sample's
+            # downloader fetches from, so a verified filename/digest cannot be
+            # pointed at another file's URL (e.g. the S600 part under S100).
+            manifest_rel = SAMPLE_RELEASE_MANIFESTS[platform]
+            if manifest_rel not in manifest_cache:
+                manifest_show = subprocess.run(
+                    ["git", "-C", str(ROOT), "show", f"{sample_commit}:{manifest_rel}"],
+                    capture_output=True, text=True, check=False,
+                )
+                if manifest_show.returncode != 0:
+                    raise CatalogError(
+                        f"{relative_source}: {sample_commit}:{manifest_rel} cannot be read "
+                        "from this repository"
+                    )
+                manifest_models = yaml.safe_load(manifest_show.stdout) or {}
+                by_sample_path = {
+                    entry.get("sample_path"): entry
+                    for entry in manifest_models.get("models") or []
+                    if isinstance(entry, dict)
+                }
+                manifest_cache[manifest_rel] = by_sample_path
+            manifest_entry = manifest_cache[manifest_rel].get(record["sample_path"])
+            if manifest_entry is None:
+                raise CatalogError(
+                    f"{relative_source}: {manifest_rel} at {sample_commit} has no entry for "
+                    f"{record['sample_path']}"
+                )
+            manifest_assets = {
+                asset.get("filename"): asset
+                for asset in manifest_entry.get("assets") or []
+                if isinstance(asset, dict)
+            }
+            for role, (filename, sha256, url) in sorted(roles.items()):
+                asset = manifest_assets.get(filename)
+                if asset is None:
+                    raise CatalogError(
+                        f"{relative_source}: published {role} on {platform} ({filename}) is not "
+                        f"listed in {manifest_rel} at {sample_commit}"
+                    )
+                if asset.get("url") != url or asset.get("sha256") != sha256:
+                    raise CatalogError(
+                        f"{relative_source}: published {role} on {platform} does not match the "
+                        f"pinned release manifest {manifest_rel}"
+                    )
+
+    for field in ("quickstart", "resources"):
+        entries = record.get(field)
+        if entries is None:
+            continue
+        if not isinstance(entries, list) or not entries:
+            raise CatalogError(f"{relative_source}.{field} must be a non-empty list when present")
+        for index, entry_value in enumerate(entries):
+            entry = require_mapping(entry_value, f"{relative_source}.{field}[{index}]")
+            if field == "quickstart":
+                validate_localized_note(entry.get("title"), f"{relative_source}.{field}[{index}].title")
+                require_string(entry.get("command"), f"{relative_source}.{field}[{index}].command")
+            else:
+                validate_sample_link(entry, f"{relative_source}.{field}[{index}]")
+    missing = require_list(record.get("missing"), f"{relative_source}.missing")
+    allowed_status = ("missing", "not-applicable")
+    for index, item_value in enumerate(missing):
+        item = require_mapping(item_value, f"{relative_source}.missing[{index}]")
+        require_string(item.get("field"), f"{relative_source}.missing[{index}].field")
+        if item.get("status") not in allowed_status:
+            raise CatalogError(
+                f"{relative_source}.missing[{index}].status must be one of {', '.join(allowed_status)}"
+            )
+        # The field id stays machine-readable; the page shows this title.
+        validate_localized_note(item.get("title"), f"{relative_source}.missing[{index}].title")
+        validate_localized_note(item.get("note"), f"{relative_source}.missing[{index}].note")
+
+    normalized = copy.deepcopy(record)
+    normalized["source_file"] = relative_source
+    return normalized
+
+
 def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]:
     relative_source = source_path.relative_to(ROOT).as_posix()
     if record.get("schema_version") != 1:
         raise CatalogError(f"{relative_source}: schema_version must be 1")
+    profile = record.get("profile")
+    if profile is not None:
+        # The released-model schema keeps no profile marker; the sample profile is
+        # dispatched before this validator runs. Anything else is a typo, not a model.
+        raise CatalogError(
+            f"{relative_source}: unknown profile {profile!r}; "
+            f"only {SAMPLE_PROFILE!r} is a separate profile"
+        )
 
     record_id = require_string(record.get("id"), f"{relative_source}.id")
     domain = require_string(record.get("domain"), f"{relative_source}.domain")
@@ -499,22 +944,29 @@ def build_catalog() -> tuple[bytes, bytes]:
     records: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
     release_count = 0
+    sample_count = 0
     for source_path in source_paths:
         with source_path.open(encoding="utf-8") as handle:
             record = require_mapping(yaml.safe_load(handle), source_path.relative_to(ROOT).as_posix())
-        normalized = validate_record(record, source_path)
+        if record.get("profile") == SAMPLE_PROFILE:
+            normalized = validate_sample_record(record, source_path)
+            sample_count += 1
+        else:
+            normalized = validate_record(record, source_path)
+            release_count += sum(len(variant["platforms"]) for variant in normalized["variants"])
         if normalized["id"] in seen_ids:
             raise CatalogError(f"duplicate model id: {normalized['id']}")
         seen_ids.add(normalized["id"])
-        release_count += sum(len(variant["platforms"]) for variant in normalized["variants"])
         records.append(normalized)
 
     records.sort(key=lambda item: item["id"])
+    model_count = len(records) - sample_count
     catalog = {
         "schema_version": 1,
         "source": "model_zoo_web/data",
-        "model_count": len(records),
+        "model_count": model_count,
         "release_count": release_count,
+        "sample_count": sample_count,
         "models": records,
     }
     catalog_bytes = (json.dumps(catalog, ensure_ascii=False, indent=2) + "\n").encode()
@@ -524,8 +976,9 @@ def build_catalog() -> tuple[bytes, bytes]:
         "catalog": "catalog.json",
         "sha256": catalog_sha256,
         "bytes": len(catalog_bytes),
-        "model_count": len(records),
+        "model_count": model_count,
         "release_count": release_count,
+        "sample_count": sample_count,
         "generator": "model_zoo_web/scripts/build_catalog.py",
     }
     metadata_bytes = (json.dumps(metadata, ensure_ascii=False, indent=2) + "\n").encode()

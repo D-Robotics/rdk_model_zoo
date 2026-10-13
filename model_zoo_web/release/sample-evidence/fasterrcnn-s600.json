@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "kind": "fasterrcnn-platform-evidence",
+  "sample": "fasterrcnn/fasterrcnn/detect",
+  "sample_commit": "c8eb9d56264fbaf8f78265139d053e027bd32b28",
+  "platform": "s600",
+  "board": "RDK S600 64GB",
+  "generated": "2026-10-13",
+  "artifacts": [
+    {
+      "role": "parta",
+      "filename": "s600/frcnn_mbv3_320_parta.hbm",
+      "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/fasterrcnn/s600/frcnn_mbv3_320_parta.hbm",
+      "sha256": "a0c857181e95b275190aca68c4149814c7381ceb7e3c9aac1cdd8a22cd2e0e84",
+      "size_bytes": 6406240
+    },
+    {
+      "role": "partb",
+      "filename": "s600/frcnn_mbv3_320_partb.hbm",
+      "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/fasterrcnn/s600/frcnn_mbv3_320_partb.hbm",
+      "sha256": "2ae5360e0b1bbc1d463cfd12f4764936e2c4e9dd5741cc35d0df705d848603ef",
+      "size_bytes": 15083120
+    }
+  ],
+  "artifact_binding": {
+    "descriptor": {
+      "path": "git c8eb9d56264fbaf8f78265139d053e027bd32b28:samples/vision/fasterrcnn/model/frcnn_mbv3_320.json",
+      "sha256": "d2ffcce67d117636fa104889626ef4b024b63acdaed880eaa4933875e2a1b032"
+    },
+    "build_receipt": {
+      "path": "local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/product_artifact_hashes.txt",
+      "sha256": "a8171b0c05b8a94174571e03506f2ad645a9971008b8c2e0cf0dc440421dd2a2"
+    },
+    "parts": {
+      "parta": {
+        "file": "frcnn_mbv3_320_parta.hbm",
+        "sha256": "a0c857181e95b275190aca68c4149814c7381ceb7e3c9aac1cdd8a22cd2e0e84",
+        "matches_descriptor": true,
+        "matches_build_receipt": true
+      },
+      "partb": {
+        "file": "frcnn_mbv3_320_partb.hbm",
+        "sha256": "2ae5360e0b1bbc1d463cfd12f4764936e2c4e9dd5741cc35d0df705d848603ef",
+        "matches_descriptor": true,
+        "matches_build_receipt": true
+      }
+    }
+  },
+  "conversion": {
+    "march": "nash-p",
+    "toolchain": "OE S 3.7.0 (hb_compile HBDK 4.7.5, O2 latency)",
+    "compiler_latency_us": {
+      "parta": 275.3,
+      "partb": 1648.2,
+      "scope": "toolchain latency estimate (pinned sample descriptor)"
+    },
+    "compiler_fps_scope": "per compiled graph invocation; not end-to-end image FPS",
+    "parts": {
+      "parta": {
+        "recipe": {
+          "path": "local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/build/s600/parta/config.yaml",
+          "sha256": "541c0f9e92714e161349af01505dccd494013c31c8434a4727e2203208628580"
+        },
+        "optimize_level": "O2",
+        "driver_log": {
+          "path": "local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/build/s600/parta/config.compile.log",
+          "sha256": "5b5988f8a8f8447f6eec7fd2213d53d72f509b2c8951751e5c26d4f0c1e1538e"
+        },
+        "logged": {
+          "fps": 3632.39,
+          "latency_us": 275.3,
+          "ddr_bytes": 6913280
+        }
+      },
+      "partb": {
+        "recipe": {
+          "path": "local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/build/s600/partb/config.yaml",
+          "sha256": "116def91f4769334fc82b417bb685628ded3ca61b8b8685bf9a2042441c864d9"
+        },
+        "optimize_level": "O2",
+        "driver_log": {
+          "path": "local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/build/s600/partb/config.compile.log",
+          "sha256": "1264d3f2770cb0db5e533329702808fb84de11362252d8b1985ac0543d410a0e"
+        },
+        "logged": {
+          "fps": 606.71,
+          "latency_us": 1648.2,
+          "ddr_bytes": 22618048
+        }
+      }
+    },
+    "io_contract": {
+      "parta_input": {
+        "names": [
+          "images_y",
+          "images_uv"
+        ],
+        "format": "split nv12 uint8 (bt.601 limited)"
+      },
+      "partb_layout": "packed",
+      "partb_input": {
+        "name": "bank",
+        "shape": [
+          1,
+          256,
+          1050,
+          7
+        ],
+        "dtype": "float32",
+        "quantization": "on-chip (HzCalibration)"
+      },
+      "partb_outputs": {
+        "cls_packed": [
+          1,
+          91,
+          150,
+          1
+        ],
+        "reg_packed": [
+          1,
+          364,
+          150,
+          1
+        ],
+        "dtype": "float32"
+      },
+      "cpu_between_graphs": "proposal selection among 150 candidates + RoI alignment",
+      "final_output": "detection boxes, classes and scores after CPU post-processing"
+    },
+    "sources": [
+      {
+        "path": "git c8eb9d56264fbaf8f78265139d053e027bd32b28:samples/vision/fasterrcnn/model/frcnn_mbv3_320.json",
+        "sha256": "d2ffcce67d117636fa104889626ef4b024b63acdaed880eaa4933875e2a1b032"
+      },
+      {
+        "path": "local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/product_artifact_hashes.txt",
+        "sha256": "a8171b0c05b8a94174571e03506f2ad645a9971008b8c2e0cf0dc440421dd2a2"
+      },
+      {
+        "path": "local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/hb_compile.log",
+        "sha256": "ec787b510d9ebf71933439f4ef7440123eee5bd47b9b61e86bfd86ce27be6541"
+      },
+      {
+        "path": "local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/build/s600/parta/config.yaml",
+        "sha256": "541c0f9e92714e161349af01505dccd494013c31c8434a4727e2203208628580"
+      },
+      {
+        "path": "local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/build/s600/parta/config.compile.log",
+        "sha256": "5b5988f8a8f8447f6eec7fd2213d53d72f509b2c8951751e5c26d4f0c1e1538e"
+      },
+      {
+        "path": "local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/build/s600/partb/config.yaml",
+        "sha256": "116def91f4769334fc82b417bb685628ded3ca61b8b8685bf9a2042441c864d9"
+      },
+      {
+        "path": "local-execution/20261012-tros-fastrcnn-evaluation/public-sample/evidence/product_compile/build/s600/partb/config.compile.log",
+        "sha256": "1264d3f2770cb0db5e533329702808fb84de11362252d8b1985ac0543d410a0e"
+      }
+    ]
+  },
+  "board_verification": {
+    "input": "bus.jpg (sample test_data)",
+    "runtimes": [
+      "python",
+      "cpp"
+    ],
+    "detections": {
+      "python": 17,
+      "cpp": 17
+    },
+    "download": "the downloader fetched the published pair from archive.d-robotics.cc and verified both SHA-256 digests before the run",
+    "sources": [
+      {
+        "path": "local-execution/20261012-tros-fastrcnn-evaluation/public-sample/download-publish/REPORT.md",
+        "sha256": "513cfbcbf0c69e95dba2c4ccc95a91eace5675b0e4766437456f8c1c1e9ec257"
+      },
+      {
+        "path": "local-execution/20261012-tros-fastrcnn-evaluation/public-sample/board-runs/x5-8g/runs/cpp-image/result.jpg",
+        "sha256": "bec899c8a4600a6286a724a552aed4e9ac1dde7f6af77dea6eaeadde94667221"
+      }
+    ]
+  }
+}

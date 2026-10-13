@@ -367,6 +367,22 @@ const taskMetadata = {
   pose: { id: 'pose-estimation', label: '姿态估计', description: '人体姿态估计模型' },
   obb: { id: 'object-detection', label: '旋转框检测', description: '旋转框目标检测模型' },
 };
+// Sample-profile records carry kebab-case task ids instead of the catalog's
+// short task names; map their primary id to the same display labels.
+const sampleTaskMetadata = {
+  'object-detection': taskMetadata.detect,
+  'image-classification': taskMetadata.cls,
+  'multi-object-tracking': { id: 'multi-object-tracking', label: '目标跟踪' },
+};
+const sampleTask = record => sampleTaskMetadata[(record.task_ids || [])[0]]
+  || taskMetadata[record.task] || { id: record.task, label: record.task };
+// Download roles a sample platform can publish; the raw ids are translated in
+// detail-view when the per-file download list renders.
+const sampleAvailabilityLabels = {
+  'published-download': '已发布下载',
+  'manual-compile': '需自行编译',
+  'no-neural-artifact': '无神经网络模型',
+};
 
 const safeId = (...parts) => parts.join('-').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-');
 const displayNames = (record, size) => {
@@ -417,6 +433,72 @@ for (const record of catalog.models || []) {
     label: record.task,
     description: `${record.family} ${record.task} model`,
   };
+  if (record.profile === 'sample') {
+    // Sample-profile records render on the same dashboard with their own
+    // payload: platform availability, verification notes, evidence links and
+    // quickstart steps, never the released-model benchmark fields.
+    const sampleTaskMeta = sampleTask(record);
+    for (const variant of record.variants || []) {
+      for (const release of variant.platforms || []) {
+        const platform = String(release.platform).toUpperCase();
+        const id = safeId(record.source, record.family, record.task, variant.size, release.platform);
+        const artifacts = release.artifacts || [];
+        models.push({
+          id,
+          catalogId: record.id,
+          name: record.name,
+          variantName: record.name,
+          family: record.family,
+          modelSize: variant.size,
+          releaseStatus: release.status,
+          entryKind: 'sample',
+          releasePlatform: platform,
+          releaseHardware: `RDK ${platform}`,
+          task: sampleTaskMeta.label,
+          taskId: sampleTaskMeta.id,
+          tasks: record.task_ids?.length ? record.task_ids : [sampleTaskMeta.id],
+          description: record.description?.zh,
+          descriptionEn: record.description?.en,
+          platforms: [platform],
+          coverImage: `assets/models/${coverFilename}`,
+          coverLabel: modelInput.cover_label || '模型参考推理结果',
+          sample: `${record.source}/${record.family}/${record.task}/${variant.size}`,
+          source: `${repositoryUrl}/tree/${record.sample_commit}/${record.sample_path}`,
+          sourceType: 'repository',
+          licenseName: record.license?.name,
+          licenseUrl: record.license?.url,
+          assets: artifacts.map(artifact => ({
+            role: artifact.role,
+            format: artifact.format,
+            filename: basename(new URL(artifact.url).pathname),
+            url: artifact.url,
+            ...(artifact.sha256 ? { sha256: artifact.sha256 } : {}),
+            ...(artifact.size_bytes ? { sizeBytes: Number(artifact.size_bytes) } : {}),
+          })),
+          sampleProfile: {
+            provider: record.provider,
+            sampleCommit: record.sample_commit,
+            pipeline: record.pipeline,
+            pipelineNote: record.pipeline_note,
+            inputContract: variant.input_contract || [],
+            runtimes: release.runtimes || [],
+            availability: {
+              status: release.model_availability?.status,
+              statusLabel: sampleAvailabilityLabels[release.model_availability?.status] || release.model_availability?.status,
+              note: release.model_availability?.note,
+              guideUrl: release.model_availability?.guide_url,
+            },
+            verification: release.verification,
+            evidence: release.evidence || [],
+            quickstart: release.quickstart || record.quickstart || [],
+            resources: record.resources || [],
+            missing: record.missing || [],
+          },
+        });
+      }
+    }
+    continue;
+  }
   const localRecord = localCandidateIds.has(record.id);
   for (const variant of record.variants || []) {
     for (const release of variant.platforms || []) {
@@ -740,6 +822,17 @@ if (technicalPassedPreview) {
   }
 }
 
+// Sample-profile evidence summaries are site assets: copy them next to the
+// built pages so the detail-view links resolve on GitHub Pages.
+const sampleEvidenceRoot = resolve(webRoot, 'release', 'sample-evidence');
+if (await stat(sampleEvidenceRoot).then(details => details.isDirectory()).catch(() => false)) {
+  const evidenceTarget = resolve(outputRoot, 'sample-evidence');
+  await mkdir(evidenceTarget, { recursive: true });
+  for (const entry of await readdir(sampleEvidenceRoot, { withFileTypes: true })) {
+    if (entry.isFile()) await cp(resolve(sampleEvidenceRoot, entry.name), resolve(evidenceTarget, entry.name));
+  }
+}
+
 const platformNames = [...new Set(models.flatMap(model => model.platforms))];
 const data = {
   schemaVersion: 1,
@@ -747,6 +840,7 @@ const data = {
     status: localCandidate ? 'local-candidate' : candidatePreview ? 'candidate' : 'published',
     summary: {
       sample_count: new Set(models.map(model => model.sample)).size,
+      sample_profile_count: models.filter(model => model.entryKind === 'sample').length,
       asset_count: models.reduce((count, model) => count + model.assets.length, 0),
       downloadable_asset_count: models.reduce((count, model) => count + model.assets.length, 0),
       benchmark_count: models.filter(model => model.benchmark).length,

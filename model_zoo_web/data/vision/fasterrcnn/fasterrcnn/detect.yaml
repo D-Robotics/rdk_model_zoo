@@ -1,0 +1,293 @@
+schema_version: 1
+profile: sample
+id: fasterrcnn/fasterrcnn/detect
+name: Faster R-CNN (MobileNetV3-Large 320-FPN)
+domain: vision
+source: fasterrcnn
+provider: torchvision
+family: fasterrcnn
+task: detect
+task_ids:
+- object-detection
+- multi-object-tracking
+description:
+  zh: torchvision COCO 预训练的两阶段 Faster R-CNN 检测器（MobileNetV3-Large 320 骨干 + FPN）。骨干/RPN 与检测头拆分为 PartA / PartB 两个 BPU 图，中间的候选框选择与 RoI 对齐在 CPU 上运行；视频模式下附带 ByteTrack 行人跟踪。
+  en: A two-stage Faster R-CNN detector from torchvision COCO weights (MobileNetV3-Large 320 backbone with FPN). The backbone/RPN and the box head are exported as the PartA and PartB BPU graphs, with proposal selection and RoI alignment running on the CPU between them; video mode adds ByteTrack person tracking.
+license:
+  name: BSD-3-Clause
+  url: https://github.com/pytorch/vision/blob/main/LICENSE
+sample_path: samples/vision/fasterrcnn
+sample_commit: c8eb9d56264fbaf8f78265139d053e027bd32b28
+artifact_descriptor: samples/vision/fasterrcnn/model/frcnn_mbv3_320.json
+pipeline: neural_detector
+pipeline_note:
+  zh: PartA（NV12 输入，骨干 + RPN 特征）与 PartB（RoI 对齐后的 float32 池化特征，分类与回归）在 BPU 上运行；CPU 侧完成 150 个候选框的选择与 RoI 对齐，最终输出检测框、类别与分数。
+  en: PartA (NV12 input, backbone and RPN features) and PartB (float32 pooled features after RoI alignment, classification and regression) run on the BPU; the CPU selects among the 150 proposals and performs RoI alignment, and the final output is detection boxes, classes and scores.
+variants:
+- size: mbv3-320
+  input_contract:
+  - label:
+      zh: 输入尺寸
+      en: Input size
+    value:
+      zh: 320 × 320 letterbox
+      en: 320x320 letterbox
+  - label:
+      zh: Runtime 输入
+      en: Runtime input
+    value:
+      zh: NV12（X5 packed / S100 · S100P · S600 split，bt.601 limited）
+      en: NV12 (packed on X5, split on S100/S100P/S600, bt.601 limited)
+  - label:
+      zh: 输出
+      en: Output
+    value:
+      zh: 检测框、类别与置信度（PartB 原始输出为 150 候选框 × 91 类 logits 与 364 维框回归，经 CPU 后处理解码）
+      en: Detection boxes, classes and confidences (PartB's raw output is 150 proposals x 91-class logits plus 364-d box regression, decoded by CPU post-processing)
+  platforms:
+  - platform: x5
+    status: available
+    runtimes:
+    - python
+    - cpp
+    model_availability:
+      status: published-download
+      note:
+        zh: PartA/PartB 一对 .bin 已发布到公共归档，下载器按 SHA-256 校验后获取。
+        en: The PartA/PartB .bin pair is published on the public archive and downloads with SHA-256 verification.
+    artifacts:
+    - role: parta
+      filename: frcnn_mbv3_320_parta.bin
+      format: bin
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fasterrcnn/frcnn_mbv3_320_parta.bin
+      sha256: a6f6509e5ab3b42f709d10062cfdb0a930b9eebb3ceb1d1a4bff3baeda42af86
+      sha256_provenance: publisher
+      size_bytes: 5775924
+    - role: partb
+      filename: frcnn_mbv3_320_partb.bin
+      format: bin
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fasterrcnn/frcnn_mbv3_320_partb.bin
+      sha256: 2ade35e91d66debf616594a28e2cae051b5e1ede617dfa914b25d06c3255724e
+      sha256_provenance: publisher
+      size_bytes: 14553677
+    verification:
+      zh: X5 8GB 板端：PartA/PartB 由下载器从公共归档获取（SHA-256 校验通过）后，bus.jpg 经 Python 与 C++ 运行时各检出 22 个目标。
+      en: On an X5 8GB board, after the downloader fetches the pair from the public archive with SHA-256 verification, bus.jpg yields 22 detections through both the Python and C++ runtimes.
+    evidence:
+    - label:
+        zh: 板端与转换证据摘要
+        en: Board and conversion evidence summary
+      url: sample-evidence/fasterrcnn-x5.json
+    - label:
+        zh: 转换与发布构建证据节选（配方 · 收据 · 编译日志）
+        en: Conversion and release-build evidence excerpts (recipe, receipt, compile logs)
+      url: sample-evidence/fasterrcnn-x5-compile-excerpt.log
+    quickstart:
+    - title:
+        zh: 下载已发布模型对（X5）
+        en: Download the published pair (X5)
+      command: python3 samples/vision/fasterrcnn/model/download.py --target x5
+    - title:
+        zh: 运行推理（X5）
+        en: Run inference (X5)
+      command: python3 samples/vision/fasterrcnn/runtime/python/main.py --target x5
+  - platform: s100
+    status: available
+    runtimes:
+    - python
+    - cpp
+    model_availability:
+      status: published-download
+      note:
+        zh: PartA/PartB 一对 .hbm 已发布到公共归档，下载器按 SHA-256 校验后获取。
+        en: The PartA/PartB .hbm pair is published on the public archive and downloads with SHA-256 verification.
+    artifacts:
+    - role: parta
+      filename: s100/frcnn_mbv3_320_parta.hbm
+      format: hbm
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/fasterrcnn/s100/frcnn_mbv3_320_parta.hbm
+      sha256: ca4c565497b3b027cad2241110e689c5eb54e24939a328f6e4fb8bd013e51337
+      sha256_provenance: publisher
+      size_bytes: 6635816
+    - role: partb
+      filename: s100/frcnn_mbv3_320_partb.hbm
+      format: hbm
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/fasterrcnn/s100/frcnn_mbv3_320_partb.hbm
+      sha256: d4d21cebaece91c6195794b7062f607d665ef10c3055ce22d512ba14a5307ff4
+      sha256_provenance: publisher
+      size_bytes: 15329040
+    verification:
+      zh: S100 板端：PartA/PartB 由下载器从公共归档获取（SHA-256 校验通过）后，bus.jpg 经 Python 与 C++ 运行时各检出 22 个目标。
+      en: On an S100 board, after the downloader fetches the pair from the public archive with SHA-256 verification, bus.jpg yields 22 detections through both the Python and C++ runtimes.
+    evidence:
+    - label:
+        zh: 板端与转换证据摘要
+        en: Board and conversion evidence summary
+      url: sample-evidence/fasterrcnn-s100.json
+    - label:
+        zh: 转换与发布构建证据节选（配方 · 收据 · 编译日志）
+        en: Conversion and release-build evidence excerpts (recipe, receipt, compile logs)
+      url: sample-evidence/fasterrcnn-s100-compile-excerpt.log
+    quickstart:
+    - title:
+        zh: 下载已发布模型对（S100）
+        en: Download the published pair (S100)
+      command: python3 samples/vision/fasterrcnn/model/download.py --target s100
+    - title:
+        zh: 运行推理（S100）
+        en: Run inference (S100)
+      command: python3 samples/vision/fasterrcnn/runtime/python/main.py --target s100
+  - platform: s100p
+    status: available
+    runtimes:
+    - python
+    - cpp
+    model_availability:
+      status: published-download
+      note:
+        zh: PartA/PartB 一对 .hbm 已发布到公共归档，下载器按 SHA-256 校验后获取。
+        en: The PartA/PartB .hbm pair is published on the public archive and downloads with SHA-256 verification.
+    artifacts:
+    - role: parta
+      filename: s100p/frcnn_mbv3_320_parta.hbm
+      format: hbm
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/fasterrcnn/s100p/frcnn_mbv3_320_parta.hbm
+      sha256: e7f4611d5283ff71673f8b0d67953111e70d2878405b8054bf56536d12924710
+      sha256_provenance: publisher
+      size_bytes: 6635816
+    - role: partb
+      filename: s100p/frcnn_mbv3_320_partb.hbm
+      format: hbm
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/fasterrcnn/s100p/frcnn_mbv3_320_partb.hbm
+      sha256: ed91c61f81f2ac21a2d9dd8d20170f6a85243fab4157247e0943c8af535809f7
+      sha256_provenance: publisher
+      size_bytes: 15316752
+    verification:
+      zh: S100P 板端：PartA/PartB 由下载器从公共归档获取（SHA-256 校验通过）后，bus.jpg 经 Python 与 C++ 运行时各检出 22 个目标。
+      en: On an S100P board, after the downloader fetches the pair from the public archive with SHA-256 verification, bus.jpg yields 22 detections through both the Python and C++ runtimes.
+    evidence:
+    - label:
+        zh: 板端与转换证据摘要
+        en: Board and conversion evidence summary
+      url: sample-evidence/fasterrcnn-s100p.json
+    - label:
+        zh: 转换与发布构建证据节选（配方 · 收据 · 编译日志）
+        en: Conversion and release-build evidence excerpts (recipe, receipt, compile logs)
+      url: sample-evidence/fasterrcnn-s100p-compile-excerpt.log
+    quickstart:
+    - title:
+        zh: 下载已发布模型对（S100P）
+        en: Download the published pair (S100P)
+      command: python3 samples/vision/fasterrcnn/model/download.py --target s100p
+    - title:
+        zh: 运行推理（S100P）
+        en: Run inference (S100P)
+      command: python3 samples/vision/fasterrcnn/runtime/python/main.py --target s100p
+  - platform: s600
+    status: available
+    runtimes:
+    - python
+    - cpp
+    model_availability:
+      status: published-download
+      note:
+        zh: PartA/PartB 一对 .hbm 已发布到公共归档，下载器按 SHA-256 校验后获取。
+        en: The PartA/PartB .hbm pair is published on the public archive and downloads with SHA-256 verification.
+    artifacts:
+    - role: parta
+      filename: s600/frcnn_mbv3_320_parta.hbm
+      format: hbm
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/fasterrcnn/s600/frcnn_mbv3_320_parta.hbm
+      sha256: a0c857181e95b275190aca68c4149814c7381ceb7e3c9aac1cdd8a22cd2e0e84
+      sha256_provenance: publisher
+      size_bytes: 6406240
+    - role: partb
+      filename: s600/frcnn_mbv3_320_partb.hbm
+      format: hbm
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/fasterrcnn/s600/frcnn_mbv3_320_partb.hbm
+      sha256: 2ae5360e0b1bbc1d463cfd12f4764936e2c4e9dd5741cc35d0df705d848603ef
+      sha256_provenance: publisher
+      size_bytes: 15083120
+    verification:
+      zh: S600 64GB 板端：PartA/PartB 由下载器从公共归档获取（SHA-256 校验通过）后，bus.jpg 经 Python 与 C++ 运行时各检出 17 个目标。
+      en: On an S600 64GB board, after the downloader fetches the pair from the public archive with SHA-256 verification, bus.jpg yields 17 detections through both the Python and C++ runtimes.
+    evidence:
+    - label:
+        zh: 板端与转换证据摘要
+        en: Board and conversion evidence summary
+      url: sample-evidence/fasterrcnn-s600.json
+    - label:
+        zh: 转换与发布构建证据节选（配方 · 收据 · 编译日志）
+        en: Conversion and release-build evidence excerpts (recipe, receipt, compile logs)
+      url: sample-evidence/fasterrcnn-s600-compile-excerpt.log
+    quickstart:
+    - title:
+        zh: 下载已发布模型对（S600）
+        en: Download the published pair (S600)
+      command: python3 samples/vision/fasterrcnn/model/download.py --target s600
+    - title:
+        zh: 运行推理（S600）
+        en: Run inference (S600)
+      command: python3 samples/vision/fasterrcnn/runtime/python/main.py --target s600
+resources:
+- label:
+    zh: 模型仓库
+    en: Sample repository
+  url: https://github.com/D-Robotics/rdk_model_zoo/tree/c8eb9d56264fbaf8f78265139d053e027bd32b28/samples/vision/fasterrcnn
+- label:
+    zh: 模型下载说明
+    en: Model download guide
+  url: https://github.com/D-Robotics/rdk_model_zoo/tree/c8eb9d56264fbaf8f78265139d053e027bd32b28/samples/vision/fasterrcnn/model
+- label:
+    zh: 运行文档（Python）
+    en: Runtime guide (Python)
+  url: https://github.com/D-Robotics/rdk_model_zoo/tree/c8eb9d56264fbaf8f78265139d053e027bd32b28/samples/vision/fasterrcnn/runtime/python
+- label:
+    zh: 运行文档（C++）
+    en: Runtime guide (C++)
+  url: https://github.com/D-Robotics/rdk_model_zoo/tree/c8eb9d56264fbaf8f78265139d053e027bd32b28/samples/vision/fasterrcnn/runtime/cpp
+- label:
+    zh: 模型转换指南
+    en: Conversion guide
+  url: https://github.com/D-Robotics/rdk_model_zoo/tree/c8eb9d56264fbaf8f78265139d053e027bd32b28/samples/vision/fasterrcnn/conversion
+missing:
+- field: full-dataset-accuracy
+  status: missing
+  title:
+    zh: 全量数据集精度
+    en: Full-dataset accuracy
+  note:
+    zh: COCO 全量精度评测待完成。
+    en: Full-dataset COCO accuracy evaluation is pending.
+- field: runtime-latency-1-and-2-threads
+  status: missing
+  title:
+    zh: 单路与双路性能
+    en: Single- and dual-stream performance
+  note:
+    zh: 1 路 / 2 路并发延迟待按正式口径测量。
+    en: Single- and two-thread latency is pending under the formal benchmark protocol.
+- field: cpp-end-to-end-pipelines
+  status: missing
+  title:
+    zh: C++ 端到端性能
+    en: C++ end-to-end performance
+  note:
+    zh: C++ 1 路 / 2 路端到端流水线数据待测量。
+    en: Single- and two-stream C++ end-to-end pipeline measurements are pending.
+- field: oe-html-report
+  status: missing
+  title:
+    zh: OE 转换报告
+    en: OE conversion report
+  note:
+    zh: 正式 OE HTML 报告待发布；站内证据为转换配方、构建收据与编译日志节选。
+    en: The formal OE HTML report is pending; the site carries conversion recipes, the build receipt and compile-log excerpts.
+- field: x5-parta-conversion-log
+  status: missing
+  title:
+    zh: X5 PartA 转换日志
+    en: X5 PartA conversion log
+  note:
+    zh: X5 PartA 发布制品与转换配方已由构建收据绑定；该部分的转换驱动日志未留存，编译延迟取自模型描述文件估算值。
+    en: The published X5 PartA artifact and recipe are bound by the build receipt; its conversion driver log was not retained and the compile latency is the descriptor estimate.
