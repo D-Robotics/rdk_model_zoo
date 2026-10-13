@@ -56,4 +56,4 @@ C++ 检查错误分支释放、等待完成前数据有效性、cache/同步操�
 - [适用条款原文：目录、编码、任务、注释、文档](https://github.com/D-Robotics/rdk_model_zoo/blob/529aece791b8f6a21cf93a14e1caa3edbeb11995/docs/Model_Zoo_Repository_Guidelines.md)
 - [现有 Review 的双轴与证据原则](https://github.com/maxma615/skills/blob/d45931b688722fd9895558cec860b6762a91c1d9/skills/rdk-model-zoo-demo-review/SKILL.md)
 
-旧 review 的工作区名字、X3 迁移假设、静态平台例外不继承为当前规则。目标 ref 的 README、Manifest 和实际代码优先；不能因当前维护源默认分支而改变用户指定平台。新规则 ID 是本包索引，不是上游已有规范编号。
+目标 ref 的 README、Manifest 和实际代码优先；不能因当前维护源默认分支而改变用户指定平台。规则 ID 是本包索引，不是上游已有规范编号。

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Host tests for the shared runtime metadata reader (Phase 1.5 H3).
+"""Host tests for the shared runtime metadata reader.
 
 All runtimes and models below are synthetic fixtures; none of them is board
 evidence.

@@ -1,7 +1,7 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Host acceptance tests for the migrated 3DResNet video classifier."""
+"""Host acceptance tests for the 3DResNet video classifier."""
 from __future__ import annotations
 
 import contextlib

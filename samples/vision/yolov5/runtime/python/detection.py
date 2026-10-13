@@ -433,7 +433,8 @@ def decode_x5(outputs, names, size, anchors, score_thres, nms_thres):
     """Preserve X5 source candidate order, OpenCV XYXY-call convention and score gate.
 
     The source feeds XYXY to OpenCV NMSBoxes (whose Rect interface is XYWH).
-    This legacy convention is intentionally unchanged for migration comparison;
+    This convention is intentionally unchanged so comparison against the
+    reference source stays valid;
     it is not equivalent to S class-wise XYXY NMS. See the evaluator limits.
     """
     all_boxes=[];all_scores=[];all_ids=[]

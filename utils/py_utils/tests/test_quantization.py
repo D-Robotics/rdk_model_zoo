@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Host tests for the declared output transform chain (Phase 1.5 H1).
+"""Host tests for the declared output transform chain.
 
 The dequantization math is checked against hand-computed values following the
 semantics ported from the delivery branches' ``utils/py_utils/postprocess.py``

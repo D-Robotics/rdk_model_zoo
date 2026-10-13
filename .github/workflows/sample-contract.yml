@@ -1,12 +1,11 @@
 name: sample-contract
 
-# Static contract gate for the unified samples. Scope is resolved from the
-# migration map's Refactor column (in-progress/done are both included); the
-# historical P0 S/F/H columns are never read for scope decisions. The
-# checker only reads source/docs and, in import mode, calls the trusted
-# sample's side-effect-free build_parser. No downloads, no board SDK, no
-# README code-block execution. The same gate covers develop/main pushes and
-# pull requests; the complete host gate (this checker included) runs in
+# Static contract gate for the unified samples. Scope is the maintained
+# sample list in utils/tools/sample_contract/sample-scope.md. The checker
+# only reads source/docs and, in import mode, calls the trusted sample's
+# side-effect-free build_parser. No downloads, no board SDK, no README
+# code-block execution. The same gate covers develop/main pushes and pull
+# requests; the complete host gate (this checker included) runs in
 # host-validation.yml.
 
 on:
@@ -34,14 +33,15 @@ jobs:
           -r utils/tools/host_validation/requirements.txt
       - name: Checker unit tests (fixtures first)
         run: python -m unittest discover -s utils/tools/sample_contract/tests -v
-      - name: Check migration scope
-        # All migrated README contracts are enforced without a debt baseline.
-        # The report is written under $RUNNER_TEMP, never into the checkout.
+      - name: Check maintained sample scope
+        # All maintained-sample README contracts are enforced without a debt
+        # baseline. The report is written under $RUNNER_TEMP, never into the
+        # checkout.
         env:
           CONTRACT_REPORT: ${{ runner.temp }}/sample-contract-report.json
         run: >
           python utils/tools/sample_contract/check.py
-          --scope migration
+          --scope maintained
           --parser-mode import
           --report "$CONTRACT_REPORT"
       - name: Upload report

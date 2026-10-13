@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static contract checker for the unified samples layout (Phase 0.5, Q3).
+"""Static contract checker for the unified samples layout.
 
 The checker reads source files and documentation only.  It never downloads,
 never loads a board SDK, and never executes README code blocks.  The single
@@ -36,14 +36,14 @@ and ``build_parser``:
 
 Backticks and surrounding quotes in README cells are stripped first.
 
-What this tool deliberately does NOT decide (goes to semantic review per the
-plan): whether prose answers the contract's must-answer questions, whether a
+What this tool deliberately does NOT decide (goes to semantic review):
+whether prose answers the contract's must-answer questions, whether a
 ``predict`` implementation duplicates stage logic, whether appended sections
 are top-level or sub-sections, board behavior, and conversion correctness.
 
 Usage:
   python3 utils/tools/sample_contract/check.py --sample samples/vision/resnet
-  python3 utils/tools/sample_contract/check.py --scope migration --report out.json
+  python3 utils/tools/sample_contract/check.py --scope maintained --report out.json
 """
 
 from __future__ import annotations
@@ -759,77 +759,49 @@ def run_sample(sample_dir: Path, templates: dict[str, tuple[str, ...]],
     return report
 
 
-def parse_progress_region(map_path: Path) -> list[list[str]]:
-    """Return the data rows of the current-round progress table."""
+def parse_maintained_samples(list_path: Path) -> list[tuple[str, str]]:
+    """Return the ``(domain, sample)`` rows of the maintained-samples table."""
 
-    rows: list[list[str]] = []
-    in_progress = False
-    for line in map_path.read_text(encoding="utf-8").splitlines():
-        if line.startswith("## ") and "进度区" in line:
-            in_progress = True
-            continue
-        if in_progress and line.startswith("## "):
-            break
-        if not in_progress or not line.strip().startswith("|"):
+    rows: list[tuple[str, str]] = []
+    for line in list_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip().startswith("|"):
             continue
         cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-        if cells and cells[0] in {"Batch", "---", "—"}:
+        if len(cells) != 2 or cells[0] in {"Domain", "---", "—"}:
             continue
         if all(re.fullmatch(r":?-{2,}:?", cell) for cell in cells if cell):
             continue
-        if len(cells) >= 6:
-            rows.append(cells)
+        if cells[0] and cells[1]:
+            rows.append((cells[0], cells[1]))
     return rows
 
 
-def resolve_migration_scope(map_path: Path, samples_root: Path) -> tuple[
+def resolve_maintained_scope(list_path: Path,
+                             samples_root: Path) -> tuple[
         list[Path], list[Finding]]:
-    """Resolve sample directories from the Refactor column (>= in-progress).
+    """Resolve sample directories from the maintained-samples list.
 
-    The historical P0 S/F/H columns are never read for scope decisions.
+    Every listed ``(domain, sample)`` row must resolve to exactly one
+    ``samples/<domain>/<sample>`` directory.
     """
 
     findings: list[Finding] = []
-    sample_names: list[str] = []
-    if not map_path.is_file():
+    if not list_path.is_file():
         findings.append(Finding(
-            RULE_SCOPE, display_path(map_path), 0,
-            f"migration map not found at {map_path}"))
+            RULE_SCOPE, display_path(list_path), 0,
+            f"maintained-samples list not found at {list_path}"))
         return [], findings
-    for cells in parse_progress_region(map_path):
-        sample_cell = cells[1]
-        refactor = re.sub(r"[（(].*$", "", cells[4]).strip().lower()
-        if refactor not in {"in-progress", "done"}:
-            continue
-        if sample_cell.startswith("~"):
-            # Infrastructure rows (leading '~', per the map legend) track
-            # tooling/contract deliverables, not sample directories; they are
-            # excluded from the sample scope instead of failing resolution.
-            continue
-        name = re.split(r"[（(]", sample_cell)[0].strip()
-        name = re.sub(r"\s*/\s*.*$", "", name).strip()
-        if name:
-            sample_names.append(name)
-
     paths: list[Path] = []
-    for name in dict.fromkeys(sample_names):
-        matches = sorted(
-            domain / name
-            for domain in sorted(samples_root.iterdir())
-            if (domain / name).is_dir()
-        ) if samples_root.is_dir() else []
-        if not matches:
-            findings.append(Finding(
-                RULE_SCOPE, display_path(map_path), 0,
-                f"progress row sample {name!r} has no directory under "
-                f"{samples_root}"))
-        elif len(matches) > 1:
-            findings.append(Finding(
-                RULE_SCOPE, display_path(map_path), 0,
-                f"progress row sample {name!r} is ambiguous: "
-                f"{[display_path(p) for p in matches]}"))
+    for domain, name in dict.fromkeys(
+            parse_maintained_samples(list_path)):
+        sample_dir = samples_root / domain / name
+        if sample_dir.is_dir():
+            paths.append(sample_dir)
         else:
-            paths.append(matches[0])
+            findings.append(Finding(
+                RULE_SCOPE, display_path(list_path), 0,
+                f"maintained row {domain}/{name!r} has no directory at "
+                f"{display_path(sample_dir)}"))
     return paths, findings
 
 
@@ -913,24 +885,28 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="sample-contract",
         description="Static README/interface contract checker for unified "
-                    "samples (Phase 0.5 Q3).")
+                    "samples.")
     parser.add_argument(
         "--sample", action="append", default=[], metavar="PATH",
         help="sample directory to check (repeatable)")
     parser.add_argument(
-        "--scope", choices=("migration",),
-        help="resolve samples from the migration progress region")
+        "--scope", metavar="SCOPE",
+        help="check every sample listed in the maintained-samples table "
+             "(pass 'maintained')")
     parser.add_argument(
-        "--migration-map", type=Path,
+        "--scope-list", type=Path,
         default=REPO_ROOT / "utils/tools/sample_contract/sample-scope.md",
-        help="progress-region markdown used by --scope migration")
+        help="maintained-samples markdown used by --scope")
+    parser.add_argument(
+        "--migration-map", type=Path, default=None,
+        help=argparse.SUPPRESS)  # hidden compat alias of --scope-list
     parser.add_argument(
         "--samples-root", type=Path, default=REPO_ROOT / "samples",
         help="root directory holding <domain>/<sample> directories")
     parser.add_argument(
         "--templates-dir", type=Path,
         default=REPO_ROOT / "docs/sample-standards/templates",
-        help="directory holding the Q1 bilingual README templates")
+        help="directory holding the bilingual README templates")
     parser.add_argument(
         "--parser-mode", choices=("import", "static"), default="import",
         help="import mode calls the trusted sample's build_parser(); "
@@ -952,8 +928,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     """Entry point; returns 0 when no violations, 1 when violations exist."""
 
     args = build_arg_parser().parse_args(argv)
+    if args.scope == "migration":
+        args.scope = "maintained"  # accepted compat value; not documented
+    elif args.scope not in (None, "maintained"):
+        print(f"sample-contract: invalid --scope value: {args.scope!r} "
+              "(expected 'maintained')", file=sys.stderr)
+        return 2
     if not args.sample and not args.scope:
-        print("sample-contract: pass --sample PATH or --scope migration",
+        print("sample-contract: pass --sample PATH or --scope maintained",
               file=sys.stderr)
         return 2
 
@@ -965,9 +947,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     sample_dirs = [Path(target) for target in args.sample]
     scope_findings: list[Finding] = []
-    if args.scope == "migration":
-        resolved, scope_findings = resolve_migration_scope(
-            args.migration_map, args.samples_root)
+    if args.scope:
+        scope_list = (args.migration_map if args.migration_map is not None
+                      else args.scope_list)
+        resolved, scope_findings = resolve_maintained_scope(
+            scope_list, args.samples_root)
         sample_dirs.extend(resolved)
 
     try:

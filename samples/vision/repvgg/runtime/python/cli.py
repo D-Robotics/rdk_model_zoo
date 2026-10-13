@@ -148,8 +148,8 @@ from utils.py_utils.labels import load_labels as _load_labels
 _ROOT = Path(__file__).resolve().parents[5]
 _SAMPLE_DIR = _ROOT / "samples" / "vision" / "repvgg"
 _DEFAULT_IMAGE = _SAMPLE_DIR / "test_data" / "gooze.JPEG"
-# Root datasets/ is the A2 unified location; the per-platform snapshot paths
-# under platforms/ disappear with the migration closeout.
+# datasets/ at the repository root holds the dataset assets (class-name
+# lists, sample images) shared by all samples.
 _DEFAULT_LABELS = _ROOT / "datasets" / "imagenet" / "imagenet_classes.names"
 
 

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Host contract tests for the migrated FCOS sample.
+"""Host contract tests for the FCOS sample.
 
 Fixtures use real source post-processing for numerical comparison.  The only
 source import seam is a minimal ``hbm_runtime.QuantParams`` type stub because

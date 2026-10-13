@@ -1,6 +1,6 @@
 """Runtime-simplification boundaries for the KWS sample.
 
-The consolidated layout splits the former monolithic entry into a thin
+The layout splits the entry into a thin
 ``main.py`` (construct the task through ``KWS.from_model``, apply
 scheduling, call ``predict`` once) plus a ``cli.py`` that owns option
 declarations, model-free listing/dry-run and the probability report. The

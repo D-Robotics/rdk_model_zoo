@@ -56,7 +56,7 @@ class VlaIntegrationTests(unittest.TestCase):
                     text = (ROOT / guide).read_text()
                     self.assertIn(item["commit"], text)
                     self.assertIn("git submodule update --init --checkout", text)
-                self.assertFalse(item["board_tested_this_migration"])
+                self.assertFalse(item["board_tested"])
 
     def test_manual_assets_and_no_shadow_gitlinks(self):
         import yaml

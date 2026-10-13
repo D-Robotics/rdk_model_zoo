@@ -443,41 +443,39 @@ class PairingTests(unittest.TestCase):
 
 
 class ScopeTests(unittest.TestCase):
-    def test_migration_scope_reads_refactor_column_of_progress_region(self):
-        map_path = CHECK.REPO_ROOT / "utils/tools/sample_contract/sample-scope.md"
-        paths, findings = CHECK.resolve_migration_scope(
-            map_path, CHECK.REPO_ROOT / "samples")
+    def test_maintained_scope_resolves_the_committed_list(self):
+        list_path = CHECK.REPO_ROOT / "utils/tools/sample_contract/sample-scope.md"
+        paths, findings = CHECK.resolve_maintained_scope(
+            list_path, CHECK.REPO_ROOT / "samples")
         names = {path.name for path in paths}
         self.assertIn("resnet", names)
         self.assertIn("paddle_ocr", names)
         self.assertIn("ultralytics_yolo", names)
         self.assertEqual(findings, [])
 
-    def test_infrastructure_rows_are_excluded_by_tilde_marker(self):
-        # Rows marked with a leading '~' are infrastructure deliverables and
-        # must leave the sample scope; unresolvable *unmarked* rows must keep
-        # failing so typos cannot silently drop out of scope.
-        map_text = (
-            "## 本轮 B1–B11 迁移进度区（2026-09-20 起）\n\n"
-            "| Batch | Sample / source SHA | Target | Mapping | Refactor"
-            " | Docs | Host | Board | Review | Closed | Evidence |\n"
-            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | ---"
-            " | --- |\n"
-            "| B1 | resnet / dev | s100 / python | done | done | done"
-            " | passed | passed | passed | no | — |\n"
-            "| B1 | ~ H5 Profile 契约 / develop | _shared | done | done"
-            " | done | passed | not-applicable | passed | no | — |\n"
-            "| B1 | boguswidget / dev | x5 | done | done | done | not-run"
-            " | not-run | not-run | no | — |\n"
+    def test_unresolvable_rows_fail_scope_resolution(self):
+        # A row whose directory does not exist must fail resolution so typos
+        # cannot silently drop a sample out of the checked scope; resolvable
+        # rows in the same list are still returned.
+        list_text = (
+            "# Maintained samples\n\n"
+            "| Domain | Sample |\n"
+            "| --- | --- |\n"
+            "| vision | resnet |\n"
+            "| vision | boguswidget |\n"
         )
         with tempfile.TemporaryDirectory() as tmp:
-            map_path = Path(tmp) / "map.md"
-            map_path.write_text(map_text, encoding="utf-8")
-            paths, findings = CHECK.resolve_migration_scope(
-                map_path, CHECK.REPO_ROOT / "samples")
+            list_path = Path(tmp) / "scope.md"
+            list_path.write_text(list_text, encoding="utf-8")
+            paths, findings = CHECK.resolve_maintained_scope(
+                list_path, CHECK.REPO_ROOT / "samples")
         self.assertEqual([path.name for path in paths], ["resnet"])
         self.assertEqual(len(findings), 1)
-        self.assertIn("'boguswidget'", findings[0].message)
+        self.assertIn("boguswidget", findings[0].message)
+
+    def test_deprecated_migration_scope_alias_is_accepted(self):
+        args = CHECK.build_arg_parser().parse_args(["--scope", "migration"])
+        self.assertEqual(args.scope, "migration")
 
 
 class ExemptionTests(unittest.TestCase):

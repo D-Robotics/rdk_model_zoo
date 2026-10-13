@@ -1,4 +1,4 @@
-"""Load the fixed MODNet source for migration comparison; not a runtime dependency."""
+"""Load the fixed MODNet reference source for output comparison; not a runtime dependency."""
 
 from __future__ import annotations
 

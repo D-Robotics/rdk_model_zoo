@@ -35,7 +35,7 @@ HARNESS = ROOT / "samples" / "vision" / "yolov5" / "tests" / "cpp" / "portable_c
 C_UTILS = ROOT / "utils" / "c_utils" / "inc"
 
 # Minimal SDK-shape stubs derived from the on-board header evidence captured
-# 2026-09-24 (docs/releases/unified-migration/evidence/2026-09-24-b7-native-sdk-preflight.json).
+# 2026-09-24 (S100 native SDK preflight).
 # They encode the differences that broke the real S100 build: the S100
 # hbDNNTensorProperties has no alignedShape, hbDNNQuantiType has no SHIFT,
 # stride/alignedByteSize are int64, sysMem is a single hbUCPSysMem, and there

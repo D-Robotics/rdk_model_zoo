@@ -1,10 +1,10 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Reproducible legacy/unified fixed-image SAM comparison, separate from tasks.
+"""Reproducible fixed-image SAM reference/runtime output comparison, separate from tasks.
 
 Runs only on the explicitly requested board in normal use. Captures both stage
 inputs/raw outputs and results in a new directory, even on comparison failure.
-This measures migration consistency, not dataset accuracy or performance.
+This compares reference and runtime outputs on one fixed image, not dataset accuracy or performance.
 """
 import argparse
 from datetime import datetime, timezone
@@ -217,7 +217,7 @@ def run_comparison(selection, image, image_path, output_dir, *, box=None,
         box=box, priority=priority, bpu_cores=cores, passed=False,
         source_ref='ac115717197920355fc390bb04299b20e6436864' if group == 'x5' else '380e1a2bf42041af54be6f34935e50197cfadff9',
         code_sha256={},
-        measurement='fixed-image migration consistency; not accuracy or latency')
+        measurement='fixed-image reference/runtime output comparison; not accuracy or latency')
     records = {side: dict(inputs={}, outputs={}, scheduling=[]) for side in ('legacy', 'unified')}
     summary['metadata'] = {side: {} for side in records}
     schedule = dict(priority=priority)
@@ -324,7 +324,7 @@ def _parse_box(value):
 
 
 def build_parser(sample):
-    p = argparse.ArgumentParser(description=f'{sample}: fixed-image legacy/unified board comparison, no download.')
+    p = argparse.ArgumentParser(description=f'{sample}: fixed-image reference/runtime board comparison, no download.')
     p.add_argument('--target', choices=('x5', 's100', 's100p', 's600'), required=True)
     p.add_argument('--output-dir', type=Path, required=True, help='New evidence directory; existing paths are rejected.')
     p.add_argument('--test-img', type=Path, default=_ROOT/'samples'/'vision'/sample/'test_data'/'dogs.jpg')

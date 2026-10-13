@@ -179,8 +179,8 @@ class AnnotationGlobalTests(unittest.TestCase):
 
     ``Binding.selection`` evaluates eagerly on Python 3.10-3.13 (no future
     annotations in asr.py), and ``AudioChunk.waveform`` must resolve to a
-    real NumPy dtype; both were silent NameErrors when ``Selection``/``np``
-    moved modules during consolidation.
+    real NumPy dtype; a module missing either global would fail only as a
+    silent NameError.
     """
 
     def test_binding_and_audio_chunk_annotations_resolve_to_real_globals(self):

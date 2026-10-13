@@ -1,4 +1,4 @@
-"""Load fixed source code for migration comparison; not a runtime dependency."""
+"""Load fixed source code reference source for output comparison; not a runtime dependency."""
 from pathlib import Path
 import importlib.util,sys,types
 ROOT=Path(__file__).resolve().parents[4]

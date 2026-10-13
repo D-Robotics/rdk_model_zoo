@@ -1,4 +1,4 @@
-"""Load the fixed LPRNet source for migration comparison; not a runtime dependency."""
+"""Load the fixed LPRNet reference source for output comparison; not a runtime dependency."""
 
 from __future__ import annotations
 

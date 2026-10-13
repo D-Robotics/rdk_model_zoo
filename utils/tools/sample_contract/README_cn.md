@@ -21,8 +21,8 @@
 # one sample
 python3 utils/tools/sample_contract/check.py --sample samples/vision/resnet
 
-# CI scope: every sample row listed in the progress map
-python3 utils/tools/sample_contract/check.py --scope migration --report out.json
+# CI scope: every sample listed in the maintained-samples list
+python3 utils/tools/sample_contract/check.py --scope maintained --report out.json
 
 # never execute sample code (CLI-default checks then record skips)
 python3 utils/tools/sample_contract/check.py --sample ... --parser-mode static
@@ -43,7 +43,7 @@ README 的 `Default` 列与解析器经过标准化后进行比较：`None` → 
 
 ## 检查范围
 
-`--scope migration` 读取 `utils/tools/sample_contract/sample-scope.md` 的进度区域，检查 **Refactor** 列为 `in-progress` 或 `done` 的全部样例（忽略括号注释）。选中行若没有可解析的 `samples/<domain>/<name>` 目录，会产生 `R-SCOPE` 违规，使进度表与样例树保持同步。
+`--scope maintained` 读取 `utils/tools/sample_contract/sample-scope.md` 的维护样例表，检查其中列出的全部 `samples/<domain>/<name>` 目录。所列行若没有可解析的目录，会产生 `R-SCOPE` 违规，使清单与样例树保持同步；新增或下线维护样例时应在同一变更中更新清单。
 
 ## 豁免
 

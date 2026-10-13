@@ -40,7 +40,7 @@ class BindingTableTests(unittest.TestCase):
                 record.variant, table.filename_variants[record.filename]
             )
             profile = PLATFORMS[record.target]
-            # H5 coherence: manifest rows and platform profiles agree on the
+            # coherence: manifest rows and platform profiles agree on the
             # published artifact format and directory layout.
             self.assertEqual(
                 record.model_format, profile.model_format.lstrip(".")

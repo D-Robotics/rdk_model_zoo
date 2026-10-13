@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Declared output transforms for quantized BPU artifacts (Phase 1.5 H1).
+"""Declared output transforms for quantized BPU artifacts.
 
 A binding declares, per artifact, how raw runtime outputs become the float32
 values a task ``post_process`` may decode:

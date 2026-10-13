@@ -2,8 +2,8 @@ English | [简体中文](README_cn.md)
 
 # Test data provenance
 
-The pilot copies only the fixtures needed for its default X5 and S100 Python
-comparisons.
+This directory provides only the fixtures needed for the default X5 and S100
+Python comparisons.
 
 
 ## Directory structure
@@ -25,6 +25,6 @@ test_data/
 | `s100/ppocrv6_dict.txt` | `platforms/s/samples/vision/paddle_ocr/test_data/ppocrv6_dict.txt` | `769e7fa79bb297b5f18d8dbd149e364a45bc61f2b3f574e5ea836f0b261c23a6` | Existing S sample dictionary; see S Apache-2.0 license |
 
 The two image files are used as BGR OpenCV inputs. The S100 dictionary is
-decoded as UTF-8 with one source line per token, then the pilot adds the blank
-class at index zero and the source-compatible trailing space. No model files,
-fonts or generated result images are copied into this candidate sample.
+decoded as UTF-8 with one source line per token, then the blank class is added
+at index zero with the source-compatible trailing space. No model files,
+fonts or generated result images are copied into this sample.

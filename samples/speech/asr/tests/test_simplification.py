@@ -1,11 +1,11 @@
 """Runtime-simplification boundaries for the ASR sample.
 
-The consolidated layout keeps one readable model file: ``asr.py`` owns the
+The layout keeps one readable model file: ``asr.py`` owns the
 ``ASR`` stage class, the raw runner construction (``RuntimeModelRunner``),
 the model-owned loader ``ASR.from_model`` (runner creation, load and
-binding) and the real output validation/dispatch (``transcribe``), so the
-thin per-sample ``model_runner``/``postprocess`` forwarders are gone and
-``main`` never assembles a runner. Host listing/dry-run must stay free of
+binding) and the real output validation/dispatch (``transcribe``), so no
+per-sample ``model_runner``/``postprocess`` forwarders exist and ``main``
+never assembles a runner. Host listing/dry-run must stay free of
 SciPy, SoundFile and the board SDK.
 """
 

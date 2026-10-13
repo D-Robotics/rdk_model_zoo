@@ -50,7 +50,7 @@ class ClassificationTests(unittest.TestCase):
         result = task.predict(np.zeros((10, 20, 3), dtype=np.uint8))
 
         self.assertEqual(result.class_ids.tolist(), [7])
-        # H2: packed NV12 feeds the canonical flat 1-D byte buffer.
+        # packed NV12 feeds the canonical flat 1-D byte buffer.
         self.assertEqual(tuple(observed[binding.input_names[0]].shape), (224 * 336,))
 
     def test_injected_runner_rejects_wrong_output_shape(self):
@@ -86,7 +86,7 @@ class ClassificationTests(unittest.TestCase):
             ).predict(np.zeros((20, 20, 3), dtype=np.uint8))
 
     def test_declared_dequant_transform_is_executed_by_post_process(self):
-        # H1 full chain: a contract declaring 'dequant' makes post_process
+        # full chain: a contract declaring 'dequant' makes post_process
         # dequantize the runner's int8 output with the binding's descriptor
         # before the legacy softmax policy.  Synthetic fixture, not board
         # evidence; the published ResNet artifacts declare raw_f32.

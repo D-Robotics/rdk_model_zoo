@@ -1,7 +1,7 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Host acceptance tests for the DINOv2 migration.
+"""Host acceptance tests for the DINOv2 sample.
 
 The runtime in these tests is an injected fixture.  The legacy DINOv2 module
 is imported from the fixed S source for numerical and preprocessing parity;

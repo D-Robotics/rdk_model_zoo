@@ -210,7 +210,7 @@ if __name__ == "__main__":
 class AnnotationGlobalTests(unittest.TestCase):
     """Binding.selection evaluates eagerly on Python 3.10-3.13.
 
-    After consolidation ``Selection`` lives in ``cli.py``; this guards the
+    ``Selection`` lives in ``cli.py``; this guards the
     import actually existing in kws' module globals rather than relying on
     deferred-annotation masking.
     """

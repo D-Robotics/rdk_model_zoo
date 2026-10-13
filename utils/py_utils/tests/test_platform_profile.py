@@ -1,4 +1,4 @@
-"""Host tests for the H5 platform deployment profiles."""
+"""Host tests for the platform deployment profiles."""
 
 from __future__ import annotations
 

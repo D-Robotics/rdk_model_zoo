@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Runtime metadata reading shared by the migrated samples (Phase 1.5 H3).
+"""Runtime metadata reading shared by the unified samples.
 
 The class reads only public attributes exposed by ``hbm_runtime`` objects and
 never imports a board SDK.  It supports runtimes that host several models in

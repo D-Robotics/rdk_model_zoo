@@ -8,7 +8,7 @@ its table — the variant/target facts that genuinely differ per sample — and
 re-exports the machinery under its own module path.
 
 The table is the single place where platform differences live for a sample
-(the migration template's ``model_binding.py(平台差异)``).  Nothing here
+(each sample's ``model_binding.py`` owns its rows).  Nothing here
 imports a board SDK, inspects model bytes, or infers a protocol from a caller
 supplied filename.
 """
@@ -62,8 +62,8 @@ class ManifestAssetError(BindingError):
 class VariantFacts:
     """Per-(variant, target) contract facts for one classification artifact.
 
-    These are source-proven values recorded in the sample's old→new mapping
-    table during migration; defaults encode the shared classification shape
+    These are source-proven values recorded in the sample's facts
+    table; defaults encode the shared classification shape
     (ImageNet-1k, F32 output, letterbox).  Geometry varies (mobilenetv4
     medium is 256×256 on S), so every published (variant, target) row is
     explicit in the sample table rather than derived.
@@ -133,14 +133,15 @@ class SampleBindingTable:
 class ClassificationContract:
     """Known input/output facts for one published classification artifact.
 
-    ``output_semantics`` records what the migration could prove about the
-    output values: ``unverified_score_vector`` (pilot evidence shape),
+    ``output_semantics`` records what the sample's source evidence
+    establishes about the output values: ``unverified_score_vector`` (pilot
+    evidence shape),
     ``source_declared_logits`` / ``source_declared_probabilities`` (source
     docstrings), or another sample-recorded term.  ``output_score_policy``
     selects the post-processing math (see :data:`SCORE_POLICIES`).
 
-    ``output_transform`` (Phase 1.5 H1) declares how raw runtime outputs
-    become float32 values.  Output shapes follow the H4 rank rule
+    ``output_transform`` declares how raw runtime outputs
+    become float32 values.  Output shapes follow the rank rule
     (:func:`score_vector_shape`): ``(1, 1000, 1, 1)`` and ``(1, 1000)`` are
     two spellings of one squeezable score vector, not two contracts.
     """
@@ -216,7 +217,7 @@ class ModelBinding:
     """Validated connection between a selection and runtime tensor names.
 
     ``output_shape`` is the observed metadata shape (diagnostics); validation
-    and normalization follow the H4 squeeze rule through
+    and normalization follow the squeeze rule through
     :func:`score_vector_shape`/:func:`normalise_score_vector`.
     ``output_quants`` snapshots the runtime's per-output quantization
     descriptors at bind time so ``post_process`` can execute the declared
@@ -401,7 +402,7 @@ def bind_model(
         raise MetadataMismatchError(
             f"Output {output_name!r} shape {output_shape!r} does not squeeze to "
             f"the known ({selection.contract.class_count},) score vector "
-            "(H4 rank rule: singleton batch/spatial dims collapse, batch must "
+            "(rank rule: singleton batch/spatial dims collapse, batch must "
             "be one)."
         )
 
@@ -518,7 +519,7 @@ def contract_for(table: SampleBindingTable, record: AssetRecord) -> Classificati
     if facts is None:
         raise ManifestAssetError(
             f"No contract facts are recorded for variant {record.variant!r} on "
-            f"{record.target!r}; the migration table is incomplete."
+            f"{record.target!r}; the sample's facts table is incomplete."
         )
     if facts.output_score_policy not in SCORE_POLICIES:
         raise ManifestAssetError(
@@ -558,7 +559,7 @@ def contract_for(table: SampleBindingTable, record: AssetRecord) -> Classificati
 
 
 def score_vector_shape(shape: Sequence[int] | None, class_count: int) -> bool:
-    """Apply the H4 output rank rule to one observed output shape.
+    """Apply the output rank rule to one observed output shape.
 
     A classification artifact may spell its score vector ``(1000,)``,
     ``(1, 1000)`` (S-series) or ``(1, 1000, 1, 1)`` (X5 NCHW-style): all

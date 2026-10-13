@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Generate instrumented copies of the FIXED YOLOv5 C++ sources.
 
-The fixed sources are taken verbatim from the repository snapshots pinned by
-the migration (X5 ``ac115717197920355fc390bb04299b20e6436864``, S
+The fixed sources are taken verbatim from the pinned repository snapshots
+(X5 ``ac115717197920355fc390bb04299b20e6436864``, S
 ``380e1a2bf42041af54be6f34935e50197cfadff9``), verified by SHA-256 through
 ``git cat-file`` before anything is generated. Read-only observation hooks
 (from ``ycap_observer.hpp``) are inserted at explicitly listed anchors; every

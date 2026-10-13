@@ -16,12 +16,12 @@
 
 | 实际目标 | 可核对的常见 ref | 目标身份与布局线索 |
 |---|---|---|
-| RDK X5 | `rdk_x5`、`x5-vMAJOR.MINOR.PATCH` | `release.platform: x5`、X5 README/metadata；当前维护线通常使用 `docs/manifests/` |
-| RDK S100 / S100P / S600 | `rdk_s`、`s-vMAJOR.MINOR.PATCH` | `release.platform: s` 与具体 `hardware`/SoC；当前 S 线通常使用 `docs/manifests/` |
+| RDK X5 | `rdk_x5`、`x5-vMAJOR.MINOR.PATCH` | `release.platform: x5`、X5 README/metadata；当前维护线清单位于 `docs/release/x5/` |
+| RDK S100 / S100P / S600 | `rdk_s`、`s-vMAJOR.MINOR.PATCH` | `release.platform: s` 与具体 `hardware`/SoC；当前 S 线清单位于 `docs/release/s/` |
 | RDK X3 | `rdk_x3`、`x3-vMAJOR.MINOR.PATCH` | X3 README、`release.platform: x3`；旧版本可能只有 `release/` 或 `demos/` |
 | legacy / 历史交付 | `rdk_x5_legacy` 或用户指定的历史 tag/ref | 只按该 ref 的 README、代码和清单判断；保留其历史 `samples/`、`demos/`、`docs/release/` 或 `release/` 布局 |
 
-这些 ref 是定位候选，不是静态兼容矩阵。分支/Tag 名称不能单独证明板卡；目标 ref 的 README 和实际 sample/代码必须参与核对，有 Manifest 时再用 `release.platform`、hardware 和 source ref 交叉核对。S100、S100P、S600 的支持范围仍按每个 sample、artifact 和 runtime 分别判断，不能从 S 版本的总清单聚合推导。当前 checkout 中有多个 Manifest 时逐个列出并让用户或任务范围选择，不能用维护分支的 Manifest 代替目标 ref。当前布局优先读取 `docs/manifests/`；`docs/release/` 与根 `release/` 是目标历史 ref 仍可能使用的真实布局，不能为迁移方便改写历史路径。
+这些 ref 是定位候选，不是静态兼容矩阵。分支/Tag 名称不能单独证明板卡；目标 ref 的 README 和实际 sample/代码必须参与核对，有 Manifest 时再用 `release.platform`、hardware 和 source ref 交叉核对。S100、S100P、S600 的支持范围仍按每个 sample、artifact 和 runtime 分别判断，不能从 S 版本的总清单聚合推导。当前 checkout 中有多个 Manifest 时逐个列出并让用户或任务范围选择，不能用维护分支的 Manifest 代替目标 ref。当前布局的统一清单位于 `docs/release/{x5,s}/`；其他目标 ref 的历史路径（如 `docs/manifests/`、根 `release/` 或 `demos/`）按该 ref 实际存在的目录选择，不得改写历史路径。
 
 如果明确的用户平台、版本、路径或 ref 与候选分支/Manifest 冲突，保留用户约束并报告冲突；不要 checkout、切换分支、重置工作区或把目标改成 `rdk_x5` 来消除冲突。只继续不依赖冲突信息的只读分析，依赖目标身份的命令保持未执行并说明阻断。
 

@@ -25,7 +25,7 @@ from utils.py_utils.cls_binding import (
 
 
 class ScoreVectorShapeTests(unittest.TestCase):
-    """The H4 rank rule: squeeze singletons, then require the class count."""
+    """The rank rule: squeeze singletons, then require the class count."""
 
     def test_all_source_spellings_of_1000_bind(self):
         for shape in [(1000,), (1, 1000), (1, 1000, 1), (1, 1000, 1, 1)]:

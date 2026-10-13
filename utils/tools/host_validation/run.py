@@ -18,7 +18,7 @@ and never runs on a board.  It executes, in isolated subprocesses:
   gitlink/pin integrity check that never executes upstream ACT/Pi0 code),
   ``utils/tools/board_validation``, ``utils/tools/sample_contract``, ``skills`` and this
   runner's own tests;
-* the static sample-contract checker (``--scope migration --parser-mode import``);
+* the static sample-contract checker (``--scope maintained --parser-mode import``);
 * the existing host-safe native CTest projects with their full-gate flags on
   by default (``YOLOE_TEST_OPENCV=ON``, ``ASR_AUDIO_TESTS=ON``,
   ``ASR_CLI_TESTS=ON``, ``PARAFORMER_BUILD_TESTS=ON`` +
@@ -1130,7 +1130,7 @@ class _SectionRunner:
         report_file = self.artifacts / "sample-contract-report.json"
         report_file.parent.mkdir(parents=True, exist_ok=True)
         command = [
-            self.python, str(checker), "--scope", "migration",
+            self.python, str(checker), "--scope", "maintained",
             "--parser-mode", "import", "--report", str(report_file),
         ]
         started = time.monotonic()

@@ -1,4 +1,4 @@
-"""RepGhost migration acceptance on a host; no inference on hardware."""
+"""RepGhost host acceptance tests; no inference on hardware."""
 from pathlib import Path
 from utils.py_utils.tests.legacy_platforms import legacy_path  # noqa: E402
 import contextlib

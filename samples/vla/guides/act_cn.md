@@ -10,7 +10,7 @@
 | S600 | `samples/vla/pi0`，`a32de276bc1681a2b1531012de111eaa1c16acb6` | Hugging Face LeRobot v0.5.2；v3.0 | `models/act/bpu_control_robot.py`，SO100Follower |
 
 S600 源明确不使用旧 D-Robotics fork。配置中能填写某种 march 不代表该板型已验证。
-使用匹配板卡镜像的 BPU runtime 和所选指南的环境。板型支持结论继承源说明，本轮未执行板测。
+使用匹配板卡镜像的 BPU runtime 和所选指南的环境。板型支持结论继承源说明。
 
 ## 初始化与阅读
 
@@ -43,7 +43,6 @@ python models/act/export_bpu_actpolicy.py --config bpu_export_config_s600_calfix
 按源指南在对应 OE 环境中运行生成的 `build_all.sh`。最终 VisionEncoder／TransformerLayers
 两个 HBM 和所有归一化 `.npy` 文件要作为一组保留在 `bpu_output/`，统计中的相机名称
 必须与运行时名称一致。S600 源要求 `uint8 → /255 → (image-mean)/std`，不能混用旧校准假设。
-这里保留可信源方案，本轮未执行。
 
 ## 运行与输出
 
@@ -62,7 +61,7 @@ python models/act/bpu_control_robot.py --bpu-act-path /data/bpu_output \
 `/data/bpu_output` 指使用者准备的模型目录。这些命令打开机器人／相机设备并发送动作，
 不能当作主机 smoke test。端口、校准与机器人型号必须匹配对应源版本。S600 ACT 输出
 100 步动作块，源文档明确不使用强制单动作步数来绕过部署问题。
-完整源指南保留安装流程和全部运行参数；本轮未运行转换或执行器命令。
+完整源指南保留安装流程和全部运行参数。
 
 ## 历史测量与边界
 

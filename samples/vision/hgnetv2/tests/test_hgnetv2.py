@@ -1,4 +1,4 @@
-"""HGNetV2 migration acceptance on a host; no inference on hardware."""
+"""HGNetV2 host acceptance tests; no inference on hardware."""
 from pathlib import Path
 import contextlib
 import importlib.util

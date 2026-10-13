@@ -115,7 +115,7 @@ class ClassificationTask:
     def post_process(self, outputs: Any) -> ClassificationResult:
         """Decode the bound score vector using the declared source policy.
 
-        Phase 1.5 H1: ``post_process`` owns the declared
+        ``post_process`` owns the declared
         ``output_transform`` (``raw_f32`` passthrough or ``dequant`` with the
         binding's quantization descriptors); ``forward``/the runner only
         adapt containers.  The contract's ``output_score_policy`` then
@@ -232,7 +232,7 @@ def extract_score_tensor(outputs: Any, binding: ModelBinding) -> np.ndarray:
     Accepts the flat ``{output_name: array}`` mapping the canonical runner
     returns, the SDK-nested ``{model_name: {output_name: array}}`` form, or
     a bare array from an injected test runner.  Shape and dtype follow the
-    binding's declared contract (H4 squeeze rule, raw_f32 dtype) so the
+    binding's declared contract (squeeze rule, raw_f32 dtype) so the
     readable per-sample task classes can share one validated extraction.
     """
     value: Any
@@ -255,7 +255,7 @@ def extract_score_tensor(outputs: Any, binding: ModelBinding) -> np.ndarray:
         )
 
     array = np.asarray(value)
-    # H4 rank rule replaces the dual (1,1000,1,1)/(1,1000) hard-code.
+    # rank rule replaces the dual (1,1000,1,1)/(1,1000) hard-code.
     if not score_vector_shape(array.shape, binding.contract.class_count):
         raise MetadataMismatchError(
             f"Runner output {binding.output_name!r} shape {array.shape} does not "

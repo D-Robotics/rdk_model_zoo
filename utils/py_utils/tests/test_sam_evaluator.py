@@ -1,4 +1,4 @@
-"""Host tests of real legacy/unified SAM evidence capture, never board claims."""
+"""Host tests of real SAM reference-runtime evidence capture, never board claims."""
 import hashlib
 import json
 from pathlib import Path

@@ -1,6 +1,6 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Capture same-board legacy/unified segmentation evidence; never downloads."""
+"""Capture same-board reference/runtime segmentation evidence; never downloads."""
 from pathlib import Path
 import sys
 ROOT=Path(__file__).resolve().parents[4]

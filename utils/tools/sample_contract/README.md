@@ -25,8 +25,8 @@ skip and never counts as a pass.
 # one sample
 python3 utils/tools/sample_contract/check.py --sample samples/vision/resnet
 
-# CI scope: every sample row listed in the progress map
-python3 utils/tools/sample_contract/check.py --scope migration --report out.json
+# CI scope: every sample listed in the maintained-samples list
+python3 utils/tools/sample_contract/check.py --scope maintained --report out.json
 
 # never execute sample code (CLI-default checks then record skips)
 python3 utils/tools/sample_contract/check.py --sample ... --parser-mode static
@@ -60,12 +60,12 @@ and surrounding quotes in README cells are stripped.
 
 ## Check scope
 
-`--scope migration` reads the progress region of
-`utils/tools/sample_contract/sample-scope.md` and checks every
-sample whose **Refactor** column is `in-progress` or `done` (parenthetical
-annotations are ignored). A selected row without a resolvable
-`samples/<domain>/<name>` directory raises an `R-SCOPE` violation, keeping
-the map and the sample tree in sync.
+`--scope maintained` reads the maintained-samples table in
+`utils/tools/sample_contract/sample-scope.md` and checks every listed
+`samples/<domain>/<name>` directory. A listed row without a resolvable
+directory raises an `R-SCOPE` violation, keeping the list and the sample
+tree in sync; edit the list in the same change that adds or removes a
+maintained sample.
 
 ## Exemptions
 

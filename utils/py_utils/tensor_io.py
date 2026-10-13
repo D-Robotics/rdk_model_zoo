@@ -222,13 +222,12 @@ def bgr_to_nv12_planes(image: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
 
 def as_packed(y: np.ndarray, uv: np.ndarray) -> np.ndarray:
-    """Return the canonical flat 1-D packed NV12 byte layout (Phase 1.5 H2).
+    """Return the canonical flat 1-D packed NV12 byte layout.
 
     X5 accepts one packed NV12 buffer; the canonical feed layout is the flat
     Y-then-interleaved-UV byte sequence (``H*W + H*W/2`` bytes, uint8,
     contiguous).  The former ``(1, 3H/2, W, 1)`` view carried the same bytes;
-    board smoke evidence for the equivalence is recorded with the Phase 1.5
-    migration notes.
+    board smoke evidence confirmed the equivalence.
     """
 
     return np.ascontiguousarray(
@@ -332,7 +331,7 @@ def validate_input_tensors(binding: "ModelBinding",
     contract = binding.contract
     if contract.input_protocol == "packed_nv12":
         actual = tensors[binding.input_names[0]]
-        # Canonical flat 1-D layout (H2): exact byte count, no view games.
+        # Canonical flat 1-D layout: exact byte count, no view games.
         expected_size = contract.input_height * contract.input_width * 3 // 2
         if actual.ndim != 1 or actual.size != expected_size:
             raise ValueError(

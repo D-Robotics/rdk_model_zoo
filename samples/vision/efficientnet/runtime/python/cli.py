@@ -40,7 +40,7 @@ SUPPORTED_TARGETS = _SHARED_TARGETS
 SUPPORTED_VARIANTS = ('b2', 'b3', 'b4', 'lite0', 'lite1', 'lite2', 'lite3', 'lite4')
 _SAMPLE_DIR = Path(__file__).resolve().parents[2]
 
-#: Platform deployment profiles for this sample (H5).  X5 publishes flat
+#: Platform deployment profiles for this sample.  X5 publishes flat
 #: ``.bin`` artifacts; S100/S600 publish ``.hbm`` artifacts under the shared
 #: ``EfficientNet`` archive directory; S100P publishes none (the legacy S
 #: download script silently fell back to the S100 build, which this sample
@@ -181,8 +181,8 @@ from utils.py_utils.labels import load_labels as _load_labels
 _ROOT = Path(__file__).resolve().parents[5]
 _SAMPLE_DIR = _ROOT / "samples" / "vision" / "efficientnet"
 _DEFAULT_IMAGE = _SAMPLE_DIR / "test_data" / "Scottish_deerhound.JPEG"
-# Root datasets/ is the A2 unified location; the per-platform snapshot paths
-# under platforms/ disappear with the migration closeout.
+# datasets/ at the repository root holds the dataset assets (class-name
+# lists, sample images) shared by all samples.
 _DEFAULT_LABELS = _ROOT / "datasets" / "imagenet" / "imagenet_classes.names"
 
 

@@ -323,9 +323,9 @@ class RuntimeModelRunner:
             raise MetadataMismatchError(
                 f"Runtime output does not contain bound tensor {binding.output_name!r}.")
         output = np.asarray(flat[binding.output_name])
-        # H4: the observed shape must satisfy the squeeze rule instead of one
+        # the observed shape must satisfy the squeeze rule instead of one
         # hard-coded spelling; the runner performs container validation only,
-        # the declared output transform stays with post_process (H1).
+        # the declared output transform stays with post_process.
         if not score_vector_shape(output.shape, binding.contract.class_count):
             raise MetadataMismatchError(
                 f"Runtime output {binding.output_name!r} shape {output.shape} does "

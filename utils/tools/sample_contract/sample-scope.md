@@ -1,57 +1,65 @@
-## 样例范围进度区
+# Maintained samples
 
-| Batch | Sample | Domain | Source | Refactor | Notes |
-| --- | --- | --- | --- | --- | --- |
-| 1 | ultralytics_yolo | vision | — | done | checked sample |
-| 2 | resnet | vision | — | done | checked sample |
-| 3 | paddle_ocr | vision | — | done | checked sample |
-| 4 | mobilenetv1 | vision | — | done | checked sample |
-| 5 | mobilenetv2 | vision | — | done | checked sample |
-| 6 | mobilenetv3 | vision | — | done | checked sample |
-| 7 | mobilenetv4 | vision | — | done | checked sample |
-| 8 | efficientnet | vision | — | done | checked sample |
-| 9 | efficientformer | vision | — | done | checked sample |
-| 10 | efficientformerv2 | vision | — | done | checked sample |
-| 11 | efficientvit | vision | — | done | checked sample |
-| 12 | convnext | vision | — | done | checked sample |
-| 13 | edgenext | vision | — | done | checked sample |
-| 14 | fasternet | vision | — | done | checked sample |
-| 15 | fastvit | vision | — | done | checked sample |
-| 16 | repghost | vision | — | done | checked sample |
-| 17 | repvgg | vision | — | done | checked sample |
-| 18 | repvit | vision | — | done | checked sample |
-| 19 | mobileone | vision | — | done | checked sample |
-| 20 | resnext | vision | — | done | checked sample |
-| 21 | vargconvnet | vision | — | done | checked sample |
-| 22 | googlenet | vision | — | done | checked sample |
-| 23 | hgnetv2 | vision | — | done | checked sample |
-| 24 | clip | vision | — | done | checked sample |
-| 25 | siglip | vision | — | done | checked sample |
-| 26 | dinov2 | vision | — | done | checked sample |
-| 27 | vit | vision | — | done | checked sample |
-| 28 | 3dresnet | vision | — | done | checked sample |
-| 29 | efficient_sam | vision | — | done | checked sample |
-| 30 | mobile_sam | vision | — | done | checked sample |
-| 31 | yolov5 | vision | — | done | checked sample |
-| 32 | fcos | vision | — | done | checked sample |
-| 33 | yoloworld | vision | — | done | checked sample |
-| 34 | lprnet | vision | — | done | checked sample |
-| 35 | modnet | vision | — | done | checked sample |
-| 36 | bytetrack | vision | — | done | checked sample |
-| 37 | unet | vision | — | done | checked sample |
-| 38 | unetmobilenet | vision | — | done | checked sample |
-| 39 | pp_liteseg | vision | — | done | checked sample |
-| 40 | yolo26_depth | vision | — | done | checked sample |
-| 41 | depth_anything_v2 | vision | — | done | checked sample |
-| 42 | lanenet | vision | — | done | checked sample |
-| 43 | pointnet | vision | — | done | checked sample |
-| 44 | diffusiondrive | vision | — | done | checked sample |
-| 45 | yoloe | vision | — | done | checked sample |
-| 46 | himloco | robotics | — | done | checked sample |
-| 47 | asr | speech | — | done | checked sample |
-| 48 | kws | speech | — | done | checked sample |
-| 49 | paraformer | speech | — | done | checked sample |
-| 50 | gemma4-e2b | llm | — | done | checked sample |
-| 51 | minicpm5-2b | llm | — | done | checked sample |
-| 52 | fasterrcnn | vision | — | done | checked sample |
-| 53 | lite_avatar | vision | — | done | checked sample |
+Samples covered by the static contract gate
+(`utils/tools/sample_contract/check.py --scope maintained`). Each row names
+one `samples/<domain>/<sample>` directory. Edit this list in the same change
+that adds or removes a maintained sample; a row whose directory does not
+exist fails with an `R-SCOPE` violation, keeping the list and the sample
+tree in sync. External gitlink samples (ACT, Pi0) are not part of this
+scope.
+
+| Domain | Sample |
+| --- | --- |
+| llm | gemma4-e2b |
+| llm | minicpm5-2b |
+| robotics | himloco |
+| speech | asr |
+| speech | kws |
+| speech | paraformer |
+| vision | 3dresnet |
+| vision | bytetrack |
+| vision | clip |
+| vision | convnext |
+| vision | depth_anything_v2 |
+| vision | diffusiondrive |
+| vision | dinov2 |
+| vision | edgenext |
+| vision | efficient_sam |
+| vision | efficientformer |
+| vision | efficientformerv2 |
+| vision | efficientnet |
+| vision | efficientvit |
+| vision | fasterrcnn |
+| vision | fasternet |
+| vision | fastvit |
+| vision | fcos |
+| vision | googlenet |
+| vision | hgnetv2 |
+| vision | lanenet |
+| vision | lite_avatar |
+| vision | lprnet |
+| vision | mobile_sam |
+| vision | mobileone |
+| vision | mobilenetv1 |
+| vision | mobilenetv2 |
+| vision | mobilenetv3 |
+| vision | mobilenetv4 |
+| vision | modnet |
+| vision | paddle_ocr |
+| vision | pp_liteseg |
+| vision | pointnet |
+| vision | repghost |
+| vision | repvgg |
+| vision | repvit |
+| vision | resnet |
+| vision | resnext |
+| vision | siglip |
+| vision | ultralytics_yolo |
+| vision | unet |
+| vision | unetmobilenet |
+| vision | vargconvnet |
+| vision | vit |
+| vision | yolo26_depth |
+| vision | yoloe |
+| vision | yolov5 |
+| vision | yoloworld |

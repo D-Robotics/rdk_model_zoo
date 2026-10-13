@@ -1,4 +1,4 @@
-"""RepViT migration acceptance on a host; no inference on hardware."""
+"""RepViT host acceptance tests; no inference on hardware."""
 from pathlib import Path
 import contextlib
 import importlib.util

@@ -1,6 +1,6 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Same-board fixed-image source/unified comparison for the B3 classification batch.
+"""Same-board fixed-image reference/runtime output comparison for the B3 classification batch.
 
 Scope: the four B3 samples (convnext, edgenext, fasternet, fastvit) on X5
 8GB/4GB boards, one sample/target/variant per invocation, against the fixed
@@ -37,7 +37,7 @@ abs 1e-5 and identical label strings (the two label loaders are separate
 implementations, so a silent loader change cannot hide); exact ties inside
 the top-(k+1) window are recorded with per-ID top-8 evidence for independent
 review and never auto-adjudicated into a pass.  This is a fixed-image
-migration consistency check, not a dataset accuracy or latency measurement.
+reference/runtime output comparison, not a dataset accuracy or latency measurement.
 
 Exit codes: 0 all checks passed; 1 comparison completed with failed checks
 (arrays retained); 2 execution error (error evidence retained).
@@ -827,7 +827,7 @@ def run_comparison(
         "tool": "utils/tools/board_validation/b3_classification_compare.py",
         "schema_version": 1,
         "measurement": (
-            "fixed-image source/unified migration consistency on one board; "
+            "fixed-image reference/runtime output comparison on one board; "
             "not dataset accuracy or latency"
         ),
         "sample": sample,
@@ -1073,7 +1073,7 @@ def run_comparison(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "B3 classification batch: same-board fixed-image source/unified "
+            "B3 classification batch: same-board fixed-image reference/runtime "
             "comparison for one sample/target/variant; no downloads."
         )
     )

@@ -1,4 +1,4 @@
-"""Platform deployment profiles shared by the unified samples (Phase 1.5 H5).
+"""Platform deployment profiles shared by the unified samples.
 
 A :class:`PlatformProfile` records the facts that are invariant for one
 deployment platform across the samples that support it: the compiler march,

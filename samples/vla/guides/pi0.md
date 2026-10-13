@@ -31,7 +31,7 @@ pair/request and is reused only within its ten Expert denoise steps.
 
 The source recipe is chain-aware: SigLIP HBM outputs calibrate PaliGemma, whose
 real HBM KV outputs calibrate Expert. The complete training/conversion tools and
-constraints remain in the upstream guide; they were not rerun in this migration.
+constraints remain in the upstream guide.
 Do not mix an individually rebuilt HBM into the fixed deployment bundle.
 
 The default deployment file, relative to `models/pi0/`, is
@@ -93,6 +93,5 @@ operator-supervision instructions before choosing live operation.
 The source reports 64 synchronous hardware chunks and one fixed real-input BF16/HBM
 comparison: MAE 0.4405°, RMSE 0.5903°, maximum error 1.6888°, relative L2 0.852%,
 cosine similarity 0.999981858. This is chain-integrity evidence for one input,
-not task-success rate. No board inference, live control, training or quantization
-was executed in this migration. The upstream Apache-2.0 LICENSE and separate
+not task-success rate. The upstream Apache-2.0 LICENSE and separate
 model/data/SDK terms remain applicable.

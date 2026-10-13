@@ -30,7 +30,7 @@ metadata:
    ```bash
    python3 "$SKILL_ROOT/scripts/read_catalog.py" --repo "$REPO_ROOT" --model "$MODEL_QUERY"
    ```
-   `MODEL_QUERY` 可省略 `--model` 来列出全部。脚本报告实际存在的候选清单（含统一按平台与迁移快照布局，同平台统一清单优先）：恰好一个候选时隐式选择，多个候选时报 `ambiguous-manifest` 和候选路径，需显式 `--manifest` 选择，不按分支、文件名或 S 组推断目标；缺少清单时保持未知，阅读真实目录/README。返回空集不能解释为板卡不支持。
+   `MODEL_QUERY` 可省略 `--model` 来列出全部。脚本报告实际存在的候选清单（含统一按平台与历史目录布局，同平台统一清单优先）：恰好一个候选时隐式选择，多个候选时报 `ambiguous-manifest` 和候选路径，需显式 `--manifest` 选择，不按分支、文件名或 S 组推断目标；缺少清单时保持未知，阅读真实目录/README。返回空集不能解释为板卡不支持。
 3. 按请求选一个实际存在的样例，核对精确模型资产、任务、下载方式、输入输出与运行语言。`availability: manual` 说明自行提供条件；`sha256: null` 保持未知。多模型 pipeline 不强制只有一个 BPU 文件。
 4. 查询性能只转述绑定原始版本和条件的记录；保留 qualifier、缺失字段和 source。不同平台/变体不能代填，无对应实测就明确说未提供。
 5. 运行前先读 runtime README、main、run.sh、下载脚本和所需公共函数。记录 cwd/argv、输入、输出及安装/下载/写系统路径的副作用。优先使用已编译模型；不要为一次 smoke test 自动安装 OE。

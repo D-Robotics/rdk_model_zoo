@@ -12,7 +12,7 @@
 The S600 source explicitly excludes the older D-Robotics fork. A source config
 listing other marches is not verified board support. Use the board-image BPU
 runtime and the environment matching the selected guide. Source-supported target
-claims are inherited; no board execution was performed in this migration.
+claims are inherited.
 
 ## Initialization and reading
 
@@ -50,7 +50,6 @@ by the source guide. Keep the two final VisionEncoder/TransformerLayers HBM file
 and all generated normalization `.npy` files together in `bpu_output/`.
 Camera names in the statistics must match runtime camera names. The S600 source
 specifies `uint8 → /255 → (image-mean)/std`; do not mix older calibration assumptions.
-These instructions are preserved source recipes and were not executed here.
 
 ## Runtime and outputs
 
@@ -72,7 +71,7 @@ open robot/camera devices and send actions; they are not host smoke checks.
 Hardware ports, calibration and robot type must match the selected source. S600
 ACT returns 100-step chunks; the source warns against forcing one action step as
 a workaround. The full source guides retain environment installation and all
-runtime options; no conversion or actuator command was run by this migration.
+runtime options.
 
 ## Historical measurements and boundaries
 

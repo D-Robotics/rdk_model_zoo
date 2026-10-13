@@ -40,7 +40,7 @@ SUPPORTED_TARGETS = _SHARED_TARGETS
 SUPPORTED_VARIANTS = ('100', '125')
 _SAMPLE_DIR = Path(__file__).resolve().parents[2]
 
-#: Platform deployment profiles for this sample (H5).  X5 publishes flat
+#: Platform deployment profiles for this sample.  X5 publishes flat
 #: ``.bin`` artifacts; S100, S100P and S600 publish ``.hbm`` artifacts under
 #: ``s100/``, ``s100p/`` and ``s600/``.
 PLATFORMS = classification_profiles(
@@ -156,8 +156,8 @@ from utils.py_utils.labels import load_labels as _load_labels
 _ROOT = Path(__file__).resolve().parents[5]
 _SAMPLE_DIR = _ROOT / "samples" / "vision" / "mobilenetv1"
 _DEFAULT_IMAGE = _SAMPLE_DIR / "test_data" / "bulbul.JPEG"
-# Root datasets/ is the A2 unified location; the per-platform snapshot paths
-# under platforms/ disappear with the migration closeout.
+# datasets/ at the repository root holds the dataset assets (class-name
+# lists, sample images) shared by all samples.
 _DEFAULT_LABELS = _ROOT / "datasets" / "imagenet" / "imagenet_classes.names"
 
 

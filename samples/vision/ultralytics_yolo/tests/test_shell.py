@@ -1,8 +1,7 @@
 """Execute real shell entry points using this test's Python interpreter.
 
-The historical platforms/ shell trees were removed with the migration
-closeout (2026-10-01); their transitional entries are reachable through
-the pinned commit recorded in docs/migration/2026-09-30-model-examples.md.
+The historical platforms/ shell trees live in git history; the pinned
+commits are recorded in utils/py_utils/legacy_platforms.py.
 """
 from pathlib import Path
 import os, re, shlex, shutil, subprocess, sys, tempfile, unittest

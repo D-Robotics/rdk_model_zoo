@@ -1,4 +1,4 @@
-"""Load the fixed YOLOWorld source for migration comparison; not a runtime dependency."""
+"""Load the fixed YOLOWorld reference source for output comparison; not a runtime dependency."""
 
 from __future__ import annotations
 

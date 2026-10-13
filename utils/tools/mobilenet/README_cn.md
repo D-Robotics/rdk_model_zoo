@@ -95,7 +95,7 @@ python utils/tools/mobilenet/workflow.py config --model v4-small \
   --output /absolute/workbench/run/x5/config
 ```
 
-S 试点将两条命令的平台改为 `s100` 并使用独立输出目录。配置回执包含 march 和编译命令。
+在 S 上将两条命令的平台改为 `s100` 并使用独立输出目录。配置回执包含 march 和编译命令。
 Docker 中保持输入/输出绝对路径与宿主机一致。在对应镜像内只检查配置与 200 份数据加载：
 
 ```bash

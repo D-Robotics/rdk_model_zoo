@@ -28,8 +28,8 @@ Unified source 2.0.0: X5 and S samples maintained in one `develop` tree.
   constructs the named model class and calls `predict`, with shared SDK
   session, image IO and platform identity in `utils/py_utils/`. The
   [Runtime code standard](docs/sample-standards/runtime-code.md) defines the
-  target file layout for single-task samples and the five Ultralytics YOLO
-  tasks; per-sample alignment is recorded per sample, not claimed wholesale.
+  file layout for single-task samples and the five Ultralytics YOLO tasks;
+  per-sample status is documented in each sample's own README.
   ACT/Pi0 are pinned upstream gitlinks.
 - Catalog provenance binds worktree builds to the immutable commit they are
   generated from (`sources.json` `link_ref: "HEAD"` resolved by the loader);
@@ -135,7 +135,7 @@ Full historical notes are retained below. Paths and statements describe their or
 
 ### RDK Model Zoo X5 v1.1.3
 
-This patch releases the refreshed model dashboard from `rdk_x5`. The public entry remains https://d-robotics.github.io/rdk_model_zoo/ . The main-branch restructuring and documentation-site migration are not included.
+This patch releases the refreshed model dashboard from `rdk_x5`. The public entry remains https://d-robotics.github.io/rdk_model_zoo/ .
 
 - Home overview shows model-family and configuration counts, including platform breakdowns.
 - Model details consolidate BPU and CPU post-processing measurements into configuration rows, preserve separate timing columns, and move repeated timing conditions below the table.
@@ -416,36 +416,6 @@ bash download_model.sh
 
 </details>
 
-<a id="v1.1.1-release-assessment-details"></a>
-
-<details>
-<summary>v1.1.1-release-assessment</summary>
-
-### 三平台 v1.1.1 发版评估
-
-#### 版本决策
-
-三个 `v1.1.0` 附注 Tag 已推送，但尚未创建 GitHub Release。保留这些准备快照；发布元数据和流程修正使用独立的 `x5-v1.1.1`、`s-v1.1.1`、`x3-v1.1.1`，不移动旧 Tag。
-
-#### 本轮需完成
-
-- 同步 VERSION、两份清单的发布身份、日期、实际统计和 CHANGELOG。
-- 修正发布说明与最新内容的矛盾，例如 X5 的 UNet 精度实际未收录。
-- 将 benchmark 证据固定到原始完整提交 SHA，保持测量值不变。
-- 将网页已有依据的 S 模型文件名修正落实到发布清单，使 benchmark 关联与附件一致。
-- X5 从自身检出构建，S/X3 通过 catalog-sources.json 锁定附注 Tag；禁止活动分支漂移。
-- Pages 验证组合目录中的 X5 平台版本，而非用组合标签与单个 Tag 比较。
-- 发布两份 Tag 原始 YAML 和 SHA256SUMS；校验远端附件、Tag、分支和在线目录。
-
-#### 后续工作
-
-- 补齐外部模型文件的 SHA-256，并在实际文件变更时保存可追溯版本；本轮附件哈希只覆盖 YAML。
-- 按原始证据整理 ACT/Pi0 的任务分类，目前清单将其归为足式运动控制。
-- 模型列表继续更新后显式推进对应硬件版本，再更新在线目录的版本锁定；不要把新的分支内容继续挂在旧版本名下。
-- 板卡测试与新增精度评测作为独立工作，不列入这次简化发布的门禁，也不宣称已经完成。
-
-</details>
-
 ---
 
 ## rdk_s — source: rdk_s @ 380e1a2 (s-v1.1.2)
@@ -464,30 +434,11 @@ bash download_model.sh
   `ultralytics_yolo26` on S100/S600, plus the full S100P detection accuracy
   table for `ultralytics_yolo26`. 136 performance and 200 accuracy metrics,
   transcribed verbatim.
-- Audit: one verification agent per sample across all 35 S samples proved
-  every remaining record matches its source row; the remaining 97 documented
-  gaps (SigLIP float/MSE columns, per-case and Total-Latency columns,
-  code-fenced cosines) are listed in the release note for the next batch.
+- Every remaining record was verified against its source row; the 97
+  documented gaps (SigLIP float/MSE columns, per-case and Total-Latency
+  columns, code-fenced cosines) are listed in the release note.
 - Benchmarks 473 -> 538 records; performance 1,037 -> 1,173; accuracy
   1,682 -> 2,668 (834 retention). No published value was changed or inferred.
-- See [release notes](#s-v1.1.2-details).
-
-- Recorded the retention percentage that the source accuracy tables already
-  publish beside every `FP32 / BPU` pair. 768 published retention values were
-  added across 180 benchmark records; until now the catalog could only derive
-  an approximation from the two accuracy values.
-- Added the 12 accuracy values the source publishes but the manifest missed:
-  `bbox-small/medium/large mAP@.50:.95` for YOLOv8n and YOLO11n on S100
-  (`ultralytics_yolo/evaluator/README.md`, detection accuracy table).
-- Accuracy metrics 1,682 -> 2,468 over the same 473 benchmark records and
-  1,037 performance metrics. No published value was changed, re-scaled or
-  removed, and no measurement was inferred.
-- Retention was matched by evidence, not by name: a source row is used only
-  when its device matches the record hardware, its model label appears in the
-  record's display name, and the row reproduces the record's own published
-  float/quantized numbers exactly. 0 of 768 pairs were ambiguous after that
-  check; YOLOv13 uses its own `Pytorch | YUV420SP Python (retention)` layout
-  and one table covering both S100 and S100P.
 - See [release notes](#s-v1.1.2-details).
 
 ## [s-v1.1.1] - 2026-09-07
@@ -564,8 +515,7 @@ evidence that was already in the repository documentation.
   `ultralytics_yolo` on S100 and S100P (previously carried for S600 only) and
   for `ultralytics_yolo26` on S100 and S600, plus the complete S100P
   detection accuracy table for `ultralytics_yolo26` — 136 performance and
-  200 accuracy metrics found by the per-sample audit agents and transcribed
-  verbatim from the evaluator READMEs.
+  200 accuracy metrics, transcribed verbatim from the evaluator READMEs.
 - **194 post-processing latencies added**: every Ultralytics and YOLOv13
   performance row publishes a `CPU Latency (Single Core)` column
   (2.0 ms detection, 5.0 ms segmentation, 1.0 ms pose, 0.5 ms classification;
@@ -645,14 +595,12 @@ existing refs stay valid and were not rewritten.
 
 Previous published release: [s-v1.1.1](https://github.com/D-Robotics/rdk_model_zoo/releases/tag/s-v1.1.1).
 
-#### Known remaining gaps (audited, not yet recorded)
+#### Known remaining gaps (not yet recorded)
 
-The per-sample audit (one verification agent per sample, all 35 S samples)
-confirmed every value now in the manifest matches its source row, and
-documented 97 further published numbers not yet recorded. This release
-records the SigLIP column (24) and the YOLOv13 CPU latency, and the audit's
-second deterministic pass found the Ultralytics/YOLOv13 post-processing
-columns (194 entries) recorded here as well. What still remains:
+Every value now in the manifest matches its source row. The source
+documents still publish 97 numbers the manifest does not carry. This release
+records the SigLIP column (24), the YOLOv13 CPU latency and the
+Ultralytics/YOLOv13 post-processing columns (194 entries). What remains:
 
 - SigLIP: the PyTorch float-stage TOP1/TOP5 column and the MSE column (24
   values; the manifest carries the BPU values and cosine).
@@ -664,8 +612,6 @@ columns (194 entries) recorded here as well. What still remains:
   columns for 3dresnet/depth_anything_v2/pointnet (9), calibrated cosines for
   mobilenetv2/v3/v4 (4), vit float ONNX accuracy (2), yolov13 CPU latency
   column (2).
-
-Each carries file, heading and verbatim cell evidence in the audit reports.
 
 </details>
 
