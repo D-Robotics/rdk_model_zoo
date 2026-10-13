@@ -369,14 +369,14 @@ class SampleProfileTest(unittest.TestCase):
 
 
 class CatalogGateTest(unittest.TestCase):
-    """The full build keeps the ten released families untouched and adds four samples."""
+    """The full build keeps the eleven released families untouched and adds four samples."""
 
     def test_build_counts_and_sample_ids(self):
         with mock.patch.dict(os.environ, {ENV: "refs/remotes/origin/develop"}):
             catalog_bytes, _metadata = build_catalog.build_catalog()
         catalog = json.loads(catalog_bytes)
-        self.assertEqual(catalog["model_count"], 10)
-        self.assertEqual(catalog["release_count"], 154)
+        self.assertEqual(catalog["model_count"], 11)
+        self.assertEqual(catalog["release_count"], 174)
         self.assertEqual(catalog["sample_count"], 4)
         samples = {record["id"] for record in catalog["models"] if record.get("profile") == "sample"}
         self.assertEqual(samples, {

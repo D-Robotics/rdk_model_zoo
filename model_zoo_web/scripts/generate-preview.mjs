@@ -515,11 +515,12 @@ for (const record of catalog.models || []) {
       const sampleLinkedCandidate = clsSegCandidate || poseObbTechnicalCandidate;
       const conversionRepositoryCommit = release.provenance?.workbench_repository_commit || null;
       const sourceRepositoryCommit = sampleLinkedCandidate ? candidateSampleReferenceCommit : null;
-      // Samples that land on upstream develop link there. For the MobileNet families the build commit still
-      // holds the superseded sample, so linking to it would show users code that no longer matches the models.
+      // Samples that land on upstream develop link there. For the MobileNet and ResNet families the build
+      // commit still holds the superseded sample, so linking to it would show users code that no longer
+      // matches the models.
       const releasedDevelopTask = !candidatePreview && (
         (record.family === 'yolo26' && ['cls', 'seg', 'pose', 'obb'].includes(record.task))
-        || ['mobilenetv1', 'mobilenetv2', 'mobilenetv3', 'mobilenetv4'].includes(record.family));
+        || ['mobilenetv1', 'mobilenetv2', 'mobilenetv3', 'mobilenetv4', 'resnet'].includes(record.family));
       // Drafts link the existing upstream develop sample; their own source
       // changes are not pushed yet.
       const sourceUrl = localRecord ? `${officialRepositoryUrl}/tree/develop/${record.sample_path}` : candidatePreview
