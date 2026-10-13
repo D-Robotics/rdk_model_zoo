@@ -108,10 +108,14 @@ describe("multi-platform variant catalog", () => {
     // On 2026-10-13 HobotMot joined both platforms as a CPU tracker family: one dependency asset
     // (pinned upstream source tarball, no benchmarks) per platform, no model variants: 60 families,
     // variants and benchmark rows unchanged.
+    // On 2026-10-13 ResNet-18/34/50/101/152 replaced the earlier ResNet artifacts (one X5, three S
+    // depths on S100/S600) with twenty measured builds on X5/S100/S100P/S600, and their twenty
+    // benchmark rows replaced the X5 ResNet18 and S ResNet152 records: 60 families, 649 variants,
+    // 852 benchmark rows.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(60);
-    expect(variants).toHaveLength(636);
-    expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(834);
+    expect(variants).toHaveLength(649);
+    expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(852);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
   });
@@ -210,9 +214,10 @@ describe("multi-platform variant catalog", () => {
     );
     // Qualified manifest identities are unique; different models may legally
     // share a URL, while two URLs cannot make one duplicate identity valid.
-    // 190 since HobotMot added its dependency source asset on 2026-10-13.
+    // 190 since HobotMot added its dependency source asset on 2026-10-13; 194 since ResNet replaced
+    // its one X5 artifact with the five ResNet-18/34/50/101/152 builds the same day.
     expect(new Set(x5Entries).size).toBe(x5Entries.length);
-    expect(x5Entries).toHaveLength(190);
+    expect(x5Entries).toHaveLength(194);
     expect(x5Models.summary.asset_count).toBe(x5Entries.length);
   });
 

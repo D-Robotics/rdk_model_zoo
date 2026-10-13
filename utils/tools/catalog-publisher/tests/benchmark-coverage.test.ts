@@ -9,10 +9,13 @@ import type { BenchmarkRecord, MetricRecord } from "../src/catalog/types";
 // one audited X5 record (two performance and two accuracy metrics) were removed.
 // On 2026-10-13 Faster R-CNN joined with two manual X5 assets and no X5 benchmark rows: the model
 // count gains one while the audited record and metric totals stay at the MobileNetV3-exit values.
+// On 2026-10-13 ResNet-18/34/50/101/152 replaced the X5 ResNet18 history record: one record (two
+// performance, two accuracy metrics) left and five measured records (eight performance, four accuracy
+// metrics each) joined.
 const EXPECTED_MODEL_COUNT = 36;
-const EXPECTED_BENCHMARK_RECORD_COUNT = 238;
-const EXPECTED_PERFORMANCE_METRIC_COUNT = 634;
-const EXPECTED_ACCURACY_METRIC_COUNT = 417;
+const EXPECTED_BENCHMARK_RECORD_COUNT = 242;
+const EXPECTED_PERFORMANCE_METRIC_COUNT = 672;
+const EXPECTED_ACCURACY_METRIC_COUNT = 435;
 // YOLO26 rows resolve under the unified ultralytics_yolo sample (the separate
 // yolo26 directory no longer exists on develop), and the OCR pilot lives at
 // samples/vision/paddle_ocr; the audited directory count shrank accordingly.

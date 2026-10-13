@@ -45,13 +45,13 @@ describe("production catalog naming", () => {
     expect(nameById.get("yolov8")).toBe("YOLOv8");
     expect(nameById.get("yolov5")).toBe("YOLOv5");
 
-    // ResNet18/50/152 across release lines aggregate into ONE family card
-    // (X3/X5 publish `resnet`, S publishes resnet18/50/152), exactly like
+    // ResNet across release lines aggregates into ONE family card (X3, X5 and
+    // S all publish `resnet`; S once published resnet18/50/152), exactly like
     // MobileNet v1-v4; 3dresnet and unet resnet* backbones stay separate.
     expect(nameById.get("resnet")).toBe("ResNet");
     const resnet = catalog.models.find((model) => model.id === "resnet");
     const resnetHardware = new Set((resnet?.variants ?? []).map((variant) => variant.hardware));
-    expect([...resnetHardware].sort()).toEqual(["s100", "s600", "x3", "x5"]);
+    expect([...resnetHardware].sort()).toEqual(["s100", "s100p", "s600", "x3", "x5"]);
     expect(nameById.get("resnet18")).toBeUndefined();
     expect(nameById.get("resnet50")).toBeUndefined();
     expect(nameById.get("resnet152")).toBeUndefined();
