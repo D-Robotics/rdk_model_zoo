@@ -4,7 +4,8 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
+from samples.vision.mobilenetv3.runtime.python.classify import MobileNetV3Classifier
 from utils.tools.classification.board_evaluate import main
 
 if __name__ == "__main__":
-    main()
+    main(MobileNetV3Classifier)

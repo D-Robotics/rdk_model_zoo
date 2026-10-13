@@ -1,7 +1,7 @@
-"""Evaluate a compiled MobileNet model on the frozen full ImageNetV2 manifest.
+"""Evaluate a compiled classification model on the frozen full ImageNetV2 manifest.
 
-The host's PIL geometry is applied before the sample's NV12 conversion. Model
-loading happens once. This accuracy run does not claim performance metrics.
+The host's PIL geometry is applied before the calling sample's NV12 conversion.
+Model loading happens once. This accuracy run does not claim performance metrics.
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ from pathlib import Path
 import platform
 import sys
 import time
+from typing import Callable
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
@@ -22,17 +23,18 @@ import cv2
 import numpy as np
 import PIL
 
-from samples.vision.mobilenetv4.runtime.python.classify import MobileNetV4Classifier
 from utils.py_utils.classification_host import (
     load_dataset, prepare_rgb, sha256_file, write_json,
 )
 
 
-def evaluate(args: argparse.Namespace) -> None:
+def evaluate(args: argparse.Namespace, classifier_factory: Callable) -> None:
     """Validate every dataset hash and evaluate the requested board artifact.
 
     Args:
         args: Explicit model, target, campaign, manifest, data and output paths.
+        classifier_factory: The sample's classifier class, called with the model
+            path and keyword tensor settings.
 
     Raises:
         ValueError: Input hashes, model metadata or dataset coverage disagree.
@@ -47,9 +49,9 @@ def evaluate(args: argparse.Namespace) -> None:
     _, images = load_dataset(args.manifest, args.data_root,
                              expected_count=campaign["evaluation"]["count"])
     # The prepared crop already has the model size, so resize_type 0 is an identity resize.
-    classifier = MobileNetV4Classifier(args.model, target=args.target,
-                                      input_size=(contract["size"], contract["size"]),
-                                      resize_type=0, score_policy="none")
+    classifier = classifier_factory(args.model, target=args.target,
+                                    input_size=(contract["size"], contract["size"]),
+                                    resize_type=0, score_policy="none")
     metadata = classifier.runner.metadata
     # SDK QuantParams are pybind objects, not serializable dataclasses.
     write_json(args.output / "metadata.json", {
@@ -102,16 +104,20 @@ def evaluate(args: argparse.Namespace) -> None:
     print(json.dumps({k: report[k] for k in ("target", "count", "top1", "top5")}))
 
 
-def main() -> None:
-    """Parse a complete reproducible board accuracy invocation."""
+def main(classifier_factory: Callable) -> None:
+    """Parse a complete reproducible board accuracy invocation.
+
+    Args:
+        classifier_factory: The calling sample's classifier class.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("model", "campaign", "manifest", "data-root", "output"):
         parser.add_argument("--" + name, type=Path, required=True)
     parser.add_argument("--model-sha256", required=True)
     parser.add_argument("--target", choices=("x5", "s100", "s100p", "s600"), required=True)
-    parser.add_argument("--variant", default="v4-small",
+    parser.add_argument("--variant", required=True,
                         help="Campaign source model key whose preprocessing contract applies")
-    evaluate(parser.parse_args())
+    evaluate(parser.parse_args(), classifier_factory)
 
 
 if __name__ == "__main__":
