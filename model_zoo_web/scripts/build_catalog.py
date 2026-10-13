@@ -39,7 +39,7 @@ SIZE_ORDER = {name: index for index, name in enumerate(("n", "s", "m", "l", "x")
 SAMPLE_PROFILE = "sample"
 SAMPLE_STATUS = "available"
 SAMPLE_PLATFORMS = ("x5", "s100", "s100p", "s600")
-SAMPLE_PIPELINE_KINDS = ("cpu_tracker", "detector_cpu_tracker", "neural_detector")
+SAMPLE_PIPELINE_KINDS = ("cpu_tracker", "detector_cpu_tracker", "neural_detector", "avatar_pipeline")
 SAMPLE_ARTIFACT_HOSTS = ("archive.d-robotics.cc", "codeload.github.com")
 # Release manifests at the sample commit are what the samples' download
 # scripts fetch from; descriptor-bound records must publish the same URLs.

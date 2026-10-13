@@ -373,6 +373,7 @@ const sampleTaskMetadata = {
   'object-detection': taskMetadata.detect,
   'image-classification': taskMetadata.cls,
   'multi-object-tracking': { id: 'multi-object-tracking', label: '目标跟踪' },
+  'audio-driven-talking-avatar': { id: 'audio-driven-talking-avatar', label: '语音驱动数字人' },
 };
 const sampleTask = record => sampleTaskMetadata[(record.task_ids || [])[0]]
   || taskMetadata[record.task] || { id: record.task, label: record.task };

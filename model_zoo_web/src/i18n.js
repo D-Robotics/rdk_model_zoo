@@ -81,6 +81,7 @@
     '视觉特征提取': 'Visual embeddings',
     '文字检测': 'Text detection',
     '文字识别': 'Text recognition',
+    '语音驱动数字人': 'Speech-driven talking avatar',
     '文本生成': 'Text generation',
     '机械臂策略': 'Manipulation policies',
     '足式运动控制': 'Legged locomotion',
@@ -241,6 +242,7 @@
     'CPU 跟踪器': 'CPU tracker',
     '检测器 + CPU 关联': 'Detector + CPU association',
     '神经网络检测器': 'Neural detector',
+    '语音驱动数字人管线': 'Speech-driven avatar pipeline',
     '已发布下载': 'Published download',
     '需自行编译': 'Manual compile required',
     '无神经网络模型': 'No neural model',
@@ -250,6 +252,7 @@
     '上游源码包': 'Upstream source package',
     'RDK X5 板端 bus.jpg 检测结果': 'RDK X5 on-board bus.jpg detection result',
     'RDK X5 板端跟踪输出（track id）': 'RDK X5 on-board tracking output (track ids)',
+    'RDK S100 板端渲染输出（真实帧）': 'RDK S100 on-board rendered output (real frames)',
   };
 
   const pattern = new RegExp(

@@ -143,7 +143,7 @@
         const value = entry.value || {};
         return `<dt data-i18n-zh="${esc(label.zh || '')}" data-i18n-en="${esc(label.en || label.zh || '')}">${esc(label.zh || '')}</dt><dd data-i18n-zh="${esc(value.zh || '')}" data-i18n-en="${esc(value.en || value.zh || '')}">${esc(value.zh || '')}</dd>`;
       });
-      if (profile.pipeline) rows.push(row('实现结构', { cpu_tracker: 'CPU 跟踪器', detector_cpu_tracker: '检测器 + CPU 关联', neural_detector: '神经网络检测器' }[profile.pipeline] || profile.pipeline));
+      if (profile.pipeline) rows.push(row('实现结构', { cpu_tracker: 'CPU 跟踪器', detector_cpu_tracker: '检测器 + CPU 关联', neural_detector: '神经网络检测器', avatar_pipeline: '语音驱动数字人管线' }[profile.pipeline] || profile.pipeline));
       if (profile.provider) rows.push(row('上游提供方', profile.provider));
       if (profile.sampleCommit) rows.push(row('源码提交', profile.sampleCommit.slice(0, 12), profile.sampleCommit));
       return rows.join('');

@@ -369,7 +369,7 @@ class SampleProfileTest(unittest.TestCase):
 
 
 class CatalogGateTest(unittest.TestCase):
-    """The full build keeps the ten released families untouched and adds three samples."""
+    """The full build keeps the ten released families untouched and adds four samples."""
 
     def test_build_counts_and_sample_ids(self):
         with mock.patch.dict(os.environ, {ENV: "refs/remotes/origin/develop"}):
@@ -377,12 +377,13 @@ class CatalogGateTest(unittest.TestCase):
         catalog = json.loads(catalog_bytes)
         self.assertEqual(catalog["model_count"], 10)
         self.assertEqual(catalog["release_count"], 154)
-        self.assertEqual(catalog["sample_count"], 3)
+        self.assertEqual(catalog["sample_count"], 4)
         samples = {record["id"] for record in catalog["models"] if record.get("profile") == "sample"}
         self.assertEqual(samples, {
             "bytetrack/bytetrack/tracking",
             "fasterrcnn/fasterrcnn/detect",
             "hobot_mot/hobot_mot/tracking",
+            "lite_avatar/lite_avatar/avatar",
         })
         for record in catalog["models"]:
             if record.get("profile") != "sample":
@@ -394,6 +395,62 @@ class CatalogGateTest(unittest.TestCase):
                         platform["model_availability"]["status"],
                         ("published-download", "manual-compile", "no-neural-artifact"),
                     )
+
+
+class LiteAvatarRegistrationTest(unittest.TestCase):
+    """The lite_avatar entry is the only multi-model pipeline sample; it is
+    pinned to its develop commit, supported on the three S-series targets as
+    Python-only manual-compile runs, and every evidence link ships with the site."""
+
+    ID = "lite_avatar/lite_avatar/avatar"
+
+    @classmethod
+    def setUpClass(cls):
+        with mock.patch.dict(os.environ, {ENV: "refs/remotes/origin/develop"}):
+            catalog_bytes, _metadata = build_catalog.build_catalog()
+        catalog = json.loads(catalog_bytes)
+        cls.record = next(r for r in catalog["models"] if r.get("id") == cls.ID)
+
+    def test_identity_and_pinning(self):
+        record = self.record
+        self.assertEqual(record["profile"], "sample")
+        self.assertEqual(record["pipeline"], "avatar_pipeline")
+        self.assertEqual(record["task_ids"], ["audio-driven-talking-avatar"])
+        self.assertEqual(record["sample_commit"], "f77bcea4c203f935efbafe0374cb21c9f3d4cd28")
+        self.assertEqual(record["sample_path"], "samples/vision/lite_avatar")
+
+    def test_three_s_targets_python_only_manual_compile(self):
+        platforms = self.record["variants"][0]["platforms"]
+        self.assertEqual({p["platform"] for p in platforms}, {"s100", "s100p", "s600"})
+        for platform in platforms:
+            self.assertEqual(platform["runtimes"], ["python"])
+            availability = platform["model_availability"]
+            self.assertEqual(availability["status"], "manual-compile")
+            self.assertNotIn("artifacts", platform)
+            self.assertTrue(
+                availability["guide_url"].startswith(
+                    "https://github.com/D-Robotics/rdk_model_zoo/tree/f77bcea4c203f935efbafe0374cb21c9f3d4cd28/"
+                ),
+                "the guide must point into the pinned sample commit",
+            )
+            evidence_files = [
+                link["url"] for link in platform["evidence"]
+                if not link["url"].startswith("https://")
+            ]
+            self.assertTrue(all(
+                (SCRIPT.parents[1] / "release" / url).is_file() for url in evidence_files
+            ), "evidence summaries must ship with the site")
+
+    def test_missing_gaps_are_declared_not_faked(self):
+        missing = {item["field"]: item["status"] for item in self.record["missing"]}
+        self.assertEqual(missing, {
+            "warmed-render-benchmark": "missing",
+            "float-vs-board-quality": "missing",
+            "model-size-and-compute": "missing",
+            "oe-conversion-reports": "missing",
+            "published-model-downloads": "missing",
+            "cpp-runtime": "not-applicable",
+        })
 
 
 def git_output(root, *args):

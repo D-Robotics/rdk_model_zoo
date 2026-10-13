@@ -1,0 +1,327 @@
+schema_version: 1
+profile: sample
+id: lite_avatar/lite_avatar/avatar
+name: LiteAvatar
+domain: vision
+source: lite_avatar
+provider: HumanAIGC/lite-avatar
+family: lite_avatar
+task: avatar
+task_ids:
+- audio-driven-talking-avatar
+description:
+  zh: 音频驱动的说话数字人管线：由语音特征得到口型参数，以参考图为条件生成人脸并合成到背景，视频经 H.264 硬件编码，FFmpeg 封装 AAC 音轨输出 MP4。
+  en: An audio-driven talking-avatar pipeline in which speech features yield mouth-shape
+    parameters, reference-conditioned face generation composites the face onto the background, and
+    the Python pipeline outputs an MP4 with H.264 hardware-encoded video and FFmpeg-muxed AAC
+    audio.
+license:
+  name: MIT
+  url: https://github.com/HumanAIGC/lite-avatar/blob/5b7ec850945e03d56fb290b05fb68440c359fa86/LICENSE
+sample_path: samples/vision/lite_avatar
+sample_commit: f77bcea4c203f935efbafe0374cb21c9f3d4cd28
+pipeline: avatar_pipeline
+pipeline_note:
+  zh: 语音驱动数字人管线（Python）。音频特征与流程控制在 CPU；encoder、audio2mouth、net_encode、net_decode 四个 INT16 模型在 BPU（S100
+    nash-e · S100P nash-m · S600 nash-p；解码器的 FP32 InstanceNorm 归一化子图留在 CPU）；背景解码与输出
+    H.264 编码使用 VPU 硬件，AAC 音轨由 FFmpeg 封装。
+  en: A speech-driven avatar pipeline (Python). Audio features and orchestration run on the CPU;
+    the four INT16 models (encoder, audio2mouth, net_encode, net_decode) run on the BPU (nash-e on
+    S100, nash-m on S100P, nash-p on S600; the decoder's FP32 InstanceNorm normalization subgraph
+    stays on the CPU); background decode and output H.264 encoding use the VPU hardware, and the
+    AAC track is muxed by FFmpeg.
+variants:
+- size: default
+  input_contract:
+  - label:
+      zh: 输入音频
+      en: Input audio
+    value:
+      zh: WAV，任意采样率（捆绑示例为 16 kHz 单声道 5.55 秒）
+      en: WAV at any sample rate (the bundled example is 16 kHz mono, 5.55 s)
+  - label:
+      zh: 背景视频
+      en: Background video
+    value:
+      zh: 宿主机一次性生成的 bg_video.h264（可见宽 890 填充为编码宽 896 × 1920，30 fps）与 bg_video.json 边车
+      en: bg_video.h264 produced by the one-time host preparation (visible width 890 padded to a
+        coded 896 x 1920, 30 fps) plus its bg_video.json sidecar
+  - label:
+      zh: 输出
+      en: Output
+    value:
+      zh: MP4，H.264 High 890 × 1920 yuv420p @ 30 fps + AAC 16 kHz 单声道
+      en: MP4, H.264 High 890x1920 yuv420p at 30 fps plus AAC 16 kHz mono
+  platforms:
+  - platform: s100
+    status: available
+    runtimes:
+    - python
+    model_availability:
+      status: manual-compile
+      note:
+        zh: 四个 INT16 HBM（encoder 400×560、audio2mouth 30×50×512、net_encode 384×384、net_decode 384×384）无公开下载；按模型准备指南本地打包或用
+          OpenExplorer 自编译 nash-e 版本（含 12 个 SHA-256 指纹与 am.mvn 校验）。上游代码 MIT；上游未声明预训练权重许可证，权重需自行获取。
+        en: The four INT16 HBMs (encoder 400x560, audio2mouth 30x50x512, net_encode 384x384,
+          net_decode 384x384) have no public download; prepare them from a local bundle or
+          self-compile the nash-e set with OpenExplorer per the model preparation guide (12 SHA-256
+          digests plus the am.mvn check). The upstream code is MIT while the upstream declares no
+          license for the pretrained weights, which users must obtain themselves.
+      guide_url: https://github.com/D-Robotics/rdk_model_zoo/tree/f77bcea4c203f935efbafe0374cb21c9f3d4cd28/samples/vision/lite_avatar/model
+    verification:
+      zh: S100（nash-e）板端实测：run.sh 渲染 166 帧 890×1920 @ 30 fps 的 H.264+AAC MP4（exit 0）。渲染段 10.85 s（15.30
+        fps，覆盖 166 帧渲染、编码收尾与 FFmpeg 封装，不含背景解码、音频特征与模型阶段 1.28 s、渲染器初始化 10.25 s），整条 CLI 28.6
+        s；背景解码（整文件解码 1 次，151 次取图中 150 帧有效背景帧）与输出编码（166 帧硬件编码）均在 VPU（UCP 3.13.6 · BPULib
+        2.2.15 · DNN 3.13.6）。单次示例测量。
+      en: Measured on an S100 (nash-e) board, run.sh renders a 166-frame 890x1920 30 fps H.264+AAC
+        MP4 (exit 0). The render phase takes 10.85 s (15.30 fps, covering the 166 rendered frames,
+        the encoder drain and the FFmpeg remux; it excludes background decode, the 1.28 s
+        audio-features-and-models phase and the 10.25 s renderer init) while the whole CLI
+        invocation takes 28.6 s; background decode (one whole-file decode; 151 get_img calls yield
+        150 valid background frames) and output encoding (166 hardware-encoded frames) both run on
+        the VPU (UCP 3.13.6, BPULib 2.2.15, DNN 3.13.6). Single example measurement.
+    evidence:
+    - label:
+        zh: 板端运行证据摘要
+        en: Board run evidence summary
+      url: sample-evidence/lite-avatar-s100.json
+    quickstart:
+    - title:
+        zh: 宿主机一次性：下载并校验上游示例数据
+        en: 'Host, one-time: download and verify the upstream sample data'
+      command: wget https://github.com/HumanAIGC/lite-avatar/raw/5b7ec850945e03d56fb290b05fb68440c359fa86/data/sample_data.zip
+    - title:
+        zh: 宿主机一次性：校验并解压到示例目录
+        en: 'Host, one-time: verify and unpack into the sample directory'
+      command: echo 'd1c77b2df48b7fd7f19e6eef52bc5107e3131dd9777162faf2576f9451f69d7b  sample_data.zip'
+        | shasum -a 256 -c - && unzip sample_data.zip -d samples/vision/lite_avatar/test_data/
+    - title:
+        zh: 宿主机一次性：转码背景视频（生成 bg_video.h264 + bg_video.json）
+        en: 'Host, one-time: prepare the background video (writes bg_video.h264 and bg_video.json)'
+      command: python3 samples/vision/lite_avatar/test_data/prepare_background.py --data samples/vision/lite_avatar/test_data/preload
+    - title:
+        zh: 宿主机 → 板端：把预生成的 preload 目录（bg_video.h264、bg_video.json、ref_frames/、face_box.txt）拷贝到板端 test_data/preload
+        en: 'Host to board: copy the prepared preload directory (bg_video.h264, bg_video.json,
+          ref_frames/, face_box.txt) to the board''s sample test_data/preload before the on-board
+          steps'
+      command: rsync -av samples/vision/lite_avatar/test_data/preload/ <board-user>@<board-host>:<board-repo>/samples/vision/lite_avatar/test_data/preload/
+    - title:
+        zh: 板端：校验四个模型文件（S100）
+        en: 'On board: verify the four model artifacts (S100)'
+      command: python3 samples/vision/lite_avatar/model/verify.py --target s100
+    - title:
+        zh: 板端：渲染捆绑示例语音（S100）
+        en: 'On board: render the bundled example utterance (S100)'
+      command: bash samples/vision/lite_avatar/runtime/python/run.sh --target s100 --audio samples/vision/lite_avatar/test_data/asr_example.wav
+  - platform: s100p
+    status: available
+    runtimes:
+    - python
+    model_availability:
+      status: manual-compile
+      note:
+        zh: 四个 INT16 HBM（encoder 400×560、audio2mouth 30×50×512、net_encode 384×384、net_decode 384×384）无公开下载；按模型准备指南本地打包或用
+          OpenExplorer 自编译 nash-m 版本（含 12 个 SHA-256 指纹与 am.mvn 校验）。上游代码 MIT；上游未声明预训练权重许可证，权重需自行获取。
+        en: The four INT16 HBMs (encoder 400x560, audio2mouth 30x50x512, net_encode 384x384,
+          net_decode 384x384) have no public download; prepare them from a local bundle or
+          self-compile the nash-m set with OpenExplorer per the model preparation guide (12 SHA-256
+          digests plus the am.mvn check). The upstream code is MIT while the upstream declares no
+          license for the pretrained weights, which users must obtain themselves.
+      guide_url: https://github.com/D-Robotics/rdk_model_zoo/tree/f77bcea4c203f935efbafe0374cb21c9f3d4cd28/samples/vision/lite_avatar/model
+    verification:
+      zh: S100P（nash-m）板端实测：run.sh 渲染 166 帧 890×1920 @ 30 fps 的 H.264+AAC MP4（exit 0）。渲染段 8.89 s（18.66
+        fps，覆盖 166 帧渲染、编码收尾与 FFmpeg 封装，不含背景解码、音频特征与模型阶段 0.87 s、渲染器初始化 9.10 s），整条 CLI 24.7
+        s；背景解码（整文件解码 1 次，151 次取图中 150 帧有效背景帧）与输出编码（166 帧硬件编码）均在 VPU（UCP 3.13.6 · BPULib
+        2.2.15 · DNN 3.13.6）。单次示例测量。
+      en: Measured on an S100P (nash-m) board, run.sh renders a 166-frame 890x1920 30 fps H.264+AAC
+        MP4 (exit 0). The render phase takes 8.89 s (18.66 fps, covering the 166 rendered frames,
+        the encoder drain and the FFmpeg remux; it excludes background decode, the 0.87 s
+        audio-features-and-models phase and the 9.10 s renderer init) while the whole CLI
+        invocation takes 24.7 s; background decode (one whole-file decode; 151 get_img calls yield
+        150 valid background frames) and output encoding (166 hardware-encoded frames) both run on
+        the VPU (UCP 3.13.6, BPULib 2.2.15, DNN 3.13.6). Single example measurement.
+    evidence:
+    - label:
+        zh: 板端运行证据摘要
+        en: Board run evidence summary
+      url: sample-evidence/lite-avatar-s100p.json
+    quickstart:
+    - title:
+        zh: 宿主机一次性：下载并校验上游示例数据
+        en: 'Host, one-time: download and verify the upstream sample data'
+      command: wget https://github.com/HumanAIGC/lite-avatar/raw/5b7ec850945e03d56fb290b05fb68440c359fa86/data/sample_data.zip
+    - title:
+        zh: 宿主机一次性：校验并解压到示例目录
+        en: 'Host, one-time: verify and unpack into the sample directory'
+      command: echo 'd1c77b2df48b7fd7f19e6eef52bc5107e3131dd9777162faf2576f9451f69d7b  sample_data.zip'
+        | shasum -a 256 -c - && unzip sample_data.zip -d samples/vision/lite_avatar/test_data/
+    - title:
+        zh: 宿主机一次性：转码背景视频（生成 bg_video.h264 + bg_video.json）
+        en: 'Host, one-time: prepare the background video (writes bg_video.h264 and bg_video.json)'
+      command: python3 samples/vision/lite_avatar/test_data/prepare_background.py --data samples/vision/lite_avatar/test_data/preload
+    - title:
+        zh: 宿主机 → 板端：把预生成的 preload 目录（bg_video.h264、bg_video.json、ref_frames/、face_box.txt）拷贝到板端 test_data/preload
+        en: 'Host to board: copy the prepared preload directory (bg_video.h264, bg_video.json,
+          ref_frames/, face_box.txt) to the board''s sample test_data/preload before the on-board
+          steps'
+      command: rsync -av samples/vision/lite_avatar/test_data/preload/ <board-user>@<board-host>:<board-repo>/samples/vision/lite_avatar/test_data/preload/
+    - title:
+        zh: 板端：校验四个模型文件（S100P）
+        en: 'On board: verify the four model artifacts (S100P)'
+      command: python3 samples/vision/lite_avatar/model/verify.py --target s100p
+    - title:
+        zh: 板端：渲染捆绑示例语音（S100P）
+        en: 'On board: render the bundled example utterance (S100P)'
+      command: bash samples/vision/lite_avatar/runtime/python/run.sh --target s100p --audio samples/vision/lite_avatar/test_data/asr_example.wav
+  - platform: s600
+    status: available
+    runtimes:
+    - python
+    model_availability:
+      status: manual-compile
+      note:
+        zh: 四个 INT16 HBM（encoder 400×560、audio2mouth 30×50×512、net_encode 384×384、net_decode 384×384）无公开下载；按模型准备指南本地打包或用
+          OpenExplorer 自编译 nash-p 版本（含 12 个 SHA-256 指纹与 am.mvn 校验）。上游代码 MIT；上游未声明预训练权重许可证，权重需自行获取。
+        en: The four INT16 HBMs (encoder 400x560, audio2mouth 30x50x512, net_encode 384x384,
+          net_decode 384x384) have no public download; prepare them from a local bundle or
+          self-compile the nash-p set with OpenExplorer per the model preparation guide (12 SHA-256
+          digests plus the am.mvn check). The upstream code is MIT while the upstream declares no
+          license for the pretrained weights, which users must obtain themselves.
+      guide_url: https://github.com/D-Robotics/rdk_model_zoo/tree/f77bcea4c203f935efbafe0374cb21c9f3d4cd28/samples/vision/lite_avatar/model
+    verification:
+      zh: S600 64GB（nash-p）板端实测：run.sh 渲染 166 帧 890×1920 @ 30 fps 的 H.264+AAC MP4（exit 0）。渲染段 8.09
+        s（20.51 fps，覆盖 166 帧渲染、编码收尾与 FFmpeg 封装，不含背景解码、音频特征与模型阶段 1.10 s、渲染器初始化 8.84 s），整条 CLI
+        28.3 s；背景解码（整文件解码 1 次，151 次取图中 150 帧有效背景帧）与输出编码（166 帧硬件编码）均在 VPU（UCP 3.13.6 ·
+        BPULib 2.2.15 · DNN 3.13.6）。单次示例测量。
+      en: Measured on an S600 64GB (nash-p) board, run.sh renders a 166-frame 890x1920 30 fps
+        H.264+AAC MP4 (exit 0). The render phase takes 8.09 s (20.51 fps, covering the 166 rendered
+        frames, the encoder drain and the FFmpeg remux; it excludes background decode, the 1.10 s
+        audio-features-and-models phase and the 8.84 s renderer init) while the whole CLI
+        invocation takes 28.3 s; background decode (one whole-file decode; 151 get_img calls yield
+        150 valid background frames) and output encoding (166 hardware-encoded frames) both run on
+        the VPU (UCP 3.13.6, BPULib 2.2.15, DNN 3.13.6). Single example measurement.
+    evidence:
+    - label:
+        zh: 板端运行证据摘要
+        en: Board run evidence summary
+      url: sample-evidence/lite-avatar-s600.json
+    quickstart:
+    - title:
+        zh: 宿主机一次性：下载并校验上游示例数据
+        en: 'Host, one-time: download and verify the upstream sample data'
+      command: wget https://github.com/HumanAIGC/lite-avatar/raw/5b7ec850945e03d56fb290b05fb68440c359fa86/data/sample_data.zip
+    - title:
+        zh: 宿主机一次性：校验并解压到示例目录
+        en: 'Host, one-time: verify and unpack into the sample directory'
+      command: echo 'd1c77b2df48b7fd7f19e6eef52bc5107e3131dd9777162faf2576f9451f69d7b  sample_data.zip'
+        | shasum -a 256 -c - && unzip sample_data.zip -d samples/vision/lite_avatar/test_data/
+    - title:
+        zh: 宿主机一次性：转码背景视频（生成 bg_video.h264 + bg_video.json）
+        en: 'Host, one-time: prepare the background video (writes bg_video.h264 and bg_video.json)'
+      command: python3 samples/vision/lite_avatar/test_data/prepare_background.py --data samples/vision/lite_avatar/test_data/preload
+    - title:
+        zh: 宿主机 → 板端：把预生成的 preload 目录（bg_video.h264、bg_video.json、ref_frames/、face_box.txt）拷贝到板端 test_data/preload
+        en: 'Host to board: copy the prepared preload directory (bg_video.h264, bg_video.json,
+          ref_frames/, face_box.txt) to the board''s sample test_data/preload before the on-board
+          steps'
+      command: rsync -av samples/vision/lite_avatar/test_data/preload/ <board-user>@<board-host>:<board-repo>/samples/vision/lite_avatar/test_data/preload/
+    - title:
+        zh: 板端：校验四个模型文件（S600）
+        en: 'On board: verify the four model artifacts (S600)'
+      command: python3 samples/vision/lite_avatar/model/verify.py --target s600
+    - title:
+        zh: 板端：渲染捆绑示例语音（S600）
+        en: 'On board: render the bundled example utterance (S600)'
+      command: bash samples/vision/lite_avatar/runtime/python/run.sh --target s600 --audio samples/vision/lite_avatar/test_data/asr_example.wav
+resources:
+- label:
+    zh: 模型仓库
+    en: Sample repository
+  url: https://github.com/D-Robotics/rdk_model_zoo/tree/f77bcea4c203f935efbafe0374cb21c9f3d4cd28/samples/vision/lite_avatar
+- label:
+    zh: 运行文档（Python）
+    en: Runtime guide (Python)
+  url: https://github.com/D-Robotics/rdk_model_zoo/tree/f77bcea4c203f935efbafe0374cb21c9f3d4cd28/samples/vision/lite_avatar/runtime/python
+- label:
+    zh: 模型准备指南
+    en: Model preparation guide
+  url: https://github.com/D-Robotics/rdk_model_zoo/tree/f77bcea4c203f935efbafe0374cb21c9f3d4cd28/samples/vision/lite_avatar/model
+- label:
+    zh: 转换指南（OpenExplorer 自编译）
+    en: Conversion guide (OpenExplorer self-build)
+  url: https://github.com/D-Robotics/rdk_model_zoo/tree/f77bcea4c203f935efbafe0374cb21c9f3d4cd28/samples/vision/lite_avatar/conversion
+- label:
+    zh: 帧评测器
+    en: Frame evaluator
+  url: https://github.com/D-Robotics/rdk_model_zoo/tree/f77bcea4c203f935efbafe0374cb21c9f3d4cd28/samples/vision/lite_avatar/evaluator
+- label:
+    zh: 上游项目（固定版本）
+    en: Upstream project (pinned)
+  url: https://github.com/HumanAIGC/lite-avatar/tree/5b7ec850945e03d56fb290b05fb68440c359fa86
+- label:
+    zh: 上游许可证
+    en: Upstream license
+  url: https://github.com/HumanAIGC/lite-avatar/blob/5b7ec850945e03d56fb290b05fb68440c359fa86/LICENSE
+missing:
+- field: warmed-render-benchmark
+  status: missing
+  title:
+    zh: 正式渲染基准
+    en: Formal render benchmark
+  note:
+    zh: 现有数据为单次示例测量（渲染段与整条 CLI 两种口径均已记录）；预热后多次运行的均值与波动、以及并发口径未测量。30 fps 为输出视频封装帧率，不代表渲染性能。
+    en: The recorded numbers come from single example measurements (both the render-phase and
+      whole-CLI scopes); warmed repeated-run means and variance, and any concurrency protocol, are
+      not measured. The 30 fps value is the muxed output cadence, not render performance.
+- field: float-vs-board-quality
+  status: missing
+  title:
+    zh: 浮点与板端全量质量对比
+    en: Full float-vs-board quality
+  note:
+    zh: 已收录：PTQ 模拟 FP32 对比套件（各阶段示例数 3/17/30/30）、S100P 与 S600 板端 4 阶段对 FP32 单样本余弦相似度达标（门限
+      0.95）、音频前端特征 3 组逐位一致。本站尚未收录：S100 对应的板端阶段记录、全量帧级浮点对板端 PSNR/MAE 对比与唇形同步评测；唇形同步需单独的评测方法（随示例提供的帧评测器仅计算
+      PSNR/MAE）。
+    en: Collected here are the PTQ-simulation FP32 comparison suite (3/17/30/30 examples per
+      stage), single-sample 4-stage BPU-vs-FP32 cosine similarity passing the 0.95 gate on S100P
+      and S600, and bitwise-equal audio-frontend features in 3 cases. Not yet collected on this
+      site are the matching S100 on-board stage records, a full frame-level float-vs-board
+      PSNR/MAE comparison and a lip-sync evaluation; lip sync needs its own method (the shipped
+      frame evaluator computes PSNR/MAE only).
+- field: model-size-and-compute
+  status: missing
+  title:
+    zh: 四阶段模型参数量与计算量
+    en: Per-stage parameters and compute
+  note:
+    zh: 四个组件模型在各自的分块/逐帧输入口径下尚无已登记的 parameter_count/GFLOPs 数值，本站未收录，也不以估算值代替；与已发布模型的正式标准对齐前需实测补齐。
+    en: No registered parameter_count/GFLOPs figures exist for the four component models under
+      their explicit per-block/per-frame input contracts; they are not collected on this site and
+      no estimates stand in. Measured values are required before full alignment with the published
+      released-model standards.
+- field: oe-conversion-reports
+  status: missing
+  title:
+    zh: OE 转换报告
+    en: OE conversion reports
+  note:
+    zh: 四个 HBM 由用户本地编译，OE HTML 转换报告未在本站收录。
+    en: The four HBMs are compiled locally by users; no OE HTML conversion report is catalogued on
+      this site.
+- field: published-model-downloads
+  status: missing
+  title:
+    zh: 公开模型下载
+    en: Public model downloads
+  note:
+    zh: 无稳定公开下载地址；四个 HBM 按固定版本的模型准备指南本地打包或自编译，SHA-256 指纹亦见该指南。
+    en: There is no stable public download; the four HBMs are prepared from a local bundle or
+      self-compiled per the pinned preparation guide, which also carries their SHA-256 digests.
+- field: cpp-runtime
+  status: not-applicable
+  title:
+    zh: C++ 运行时
+    en: C++ runtime
+  note:
+    zh: 本示例仅提供 Python 运行时，无 C++ 端到端口径。
+    en: This sample ships a Python runtime only; no C++ end-to-end protocol applies.
