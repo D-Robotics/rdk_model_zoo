@@ -70,4 +70,4 @@ Inputs are two NV12 planes at 2048×1024, prepared with INTER_AREA stretching. T
 <a id="license"></a>
 ## License
 
-Code follows the repository [LICENSE](../../../LICENSE); source copyright notices are retained. The published manifest does not establish training-weight or Cityscapes redistribution rights; check those upstream terms separately.
+Code follows the repository [LICENSE](../../../LICENSE); source copyright notices are retained. Training-weight and Cityscapes redistribution rights follow their upstream terms; review them separately.

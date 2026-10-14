@@ -5,6 +5,38 @@
 The Pack remains a release candidate (`release_state: unreleased-candidate` in
 `pack.json`).
 
+- Content refresh against the unified integration line. Shared references and
+  skill entrypoints now state the actual branch facts — the published default
+  branch is still `rdk_x5`, `develop` is the unified integration line, model
+  manifests live at `docs/release/{x5,s}/models.yaml` with per-platform version
+  lines `docs/release/{x5,s}/VERSION`; the default branch is resolved from the
+  checkout's Git state, without preselecting a future default-branch name or
+  presenting any cutover as done.
+- `rdk-model-zoo-release` resolves model versions and manifests from those real
+  paths instead of the retired `docs/manifests/` default; the version table
+  distinguishes the unified per-platform VERSION files from delivery-line and
+  Skills versioning, and names the root `VERSION` as its own unified-repo line.
+- `rdk-model-zoo-develop` reads the sample-standards files that actually exist
+  (`runtime-code.md`, `readme-contract.md`, `cpp-runtime-code.md`; the retired
+  `inference-contract.md` name is gone), states the default single-task layout
+  (`main.py` + `cli.py` + one task-named model file; multi-task families keep
+  one model file per task), and routes board selection through
+  `utils/py_utils/platforms.resolve_target` (`auto|x5|s100|s100p|s600`; unknown
+  targets raise).
+- `rdk-model-zoo-validate` documents the repository gate split: the
+  sample-contract workflow enforces the delivery rule set on every PR,
+  host-validation defaults to a single Linux leg with catalog/contract owned by
+  their own workflows and an expanded Python 3.10/macOS dispatch matrix, and the
+  strict rule set stays a local full-gate opt-in.
+- `repository-rules.md` records the current Python surface: `preprocess →
+  infer → postprocess` chained by `predict` (old spellings survive only as
+  legacy delegates), `main.py` + `cli.py` entries, a new MZ-TARGET-01 check for
+  target resolution, and typed detection outputs with explicit dtypes.
+- Member versions: `rdk-model-zoo-develop` 1.1.1 → 1.1.2 and
+  `rdk-model-zoo-release` 1.0.1 → 1.0.2 for the instruction changes; two eval
+  definitions (develop-eval-013, release-eval-011) and the refreshed
+  develop-eval-012 cover the retired contract path, the stage naming, and
+  Git-resolved branch facts. The Pack stays an unreleased 1.1.0 candidate.
 - `rdk-model-zoo/scripts/read_catalog.py` default discovery now also probes
   the unified per-platform layouts `docs/release/{x5,s,x3}/models.yaml` and
   the frozen `platforms/{platform}/...` snapshots, preferring the active

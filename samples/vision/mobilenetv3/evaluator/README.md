@@ -128,7 +128,7 @@ checkpoint on the same crops.
 Latency and throughput of the same artifacts, with the measurement
 conditions, are in the [sample README](../README.md#performance). 
 The X5 and X3 figures below belong to earlier builds (different weights and
-preprocessing) and are kept as history; MobileNetV3 is no longer published for X5.
+preprocessing) and record those builds; MobileNetV3 is no longer published for X5.
 
 ### RDK X5 / X5 Module performance
 

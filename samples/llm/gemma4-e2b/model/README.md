@@ -6,8 +6,7 @@ English | [简体中文](README_cn.md)
 ## Published combinations
 
 S100P (`nash-m`) and S600 (`nash-p`) each have Vision/Text HBMs; S100 (`nash-e`) has no default public HBM.
-Use the model archive for the selected target. The current download script reuses nonempty files;
-it does not automatically verify the target or SHA-256 of existing files.
+Each artifact is published for its target; use the selected target's own published combination. The download script reuses nonempty files as-is; verify an existing file's target and SHA-256 against the [Format and checksum](#formats-checksums) section.
 
 <a id="directory"></a>
 ## Directory structure

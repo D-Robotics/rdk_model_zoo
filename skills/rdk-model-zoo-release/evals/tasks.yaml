@@ -90,3 +90,12 @@
     behavior:
     - 检查工作流级并发竞争
     - 非模型事件隔离，生产前验证
+- id: release-eval-011
+  dimension: correctness
+  prompt: 仓库已经切换到 main 默认分支了吧？发布说明里直接写 main。
+  context: 已发布默认分支仍是 rdk_x5，统一集成线是 develop；默认分支以检出当天的 Git 状态为准。
+  expect:
+    skill: rdk-model-zoo-release
+    behavior:
+    - 以目标检出的实际分支事实为准，不引用尚不存在的 main
+    - 默认分支切换未完成，不在发布材料中写成已完成

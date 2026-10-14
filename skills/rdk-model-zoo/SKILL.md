@@ -25,7 +25,7 @@ metadata:
 
 ## Instructions
 
-1. 读取 [context-policy.md](references/context-policy.md)。区分 `SKILL_ROOT` 与目标 `REPO_ROOT`；`rdk_x5` 只是本 Pack 的维护源，不是默认目标。按用户约束和目标 ref 核实 X5、S100/S100P/S600、X3 或 legacy，再建立仓库/版本、板卡、sample、模型变体、任务和 runtime 上下文。仅浏览模型列表不要求用户先提供板卡日志；执行前必须核实目标环境，冲突时不切换分支。
+1. 读取 [context-policy.md](references/context-policy.md)。区分 `SKILL_ROOT` 与目标 `REPO_ROOT`；Pack 的维护分支（统一集成线 `develop`、已发布默认分支 `rdk_x5`）不是默认目标。按用户约束和目标 ref 核实 X5、S100/S100P/S600、X3 或 legacy，再建立仓库/版本、板卡、sample、模型变体、任务和 runtime 上下文。仅浏览模型列表不要求用户先提供板卡日志；执行前必须核实目标环境，冲突时不切换分支。
 2. 有目标工作区时读取该版本 README 与模型 Manifest。可用以下只读脚本，不安装依赖、不执行 sample：
    ```bash
    python3 "$SKILL_ROOT/scripts/read_catalog.py" --repo "$REPO_ROOT" --model "$MODEL_QUERY"
@@ -33,7 +33,7 @@ metadata:
    `MODEL_QUERY` 可省略 `--model` 来列出全部。脚本报告实际存在的候选清单（含统一按平台与历史目录布局，同平台统一清单优先）：恰好一个候选时隐式选择，多个候选时报 `ambiguous-manifest` 和候选路径，需显式 `--manifest` 选择，不按分支、文件名或 S 组推断目标；缺少清单时保持未知，阅读真实目录/README。返回空集不能解释为板卡不支持。
 3. 按请求选一个实际存在的样例，核对精确模型资产、任务、下载方式、输入输出与运行语言。`availability: manual` 说明自行提供条件；`sha256: null` 保持未知。多模型 pipeline 不强制只有一个 BPU 文件。
 4. 查询性能只转述绑定原始版本和条件的记录；保留 qualifier、缺失字段和 source。不同平台/变体不能代填，无对应实测就明确说未提供。
-5. 运行前先读 runtime README、main、run.sh、下载脚本和所需公共函数。记录 cwd/argv、输入、输出及安装/下载/写系统路径的副作用。优先使用已编译模型；不要为一次 smoke test 自动安装 OE。
+5. 运行前先读 runtime README、main、run.sh、下载脚本和所需公共函数。共享 helper sample 的模型制品按 README 的 `--target auto|x5|s100|s100p|s600` 与变体选择（支持的 target 以该 sample 为准；LLM 与专用 sample 使用各自 CLI）；`auto` 用硬件身份识别，未知目标报错。记录 cwd/argv、输入、输出及安装/下载/写系统路径的副作用。优先使用已编译模型；不要为一次 smoke test 自动安装 OE。
 6. 获授权后按文档和源码匹配的命令执行。记录退出码、日志、本次新生成输出，并检查任务语义；存在历史截图不是运行证据。没有硬件时输出经静态核对的运行计划，保持 not-run。
 7. 自有模型需要转换时读 [toolchain-handoff.md](references/toolchain-handoff.md)，先确定精确子任务和可用 router。LLM/VLM 聊天部署、机器人闭环应用、ROS 节点开发分别选择实际可用领域 Skill/官方文档，不发明不存在的技能。
 8. 加载/路径问题先对照 sample；运行环境或工具链失败按证据交接。不要因为低 FPS 就断定所有 ONNX 都只在 CPU 上执行，也不要承诺固定速度。

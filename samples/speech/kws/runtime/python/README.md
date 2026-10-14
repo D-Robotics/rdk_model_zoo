@@ -110,10 +110,10 @@ print(score)
 
 | Error | Action |
 | --- | --- |
-| Only s100 published / target mismatch | Use a genuine S100 and its artifact; do not impersonate S100P/S600 |
+| Only s100 published / target mismatch | Only the s100 artifact is published; run on S100 |
 | Missing model or SDK | Perform explicit download and use the BSP runtime environment |
 | Missing PaddleAudio dependency | Prepare the frontend environment explicitly; inspect the missing package name |
-| Input must be [1,373,80] | Check artifact and frontend versions; do not reshape arbitrary tensors to bypass checks |
+| Input must be [1,373,80] | Check artifact and frontend versions; use the matching artifact's tensor shape |
 | Mono/16000 Hz required | Convert audio explicitly, retaining the converted input identity |
 | Invalid probability or SCALE descriptor | Check the exact model/SDK output metadata; no guessed sigmoid or scale |
 | Output directory must be new | Select a new run directory |

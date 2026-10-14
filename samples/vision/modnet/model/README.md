@@ -46,7 +46,7 @@ It prints the manual requirement and exits `2`; this is the expected behavior be
 <a id="local-paths"></a>
 ## Local paths
 
-The default runtime path is `samples/vision/modnet/model/modnet_512x512_rgb.bin`. An external path must be paired with the exact `--asset-id x5:modnet:modnet_512x512_rgb.bin`; a filename alone does not establish protocol identity.
+The default runtime path is `samples/vision/modnet/model/modnet_512x512_rgb.bin`. An external path takes the matching `--asset-id x5:modnet:modnet_512x512_rgb.bin`, which binds the protocol identity.
 
 <a id="formats-checksums"></a>
 ## Format and checksums

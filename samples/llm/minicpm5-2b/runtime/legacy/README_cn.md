@@ -28,7 +28,7 @@ ion=ion_reserved_size=0xf0000000
 ion=ion_carveout_size=0xf0000000
 ```
 
-即 CMA 1 GiB、reserved/carveout 各 3.75 GiB。修改前备份原配置，结合板卡实际容量确认；**脚本不会自动修改启动配置或重启**。该配置下 S100 的 Linux 内存约 2.8 GiB，S100P 约 14 GiB，具体以硬件版本实际容量为准。S100 请关闭非必要应用，不能只根据 `free` 判断 BPU 连续内存是否足够。下载与解压需约 6 GB 可用存储。
+即 CMA 1 GiB、reserved/carveout 各 3.75 GiB。修改前备份原配置，结合板卡实际容量确认；**脚本不会自动修改启动配置或重启**。该配置下实测 S100 的 Linux 内存约 2.8 GiB，S100P 约 14 GiB，请按你的硬件版本确认实际容量。S100 请关闭非必要应用；BPU 连续内存以板端 ION/BPU 内存报告为准（`free` 只显示系统内存）。下载与解压需约 6 GB 可用存储。
 
 ## 准备并运行
 

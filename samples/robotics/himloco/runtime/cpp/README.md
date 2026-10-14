@@ -213,5 +213,6 @@ Exit 0 means completion/help; 2 means execution/argument error. Launcher build
 failure also returns 2.
 
 Files are exclusively created without replacing prior results. A changed model
-or manifest fails the run. Forced termination or filesystem write failure can
-leave a running or incomplete report; neither establishes success.
+or manifest fails the run. Forced termination or filesystem write failure may leave
+the report in a `running` or incomplete state; success is the recorded
+`status: completed`.

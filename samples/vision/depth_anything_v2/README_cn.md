@@ -82,7 +82,7 @@ bash samples/vision/depth_anything_v2/runtime/python/run.sh --target s100 \
 最近邻拉伸。可选 letterbox 使用线性插值/127 填充，并在恢复尺寸前先裁去填充。
 task 返回浮点深度；uint8 显示 API 属于单独的可视化步骤。
 
-深度值为相对量，并非校准后的米。CLI 保存原图尺寸的浮点深度与 INFERNO 彩色显示图。
+深度值为相对深度。CLI 保存原图尺寸的浮点深度与 INFERNO 彩色显示图。
 
 ![源框架图](test_data/readme_img/image-2.png)
 

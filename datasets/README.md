@@ -26,8 +26,8 @@ directory; choose a data directory outside the repository when downloading.
   obtain ImageNet, DOTA and Pascal VOC from their official sources.
 - **Licenses and terms are per dataset.** Obtain each dataset under its own
   terms; the guides link the official sites. Bundled label lists and example
-  images are small excerpts kept for offline smoke checks, not redistributions
-  of the datasets.
+  images are small excerpts for offline smoke checks; obtain the full datasets
+  from their official sources.
 - **Class index ≠ dataset category ID.** Model output columns are contiguous
   indices. COCO annotation files use sparse numeric IDs; DOTA's native
   annotations carry category **names**, so any numeric DOTA ID space belongs to

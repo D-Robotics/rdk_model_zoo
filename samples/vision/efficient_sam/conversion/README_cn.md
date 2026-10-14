@@ -171,7 +171,7 @@ python3 scripts/quantize.py --target s600
 
 单配置命令必须同时显式指定匹配的 `--target`；脚本不从 YAML 推断编译器，省略目标板卡会默认 X5。例如：`python3 scripts/quantize.py --target s100 --config configs/s100/efficient_sam_decoder_nashe_config.yaml`。
 
-以下输入字段逐字取自各编译配置，不能视为实测 SDK 元数据；转换后仍须读取模型元数据校验。X5 的 type 字段依次为运行时 / train，S 为 input_type。
+以下输入字段逐字取自各编译配置，并非实测 SDK 元数据；转换后仍须读取模型元数据校验。X5 的 type 字段依次为运行时 / train，S 为 input_type。
 
 | Config | input_name | input_shape | type |
 | --- | --- | --- | --- |

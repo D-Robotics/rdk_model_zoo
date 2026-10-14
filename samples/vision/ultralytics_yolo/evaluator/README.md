@@ -145,7 +145,7 @@ Each script's `--help` lists its task-specific contract options. YOLO26 uses dir
 <a id="metrics"></a>
 ## Metrics and comparability
 
-COCO uses `pycocotools.COCOeval` with `bbox`, `segm` or `keypoints`; the printed AP/AR summary is evaluated only over the selected image IDs. Classification `top1`/`top5` are fractions of processed labeled images, not percentages. OBB JSON is an intermediate result, not an accuracy metric. Elapsed wall time includes Python/data processing and is not BPU inference latency.
+COCO uses `pycocotools.COCOeval` with `bbox`, `segm` or `keypoints`; the printed AP/AR summary is evaluated only over the selected image IDs. Classification `top1`/`top5` are fractions of processed labeled images. OBB JSON is an intermediate prediction file. Elapsed wall time includes Python/data processing.
 
 Record the source revision, target/system/SDK, model digest, dataset/split, processed count, resize policy and thresholds with any result. A change in any of these can invalidate comparisons with historical benchmark tables.
 
@@ -154,7 +154,7 @@ Record the source revision, target/system/SDK, model digest, dataset/split, proc
 
 Detection JSON contains COCO `image_id`, `category_id`, `[x,y,width,height]` boxes and scores. Segmentation JSON contains encoded masks; pose JSON contains keypoints and scores. Classification JSON contains `total`, `top1`, `top5`, `elapsed_sec`. OBB entries contain `file_name`, `image_id`, `category_id`, `score`, `rrect` and `polygon`; rectangle angles are radians, polygon coordinates are original-image pixels.
 
-Existing output files are overwritten by the current scripts. Choose a unique output name for each run and preserve stdout containing the COCO summary. Exit 0 means execution completed; empty predictions, no annotations, or classification `total=0` do not constitute a passing accuracy result. COCO empty outputs are written as `[]` and metric computation is skipped explicitly.
+Existing output files are overwritten by the current scripts. Choose a unique output name for each run and preserve stdout containing the COCO summary. Exit 0 means execution completed; empty predictions, no annotations, or classification `total=0` are recorded as-is. COCO empty outputs are written as `[]` and metric computation is skipped explicitly.
 
 <a id="reference-results"></a>
 ## Reference results
@@ -168,7 +168,7 @@ The [sample guide](../README.md) describes the YOLOv8n and YOLO26n detection com
 - `pycocotools` missing: install it into the interpreter running the evaluator, including prediction-only COCO runs.
 - Ground truth missing or class IDs wrong: check named/ordered/synset format, offset and model class order; do not guess labels from arbitrary filenames.
 - COCO filename or ID error: use matching annotation/image splits; numeric stems are required without annotations.
-- Empty outputs: inspect one image with the runtime first, check thresholds/task/model, and retain the empty result rather than claiming a metric.
+- Empty outputs: inspect one image with the runtime first, check thresholds/task/model; the empty result is retained as-is.
 - Output write failure: create a writable parent and use an explicit result path.
 
 `eval_common.py` handles shared arguments, category mapping and dataset selection. Each `eval_yolo_*.py` owns its metric/result format and calls the existing runtime task. `eval_batch.py` only dispatches those commands. Export or tensor-layout changes belong in [conversion](../conversion/README.md) and the runtime binding, not in metric code.
@@ -384,7 +384,7 @@ sudo bash -c "echo performance > /sys/devices/system/bpu/bpu0/devfreq/28108000.b
 4. When the BPU model quantizes the NCHW-RGB888 input and converts it to YUV420SP(nv12) input, there is also some accuracy loss due to color space conversion. This accuracy loss can be avoided by incorporating the color space conversion loss during training.
 5. There are slight differences between the accuracy results of the Python and C/C++ interfaces, mainly due to different ways of handling floating-point numbers during memcpy and conversion processes of data structures in Python and C/C++.
 6. Refer to the eval section of the RDK Model Zoo for the test script: https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/tools/eval_pycocotools
-7. This table presents the results of PTQ (Post-Training Quantization) using 50 images for calibration and compilation, simulating the accuracy scenario for a typical developer's first direct compilation. It does not involve accuracy tuning or QAT (Quantization-Aware Training) and meets regular usage validation needs but does not represent the accuracy upper limit.
+7. This table presents the results of PTQ (Post-Training Quantization) using 50 images for calibration and compilation. No accuracy tuning or QAT (Quantization-Aware Training) was applied.
 
 
 ## Additional reference measurements
@@ -1682,7 +1682,7 @@ Object Detection (COCO2017)
 4. Some accuracy loss appears when converting NCHW RGB888 inputs to YUV420SP inputs for BPU deployment because of color space conversion. This can be reduced if that transformation is considered during training.
 5. Python and C/C++ runtime accuracy may differ slightly because of differences in memory copy and floating-point handling.
 6. Evaluation scripts can be referenced here: <https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/tools/eval_pycocotools>
-7. The table reflects PTQ results compiled with 50 calibration images. It represents a practical first-pass compilation baseline instead of the upper bound of achievable accuracy.
+7. The table reflects PTQ results compiled with 50 calibration images.
 
 ## Result Check
 
@@ -1704,7 +1704,7 @@ DFL pose returns point probabilities. COCO JSON serialization preserves the hist
 
 [Source measurement table](https://github.com/D-Robotics/rdk_model_zoo/blob/cb86079ae5befcef9ca50fb46c8a6d8980106dec/samples/vision/ultralytics_yolo26/evaluator/README_cn.md).
 
-The linked record associates YOLO26m with 51.1 ms / 24.8 FPS and YOLO26l with 40.1 ms / 19.5 FPS. The other X5 table above assigns the single-thread latencies differently. These are conflicting source records; neither record establishes a corrected value. Input is NV12; sizes, classes and thread counts appear in each row.
+The linked record associates YOLO26m with 51.1 ms / 24.8 FPS and YOLO26l with 40.1 ms / 19.5 FPS. The other X5 table above assigns the single-thread latencies differently. The two source records disagree; both are retained as originally recorded. Input is NV12; sizes, classes and thread counts appear in each row.
 
 | Device | Model | Size <br> (Pixels) | Classes | BPU Task Latency / <br> BPU Throughput (Threads) | CPU Latency | params <br> (M) | FLOPs <br> (B) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |

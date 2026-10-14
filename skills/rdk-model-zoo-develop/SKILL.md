@@ -1,7 +1,7 @@
 ---
 name: rdk-model-zoo-develop
 description: "Use when adding or modifying maintained RDK Model Zoo samples, shared utilities, sample docs, tests, or repository conventions, including bug fixes. 触发词：开发样例、新增模型、修复 sample、公共工具。Do not use as the primary skill for read-only review, ready-made use, or toolchain quantization."
-version: "1.1.1"
+version: "1.1.2"
 license: Apache-2.0
 metadata:
   author: "RDK Model Zoo maintainers"
@@ -22,9 +22,9 @@ metadata:
 
 ## Instructions
 
-1. 读取 [context-policy.md](references/context-policy.md)，确认工作区与交付来源。`rdk_x5` 只是 Skill 维护源；按目标 ref 和仓库事实识别 X5、S100/S100P/S600、X3 或 legacy，不把分支名当硬件探测。写出模型/任务、目标平台、语言、功能、转换/评估/文档和验收范围；缺少的约束作为问题或提议，不编造承诺。用户约束冲突时不切换分支。
-2. 阅读目标规范与 [repository-rules.md](references/repository-rules.md)，建立适用条款表。目标 ref 存在样例标准契约时（如 develop 的 `docs/sample-standards/readme-contract.md` 与 `inference-contract.md`）一并读取并列为最高层适用条款；旧 ref 没有这些文件时不虚构，按该 ref 实际规范执行。选择同任务/平台/runtime 参考样例；相邻源码只作参考。规范空缺应单列接口提案；未批准规则不能作为现行门禁。
-3. 先明确最小修改计划和测试。新 sample 先定 Config/Model/入口/脚本与 I/O；公共 utils 先列调用方与平台影响。错误修复从日志定位具体文件/函数，验证假设后再改，不先批量重构。
+1. 读取 [context-policy.md](references/context-policy.md)，确认工作区与交付来源。统一集成线 `develop` 是 Skill 文档的日常维护分支，已发布默认分支仍是 `rdk_x5`；按目标 ref 和仓库事实识别 X5、S100/S100P/S600、X3 或 legacy，不把分支名当硬件探测。写出模型/任务、目标平台、语言、功能、转换/评估/文档和验收范围；缺少的约束作为问题或提议，不编造承诺。用户约束冲突时不切换分支。
+2. 阅读目标规范与 [repository-rules.md](references/repository-rules.md)，建立适用条款表。目标 ref 存在样例标准契约时（统一集成线：`docs/sample-standards/` 下的 `readme-contract.md`、`runtime-code.md`、`cpp-runtime-code.md` 及 `templates/`）一并读取并列为最高层适用条款；旧 ref 没有这些文件时不虚构，按该 ref 实际规范执行。选择同任务/平台/runtime 参考样例；相邻源码只作参考。规范空缺应单列接口提案；未批准规则不能作为现行门禁。
+3. 先明确最小修改计划和测试。普通单任务 sample 采用 `main.py` + `cli.py` + 一个按任务命名的模型文件（如 `classify.py`）；多任务家族（如 Ultralytics YOLO）是 `main.py` + `cli.py` + 每任务一个模型文件。采用共享 helper 的 sample 经 `utils/py_utils/platforms.resolve_target` 选择板卡目标（`auto|x5|s100|s100p|s600`，未知目标报错；支持的 target 以该 sample 为准），不硬编码平台字符串。公共 utils 先列调用方与平台影响。错误修复从日志定位具体文件/函数，验证假设后再改，不先批量重构。
 4. 对可在 host 验证的逻辑先写失败测试，再实现最小修复。硬件依赖分离，mock 只能证明 host 边界，不能称板测。结构、路径和文档检查不导入目标 runtime。
 5. 实现时按实际适用规范处理命名、默认参数、错误返回、注释、资源释放、前后处理与公共代码复用。Python/C++ 参数风格区别处理；是否双语言由类别规则和交付承诺决定。
 6. 模型需重新转换/调整 I/O 时由 `rdk-model-zoo-integrate` 协调工具链，不新增量化技能。产物仅按 model 获取约定落地；临时结果和私有数据留在被忽略或仓库外的独立目录。

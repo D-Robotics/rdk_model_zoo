@@ -47,7 +47,7 @@ evaluator/
 | --progress-every | 50 | progress interval |
 | --min-miou | 0.0 | write report and return 2 if below threshold |
 
-标准发布文件名可推导骨干；自编译自定义文件名须传 --backbone，和文件名冲突时拒绝。--model 是显式评估输入，不验证发布哈希；报告保存实际模型 digest，不能把这条路径当作已认证下载。
+标准发布文件名可推导骨干；自编译自定义文件名须传 --backbone，和文件名冲突时拒绝。--model 是显式评估输入；报告保存实际模型 digest，已认证下载走模型准备路径。
 
 <a id="command"></a>
 ## PyTorch 权重文件

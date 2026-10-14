@@ -94,7 +94,7 @@ C++ 入口读取 Python 前端生成的 NPY／清单，不重复执行音频前�
 最多 400 帧，每帧 560 维。真实 CPU 前端的特征生成流程
 详见 Python 说明。流程中的全零 context bias
 保留源部署方式，不提供用户自定义热词功能。三模型的具体接口见
-[物理张量契约](../runtime/python/README_cn.md)。INT16 名称描述编译配方，不能据此猜测 I/O 类型。
+[物理张量契约](../runtime/python/README_cn.md)。制品名称中的 INT16 标记编译配方；实际 I/O 类型以该契约与模型 metadata 为准。
 
 三个 `.hbm` 是 S100 编译制品，各自发布方 SHA-256 均为 `null (unknown)`。
 `tokens.json` 是 UTF-8 JSON，`am.mvn` 是文本 CMVN，`paraformer_config.yaml` 是 YAML。

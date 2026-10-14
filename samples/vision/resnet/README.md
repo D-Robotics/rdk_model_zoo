@@ -235,7 +235,7 @@ The CPU governor was `performance` and the CPUs ran at the clock listed (all
 online cores) during each measurement; the boards differ in CPU and BPU clocks,
 so compare targets with care. The C++ pipeline uses a scalar, bit-exact
 reimplementation of Pillow's bicubic resize, which dominates its preprocessing
-time; it is not an upper bound for an optimized pipeline. To reproduce the accuracy numbers see the
+time; the latency columns record this implementation's measured cost. To reproduce the accuracy numbers see the
 [evaluator](evaluator/README.md); the C++ timing tool is described in the
 [benchmark instructions](../../../utils/tools/classification/cpp/README.md).
 

@@ -104,11 +104,20 @@
     - 在检查表中逐项关联文件与核对证据，不以"文档已更新"一行代替
 - id: develop-eval-012
   dimension: correctness
-  prompt: 把模型下载和 NMS 都挪进 forward，调用方一行就能拿到最终框。
-  context: 目标 ref 的推理契约规定 forward 只做底层推理。
+  prompt: 把模型下载和 NMS 都挪进 infer，调用方一行就能拿到最终框。
+  context: 目标 ref 的 runtime 契约规定 infer 只做底层推理。
   expect:
     skill: rdk-model-zoo-develop
     behavior:
-    - 拒绝把下载/NMS/文件输出混入 forward
-    - 按契约拆分 pre/forward/post 职责并说明理由
+    - 拒绝把下载/NMS/文件输出混入 infer
+    - 按契约拆分 preprocess/infer/postprocess 职责并说明理由
     - 需要便捷入口时用 predict/示例层封装，不改契约边界
+- id: develop-eval-013
+  dimension: correctness
+  prompt: 按目标仓库的 docs/sample-standards/inference-contract.md 对齐这个 sample 的阶段接口。
+  context: 统一集成线的 sample 标准契约是 runtime-code.md 与 readme-contract.md，inference-contract.md 不存在。
+  expect:
+    skill: rdk-model-zoo-develop
+    behavior:
+    - 读取目标 ref 实际存在的契约文件，不沿用不存在的文件名
+    - 按 preprocess/infer/postprocess 与 predict 串联核对阶段接口

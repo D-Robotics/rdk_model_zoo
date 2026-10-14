@@ -50,7 +50,7 @@ bash samples/vision/lanenet/runtime/python/run.sh --target s100 --output outputs
 python3 -m samples.vision.lanenet.runtime.python.main --target s100 --asset-id s:lanenet:s100/lanenet256x512.hbm --model-path /data/models/lanenet256x512.hbm --test-img /data/road.jpg --output outputs/lanenet_external
 ```
 
-外部模型路径必须同时提供资产 ID。这只声明预期契约；缺少发布方校验和时，不能认证文件来源。仅支持 S100。
+外部模型路径必须同时提供资产 ID，用于声明预期契约。仅支持 S100。
 
 <a id="parameters"></a>
 ## 参数
@@ -137,6 +137,6 @@ assert set(details.raw) == set(task.binding.metadata.output_names)
 
 - 模型缺失：按模型说明显式准备；`--dry-run` 不验证文件内容。
 - 身份拒绝：确认物理板卡为 S100；S100P/S600 需各自的制品与绑定。
-- 元数据不符：保留实际名称/形状/类型；未确认语义时不能通过改名绕过检查。
+- 元数据不符：保留实际名称/形状/类型；改名前先确认语义。
 - 图像无效或输出路径已存在：使用可解码图像与新目录。部分 IO 失败可能留下不完整目录，复用结果前先检查错误。
 - 颜色不符合预期：单独检查原始嵌入；彩色渲染是语义车道分割视图，不含实例 ID。声明精度或等价前请阅读[评估边界](../../evaluator/README_cn.md)。

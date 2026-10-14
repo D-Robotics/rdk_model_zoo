@@ -31,7 +31,7 @@ From the repository root, download separately from inference:
 bash samples/speech/kws/model/download.sh --target s100
 ```
 
-`--asset-id` defaults to the exact identity above and rejects any other value. `--output-dir /path/to/models` stores `s100/kws.hbm` under that directory. `PYTHON` selects the interpreter. The shared downloader checks file existence/size and configured checksums; this record has no publisher checksum, so the printed observed SHA binds bytes but does not authenticate their origin. No board is required to download. Errors return 2; incomplete downloads must not be treated as ready models.
+`--asset-id` defaults to the exact identity above and rejects any other value. `--output-dir /path/to/models` stores `s100/kws.hbm` under that directory. `PYTHON` selects the interpreter. The shared downloader checks file existence/size and configured checksums; this record configures no publisher checksum, and the printed observed SHA-256 is recorded alongside the download URL. No board is required to download. Errors return 2; incomplete downloads must not be treated as ready models.
 
 <a id="accompanying-files"></a>
 ## Accompanying data

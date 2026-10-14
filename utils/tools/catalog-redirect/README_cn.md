@@ -12,7 +12,7 @@
 
 **本仓库没有工作流部署此文件；未经明确决策，也不应部署。** 文件保留在这里供评审，以便后续有计划地发布重定向：
 
-- `rdk_model_zoo` 的 GitHub Pages 站点根路径必须继续提供内容，因此需要向该 Pages 环境部署。这会改变仓库的发布方式，并非数据构建。
+- `rdk_model_zoo` 的 GitHub Pages 站点根路径必须继续提供内容，因此需要向该 Pages 环境部署。发布即向该 Pages 环境部署，属于仓库发布方式的变更，数据构建 workflow 不涉及部署。
 - 发布会影响在线 URL，是用户可见的对外操作。
 
 模型仓库已移除 Pages 部署：`.github/workflows/model-catalog-data.yml` 只构建、上传 catalog 数据包。

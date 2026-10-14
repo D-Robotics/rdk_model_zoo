@@ -85,8 +85,8 @@ python utils/tools/classification/freeze.py \
 
 The source root layout is `<repo-name>/<revision>/{config.json,README.md,model.safetensors}`.
 `toolchains.json` records the actual Docker tags and immutable image IDs.
-The campaign's one-percentage-point Top-1/Top-5 drop limits are local candidate
-gates, not a repository-wide policy. Changing a frozen input creates a new
+The campaign's one-percentage-point Top-1/Top-5 drop limits are the gates for
+that campaign. Changing a frozen input creates a new
 campaign. COCO calibration suitability is checked by subsequent quantized
 evaluation on the complete independent classification dataset.
 

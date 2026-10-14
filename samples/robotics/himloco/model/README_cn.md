@@ -61,5 +61,4 @@ bash samples/robotics/himloco/model/download_model.sh --target x5
 
 发布 BIN SHA-256：
 `7ce46ca2628f8bc236da0e8564180a1de92847bddf1ec00717ce7aa93e8c3e6a`。
-来源是活动清单，继承自固定 X5 Sample。准备成功证明文件与该摘要一致，不证明 SDK
-兼容、动作精度或闭环稳定性；运行时还会核验物理张量元数据。
+来源是活动清单，继承自固定 X5 Sample。准备成功表示文件与该摘要一致；运行时在加载模型时核验物理张量元数据，动作精度与闭环稳定性按板端评测与闭环流程验证。

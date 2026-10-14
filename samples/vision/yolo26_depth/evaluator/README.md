@@ -136,8 +136,7 @@ python eval_numeric.py --image /work/depth/input.png \
   --output /work/depth/single-image
 ```
 
-`--x5` remains an alias for `--candidate`; the candidate is no longer hardcoded as
-X5 n. `--official` names the supplied reference path, not an authenticity check.
+`--x5` is an alias for `--candidate`. `--official` names the supplied reference path the metrics are computed against.
 Both maps must match the image shape and contain finite values greater than 1e-6.
 
 <a id="metrics"></a>

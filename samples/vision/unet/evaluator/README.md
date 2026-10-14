@@ -50,7 +50,7 @@ Common requirements: Python 3.10+, NumPy, Pillow. PyTorch/ONNX backends addition
 | --progress-every | 50 | progress interval |
 | --min-miou | 0.0 | write report and return 2 if below threshold |
 
-Standard published filenames identify the backbone; custom compiled filenames require --backbone, and conflicting filename/backbone pairs are rejected. --model is explicit evaluation input, not publisher-hash authentication. Reports record its actual digest; this path must not be presented as a verified download.
+Standard published filenames identify the backbone; custom compiled filenames require --backbone, and conflicting filename/backbone pairs are rejected. --model is explicit evaluation input; the report records its actual digest, and verified downloads go through the model preparation path.
 
 <a id="command"></a>
 ## PyTorch checkpoint

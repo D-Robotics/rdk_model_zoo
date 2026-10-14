@@ -75,8 +75,7 @@ must match its publisher digest. For a newly compiled model, explicitly use
 for those bytes. Target and metadata checks still apply; the report records
 `artifact_origin=user-converted`, `asset_id=null`, the contract reference and
 actual file digest. See the [custom-model example](../../model/README.md).
-S publisher digests are absent from the source manifest; an observed local hash
-does not establish publisher authenticity. Core availability is SDK-dependent.
+S publisher digests are absent from the source manifest. Core availability is SDK-dependent.
 
 <a id="results"></a>
 ## Results

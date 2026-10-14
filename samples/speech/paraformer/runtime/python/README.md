@@ -157,8 +157,8 @@ missing selected WAVs fail instead of silently reducing the evaluated set.
 - Inference: utterance records additionally contain `text`, `token_ids`,
   `token_count`, `decoder_executed` and stage `timings_ms`; no NPY feature export.
   `metadata` contains the bound model metadata. CER reporting is provided by the
-  [evaluator](../../evaluator/README.md). `frontend_ms` excludes file loading;
-  stage timing is not full end-to-end latency.
+  [evaluator](../../evaluator/README.md). `frontend_ms` starts after file loading;
+  stage timings cover the model-call segment.
 - `failed.json`: failure after output-directory creation, with current utterance,
   completed earlier records, error type/message and identities collected so far.
   Preflight errors can occur before a directory exists and only print stderr.
@@ -405,9 +405,10 @@ the original exception as `__cause__`; CIF errors use stage `cif`/operation
 `integrate`. Operation labels use (`pre_process`,
 `forward`, `post_process`) whichever spelling is called, and appear in CLI failure messages. The CLI failure message retains this attribution. Invalid
 pipeline feature length is rejected before model execution. Timed model calls
-(the `infer` implementations) include
-raw validation/copy overhead and adapter execution, not isolated accelerator time;
-pre/post, frontend, model loading and I/O are excluded.
+(the `infer` implementations) cover
+raw validation/copy overhead and adapter execution — the timing scope is the
+model-call segment; frontend time is reported as `frontend_ms`, and pre/post,
+model loading and file I/O sit outside the model-call timings.
 
 `predict(features, feature_length)` requires finite float32 prepared features and
 an integer valid length 1–400. Shape/dtype/finiteness are checked at every consumed
@@ -415,19 +416,21 @@ boundary. Intermediate values are copied so later runner buffers cannot overwrit
 retained encoder context. The pipeline does not load an SDK or change scheduling;
 physical-model validation and scheduling are provided by the runtime adapter below.
 Read the physical I/O precision from the model metadata — the artifact
-filename's INT16 tag names the compiler recipe, not the I/O dtypes.
+filename's INT16 tag names the compiler recipe.
 
 `Prediction` includes text, selected token IDs, CIF count, per-stage milliseconds,
 and `decoder_executed`. Text follows the S source: argmax on the valid prefix,
 remove tokens enclosed by `<...>`, strip `@@`, concatenate without a separator.
-Repeated tokens remain repeated: this is not CTC. The token count and ID list
+Repeated tokens remain repeated; decoding does not apply CTC collapsing. The token count and ID list
 include subsequently removed special tokens. A zero CIF count bypasses the decoder
 and returns empty text, empty IDs, `decoder_executed=False` and decoder timing
 `None`. A stage error propagates and produces no successful prediction.
 
-Timings measure the three runner calls and CPU CIF separately. They exclude
-frontend, loading, validation/copying outside the calls, text decoding and file I/O;
-their sum is not end-to-end latency.
+Timings measure the three runner calls and CPU CIF separately, composing the
+model-call segment. Frontend time is reported separately as `frontend_ms`;
+loading, validation/copying outside the calls, text decoding and file I/O sit
+outside the model-call timings; end-to-end latency is measured over the
+complete call.
 
 ## Place in the pipeline
 
@@ -475,12 +478,11 @@ the decoder. Partial weight below the next integer is not emitted. More than 100
 emitted embeddings retain the first 100, matching the source contract.
 
 The arithmetic preserves the source's float64 cumulative sums rounded to float32
-and its one-fire-per-frame rule. It is not a general multi-fire integrator for
-weights above one. Inputs remain unchanged. Invalid shape, dtype, non-finite
+and its one-fire-per-frame rule; firing is capped at one per frame. Inputs remain unchanged. Invalid shape, dtype, non-finite
 values, negative weights or invalid frame count raise an error before integration;
 there is no implicit cast or batch-size expansion. Explicit `real_T=None` preserves
-the source calibration's unmasked distribution and must not be used to replace
-inference masking.
+the source calibration's unmasked distribution; inference-time padding masks pass
+an integer `real_T` (0–400).
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

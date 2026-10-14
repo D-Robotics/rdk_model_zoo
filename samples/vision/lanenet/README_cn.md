@@ -85,7 +85,7 @@ bash samples/vision/lanenet/runtime/cpp/run.sh --target s100 --build --output ou
 
 另保留[源原生嵌入显示图](test_data/cpp_instance_pred.png)和[原生二值显示图](test_data/cpp_binary_pred.png)。数值比较使用原始嵌入数组；车道实例需要进一步聚类。
 
-车道实例 ID 与拟合曲线需对嵌入执行聚类及曲线拟合。显示颜色本身不代表车道实例身份。
+车道实例 ID 与拟合曲线需对嵌入执行聚类及曲线拟合。显示颜色仅用于可视化，车道实例身份来自聚类结果。
 
 <a id="entry-points"></a>
 ## 用户与 Agent 的入口

@@ -50,7 +50,7 @@ To use a prepared external model and image:
 python3 -m samples.vision.lanenet.runtime.python.main --target s100 --asset-id s:lanenet:s100/lanenet256x512.hbm --model-path /data/models/lanenet256x512.hbm --test-img /data/road.jpg --output outputs/lanenet_external
 ```
 
-The model path requires an explicit asset ID. This declares the intended contract; absent a publisher checksum it does not authenticate the file. Only S100 is supported.
+The model path requires an explicit asset ID declaring the intended contract. Only S100 is supported.
 
 <a id="parameters"></a>
 ## Parameters
@@ -139,6 +139,6 @@ Binding requires one model, one float32 `[1,3,256,512]` input, `instance_seg_log
 
 - Missing model: explicitly prepare it using the model instructions; `--dry-run` does not validate file contents.
 - Identity rejection: verify the physical board. S100P/S600 names are not interchangeable with S100.
-- Metadata mismatch: retain actual names/shapes/dtypes; do not bypass validation by renaming a tensor without establishing semantics.
+- Metadata mismatch: retain actual names/shapes/dtypes; establish semantics before renaming any tensor.
 - Invalid image or existing output path: choose a decodable image and a new output directory. A partial IO failure can leave an incomplete directory; inspect the error before reusing results.
 - Unexpected colors: inspect the raw embeddings separately; the colored render is a semantic lane-segmentation view without instance IDs. See [evaluation boundaries](../../evaluator/README.md) before reporting accuracy or equivalence.

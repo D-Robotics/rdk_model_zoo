@@ -116,7 +116,7 @@ outputs/yoloe_cpp_x5_11s_run1/
     masks/000000.png ...
 ```
 
-`launch-report.json` 记录发布引用、本地/发布模型类别、预期及观察摘要、生效选项、可执行程序摘要、精确子进程 argv/cwd、UTC 时间、退出码及结果文件摘要。stdout/stderr 保留原始字节，包括非 UTF-8 输出。清单没有校验值时，观察摘要不构成发布来源认证，`publisher_checksum_verified` 保持 false。自行转换模型所对应的发布 ID 只是架构参考，不是新文件的来源证明。
+`launch-report.json` 记录发布引用、本地/发布模型类别、预期及观察摘要、生效选项、可执行程序摘要、精确子进程 argv/cwd、UTC 时间、退出码及结果文件摘要。stdout/stderr 保留原始字节，包括非 UTF-8 输出。清单没有校验值时，`publisher_checksum_verified` 保持 false，字节身份由报告中的预期/观察摘要记录。自行转换模型所对应的发布 ID 仅命名架构参考。
 
 原生 `report.json` 使用 `rdk-model-zoo/yoloe-native-run/v1` schema，包含 target/variant、模型/图片/词表摘要、图像形状、生效配置及对齐的实例。每个实例记录从 0 起的类别 ID、固定标签、分数、原图 `[x1,y1,x2,y2]` 框及 ROI 掩码路径/形状。PNG 存储值为 0/255，内存掩码为 0/1；零面积实例保留精确的空轴和 `mask: null`，不写空 PNG。`annotated.png` 是展示叠图，不是评估掩码。**所有原生掩码均为 ROI，包括 X5；Python X5 使用整图概率掩码。** 评估输入不能直接互换，需适配相应协议。
 

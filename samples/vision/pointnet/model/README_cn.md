@@ -57,7 +57,7 @@ python3 samples/vision/pointnet/runtime/python/main.py --target s100 --asset-id 
 <a id="formats-checksums"></a>
 ## 格式与校验值
 
-格式 `.hbm`；发布清单 `sha256: null (unknown)`。下载器输出的是观测 SHA-256，
-用于追踪，不能当作发布方校验值。加载要求单模型、float32 `(1,3,N)` 输入、`(1,N,4)` 输出。
+格式 `.hbm`；发布清单 `sha256: null (unknown)`。下载器输出的观测 SHA-256 用于追踪；
+本制品未配置发布方校验值。加载要求单模型、float32 `(1,3,N)` 输入、`(1,N,4)` 输出。
 输出数据类型取自元数据并校验；整数 logits 必须有有效 SCALE 参数。
 这些检查用于选择与摘要校验；板端执行与 HBM 兼容性以实际加载为准。
