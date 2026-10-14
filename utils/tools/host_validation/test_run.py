@@ -1119,10 +1119,11 @@ class SourceDriftTests(RunnerFixtureTestCase):
         target = repo / "samples/vision/zeta/README.md"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text("initial\n")
-        for command in (("add", "samples/vision/zeta/README.md"),
-                        ("commit", "-m", "seed zeta readme")):
-            subprocess.run(["git", "-C", str(repo), *command],
-                           capture_output=True, check=True)
+        # Seed through the _git helper: its per-command user.name/user.email
+        # keep the fixture commit working on a clean runner with no global
+        # Git identity (a bare `git commit` exits 128 there).
+        _git(repo, "add", "samples/vision/zeta/README.md")
+        _git(repo, "commit", "-m", "seed zeta readme")
         before = subprocess.run(
             ["git", "-C", str(repo), "status", "--porcelain"],
             capture_output=True, text=True, check=True).stdout
