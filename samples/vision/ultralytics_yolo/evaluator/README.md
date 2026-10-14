@@ -174,6 +174,117 @@ The [sample guide](../README.md) describes the YOLOv8n and YOLO26n detection com
 `eval_common.py` handles shared arguments, category mapping and dataset selection. Each `eval_yolo_*.py` owns its metric/result format and calls the existing runtime task. `eval_batch.py` only dispatches those commands. Export or tensor-layout changes belong in [conversion](../conversion/README.md) and the runtime binding, not in metric code.
 
 
+## Published YOLOv8 and YOLO11 builds
+
+Board results of the 82 YOLOv8 / YOLO11 builds published on 2026-10-14 (INT8, NV12 input, max-percentile 0.99995 calibration on 200 COCO train2017 images). The model files download from `https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_<board>/ultralytics_yolo/` (each directory's SHA256SUMS lists its checksums); each build's release record (release.json) and OE conversion report are under `https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/<family>/<task>/<size>/<board>/`.
+
+- Accuracy: all 5000 COCO val2017 images (detection box, instance-segmentation box/mask and keypoint mAP50-95, conf 0.001, NMS 0.7); classification on the 10,000 ImageNetV2 MatchedFrequency images (not ILSVRC2012 val). FP32 and board use the same evaluator, export flavour and thresholds.
+- Relative loss is the largest over the listed metrics; ⚠ marks a loss above 5%, published with the loss shown by the owner's decision of 2026-10-14.
+- Runtime: `hrt_model_exec perf`, 1/2 threads, 3 runs of 200 frames each. C++ end to end: the sample's `--benchmark`, in-memory BGR to final results, 1/2 pipeline streams, 3 rounds of 200 frames.
+- The tables after this section are earlier measurements of older model files under other conditions and are not comparable with this section.
+
+### Object detection
+
+| Model | Board | bbox mAP50-95 FP32 | bbox mAP50-95 board | Relative loss | Runtime latency, 1 thread (ms) | Runtime FPS, 1/2 threads | C++ end-to-end FPS, 1/2 streams |
+|---|---|---|---|---|---|---|---|
+| YOLOv8n Detect | X5 | 36.77 | 35.74 | -2.8% | 9.61 | 103.8 / 243.1 | 26.1 / 51.3 |
+| YOLOv8s Detect | X5 | 44.29 | 43.55 | -1.7% | 17.16 | 58.2 / 91.8 | 22.1 / 43.9 |
+| YOLOv8m Detect | X5 | 49.55 | 48.71 | -1.7% | 31.50 | 31.7 / 35.9 | 14.6 / 31.6 |
+| YOLOv8m Detect | S100 | 49.55 | 48.69 | -1.9% | 4.78 | 207.8 / 226.3 | 74.3 / 146.2 |
+| YOLOv8m Detect | S100P | 49.55 | 48.69 | -1.9% | 3.37 | 294.7 / 321.1 | 108.1 / 210.1 |
+| YOLOv8m Detect | S600 | 49.55 | 48.64 | -1.8% | 2.68 | 370.4 / 718.0 | 112.2 / 218.1 |
+| YOLOv8l Detect | X5 | 52.16 | 51.09 | -2.1% | 60.62 | 16.5 / 17.7 | 9.5 / 17.6 |
+| YOLOv8l Detect | S100 | 52.16 | 51.05 | -2.3% | 9.47 | 105.2 / 109.7 | 52.9 / 100.8 |
+| YOLOv8l Detect | S100P | 52.16 | 51.05 | -2.3% | 6.65 | 149.7 / 156.4 | 79.4 / 153.9 |
+| YOLOv8l Detect | S600 | 52.16 | 50.99 | -2.4% | 4.52 | 220.5 / 434.3 | 92.7 / 180.8 |
+| YOLOv8x Detect | X5 | 53.17 | 51.99 | -2.2% | 93.83 | 10.7 / 11.1 | 7.3 / 11.1 |
+| YOLOv8x Detect | S100 | 53.17 | 51.92 | -2.4% | 15.10 | 66.1 / 67.9 | 40.6 / 67.9 |
+| YOLOv8x Detect | S100P | 53.17 | 51.89 | -2.4% | 10.35 | 96.3 / 99.2 | 61.3 / 99.0 |
+| YOLOv8x Detect | S600 | 53.17 | 51.82 | -2.7% | 7.21 | 138.2 / 272.6 | 74.0 / 145.4 |
+
+### Instance segmentation
+
+| Model | Board | box AP FP32 | box AP board | mask AP FP32 | mask AP board | Relative loss | Runtime latency, 1 thread (ms) | Runtime FPS, 1/2 threads | C++ end-to-end FPS, 1/2 streams |
+|---|---|---|---|---|---|---|---|---|---|
+| YOLOv8n Seg | X5 | 36.07 | 35.15 | 27.17 | 26.48 | -2.5% | 12.17 | 82.0 / 162.8 | 10.6 / 20.6 |
+| YOLOv8s Seg | X5 | 44.08 | 43.35 | 32.55 | 32.07 | -1.7% | 22.41 | 44.6 / 68.8 | 10.5 / 20.6 |
+| YOLOv8m Seg | X5 | 49.06 | 48.04 | 35.71 | 34.85 | -2.4% | 42.34 | 23.6 / 28.2 | 8.5 / 17.0 |
+| YOLOv8m Seg | S100 | 49.06 | 48.03 | 35.70 | 34.90 | -2.2% | 6.21 | 159.8 / 172.0 | 33.7 / 63.8 |
+| YOLOv8m Seg | S100P | 49.06 | 48.03 | 35.70 | 34.90 | -2.2% | 4.32 | 229.9 / 246.8 | 46.0 / 84.3 |
+| YOLOv8m Seg | S600 | 49.06 | 48.09 | 35.70 | 34.91 | -2.2% | 3.30 | 301.1 / 594.0 | 33.9 / 67.2 |
+| YOLOv8l Seg | X5 | 51.48 | 50.40 | 37.18 | 36.54 | -2.1% | 76.55 | 13.1 / 14.3 | 6.0 / 12.0 |
+| YOLOv8l Seg | S100 | 51.47 | 50.32 | 37.18 | 36.55 | -2.2% | 11.64 | 85.6 / 89.0 | 27.7 / 54.6 |
+| YOLOv8l Seg | S100P | 51.47 | 50.32 | 37.18 | 36.55 | -2.2% | 8.10 | 123.1 / 127.8 | 38.7 / 73.3 |
+| YOLOv8l Seg | S600 | 51.47 | 50.31 | 37.18 | 36.55 | -2.3% | 5.59 | 178.2 / 352.4 | 31.4 / 62.0 |
+| YOLOv8x Seg | X5 | 52.64 | 51.26 | 37.88 | 37.00 | -2.6% | 117.54 | 8.5 / 9.0 | 4.8 / 9.0 |
+| YOLOv8x Seg | S100 | 52.64 | 51.20 | 37.88 | 36.93 | -2.7% | 18.67 | 53.4 / 54.8 | 22.2 / 44.6 |
+| YOLOv8x Seg | S100P | 52.64 | 51.20 | 37.88 | 36.98 | -2.7% | 12.88 | 77.4 / 79.4 | 32.9 / 63.6 |
+| YOLOv8x Seg | S600 | 52.64 | 51.20 | 37.88 | 36.97 | -2.7% | 8.88 | 112.2 / 221.6 | 28.5 / 56.2 |
+| YOLO11n Seg | X5 | 38.27 | 36.75 | 28.67 | 27.39 | -4.5% | 12.94 | 77.2 / 137.5 | 9.8 / 19.1 |
+| YOLO11s Seg | X5 | 45.72 | 44.54 | 33.46 | 32.74 | -2.6% | 24.02 | 41.6 / 60.4 | 10.2 / 19.8 |
+| YOLO11m Seg | X5 | 50.70 | 49.40 | 36.49 | 35.66 | -2.6% | 53.14 | 18.8 / 22.0 | 7.9 / 15.6 |
+| YOLO11m Seg | S600 | 50.70 | 49.37 | 36.49 | 35.64 | -2.6% | 3.62 | 274.1 / 542.4 | 33.9 / 66.3 |
+| YOLO11l Seg | X5 | 52.49 | 51.02 | 37.59 | 36.62 | -2.8% | 62.27 | 16.1 / 18.0 | 7.3 / 14.4 |
+| YOLO11x Seg | X5 | 53.80 | 52.40 | 38.30 | 37.49 | -2.6% | 131.73 | 7.6 / 8.0 | 4.5 / 8.0 |
+| YOLO11x Seg | S100 | 53.80 | 52.29 | 38.29 | 37.43 | -2.8% | 16.92 | 58.9 / 60.7 | 23.4 / 47.2 |
+| YOLO11x Seg | S100P | 53.80 | 52.29 | 38.29 | 37.43 | -2.8% | 11.76 | 84.8 / 87.2 | 34.4 / 66.0 |
+| YOLO11x Seg | S600 | 53.80 | 52.31 | 38.29 | 37.40 | -2.8% | 8.83 | 112.9 / 223.0 | 28.8 / 56.6 |
+
+### Pose estimation
+
+| Model | Board | keypoint AP FP32 | keypoint AP board | Relative loss | Runtime latency, 1 thread (ms) | Runtime FPS, 1/2 threads | C++ end-to-end FPS, 1/2 streams |
+|---|---|---|---|---|---|---|---|
+| YOLOv8n Pose | X5 | 49.87 | 48.07 | -3.6% | 7.59 | 131.3 / 241.1 | 33.9 / 66.6 |
+| YOLOv8s Pose | X5 | 59.43 | 56.62 | -4.7% | 17.55 | 56.9 / 88.1 | 26.1 / 51.3 |
+| YOLOv8m Pose | X5 | 64.47 | 61.96 | -3.9% | 32.42 | 30.8 / 34.8 | 16.3 / 34.4 |
+| YOLOv8m Pose | S100 | 64.48 | 61.94 | -3.9% | 5.08 | 195.6 / 213.1 | 84.7 / 157.3 |
+| YOLOv8m Pose | S100P | 64.48 | 61.94 | -3.9% | 3.58 | 277.4 / 301.8 | 125.0 / 238.4 |
+| YOLOv8m Pose | S600 | 64.48 | 62.03 | -3.8% | 2.77 | 358.4 / 697.3 | 129.2 / 253.4 |
+| YOLOv8l Pose | X5 | 66.91 | 64.58 | -3.5% | 61.27 | 16.3 / 17.4 | 11.5 / 17.3 |
+| YOLOv8x Pose | X5 | 68.37 | 66.24 | -3.1% | 95.34 | 10.5 / 11.0 | 8.3 / 10.9 |
+| YOLOv8x Pose | S100 | 68.37 | 66.20 | -3.2% | 15.40 | 64.7 / 66.7 | 44.6 / 66.7 |
+| YOLOv8x Pose | S100P | 68.37 | 66.20 | -3.2% | 10.56 | 94.5 / 97.4 | 67.0 / 97.2 |
+| YOLOv8x Pose | S600 | 68.37 | 66.15 | -3.3% | 7.39 | 134.9 / 266.5 | 81.1 / 158.8 |
+| YOLO11n Pose | X5 | 49.24 | 46.23 | -6.1% ⚠ | 10.31 | 96.8 / 175.6 | 32.3 / 63.7 |
+| YOLO11s Pose | X5 | 57.89 | 55.18 | -4.7% | 20.20 | 49.4 / 73.9 | 23.5 / 49.0 |
+| YOLO11m Pose | X5 | 64.32 | 61.57 | -4.3% | 36.56 | 27.3 / 30.4 | 15.1 / 30.3 |
+| YOLO11m Pose | S600 | 64.32 | 61.71 | -4.1% | 2.69 | 368.0 / 728.2 | 131.3 / 258.2 |
+| YOLO11l Pose | X5 | 65.43 | 62.77 | -4.1% | 47.50 | 21.0 / 23.0 | 13.5 / 23.0 |
+| YOLO11l Pose | S100 | 65.43 | 62.85 | -3.9% | 6.70 | 148.4 / 157.6 | 73.2 / 141.9 |
+| YOLO11l Pose | S100P | 65.43 | 62.85 | -3.9% | 4.82 | 206.2 / 220.1 | 108.6 / 206.2 |
+| YOLO11l Pose | S600 | 65.43 | 62.82 | -4.0% | 3.31 | 299.9 / 587.0 | 120.7 / 223.7 |
+| YOLO11x Pose | X5 | 68.63 | 66.22 | -3.5% | 99.98 | 10.0 / 10.4 | 8.0 / 10.5 |
+| YOLO11x Pose | S100 | 68.63 | 66.14 | -3.6% | 12.81 | 77.8 / 80.6 | 50.6 / 80.4 |
+| YOLO11x Pose | S100P | 68.63 | 66.14 | -3.6% | 9.04 | 110.2 / 114.1 | 74.4 / 113.8 |
+| YOLO11x Pose | S600 | 68.63 | 66.17 | -3.6% | 6.76 | 147.3 / 290.4 | 85.0 / 167.2 |
+
+### Image classification
+
+| Model | Board | Top-1 FP32 | Top-1 board | Top-5 FP32 | Top-5 board | Relative loss | Runtime latency, 1 thread (ms) | Runtime FPS, 1/2 threads | C++ end-to-end FPS, 1/2 streams |
+|---|---|---|---|---|---|---|---|---|---|
+| YOLOv8n Cls | X5 | 47.26 | 45.29 | 71.04 | 69.82 | -4.2% | 0.97 | 1024.7 / 2001.8 | 261.7 / 509.5 |
+| YOLOv8s Cls | X5 | 54.09 | 50.43 | 77.16 | 74.02 | -6.8% ⚠ | 1.76 | 565.5 / 836.1 | 206.7 / 411.4 |
+| YOLOv8m Cls | X5 | 58.76 | 57.50 | 81.58 | 80.56 | -2.1% | 4.13 | 241.1 / 294.0 | 139.8 / 277.4 |
+| YOLOv8l Cls | X5 | 61.64 | 59.92 | 83.22 | 82.28 | -2.8% | 8.39 | 119.0 / 129.7 | 76.0 / 129.8 |
+| YOLOv8l Cls | S100 | 61.66 | 59.77 | 83.22 | 82.14 | -3.1% | 1.70 | 584.4 / 716.2 | 336.5 / 663.4 |
+| YOLOv8l Cls | S100P | 61.66 | 59.77 | 83.22 | 82.14 | -3.1% | 1.41 | 700.5 / 842.0 | 441.0 / 831.7 |
+| YOLOv8l Cls | S600 | 61.66 | 59.84 | 83.22 | 82.30 | -3.0% | 0.87 | 1135.9 / 2069.3 | 581.3 / 1133.1 |
+| YOLOv8x Cls | X5 | 62.34 | 61.57 | 84.04 | 83.49 | -1.2% | 14.43 | 69.2 / 73.7 | 58.3 / 74.3 |
+| YOLOv8x Cls | S100 | 62.34 | 61.79 | 84.03 | 83.76 | -0.9% | 2.35 | 421.6 / 489.7 | 275.4 / 485.6 |
+| YOLOv8x Cls | S100P | 62.34 | 61.79 | 84.03 | 83.76 | -0.9% | 2.00 | 498.1 / 562.6 | 350.0 / 562.4 |
+| YOLOv8x Cls | S600 | 62.34 | 61.85 | 84.03 | 83.78 | -0.8% | 1.23 | 801.3 / 1446.5 | 474.4 / 912.7 |
+| YOLO11n Cls | X5 | 48.75 | 44.39 | 72.65 | 69.49 | -8.9% ⚠ | 1.35 | 733.4 / 1213.9 | 240.2 / 471.3 |
+| YOLO11s Cls | X5 | 54.35 | 53.11 | 78.01 | 76.71 | -2.3% | 2.36 | 421.2 / 568.3 | 184.1 / 363.3 |
+| YOLO11m Cls | X5 | 58.06 | 57.18 | 81.98 | 80.38 | -2.0% | 4.27 | 233.3 / 280.5 | 136.4 / 268.6 |
+| YOLO11l Cls | X5 | 60.21 | 58.37 | 82.86 | 81.39 | -3.1% | 5.53 | 180.2 / 210.2 | 120.2 / 210.4 |
+| YOLO11l Cls | S100 | 60.23 | 58.42 | 82.86 | 81.38 | -3.0% | 1.09 | 903.6 / 1236.1 | 414.6 / 809.0 |
+| YOLO11l Cls | S100P | 60.23 | 58.42 | 82.86 | 81.38 | -3.0% | 0.87 | 1130.2 / 1554.0 | 582.8 / 1129.6 |
+| YOLO11l Cls | S600 | 60.23 | 58.17 | 82.86 | 81.26 | -3.4% | 0.65 | 1494.4 / 2846.3 | 661.8 / 1230.0 |
+| YOLO11x Cls | X5 | 62.06 | 59.57 | 84.08 | 82.18 | -4.0% | 10.91 | 91.5 / 97.9 | 71.6 / 98.1 |
+| YOLO11x Cls | S100 | 62.05 | 59.46 | 84.08 | 82.02 | -4.2% | 1.70 | 579.2 / 709.8 | 328.3 / 660.3 |
+| YOLO11x Cls | S100P | 62.05 | 59.46 | 84.08 | 82.02 | -4.2% | 1.41 | 703.2 / 846.8 | 443.9 / 832.3 |
+| YOLO11x Cls | S600 | 62.05 | 59.54 | 84.08 | 81.92 | -4.0% | 0.99 | 996.6 / 1871.8 | 539.3 / 1048.0 |
+
 ## BenchMark - Performance
 
 ### RDK X5
