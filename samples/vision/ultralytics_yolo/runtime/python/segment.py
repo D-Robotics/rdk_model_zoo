@@ -75,7 +75,6 @@ class YoloSegConfig:
         mces_num: Dimension of the MCES (mask coefficient) vector. Defaults to 32.
         strides: Feature map downsampling strides for each detection scale.
         anchor_sizes: Feature map grid sizes for each detection scale.
-        do_morph: Whether to apply morphological opening to clean mask edges.
     """
 
     model_path: str
@@ -89,7 +88,6 @@ class YoloSegConfig:
     mces_num: int = 32
     strides: list = field(default_factory=lambda: [8, 16, 32])
     anchor_sizes: Optional[list] = None
-    do_morph: bool = True
 
     contract: Optional[DFLSegmentationContract] = None
 
@@ -194,7 +192,6 @@ class YoloSeg:
             context,
             self.cfg.score_thres if score_thres is None else score_thres,
             self.cfg.nms_thres if nms_thres is None else nms_thres,
-            do_morph=self.cfg.do_morph,
         )
 
     def predict(self, img, image_format="BGR", score_thres=None, nms_thres=None):
@@ -256,7 +253,6 @@ class YOLO26SegConfig:
     input_shape: Optional[tuple] = None
     contract: Optional[LTRBSegmentationContract] = None
     anchor_sizes: Optional[list] = None
-    do_morph: bool = field(default=False, init=False)
 
 
 class YOLO26Seg(YoloSeg):
@@ -284,13 +280,11 @@ class YOLO26Seg(YoloSeg):
 # Numeric decode: DFL/direct-LTRB instance masks; no model loading, SDK calls or rendering.
 # ====================================================================
 
-def decode_segmentation(
-    outputs, contract, transform, score_thres, nms_thres, *, do_morph=True
-):
+def decode_segmentation(outputs, contract, transform, score_thres, nms_thres):
     """Decode validated NHWC floating semantic heads and stride-4 prototypes.
 
-    Returns owned float32 boxes/scores, int64 IDs and ROI masks (DFL uint8, LTRB bool). Source
-    coefficient/prototype math, classwise NMS and optional opening are preserved.
+    Returns owned float32 boxes/scores, int64 IDs and bool ROI masks. Boxes use DFL or
+    direct LTRB distances; both mask paths interpolate probabilities before thresholding.
     """
     score_thres, nms_thres = float(score_thres), float(nms_thres)
     if not np.isfinite(score_thres) or not 0 < score_thres < 1:
@@ -356,50 +350,26 @@ def decode_segmentation(
         np.concatenate(parts, axis=0) for parts in (boxes, scores, ids, coefficients)
     ]
     keep = post.NMS(boxes, scores, ids, nms_thres)
-    if direct:
-        xyxy = inverse_boxes(boxes[keep], transform)
-        masks = _probability_roi_masks(
-            outputs["protos"][0], coefficients[keep], boxes[keep], xyxy, transform
-        )
-        return (
-            np.array(xyxy, dtype=np.float32, copy=True),
-            np.array(scores[keep], dtype=np.float32, copy=True),
-            np.array(ids[keep], dtype=np.int64, copy=True),
-            masks,
-        )
-    proto = outputs["protos"][0]
-    # Source semantics: the prototype crop uses the full decoded box, letterbox
-    # padding included (the model produces prototype responses there too).
-    # Boxes are not clipped to the content region, and negative crop starts
-    # keep the source NumPy slicing behavior, so masks match the original
-    # sample output exactly.
-    masks = post.decode_masks(
-        coefficients[keep],
-        boxes[keep],
-        proto,
-        width,
-        height,
-        proto.shape[1],
-        proto.shape[0],
-        mask_thresh=0.5,
-    )
     xyxy = inverse_boxes(boxes[keep], transform)
-    oh, ow = transform.original_size
-    masks = post.resize_masks_to_boxes(masks, xyxy, ow, oh, do_morph=do_morph)
+    masks = _probability_roi_masks(
+        outputs["protos"][0], coefficients[keep], boxes[keep], xyxy, transform
+    )
     return (
         np.array(xyxy, dtype=np.float32, copy=True),
         np.array(scores[keep], dtype=np.float32, copy=True),
         np.array(ids[keep], dtype=np.int64, copy=True),
-        [np.array(mask, dtype=np.uint8, copy=True) for mask in masks],
+        masks,
     )
 
 
 def _probability_roi_masks(
     prototype, coefficients, model_boxes, original_boxes, transform
 ):
-    """YOLO26: interpolate probabilities, remove actual padding, then binarize.
+    """Interpolate probabilities, remove actual padding, then binarize.
 
-    This order intentionally differs from DFL's cropped binary-mask resizing.
+    Shared by DFL (v8/v9/v11) and YOLO26 segmentation and the same order as the C++
+    sample: thresholding after bilinear interpolation keeps smooth mask edges, where
+    binarizing at prototype resolution and resizing the binary crop leaves steps.
     No morphological opening is applied. Return one owned bool ROI per box.
     """
     if len(coefficients) == 0:

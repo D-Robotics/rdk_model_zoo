@@ -338,20 +338,22 @@ Injected plain role mappings must already contain finite floating NHWC arrays.
 
 The result is `(boxes, scores, ids, masks)`: owned float32 `(N,4)` xyxy boxes
 clipped to original-image `[0,width]`/`[0,height]`, float32 `(N,)` probabilities,
-int64 `(N,)` class IDs, and N uint8 **ROI masks**, not full-image masks. Each mask
-has values 0/1 and shape `max(int(y2)-int(y1),0)` × `max(int(x2)-int(x1),0)`.
+int64 `(N,)` class IDs, and N bool **ROI masks**, not full-image masks. Each mask
+has shape `max(int(y2)-int(y1),0)` × `max(int(x2)-int(x1),0)`.
 Empty results retain these array ranks/dtypes and return `masks=[]`. A degenerate
 ROI preserves each zero-sized axis; no artificial one-pixel extent is added. Keep each mask paired with its own box.
-The decode uses a coefficient/prototype dot-product threshold `>0.5`, Lanczos
-resize and optional 5×5 morphological opening (`do_morph=True`). The
+The mask decode is the same as YOLO26's and the C++ sample's: combine
+coefficients/prototypes, apply sigmoid, bilinearly resize the probabilities to
+model size, crop by the model-space box, remove actual padding, resize to the
+original image, threshold at `>0.5`, then take the box ROI. Thresholding after
+interpolation keeps mask edges smooth; no morphological opening is applied. The
 returned masks are per-box ROIs; upstream Ultralytics full-image mask
 evaluation is a different metric.
-The Lanczos result is returned as-is after the optional opening: isolated pixels can read 2 (uint8 overshoot); any nonzero value is foreground.
 Confidence must be finite in `(0,1)` and NMS in `[0,1]`.
 
-Geometry uses actual integer resize/padding; prototype crops
-are clipped to visible image content before slicing, so negative coordinates do
-not index from the opposite edge and letterbox padding does not enter the mask.
+Geometry uses actual integer resize/padding; the box crop is applied in model
+space and the letterbox padding is removed before the probabilities are resized
+to the original image, so padding does not enter the mask.
 Board accuracy, real SDK compatibility, latency and dataset metrics are
 measured through the evaluation guide.
 
@@ -595,11 +597,11 @@ dataset metrics are measured through the evaluation guide.
 
 YOLO26 segmentation shares the DFL sample's stage transport, validated runner,
 NMS and explicit geometry, but uses direct LTRB box distances. Its mask algorithm
-also differs: combine coefficients/prototypes, apply sigmoid, bilinearly resize
+is the DFL sample's: combine coefficients/prototypes, apply sigmoid, bilinearly resize
 probabilities to model size, crop by the model-space box, remove actual padding,
 resize probabilities to the original image, threshold at `>0.5`, then take the
-original-image box ROI. Do not substitute DFL's cropped-binary-mask resize or
-morphological opening; interpolation and threshold order change edge pixels.
+original-image box ROI. Thresholding before interpolation (resizing a binary crop)
+would change the edge pixels and leave stepped edges.
 
 Run from the repository root on the matching S600 board after preparing a local
 artifact through [model preparation](../../model/README.md); replace the path:
