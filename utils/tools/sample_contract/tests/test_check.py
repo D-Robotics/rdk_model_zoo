@@ -65,12 +65,13 @@ def run_fixture(name: str, *extra: str):
     return code, stdout.getvalue()
 
 
-def report_for(name: str):
+def report_for(name: str, rule_set: str = "strict"):
     """Run run_sample directly; return the SampleReport."""
 
     templates = CHECK.load_template_anchors(
         CHECK.REPO_ROOT / "docs/sample-standards/templates")
-    return CHECK.run_sample(FIXTURES / name, templates, "import")
+    return CHECK.run_sample(FIXTURES / name, templates, "import",
+                            rule_set=rule_set)
 
 
 def findings_for(report, rule: str):
@@ -473,9 +474,58 @@ class ScopeTests(unittest.TestCase):
         self.assertEqual(len(findings), 1)
         self.assertIn("boguswidget", findings[0].message)
 
-    def test_deprecated_migration_scope_alias_is_accepted(self):
-        args = CHECK.build_arg_parser().parse_args(["--scope", "migration"])
-        self.assertEqual(args.scope, "migration")
+    def test_deprecated_migration_scope_alias_is_rejected(self):
+        # The unified migration is complete: only --scope maintained is
+        # accepted and the hidden --migration-map alias is gone.
+        self.assertEqual(CHECK.main(["--scope", "migration"]), 2)
+        with self.assertRaises(SystemExit):
+            CHECK.build_arg_parser().parse_args(
+                ["--migration-map", "scope.md"])
+
+
+class RuleSetTests(unittest.TestCase):
+    """The delivery rule set narrows CI to the delivery-decidable rules."""
+
+    def test_strict_is_the_default(self):
+        args = CHECK.build_arg_parser().parse_args([])
+        self.assertEqual(args.rule_set, "strict")
+
+    def test_delivery_drops_order_but_keeps_presence_and_uniqueness(self):
+        report = report_for("bad_sections", rule_set="delivery")
+        messages = [f.message
+                    for f in findings_for(report, CHECK.RULE_SECTIONS)]
+        self.assertFalse(
+            any("order deviates from template" in m for m in messages))
+        self.assertTrue(
+            any("missing required section anchor 'quickstart'" in m
+                for m in messages))
+        self.assertEqual(
+            len([m for m in messages if "duplicate anchor id" in m]), 1)
+
+    def test_delivery_skips_stage_purity_with_a_recorded_skip(self):
+        report = report_for("bad_stage_purity_canonical", rule_set="delivery")
+        self.assertEqual(findings_for(report, CHECK.RULE_PURITY), [])
+        skips = [s for s in report.skips if s.rule == CHECK.RULE_PURITY]
+        self.assertEqual(len(skips), 1)
+        self.assertIn("delivery rule set", skips[0].reason)
+        self.assertIn("strict", skips[0].reason)
+
+    def test_delivery_keeps_pairing_links_and_cli_defaults(self):
+        for fixture, rule in (("bad_pair", CHECK.RULE_PAIR),
+                              ("bad_links", CHECK.RULE_LINKS),
+                              ("bad_cli_drift", CHECK.RULE_CLI)):
+            with self.subTest(fixture=fixture):
+                report = report_for(fixture, rule_set="delivery")
+                self.assertTrue(findings_for(report, rule))
+
+    def test_report_records_the_selected_rule_set(self):
+        code, stdout = run_fixture("good_sample", "--format", "json",
+                                   "--rule-set", "delivery")
+        self.assertEqual(code, 0)
+        payload = json.loads(stdout)
+        self.assertEqual(payload["rule_set"], "delivery")
+        self.assertTrue(any(s["rule"] == CHECK.RULE_PURITY
+                            for s in payload["samples"][0]["skips"]))
 
 
 class ExemptionTests(unittest.TestCase):

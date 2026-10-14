@@ -19,15 +19,35 @@ interpreter running `run.py`. Exit status 0 means all selected sections passed.
 
 | Section | Scope |
 | --- | --- |
-| Catalog | `npm run check` in `utils/tools/catalog-publisher`; the build creates `dist/catalog.json` before Python suites read the catalog snapshot. |
+| Catalog | `npm run check` in `utils/tools/catalog-publisher`, run first so the generated `dist/` artifact exists during the run (the sample suites read the `docs/release` manifests directly). |
 | Python | First-party `unittest` directories under all 54 inventory-listed samples, `utils/py_utils/tests`, `utils/tools/board_validation/tests`, `utils/tools/sample_contract/tests`, `skills/tests`, and this runner's tests. |
 | Sample inventory | Cross-checks discovered sample tests with the required `utils/tools/host_validation/sample-inventory.json`. |
-| Static contract | Runs `utils/tools/sample_contract/check.py --scope maintained --parser-mode import`. |
+| Static contract | Runs `utils/tools/sample_contract/check.py --scope maintained --parser-mode import` (strict rule set). |
 | Native CTest | Runs the six host C++ projects listed below. |
 
-Catalog runs first because its build creates the file read by the ultralytics_yolo
-asset and manifest snapshot suites. Install catalog dependencies in
+Catalog runs first so the generated `dist/` artifact exists for any consumer
+during the run. Install catalog dependencies in
 `utils/tools/catalog-publisher` with `npm ci` before running the section.
+
+## CI scope versus the full local gate
+
+The `host-validation` workflow runs this runner on one default leg —
+ubuntu-24.04 with Python 3.12 — with `--skip-catalog --skip-contract`:
+those two sections are owned by the `Model catalog data` and
+`sample-contract` workflows, which run on the same events, so no check runs
+twice in one CI run (the skips are recorded in the report, whose
+`full_gate: false` describes the delegated scope, not a lesser CI run).
+Python 3.10 and the macOS leg are available as expanded compatibility
+through `workflow_dispatch` (`compatibility: expanded`). Changes limited
+to narrative Markdown skip the host gate through an explicit successful
+classification step: Markdown read as prose anywhere in the tree —
+including sample READMEs, whose CLI/link contract the `sample-contract`
+workflow enforces on every PR. Markdown that programs consume (test
+fixtures and `test_data`, skill packs, inputs under `utils/tools`, and the
+`docs/release` catalog data) and every non-Markdown change still run the
+full gate. The command above with no skip flags remains the
+complete local gate: every section, strict rules, Python 3.10 or 3.12,
+Linux or macOS.
 
 | Project | Source directory | Full-gate CMake flags and coverage |
 | --- | --- | --- |
@@ -44,11 +64,17 @@ production CLIs; the host CTest projects use host libraries and SDK doubles.
 
 Python suite results include exact test counts, skip identities and reasons,
 and failure messages. CTest case counts appear in a separate report section.
-The JSON report uses schema `host-validation-report/1`; each run records section
-results, the selected scope, `ci_equivalent`, source HEAD/branch/dirty files,
-and before/after SHA-256 digests of tracked file contents and non-ignored
-untracked files. Gitlinks are recorded as pins rather than hashed file content.
-Source changes during a run fail the source-identity check.
+The JSON report uses schema `host-validation-report/2`; each run records
+section results, the selected scope, `full_gate`, and the source
+identity: HEAD, branch and the `git status --porcelain` dirty-file list
+before and after the run. `full_gate` is true only when the run covered
+the complete local gate (no skipped section, suite filter, allowed native
+skip or disabled default flag); delivery CI legitimately shows
+`full_gate: false` because it delegates the catalog and contract sections
+to their own workflows — the flag describes this run's scope, not whether
+the run is CI. Any HEAD or dirty-list change during a run fails
+the source-identity check; a checkout that is not a Git repository cannot
+pass.
 
 ## Options
 
@@ -56,9 +82,9 @@ Source changes during a run fail the source-identity check.
 | --- | --- |
 | `--python PYTHON` | Select the interpreter for Python suites. |
 | `--timeout N` | Set each suite timeout in seconds (default `1800`). |
-| `--suite SUBSTRING` | Select matching suites; repeatable. The report sets `ci_equivalent` to `false`. |
+| `--suite SUBSTRING` | Select matching suites; repeatable. The report sets `full_gate` to `false`. |
 | `--list` | Print discovered suites, native-only directories, sample coverage, pins and CTest defaults. |
-| `--skip-ctest`, `--skip-contract`, `--skip-catalog` | Skip a section and record it in the report. `--skip-catalog` omits the catalog build needed by ultralytics_yolo snapshot suites. |
+| `--skip-ctest`, `--skip-contract`, `--skip-catalog` | Skip a section and record it in the report. Delivery CI passes `--skip-catalog --skip-contract` because the `Model catalog data` and `sample-contract` workflows own those checks. |
 | `--allow-native-skips` | Record missing native prerequisites as skips. |
 | `--cmake PATH`, `--ctest PATH` | Select CMake and CTest executables. |
 | `--cmake-define PROJECT:VAR=VALUE` | Set a CMake define for a CTest project; repeatable. Full-gate defaults are merged in. |
@@ -67,7 +93,7 @@ The full-gate defaults are `YOLOE_TEST_OPENCV=ON`, `ASR_AUDIO_TESTS=ON`,
 `ASR_CLI_TESTS=ON`, `PARAFORMER_BUILD_TESTS=ON`, `PARAFORMER_BUILD_IO=ON`,
 `PARAFORMER_SANITIZERS=ON` and `HIMLOCO_BUILD_TESTS=ON`. Setting one of these
 flags to a CMake false value records a scope reduction and sets
-`ci_equivalent: false`. The four vendor SDK/CLI flags above remain `OFF`;
+`full_gate: false`. The four vendor SDK/CLI flags above remain `OFF`;
 enabling them is rejected. The accepted override syntax is the untyped
 `PROJECT:VAR=VALUE`; typed cache keys such as `VAR:BOOL`, `VAR:STRING` and
 `VAR:PATH` are rejected. A false value used to restate an SDK/CLI `OFF` default
@@ -107,7 +133,9 @@ identity and reason.
   tiny libx264 encode before the suites run, so a missing FFmpeg fails
   the gate instead of skipping those tests.
 - Node.js 22.12 or newer and below 23, plus `npm ci` in
-  `utils/tools/catalog-publisher`.
+  `utils/tools/catalog-publisher` — only for the local full gate's catalog
+  section (delivery CI runs the catalog check in its own workflow, which
+  needs no Node in this runner).
 
 OpenCV lookup uses `find_package(OpenCV)`, the `OPENCV_DIR`/`OpenCV_DIR`
 environment override, then standard Homebrew and Linux CMake package paths.

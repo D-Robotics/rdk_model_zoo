@@ -1,12 +1,16 @@
 name: sample-contract
 
-# Static contract gate for the unified samples. Scope is the maintained
-# sample list in utils/tools/sample_contract/sample-scope.md. The checker
-# only reads source/docs and, in import mode, calls the trusted sample's
+# Static delivery gate for the unified samples, run once on Ubuntu with
+# Python 3.12. Scope is the maintained sample list in
+# utils/tools/sample_contract/sample-scope.md and the rule set is
+# delivery: bilingual pairing, section anchor presence/uniqueness, local
+# links, CLI defaults and en/zh table agreement. Template section order
+# and stage purity stay opt-in through the strict rule set of the local
+# full gate (utils/tools/host_validation/run.py, whose suite discovery
+# also runs the checker's own unit tests). The checker only reads
+# source/docs and, in import mode, calls the trusted sample's
 # side-effect-free build_parser. No downloads, no board SDK, no README
-# code-block execution. The same gate covers develop/main pushes and pull
-# requests; the complete host gate (this checker included) runs in
-# host-validation.yml.
+# code-block execution.
 
 on:
   pull_request:
@@ -31,18 +35,17 @@ jobs:
         run: >
           python -m pip install
           -r utils/tools/host_validation/requirements.txt
-      - name: Checker unit tests (fixtures first)
-        run: python -m unittest discover -s utils/tools/sample_contract/tests -v
-      - name: Check maintained sample scope
-        # All maintained-sample README contracts are enforced without a debt
-        # baseline. The report is written under $RUNNER_TEMP, never into the
-        # checkout.
+      - name: Check maintained sample scope (delivery rule set)
+        # All maintained-sample README contracts are enforced without a
+        # debt baseline. The report is written under $RUNNER_TEMP, never
+        # into the checkout.
         env:
           CONTRACT_REPORT: ${{ runner.temp }}/sample-contract-report.json
         run: >
           python utils/tools/sample_contract/check.py
           --scope maintained
           --parser-mode import
+          --rule-set delivery
           --report "$CONTRACT_REPORT"
       - name: Upload report
         if: always()
@@ -51,3 +54,4 @@ jobs:
           name: sample-contract-report
           path: ${{ runner.temp }}/sample-contract-report.json
           if-no-files-found: warn
+          retention-days: 30

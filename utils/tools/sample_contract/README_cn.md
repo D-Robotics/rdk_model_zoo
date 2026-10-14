@@ -6,14 +6,19 @@
 
 ## 检查内容
 
-| 规则 | 范围 |
-| --- | --- |
-| `R-README-PAIR` | 每个现有层级均提供 `README.md` 与 `README_cn.md` |
-| `R-README-SECTIONS` | 固定锚点 ID（实时从模板获取）存在、唯一，且符合模板顺序 |
-| `R-README-LINKS` | 相对链接/图片指向现有文件；文档内部片段指向显式锚点；外部 URL 不在检查范围（不访问网络） |
-| `R-CLI-DEFAULTS` | 每种语言的 runtime/python 参数表与实际 `build_parser` 默认值一致 |
-| `R-I18N-PARAMS` | 英中参数表的选项集合和默认值一致 |
-| `R-STAGE-PURITY` | AST 扫描：阶段函数——标准 `preprocess`/`infer`/`postprocess`/`predict` 以及兼容名称 `pre_process`/`forward`/`post_process`，连同对应的 `preprocess_*`/`infer_*`/`postprocess_*`/`forward_*`/`pre_process_*`/`post_process_*`/`run_*` 前缀——不得包含下载、文件写入/保存、子进程或破坏性调用。`main.py` 与 `legacy.py` 按策略跳过并记录原因；`cli.py`/`yolo_cli.py` 中的模块级辅助函数（如响应明确请求进行下载的 `run_prepare`）属于 CLI 应用边界，记录为跳过，但这些文件中使用阶段名称的类方法仍接受检查 |
+| 规则 | 范围 | 规则集 |
+| --- | --- | --- |
+| `R-README-PAIR` | 每个现有层级均提供 `README.md` 与 `README_cn.md` | delivery |
+| `R-README-SECTIONS` | 固定锚点 ID（实时从模板获取）存在、唯一；strict 规则集还要求符合模板顺序 | 存在/唯一：delivery；顺序：strict |
+| `R-README-LINKS` | 相对链接/图片指向现有文件；文档内部片段指向显式锚点；外部 URL 不在检查范围（不访问网络） | delivery |
+| `R-CLI-DEFAULTS` | 每种语言的 runtime/python 参数表与实际 `build_parser` 默认值一致 | delivery |
+| `R-I18N-PARAMS` | 英中参数表的选项集合和默认值一致 | delivery |
+| `R-STAGE-PURITY` | AST 扫描：阶段函数——标准 `preprocess`/`infer`/`postprocess`/`predict` 以及兼容名称 `pre_process`/`forward`/`post_process`，连同对应的 `preprocess_*`/`infer_*`/`postprocess_*`/`forward_*`/`pre_process_*`/`post_process_*`/`run_*` 前缀——不得包含下载、文件写入/保存、子进程或破坏性调用。`main.py` 与 `legacy.py` 按策略跳过并记录原因；`cli.py`/`yolo_cli.py` 中的模块级辅助函数（如响应明确请求进行下载的 `run_prepare`）属于 CLI 应用边界，记录为跳过，但这些文件中使用阶段名称的类方法仍接受检查 | strict |
+
+`--rule-set delivery`（CI 门禁）只执行 delivery 规则。章节顺序不参与评估
+（不逐文件记录 skip——每个样例一条 skip 不携带任何信息）；阶段纯度扫描
+记录为显式 skip，绝不是静默通过。`--rule-set strict`（默认值，也是经
+`utils/tools/host_validation/run.py` 的本地完整门禁）执行全部规则。
 
 ## 使用方法
 
@@ -21,13 +26,13 @@
 # one sample
 python3 utils/tools/sample_contract/check.py --sample samples/vision/resnet
 
-# CI scope: every sample listed in the maintained-samples list
-python3 utils/tools/sample_contract/check.py --scope maintained --report out.json
+# CI scope: every sample listed in the maintained-samples list, delivery rules
+python3 utils/tools/sample_contract/check.py --scope maintained --rule-set delivery --report out.json
 
 # never execute sample code (CLI-default checks then record skips)
 python3 utils/tools/sample_contract/check.py --sample ... --parser-mode static
 
-# checker's own tests (fixtures first)
+# checker's own tests (fixtures first; also run by the host-validation suites)
 python3 -m unittest discover -s utils/tools/sample_contract/tests -v
 ```
 
