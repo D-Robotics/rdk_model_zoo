@@ -112,10 +112,15 @@ describe("multi-platform variant catalog", () => {
     // depths on S100/S600) with twenty measured builds on X5/S100/S100P/S600, and their twenty
     // benchmark rows replaced the X5 ResNet18 and S ResNet152 records: 60 families, 649 variants,
     // 852 benchmark rows.
+    // On 2026-10-14 82 YOLOv8 detect/seg/pose/cls and YOLO11 seg/pose/cls builds (X5 all 35, S100 15,
+    // S100P 15, S600 17) moved to OSS with SHA-256 and measured records: 35 X5 history records and the
+    // 94 S records of those variants (performance and accuracy rows, some without an asset) became one
+    // measured record per build. The ten X5 classification assets now share a variant with their measured
+    // record instead of standing alone: 60 families, 639 variants, 805 benchmark rows.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(60);
-    expect(variants).toHaveLength(649);
-    expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(852);
+    expect(variants).toHaveLength(639);
+    expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(805);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
   });

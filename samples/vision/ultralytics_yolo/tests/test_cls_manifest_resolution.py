@@ -19,10 +19,11 @@ class ClassifierManifestTests(unittest.TestCase):
                     with self.subTest(target=target, family=family, size=size):
                         asset = manifest_asset(profile, family, "cls", size)
                         self.assertIn("_640x640_", asset.filename)
-                        self.assertTrue(
-                            asset.url.endswith(
-                                asset.filename.replace("_640x640_", "_224x224_")
-                            )
+                        # The 640x640 filename is a compatibility identity; the downloaded
+                        # file is the 224x224 build, on the archive or on OSS.
+                        self.assertEqual(
+                            asset.url.rsplit("/", 1)[-1],
+                            Path(asset.filename).name.replace("_640x640_", "_224x224_"),
                         )
                         self.assertEqual(
                             model_filename(profile, family, "cls", size),

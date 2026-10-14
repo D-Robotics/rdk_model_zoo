@@ -12,10 +12,13 @@ import type { BenchmarkRecord, MetricRecord } from "../src/catalog/types";
 // On 2026-10-13 ResNet-18/34/50/101/152 replaced the X5 ResNet18 history record: one record (two
 // performance, two accuracy metrics) left and five measured records (eight performance, four accuracy
 // metrics each) joined.
+// On 2026-10-14 the 35 X5 YOLOv8 detect/seg/pose/cls and YOLO11 seg/pose/cls history records (five
+// performance metrics each, 115 accuracy metrics in all) became 35 measured records bound to their OSS
+// assets (eight performance metrics each; two accuracy metrics per detect/pose record, four per seg/cls).
 const EXPECTED_MODEL_COUNT = 36;
 const EXPECTED_BENCHMARK_RECORD_COUNT = 242;
-const EXPECTED_PERFORMANCE_METRIC_COUNT = 672;
-const EXPECTED_ACCURACY_METRIC_COUNT = 435;
+const EXPECTED_PERFORMANCE_METRIC_COUNT = 777;
+const EXPECTED_ACCURACY_METRIC_COUNT = 430;
 // YOLO26 rows resolve under the unified ultralytics_yolo sample (the separate
 // yolo26 directory no longer exists on develop), and the OCR pilot lives at
 // samples/vision/paddle_ocr; the audited directory count shrank accordingly.
