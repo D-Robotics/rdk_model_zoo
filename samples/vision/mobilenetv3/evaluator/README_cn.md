@@ -110,7 +110,7 @@ Top-K，在标签格式化之前比较类别 ID 与原始分数；预期类别 I
 | MobileNetV3-Small-100 | S600 | 54.47% | 53.44% | 77.49% | 76.65% |
 
 相同制品的延迟与吞吐及测量条件见 [sample README](../README_cn.md#performance)。
-下面的 X5 与 X3 数据属于早期构建（权重与前处理不同），仅作历史保留；MobileNetV3 已不再发布 X5 版本。
+下面的 X5 与 X3 数据属于早期构建（权重与前处理不同），保留作为这些构建的记录；MobileNetV3 已不再发布 X5 版本。
 
 ### RDK X5 / X5 Module 性能
 

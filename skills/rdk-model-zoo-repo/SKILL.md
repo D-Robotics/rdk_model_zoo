@@ -26,7 +26,7 @@ metadata:
 
 ## Instructions
 
-1. 读取 [context-policy.md](references/context-policy.md)，从用户给定路径或当前实际 Git 根识别目标。`rdk_x5` 是维护源线索，不是目标硬件；按实际 ref/README 和（有清单时）Manifest 区分 X5、S100/S100P/S600、X3 和 legacy。记录 repo、HEAD、branch/Tag、dirty、需求来源；平台与硬件尚未确认时保持未知，用户约束冲突时不切换分支。
+1. 读取 [context-policy.md](references/context-policy.md)，从用户给定路径或当前实际 Git 根识别目标。维护分支（统一集成线 `develop`、已发布默认 `rdk_x5`）只是来源线索，不是目标硬件；按实际 ref/README 和（有清单时）Manifest 区分 X5、S100/S100P/S600、X3 和 legacy。记录 repo、HEAD、branch/Tag、dirty、需求来源；平台与硬件尚未确认时保持未知，用户约束冲突时不切换分支。
 2. 使用自包含只读脚本收集可观测事实：
    ```bash
    python3 "$SKILL_ROOT/scripts/inspect_repo.py" --repo "$REPO_ROOT"

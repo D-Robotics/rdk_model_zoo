@@ -105,7 +105,7 @@ hrt_model_exec perf --model_file model/pp_liteseg_stdc1_cityscapes_1024x512_nv12
 <a id="artifacts"></a>
 ## Artifacts
 
-Expected sequence: trained.pdparams → inference model.json/model.pdiparams → original/simplified ONNX → OE logs and *_output BIN → local validation report. Preserve checkpoint and PaddleSeg revision, environment versions, calibration manifest, model hashes and logs alongside a locally compiled model. Do not overwrite the published model merely because the filename matches. Custom files may use explicit runtime asset-id to request the same tensor contract, but the unknown publisher digest cannot authenticate them.
+Expected sequence: trained.pdparams → inference model.json/model.pdiparams → original/simplified ONNX → OE logs and *_output BIN → local validation report. Preserve checkpoint and PaddleSeg revision, environment versions, calibration manifest, model hashes and logs alongside a locally compiled model. Do not overwrite the published model merely because the filename matches. Custom files may use explicit runtime asset-id to request the same tensor contract; their identity is recorded by the observed digest and the compilation logs.
 
 <a id="known-gaps"></a>
 ## Additional preparation

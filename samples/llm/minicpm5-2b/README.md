@@ -75,7 +75,7 @@ See [conversion](conversion/README.md) for the external MiniCPM5 adapter and the
 | Fake-quantized model | 14.2687 |
 | Final S600 HBM | 14.2428 |
 
-The final HBM increases PPL by 1.60% relative to the floating-point reference. All 286580 next-token predictions were evaluated. The board-local NumPy evaluator differs from the SDK/PyTorch RPC path by 0.0055% PPL on a five-sample cross-check; it is not bit-identical.
+The final HBM increases PPL by 1.60% relative to the floating-point reference. All 286580 next-token predictions were evaluated. The board-local NumPy evaluator differs from the SDK/PyTorch RPC path by 0.0055% PPL on a five-sample cross-check.
 
 The generation reference set includes six additional prompts matching reference text and tokens, two-turn English/Chinese conversation, retrieval from inputs padded to 2048 and 3840 tokens, and 50 repeated requests. The latter averaged 53.25 decode tokens/s and 147.86 ms time to first token for the recorded short prompt. These measurements use sequential requests with the recorded short prompt. Runtime prefill token counts are padded to chunk boundaries.
 

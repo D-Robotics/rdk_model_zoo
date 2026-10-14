@@ -31,7 +31,7 @@ model/
 bash samples/speech/kws/model/download.sh --target s100
 ```
 
-`--asset-id` 默认且仅接受上表身份；`--output-dir /path/to/models` 会将文件保存到该目录下的 `s100/kws.hbm`。`PYTHON` 指定解释器。共享下载器检查文件及已配置摘要；本记录没有发布方校验值，打印的观察 SHA 只能绑定字节，不能认证来源。下载不要求板卡。失败返回 2，不能将未完成下载当作可用模型。
+`--asset-id` 默认且仅接受上表身份；`--output-dir /path/to/models` 会将文件保存到该目录下的 `s100/kws.hbm`。`PYTHON` 指定解释器。共享下载器检查文件及已配置摘要；本记录未配置发布方校验值，打印的观察 SHA-256 与下载 URL 一并记录。下载不要求板卡。失败返回 2，不能将未完成下载当作可用模型。
 
 <a id="accompanying-files"></a>
 ## 配套数据
@@ -41,7 +41,7 @@ bash samples/speech/kws/model/download.sh --target s100
 <a id="local-paths"></a>
 ## 已有文件
 
-默认模型位置相对 sample 解析，不受调用目录影响。已有文件需向[运行入口](../runtime/python/README_cn.md)同时传 `--model-path` 和 `--asset-id s:kws:s100/kws.hbm`，这是声明预期发布身份；没有校验值的路径本身不能证明来源。真实执行先核验本机身份再加载 SDK，加载后检查严格单模型、单输入、单输出。
+默认模型位置相对 sample 解析，不受调用目录影响。已有文件需向[运行入口](../runtime/python/README_cn.md)同时传 `--model-path` 和 `--asset-id s:kws:s100/kws.hbm`，这是声明预期发布身份；该制品当前无发布方校验值；下载 URL 与实际观测到的 SHA-256 一并记录。真实执行先核验本机身份再加载 SDK，加载后检查严格单模型、单输入、单输出。
 
 <a id="formats-checksums"></a>
 ## 格式及运行契约

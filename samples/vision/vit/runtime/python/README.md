@@ -71,7 +71,7 @@ python3 samples/vision/vit/runtime/python/main.py --dry-run --target s100 --vari
 | `--list-models` | flag | false | lists manifest references without executing the model |
 | `--dry-run` | flag | false | selection only; no inference |
 
-Image/label defaults resolve to absolute paths inside the checkout. `None` for variant/resize means the selected model configuration, not a missing setting. List/dry-run are mutually exclusive.
+Image/label defaults resolve to absolute paths inside the checkout. `None` for variant/resize selects the default of the chosen model configuration. List/dry-run are mutually exclusive.
 
 <a id="results"></a>
 ## Results

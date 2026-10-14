@@ -83,9 +83,9 @@ Example LaneNet visualizations:
 | --- | --- |
 | ![Source embedding display](test_data/instance_pred.png) | ![Source binary display](test_data/binary_pred.png) |
 
-[Source native embedding display](test_data/cpp_instance_pred.png) and [native binary display](test_data/cpp_binary_pred.png) are also retained. Display differences do not by themselves establish raw numerical differences or distinct lane instances.
+[Source native embedding display](test_data/cpp_instance_pred.png) and [native binary display](test_data/cpp_binary_pred.png) are also retained. Numerical comparison uses the raw embedding arrays; lane instances require further clustering.
 
-Lane-instance IDs and fitted curves require a clustering and curve-fitting algorithm applied to the embeddings. Display colors alone do not identify individual lanes.
+Lane-instance IDs and fitted curves require a clustering and curve-fitting algorithm applied to the embeddings. Display colors are for visualization; lane identity comes from the clustering output.
 
 <a id="entry-points"></a>
 ## Entry points for users and agents

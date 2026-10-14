@@ -22,7 +22,7 @@ metadata:
 
 ## Instructions
 
-1. 读取 [context-policy.md](references/context-policy.md) 和 [evidence-contract.md](references/evidence-contract.md)。确定目标提交及 dirty 内容、实际平台/SoC（X5、S100/S100P/S600、X3 或 legacy）、模型/输入/runtime、交付条件。`rdk_x5` 维护源不能替代目标 ref；用户约束冲突时保持 not-run 并不切换分支。
+1. 读取 [context-policy.md](references/context-policy.md) 和 [evidence-contract.md](references/evidence-contract.md)。确定目标提交及 dirty 内容、实际平台/SoC（X5、S100/S100P/S600、X3 或 legacy）、模型/输入/runtime、交付条件。Pack 维护分支（`develop`、已发布默认 `rdk_x5`）不能替代目标 ref；用户约束冲突时保持 not-run 并不切换分支。
 2. 按 [validation-matrix.md](references/validation-matrix.md) 列出检查与 required 属性，先声明阈值和范围。没有板卡、私有数据或可信模型时只阻断相应行；其余 host 检查可继续。验证 README 命令与 API 示例时，先把文档代码块按 **说明 / 主机 / 板端 / 转换** 分类：主机类在授权内实际执行并绑定代码 SHA、cwd 与制品/输入身份；板端与转换类只形成待执行计划交对应执行者；纯说明文字不冒充已验证命令。结构校验通过不是命令验证。
 3. 选择目标版本已有脚本/evaluator/构建命令。先读源码和文档，再确定 cwd、argv、输出和副作用；`--help` 也不能盲目执行。首次范围不自动扩成全仓下载和重测。
 4. 实际执行前确认权限、环境、空间与输出隔离；有板卡串行占用策略时遵守，不在共享板卡上任意停进程或改频率。PR 不可信代码不得接触生产凭据和长期自托管 runner。

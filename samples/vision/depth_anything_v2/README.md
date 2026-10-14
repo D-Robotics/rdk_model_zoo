@@ -88,7 +88,7 @@ letterbox uses linear resize/fill-127 and crops the padding before restoring
 the result. The task returns float depth; the uint8 display API is a separate
 visualization step.
 
-Depth values are relative, rather than calibrated meters. The CLI saves original-size float depth and an INFERNO color rendering.
+Depth values are relative quantities. The CLI saves original-size float depth and an INFERNO color rendering.
 
 ![Source framework](test_data/readme_img/image-2.png)
 

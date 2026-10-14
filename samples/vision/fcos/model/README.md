@@ -43,7 +43,7 @@ bash samples/vision/fcos/model/fulldownload.sh --target x5
 bash samples/vision/fcos/model/download_model.sh --target x5 --variant efficientnetb2
 ```
 
-The downloader delegates to the manifest URL and hash fields. The current rows have `sha256: null (unknown)`, so an observed local digest does not establish publisher origin. A missing URL or a non-matching recorded hash fails before installation.
+The downloader delegates to the manifest URL and hash fields. The current rows have `sha256: null (unknown)`; the observed local digest identifies the downloaded bytes. A missing URL or a non-matching recorded hash fails before installation.
 
 The shell helpers resolve `download.py` beside themselves and call the board image's `python3`; they do not depend on a repository-local host `.venv`. `download_model.sh` is the download entrypoint registered in `docs/release/x5/models.yaml`.
 

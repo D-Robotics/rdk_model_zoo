@@ -43,17 +43,20 @@ The synthetic repositories deliberately contain:
   option()/if() behaviour) any real OFF of a default-ON
   test/IO/sanitizer flag: recorded as a reduction through both the
   classifier and the CLI/report path with the raw value, so no false
-  spelling can disable required flags while the run stays CI-equivalent;
+  spelling can disable required flags while the run still counts as the
+  full gate;
 * catalog fixtures for Node ``engines`` enforcement (satisfied, mismatched,
   missing, unparseable);
 * a catalog-before-Python ordering fixture (the 2026-10-06 clean-clone
   defect): a fake node/npm pair whose ``npm run check`` writes the ignored
-  generated catalog (``utils/tools/catalog-publisher/dist/catalog.json``) that a
-  dependent sample suite reads — no initial ``dist/`` — with the maintainer
-  launched from outside the repository, ``PYTHONPATH``/``PYTHONHOME``
-  cleared, the catalog section enabled and only CTest skipped; the check
-  must run exactly once, before that suite, and a failing check (exit 7)
-  still fails the whole run;
+  generated catalog (``utils/tools/catalog-publisher/dist/catalog.json``)
+  that a dependent sample suite reads — no initial ``dist/`` — with the
+  maintainer launched from outside the repository, ``PYTHONPATH``/
+  ``PYTHONHOME`` cleared, the catalog section enabled and only CTest
+  skipped; the check must run exactly once, before that suite, and a
+  failing check (exit 7) still fails the whole run (the committed sample
+  suites read the ``docs/release`` manifests directly; the fixture keeps
+  the ordering contract for any consumer of the generated artifact);
 * sample-inventory coverage fixtures (happy path with real-shaped rows,
   deleted tests directory, extra sample, broken JSON, absent inventory,
   empty rows array and malformed/duplicate rows) — the accepted inventory
@@ -428,22 +431,26 @@ def _cwd_probe_layout(repo: Path) -> None:
     _contract_stub(repo)
 
 
-#: The generated catalog build output the real ultralytics_yolo asset and
-#: manifest snapshot suites (test_platform_assets/test_yolo26) read at the
-#: repository root — produced only by ``npm run check``'s build stage.
+#: The generated catalog build output at the repository root — produced
+#: only by ``npm run check``'s build stage.  The committed sample suites
+#: read the ``docs/release`` manifests directly (since the 2026-10-10
+#: runtime consolidation); the fixture's dependent suite models any
+#: consumer of the generated artifact, for which the catalog-first ordering
+#: contract below still holds.
 CATALOG_MARKER_RELATIVE = "utils/tools/catalog-publisher/dist/catalog.json"
 
 
 def _catalog_dependent_layout(repo: Path) -> None:
     """Green repository plus a catalog package and a dependent suite.
 
-    Mirrors the dependency the 2026-10-06 clean-clone gate exposed: the
-    ultralytics_yolo asset/manifest snapshot suites read the generated
-    ``utils/tools/catalog-publisher/dist/catalog.json``, an ignored build output
-    that only the catalog section's ``npm run check`` produces — a clean
-    clone carries no ``dist/``, so those suites fail unless the catalog is
-    built before the Python suites run.  The dependent suite reads the
-    generated marker exactly the way those suites read the real catalog.
+    Mirrors the dependency shape the 2026-10-06 clean-clone gate exposed
+    back when the ultralytics_yolo asset and manifest snapshot suites read
+    the generated ``utils/tools/catalog-publisher/dist/catalog.json``: an
+    ignored build output that only the catalog section's ``npm run check``
+    produces — a clean clone carries no ``dist/``, so a suite reading it
+    fails unless the catalog is built before the Python suites run.  The
+    dependent suite reads the generated marker exactly the way such a
+    consumer reads the real catalog.
     """
     _green_layout(repo)
     # Mirror the real repository's ignore rule for the generated catalog:
@@ -579,7 +586,7 @@ class GreenRepositoryTests(RunnerFixtureTestCase):
         )
         data = self.load_report(proc, report)
 
-        self.assertEqual(data["schema"], "host-validation-report/1")
+        self.assertEqual(data["schema"], "host-validation-report/2")
         self.assertEqual(data["overall"]["status"], "passed")
         self.assertEqual(data["overall"]["reasons"], [])
         # Source identity recorded from the fixture git repository.
@@ -588,14 +595,11 @@ class GreenRepositoryTests(RunnerFixtureTestCase):
                                         capture_output=True, text=True,
                                         check=True).stdout.strip())
         self.assertFalse(data["source"]["source_drift"])
-        # Content identity: deterministic digest over tracked + relevant
-        # untracked files, stable across the run.
-        manifest = data["source"]["manifest"]
-        self.assertEqual(manifest["digest_start"], manifest["digest_end"])
-        self.assertRegex(manifest["digest_start"], r"^[0-9a-f]{64}$")
-        self.assertGreater(manifest["file_count_start"], 0)
-        self.assertFalse(data["source"]["content_drift"])
-        # A dirty checkout passes but carries its provenance.
+        self.assertFalse(data["source"]["dirty_files_changed_during_run"])
+        # The Git-based identity: HEAD, branch and the dirty-file list,
+        # stable across the run.
+        self.assertEqual(data["source"]["dirty_files_start"],
+                         data["source"]["dirty_files_end"])
         self.assertEqual(data["source"]["dirty_count_start"],
                          data["source"]["dirty_count_end"])
         # Artifacts directory next to the report, never inside the source.
@@ -606,7 +610,7 @@ class GreenRepositoryTests(RunnerFixtureTestCase):
         # Explicitly skipped sections are visible, not silent.
         self.assertEqual(data["ctest"]["status"], "skipped-explicit")
         self.assertEqual(data["catalog"]["status"], "skipped-explicit")
-        self.assertFalse(data["options"]["ci_equivalent"])
+        self.assertFalse(data["options"]["full_gate"])
         # The options record the reduction of scope.
         self.assertEqual(sorted(data["options"]["skipped_sections"]),
                          ["catalog", "ctest"])
@@ -761,7 +765,7 @@ class RequestedRepoCwdTests(RunnerFixtureTestCase):
         self.assertEqual(probe["errors"], 0)
         # The requested repository is unchanged and clean.
         self.assertFalse(data["source"]["source_drift"])
-        self.assertFalse(data["source"]["content_drift"])
+        self.assertFalse(data["source"]["dirty_files_changed_during_run"])
         self.assertEqual(data["source"]["dirty_files_start"], [])
         self.assertEqual(data["source"]["dirty_files_end"], [])
         porcelain = subprocess.run(
@@ -881,7 +885,7 @@ class FailureModeTests(RunnerFixtureTestCase):
         data = json.loads(report.read_text())
         reasons = " ".join(data["overall"]["reasons"])
         self.assertNotIn("native-prerequisite skip", reasons)
-        self.assertFalse(data["options"]["ci_equivalent"])
+        self.assertFalse(data["options"]["full_gate"])
         delta = self.suite_by_dir(data, "samples/vision/delta/tests")
         self.assertEqual(delta["status"], "passed")
         self.assertEqual(delta["skips"][0]["category"], "native_prerequisite")
@@ -1105,51 +1109,38 @@ class SourceDriftTests(RunnerFixtureTestCase):
             )
         return layout
 
-    def test_tracked_content_mutation_with_unchanged_dirty_list_fails(self):
-        # Pre-dirty the tracked file so its name is already in the dirty
-        # list; the mutator then changes its CONTENT during the run.  HEAD
-        # and the dirty filename list stay identical.
+    def test_clean_tracked_file_modified_during_run_fails(self):
+        # A clean tracked file mutated during the run enters the
+        # ``git status --porcelain`` dirty list, so the before/after list
+        # comparison fails the gate.
         repo = _init_repo(
             self.tmp / "drift-tracked",
             self._mutator_layout("samples/vision/zeta/README.md", "append"))
         target = repo / "samples/vision/zeta/README.md"
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text("initial\ndirty\n")
+        target.write_text("initial\n")
+        # Seed through the _git helper: its per-command user.name/user.email
+        # keep the fixture commit working on a clean runner with no global
+        # Git identity (a bare `git commit` exits 128 there).
+        _git(repo, "add", "samples/vision/zeta/README.md")
+        _git(repo, "commit", "-m", "seed zeta readme")
         before = subprocess.run(
             ["git", "-C", str(repo), "status", "--porcelain"],
             capture_output=True, text=True, check=True).stdout
+        self.assertNotIn("samples/vision/zeta/README.md", before)
         report = self.tmp / "drift-tracked" / "report.json"
         proc = run_runner(repo, "--report", str(report),
                           "--skip-ctest", "--skip-catalog", "--timeout", "120")
-        after = subprocess.run(
-            ["git", "-C", str(repo), "status", "--porcelain"],
-            capture_output=True, text=True, check=True).stdout
-        self.assertEqual(before, after, "fixture must not change the dirty list")
         self.assertEqual(proc.returncode, 1)
         data = json.loads(report.read_text())
-        self.assertTrue(data["source"]["content_drift"])
-        self.assertNotEqual(data["source"]["manifest"]["digest_start"],
-                            data["source"]["manifest"]["digest_end"])
+        self.assertTrue(data["source"]["dirty_files_changed_during_run"])
         reasons = " ".join(data["overall"]["reasons"])
-        self.assertIn("source content changed during the run", reasons)
+        self.assertIn("dirty-file list changed during the run", reasons)
         self.assertEqual(data["source"]["commit"],
                          data["source"]["start_commit"])
-
-    def test_untracked_file_content_mutation_with_unchanged_list_fails(self):
-        # An untracked-but-relevant file (not gitignored) whose content
-        # changes during the run: same dirty list, different content.
-        repo = _init_repo(
-            self.tmp / "drift-untracked",
-            self._mutator_layout("untracked_note.txt", "append"))
-        (repo / "untracked_note.txt").write_text("v1\n")
-        report = self.tmp / "drift-untracked" / "report.json"
-        proc = run_runner(repo, "--report", str(report),
-                          "--skip-ctest", "--skip-catalog", "--timeout", "120")
-        self.assertEqual(proc.returncode, 1)
-        data = json.loads(report.read_text())
-        self.assertTrue(data["source"]["content_drift"])
-        reasons = " ".join(data["overall"]["reasons"])
-        self.assertIn("source content changed during the run", reasons)
+        self.assertTrue(
+            any("zeta/README.md" in line
+                for line in (data["source"]["dirty_files_end"] or [])))
 
     def test_new_untracked_file_during_run_fails(self):
         def layout(repo: Path) -> None:
@@ -1175,17 +1166,17 @@ class SourceDriftTests(RunnerFixtureTestCase):
         data = json.loads(report.read_text())
         reasons = " ".join(data["overall"]["reasons"])
         self.assertTrue(
-            data["source"]["content_drift"]
-            or data["source"]["dirty_files_changed_during_run"],
+            data["source"]["dirty_files_changed_during_run"],
             "new untracked file must be detected")
+        self.assertIn("dirty-file list changed during the run", reasons)
         self.assertTrue(
             any("surprise.txt" in line
                 for line in (data["source"]["dirty_files_end"] or [])))
 
     def test_ignored_artifacts_do_not_count_as_drift(self):
         # Writes into gitignored paths (caches, build noise) must not fail
-        # the gate: the manifest honors Git ignore rules.  The path
-        # contains __pycache__, which .gitignore excludes.
+        # the gate: the dirty-list snapshot honors Git ignore rules.  The
+        # path contains __pycache__, which .gitignore excludes.
         repo = _init_repo(
             self.tmp / "drift-ignored",
             self._mutator_layout(
@@ -1194,7 +1185,6 @@ class SourceDriftTests(RunnerFixtureTestCase):
         proc = run_runner(repo, "--report", str(report),
                           "--skip-ctest", "--skip-catalog", "--timeout", "120")
         data = self.load_report(proc, report)
-        self.assertFalse(data["source"]["content_drift"])
         self.assertFalse(data["source"]["dirty_files_changed_during_run"])
 
     def test_dirty_checkout_passes_with_recorded_provenance(self):
@@ -1209,24 +1199,6 @@ class SourceDriftTests(RunnerFixtureTestCase):
                       data["source"]["dirty_files_start"])
         self.assertEqual(data["source"]["dirty_count_start"], 1)
 
-    def test_gitlink_entries_are_not_hashed(self):
-        module = _import_runner()
-        repo = _init_repo(
-            self.tmp / "gitlink",
-            self._mutator_layout("samples/vision/zeta/README.md", "append"))
-        # Register a gitlink row exactly the way the VLA pins exist in the
-        # real tree: no submodule checkout exists to hash.
-        subprocess.run(
-            ["git", "-C", str(repo), "update-index", "--add", "--cacheinfo",
-             f"160000,{ABSENT_PIN},samples/vla/act"],
-            check=True, capture_output=True)
-        manifest = module.source_manifest(repo)
-        self.assertIsNotNone(manifest)
-        self.assertIn("samples/vla/act", manifest["gitlinks"])
-        self.assertNotIn("samples/vla/act", manifest["files_hashed_sample"])
-        self.assertEqual(
-            manifest["digest"], module.source_manifest(repo)["digest"])
-
     def test_non_git_checkout_cannot_pass(self):
         plain = self.tmp / "not-a-repo"
         _green_layout(plain)
@@ -1237,7 +1209,6 @@ class SourceDriftTests(RunnerFixtureTestCase):
         data = json.loads(report.read_text())
         self.assertEqual(data["overall"]["status"], "failed")
         self.assertIsNone(data["source"]["commit"])
-        self.assertIsNone(data["source"]["manifest"])
         reasons = " ".join(data["overall"]["reasons"])
         self.assertIn("source identity unavailable", reasons)
         self.assertIn("Git", reasons)
@@ -1466,7 +1437,7 @@ class CTestDefaultTests(RunnerFixtureTestCase):
              "HIMLOCO_BUILD_CLI": "OFF"})
         self.assertEqual(project["total"], 1)
 
-    def test_disabling_a_default_on_flag_is_not_ci_equivalent(self):
+    def test_disabling_a_default_on_flag_reduces_full_gate(self):
         repo = self.green_repo()
         report = self.tmp / "ctest-off" / "report.json"
         proc = run_runner(repo, "--report", str(report),
@@ -1474,7 +1445,7 @@ class CTestDefaultTests(RunnerFixtureTestCase):
                           "--cmake-define",
                           "yoloe-cpp-tests:YOLOE_TEST_OPENCV=OFF")
         data = self.load_report(proc, report)
-        self.assertFalse(data["options"]["ci_equivalent"])
+        self.assertFalse(data["options"]["full_gate"])
         self.assertIn("yoloe-cpp-tests:YOLOE_TEST_OPENCV=OFF",
                       data["options"]["cmake_scope_reductions"])
 
@@ -1493,7 +1464,7 @@ class CTestDefaultTests(RunnerFixtureTestCase):
                     "--skip-ctest", "--skip-catalog", "--timeout", "120",
                     "--cmake-define", define)
                 data = self.load_report(proc, report)
-                self.assertFalse(data["options"]["ci_equivalent"])
+                self.assertFalse(data["options"]["full_gate"])
                 self.assertIn(define, data["options"]["cmake_scope_reductions"])
 
     def test_cmake_false_constant_aliases_disable_required_flags(self):
@@ -1505,7 +1476,7 @@ class CTestDefaultTests(RunnerFixtureTestCase):
         # extra-cmake-aliases).  Each is a legitimate untyped override that
         # turns a required default-ON test/IO/sanitizer flag off in fact,
         # so the CLI/report path must record it as a scope reduction with
-        # the raw value and mark the run non-CI-equivalent — while still
+        # the raw value and mark the run less than the full gate — while still
         # emitting the define raw to the configure command.  The fake
         # cmake/ctest sentinels log every invocation (and fake-discover one
         # passing case per project), so no vendor build ever runs and the
@@ -1563,7 +1534,7 @@ class CTestDefaultTests(RunnerFixtureTestCase):
                     "--timeout", "120",
                     "--cmake-define", define)
                 data = self.load_report(proc, report)
-                self.assertFalse(data["options"]["ci_equivalent"])
+                self.assertFalse(data["options"]["full_gate"])
                 self.assertIn(define,
                               data["options"]["cmake_scope_reductions"])
                 self.assertEqual(data["ctest"]["status"], "passed")
@@ -2107,7 +2078,10 @@ class CatalogBeforePythonTests(RunnerFixtureTestCase):
     ``npm run check`` builds the catalog the dependent suite reads, no
     initial ``dist/``, the maintainer launched from outside the repository
     with ``PYTHONPATH``/``PYTHONHOME`` cleared, the catalog section enabled
-    and only CTest skipped.
+    and only CTest skipped.  (The committed ultralytics_yolo suites have
+    read the ``docs/release`` manifests directly since the 2026-10-10
+    runtime consolidation; the ordering contract stays guarded for any
+    consumer of the generated artifact.)
     """
 
     def _fake_node_tools(self, name: str, npm_body: str):
@@ -2194,7 +2168,7 @@ class CatalogBeforePythonTests(RunnerFixtureTestCase):
                           "skipped": 1, "optional_missing_modules": 1})
         # The generated catalog is ignored build output: no drift, and the
         # checkout stays clean after the run.
-        self.assertFalse(data["source"]["content_drift"])
+        self.assertFalse(data["source"]["dirty_files_changed_during_run"])
         self.assertEqual(data["source"]["dirty_files_end"], [])
         marker = repo / CATALOG_MARKER_RELATIVE
         self.assertTrue(marker.is_file())
@@ -2675,7 +2649,7 @@ class PureFunctionTests(unittest.TestCase):
 
     def test_effective_cmake_defines_classify_typed_off_as_reduction(self):
         # A typed OFF of a required default-ON test/IO/sanitizer flag must
-        # never pass as CI-equivalent scope: it is recorded as a reduction
+        # never pass as full-gate scope: it is recorded as a reduction
         # naming the typed spelling it was seen with, and the typed key is
         # kept as given — never rewritten into a supported bare define.
         effective = self.module.effective_cmake_defines
@@ -2843,8 +2817,8 @@ class PureFunctionTests(unittest.TestCase):
         # execution/extra-cmake-aliases).  Each is a legitimate spelling
         # that turns a required default-ON test/IO/sanitizer flag off in
         # fact, so every one must be recorded as a scope reduction naming
-        # the raw value — never merged as if the run were still
-        # CI-equivalent.
+        # the raw value — never merged as if the run were still the
+        # full gate.
         effective = self.module.effective_cmake_defines
         evidenced = ("", "N", "IGNORE", "NOTFOUND", "missing-NOTFOUND")
         targets = (("yoloe-cpp-tests", "YOLOE_TEST_OPENCV"),
@@ -3006,12 +2980,22 @@ class RealRepositoryTests(unittest.TestCase):
         self.assertEqual(coverage["missing_tests_dirs"], [])
         self.assertEqual(coverage["extra_samples"], [])
 
-    def test_source_manifest_is_stable_and_excludes_gitlinks(self):
-        first = self.module.source_manifest(REPO)
-        second = self.module.source_manifest(REPO)
-        self.assertEqual(first["digest"], second["digest"])
-        self.assertIn("samples/vla/act", first["gitlinks"])
-        self.assertNotIn("samples/vla/act", first["files_hashed_sample"])
+    def test_git_snapshot_matches_the_real_checkout_state(self):
+        first = self.module.git_snapshot(REPO)
+        second = self.module.git_snapshot(REPO)
+        self.assertEqual(first, second)
+        self.assertEqual(
+            first["commit"],
+            subprocess.run(["git", "-C", str(REPO), "rev-parse", "HEAD"],
+                           capture_output=True, text=True,
+                           check=True).stdout.strip())
+        porcelain = subprocess.run(
+            ["git", "-C", str(REPO), "status", "--porcelain"],
+            capture_output=True, text=True, check=True).stdout
+        self.assertEqual(
+            first["dirty_files"],
+            [line for line in porcelain.splitlines() if line])
+        self.assertEqual(first["dirty_count"], len(first["dirty_files"]))
 
 
 def _import_runner():

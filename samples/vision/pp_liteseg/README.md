@@ -66,4 +66,4 @@ The compiled model returns a decoded int32 class map. `postprocess` validates cl
 <a id="license"></a>
 ## License
 
-Repository code follows the top-level [LICENSE](../../../LICENSE); retained source notices remain applicable. PaddleSeg and externally obtained pretrained weights/data have their own terms. The manifest does not establish the pretrained weight license; check the actual checkpoint source before redistribution.
+Repository code follows the top-level [LICENSE](../../../LICENSE); retained source notices remain applicable. PaddleSeg and externally obtained pretrained weights/data have their own terms. Before redistributing pretrained weights, check the license at the actual checkpoint source.

@@ -207,7 +207,7 @@ hrt_model_exec perf --model_file bpu_model_output_decoder_nashe/efficient_sam_vi
 
 The S source evaluator material is performance-only and has no dataset-level accuracy harness.
 
-Before using a compiled artifact, inspect the actual SDK metadata for every target/march and verify input names, ranks, shapes, native dtypes, output names, ranks, shapes, and native dtypes. The source does not provide compiled HBM metadata; runtime float casts cannot establish native dtype.
+Before using a compiled artifact, inspect the actual SDK metadata for every target/march and verify input names, ranks, shapes, native dtypes, output names, ranks, shapes, and native dtypes. The source does not provide compiled HBM metadata; the compiled model's SDK metadata is the authority for native dtypes.
 
 <a id="artifacts"></a>
 ## Artifacts

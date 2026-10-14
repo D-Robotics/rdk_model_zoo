@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="source-model"></a>
 ## Source model
 
-The S source ships precompiled HBM and an architectural description, but no training framework version, checkpoint, exact training repository or export code. U-Net/MobileNet papers explain the family; they do not reconstruct this deployed weight file.
+The S source ships precompiled HBM and an architectural description, but no training framework version, checkpoint, exact training repository or export code. U-Net/MobileNet papers explain the family; this deployed weight file is the S source's precompiled HBM.
 
 <a id="directory"></a>
 ## Directory structure

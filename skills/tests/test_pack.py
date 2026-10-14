@@ -55,10 +55,10 @@ class PackTests(unittest.TestCase):
             'rdk-model-zoo':'1.1.2',
             'rdk-model-zoo-repo':'1.1.1',
             'rdk-model-zoo-integrate':'1.0.1',
-            'rdk-model-zoo-develop':'1.1.1',
+            'rdk-model-zoo-develop':'1.1.2',
             'rdk-model-zoo-validate':'1.1.1',
             'rdk-model-zoo-review':'1.1.1',
-            'rdk-model-zoo-release':'1.0.1',
+            'rdk-model-zoo-release':'1.0.2',
         })
         readme=(ROOT/'README.md').read_text(encoding='utf-8')
         # The README documents versions as a factual table; the documented

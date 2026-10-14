@@ -86,10 +86,10 @@ python samples/robotics/himloco/runtime/python/main.py --target x5 \
 | Python | `HB_HBMRuntime.run` | 0.885 ms | 1129.37 FPS |
 | C++ | `hbDNNInfer` + `hbDNNWaitTaskDone` | 0.350 ms | 2853.09 FPS |
 
-编译器估计为 0.063 ms。以上均为参考数据；计时范围不同，Python
-任务计时还包含适配器校验／复制，不能当作纯设备耗时比较。完整源百分位数据与评测
+编译器估计为 0.063 ms。以上均为参考数据；各计时范围不同——Python
+任务计时包含适配器校验／复制，对比时按各自计时口径理解。完整源百分位数据与评测
 口径见[评测说明](evaluator/README_cn.md)。
-离线动作一致不能证明观测构造、关节映射、控制环行为或闭环稳定性。
+离线一致性比较检查给定观测下的策略输出数值；观测构造、关节映射、控制环行为与闭环稳定性需按机器人系统集成流程另行验证。
 
 <a id="entry-points"></a>
 ## 入口

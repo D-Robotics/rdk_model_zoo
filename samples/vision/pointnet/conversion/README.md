@@ -72,10 +72,10 @@ python3 samples/vision/pointnet/runtime/python/main.py --target s100 --no-plot -
 ```
 
 This is a example inference command for the unified entry.
-For a newly compiled artifact, first establish its provenance, target and tensor
-contract; passing shape checks alone cannot establish equivalence to the published
-model. Compare point IDs against a pinned floating reference using the same input
-order and normalization before making an accuracy claim.
+For a newly compiled artifact, record its provenance, target and tensor
+contract; verify equivalence to the published model by comparing point IDs
+against a pinned floating reference using the same input order and
+normalization before making an accuracy claim.
 
 <a id="artifacts"></a>
 ## Artifact

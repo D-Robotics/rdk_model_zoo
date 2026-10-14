@@ -8,19 +8,20 @@
 
 `required`：适用的明确强制条款或交付规格。`platform`：经过目标平台代码/文档验证的限制。`convention`：同类参考。`proposal`：尚未批准的新约定。只有前两类以及有实证的正确性问题可作为强制结论依据；惯例建议与强制缺陷分列。
 
-规范中分类、分割、姿态输出接口尚有空缺时，不自行发明全仓唯一 tuple/dict；为本次实现写明接口并申请维护者确认。目标可能是 X5、S100/S100P/S600、X3 或 legacy；维护源 `rdk_x5` 的模板和示例不能覆盖目标 ref 的实际交付。HBM、BIN 等后缀只按目标 metadata/README 解释，不按后缀批量推断平台或兼容性。明确类别要求优先于样例自行减少承诺：例如 robotics 规定双 runtime 时，不能仅写一句 Python-only 就豁免。
+规范中分类、分割、姿态输出接口尚有空缺时，不自行发明全仓唯一 tuple/dict；为本次实现写明接口并申请维护者确认。目标可能是 X5、S100/S100P/S600、X3 或 legacy；已发布交付线的模板和示例不能覆盖目标 ref 的实际交付。HBM、BIN 等后缀只按目标 metadata/README 解释，不按后缀批量推断平台或兼容性。明确类别要求优先于样例自行减少承诺：例如 robotics 规定双 runtime 时，不能仅写一句 Python-only 就豁免。
 
 ## 核心检查
 
 | ID | 检查与适用范围 | 证据 |
 |---|---|---|
-| MZ-CTX-01 | 平台、模型变体、运行语言和目标 ref 相容；不将 `rdk_x5` 维护源当成用户目标 | 用户约束、target 身份、README、Manifest、模型 metadata |
-| MZ-LAYOUT-01 | 新增规范化 sample 按职责使用 conversion/evaluator/model/runtime/test_data；不无理由增加顶层目录 | 完整文件列表、目标目录规范 |
-| MZ-ENTRY-01 | 规范化入口 main.py/main.cc/main.cpp，启动脚本 run.sh，模型实现按模型或任务命名 | 源码、脚本、CMake |
-| MZ-PY-01 | 独立 Config 与 Model，参数/模型逻辑分离；pre_process/forward/post_process/predict 等遵守目标 runtime 协议 | 模型源码、适用 Python 规范 |
+| MZ-CTX-01 | 平台、模型变体、运行语言和目标 ref 相容；不将 `rdk_x5` 已发布默认分支或 `develop` 集成线当成用户目标 | 用户约束、target 身份、README、Manifest、模型 metadata |
+| MZ-TARGET-01 | 采用共享 helper 的 sample 经 `utils/py_utils/platforms.resolve_target` 解析板卡目标（`auto|x5|s100|s100p|s600`，注册表 `docs/release/platforms.json`），未知目标抛 `ValueError`，不硬编码平台字符串；每个 sample 支持的 target 以其 parser/manifest 为准，LLM 与专用 sample 使用其他 CLI；显式 `--target` 不是本机硬件证据，执行前用 `require_execution_target` 校验 | platforms.py、CLI `--target` 参数、模型绑定表 |
+| MZ-LAYOUT-01 | 新增规范化 sample 按职责使用 conversion/evaluator/model/runtime/test_data；conversion 保存导出与编译配方，runtime 保存入口与模型实现；不无理由增加顶层目录 | 完整文件列表、目标目录规范 |
+| MZ-ENTRY-01 | 规范化 Python 入口为 `main.py` + `cli.py`（参数、发布模型选择、结果交付集中在 CLI），启动脚本 run.sh；模型实现按任务命名（`classify.py`、`detect.py`、`segment.py` 等）；C++ 入口 main.cc/main.cpp | 源码、脚本、CMake |
+| MZ-PY-01 | 独立 Config 与 Model，参数/模型逻辑分离；具名模型类公开 `preprocess → infer → postprocess` 三阶段并由 `predict` 串联；旧拼写（`pre_process`/`forward`/`post_process`）只作为既有样例的兼容委托存在，不是新代码契约；历史 ref 按其自身 runtime 协议判断 | 模型源码、适用 Python 规范 |
 | MZ-CLI-01 | Python argparse、kebab-case、合理默认、type/default/help；布尔 action 等语言特例按实际语义判断 | main.py、CLI 文档 |
-| MZ-CPP-01 | 适用 C++ 规范要求配置结构、显式 init、错误返回、任务/张量生命周期；C++ gflags snake_case 不照搬 Python 参数形式 | 头文件、实现、主入口 |
-| MZ-DET-01 | 检测 Python 返回 boxes(N,4), scores(N,), cls_ids(N,)；C++ 目标 Detection 约定；空结果也保持 shape | post_process、边界测试 |
+| MZ-CPP-01 | 适用 C++ 规范要求构造函数建立可复用 Runtime（RAII 释放句柄/缓冲），薄入口 main.cpp 解析→构造具名模型→`predict`→保存；模型 API 抛异常、入口只做顶层 catch；公开阶段名 `preprocess`/`infer`/`postprocess`（LLM 引擎按实际流程命名）；CLI 选项与同 sample Python CLI 对齐；构建显式枚举支持目标，未识别取值报错 | 头文件、实现、main/cli、CMake |
+| MZ-DET-01 | 检测 Python 返回 boxes float32 (N,4) 连续 xyxy、scores float32 (N,)、class_ids int64 (N,) 零基（空结果保持 dtype 与秩）；C++ 目标 Detection 约定；输出结构与 sample 声明的结果类型一致 | postprocess、边界测试 |
 | MZ-DOC-01 | 公共 Python module/class/function Google-style docstrings；C++ 公共接口 Doxygen；文档描述真实语义 | 变更代码与文档 |
 | MZ-REUSE-01 | 新增 helper 前查 utils；复用时核对行为、shape、dtype，不能以“复用”引入语义回归 | 工具定义、全部受影响调用点 |
 | MZ-ASSET-01 | 模型获取方式、默认路径、下载脚本和 Manifest 一致；manual 明确条件；可信哈希缺失如实披露 | model 文档/脚本、Manifest |

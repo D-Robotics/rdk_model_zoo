@@ -731,8 +731,8 @@ Use the task-specific model class and tensor contract shown above. Validate OBB 
 ## Troubleshooting
 
 * **`hbm_runtime` cannot be imported:** use the matching RDK board/system image
-  and check its Python module path. Installing a host OpenExplore compiler does
-  not provide board runtime support.
+  and check its Python module path. Board inference runs on the board runtime
+  image; the host OpenExplore compiler covers model compilation.
 * **Unknown board or target mismatch:** omit `--platform` on the board or pass
   the board's real target. A CLI flag cannot override an unknown hardware
   identity.

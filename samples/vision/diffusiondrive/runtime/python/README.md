@@ -139,7 +139,7 @@ Input quantization preserves source float32 `rint(x/scale + zero)`; integer clip
 ## Troubleshooting
 
 - Unknown host under auto: use explicit target for inspection/preparation; real execution still requires matching board identity.
-- Hash mismatch: use the correct published target file; do not bypass verification with a renamed custom model.
+- Hash mismatch: use the correct published target file.
 - Feature error: retain exact float32 shapes and names, without extra archive members or regenerated noise.
 - Quantization rejection: capture actual metadata and resolve the contract discrepancy before changing the validation.
 - Almost-gray BEV: gray is road; inspect logits/labels and reference metrics before assuming a palette bug.

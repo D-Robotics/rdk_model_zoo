@@ -5,11 +5,14 @@
 
 | 对象 | 版本位置 | Tag | 说明 |
 |---|---|---|---|
-| X5 模型 | 目标 X5 ref 的根 VERSION（常见 `rdk_x5`） | x5-vMAJOR.MINOR.PATCH | 保留目标 ref 的模型流程 |
-| S100 / S100P / S600 模型 | 目标 S ref 的根 VERSION（常见 `rdk_s`） | s-vMAJOR.MINOR.PATCH | 按 Manifest 的 SoC 范围分别核对 |
-| X3 模型 | 目标 X3 ref 的根 VERSION（常见 `rdk_x3`） | x3-vMAJOR.MINOR.PATCH | 保留目标 ref 的历史布局兼容 |
+| X5 模型 | 统一集成线（`develop`）为 `docs/release/x5/VERSION`；交付线 ref（常见 `rdk_x5`）按其自身 VERSION 布局 | x5-vMAJOR.MINOR.PATCH | 保留目标 ref 的模型流程 |
+| S100 / S100P / S600 模型 | 统一集成线为 `docs/release/s/VERSION`；交付线 ref（常见 `rdk_s`）按其自身 VERSION 布局 | s-vMAJOR.MINOR.PATCH | 按 Manifest 的 SoC 范围分别核对 |
+| X3 模型 | 目标 X3 ref 的 VERSION（常见 `rdk_x3`） | x3-vMAJOR.MINOR.PATCH | 保留目标 ref 的历史布局兼容 |
 | legacy 模型 | 用户指定的 legacy ref/tag | 该 ref 已有的模型 Tag | 不把历史交付重命名为当前平台版本 |
+| 统一仓库版本线 | 目标检出根 `VERSION` | 随该线自身的发布约定 | 独立于模型与 Skills 版本 |
 | Model Zoo Skills | skills/VERSION | vMAJOR.MINOR.PATCH | 独立 Pack 版本；不是全模型统一版本 |
+
+分支事实：当前已发布默认分支仍是 `rdk_x5`（`rdk_s` 为 S 交付线）；`develop` 是 X5/S 样例统一后的集成线。默认分支以目标检出当天的 Git 状态为准；发布检查与材料不预设未来分支名，也不声称任何切换已完成。
 
 Tag 标识整个提交，不是子目录。Hub 只镜像注册目录。Pack 版本与各成员 Skill 版本分别维护，本文不转写当前版本清单；发布核对一律读取目标 checkout 的实际元数据：Pack 版本与发布状态看 `skills/VERSION` 与 `skills/pack.json` 的 `version`、`release_state`，变更与未发布说明看 `skills/CHANGELOG.md`；每个成员的版本看该成员 `SKILL.md` frontmatter 的 `version`，其治理卡 `skill-card.md` 的版本行须与之一致。历史事实：上游 `rdk_x5` 已发布 Pack 1.0.1，旧 Hub 入口 `rdk-model-zoo` 为 1.0.0；这些状态描述上游 Pack，本候选未发布。Pack 与单 Skill 版本可以不同，不应校验成永远相等。
 
@@ -17,7 +20,7 @@ Tag 标识整个提交，不是子目录。Hub 只镜像注册目录。Pack 版�
 
 ## 发布模型
 
-从用户指定的目标 ref 读取 `docs/RELEASE*` 流程，优先检查当前 `docs/manifests/`；历史目标 ref 可能使用 `docs/release/` 或根 `release/`。有 Manifest 时，模型清单和 benchmark 保持 `source_ref`、平台、SoC 范围和版本一致，不能用维护源 `rdk_x5` 的 Manifest 代替 S100/S100P/S600、X3 或 legacy 目标；无 Manifest 时按目标 README、下载脚本和实际 sample 记录缺失。模型下载哈希缺失继续披露；不把新 Skill 检查当全量板测。目录聚合按各目标已批准固定 Tag 取数。
+从用户指定的目标 ref 读取 `docs/RELEASE*` 流程。统一集成线的发布数据位于 `docs/release/`：`platforms.json`（SoC 身份注册表）加 `{x5,s}/models.yaml`、`benchmarks.yaml`、`VERSION` 与 `schemas/`；历史目标 ref 可能使用 `docs/manifests/`、单平台 `docs/release/` 或根 `release/`，按该 ref 实际存在的目录选择。有 Manifest 时，模型清单和 benchmark 保持 `source_ref`、平台、SoC 范围和版本一致，不能用已发布交付线的 Manifest 代替其他目标；无 Manifest 时按目标 README、下载脚本和实际 sample 记录缺失。模型下载哈希缺失继续披露；不把新 Skill 检查当全量板测。目录聚合按各目标已批准固定 Tag 取数。
 
 ## 发布 Skills
 

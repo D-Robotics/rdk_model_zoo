@@ -121,8 +121,8 @@ python eval_numeric.py --image /work/depth/input.png \
   --output /work/depth/single-image
 ```
 
-`--x5` 保留为 `--candidate` 别名，不再把所有候选写死成 X5 n。
-`--official` 只是参考文件路径，并非真实性认证。
+`--x5` 是 `--candidate` 的别名。
+`--official` 指定参考文件路径；对比指标基于该文件计算。
 两个数组必须与图像形状一致，且所有值有限并大于 1e-6。
 
 <a id="metrics"></a>

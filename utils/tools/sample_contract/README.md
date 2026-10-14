@@ -10,14 +10,21 @@ skip and never counts as a pass.
 
 ## What it checks
 
-| Rule | Scope |
-| --- | --- |
-| `R-README-PAIR` | every existing level ships both `README.md` and `README_cn.md` |
-| `R-README-SECTIONS` | fixed anchor IDs (derived live from the templates) are present, unique, and in template order |
-| `R-README-LINKS` | relative links/images resolve to existing files; intra-document fragments resolve to explicit anchors; external URLs are out of scope (no network) |
-| `R-CLI-DEFAULTS` | runtime/python parameter tables match the real `build_parser` defaults, per language |
-| `R-I18N-PARAMS` | the en/zh parameter tables agree with each other (option set and defaults) |
-| `R-STAGE-PURITY` | AST scan: stage functions — canonical `preprocess`/`infer`/`postprocess`/`predict` plus the legacy `pre_process`/`forward`/`post_process` spellings, with the matching `preprocess_*`/`infer_*`/`postprocess_*`/`forward_*`/`pre_process_*`/`post_process_*`/`run_*` prefixes — contain no download, file-write/save, subprocess, or destructive calls. `main.py` and `legacy.py` are policy-skipped with a recorded reason; module-level helpers in `cli.py`/`yolo_cli.py` (e.g. a `run_prepare` that downloads on explicit request) are the CLI application boundary and are recorded as skips, while stage-named methods inside those files stay checked |
+| Rule | Scope | Rule set |
+| --- | --- | --- |
+| `R-README-PAIR` | every existing level ships both `README.md` and `README_cn.md` | delivery |
+| `R-README-SECTIONS` | fixed anchor IDs (derived live from the templates) are present and unique; in the strict rule set they must also follow template order | presence/uniqueness: delivery; order: strict |
+| `R-README-LINKS` | relative links/images resolve to existing files; intra-document fragments resolve to explicit anchors; external URLs are out of scope (no network) | delivery |
+| `R-CLI-DEFAULTS` | runtime/python parameter tables match the real `build_parser` defaults, per language | delivery |
+| `R-I18N-PARAMS` | the en/zh parameter tables agree with each other (option set and defaults) | delivery |
+| `R-STAGE-PURITY` | AST scan: stage functions — canonical `preprocess`/`infer`/`postprocess`/`predict` plus the legacy `pre_process`/`forward`/`post_process` spellings, with the matching `preprocess_*`/`infer_*`/`postprocess_*`/`forward_*`/`pre_process_*`/`post_process_*`/`run_*` prefixes — contain no download, file-write/save, subprocess, or destructive calls. `main.py` and `legacy.py` are policy-skipped with a recorded reason; module-level helpers in `cli.py`/`yolo_cli.py` (e.g. a `run_prepare` that downloads on explicit request) are the CLI application boundary and are recorded as skips, while stage-named methods inside those files stay checked | strict |
+
+`--rule-set delivery` (the CI gate) evaluates the delivery rules only.
+Section order is simply not evaluated (no per-file skip is recorded — one
+skip per sample would carry no information); the stage purity scan is
+recorded as an explicit skip, never a silent pass. `--rule-set strict`
+(the default, and the local full gate through
+`utils/tools/host_validation/run.py`) enforces everything.
 
 ## Usage
 
@@ -25,13 +32,13 @@ skip and never counts as a pass.
 # one sample
 python3 utils/tools/sample_contract/check.py --sample samples/vision/resnet
 
-# CI scope: every sample listed in the maintained-samples list
-python3 utils/tools/sample_contract/check.py --scope maintained --report out.json
+# CI scope: every sample listed in the maintained-samples list, delivery rules
+python3 utils/tools/sample_contract/check.py --scope maintained --rule-set delivery --report out.json
 
 # never execute sample code (CLI-default checks then record skips)
 python3 utils/tools/sample_contract/check.py --sample ... --parser-mode static
 
-# checker's own tests (fixtures first)
+# checker's own tests (fixtures first; also run by the host-validation suites)
 python3 -m unittest discover -s utils/tools/sample_contract/tests -v
 ```
 

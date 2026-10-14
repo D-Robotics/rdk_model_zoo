@@ -159,8 +159,7 @@ GFLOPs 按每次 Conv 与 Gemm 乘加计 2 次运算。
 
 每次测量时 CPU 调频策略为 `performance`，所有在线核心运行在表中所列频率；
 各板卡的 CPU 与 BPU 频率不同，比较不同 target 时需谨慎。C++ 流水线使用对
-Pillow 双三次缩放的标量、逐位一致的重新实现，它主导了前处理耗时，因此该列并非
-优化流水线的上限。复现精度数字见[评测器](evaluator/README_cn.md)；C++ 计时工具
+Pillow 双三次缩放的标量、逐位一致的重新实现，它主导了前处理耗时；表中延迟列为该实现的实测值。复现精度数字见[评测器](evaluator/README_cn.md)；C++ 计时工具
 见[基准说明](../../../utils/tools/classification/cpp/README.md)。
 
 ![推理结果](./test_data/inference.png)

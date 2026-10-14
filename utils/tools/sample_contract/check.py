@@ -25,6 +25,18 @@ Rules (IDs are decoupled from section IDs; see readme-contract §8):
                       or destructive calls (AST)
   R-EXEMPTION         exemption bookkeeping (unknown/unused entries fail)
 
+Rule sets (``--rule-set``):
+
+  delivery            the delivery CI gate: bilingual pairing, anchor
+                      presence/uniqueness, local links, CLI defaults and
+                      en/zh table agreement.  Template section *order*
+                      (R-README-SECTIONS) and architectural purity
+                      (R-STAGE-PURITY) are not delivery gates: order is
+                      simply not evaluated, and the purity scan is recorded
+                      as an explicit skip, never a pass.
+  strict              everything (default): also enforces template section
+                      order and the stage purity AST scan.
+
 Canonical default-value forms compared between the README ``Default`` column
 and ``build_parser``:
 
@@ -44,6 +56,7 @@ are top-level or sub-sections, board behavior, and conversion correctness.
 Usage:
   python3 utils/tools/sample_contract/check.py --sample samples/vision/resnet
   python3 utils/tools/sample_contract/check.py --scope maintained --report out.json
+  python3 utils/tools/sample_contract/check.py --scope maintained --rule-set delivery
 """
 
 from __future__ import annotations
@@ -257,8 +270,13 @@ def extract_anchors(text: str) -> list[tuple[str, int]]:
 
 
 def check_sections(report: SampleReport, readme: Path,
-                   required: Sequence[str]) -> bool:
-    """R-README-SECTIONS: presence, uniqueness, and template order."""
+                   required: Sequence[str],
+                   check_order: bool = True) -> bool:
+    """R-README-SECTIONS: presence, uniqueness, and (strict) template order.
+
+    ``check_order=False`` (delivery rule set) keeps presence and uniqueness
+    but does not require the anchors to follow the template's ordering.
+    """
 
     text = readme.read_text(encoding="utf-8")
     anchors = extract_anchors(text)
@@ -280,16 +298,17 @@ def check_sections(report: SampleReport, readme: Path,
                 RULE_SECTIONS, readme, 0,
                 f"missing required section anchor {anchor_id!r}")
 
-    ordered = [anchor_id for anchor_id in present_ids
-               if anchor_id in required]
-    expected = [anchor_id for anchor_id in required
-                if anchor_id in seen]
-    if ordered != expected:
-        first_line = seen.get(ordered[0], 1) if ordered else 1
-        report.add(
-            RULE_SECTIONS, readme, first_line,
-            f"required section order deviates from template "
-            f"(expected: {', '.join(expected)}; got: {', '.join(ordered)})")
+    if check_order:
+        ordered = [anchor_id for anchor_id in present_ids
+                   if anchor_id in required]
+        expected = [anchor_id for anchor_id in required
+                   if anchor_id in seen]
+        if ordered != expected:
+            first_line = seen.get(ordered[0], 1) if ordered else 1
+            report.add(
+                RULE_SECTIONS, readme, first_line,
+                f"required section order deviates from template "
+                f"(expected: {', '.join(expected)}; got: {', '.join(ordered)})")
     return bool(anchors)
 
 
@@ -708,10 +727,11 @@ def check_stage_purity(report: SampleReport, sample_dir: Path) -> None:
 
 
 def run_sample(sample_dir: Path, templates: dict[str, tuple[str, ...]],
-               parser_mode: str) -> SampleReport:
+               parser_mode: str, rule_set: str = "strict") -> SampleReport:
     """Run every applicable rule against one sample directory."""
 
     report = SampleReport(path=display_path(sample_dir))
+    strict = rule_set == "strict"
 
     en_tables: dict[str, Optional[dict]] = {}
     zh_tables: dict[str, Optional[dict]] = {}
@@ -734,7 +754,7 @@ def run_sample(sample_dir: Path, templates: dict[str, tuple[str, ...]],
         for readme in (en_readme, zh_readme):
             if not readme.is_file():
                 continue
-            check_sections(report, readme, required)
+            check_sections(report, readme, required, check_order=strict)
             file_anchors = {
                 anchor_id
                 for anchor_id, _ in extract_anchors(
@@ -755,7 +775,16 @@ def run_sample(sample_dir: Path, templates: dict[str, tuple[str, ...]],
         check_i18n_params(
             report, runtime_en, runtime_zh,
             en_tables.get("runtime-python"), zh_tables.get("runtime-python"))
-    check_stage_purity(report, sample_dir)
+    if strict:
+        check_stage_purity(report, sample_dir)
+    elif (sample_dir / "runtime" / "python").is_dir():
+        # Delivery rule set: the purity scan is deliberately not a delivery
+        # gate.  Recorded as a skip so the report always names what was not
+        # evaluated — never a silent pass.
+        report.skip(
+            RULE_PURITY, sample_dir / "runtime" / "python",
+            "delivery rule set: stage purity not evaluated "
+            "(opt-in via --rule-set strict)")
     return report
 
 
@@ -898,8 +927,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
         default=REPO_ROOT / "utils/tools/sample_contract/sample-scope.md",
         help="maintained-samples markdown used by --scope")
     parser.add_argument(
-        "--migration-map", type=Path, default=None,
-        help=argparse.SUPPRESS)  # hidden compat alias of --scope-list
+        "--rule-set", choices=("delivery", "strict"), default="strict",
+        help="delivery: bilingual pairing, anchor presence/uniqueness, local "
+             "links, CLI defaults and en/zh table agreement (section order "
+             "and stage purity recorded as skips); strict: everything "
+             "(default)")
     parser.add_argument(
         "--samples-root", type=Path, default=REPO_ROOT / "samples",
         help="root directory holding <domain>/<sample> directories")
@@ -928,9 +960,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     """Entry point; returns 0 when no violations, 1 when violations exist."""
 
     args = build_arg_parser().parse_args(argv)
-    if args.scope == "migration":
-        args.scope = "maintained"  # accepted compat value; not documented
-    elif args.scope not in (None, "maintained"):
+    if args.scope not in (None, "maintained"):
         print(f"sample-contract: invalid --scope value: {args.scope!r} "
               "(expected 'maintained')", file=sys.stderr)
         return 2
@@ -948,10 +978,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     sample_dirs = [Path(target) for target in args.sample]
     scope_findings: list[Finding] = []
     if args.scope:
-        scope_list = (args.migration_map if args.migration_map is not None
-                      else args.scope_list)
         resolved, scope_findings = resolve_maintained_scope(
-            scope_list, args.samples_root)
+            args.scope_list, args.samples_root)
         sample_dirs.extend(resolved)
 
     try:
@@ -967,7 +995,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                   f"{sample_dir}", file=sys.stderr)
             return 2
         reports.append(
-            run_sample(sample_dir, templates, args.parser_mode))
+            run_sample(sample_dir, templates, args.parser_mode,
+                       rule_set=args.rule_set))
     if not reports:
         # Scope resolution produced nothing; findings still need a home.
         reports.append(SampleReport(path=display_path(args.samples_root)))
@@ -990,6 +1019,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     payload = {
         "tool": "sample-contract",
         "parser_mode": args.parser_mode,
+        "rule_set": args.rule_set,
         "templates_dir": display_path(args.templates_dir),
         "samples": [
             {

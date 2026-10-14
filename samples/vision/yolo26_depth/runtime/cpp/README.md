@@ -117,7 +117,7 @@ samples/vision/yolo26_depth/runtime/cpp/build/x5/yolo26_depth \
   /work/depth/model.bin /work/depth/input.jpg /work/depth/native-positional
 ```
 
-The direct binary verifies board/tensor contracts, not publisher identity.
+The direct binary verifies board/tensor contracts; published-model identity is enforced by the manifest SHA-256 check.
 Use the launcher when you need manifest hash verification and `launch-report.json`.
 For a self-compiled model, combine `--converted-model`, `--model-path` and an exact
 `--asset-id` from list-models. This selects the X5 calibrated-log/NV12 tensor

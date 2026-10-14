@@ -145,7 +145,7 @@ python3 samples/vision/ultralytics_yolo/evaluator/eval_batch.py \
 <a id="metrics"></a>
 ## 指标与比较条件
 
-COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所选图像ID。分类top1/top5为处理过且有标签图像的正确比例，不是百分数。OBB JSON是中间预测，不是精度指标。运行墙钟时间包含Python与数据处理，并非BPU推理延迟。
+COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所选图像ID。分类top1/top5为处理过且有标签图像的正确比例。OBB JSON是中间预测文件。运行墙钟时间包含Python与数据处理。
 
 记录源码提交、目标/系统/SDK、制品摘要、数据集/划分、实际处理数量、缩放策略和阈值后再比较结果。这些条件改变时，不能直接对比历史表。数据集精度使用对应数据集评估命令计算。
 
@@ -168,7 +168,7 @@ COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所
 - 缺pycocotools：安装到运行评估脚本的解释器，包括仅导出COCO预测的情况。
 - 缺真值或类别错位：核对named/ordered/synset、偏移和模型类别顺序，不猜测任意文件名的标签。
 - COCO文件名/ID错误：使用配套图像和标注；无标注导出要求数字文件名主体。
-- 空输出：先用运行时检查单图，再核对阈值、任务、制品；保留空输出事实，不能据此宣称精度。
+- 空输出：先用运行时检查单图，再核对阈值、任务、制品；空输出如实保留在结果中。
 - 写文件失败：创建可写父目录并显式指定输出路径。
 
 `eval_common.py`负责共享参数、类别映射与图像选择，`eval_yolo_*.py`分别负责指标/输出格式并调用运行时，`eval_batch.py`仅派发命令。导出与张量布局变更属于[conversion](../conversion/README_cn.md)及运行时模型绑定，不应混入指标代码。
@@ -488,7 +488,7 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 4. BPU模型在量化NCHW-RGB888输入转换为YUV420SP(nv12)输入后, 也会有一部分精度损失, 这是由于色彩空间转化导致的, 在训练时加入这种色彩空间转化的损失可以避免这种精度损失.
 5. Python接口和C/C++接口的精度结果有细微差异, 主要在于Python和C/C++的一些数据结构进行memcpy和转化的过程中, 对浮点数的处理方式不同, 导致的细微差异.
 6. 测试脚本请参考RDK Model Zoo的eval部分: https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/tools/eval_pycocotools
-7. 本表格是使用PTQ(训练后量化)使用50张图片进行校准和编译的结果, 用于模拟普通开发者第一次直接编译的精度情况, 并没有进行精度调优或者QAT(量化感知训练), 满足常规使用验证需求, 不代表精度上限.
+7. 本表格是使用PTQ(训练后量化)使用50张图片进行校准和编译的结果, 未进行精度调优或QAT(量化感知训练).
 
 
 ## 补充参考数据
@@ -1786,7 +1786,7 @@ Object Detection (COCO2017)
 4. Some accuracy loss appears when converting NCHW RGB888 inputs to YUV420SP inputs for BPU deployment because of color space conversion. This can be reduced if that transformation is considered during training.
 5. Python and C/C++ 运行时 accuracy may differ slightly because of differences in memory copy and floating-point handling.
 6. Evaluation scripts can be referenced here: <https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/tools/eval_pycocotools>
-7. The table reflects PTQ results compiled with 50 calibration images. It represents a practical first-pass compilation baseline instead of the upper bound of achievable accuracy.
+7. The table reflects PTQ results compiled with 50 calibration images.
 
 ## Result Check
 
@@ -1808,7 +1808,7 @@ DFL 姿态接口返回关键点概率。当前 COCO JSON 序列化保留历史�
 
 [Source measurement table](https://github.com/D-Robotics/rdk_model_zoo/blob/cb86079ae5befcef9ca50fb46c8a6d8980106dec/samples/vision/ultralytics_yolo26/evaluator/README_cn.md).
 
-该来源将 YOLO26m 对应到 51.1 ms / 24.8 FPS，将 YOLO26l 对应到 40.1 ms / 19.5 FPS；上方另一份 X5 表的单线程延迟对应关系不同。两份来源存在冲突，不能据此确定哪一份是修正值。输入为 NV12，各行列出尺寸、类别数与线程数。
+该来源将 YOLO26m 对应到 51.1 ms / 24.8 FPS，将 YOLO26l 对应到 40.1 ms / 19.5 FPS；上方另一份 X5 表的单线程延迟对应关系不同。两份来源记录不一致，此处按原始记录保留两份数值供对照。输入为 NV12，各行列出尺寸、类别数与线程数。
 
 | Device | Model | Size <br> (Pixels) | Classes | BPU Task Latency / <br> BPU Throughput (Threads) | CPU Latency | params <br> (M) | FLOPs <br> (B) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |

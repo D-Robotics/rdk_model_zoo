@@ -46,7 +46,7 @@ python3 -m samples.vision.modnet.model.download \
 <a id="local-paths"></a>
 ## 本地路径
 
-运行时默认路径为 `samples/vision/modnet/model/modnet_512x512_rgb.bin`。外部路径必须配合精确 `--asset-id x5:modnet:modnet_512x512_rgb.bin`；单凭文件名不能确定协议身份。
+运行时默认路径为 `samples/vision/modnet/model/modnet_512x512_rgb.bin`。外部路径必须配合精确 `--asset-id x5:modnet:modnet_512x512_rgb.bin`，由该 ID 绑定协议身份。
 
 <a id="formats-checksums"></a>
 ## 格式与校验值

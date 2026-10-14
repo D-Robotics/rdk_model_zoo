@@ -139,5 +139,5 @@ N is fixed by the compiled model metadata; supply exactly N points. `prepared.co
 - Wrong point count/columns: provide exactly N XYZ rows; normals/colors are not inputs.
 - Zero-radius/nonfinite cloud: identical or NaN/Inf points cannot be normalized.
 - Unknown outputs, differing shapes or unknown dtype: inspect the actual artifact;
-  do not bypass binding checks to run a different export.
+  use the export that matches the binding checks.
 - Missing matplotlib: install it or use `--no-plot`. The latter still saves labels/JSON.

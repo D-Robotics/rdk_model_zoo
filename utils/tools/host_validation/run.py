@@ -39,17 +39,17 @@ and never runs on a board.  It executes, in isolated subprocesses:
   (``0``/``OFF``/``NO``/``FALSE``/``N``/``IGNORE`` and the empty value
   case-insensitively, the case-sensitive ``NOTFOUND`` and ``*-NOTFOUND``
   spellings, or trailing whitespace CMake strips itself) is recorded as
-  a scope reduction naming the raw value, so the run can never stay
-  CI-equivalent);
+  a scope reduction naming the raw value, so the run can never stay a
+  full gate);
 * the model-catalog check (``npm run check`` in ``utils/tools/catalog-publisher``)
   under the Node ``engines`` range the package itself declares.  This
-  section runs **first**, before the Python suites: its build stage
-  generates ``utils/tools/catalog-publisher/dist/catalog.json``, which the
-  ultralytics_yolo asset/manifest snapshot suites compare against, so the
-  catalog must exist before those suites execute (``npm ci`` remains a
-  maintainer prerequisite — the runner never installs; with
-  ``--skip-catalog`` no catalog is built, and those suites then need one
-  generated beforehand or they fail).
+  section runs **first**, before the Python suites, so the generated
+  ``utils/tools/catalog-publisher/dist/`` artifact exists for any consumer
+  while the gate runs (``npm ci`` remains a maintainer prerequisite — the
+  runner never installs).  The sample suites themselves read the
+  ``docs/release/{x5,s}`` manifests directly, not the generated artifact;
+  delivery CI runs the catalog check in its own workflow and therefore
+  invokes this runner with ``--skip-catalog``.
 
 Every suite runs in its own process, so identical test module names in
 different samples cannot mask each other, and results are collected from a
@@ -58,7 +58,8 @@ reasons, per-failure messages.  A suite with zero tests, a missing declared
 directory, an unexplained directory, a crashed worker, a timeout, an
 undeclared skip, a rejected native skip, a missing pinned historical commit,
 an absent, malformed or mismatched accepted sample inventory or source drift
-during the run can never report success.
+(HEAD or the dirty-file list changing) during the run can never report
+success.
 
 Skip policy (strict by default, matching CI):
 
@@ -72,7 +73,7 @@ Skip policy (strict by default, matching CI):
   ``unexpected`` — the optional scope never hides a dependency regression.
 * ``native_prerequisite`` — missing C++ compiler, nlohmann-json, gflags,
   iconv or CMake.  Rejected in strict mode; ``--allow-native-skips`` records
-  them instead (the report then says ``ci_equivalent: false``).
+  them instead (the report then says ``full_gate: false``).
 * ``conditional`` — legitimately conditional skips (e.g. a board SDK being
   installed makes an import-failure path unreachable, or the HobotMot
   board-built ``libhobot_mot_capi.so`` being absent on a host — accepted
@@ -80,14 +81,13 @@ Skip policy (strict by default, matching CI):
   recorded.
 * anything else is ``unexpected`` and always fails the run.
 
-Source identity is content-based, not HEAD-based: a deterministic sha256
-digest is taken over every tracked file (except mode-160000 gitlinks, whose
-upstream code is not present) plus every untracked file Git's ignore rules
-do not exclude, before and after the run.  Any content, dirty-state or HEAD
-change during the run fails the gate, and a checkout that is not a Git
-repository can never pass.  Reports and build artifacts must live outside
-the source tree (``--report`` is rejected inside it) so the gate can never
-pass by writing its own report into the tree.
+Source identity is Git-based: HEAD, branch and the ``git status --porcelain``
+dirty-file list are captured before and after the run, and any HEAD or
+dirty-list change during the run fails the gate (a suite that writes a new
+file, modifies or deletes one is caught by the list).  A checkout that is
+not a Git repository can never pass.  Reports and build artifacts must live
+outside the source tree (``--report`` is rejected inside it) so the gate can
+never pass by writing its own report into the tree.
 
 CTest case counts are reported in their own section and are deliberately NOT
 added to the Python unittest totals; a per-stage timeout, a missing
@@ -114,7 +114,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-REPORT_SCHEMA = "host-validation-report/1"
+REPORT_SCHEMA = "host-validation-report/2"
 RUNNER_PATH = Path(__file__).resolve()
 
 WORKER_SENTINEL = "@@HOST_VALIDATION_WORKER_JSON@@"
@@ -235,7 +235,7 @@ CTEST_PROJECTS = (
 
 #: CMake defines that make up the full gate.  A ``--cmake-define`` that
 #: turns any of the default-ON flags OFF reduces scope: the report then
-#: records the reduction and ``ci_equivalent`` becomes false.  The OFF
+#: records the reduction and ``full_gate`` becomes false.  The OFF
 #: entries of the added projects are not scope choices but the mandatory
 #: safety defaults themselves (see :data:`MANDATORY_SAFE_DEFINES`).
 DEFAULT_CTEST_DEFINES = {
@@ -469,94 +469,6 @@ def git_snapshot(repo: Path):
         "branch": branch.stdout.strip() if branch.returncode == 0 else None,
         "dirty_files": dirty,
         "dirty_count": len(dirty),
-    }
-
-
-#: Individual files above this size are hashed by size marker instead of
-#: content — a pathological-memory guard only; no repository file is near it.
-_MANIFEST_MAX_FILE_BYTES = 64 * 1024 * 1024
-
-
-def _hash_file(path: Path) -> str:
-    """Deterministic content hash of one manifest file."""
-    if path.stat().st_size > _MANIFEST_MAX_FILE_BYTES:
-        return f"too-large:{path.stat().st_size}"
-    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def source_manifest(repo: Path):
-    """Content identity of every first-party file in the checkout.
-
-    Hashes all tracked files (skipping mode-160000 gitlinks: the pinned VLA
-    integrations carry no upstream code in this tree) plus every untracked
-    file that Git's ignore rules do not exclude (``--exclude-standard``), so
-    ordinary generated/cache artifacts never count as drift.  Returns
-    ``None`` when the checkout is not a usable Git repository.
-    """
-    def git_z(*args):
-        return subprocess.run(
-            ["git", "-C", str(repo), *args], capture_output=True)
-
-    staged = git_z("ls-files", "-z", "-s")
-    untracked = git_z("ls-files", "-z", "--others", "--exclude-standard")
-    head = subprocess.run(
-        ["git", "-C", str(repo), "rev-parse", "HEAD"],
-        capture_output=True, text=True)
-    if staged.returncode != 0 or untracked.returncode != 0:
-        return None
-
-    entries = []          # (path, mode, content-hash)
-    gitlinks = []
-    for record in staged.stdout.decode("utf-8", "surrogateescape").split("\0"):
-        if not record:
-            continue
-        metadata, separator, path = record.partition("\t")
-        if not separator:
-            continue
-        mode = metadata.split(" ", 1)[0]
-        if mode == "160000":
-            # Gitlink (submodule pin): no local content to hash.  Its
-            # identity is verified by the VLA gitlink guard and pin checks.
-            gitlinks.append(path)
-            continue
-        file = repo / path
-        if not file.is_file():
-            # Deleted in the worktree; still tracked.  Recorded by path so a
-            # restore during the run is still a content change.
-            entries.append((path, mode, "deleted"))
-            continue
-        try:
-            entries.append((path, mode, _hash_file(file)))
-        except OSError as exc:
-            entries.append((path, mode, f"unreadable:{exc.errno}"))
-    for path in untracked.stdout.decode("utf-8", "surrogateescape").split("\0"):
-        if not path:
-            continue
-        file = repo / path
-        if not file.is_file():
-            continue
-        try:
-            entries.append((path, "untracked", _hash_file(file)))
-        except OSError as exc:
-            entries.append((path, "untracked", f"unreadable:{exc.errno}"))
-
-    entries.sort(key=lambda item: item[0])
-    digest = hashlib.sha256()
-    for path, mode, content in entries:
-        digest.update(mode.encode())
-        digest.update(b"\0")
-        digest.update(path.encode("utf-8", "surrogateescape"))
-        digest.update(b"\0")
-        digest.update(content.encode())
-        digest.update(b"\n")
-    return {
-        "algorithm": "sha256 over sorted (mode, path, content-hash) of "
-                     "tracked non-gitlink files plus untracked non-ignored "
-                     "files",
-        "digest": digest.hexdigest(),
-        "file_count": len(entries),
-        "gitlinks": sorted(gitlinks),
-        "files_hashed_sample": [path for path, _, _ in entries[:40]],
     }
 
 
@@ -1685,8 +1597,8 @@ def effective_cmake_defines(options):
     """Merge default full-gate defines with ``--cmake-define`` overrides.
 
     Returns ``(merged, reductions)`` where ``reductions`` names every user
-    define that turned a default-on flag off — a scope reduction that makes
-    the run non-CI-equivalent.  Classification matches on the bare key
+    define that turned a default-on flag off — a scope reduction that
+    makes the run less than the full gate.  Classification matches on the bare key
     name: a typed spelling (``VAR:BOOL`` — rejected by the CLI parser, but
     classified conservatively here regardless) whose base name targets a
     default-ON flag is recorded as a reduction too, so no define spelling
@@ -1845,24 +1757,23 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--suite", action="append", default=[],
                         metavar="SUBSTRING",
                         help="run only suites whose directory contains "
-                             "SUBSTRING (repeatable; not CI-equivalent)")
+                             "SUBSTRING (repeatable; not the full gate)")
     parser.add_argument("--list", action="store_true",
                         help="print discovery as JSON and exit")
     parser.add_argument("--skip-ctest", action="store_true",
                         help="skip the native CTest section (explicitly "
-                             "recorded; not CI-equivalent)")
+                             "recorded; not the full gate)")
     parser.add_argument("--skip-contract", action="store_true",
                         help="skip the static contract section (explicitly "
-                             "recorded; not CI-equivalent)")
+                             "recorded; not the full gate)")
     parser.add_argument("--skip-catalog", action="store_true",
                         help="skip the catalog section (explicitly recorded; "
-                             "not CI-equivalent); no dist/catalog.json is "
-                             "built then, so the ultralytics_yolo asset/"
-                             "manifest snapshot suites need a previously "
-                             "generated catalog or they fail")
+                             "not the full local gate; delivery CI passes "
+                             "this because the catalog check runs in its "
+                             "own workflow)")
     parser.add_argument("--allow-native-skips", action="store_true",
                         help="record native-prerequisite skips instead of "
-                             "rejecting them (not CI-equivalent)")
+                             "rejecting them (not the full gate)")
     parser.add_argument("--cmake", help="cmake executable override")
     parser.add_argument("--ctest", help="ctest executable override")
     parser.add_argument("--cmake-define", action="append", default=[],
@@ -1998,7 +1909,12 @@ def main(argv=None) -> int:
         return 2
     _, reductions = effective_cmake_defines(options)
     options["cmake_scope_reductions"] = reductions
-    options["ci_equivalent"] = not (
+    # full_gate denotes complete local-gate coverage — no skipped section,
+    # suite filter, allowed native skip or disabled default flag.  It is a
+    # statement about this run's scope, not about CI: delivery CI
+    # legitimately passes --skip-catalog --skip-contract (those sections
+    # run in their own workflows), so its reports show full_gate: false.
+    options["full_gate"] = not (
         options["skipped_sections"] or options["allow_native_skips"]
         or options["suite_filters"] or reductions)
 
@@ -2008,20 +1924,17 @@ def main(argv=None) -> int:
     started = time.monotonic()
 
     snapshot_start = git_snapshot(repo)
-    manifest_start = source_manifest(repo)
     pins = verify_pins(repo)
 
     runner_section = _SectionRunner(repo, report, args.python, options)
     runner_section.artifacts.mkdir(parents=True, exist_ok=True)
 
-    # The catalog gate runs before the Python suites: its ``npm run check``
-    # build stage generates ``utils/tools/catalog-publisher/dist/catalog.json``
-    # (ignored build output), which the ultralytics_yolo asset/manifest
-    # snapshot suites read — on a clean checkout no ``dist/`` exists, so
-    # building the catalog after those suites fails them.  It still runs
-    # after the starting source snapshots and before the ending ones, i.e.
-    # inside the same source-stability interval, so the ordering never
-    # weakens the content gate.
+    # The catalog gate runs before the Python suites so the generated
+    # ``utils/tools/catalog-publisher/dist/`` artifact (ignored build
+    # output) exists for any consumer during the run; the sample suites
+    # themselves read the ``docs/release/{x5,s}`` manifests directly.  It
+    # still runs between the starting and ending source snapshots, so the
+    # ordering never weakens the source-identity gate.
     catalog_section = runner_section.run_catalog()
     python_section = runner_section.run_python_suites(discovery)
     coverage_section = validate_sample_coverage(repo, discovery)
@@ -2048,14 +1961,10 @@ def main(argv=None) -> int:
                 f"missing from this clone: git fetch origin {pin['pin']}")
 
     snapshot_end = git_snapshot(repo)
-    manifest_end = source_manifest(repo)
     source_drift = (
         snapshot_start["commit"] != snapshot_end["commit"])
     dirty_changed = (
         snapshot_start["dirty_files"] != snapshot_end["dirty_files"])
-    content_drift = (
-        manifest_start is None or manifest_end is None
-        or manifest_start["digest"] != manifest_end["digest"])
     if source_drift:
         runner_section.reasons.append(
             "source drift: HEAD changed during the run "
@@ -2063,15 +1972,10 @@ def main(argv=None) -> int:
     if dirty_changed:
         runner_section.reasons.append(
             "source drift: the dirty-file list changed during the run")
-    if manifest_start is None or manifest_end is None:
+    if snapshot_start["commit"] is None:
         runner_section.reasons.append(
             "source identity unavailable: not a Git repository (or git "
             "missing/failed); a strict gate cannot certify this checkout")
-    elif content_drift:
-        runner_section.reasons.append(
-            "source content changed during the run (content digest "
-            f"{manifest_start['digest'][:12]}.. -> "
-            f"{manifest_end['digest'][:12]}..)")
 
     reasons = runner_section.reasons
     document = {
@@ -2103,20 +2007,7 @@ def main(argv=None) -> int:
             "dirty_files_end": snapshot_end["dirty_files"],
             "dirty_count_start": snapshot_start["dirty_count"],
             "dirty_count_end": snapshot_end["dirty_count"],
-            "manifest": None if manifest_start is None else {
-                "algorithm": manifest_start["algorithm"],
-                "digest_start": manifest_start["digest"],
-                "digest_end":
-                    None if manifest_end is None else manifest_end["digest"],
-                "file_count_start": manifest_start["file_count"],
-                "file_count_end":
-                    None if manifest_end is None else manifest_end["file_count"],
-                "gitlinks": manifest_start["gitlinks"],
-                "files_hashed_sample":
-                    manifest_start["files_hashed_sample"],
-            },
             "source_drift": source_drift,
-            "content_drift": content_drift,
             "dirty_files_changed_during_run": dirty_changed,
             "pins": pins,
         },

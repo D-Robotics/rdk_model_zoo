@@ -1,25 +1,42 @@
 name: host-validation
 
-# Maintainer host gate: the complete supported host suites (all native
-# samples plus nested conversion/evaluator suites, shared suites including
-# the safe parent-repo VLA gitlink integrity guard test_vla_integration.py
-# — gitlinks stay uninitialized and upstream ACT/Pi0 code is never run,
-# board_validation, the contract checker's own tests, skills), the static
-# sample contract, the host-safe native CTest projects and the catalog
-# check — one run of utils/tools/host_validation/run.py per matrix leg.
+# Linux host gate.  The default CI scope is one leg — ubuntu-24.04 with
+# Python 3.12 — running utils/tools/host_validation/run.py: every
+# first-party Python suite, the sample-inventory coverage, the host-safe
+# native CTest projects with their full-gate flags, and the declared
+# historical pins.  The catalog and static contract sections are owned by
+# their own workflows (model-catalog-data, sample-contract) and are
+# skipped here through run.py's explicit --skip-catalog/--skip-contract
+# flags, recorded in its report, so no check runs twice in one CI run.
+# Python 3.10 and the macOS leg stay available as expanded compatibility
+# through workflow_dispatch.
 #
-# Equivalent gates for develop/main pushes and pull requests: no path
-# filters, reports uploaded even on failure.  The report and its artifacts
-# are written under $RUNNER_TEMP,
-# never into the checkout: the runner gates on source content identity, so
-# workspace-local reports would be self-induced source drift.  Linux
-# results are proven by these jobs; a green local run is not a CI claim.
+# Docs-only changes — narrative Markdown anywhere in the tree (the
+# classifier defines the exact predicate) — skip the native/full host gate
+# through an explicit successful classification step; the job always
+# reports, so a required check can never stay pending.  Sample READMEs
+# count as docs-only: their CLI/link contract is enforced by the
+# sample-contract workflow, which runs on every PR, so a README-only
+# change does not rebuild the C++/audio/full suites.  Machine-read
+# Markdown (test fixtures, test_data, skill packs, checker inputs under
+# utils/tools) and docs/release data stay on the full gate.
+#
+# The report and its artifacts are written under $RUNNER_TEMP, never into
+# the checkout.  Linux results are proven by these jobs; a green local run
+# is not a CI claim.  The complete local gate (catalog and strict contract
+# sections included) remains available through run.py directly.
 
 on:
   pull_request:
   push:
     branches: [develop, main]
   workflow_dispatch:
+    inputs:
+      compatibility:
+        description: Host matrix scope (expanded adds Python 3.10 and macOS)
+        type: choice
+        options: [default, expanded]
+        default: default
 
 permissions:
   contents: read
@@ -31,33 +48,113 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-24.04
-            python-version: "3.10"
-          - os: ubuntu-24.04
-            python-version: "3.12"
-          # Applicable macOS host coverage: the portable native dependency
-          # discovery (iconv/gflags/json) and the host suites must hold on a
-          # second platform; board execution is never claimed here.
-          - os: macos-15
-            python-version: "3.12"
+        # Default delivery scope: the single ubuntu-24.04 py3.12 leg.
+        # workflow_dispatch with compatibility=expanded restores the
+        # Python 3.10 and macOS legs for compatibility checks.
+        include: ${{ (github.event_name == 'workflow_dispatch' && inputs.compatibility == 'expanded') && fromJSON('[{"os":"ubuntu-24.04","python-version":"3.10"},{"os":"ubuntu-24.04","python-version":"3.12"},{"os":"macos-15","python-version":"3.12"}]') || fromJSON('[{"os":"ubuntu-24.04","python-version":"3.12"}]') }}
     steps:
       - name: Check out repository (full history, no submodules)
         uses: actions/checkout@v4
         with:
           # Pinned historical sources (utils/py_utils/legacy_platforms.py,
-          # the Gemma native CMake pin, catalog commit sources) read Git
-          # objects, so the run requires complete history.  The VLA ACT/Pi0
-          # gitlinks stay uninitialized by design.
+          # the Gemma native CMake pin) read Git objects, so the run
+          # requires complete history.  The VLA ACT/Pi0 gitlinks stay
+          # uninitialized by design.
           fetch-depth: 0
           submodules: false
           persist-credentials: false
+      - name: Classify changed paths
+        id: classify
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import subprocess
+          import sys
+
+          event = os.environ["EVENT_NAME"]
+          range_spec = ""
+          if event == "pull_request":
+              base = os.environ.get("PR_BASE", "")
+              if base:
+                  # Merge-base diff: what the PR changes on top of its base.
+                  range_spec = f"{base}...HEAD"
+          elif event == "push":
+              before = os.environ.get("PUSH_BEFORE", "")
+              if before and set(before) != {"0"}:
+                  # Endpoint diff: exactly what this push changed relative
+                  # to the branch's previous tip (correct for force pushes
+                  # too, where before is not an ancestor of HEAD).
+                  range_spec = f"{before}..HEAD"
+
+          files = None
+          if range_spec:
+              # -z emits NUL-separated paths so filenames with spaces or
+              # unusual bytes survive; --no-renames reports moves as
+              # delete+add so both sides are classified.
+              diff = subprocess.run(
+                  ["git", "diff", "--name-only", "--no-renames", "-z",
+                   range_spec],
+                  capture_output=True, text=True)
+              if diff.returncode == 0:
+                  files = [p for p in diff.stdout.split("\0") if p]
+
+          def output(key, value):
+              with open(os.environ["GITHUB_OUTPUT"], "a") as handle:
+                  handle.write(f"{key}={value}\n")
+
+          if files is None:
+              # workflow_dispatch, a brand-new branch push or an
+              # unresolvable base: fail safe and run the full gate.
+              output("host", "true")
+              print("::notice::no diff base resolved - running the full host gate")
+              sys.exit(0)
+
+          def is_narrative_markdown(path):
+              # Narrative Markdown only — prose read by humans. Anything
+              # else (scripts or config under docs/, images, code) fails
+              # safe and runs the gate.
+              if not path.endswith(".md"):
+                  return False
+              # docs/release holds the catalog data the manifests own.
+              if path.startswith("docs/release/"):
+                  return False
+              parts = path.split("/")
+              # Test fixtures and test_data are inputs the suites execute
+              # or parse; skill packs and everything under utils/tools
+              # (sample-scope.md and other checker inputs) are machine-read
+              # Markdown, not narrative.
+              if "tests" in parts or "test_data" in parts:
+                  return False
+              if parts[0] == "skills" or path.startswith("utils/tools/"):
+                  return False
+              return True
+
+          # Sample READMEs are narrative here: the sample-contract workflow
+          # enforces their CLI/link contract on every PR, and a README-only
+          # change does not need the C++/audio/full suites.
+          docs_only = bool(files) and all(is_narrative_markdown(p)
+                                          for p in files)
+          output("host", "false" if docs_only else "true")
+          if files:
+              print("changed paths:")
+              for path in files:
+                  print(f"  {path}")
+          if docs_only:
+              print("::notice::narrative-Markdown-only change - native/full host gate skipped")
+          else:
+              print(f"::notice::{len(files)} changed path(s) - host gate runs")
+          PY
       - name: Set up Python ${{ matrix.python-version }}
+        if: steps.classify.outputs.host == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install native host dependencies (Linux)
-        if: runner.os == 'Linux'
+        if: steps.classify.outputs.host == 'true' && runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -72,7 +169,7 @@ jobs:
             liblz4-1 \
             ffmpeg
       - name: Install native host dependencies (macOS)
-        if: runner.os == 'macOS'
+        if: steps.classify.outputs.host == 'true' && runner.os == 'macOS'
         run: |
           brew install cmake pkg-config opencv gflags nlohmann-json \
             libsndfile libsamplerate lz4 ffmpeg
@@ -85,6 +182,7 @@ jobs:
           # themselves, right before Python starts, from this variable.
           echo "LZ4_LIBDIR=$(brew --prefix lz4)/lib" >> "$GITHUB_ENV"
       - name: Probe native liblz4 (production loader path, fail fast)
+        if: steps.classify.outputs.host == 'true'
         run: |
           if [ "$(uname)" = "Darwin" ] && [ -n "${LZ4_LIBDIR:-}" ]; then
             export DYLD_LIBRARY_PATH="${LZ4_LIBDIR}${DYLD_LIBRARY_PATH:+:${DYLD_LIBRARY_PATH}}"
@@ -112,6 +210,7 @@ jobs:
           print(f"liblz4 OK: {path} (LZ4_compressBound(64) = {bound})")
           PY
       - name: Probe FFmpeg with libx264 (host test fixtures, fail fast)
+        if: steps.classify.outputs.host == 'true'
         run: |
           # The LiteAvatar host suites transcode real lavfi fixtures with
           # libx264 and remux/verify them with ffprobe (host-only test
@@ -125,16 +224,10 @@ jobs:
             -t 0.2 -c:v libx264 -pix_fmt yuv420p -f null -
           echo "ffmpeg/ffprobe OK: $(ffmpeg -version | head -1)"
       - name: Install core Python host dependencies
+        if: steps.classify.outputs.host == 'true'
         run: python -m pip install -r utils/tools/host_validation/requirements.txt
-      - name: Set up Node.js
-        uses: actions/setup-node@v5
-        with:
-          # utils/tools/catalog-publisher engines: >=22.12 <23
-          node-version: "22.12"
-      - name: Install catalog dependencies
-        run: npm ci
-        working-directory: utils/tools/catalog-publisher
       - name: Run host validation
+        if: steps.classify.outputs.host == 'true'
         env:
           HOST_VALIDATION_OUTPUT: ${{ runner.temp }}/host-validation-report
         run: |
@@ -145,9 +238,14 @@ jobs:
           if [ "$(uname)" = "Darwin" ] && [ -n "${LZ4_LIBDIR:-}" ]; then
             export DYLD_LIBRARY_PATH="${LZ4_LIBDIR}${DYLD_LIBRARY_PATH:+:${DYLD_LIBRARY_PATH}}"
           fi
+          # The catalog and contract sections run in their own workflows
+          # (model-catalog-data, sample-contract) on the same events; the
+          # skips are explicit and recorded in the report.
           python utils/tools/host_validation/run.py \
             --repo "$GITHUB_WORKSPACE" \
-            --report "$HOST_VALIDATION_OUTPUT/report.json"
+            --report "$HOST_VALIDATION_OUTPUT/report.json" \
+            --skip-catalog \
+            --skip-contract
       - name: Upload host validation report
         if: always()
         uses: actions/upload-artifact@v4

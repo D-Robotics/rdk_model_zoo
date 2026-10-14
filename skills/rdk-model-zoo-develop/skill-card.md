@@ -4,7 +4,7 @@
 | 字段 | 内容 |
 |---|---|
 | Owner | RDK Model Zoo maintainers（角色负责人；合入时按仓库 CODEOWNERS 分配具体 reviewer） |
-| Skill 版本 | 1.1.1 |
+| Skill 版本 | 1.1.2 |
 | Pack 候选版本 | 1.1.0（未发布） |
 | 文档许可证 | CC-BY-4.0；frontmatter 的 Apache-2.0 为 Hub 兼容字段，不覆盖内容许可 |
 | 脚本许可证 | Apache-2.0 |

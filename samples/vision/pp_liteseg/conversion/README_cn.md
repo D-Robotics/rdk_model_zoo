@@ -105,7 +105,7 @@ hrt_model_exec perf --model_file model/pp_liteseg_stdc1_cityscapes_1024x512_nv12
 <a id="artifacts"></a>
 ## 产物
 
-预期产物链：训练.pdparams → 推理 model.json/model.pdiparams → 原始／简化 ONNX → OE 日志和 *_output BIN → 本地验证报告。为本地编译模型保留权重文件、PaddleSeg 版本、环境版本、校准清单、模型摘要和日志。不要因文件名相同就覆盖发布模型。自定义文件可显式指定运行时 asset-id 请求相同张量契约，但未知的发布摘要不能认证文件来源。
+预期产物链：训练.pdparams → 推理 model.json/model.pdiparams → 原始／简化 ONNX → OE 日志和 *_output BIN → 本地验证报告。为本地编译模型保留权重文件、PaddleSeg 版本、环境版本、校准清单、模型摘要和日志。不要因文件名相同就覆盖发布模型。自定义文件可显式指定运行时 asset-id 请求相同张量契约；其文件身份由观察摘要与编译记录标识。
 
 <a id="known-gaps"></a>
 ## 补充准备

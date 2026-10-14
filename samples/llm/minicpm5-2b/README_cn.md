@@ -75,7 +75,7 @@ bash run.sh -- --prompt="What is the capital of France? Answer with the city nam
 | 假量化模型 | 14.2687 |
 | 最终 S600 HBM | 14.2428 |
 
-最终 HBM 相对浮点 PPL 上升 1.60%，覆盖全部 286580 个下一 token 预测目标。板端 NumPy 评估与 SDK/PyTorch RPC 路径在 5 个样本上的 PPL 相差 0.0055%，并非逐位一致。
+最终 HBM 相对浮点 PPL 上升 1.60%，覆盖全部 286580 个下一 token 预测目标。板端 NumPy 评估与 SDK/PyTorch RPC 路径在 5 个样本上的 PPL 相差 0.0055%。
 
 生成参考数据包含 6 条提示词的文本及 token 与浮点参考对照、中英文两轮对话、填充后 2048/3840 token 输入的信息检索，以及 50 次重复请求。该重复请求场景的平均 decode 速度为 53.25 token/s，平均首 token 延迟为 147.86 ms。这些数据使用上述短提示词顺序请求测得；runtime 的 prefill token 数包含 chunk 填充。
 

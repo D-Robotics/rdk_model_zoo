@@ -93,8 +93,8 @@ Top-1 为首位正确数/成功推理数；Top-K 为真值落在 K 个预测内�
 <a id="outputs"></a>
 ## 输出
 
-写入 --json-save-path 并打印报告。字段包含 status（complete/partial/no-results）、扫描/匹配/未匹配/失败/成功数、逐图错误、精度分母、top1_acc/topk_acc（无成功推理时为 null）、可选 top5_acc、elapsed_seconds/fps、asset_id/target/model、数据路径和配置。complete 只表示本次扫描图片全部评测，不证明已覆盖完整 50,000 张
-数据；未匹配/失败计数需一并核对。
+写入 --json-save-path 并打印报告。字段包含 status（complete/partial/no-results）、扫描/匹配/未匹配/失败/成功数、逐图错误、精度分母、top1_acc/topk_acc（无成功推理时为 null）、可选 top5_acc、elapsed_seconds/fps、asset_id/target/model、数据路径和配置。完整 ImageNet 验证请设 `--limit 0`，并核对扫描、匹配与成功均达 50,000 张且
+未匹配/失败为 0；请保留 JSON 报告及当次使用的模型与数据集信息。
 
 <a id="reference-results"></a>
 ## 参考结果

@@ -28,7 +28,7 @@ ion=ion_reserved_size=0xf0000000
 ion=ion_carveout_size=0xf0000000
 ```
 
-This allocates CMA 1 GiB and reserved/carveout 3.75 GiB each. Back up the original configuration and check your board capacity before changing it. **run.sh never changes boot settings or reboots.** Linux reported approximately 2.8 GiB on the tested S100 and 14 GiB on S100P; these are not universal hardware capacities. Close unnecessary S100 applications. `free` does not establish contiguous BPU heap capacity. Allow about 6 GB free storage for download and extraction.
+This allocates CMA 1 GiB and reserved/carveout 3.75 GiB each. Back up the original configuration and check your board capacity before changing it. **run.sh never changes boot settings or reboots.** On the tested S100, Linux reported approximately 2.8 GiB remaining, and 14 GiB on S100P; confirm the capacity of your own hardware version. Close unnecessary S100 applications. Read contiguous BPU heap capacity from the board's ION/BPU memory report; `free` shows system memory only. Allow about 6 GB free storage for download and extraction.
 
 ## Run
 

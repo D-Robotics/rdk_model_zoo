@@ -1,5 +1,18 @@
 name: Model catalog data
 
+# The single catalog npm check (validate sources, vitest, build,
+# reproducibility check). It runs when the catalog's own inputs change —
+# the publisher and redirect packages, the docs/release platform manifests
+# and benchmark records, these CI workflows themselves (the vitest
+# release-workflow suite asserts their content), the shared YOLO26 release
+# fixture the tests read from the sample tree, and conservatively any
+# sample model-preparation change or deletion/rename under samples/ (the
+# manifests are the authority, but such moves must not silently skip the
+# catalog check) — and always on workflow_dispatch. Everything else skips
+# the heavy steps through an explicit successful classification step, so
+# the job always reports and the catalog artifact behavior is preserved
+# exactly where it matters.
+
 on:
   pull_request:
   push:
@@ -24,7 +37,104 @@ jobs:
           # historical platforms/ tree exists only in Git history.
           fetch-depth: 0
           persist-credentials: false
+      - name: Classify changed paths
+        id: classify
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import subprocess
+          import sys
+
+          event = os.environ["EVENT_NAME"]
+          range_spec = ""
+          if event == "pull_request":
+              base = os.environ.get("PR_BASE", "")
+              if base:
+                  # Merge-base diff: what the PR changes on top of its base.
+                  range_spec = f"{base}...HEAD"
+          elif event == "push":
+              before = os.environ.get("PUSH_BEFORE", "")
+              if before and set(before) != {"0"}:
+                  # Endpoint diff: exactly what this push changed relative
+                  # to the branch's previous tip (correct for force pushes
+                  # too, where before is not an ancestor of HEAD).
+                  range_spec = f"{before}..HEAD"
+
+          entries = None
+          if range_spec:
+              # name-status + -z: NUL-separated status/path records so
+              # filenames with spaces survive and deletions (including the
+              # delete half of a rename, since --no-renames splits moves
+              # into delete+add) are visible.
+              diff = subprocess.run(
+                  ["git", "diff", "--name-status", "--no-renames", "-z",
+                   range_spec],
+                  capture_output=True, text=True)
+              if diff.returncode == 0:
+                  fields = diff.stdout.split("\0")
+                  changed, deleted = [], set()
+                  for index in range(0, len(fields) - 1, 2):
+                      status, path = fields[index], fields[index + 1]
+                      if path:
+                          changed.append(path)
+                          if "D" in status:
+                              deleted.add(path)
+                  entries = (changed, deleted)
+
+          def output(key, value):
+              with open(os.environ["GITHUB_OUTPUT"], "a") as handle:
+                  handle.write(f"{key}={value}\n")
+
+          if entries is None:
+              # workflow_dispatch, a brand-new branch push or an
+              # unresolvable base: fail safe and run the check.
+              output("catalog", "true")
+              print("::notice::no diff base resolved - catalog check runs")
+              sys.exit(0)
+
+          changed, deleted = entries
+
+          # Everything npm run check reads from the tree beyond the
+          # publisher's own package: the redirect artifact its tests
+          # validate, the docs/release manifests (benchmark evidence itself
+          # is read at the git refs the records cite, not from the tree),
+          # the workflows asserted by the vitest suite, and the shared
+          # YOLO26 release fixture. Sample model-preparation changes and
+          # any deletion under samples/ run the check conservatively: the
+          # manifests are the authority, but asset moves must not skip it.
+          PREFIXES = ("utils/tools/catalog-publisher/",
+                      "utils/tools/catalog-redirect/",
+                      "docs/release/",
+                      ".github/workflows/")
+          SHARED_FIXTURE = ("samples/vision/ultralytics_yolo/tests/"
+                            "fixtures/yolo26_detect_release.json")
+
+          def is_catalog_relevant(path):
+              if path.startswith(PREFIXES) or path == SHARED_FIXTURE:
+                  return True
+              if path.startswith("samples/"):
+                  parts = path.split("/")
+                  if "model" in parts[:-1] or path in deleted:
+                      return True
+              return False
+
+          catalog = any(is_catalog_relevant(p) for p in changed)
+          output("catalog", "true" if catalog else "false")
+          if changed:
+              print("changed paths:")
+              for path in changed:
+                  print(f"  {path}")
+          if catalog:
+              print("::notice::catalog-relevant change - catalog check runs")
+          else:
+              print("::notice::no catalog-relevant change - catalog check skipped")
+          PY
       - name: Set up Node.js
+        if: steps.classify.outputs.catalog == 'true'
         uses: actions/setup-node@v5
         with:
           # package.json engines: >=22.12 <23
@@ -32,12 +142,15 @@ jobs:
           cache: npm
           cache-dependency-path: utils/tools/catalog-publisher/package-lock.json
       - name: Install dependencies
+        if: steps.classify.outputs.catalog == 'true'
         run: npm ci
         working-directory: utils/tools/catalog-publisher
       - name: Validate sources, test, and build the catalog package
+        if: steps.classify.outputs.catalog == 'true'
         run: npm run check
         working-directory: utils/tools/catalog-publisher
       - name: Report the pinned catalog identity
+        if: steps.classify.outputs.catalog == 'true'
         run: |
           node --input-type=module -e '
             import { readFileSync } from "node:fs";
@@ -47,7 +160,9 @@ jobs:
             console.log(`platform tags: ${JSON.stringify(meta.platform_tags)}`);
           '
       - name: Upload catalog data package
-        if: github.event_name != 'pull_request'
+        if: >-
+          steps.classify.outputs.catalog == 'true' &&
+          github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: model-catalog-data

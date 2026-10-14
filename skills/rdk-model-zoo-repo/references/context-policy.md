@@ -12,12 +12,13 @@
 
 ## 维护源与目标引用
 
-本 Pack 的单一维护源是 `rdk_x5` 默认分支；这只说明 Skill 文档从哪里维护，**不把任务目标默认为 X5**。目标必须来自用户给出的 `REPO_ROOT`/ref，或来自该工作区可核对的 README、模型 metadata、代码和（有清单时）Manifest。已有用户约束优先于分支名、文件名和旧 Skill 示例。
+Pack 文档的日常维护发生在统一集成线 `develop`：X5 与 S（S100/S100P/S600）样例已合并到 `samples/{vision,speech,robotics,llm,vla}/`，采用共享 helper 的 sample 经 `--target auto|x5|s100|s100p|s600` 选择板卡（注册表 `docs/release/platforms.json`，未知目标报错；支持的 target 由各 sample 决定，LLM 与专用 sample 使用各自 CLI），统一清单位于 `docs/release/{x5,s}/models.yaml`，各平台版本线记录在 `docs/release/{x5,s}/VERSION`。仓库当前的已发布默认分支仍是 `rdk_x5`（`rdk_s` 是 S 交付线，`rdk_x3` 仅存档）；实际 ref 与默认分支以用户检出的 Git 状态为准，不预设未来分支名，也不在结论里把任何切换写成已完成。这只说明文档从哪里维护，**不把任务目标默认为 X5**。目标必须来自用户给出的 `REPO_ROOT`/ref，或来自该工作区可核对的 README、模型 metadata、代码和（有清单时）Manifest。已有用户约束优先于分支名、文件名和旧 Skill 示例。
 
 | 实际目标 | 可核对的常见 ref | 目标身份与布局线索 |
 |---|---|---|
-| RDK X5 | `rdk_x5`、`x5-vMAJOR.MINOR.PATCH` | `release.platform: x5`、X5 README/metadata；当前维护线清单位于 `docs/release/x5/` |
-| RDK S100 / S100P / S600 | `rdk_s`、`s-vMAJOR.MINOR.PATCH` | `release.platform: s` 与具体 `hardware`/SoC；当前 S 线清单位于 `docs/release/s/` |
+| RDK X5 | `rdk_x5`、`x5-vMAJOR.MINOR.PATCH` | `release.platform: x5`、X5 README/metadata；统一集成线上 X5 清单位于 `docs/release/x5/` |
+| RDK S100 / S100P / S600 | `rdk_s`、`s-vMAJOR.MINOR.PATCH` | `release.platform: s` 与具体 `hardware`/SoC；统一集成线上 S 线清单位于 `docs/release/s/` |
+| 统一集成检出 | `develop` | `samples/` 统一布局、共享 helper sample 的 `--target auto|x5|s100|s100p|s600`、`docs/release/{x5,s}/`；同一棵树覆盖 X5 与 S 目标，按用户约束选具体 target |
 | RDK X3 | `rdk_x3`、`x3-vMAJOR.MINOR.PATCH` | X3 README、`release.platform: x3`；旧版本可能只有 `release/` 或 `demos/` |
 | legacy / 历史交付 | `rdk_x5_legacy` 或用户指定的历史 tag/ref | 只按该 ref 的 README、代码和清单判断；保留其历史 `samples/`、`demos/`、`docs/release/` 或 `release/` 布局 |
 

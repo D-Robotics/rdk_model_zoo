@@ -181,9 +181,10 @@ python samples/speech/paraformer/conversion/prepare.py \
 For a real conversion, supply a representative collection of your 16 kHz WAVs.
 Selection is a sorted recursive prefix of lowercase `*.wav` files, default 50,
 matching the source recipe's reference count. Fewer files are explicitly recorded;
-50 files alone do not establish representative coverage. Empty selection, bad
-sample rate, malformed audio or invalid stage outputs fail the run; no selected
-file is silently skipped. There is no implicit resampling or random calibration.
+50 is the source recipe's count — widen the collection when your audio
+distribution is broader. Empty selection, bad sample rate, malformed audio or
+invalid stage outputs fail the run; provide or pre-convert audio to 16 kHz
+before invoking the step, and calibration audio comes only from the provided files.
 
 The shared runtime frontend averages multichannel audio, computes fbank/LFR/CMVN with CPU seed 191009, and pads/truncates to 400 frames. Seed, dependencies and input hashes are recorded with each run;
 actual/retained frame counts and truncation remain visible in each record.

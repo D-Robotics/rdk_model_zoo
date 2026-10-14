@@ -108,7 +108,7 @@ samples/vision/yolo26_depth/runtime/cpp/build/x5/yolo26_depth \
   /work/depth/model.bin /work/depth/input.jpg /work/depth/native-positional
 ```
 
-直接调用只验证板卡与张量契约，不验证发布方身份。
+直接调用验证板卡与张量契约；发布模型身份由清单 SHA-256 校验保障。
 需要清单摘要校验和 `launch-report.json` 时使用启动器。
 自编译模型同时传入 `--converted-model`、`--model-path` 与 list-models 给出的精确 `--asset-id`。
 此时 ID 是**张量契约参照**，不表示新文件就是已发布制品；仍要求 X5 和同样的已校准 log-depth/NV12 契约。

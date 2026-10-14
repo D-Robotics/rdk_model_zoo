@@ -72,7 +72,7 @@ python utils/tools/classification/freeze.py \
 
 源权重目录为 `<repo-name>/<revision>/{config.json,README.md,model.safetensors}`。
 `toolchains.json` 记录实际 Docker tag 和不可变 image ID。
-campaign 的 Top-1/Top-5 各下降最多一个百分点是本次候选门槛，并非仓库统一标准；
+campaign 的 Top-1/Top-5 各下降最多一个百分点是该次 campaign 的候选门槛；
 修改冻结输入应新建 campaign。COCO 校准集是否适用，由后续独立全量分类评测验证。
 
 ## 校准和 OE 配置

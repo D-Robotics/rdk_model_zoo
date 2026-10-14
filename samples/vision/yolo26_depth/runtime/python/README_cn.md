@@ -44,7 +44,7 @@ python samples/vision/yolo26_depth/runtime/python/main.py --target x5 --variant 
 
 `x5/s100/s100p/s600` 各有 `n/s/m/l/x` 五种变体。省略变体默认 `n`，但精确
 asset ID 可以推导其他变体。目标板卡、variant、asset ID 冲突会报错。
-生产加载器在 SDK 加载前检查板身份；选择目标板卡并不意味着可以跨板运行模型。
+生产加载器在 SDK 加载前检查板身份；模型须与所用板卡匹配。
 
 <a id="parameters"></a>
 ## 参数

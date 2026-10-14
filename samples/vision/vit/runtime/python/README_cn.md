@@ -71,7 +71,7 @@ python3 samples/vision/vit/runtime/python/main.py --dry-run --target s100 --vari
 | `--list-models` | flag | false | 不加载 SDK 或下载 |
 | `--dry-run` | flag | false | 仅解析选择，不推理 |
 
-图片/标签默认解析为当前仓库绝对路径。variant/resize 的 None 表示使用所选模型配置，并非无配置。list/dry-run 互斥。
+图片/标签默认解析为当前仓库绝对路径。variant/resize 为 None 时使用所选模型配置的默认值。list/dry-run 互斥。
 
 <a id="results"></a>
 ## 结果

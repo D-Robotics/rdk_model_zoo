@@ -51,4 +51,4 @@ The source README records ≈95 FPS and ≈10.5 ms at 1024×512 single-core with
 <a id="boundaries"></a>
 ## Scope
 
-Board execution requires an RDK X5 environment. S100/S100P/S600 and C++ are not supported by this sample. A locally compiled model must satisfy the same tensor contract; the declared asset-id and unknown publisher SHA are not provenance proof. For real performance commands and graph comparison prerequisites, use the [conversion validation section](../conversion/README.md#validation).
+Board execution requires an RDK X5 environment. S100/S100P/S600 and C++ are not supported by this sample. A locally compiled model must satisfy the same tensor contract; with no publisher checksum published, run it with the matching declared asset-id and record its actual digest. For real performance commands and graph comparison prerequisites, use the [conversion validation section](../conversion/README.md#validation).

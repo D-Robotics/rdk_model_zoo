@@ -12,7 +12,7 @@ The dashboard now ships as a static module of the documentation site at `/model_
 
 **No workflow in this repository deploys this file, and none should without an explicit decision.** It is kept here as a reviewable artifact so the redirect can be published deliberately later:
 
-- The `rdk_model_zoo` GitHub Pages site has to keep serving *something* at its root, which means a deployment to that Pages environment — a change to how this repository publishes, not a data build.
+- The `rdk_model_zoo` GitHub Pages site has to keep serving *something* at its root, which means a deployment to that Pages environment; this changes how the repository publishes, beyond the data-build workflow.
 - Publishing it is a user-visible, outward-facing action that affects a live URL.
 
 The model repository deliberately has no Pages deployment left: `.github/workflows/model-catalog-data.yml` builds and uploads the catalog data package and stops there.

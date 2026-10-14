@@ -35,11 +35,11 @@ python3 samples/vision/pointnet/runtime/python/main.py --list-models
 ```
 
 Download runs on host or board with network access and PyYAML. It writes a
-partial file before atomic installation. Existing files are not overwritten;
-without a publisher digest an existing file cannot be independently authenticated.
+partial file before atomic installation. Existing files are not overwritten; with no publisher digest recorded, the printed
+observed SHA-256 identifies the downloaded bytes.
 If download fails, retry the explicit command after restoring network access or
-obtain the exact HBM from the publisher and place it at the default path. A file
-extension or a renamed model cannot establish target compatibility.
+obtain the exact HBM from the publisher and place it at the default path. Target compatibility is defined by the published
+filename, asset ID and manifest row.
 
 <a id="accompanying-files"></a>
 ## Accompanying files
@@ -64,7 +64,7 @@ python3 samples/vision/pointnet/runtime/python/main.py --target s100 --asset-id 
 ## Format and checksum
 
 Format: `.hbm`. `sha256: null (unknown)` in the publisher manifest. The downloader
-prints an observed SHA-256 for tracking; that digest is not a publisher checksum.
+prints an observed SHA-256 for tracking; this artifact configures no publisher checksum.
 Loading validates one model, float32 `(1,3,N)` input and `(1,N,4)` output. Output
 dtype is verified from metadata; integer logits require valid SCALE parameters.
 Load the matching S100 HBM using the Python runtime command above.

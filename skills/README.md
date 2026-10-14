@@ -26,16 +26,16 @@ Use the corresponding OE Skills for quantization, compilation and tuning. This P
 | rdk-model-zoo | 1.1.2 |
 | rdk-model-zoo-repo | 1.1.1 |
 | rdk-model-zoo-integrate | 1.0.1 |
-| rdk-model-zoo-develop | 1.1.1 |
+| rdk-model-zoo-develop | 1.1.2 |
 | rdk-model-zoo-validate | 1.1.1 |
 | rdk-model-zoo-review | 1.1.1 |
-| rdk-model-zoo-release | 1.0.1 |
+| rdk-model-zoo-release | 1.0.2 |
 
 The [`pack.json`](pack.json) manifest is authoritative for versions.
 
 ## Target repositories and platforms
 
-First resolve `SKILL_ROOT` (the current Skill installation directory) and `REPO_ROOT` (the user's Model Zoo workspace). Common targets include `rdk_x5`/`x5-v*` for X5, `rdk_s`/`s-v*` for S100/S100P/S600, `rdk_x3`/`x3-v*` for X3, and user-specified `rdk_x5_legacy` or historical refs. Inspect the README, code, manifests and metadata at the requested ref. Locate S100, S100P and S600 support information at the specific sample, artifact and runtime level.
+First resolve `SKILL_ROOT` (the current Skill installation directory) and `REPO_ROOT` (the user's Model Zoo workspace). Common targets include `rdk_x5`/`x5-v*` for X5, `rdk_s`/`s-v*` for S100/S100P/S600, `rdk_x3`/`x3-v*` for X3, and user-specified `rdk_x5_legacy` or historical refs. On the unified integration branch `develop`, X5 and S samples share the `samples/` layout; shared-helper samples select their board with `--target auto|x5|s100|s100p|s600` (supported targets are sample-specific; LLM and specialized samples use their own CLI; registry: `docs/release/platforms.json`; per-platform manifests: `docs/release/{x5,s}/models.yaml`). The published default branch is still `rdk_x5`; resolve the actual ref and default branch from the checkout's Git state rather than assuming a future rename. Inspect the README, code, manifests and metadata at the requested ref. Locate S100, S100P and S600 support information at the specific sample, artifact and runtime level.
 
 Resolve manifests from paths that actually exist at the target ref. Common locations
 include `docs/manifests/`, `docs/release/`, `release/` and platform directories
