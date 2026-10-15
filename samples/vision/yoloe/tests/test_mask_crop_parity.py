@@ -1,10 +1,12 @@
-"""Regression: DFL prototype crops keep the source (unclipped) box semantics.
+"""Regression: the S YOLOE-11 decode keeps the source (unclipped) box semantics.
 
 Reproduces the S100 YOLOE-11s board parity failure where clipping the
 prototype crop to the letterbox content region shrank mask index 5 by ~12%
 of its pixels (boolean IoU 0.738) and renormalizing Lanczos output changed
 edge values. The source sample feeds the full decoded box to the prototype
-crop and returns the resized mask unchanged.
+crop and returns the resized mask unchanged. The shared Ultralytics sample
+decode now interpolates probabilities instead, so this pins YOLOE's own
+``decode_s11`` legacy raw-prototype path.
 """
 
 from types import SimpleNamespace
@@ -13,7 +15,7 @@ from unittest import mock
 
 import numpy as np
 
-from samples.vision.ultralytics_yolo.runtime.python import segment as segmentation_decode
+from samples.vision.yoloe.runtime.python import yoloe as yoloe_runtime
 from samples.vision.ultralytics_yolo.runtime.python.detect import ImageTransform
 
 
@@ -58,14 +60,14 @@ class MaskCropParityTests(unittest.TestCase):
         transform = _padding_transform()
         seen = {}
 
-        real_decode_masks = segmentation_decode.post.decode_masks
+        real_decode_masks = yoloe_runtime.post.decode_masks
 
         def spy(coefficients, boxes, protos, *args, **kwargs):
             seen["boxes"] = np.array(boxes, copy=True)
             return real_decode_masks(coefficients, boxes, protos, *args, **kwargs)
 
-        with mock.patch.object(segmentation_decode.post, "decode_masks", spy):
-            _, _, _, masks = segmentation_decode.decode_segmentation(
+        with mock.patch.object(yoloe_runtime.post, "decode_masks", spy):
+            _, _, _, masks = yoloe_runtime.decode_s11(
                 _outputs_with_one_anchor(),
                 contract,
                 transform,
