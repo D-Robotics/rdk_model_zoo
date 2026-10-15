@@ -79,21 +79,18 @@ class BindingTableTests(unittest.TestCase):
             if target != "x5":
                 self.assertEqual(selection.model_path.parent.name, target)
 
-    def test_every_published_asset_has_hash_and_oss_url(self):
+    def test_every_published_asset_has_hash_and_download_server_url(self):
         from samples.vision.mobilenetv4.runtime.python.cli import list_available_assets
         from utils.py_utils.assets import resolve_asset
-        from testsupport import VARIANTS
 
         for target in ("x5", "s100", "s100p", "s600"):
             for record in list_available_assets(target):
                 asset = resolve_asset(record.asset_id)
                 self.assertRegex(asset.sha256 or "", r"^[0-9a-f]{64}$", record.asset_id)
-                self.assertTrue(
-                    asset.url.startswith(
-                        "https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/"
-                        f"mobilenetv4/mobilenetv4/cls/{VARIANTS[record.variant][2]}/{target}/"
-                    ),
+                self.assertEqual(
                     asset.url,
+                    "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/"
+                    f"rdk_{target}/mobilenetv4/{asset.filename.rsplit('/', 1)[-1]}",
                 )
 
     def test_per_target_contracts_match_source_facts(self):

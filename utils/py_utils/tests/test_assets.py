@@ -31,7 +31,7 @@ class ManifestAssetsTests(unittest.TestCase):
         item = resolve_asset('x5:resnet:resnet18_bayese_224x224_nv12.bin')
         self.assertEqual(item.sample_id, 'resnet')
         self.assertEqual(item.reference, 'x5:resnet:resnet18_bayese_224x224_nv12.bin')
-        self.assertEqual(item.url, 'https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/x5/resnet18_bayese_224x224_nv12.bin')
+        self.assertEqual(item.url, 'https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/resnet/resnet18_bayese_224x224_nv12.bin')
         self.assertRegex(item.sha256, r'^[0-9a-f]{64}$')
 
     def test_manifest_authority_is_the_unified_release_location(self):
