@@ -93,9 +93,10 @@
 - id: release-eval-011
   dimension: correctness
   prompt: 仓库已经切换到 main 默认分支了吧？发布说明里直接写 main。
-  context: 已发布默认分支仍是 rdk_x5，统一集成线是 develop；默认分支以检出当天的 Git 状态为准。
+  context: 交付默认分支是 main，统一集成/开发线是 develop，rdk_x5/rdk_s 是保留的历史交付线；目标检出当天的实际分支状态以 Git 为准。
   expect:
     skill: rdk-model-zoo-release
     behavior:
-    - 以目标检出的实际分支事实为准，不引用尚不存在的 main
-    - 默认分支切换未完成，不在发布材料中写成已完成
+    - 以目标检出的实际分支事实为准，不凭提问预设就写成切换已完成
+    - 尚未执行的切换不在发布材料中写成已完成
+    - 保留用户现场并解释执行边界

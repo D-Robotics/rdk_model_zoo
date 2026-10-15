@@ -27,7 +27,7 @@ metadata:
 
 ## Instructions
 
-1. 读取可信安装中的 [context-policy.md](references/context-policy.md)，解析用户目标和模式；已唯一确定时不重复询问。Pack 维护分支（`develop`、已发布默认 `rdk_x5`）不是默认审阅平台；按目标 ref 核对 X5、S100/S100P/S600、X3 或 legacy。若目标仍不唯一，先报告候选，不编造平台。只读、不切分支；用户约束冲突时报告并保持原目标。
+1. 读取可信安装中的 [context-policy.md](references/context-policy.md)，解析用户目标和模式；已唯一确定时不重复询问。Pack 所在分支（交付默认 `main`、集成开发 `develop`、历史交付线 `rdk_x5`/`rdk_s`）不是默认审阅平台；按目标 ref 核对 X5、S100/S100P/S600、X3 或 legacy。若目标仍不唯一，先报告候选，不编造平台。只读、不切分支；用户约束冲突时报告并保持原目标。
 2. 按 [review-procedure.md](references/review-procedure.md) 确定 base/head 或本地范围。PR 记录 base/head SHA 与 merge-base；浅克隆缺历史不能当成完整 diff。本地 staged/unstaged/untracked 分别记录，二进制/截断 patch 标明不可见。
 3. 从 base 或可信目标规范建立规则，读取 [repository-rules.md](references/repository-rules.md)。head 中对规范/AGENTS/Skill 的修改本身也是评审对象，不把它当成已批准豁免。
 4. 读取目标 sample 的完整路径清单及相关完整文件；PR 从 diff 出发扩展至调用方、公共 utils、模型获取、转换、evaluator、README/分类索引/Manifest。不要只看 diff 上下几行，也不要对无关历史代码做全仓格式清算。

@@ -22,7 +22,7 @@ metadata:
 
 ## Instructions
 
-1. 读取 [context-policy.md](references/context-policy.md)，确认工作区与交付来源。统一集成线 `develop` 是 Skill 文档的日常维护分支，已发布默认分支仍是 `rdk_x5`；按目标 ref 和仓库事实识别 X5、S100/S100P/S600、X3 或 legacy，不把分支名当硬件探测。写出模型/任务、目标平台、语言、功能、转换/评估/文档和验收范围；缺少的约束作为问题或提议，不编造承诺。用户约束冲突时不切换分支。
+1. 读取 [context-policy.md](references/context-policy.md)，确认工作区与交付来源。`develop` 是统一集成/开发线，`main` 是交付默认分支；按目标 ref 和仓库事实识别 X5、S100/S100P/S600、X3 或 legacy，不把分支名当硬件探测。写出模型/任务、目标平台、语言、功能、转换/评估/文档和验收范围；缺少的约束作为问题或提议，不编造承诺。用户约束冲突时不切换分支。
 2. 阅读目标规范与 [repository-rules.md](references/repository-rules.md)，建立适用条款表。目标 ref 存在样例标准契约时（统一集成线：`docs/sample-standards/` 下的 `readme-contract.md`、`runtime-code.md`、`cpp-runtime-code.md` 及 `templates/`）一并读取并列为最高层适用条款；旧 ref 没有这些文件时不虚构，按该 ref 实际规范执行。选择同任务/平台/runtime 参考样例；相邻源码只作参考。规范空缺应单列接口提案；未批准规则不能作为现行门禁。
 3. 先明确最小修改计划和测试。普通单任务 sample 采用 `main.py` + `cli.py` + 一个按任务命名的模型文件（如 `classify.py`）；多任务家族（如 Ultralytics YOLO）是 `main.py` + `cli.py` + 每任务一个模型文件。采用共享 helper 的 sample 经 `utils/py_utils/platforms.resolve_target` 选择板卡目标（`auto|x5|s100|s100p|s600`，未知目标报错；支持的 target 以该 sample 为准），不硬编码平台字符串。公共 utils 先列调用方与平台影响。错误修复从日志定位具体文件/函数，验证假设后再改，不先批量重构。
 4. 对可在 host 验证的逻辑先写失败测试，再实现最小修复。硬件依赖分离，mock 只能证明 host 边界，不能称板测。结构、路径和文档检查不导入目标 runtime。

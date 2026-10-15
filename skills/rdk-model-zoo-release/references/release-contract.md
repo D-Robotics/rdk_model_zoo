@@ -12,7 +12,7 @@
 | 统一仓库版本线 | 目标检出根 `VERSION` | 随该线自身的发布约定 | 独立于模型与 Skills 版本 |
 | Model Zoo Skills | skills/VERSION | vMAJOR.MINOR.PATCH | 独立 Pack 版本；不是全模型统一版本 |
 
-分支事实：当前已发布默认分支仍是 `rdk_x5`（`rdk_s` 为 S 交付线）；`develop` 是 X5/S 样例统一后的集成线。默认分支以目标检出当天的 Git 状态为准；发布检查与材料不预设未来分支名，也不声称任何切换已完成。
+分支事实：交付默认分支为 `main`；`develop` 是 X5/S 样例统一后的集成/开发线；`rdk_x5`/`rdk_s` 为保留的历史分板卡交付线。具体检出的 ref 与默认分支仍以目标检出当天的 Git 状态为准；尚未执行的切换不得在发布检查与材料中写成已完成。
 
 Tag 标识整个提交，不是子目录。Hub 只镜像注册目录。Pack 版本与各成员 Skill 版本分别维护，本文不转写当前版本清单；发布核对一律读取目标 checkout 的实际元数据：Pack 版本与发布状态看 `skills/VERSION` 与 `skills/pack.json` 的 `version`、`release_state`，变更与未发布说明看 `skills/CHANGELOG.md`；每个成员的版本看该成员 `SKILL.md` frontmatter 的 `version`，其治理卡 `skill-card.md` 的版本行须与之一致。历史事实：上游 `rdk_x5` 已发布 Pack 1.0.1，旧 Hub 入口 `rdk-model-zoo` 为 1.0.0；这些状态描述上游 Pack，本候选未发布。Pack 与单 Skill 版本可以不同，不应校验成永远相等。
 

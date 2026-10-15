@@ -494,7 +494,7 @@ sudo bash -c "echo performance > /sys/devices/system/bpu/bpu0/devfreq/28108000.b
 3. The accuracy calculated by `pycocotools` is slightly lower than that calculated by `ultralytics`. This is normal, primarily because `pycocotools` uses rectangular areas, while `ultralytics` uses trapezoidal areas. Our main focus is on using the same calculation method to test both quantized and floating-point models to assess the accuracy loss during the quantization process.
 4. When the BPU model quantizes the NCHW-RGB888 input and converts it to YUV420SP(nv12) input, there is also some accuracy loss due to color space conversion. This accuracy loss can be avoided by incorporating the color space conversion loss during training.
 5. There are slight differences between the accuracy results of the Python and C/C++ interfaces, mainly due to different ways of handling floating-point numbers during memcpy and conversion processes of data structures in Python and C/C++.
-6. Refer to the eval section of the RDK Model Zoo for the test script: https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/tools/eval_pycocotools
+6. Refer to the eval section of the RDK Model Zoo for the test script: [utils/tools/batch_eval_pycocotools](../../../../utils/tools/batch_eval_pycocotools/)
 7. This table presents the results of PTQ (Post-Training Quantization) using 50 images for calibration and compilation. No accuracy tuning or QAT (Quantization-Aware Training) was applied.
 
 
@@ -1792,7 +1792,7 @@ Object Detection (COCO2017)
 3. `pycocotools` AP is usually lower than the Ultralytics built-in numbers due to different area calculation rules. The important signal here is the relative gap between floating-point and quantized models.
 4. Some accuracy loss appears when converting NCHW RGB888 inputs to YUV420SP inputs for BPU deployment because of color space conversion. This can be reduced if that transformation is considered during training.
 5. Python and C/C++ runtime accuracy may differ slightly because of differences in memory copy and floating-point handling.
-6. Evaluation scripts can be referenced here: <https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/tools/eval_pycocotools>
+6. Evaluation scripts can be referenced here: [utils/tools/batch_eval_pycocotools](../../../../utils/tools/batch_eval_pycocotools/)
 7. The table reflects PTQ results compiled with 50 calibration images.
 
 ## Result Check

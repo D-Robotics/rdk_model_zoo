@@ -50,11 +50,80 @@ cv::Mat load_bgr_image(const std::string& image_file) {
     return bgr_mat;
 }
 
+namespace {
+
+/**
+ * @brief Match one linewise Python-dict entry and extract its value text.
+ *
+ * Recognized shape: optional leading whitespace, an optional '{', optional
+ * whitespace, a decimal key, optional whitespace, ':', optional whitespace,
+ * then the value wrapped in exactly one pair of single or double quotes,
+ * then optional whitespace, an optional ',', an optional '}' and optional
+ * whitespace up to the end of the line. Returns false for anything else so
+ * quotes or apostrophes embedded in plain-text labels are never unwrapped.
+ */
+bool match_linewise_dict_entry(const std::string& line, std::string& label) {
+    const auto is_ws = [](char c) { return c == ' ' || c == '\t'; };
+    size_t i = 0;
+    const size_t n = line.size();
+
+    while (i < n && is_ws(line[i])) ++i;
+    if (i < n && line[i] == '{') {
+        ++i;
+        while (i < n && is_ws(line[i])) ++i;
+    }
+
+    size_t digits_end = i;
+    while (digits_end < n && line[digits_end] >= '0' && line[digits_end] <= '9') {
+        ++digits_end;
+    }
+    if (digits_end == i) {
+        return false;  // no numeric key: not a dict entry line
+    }
+    size_t key_end = digits_end;
+    while (key_end < n && is_ws(line[key_end])) ++key_end;
+    if (key_end >= n || line[key_end] != ':') {
+        return false;
+    }
+    i = key_end + 1;
+    while (i < n && is_ws(line[i])) ++i;
+
+    if (i >= n || (line[i] != '\'' && line[i] != '"')) {
+        return false;
+    }
+    const char quote = line[i];
+    size_t value_end = line.find(quote, i + 1);
+    if (value_end == std::string::npos) {
+        return false;
+    }
+    if (line.find(quote, value_end + 1) != std::string::npos) {
+        return false;  // more than one wrapped value: not a dict entry line
+    }
+
+    size_t after = value_end + 1;
+    while (after < n && is_ws(line[after])) ++after;
+    if (after < n && line[after] == ',') ++after;
+    while (after < n && is_ws(line[after])) ++after;
+    if (after < n && line[after] == '}') ++after;
+    while (after < n && is_ws(line[after])) ++after;
+    if (after != n) {
+        return false;
+    }
+
+    label = line.substr(i + 1, value_end - i - 1);
+    return true;
+}
+
+}  // namespace
+
 /**
  * @brief Load classification labels from a text file.
  *
  * Each line in the file represents one label. The line index (0-based)
- * is treated as the corresponding class ID.
+ * is treated as the corresponding class ID. Linewise Python-dict entries
+ * (e.g. "{0: 'label'}", '0: "label\'s text",') contribute their quoted
+ * value; plain-text lines are kept verbatim apart from the brace/comma
+ * trim described below.
  *
  * @param[in] label_path Path to the label text file.
  * @return Vector of label strings. Returns an empty vector on failure.
@@ -80,22 +149,28 @@ std::vector<std::string> load_linewise_labels(const std::string& label_path)
             continue;
         }
 
-        // Compatible with Python dict-like formats like {0: 'label', 1: 'label'} or 0: 'label'
-        size_t first_quote = line.find('\'');
-        size_t last_quote = line.rfind('\'');
-        if (first_quote != std::string::npos && last_quote != std::string::npos && last_quote > first_quote) {
-            line = line.substr(first_quote + 1, last_quote - first_quote - 1);
-        } else {
-            if (line.front() == '{') line = line.substr(1);
-            if (line.back() == '}') line.pop_back();
-            if (line.back() == ',') line.pop_back();
+        // Compatible with linewise Python-dict formats like
+        // {0: 'label', 1: "label's text"} or 0: 'label'. Only that explicit
+        // per-line shape is unwrapped; plain-text labels keep every quote,
+        // apostrophe and embedded comma and only get the original
+        // brace/comma trim.
+        std::string label_text;
+        if (!match_linewise_dict_entry(line, label_text)) {
+            label_text = line;
+            if (label_text.front() == '{') label_text = label_text.substr(1);
+            if (!label_text.empty() && label_text.back() == '}') {
+                label_text.pop_back();
+            }
+            if (!label_text.empty() && label_text.back() == ',') {
+                label_text.pop_back();
+            }
         }
 
-        if (line.empty()) {
+        if (label_text.empty()) {
             continue;
         }
 
-        labels.emplace_back(line);
+        labels.emplace_back(label_text);
     }
 
     return labels;

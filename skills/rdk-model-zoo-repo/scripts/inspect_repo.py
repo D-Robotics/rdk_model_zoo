@@ -25,9 +25,11 @@ PLATFORM_MANIFEST_PATTERNS=(
 )
 MANIFEST_PLATFORMS=('x5','s','x3')
 PLATFORM_BY_BRANCH={'rdk_x5':'x5','rdk_s':'s','rdk_x3':'x3','rdk_x5_legacy':'x5-legacy'}
-# This is the Skills Pack's maintenance source.  It is intentionally exposed
-# as branch metadata, never used as a target-platform declaration.
-MAINTENANCE_BRANCH='rdk_x5'
+# Skills Pack docs are maintained on the unified development line; `main` is
+# the delivery default.  Both are intentionally exposed as branch metadata,
+# never used as a target-platform declaration.
+MAINTENANCE_BRANCH='develop'
+DELIVERY_BRANCH='main'
 # Reported as the integration line only when unified-layout facts confirm it;
 # the branch name alone never proves the layout.
 INTEGRATION_BRANCH='develop'
@@ -102,8 +104,8 @@ def inspect(repo: str, sample: str | None = None) -> dict:
     candidates=flat_candidates+sorted(platform_manifests.values())
     unified_layout=(root/'samples').is_dir() and any(p.startswith('docs/release/') for p in platform_manifests.values())
     is_maintenance=branch==MAINTENANCE_BRANCH
-    if is_maintenance:
-        branch_role='maintenance'
+    if branch==DELIVERY_BRANCH and unified_layout:
+        branch_role='delivery'
     elif branch==INTEGRATION_BRANCH and unified_layout:
         branch_role='integration'
     elif branch in PLATFORM_BY_BRANCH:

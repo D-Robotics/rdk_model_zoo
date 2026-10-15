@@ -35,11 +35,10 @@
 
 ## 目标仓库与平台
 
-先解析 `SKILL_ROOT`（当前 Skill 安装目录）和 `REPO_ROOT`（用户指定的 Model Zoo 工作区）。常见目标包括 X5 的 `rdk_x5`/`x5-v*`、S100/S100P/S600 的 `rdk_s`/`s-v*`、X3 的 `rdk_x3`/`x3-v*`，以及用户指定的 `rdk_x5_legacy` 或历史 ref。统一集成线 `develop` 上 X5 与 S 样例共用 `samples/` 布局，采用共享 helper 的 sample 用 `--target auto|x5|s100|s100p|s600` 选择板卡（支持的 target 因 sample 而异；LLM 与专用 sample 使用各自 CLI；注册表：`docs/release/platforms.json`；分平台清单：`docs/release/{x5,s}/models.yaml`）。当前已发布默认分支仍是 `rdk_x5`；实际 ref 与默认分支以检出 Git 状态为准，不预设未来改名。按用户指定的目标 ref 检查 README、代码、清单和 metadata；S100、S100P、S600 的支持信息应定位到具体 sample、artifact 和 runtime。
+先解析 `SKILL_ROOT`（当前 Skill 安装目录）和 `REPO_ROOT`（用户指定的 Model Zoo 工作区）。`main` 是交付默认分支，`develop` 是统一集成/开发线；保留的 `rdk_x5`/`rdk_s` 分支及 `x5-v*`/`s-v*` 等 tag 是历史分板卡交付，`rdk_x3`/`x3-v*` 仅存档，用户指定的 `rdk_x5_legacy` 等历史 ref 按其指定使用。统一树中 X5 与 S 样例共用 `samples/` 布局，采用共享 helper 的 sample 用 `--target auto|x5|s100|s100p|s600` 选择板卡（支持的 target 因 sample 而异；LLM 与专用 sample 使用各自 CLI；注册表：`docs/release/platforms.json`；分平台清单：`docs/release/{x5,s}/models.yaml`）。平台按用户目标与清单选择，并按目标 ref 检查 README、代码、清单和 metadata；S100、S100P、S600 的支持信息应定位到具体 sample、artifact 和 runtime。
 
-清单按目标 ref 中实际存在的路径解析。常见位置为 `docs/manifests/`、
-`docs/release/`、`release/` 和按平台组织的 `docs/release/{x5,s,x3}/`；
-部分检出还包含 `platforms/` 下的按平台清单。`inspect_repo` 输出候选清单、
+统一清单位于 `docs/release/{x5,s}/models.yaml`；历史 ref 保留其自身的历史位置，
+只按该 ref 实际存在的路径读取。`inspect_repo` 输出候选清单、
 平台清单、分支角色、工作区状态和可选 sample 文件清单。`read_catalog` 使用
 PyYAML 读取实际清单：单个候选可直接选择，多个候选时用 `--manifest` 指定路径；
 `--benchmark-manifest` 可指定基准数据，`--model` 按模型 ID 或名称筛选。

@@ -26,7 +26,7 @@ metadata:
 
 ## Instructions
 
-1. 读取 [context-policy.md](references/context-policy.md)、目标仓库发版规范和 [release-contract.md](references/release-contract.md)。统一集成线 `develop` 是 Skill 文档的日常维护分支，已发布默认分支仍是 `rdk_x5`；实际 ref 与默认分支以目标检出当天的 Git 状态为准，不在发布材料中预设未来分支名或把任何切换写成已完成。按目标 ref 识别 X5、S100/S100P/S600、X3 或 legacy，并核对该 ref 的 Manifest（有清单时）。记录发布类型、候选提交、版本、原 Tag/Latest/Manifest 状态和权限；用户指定的对象冲突时不切换分支。
+1. 读取 [context-policy.md](references/context-policy.md)、目标仓库发版规范和 [release-contract.md](references/release-contract.md)。`main` 是交付默认分支，`develop` 是统一集成/开发线，保留的 `rdk_x5`/`rdk_s` 是历史分板卡交付线；具体检出的 ref 与默认分支仍以目标检出当天的 Git 状态为准，尚未执行的切换不得在发布材料中写成已完成。按目标 ref 识别 X5、S100/S100P/S600、X3 或 legacy，并核对该 ref 的 Manifest（有清单时）。记录发布类型、候选提交、版本、原 Tag/Latest/Manifest 状态和权限；用户指定的对象冲突时不切换分支。
 2. `model-release` 只修改该平台版本线的 VERSION、CHANGELOG、适用布局的 Manifest 与发布说明；已发布 Tag 不变。统一集成线上各平台版本线位于 `docs/release/{x5,s}/VERSION`，清单与基准数据位于 `docs/release/{x5,s}/models.yaml` 与 `benchmarks.yaml`；历史 ref 按其实际布局。遵循当前 S/X3 固定来源与 X5 目录发布流程，不把静态清单构建写成全量板测。
 3. `skills-release` 读取 skills/VERSION、技能自身版本与 skills/CHANGELOG；严格区分 Pack 版本和单 Skill 版本。裸 vMAJOR.MINOR.PATCH 只表示 Skills Pack；模型 x5-v*/s-v*/x3-v* 保持原样。核对技能自包含、引用、行为评测和许可/来源。
 4. 验证发布隔离：Skills 不改模型 Manifest/根 VERSION；非模型事件不进入 pages 并发组；Skills Release 正式、非草稿、非预发布，显式 latest=false。附注 Tag 指向批准的真实提交；不能把旧模型 Tag 重命名为 Skills Tag。

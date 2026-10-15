@@ -38,7 +38,7 @@
 
 ### 硬件与系统支持
 
-`samples/` 目录是所有在维护板卡的统一源。请在每个 Sample 中按板卡选择运行时与模型：Python 入口使用其 README 声明的 `--target` 或 `--platform` 选项选择目标板，原生 C++ 入口使用其 README 声明的参数，各 README 同时说明其发布制品支持的板卡。平台制品清单记录在 `docs/release/x5/` 与 `docs/release/s/`。`rdk_x5` 与 `rdk_s` 分支为分板卡交付线，RDK X3 资料归档在 `rdk_x3`。
+`samples/` 目录是所有在维护板卡的统一源。请在每个 Sample 中按板卡选择运行时与模型：Python 入口使用其 README 声明的 `--target` 或 `--platform` 选项选择目标板，原生 C++ 入口使用其 README 声明的参数，各 README 同时说明其发布制品支持的板卡。平台制品清单记录在 `docs/release/x5/` 与 `docs/release/s/`。默认分支 `main` 为交付线，`develop` 为统一开发分支；保留的 `rdk_x5` 与 `rdk_s` 为历史分板卡交付线，RDK X3 资料归档在 `rdk_x3`。
 
 | 目标硬件 | 获取方式 | 说明 |
 | :--- | :--- | :--- |
@@ -46,7 +46,8 @@
 | RDK S100 | `samples/` 目录，模型目标 `s100` | Nash-E 制品发布于 `docs/release/s/`。 |
 | RDK S100P | `samples/` 目录，模型目标 `s100p` | Nash-M 制品发布于 `docs/release/s/`。 |
 | RDK S600 | `samples/` 目录，模型目标 `s600` | Nash-P 制品发布于 `docs/release/s/`。 |
-| 分板卡交付线 | [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) / [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | 按板卡发布的交付分支。 |
+| 交付 / 开发 | [`main`](https://github.com/D-Robotics/rdk_model_zoo/tree/main)（默认）/ [`develop`](https://github.com/D-Robotics/rdk_model_zoo/tree/develop) | 交付分支与统一开发分支。 |
+| 历史分板卡交付线 | [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) / [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | 保留的按板卡发布交付分支。 |
 | RDK X3（归档） | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | 仅作历史归档，不再作为适配目标。 |
 
 **[浏览在线模型目录 →](https://d-robotics.github.io/rdk_model_zoo/)**

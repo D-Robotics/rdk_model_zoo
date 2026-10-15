@@ -487,7 +487,7 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 3. pycocotools计算的精度比ultralytics计算的精度会低一些是正常现象, 主要原因是pycocotools是取矩形面积, ultralytics是取梯形面积, 我们主要是关注同样的一套计算方式去测试定点模型和浮点模型的精度, 从而来评估量化过程中的精度损失.
 4. BPU模型在量化NCHW-RGB888输入转换为YUV420SP(nv12)输入后, 也会有一部分精度损失, 这是由于色彩空间转化导致的, 在训练时加入这种色彩空间转化的损失可以避免这种精度损失.
 5. Python接口和C/C++接口的精度结果有细微差异, 主要在于Python和C/C++的一些数据结构进行memcpy和转化的过程中, 对浮点数的处理方式不同, 导致的细微差异.
-6. 测试脚本请参考RDK Model Zoo的eval部分: https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/tools/eval_pycocotools
+6. 测试脚本请参考RDK Model Zoo的eval部分: [utils/tools/batch_eval_pycocotools](../../../../utils/tools/batch_eval_pycocotools/)
 7. 本表格是使用PTQ(训练后量化)使用50张图片进行校准和编译的结果, 未进行精度调优或QAT(量化感知训练).
 
 
@@ -1785,7 +1785,7 @@ Object Detection (COCO2017)
 3. `pycocotools` AP is usually lower than the Ultralytics built-in numbers due to different area calculation rules. The important signal here is the relative gap between floating-point and quantized models.
 4. Some accuracy loss appears when converting NCHW RGB888 inputs to YUV420SP inputs for BPU deployment because of color space conversion. This can be reduced if that transformation is considered during training.
 5. Python and C/C++ 运行时 accuracy may differ slightly because of differences in memory copy and floating-point handling.
-6. Evaluation scripts can be referenced here: <https://github.com/D-Robotics/rdk_model_zoo/tree/main/demos/tools/eval_pycocotools>
+6. Evaluation scripts can be referenced here: [utils/tools/batch_eval_pycocotools](../../../../utils/tools/batch_eval_pycocotools/)
 7. The table reflects PTQ results compiled with 50 calibration images.
 
 ## Result Check

@@ -25,7 +25,7 @@ metadata:
 
 ## Instructions
 
-1. 读取 [context-policy.md](references/context-policy.md)。区分 `SKILL_ROOT` 与目标 `REPO_ROOT`；Pack 的维护分支（统一集成线 `develop`、已发布默认分支 `rdk_x5`）不是默认目标。按用户约束和目标 ref 核实 X5、S100/S100P/S600、X3 或 legacy，再建立仓库/版本、板卡、sample、模型变体、任务和 runtime 上下文。仅浏览模型列表不要求用户先提供板卡日志；执行前必须核实目标环境，冲突时不切换分支。
+1. 读取 [context-policy.md](references/context-policy.md)。区分 `SKILL_ROOT` 与目标 `REPO_ROOT`；Pack 所在分支（交付默认 `main`、集成开发 `develop`、历史交付线 `rdk_x5`/`rdk_s`）不是默认目标。按用户约束和目标 ref 核实 X5、S100/S100P/S600、X3 或 legacy，再建立仓库/版本、板卡、sample、模型变体、任务和 runtime 上下文。仅浏览模型列表不要求用户先提供板卡日志；执行前必须核实目标环境，冲突时不切换分支。
 2. 有目标工作区时读取该版本 README 与模型 Manifest。可用以下只读脚本，不安装依赖、不执行 sample：
    ```bash
    python3 "$SKILL_ROOT/scripts/read_catalog.py" --repo "$REPO_ROOT" --model "$MODEL_QUERY"
