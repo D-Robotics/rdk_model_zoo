@@ -344,6 +344,37 @@ Board results of the 140 YOLOv8 / YOLO11 builds published on 2026-10-14 and 2026
 | YOLO11x Cls | S100P | 62.05 | 59.46 | 84.08 | 82.02 | -4.2% | 1.41 | 703.2 / 846.8 | 443.9 / 832.3 |
 | YOLO11x Cls | S600 | 62.05 | 59.54 | 84.08 | 81.92 | -4.0% | 0.99 | 996.6 / 1871.8 | 539.3 / 1048.0 |
 
+## Published YOLO26 OBB builds
+
+Board results of the 20 YOLO26 OBB builds released on 2026-10-01 (1024x1024 input, NV12), as published on the Model Zoo Web. The model files download from `https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_<board>/ultralytics_yolo/` (named `yolo26<size>_obb_<march>_1024x1024_nv12`; each directory's SHA256SUMS lists the checksums). The release manifests keep the `640x640` compatibility filename; the sample reads the actual input size from the model.
+
+- Accuracy: DOTA-v1.0 labeled val, 458 images, single-scale local evaluation (not an official DOTA test-set score), mAP50. FP32 and board use the same evaluation.
+- n/s/m/l are INT8; x is an INT8 + INT16 mixed-precision rebuild.
+- Runtime: `hrt_model_exec perf`, 1/2 threads, 3 runs of 200 frames each. C++ end to end: the sample's YOLO26 OBB program, in-memory BGR to rotated boxes, 1/2 pipeline streams, 3 rounds of 200 frames.
+
+| Model | Board | Precision | mAP50 FP32 | mAP50 board | Relative loss | Runtime latency, 1 thread (ms) | Runtime FPS, 1/2 threads | C++ end-to-end FPS, 1/2 streams |
+|---|---|---|---|---|---|---|---|---|
+| YOLO26n OBB | X5 | INT8 | 59.33 | 57.15 | -3.7% | 38.16 | 26.2 / 28.6 | 16.2 / 28.5 |
+| YOLO26n OBB | S100 | INT8 | 56.56 | 51.73 | -8.5% | 2.56 | 384.9 / 453.1 | 84.8 / 116.9 |
+| YOLO26n OBB | S100P | INT8 | 56.56 | 51.73 | -8.5% | 1.94 | 506.8 / 600.4 | 112.8 / 160.0 |
+| YOLO26n OBB | S600 | INT8 | 56.56 | 51.98 | -8.1% | 1.39 | 711.2 / 886.1 | 115.0 / 222.6 |
+| YOLO26s OBB | X5 | INT8 | 64.19 | 60.99 | -5.0% | 60.63 | 16.5 / 17.4 | 12.1 / 17.3 |
+| YOLO26s OBB | S100 | INT8 | 60.96 | 58.03 | -4.8% | 5.23 | 189.6 / 205.7 | 67.2 / 129.3 |
+| YOLO26s OBB | S100P | INT8 | 60.96 | 58.03 | -4.8% | 3.88 | 254.9 / 279.2 | 90.4 / 168.0 |
+| YOLO26s OBB | S600 | INT8 | 60.96 | 58.27 | -4.4% | 2.60 | 381.5 / 426.1 | 101.8 / 198.0 |
+| YOLO26m OBB | X5 | INT8 | 67.61 | 64.49 | -4.6% | 111.88 | 8.9 / 9.2 | 7.5 / 9.2 |
+| YOLO26m OBB | S100 | INT8 | 64.43 | 61.05 | -5.2% | 12.96 | 76.9 / 79.6 | 41.7 / 78.8 |
+| YOLO26m OBB | S100P | INT8 | 64.43 | 61.05 | -5.2% | 9.44 | 105.6 / 109.6 | 57.4 / 108.2 |
+| YOLO26m OBB | S600 | INT8 | 64.43 | 60.78 | -5.7% | 6.05 | 164.6 / 172.8 | 75.7 / 145.3 |
+| YOLO26l OBB | X5 | INT8 | 67.98 | 65.08 | -4.3% | 143.50 | 7.0 / 7.1 | 6.0 / 7.1 |
+| YOLO26l OBB | S100 | INT8 | 64.84 | 61.30 | -5.5% | 15.83 | 63.0 / 64.7 | 38.3 / 64.5 |
+| YOLO26l OBB | S100P | INT8 | 64.84 | 61.30 | -5.5% | 11.63 | 85.7 / 88.5 | 51.5 / 88.1 |
+| YOLO26l OBB | S600 | INT8 | 64.84 | 60.76 | -6.3% | 7.51 | 132.6 / 138.0 | 68.8 / 135.6 |
+| YOLO26x OBB | X5 | INT8 + INT16 | 69.45 | 66.63 | -4.1% | 303.71 | 3.3 / 3.3 | 3.0 / 3.3 |
+| YOLO26x OBB | S100 | INT8 + INT16 | 66.36 | 65.32 | -1.6% | 313.06 | 3.2 / 3.2 | 3.1 / 3.2 |
+| YOLO26x OBB | S100P | INT8 + INT16 | 66.36 | 65.32 | -1.6% | 240.18 | 4.2 / 4.2 | 4.0 / 4.2 |
+| YOLO26x OBB | S600 | INT8 + INT16 | 66.36 | 65.28 | -1.6% | 105.46 | 9.5 / 9.5 | 8.9 / 17.3 |
+
 ## BenchMark - Performance
 
 ### RDK X5
