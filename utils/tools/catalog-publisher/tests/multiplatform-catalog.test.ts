@@ -117,10 +117,12 @@ describe("multi-platform variant catalog", () => {
     // 94 S records of those variants (performance and accuracy rows, some without an asset) became one
     // measured record per build. The ten X5 classification assets now share a variant with their measured
     // record instead of standing alone: 60 families, 639 variants, 805 benchmark rows.
+    // On 2026-10-15 the remaining 58 S builds (S100 20, S100P 20, S600 18) followed: the 113 S records of
+    // those variants became 58 measured records, one per build: 750 benchmark rows, variants unchanged.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(60);
     expect(variants).toHaveLength(639);
-    expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(805);
+    expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(750);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
   });
