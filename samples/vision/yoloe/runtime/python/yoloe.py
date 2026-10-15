@@ -50,7 +50,6 @@ from samples.vision.ultralytics_yolo.runtime.python.detect import (
     inverse_boxes,
     resize_with_transform,
 )
-from samples.vision.ultralytics_yolo.runtime.python.segment import decode_segmentation
 from samples.vision.yoloe.runtime.python.cli import (
     Config,
     Selection,
@@ -446,7 +445,7 @@ def decode_result(semantic, contract, selection, cfg, context):
     if selection.target == "x5":
         values = decode_x5(semantic, contract, context, cfg.score_thres, nms)
         return Result(*values, "full")
-    values = decode_segmentation(
+    values = decode_s11(
         semantic, contract, context, cfg.score_thres, nms, do_morph=cfg.do_morph
     )
     return Result(*values, "roi")
@@ -511,6 +510,74 @@ def decode_x5(outputs, contract, context, score_thres, nms_thres):
         np.array(scores, dtype=np.float32, copy=True),
         np.array(ids, dtype=np.int64, copy=True),
         np.array(masks, dtype=bool).reshape(-1, h, w),
+    )
+
+
+def decode_s11(outputs, contract, transform, score_thres, nms_thres, *, do_morph):
+    """S YOLOE-11 ROI decode: DFL/NMS candidates and uint8 prototype-crop masks.
+
+    Masks binarize at prototype resolution (``>0.5``), are cropped with the
+    full decoded model-space box (letterbox padding included; negative crop
+    starts keep Python slice addressing), resized to each clipped box with
+    Lanczos4 and optionally cleaned with a 5x5 morphological opening. The
+    uint8 ROI values are returned unchanged (isolated pixels can exceed 1;
+    nonzero is foreground) and a degenerate axis is kept at one pixel.
+
+    Args:
+        outputs: Validated semantic role mapping (see :func:`validate_semantic`).
+        contract: Bound PF11 contract supplying strides and reg bins.
+        transform: ImageTransform of this call; supplies padding and sizes.
+        score_thres: Class confidence threshold on the sigmoid class scores.
+        nms_thres: Classwise NMS IoU threshold.
+        do_morph: Apply the 5x5 opening after the Lanczos resize.
+
+    Returns:
+        Tuple of boxes (N,4) float32, scores (N,) float32, class ids (N,)
+        int64, and uint8 ROI masks (one per box, at least one pixel per axis).
+    """
+    height, width = transform.model_size
+    threshold = -np.log(1.0 / float(score_thres) - 1.0)
+    weights = np.arange(contract.reg_bins, dtype=np.float32)[None, None, :]
+    boxes, scores, ids, coefficients = [], [], [], []
+    for stride in contract.strides:
+        conf, cls, selected = post.filter_classification(
+            outputs[f"cls_{stride}"], threshold
+        )
+        boxes.append(
+            post.decode_boxes(
+                outputs[f"box_{stride}"],
+                selected,
+                height // stride,
+                stride,
+                weights,
+            )
+        )
+        scores.append(conf)
+        ids.append(cls)
+        coefficients.append(post.filter_mces(outputs[f"mces_{stride}"], selected))
+    boxes, scores, ids, coefficients = [
+        np.concatenate(x, axis=0) for x in (boxes, scores, ids, coefficients)
+    ]
+    keep = post.NMS(boxes, scores, ids, nms_thres)
+    proto = outputs["protos"][0]
+    masks = post.decode_masks(
+        coefficients[keep],
+        boxes[keep],
+        proto,
+        width,
+        height,
+        proto.shape[1],
+        proto.shape[0],
+        mask_thresh=0.5,
+    )
+    xyxy = inverse_boxes(boxes[keep], transform)
+    oh, ow = transform.original_size
+    masks = post.resize_masks_to_boxes(masks, xyxy, ow, oh, do_morph=do_morph)
+    return (
+        np.array(xyxy, dtype=np.float32, copy=True),
+        np.array(scores[keep], dtype=np.float32, copy=True),
+        np.array(ids[keep], dtype=np.int64, copy=True),
+        [np.array(mask, dtype=np.uint8, copy=True) for mask in masks],
     )
 
 

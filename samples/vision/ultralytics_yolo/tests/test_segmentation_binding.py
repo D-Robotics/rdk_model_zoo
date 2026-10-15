@@ -113,7 +113,7 @@ class SegmentationBinding(unittest.TestCase):
 
     def test_border_masks_follow_interpolated_probability_decode(self):
         # Masks are thresholded after the probabilities are resized and cropped
-        # by the model-space box (the YOLO26 and C++ decode), so a box that
+        # by the model-space box (the shared YOLO26 decode), so a box that
         # starts left of the prototype grid keeps the part inside the image.
         task, raw, _ = fixture(quantized=False)
         raw["protos"].fill(1)
@@ -127,13 +127,24 @@ class SegmentationBinding(unittest.TestCase):
         self.assertEqual(actual[3][0].shape, (36, 36))
         self.assertTrue(actual[3][0].all())
         # A small box lies wholly in top letterbox padding of a panoramic image:
-        # its clipped box is degenerate and the ROI keeps the zero-sized axes.
+        # its clipped box degenerates in y only, so the ROI keeps that axis at
+        # zero while preserving the x extent ((0, 32), not a collapsed (0, 0)).
         raw["box_8"].fill(-20)
-        raw["box_8"][..., [0, 16, 32, 48]] = 20
+        raw["box_8"][..., [0, 16, 36, 49]] = 20
         prepared = task.pre_process(np.zeros((8, 64, 3), np.uint8))
         result = task.post_process(task.forward(prepared), transform=prepared.transform)
         self.assertEqual(result[0][0, 1], result[0][0, 3])
-        self.assertEqual(result[3][0].size, 0)
+        self.assertGreater(result[0][0, 2], result[0][0, 0])
+        self.assertEqual(result[3][0].shape, (0, 32))
+        # Mirror case in a portrait image: the box sits in left letterbox
+        # padding, degenerates in x only and the ROI is (32, 0).
+        raw["box_8"].fill(-20)
+        raw["box_8"][..., [0, 16, 32, 52]] = 20
+        prepared = task.pre_process(np.zeros((64, 8, 3), np.uint8))
+        result = task.post_process(task.forward(prepared), transform=prepared.transform)
+        self.assertEqual(result[0][0, 0], result[0][0, 2])
+        self.assertGreater(result[0][0, 3], result[0][0, 1])
+        self.assertEqual(result[3][0].shape, (32, 0))
 
     def test_empty_and_owned_results(self):
         task, raw, _ = fixture()

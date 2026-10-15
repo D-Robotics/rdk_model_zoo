@@ -17,7 +17,8 @@
 postprocess) for the DFL families; :class:`YOLO26Seg` selects the
 direct-LTRB, 32-coefficient contract on the same stages.  Below the classes
 lives the numeric segmentation decode — source coefficient/prototype mask
-math, classwise NMS, YOLO26's probability-ROI binarisation.  The shared
+math, classwise NMS and the probability-ROI binarisation shared by the DFL
+families and YOLO26.  The shared
 image transport and letterbox geometry come from ``detect.py``; the tensor
 contracts and runner come from ``backend.py``.
 """
@@ -367,10 +368,16 @@ def _probability_roi_masks(
 ):
     """Interpolate probabilities, remove actual padding, then binarize.
 
-    Shared by DFL (v8/v9/v11) and YOLO26 segmentation and the same order as the C++
-    sample: thresholding after bilinear interpolation keeps smooth mask edges, where
-    binarizing at prototype resolution and resizing the binary crop leaves steps.
-    No morphological opening is applied. Return one owned bool ROI per box.
+    Shared by DFL (v8/v9/v11) and YOLO26 segmentation: interpolate prototype
+    probabilities to model size, gate them by the model-space box, remove the
+    actual letterbox padding, interpolate to the original image and binarize
+    at ``>0.5``. Thresholding after interpolation keeps mask edges smooth,
+    where binarizing at prototype resolution and resizing the binary crop
+    leaves steps. The C++ sample thresholds at model resolution before
+    cropping its ROI; this decode thresholds at original resolution after
+    removing the letterbox padding. No morphological opening is applied.
+    Return one owned bool ROI per box, each of shape
+    ``max(int(y2)-int(y1),0) x max(int(x2)-int(x1),0)`` for its clipped box.
     """
     if len(coefficients) == 0:
         return []
@@ -397,7 +404,12 @@ def _probability_roi_masks(
         if x2 > x1 and y2 > y1:
             result.append(np.array(restored[y1:y2, x1:x2] > 0.5, dtype=bool, copy=True))
         else:
-            result.append(np.zeros((0, 0), dtype=bool))
+            # Degenerate boxes keep each zero-sized axis exactly as documented
+            # instead of collapsing both axes to zero.
+            result.append(
+                np.zeros((max(int(y2) - int(y1), 0), max(int(x2) - int(x1), 0)),
+                         dtype=bool)
+            )
     return result
 
 __all__ = ["YOLO26Seg", "YOLO26SegConfig", "YoloSeg", "YoloSegConfig",

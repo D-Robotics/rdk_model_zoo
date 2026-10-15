@@ -342,13 +342,14 @@ int64 `(N,)` class IDs, and N bool **ROI masks**, not full-image masks. Each mas
 has shape `max(int(y2)-int(y1),0)` × `max(int(x2)-int(x1),0)`.
 Empty results retain these array ranks/dtypes and return `masks=[]`. A degenerate
 ROI preserves each zero-sized axis; no artificial one-pixel extent is added. Keep each mask paired with its own box.
-The mask decode is the same as YOLO26's and the C++ sample's: combine
+The mask decode is the same as YOLO26's: combine
 coefficients/prototypes, apply sigmoid, bilinearly resize the probabilities to
 model size, crop by the model-space box, remove actual padding, resize to the
 original image, threshold at `>0.5`, then take the box ROI. Thresholding after
-interpolation keeps mask edges smooth; no morphological opening is applied. The
-returned masks are per-box ROIs; upstream Ultralytics full-image mask
-evaluation is a different metric.
+interpolation keeps mask edges smooth; no morphological opening is applied.
+The C++ sample thresholds at model resolution before cropping its ROI; this
+decode removes the letterbox padding, resizes the probabilities to the
+original image and thresholds there. The returned masks are per-box ROIs.
 Confidence must be finite in `(0,1)` and NMS in `[0,1]`.
 
 Geometry uses actual integer resize/padding; the box crop is applied in model
@@ -647,8 +648,8 @@ Raw buffers are borrowed: finish postprocessing before the next inference or
 copy raw arrays. The result owns float32 `(N,4)` boxes, float32 `(N,)` scores,
 int64 `(N,)` IDs and a list of owned **boolean** ROI masks. For each clipped box,
 use `x1,y1,x2,y2 = box.astype(int)` and place its mask at `[y1:y2,x1:x2]` in a
-blank original-size image. A degenerate ROI is `(0,0)`; no detections return
-`(0,4)/(0,)/(0,)/[]`. The X5 adapter returns a boolean `(N,H,W)`
+blank original-size image. A degenerate ROI keeps each zero-sized axis
+(`(0,w)` or `(h,0)`); no detections return `(0,4)/(0,)/(0,)/[]`. The X5 adapter returns a boolean `(N,H,W)`
 full-image mask stack; the S adapter returns ROI masks. `YOLO26Seg.predict` returns ROI masks for every target.
 
 Confidence must be finite in `(0,1)` and NMS in `[0,1]`. The library NMS default
