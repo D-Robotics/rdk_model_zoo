@@ -2346,6 +2346,136 @@ benchmarks:
       - { metric: "latency", value: 1.7, unit: ms, qualifier: exact, concurrency: 2, scope: "BPU task" }
       - { metric: "throughput", value: 1156.8, unit: fps, qualifier: exact, concurrency: 2, scope: "BPU task" }
     source: { ref: 1e1c64decba4beb7551b0fed20e325eb9eab923e, path: samples/vision/ultralytics_yolo26/evaluator/README.md, section: "## Benchmark Results", provenance: existing-repository-documentation }
+  - id: ultralytics-yolo26n-obb-x5
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26n-obb-640
+    display_name: YOLO26n OBB 1024x1024 on RDK X5
+    asset_filename: yolo26n_obb_bayese_640x640_nv12.bin
+    model_format: bin
+    precision: int8
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK X5, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 38.158, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 26.19, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 69.78, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 28.58, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 61.53, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 16.25, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 69.943, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 28.49, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.5933, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.5715, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
+    source:
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
+      provenance: existing-repository-documentation
+  - id: ultralytics-yolo26s-obb-x5
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26s-obb-640
+    display_name: YOLO26s OBB 1024x1024 on RDK X5
+    asset_filename: yolo26s_obb_bayese_640x640_nv12.bin
+    model_format: bin
+    precision: int8
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK X5, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 60.634, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 16.49, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 114.476, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 17.42, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 82.858, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 12.07, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 115.538, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 17.29, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.6419, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.6099, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
+    source:
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
+      provenance: existing-repository-documentation
+  - id: ultralytics-yolo26m-obb-x5
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26m-obb-640
+    display_name: YOLO26m OBB 1024x1024 on RDK X5
+    asset_filename: yolo26m_obb_bayese_640x640_nv12.bin
+    model_format: bin
+    precision: int8
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK X5, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 111.879, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 8.94, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 216.857, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 9.2, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 133.705, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 7.48, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 217.637, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 9.18, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.6761, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.6449, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
+    source:
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
+      provenance: existing-repository-documentation
+  - id: ultralytics-yolo26l-obb-x5
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26l-obb-640
+    display_name: YOLO26l OBB 1024x1024 on RDK X5
+    asset_filename: yolo26l_obb_bayese_640x640_nv12.bin
+    model_format: bin
+    precision: int8
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK X5, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 143.496, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 6.97, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 280.069, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 7.12, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 166.518, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 6, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 281.138, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 7.1, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.6798, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.6508, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
+    source:
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
+      provenance: existing-repository-documentation
+  - id: ultralytics-yolo26x-obb-x5
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26x-obb-640
+    display_name: YOLO26x OBB 1024x1024 on RDK X5
+    asset_filename: yolo26x_obb_bayese_640x640_nv12.bin
+    model_format: bin
+    precision: int8-int16
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK X5, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 303.71, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 3.29, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 598.861, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 3.33, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 329.351, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 3.04, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 601.065, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 3.32, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.6945, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.6663, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
+    source:
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
+      provenance: existing-repository-documentation
   - id: fcos-efficientnetb0-single-thread-x5
     sample_id: fcos
     variant_id: fcos-efficientnetb0-512

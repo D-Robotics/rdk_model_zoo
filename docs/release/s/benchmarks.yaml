@@ -6209,168 +6209,409 @@ benchmarks:
       section: "## Benchmark Results"
       provenance: existing-repository-documentation
 
-  - id: ultralytics-yolo26n-obb-s100-performance
-    sample_id: ultralytics_yolo26
-    variant_id: yolo26n-obb-640-s100
-    display_name: YOLO26n Obb 640x640 on RDK S100
-    asset_filename: nash-e/yolo26n_obb_nashe_640x640_nv12.hbm
-    model_format: hbm
-    environment: { hardware: "RDK S100", runtime: hrt_model_exec }
-    performance:
-      - { metric: latency, value: 1.64, unit: ms, concurrency: 1, scope: "BPU task" }
-      - { metric: throughput, value: 548.83, unit: fps, concurrency: 1, scope: "BPU task" }
-      - { metric: latency, value: 2.24, unit: ms, concurrency: 2, scope: "BPU task" }
-      - { metric: throughput, value: 842.21, unit: fps, concurrency: 2, scope: "BPU task" }
-    source:
-      ref: 53d924f4c88175ec77634d24e5d711a3a0901eb6
-      path: samples/vision/ultralytics_yolo26/evaluator/README.md
-      section: "## Benchmark Results"
-      provenance: existing-repository-documentation
-
-  - id: ultralytics-yolo26n-obb-s600-performance
+  - id: ultralytics-yolo26n-obb-s600
     sample_id: ultralytics_yolo26
     variant_id: yolo26n-obb-640-s600
-    display_name: YOLO26n Obb 640x640 on RDK S600
+    display_name: YOLO26n OBB 1024x1024 on RDK S600
     asset_filename: nash-p/yolo26n_obb_nashp_640x640_nv12.hbm
     model_format: hbm
-    environment: { hardware: "RDK S600", runtime: hrt_model_exec }
+    precision: int8
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK S600, runtime: hrt_model_exec }
     performance:
-      - { metric: latency, value: 0.79, unit: ms, concurrency: 1, scope: "BPU task" }
-      - { metric: throughput, value: 1230.91, unit: fps, concurrency: 1, scope: "BPU task" }
-      - { metric: latency, value: 1.65, unit: ms, concurrency: 12, scope: "BPU task" }
-      - { metric: throughput, value: 6496.46, unit: fps, concurrency: 12, scope: "BPU task" }
+      - { metric: latency, value: 1.385, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 711.24, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 2.227, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 886.1, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 8.695, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 114.96, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 8.964, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 222.62, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.5656, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.5198, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
     source:
-      ref: 53d924f4c88175ec77634d24e5d711a3a0901eb6
-      path: samples/vision/ultralytics_yolo26/evaluator/README.md
-      section: "## Benchmark Results"
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
       provenance: existing-repository-documentation
 
-  - id: ultralytics-yolo26s-obb-s100-performance
+  - id: ultralytics-yolo26n-obb-s100p
     sample_id: ultralytics_yolo26
-    variant_id: yolo26s-obb-640-s100
-    display_name: YOLO26s Obb 640x640 on RDK S100
-    environment: { hardware: "RDK S100", runtime: hrt_model_exec }
+    variant_id: yolo26n-obb-640-s100p
+    display_name: YOLO26n OBB 1024x1024 on RDK S100P
+    asset_filename: nash-m/yolo26n_obb_nashm_640x640_nv12.hbm
+    model_format: hbm
+    precision: int8
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK S100P, runtime: hrt_model_exec }
     performance:
-      - { metric: latency, value: 2.8, unit: ms, concurrency: 1, scope: "BPU task" }
-      - { metric: throughput, value: 337.46, unit: fps, concurrency: 1, scope: "BPU task" }
-      - { metric: latency, value: 4.65, unit: ms, concurrency: 2, scope: "BPU task" }
-      - { metric: throughput, value: 418.28, unit: fps, concurrency: 2, scope: "BPU task" }
+      - { metric: latency, value: 1.939, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 506.76, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 3.283, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 600.43, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 8.859, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 112.84, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 11.658, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 160.02, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.5656, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.5173, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
     source:
-      ref: 53d924f4c88175ec77634d24e5d711a3a0901eb6
-      path: samples/vision/ultralytics_yolo26/evaluator/README.md
-      section: "## Benchmark Results"
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
       provenance: existing-repository-documentation
 
-  - id: ultralytics-yolo26s-obb-s600-performance
+  - id: ultralytics-yolo26n-obb-s100
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26n-obb-640-s100
+    display_name: YOLO26n OBB 1024x1024 on RDK S100
+    asset_filename: nash-e/yolo26n_obb_nashe_640x640_nv12.hbm
+    model_format: hbm
+    precision: int8
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 2.563, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 384.88, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 4.363, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 453.13, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 11.791, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 84.79, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 15.175, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 116.87, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.5656, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.5173, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
+    source:
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolo26s-obb-s600
     sample_id: ultralytics_yolo26
     variant_id: yolo26s-obb-640-s600
-    display_name: YOLO26s Obb 640x640 on RDK S600
-    environment: { hardware: "RDK S600", runtime: hrt_model_exec }
+    display_name: YOLO26s OBB 1024x1024 on RDK S600
+    asset_filename: nash-p/yolo26s_obb_nashp_640x640_nv12.hbm
+    model_format: hbm
+    precision: int8
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK S600, runtime: hrt_model_exec }
     performance:
-      - { metric: latency, value: 1.26, unit: ms, concurrency: 1, scope: "BPU task" }
-      - { metric: throughput, value: 784.6, unit: fps, concurrency: 1, scope: "BPU task" }
-      - { metric: latency, value: 3.11, unit: ms, concurrency: 12, scope: "BPU task" }
-      - { metric: throughput, value: 3610.24, unit: fps, concurrency: 12, scope: "BPU task" }
+      - { metric: latency, value: 2.603, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 381.46, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 4.656, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 426.1, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 9.824, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 101.75, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 10.081, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 198, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.6096, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.5827, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
     source:
-      ref: 53d924f4c88175ec77634d24e5d711a3a0901eb6
-      path: samples/vision/ultralytics_yolo26/evaluator/README.md
-      section: "## Benchmark Results"
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
       provenance: existing-repository-documentation
 
-  - id: ultralytics-yolo26m-obb-s100-performance
+  - id: ultralytics-yolo26s-obb-s100p
     sample_id: ultralytics_yolo26
-    variant_id: yolo26m-obb-640-s100
-    display_name: YOLO26m Obb 640x640 on RDK S100
-    environment: { hardware: "RDK S100", runtime: hrt_model_exec }
+    variant_id: yolo26s-obb-640-s100p
+    display_name: YOLO26s OBB 1024x1024 on RDK S100P
+    asset_filename: nash-m/yolo26s_obb_nashm_640x640_nv12.hbm
+    model_format: hbm
+    precision: int8
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK S100P, runtime: hrt_model_exec }
     performance:
-      - { metric: latency, value: 6.16, unit: ms, concurrency: 1, scope: "BPU task" }
-      - { metric: throughput, value: 157.61, unit: fps, concurrency: 1, scope: "BPU task" }
-      - { metric: latency, value: 11.27, unit: ms, concurrency: 2, scope: "BPU task" }
-      - { metric: throughput, value: 175.02, unit: fps, concurrency: 2, scope: "BPU task" }
+      - { metric: latency, value: 3.879, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 254.88, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 7.1, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 279.18, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 11.063, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 90.36, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 11.884, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 167.96, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.6096, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.5803, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
     source:
-      ref: 53d924f4c88175ec77634d24e5d711a3a0901eb6
-      path: samples/vision/ultralytics_yolo26/evaluator/README.md
-      section: "## Benchmark Results"
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
       provenance: existing-repository-documentation
 
-  - id: ultralytics-yolo26m-obb-s600-performance
+  - id: ultralytics-yolo26s-obb-s100
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26s-obb-640-s100
+    display_name: YOLO26s OBB 1024x1024 on RDK S100
+    asset_filename: nash-e/yolo26s_obb_nashe_640x640_nv12.hbm
+    model_format: hbm
+    precision: int8
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 5.23, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 189.63, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 9.644, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 205.71, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 14.879, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 67.19, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 15.415, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 129.29, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.6096, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.5803, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
+    source:
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolo26m-obb-s600
     sample_id: ultralytics_yolo26
     variant_id: yolo26m-obb-640-s600
-    display_name: YOLO26m Obb 640x640 on RDK S600
-    environment: { hardware: "RDK S600", runtime: hrt_model_exec }
+    display_name: YOLO26m OBB 1024x1024 on RDK S600
+    asset_filename: nash-p/yolo26m_obb_nashp_640x640_nv12.hbm
+    model_format: hbm
+    precision: int8
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK S600, runtime: hrt_model_exec }
     performance:
-      - { metric: latency, value: 2.66, unit: ms, concurrency: 1, scope: "BPU task" }
-      - { metric: throughput, value: 372.64, unit: fps, concurrency: 1, scope: "BPU task" }
-      - { metric: latency, value: 7.21, unit: ms, concurrency: 12, scope: "BPU task" }
-      - { metric: throughput, value: 1601, unit: fps, concurrency: 12, scope: "BPU task" }
+      - { metric: latency, value: 6.052, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 164.58, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 11.513, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 172.82, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 13.214, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 75.66, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 13.745, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 145.3, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.6443, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.6078, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
     source:
-      ref: 53d924f4c88175ec77634d24e5d711a3a0901eb6
-      path: samples/vision/ultralytics_yolo26/evaluator/README.md
-      section: "## Benchmark Results"
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
       provenance: existing-repository-documentation
 
-  - id: ultralytics-yolo26l-obb-s100-performance
+  - id: ultralytics-yolo26m-obb-s100p
     sample_id: ultralytics_yolo26
-    variant_id: yolo26l-obb-640-s100
-    display_name: YOLO26l Obb 640x640 on RDK S100
-    environment: { hardware: "RDK S100", runtime: hrt_model_exec }
+    variant_id: yolo26m-obb-640-s100p
+    display_name: YOLO26m OBB 1024x1024 on RDK S100P
+    asset_filename: nash-m/yolo26m_obb_nashm_640x640_nv12.hbm
+    model_format: hbm
+    precision: int8
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK S100P, runtime: hrt_model_exec }
     performance:
-      - { metric: latency, value: 7.46, unit: ms, concurrency: 1, scope: "BPU task" }
-      - { metric: throughput, value: 130.74, unit: fps, concurrency: 1, scope: "BPU task" }
-      - { metric: latency, value: 13.79, unit: ms, concurrency: 2, scope: "BPU task" }
-      - { metric: throughput, value: 143.34, unit: fps, concurrency: 2, scope: "BPU task" }
+      - { metric: latency, value: 9.437, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 105.59, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 18.157, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 109.63, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 17.433, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 57.35, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 18.458, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 108.18, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.6443, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.6105, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
     source:
-      ref: 53d924f4c88175ec77634d24e5d711a3a0901eb6
-      path: samples/vision/ultralytics_yolo26/evaluator/README.md
-      section: "## Benchmark Results"
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
       provenance: existing-repository-documentation
 
-  - id: ultralytics-yolo26l-obb-s600-performance
+  - id: ultralytics-yolo26m-obb-s100
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26m-obb-640-s100
+    display_name: YOLO26m OBB 1024x1024 on RDK S100
+    asset_filename: nash-e/yolo26m_obb_nashe_640x640_nv12.hbm
+    model_format: hbm
+    precision: int8
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 12.961, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 76.91, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 25.016, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 79.57, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 23.975, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 41.7, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 25.343, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 78.79, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.6443, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.6105, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
+    source:
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolo26l-obb-s600
     sample_id: ultralytics_yolo26
     variant_id: yolo26l-obb-640-s600
-    display_name: YOLO26l Obb 640x640 on RDK S600
-    environment: { hardware: "RDK S600", runtime: hrt_model_exec }
+    display_name: YOLO26l OBB 1024x1024 on RDK S600
+    asset_filename: nash-p/yolo26l_obb_nashp_640x640_nv12.hbm
+    model_format: hbm
+    precision: int8
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK S600, runtime: hrt_model_exec }
     performance:
-      - { metric: latency, value: 3.27, unit: ms, concurrency: 1, scope: "BPU task" }
-      - { metric: throughput, value: 304.08, unit: fps, concurrency: 1, scope: "BPU task" }
-      - { metric: latency, value: 9.15, unit: ms, concurrency: 12, scope: "BPU task" }
-      - { metric: throughput, value: 1266.96, unit: fps, concurrency: 12, scope: "BPU task" }
+      - { metric: latency, value: 7.512, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 132.61, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 14.418, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 138.05, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 14.542, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 68.75, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 14.732, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 135.6, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.6484, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.6076, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
     source:
-      ref: 53d924f4c88175ec77634d24e5d711a3a0901eb6
-      path: samples/vision/ultralytics_yolo26/evaluator/README.md
-      section: "## Benchmark Results"
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
       provenance: existing-repository-documentation
 
-  - id: ultralytics-yolo26x-obb-s100-performance
+  - id: ultralytics-yolo26l-obb-s100p
     sample_id: ultralytics_yolo26
-    variant_id: yolo26x-obb-640-s100
-    display_name: YOLO26x Obb 640x640 on RDK S100
-    environment: { hardware: "RDK S100", runtime: hrt_model_exec }
+    variant_id: yolo26l-obb-640-s100p
+    display_name: YOLO26l OBB 1024x1024 on RDK S100P
+    asset_filename: nash-m/yolo26l_obb_nashm_640x640_nv12.hbm
+    model_format: hbm
+    precision: int8
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK S100P, runtime: hrt_model_exec }
     performance:
-      - { metric: latency, value: 13.81, unit: ms, concurrency: 1, scope: "BPU task" }
-      - { metric: throughput, value: 71.33, unit: fps, concurrency: 1, scope: "BPU task" }
-      - { metric: latency, value: 26.95, unit: ms, concurrency: 2, scope: "BPU task" }
-      - { metric: throughput, value: 73.69, unit: fps, concurrency: 2, scope: "BPU task" }
+      - { metric: latency, value: 11.63, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 85.66, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 22.486, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 88.5, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 19.405, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 51.52, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 22.674, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 88.07, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.6484, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.613, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
     source:
-      ref: 53d924f4c88175ec77634d24e5d711a3a0901eb6
-      path: samples/vision/ultralytics_yolo26/evaluator/README.md
-      section: "## Benchmark Results"
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
       provenance: existing-repository-documentation
 
-  - id: ultralytics-yolo26x-obb-s600-performance
+  - id: ultralytics-yolo26l-obb-s100
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26l-obb-640-s100
+    display_name: YOLO26l OBB 1024x1024 on RDK S100
+    asset_filename: nash-e/yolo26l_obb_nashe_640x640_nv12.hbm
+    model_format: hbm
+    precision: int8
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 15.832, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 63, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 30.761, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 64.75, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 26.101, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 38.3, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 30.945, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 64.54, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.6484, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.613, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
+    source:
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolo26x-obb-s600
     sample_id: ultralytics_yolo26
     variant_id: yolo26x-obb-640-s600
-    display_name: YOLO26x Obb 640x640 on RDK S600
-    environment: { hardware: "RDK S600", runtime: hrt_model_exec }
+    display_name: YOLO26x OBB 1024x1024 on RDK S600
+    asset_filename: nash-p/yolo26x_obb_nashp_640x640_nv12.hbm
+    model_format: hbm
+    precision: int8-int16
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK S600, runtime: hrt_model_exec }
     performance:
-      - { metric: latency, value: 6.73, unit: ms, concurrency: 1, scope: "BPU task" }
-      - { metric: throughput, value: 148.08, unit: fps, concurrency: 1, scope: "BPU task" }
-      - { metric: latency, value: 19.31, unit: ms, concurrency: 12, scope: "BPU task" }
-      - { metric: throughput, value: 604.86, unit: fps, concurrency: 12, scope: "BPU task" }
+      - { metric: latency, value: 105.462, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 9.48, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 209.677, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 9.51, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 112.912, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 8.86, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 115.721, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 17.28, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.6636, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.6528, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
     source:
-      ref: 53d924f4c88175ec77634d24e5d711a3a0901eb6
-      path: samples/vision/ultralytics_yolo26/evaluator/README.md
-      section: "## Benchmark Results"
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolo26x-obb-s100p
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26x-obb-640-s100p
+    display_name: YOLO26x OBB 1024x1024 on RDK S100P
+    asset_filename: nash-m/yolo26x_obb_nashm_640x640_nv12.hbm
+    model_format: hbm
+    precision: int8-int16
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK S100P, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 240.177, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 4.16, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 478.143, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 4.17, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 248.068, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 4.03, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 479.102, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 4.17, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.6636, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.6532, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
+    source:
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
+      provenance: existing-repository-documentation
+
+  - id: ultralytics-yolo26x-obb-s100
+    sample_id: ultralytics_yolo26
+    variant_id: yolo26x-obb-640-s100
+    display_name: YOLO26x OBB 1024x1024 on RDK S100
+    asset_filename: nash-e/yolo26x_obb_nashe_640x640_nv12.hbm
+    model_format: hbm
+    precision: int8-int16
+    input: { shape: [1024, 1024], format: NV12 }
+    environment: { hardware: RDK S100, runtime: hrt_model_exec }
+    performance:
+      - { metric: latency, value: 313.057, unit: ms, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 3.19, unit: fps, concurrency: 1, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 623.368, unit: ms, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: throughput, value: 3.2, unit: fps, concurrency: 2, scope: "model runtime, hrt_model_exec perf, 3 runs of 200 frames" }
+      - { metric: latency, value: 323.63, unit: ms, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 3.09, unit: fps, concurrency: 1, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: latency, value: 624.227, unit: ms, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+      - { metric: throughput, value: 3.2, unit: fps, concurrency: 2, scope: "C++ end to end, in-memory BGR to rotated boxes" }
+    accuracy:
+      - { metric: obb-map-50, value: 0.6636, unit: ratio, model_stage: float, dataset: DOTA-v1.0 val }
+      - { metric: obb-map-50, value: 0.6532, unit: ratio, model_stage: quantized, dataset: DOTA-v1.0 val }
+    source:
+      ref: 872bd4b912ff0ad193f1bf5152daba0d3c555793
+      path: samples/vision/ultralytics_yolo/evaluator/README.md
+      section: "## Published YOLO26 OBB builds"
       provenance: existing-repository-documentation
 
   - id: ultralytics-yolo11l-detect-s600-performance

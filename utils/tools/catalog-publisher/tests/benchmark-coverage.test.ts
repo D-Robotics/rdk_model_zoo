@@ -15,10 +15,12 @@ import type { BenchmarkRecord, MetricRecord } from "../src/catalog/types";
 // On 2026-10-14 the 35 X5 YOLOv8 detect/seg/pose/cls and YOLO11 seg/pose/cls history records (five
 // performance metrics each, 115 accuracy metrics in all) became 35 measured records bound to their OSS
 // assets (eight performance metrics each; two accuracy metrics per detect/pose record, four per seg/cls).
+// On 2026-10-15 YOLO26 OBB moved to the 1024x1024 builds the Web publishes: five measured X5 records
+// (eight performance and two accuracy metrics each) joined; X5 had no OBB record before.
 const EXPECTED_MODEL_COUNT = 36;
-const EXPECTED_BENCHMARK_RECORD_COUNT = 242;
-const EXPECTED_PERFORMANCE_METRIC_COUNT = 777;
-const EXPECTED_ACCURACY_METRIC_COUNT = 430;
+const EXPECTED_BENCHMARK_RECORD_COUNT = 247;
+const EXPECTED_PERFORMANCE_METRIC_COUNT = 817;
+const EXPECTED_ACCURACY_METRIC_COUNT = 440;
 // YOLO26 rows resolve under the unified ultralytics_yolo sample (the separate
 // yolo26 directory no longer exists on develop), and the OCR pilot lives at
 // samples/vision/paddle_ocr; the audited directory count shrank accordingly.

@@ -119,10 +119,13 @@ describe("multi-platform variant catalog", () => {
     // record instead of standing alone: 60 families, 639 variants, 805 benchmark rows.
     // On 2026-10-15 the remaining 58 S builds (S100 20, S100P 20, S600 18) followed: the 113 S records of
     // those variants became 58 measured records, one per build: 750 benchmark rows, variants unchanged.
+    // On 2026-10-15 YOLO26 OBB moved to the 1024x1024 builds the Web publishes: the 10 S records of the
+    // old 640x640 builds became 20 measured records (X5, S100, S100P, S600); the 10 X5/S100P OBB assets
+    // that stood alone now share a variant with their record: 760 benchmark rows, variants unchanged.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(60);
     expect(variants).toHaveLength(639);
-    expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(750);
+    expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(760);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
   });
