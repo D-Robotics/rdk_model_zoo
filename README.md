@@ -38,7 +38,7 @@ The samples provide model preparation, conversion guides and board-side inferenc
 
 ### Hardware & System Support
 
-The `samples/` tree is the unified source for all maintained boards. Choose the runtime and model for your board inside each sample: Python entries select the target with the `--target` or `--platform` option their README documents, native C++ entries take the arguments their README documents, and each README states which boards its published artifacts support. Platform artifacts are recorded in the manifests under `docs/release/x5/` and `docs/release/s/`. The `rdk_x5` and `rdk_s` branches are per-board delivery lines; RDK X3 material is archived on `rdk_x3`.
+The `samples/` tree is the unified source for all maintained boards. Choose the runtime and model for your board inside each sample: Python entries select the target with the `--target` or `--platform` option their README documents, native C++ entries take the arguments their README documents, and each README states which boards its published artifacts support. Platform artifacts are recorded in the manifests under `docs/release/x5/` and `docs/release/s/`. The default branch `main` is the delivery line and `develop` is the unified development branch; the preserved `rdk_x5` and `rdk_s` branches are historical per-board delivery lines, and RDK X3 material is archived on `rdk_x3`.
 
 | Target Hardware | Where | Description |
 | :--- | :--- | :--- |
@@ -46,7 +46,8 @@ The `samples/` tree is the unified source for all maintained boards. Choose the 
 | RDK S100 | `samples/` tree, model target `s100` | Nash-E artifacts published under `docs/release/s/`. |
 | RDK S100P | `samples/` tree, model target `s100p` | Nash-M artifacts published under `docs/release/s/`. |
 | RDK S600 | `samples/` tree, model target `s600` | Nash-P artifacts published under `docs/release/s/`. |
-| Per-board delivery lines | [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) / [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | Board-specific release branches. |
+| Delivery / development | [`main`](https://github.com/D-Robotics/rdk_model_zoo/tree/main) (default) / [`develop`](https://github.com/D-Robotics/rdk_model_zoo/tree/develop) | Delivery branch and unified development branch. |
+| Historical per-board delivery lines | [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) / [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | Preserved board-specific release branches. |
 | RDK X3 (archive) | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | Historical archive only, not an adaptation target. |
 
 **[Browse the online model catalog →](https://d-robotics.github.io/rdk_model_zoo/)**

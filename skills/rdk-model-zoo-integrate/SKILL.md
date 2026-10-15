@@ -22,7 +22,7 @@ metadata:
 
 ## Instructions
 
-1. 读取 [context-policy.md](references/context-policy.md)，确认目标 sample、平台/SoC、模型来源、runtime 与用户目标。Pack 维护分支（`develop`、已发布默认 `rdk_x5`）不等于 X5 目标；按实际 ref 区分 X5、S100/S100P/S600、X3 和 legacy。用户指定的平台、版本或路径冲突时保留约束，不切换分支。区分私有应用接入和公开仓库贡献；后者才要求仓库级索引/发布清单等交付。
+1. 读取 [context-policy.md](references/context-policy.md)，确认目标 sample、平台/SoC、模型来源、runtime 与用户目标。Pack 所在分支（交付默认 `main`、集成开发 `develop`、历史交付线 `rdk_x5`/`rdk_s`）不等于 X5 目标；按实际 ref 区分 X5、S100/S100P/S600、X3 和 legacy。用户指定的平台、版本或路径冲突时保留约束，不切换分支。区分私有应用接入和公开仓库贡献；后者才要求仓库级索引/发布清单等交付。
 2. 阅读目标 export/conversion、wrapper、main、run.sh 和模型文档。按 [integration-contract.md](assets/integration-contract.md) 建立源模型与目标 runtime 的 I/O 对照；每个输入输出分别记录，不能只比较文件名。
 3. 已有可用产物先核对架构、格式、模型 metadata、shape/layout/dtype、输入名、输出次序、量化/反量化责任。YOLO 类别数变化同时审查标签、输出 reshape 和解码；多模型任务逐组件核对。缺少适配证据时不强行运行。
 4. 需要转换时按 [toolchain-handoff.md](references/toolchain-handoff.md) 交出精确子任务。检查对应 router 和完整资源树可用；安装或升级另行确认。将输入协议、基线/容差、输出目录和授权边界传递，不复制量化实现。

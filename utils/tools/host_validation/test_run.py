@@ -119,6 +119,19 @@ def _write_inventory(repo: Path, samples) -> None:
     )
 
 
+def _registered_sample_id(project) -> str | None:
+    """Sample-relative id of a registered project's source, if it is one.
+
+    A registry project rooted under ``samples/`` maps to its
+    ``<domain>/<name>`` id.  A project rooted elsewhere (the shared
+    ``utils/c_utils`` tests) is not a sample: its stub source is still
+    written, but it contributes no inventory row and no sample marker
+    directory — the sample inventory only accepts ``samples/`` ids.
+    """
+    parts = project["source"].split("/")
+    return "/".join(parts[1:3]) if parts[0] == "samples" else None
+
+
 def _write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(textwrap.dedent(text).lstrip("\n"))
@@ -1311,7 +1324,8 @@ class CTestDefaultTests(RunnerFixtureTestCase):
             if project.get("requires_opencv"):
                 self.assertIn(
                     project["name"],
-                    ("gemma4-e2b-native", "yoloe-cpp-tests"),
+                    ("gemma4-e2b-native", "yoloe-cpp-tests",
+                     "c-utils-file-io-tests"),
                     "unknown OpenCV-requiring project")
 
     @unittest.skipUnless(_interpreter_tool("cmake") and _interpreter_tool("ctest"),
@@ -1485,19 +1499,24 @@ class CTestDefaultTests(RunnerFixtureTestCase):
             _green_layout(repo)
             # Every registered project present as a stub, so the run is a
             # complete green checkout whose only variable is the
-            # --cmake-define value spelling.
+            # --cmake-define value spelling.  Sample inventory rows and
+            # native-only markers follow only the projects that really
+            # live under samples/.
+            registered_samples = set()
             for project in self.module.CTEST_PROJECTS:
                 _write(repo / project["source"] / "CMakeLists.txt",
                        "# fixture stub (never really configured)\n")
-                sample = "/".join(project["source"].split("/")[1:3])
+                sample = _registered_sample_id(project)
+                if sample is None:
+                    continue
+                registered_samples.add(sample)
                 if sample not in GREEN_INVENTORY_SAMPLES:
                     _write(repo / "samples" / sample / "tests" /
                            "CMakeLists.txt",
                            "# native-only marker (fixture stub)\n")
             _write_inventory(
                 repo, sorted(set(GREEN_INVENTORY_SAMPLES).union(
-                    "/".join(project["source"].split("/")[1:3])
-                    for project in self.module.CTEST_PROJECTS)))
+                    registered_samples)))
 
         repo = _init_repo(self.tmp / "false-constants", layout)
         logs = self.tmp / "false-constants" / "invocations"
@@ -1613,20 +1632,24 @@ class CTestDefaultTests(RunnerFixtureTestCase):
             # Every registered project present, so a define that slipped
             # past would reach the (fake) configure command for all of them;
             # each added sample also carries a marker `tests` directory and
-            # an inventory row, so the fixture repo stays a complete green
-            # checkout whose only variable is the --cmake-define spelling.
+            # an inventory row (only for projects really under samples/), so
+            # the fixture repo stays a complete green checkout whose only
+            # variable is the --cmake-define spelling.
+            registered_samples = set()
             for project in self.module.CTEST_PROJECTS:
                 _write(repo / project["source"] / "CMakeLists.txt",
                        "# fixture stub (never really configured)\n")
-                sample = "/".join(project["source"].split("/")[1:3])
+                sample = _registered_sample_id(project)
+                if sample is None:
+                    continue
+                registered_samples.add(sample)
                 if sample not in GREEN_INVENTORY_SAMPLES:
                     _write(repo / "samples" / sample / "tests" /
                            "CMakeLists.txt",
                            "# native-only marker (fixture stub)\n")
             _write_inventory(
                 repo, sorted(set(GREEN_INVENTORY_SAMPLES).union(
-                    "/".join(project["source"].split("/")[1:3])
-                    for project in self.module.CTEST_PROJECTS)))
+                    registered_samples)))
 
         repo = _init_repo(self.tmp / "typed-define", layout)
         logs = self.tmp / "typed-define" / "invocations"
@@ -1727,19 +1750,24 @@ class CTestDefaultTests(RunnerFixtureTestCase):
             # Every registered project present, so a define that slipped
             # past would reach the (fake) configure command for all of them
             # — the fixture stays a complete green checkout whose only
-            # variable is the --cmake-define value spelling.
+            # variable is the --cmake-define value spelling.  Sample
+            # inventory rows and native-only markers follow only the
+            # projects that really live under samples/.
+            registered_samples = set()
             for project in self.module.CTEST_PROJECTS:
                 _write(repo / project["source"] / "CMakeLists.txt",
                        "# fixture stub (never really configured)\n")
-                sample = "/".join(project["source"].split("/")[1:3])
+                sample = _registered_sample_id(project)
+                if sample is None:
+                    continue
+                registered_samples.add(sample)
                 if sample not in GREEN_INVENTORY_SAMPLES:
                     _write(repo / "samples" / sample / "tests" /
                            "CMakeLists.txt",
                            "# native-only marker (fixture stub)\n")
             _write_inventory(
                 repo, sorted(set(GREEN_INVENTORY_SAMPLES).union(
-                    "/".join(project["source"].split("/")[1:3])
-                    for project in self.module.CTEST_PROJECTS)))
+                    registered_samples)))
 
         repo = _init_repo(self.tmp / "padded-false", layout)
         logs = self.tmp / "padded-false" / "invocations"
@@ -2940,7 +2968,7 @@ class RealRepositoryTests(unittest.TestCase):
             names,
             {"gemma4-e2b-native", "yoloe-cpp-tests", "asr-cpp-tests",
              "ultralytics-yolo-cpp-common", "paraformer-cpp-tests",
-             "himloco-cpp-tests"})
+             "himloco-cpp-tests", "c-utils-file-io-tests"})
         for project in registry:
             source = REPO / project["source"]
             self.assertTrue(

@@ -13,7 +13,7 @@
 
 | ID | 检查与适用范围 | 证据 |
 |---|---|---|
-| MZ-CTX-01 | 平台、模型变体、运行语言和目标 ref 相容；不将 `rdk_x5` 已发布默认分支或 `develop` 集成线当成用户目标 | 用户约束、target 身份、README、Manifest、模型 metadata |
+| MZ-CTX-01 | 平台、模型变体、运行语言和目标 ref 相容；不将交付默认分支 `main`、集成线 `develop` 或历史交付线 `rdk_x5`/`rdk_s` 当成用户目标 | 用户约束、target 身份、README、Manifest、模型 metadata |
 | MZ-TARGET-01 | 采用共享 helper 的 sample 经 `utils/py_utils/platforms.resolve_target` 解析板卡目标（`auto|x5|s100|s100p|s600`，注册表 `docs/release/platforms.json`），未知目标抛 `ValueError`，不硬编码平台字符串；每个 sample 支持的 target 以其 parser/manifest 为准，LLM 与专用 sample 使用其他 CLI；显式 `--target` 不是本机硬件证据，执行前用 `require_execution_target` 校验 | platforms.py、CLI `--target` 参数、模型绑定表 |
 | MZ-LAYOUT-01 | 新增规范化 sample 按职责使用 conversion/evaluator/model/runtime/test_data；conversion 保存导出与编译配方，runtime 保存入口与模型实现；不无理由增加顶层目录 | 完整文件列表、目标目录规范 |
 | MZ-ENTRY-01 | 规范化 Python 入口为 `main.py` + `cli.py`（参数、发布模型选择、结果交付集中在 CLI），启动脚本 run.sh；模型实现按任务命名（`classify.py`、`detect.py`、`segment.py` 等）；C++ 入口 main.cc/main.cpp | 源码、脚本、CMake |
@@ -56,4 +56,4 @@ C++ 检查错误分支释放、等待完成前数据有效性、cache/同步操�
 - [适用条款原文：目录、编码、任务、注释、文档](https://github.com/D-Robotics/rdk_model_zoo/blob/529aece791b8f6a21cf93a14e1caa3edbeb11995/docs/Model_Zoo_Repository_Guidelines.md)
 - [现有 Review 的双轴与证据原则](https://github.com/maxma615/skills/blob/d45931b688722fd9895558cec860b6762a91c1d9/skills/rdk-model-zoo-demo-review/SKILL.md)
 
-目标 ref 的 README、Manifest 和实际代码优先；不能因当前维护源默认分支而改变用户指定平台。规则 ID 是本包索引，不是上游已有规范编号。
+目标 ref 的 README、Manifest 和实际代码优先；不能因维护线或交付线所在分支而改变用户指定平台。规则 ID 是本包索引，不是上游已有规范编号。

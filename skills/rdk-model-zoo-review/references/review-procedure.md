@@ -33,7 +33,7 @@ git ls-files --others --exclude-standard -z
 
 ## 3. 完整证据集
 
-按实际目标读取 sample tree、top README 双语、conversion、evaluator、model、runtime、test_data；读实际存在的 root/category indexes 和当前目标 ref 的 Manifest（有清单时）。当前清单通常在 `docs/manifests/`，历史 ref 也可能在 `docs/release/` 或根 `release/`；路径变更核对所有引用。utils 变更搜索受影响调用方，而不是只看 diff。同类样例仅用于解释惯例。
+按实际目标读取 sample tree、top README 双语、conversion、evaluator、model、runtime、test_data；读实际存在的 root/category indexes 和当前目标 ref 的 Manifest（有清单时）。统一清单位于 `docs/release/{x5,s}/`；历史 ref 可能使用 `docs/manifests/` 或根 `release/`，按该 ref 实际存在的目录读取。路径变更核对所有引用。utils 变更搜索受影响调用方，而不是只看 diff。同类样例仅用于解释惯例。
 
 不存在的文件可以引用应出现的目录树、缺失路径和对应要求；不能发明不存在文件的行号。代码缺陷引用精确位置和最小可证明路径，未运行的执行推断明确写静态判断。
 

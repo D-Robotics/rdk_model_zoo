@@ -118,13 +118,42 @@ models: []
         x=self.invoke(INSPECT,'--repo',self.root)
         self.assertTrue(any('dual state' in warning for warning in x['warnings']))
 
-    def test_maintenance_branch_is_distinguished_from_target(self):
+    def test_maintenance_branch_keeps_integration_role(self):
+        self.git('checkout','-qb','develop')
+        self.write('docs/release/x5/models.yaml','schema_version: 1\nmodels: []\n')
+        self.write('samples/vision/demo/README.md','fixture')
+        x=self.invoke(INSPECT,'--repo',self.root)
+        # The maintenance flag rides along with the integration role instead of
+        # swallowing it, and never becomes a platform declaration.
+        self.assertEqual(x['branch_role'],'integration')
+        self.assertTrue(x['is_maintenance_branch'])
+        self.assertEqual(x['maintenance_branch'],'develop')
+        self.assertIsNone(x['platform_hint'])
+
+    def test_delivery_branch_reports_delivery_without_platform(self):
+        # Rename whatever the fixture's initial branch is, so the case does not
+        # depend on the local init.defaultBranch configuration.
+        self.git('branch','-m','main')
+        x=self.invoke(INSPECT,'--repo',self.root)
+        # The branch name alone still proves nothing about the layout.
+        self.assertEqual(x['branch_role'],'unknown')
+        self.assertFalse(x['is_maintenance_branch'])
+        self.write('docs/release/x5/models.yaml','schema_version: 1\nmodels: []\n')
+        self.write('docs/release/s/models.yaml','schema_version: 1\nmodels: []\n')
+        self.write('samples/vision/demo/README.md','fixture')
+        x=self.invoke(INSPECT,'--repo',self.root)
+        self.assertEqual(x['branch_role'],'delivery')
+        self.assertIsNone(x['platform_hint'])
+        self.assertFalse(x['is_maintenance_branch'])
+
+    def test_historical_delivery_branch_is_target_not_maintenance(self):
         self.git('checkout','-qb','rdk_x5')
         x=self.invoke(INSPECT,'--repo',self.root)
-        self.assertTrue(x['is_maintenance_branch'])
-        self.assertEqual(x['maintenance_branch'],'rdk_x5')
-        self.assertEqual(x['branch_role'],'maintenance')
-        # Keep the historical branch hint while exposing its maintenance role.
+        self.assertFalse(x['is_maintenance_branch'])
+        self.assertEqual(x['maintenance_branch'],'develop')
+        self.assertEqual(x['branch_role'],'target')
+        # Keep the historical branch hint now that it is no longer the
+        # maintenance default.
         self.assertEqual(x['platform_hint'],'x5')
     def test_detached_head_is_not_x5(self):
         self.git('checkout','--detach','-q');x=self.invoke(INSPECT,'--repo',self.root)

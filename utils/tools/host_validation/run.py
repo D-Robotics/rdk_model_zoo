@@ -231,6 +231,17 @@ CTEST_PROJECTS = (
         "note": "SDK-free C++17 numerical policy test over the checked-in "
                 "obs_history fixture (no real robot, no vendor SDK, no CLI)",
     },
+    {
+        "name": "c-utils-file-io-tests",
+        "source": "utils/c_utils/tests",
+        "requires_opencv": True,
+        "note": "SDK-free C++17 host test for the shared linewise label "
+                "reader: single/double-quoted dict lines, plain-text labels "
+                "with embedded quotes/apostrophes, CRLF/brace boundaries and "
+                "the shipped 1000-entry ImageNet names file checked entry by "
+                "entry against the repo's plain labels oracle "
+                "(samples/vision/resnet/test_data/imagenet1000_labels.txt)",
+    },
 )
 
 #: CMake defines that make up the full gate.  A ``--cmake-define`` that

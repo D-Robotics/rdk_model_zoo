@@ -6,12 +6,18 @@ The Pack remains a release candidate (`release_state: unreleased-candidate` in
 `pack.json`).
 
 - Content refresh against the unified integration line. Shared references and
-  skill entrypoints now state the actual branch facts — the published default
-  branch is still `rdk_x5`, `develop` is the unified integration line, model
-  manifests live at `docs/release/{x5,s}/models.yaml` with per-platform version
-  lines `docs/release/{x5,s}/VERSION`; the default branch is resolved from the
-  checkout's Git state, without preselecting a future default-branch name or
-  presenting any cutover as done.
+  skill entrypoints now state the branch facts — `main` is the delivery default
+  branch, `develop` is the unified development/integration line, the preserved
+  `rdk_x5`/`rdk_s` branches are historical per-board deliveries, model manifests
+  live at `docs/release/{x5,s}/models.yaml` with per-platform version lines
+  `docs/release/{x5,s}/VERSION`; a checkout's actual ref is still resolved from
+  its Git state, and a cutover that has not happened is never presented as done.
+- Branch metadata follows the same split: `pack.json` and `inspect_repo.py`
+  record `develop` as the maintenance branch and recognize `main` as the
+  unified delivery role (`branch_role: delivery`, layout-gated, no platform
+  inference). The integration role is no longer swallowed by the maintenance
+  flag, `rdk_x5`/`rdk_s` stay historical per-board targets with their platform
+  hints, and detached or unknown refs keep `platform_hint: null`.
 - `rdk-model-zoo-release` resolves model versions and manifests from those real
   paths instead of the retired `docs/manifests/` default; the version table
   distinguishes the unified per-platform VERSION files from delivery-line and
