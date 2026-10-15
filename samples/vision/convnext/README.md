@@ -60,10 +60,17 @@ convnext/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Language | Status |
-| --- | --- | --- | --- |
-| x5 | atto | python | supported |
-| s100 / s100p / s600 | any | python | not-supported (no ConvNeXt artifact is available for these targets) |
+The table lists the models published for this sample; `—` marks an
+unpublished combination.
+
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| ConvNeXt-atto | 224x224 | ✓ | — | — | — |
+
+Runtime coverage: the Python CLI serves the published combination with
+`--target auto|x5` and `--variant atto`. Only the X5 archive publishes
+`ConvNeXt_atto_224x224_nv12.bin`; `--target s100`, `s100p` and `s600`
+resolve no asset. The sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites

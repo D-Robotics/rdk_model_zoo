@@ -66,43 +66,28 @@ resnet/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Language | Status |
-| --- | --- | --- | --- |
-| x5 | 18 | python | supported |
-| x5 | 34 | python | supported |
-| x5 | 50 | python | supported |
-| x5 | 101 | python | supported |
-| x5 | 152 | python | supported |
-| s100 | 18 | python | supported |
-| s100 | 34 | python | supported |
-| s100 | 50 | python | supported |
-| s100 | 101 | python | supported |
-| s100 | 152 | python | supported |
-| s100p | 18 | python | supported |
-| s100p | 34 | python | supported |
-| s100p | 50 | python | supported |
-| s100p | 101 | python | supported |
-| s100p | 152 | python | supported |
-| s600 | 18 | python | supported |
-| s600 | 34 | python | supported |
-| s600 | 50 | python | supported |
-| s600 | 101 | python | supported |
-| s600 | 152 | python | supported |
-| s100 | 18 | cpp | supported |
-| s100 | 34 | cpp | supported |
-| s100 | 50 | cpp | supported |
-| s100 | 101 | cpp | supported |
-| s100 | 152 | cpp | supported |
-| s100p | 18 | cpp | supported |
-| s100p | 34 | cpp | supported |
-| s100p | 50 | cpp | supported |
-| s100p | 101 | cpp | supported |
-| s100p | 152 | cpp | supported |
-| s600 | 18 | cpp | supported |
-| s600 | 34 | cpp | supported |
-| s600 | 50 | cpp | supported |
-| s600 | 101 | cpp | supported |
-| s600 | 152 | cpp | supported |
+The table lists the models published for this sample; `—` marks an
+unpublished combination. All published artifacts are INT8 ImageNet-1k
+classifiers at 224x224.
+
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| ResNet-18 | 224x224 | ✓ | ✓ | ✓ | ✓ |
+| ResNet-34 | 224x224 | ✓ | ✓ | ✓ | ✓ |
+| ResNet-50 | 224x224 | ✓ | ✓ | ✓ | ✓ |
+| ResNet-101 | 224x224 | ✓ | ✓ | ✓ | ✓ |
+| ResNet-152 | 224x224 | ✓ | ✓ | ✓ | ✓ |
+
+Runtime coverage:
+
+- Python serves every combination in the table. `--target auto|x5|s100|s100p|s600`
+  resolves the matching manifest artifact (`--list-models` prints the exact
+  references): X5 publishes `resnet<size>_bayese_224x224_nv12.bin`; the S
+  series publishes `resnet<size>_nashe/nashm/nashp_224x224_nv12.hbm` under
+  `s100/`, `s100p/` and `s600/`. The default variant is ResNet-18.
+- C++ ([runtime/cpp](runtime/cpp/README.md)) serves the same five variants on
+  S100, S100P and S600 only (`VARIANT=18|34|50|101|152`, default 18); X5 has
+  no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites

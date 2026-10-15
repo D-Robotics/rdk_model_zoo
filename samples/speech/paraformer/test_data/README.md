@@ -4,9 +4,8 @@ English | [简体中文](README_cn.md)
 
 [Frontend guide](../runtime/python/README.md)
 
-The two mono 16 kHz PCM16 WAVs and `manifest.json` are unchanged from S commit
-`380e1a2bf42041af54be6f34935e50197cfadff9`. They provide small source-comparison
-inputs for feature generation and inference.
+The two mono 16 kHz PCM16 WAVs and `manifest.json` come from the S release. They
+provide small comparison inputs for feature generation and inference.
 
 | Utterance ID | Samples | Reference text | Valid frontend frames |
 | --- | --- | --- | --- |
@@ -47,7 +46,7 @@ More than 400 LFR frames preserve only the first 400 and return `truncated=True`
 that is not long-audio transcription. See the runtime guide for a complete
 board-free, runnable feature example and dependencies.
 
-## Reproducible verification
+## Regenerating features
 
 With the documented frontend environment active, regenerate the features from
 repository root:

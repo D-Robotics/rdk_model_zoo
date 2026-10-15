@@ -92,9 +92,9 @@ three external model paths and their matching asset IDs to Python, or the comple
 model directory to the C++ launcher, as documented in the respective runtime guides.
 
 <a id="formats-checksums"></a>
-## Fixed source and byte identities
+## Formats and checksums
 
-`am.mvn` and `paraformer_config.yaml` are copied without changes from S commit
+`am.mvn` and `paraformer_config.yaml` come from S commit
 `380e1a2bf42041af54be6f34935e50197cfadff9`. Their SHA-256 values are:
 
 - `am.mvn`: `29b3c740a2c0cfc6b308126d31d7f265fa2be74f3bb095cd2f143ea970896ae5`
@@ -111,5 +111,5 @@ INT16 names describe the compiled model recipe; the tensor contracts linked abov
 
 The three `.hbm` files are compiled S100 artifacts: publisher SHA-256 is
 `null (unknown)` for each. `tokens.json` is UTF-8 JSON; `am.mvn` is text CMVN;
-`paraformer_config.yaml` is YAML. The hashes above identify the locally pinned
-auxiliary bytes for local file verification.
+`paraformer_config.yaml` is YAML. Use the hashes above to verify the local
+auxiliary files.

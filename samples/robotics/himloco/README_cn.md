@@ -96,7 +96,7 @@ python samples/robotics/himloco/runtime/python/main.py --target x5 \
 
 - [模型包](model/README_cn.md)：身份、路径、准备与摘要。
 - [Python 运行](runtime/python/README_cn.md)：命令、全部选项、输出与公开 API。
-- [输入来源](test_data/README_cn.md)：源索引、字节格式与摘要检查。
+- [输入来源](test_data/README_cn.md)：源索引与字节格式。
 - [C++ 运行](runtime/cpp/README_cn.md)：构建、命令、参数、阶段接口与报告。
 - [模型转换](conversion/README_cn.md)：融合导出／校准／MIX 配方。
 - [模型评测](evaluator/README_cn.md)：数据、命令、指标及源参考值。

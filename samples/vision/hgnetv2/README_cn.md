@@ -47,31 +47,21 @@ hgnetv2/
 <a id="support-matrix"></a>
 ## 支持矩阵
 
-| 目标 | 变体 | Python | C++ |
-| --- | --- | --- | --- |
-| x5 | b0 | supported | not-supported |
-| x5 | b1 | supported | not-supported |
-| x5 | b2 | supported | not-supported |
-| x5 | b3 | supported | not-supported |
-| x5 | b4 | supported | not-supported |
-| s100 | b0 | not-supported | not-supported |
-| s100 | b1 | not-supported | not-supported |
-| s100 | b2 | not-supported | not-supported |
-| s100 | b3 | not-supported | not-supported |
-| s100 | b4 | not-supported | not-supported |
-| s100p | b0 | not-supported | not-supported |
-| s100p | b1 | not-supported | not-supported |
-| s100p | b2 | not-supported | not-supported |
-| s100p | b3 | not-supported | not-supported |
-| s100p | b4 | not-supported | not-supported |
-| s600 | b0 | not-supported | not-supported |
-| s600 | b1 | not-supported | not-supported |
-| s600 | b2 | not-supported | not-supported |
-| s600 | b3 | not-supported | not-supported |
-| s600 | b4 | not-supported | not-supported |
+下表列出本 Sample 已发布的模型；`—` 表示该组合未发布。
 
-S 系列无对应制品，也按支持矩阵选择 Python 运行时与目标。CLI 小写 ID 映射到准确发布
-文件名；文件名大小写保留。
+| 模型 | 输入 | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| HGNetV2-B0 | 224x224 | ✓ | — | — | — |
+| HGNetV2-B1 | 224x224 | ✓ | — | — | — |
+| HGNetV2-B2 | 224x224 | ✓ | — | — | — |
+| HGNetV2-B3 | 224x224 | ✓ | — | — | — |
+| HGNetV2-B4 | 224x224 | ✓ | — | — | — |
+
+运行时覆盖：Python CLI 通过 `--target auto|x5` 和
+`--variant b0|b1|b2|b3|b4`（默认 `b0`）覆盖全部已发布组合；CLI 小写 ID 映射
+到准确的发布文件名 `hgnetv2_b<0-4>_224x224_nv12.bin`（文件名大小写保留）。
+`--target s100`、`s100p`、`s600` 不会解析出任何资产。本 Sample 不提供 C++
+运行时。
 
 <a id="prerequisites"></a>
 ## 前提

@@ -65,7 +65,7 @@ bash samples/vision/yolo26_depth/model/download.sh --target s100p --variant l
 <a id="accompanying-files"></a>
 ## 附属文件
 
-深度任务不需要标签文件。样例只附带逐字节保留的 `../test_data/bus.jpg`，不附带校准集或评估集。
+深度任务不需要标签文件。样例只附带 `../test_data/bus.jpg`，不附带校准集或评估集。
 S lite l/x 校准系数位于模型绑定模块，是声明权重契约的一部分。
 原始权重、生成 ONNX、BIN/HBM 和 SUNRGBD 数据保存在外部，准备步骤及缺口见[转换](../conversion/README_cn.md)。
 
@@ -93,13 +93,13 @@ python -m samples.vision.yolo26_depth.runtime.python.main --target x5 \
   --converted-model --output /work/depth/custom-x5-n
 ```
 
-此时 ID 参照输入/输出契约，不表示官方字节身份。报告中 `asset_id=null`、
+此时 ID 仅参照输入/输出契约，不表示官方发布制品。报告中 `asset_id=null`、
 `artifact_origin=user-converted`，保留 `contract_reference` 和实际模型摘要。
 板卡身份及元数据检查仍生效。任意形状或边界变化需要新绑定，改名不会使不兼容模型兼容。
 S lite 的运行时系数必须与导出权重校准参数一致。
 
 <a id="formats-checksums"></a>
-## 格式、摘要与来源
+## 格式与摘要
 
 五个 X5 发布方摘要保持不变：
 

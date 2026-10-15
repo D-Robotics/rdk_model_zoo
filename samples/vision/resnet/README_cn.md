@@ -59,43 +59,27 @@ resnet/
 <a id="support-matrix"></a>
 ## 支持范围
 
-| Target | 变体 | 语言 | 状态 |
-| --- | --- | --- | --- |
-| x5 | 18 | python | supported |
-| x5 | 34 | python | supported |
-| x5 | 50 | python | supported |
-| x5 | 101 | python | supported |
-| x5 | 152 | python | supported |
-| s100 | 18 | python | supported |
-| s100 | 34 | python | supported |
-| s100 | 50 | python | supported |
-| s100 | 101 | python | supported |
-| s100 | 152 | python | supported |
-| s100p | 18 | python | supported |
-| s100p | 34 | python | supported |
-| s100p | 50 | python | supported |
-| s100p | 101 | python | supported |
-| s100p | 152 | python | supported |
-| s600 | 18 | python | supported |
-| s600 | 34 | python | supported |
-| s600 | 50 | python | supported |
-| s600 | 101 | python | supported |
-| s600 | 152 | python | supported |
-| s100 | 18 | cpp | supported |
-| s100 | 34 | cpp | supported |
-| s100 | 50 | cpp | supported |
-| s100 | 101 | cpp | supported |
-| s100 | 152 | cpp | supported |
-| s100p | 18 | cpp | supported |
-| s100p | 34 | cpp | supported |
-| s100p | 50 | cpp | supported |
-| s100p | 101 | cpp | supported |
-| s100p | 152 | cpp | supported |
-| s600 | 18 | cpp | supported |
-| s600 | 34 | cpp | supported |
-| s600 | 50 | cpp | supported |
-| s600 | 101 | cpp | supported |
-| s600 | 152 | cpp | supported |
+下表列出本 Sample 已发布的模型；`—` 表示该组合未发布。全部已发布制品均为
+INT8、224x224 的 ImageNet-1k 分类模型。
+
+| 模型 | 输入 | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| ResNet-18 | 224x224 | ✓ | ✓ | ✓ | ✓ |
+| ResNet-34 | 224x224 | ✓ | ✓ | ✓ | ✓ |
+| ResNet-50 | 224x224 | ✓ | ✓ | ✓ | ✓ |
+| ResNet-101 | 224x224 | ✓ | ✓ | ✓ | ✓ |
+| ResNet-152 | 224x224 | ✓ | ✓ | ✓ | ✓ |
+
+运行时覆盖：
+
+- Python 覆盖上表全部组合。`--target auto|x5|s100|s100p|s600` 会解析对应的
+  Manifest 制品（`--list-models` 打印精确引用）：X5 发布
+  `resnet<size>_bayese_224x224_nv12.bin`；S 系列在 `s100/`、`s100p/`、`s600/`
+  目录下发布 `resnet<size>_nashe/nashm/nashp_224x224_nv12.hbm`。默认变体为
+  ResNet-18。
+- C++（[runtime/cpp](runtime/cpp/README.md)）覆盖相同的五个变体，仅限
+  S100、S100P、S600（`VARIANT=18|34|50|101|152`，默认 18）；X5 没有 C++
+  运行时。
 
 <a id="prerequisites"></a>
 ## 环境前提

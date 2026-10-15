@@ -8,7 +8,7 @@
 <a id="dataset"></a>
 ## 数据集准备
 
-准备与模型类别顺序一致的验证集。获取和整理方法见统一的[COCO](../../../../datasets/coco/README_cn.md)与[ImageNet](../../../../datasets/imagenet/README_cn.md)指南；X5/S 平台快照保留作溯源（X5 COCO、S COCO、X5 ImageNet、S ImageNet）。数据集不随仓库分发，使用时遵守各自许可。
+准备与模型类别顺序一致的验证集。获取和整理方法见统一的[COCO](../../../../datasets/coco/README_cn.md)与[ImageNet](../../../../datasets/imagenet/README_cn.md)指南；数据集不随仓库分发，使用时遵守各自许可。
 
 以下示例约定本地目录如下；请将`/data`、`/models`替换为实际准备路径：
 
@@ -51,7 +51,7 @@ evaluator/
 python3 -m pip install pycocotools
 ```
 
-将该用户态依赖安装到实际使用的Python环境；脚本不会自动安装依赖。先按[模型准备](../model/README_cn.md)获取当前目标/任务/家族的制品。`--help`不会加载板端SDK。下面命令已对照参数解析器检查，未作为新一轮板端精度测试执行。
+将该用户态依赖安装到实际使用的Python环境；脚本不会自动安装依赖。先按[模型准备](../model/README_cn.md)获取当前目标/任务/家族的制品。`--help`不会加载板端SDK。
 
 <a id="command"></a>
 ## 执行评估
@@ -123,7 +123,7 @@ python3 samples/vision/ultralytics_yolo/evaluator/eval_batch.py \
   --annotation /data/coco/annotations/instances_val2017.json --suffix val2017
 ```
 
-批量命令打印选择结果后交互确认；`--yes`跳过确认。JSON写在各模型旁边。完整验证集可能耗时数小时，取决于板型、模型和存储，。先用`--limit 10`检查流程，再取消限制跑全量；子集结果必须标注为子集。
+批量命令打印选择结果后交互确认；`--yes`跳过确认。JSON写在各模型旁边。完整验证集可能耗时数小时，取决于板型、模型和存储。先用`--limit 10`检查流程，再取消限制跑全量；子集结果必须标注为子集。
 
 | 参数 | 默认值 | 含义 |
 | --- | --- | --- |
@@ -157,9 +157,7 @@ COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所
 当前脚本会覆盖同名结果，应每次选择唯一输出路径，并保存含COCO指标摘要的stdout。退出0仅代表流程完成；无标注、空预测、分类total=0都不是精度通过。COCO空预测写为`[]`并明确跳过指标计算。
 
 <a id="reference-results"></a>
-## 参考结果与验证范围
-
-制品清单与参考测量见 [X5 发布数据](../../../../docs/release/x5/)及 [S 发布数据](../../../../docs/release/s/)。
+## 参考结果
 
 制品与基准数据见 [X5 benchmark 清单](../../../../docs/release/x5/benchmarks.yaml)及 [S benchmark 清单](../../../../docs/release/s/benchmarks.yaml)；[sample说明](../README_cn.md)列出 YOLOv8n/YOLO26n 检测对照及目标条件。
 
@@ -179,8 +177,8 @@ COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所
 下表是 2026-10-14 与 2026-10-15 发布的 140 个 YOLOv8 / YOLO11 模型在板端的实测结果（INT8，NV12 输入，max-percentile 0.99995 校准，200 张 COCO train2017 图片）。模型文件从 `https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_<board>/ultralytics_yolo/` 下载（每个目录的 SHA256SUMS 列出该目录的校验和）；每个模型的发布记录 release.json 和 OE 转换报告位于 `https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/<family>/<task>/<size>/<board>/`。
 
 - 精度：COCO val2017 全部 5000 张（检测框、实例分割框/掩码、关键点 mAP50-95，conf 0.001，NMS 0.7）；分类为 ImageNetV2 MatchedFrequency 10000 张（不是 ILSVRC2012 val）。FP32 参考与板端使用同一个评估脚本、同一导出版本和同一阈值。
-- 相对损失取各指标中最大的一项；⚠ 表示超过 5%，按负责人 2026-10-14 的决定照常发布并注明损失。
-- 实例分割的掩码按 YOLO26 的方式解码：先把掩码概率插值到原图尺寸，再按 0.5 阈值二值化（样例提交 2838ca0a）。2026-10-14 发布的分割模型已于 2026-10-15 用这种解码重新测量（模型文件不变），表中为新结果。
+- 相对损失取各指标中最大的一项；⚠ 表示超过 5%。
+- 实例分割的掩码按 YOLO26 的方式解码：先把掩码概率插值到原图尺寸，再按 0.5 阈值二值化；表中为按此解码测得的结果。
 - 运行时：`hrt_model_exec perf`，1/2 线程，每个条件 3 轮 × 200 帧。C++ 端到端：样例 `--benchmark`，内存中 BGR 到最终结果，1/2 路流水线，3 轮 × 200 帧。
 - 本节之后的表格是更早的历史测量，对应旧的模型文件和评估条件，不能与本节直接比较。
 
@@ -466,7 +464,7 @@ COCO通过`pycocotools.COCOeval`的bbox/segm/keypoints计算AP/AR，只评估所
 | YOLO11x-CLS | 224x224 | 1000 | 10.0 ms / 100.2 FPS (1 thread  ) <br/> 19.3 ms / 103.2 FPS (2 threads) | 0.5 ms | 29.6 M | 111.3 B |
 
 
-### Performance Test Instructions
+### 性能测试说明
 1. 此处测试的均为YUV420SP (nv12) 输入的模型的性能数据.
 2. BPU延迟与BPU吞吐量.
  - 单线程延迟为单帧,单线程,单BPU核心的延迟,BPU推理一个任务最理想的情况.
@@ -570,7 +568,7 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | YOLO11x-CLS | 0.795 / 0.949 | 0.732(92.08%) / 0.917(96.63%) | (%) / (%) |
 
 
-##### Accuracy test conditions
+##### 精度测试条件
 
 1. 所有的精度数据使用微软官方的无修改的`pycocotools`库进行计算, Det和Seg取的精度标准为`Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]`的数据, Pose取的精度标准为`Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ]`的数据.
 2. 所有的测试数据均使用`COCO2017`数据集的val验证集的5000张照片, 在板端直接推理, dump保存为json文件, 送入第三方测试工具`pycocotools`库进行计算, 分数的阈值为0.25, nms的阈值为0.7.
@@ -1013,8 +1011,6 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | X5 | YOLO26n Detect | 640x640 | 80 | 11.6 ms / 86.3 FPS (1 thread) <br> 19.1 ms / 104.3 FPS (2 threads) | - | - | - |
 | X5 | YOLO26s Detect | 640x640 | 80 | 20.9 ms / 47.7 FPS (1 thread) <br> 37.8 ms / 52.8 FPS (2 threads) | - | - | - |
-| X5 | YOLO26m Detect | 640x640 | 80 | 40.1 ms / 24.8 FPS (1 thread) <br> 76.1 ms / 26.1 FPS (2 threads) | - | - | - |
-| X5 | YOLO26l Detect | 640x640 | 80 | 51.1 ms / 19.5 FPS (1 thread) <br> 98.0 ms / 20.3 FPS (2 threads) | - | - | - |
 | X5 | YOLO26x Detect | 640x640 | 80 | 103.3 ms / 9.6 FPS (1 thread) <br> 202.0 ms / 9.8 FPS (2 threads) | - | - | - |
 | X5 | YOLO26n Seg | 640x640 | 80 | 15.5 ms / 64.3 FPS (1 thread) <br> 22.8 ms / 87.6 FPS (2 threads) | - | - | - |
 | X5 | YOLO26n Pose | 640x640 | 80 | 12.5 ms / 79.6 FPS (1 thread) <br> 20.1 ms / 98.7 FPS (2 threads) | - | - | - |
@@ -1651,7 +1647,7 @@ python3 /path/to/rdk_model_zoo/utils/tools/batch_perf/batch_perf.py --max 3 --fi
 | YOLOv8l-seg | 640×640 | 80 | 46.0 | 14.4 | 6 ms |
 | YOLOv8x-seg | 640×640 | 80 | 71.8 | 8.9 | 6 ms |
 
-Note: Detailed performance data is at the end of the document.
+注：详细性能数据见文末。
 
 ### Performance Data (X3 historical benchmark)
 
@@ -1663,17 +1659,17 @@ Note: Detailed performance data is at the end of the document.
 | YOLOv8l-seg | 640×640 | 80 | 46.0 | 52.3/42.6 |  | 72.7 ms / 13.7 FPS (1 thread) | 138.2 ms / 14.4 FPS (2 threads) | 6 ms |
 | YOLOv8x-seg | 640×640 | 80 | 71.8 | 53.4/43.4 |  | 115.7 ms / 8.6 FPS (1 thread) | 223.8 ms / 8.9 FPS (2 threads) | 6 ms |
 
-Notes:
-1. The X5 is in its optimal state: CPU is 8 × A55 @ 1.8G with full-core Performance scheduling, BPU is 1 × Bayes-e @ 1G with a total equivalent int8 computing power of 10 TOPS.
-2. Single-threaded latency is for a single frame, single thread, and single BPU core, representing the ideal delay for BPU inference of a single task.
-3. Four-thread engineering frame rate is when four threads simultaneously feed tasks to the dual-core BPU. In general engineering scenarios, four threads can minimize single-frame latency while fully utilizing all BPU cores at 100%, achieving a good balance between throughput (FPS) and frame latency. X5 BPU overall is more powerful, generally 2 threads can eat BPU full, frame delay and throughput are very good.
-4. Eight-thread extreme frame rate is when eight threads simultaneously feed tasks to the dual-core BPU on the X3, aiming to test the BPU’s extreme performance. Typically, four cores are already saturated; if eight threads perform significantly better than four, it suggests that the model structure needs to improve the "compute/memory access" ratio, or that DDR bandwidth optimization should be selected during compilation.
-5. FP/Q mAP: 50-95 precision is calculated using pycocotools and comes from the COCO dataset. This can refer to Microsoft’s paper, and is used here to assess the degree of accuracy degradation for deployment on the board.
-6. Run the following command to test the bin model throughput on the board
+说明:
+1. X5为最佳状态：CPU为8 × A55 @ 1.8G，全核心Performance调度，BPU为1 × Bayes-e @ 1G，等效int8总算力10 TOPS。
+2. 单线程延迟为单帧、单线程、单BPU核心的延迟，是BPU推理单个任务的最理想延迟。
+3. 四线程工程帧率指四个线程同时向双核BPU提交任务。一般工程场景中，四个线程可以在把所有BPU核心吃满到100%的同时将单帧延迟控制得较小，在吞吐量(FPS)和帧延迟之间取得较好的平衡。X5的BPU整体较强，一般2个线程即可吃满BPU，帧延迟和吞吐量都非常出色。
+4. 八线程极限帧率指在X3上八个线程同时向双核BPU提交任务，用于测试BPU的极限性能。通常四个核心已经吃满；如果八个线程明显优于四个线程，说明模型结构需要提高"计算/访存"比，或编译时选择DDR带宽优化。
+5. FP/Q mAP：50-95精度使用pycocotools计算，来自COCO数据集，可参考微软的论文，此处用于评估板端部署的精度下降程度。
+6. 在板端测试bin模型吞吐量的命令如下
 ```bash
 hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv12_modified.bin
 ```
-7. Regarding post-processing: At present, the post-processing of Python reconstruction on X5 only requires a single-core single-thread serial about 5ms to complete, that is, it only needs to occupy 2 CPU cores (200% CPU usage, maximum 800% CPU usage), and can complete 400 frames of image post-processing per minute, and post-processing will not constitute a bottleneck.
+7. 关于后处理：目前在X5上使用Python重构的后处理，仅需单核心单线程串行约5ms即可完成，即只需占用2个CPU核心（200%的CPU占用，最大800%的CPU占用），每分钟可完成400帧图像的后处理，后处理不会构成瓶颈。
 
 ### RDK X3 & RDK X3 Module (X3 historical benchmark)
 
@@ -1681,8 +1677,6 @@ hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv
 |---------|---------|-------|---------|---------|----------|--------------------|--------------------|
 | YOLOv8n-seg | 640×640 | 80 | 3.4 M | 36.7/30.5 |  | 126.7 ms / 7.9 FPS (1 thread) <br/> 129.2 ms / 15.5 FPS (2 threads) <br/> 163.9 ms / 24.1 FPS (4 threads) <br/> 285.8 ms / 27.3 FPS (8 threads) | 6 ms |
 
-说明:
-说明:
 说明:
 1. BPU延迟与BPU吞吐量。
  - 单线程延迟为单帧,单线程,单BPU核心的延迟,BPU推理一个任务最理想的情况。
@@ -1729,17 +1723,17 @@ sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling
 | YOLOv10l | 640×640 | 80 | 120.3 | 53.2 |  | 52.0 ms / 19.2 FPS (1 thread) | 100.0 ms / 20.0 FPS (2 threads) | 4.5 ms |
 | YOLOv10x | 640×640 | 80 | 160.4 | 54.4 |  | 70.7 ms / 14.1 FPS (1 thread) | 137.3 ms / 14.5 FPS (2 threads) | 4.5 ms |
 
-Notes:
-1. The X5 is in its optimal state: CPU is 8 × A55 @ 1.8G with full-core Performance scheduling, BPU is 1 × Bayes-e @ 1G with a total equivalent int8 computing power of 10 TOPS.
-2. Single-threaded latency is for a single frame, single thread, and single BPU core, representing the ideal delay for BPU inference of a single task.
-3. Four-thread engineering frame rate is when four threads simultaneously feed tasks to the dual-core BPU. In general engineering scenarios, four threads can minimize single-frame latency while fully utilizing all BPU cores at 100%, achieving a good balance between throughput (FPS) and frame latency. X5 BPU overall is more powerful, generally 2 threads can eat BPU full, frame delay and throughput are very good.
-4. Eight-thread extreme frame rate is when eight threads simultaneously feed tasks to the dual-core BPU on the X3, aiming to test the BPU’s extreme performance. Typically, four cores are already saturated; if eight threads perform significantly better than four, it suggests that the model structure needs to improve the "compute/memory access" ratio, or that DDR bandwidth optimization should be selected during compilation.
-5. FP/Q mAP: 50-95 precision is calculated using pycocotools and comes from the COCO dataset. This can refer to Microsoft’s paper, and is used here to assess the degree of accuracy degradation for deployment on the board.
-6. Run the following command to test the bin model throughput on the board
+说明:
+1. X5为最佳状态：CPU为8 × A55 @ 1.8G，全核心Performance调度，BPU为1 × Bayes-e @ 1G，等效int8总算力10 TOPS。
+2. 单线程延迟为单帧、单线程、单BPU核心的延迟，是BPU推理单个任务的最理想延迟。
+3. 四线程工程帧率指四个线程同时向双核BPU提交任务。一般工程场景中，四个线程可以在把所有BPU核心吃满到100%的同时将单帧延迟控制得较小，在吞吐量(FPS)和帧延迟之间取得较好的平衡。X5的BPU整体较强，一般2个线程即可吃满BPU，帧延迟和吞吐量都非常出色。
+4. 八线程极限帧率指在X3上八个线程同时向双核BPU提交任务，用于测试BPU的极限性能。通常四个核心已经吃满；如果八个线程明显优于四个线程，说明模型结构需要提高"计算/访存"比，或编译时选择DDR带宽优化。
+5. FP/Q mAP：50-95精度使用pycocotools计算，来自COCO数据集，可参考微软的论文，此处用于评估板端部署的精度下降程度。
+6. 在板端测试bin模型吞吐量的命令如下
 ```bash
 hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv12_modified.bin
 ```
-7. Regarding post-processing: At present, the post-processing of Python reconstruction on X5 only requires a single-core single-thread serial about 5ms to complete, that is, it only needs to occupy 2 CPU cores (200% CPU usage, maximum 800% CPU usage), and can complete 400 frames of image post-processing per minute, and post-processing will not constitute a bottleneck.
+7. 关于后处理：目前在X5上使用Python重构的后处理，仅需单核心单线程串行约5ms即可完成，即只需占用2个CPU核心（200%的CPU占用，最大800%的CPU占用），每分钟可完成400帧图像的后处理，后处理不会构成瓶颈。
 
 ### RDK X3 & RDK X3 Module (X3 historical benchmark)
 
@@ -1780,7 +1774,7 @@ sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling
 | YOLOv8l | 640×640 | 80 | 43.7 | 17.9 | 5 ms |
 | YOLOv8x | 640×640 | 80 | 68.2 | 11.2 | 5 ms |
 
-Note: Detailed performance data is at the end of the document.
+注：详细性能数据见文末。
 
 ### Performance Data (X3 historical benchmark)
 
@@ -1792,7 +1786,7 @@ Note: Detailed performance data is at the end of the document.
 | YOLOv8l | 640×640 | 80 | 43.7 | 52.9 |  | 57.6ms/17.3FPS(1 thread) | 111.1ms/17.9FPS(2 threads) | 5 ms |
 | YOLOv8x | 640×640 | 80 | 68.2 | 53.9 |  | 90.0ms/11.0FPS(1 thread) | 177.5ms/11.2FPS(2 threads) | 5 ms |
 
-Object Detection (Open Image V7)
+目标检测 (Open Image V7)
 
 ### Performance Data (X3 historical benchmark)
 
@@ -1804,17 +1798,17 @@ Object Detection (Open Image V7)
 | YOLOv8l | 640×640 | 600 | 44.1 | 34.9 | - | - | - |
 | YOLOv8x | 640×640 | 600 | 68.7 | 36.3 | - | - | - |
 
-Notes:
-1. The X5 is in its optimal state: CPU is 8 × A55 @ 1.8G with full-core Performance scheduling, BPU is 1 × Bayes-e @ 1G with a total equivalent int8 computing power of 10 TOPS.
-2. Single-threaded latency is for a single frame, single thread, and single BPU core, representing the ideal delay for BPU inference of a single task.
-3. Four-thread engineering frame rate is when four threads simultaneously feed tasks to the dual-core BPU. In general engineering scenarios, four threads can minimize single-frame latency while fully utilizing all BPU cores at 100%, achieving a good balance between throughput (FPS) and frame latency. X5 BPU overall is more powerful, generally 2 threads can eat BPU full, frame delay and throughput are very good.
-4. Eight-thread extreme frame rate is when eight threads simultaneously feed tasks to the dual-core BPU on the X3, aiming to test the BPU’s extreme performance. Typically, four cores are already saturated; if eight threads perform significantly better than four, it suggests that the model structure needs to improve the "compute/memory access" ratio, or that DDR bandwidth optimization should be selected during compilation.
-5. FP/Q mAP: 50-95 precision is calculated using pycocotools and comes from the COCO dataset. This can refer to Microsoft’s paper, and is used here to assess the degree of accuracy degradation for deployment on the board.
-6. Run the following command to test the bin model throughput on the board
+说明:
+1. X5为最佳状态：CPU为8 × A55 @ 1.8G，全核心Performance调度，BPU为1 × Bayes-e @ 1G，等效int8总算力10 TOPS。
+2. 单线程延迟为单帧、单线程、单BPU核心的延迟，是BPU推理单个任务的最理想延迟。
+3. 四线程工程帧率指四个线程同时向双核BPU提交任务。一般工程场景中，四个线程可以在把所有BPU核心吃满到100%的同时将单帧延迟控制得较小，在吞吐量(FPS)和帧延迟之间取得较好的平衡。X5的BPU整体较强，一般2个线程即可吃满BPU，帧延迟和吞吐量都非常出色。
+4. 八线程极限帧率指在X3上八个线程同时向双核BPU提交任务，用于测试BPU的极限性能。通常四个核心已经吃满；如果八个线程明显优于四个线程，说明模型结构需要提高"计算/访存"比，或编译时选择DDR带宽优化。
+5. FP/Q mAP：50-95精度使用pycocotools计算，来自COCO数据集，可参考微软的论文，此处用于评估板端部署的精度下降程度。
+6. 在板端测试bin模型吞吐量的命令如下
 ```bash
 hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv12_modified.bin
 ```
-7. Regarding post-processing: At present, the post-processing of Python reconstruction on X5 only requires a single-core single-thread serial about 5ms to complete, that is, it only needs to occupy 2 CPU cores (200% CPU usage, maximum 800% CPU usage), and can complete 400 frames of image post-processing per minute, and post-processing will not constitute a bottleneck.
+7. 关于后处理：目前在X5上使用Python重构的后处理，仅需单核心单线程串行约5ms即可完成，即只需占用2个CPU核心（200%的CPU占用，最大800%的CPU占用），每分钟可完成400帧图像的后处理，后处理不会构成瓶颈。
 
 ### RDK X3 & RDK X3 Module (X3 historical benchmark)
 
@@ -1830,7 +1824,6 @@ hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv
 |---------|---------|-------|---------|---------|----------|--------------------|--------------------|
 | YOLOv8n | 640×640 | 80 | 3.2 M | 37.3  | - | 99.8 ms / 10.0 FPS (1 thread) <br/> 102.0 ms / 19.6 FPS (2 threads)<br/> 131.4 ms / 30.2 FPS (4 threads)<br/> 231.0 ms / 34.1 FPS (8 threads) | 6 ms |
 
-说明:
 说明:
 1. BPU延迟与BPU吞吐量。
  - 单线程延迟为单帧,单线程,单BPU核心的延迟,BPU推理一个任务最理想的情况。
@@ -1859,7 +1852,7 @@ sudo bash -c "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling
 
 ### RDK S100 / RDK S100P
 
-Object Detection (COCO2017)
+目标检测 (COCO2017)
 
 | Model | Pytorch | YUV420SP<br>Python | YUV420SP<br>C/C++ | NCHWRGB<br>C/C++ |
 |---|---:|---:|---:|---:|
@@ -1868,45 +1861,27 @@ Object Detection (COCO2017)
 | YOLOv13l | 0.458 | 0.443 (96.73%) | (%) | (%) |
 | YOLOv13x | 0.473 | 0.458 (96.83%) | (%) | (%) |
 
-## Accuracy Test Notes
+## 精度测试说明
 
-1. The accuracy data is computed with the official unmodified Microsoft `pycocotools`, using `Average Precision (AP) @[ IoU=0.50:0.95 | area=all | maxDets=100 ]`.
-2. The evaluation uses all 5000 images from `COCO2017 val`, runs inference on board, dumps JSON results, and evaluates them with `pycocotools` using `score=0.25` and `nms=0.7`.
-3. `pycocotools` AP is usually lower than the Ultralytics built-in numbers due to different area calculation rules. The important signal here is the relative gap between floating-point and quantized models.
-4. Some accuracy loss appears when converting NCHW RGB888 inputs to YUV420SP inputs for BPU deployment because of color space conversion. This can be reduced if that transformation is considered during training.
-5. Python and C/C++ 运行时 accuracy may differ slightly because of differences in memory copy and floating-point handling.
-6. Evaluation scripts can be referenced here: [utils/tools/batch_eval_pycocotools](../../../../utils/tools/batch_eval_pycocotools/)
-7. The table reflects PTQ results compiled with 50 calibration images.
+1. 精度数据使用微软官方未修改的`pycocotools`库计算，取`Average Precision (AP) @[ IoU=0.50:0.95 | area=all | maxDets=100 ]`。
+2. 评估使用`COCO2017 val`全部5000张图像，在板端推理后dump保存为JSON，再送入`pycocotools`计算，score阈值0.25，NMS阈值0.7。
+3. 由于面积计算规则不同，`pycocotools`的AP通常低于Ultralytics内置数值，这是正常现象；这里主要关注用同一套计算方式测试浮点与量化模型，评估量化过程的精度损失。
+4. BPU模型把NCHW-RGB888输入转换为YUV420SP(nv12)输入后，也会因色彩空间转换带来部分精度损失；训练时加入该转换损失可以避免。
+5. Python与C/C++接口的精度结果有细微差异，主要原因是两者在数据结构memcpy和转换过程中对浮点数的处理方式不同。
+6. 评估脚本参考RDK Model Zoo的eval部分：[utils/tools/batch_eval_pycocotools](../../../../utils/tools/batch_eval_pycocotools/)
+7. 表中为使用50张图片校准编译的PTQ结果，未做精度调优或QAT。
 
-## Result Check
+## 结果检查
 
-With the default `test_data/kite.jpg`, the 运行时 should output boxes that match the visible objects in the image and save a rendered result image. If the boxes are clearly misplaced, all classes are wrong, scores are abnormally low, or the result is empty, check:
+使用默认的`test_data/kite.jpg`时，运行时应输出与图中可见目标相符的框，并保存渲染结果图。如果框明显错位、类别全部错误、分数异常偏低或结果为空，检查：
 
-- the ONNX export output order
-- whether `remove_node_name` matches the current ONNX
-- whether `score-thres` and `nms-thres` match the evaluation assumptions
+- ONNX 导出的输出顺序
+- `remove_node_name` 是否与当前 ONNX 匹配
+- `score-thres` 和 `nms-thres` 是否与评估假设一致
 
 <a id="boundaries"></a>
-## 能力边界
+## 评估方式与数据集注意事项
 
-这些脚本不验证模型转换正确性、不支持任意自定义类别顺序，也不测量完整应用性能。分类会按上述规则跳过不可读或无标签图像，必须报告实际处理数量。OBB需另行使用DOTA评分器。发布基准与既有固定图板测属于各自源码版本的参考，仅覆盖其记录的任务与尺寸；新板测及全数据集测量按本指南命令执行。
+分类评估按前述规则跳过不可读或无标签图像，报告时必须给出实际处理的图像数量；OBB只导出预测，DOTA mAP需另行使用评分器计算。
 
-DFL 姿态接口返回关键点概率。当前 COCO JSON 序列化保留历史规则：概率 >0 时 v=1，否则为 0；这不是 0.5 可见性筛选，不会删除低置信度点。绘制阈值与评测序列化是不同操作。
-
-
-### X5 YOLO26 NV12 测量记录（中文来源）
-
-[Source measurement table](https://github.com/D-Robotics/rdk_model_zoo/blob/cb86079ae5befcef9ca50fb46c8a6d8980106dec/samples/vision/ultralytics_yolo26/evaluator/README_cn.md).
-
-该来源将 YOLO26m 对应到 51.1 ms / 24.8 FPS，将 YOLO26l 对应到 40.1 ms / 19.5 FPS；上方另一份 X5 表的单线程延迟对应关系不同。两份来源记录不一致，此处按原始记录保留两份数值供对照。输入为 NV12，各行列出尺寸、类别数与线程数。
-
-| Device | Model | Size <br> (Pixels) | Classes | BPU Task Latency / <br> BPU Throughput (Threads) | CPU Latency | params <br> (M) | FLOPs <br> (B) |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| X5 | YOLO26n Detect | 640x640 | 80 | 11.6 ms / 86.3 FPS (1 thread) <br> 19.1 ms / 104.3 FPS (2 threads) | - | - | - |
-| X5 | YOLO26s Detect | 640x640 | 80 | 20.9 ms / 47.7 FPS (1 thread) <br> 37.8 ms / 52.8 FPS (2 threads) | - | - | - |
-| X5 | YOLO26m Detect | 640x640 | 80 | 51.1 ms / 24.8 FPS (1 thread) <br> 76.1 ms / 26.1 FPS (2 threads) | - | - | - |
-| X5 | YOLO26l Detect | 640x640 | 80 | 40.1 ms / 19.5 FPS (1 thread) <br> 98.0 ms / 20.3 FPS (2 threads) | - | - | - |
-| X5 | YOLO26x Detect | 640x640 | 80 | 103.3 ms / 9.6 FPS (1 thread) <br> 202.0 ms / 9.8 FPS (2 threads) | - | - | - |
-| X5 | YOLO26n Seg | 640x640 | 80 | 15.5 ms / 64.3 FPS (1 thread) <br> 22.8 ms / 87.6 FPS (2 threads) | - | - | - |
-| X5 | YOLO26n Pose | 640x640 | 80 | 12.5 ms / 79.6 FPS (1 thread) <br> 20.1 ms / 98.7 FPS (2 threads) | - | - | - |
-| X5 | YOLO26n Cls | 224x224 | 1000 | 1.1 ms / 906.0 FPS (1 thread) <br> 1.7 ms / 1156.8 FPS (2 threads) | - | - | - |
+DFL 姿态接口返回关键点概率。COCO JSON 序列化在概率 >0 时写 v=1，否则写 0；这不是 0.5 可见性筛选，不会删除低置信度点。绘制阈值与评测序列化是不同操作。

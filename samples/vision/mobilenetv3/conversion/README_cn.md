@@ -170,7 +170,7 @@ INT16，X5 工具链仍把 MobileNetV3 的 stride 2 depthwise 卷积与 SE 池�
 2. 用新制品执行 sample 快速开始做冒烟测试：退出码 0 并打印 Top-5 列表
    （见[预期结果](../README_cn.md#expected-results)）。
 3. 用[评测器](../evaluator/README_cn.md)测量全量精度，并与同一检查点的 FP32
-   ONNX 基线比较；已发布结果与验收规则见
+   ONNX 基线比较；已发布结果见
    [sample README](../README_cn.md#performance)。
 
 <a id="artifacts"></a>

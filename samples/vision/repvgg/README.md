@@ -61,34 +61,23 @@ repvgg/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Python | C++ |
-| --- | --- | --- | --- |
-| x5 | a0 | supported | not-supported |
-| x5 | a1 | supported | not-supported |
-| x5 | a2 | supported | not-supported |
-| x5 | b0 | supported | not-supported |
-| x5 | b1g2 | supported | not-supported |
-| x5 | b1g4 | supported | not-supported |
-| s100 | a0 | not-supported | not-supported |
-| s100 | a1 | not-supported | not-supported |
-| s100 | a2 | not-supported | not-supported |
-| s100 | b0 | not-supported | not-supported |
-| s100 | b1g2 | not-supported | not-supported |
-| s100 | b1g4 | not-supported | not-supported |
-| s100p | a0 | not-supported | not-supported |
-| s100p | a1 | not-supported | not-supported |
-| s100p | a2 | not-supported | not-supported |
-| s100p | b0 | not-supported | not-supported |
-| s100p | b1g2 | not-supported | not-supported |
-| s100p | b1g4 | not-supported | not-supported |
-| s600 | a0 | not-supported | not-supported |
-| s600 | a1 | not-supported | not-supported |
-| s600 | a2 | not-supported | not-supported |
-| s600 | b0 | not-supported | not-supported |
-| s600 | b1g2 | not-supported | not-supported |
-| s600 | b1g4 | not-supported | not-supported |
+The table lists the models published for this sample; `—` marks an
+unpublished combination.
 
-Use the Python CLI with a lowercase variant ID; it resolves to the exact case-sensitive published filename.
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| RepVGG-A0 | 224x224 | ✓ | — | — | — |
+| RepVGG-A1 | 224x224 | ✓ | — | — | — |
+| RepVGG-A2 | 224x224 | ✓ | — | — | — |
+| RepVGG-B0 | 224x224 | ✓ | — | — | — |
+| RepVGG-B1g2 | 224x224 | ✓ | — | — | — |
+| RepVGG-B1g4 | 224x224 | ✓ | — | — | — |
+
+Runtime coverage: the Python CLI serves every published combination with
+`--target auto|x5` and `--variant a0|a1|a2|b0|b1g2|b1g4` (default `a0`);
+the lowercase CLI ID resolves to the exact case-sensitive published
+filename `RepVGG_<variant>_224x224_nv12.bin`. `--target s100`, `s100p` and
+`s600` resolve no asset. The sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -149,4 +138,4 @@ the same thread count, concurrent submission mode and BPU utilization.
 <a id="license"></a>
 ## License
 
-Source Python headers retain Apache-2.0 provenance. Conversion YAMLs retain their original proprietary notices verbatim; Before redistribution, follow the original conversion YAML notices and applicable upstream weight license terms.
+Source Python headers retain Apache-2.0 provenance. Conversion YAMLs retain their original proprietary notices verbatim; before redistribution, follow the original conversion YAML notices and applicable upstream weight license terms.

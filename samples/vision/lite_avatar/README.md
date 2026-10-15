@@ -58,11 +58,19 @@ lite_avatar/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Language | Background decode | Video encoder | Status |
+The sample provides Python run entry points for S100, S100P and S600. Each
+target requires four matching model files — `encoder`, `audio2mouth`,
+`net_encode` and `net_decode` — placed under `model/<target>/`. Prepare the
+models from a local bundle or by self-compilation, see
+[model preparation](model/README.md). The table lists the per-target
+capabilities; `—` means not applicable.
+
+| Target | Required models | Language | Background decode | Video encoder |
 | --- | --- | --- | --- | --- |
-| s100 | python | VPU H.264 (file mode) | VPU H.264 worker | supported |
-| s100p | python | VPU H.264 (file mode) | VPU H.264 worker | supported |
-| s600 | python | VPU H.264 (file mode) | VPU H.264 worker | supported |
+| s100 | encoder + audio2mouth + net_encode + net_decode (`*_s100.hbm`) | python | VPU H.264 (file mode) | VPU H.264 worker |
+| s100p | encoder + audio2mouth + net_encode + net_decode (`*_s100p.hbm`) | python | VPU H.264 (file mode) | VPU H.264 worker |
+| s600 | encoder + audio2mouth + net_encode + net_decode (`*_s600.hbm`) | python | VPU H.264 (file mode) | VPU H.264 worker |
+| x5 | — | — | — | — |
 
 <a id="prerequisites"></a>
 ## Prerequisites

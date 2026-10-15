@@ -64,12 +64,12 @@ python -m samples.vision.depth_anything_v2.runtime.python.main --target s100 \
   --output /work/depth-results/external-copy
 ```
 
-显式模型路径必须配精确 asset ID。该引用声明预期契约；字节身份以发布摘要与加载检查为准。
+显式模型路径必须配精确 asset ID。该引用声明预期契约；实际文件需匹配该输入/输出契约。
 运行时记录实测摘要并检查 IO 元数据。自制模型若归一化、几何或语义不同，需要新
 绑定；改文件名不能使其兼容。
 
 <a id="formats-checksums"></a>
-## 格式、摘要与来源
+## 格式与摘要
 
 HBM 是源异构模型格式。预期公开 IO 为 float32 RGB NCHW `[1,3,518,686]` 和
 float32 深度 `[1,518,686]`。图内 int16 量化不改变公开输出的浮点契约。加载时

@@ -154,7 +154,7 @@ python eval_numeric.py --image /work/depth/input.png \
 文件名使用 reference/candidate，不再把所有输入错误标注为 X5。
 
 <a id="reference-results"></a>
-## 参考记录结果
+## 参考结果
 
 X5 参考记录为 OE 1.2.8 / Mapper 1.24.3、768 输入、max percentile 0.9999、
 O3 latency 和尾部卷积 int16。HRT 数值只包含模型执行：

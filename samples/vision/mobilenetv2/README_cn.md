@@ -65,22 +65,21 @@ mobilenetv2/
 <a id="support-matrix"></a>
 ## 支持范围
 
-| Target | 变体 | 语言 | 状态 |
-| --- | --- | --- | --- |
-| x5 | 100 | python | supported |
-| x5 | 140 | python | supported |
-| s100 | 100 | python | supported |
-| s100 | 140 | python | supported |
-| s100p | 100 | python | supported |
-| s100p | 140 | python | supported |
-| s600 | 100 | python | supported |
-| s600 | 140 | python | supported |
-| s100 | 100 | cpp | supported |
-| s100 | 140 | cpp | supported |
-| s100p | 100 | cpp | supported |
-| s100p | 140 | cpp | supported |
-| s600 | 100 | cpp | supported |
-| s600 | 140 | cpp | supported |
+下表列出本 Sample 已发布的模型；`—` 表示该组合未发布。
+
+| 模型 | 输入 | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| MobileNetV2 (1.00) | 224x224 | ✓ | ✓ | ✓ | ✓ |
+| MobileNetV2 (1.40) | 224x224 | ✓ | ✓ | ✓ | ✓ |
+
+运行时覆盖：
+
+- Python 覆盖上表全部组合：`--target auto|x5|s100|s100p|s600` 加
+  `--variant 100|140`（默认 100）。X5 发布
+  `mobilenetv2_<width>_bayese_224x224_nv12.bin`；S 系列在 `s100/`、`s100p/`、
+  `s600/` 目录下发布 `mobilenetv2_<width>_nashe/nashm/nashp_224x224_nv12.hbm`。
+- C++（[runtime/cpp](runtime/cpp/README.md)）覆盖两个变体，仅限 S100、S100P、
+  S600（`VARIANT=100|140`，默认 100）；X5 没有 C++ 运行时。
 
 <a id="prerequisites"></a>
 ## 环境前提

@@ -75,7 +75,7 @@ runtime/cpp/                            C++ 源码（本目录）
 │   ├── gemma4_tokenizer.hpp            TokenizerBridge：chat template + 图片展开
 │   └── hb_utils.hpp                    Horizon BPU 辅助函数（tensor、flush、infer）
 └── src/                                实现 + 入口
-    ├── main.cpp                        ★ 薄入口：选项 → 具名模型 → 每轮 predict
+    ├── main.cpp                        ★ 入口：选项 → 模型 → 每轮 predict
     ├── gemma4.cpp                      ★ Gemma4 模型会话（历史、预算、KV 复用）
     ├── cli.cpp                         ★ CLI 参数解析 + 控制台展示
     └── gemma4_*.cpp                    引擎/算法实现

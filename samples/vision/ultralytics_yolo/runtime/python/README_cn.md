@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Python 推理
 
-运行 Ultralytics 检测、分割、姿态、分类与旋转框模型。`main.py` 取得模型类与配置，显式构造 `Model(config)` 并调用 `predict`；各任务文件包含对应的前处理、推理与解码。
+运行 Ultralytics 检测、分割、姿态、分类与旋转框模型。`main.py` 取得模型类与配置，构造 `Model(config)` 并调用 `predict`；各任务文件包含对应的前处理、推理与解码。
 
 <a id="directory"></a>
 ## 目录结构
@@ -27,7 +27,7 @@ python/
 ## 板端准备
 
 将与板卡目标一致的编译制品复制到板端或下载到 Manifest 指定位置。X5 绑定
-一个 packed NV12 输入；S 系列绑定命名的 NHWC Y、UV 输入。运行时在推理前
+一个 packed NV12 输入；S 系列绑定命名的 NHWC Y、UV 输入。推理前运行时
 读取模型元数据并检查 batch、尺寸、类型和输出协议；文件名后缀不能代替
 元数据检查。
 
@@ -202,8 +202,8 @@ for staged, predicted in zip(result, detector.predict(bgr_image)):
 
 `YoloDetect` 支持注入推理执行器，用于接入其他运行时加载器。推理执行器
 负责模型执行；图像几何、协议绑定、DFL 解码、按类别 NMS 和坐标还原由共用
-任务实现负责。`pre_process` / `forward` / `post_process` 是可读阶段方法的
-别名（同一实现）。`YOLO26Detect` 共用图片准备与 Runtime 流程，使用直接 LTRB 解码。
+任务实现负责。`pre_process` / `forward` / `post_process` 是阶段方法的
+别名。`YOLO26Detect` 共用图片准备与 Runtime 流程，使用直接 LTRB 解码。
 
 <a id="stage-io"></a>
 ## 代码流程
@@ -211,13 +211,13 @@ for staged, predicted in zip(result, detector.predict(bgr_image)):
 `YoloDetect` 和 `YOLO26Detect` 按 `preprocess` → `infer` → `postprocess` 处理输入。保留每次 `preprocess` 返回的 `transform`，传给对应的 `postprocess`；同一模型实例串行调用。检测、分类、分割、姿态和 OBB 任务均使用这三个方法名；`pre_process`、`forward`、`post_process` 分别为它们的别名。
 
 - `preprocess(图片或路径, image_format="BGR")`（别名 `pre_process`）要求非空 uint8 H×W×3 BGR 或可读的本地图片路径，返回 `PreparedDetection.tensors` 和冻结的 `.transform`。后者包含原图/模型/实际缩放尺寸、整数 padding 与横纵缩放比例。X5 张量为 packed NV12；S 为 Y `(1,H,W,1)` 和 UV `(1,H/2,W/2,2)`，H/W 来自模型元数据。
-- `infer(prepared)`（别名 `forward`）只调用一次推理执行器，返回以角色名索引的 `RawOutputs`。绑定的推理执行器校验物理形状、数据类型和有限值，不反量化、不激活、不解码、不改变布局。数组保留 SDK 数据类型，借用 SDK 缓冲区；须先完成后处理再发起下一次 SDK 调用，或主动复制需要长期保留的原始数组。
+- `infer(prepared)`（别名 `forward`）只调用一次推理执行器，返回以角色名索引的 `RawOutputs`。绑定的推理执行器校验物理形状、数据类型和有限值，不反量化、不激活、不解码、不改变布局。数组保留 SDK 数据类型并借用 SDK 缓冲区；生命周期规则见下文共享阶段规则。
 - `postprocess(raw, transform=prepared.transform)`（别名 `post_process`）进行 sigmoid/DFL 或 LTRB 解码、适用的 NMS 和坐标还原。检测与 DFL 分割/姿态绑定均要求模型直接提供浮点输出；整数或 SCALE 元数据在加载时拒绝，后处理不执行手动反量化。
 - `predict(图片或路径)` 串联这些方法并返回自有结果数组。注入推理执行器返回普通语义映射时，数值须已是浮点；物理浮点输出使用绑定后的 raw 容器。
 
 prepared 支持 `[model_name]` 映射访问，`infer`/`forward(prepared)` 会取出
-`.tensors`。显式 `post_process(outputs, 原宽, 原高)` 可无缓存重建同一几何；同时给宽高和 transform
-时必须一致。逐图几何保存在 prepared 对象上，没有实例级的 last-transform 属性。
+`.tensors`。显式 `post_process(outputs, 原宽, 原高)` 可重建同一几何；同时给宽高和 transform
+时必须一致。逐图几何保存在 prepared 对象上。
 DFL 分割、姿态、分类和 YOLO26 OBB 的阶段接口与完整例子见下文。
 
 ```text
@@ -234,6 +234,35 @@ main.py
 `backend.py` 按既定形状/类型契约识别输出角色，编译器枚举名称
 只是物理名称。`detect.py` 记录实际整数缩放和 padding，使框还原使用
 同一个变换。
+
+<a id="stage-rules"></a>
+### 所有任务接口共享的规则
+
+下文的任务类（`YoloDetect`、`YOLO26Detect`、`YoloV10Detect`、`YoloSeg`、
+`YOLO26Seg`、`YoloPose`、`YOLO26Pose`、`YOLO26OBB`、`YoloCls`）只在模型
+协议和结果形状上有差别。以下规则对所有任务类生效：
+
+- **只接受浮点模型输出。** 每个解码器都要求编译模型直接输出未量化的
+  FLOAT32 NHWC 张量。加载器会拒绝整数张量、缺失或不完整的 shape/dtype
+  元数据、SCALE 量化描述和非有限值。
+  任何环节都不做手动反量化；绑定失败时请以未量化任务输出重新导出模型。
+- **角色按形状绑定，不按输出顺序。** 每个张量按空间形状和通道数识别。
+  歧义布局会被拒绝；接口提供显式角色映射时，自定义类别数请使用角色映射。
+- **协议不可互换。** 解码器跟随模型自身的协议——DFL 分布 logits 或直接
+  LTRB 距离——从不依据文件名或输出序号。
+- **原始数组借用 SDK 缓冲区。** `infer` 返回的数组引用运行时自身存储，
+  下一次推理可能覆盖它。请先完成后处理再发起下一次 SDK 调用，或复制需要
+  保留的原始数组。`predict` 与 `postprocess` 的结果自有存储，可安全保留。
+- **transform 与输出一一配对。** 每次调用自带的缩放/padding 保存在返回的
+  `transform` 上；把它传给对应的 `postprocess` 调用，同一模型实例串行
+  处理。接口不保存“上一张图片”。
+- **数值范围。** 置信度阈值须为 `(0,1)` 内有限值，NMS 阈值须为 `[0,1]` 内
+  有限值；阈值严格按传入值使用。
+- **空结果是合法结果。** 零检测返回保持文档维度和类型的数组（`N=0`），
+  分割返回 `masks=[]`。
+
+检测类任务接口的 `post_process` 还接受显式 `(原宽, 原高)` 参数代替
+transform。
 
 <a id="detection-io"></a>
 ### 检测输入与输出
@@ -292,15 +321,14 @@ print(boxes.shape, scores.shape, ids.shape, [mask.shape for mask in masks])
 在加载真实 SDK 前核对目标身份；推理不下载模型。`preprocess`（别名 `pre_process`）
 接收非空 BGR
 uint8 H×W×3；`postprocess`（别名 `post_process`）接收 `prepared.transform`，也支持显式传入的
-`(原宽, 原高)` 参数。缺失或冲突的几何会报错，不保存上一张图片的状态。
+`(原宽, 原高)` 参数。缺失或冲突的几何会报错。
 
-有限输出协议为 stride 8/16/32 的 NHWC 类别 logits `(1,H/s,W/s,C)`、DFL 框
+模型须直接提供浮点输出：stride 8/16/32 的 NHWC 类别 logits
+`(1,H/s,W/s,C)`、DFL 框
 logits `(1,H/s,W/s,64)`、系数 `(1,H/s,W/s,32)`，以及 stride-4 原型
 `(1,H/4,W/4,32)` 或 `(1,32,H/4,W/4)`；要求发布模型所用的方形输入。
 按形状或显式声明的 `DFLSegmentationContract(output_roles=...)` 绑定角色，
-不依赖输出枚举顺序。缺失、错误或歧义元数据、非有限张量、所有整数输出
-均拒绝；模型须直接提供浮点张量，后处理只转换 NCHW 原型布局，不做反量化。
-注入的普通角色映射须已是有限浮点 NHWC 数组。
+不依赖输出枚举顺序。后处理只转换 NCHW 原型布局，不做反量化。
 
 返回 `(boxes, scores, ids, masks)`：自有 float32 `(N,4)` xyxy 原图框，裁至
 `[0,width]`/`[0,height]`；float32 `(N,)` 概率；int64 `(N,)` 类别 ID；N 个
@@ -312,10 +340,7 @@ bool **ROI 掩码**，不是全图掩码。每个掩码高宽为
 二值化，最后取框 ROI。先插值再二值化可保持掩码边缘平滑，不做形态学开运算。
 C++ 示例先在模型分辨率二值化并裁剪 ROI；此解码先去掉 letterbox padding，
 把概率缩放到原图后再二值化。返回的掩码是逐框 ROI。
-置信度须为 `(0,1)` 内有限值，NMS 为 `[0,1]` 内有限值。
-
-坐标还原使用实际整数缩放/padding；框裁剪在模型坐标进行，概率图缩放回原图前去掉
-letterbox padding，因此 padding 不进入掩码。板端精度、SDK 兼容性、延迟与数据集指标需按评估指南另行测量。
+几何按实际整数缩放/padding 还原，letterbox padding 不会进入掩码。
 
 <a id="pose-api"></a>
 ## DFL 姿态库接口
@@ -349,17 +374,16 @@ visible = visibility[..., 0] >= 0.5
 print(boxes.shape, keypoints_xy.shape, visibility.shape, visible.sum())
 ```
 
-`YoloPose(config, runner=...)` 可注入运行器。输入、raw 缓冲区寿命和逐图 transform
-约定与检测一致；`post_process(raw, 原宽, 原高)`（`postprocess` 的别名）仍兼容，
+`YoloPose(config, runner=...)` 可注入运行器。输入与 raw 缓冲区生命周期遵循
+共享阶段规则；`post_process(raw, 原宽, 原高)`（`postprocess` 的别名）也可用，
 缺失或冲突的几何会报错。
 9 个模型输出为 stride 8/16/32 的 NHWC `(1,H/s,W/s,1)` 类别 logits、
 `(1,H/s,W/s,64)` DFL 框与 `(1,H/s,W/s,51)` 关键点（17 组 x/y/logit）。
-要求方形输入、16 个 DFL bin、17 个 COCO 点，以及模型直接提供的有限浮点张量；
-按形状绑定角色，不依赖物理输出枚举顺序，不支持手动反量化的重复版本。
+要求方形输入、16 个 DFL bin 和 17 个 COCO 点。
 
 结果为五元组：float32 `(N,4)` 原图框、float32 `(N,)` 检测概率、int64 `(N,)`
 类别 ID（person=0）、float32 `(N,17,2)` 原图点坐标、float32 `(N,17,1)`
-关键点概率。所有数组自有存储；空结果保留这些维度。NMS 对框和骨架使用同一索引。
+关键点概率。NMS 对框和骨架使用同一索引。
 坐标按实际缩放/padding 还原并裁至 `[0,width]`/`[0,height]`。关键点置信度只做一次
 稳定 sigmoid；已经是概率，不要再次 sigmoid，也不要按 logits 的零阈值判断可见性。
 示例的 0.5 只用于调用方可见性筛选，不改变返回的坐标或删掉关键点。
@@ -400,8 +424,8 @@ print(ranked)
 
 `preprocess`（别名 `pre_process`）返回嵌套 NV12 输入字典，分类无需携带几何还原
 信息。`infer`（别名 `forward`）只调用
-共用推理执行器一次，`raw["logits"]` 保留物理浮点数组及 SDK 缓冲区引用。下一次推理前
-完成后处理，或显式复制需要保存的 raw 数组。必须恰好有一个输出：1000 类向量及可选
+共用推理执行器一次，`raw["logits"]` 保留物理浮点数组及 SDK 缓冲区引用。
+必须恰好有一个输出：1000 类向量及可选
 单例维度，例如 `(1,1000)`、`(1,1000,1,1)`；多维输出的首维 batch 必须为 1。
 额外输出、空间特征图、批输入、缺失
 shape/dtype 元数据、整数输出和 SCALE 描述均拒绝。
@@ -414,7 +438,6 @@ CLI 负责加载 ImageNet 标签并打印结果。
 
 库接口所有系列/目标默认拉伸（`resize_type=0`）；CLI 对 X5 YOLOv8/11 分类显式
 选择 letterbox，对 S 选择拉伸，YOLO26 全目标拉伸。比较库和 CLI 时须统一该参数。
-数据集精度按评估指南测量。
 
 <a id="v10-api"></a>
 ## S 系列 YOLOv10 不执行 NMS
@@ -453,11 +476,8 @@ print(result.boxes.shape, result.scores.shape, result.class_ids.shape)
 ```
 
 六个物理浮点 NHWC 输出按形状绑定为 stride 8/16/32 的分类及 16-bin DFL 框角色，
-不按 SDK 枚举顺序猜测含义。模型输入必须为正方形。raw 缓冲区生命周期、显式逐图
-transform、拥有独立存储的 `(boxes, scores, class_ids)` 结果与共用检测接口一致。
-`pre_process` / `forward` / `post_process` 别名可用；
-`post_process(raw, 原图宽, 原图高)` 显式重建几何，`pre_process` 返回支持映射访问的
-`PreparedDetection` 对象。
+不按 SDK 枚举顺序猜测含义。模型输入必须为正方形。结果为独立拥有存储的
+`(boxes, scores, class_ids)`，与共用检测接口一致。
 
 所有达到置信度阈值的 anchor 都保留，包括重叠框。输出按 stride、再按网格遍历顺序
 排列，每个 anchor 选一个最高分类。输出保持 anchor 顺序并包含重叠框，不执行 NMS、分数排序或 Top-K 截断。NMS 阈值在此不起作用；传入启用 NMS 的绑定契约会明确拒绝。
@@ -473,7 +493,7 @@ transform、拥有独立存储的 `(boxes, scores, class_ids)` 结果与共用�
 YOLO26 姿态与 DFL 姿态共用前处理、raw 推理执行器、显式逐图上下文、NMS 和坐标还原。
 但它的九个输出在 stride 8/16/32 上分别为单类 logits、**四个直接 LTRB 距离**及
 17 组 `(x,y,可见性 logit)`。关键点坐标公式为 `(offset + grid_center) * stride`；
-DFL 姿态的倍数和偏移规则不同，绑定契约明确区分两者。文件名和输出枚举顺序都不能
+DFL 姿态的倍数和偏移规则不同，两套解码公式严格区分。文件名和输出枚举顺序都不能
 用来猜测协议。
 
 在匹配的 S600 板卡上，从仓库根目录运行下例；先按[模型准备](../../model/README_cn.md)
@@ -504,31 +524,24 @@ boxes, scores, class_ids, keypoint_xy, visibility = result
 print(boxes.shape, keypoint_xy.shape, visibility.shape)
 ```
 
-输入须为非空 BGR uint8 H×W×3。输出须为已反量化的浮点 NHWC，具有完整 shape/dtype
-元数据且不带 SCALE 量化描述。整数、非有限值、DFL 绑定或角色歧义会明确拒绝。
-raw 引用 SDK 缓冲区，下一次推理前完成后处理，或复制要保留的 raw 数组。
-`preprocess` 返回支持映射访问的 `PreparedDetection`；`pre_process`/`forward`/
-`post_process` 别名及后处理显式传原图宽高仍可用，
-不依赖最近一次图片的缓存状态。
+输入须为非空 BGR uint8 H×W×3；输出须为已是浮点的 NHWC，具有完整 shape/dtype
+元数据。DFL 绑定或角色歧义会明确拒绝。
 
 五个返回值的形状/类型/存储所有权与 DFL 姿态相同：float32 `(N,4)` 框、float32
 `(N,)` 检测概率、int64 `(N,)` 类别、float32 `(N,17,2)` 点坐标、float32 `(N,17,1)`
-点概率。空结果保持维度。可见性只执行一次稳定 sigmoid；NMS 对框和骨架使用相同索引。
-坐标按实际取整缩放/padding 还原并裁到原图范围。X5 适配器返回含整数框的
+点概率。X5 适配器返回含整数框的
 `{box, score, kpts}` 字典列表；S 适配器返回四元组，关键点合并为 `(N,17,3)`。
 
-库的 NMS 默认为 0.65；CLI 的 X5 默认 0.70、S 默认 0.45，本例显式对齐 S CLI。
-置信度须为 `(0,1)` 内有限值，NMS 为 `[0,1]`。置信度阈值严格按传入值使用；
+YOLO26 库接口默认 NMS 0.65；CLI 的 X5 默认 0.70、S 默认 0.45，本例显式对齐
+S CLI。置信度阈值严格按传入值使用；
 配合实际取整几何和极端 logits 的稳定 sigmoid，存在取整的输入按修正后的
-几何输出坐标。板端推理与数据集指标按评估指南测量。
+几何输出坐标。
 
 <a id="yolo26-segmentation-api"></a>
 ## YOLO26 分割阶段接口
 
 YOLO26 分割与 DFL 示例共用阶段传输、严格推理执行器、NMS 和显式几何，但框为直接
-LTRB 距离，掩码算法与 DFL 示例相同：系数与原型相乘，执行 sigmoid，把概率双线性放大到模型
-尺寸，按模型坐标框裁剪，去掉实际 padding，把概率图缩放到原图，再以 `>0.5` 二值化，
-最后取原图框 ROI。若先二值化再缩放局部掩码，边缘像素会改变并出现台阶。
+LTRB 距离。掩码解码使用上文 DFL 分割的流程，最终返回逐框 ROI 掩码。
 
 在匹配的 S600 板卡上，先按[模型准备](../../model/README_cn.md)获取制品并替换
 下例路径，然后从仓库根目录运行：
@@ -562,23 +575,21 @@ boxes, scores, class_ids, masks = result
 print(boxes.shape, [mask.shape for mask in masks])
 ```
 
-契约要求正方形模型输入及十个输出：stride 8/16/32 各包含分类 logits、四个 LTRB
+模型要求正方形输入及十个输出：stride 8/16/32 各包含分类 logits、四个 LTRB
 距离、32 个掩码系数，另有 stride-4 的 32 通道原型。head 为浮点 NHWC；原型可以
 是元数据形状能证明的浮点 NHWC 或 NCHW。自定义类别数造成角色歧义时，须提供
-审定的显式角色映射，不按枚举顺序猜测。整数/SCALE、错误 shape/dtype 和非有限值
-会拒绝。前向推理保留原型物理布局，postprocess 才归一化布局。
+显式角色映射，不按枚举顺序猜测。前向推理保留原型物理布局，postprocess 才归一化布局。
 
-raw 引用 SDK 缓冲区，下一次推理前完成后处理或复制 raw。结果拥有独立的 float32
+结果拥有独立的 float32
 `(N,4)` 框、float32 `(N,)` 分数、int64 `(N,)` 类别和**布尔** ROI 掩码列表。
 对已裁到原图的每个框取 `x1,y1,x2,y2 = box.astype(int)`，即可把对应掩码放到
 原图大小空白数组的 `[y1:y2,x1:x2]`。退化 ROI 保留每个为零的轴（`(0,w)` 或
 `(h,0)`）；无检测结果保持 `(0,4)/(0,)/(0,)/[]`。`YOLO26Seg.predict` 的结果在每个目标上均为 ROI 掩码；X5 适配器
 返回布尔 `(N,H,W)` 全图掩码堆叠，S 适配器返回逐框 ROI 掩码。
 
-置信度须为 `(0,1)` 内有限值，NMS 为 `[0,1]`。库 NMS 默认值为 0.65；CLI
-传入 X5 0.70 或 S 0.45。解码器使用指定的有效置信度阈值，在 sigmoid 前从
-logits 选择类别；掩码使用稳定 sigmoid，依据实际取整后的缩放尺寸及 padding
-还原到原图。数据集精度测量见[评估指南](../../evaluator/README_cn.md)。
+解码器使用指定的置信度阈值，在 sigmoid 前从
+logits 选择类别；掩码依据实际取整后的缩放尺寸及 padding
+还原到原图。
 
 <a id="yolo26-obb-stages"></a>
 ## YOLO26 旋转框三阶段
@@ -615,18 +626,16 @@ for record in records:
     print(record["id"], record["score"], record["rrect"])
 ```
 
-该类复用可读检测器的图像传输与原始推理执行器调用（`preprocess`/`infer`，也可通过
+该类复用检测类的图像传输与原始推理执行器调用（`preprocess`/`infer`，也可通过
 `pre_process`/`forward` 别名访问），自身提供旋转框解码：
 `preprocess` 返回输入张量及当前图片实际的整数缩放、填充信息。`infer`
 复用共用推理执行器，原样返回借用的 SDK 缓冲区，不解码、不反量化；下一次推理前
 完成后处理，或先复制原始输出。`postprocess`（别名 `post_process`）返回独立拥有数据的记录列表：
 `rrect=(cx,cy,width,height,angle_radians)`、浮点 `score`、整数 `id`。
-无检测时返回 `[]`。交错处理图片时，必须将各自 transform 与输出配对，不能依赖
-隐式的“上一次图片”状态。
+无检测时返回 `[]`。
 
 方形模型需要九个浮点输出：stride 8/16/32 各自的 15 类 logits、4 个直接 LTRB
-距离和 1 个**弧度角度**。按形状与角色绑定，不依赖输出枚举顺序；拒绝整数或
-SCALE 量化描述、错误形状/类型及非有限值。LTRB 距离取绝对值。
+距离和 1 个**弧度角度**。按形状与角色绑定，不依赖输出枚举顺序。LTRB 距离取绝对值。
 `angle_sign` 乘到角度上；`angle_offset` 使用**度**，转换后相加。
 默认 `regularize=True`，宽小于高时交换宽高并将角度加 π/2。
 导出器输出弧度角度。
@@ -634,15 +643,16 @@ SCALE 量化描述、错误形状/类型及非有限值。LTRB 距离取绝对�
 | 行为 | X5 | S100 / S100P / S600 |
 | --- | --- | --- |
 | 旋转 NMS | 按类别计算旋转 IoU，IoU ≥ 阈值时抑制 | OpenCV `NMSBoxesRotated`，所有类别一起处理 |
-| 规范化后的角度 | 归一化到 [−π/2, π/2) | 不再额外归一化 |
+| 规范化后的角度 | 归一化到 [−π/2, π/2) | 不额外回绕 |
 | 还原后的中心及宽高 | 分别裁剪到原图宽高范围 | 不裁剪 |
 
-库默认置信度 0.25、NMS 0.2、letterbox 缩放。置信度必须为 `(0,1)` 内有限值，
-NMS 为 `[0,1]` 内有限值，角度参数必须有限。OpenCV 求交异常会向调用者报告。逆变换使用实际整数填充和逐轴缩放，修正取整后的 letterbox
+库默认置信度 0.25、NMS 0.2、letterbox 缩放；角度参数必须有限。OpenCV 求交
+异常会向调用者报告。逆变换使用实际整数填充和逐轴缩放，修正取整后的 letterbox
 坐标；宽高逐轴缩放、角度保持不变。因此 X/Y 比例不同时返回的是
 **近似旋转矩形**，不是精确变换后的多边形。
 
-使用上述任务模型类和张量契约。核对 OBB 几何时，保持输入尺寸、缩放策略和模型顺序 DOTA 标签与推理配置一致。
+核对 OBB 几何时，使用上述任务模型类与张量协议，并保持输入尺寸、缩放策略和
+模型顺序 DOTA 标签与推理配置一致。
 
 <a id="troubleshooting"></a>
 ## 故障排查

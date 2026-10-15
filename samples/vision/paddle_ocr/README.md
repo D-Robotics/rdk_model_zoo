@@ -133,7 +133,7 @@ result. An empty detector output skips recognition and returns empty lists.
 The detector output is treated as the observed score map and thresholded
 directly (`0.5`); What
 the bundled fixtures print exactly is a property of the artifact pair — see
-[evaluation](./evaluator/README.md#reference-results) for the verified
+[evaluation](./evaluator/README.md#reference-results) for the
 comparison record; dataset-level accuracy requires a labeled corpus and is not bundled.
 
 S100 reference results:

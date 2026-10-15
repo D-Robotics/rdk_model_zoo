@@ -96,15 +96,15 @@ python -m samples.vision.yolo26_depth.runtime.python.main --target x5 \
   --converted-model --output /work/depth/custom-x5-n
 ```
 
-Here the asset ID references the expected input/output contract, not official
-byte identity. Reports set `asset_id=null`, `artifact_origin=user-converted` and
+Here the asset ID references the expected input/output contract, not an
+official published artifact. Reports set `asset_id=null`, `artifact_origin=user-converted` and
 retain `contract_reference` plus the observed model digest. Board identity and
 metadata checks still apply. Arbitrary shape/boundary changes require a new
 binding; a filename cannot make an incompatible model compatible. For S lite,
 the runtime coefficients must match the exported checkpoint calibration.
 
 <a id="formats-checksums"></a>
-## Formats, checksums and provenance
+## Formats and checksums
 
 The five X5 manifest hashes are preserved:
 

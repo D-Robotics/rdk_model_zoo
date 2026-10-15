@@ -7,7 +7,7 @@ The two PTQ YAMLs configure the S100P and S600 compilers. Prepare the export and
 <a id="source-model"></a>
 ## Source model
 
-The source refers to the official [DiffusionDrive project](https://github.com/hustvl/DiffusionDrive) and its NAVSIM checkpoint, without pinning the checkpoint URL/hash, upstream revision or exporter. The [paper](https://openaccess.thecvf.com/content/CVPR2025/html/Liao_DiffusionDrive_Truncated_Diffusion_Model_for_End-to-End_Autonomous_Driving_CVPR_2025_paper.html) describes the algorithm; it does not identify the bytes behind this release. Obtain the matching model code, weights and export procedure before claiming a reproducible rebuild.
+The source refers to the official [DiffusionDrive project](https://github.com/hustvl/DiffusionDrive) and its NAVSIM checkpoint, without pinning the checkpoint URL/hash, upstream revision or exporter. The [paper](https://openaccess.thecvf.com/content/CVPR2025/html/Liao_DiffusionDrive_Truncated_Diffusion_Model_for_End-to-End_Autonomous_Driving_CVPR_2025_paper.html) describes the algorithm. Obtain the matching model code, weights and export procedure to rebuild the model yourself.
 
 For inference with the published assets, use [model preparation](../model/README.md). Published HBM checksums authenticate those published files; an independently exported model needs its own digest record.
 

@@ -61,10 +61,21 @@ edgenext/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Language | Status |
-| --- | --- | --- | --- |
-| x5 | base, small, x_small, xx_small | python | supported |
-| s100 / s100p / s600 | any | python | not-supported (the S manifest publishes no EdgeNeXt asset; selection is an explicit error, no cross-platform fallback) |
+The table lists the models published for this sample; `—` marks an
+unpublished combination.
+
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| EdgeNeXt-xx-small | 224x224 | ✓ | — | — | — |
+| EdgeNeXt-x-small | 224x224 | ✓ | — | — | — |
+| EdgeNeXt-small | 224x224 | ✓ | — | — | — |
+| EdgeNeXt-base | 224x224 | ✓ | — | — | — |
+
+Runtime coverage: the Python CLI serves every published combination with
+`--target auto|x5` and `--variant xx_small|x_small|small|base` (default
+`base`). Only the X5 archive publishes `EdgeNeXt_<size>_224x224_nv12.bin`;
+`--target s100`, `s100p` and `s600` resolve no asset. The sample ships no
+C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites

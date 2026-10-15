@@ -26,7 +26,7 @@ cpp/
 │   ├── cli.hpp  # CLI options, image loading, colorization and report declarations
 │   └── depth.hpp  # Yolo26Depth model, stage-data types, tensor contract
 ├── src/
-│   ├── main.cpp  # thin entry: parse options, construct model, predict, save
+│   ├── main.cpp  # entry point: parse options, construct model, predict, save
 │   ├── cli.cpp  # option parsing, depth colorization, NPY/F32/PNG/report writing
 │   └── depth.cpp  # preprocess/infer/postprocess, letterbox/NV12, SDK handles
 ├── CMakeLists.txt  # RDK_TARGET-gated build definition

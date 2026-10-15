@@ -20,7 +20,7 @@ cpp/
 ├── CMakeLists.txt  # Board build (C++17, YOLO_TARGET=auto|x5|s100|s100p|s600)
 ├── run.sh          # Out-of-tree build + launch, forwards all arguments
 ├── inc/
-│   ├── yolo.hpp            # SDK-free vocabulary: decode math, plans, task types
+│   ├── yolo.hpp            # Pure decode math, plans and task types (no SDK calls)
 │   ├── backend.hpp         # Shared DNN backend: stack probe, infer, RAII owners
 │   ├── cli.hpp             # Inline option parsing, benchmark math and entries
 │   └── imagenet_labels.hpp # 1000-entry ImageNet label order (classification)
@@ -229,16 +229,16 @@ keypoint values, segment 32 mask coefficients). All three scales must use the
 same box encoding. Segment adds one stride-4, 32-channel NHWC prototype.
 Missing/duplicate roles, mixed encodings, integer/SCALE tensors, unsupported
 layouts and nonfinite values fail explicitly. In particular this C++ prototype
-path does **not** accept Python's NCHW prototype alternative; use the matching
-NHWC export or the Python entry.
+path does **not** accept Python's NCHW prototype
+alternative; use the matching NHWC export or the Python entry.
 
 X5 aligned dimensions and S byte strides determine physical reads. After cache
 invalidation, valid values are copied to owned compact NHWC vectors, skipping
 padding. This adds a temporary host copy of the valid outputs. Allocation and
 cache errors abort; acquired output/model resources release on all exit paths.
-DFL and direct-distance math live in `inc/yolo.hpp` (`decode_box_dfl`,
-`decode_box_ltrb`) rather than private copies. The existing keypoint
-equations, NMS and rendering policies remain unchanged.
+DFL and direct-distance decode math lives in `inc/yolo.hpp`
+(`decode_box_dfl`, `decode_box_ltrb`); the keypoint equations, NMS and
+rendering policies follow the behavior described above.
 
 Both tasks discard boxes crossing the model-input boundary. Segment uses
 class-agnostic NMS and renders a **model-input-sized** three-panel image

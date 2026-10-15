@@ -54,15 +54,16 @@ googlenet/
 <a id="support-matrix"></a>
 ## 支持矩阵
 
-| 目标 | 变体 | Python | C++ |
-| --- | --- | --- | --- |
-| x5 | googlenet | supported | not-supported |
-| s100 | googlenet | not-supported | not-supported |
-| s100p | googlenet | not-supported | not-supported |
-| s600 | googlenet | not-supported | not-supported |
+下表列出本 Sample 已发布的模型；`—` 表示该组合未发布。
 
-S 系列无对应制品，也按支持矩阵选择 Python 运行时与目标。CLI 小写 ID 映射到准确发布
-文件名；文件名大小写保留。
+| 模型 | 输入 | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| GoogLeNet | 224x224 | ✓ | — | — | — |
+
+运行时覆盖：Python CLI 通过 `--target auto|x5` 和 `--variant googlenet` 运行
+已发布的组合；CLI 小写 ID 映射到准确的发布文件名
+`googlenet_224x224_nv12.bin`（文件名大小写保留）。`--target s100`、`s100p`、
+`s600` 不会解析出任何资产。本 Sample 不提供 C++ 运行时。
 
 <a id="prerequisites"></a>
 ## 前提

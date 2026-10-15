@@ -77,13 +77,13 @@ bash samples/vision/lanenet/runtime/cpp/run.sh --target s100 --build --output ou
 
 嵌入 PNG 将特征裁剪至 [0,1]，乘 255 后舍入。它明确替换源 Python 的溢出回绕/截断显示行为，原始嵌入不变。二值 PNG 用 0/255 显示标签。不输出聚类结果、车道 ID、跟踪、曲线拟合、数据集精度或延迟。
 
-以下图片逐字节保留自原 S 示例：
+以下可视化图片来自原 S 示例：
 
-| 参考记录 Python 嵌入显示图 | 参考记录 Python 二值显示图 |
+| Python 嵌入显示图 | Python 二值显示图 |
 | --- | --- |
-| ![源嵌入显示](test_data/instance_pred.png) | ![源二值显示](test_data/binary_pred.png) |
+| ![嵌入显示](test_data/instance_pred.png) | ![二值显示](test_data/binary_pred.png) |
 
-另保留[源原生嵌入显示图](test_data/cpp_instance_pred.png)和[原生二值显示图](test_data/cpp_binary_pred.png)。数值比较使用原始嵌入数组；车道实例需要进一步聚类。
+另保留[原生嵌入显示图](test_data/cpp_instance_pred.png)和[原生二值显示图](test_data/cpp_binary_pred.png)。数值比较使用原始嵌入数组；车道实例需要进一步聚类。
 
 车道实例 ID 与拟合曲线需对嵌入执行聚类及曲线拟合。显示颜色仅用于可视化，车道实例身份来自聚类结果。
 

@@ -60,15 +60,20 @@ mobilenetv3/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Language | Status |
-| --- | --- | --- | --- |
-| s100 | large | python | supported |
-| s100 | small | python | supported |
-| s100p | large | python | supported |
-| s100p | small | python | supported |
-| s600 | large | python | supported |
-| s600 | small | python | supported |
-| x5 | any | python | not-supported (no X5 build: the X5 toolchain cannot run MobileNetV3's stride-2 depthwise convolutions and SE pooling in INT16; selection is an explicit error, no fallback) |
+The table lists the models published for this sample; `—` marks an
+unpublished combination.
+
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| MobileNetV3-Large | 224x224 | — | ✓ | ✓ | ✓ |
+| MobileNetV3-Small | 224x224 | — | ✓ | ✓ | ✓ |
+
+Runtime coverage: the Python CLI serves every published combination with
+`--target auto|s100|s100p|s600` and `--variant large|small` (default
+`large`). The S series publishes
+`mobilenetv3_<block>_100_nashe/nashm/nashp_224x224_nv12.hbm` under `s100/`,
+`s100p/` and `s600/`. No X5 artifact is published, so `--target x5` resolves
+no asset. The sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -123,7 +128,7 @@ same root `datasets/imagenet/` labels. Full commands:
 The Python run prints a stable Top-K (default 5) of class IDs, scores, and
 labels and exits 0; Pass `--img-save-path` to save a visualization; otherwise results are printed to stdout. With the bundled `kit_fox.JPEG` the Top-1 is class 278 (`kit fox`)
 and with `zebra_cls.jpg` it is class 340 (`zebra`), for both variants on S100, S100P
-and S600 (checked on each board with the published builds). Select a target and variant listed in the [Support matrix](#support-matrix), prepare that exact manifest artifact with the model downloader, and run the sample on the matching board.
+and S600. Select a target and variant listed in the [Support matrix](#support-matrix), prepare that exact manifest artifact with the model downloader, and run the sample on the matching board.
 
 <a id="performance"></a>
 ## Performance data

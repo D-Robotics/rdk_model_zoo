@@ -67,10 +67,15 @@ efficientvit/
 <a id="support-matrix"></a>
 ## 支持范围
 
-| Target | 变体 | 语言 | 状态 |
-| --- | --- | --- | --- |
-| x5 | m5 | python | supported |
-| s100 / s100p / s600 | 任意 | python | not-supported（这些目标没有可用的模型文件） |
+下表列出本 Sample 已发布的模型；`—` 表示该组合未发布。
+
+| 模型 | 输入 | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| EfficientViT-M5 | 224x224 | ✓ | — | — | — |
+
+运行时覆盖：Python CLI 通过 `--target auto|x5` 和 `--variant m5` 运行已发布
+的组合。仅 X5 归档发布 `EfficientViT_m5_224x224_nv12.bin`；`--target s100`、
+`s100p`、`s600` 不会解析出任何资产。本 Sample 不提供 C++ 运行时。
 
 <a id="prerequisites"></a>
 ## 环境前提

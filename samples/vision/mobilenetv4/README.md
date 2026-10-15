@@ -57,20 +57,21 @@ mobilenetv4/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Language | Status |
-| --- | --- | --- | --- |
-| x5 | small | python | supported |
-| x5 | medium | python | supported |
-| x5 | large | python | supported |
-| s100 | small | python | supported |
-| s100 | medium | python | supported |
-| s100 | large | python | supported |
-| s100p | small | python | supported |
-| s100p | medium | python | supported |
-| s100p | large | python | supported |
-| s600 | small | python | supported |
-| s600 | medium | python | supported |
-| s600 | large | python | supported |
+The table lists the models published for this sample; `—` marks an
+unpublished combination.
+
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| MobileNetV4-conv-small | 224x224 | ✓ | ✓ | ✓ | ✓ |
+| MobileNetV4-conv-medium | 224x224 | ✓ | ✓ | ✓ | ✓ |
+| MobileNetV4-conv-large | 256x256 | ✓ | ✓ | ✓ | ✓ |
+
+Runtime coverage: the Python CLI serves every combination in the table with
+`--target auto|x5|s100|s100p|s600` and `--variant small|medium|large`
+(default `small`). X5 publishes
+`mobilenetv4_conv_<size>_bayese_<input>_nv12.bin`; the S series publishes
+`mobilenetv4_conv_<size>_nashe/nashm/nashp_<input>_nv12.hbm` under `s100/`,
+`s100p/` and `s600/`. The sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites

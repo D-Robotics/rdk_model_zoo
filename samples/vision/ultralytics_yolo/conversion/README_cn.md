@@ -5,13 +5,13 @@
 
 本目录把 Ultralytics 浮点模型导出为 ONNX，再编译为共用 Python Sample
 使用的目标 BPU 制品。导出和编译在主机执行，不能在板端运行。导出覆盖
-YOLOv8/YOLO11 的 DFL 检测和 YOLO26 的直接 LTRB 检测；下文同时列出分类、分割、姿态和 OBB 导出入口。导出入口记录的是配方本身——每个新制品的验证须单独记录。
+YOLOv8/YOLO11 的 DFL 检测和 YOLO26 的直接 LTRB 检测；下文同时列出分类、分割、姿态和 OBB 导出入口。
 
 <a id="source-model"></a>
 
-## 源模型与复现身份
+## 源模型
 
-输入为与所选任务匹配的本地 Ultralytics PyTorch `.pt` 权重。`/models/*.pt` 是操作者预先准备的路径，仓库不附带自定义权重。导出时记录权重 SHA-256、训练/导出环境版本、类别、输入尺寸和训练配置。[模型清单](../model/README_cn.md)列出的 `.bin/.hbm` 是运行制品，与转换输入权重分开。
+输入为与所选任务匹配的本地 Ultralytics PyTorch `.pt` 权重。`/models/*.pt` 是操作者预先准备的路径，仓库不附带自定义权重。[模型清单](../model/README_cn.md)列出的 `.bin/.hbm` 是运行制品，与转换输入权重分开。
 
 <a id="directory"></a>
 ## 目录结构
@@ -130,7 +130,7 @@ docker run -it --rm --network host --shm-size=15g \
 例如 `wget https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt`；
 主机 pip 安装可使用 [阿里云 PyPI 镜像](https://mirrors.aliyun.com/pypi/simple/)。
 
-通用 Ultralytics 检测器通过 `--platform` 选择已核定的 opset 默认值：X5
+通用 Ultralytics 检测器通过 `--platform` 选择对应目标的 opset 默认值：X5
 使用 opset 11，S 系列使用 opset 19。`--opset` 与 `--optse` 两种拼写等价，
 显式传入的值优先。
 
@@ -313,7 +313,7 @@ NMS，都由 Python 后处理（`runtime/python/detect.py` 中的 `decode_dfl`�
 分支输出做线性组合（加权求和，图中画为 MatMul；proto 为 `1×160×160×32`，
 即 stride 4），生成实例掩码。因此检测部分的 ReduceMax、
 Threshold(TopK)、GatherElements、DFL 和 Decode 优化仍然适用。运行时
-在浮点 head 上的后处理中执行同样的系数–proto 组合（`segmentation_decode`）。
+在浮点 head 上的后处理中执行同样的系数–proto 组合（`runtime/python/segment.py` 的 `decode_segmentation`）。
 
 ### 姿态估计（DFL 系列任务）
 
@@ -349,16 +349,14 @@ COCO_keypoint_indexes = {
 Pose 模型的目标检测部分与 Detect 模型一致，由 pose head 额外增加一个每
 Grid Cell 的特征图。在已发布的 17 关键点 COCO 契约下，绑定要求每个
 Grid Cell 提供 1 个类别通道加 `3 × 17 = 51` 个关键点通道：每个关键点包含
-相对该层下采样倍率的 x、y 坐标以及一个可见性 score（`pose_decode.py` 绑定
-`cls` 为 1 通道、`kpts` 为 `3 × nkpt`；已发布绑定固定 `nkpt = 17`，仅改变
-形状声明不构成受支持的变体）。检测分支确定某个 Grid Cell 合格后，DFL 解码
+相对该层下采样倍率的 x、y 坐标以及一个可见性 score（`runtime/python/pose.py` 绑定 `cls` 为 1 通道、
+`kpts` 为 `3 × nkpt`，绑定固定 `nkpt = 17`）。检测分支确定某个 Grid Cell 合格后，DFL 解码
 按 `(raw_xy × 2 + anchor − 0.5) × stride` 计算关键点在模型输入坐标系中的
-位置，其中 `anchor` 是该 Grid Cell 的半整数中心（`runtime/python/
-utils.py_utils/postprocess.py` 的 `decode_kpts`）；随后 `inverse_points`
+位置，其中 `anchor` 是该 Grid Cell 的半整数中心（`utils/py_utils/postprocess.py` 的 `decode_kpts`）；随后 `inverse_points`
 连同 `inverse_boxes` 把模型输入的 letterbox 几何还原回原图，Sigmoid 把
-关键点可见性 logits 转成 score（`pose_decode.py`）。作为对照，YOLO26
+关键点可见性 logits 转成 score（`runtime/python/pose.py` 的 `decode_pose`）。作为对照，YOLO26
 直接 LTRB pose 分支使用 `(raw_xy + anchor) × stride`，没有 DFL 的 ×2
-形式。运行时在后处理中解码这些 head（`pose_decode`）。
+形式。运行时在后处理中解码这些 head（`decode_pose`）。
 
 ### YOLO26 直接 LTRB 的差异
 
@@ -658,12 +656,6 @@ model_parameters:
 hb_compile --config config_yolov13_detect_nv12.yaml
 ```
 
-当前目录中提供了以下参考日志，便于对照自己的模型导出与编译结果：
-
-- `hb_compile_yolov13.txt`
-- `hb_model_info_yolov13.txt`
-- `hrt_model_exec_model_info_yolov13.txt`
-
 ### 异常处理
 
 如果你自己编译出的模型输出顺序与参考模型不一致，通常是 `remove_node_name` 设置错误。可以通过快速生成 `bc` 模型并检查可移除节点信息：
@@ -734,8 +726,7 @@ hrt_model_exec model_info --model_file bpu_outputs/yolo13n_detect_nashe_640x640_
 <a id="known-gaps"></a>
 ## 额外准备
 
-- 每个新制品都需完成自己的绑定检查、匹配板卡推理和必要的数据集/参考数值比较；已发布制品的板测记录不能转用于新转换。
-- 未随仓库提供已固定的数据集版本、校准图片集或全部源权重摘要；20–50 张是脚本建议。默认 `--cal-sample true --cal-sample-num 20`，`--cal-sample false` 使用全部符合扩展名的图片；复现时保存所选文件列表与摘要。
-- `--quantized` 默认 int8，可选 int16；`--jobs` 默认 16，`--save-cache` 默认 false。不同工具链的优化选项见 `mapper.py --platform x5 --toolchain-help` 或对应 S 目标；选择器不代替工具链兼容性验证。
-- 容器版本链接是环境示例；按实际使用的发布环境记录镜像标识及版本输出。
+- 仓库不附带校准图片集；20–50 张是脚本建议。默认 `--cal-sample true --cal-sample-num 20`，`--cal-sample false` 使用全部符合扩展名的图片。
+- `--quantized` 默认 int8，可选 int16；`--jobs` 默认 16，`--save-cache` 默认 false。不同工具链的优化选项见 `mapper.py --platform x5 --toolchain-help` 或对应 S 目标。
+- 容器镜像链接是环境示例；选择与目标工具链要求匹配的镜像。
 - 新制品按[转换后验证](#validation)完成绑定检查、匹配板卡推理与数据集/参考数值比较。

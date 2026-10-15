@@ -80,7 +80,7 @@ bash samples/vision/yolo26_depth/runtime/python/run.sh --target s600 --variant l
 使用 `--variant n|s|m|l|x` 选择模型尺度。
 
 <a id="expected-results"></a>
-## 输出与参考记录参考
+## 预期结果与参考测量
 
 Python 写出 `log_depth.npy`（192×192 F32）、`depth_native.npy`（原图 H×W F32）、
 `depth.png`、`overlay.png` 和 `report.json`；S lite 另写 `raw_logit.npy`。

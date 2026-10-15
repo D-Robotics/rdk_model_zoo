@@ -82,7 +82,7 @@ bash samples/vision/ultralytics_yolo/model/fulldownload.sh \
 bash samples/vision/ultralytics_yolo/model/fulldownload.sh \
   --platform s100 --dry-run
 ```
-`fulldownload.sh` passes `--all` to the same resolver. It does not need a separate model list.
+`fulldownload.sh` downloads all published assets for the target; `--family` restricts the set.
 
 <a id="accompanying-files"></a>
 ## Inputs, labels and next steps
@@ -101,7 +101,7 @@ bash samples/vision/ultralytics_yolo/model/download_model.sh \
   --platform s600 --family yolo26 --task cls --model-size n \
   --model-dir /tmp/rdk-models --dry-run
 ```
-This example resolves below `/tmp/rdk-models/nash-p/`. Remove `--dry-run` to fetch it, then copy the compiled file to the matching board and pass its full path to runtime `--model-path`. Explicit runtime paths are never automatically replaced or downloaded. If a file already exists at the download destination, the downloader verifies it and never overwrites it. Move an unwanted or damaged file aside before retrying.
+This example resolves below `/tmp/rdk-models/nash-p/`. Remove `--dry-run` to fetch it, then copy the compiled file to the matching board and pass its full path to runtime `--model-path`. Explicit runtime paths are used as-is: no substitution, no download. If the destination already holds a file, the downloader verifies it and does not overwrite it; move it aside to download again.
 
 For a model stored outside the default directory, pass its full path to runtime `--model-path`. Keep the artifact extension and nash-e/m/p directory matched to the target.
 
@@ -110,7 +110,7 @@ For a model stored outside the default directory, pass its full path to runtime 
 
 X5 uses a packed NV12 input; S uses separate Y/UV inputs. Non-classification filenames use 640×640. YOLO26 classification filenames use 224×224 on all targets; S600 classification identifiers also use 224×224. S100/S100P v8/v11 classification manifest IDs retain 640×640 identifiers, while their download URLs use 224×224. Runtime metadata determines actual input geometry; filename tokens are not shape overrides.
 
-The downloader rejects empty files and verifies publisher SHA-256 values when recorded. A locally observed digest identifies the downloaded bytes. `--dry-run` reports path presence; it does not download or inspect file contents. Downloads use a temporary `.part` file and install the final file only after successful validation. A timeout, HTTP error or unavailable URL returns a preparation error.
+The downloader rejects empty files and verifies publisher SHA-256 values when recorded. `--dry-run` reports path presence; it does not download or inspect file contents. Downloads use a temporary `.part` file and install the final file only after successful validation. A timeout, HTTP error or unavailable URL returns a preparation error.
 
 <a id="maintained-scope"></a>
 ## Runtime output requirements

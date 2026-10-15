@@ -56,16 +56,19 @@ mobilenetv1/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Language | Status |
-| --- | --- | --- | --- |
-| x5 | 100 | python | supported |
-| x5 | 125 | python | supported |
-| s100 | 100 | python | supported |
-| s100 | 125 | python | supported |
-| s100p | 100 | python | supported |
-| s100p | 125 | python | supported |
-| s600 | 100 | python | supported |
-| s600 | 125 | python | supported |
+The table lists the models published for this sample; `—` marks an
+unpublished combination.
+
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| MobileNetV1 (1.00) | 224x224 | ✓ | ✓ | ✓ | ✓ |
+| MobileNetV1 (1.25) | 224x224 | ✓ | ✓ | ✓ | ✓ |
+
+Runtime coverage: the Python CLI serves every combination in the table with
+`--target auto|x5|s100|s100p|s600` and `--variant 100|125` (default 100).
+X5 publishes `mobilenetv1_<width>_bayese_224x224_nv12.bin`; the S series
+publishes `mobilenetv1_<width>_nashe/nashm/nashp_224x224_nv12.hbm` under
+`s100/`, `s100p/` and `s600/`. The sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites

@@ -55,36 +55,22 @@ repvgg/
 <a id="support-matrix"></a>
 ## 支持矩阵
 
-| 目标 | 变体 | Python | C++ |
-| --- | --- | --- | --- |
-| x5 | a0 | supported | not-supported |
-| x5 | a1 | supported | not-supported |
-| x5 | a2 | supported | not-supported |
-| x5 | b0 | supported | not-supported |
-| x5 | b1g2 | supported | not-supported |
-| x5 | b1g4 | supported | not-supported |
-| s100 | a0 | not-supported | not-supported |
-| s100 | a1 | not-supported | not-supported |
-| s100 | a2 | not-supported | not-supported |
-| s100 | b0 | not-supported | not-supported |
-| s100 | b1g2 | not-supported | not-supported |
-| s100 | b1g4 | not-supported | not-supported |
-| s100p | a0 | not-supported | not-supported |
-| s100p | a1 | not-supported | not-supported |
-| s100p | a2 | not-supported | not-supported |
-| s100p | b0 | not-supported | not-supported |
-| s100p | b1g2 | not-supported | not-supported |
-| s100p | b1g4 | not-supported | not-supported |
-| s600 | a0 | not-supported | not-supported |
-| s600 | a1 | not-supported | not-supported |
-| s600 | a2 | not-supported | not-supported |
-| s600 | b0 | not-supported | not-supported |
-| s600 | b1g2 | not-supported | not-supported |
-| s600 | b1g4 | not-supported | not-supported |
+下表列出本 Sample 已发布的模型；`—` 表示该组合未发布。
 
-S 系列无对应制品，所有目标均无 C++ 实现。
+| 模型 | 输入 | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| RepVGG-A0 | 224x224 | ✓ | — | — | — |
+| RepVGG-A1 | 224x224 | ✓ | — | — | — |
+| RepVGG-A2 | 224x224 | ✓ | — | — | — |
+| RepVGG-B0 | 224x224 | ✓ | — | — | — |
+| RepVGG-B1g2 | 224x224 | ✓ | — | — | — |
+| RepVGG-B1g4 | 224x224 | ✓ | — | — | — |
 
-CLI 小写变体 ID 映射到准确发布文件名；文件名大小写保持不变。
+运行时覆盖：Python CLI 通过 `--target auto|x5` 和
+`--variant a0|a1|a2|b0|b1g2|b1g4`（默认 `a0`）覆盖全部已发布组合；CLI 小写
+变体 ID 映射到大小写敏感的准确发布文件名
+`RepVGG_<variant>_224x224_nv12.bin`。`--target s100`、`s100p`、`s600` 不会
+解析出任何资产。本 Sample 不提供 C++ 运行时。
 
 <a id="prerequisites"></a>
 ## 前提

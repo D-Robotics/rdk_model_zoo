@@ -67,24 +67,19 @@ repvit/
 <a id="support-matrix"></a>
 ## 支持矩阵
 
-| 目标 | 变体 | Python | C++ |
-| --- | --- | --- | --- |
-| x5 | m0_9 | supported | not-supported |
-| x5 | m1_0 | supported | not-supported |
-| x5 | m1_1 | supported | not-supported |
-| s100 | m0_9 | not-supported | not-supported |
-| s100 | m1_0 | not-supported | not-supported |
-| s100 | m1_1 | not-supported | not-supported |
-| s100p | m0_9 | not-supported | not-supported |
-| s100p | m1_0 | not-supported | not-supported |
-| s100p | m1_1 | not-supported | not-supported |
-| s600 | m0_9 | not-supported | not-supported |
-| s600 | m1_0 | not-supported | not-supported |
-| s600 | m1_1 | not-supported | not-supported |
+下表列出本 Sample 已发布的模型；`—` 表示该组合未发布。
 
-S 系列无对应制品，所有目标均无 C++ 实现。
+| 模型 | 输入 | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| RepViT-M0.9 | 224x224 | ✓ | — | — | — |
+| RepViT-M1.0 | 224x224 | ✓ | — | — | — |
+| RepViT-M1.1 | 224x224 | ✓ | — | — | — |
 
-CLI 小写变体 ID 映射到准确发布文件名；文件名大小写保持不变。
+运行时覆盖：Python CLI 通过 `--target auto|x5` 和
+`--variant m0_9|m1_0|m1_1`（默认 `m0_9`）覆盖全部已发布组合；CLI 小写变体
+ID 映射到大小写敏感的准确发布文件名
+`RepViT_m0_9/m1_0/m1_1_224x224_nv12.bin`。`--target s100`、`s100p`、`s600`
+不会解析出任何资产。本 Sample 不提供 C++ 运行时。
 
 <a id="prerequisites"></a>
 ## 前提

@@ -3,7 +3,7 @@
 # YOLOE PF 评估
 
 
-使用与[运行时](../runtime/python/README_cn.md)相同的后处理评估本地浮点输出模型。ONNX 后端在 CPU 执行；板端后端需要匹配的 SDK 和另行准备的浮点 BIN/HBM。本目录不下载模型/数据集，也不编译模型；已记录的 BPU 性能见参考记录一节。
+使用与[运行时](../runtime/python/README_cn.md)相同的后处理评估本地浮点输出模型。ONNX 后端在 CPU 执行；板端后端需要匹配的 SDK 和另行准备的浮点 BIN/HBM。本目录不下载模型/数据集，也不编译模型；已记录的 BPU 性能见参考结果一节。
 
 <a id="dataset"></a>
 ## 数据集与类别映射
@@ -138,7 +138,7 @@ python3 samples/vision/yoloe/evaluator/evaluate.py \
 状态为 `predictions-only`、`evaluated` 或 `failed`；`metric_scope` 区分全部标注图片、选中子集和未请求指标。引用数字前检查已处理/选中数量及未映射预测。应用场景的精度阈值由发布流程确定。
 
 <a id="reference-results"></a>
-## 参考记录
+## 参考结果
 
 下表为发布量化制品的 Runtime-only 参考测量；本地编译的浮点模型在各自编译后另行测量：
 

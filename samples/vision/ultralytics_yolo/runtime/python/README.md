@@ -27,10 +27,10 @@ python/
 ## Board preparation
 
 Copy or download the artifact for the same target as the board. X5 binds one
-packed NV12 input; the S targets bind named NHWC Y and UV inputs. The runtime
-reads model metadata and checks batch, geometry, dtype, and output protocol
-before inference. A filename suffix is not accepted as a substitute for model
-metadata.
+packed NV12 input; the S targets bind named NHWC Y and UV inputs. Before
+inference the runtime reads the model metadata and checks batch, geometry,
+dtype and output protocol; a filename suffix is never accepted as a
+substitute for metadata.
 
 The default model path comes from the platform Manifest. On a board, the
 entry downloads a missing default model; an explicit
@@ -65,10 +65,10 @@ python samples/vision/ultralytics_yolo/runtime/python/main.py \
 ```
 
 The convenience script accepts the same options after a task name:
-`bash samples/vision/ultralytics_yolo/runtime/python/run.sh detect --platform s100`. It detects the board when
-`--platform` is omitted; explicit target selection is useful for listing,
-download, and dry-run on a host. Actual inference rejects an unknown board or
-a target mismatch before loading the model.
+`bash samples/vision/ultralytics_yolo/runtime/python/run.sh detect --platform s100`. It detects the board through
+`/sys/class/boardinfo` when `--platform` is omitted; explicit target selection
+is useful for listing, download, and dry-run on a host. Actual inference
+rejects an unknown board or a target mismatch before loading the model.
 
 The following commands cover the other tasks and the default entry. With no arguments, the board is detected and yolo11 default-scale detection uses bus.jpg. Supply your own aerial image for OBB. Run each line on its matching board; this is not a script to execute all targets on one board.
 
@@ -211,9 +211,9 @@ for staged, predicted in zip(result, detector.predict(bgr_image)):
 
 `YoloDetect` accepts an injected runner for alternate runtime
 loaders. The runner is responsible for model execution; geometry preparation,
-protocol binding, DFL decode, class-wise NMS, and coordinate restoration remain
+protocol binding, DFL decode, class-wise NMS, and coordinate restoration stay
 in the shared task implementation. `pre_process` / `forward` / `post_process`
-stay thin aliases of the readable stage methods (one implementation).
+are aliases of the stage methods.
 `YOLO26Detect` uses the shared image and runtime flow with direct LTRB decoding.
 
 <a id="stage-io"></a>
@@ -222,16 +222,16 @@ stay thin aliases of the readable stage methods (one implementation).
 `YoloDetect` and `YOLO26Detect` process inputs through `preprocess` → `infer` → `postprocess`. Retain the transform returned by each `preprocess` call and pass it to the corresponding `postprocess`; call one model instance serially. Detection, classification, segmentation, pose and OBB use these stage names, with `pre_process`, `forward` and `post_process` as aliases.
 
 - `preprocess(img_or_path, image_format="BGR")` (alias `pre_process`) requires nonempty uint8 H×W×3 BGR, or a readable local image path. It returns `PreparedDetection.tensors` and a frozen `.transform` containing original/model/resized sizes, actual integer padding and per-axis scale. X5 tensors are packed NV12; S tensors are Y `(1,H,W,1)` and UV `(1,H/2,W/2,2)`, using metadata-derived H/W.
-- `infer(prepared)` (alias `forward`) calls the runner once and returns role-keyed `RawOutputs`. The bound runner validates physical shape, dtype and finite values; it does not dequantize, activate, decode or change layout. Arrays still have the SDK dtype and borrow SDK buffers. Finish postprocessing before another SDK call, or explicitly copy retained raw arrays.
+- `infer(prepared)` (alias `forward`) calls the runner once and returns role-keyed `RawOutputs`. The bound runner validates physical shape, dtype and finite values; it does not dequantize, activate, decode or change layout. Arrays keep the SDK dtype and borrow SDK buffers; the lifetime rules are in the shared stage rules below.
 - `postprocess(raw, transform=prepared.transform)` (alias `post_process`) performs sigmoid/DFL or LTRB decoding, applicable NMS and coordinate restoration. Detection and DFL segmentation/pose require already-floating outputs; integer outputs or SCALE metadata fail at load time. No manual dequantization occurs in postprocessing.
 - `predict(img_or_path)` composes those methods and returns owned result arrays. Plain semantic mappings from an injected runner must already hold floating values; use the bound raw carrier for physical floating tensors.
 
 Prepared results support `[model_name]` mapping
 access, and `infer`/`forward(prepared)` unwraps `.tensors`. Explicit
 `post_process(outputs, original_width, original_height)` reconstructs the same
-geometry without cached state. With both dimensions and a transform supplied,
-they must agree. Per-image geometry is carried on the prepared object; there
-is no instance-level last-transform attribute. DFL segmentation shares this
+geometry. With both dimensions and a transform supplied,
+they must agree. Per-image geometry is carried on the prepared object.
+DFL segmentation shares this
 transport; see its complete example below.
 DFL pose, classification and YOLO26 OBB stages are documented below.
 
@@ -249,6 +249,43 @@ main.py
 `backend.py` identifies output roles by established shape/dtype contracts;
 compiler enumeration names are opaque. `detect.py` records the actual
 integer resize and padding so inverse boxes use the same transform.
+
+<a id="stage-rules"></a>
+### Rules shared by every task API
+
+The task classes below (`YoloDetect`, `YOLO26Detect`, `YoloV10Detect`,
+`YoloSeg`, `YOLO26Seg`, `YoloPose`, `YOLO26Pose`, `YOLO26OBB`, `YoloCls`)
+differ only in model protocol and result shapes. The following rules apply to
+all of them:
+
+- **Floating model outputs only.** Every decoder requires the compiled model
+  to emit unquantized FLOAT32 NHWC tensors. The loader rejects integer
+  tensors, missing or incomplete shape/dtype metadata, SCALE quantization
+  descriptors and non-finite values. Nothing dequantizes by
+  hand; if binding fails, re-export the model with unquantized task outputs.
+- **Roles bind by shape, never by output order.** Each tensor is
+  identified by spatial shape and channel count. Ambiguous layouts are
+  rejected; where an API offers an explicit role map, use it for custom class
+  counts.
+- **Protocols are not interchangeable.** The decoder follows the model's
+  protocol — DFL distribution logits or direct LTRB distances — never the
+  filename or output numbering.
+- **Raw arrays borrow SDK buffers.** `infer` returns arrays that reference the
+  runtime's own storage, which the next inference may overwrite. Finish
+  postprocessing before the next SDK call, or copy any raw array you keep.
+  `predict` and `postprocess` results own their storage and are safe to keep.
+- **Pair every transform with its outputs.** Each call carries its own
+  resize/padding on the returned `transform`; pass it to the matching
+  `postprocess` call and drive one model instance serially. No "last image" is
+  stored.
+- **Numeric ranges.** Confidence thresholds must be finite in `(0,1)` and NMS
+  thresholds finite in `[0,1]`; values are used exactly as supplied.
+- **Empty results are valid.** Zero detections return arrays with the
+  documented ranks and dtypes (`N=0`), and `masks=[]` where applicable.
+
+Detection-style task APIs also accept an explicit
+`(original_width, original_height)` pair in `post_process` instead of the
+transform.
 
 <a id="detection-io"></a>
 ### Detection input and output
@@ -284,7 +321,7 @@ The public result is `DetectionResult(boxes_xyxy, scores, class_ids)`:
 ## DFL segmentation library interface
 
 For YOLOv8/9/11 segmentation, use `YoloSeg`; YOLO26 segmentation has a different
-direct-box contract and is not covered by this example. On a matching S100 board,
+direct-box protocol and is not covered by this example. On a matching S100 board,
 run from the repository root after preparing a compatible local segmentation
 model through the [model instructions](../../model/README.md). Replace the example
 absolute model path with your prepared artifact. The example uses the S platform default `nms_thres=0.45`; override it explicitly when needed.
@@ -323,18 +360,17 @@ runner. The factory reads actual input/output metadata and enforces target
 identity before loading the real SDK. Inference never downloads a model.
 `preprocess` (alias `pre_process`) accepts nonempty BGR uint8 H×W×3;
 `postprocess` (alias `post_process`) takes either
-`prepared.transform` or the legacy `(original_width, original_height)` arguments.
-Missing/conflicting geometry is an error. No last-image state is retained.
+`prepared.transform` or the explicit `(original_width, original_height)` pair.
+Missing or conflicting geometry is an error.
 
-The finite output contract contains NHWC class logits `(1,H/s,W/s,C)`, DFL box
-logits `(1,H/s,W/s,64)` and coefficients `(1,H/s,W/s,32)` at strides 8/16/32,
-plus stride-4 prototypes `(1,H/4,W/4,32)` or `(1,32,H/4,W/4)`. Published square
+The model must directly supply floating outputs: NHWC class logits
+`(1,H/s,W/s,C)`, DFL box logits `(1,H/s,W/s,64)` and coefficients
+`(1,H/s,W/s,32)` at strides 8/16/32, plus stride-4 prototypes
+`(1,H/4,W/4,32)` or `(1,32,H/4,W/4)`. Published square
 input geometry is required. Roles are bound from shapes or an explicit
-`DFLSegmentationContract(output_roles=...)`; output enumeration order is ignored.
-Wrong/missing/ambiguous metadata, nonfinite tensors and all integer outputs
-are rejected. The model must directly supply floating arrays; postprocessing
-normalizes NCHW prototypes without manual dequantization.
-Injected plain role mappings must already contain finite floating NHWC arrays.
+`DFLSegmentationContract(output_roles=...)`; output enumeration order is
+ignored. Postprocessing normalizes NCHW prototypes without manual
+dequantization.
 
 The result is `(boxes, scores, ids, masks)`: owned float32 `(N,4)` xyxy boxes
 clipped to original-image `[0,width]`/`[0,height]`, float32 `(N,)` probabilities,
@@ -350,13 +386,8 @@ interpolation keeps mask edges smooth; no morphological opening is applied.
 The C++ sample thresholds at model resolution before cropping its ROI; this
 decode removes the letterbox padding, resizes the probabilities to the
 original image and thresholds there. The returned masks are per-box ROIs.
-Confidence must be finite in `(0,1)` and NMS in `[0,1]`.
-
-Geometry uses actual integer resize/padding; the box crop is applied in model
-space and the letterbox padding is removed before the probabilities are resized
-to the original image, so padding does not enter the mask.
-Board accuracy, real SDK compatibility, latency and dataset metrics are
-measured through the evaluation guide.
+Geometry uses actual integer resize/padding, so the letterbox padding never
+enters the mask.
 
 <a id="pose-api"></a>
 ## DFL pose library interface
@@ -391,20 +422,18 @@ visible = visibility[..., 0] >= 0.5
 print(boxes.shape, keypoints_xy.shape, visibility.shape, visible.sum())
 ```
 
-`YoloPose(config, runner=...)` accepts an injected runner. Input, raw-buffer
-lifetime and per-image transforms follow detection. Explicit
+`YoloPose(config, runner=...)` accepts an injected runner. Input handling and
+raw-buffer lifetime follow the shared stage rules; explicit
 `post_process(raw, original_width, original_height)` (alias of `postprocess`)
-remains supported; missing/conflicting geometry fails. The nine outputs are NHWC class logits
+is also accepted, and missing/conflicting geometry fails. The nine outputs are NHWC class logits
 `(1,H/s,W/s,1)`, DFL boxes `(1,H/s,W/s,64)` and keypoints `(1,H/s,W/s,51)`
-(17 x/y/logit triplets) at strides 8/16/32. Square inputs, 16 DFL bins, 17 COCO
-points and finite model-provided floating outputs are required. Roles bind by
-shape, never enumeration order; manually dequantized duplicate variants are
-not supported.
+(17 x/y/logit triplets) at strides 8/16/32. Square inputs, 16 DFL bins and
+17 COCO points are required.
 
 The five-tuple contains float32 `(N,4)` original-image boxes, float32 `(N,)`
 detection probabilities, int64 `(N,)` class IDs (person=0), float32 `(N,17,2)`
 original-image point coordinates and float32 `(N,17,1)` point probabilities.
-Arrays own their storage; empty results retain all ranks. NMS uses the same
+NMS uses the same
 indices for boxes and skeletons. Coordinates use actual resize/padding and clip
 to `[0,width]`/`[0,height]`. Visibility receives one stable sigmoid; do not apply
 another sigmoid or a zero-logit threshold to these probabilities. The example's
@@ -451,8 +480,7 @@ print(ranked)
 with no geometry carrier needed for classification. `infer` (alias `forward`)
 calls the shared runner once and returns
 `raw["logits"]` as the unchanged physical floating array, borrowing SDK storage.
-Complete postprocessing before another inference or explicitly copy retained raw
-arrays. Exactly one output is required: one 1000-class vector with optional
+Exactly one output is required: one 1000-class vector with optional
 singleton axes (for example `(1,1000)` or `(1,1000,1,1)`); multidimensional
 outputs require a leading batch size of one. Extra outputs, spatial
 maps, batches, missing shape/dtype metadata, integer outputs and SCALE descriptors
@@ -509,13 +537,9 @@ print(result.boxes.shape, result.scores.shape, result.class_ids.shape)
 ```
 
 The six physical floating NHWC outputs bind by shape to class/16-bin DFL box
-roles at strides 8/16/32; enumeration order does not choose their meaning. Model
-input must be square. The raw buffer lifetime, explicit per-image transform and
-owned `(boxes, scores, class_ids)` result are the same as the common detection
-API. The stage aliases `pre_process` / `forward` / `post_process` remain
-available; `post_process(raw, original_width, original_height)` reconstructs the
-geometry explicitly and `pre_process` returns the mapping-compatible
-`PreparedDetection` carrier.
+roles at strides 8/16/32; enumeration order does not choose their meaning. The
+model input must be square. The result is owned
+`(boxes, scores, class_ids)`, as in the common detection API.
 
 All anchors meeting the confidence threshold remain, including overlapping
 boxes. Results follow stride order and then grid traversal, with one best class
@@ -537,7 +561,7 @@ NMS and coordinate restoration as DFL pose. Its nine outputs instead contain
 one class logit, **four direct LTRB distances**, and 17 `(x,y,visibility-logit)`
 triplets per anchor at strides 8/16/32. Keypoint coordinates decode as
 `(offset + grid_center) * stride`; DFL pose uses a different factor/offset rule.
-The contract keeps these formulas separate. Neither output-list order nor a
+The two decoders keep these formulas separate. Neither output-list order nor a
 filename selects a protocol.
 
 Run from the repository root on a matching S600 board, after preparing the model
@@ -568,41 +592,31 @@ boxes, scores, class_ids, keypoint_xy, visibility = result
 print(boxes.shape, keypoint_xy.shape, visibility.shape)
 ```
 
-Input must be nonempty BGR uint8 H×W×3. Outputs must already be floating NHWC,
-with complete shape/dtype metadata and no SCALE quantization. Integer arrays,
-nonfinite values, a DFL binding or ambiguous heads are rejected. The raw carrier
-borrows SDK buffers: complete postprocessing before another inference or copy
-retained raw arrays. `preprocess` returns the mapping-compatible
-`PreparedDetection`; the `pre_process`/`forward`/`post_process` aliases and the
-explicit original width/height postprocess arguments
-remain supported without cached last-image state.
+Input must be nonempty BGR uint8 H×W×3; outputs must already be floating NHWC
+with complete shape/dtype metadata. A DFL binding or ambiguous heads are
+rejected.
 
-The five results have the same shape/dtype/ownership as the DFL pose API: float32
+The five results have the same shapes, dtypes and ownership as the DFL pose
+API: float32
 `(N,4)` boxes, float32 `(N,)` detection probabilities, int64 `(N,)` IDs,
-float32 `(N,17,2)` points and float32 `(N,17,1)` point probabilities. Empty results
-retain these ranks. Visibility receives exactly one stable sigmoid. NMS selects
-the same indices for boxes and skeletons. Coordinates use actual integer resize/
-padding and clip to the original-image bounds. The X5 adapter
-returns a list of `{box, score, kpts}` dictionaries with integer boxes; the S
+float32 `(N,17,2)` points and float32 `(N,17,1)` point probabilities. The X5
+adapter returns a list of `{box, score, kpts}` dictionaries with integer boxes;
+the S
 adapter returns a four-tuple with keypoints merged as `(N,17,3)`.
 
-The library NMS default is 0.65; CLI defaults are X5 0.70 and S 0.45. The
-example explicitly matches S CLI behavior. Confidence must be finite in `(0,1)`
-and NMS in `[0,1]`. Confidence thresholds are honored exactly as supplied; with
+The YOLO26 library classes default to NMS 0.65; CLI defaults are X5 0.70 and
+S 0.45. The
+example explicitly matches S CLI behavior. Confidence thresholds are honored
+exactly as supplied; with
 actual integer geometry and the stable extreme-logit sigmoid, inputs with
-rounding produce coordinates from the corrected geometry. Board inference and
-dataset metrics are measured through the evaluation guide.
+rounding produce coordinates from the corrected geometry.
 
 <a id="yolo26-segmentation-api"></a>
 ## YOLO26 segmentation stages
 
 YOLO26 segmentation shares the DFL sample's stage transport, validated runner,
-NMS and explicit geometry, but uses direct LTRB box distances. Its mask algorithm
-is the DFL sample's: combine coefficients/prototypes, apply sigmoid, bilinearly resize
-probabilities to model size, crop by the model-space box, remove actual padding,
-resize probabilities to the original image, threshold at `>0.5`, then take the
-original-image box ROI. Thresholding before interpolation (resizing a binary crop)
-would change the edge pixels and leave stepped edges.
+NMS and explicit geometry, but uses direct LTRB box distances. Its mask decode
+is the DFL segmentation pipeline described above, ending in per-box ROI masks.
 
 Run from the repository root on the matching S600 board after preparing a local
 artifact through [model preparation](../../model/README.md); replace the path:
@@ -636,28 +650,23 @@ boxes, scores, class_ids, masks = result
 print(boxes.shape, [mask.shape for mask in masks])
 ```
 
-The contract requires a square model input and ten outputs: class logits, four
+The model requires a square input and ten outputs: class logits, four
 LTRB distances and 32 mask coefficients at each of strides 8/16/32, plus 32
 stride-4 prototypes. Heads are floating NHWC; prototypes may be floating NHWC or
 NCHW when runtime shape proves that layout. In ambiguous custom-class layouts,
 provide an explicit role map instead of relying on enumeration order.
-Integer/SCALE descriptors, malformed shapes/dtypes and nonfinite values fail.
 Forward preserves the physical prototype layout; postprocess normalizes it.
 
-Raw buffers are borrowed: finish postprocessing before the next inference or
-copy raw arrays. The result owns float32 `(N,4)` boxes, float32 `(N,)` scores,
+The result owns float32 `(N,4)` boxes, float32 `(N,)` scores,
 int64 `(N,)` IDs and a list of owned **boolean** ROI masks. For each clipped box,
 use `x1,y1,x2,y2 = box.astype(int)` and place its mask at `[y1:y2,x1:x2]` in a
 blank original-size image. A degenerate ROI keeps each zero-sized axis
 (`(0,w)` or `(h,0)`); no detections return `(0,4)/(0,)/(0,)/[]`. The X5 adapter returns a boolean `(N,H,W)`
 full-image mask stack; the S adapter returns ROI masks. `YOLO26Seg.predict` returns ROI masks for every target.
 
-Confidence must be finite in `(0,1)` and NMS in `[0,1]`. The library NMS default
-is 0.65; the CLI supplies X5 0.70 or S 0.45. The decoder uses the supplied valid
-confidence threshold and selects class IDs from logits before sigmoid. Masks
-use stable sigmoid and the recorded integer resize and padding to restore the
-original image geometry. Measure dataset accuracy with the
-[evaluation guide](../../evaluator/README.md).
+The decoder uses the supplied confidence threshold and selects class IDs from
+logits before sigmoid; masks restore the original image geometry with the
+recorded integer resize and padding.
 
 <a id="yolo26-obb-stages"></a>
 ## YOLO26 rotated-box stages
@@ -695,7 +704,7 @@ for record in records:
     print(record["id"], record["score"], record["rrect"])
 ```
 
-The class reuses the readable detector's shared image transport and raw runner
+The class reuses the detection class's shared image transport and raw runner
 call (`preprocess`/`infer`, also reachable through the `pre_process`/`forward`
 aliases) and adds its own rotated decode: `preprocess` returns input tensors
 plus this image's actual integer resize and
@@ -704,13 +713,11 @@ finish postprocessing before the next inference or copy the buffers. It performs
 no decoding or dequantization. `postprocess` (alias `post_process`) produces an
 owned list of records:
 `rrect=(cx,cy,width,height,angle_radians)`, floating `score`, integer `id`.
-An empty detection set is `[]`. Keep each prepared transform with its outputs;
-interleaved images must not share an implicit last-image context.
+An empty detection set is `[]`.
 
 The square model requires nine floating heads: 15 class logits, four direct
 LTRB offsets and one **radian angle**, each at strides 8/16/32. Binding uses
-shape/roles rather than output order. Integer/SCALE metadata, wrong geometry,
-dtypes or nonfinite values are rejected. Absolute LTRB distances are used.
+shape/roles rather than output order. Absolute LTRB distances are used.
 `angle_sign` multiplies the angle; `angle_offset` is in **degrees**, converted
 before addition. `regularize=True` swaps width/height when width is smaller and
 adds π/2. The exporter produces angles in radians.
@@ -721,14 +728,16 @@ adds π/2. The exporter produces angles in radians.
 | Angle after regularization | Wrapped to [−π/2, π/2) | No additional wrapping |
 | Restored center and dimensions | Each clipped to original width/height | Not clipped |
 
-Library defaults are confidence 0.25, NMS 0.2 and letterbox resize. Confidence
-must be finite in `(0,1)`, NMS in `[0,1]`, and angle controls finite. OpenCV
+Library defaults are confidence 0.25, NMS 0.2 and letterbox resize; the angle
+controls must be finite. OpenCV
 intersection errors propagate to the caller. Inverse mapping uses actual integer padding and per-axis scales,
 correcting rounded-letterbox coordinates. Width and height are scaled axis-wise
 with the angle unchanged: under unequal X/Y scales this is an
 **approximate rotated rectangle**, not an exact transformed polygon.
 
-Use the task-specific model class and tensor contract shown above. Validate OBB geometry with the same input dimensions, resize policy and model-order DOTA labels used during inference.
+Validate OBB geometry with the task-specific model classes and tensor
+protocols shown above, keeping the same input dimensions, resize policy and
+model-order DOTA labels used during inference.
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

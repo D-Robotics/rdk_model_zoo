@@ -5,8 +5,8 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## C++ inference
 
-Use this directory for c++ inference. `main.cpp` visibly constructs the named
-model and calls `predict`; stage math, tensor contract and SDK ownership live
+Use this directory for c++ inference. `main.cpp` constructs the model
+and calls `predict`; stage math, tensor contract and SDK ownership live
 in `segment.cpp`; parsing, overlay rendering and artifact/report writing live
 in `cli.cpp`.
 
@@ -19,7 +19,7 @@ cpp/
 │   ├── cli.hpp  # CLI options, image loading, overlay and report declarations
 │   └── segment.hpp  # UnetMobileNet model, score contract, board identity
 ├── src/
-│   ├── main.cpp  # thin entry: parse options, construct model, predict, save
+│   ├── main.cpp  # entry point: parse options, construct model, predict, save
 │   ├── cli.cpp  # option parsing, overlay rendering, image/mask/report writing
 │   └── segment.cpp  # preprocess/infer/postprocess, NV12 binding, decode, SDK handles
 ├── CMakeLists.txt  # RDK_TARGET-gated build definition

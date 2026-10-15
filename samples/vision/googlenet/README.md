@@ -62,16 +62,18 @@ googlenet/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Python | C++ |
-| --- | --- | --- | --- |
-| x5 | googlenet | supported | not-supported |
-| s100 | googlenet | not-supported | not-supported |
-| s100p | googlenet | not-supported | not-supported |
-| s600 | googlenet | not-supported | not-supported |
+The table lists the models published for this sample; `—` marks an
+unpublished combination.
 
-Select a supported target and runtime from the support matrix. The lowercase CLI IDs
-map to exact published filenames; letter casing in filenames is
-preserved.
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| GoogLeNet | 224x224 | ✓ | — | — | — |
+
+Runtime coverage: the Python CLI serves the published combination with
+`--target auto|x5` and `--variant googlenet`; the lowercase CLI ID maps to
+the exact published filename `googlenet_224x224_nv12.bin` (letter casing in
+filenames is preserved). `--target s100`, `s100p` and `s600` resolve no
+asset. The sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites

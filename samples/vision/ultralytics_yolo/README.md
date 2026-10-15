@@ -25,26 +25,27 @@ ultralytics_yolo/
 ```
 
 <a id="support-matrix"></a>
-## Support and validation
+## Support matrix
 
-States distinguish task and language. `supported` marks combinations with a published artifact and a runnable implementation; accuracy and performance figures are recorded separately in the evaluation guide.
+The table lists models published for this sample. Each cell shows the available model sizes; `—` indicates an unpublished combination. See the [evaluation guide](evaluator/README.md) for accuracy and performance.
 
-| Scope | x5 | s100 | s100p | s600 |
-|---|---|---|---|---|
-| Python YOLOv8n / YOLO26n detect | supported | supported | supported | supported |
-| Python other published scales/tasks | supported | supported | supported | supported |
-| Python YOLOv9 seg c/e | supported | supported | supported | not-supported |
-| Python YOLOv13 detect n/s/l/x | supported | not-supported | not-supported | not-supported |
-| C++ detect / classify | supported | supported | supported | supported |
-| C++ segment / pose (YOLOv8/11/26 n/s/m/l/x) | not compatible (published artifacts)* | supported | supported | supported |
-| C++ segment YOLOv9c/e | not compatible (published artifacts)* | supported | supported | not-supported |
-| C++ obb (YOLO26 n/s/m/l/x) | not compatible (published artifacts)* | supported | supported | supported |
+| Model family | Task | X5 | S100 | S100P | S600 |
+|---|---|---|---|---|---|
+| YOLOv5u | detect | n/s/m/l/x | n/s/m/l/x | n/s/m/l/x | n/s/m/l/x |
+| YOLOv8 / YOLO11 | detect / seg / pose / cls | n/s/m/l/x | n/s/m/l/x | n/s/m/l/x | n/s/m/l/x |
+| YOLOv9 | detect | t/s/m/c/e | t/s/m/c/e | t/s/m/c/e | s/m/c/e |
+| YOLOv9 | seg | c/e | c/e | c/e | — |
+| YOLOv10 | detect | n/s/m/b/l/x | n/s/m/b/l/x | n/s/m/b/l/x | n/s/m/b/l/x |
+| YOLO12 | detect | n/s/m/l/x | n/s/m/l/x | n/s/m/l/x | n/s/m/l/x |
+| YOLOv13 | detect | n/s/l/x | — | — | — |
+| YOLO26 | detect / seg / pose / cls / obb | n/s/m/l/x | n/s/m/l/x | n/s/m/l/x | n/s/m/l/x |
 
-\* On X5 the published segmentation, pose and oriented-box `.bin` artifacts — segment YOLOv8/11/26 n/s/m/l/x and YOLOv9c/e, pose YOLOv8/11/26 n/s/m/l/x, OBB YOLO26 n/s/m/l/x — fail the C++ runtime's output binding (`Task output requires NHWC aligned geometry.`). Run those published artifacts with the Python runtime above, or bind a locally exported model with unquantized FLOAT32 NHWC outputs. YOLOv10 detection (NMS-free interface) also runs through the Python entry. Details in the [C++ output contracts](runtime/cpp/README.md).
+Select a published target/family/task/scale combination from the [model inventory](model/README.md).
 
-See the [model inventory](model/README.md) for published combinations: YOLOv5u/v10/12 detection; YOLOv8/11 detect/seg/pose/cls; YOLOv9 segmentation only c/e, with no t detection or segmentation on S600; YOLOv13 X5 only. YOLO26 has 25 assets per target (five tasks × n/s/m/l/x). C++ scope follows its [input/head contracts and limitations](runtime/cpp/README.md).
+How to run:
 
-Select a published target/family/task/scale combination from the [model inventory](model/README.md). The [evaluator](evaluator/README.md) provides dataset scoring and reference measurements with their conditions.
+- Python provides entry points for every family/task combination in the table (see [Quick start](#quickstart)).
+- C++ implements a subset; its scope and output requirements are documented in the [C++ guide](runtime/cpp/README.md). Known limitations: the published X5 segmentation, pose and OBB `.bin` artifacts fail the C++ runtime output binding and must run through the Python entry; S-series YOLOv10 is NMS-free while the C++ detect path always applies NMS, so S-series YOLOv10 also uses the Python entry (X5 YOLOv10 uses DFL+NMS).
 
 | Runtime contract | X5 | S100 / S100P / S600 |
 |---|---|---|
@@ -52,14 +53,13 @@ Select a published target/family/task/scale combination from the [model inventor
 | NV12 input | One packed buffer | NHWC Y + UV |
 | Python detection NMS default | 0.70 | 0.45; YOLOv10 is NMS-free |
 | Classification CLI resize | YOLO26 stretch; others letterbox | Stretch |
-| Classification filename tokens (not an input override) | YOLO26 224, others 640 | Public URLs use 224; S100/S100P v8/v11 retain 640 identifiers |
 
 <a id="prerequisites"></a>
 ## Prerequisites
 
-Use a complete checkout, Python 3, NumPy, OpenCV, SciPy and PyYAML. Actual inference additionally needs `hbm_runtime` supplied by the matching board image. Install dependencies explicitly and use the board image and SDK paired with the selected artifact. Choose a published target/family/task/scale combination from the [model inventory](model/README.md).
+Requires a complete checkout, Python 3, NumPy, OpenCV, SciPy and PyYAML; actual inference additionally needs `hbm_runtime` supplied by the matching board image. Use the board image and SDK paired with the selected artifact.
 
-Runtime, download and host conversion environments are separate: C++ needs board development libraries, while ONNX/quantization compilation needs training and OE environments. See the subdirectories. Help/list/dry-run/download can run on a host. Hardware identity uses the [shared registry](../../../docs/release/platforms.json); select an artifact published for the matching target.
+Runtime, download and host conversion environments are separate: C++ needs board development libraries, while ONNX/quantization compilation needs training and OE environments (see the subdirectories). Help/list/dry-run/download can run on a host. Hardware identity comes from the [shared platform registry](../../../docs/release/platforms.json).
 
 <a id="quickstart"></a>
 ## Quick start
@@ -115,30 +115,39 @@ YOLO26 detection visualization with class IDs and scores:
 - [evaluator](evaluator/README.md) — COCO/ImageNet/DOTA task evaluation and reference measurements.
 - [test_data](test_data/README.md) — Bundled input images, display-label tables and example visualizations.
 
-Read `main.py` for the visible construct-and-predict entry. ``cli.py`` owns option declarations, published-asset selection/listing, dry-run and result presentation; ``backend.py`` owns the runner, tensor binding and runtime metadata; the task files (`detect.py`/`segment.py`/`pose.py`/`obb.py`/`classify.py`) own preprocessing/inference/postprocessing and rendering inputs. Detection DFL and YOLO26 direct LTRB are separate protocols; see the [detection input/output](runtime/python/README.md#detection-io). Input geometry resolves from metadata or an explicit fallback. YOLO26 OBB uses radians; X5 class-aware NMS/clipping differs from S.
+In `runtime/python/`, `main.py` is the command-line entry, `cli.py` handles options, published-asset selection and result printing, `backend.py` loads the model and binds tensors, and the task files (`detect.py`/`segment.py`/`pose.py`/`obb.py`/`classify.py`) implement each task's preprocessing, inference and postprocessing. Detection DFL and YOLO26 direct LTRB are separate protocols; see the [detection input/output](runtime/python/README.md#detection-io). Input geometry comes from model metadata or an explicit fallback. YOLO26 OBB uses radians; X5 class-aware NMS/clipping differs from S-series targets.
 
 <a id="license"></a>
 ## License and provenance
 
-Sample code follows the repository [Apache-2.0 LICENSE](../../../LICENSE), preserving file-level copyright notices. Check model weights and upstream training frameworks under their accompanying licenses separately. Artifact URLs and publisher SHA-256 values are listed in the manifests.
-
-The [model inventory](model/README.md) lists supported assets and runtime output requirements.
+Sample code follows the repository [Apache-2.0 LICENSE](../../../LICENSE). Model weights and upstream training frameworks remain under their own licenses; check them separately. Artifact URLs and publisher SHA-256 values are listed in the manifests.
 
 <a id="readable-example"></a>
-## Readable example and custom models
+<a id="custom-models"></a>
+## Custom models
 
-This sample is one of the two readable model examples: the complete DFL
-detection flow (initialization, `preprocess`, `infer`, `postprocess`,
-`predict`) is visible in
-[`runtime/python/detect.py`](runtime/python/detect.py); `main.py` stays a thin
-entry that constructs the dispatched task model and calls `predict`. Each
-protocol keeps its own task class (YOLO26 direct-LTRB, S-series NMS-free
-YOLOv10, cls/seg/pose/obb). Custom-trained detectors connect through the
-conversion flow plus `--model-path`/`--family` (and `--classes-num` with a
-matching label file); predict accepts an image path or BGR array. An explicit
-`--model-path` is treated as a custom model: without `--label-file` results
-render class IDs, and an explicit label file whose count differs from the bound
-model's classes fails before inference. The image-path predict convenience
-applies to the DFL detector (`detect.py`); cls/seg/pose/obb
-keep their array interfaces. Three usage paths are described in
-[docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md).
+Compile your trained model with the [conversion flow](conversion/README.md),
+then run it by path:
+
+```bash
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform x5 --family yolov8 --task detect \
+  --model-path /path/to/my_detect_model.bin \
+  --classes-num 80 --label-file /path/to/my_classes.names \
+  --test-img samples/vision/ultralytics_yolo/test_data/bus.jpg \
+  --img-save-path /tmp/custom-detect.jpg
+```
+
+- An explicit `--model-path` is used as-is and never downloads; give a custom
+  filename an explicit `--family` so the matching task protocol is selected.
+- Without `--label-file`, results render class IDs. An explicit label file
+  whose entry count differs from the model's class count fails before
+  inference; custom detect/seg/obb graphs additionally need the matching
+  `--classes-num`.
+- The task classes (`YoloDetect`, `YoloSeg`, `YoloPose`, `YOLO26OBB` and
+  `YoloCls` in `runtime/python/`) can be called from your own code:
+  `predict` accepts an image path or a BGR array. The image-path convenience
+  applies to detection; seg/pose/obb/cls take BGR arrays.
+- Dataset scoring goes through the [evaluator](evaluator/README.md); further
+  integration examples are collected in
+  [docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md).

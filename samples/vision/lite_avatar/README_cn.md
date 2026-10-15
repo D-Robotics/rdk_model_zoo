@@ -50,11 +50,17 @@ lite_avatar/
 <a id="support-matrix"></a>
 ## 支持矩阵
 
-| 目标 | 语言 | 背景解码 | 视频编码器 | 状态 |
+本示例提供 S100、S100P、S600 的 Python 运行入口。每个目标需要 `encoder`、
+`audio2mouth`、`net_encode`、`net_decode` 四个匹配的模型文件，放在
+`model/<target>/`。模型通过本地包或自行编译准备，见
+[模型准备](model/README_cn.md)。下表列出各目标的能力，`—` 表示不适用。
+
+| 目标 | 所需模型 | 语言 | 背景解码 | 视频编码器 |
 | --- | --- | --- | --- | --- |
-| s100 | python | VPU H.264（文件模式） | VPU H.264 工作进程 | supported |
-| s100p | python | VPU H.264（文件模式） | VPU H.264 工作进程 | supported |
-| s600 | python | VPU H.264（文件模式） | VPU H.264 工作进程 | supported |
+| s100 | encoder + audio2mouth + net_encode + net_decode（`*_s100.hbm`） | python | VPU H.264（文件模式） | VPU H.264 工作进程 |
+| s100p | encoder + audio2mouth + net_encode + net_decode（`*_s100p.hbm`） | python | VPU H.264（文件模式） | VPU H.264 工作进程 |
+| s600 | encoder + audio2mouth + net_encode + net_decode（`*_s600.hbm`） | python | VPU H.264（文件模式） | VPU H.264 工作进程 |
+| x5 | — | — | — | — |
 
 <a id="prerequisites"></a>
 ## 环境要求

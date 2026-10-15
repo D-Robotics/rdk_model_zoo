@@ -69,7 +69,7 @@ cannot be used to infer the exposed output dtype.
 
 The existing manifest artifact is `model/s100/depth_any.hbm`, with unknown publisher
 SHA-256. Use the [model guide](../model/README.md) for explicit download and path
-selection. Local hashes identify bytes, not missing publisher provenance.
+selection. Local hashes identify the downloaded bytes; the publisher SHA-256 remains unknown.
 Generated models must be bound to their actual metadata; identical filenames do
 not establish compatible normalization, layout or depth semantics.
 

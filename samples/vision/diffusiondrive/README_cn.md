@@ -78,7 +78,7 @@ S100P 的下载和推理均选择 `--target s100p`，它使用独立 HBM，修�
 
 可视化组合相机全景、BEV 语义与 LiDAR 栅格，橙色轨迹、红色筛选后 Agent、蓝色自车。灰色代表道路，大面积灰色不自动意味着色表错误。坐标和类别详情见[测试数据](test_data/README_cn.md)。
 
-S600 参考可视化（参考记录）：
+S600 参考可视化：
 
 ![参考 S600 DiffusionDrive 显示](test_data/reference_result.png)
 

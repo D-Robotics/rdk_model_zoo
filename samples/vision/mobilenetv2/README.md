@@ -73,22 +73,24 @@ mobilenetv2/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Language | Status |
-| --- | --- | --- | --- |
-| x5 | 100 | python | supported |
-| x5 | 140 | python | supported |
-| s100 | 100 | python | supported |
-| s100 | 140 | python | supported |
-| s100p | 100 | python | supported |
-| s100p | 140 | python | supported |
-| s600 | 100 | python | supported |
-| s600 | 140 | python | supported |
-| s100 | 100 | cpp | supported |
-| s100 | 140 | cpp | supported |
-| s100p | 100 | cpp | supported |
-| s100p | 140 | cpp | supported |
-| s600 | 100 | cpp | supported |
-| s600 | 140 | cpp | supported |
+The table lists the models published for this sample; `—` marks an
+unpublished combination.
+
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| MobileNetV2 (1.00) | 224x224 | ✓ | ✓ | ✓ | ✓ |
+| MobileNetV2 (1.40) | 224x224 | ✓ | ✓ | ✓ | ✓ |
+
+Runtime coverage:
+
+- Python serves every combination in the table: `--target auto|x5|s100|s100p|s600`
+  with `--variant 100|140` (default 100). X5 publishes
+  `mobilenetv2_<width>_bayese_224x224_nv12.bin`; the S series publishes
+  `mobilenetv2_<width>_nashe/nashm/nashp_224x224_nv12.hbm` under `s100/`,
+  `s100p/` and `s600/`.
+- C++ ([runtime/cpp](runtime/cpp/README.md)) serves both variants on S100,
+  S100P and S600 only (`VARIANT=100|140`, default 100); X5 has no C++
+  runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites

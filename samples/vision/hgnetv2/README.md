@@ -55,32 +55,23 @@ hgnetv2/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Python | C++ |
-| --- | --- | --- | --- |
-| x5 | b0 | supported | not-supported |
-| x5 | b1 | supported | not-supported |
-| x5 | b2 | supported | not-supported |
-| x5 | b3 | supported | not-supported |
-| x5 | b4 | supported | not-supported |
-| s100 | b0 | not-supported | not-supported |
-| s100 | b1 | not-supported | not-supported |
-| s100 | b2 | not-supported | not-supported |
-| s100 | b3 | not-supported | not-supported |
-| s100 | b4 | not-supported | not-supported |
-| s100p | b0 | not-supported | not-supported |
-| s100p | b1 | not-supported | not-supported |
-| s100p | b2 | not-supported | not-supported |
-| s100p | b3 | not-supported | not-supported |
-| s100p | b4 | not-supported | not-supported |
-| s600 | b0 | not-supported | not-supported |
-| s600 | b1 | not-supported | not-supported |
-| s600 | b2 | not-supported | not-supported |
-| s600 | b3 | not-supported | not-supported |
-| s600 | b4 | not-supported | not-supported |
+The table lists the models published for this sample; `—` marks an
+unpublished combination.
 
-Select a supported target and runtime from the support matrix. The lowercase CLI IDs
-map to exact published filenames; letter casing in filenames is
-preserved.
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| HGNetV2-B0 | 224x224 | ✓ | — | — | — |
+| HGNetV2-B1 | 224x224 | ✓ | — | — | — |
+| HGNetV2-B2 | 224x224 | ✓ | — | — | — |
+| HGNetV2-B3 | 224x224 | ✓ | — | — | — |
+| HGNetV2-B4 | 224x224 | ✓ | — | — | — |
+
+Runtime coverage: the Python CLI serves every published combination with
+`--target auto|x5` and `--variant b0|b1|b2|b3|b4` (default `b0`); the
+lowercase CLI IDs map to the exact published filenames
+`hgnetv2_b<0-4>_224x224_nv12.bin` (letter casing in filenames is
+preserved). `--target s100`, `s100p` and `s600` resolve no asset. The
+sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites
