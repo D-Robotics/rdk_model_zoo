@@ -171,7 +171,7 @@ python conversion/scripts/decompose_inorm.py --verify
 
 第 5 步存在的原因（根因记录在配置头部）：`hb_compile` 在优化阶段分解
 InstanceNormalization 并把方差路径量化为 BPU INT16；复合节点上的 `run_on_cpu`
-标志在该分解中不会保留（已用逐字节相同的 `node_info.csv` 证实）。预先分解为
+标志在该分解中不会保留。预先分解为
 命名的普通算子后，配置的 `run_on_cpu` 列表可以把全部 21 个 norm 节点（每个
 解码器块的 mean/centered/sq/var/vareps/invstd/apply）挡在 BPU INT16 之外——
 节点报告显示 `Pow` 方差算子以 FP32 在 CPU 执行，列表中其余节点的落位由编译器
@@ -279,7 +279,7 @@ python conversion/scripts/cosine_eval_ptq.py \
 # 解码器的五子目录校准布局加 --multi
 ```
 
-上板验收（真实 BPU 对比 FP32 ONNX）—— `board_infer.py` 在**板上**运行，
+上板验证（真实 BPU 对比 FP32 ONNX）—— `board_infer.py` 在**板上**运行，
 `board_compare.py` 在主机运行：
 
 ```bash

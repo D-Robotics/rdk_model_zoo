@@ -7,14 +7,13 @@ This directory turns a float Ultralytics checkpoint into the ONNX graph and
 then into the target BPU artifact used by the shared Python sample. Export and
 compilation run on a host; they are not board runtime operations. Export covers
 YOLOv8/YOLO11 DFL detection and YOLO26 direct-LTRB detection; classification,
-segmentation, pose and OBB export entries are also listed below. An exporter
-entry documents the recipe — record each produced artifact's own validation.
+segmentation, pose and OBB export entries are also listed below.
 
 <a id="source-model"></a>
 
-## Source model and reproducibility
+## Source model
 
-Input is a local Ultralytics PyTorch `.pt` checkpoint matching the selected task. `/models/*.pt` paths below are prepared by the operator; custom weights are not bundled. Record the checkpoint SHA-256, training/export package versions, classes, input geometry and training configuration. The [published model inventory](../model/README.md) lists compiled `.bin`/`.hbm` runtime artifacts separately from conversion checkpoints.
+Input is a local Ultralytics PyTorch `.pt` checkpoint matching the selected task. `/models/*.pt` paths below are prepared by the operator; custom weights are not bundled. The [published model inventory](../model/README.md) lists compiled `.bin`/`.hbm` runtime artifacts separately from conversion checkpoints.
 
 <a id="directory"></a>
 ## Directory structure
@@ -352,7 +351,7 @@ sum, drawn as MatMul; prototypes are `1×160×160×32`, i.e. stride 4) to
 generate the instance masks. The ReduceMax, Threshold(TopK), GatherElements,
 DFL, and Decode optimizations of the detection branch therefore still apply.
 The runtime performs the same coefficient–prototype combination
-in post-processing on floating heads (`segmentation_decode`).
+in post-processing on floating heads (`decode_segmentation` in `runtime/python/segment.py`).
 
 ### Pose estimation (DFL families)
 
@@ -392,18 +391,17 @@ and the pose head adds one per-cell feature map. Under the published
 17-keypoint COCO contract, the binding requires one class channel plus
 `3 × 17 = 51` keypoint channels per cell: each keypoint has an x/y
 coordinate relative to that feature level's downsampling factor, plus a
-visibility score (`pose_decode.py` binds `cls` with 1 channel and `kpts`
-with `3 × nkpt`; the published binding fixes `nkpt = 17`, and changing the
-shape declaration alone does not produce a supported variant). After the
+visibility score (`runtime/python/pose.py` binds `cls` with 1 channel and
+`kpts` with `3 × nkpt`; the binding fixes `nkpt = 17`). After the
 detection branch selects a cell, the DFL decode computes each keypoint's
 model-input position as `(raw_xy × 2 + anchor − 0.5) × stride`, where
 `anchor` is the cell's half-integer center (`decode_kpts` in
-`runtime/python/utils.py_utils/postprocess.py`); `inverse_points`, together
+`utils/py_utils/postprocess.py`); `inverse_points`, together
 with `inverse_boxes`, then restores original-image geometry from the
 model-input letterbox, and Sigmoid converts the keypoint visibility logits
-into scores (`pose_decode.py`). For comparison, the YOLO26 direct-LTRB pose
+into scores (`decode_pose` in `runtime/python/pose.py`). For comparison, the YOLO26 direct-LTRB pose
 branch uses `(raw_xy + anchor) × stride`, without the DFL ×2 form. The
-runtime decodes these heads in post-processing (`pose_decode`).
+runtime decodes these heads in post-processing (`decode_pose`).
 
 ### YOLO26 direct-LTRB difference
 
@@ -726,13 +724,6 @@ model_parameters:
 hb_compile --config config_yolov13_detect_nv12.yaml
 ```
 
-The following reference logs are included for comparison:
-
-- `hb_compile_yolov13.txt`
-- `hb_model_info_yolov13.txt`
-- `hrt_model_exec_model_info_yolov13.txt`
-
-
 Save the complete S100 configuration below as `config_yolov13_detect_nv12.yaml` in the export directory. Prepare RGB float32 calibration tensors at the configured `cal_data_dir`, or replace that path with your prepared directory.
 
 ```yaml
@@ -779,8 +770,7 @@ hrt_model_exec model_info --model_file bpu_outputs/yolo13n_detect_nashe_640x640_
 <a id="known-gaps"></a>
 ## Additional preparation
 
-- Each produced artifact requires its own binding check, matching-board inference run and applicable dataset/reference comparisons; published-artifact board records do not transfer to a fresh conversion.
-- No pinned calibration image set/dataset version or complete source-checkpoint hash set is bundled. The 20–50 image guidance is a script recommendation. Defaults are `--cal-sample true --cal-sample-num 20`; `--cal-sample false` uses the whole eligible image pool. Save selected filenames and digests for reproducibility.
+- Calibration images are not bundled; supply your own pool. The 20–50 image guidance is a script recommendation. Defaults are `--cal-sample true --cal-sample-num 20`; `--cal-sample false` uses the whole eligible image pool.
 - `--quantized` defaults to int8, with int16 available; `--jobs` defaults to 16 and `--save-cache` to false. Inspect target-specific optimization choices using `mapper.py --platform x5 --toolchain-help` or the appropriate S target. Use the compiler version specified for the selected target.
-- The container images linked in this guide are the documented environment examples for the targets they cover; select an image matching your target's toolchain requirements and record the actual image identity and version output.
+- The container images linked in this guide are documented environment examples; select an image matching your target's toolchain requirements.
 - Validate fresh artifacts with the binding check, a matching-board inference run and applicable dataset/reference comparisons (see [Validation](#validation)).

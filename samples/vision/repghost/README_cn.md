@@ -54,32 +54,21 @@ repghost/
 <a id="support-matrix"></a>
 ## 支持矩阵
 
-| 目标 | 变体 | Python | C++ |
-| --- | --- | --- | --- |
-| x5 | 100 | supported | not-supported |
-| x5 | 111 | supported | not-supported |
-| x5 | 130 | supported | not-supported |
-| x5 | 150 | supported | not-supported |
-| x5 | 200 | supported | not-supported |
-| s100 | 100 | not-supported | not-supported |
-| s100 | 111 | not-supported | not-supported |
-| s100 | 130 | not-supported | not-supported |
-| s100 | 150 | not-supported | not-supported |
-| s100 | 200 | not-supported | not-supported |
-| s100p | 100 | not-supported | not-supported |
-| s100p | 111 | not-supported | not-supported |
-| s100p | 130 | not-supported | not-supported |
-| s100p | 150 | not-supported | not-supported |
-| s100p | 200 | not-supported | not-supported |
-| s600 | 100 | not-supported | not-supported |
-| s600 | 111 | not-supported | not-supported |
-| s600 | 130 | not-supported | not-supported |
-| s600 | 150 | not-supported | not-supported |
-| s600 | 200 | not-supported | not-supported |
+下表列出本 Sample 已发布的模型；`—` 表示该组合未发布。
 
-S 系列无对应制品，所有目标均无 C++ 实现。
+| 模型 | 输入 | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| RepGhost-100 | 224x224 | ✓ | — | — | — |
+| RepGhost-111 | 224x224 | ✓ | — | — | — |
+| RepGhost-130 | 224x224 | ✓ | — | — | — |
+| RepGhost-150 | 224x224 | ✓ | — | — | — |
+| RepGhost-200 | 224x224 | ✓ | — | — | — |
 
-按支持矩阵选择 Python 运行时与目标。
+运行时覆盖：Python CLI 通过 `--target auto|x5` 和
+`--variant 100|111|130|150|200`（默认 `100`）覆盖全部已发布组合；小写变体
+ID 映射到大小写敏感的准确发布文件名 `RepGhost_<width>_224x224_nv12.bin`。
+`--target s100`、`s100p`、`s600` 不会解析出任何资产。本 Sample 不提供 C++
+运行时。
 
 <a id="prerequisites"></a>
 ## 前提

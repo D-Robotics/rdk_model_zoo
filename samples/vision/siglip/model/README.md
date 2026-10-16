@@ -95,4 +95,4 @@ Release URLs are the exact `https://archive.d-robotics.cc/downloads/rdk_model_zo
 
 ## License
 
-The sample preparation code is Apache-2.0 under the repository [LICENSE](../../../../LICENSE). The source release does not record a per-artifact model license or weight version; this README therefore does not invent one.
+The sample preparation code is Apache-2.0 under the repository [LICENSE](../../../../LICENSE). The source release does not record a per-artifact model license or weight version.

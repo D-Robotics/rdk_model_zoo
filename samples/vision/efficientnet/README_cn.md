@@ -58,12 +58,25 @@ efficientnet/
 <a id="support-matrix"></a>
 ## 支持范围
 
-| Target | 变体 | 语言 | 状态 |
-| --- | --- | --- | --- |
-| x5 | b2、b3、b4 | python | supported |
-| s100 | lite0..lite4 | python | supported |
-| s600 | lite0..lite4 | python | supported |
-| s100p | 任意 | python | not-supported（这些目标没有可用的模型文件） |
+下表列出本 Sample 已发布的模型；`—` 表示该组合未发布。
+
+| 模型 | 输入 | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| EfficientNet-B2 | 224x224 | ✓ | — | — | — |
+| EfficientNet-B3 | 224x224 | ✓ | — | — | — |
+| EfficientNet-B4 | 224x224 | ✓ | — | — | — |
+| EfficientNet-Lite0 | 224x224 | — | ✓ | — | ✓ |
+| EfficientNet-Lite1 | 240x240 | — | ✓ | — | ✓ |
+| EfficientNet-Lite2 | 260x260 | — | ✓ | — | ✓ |
+| EfficientNet-Lite3 | 300x300 | — | ✓ | — | ✓ |
+| EfficientNet-Lite4 | 380x380 | — | ✓ | — | ✓ |
+
+运行时覆盖：Python CLI 通过 `--target auto|x5|s100|s600` 和
+`--variant b2|b3|b4|lite0|lite1|lite2|lite3|lite4` 覆盖上表全部组合。省略
+`--variant` 时，默认解析 x5 的 `b2` 与 s100/s600 的 `lite0`。X5 发布
+`EfficientNet_B<2-4>_224x224_nv12.bin`；S100 与 S600 归档在 `s100/`、`s600/`
+目录下发布 `efficientnet_lite<0-4>_<input>_nv12.hbm`。清单未发布 S100P
+制品，`--target s100p` 不会解析出任何资产。本 Sample 不提供 C++ 运行时。
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -113,7 +126,7 @@ S100/S600 使用对应的 `s:efficientnet:s…` 引用（见 `--list-models`）�
 Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并退出 0；除非
 指定 `--img-save-path`，不写任何输出文件。使用随附 `Scottish_deerhound.JPEG`
 时 Top-5 含鹿猎犬相关 ImageNet 类别；使用 `redshank.JPEG` 时含红脚鹬相关
-类别。按支持矩阵选择目标并准备对应制品；S100P 需使用清单中对应目标的制品。
+类别。按支持矩阵选择目标并准备对应制品，在对应板卡上运行。
 
 <a id="performance"></a>
 ## 性能数据

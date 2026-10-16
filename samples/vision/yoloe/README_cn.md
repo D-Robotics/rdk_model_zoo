@@ -97,17 +97,17 @@ dry-run 解析选择并以 JSON 预览显示，不加载模型、不连接板卡
 
 X5 为源单线程 libdnn Runtime 记录。S100 为源 2026-09-08、200 帧、warmup、thread_num=1/core_id=0 记录，不含前后处理。S100P 无已发布的 Runtime 测量记录。完整条件与精度边界见[评估说明](evaluator/README_cn.md)。
 
-下面两幅插图由 S 源交付发布，均基于随附的同一张 `office_desk.jpg`；此处以独立文件名逐字节保留，与运行时生成的 `test_data/result.jpg` 分开：
+基于随附 `office_desk.jpg` 的示例结果图：
 
-![S11 源结果插图](test_data/source_s11_result_figure.jpg)
+![YOLOE-11s PF 结果插图](test_data/source_s11_result_figure.jpg)
 
-随 S100 量化 YOLOE-11s PF HBM 发布的结果插图，基于随附 `office_desk.jpg`。该源交付仅支持 S100，其可运行发布制品即该量化 11s PF HBM；源未记录产生此图的具体运行。
+S100 量化 YOLOE-11s PF 模型在 `office_desk.jpg` 上的示例结果。
 
-![S26 源结果插图](test_data/source_s26_result_figure.jpg)
+![YOLOE-26n PF 结果插图](test_data/source_s26_result_figure.jpg)
 
-S26 源交付发布的示例：已发布 S100 量化 YOLOE-26n PF 模型在随附 `office_desk.jpg` 上的实测输出，标签按 PF 检查点类别 ID 顺序导出，与源图注一致。
+S100 量化 YOLOE-26n PF 模型在 `office_desk.jpg` 上的示例结果。
 
-两图均为源发布的量化 S 结果（基于随附图片）；当前输出来自实际运行本示例，精度指标来自[评估器](evaluator/README_cn.md)。
+运行本示例会写入 `test_data/result.jpg`；精度指标来自[评估器](evaluator/README_cn.md)。
 
 <a id="entry-points"></a>
 ## 入口
@@ -117,7 +117,7 @@ S26 源交付发布的示例：已发布 S100 量化 YOLOE-26n PF 模型在随�
 - [评估](evaluator/README_cn.md) — 显式 PF 映射、CPU/板端后端、COCO 指标、来源与历史性能。
 - [Python](runtime/python/README_cn.md) — 参数、协议、库接口与排障。
 - [C++ 运行时](runtime/cpp/README_cn.md) — 可复用三阶段 C++ 库，包含独立持有的 NV12 输入、浮点绑定和 E11/E26 解码与掩码；SDK 适配器、板卡/模型/词表核验、发布制品选择、CLI 及结果记录一并提供；SDK 构建与板端运行按 C++ 流程指南执行。
-- [Test data](test_data/README_cn.md) — 图片、词表与参考记录结果插图来源。
+- [Test data](test_data/README_cn.md) — 示例图片、类别词表与结果插图。
 
 <a id="license"></a>
 ## 许可

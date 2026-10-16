@@ -179,8 +179,8 @@ The [sample guide](../README.md) describes the YOLOv8n and YOLO26n detection com
 Board results of the 140 YOLOv8 / YOLO11 builds published on 2026-10-14 and 2026-10-15 (INT8, NV12 input, max-percentile 0.99995 calibration on 200 COCO train2017 images). The model files download from `https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_<board>/ultralytics_yolo/` (each directory's SHA256SUMS lists its checksums); each build's release record (release.json) and OE conversion report are under `https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/<family>/<task>/<size>/<board>/`.
 
 - Accuracy: all 5000 COCO val2017 images (detection box, instance-segmentation box/mask and keypoint mAP50-95, conf 0.001, NMS 0.7); classification on the 10,000 ImageNetV2 MatchedFrequency images (not ILSVRC2012 val). FP32 and board use the same evaluator, export flavour and thresholds.
-- Relative loss is the largest over the listed metrics; ⚠ marks a loss above 5%, published with the loss shown by the owner's decision of 2026-10-14.
-- Segmentation masks are decoded as in YOLO26: mask probabilities are interpolated to the image and then thresholded at 0.5 (sample commit 2838ca0a). The segmentation builds published on 2026-10-14 were re-measured with this decode on 2026-10-15 (same model files); the tables show the new results.
+- Relative loss is the largest over the listed metrics; ⚠ marks a loss above 5%.
+- Segmentation masks are decoded as in YOLO26: mask probabilities are interpolated to the image and then thresholded at 0.5; the tables show the results measured with this decode.
 - Runtime: `hrt_model_exec perf`, 1/2 threads, 3 runs of 200 frames each. C++ end to end: the sample's `--benchmark`, in-memory BGR to final results, 1/2 pipeline streams, 3 rounds of 200 frames.
 - The tables after this section are earlier measurements of older model files under other conditions and are not comparable with this section.
 
@@ -1020,8 +1020,6 @@ Each table retains its published model, board and measurement conditions. Measur
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | X5 | YOLO26n Detect | 640x640 | 80 | 11.6 ms / 86.3 FPS (1 thread) <br> 19.1 ms / 104.3 FPS (2 threads) | - | - | - |
 | X5 | YOLO26s Detect | 640x640 | 80 | 20.9 ms / 47.7 FPS (1 thread) <br> 37.8 ms / 52.8 FPS (2 threads) | - | - | - |
-| X5 | YOLO26m Detect | 640x640 | 80 | 40.1 ms / 24.8 FPS (1 thread) <br> 76.1 ms / 26.1 FPS (2 threads) | - | - | - |
-| X5 | YOLO26l Detect | 640x640 | 80 | 51.1 ms / 19.5 FPS (1 thread) <br> 98.0 ms / 20.3 FPS (2 threads) | - | - | - |
 | X5 | YOLO26x Detect | 640x640 | 80 | 103.3 ms / 9.6 FPS (1 thread) <br> 202.0 ms / 9.8 FPS (2 threads) | - | - | - |
 | X5 | YOLO26n Seg | 640x640 | 80 | 15.5 ms / 64.3 FPS (1 thread) <br> 22.8 ms / 87.6 FPS (2 threads) | - | - | - |
 | X5 | YOLO26n Pose | 640x640 | 80 | 12.5 ms / 79.6 FPS (1 thread) <br> 20.1 ms / 98.7 FPS (2 threads) | - | - | - |
@@ -1689,8 +1687,6 @@ hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv
 | YOLOv8n-seg | 640×640 | 80 | 3.4 M | 36.7/30.5 |  | 126.7 ms / 7.9 FPS (1 thread) <br/> 129.2 ms / 15.5 FPS (2 threads) <br/> 163.9 ms / 24.1 FPS (4 threads) <br/> 285.8 ms / 27.3 FPS (8 threads) | 6 ms |
 
 说明:
-说明:
-说明:
 1. BPU延迟与BPU吞吐量。
  - 单线程延迟为单帧,单线程,单BPU核心的延迟,BPU推理一个任务最理想的情况。
  - 多线程帧率为多个线程同时向BPU塞任务, 每个BPU核心可以处理多个线程的任务, 一般工程中4个线程可以控制单帧延迟较小,同时吃满所有BPU到100%,在吞吐量(FPS)和帧延迟间得到一个较好的平衡。X5的BPU整体比较厉害, 一般2个线程就可以将BPU吃满, 帧延迟和吞吐量都非常出色。
@@ -1838,7 +1834,6 @@ hrt_model_exec perf --thread_num 2 --model_file yolov8n_detect_bayese_640x640_nv
 | YOLOv8n | 640×640 | 80 | 3.2 M | 37.3  | - | 99.8 ms / 10.0 FPS (1 thread) <br/> 102.0 ms / 19.6 FPS (2 threads)<br/> 131.4 ms / 30.2 FPS (4 threads)<br/> 231.0 ms / 34.1 FPS (8 threads) | 6 ms |
 
 说明:
-说明:
 1. BPU延迟与BPU吞吐量。
  - 单线程延迟为单帧,单线程,单BPU核心的延迟,BPU推理一个任务最理想的情况。
  - 多线程帧率为多个线程同时向BPU塞任务, 每个BPU核心可以处理多个线程的任务, 一般工程中4个线程可以控制单帧延迟较小,同时吃满所有BPU到100%,在吞吐量(FPS)和帧延迟间得到一个较好的平衡。X5的BPU整体比较厉害, 一般2个线程就可以将BPU吃满, 帧延迟和吞吐量都非常出色。
@@ -1894,26 +1889,8 @@ With the default `test_data/kite.jpg`, the runtime should output boxes that matc
 - whether `score-thres` and `nms-thres` match the evaluation assumptions
 
 <a id="boundaries"></a>
-## Boundaries
+## Evaluation method and dataset notes
 
 For classification, report the number of readable, labeled images actually processed. For OBB, export detections and run the DOTA scorer separately. Record the model, target, dataset, and metric settings alongside each result.
 
-DFL pose returns point probabilities. COCO JSON serialization preserves the historical rule v=1 for probability >0, otherwise 0; this is not a 0.5 visibility filter and does not remove low-confidence points. Drawing thresholds and evaluation serialization are separate operations.
-
-
-### X5 YOLO26 NV12 measurement set (Chinese source)
-
-[Source measurement table](https://github.com/D-Robotics/rdk_model_zoo/blob/cb86079ae5befcef9ca50fb46c8a6d8980106dec/samples/vision/ultralytics_yolo26/evaluator/README_cn.md).
-
-The linked record associates YOLO26m with 51.1 ms / 24.8 FPS and YOLO26l with 40.1 ms / 19.5 FPS. The other X5 table above assigns the single-thread latencies differently. The two source records disagree; both are retained as originally recorded. Input is NV12; sizes, classes and thread counts appear in each row.
-
-| Device | Model | Size <br> (Pixels) | Classes | BPU Task Latency / <br> BPU Throughput (Threads) | CPU Latency | params <br> (M) | FLOPs <br> (B) |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| X5 | YOLO26n Detect | 640x640 | 80 | 11.6 ms / 86.3 FPS (1 thread) <br> 19.1 ms / 104.3 FPS (2 threads) | - | - | - |
-| X5 | YOLO26s Detect | 640x640 | 80 | 20.9 ms / 47.7 FPS (1 thread) <br> 37.8 ms / 52.8 FPS (2 threads) | - | - | - |
-| X5 | YOLO26m Detect | 640x640 | 80 | 51.1 ms / 24.8 FPS (1 thread) <br> 76.1 ms / 26.1 FPS (2 threads) | - | - | - |
-| X5 | YOLO26l Detect | 640x640 | 80 | 40.1 ms / 19.5 FPS (1 thread) <br> 98.0 ms / 20.3 FPS (2 threads) | - | - | - |
-| X5 | YOLO26x Detect | 640x640 | 80 | 103.3 ms / 9.6 FPS (1 thread) <br> 202.0 ms / 9.8 FPS (2 threads) | - | - | - |
-| X5 | YOLO26n Seg | 640x640 | 80 | 15.5 ms / 64.3 FPS (1 thread) <br> 22.8 ms / 87.6 FPS (2 threads) | - | - | - |
-| X5 | YOLO26n Pose | 640x640 | 80 | 12.5 ms / 79.6 FPS (1 thread) <br> 20.1 ms / 98.7 FPS (2 threads) | - | - | - |
-| X5 | YOLO26n Cls | 224x224 | 1000 | 1.1 ms / 906.0 FPS (1 thread) <br> 1.7 ms / 1156.8 FPS (2 threads) | - | - | - |
+DFL pose returns point probabilities. COCO JSON serialization writes v=1 when the probability is >0 and 0 otherwise; this is not a 0.5 visibility filter and does not remove low-confidence points. Drawing thresholds and evaluation serialization are separate operations.

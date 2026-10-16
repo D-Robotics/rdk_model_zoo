@@ -38,7 +38,8 @@ paraformer/
 | --- | --- | --- | --- | --- | --- | --- |
 | large：encoder 400×560／predictor 400×512／decoder 100×8404 | not-supported | supported | not-supported | not-supported | 已实现 | 已实现（板端运行见 [C++ 指南](runtime/cpp/README_cn.md)） |
 
-`supported` 表示声明的 S100 部署、已发布制品与现有实现。[原生说明](runtime/cpp/README_cn.md#quickstart)
+上表列出本 Sample 已发布的部署组合。S100 部署按整套模型使用：三阶段 HBM 与
+`tokens.json`、`am.mvn`、`paraformer_config.yaml` 一起运行。[原生说明](runtime/cpp/README_cn.md#quickstart)
 提供完整准备特征、构建、运行与结果报告流程。
 
 <a id="prerequisites"></a>
@@ -88,7 +89,7 @@ python samples/speech/paraformer/runtime/python/main.py --target s100 --output-d
 ```
 
 下载器打印路径与实测摘要，不覆盖已有文件。清单没有 HBM 发布方哈希，
-本地摘要只能记录字节身份，不能独立认证来源。推理核对本机板型、声明制品和物理
+本地摘要仅标识文件内容，不能独立认证来源。推理核对本机板型、声明制品和物理
 张量契约，不自动下载。可选 `runtime/python/run.sh` 转发相同参数，接受 `PYTHON`
 环境变量指定解释器，不安装依赖。
 

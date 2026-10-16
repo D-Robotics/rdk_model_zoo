@@ -184,8 +184,8 @@ python conversion/scripts/decompose_inorm.py --verify
 Why step 5 exists (root cause recorded in the config header): `hb_compile`
 decomposes InstanceNormalization *during* its optimize pass and quantizes the
 resulting variance path INT16 on the BPU; a `run_on_cpu` flag on the composite
-node does not survive that decomposition (verified by byte-identical
-`node_info.csv`). Pre-decomposing into plain named ops lets the config's
+node does not survive that decomposition. Pre-decomposing into plain named ops
+lets the config's
 `run_on_cpu` list keep all 21 norm nodes (mean/centered/sq/var/vareps/invstd/
 apply per decoder block) out of BPU INT16 — the node report shows the
 `Pow` variance ops executing FP32 on the CPU; the other listed nodes'
@@ -306,7 +306,7 @@ python conversion/scripts/cosine_eval_ptq.py \
 # add --multi for the decoder's 5-subdir calib layout
 ```
 
-Board acceptance (real BPU vs FP32 ONNX) — run `board_infer.py` **on the
+On-board check (real BPU vs FP32 ONNX) — run `board_infer.py` **on the
 board**, then `board_compare.py` on the host:
 
 ```bash

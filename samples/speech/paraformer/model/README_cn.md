@@ -81,10 +81,10 @@ C++ 入口读取 Python 前端生成的 NPY／清单，不重复执行音频前�
 路径及匹配的 asset ID；C++ 启动器需要指定完整模型目录，具体见各运行时说明。
 
 <a id="formats-checksums"></a>
-## 固定来源与字节身份
+## 文件格式与校验和
 
-`am.mvn`、`paraformer_config.yaml` 逐字节保留 S 提交
-`380e1a2bf42041af54be6f34935e50197cfadff9`。SHA-256 如下：
+`am.mvn`、`paraformer_config.yaml` 来自 S 提交
+`380e1a2bf42041af54be6f34935e50197cfadff9`，SHA-256 如下：
 
 - `am.mvn`：`29b3c740a2c0cfc6b308126d31d7f265fa2be74f3bb095cd2f143ea970896ae5`
 - `paraformer_config.yaml`：`1d9057edeaba9e131cb98f26011606497cf3af187d8943525ddb5ee36c836b1b`

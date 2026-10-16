@@ -54,20 +54,20 @@ mobilenetv4/
 <a id="support-matrix"></a>
 ## 支持范围
 
-| Target | 变体 | 语言 | 状态 |
-| --- | --- | --- | --- |
-| x5 | small | python | supported |
-| x5 | medium | python | supported |
-| x5 | large | python | supported |
-| s100 | small | python | supported |
-| s100 | medium | python | supported |
-| s100 | large | python | supported |
-| s100p | small | python | supported |
-| s100p | medium | python | supported |
-| s100p | large | python | supported |
-| s600 | small | python | supported |
-| s600 | medium | python | supported |
-| s600 | large | python | supported |
+下表列出本 Sample 已发布的模型；`—` 表示该组合未发布。
+
+| 模型 | 输入 | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| MobileNetV4-conv-small | 224x224 | ✓ | ✓ | ✓ | ✓ |
+| MobileNetV4-conv-medium | 224x224 | ✓ | ✓ | ✓ | ✓ |
+| MobileNetV4-conv-large | 256x256 | ✓ | ✓ | ✓ | ✓ |
+
+运行时覆盖：Python CLI 通过 `--target auto|x5|s100|s100p|s600` 和
+`--variant small|medium|large`（默认 `small`）覆盖上表全部组合。X5 发布
+`mobilenetv4_conv_<size>_bayese_<input>_nv12.bin`；S 系列在 `s100/`、`s100p/`、
+`s600/` 目录下发布
+`mobilenetv4_conv_<size>_nashe/nashm/nashp_<input>_nv12.hbm`。本 Sample 不提供
+C++ 运行时。
 
 <a id="prerequisites"></a>
 ## 环境前提

@@ -109,7 +109,7 @@ For robot integration, implement observation construction, joint mapping and the
 
 - [Model package](model/README.md): identity, paths, preparation and checksum.
 - [Python runtime](runtime/python/README.md): commands, all options, outputs and public API.
-- [Input provenance](test_data/README.md): source indices, byte layout and digest checks.
+- [Example inputs](test_data/README.md): source indices and byte layout.
 - [C++ runtime](runtime/cpp/README.md): build, commands, options, stages and reports.
 - [Model conversion](conversion/README.md): fused export/calibration/MIX recipe.
 - [Model evaluation](evaluator/README.md): data, commands, metrics and source references.

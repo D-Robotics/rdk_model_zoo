@@ -26,10 +26,8 @@ Start with [main.py](main.py): it constructs `DepthEstimator` and calls `predict
 ## Environment
 
 Use compatible S100 `hbm_runtime`, Python, NumPy, OpenCV and PyYAML. Listing and
-dry-run work on a host without the board SDK. The source delivery used
-NumPy 1.26.4, OpenCV 4.11.0.86 and Torch 2.3.1 (installed by its own helper);
-this runtime installs nothing automatically. Torch was used by the source only
-for resizing and is no longer required.
+dry-run work on a host without the board SDK. This runtime installs nothing
+automatically and does not require Torch.
 See [model preparation](../../model/README.md).
 
 <a id="usage"></a>
@@ -159,8 +157,8 @@ an incompatible output to make validation pass.
 <a id="troubleshooting"></a>
 ## Troubleshooting
 
-- **S100P or another target rejected:** only S100 has a published asset. The
-  use a model published for your board.
+- **S100P or another target rejected:** only S100 has a published asset; run on
+  an S100 board and do not override the board identity.
 - **Missing SDK/model:** prepare the matching board runtime and model explicitly;
   host dry-run is not an inference test.
 - **Wrong metadata:** inspect the actual artifact/runtime version; internal

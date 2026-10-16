@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## C++ 推理
 
-本目录提供C++ 推理所需的程序与操作说明。`main.cpp` 显式构造具名模型并调用 `predict`；阶段计算、张量契约与 SDK 资源管理位于 `segment.cpp`；参数解析、叠加渲染与产物／报告写入位于 `cli.cpp`。
+本目录提供C++ 推理所需的程序与操作说明。`main.cpp` 构造模型并调用 `predict`；阶段计算、张量契约与 SDK 资源管理位于 `segment.cpp`；参数解析、叠加渲染与产物／报告写入位于 `cli.cpp`。
 
 <a id="directory"></a>
 ## 目录结构
@@ -16,7 +16,7 @@ cpp/
 │   ├── cli.hpp  # CLI 选项、图像加载、叠加与报告声明
 │   └── segment.hpp  # UnetMobileNet 模型、分数契约、板身份
 ├── src/
-│   ├── main.cpp  # 薄入口：解析参数、构造模型、predict、保存
+│   ├── main.cpp  # 入口：解析参数、构造模型、predict、保存
 │   ├── cli.cpp  # 参数解析、叠加渲染、图像/mask/报告写入
 │   └── segment.cpp  # preprocess/infer/postprocess、NV12 绑定、解码、SDK 句柄
 ├── CMakeLists.txt  # RDK_TARGET 门控的构建定义

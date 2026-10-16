@@ -61,10 +61,20 @@ efficientformerv2/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Language | Status |
-| --- | --- | --- | --- |
-| x5 | s0, s1, s2 | python | supported |
-| s100 / s100p / s600 | any | python | not-supported (the S manifest publishes no EfficientFormerV2 asset; selection is an explicit error, no cross-platform fallback) |
+The table lists the models published for this sample; `—` marks an
+unpublished combination.
+
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| EfficientFormerV2-S0 | 224x224 | ✓ | — | — | — |
+| EfficientFormerV2-S1 | 224x224 | ✓ | — | — | — |
+| EfficientFormerV2-S2 | 224x224 | ✓ | — | — | — |
+
+Runtime coverage: the Python CLI serves every published combination with
+`--target auto|x5` and `--variant s0|s1|s2` (default `s0`). Only the X5
+archive publishes `EfficientFormerv2_s0/s1/s2_224x224_nv12.bin`;
+`--target s100`, `s100p` and `s600` resolve no asset. The sample ships no
+C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites

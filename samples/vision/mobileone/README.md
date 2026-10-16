@@ -61,30 +61,22 @@ mobileone/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Python | C++ |
-| --- | --- | --- | --- |
-| x5 | s0 | supported | not-supported |
-| x5 | s1 | supported | not-supported |
-| x5 | s2 | supported | not-supported |
-| x5 | s3 | supported | not-supported |
-| x5 | s4 | supported | not-supported |
-| s100 | s0 | not-supported | not-supported |
-| s100 | s1 | not-supported | not-supported |
-| s100 | s2 | not-supported | not-supported |
-| s100 | s3 | not-supported | not-supported |
-| s100 | s4 | not-supported | not-supported |
-| s100p | s0 | not-supported | not-supported |
-| s100p | s1 | not-supported | not-supported |
-| s100p | s2 | not-supported | not-supported |
-| s100p | s3 | not-supported | not-supported |
-| s100p | s4 | not-supported | not-supported |
-| s600 | s0 | not-supported | not-supported |
-| s600 | s1 | not-supported | not-supported |
-| s600 | s2 | not-supported | not-supported |
-| s600 | s3 | not-supported | not-supported |
-| s600 | s4 | not-supported | not-supported |
+The table lists the models published for this sample; `—` marks an
+unpublished combination.
 
-Use the Python CLI with a lowercase variant ID; it resolves to the exact case-sensitive published filename.
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| MobileOne-S0 | 224x224 | ✓ | — | — | — |
+| MobileOne-S1 | 224x224 | ✓ | — | — | — |
+| MobileOne-S2 | 224x224 | ✓ | — | — | — |
+| MobileOne-S3 | 224x224 | ✓ | — | — | — |
+| MobileOne-S4 | 224x224 | ✓ | — | — | — |
+
+Runtime coverage: the Python CLI serves every published combination with
+`--target auto|x5` and `--variant s0|s1|s2|s3|s4` (default `s0`); the
+lowercase CLI ID resolves to the exact case-sensitive published filename
+`MobileOne_S<0-4>_224x224_nv12.bin`. `--target s100`, `s100p` and `s600`
+resolve no asset. The sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -145,4 +137,4 @@ the same thread count, concurrent submission mode and BPU utilization.
 <a id="license"></a>
 ## License
 
-Source Python headers retain Apache-2.0 provenance. Conversion YAMLs retain their original proprietary notices verbatim; Before redistribution, follow the original conversion YAML notices and applicable upstream weight license terms.
+Source Python headers retain Apache-2.0 provenance. Conversion YAMLs retain their original proprietary notices verbatim; before redistribution, follow the original conversion YAML notices and applicable upstream weight license terms.

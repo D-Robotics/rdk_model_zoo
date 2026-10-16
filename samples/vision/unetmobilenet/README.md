@@ -37,7 +37,7 @@ SDK compilation/inference, dataset accuracy and performance run in the board env
 <a id="prerequisites"></a>
 ## Prerequisites
 
-S100 or S600 with its matching board image and hbm_runtime (Python) or DNN/UCP headers/libraries (C++). The source does not pin a minimum S OS/SDK version; none is invented here. Python 3.10+, NumPy, OpenCV-Python and PyYAML; C++17, CMake 3.16+ and OpenCV development libraries for native compilation. Runtimes never install packages or fetch weights. Model size and peak memory are unmeasured; full-resolution 19-channel int32 scores alone can occupy about 152 MiB, and float64 decoding needs additional memory.
+S100 or S600 with its matching board image and hbm_runtime (Python) or DNN/UCP headers/libraries (C++). The S OS/SDK version is determined by the deployment environment. Python 3.10+, NumPy, OpenCV-Python and PyYAML; C++17, CMake 3.16+ and OpenCV development libraries for native compilation. Runtimes never install packages or fetch weights. Model size and peak memory are unmeasured; full-resolution 19-channel int32 scores alone can occupy about 152 MiB, and float64 decoding needs additional memory.
 
 <a id="quickstart"></a>
 ## Quick start

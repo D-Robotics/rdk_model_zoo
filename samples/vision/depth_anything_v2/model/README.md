@@ -78,7 +78,7 @@ with different normalization, geometry or semantics require a new binding; a
 filename change cannot make them compatible.
 
 <a id="formats-checksums"></a>
-## Format, checksums and provenance
+## Formats and checksums
 
 HBM is the source heterogeneous model format. Expected public IO is float32 RGB
 NCHW `[1,3,518,686]` and float32 depth `[1,518,686]`. Internal int16

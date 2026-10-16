@@ -50,10 +50,15 @@ convnext/
 <a id="support-matrix"></a>
 ## 支持范围
 
-| Target | 变体 | 语言 | 状态 |
-| --- | --- | --- | --- |
-| x5 | atto | python | supported |
-| s100 / s100p / s600 | 任意 | python | not-supported（这些目标没有可用的模型文件） |
+下表列出本 Sample 已发布的模型；`—` 表示该组合未发布。
+
+| 模型 | 输入 | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| ConvNeXt-atto | 224x224 | ✓ | — | — | — |
+
+运行时覆盖：Python CLI 通过 `--target auto|x5` 和 `--variant atto` 运行已
+发布的组合。仅 X5 归档发布 `ConvNeXt_atto_224x224_nv12.bin`；`--target
+s100`、`s100p`、`s600` 不会解析出任何资产。本 Sample 不提供 C++ 运行时。
 
 <a id="prerequisites"></a>
 ## 环境前提

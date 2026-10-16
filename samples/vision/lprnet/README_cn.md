@@ -68,7 +68,7 @@ CLI 读取预先打包的 float32 `test_input.dat`，重塑为 `(1,3,24,94)`。�
 - [`evaluator/README_cn.md`](./evaluator/README_cn.md)：完整 raw/text 对照步骤。
 
 <a id="historical-performance"></a>
-## 参考记录性能
+## 参考性能
 
 源 benchmark 记录：
 

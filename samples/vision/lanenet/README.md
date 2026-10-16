@@ -79,11 +79,11 @@ The embedding PNG clips features to [0,1] and rounds after multiplying by 255. R
 
 Example LaneNet visualizations:
 
-| Python embedding display (source record) | Python binary display (source record) |
+| Python embedding display | Python binary display |
 | --- | --- |
-| ![Source embedding display](test_data/instance_pred.png) | ![Source binary display](test_data/binary_pred.png) |
+| ![Embedding display](test_data/instance_pred.png) | ![Binary display](test_data/binary_pred.png) |
 
-[Source native embedding display](test_data/cpp_instance_pred.png) and [native binary display](test_data/cpp_binary_pred.png) are also retained. Numerical comparison uses the raw embedding arrays; lane instances require further clustering.
+[Native embedding display](test_data/cpp_instance_pred.png) and [native binary display](test_data/cpp_binary_pred.png) are also provided. Numerical comparison uses the raw embedding arrays; lane instances require further clustering.
 
 Lane-instance IDs and fitted curves require a clustering and curve-fitting algorithm applied to the embeddings. Display colors are for visualization; lane identity comes from the clustering output.
 

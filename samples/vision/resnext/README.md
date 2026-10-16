@@ -63,14 +63,18 @@ resnext/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Python | C++ |
-| --- | --- | --- | --- |
-| x5 | 50_32x4d | supported | not-supported |
-| s100 | 50_32x4d | not-supported | not-supported |
-| s100p | 50_32x4d | not-supported | not-supported |
-| s600 | 50_32x4d | not-supported | not-supported |
+The table lists the models published for this sample; `—` marks an
+unpublished combination.
 
-Use the Python CLI with a lowercase variant ID; it resolves to the exact case-sensitive published filename.
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| ResNeXt-50 32x4d | 224x224 | ✓ | — | — | — |
+
+Runtime coverage: the Python CLI serves the published combination with
+`--target auto|x5` and `--variant 50_32x4d`; the lowercase CLI ID resolves
+to the exact case-sensitive published filename
+`ResNeXt50_32x4d_224x224_nv12.bin`. `--target s100`, `s100p` and `s600`
+resolve no asset. The sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites

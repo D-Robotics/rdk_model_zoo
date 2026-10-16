@@ -54,10 +54,19 @@ edgenext/
 <a id="support-matrix"></a>
 ## 支持范围
 
-| Target | 变体 | 语言 | 状态 |
-| --- | --- | --- | --- |
-| x5 | base、small、x_small、xx_small | python | supported |
-| s100 / s100p / s600 | 任意 | python | not-supported（这些目标没有可用的模型文件） |
+下表列出本 Sample 已发布的模型；`—` 表示该组合未发布。
+
+| 模型 | 输入 | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| EdgeNeXt-xx-small | 224x224 | ✓ | — | — | — |
+| EdgeNeXt-x-small | 224x224 | ✓ | — | — | — |
+| EdgeNeXt-small | 224x224 | ✓ | — | — | — |
+| EdgeNeXt-base | 224x224 | ✓ | — | — | — |
+
+运行时覆盖：Python CLI 通过 `--target auto|x5` 和
+`--variant xx_small|x_small|small|base`（默认 `base`）覆盖全部已发布组合。
+仅 X5 归档发布 `EdgeNeXt_<size>_224x224_nv12.bin`；`--target s100`、
+`s100p`、`s600` 不会解析出任何资产。本 Sample 不提供 C++ 运行时。
 
 <a id="prerequisites"></a>
 ## 环境前提

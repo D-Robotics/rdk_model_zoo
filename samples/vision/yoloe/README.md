@@ -97,17 +97,17 @@ The table below records Runtime-only performance (preprocessing/postprocessing e
 
 X5 values are source single-thread libdnn Runtime records. S100 values are from 2026-09-08, 200 frames, warmup, thread_num=1/core_id=0, excluding preprocessing/postprocessing. No S100P Runtime measurement is published. See the [evaluation guide](evaluator/README.md) for complete conditions and accuracy limits.
 
-The two illustrations below were published with the S source deliveries, each over the same bundled `office_desk.jpg`; both are kept byte-exact under distinct names, separate from the runtime-generated `test_data/result.jpg`:
+Example result figures over the bundled `office_desk.jpg`:
 
-![S11 source result figure](test_data/source_s11_result_figure.jpg)
+![YOLOE-11s PF result figure](test_data/source_s11_result_figure.jpg)
 
-Result illustration published with the S100 quantized YOLOE-11s PF HBM over the bundled `office_desk.jpg`. That source delivery runs on S100 only and its published runnable artifact is the quantized 11s PF HBM; the source does not record the exact run that produced the figure.
+Example result of the S100 quantized YOLOE-11s PF model over `office_desk.jpg`.
 
-![S26 source result figure](test_data/source_s26_result_figure.jpg)
+![YOLOE-26n PF result figure](test_data/source_s26_result_figure.jpg)
 
-Example published with the S26 source delivery: recorded outputs of the published S100 quantized YOLOE-26n PF model over the bundled `office_desk.jpg`, with labels exported in PF checkpoint class-ID order, as stated by the source caption.
+Example result of the S100 quantized YOLOE-26n PF model over `office_desk.jpg`.
 
-Both figures show source-published quantized S results over the bundled image; current outputs come from running this sample, and accuracy metrics come from the [evaluator](evaluator/README.md).
+Running the sample writes `test_data/result.jpg`; accuracy metrics come from the [evaluator](evaluator/README.md).
 
 <a id="entry-points"></a>
 ## Entry Points
@@ -117,7 +117,7 @@ Both figures show source-published quantized S results over the bundled image; c
 - [Evaluation](evaluator/README.md) — Explicit PF mapping, CPU/board backends, COCO metrics, model provenance and reference benchmarks.
 - [Python](runtime/python/README.md) — Options, protocols, library API and troubleshooting.
 - [C++ runtime](runtime/cpp/README.md) — Reusable three-stage C++ library with owned NV12 inputs, float binding and E11/E26 decoding/masks; includes the SDK adapter, board/model/vocabulary preflight, publication selection, CLI and result records; SDK compilation and board runs follow the C++ workflow guide.
-- [Test data](test_data/README.md) — Image/vocabulary provenance and source-recorded figures.
+- [Test data](test_data/README.md) — Example image, class vocabulary and result figures.
 
 <a id="license"></a>
 ## License

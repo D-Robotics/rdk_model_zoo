@@ -32,18 +32,19 @@ vit/
 <a id="support-matrix"></a>
 ## 支持矩阵
 
-| Target | Variant | Python | C++ |
-| --- | --- | --- | --- |
-| x5 | int8 | not-supported | not-supported |
-| x5 | int16 | not-supported | not-supported |
-| s100 | int8 | supported | not-supported |
-| s100 | int16 | supported | not-supported |
-| s100p | int8 | not-supported | not-supported |
-| s100p | int16 | not-supported | not-supported |
-| s600 | int8 | not-supported | not-supported |
-| s600 | int16 | not-supported | not-supported |
+下表列出本 Sample 已发布的模型；`—` 表示该组合未发布。两个已发布制品均为
+CIFAR-10（10 类）ViT 分类模型，224x224、batch 1。
 
-使用支持矩阵所列的 S100 `int8` 或 `int16` 制品运行 Python 分类器。
+| 模型 | 输入 | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| ViT CIFAR-10 INT8 | 224x224 | — | ✓ | — | — |
+| ViT CIFAR-10 INT16 | 224x224 | — | ✓ | — | — |
+
+运行时覆盖：仅 S100 归档发布了这两个制品
+（`s100/vit_cifar10_batch1_int8.hbm`、`s100/vit_cifar10_batch1_int16.hbm`）。
+Python CLI 通过 `--target auto|s100` 和 `--variant int8|int16`（默认
+`int8`）运行两者；`--target x5`、`s100p`、`s600` 不会解析出任何资产。本
+Sample 不提供 C++ 运行时。
 
 <a id="prerequisites"></a>
 ## 前提

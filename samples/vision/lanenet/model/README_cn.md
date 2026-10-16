@@ -58,11 +58,11 @@ python3 -m samples.vision.lanenet.model.download --target s100 --output-dir /dat
 python3 -m samples.vision.lanenet.runtime.python.main --target s100 --asset-id s:lanenet:s100/lanenet256x512.hbm --model-path /data/lanenet-models/s100/lanenet256x512.hbm --dry-run
 ```
 
-Dry-run 不打开 HBM；实际加载会检查板卡身份与模型真实元数据。匹配的资产 ID 声明预期契约；字节身份以发布校验和与加载检查为准。本地编译产物同样需要完整元数据与数值验证；本地摘要与发布方校验和分别记录。
+Dry-run 不打开 HBM；实际加载会检查板卡身份与模型真实元数据。匹配的资产 ID 需与模型输入/输出契约一致。本地编译产物同样需要完整元数据与数值验证；本地摘要不得当作发布方校验和。
 
 <a id="formats-checksums"></a>
 ## 格式与校验和
 
 HBM 契约为单个 float32 RGB NCHW `[1,3,256,512]` 输入，由示例完成 ImageNet 归一化。必需输出为 float32 `[1,3,256,512]` 嵌入张量，以及离散 int64 `[1,1,256,512]` 或 `[1,256,512]` 二值张量。Python 按 `instance_seg_logits`、`binary_seg_pred` 绑定，原生代码按唯一形状/类型绑定角色。额外观察到的输出原样保留，其他输出按实际元数据读取。
 
-下载器打印实际 SHA-256。清单没有发布方 SHA-256，因此它可用于跨主机跟踪字节身份，但不能独立认证下载内容。运行报告记录实际摘要供后续比较。
+下载器与运行报告记录实际 SHA-256。发布方校验和未知；在主机间复制制品时请保留实测摘要。

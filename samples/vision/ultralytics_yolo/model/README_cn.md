@@ -82,12 +82,12 @@ bash samples/vision/ultralytics_yolo/model/fulldownload.sh \
 bash samples/vision/ultralytics_yolo/model/fulldownload.sh \
   --platform s100 --dry-run
 ```
-`fulldownload.sh` 向同一个解析器传入 `--all`，无需维护另一份模型列表。
+`fulldownload.sh` 下载目标板的全部已发布制品；可用 `--family` 限定范围。
 
 <a id="accompanying-files"></a>
 ## 输入、标签与后续步骤
 
-[测试数据目录](../test_data) 包含检测/分割/姿态使用的 `bus.jpg`、分类使用的 `zebra_cls.jpg`、COCO/ImageNet/DOTA 类别名称和结果示意图。标签用于解释输出；自定义模型须使用匹配的类别顺序。
+[测试数据目录](../test_data) 包含检测/分割/姿态使用的 `bus.jpg`、分类使用的 `zebra_cls.jpg`、COCO/ImageNet/DOTA 类别名称和结果示意图。标签用于解释输出；请使用与编译模型匹配的类别顺序。
 
 后续见 [Python 推理](../runtime/python/README_cn.md)、[C++ 可用范围](../runtime/cpp/README_cn.md)、[模型转换](../conversion/README_cn.md) 和 [数据集评估](../evaluator/README_cn.md)。ONNX 和训练权重不能直接替代板端二进制，源模型与工具链要求见转换说明。
 
@@ -101,7 +101,7 @@ bash samples/vision/ultralytics_yolo/model/download_model.sh \
   --platform s600 --family yolo26 --task cls --model-size n \
   --model-dir /tmp/rdk-models --dry-run
 ```
-此例解析到 `/tmp/rdk-models/nash-p/` 下。去掉 `--dry-run` 下载，再把编译文件复制到匹配的板卡，运行时通过 `--model-path` 传入完整路径。显式运行路径不会被自动替换或下载。下载目标已存在时，下载器校验文件且不覆盖；不需要或损坏的文件请先移到其他位置再重试。
+此例解析到 `/tmp/rdk-models/nash-p/` 下。去掉 `--dry-run` 下载，再把编译文件复制到匹配的板卡，运行时通过 `--model-path` 传入完整路径。显式运行路径按原样使用，不会被替换或重新下载。下载目标已存在文件时，下载器校验该文件且不覆盖；需要重新下载请先把它移开。
 
 模型存放在默认目录之外时，运行入口通过 `--model-path` 接收完整路径。制品扩展名和 nash-e/m/p 目录须匹配目标。
 
@@ -110,7 +110,7 @@ bash samples/vision/ultralytics_yolo/model/download_model.sh \
 
 X5 使用 packed NV12 输入，S 使用独立 Y/UV 输入。非分类文件名使用 640×640。YOLO26 分类文件名在全部目标上使用 224×224，S600 分类标识同样使用 224×224。S100/S100P v8/v11 分类清单 ID 保留 640×640 标识，下载 URL 则使用 224×224。实际输入几何由运行元数据决定，文件名标记不是形状覆盖。
 
-下载器拒绝空文件；清单提供发布方 SHA-256 时会校验。本地摘要用于标识下载字节。`--dry-run` 报告路径是否存在，不下载或读取文件内容。下载使用临时 `.part` 文件，校验成功后才安装最终文件。超时、HTTP 错误或 URL 不可用会返回准备错误。
+下载器拒绝空文件；清单提供发布方 SHA-256 时会校验。`--dry-run` 报告路径是否存在，不下载或读取文件内容。下载使用临时 `.part` 文件，校验成功后才安装最终文件。超时、HTTP 错误或 URL 不可用会返回准备错误。
 
 <a id="maintained-scope"></a>
 ## 运行输出要求

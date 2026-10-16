@@ -52,4 +52,4 @@ python3 samples/vision/mobile_sam/model/download.py --target s600
 <a id="formats-checksums"></a>
 ## 格式与校验值
 
-x5 行使用 `bin`，S 行使用 `hbm`。当前清单每行均为 `sha256: null (unknown)`，不虚构校验值。
+x5 行使用 `bin`，S 行使用 `hbm`。当前清单每行均为 `sha256: null (unknown)`。

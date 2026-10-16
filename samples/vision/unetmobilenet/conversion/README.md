@@ -44,7 +44,7 @@ Converted models must expose uint8 Y [1,1024,2048,1] and UV [1,512,1024,2] input
 <a id="artifacts"></a>
 ## Artifacts
 
-Current deliverables are the two externally downloaded HBM files, with unknown publisher SHA-256, and runtime outputs; no ONNX, checkpoint, compiler logs or calibration data is bundled. Record those provenance materials when a real conversion workflow is introduced.
+Current artifacts are the two externally downloaded HBM files, with unknown publisher SHA-256, and runtime outputs; no ONNX, checkpoint, compiler logs or calibration data is bundled. Record those source materials when a real conversion workflow is introduced.
 
 <a id="known-gaps"></a>
 ## Additional preparation

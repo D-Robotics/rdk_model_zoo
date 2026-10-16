@@ -27,24 +27,25 @@ ultralytics_yolo/
 <a id="support-matrix"></a>
 ## 支持矩阵
 
-状态按任务/语言区分。`supported` 表示有已发布制品和可运行实现；精度与性能数值另行记录在评估指南中。
+下表列出本 Sample 已发布的模型。单元格为可选模型尺寸，`—` 表示该组合未发布。精度与性能见[评估指南](evaluator/README_cn.md)。
 
-| Scope | x5 | s100 | s100p | s600 |
-|---|---|---|---|---|
-| Python YOLOv8n / YOLO26n detect | supported | supported | supported | supported |
-| Python other published scales/tasks | supported | supported | supported | supported |
-| Python YOLOv9 seg c/e | supported | supported | supported | not-supported |
-| Python YOLOv13 detect n/s/l/x | supported | not-supported | not-supported | not-supported |
-| C++ detect / classify | supported | supported | supported | supported |
-| C++ segment / pose（YOLOv8/11/26 n/s/m/l/x） | 不兼容（已发布制品）* | supported | supported | supported |
-| C++ segment YOLOv9c/e | 不兼容（已发布制品）* | supported | supported | not-supported |
-| C++ obb（YOLO26 n/s/m/l/x） | 不兼容（已发布制品）* | supported | supported | supported |
+| 模型系列 | 任务 | X5 | S100 | S100P | S600 |
+|---|---|---|---|---|---|
+| YOLOv5u | detect | n/s/m/l/x | n/s/m/l/x | n/s/m/l/x | n/s/m/l/x |
+| YOLOv8 / YOLO11 | detect / seg / pose / cls | n/s/m/l/x | n/s/m/l/x | n/s/m/l/x | n/s/m/l/x |
+| YOLOv9 | detect | t/s/m/c/e | t/s/m/c/e | t/s/m/c/e | s/m/c/e |
+| YOLOv9 | seg | c/e | c/e | c/e | — |
+| YOLOv10 | detect | n/s/m/b/l/x | n/s/m/b/l/x | n/s/m/b/l/x | n/s/m/b/l/x |
+| YOLO12 | detect | n/s/m/l/x | n/s/m/l/x | n/s/m/l/x | n/s/m/l/x |
+| YOLOv13 | detect | n/s/l/x | — | — | — |
+| YOLO26 | detect / seg / pose / cls / obb | n/s/m/l/x | n/s/m/l/x | n/s/m/l/x | n/s/m/l/x |
 
-\* X5 上已发布的分割、姿态和旋转框 `.bin` 制品——分割 YOLOv8/11/26 n/s/m/l/x 与 YOLOv9c/e、姿态 YOLOv8/11/26 n/s/m/l/x、旋转框 YOLO26 n/s/m/l/x——无法通过 C++ 运行时的输出绑定（`Task output requires NHWC aligned geometry.`）。这些已发布制品请用上方 Python 运行时运行，或绑定未量化 FLOAT32 NHWC 输出的本地导出模型。YOLOv10 检测（无 NMS 接口）同样使用 Python 入口。详见 [C++ 输出契约](runtime/cpp/README_cn.md)。
+从[模型清单](model/README_cn.md)选择已发布的目标板卡、模型系列、任务和尺度组合。
 
-Python 发布组合详见 [模型清单](model/README_cn.md)：YOLOv5u/v10/12 为检测；YOLOv8/11 为 detect/seg/pose/cls；YOLOv9 分割仅 c/e，S600 无 t 检测及分割；YOLOv13 仅 X5。YOLO26 每个目标发布 25 个资产（五任务 × n/s/m/l/x）。C++ 支持范围及输入/head 契约见 [C++ 指南](runtime/cpp/README_cn.md)。
+运行方式：
 
-从[模型清单](model/README_cn.md)选择已发布的目标板卡、模型系列、任务和尺度组合。[评估指南](evaluator/README_cn.md)提供数据集计分流程和对应条件下的参考测量。
+- Python 提供上表全部系列/任务组合的入口，见[快速开始](#quickstart)。
+- C++ 仅实现其中一部分，范围与输出要求见 [C++ 指南](runtime/cpp/README_cn.md)。已知限制：X5 已发布的分割、姿态、旋转框 `.bin` 制品无法通过 C++ 运行时的输出绑定，需用 Python 入口运行；S 系列 YOLOv10 为无 NMS 接口而 C++ detect 路径固定调用 NMS，S 系列 YOLOv10 也需使用 Python 入口（X5 的 YOLOv10 采用 DFL+NMS）。
 
 | 运行契约 | X5 | S100 / S100P / S600 |
 |---|---|---|
@@ -52,14 +53,13 @@ Python 发布组合详见 [模型清单](model/README_cn.md)：YOLOv5u/v10/12 �
 | NV12 输入 | 一个 packed 缓冲区 | NHWC Y + UV |
 | Python 检测 NMS 默认 | 0.70 | 0.45；YOLOv10 无 NMS |
 | 分类 CLI 缩放 | YOLO26 拉伸；其余 letterbox | 拉伸 |
-| 分类文件名标记（不是输入覆盖） | YOLO26 224，其余 640 | 公开 URL 使用 224；S100/S100P v8/v11 保留 640 标识 |
 
 <a id="prerequisites"></a>
 ## 前置条件
 
-需要完整仓库、Python 3、NumPy、OpenCV、SciPy、PyYAML；实际推理还需要匹配板端系统镜像提供的 `hbm_runtime`。显式准备依赖，并使用所选制品对应的板端镜像/SDK。按[模型清单](model/README_cn.md)选择目标、模型系列、任务和尺度组合。
+需要完整仓库、Python 3、NumPy、OpenCV、SciPy、PyYAML；实际推理还需要匹配板端系统镜像提供的 `hbm_runtime`。请使用与所选制品配套的板端镜像和 SDK。
 
-推理、下载与主机转换环境分开：C++ 需要板端开发库，ONNX/量化编译需要训练与 OE 环境，详见各子目录。主机可使用 help/list/dry-run/download；板端推理需匹配目标制品。硬件身份来自 [平台注册表](../../../docs/release/platforms.json)。
+推理、下载与主机转换环境分开：C++ 需要板端开发库，ONNX/量化编译需要训练与 OE 环境，详见各子目录。help/list/dry-run/download 可在主机运行。板卡身份来自 [平台注册表](../../../docs/release/platforms.json)。
 
 <a id="quickstart"></a>
 ## 快速开始
@@ -115,29 +115,35 @@ YOLO26 检测效果示例（类别 ID 与分数）：
 - [evaluator](evaluator/README_cn.md) — COCO/ImageNet/DOTA、逐任务评估与参考测量.
 - [test_data](test_data/README_cn.md) — 随仓输入图片、显示标签表与效果示例.
 
-源码阅读顺序：`main.py` 是可见的构造与 predict 入口。`cli.py` 负责参数声明、发布资产选择/列表、dry-run 与结果展示；`backend.py` 负责 Runner、张量绑定与运行时元数据；任务文件（`detect.py`/`segment.py`/`pose.py`/`obb.py`/`classify.py`）处理前处理、推理、后处理。检测 DFL 与 YOLO26 direct LTRB 使用不同协议，详见 [检测输入/输出](runtime/python/README_cn.md#detection-io)。输入尺寸由元数据或显式回退解析。YOLO26 OBB 使用弧度，X5 类别内 NMS/裁剪与 S 路径有区别。
-
-`--family yolov8|yolo11|yolo26|...` 选择检测、分割、姿态、分类与 OBB 任务。任务输出契约见各任务说明。
+在 `runtime/python/` 中，`main.py` 是命令行入口，`cli.py` 负责参数声明、发布资产选择与结果打印，`backend.py` 负责模型加载与张量绑定，任务文件（`detect.py`/`segment.py`/`pose.py`/`obb.py`/`classify.py`）实现各任务的前处理、推理与后处理。检测 DFL 与 YOLO26 direct LTRB 使用不同协议，详见 [检测输入/输出](runtime/python/README_cn.md#detection-io)。输入几何来自模型元数据或显式回退值。YOLO26 OBB 使用弧度；X5 类别内 NMS/裁剪与 S 系列目标不同。
 
 <a id="license"></a>
 ## 许可与来源
 
-Sample 代码遵循仓库 [Apache-2.0 LICENSE](../../../LICENSE)，保留各文件原版权声明。模型权重和上游训练框架按其随附许可分别核对；仓库代码许可不自动授予所有权重同样的许可。制品地址和发布方摘要以清单为准，缺少发布方哈希时不能把本地摘要当作来源认证。
-
-运行制品、目标和输出要求见[模型清单](model/README_cn.md)。
+Sample 代码遵循仓库 [Apache-2.0 LICENSE](../../../LICENSE)。模型权重和上游训练框架按其自身许可发布，请分别核对。制品地址和发布方 SHA-256 以清单为准。
 
 <a id="readable-example"></a>
-## 可读范例与自定义模型
+<a id="custom-models"></a>
+## 自定义模型
 
-本示例是两个可读模型范例之一：完整 DFL 检测流程（初始化、`preprocess`、
-`infer`、`postprocess`、`predict`）在
-[`runtime/python/detect.py`](runtime/python/detect.py) 中可见；`main.py`
-保持薄入口，构造分派到的任务模型并调用 `predict`。各协议保留自身任务类
-（YOLO26 直接 LTRB、S 系 NMS-free YOLOv10、cls/seg/pose/obb）。自训练检测
-模型经 conversion 流程编译后用 `--model-path`/`--family` 接入（自定义类别数
-配 `--classes-num` 与标签文件）；predict 接受图片路径或 BGR 数组。显式
-`--model-path` 视为自定义模型：未给 `--label-file` 时结果只显示类别 ID，
-显式标签数与已绑定模型类别数不符
-时在推理前报错。图片路径 predict 便利适用于 DFL 检测
-（`detect.py`）；cls/seg/pose/obb 沿用既有数组接口。三条使用路径见
-[docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md)。
+先用[转换流程](conversion/README_cn.md)编译自己训练的模型，再按路径运行：
+
+```bash
+python samples/vision/ultralytics_yolo/runtime/python/main.py \
+  --platform x5 --family yolov8 --task detect \
+  --model-path /path/to/my_detect_model.bin \
+  --classes-num 80 --label-file /path/to/my_classes.names \
+  --test-img samples/vision/ultralytics_yolo/test_data/bus.jpg \
+  --img-save-path /tmp/custom-detect.jpg
+```
+
+- 显式 `--model-path` 按原样使用，不会触发下载；自定义文件名请同时给出
+  `--family`，以便选择匹配的任务协议。
+- 未提供 `--label-file` 时结果只显示类别 ID。显式标签文件的条目数与模型
+  类别数不符时在推理前报错；自定义 detect/seg/obb 图还需提供匹配的
+  `--classes-num`。
+- 任务类（`YoloDetect`、`YoloSeg`、`YoloPose`、`YOLO26OBB`、`YoloCls`）可在
+  自己的代码中直接调用：`predict` 接受图片路径或 BGR 数组。
+  图片路径方式仅检测支持；seg/pose/obb/cls 接受 BGR 数组。
+- 数据集指标评估通过[评估器](evaluator/README_cn.md)进行；更多接入示例见
+  [docs/architecture/model-examples.md](../../../docs/architecture/model-examples.md)。

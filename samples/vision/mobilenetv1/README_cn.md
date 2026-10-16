@@ -51,16 +51,18 @@ mobilenetv1/
 <a id="support-matrix"></a>
 ## 支持范围
 
-| Target | 变体 | 语言 | 状态 |
-| --- | --- | --- | --- |
-| x5 | 100 | python | supported |
-| x5 | 125 | python | supported |
-| s100 | 100 | python | supported |
-| s100 | 125 | python | supported |
-| s100p | 100 | python | supported |
-| s100p | 125 | python | supported |
-| s600 | 100 | python | supported |
-| s600 | 125 | python | supported |
+下表列出本 Sample 已发布的模型；`—` 表示该组合未发布。
+
+| 模型 | 输入 | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| MobileNetV1 (1.00) | 224x224 | ✓ | ✓ | ✓ | ✓ |
+| MobileNetV1 (1.25) | 224x224 | ✓ | ✓ | ✓ | ✓ |
+
+运行时覆盖：Python CLI 通过 `--target auto|x5|s100|s100p|s600` 和
+`--variant 100|125`（默认 100）覆盖上表全部组合。X5 发布
+`mobilenetv1_<width>_bayese_224x224_nv12.bin`；S 系列在 `s100/`、`s100p/`、
+`s600/` 目录下发布 `mobilenetv1_<width>_nashe/nashm/nashp_224x224_nv12.hbm`。
+本 Sample 不提供 C++ 运行时。
 
 <a id="prerequisites"></a>
 ## 环境前提

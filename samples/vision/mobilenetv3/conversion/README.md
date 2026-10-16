@@ -183,7 +183,7 @@ the Top-1 loss under 5%.
    a Top-5 list (see [Expected results](../README.md#expected-results)).
 3. Measure the full-set accuracy with the [evaluator](../evaluator/README.md)
    and compare it with the FP32 ONNX baseline of the same checkpoint; the
-   published results and the acceptance rule are in the
+   published results are in the
    [sample README](../README.md#performance).
 
 <a id="artifacts"></a>

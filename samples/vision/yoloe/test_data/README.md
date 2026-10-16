@@ -2,19 +2,12 @@ English | [简体中文](README_cn.md)
 
 # YOLOE test data
 
-`office_desk.jpg` is the example image. `classes.names` supplies the 4585-class prompt-free vocabulary, with SHA-256 `1a6c943dd251993770e7cf6fed23a38b7ac068f4c8fbc7a0db85cbe0fe5221b3`. Use labeled evaluation images for mAP and representative deployment images for calibration.
+| File | Description |
+| --- | --- |
+| `office_desk.jpg` | Example input image |
+| `classes.names` | 4585 classes in model class-ID order |
+| `source_s11_result_figure.jpg` | Example result of the S100 quantized YOLOE-11s PF model over `office_desk.jpg` |
+| `source_s26_result_figure.jpg` | Example result of the S100 quantized YOLOE-26n PF model over `office_desk.jpg` |
+| `result.jpg` | Runtime output written when the sample runs |
 
-
-## Directory structure
-
-```text
-test_data/
-├── README.md  # English instructions
-├── README_cn.md  # Chinese instructions
-└── classes.names  # Source or data file
-```
-
-
-`source_s11_result_figure.jpg` (SHA-256 `c53242d5fb3da45dc21736e12356811d41d4a73642ce45b956f70105c3a39cc3`) and `source_s26_result_figure.jpg` (SHA-256 `95b1c217eeefcb64b635828e8a073a04fc305bceabc0b740b99ea7e25914ee79`) are byte-exact copies of the fixed S source publications' `test_data/result.jpg` at rdk_s `380e1a2bf42041af54be6f34935e50197cfadff9` — see S11 and S26. They are the quantized S publication illustrations embedded by those source READMEs over the same bundled `office_desk.jpg`, preserved here for documentation. Expected outputs of the floating route come from running this sample, and accuracy metrics come from the evaluator. The S11 source does not record which run produced its figure; the S26 source caption attributes its figure to the released quantized S100 26n PF model.
-
-`result.jpg` is generated visualization, not a checked-in expected result. The two `source_*_result_figure.jpg` files are fixed source-recorded copies and always stay distinct from this runtime output path.
+Evaluation needs a labeled dataset; use representative scene images for calibration.

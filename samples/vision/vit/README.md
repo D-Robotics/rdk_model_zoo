@@ -34,18 +34,20 @@ vit/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Python | C++ |
-| --- | --- | --- | --- |
-| x5 | int8 | not-supported | not-supported |
-| x5 | int16 | not-supported | not-supported |
-| s100 | int8 | supported | not-supported |
-| s100 | int16 | supported | not-supported |
-| s100p | int8 | not-supported | not-supported |
-| s100p | int16 | not-supported | not-supported |
-| s600 | int8 | not-supported | not-supported |
-| s600 | int16 | not-supported | not-supported |
+The table lists the models published for this sample; `—` marks an
+unpublished combination. Both published artifacts are CIFAR-10 (10-class)
+ViT classifiers at 224x224, batch 1.
 
-Use the Python runtime with the S100 `int8` or `int16` artifact listed in the support matrix.
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| ViT CIFAR-10 INT8 | 224x224 | — | ✓ | — | — |
+| ViT CIFAR-10 INT16 | 224x224 | — | ✓ | — | — |
+
+Runtime coverage: only the S100 archive publishes these artifacts
+(`s100/vit_cifar10_batch1_int8.hbm`, `s100/vit_cifar10_batch1_int16.hbm`).
+The Python CLI serves both with `--target auto|s100` and
+`--variant int8|int16` (default `int8`); `--target x5`, `s100p` and `s600`
+resolve no asset. The sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites

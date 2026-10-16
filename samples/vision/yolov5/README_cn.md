@@ -68,11 +68,11 @@ python3 -m samples.vision.yolov5.runtime.python.main \
 - [`model/README_cn.md`](./model/README_cn.md)：X5/S 制品、URL、路径和校验值。
 - [`runtime/python/README_cn.md`](./runtime/python/README_cn.md)：参数解析器、三阶段和目标张量契约。
 - [`runtime/cpp/README_cn.md`](./runtime/cpp/README_cn.md)：现有 C++ 构建运行说明，包含编译依赖和运行参数。
-- [`conversion/README_cn.md`](./conversion/README_cn.md)：逐字节保留的 X5 YAML 与源转换命令。
+- [`conversion/README_cn.md`](./conversion/README_cn.md)：X5 YAML 与源转换命令。
 - [`evaluator/README_cn.md`](./evaluator/README_cn.md)：完整 raw 数组参考实现与当前实现对照。
 
 <a id="historical-performance"></a>
-## 参考记录性能
+## 参考性能
 
 源 X5 参考数据表：
 

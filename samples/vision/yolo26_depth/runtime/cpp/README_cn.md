@@ -23,7 +23,7 @@ cpp/
 │   ├── cli.hpp  # CLI 选项、图像加载、上色与报告声明
 │   └── depth.hpp  # Yolo26Depth 模型、阶段数据类型、张量契约
 ├── src/
-│   ├── main.cpp  # 薄入口：解析参数、构造模型、predict、保存
+│   ├── main.cpp  # 入口：解析参数、构造模型、predict、保存
 │   ├── cli.cpp  # 参数解析、深度上色、NPY/F32/PNG/报告写入
 │   └── depth.cpp  # preprocess/infer/postprocess、letterbox/NV12、SDK 句柄
 ├── CMakeLists.txt  # RDK_TARGET 门控的构建定义

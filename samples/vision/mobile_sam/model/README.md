@@ -52,4 +52,4 @@ The runtime resolves the exact selected pair below `samples/vision/mobile_sam/mo
 <a id="formats-checksums"></a>
 ## Formats and Checksums
 
-The x5 rows use `bin`; S rows use `hbm`. Every active manifest row records `sha256: null (unknown)`. No checksum is invented.
+The x5 rows use `bin`; S rows use `hbm`. Every active manifest row records `sha256: null (unknown)`.

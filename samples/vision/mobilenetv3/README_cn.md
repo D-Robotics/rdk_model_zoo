@@ -55,15 +55,18 @@ mobilenetv3/
 <a id="support-matrix"></a>
 ## 支持范围
 
-| Target | 变体 | 语言 | 状态 |
-| --- | --- | --- | --- |
-| s100 | large | python | supported |
-| s100 | small | python | supported |
-| s100p | large | python | supported |
-| s100p | small | python | supported |
-| s600 | large | python | supported |
-| s600 | small | python | supported |
-| x5 | 任意 | python | not-supported（没有 X5 构建：X5 工具链无法以 INT16 运行 MobileNetV3 的 stride 2 depthwise 卷积与 SE 池化；选择 X5 会明确报错，不会回退） |
+下表列出本 Sample 已发布的模型；`—` 表示该组合未发布。
+
+| 模型 | 输入 | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| MobileNetV3-Large | 224x224 | — | ✓ | ✓ | ✓ |
+| MobileNetV3-Small | 224x224 | — | ✓ | ✓ | ✓ |
+
+运行时覆盖：Python CLI 通过 `--target auto|s100|s100p|s600` 和
+`--variant large|small`（默认 `large`）覆盖上表全部已发布组合。S 系列在
+`s100/`、`s100p/`、`s600/` 目录下发布
+`mobilenetv3_<block>_100_nashe/nashm/nashp_224x224_nv12.hbm`。清单未发布 X5
+制品，`--target x5` 不会解析出任何资产。本 Sample 不提供 C++ 运行时。
 
 <a id="prerequisites"></a>
 ## 环境前提
@@ -115,7 +118,7 @@ S100P、S600 换用对应的 `s:` 引用（见 `--list-models`）与根目录
 Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并退出 0；除非给出
 `--img-save-path`，否则不写任何输出文件。使用内置测试图 `kit_fox.JPEG` 时，Top-1 为
 class 278（`kit fox`）；使用 `zebra_cls.jpg` 时 Top-1 为 class 340（`zebra`），S100、S100P、S600 上的
-两个变体都是如此（已用发布的构建在每块板上核对）。按支持矩阵选择目标并准备对应制品；运行时会在加载模型前核验板卡身份。
+两个变体都是如此。按支持矩阵选择目标并准备对应制品；运行时会在加载模型前核验板卡身份。
 
 <a id="performance"></a>
 ## 性能数据

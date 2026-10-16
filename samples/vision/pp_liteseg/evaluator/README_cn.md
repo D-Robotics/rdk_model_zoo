@@ -44,7 +44,7 @@ infer_board.py 不计算数据集分数或计时指标。其输出支持逐像�
 以 --output outputs/pp_liteseg/eval.png 为例，输出该三面板图像及同目录的 eval.labels.npy、eval.report.json。掩码为 int32 512×1024、类别 0..18。报告保留运行时元数据／版本、制品身份／路径和实际类别名，不硬编码预期类别列表。已有输出文件会替换。
 
 <a id="reference-results"></a>
-## 参考记录
+## 参考结果
 
 源 README 写有 1024×512 单核约 95 FPS、10.5 ms 的预期，但未提供可复现测量记录；应将其视为参考记录预期，阈值以自己的实测为准。板端、OE 和数据集结果在产生时另行记录。
 

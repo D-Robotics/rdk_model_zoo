@@ -83,7 +83,7 @@ The two inspection modes are mutually exclusive. Additional display files must b
 | `binary_pred.png` | Labels rendered as 0/255 |
 | `report.json` | Model/input digests, actual metadata, scheduling, processing boundaries and optional display paths |
 
-Do not interpret NPZ keys as semantic output names: use the recorded map. Additional observed tensors remain raw even when the task does not consume them. The source prose's third output is unnamed and no third identity is invented here.
+Do not interpret NPZ keys as semantic output names: use the recorded map. Additional observed tensors remain raw even when the task does not consume them. Names of additional outputs follow the SDK metadata.
 
 The display renders the embedding as a color image: values are clipped to [0,1], multiplied by 255, rounded with nearest ties-to-even and kept in channel order; `embedding.npy` is unaffected. Binary labels outside 0/1 are rejected rather than displayed as plausible masks. Results stay at 256×512; no original-resolution interpolation or lane fitting occurs.
 

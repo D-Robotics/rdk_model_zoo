@@ -19,7 +19,7 @@ cpp/
 ├── CMakeLists.txt  # 板端构建（C++17，YOLO_TARGET=auto|x5|s100|s100p|s600）
 ├── run.sh          # 树外构建并启动，转发全部参数
 ├── inc/
-│   ├── yolo.hpp            # 不依赖 SDK 的词汇层：解码数学、计划、任务类型
+│   ├── yolo.hpp            # 纯解码数学、计划与任务类型（不依赖 SDK）
 │   ├── backend.hpp         # 共享 DNN 后端：栈探测、推理、RAII 所有者
 │   ├── cli.hpp             # 内联选项解析、benchmark 数学与入口
 │   └── imagenet_labels.hpp # 1000 项 ImageNet 标签顺序（分类）
@@ -170,7 +170,6 @@ runtime/cpp/run.sh --task obb /models/obb.bin test_data/dota.jpg /tmp/cpp-obb.jp
 <a id="interface-lifecycle"></a>
 ## 接口与资源生命周期
 
-这是参考可执行程序加一套可读的模型 API，不是与 Python 相同的稳定库契约。
 `main.cpp` 用 `Config` 构造具名模型（`yolo::YoloDetect`、`YoloSegment`、
 `YoloPose`、`YoloClassify`、`YoloObb`），填充调用方拥有的 `Input`（原始 BGR 像素及
 源图几何），调用 `predict`，再把返回的 `Prediction` 交给 CLI 报告层。每个
@@ -193,7 +192,7 @@ stride 和有效形状，不要只抽取一次推理调用。
 分类运行时只接受一个模型和一个输出：1000 个有限 FLOAT32 logits，量化类型
 为 `NONE`。支持一维 `(1000,)`，或 rank 2–4、batch 为 1、仅一个轴为 1000、
 其余轴均为 1 的形状，例如 `(1,1000)`、`(1,1000,1,1)`、`(1,1,1,1000)`。
-不再固定将 axis 1 当成类别轴；其他类别数、整数输出、展开的空间图和
+类别轴按形状解析，不固定为 axis 1；其他类别数、整数输出、展开的空间图和
 batch>1 均明确拒绝。
 
 物理分配大小必须为正。X5 从 aligned 形状推导类别步长，S 读取字节
@@ -206,9 +205,9 @@ ImageNet 顺序，分类数学位于
 模型和输出资源由所有者在提前返回或 C++ 异常时释放；分配失败、输出缓存
 失效操作失败时停止解码。描述符错误或非有限 logits 会带诊断信息非零退出。
 
-分类前处理默认仍是 **letterbox、灰色 127 填充**；Python YOLO26 分类默认
-stretch，Python S 分类也默认 stretch。C++ 侧传 `--resize-type 0` 即可切换
-为 stretch，无需重新构建；请勿将 C++ 默认行为直接当作 Python 的等价基线。
+分类前处理默认 **letterbox、灰色 127 填充**；Python YOLO26 分类与 S 上的
+Python 分类默认 stretch。C++ 侧传 `--resize-type 0` 即可切换为 stretch，
+无需重新构建。
 
 <a id="pose-segment-output-contract"></a>
 ## 姿态与分割输出契约
@@ -225,12 +224,11 @@ Python 可接受的 NCHW 原型；请选择对应 NHWC 导出，或使用 Python
 复制到独立拥有内存的紧凑 NHWC 向量，跳过填充；这会增加一份有效输出的临时
 主机副本。分配或缓存操作失败会中止，所有退出路径释放已取得的输出和模型
 资源。DFL 和直接距离数学位于 `inc/yolo.hpp`（`decode_box_dfl`、
-`decode_box_ltrb`），不再维护私有副本；关键点公式、NMS 和绘图策略保持
-原有行为。
+`decode_box_ltrb`）；关键点公式、NMS 和绘图策略与上文描述一致。
 
-这两个任务仍是功能参考，行为比 Python 窄：两者都会丢弃越过模型输入边界
-的框。分割采用不区分类别的 NMS，输出的是**模型输入尺寸**的三联图（框、
-彩色掩码、叠加图），总宽为 `3 * input_width`。姿态使用原有缩放/填充运算
+分割和姿态会丢弃越过模型输入边界的框。分割采用不区分类别的 NMS，输出的是
+**模型输入尺寸**的三联图（框、
+彩色掩码、叠加图），总宽为 `3 * input_width`。姿态按其缩放/填充运算
 在原图绘制。结果图保存失败会非零退出。
 
 <a id="obb-output-contract"></a>
@@ -285,8 +283,8 @@ stream 的测量请分开记录。
 RGB 形 NCHW/NHWC 描述符，显式拒绝带填充的 packed 存储；split Y/UV 接受
 精确 batch-one 几何和未量化字节平面。动态 `-1` stride/容量按实际行距
 解析；零/重叠 stride、分配不足和溢出均被拒绝。`upload_planes` 接收精确
-长度的紧凑 Y 和交错 UV 缓冲区，写入分配的行距并 clean 两个缓存。原有
-I420 `upload` 委托到该路径。分配成功前上传或计划不匹配都会失败；部分
+长度的紧凑 Y 和交错 UV 缓冲区，写入分配的行距并 clean 两个缓存。I420
+`upload` 调用也委托到该路径。分配成功前上传或计划不匹配都会失败；部分
 分配会释放全部已取得的缓冲区。
 
 同步推理要求非空任务句柄，在创建/提交/等待失败时释放已返回的任务并保留

@@ -42,8 +42,9 @@ paraformer/
 | --- | --- | --- | --- | --- | --- | --- |
 | large, encoder 400×560 / predictor 400×512 / decoder 100×8404 | not-supported | supported | not-supported | not-supported | implemented | implemented (board run via [C++ guide](runtime/cpp/README.md)) |
 
-`supported` denotes the declared S100 deployment with its published artifacts
-and available implementations. The [native guide](runtime/cpp/README.md#quickstart)
+The table lists the published deployments of this sample. The S100 deployment is
+used as one package: the three-stage HBMs run together with `tokens.json`,
+`am.mvn` and `paraformer_config.yaml`. The [native guide](runtime/cpp/README.md#quickstart)
 provides the full prepared-feature launcher/build/run flow and result reports.
 
 <a id="prerequisites"></a>
@@ -130,7 +131,7 @@ the historical dataset metrics.
 - [Model package](model/README.md): all six files, identities, download and rerun behavior.
 - [Python runtime](runtime/python/README.md#usage): default/custom commands, every parameter,
   result fields, stage interfaces, complete CPU examples and failure handling.
-- [Test data](test_data/README.md): input provenance and reference text.
+- [Test data](test_data/README.md): input files and reference text.
 - [C++ runtime](runtime/cpp/README.md): full native application and launcher; board run via the C++ quickstart.
 - [Conversion](conversion/README.md): strict local weight loading, real three-stage FP32 export, numeric checks, real-audio calibration and explicit OE orchestration commands.
 - [Evaluator](evaluator/README.md): feature preparation, FP32 and HMCT commands, CER definition,

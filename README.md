@@ -181,13 +181,13 @@ The table lists each model family with its platforms and available models; choos
 | Image Classification | HGNetV2 | `samples/vision/hgnetv2` | RDK X5 | [Details](./samples/vision/hgnetv2) |
 | Image Classification | MobileNetV1 | `samples/vision/mobilenetv1` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/mobilenetv1) |
 | Image Classification | MobileNetV2 | `samples/vision/mobilenetv2` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/mobilenetv2) |
-| Image Classification | MobileNetV3 | `samples/vision/mobilenetv3` | RDK X5 / RDK S100 / RDK S600 | [Details](./samples/vision/mobilenetv3) |
+| Image Classification | MobileNetV3 | `samples/vision/mobilenetv3` | RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/mobilenetv3) |
 | Image Classification | MobileNetV4 | `samples/vision/mobilenetv4` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/mobilenetv4) |
 | Image Classification | MobileOne | `samples/vision/mobileone` | RDK X5 | [Details](./samples/vision/mobileone) |
 | Image Classification | RepGhost | `samples/vision/repghost` | RDK X5 | [Details](./samples/vision/repghost) |
 | Image Classification | RepVGG | `samples/vision/repvgg` | RDK X5 | [Details](./samples/vision/repvgg) |
 | Image Classification | RepViT | `samples/vision/repvit` | RDK X5 | [Details](./samples/vision/repvit) |
-| Image Classification | ResNet | `samples/vision/resnet` | RDK X5 / RDK S100 / RDK S600 | [Details](./samples/vision/resnet) |
+| Image Classification | ResNet | `samples/vision/resnet` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/resnet) |
 | Image Classification | ResNeXt | `samples/vision/resnext` | RDK X5 | [Details](./samples/vision/resnext) |
 | Image Classification | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [Details](./samples/vision/vargconvnet) |
 | Image Classification | ViT | `samples/vision/vit` | RDK S100 | [Details](./samples/vision/vit) |

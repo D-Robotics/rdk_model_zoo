@@ -61,30 +61,22 @@ repghost/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Python | C++ |
-| --- | --- | --- | --- |
-| x5 | 100 | supported | not-supported |
-| x5 | 111 | supported | not-supported |
-| x5 | 130 | supported | not-supported |
-| x5 | 150 | supported | not-supported |
-| x5 | 200 | supported | not-supported |
-| s100 | 100 | not-supported | not-supported |
-| s100 | 111 | not-supported | not-supported |
-| s100 | 130 | not-supported | not-supported |
-| s100 | 150 | not-supported | not-supported |
-| s100 | 200 | not-supported | not-supported |
-| s100p | 100 | not-supported | not-supported |
-| s100p | 111 | not-supported | not-supported |
-| s100p | 130 | not-supported | not-supported |
-| s100p | 150 | not-supported | not-supported |
-| s100p | 200 | not-supported | not-supported |
-| s600 | 100 | not-supported | not-supported |
-| s600 | 111 | not-supported | not-supported |
-| s600 | 130 | not-supported | not-supported |
-| s600 | 150 | not-supported | not-supported |
-| s600 | 200 | not-supported | not-supported |
+The table lists the models published for this sample; `—` marks an
+unpublished combination.
 
-Select a supported target and runtime from the support matrix.
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| RepGhost-100 | 224x224 | ✓ | — | — | — |
+| RepGhost-111 | 224x224 | ✓ | — | — | — |
+| RepGhost-130 | 224x224 | ✓ | — | — | — |
+| RepGhost-150 | 224x224 | ✓ | — | — | — |
+| RepGhost-200 | 224x224 | ✓ | — | — | — |
+
+Runtime coverage: the Python CLI serves every published combination with
+`--target auto|x5` and `--variant 100|111|130|150|200` (default `100`);
+each lowercase variant ID resolves to the exact case-sensitive published
+filename `RepGhost_<width>_224x224_nv12.bin`. `--target s100`, `s100p` and
+`s600` resolve no asset. The sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -148,4 +140,4 @@ the same thread count, concurrent submission mode and BPU utilization.
 <a id="license"></a>
 ## License
 
-Source Python headers retain Apache-2.0 provenance. Conversion YAMLs retain their original proprietary notices verbatim; Before redistribution, follow the original conversion YAML notices and applicable upstream weight license terms.
+Source Python headers retain Apache-2.0 provenance. Conversion YAMLs retain their original proprietary notices verbatim; before redistribution, follow the original conversion YAML notices and applicable upstream weight license terms.

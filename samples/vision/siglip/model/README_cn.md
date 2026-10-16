@@ -95,4 +95,4 @@ bash samples/vision/siglip/model/download.sh s100p so400m-patch14-384
 
 ## 许可
 
-准备脚本遵循仓库 [LICENSE](../../../../LICENSE) 的 Apache-2.0。源发布记录没有制品级模型许可证或权重版本，因此此处不虚构。
+准备脚本遵循仓库 [LICENSE](../../../../LICENSE) 的 Apache-2.0。源发布记录没有制品级模型许可证或权重版本。

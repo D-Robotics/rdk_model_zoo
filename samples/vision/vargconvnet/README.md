@@ -38,19 +38,21 @@ vargconvnet/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Python | C++ |
-| --- | --- | --- | --- |
-| x5 | vargconvnet | supported | not-supported |
-| s100 | vargconvnet | not-supported | not-supported |
-| s100p | vargconvnet | not-supported | not-supported |
-| s600 | vargconvnet | not-supported | not-supported |
+The table lists the models published for this sample; `—` marks an
+unpublished combination.
 
-Use the Python CLI with a lowercase variant ID; it resolves to the exact case-sensitive published filename.
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| VargConvNet | 224x224 | ✓ | — | — | — |
+
+Runtime coverage: the Python CLI serves the published combination with
+`--target auto|x5` and `--variant vargconvnet`; the lowercase CLI ID
+resolves to the exact case-sensitive published filename
+`vargconvnet_224x224_nv12.bin`. `--target s100`, `s100p` and `s600` resolve
+no asset. The sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites
-
-Use a full repository checkout. On X5 use the matching board image and its `hbm_runtime`; install host dependencies in a virtual environment as below. Host-side comparison tools use SciPy; board inference uses the dependencies in the matching runtime image.
 
 Use a full repository checkout. On X5 use the matching board image and
 its `hbm_runtime`; install the host dependencies in a virtual environment

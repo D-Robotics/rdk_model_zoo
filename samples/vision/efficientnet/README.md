@@ -65,16 +65,28 @@ efficientnet/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Language | Status |
-| --- | --- | --- | --- |
-| x5 | b2, b3, b4 | python | supported |
-| s100 | lite0..lite4 | python | supported |
-| s600 | lite0..lite4 | python | supported |
-| s100p | any | python | not-supported (no s100p asset row in the release manifest; selection is an explicit error, no fallback) |
+The table lists the models published for this sample; `—` marks an
+unpublished combination.
 
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| EfficientNet-B2 | 224x224 | ✓ | — | — | — |
+| EfficientNet-B3 | 224x224 | ✓ | — | — | — |
+| EfficientNet-B4 | 224x224 | ✓ | — | — | — |
+| EfficientNet-Lite0 | 224x224 | — | ✓ | — | ✓ |
+| EfficientNet-Lite1 | 240x240 | — | ✓ | — | ✓ |
+| EfficientNet-Lite2 | 260x260 | — | ✓ | — | ✓ |
+| EfficientNet-Lite3 | 300x300 | — | ✓ | — | ✓ |
+| EfficientNet-Lite4 | 380x380 | — | ✓ | — | ✓ |
+
+Runtime coverage: the Python CLI serves every combination in the table with
+`--target auto|x5|s100|s600` and `--variant b2|b3|b4|lite0|lite1|lite2|lite3|lite4`.
 With the variant omitted, the default entry resolves `b2` on x5 and
-`lite0` on s100/s600; the S geometry follows the variant
-(lite0..lite4 = 224/240/260/300/380).
+`lite0` on s100/s600. X5 publishes `EfficientNet_B<2-4>_224x224_nv12.bin`;
+the S100 and S600 archives publish
+`efficientnet_lite<0-4>_<input>_nv12.hbm` under `s100/` and `s600/`. No
+S100P artifact is published, so `--target s100p` resolves no asset. The
+sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites

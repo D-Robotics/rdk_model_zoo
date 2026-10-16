@@ -75,7 +75,7 @@ bash run.sh --target s100 --asset-id s:3dresnet:s100/r3d_18.hbm
 <a id="expected-results"></a>
 ## 预期结果
 
-默认片段是 `test_data/video0.npy`；参考记录其 Top-1 类别为 `archery`。CLI 输出如下形式的 JSON 结果：
+默认片段是 `test_data/video0.npy`；源示例报告其 Top-1 类别为 `archery`。CLI 输出如下形式的 JSON 结果：
 
 ```json
 {

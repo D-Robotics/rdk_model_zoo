@@ -76,7 +76,7 @@ runtime/cpp/                            C++ source code (this directory)
 │   ├── gemma4_tokenizer.hpp            TokenizerBridge: chat template + image expand
 │   └── hb_utils.hpp                    Horizon BPU helpers (tensor, flush, infer)
 └── src/                                Implementation + executables
-    ├── main.cpp                        ★ Thin entry: options → named model → predict per turn
+    ├── main.cpp                        ★ Entry point: options → model → predict per turn
     ├── gemma4.cpp                      ★ Gemma4 model session (history, budgeting, KV reuse)
     ├── cli.cpp                         ★ CLI argument parsing + console presentation
     └── gemma4_*.cpp                    Engine/algorithm implementations

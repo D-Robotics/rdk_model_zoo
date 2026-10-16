@@ -69,10 +69,20 @@ fastvit/
 <a id="support-matrix"></a>
 ## Support matrix
 
-| Target | Variant | Language | Status |
-| --- | --- | --- | --- |
-| x5 | s12, sa12, t12, t8 | python | supported |
-| s100 / s100p / s600 | any | python | not-supported (the S manifest publishes no FastViT asset; selection is an explicit error, no cross-platform fallback) |
+The table lists the models published for this sample; `—` marks an
+unpublished combination.
+
+| Model | Input | X5 | S100 | S100P | S600 |
+| --- | --- | --- | --- | --- | --- |
+| FastViT-T8 | 224x224 | ✓ | — | — | — |
+| FastViT-T12 | 224x224 | ✓ | — | — | — |
+| FastViT-S12 | 224x224 | ✓ | — | — | — |
+| FastViT-SA12 | 224x224 | ✓ | — | — | — |
+
+Runtime coverage: the Python CLI serves every published combination with
+`--target auto|x5` and `--variant t8|t12|s12|sa12` (default `s12`). Only the
+X5 archive publishes `FastViT_<size>_224x224_nv12.bin`; `--target s100`,
+`s100p` and `s600` resolve no asset. The sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites
