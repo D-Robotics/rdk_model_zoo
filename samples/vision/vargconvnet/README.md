@@ -54,8 +54,6 @@ no asset. The sample ships no C++ runtime.
 <a id="prerequisites"></a>
 ## Prerequisites
 
-Use a full repository checkout. On X5 use the matching board image and its `hbm_runtime`; install host dependencies in a virtual environment as below. Host-side comparison tools use SciPy; board inference uses the dependencies in the matching runtime image.
-
 Use a full repository checkout. On X5 use the matching board image and
 its `hbm_runtime`; install the host dependencies in a virtual environment
 as below. Host-side comparison tools use SciPy; board inference uses the dependencies in the matching runtime image. Native inference needs no OE toolchain; conversion

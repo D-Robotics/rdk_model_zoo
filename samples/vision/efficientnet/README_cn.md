@@ -126,7 +126,7 @@ S100/S600 使用对应的 `s:efficientnet:s…` 引用（见 `--list-models`）�
 Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并退出 0；除非
 指定 `--img-save-path`，不写任何输出文件。使用随附 `Scottish_deerhound.JPEG`
 时 Top-5 含鹿猎犬相关 ImageNet 类别；使用 `redshank.JPEG` 时含红脚鹬相关
-类别。按支持矩阵选择目标并准备对应制品；S100P 需使用清单中对应目标的制品。
+类别。按支持矩阵选择目标并准备对应制品，在对应板卡上运行。
 
 <a id="performance"></a>
 ## 性能数据

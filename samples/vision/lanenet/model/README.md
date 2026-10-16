@@ -63,6 +63,6 @@ Dry-run does not open the HBM. Real loading checks board identity and actual mod
 <a id="formats-checksums"></a>
 ## Format and checksums
 
-The HBM contract has one float32 RGB NCHW `[1,3,256,512]` input with ImageNet normalization performed by the sample. Required outputs are an embedding `[1,3,256,512]` float32 tensor and a discrete binary int64 tensor `[1,1,256,512]` or `[1,256,512]`. Python binds `instance_seg_logits` and `binary_seg_pred`; native code binds unique shape/type roles. Additional observed outputs are retained without inventing a third name from source prose.
+The HBM contract has one float32 RGB NCHW `[1,3,256,512]` input with ImageNet normalization performed by the sample. Required outputs are an embedding `[1,3,256,512]` float32 tensor and a discrete binary int64 tensor `[1,1,256,512]` or `[1,256,512]`. Python binds `instance_seg_logits` and `binary_seg_pred`; native code binds unique shape/type roles. Additional observed outputs are retained as-is and read according to the actual model metadata.
 
 The downloader and runtime reports record the observed SHA-256. The publisher checksum is `null`; keep the observed digest when copying artifacts between hosts.

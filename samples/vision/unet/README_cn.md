@@ -63,8 +63,6 @@ unet/
 新训练变体使用 torchvision ImageNet 编码器初始化；训练收据必须记录准确的
 torchvision 版本与权重标识。
 
-新增 backbone 需要完整验证后才能视为受支持：每个变体都必须
-
 <a id="prerequisites"></a>
 ## 环境前提
 

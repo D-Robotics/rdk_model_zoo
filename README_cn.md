@@ -184,13 +184,13 @@ python3 main.py \
 | 图像分类 | HGNetV2 | `samples/vision/hgnetv2` | RDK X5 | [详情](./samples/vision/hgnetv2) |
 | 图像分类 | MobileNetV1 | `samples/vision/mobilenetv1` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/mobilenetv1) |
 | 图像分类 | MobileNetV2 | `samples/vision/mobilenetv2` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/mobilenetv2) |
-| 图像分类 | MobileNetV3 | `samples/vision/mobilenetv3` | RDK X5 / RDK S100 / RDK S600 | [详情](./samples/vision/mobilenetv3) |
+| 图像分类 | MobileNetV3 | `samples/vision/mobilenetv3` | RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/mobilenetv3) |
 | 图像分类 | MobileNetV4 | `samples/vision/mobilenetv4` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/mobilenetv4) |
 | 图像分类 | MobileOne | `samples/vision/mobileone` | RDK X5 | [详情](./samples/vision/mobileone) |
 | 图像分类 | RepGhost | `samples/vision/repghost` | RDK X5 | [详情](./samples/vision/repghost) |
 | 图像分类 | RepVGG | `samples/vision/repvgg` | RDK X5 | [详情](./samples/vision/repvgg) |
 | 图像分类 | RepViT | `samples/vision/repvit` | RDK X5 | [详情](./samples/vision/repvit) |
-| 图像分类 | ResNet | `samples/vision/resnet` | RDK X5 / RDK S100 / RDK S600 | [详情](./samples/vision/resnet) |
+| 图像分类 | ResNet | `samples/vision/resnet` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/resnet) |
 | 图像分类 | ResNeXt | `samples/vision/resnext` | RDK X5 | [详情](./samples/vision/resnext) |
 | 图像分类 | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [详情](./samples/vision/vargconvnet) |
 | 图像分类 | ViT | `samples/vision/vit` | RDK S100 | [详情](./samples/vision/vit) |

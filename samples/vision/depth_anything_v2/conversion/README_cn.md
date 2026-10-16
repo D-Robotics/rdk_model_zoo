@@ -34,7 +34,7 @@ float32。源图包含 Add、Conv、Mul、MatMul 和注意力中的 Softmax，�
 ![源 ONNX IO](../test_data/readme_img/image-3.png)
 ![源 ONNX 图](../test_data/readme_img/image-1.png)
 
-由于权重、代码、选项缺失，不提供虚构导出命令。取得后应先核对名称、布局、动态轴
+权重、代码和导出选项缺失，故不提供导出命令。取得后应先核对名称、布局、动态轴
 和归一化边界是否符合运行时绑定，再编译。
 
 <a id="calibration"></a>

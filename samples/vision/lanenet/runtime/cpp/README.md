@@ -116,7 +116,7 @@ The direct binary requires `--model-path` and `--test-img`. Its `--target` and `
 | `postprocess` | Raw tensor vector | `LaneResult`: owned raw outputs plus float32 CHW `[3,256,512]` embedding and uint8 `[256,512]` labels (values 0 or 1) |
 | `predict` | BGR image | Composes the three stages; no file writes or visualization |
 
-Native output roles require exactly one float32 `[1,3,256,512]` embedding and exactly one int64 `[1,1,256,512]` or `[1,256,512]` binary tensor. Roles are resolved by unique shape and type, not assumed indices. Ambiguity is an error. Other observed numeric outputs are retained by index without inventing names or semantics; native output names are not queried. The [Python entry](../python/README.md) binds the two required names exposed by its SDK.
+Native output roles require exactly one float32 `[1,3,256,512]` embedding and exactly one int64 `[1,1,256,512]` or `[1,256,512]` binary tensor. Roles are resolved by unique shape and type, not assumed indices. Ambiguity is an error. Other observed numeric outputs are retained by index with their dtype, shape and strides; native output names are not queried. The [Python entry](../python/README.md) binds the two required names exposed by its SDK.
 
 Tensor copying honors every byte stride, including width padding, and rejects overlapping or out-of-capacity layouts. SDK call results are checked on every path — including task submission, wait and release — and a finished task is released exactly once; scoped cleanup covers partial initialization, allocation, submit and wait failures. Errors surface as C++ exceptions; the entry point prints them and exits with status 2. Returned tensors own their bytes and remain valid after the inference task is released.
 
