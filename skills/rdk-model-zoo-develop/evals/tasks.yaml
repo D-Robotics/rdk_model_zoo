@@ -121,3 +121,23 @@
     behavior:
     - 读取目标 ref 实际存在的契约文件，不沿用不存在的文件名
     - 按 preprocess/infer/postprocess 与 predict 串联核对阶段接口
+- id: develop-eval-014
+  dimension: correctness
+  prompt: README 里补一句：其他数值输出的名称与语义以模型 metadata 为准。
+  context: C++ runtime 只按索引保留 dtype/shape/stride 并明确不查询输出名称；头文件没有名称/语义字段。
+  expect:
+    skill: rdk-model-zoo-develop
+    behavior:
+    - 按代码证据写“按索引保留类型/形状/步长，不查询输出名称”
+    - 不把未实现的 metadata 名称/语义行为写成事实
+    - 保留既有绑定契约与编译命令
+- id: develop-eval-015
+  dimension: correctness
+  prompt: 顺手把 sample README 里“不虚构校验值”“Torch 依赖已移除”这类表述和那段重复的依赖前提清理掉。
+  context: 这是样例准备文档；清单确实记录 null 摘要；当前 runtime 不依赖 Torch；重复段落中一份含转换工具链链接。
+  expect:
+    skill: rdk-model-zoo-develop
+    behavior:
+    - 删除写作意图与迁移叙述，保留 null 校验和与当前依赖等真实事实
+    - 保留含转换链接的完整段落，删除重复
+    - 比对改动前后可执行代码块；命令未变则如实说明

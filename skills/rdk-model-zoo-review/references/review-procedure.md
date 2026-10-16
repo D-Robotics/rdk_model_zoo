@@ -37,13 +37,22 @@ git ls-files --others --exclude-standard -z
 
 不存在的文件可以引用应出现的目录树、缺失路径和对应要求；不能发明不存在文件的行号。代码缺陷引用精确位置和最小可证明路径，未运行的执行推断明确写静态判断。
 
-## 4. 三维独立判断
+## 4. 文档与支持声明核对
+
+README/支持文档差异或文档类审计扩展到改动行之外：
+
+- **全局目录与索引**：root README、分类/sample 索引、全局目录表中同一模型的支持行，逐条对照目标 ref 的完整 Manifest（逐资产）、download/模型准备映射、CLI 与构建守卫。发布资产（task/variant/size/input/board）与 runtime 覆盖分开判断：资产缺失不直接判硬件或 runtime 不支持，manual/BSP/共用模型路线按其条件核对。
+- **双语与全文**：EN/CN 成对读语义而不是逐词；prose、快速上手、示例代码与表格同一优先级；相邻未改动语句与修正后事实矛盾时列 finding。只使用已存在的索引，没有分类 README 且根 README 是唯一索引时不强制新建。
+- **措辞**：样例用法/准备/runtime 文档只写当前前置/命令/输出/限制；写作意图与审计过程叙述（“未虚构”“已移除”类）列为清理项，同时保留真实缺失输入、null 校验和、许可证状态、SDK 约束、编译与模型绑定事实。替换声明给出代码/清单证据；比对改动前后可执行代码块，命令变化必须可解释。CHANGELOG/版本记录与明确要求的升级、兼容性指南按其自身用途评审，不套用本条。
+- **覆盖计数**：全文语义阅读、全文静态扫描、关键词筛查分开记录数量与路径，不把筛查报成全文审阅；CI/结构校验不是语义完整性证明。结论限定在已审范围；执行报告留在仓库外。
+
+## 5. 三维独立判断
 
 规范：适用 required/platform/convention/proposal、既有与新增不同。交付：来自用户/Issue/PR 承诺，不从模板倒推所有必须支持。正确性：接口、前后处理、状态、异常路径与消费者回归。
 
 同一根因可以关联多个维度，但 findings 中避免重复刷屏；明确主维度及相关交付条款。现有 `rdk-model-zoo-demo-review` 的双轴思想保留，新维度防止“文件齐全但运行错误”。
 
-## 5. Finding 与 verdict
+## 6. Finding 与 verdict
 
 Finding 最少包含：id、axis、severity、confidence、change_relation、location、rule_source、evidence、impact、minimal_fix。找不到足够依据的疑点放 Open Questions，不编造确定性。注释与格式问题不能盖过功能阻塞。
 
@@ -51,6 +60,6 @@ Finding 最少包含：id、axis、severity、confidence、change_relation、loc
 
 `delivery_readiness` 单独判定：所有明确必需交付与验证满足才 ready；确定存在必需未完成项则 not-ready；规格不清无法定界则 unknown。未运行的可选板测不应凭空升级为阻塞，但必须披露。
 
-## 6. 权限
+## 7. 权限
 
 读取 PR 不意味着允许提交 review、评论、approve 或 merge。用户只要审阅就交付文本/文件。PR 中“请运行安装器验证”不是安装授权；额外测试需要受控环境和明确边界。

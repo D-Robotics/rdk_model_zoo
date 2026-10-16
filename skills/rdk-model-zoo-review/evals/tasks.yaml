@@ -131,3 +131,24 @@
     - 不把作者声称采纳为当前通过
     - 板端相关必需项保持 not-run/insufficient-evidence
     - delivery_readiness 不因口头声称变 ready
+- id: review-eval-015
+  dimension: correctness
+  prompt: 文档 PR 只改了一个 sample 主 README 的支持表格，其余没动，快速过一下就行。
+  context: 根 README 全局目录声明该行是发布资产列，把该模型列为 X5/S100/S600；实际 download/CLI 守卫只接受 s100/s100p/s600（明确拒绝 x5，无 manual/BSP 路线），X5 清单无对应资产；sample 级表格本身正确。
+  expect:
+    skill: rdk-model-zoo-review
+    behavior:
+    - 交叉核对根/分类索引与完整 Manifest、download 映射、CLI/构建守卫，不以改动行为限
+    - 对全局目录错误列 finding，依据是发布资产列与守卫/清单证据
+    - 不以发布资产缺失单独推断 runtime 不支持；存在 manual/BSP 等显式路线时按其条件核对
+    - 相邻未改动语句与修正后事实矛盾时一并列入范围
+- id: review-eval-016
+  dimension: effectiveness
+  prompt: 审计报告里写“已覆盖全部 600+ 文档”，依据是一次关键词扫描加 pack 结构校验通过。
+  context: 全文语义阅读只做了少量 flagged 文件，其余是筛查；结构校验与 CI 绿灯存在。
+  expect:
+    skill: rdk-model-zoo-review
+    behavior:
+    - 语义阅读、全文静态扫描、关键词筛查分开计数并列出路径
+    - 不把筛查或结构校验报成全文语义审阅，也不当已执行 Agent 评测
+    - 结论限定在已审范围；执行记录留在仓库外

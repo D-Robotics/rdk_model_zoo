@@ -2,7 +2,7 @@ English | [简体中文](README_cn.md)
 
 # Agent behavior evaluation
 
-The seven Model Zoo Skills define 75 core behavior cases in their respective
+The seven Model Zoo Skills define 91 core behavior cases in their respective
 `evals/tasks.yaml` files. Each case records the input, fixture and expected routing
 or behavior.
 

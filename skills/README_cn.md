@@ -22,13 +22,13 @@
 
 | 组件 | 版本 |
 |---|---|
-| Pack | 1.1.0 |
+| Pack | 1.1.1 |
 | rdk-model-zoo | 1.1.2 |
 | rdk-model-zoo-repo | 1.1.1 |
 | rdk-model-zoo-integrate | 1.0.1 |
-| rdk-model-zoo-develop | 1.1.2 |
-| rdk-model-zoo-validate | 1.1.1 |
-| rdk-model-zoo-review | 1.1.1 |
+| rdk-model-zoo-develop | 1.1.3 |
+| rdk-model-zoo-validate | 1.1.2 |
+| rdk-model-zoo-review | 1.1.2 |
 | rdk-model-zoo-release | 1.0.2 |
 
 版本以 [`pack.json`](pack.json) 清单为准。

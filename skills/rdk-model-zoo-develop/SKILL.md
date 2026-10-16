@@ -1,7 +1,7 @@
 ---
 name: rdk-model-zoo-develop
 description: "Use when adding or modifying maintained RDK Model Zoo samples, shared utilities, sample docs, tests, or repository conventions, including bug fixes. 触发词：开发样例、新增模型、修复 sample、公共工具。Do not use as the primary skill for read-only review, ready-made use, or toolchain quantization."
-version: "1.1.2"
+version: "1.1.3"
 license: Apache-2.0
 metadata:
   author: "RDK Model Zoo maintainers"
@@ -28,7 +28,7 @@ metadata:
 4. 对可在 host 验证的逻辑先写失败测试，再实现最小修复。硬件依赖分离，mock 只能证明 host 边界，不能称板测。结构、路径和文档检查不导入目标 runtime。
 5. 实现时按实际适用规范处理命名、默认参数、错误返回、注释、资源释放、前后处理与公共代码复用。Python/C++ 参数风格区别处理；是否双语言由类别规则和交付承诺决定。
 6. 模型需重新转换/调整 I/O 时由 `rdk-model-zoo-integrate` 协调工具链，不新增量化技能。产物仅按 model 获取约定落地；临时结果和私有数据留在被忽略或仓库外的独立目录。
-7. 同步相关 README 双语、main/run 默认值、模型下载、conversion/evaluator、存在或明确要求的分类索引、Manifest。每项只在本次影响到时修改，不创建空 evaluator 或 TODO 文档冒充交付。**改动前**先按目标 ref 的 README 内容契约列出本次将触及的文件与各级 README 章节（含父级索引），明确每个文件的职责；**改动后**在检查表中逐条关联"文件 ↔ 契约章节 ↔ 检查证据"，不允许以一行"文档已更新"代替逐项关联。
+7. 同步相关 README 双语、main/run 默认值、模型下载、conversion/evaluator、存在或明确要求的分类索引、Manifest。每项只在本次影响到时修改，不创建空 evaluator 或 TODO 文档冒充交付。支持声明与根/分类索引、完整 Manifest、download/CLI/构建映射一致，发布资产与运行时覆盖分开判断；样例文档措辞只写当前前置/命令/输出/限制，替换语句有代码或清单证据。**改动前**先按目标 ref 的 README 内容契约列出本次将触及的文件与各级 README 章节（含父级索引），明确每个文件的职责；**改动后**在检查表中逐条关联"文件 ↔ 契约章节 ↔ 检查证据"，不允许以一行"文档已更新"代替逐项关联。
 8. 根据 [evidence-contract.md](references/evidence-contract.md) 组织自检；需要实际执行验收时调用可用 `rdk-model-zoo-validate`。使用 [development-checklist.md](assets/development-checklist.md) 逐项记录 done/not-run/not-applicable 与证据。
 9. 交付 diff 范围、测试、限制和最小源码带读：症状→日志位置→数据流→修复理由→验证。只有用户需要教学时逐题交流，不用长篇解释代替证据。
 10. 用独立 `rdk-model-zoo-review` 审阅；标明作者自检与独立 review 的区别。未经授权不提交、推送、创建 PR 或合并。

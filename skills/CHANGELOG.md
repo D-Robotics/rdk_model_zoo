@@ -1,5 +1,34 @@
 # Model Zoo Skills Changelog
 
+## Unreleased — candidate Pack 1.1.1
+
+Unreleased candidate; not tagged or published. Evaluation entries added here
+are definitions, not executed results.
+
+- Sample usage/preparation/runtime documentation rules (MZ-SUP-01, MZ-DOC-03):
+  published assets (task/variant/size/input/board) are judged separately from
+  actual runtime coverage traced via complete manifests, downloader maps and
+  CLI/build guards — an absent asset alone is not an unsupported
+  hardware/runtime, and explicit manual/BSP/shared-model routes stay valid;
+  wording keeps current prerequisites/commands/outputs/limitations with
+  evidence-backed replacements; CHANGELOG/version records and explicitly
+  requested upgrade/compatibility guides are reviewed for their own purpose.
+- Review scope for document changes extends to root/category indexes, EN/CN
+  full text and prose/examples beyond altered rows; variant×size coverage and
+  its sources are recorded; full-document semantic reads, full-text scans and
+  keyword screening are counted separately, and CI/pack structural green is
+  not semantic completeness or executed Agent evals.
+- validate gate reference: `main` and `develop` run the same three workflows;
+  the narrative-Markdown skip excludes machine-read Markdown under
+  `docs/release/`, `tests/`/`test_data/`, `skills/` and `utils/tools/`, and an
+  unresolvable diff base runs the full gate; catalog triggers include
+  `samples/**/model/**` changes and any `samples/` deletion/rename. Resolve
+  the intended ref to its actual SHA and read that SHA's workflow file — it
+  is authoritative; no "README changes always skip the full gate" promise.
+- New behavioral eval definitions: review-eval-015/016, develop-eval-014/015,
+  validate-eval-013 (86 → 91). Member versions: develop 1.1.3, review 1.1.2,
+  validate 1.1.2; skill cards and pack README version tables mirrored.
+
 ## Pack 1.1.0 — 2026-10-16
 
 Released from the unified `main` delivery branch. Structural validation and
