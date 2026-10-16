@@ -1,9 +1,10 @@
 # Model Zoo Skills Changelog
 
-## Unreleased — candidate Pack 1.1.0
+## Pack 1.1.0 — 2026-10-16
 
-The Pack remains a release candidate (`release_state: unreleased-candidate` in
-`pack.json`).
+Released from the unified `main` delivery branch. Structural validation and
+65 host unit tests pass; the 86 Agent evaluation definitions are not executed
+behavior results, and no board verification is claimed.
 
 - Content refresh against the unified integration line. Shared references and
   skill entrypoints now state the branch facts — `main` is the delivery default
@@ -42,7 +43,7 @@ The Pack remains a release candidate (`release_state: unreleased-candidate` in
   `rdk-model-zoo-release` 1.0.1 → 1.0.2 for the instruction changes; two eval
   definitions (develop-eval-013, release-eval-011) and the refreshed
   develop-eval-012 cover the retired contract path, the stage naming, and
-  Git-resolved branch facts. The Pack stays an unreleased 1.1.0 candidate.
+  Git-resolved branch facts. These changes are included in Pack 1.1.0.
 - `rdk-model-zoo/scripts/read_catalog.py` default discovery now also probes
   the unified per-platform layouts `docs/release/{x5,s,x3}/models.yaml` and
   the frozen `platforms/{platform}/...` snapshots, preferring the active
@@ -69,7 +70,7 @@ The Pack remains a release candidate (`release_state: unreleased-candidate` in
 - Member versions: entry `rdk-model-zoo` 1.1.0 → 1.1.2 across the two steps
   above; `rdk-model-zoo-repo/develop/validate/review` 1.1.0 → 1.1.1;
   `rdk-model-zoo-integrate/release` 1.0.0 → 1.0.1. The Pack version advances
-  1.0.0 → 1.1.0 as a candidate because the tree now contains 1.1.x members.
+  1.0.1 → 1.1.0 for the unified delivery content.
 - Governance cards restate the real member versions and stay in sync with
   `pack.json`/SKILL.md frontmatter.
 

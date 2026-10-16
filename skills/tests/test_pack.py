@@ -43,13 +43,10 @@ class PackTests(unittest.TestCase):
         self.assertIn('`.drobotics-s/`',contract)
         self.assertNotIn('`.drobotics/`',contract)
         self.assertNotIn('`.horizon/`',contract)
-    def test_candidate_pack_and_member_versions_are_consistent(self):
+    def test_released_pack_and_member_versions_are_consistent(self):
         manifest=json.loads((ROOT/'pack.json').read_text(encoding='utf-8'))
-        # Upstream rdk_x5 released Pack 1.0.1; that state describes the upstream
-        # pack. This adapted integration candidate stays unpublished and its
-        # repo/develop/validate/review members keep their Q5 1.1.x level.
         self.assertEqual(manifest['version'],'1.1.0')
-        self.assertEqual(manifest['release_state'],'unreleased-candidate')
+        self.assertEqual(manifest['release_state'],'released')
         self.assertEqual((ROOT/'VERSION').read_text(encoding='utf-8').strip(),manifest['version'])
         self.assertEqual({row['name']:row['version'] for row in manifest['skills']}, {
             'rdk-model-zoo':'1.1.2',
@@ -70,8 +67,8 @@ class PackTests(unittest.TestCase):
         self.assertEqual(set(documented),{'Pack'}|{row['name'] for row in manifest['skills']})
         self.assertNotIn('Pack 1.1.0 已发布',readme)
         changelog=(ROOT/'CHANGELOG.md').read_text(encoding='utf-8')
-        self.assertIn('## Unreleased — candidate Pack 1.1.0',changelog)
-        self.assertNotIn('## Pack 1.1.0',changelog)
+        self.assertIn('## Pack 1.1.0 — 2026-10-16',changelog)
+        self.assertNotIn('## Unreleased — candidate Pack 1.1.0',changelog)
         for row in manifest['skills']:
             skill_root=ROOT/row['name']
             text=(skill_root/'SKILL.md').read_text(encoding='utf-8')
@@ -82,7 +79,7 @@ class PackTests(unittest.TestCase):
             self.assertEqual(version[1],row['version'])
             card=(skill_root/'skill-card.md').read_text(encoding='utf-8')
             self.assertIn(f'| Skill 版本 | {row["version"]} |',card)
-            self.assertIn('| Pack 候选版本 | 1.1.0（未发布） |',card)
+            self.assertIn('| Pack 版本 | 1.1.0 |',card)
     def test_single_flat_install_is_self_contained(self):
         with tempfile.TemporaryDirectory() as td:
             for source in ROOT.iterdir():
