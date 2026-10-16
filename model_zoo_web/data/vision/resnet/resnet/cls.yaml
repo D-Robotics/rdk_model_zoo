@@ -1,0 +1,3182 @@
+schema_version: 1
+id: resnet/resnet/cls
+name: ResNet
+domain: vision
+source: resnet
+provider: timm
+family: resnet
+task: cls
+description:
+  zh: 通过恒等快捷连接学习残差、以基础块或瓶颈块堆叠的深层图像分类网络。
+  en: A deep image classifier that learns residuals through identity shortcuts, stacking basic or bottleneck
+    blocks.
+license:
+  name: Apache-2.0
+  url: https://github.com/huggingface/pytorch-image-models/blob/main/LICENSE
+sample_path: samples/vision/resnet
+variants:
+- size: 18-224
+  model:
+    parameter_count: 11689512
+    gflops: 3.628146688
+    gflops_method: FP32 simplified ONNX static batch=1 224x224; Conv and Gemm multiply-accumulate counted
+      as 2 FLOPs; excludes activation, pooling, additions and preprocessing
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+      geometry: PIL bicubic shorter=235, center crop=224
+  platforms:
+  - platform: x5
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/x5/resnet18_bayese_224x224_nv12.bin
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/x5/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/x5/SHA256SUMS
+      size_bytes: 11081728
+      sha256: 98a16c1136c2b993cd63b6d3e2cc4eb54b44a563d2ef95f0e0319f0003c45483
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/x5/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.5935
+        top5: 0.8094
+      runtime:
+        top1: 0.5891
+        top5: 0.8056
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 2.7399986666666667
+        observed_min_latency_ms: 2.708
+        observed_max_latency_ms: 3.477
+        aggregate_fps: 364.0474062532423
+      - threads: 2
+        average_latency_ms: 4.86221
+        observed_min_latency_ms: 3.583
+        observed_max_latency_ms: 5.708
+        aggregate_fps: 409.35987713745556
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 6345.516245
+        metrics_ms:
+          preprocess:
+            mean: 7.483001703333333
+            p50: 7.6195615
+            p95: 7.9697447
+            min: 6.774142
+            max: 10.894153
+          runtime:
+            mean: 3.0573793649999996
+            p50: 3.055591
+            p95: 3.0800729
+            min: 3.027466
+            max: 3.238258
+          postprocess:
+            mean: 0.029622315000000003
+            p50: 0.029417
+            p95: 0.031042
+            min: 0.027042
+            max: 0.060625
+          end_to_end:
+            mean: 10.570003383333333
+            p50: 10.7077975
+            p95: 11.05980205
+            min: 9.84515
+            max: 14.170244
+        throughput_fps: 94.55495452758076
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 10980.589723
+        metrics_ms:
+          preprocess:
+            mean: 14.665174944166665
+            p50: 8.4894175
+            p95: 47.413206999999936
+            min: 6.844351
+            max: 50.010668
+          runtime:
+            mean: 3.3725064675
+            p50: 3.0560289999999997
+            p95: 5.635568149999997
+            min: 2.912049
+            max: 7.800437
+          postprocess:
+            mean: 0.03008589833333333
+            p50: 0.029791
+            p95: 0.03308605
+            min: 0.026917
+            max: 0.056042
+          end_to_end:
+            mean: 18.06776731
+            p50: 11.6983625
+            p95: 51.66204904999999
+            min: 9.916525
+            max: 57.258061
+        throughput_fps: 109.28374798363278
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet18-20261013-x5-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      onnx_sha256: c3a4d136ebc0c3dd900ab1bc2342970955cdf690138e504d7697ed8b1bc849a0
+      config_sha256: ea788ba7e09ef24c3ff654ec24e74e2c068f235d02153b453c96f45e5350c46f
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet18.a1_in1k
+        revision: 491b427b45c94c7fb0e78b5474cc919aff584bbf
+        model_safetensors_sha256: 80c49dee3da4822c009c5a7fe591e9223c5a2cfcf95a4067ca4dfb5a7b89c612
+  - platform: s100
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: hbm
+      march: nash-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/s100/resnet18_nashe_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/s100/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/s100/SHA256SUMS
+      size_bytes: 12193864
+      sha256: be56e79b3b53920de23b41c6ffea9738ea1acdb1c36570aa2a48b04eb712d6fc
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/s100/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.5935
+        top5: 0.8094
+      runtime:
+        top1: 0.5879
+        top5: 0.8046
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.631005
+        observed_min_latency_ms: 0.609
+        observed_max_latency_ms: 1.082
+        aggregate_fps: 1552.7990496869816
+      - threads: 2
+        average_latency_ms: 0.749395
+        observed_min_latency_ms: 0.713
+        observed_max_latency_ms: 1.314
+        aggregate_fps: 2583.445282628914
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1654.61978
+        metrics_ms:
+          preprocess:
+            mean: 1.926808455
+            p50: 1.9422065
+            p95: 2.0439325
+            min: 1.736662
+            max: 3.153106
+          runtime:
+            mean: 0.8207896516666667
+            p50: 0.7946325
+            p95: 1.16904275
+            min: 0.762833
+            max: 1.476842
+          postprocess:
+            mean: 0.006748416666666667
+            p50: 0.00655
+            p95: 0.007352499999999998
+            min: 0.005725
+            max: 0.025399
+          end_to_end:
+            mean: 2.7543465233333335
+            p50: 2.747339
+            p95: 3.0396116999999983
+            min: 2.51502
+            max: 4.026836
+        throughput_fps: 362.62107298149186
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 2730.339241
+        metrics_ms:
+          preprocess:
+            mean: 3.5760806991666665
+            p50: 2.2940500000000004
+            p95: 8.909619450000001
+            min: 1.769012
+            max: 12.21816
+          runtime:
+            mean: 0.8568263199999999
+            p50: 0.8068200000000001
+            p95: 1.19608025
+            min: 0.760959
+            max: 1.937808
+          postprocess:
+            mean: 0.006882037500000001
+            p50: 0.006475
+            p95: 0.01032625
+            min: 0.005025
+            max: 0.037624
+          end_to_end:
+            mean: 4.439789056666667
+            p50: 3.1251565
+            p95: 9.76846415
+            min: 2.563245
+            max: 13.046867
+        throughput_fps: 439.50582476355356
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet18-20261013-s100-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: c3a4d136ebc0c3dd900ab1bc2342970955cdf690138e504d7697ed8b1bc849a0
+      config_sha256: 8de0be17f142783a0fdb7001f79cbcfd03ec6f4c5c88a61c7656116745b4609c
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet18.a1_in1k
+        revision: 491b427b45c94c7fb0e78b5474cc919aff584bbf
+        model_safetensors_sha256: 80c49dee3da4822c009c5a7fe591e9223c5a2cfcf95a4067ca4dfb5a7b89c612
+  - platform: s100p
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: hbm
+      march: nash-m
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/s100p/resnet18_nashm_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/s100p/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/s100p/SHA256SUMS
+      size_bytes: 12189776
+      sha256: 1d38d8457e4fc63f7148244a5d36411a797d6671059d59f071fe7ef416858782
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/s100p/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.5935
+        top5: 0.8094
+      runtime:
+        top1: 0.5879
+        top5: 0.8046
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.5341766666666666
+        observed_min_latency_ms: 0.51
+        observed_max_latency_ms: 0.889
+        aggregate_fps: 1826.2672011542008
+      - threads: 2
+        average_latency_ms: 0.63605
+        observed_min_latency_ms: 0.576
+        observed_max_latency_ms: 1.117
+        aggregate_fps: 3047.6345276674424
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1315.020841
+        metrics_ms:
+          preprocess:
+            mean: 1.4913252933333332
+            p50: 1.475882
+            p95: 1.5478383
+            min: 1.335322
+            max: 11.222392
+          runtime:
+            mean: 0.6923888083333334
+            p50: 0.6748235
+            p95: 0.8324342499999999
+            min: 0.653936
+            max: 1.021054
+          postprocess:
+            mean: 0.005309978333333333
+            p50: 0.005175
+            p95: 0.0058
+            min: 0.0042
+            max: 0.011949
+          end_to_end:
+            mean: 2.18902408
+            p50: 2.161955
+            p95: 2.3861037999999994
+            min: 2.004358
+            max: 12.222771
+        throughput_fps: 456.26653304120526
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 2124.121433
+        metrics_ms:
+          preprocess:
+            mean: 2.7457468683333337
+            p50: 1.7501259999999998
+            p95: 6.69328475
+            min: 1.359846
+            max: 11.767256
+          runtime:
+            mean: 0.7216641500000001
+            p50: 0.6873355
+            p95: 0.9828815499999999
+            min: 0.644911
+            max: 1.524493
+          postprocess:
+            mean: 0.005602628333333333
+            p50: 0.00525
+            p95: 0.008375
+            min: 0.00395
+            max: 0.019749
+          end_to_end:
+            mean: 3.473013646666667
+            p50: 2.4583865
+            p95: 7.39544475
+            min: 2.044532
+            max: 12.446117
+        throughput_fps: 564.939452781276
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet18-20261013-s100p-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: c3a4d136ebc0c3dd900ab1bc2342970955cdf690138e504d7697ed8b1bc849a0
+      config_sha256: 2ba6c7d56bb2092855f9b9ea1068185a73711c995cc7a165a4f5293ab17acdeb
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet18.a1_in1k
+        revision: 491b427b45c94c7fb0e78b5474cc919aff584bbf
+        model_safetensors_sha256: 80c49dee3da4822c009c5a7fe591e9223c5a2cfcf95a4067ca4dfb5a7b89c612
+  - platform: s600
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: hbm
+      march: nash-p
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/s600/resnet18_nashp_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/s600/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/s600/SHA256SUMS
+      size_bytes: 12005712
+      sha256: 488144886f10bfe6539b003fe1f7df594e33ee39fdf59b06f8a9efc8c2072f64
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/18-224/s600/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.5935
+        top5: 0.8094
+      runtime:
+        top1: 0.5888
+        top5: 0.8058
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.39369166666666666
+        observed_min_latency_ms: 0.378
+        observed_max_latency_ms: 0.81
+        aggregate_fps: 2451.511152332817
+      - threads: 2
+        average_latency_ms: 0.4055866666666667
+        observed_min_latency_ms: 0.384
+        observed_max_latency_ms: 0.885
+        aggregate_fps: 4738.176275951387
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 839.2016849999999
+        metrics_ms:
+          preprocess:
+            mean: 0.7873694666666666
+            p50: 0.792739
+            p95: 0.82348325
+            min: 0.737476
+            max: 1.338003
+          runtime:
+            mean: 0.6038970366666666
+            p50: 0.5964385
+            p95: 0.62693605
+            min: 0.573126
+            max: 0.870202
+          postprocess:
+            mean: 0.005552885
+            p50: 0.005175
+            p95: 0.007552499999999998
+            min: 0.00455
+            max: 0.026325
+          end_to_end:
+            mean: 1.3968193883333333
+            p50: 1.3916655
+            p95: 1.44720325
+            min: 1.323477
+            max: 1.968704
+        throughput_fps: 714.9651993370343
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 1290.094887
+        metrics_ms:
+          preprocess:
+            mean: 1.3952459441666667
+            p50: 0.8304265
+            p95: 5.0127486999999995
+            min: 0.743226
+            max: 6.902738
+          runtime:
+            mean: 0.6318490316666666
+            p50: 0.6129015
+            p95: 0.7687498
+            min: 0.571501
+            max: 1.122977
+          postprocess:
+            mean: 0.0058689275
+            p50: 0.00555
+            p95: 0.008175
+            min: 0.00465
+            max: 0.011575
+          end_to_end:
+            mean: 2.0329639033333335
+            p50: 1.4504525
+            p95: 5.79174474999999
+            min: 1.335777
+            max: 8.03209
+        throughput_fps: 930.1641391591687
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet18-20261013-s600-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: c3a4d136ebc0c3dd900ab1bc2342970955cdf690138e504d7697ed8b1bc849a0
+      config_sha256: deee44193cf5673869026cc804bee25d733ba66ee43d0a693cd678c2e93f6617
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet18.a1_in1k
+        revision: 491b427b45c94c7fb0e78b5474cc919aff584bbf
+        model_safetensors_sha256: 80c49dee3da4822c009c5a7fe591e9223c5a2cfcf95a4067ca4dfb5a7b89c612
+- size: 34-224
+  model:
+    parameter_count: 21797672
+    gflops: 7.327522816
+    gflops_method: FP32 simplified ONNX static batch=1 224x224; Conv and Gemm multiply-accumulate counted
+      as 2 FLOPs; excludes activation, pooling, additions and preprocessing
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+      geometry: PIL bicubic shorter=235, center crop=224
+  platforms:
+  - platform: x5
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/x5/resnet34_bayese_224x224_nv12.bin
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/x5/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/x5/SHA256SUMS
+      size_bytes: 20715520
+      sha256: 06b882b882b5e05b6a8f5ce021ce82fb0c023b459eb60439dfe8bbbcc2eddb07
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/x5/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.6492
+        top5: 0.8506
+      runtime:
+        top1: 0.643
+        top5: 0.8471
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 4.6251766666666665
+        observed_min_latency_ms: 4.597
+        observed_max_latency_ms: 5.416
+        aggregate_fps: 215.8994081477558
+      - threads: 2
+        average_latency_ms: 8.615982333333333
+        observed_min_latency_ms: 5.48
+        observed_max_latency_ms: 9.496
+        aggregate_fps: 231.2698410251113
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 7474.021503999999
+        metrics_ms:
+          preprocess:
+            mean: 7.484169136666666
+            p50: 7.6185195
+            p95: 7.981847749999999
+            min: 6.785184
+            max: 8.628689
+          runtime:
+            mean: 4.936993971666666
+            p50: 4.935492
+            p95: 4.95894775
+            min: 4.913596
+            max: 5.081846
+          postprocess:
+            mean: 0.02971181
+            p50: 0.0296875
+            p95: 0.0312941
+            min: 0.026459
+            max: 0.066375
+          end_to_end:
+            mean: 12.450874918333332
+            p50: 12.5838655
+            p95: 12.9525223
+            min: 11.730238
+            max: 13.594534
+        throughput_fps: 80.2780671260964
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 12536.390854000001
+        metrics_ms:
+          preprocess:
+            mean: 15.008581186666667
+            p50: 8.660667499999999
+            p95: 46.72518325
+            min: 6.824809
+            max: 49.635001
+          runtime:
+            mean: 5.199546166666667
+            p50: 4.933679
+            p95: 6.82359445
+            min: 4.828554
+            max: 10.168026
+          postprocess:
+            mean: 0.03100503166666666
+            p50: 0.030417
+            p95: 0.034791050000000004
+            min: 0.026666
+            max: 0.153834
+          end_to_end:
+            mean: 20.239132385
+            p50: 13.729639500000001
+            p95: 52.58627739999999
+            min: 11.774572
+            max: 57.415062
+        throughput_fps: 95.72132952580324
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet34-20261013-x5-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      onnx_sha256: fd62694d48a97415a16e4e94d4cc6a5e609721994004753cb4018aa1466bcfbf
+      config_sha256: f13da6530cb16a487a8e0b2798101177b33c2c12688ce2ea753d13f14721da4a
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet34.a1_in1k
+        revision: 0e8757122c4c09b15fb9300c0fd09b3fe89e28bf
+        model_safetensors_sha256: 829a220f9529d2b1ffdc8719d3273463001e0daf411eaf1916865d9db62c0ed2
+  - platform: s100
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: hbm
+      march: nash-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/s100/resnet34_nashe_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/s100/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/s100/SHA256SUMS
+      size_bytes: 22400584
+      sha256: fbac49e060e2c39c1d971e844604c593f17482307b0b81d7665cf8a71e7e7abf
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/s100/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.6492
+        top5: 0.8506
+      runtime:
+        top1: 0.6426
+        top5: 0.8475
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.9180283333333333
+        observed_min_latency_ms: 0.892
+        observed_max_latency_ms: 1.34
+        aggregate_fps: 1066.1928031985783
+      - threads: 2
+        average_latency_ms: 1.2981916666666666
+        observed_min_latency_ms: 1.179
+        observed_max_latency_ms: 1.797
+        aggregate_fps: 1513.1340031473187
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1825.192241
+        metrics_ms:
+          preprocess:
+            mean: 1.9301779449999996
+            p50: 1.9486715000000001
+            p95: 2.04066925
+            min: 1.750386
+            max: 3.1073
+          runtime:
+            mean: 1.101259875
+            p50: 1.072641
+            p95: 1.4503205
+            min: 1.046891
+            max: 1.648786
+          postprocess:
+            mean: 0.007127268333333333
+            p50: 0.006725
+            p95: 0.010706249999999994
+            min: 0.005525
+            max: 0.030875
+          end_to_end:
+            mean: 3.0385650883333333
+            p50: 3.0375625
+            p95: 3.3385866999999982
+            min: 2.825451
+            max: 4.24669
+        throughput_fps: 328.7324954171773
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 2932.332492
+        metrics_ms:
+          preprocess:
+            mean: 3.6015403349999997
+            p50: 2.298731
+            p95: 8.90891795
+            min: 1.765711
+            max: 9.486823
+          runtime:
+            mean: 1.1451820008333333
+            p50: 1.087316
+            p95: 1.477918
+            min: 1.017392
+            max: 2.529204
+          postprocess:
+            mean: 0.0077719166666666666
+            p50: 0.0067
+            p95: 0.011328749999999997
+            min: 0.00555
+            max: 0.461847
+          end_to_end:
+            mean: 4.754494252500001
+            p50: 3.4140845
+            p95: 9.9908462
+            min: 2.837877
+            max: 10.589914
+        throughput_fps: 409.23053687596627
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet34-20261013-s100-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: fd62694d48a97415a16e4e94d4cc6a5e609721994004753cb4018aa1466bcfbf
+      config_sha256: 4eb018d17bec84dc7f8c87aa721841b446f74f926f36fb52e25b00c83ff8d9cc
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet34.a1_in1k
+        revision: 0e8757122c4c09b15fb9300c0fd09b3fe89e28bf
+        model_safetensors_sha256: 829a220f9529d2b1ffdc8719d3273463001e0daf411eaf1916865d9db62c0ed2
+  - platform: s100p
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: hbm
+      march: nash-m
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/s100p/resnet34_nashm_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/s100p/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/s100p/SHA256SUMS
+      size_bytes: 22399056
+      sha256: 5b3a8d906bcbc3fdcba3a11a6bb9636fd548c704948583345e9ec7af5c5b9a4b
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/s100p/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.6492
+        top5: 0.8506
+      runtime:
+        top1: 0.6426
+        top5: 0.8475
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.790735
+        observed_min_latency_ms: 0.769
+        observed_max_latency_ms: 1.089
+        aggregate_fps: 1237.286877335379
+      - threads: 2
+        average_latency_ms: 1.1235866666666667
+        observed_min_latency_ms: 1.031
+        observed_max_latency_ms: 1.609
+        aggregate_fps: 1747.0351357883058
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1468.521398
+        metrics_ms:
+          preprocess:
+            mean: 1.4903197350000001
+            p50: 1.4814915
+            p95: 1.5678714999999999
+            min: 1.341713
+            max: 8.425411
+          runtime:
+            mean: 0.9488786266666667
+            p50: 0.9313885
+            p95: 1.1192661999999955
+            min: 0.903401
+            max: 1.268336
+          postprocess:
+            mean: 0.005447468333333334
+            p50: 0.005375
+            p95: 0.006027199999999999
+            min: 0.00455
+            max: 0.01045
+          end_to_end:
+            mean: 2.44464583
+            p50: 2.423768
+            p95: 2.65215405
+            min: 2.265464
+            max: 9.382338
+        throughput_fps: 408.57423039061496
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 2286.691132
+        metrics_ms:
+          preprocess:
+            mean: 2.7291236041666664
+            p50: 1.7492860000000001
+            p95: 6.69409315
+            min: 1.361237
+            max: 8.511958
+          runtime:
+            mean: 0.9973106075
+            p50: 0.945551
+            p95: 1.270005
+            min: 0.890275
+            max: 2.330015
+          postprocess:
+            mean: 0.005796654166666667
+            p50: 0.0055
+            p95: 0.008025
+            min: 0.004225
+            max: 0.025526
+          end_to_end:
+            mean: 3.7322308658333334
+            p50: 2.725225
+            p95: 7.6675479499999994
+            min: 2.278538
+            max: 9.48886
+        throughput_fps: 524.775726466586
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet34-20261013-s100p-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: fd62694d48a97415a16e4e94d4cc6a5e609721994004753cb4018aa1466bcfbf
+      config_sha256: 46bd6d08917fdbd0bd3cdc7b6a567317863945e58eb968dd360c882273c33c31
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet34.a1_in1k
+        revision: 0e8757122c4c09b15fb9300c0fd09b3fe89e28bf
+        model_safetensors_sha256: 829a220f9529d2b1ffdc8719d3273463001e0daf411eaf1916865d9db62c0ed2
+  - platform: s600
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: hbm
+      march: nash-p
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/s600/resnet34_nashp_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/s600/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/s600/SHA256SUMS
+      size_bytes: 22257224
+      sha256: f57bf280157b858b553ccb4e8f9cd1f52f14f4fdacccc83ce4bf20943857b72f
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/34-224/s600/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.6492
+        top5: 0.8506
+      runtime:
+        top1: 0.6423
+        top5: 0.8475
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.52526
+        observed_min_latency_ms: 0.505
+        observed_max_latency_ms: 0.969
+        aggregate_fps: 1860.1421148575748
+      - threads: 2
+        average_latency_ms: 0.5564433333333333
+        observed_min_latency_ms: 0.52
+        observed_max_latency_ms: 1.252
+        aggregate_fps: 3492.961682210346
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 923.5813360000001
+        metrics_ms:
+          preprocess:
+            mean: 0.7974572583333334
+            p50: 0.7980145000000001
+            p95: 0.8448829999999999
+            min: 0.736552
+            max: 1.247604
+          runtime:
+            mean: 0.7347411566666667
+            p50: 0.7238645
+            p95: 0.7722308
+            min: 0.698727
+            max: 1.017628
+          postprocess:
+            mean: 0.0053136
+            p50: 0.0051
+            p95: 0.006575
+            min: 0.004525
+            max: 0.018875
+          end_to_end:
+            mean: 1.537512015
+            p50: 1.5281799999999999
+            p95: 1.63203525
+            min: 1.447579
+            max: 2.011481
+        throughput_fps: 649.6450032203769
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 1196.8391980000001
+        metrics_ms:
+          preprocess:
+            mean: 1.1575126366666668
+            p50: 0.842427
+            p95: 4.244259499999999
+            min: 0.756677
+            max: 6.971995
+          runtime:
+            mean: 0.7800820866666667
+            p50: 0.7551395000000001
+            p95: 0.9637995500000001
+            min: 0.695177
+            max: 1.154928
+          postprocess:
+            mean: 0.006121750833333333
+            p50: 0.00565
+            p95: 0.00872625
+            min: 0.0047
+            max: 0.0291
+          end_to_end:
+            mean: 1.9437164741666668
+            p50: 1.6096795
+            p95: 5.218509999999998
+            min: 1.480954
+            max: 7.763922
+        throughput_fps: 1002.6409579543198
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet34-20261013-s600-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: fd62694d48a97415a16e4e94d4cc6a5e609721994004753cb4018aa1466bcfbf
+      config_sha256: ca4b25cea24727331ca1eb33d2b08c47c27318e1c618c6a75bf0ab7aca41d7b0
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet34.a1_in1k
+        revision: 0e8757122c4c09b15fb9300c0fd09b3fe89e28bf
+        model_safetensors_sha256: 829a220f9529d2b1ffdc8719d3273463001e0daf411eaf1916865d9db62c0ed2
+- size: 50-224
+  model:
+    parameter_count: 25557032
+    gflops: 8.178368512
+    gflops_method: FP32 simplified ONNX static batch=1 224x224; Conv and Gemm multiply-accumulate counted
+      as 2 FLOPs; excludes activation, pooling, additions and preprocessing
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+      geometry: PIL bicubic shorter=235, center crop=224
+  platforms:
+  - platform: x5
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/x5/resnet50_bayese_224x224_nv12.bin
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/x5/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/x5/SHA256SUMS
+      size_bytes: 25040896
+      sha256: 6910443e0bcaaf9b2a3411633674af38e577260b15129a73dd6e68fcb972250b
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/x5/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.6884
+        top5: 0.8759
+      runtime:
+        top1: 0.669
+        top5: 0.8625
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 5.403850333333334
+        observed_min_latency_ms: 5.379
+        observed_max_latency_ms: 6.184
+        aggregate_fps: 184.82739585592336
+      - threads: 2
+        average_latency_ms: 10.152739333333333
+        observed_min_latency_ms: 6.331
+        observed_max_latency_ms: 11.049
+        aggregate_fps: 196.28780503124904
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 7942.219340999999
+        metrics_ms:
+          preprocess:
+            mean: 7.485044343333334
+            p50: 7.6247489999999996
+            p95: 7.979820950000001
+            min: 6.785559
+            max: 8.305979
+          runtime:
+            mean: 5.715727376666667
+            p50: 5.7142645000000005
+            p95: 5.73730605
+            min: 5.690348
+            max: 5.775223
+          postprocess:
+            mean: 0.030171338333333336
+            p50: 0.03
+            p95: 0.031584
+            min: 0.027875
+            max: 0.070375
+          end_to_end:
+            mean: 13.230943058333333
+            p50: 13.372555
+            p95: 13.728715600000001
+            min: 12.527282
+            max: 14.061452
+        throughput_fps: 75.5456345687444
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 13027.030509999999
+        metrics_ms:
+          preprocess:
+            mean: 15.137833584166668
+            p50: 8.5297925
+            p95: 46.72395055
+            min: 6.853892
+            max: 50.267212
+          runtime:
+            mean: 6.1448677275
+            p50: 5.709348
+            p95: 9.15614485
+            min: 5.589098
+            max: 11.732155
+          postprocess:
+            mean: 0.03070051083333333
+            p50: 0.030292
+            p95: 0.033959
+            min: 0.027625
+            max: 0.050625
+          end_to_end:
+            mean: 21.3134018225
+            p50: 14.350391
+            p95: 55.8291114
+            min: 12.563449
+            max: 59.208735
+        throughput_fps: 92.11615794396417
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet50-20261013-x5-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      onnx_sha256: ff9dd0660b3ddb49d28995136df47aaa1a86516f399b9cd5b665d3982acde4fa
+      config_sha256: 0132b934b2f8736d1400035005faf8aa3dadc72807dd71091dc94963e9f9f4ee
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet50.a1_in1k
+        revision: 767268603ca0cb0bfe326fa87277f19c419566ef
+        model_safetensors_sha256: 773525d5821de224f8f30c33377b7a795d7863e08522698200d3217d3f2a41bb
+  - platform: s100
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: hbm
+      march: nash-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/s100/resnet50_nashe_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/s100/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/s100/SHA256SUMS
+      size_bytes: 26496328
+      sha256: 118bc79923f698afd91666f19f32ae8651ee46e3f1aedfdc1f11bff1e8eb74e9
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/s100/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.6884
+        top5: 0.8759
+      runtime:
+        top1: 0.6701
+        top5: 0.864
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.0695649999999999
+        observed_min_latency_ms: 1.035
+        observed_max_latency_ms: 1.464
+        aggregate_fps: 918.7559432025075
+      - threads: 2
+        average_latency_ms: 1.5976366666666668
+        observed_min_latency_ms: 1.326
+        observed_max_latency_ms: 2.09
+        aggregate_fps: 1231.2870027396134
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1926.9936890000001
+        metrics_ms:
+          preprocess:
+            mean: 1.9436408816666668
+            p50: 1.9479090000000001
+            p95: 2.089569
+            min: 1.757099
+            max: 6.073186
+          runtime:
+            mean: 1.25777643
+            p50: 1.2294695
+            p95: 1.600846
+            min: 1.188457
+            max: 1.692075
+          postprocess:
+            mean: 0.006984470000000001
+            p50: 0.00675
+            p95: 0.008723999999999977
+            min: 0.00555
+            max: 0.0158
+          end_to_end:
+            mean: 3.2084017816666663
+            p50: 3.1917030000000004
+            p95: 3.5718444999999996
+            min: 2.972106
+            max: 7.497891
+        throughput_fps: 311.3658355110472
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 3031.6262490000004
+        metrics_ms:
+          preprocess:
+            mean: 3.625243000833334
+            p50: 2.2940294999999997
+            p95: 8.90874125
+            min: 1.772274
+            max: 20.933571
+          runtime:
+            mean: 1.3060143166666667
+            p50: 1.2443695
+            p95: 1.6527985
+            min: 1.169333
+            max: 3.230153
+          postprocess:
+            mean: 0.007459112499999999
+            p50: 0.006775
+            p95: 0.01135
+            min: 0.005475
+            max: 0.096999
+          end_to_end:
+            mean: 4.93871643
+            p50: 3.569923
+            p95: 10.1879095
+            min: 2.990531
+            max: 22.227077
+        throughput_fps: 395.82715725456825
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet50-20261013-s100-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: ff9dd0660b3ddb49d28995136df47aaa1a86516f399b9cd5b665d3982acde4fa
+      config_sha256: 08fea64dc3c8eaa2e32c99d860d31d7f6d50f9e43a0d0412cb962bf910704ed9
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet50.a1_in1k
+        revision: 767268603ca0cb0bfe326fa87277f19c419566ef
+        model_safetensors_sha256: 773525d5821de224f8f30c33377b7a795d7863e08522698200d3217d3f2a41bb
+  - platform: s100p
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: hbm
+      march: nash-m
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/s100p/resnet50_nashm_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/s100p/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/s100p/SHA256SUMS
+      size_bytes: 26502480
+      sha256: 0bdfebc791334efcbe7b61e6551d3900786aade6f2239ccb214e30d3b6ee6375
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/s100p/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.6884
+        top5: 0.8759
+      runtime:
+        top1: 0.6701
+        top5: 0.864
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.9159
+        observed_min_latency_ms: 0.894
+        observed_max_latency_ms: 1.284
+        aggregate_fps: 1071.7003240107315
+      - threads: 2
+        average_latency_ms: 1.3736766666666667
+        observed_min_latency_ms: 1.174
+        observed_max_latency_ms: 1.888
+        aggregate_fps: 1432.7297561255166
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1531.97787
+        metrics_ms:
+          preprocess:
+            mean: 1.4685683183333333
+            p50: 1.4795034999999999
+            p95: 1.5599877500000001
+            min: 1.335753
+            max: 2.267105
+          runtime:
+            mean: 1.0763548633333333
+            p50: 1.05634
+            p95: 1.3413842499999997
+            min: 1.033903
+            max: 1.406328
+          postprocess:
+            mean: 0.005533225
+            p50: 0.005425
+            p95: 0.006125
+            min: 0.00435
+            max: 0.02135
+          end_to_end:
+            mean: 2.5504564066666666
+            p50: 2.5465685000000002
+            p95: 2.820106
+            min: 2.386256
+            max: 3.339733
+        throughput_fps: 391.6505660750831
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 2354.2483720000005
+        metrics_ms:
+          preprocess:
+            mean: 2.7139795183333333
+            p50: 1.7389535
+            p95: 5.6145908
+            min: 1.353003
+            max: 8.485319
+          runtime:
+            mean: 1.1238180574999999
+            p50: 1.077502
+            p95: 1.3791017499999998
+            min: 1.034352
+            max: 1.842129
+          postprocess:
+            mean: 0.005599138333333333
+            p50: 0.005325
+            p95: 0.007825
+            min: 0.004125
+            max: 0.0187
+          end_to_end:
+            mean: 3.843396714166667
+            p50: 2.845831
+            p95: 6.7678087499999995
+            min: 2.409406
+            max: 9.881297
+        throughput_fps: 509.716822690448
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet50-20261013-s100p-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: ff9dd0660b3ddb49d28995136df47aaa1a86516f399b9cd5b665d3982acde4fa
+      config_sha256: 041dc125a5759dc760bc633300bb3971a3a2da1b2d785a3d536df0b59f1f677c
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet50.a1_in1k
+        revision: 767268603ca0cb0bfe326fa87277f19c419566ef
+        model_safetensors_sha256: 773525d5821de224f8f30c33377b7a795d7863e08522698200d3217d3f2a41bb
+  - platform: s600
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: hbm
+      march: nash-p
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/s600/resnet50_nashp_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/s600/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/s600/SHA256SUMS
+      size_bytes: 26409088
+      sha256: 6bcd64de9dc28c87229d5c1f45046eddccec7ba3c331a4a1215ab22133a30877
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/50-224/s600/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.6884
+        top5: 0.8759
+      runtime:
+        top1: 0.6694
+        top5: 0.8641
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.5929166666666666
+        observed_min_latency_ms: 0.569
+        observed_max_latency_ms: 1.083
+        aggregate_fps: 1651.895963592213
+      - threads: 2
+        average_latency_ms: 0.63178
+        observed_min_latency_ms: 0.585
+        observed_max_latency_ms: 1.34
+        aggregate_fps: 3081.094404732561
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 955.547752
+        metrics_ms:
+          preprocess:
+            mean: 0.784042345
+            p50: 0.791359
+            p95: 0.818854
+            min: 0.735658
+            max: 0.911186
+          runtime:
+            mean: 0.8012310766666667
+            p50: 0.7910965
+            p95: 0.8317214999999999
+            min: 0.768584
+            max: 1.044712
+          postprocess:
+            mean: 0.005534809999999999
+            p50: 0.00525
+            p95: 0.008031249999999993
+            min: 0.0046
+            max: 0.0107
+          end_to_end:
+            mean: 1.5908082316666665
+            p50: 1.586768
+            p95: 1.6782202499999999
+            min: 1.516593
+            max: 1.855746
+        throughput_fps: 627.9121045956896
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 1143.14315
+        metrics_ms:
+          preprocess:
+            mean: 0.9961542166666665
+            p50: 0.845709
+            p95: 0.9521999999999997
+            min: 0.753608
+            max: 6.821901
+          runtime:
+            mean: 0.8632725775
+            p50: 0.8407720000000001
+            p95: 0.9891485
+            min: 0.768183
+            max: 1.224513
+          postprocess:
+            mean: 0.006402496666666666
+            p50: 0.006
+            p95: 0.00897625
+            min: 0.005075
+            max: 0.0112
+          end_to_end:
+            mean: 1.8658292908333336
+            p50: 1.7115065
+            p95: 2.01242205
+            min: 1.543693
+            max: 8.000739
+        throughput_fps: 1049.7372966806477
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet50-20261013-s600-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: ff9dd0660b3ddb49d28995136df47aaa1a86516f399b9cd5b665d3982acde4fa
+      config_sha256: d91dd6f60d03bb90ef2bd3c432f0aa90333917c5f12cc9465dc028651a0102ad
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet50.a1_in1k
+        revision: 767268603ca0cb0bfe326fa87277f19c419566ef
+        model_safetensors_sha256: 773525d5821de224f8f30c33377b7a795d7863e08522698200d3217d3f2a41bb
+- size: 101-224
+  model:
+    parameter_count: 44549160
+    gflops: 15.60281088
+    gflops_method: FP32 simplified ONNX static batch=1 224x224; Conv and Gemm multiply-accumulate counted
+      as 2 FLOPs; excludes activation, pooling, additions and preprocessing
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+      geometry: PIL bicubic shorter=235, center crop=224
+  platforms:
+  - platform: x5
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/x5/resnet101_bayese_224x224_nv12.bin
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/x5/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/x5/SHA256SUMS
+      size_bytes: 43849733
+      sha256: 67db7c52d02b858526328fdfc541a9c50119da98882de9bd836754b9e882c116
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/x5/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.7032
+        top5: 0.8835
+      runtime:
+        top1: 0.6859
+        top5: 0.8766
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 9.044266
+        observed_min_latency_ms: 9.01
+        observed_max_latency_ms: 9.871
+        aggregate_fps: 110.47249823980485
+      - threads: 2
+        average_latency_ms: 17.391226
+        observed_min_latency_ms: 9.956
+        observed_max_latency_ms: 18.375999
+        aggregate_fps: 114.64210930781196
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 10203.470338000001
+        metrics_ms:
+          preprocess:
+            mean: 7.612076106666667
+            p50: 7.641189499999999
+            p95: 8.555672949999998
+            min: 6.809104
+            max: 12.419786
+          runtime:
+            mean: 9.356870595
+            p50: 9.349548500000001
+            p95: 9.40556725
+            min: 9.321194
+            max: 9.566903
+          postprocess:
+            mean: 0.030397456666666673
+            p50: 0.030125
+            p95: 0.03284344999999999
+            min: 0.02725
+            max: 0.055292
+          end_to_end:
+            mean: 16.999344158333333
+            p50: 17.019446000000002
+            p95: 18.040233949999994
+            min: 16.172006
+            max: 22.022981
+        throughput_fps: 58.80352273534486
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 10592.146758
+        metrics_ms:
+          preprocess:
+            mean: 7.618666773333333
+            p50: 7.652668500000001
+            p95: 7.999650099999999
+            min: 6.822104
+            max: 31.148966
+          runtime:
+            mean: 9.929618886666667
+            p50: 9.768112
+            p95: 10.57821885
+            min: 9.30761
+            max: 13.879374
+          postprocess:
+            mean: 0.034023695
+            p50: 0.033833
+            p95: 0.038584
+            min: 0.027375
+            max: 0.072416
+          end_to_end:
+            mean: 17.582309355
+            p50: 17.4591135
+            p95: 17.590074599999998
+            min: 16.241506
+            max: 43.752379
+        throughput_fps: 113.2914816435741
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet101-20261013-x5-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      onnx_sha256: 21d72562480532711bb313f01bc78b97d30c712d6e7a007fa43f413c348f5f9c
+      config_sha256: ff58d82569018d95eae5d81ae423c503dd622f5c75e8bc6b3d9658a05c2b803f
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet101.a1_in1k
+        revision: d90ce63ac1b05b22614f11dcea68fcedfc2c4dee
+        model_safetensors_sha256: 1ba5b660e7c175b3c27c557fc7dc8b2815be830c516815b0155f61b403f27380
+  - platform: s100
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: hbm
+      march: nash-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/s100/resnet101_nashe_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/s100/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/s100/SHA256SUMS
+      size_bytes: 46029392
+      sha256: 9ae4a198c1b5becdf1dd564eb5627a3f2b8ec9ecc29315d360ce41ac321c7142
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/s100/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.7032
+        top5: 0.8835
+      runtime:
+        top1: 0.6864
+        top5: 0.8767
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.613945
+        observed_min_latency_ms: 1.578
+        observed_max_latency_ms: 2.012
+        aggregate_fps: 612.7382147463621
+      - threads: 2
+        average_latency_ms: 2.679995
+        observed_min_latency_ms: 1.825
+        observed_max_latency_ms: 3.241
+        aggregate_fps: 739.321426151031
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 2259.3374160000003
+        metrics_ms:
+          preprocess:
+            mean: 1.9570082549999999
+            p50: 1.9435025000000001
+            p95: 2.03937875
+            min: 1.751842
+            max: 21.44147
+          runtime:
+            mean: 1.79835933
+            p50: 1.7644039999999999
+            p95: 2.149119
+            min: 1.737017
+            max: 2.206114
+          postprocess:
+            mean: 0.006943293333333335
+            p50: 0.0067375
+            p95: 0.0078037499999999965
+            min: 0.0056
+            max: 0.0474
+          end_to_end:
+            mean: 3.7623108783333334
+            p50: 3.722657
+            p95: 4.0996637
+            min: 3.503633
+            max: 23.240761
+        throughput_fps: 265.56458355930664
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 3157.657837
+        metrics_ms:
+          preprocess:
+            mean: 3.2594750733333333
+            p50: 2.241139
+            p95: 7.446179249999999
+            min: 1.769516
+            max: 11.910092
+          runtime:
+            mean: 1.8814196675000001
+            p50: 1.7932415000000002
+            p95: 2.34400555
+            min: 1.734667
+            max: 3.129185
+          postprocess:
+            mean: 0.007915021666666666
+            p50: 0.007174
+            p95: 0.011903749999999998
+            min: 0.005425
+            max: 0.043949
+          end_to_end:
+            mean: 5.1488097625
+            p50: 4.0877925
+            p95: 9.25096875
+            min: 3.514658
+            max: 14.842903
+        throughput_fps: 380.02850908636935
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet101-20261013-s100-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: 21d72562480532711bb313f01bc78b97d30c712d6e7a007fa43f413c348f5f9c
+      config_sha256: 0d79f4a7dba171a927c3995558e16c579e952a7833fe03c3f220b3463aad8562
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet101.a1_in1k
+        revision: d90ce63ac1b05b22614f11dcea68fcedfc2c4dee
+        model_safetensors_sha256: 1ba5b660e7c175b3c27c557fc7dc8b2815be830c516815b0155f61b403f27380
+  - platform: s100p
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: hbm
+      march: nash-m
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/s100p/resnet101_nashm_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/s100p/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/s100p/SHA256SUMS
+      size_bytes: 46006360
+      sha256: 47f07158654e29c60336d9bb37634d0146fe86e924554b33d70cd29605732d72
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/s100p/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.7032
+        top5: 0.8835
+      runtime:
+        top1: 0.6864
+        top5: 0.8767
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.3947016666666667
+        observed_min_latency_ms: 1.361
+        observed_max_latency_ms: 1.716
+        aggregate_fps: 709.0899421500789
+      - threads: 2
+        average_latency_ms: 2.323325
+        observed_min_latency_ms: 1.645
+        observed_max_latency_ms: 2.818
+        aggregate_fps: 852.4265030765492
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1822.3246830000003
+        metrics_ms:
+          preprocess:
+            mean: 1.4730106066666666
+            p50: 1.4899265
+            p95: 1.5588199999999999
+            min: 1.349688
+            max: 1.992369
+          runtime:
+            mean: 1.5557439133333335
+            p50: 1.5339025
+            p95: 1.8186844999999998
+            min: 1.503389
+            max: 1.894318
+          postprocess:
+            mean: 0.005619675
+            p50: 0.005525
+            p95: 0.006904699999999996
+            min: 0.0043
+            max: 0.011775
+          end_to_end:
+            mean: 3.0343741950000003
+            p50: 3.0341785
+            p95: 3.2665800499999995
+            min: 2.872028
+            max: 3.65111
+        throughput_fps: 329.24977946973235
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 2291.411918
+        metrics_ms:
+          preprocess:
+            mean: 2.146364318333333
+            p50: 1.6833529999999999
+            p95: 5.4395225
+            min: 1.344563
+            max: 8.542155
+          runtime:
+            mean: 1.6025829375
+            p50: 1.5598775
+            p95: 1.84958575
+            min: 1.495289
+            max: 2.574799
+          postprocess:
+            mean: 0.006168848333333333
+            p50: 0.0059629999999999996
+            p95: 0.008151249999999999
+            min: 0.00455
+            max: 0.0219
+          end_to_end:
+            mean: 3.755116104166667
+            p50: 3.2793305
+            p95: 7.11179855
+            min: 2.881476
+            max: 11.016628
+        throughput_fps: 523.6945791254282
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet101-20261013-s100p-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: 21d72562480532711bb313f01bc78b97d30c712d6e7a007fa43f413c348f5f9c
+      config_sha256: 3e8d7edaadefe8cf60c5df5328024f25e39ee60019c502f66e596be821025039
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet101.a1_in1k
+        revision: d90ce63ac1b05b22614f11dcea68fcedfc2c4dee
+        model_safetensors_sha256: 1ba5b660e7c175b3c27c557fc7dc8b2815be830c516815b0155f61b403f27380
+  - platform: s600
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: hbm
+      march: nash-p
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/s600/resnet101_nashp_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/s600/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/s600/SHA256SUMS
+      size_bytes: 46014888
+      sha256: 3662582a82aaace43d742924ecd74750d754385c5df8d55e0d0643e632f27495
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/101-224/s600/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.7032
+        top5: 0.8835
+      runtime:
+        top1: 0.6865
+        top5: 0.8756
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.8762783333333334
+        observed_min_latency_ms: 0.86
+        observed_max_latency_ms: 1.11
+        aggregate_fps: 1122.844839685828
+      - threads: 2
+        average_latency_ms: 0.9448033333333333
+        observed_min_latency_ms: 0.866
+        observed_max_latency_ms: 1.612
+        aggregate_fps: 2077.1667445604194
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1136.653025
+        metrics_ms:
+          preprocess:
+            mean: 0.7940513633333334
+            p50: 0.796067
+            p95: 0.8347824999999999
+            min: 0.735179
+            max: 1.431283
+          runtime:
+            mean: 1.0931219749999999
+            p50: 1.0799815000000001
+            p95: 1.2141582499999999
+            min: 1.058056
+            max: 1.347808
+          postprocess:
+            mean: 0.005371698333333333
+            p50: 0.0052
+            p95: 0.0068524999999999975
+            min: 0.00455
+            max: 0.009925
+          end_to_end:
+            mean: 1.8925450366666667
+            p50: 1.8819985
+            p95: 2.05420855
+            min: 1.808835
+            max: 2.786916
+        throughput_fps: 527.8655726975257
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 1275.6221560000001
+        metrics_ms:
+          preprocess:
+            mean: 0.9263937033333334
+            p50: 0.8244675
+            p95: 0.8979512999999999
+            min: 0.750879
+            max: 6.525611
+          runtime:
+            mean: 1.17606902
+            p50: 1.139244
+            p95: 1.32202175
+            min: 1.060331
+            max: 1.825711
+          postprocess:
+            mean: 0.006137441666666667
+            p50: 0.005875
+            p95: 0.00825
+            min: 0.004925
+            max: 0.015475
+          end_to_end:
+            mean: 2.1086001650000004
+            p50: 1.9779110000000002
+            p95: 2.22185955
+            min: 1.841161
+            max: 8.356622
+        throughput_fps: 940.7174329449323
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet101-20261013-s600-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: 21d72562480532711bb313f01bc78b97d30c712d6e7a007fa43f413c348f5f9c
+      config_sha256: a4e89b66c56a3664b1f13f142b290a5ebcc1511887a7c142d01e4362894c93ea
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet101.a1_in1k
+        revision: d90ce63ac1b05b22614f11dcea68fcedfc2c4dee
+        model_safetensors_sha256: 1ba5b660e7c175b3c27c557fc7dc8b2815be830c516815b0155f61b403f27380
+- size: 152-224
+  model:
+    parameter_count: 60192808
+    gflops: 23.027253248
+    gflops_method: FP32 simplified ONNX static batch=1 224x224; Conv and Gemm multiply-accumulate counted
+      as 2 FLOPs; excludes activation, pooling, additions and preprocessing
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+      geometry: PIL bicubic shorter=235, center crop=224
+  platforms:
+  - platform: x5
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/x5/resnet152_bayese_224x224_nv12.bin
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/x5/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/x5/SHA256SUMS
+      size_bytes: 59512837
+      sha256: 76a029ff8b0db1ac98ffdbcdeb0bfae7552b03a5491e72815e7f3f46a4547497
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/x5/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.7087
+        top5: 0.8816
+      runtime:
+        top1: 0.6934
+        top5: 0.8778
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 12.331685333333333
+        observed_min_latency_ms: 12.3
+        observed_max_latency_ms: 13.141
+        aggregate_fps: 81.04086728855627
+      - threads: 2
+        average_latency_ms: 23.94934466666667
+        observed_min_latency_ms: 13.287
+        observed_max_latency_ms: 24.947001
+        aggregate_fps: 83.26406225931481
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 12164.509353
+        metrics_ms:
+          preprocess:
+            mean: 7.593850961666667
+            p50: 7.641877
+            p95: 8.445889599999997
+            min: 6.78827
+            max: 13.297457
+          runtime:
+            mean: 12.643185798333334
+            p50: 12.6366215
+            p95: 12.6944904
+            min: 12.604788
+            max: 12.925331
+          postprocess:
+            mean: 0.030715724999999996
+            p50: 0.030542
+            p95: 0.03304405
+            min: 0.027708
+            max: 0.03975
+          end_to_end:
+            mean: 20.267752485000003
+            p50: 20.313499
+            p95: 21.188329699999997
+            min: 19.441183
+            max: 26.059787
+        throughput_fps: 49.32381426892722
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 14539.583336
+        metrics_ms:
+          preprocess:
+            mean: 7.611206404166666
+            p50: 7.6518355
+            p95: 7.9717886
+            min: 6.816104
+            max: 47.083516
+          runtime:
+            mean: 16.501034490833334
+            p50: 16.3908405
+            p95: 17.173518350000002
+            min: 12.589121
+            max: 21.82469
+          postprocess:
+            mean: 0.03327114333333333
+            p50: 0.033125
+            p95: 0.036627099999999996
+            min: 0.027666
+            max: 0.067291
+          end_to_end:
+            mean: 24.145512038333333
+            p50: 24.070572499999997
+            p95: 24.09782205
+            min: 19.487433
+            max: 59.793596
+        throughput_fps: 82.53331421326227
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet152-20261013-x5-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      onnx_sha256: ad8fe8169b6c7d210ea278da78cad3b233a9d493f465ef6c263da75eb9b6eb80
+      config_sha256: 0f92f8611873a0edd3e9cf47e215e5c16e1457350adcd230288b08491dd4e42e
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet152.a1_in1k
+        revision: 5529f135ee86e1bff01db5688add74a2c27ee16a
+        model_safetensors_sha256: 5a3518da3d35ee04e77a5e69289cff55c3a07a732d7287f6cab20bd4d330eda9
+  - platform: s100
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: hbm
+      march: nash-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/s100/resnet152_nashe_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/s100/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/s100/SHA256SUMS
+      size_bytes: 62128976
+      sha256: a4b93d4659b0bc5e1bbdad9e0b6814291c837d24148ca29597bc1a9149c699f0
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/s100/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.7087
+        top5: 0.8816
+      runtime:
+        top1: 0.6927
+        top5: 0.8774
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 2.127683333333333
+        observed_min_latency_ms: 2.089
+        observed_max_latency_ms: 2.648
+        aggregate_fps: 465.81789470497034
+      - threads: 2
+        average_latency_ms: 3.700791666666667
+        observed_min_latency_ms: 2.324
+        observed_max_latency_ms: 4.178
+        aggregate_fps: 536.014836890685
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 2548.268955
+        metrics_ms:
+          preprocess:
+            mean: 1.9207438466666666
+            p50: 1.9379465
+            p95: 2.03644125
+            min: 1.754508
+            max: 3.254215
+          runtime:
+            mean: 2.3162762116666666
+            p50: 2.27431
+            p95: 2.65920075
+            min: 2.25046
+            max: 2.794812
+          postprocess:
+            mean: 0.006900020000000001
+            p50: 0.0066
+            p95: 0.008383749999999992
+            min: 0.0055
+            max: 0.037525
+          end_to_end:
+            mean: 4.243920078333332
+            p50: 4.242619
+            p95: 4.46365875
+            min: 4.028093
+            max: 5.655926
+        throughput_fps: 235.4539534858478
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 2837.4261
+        metrics_ms:
+          preprocess:
+            mean: 2.30549467
+            p50: 2.072609
+            p95: 2.690606999999999
+            min: 1.776083
+            max: 11.607751
+          runtime:
+            mean: 2.36525278
+            p50: 2.3229105
+            p95: 2.7072920000000003
+            min: 2.24571
+            max: 3.924192
+          postprocess:
+            mean: 0.008769499166666668
+            p50: 0.0077505000000000004
+            p95: 0.01375125
+            min: 0.0057
+            max: 0.03935
+          end_to_end:
+            mean: 4.679516949166667
+            p50: 4.4329944999999995
+            p95: 5.1442695999999914
+            min: 4.075443
+            max: 13.958811
+        throughput_fps: 422.9185034986462
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet152-20261013-s100-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: ad8fe8169b6c7d210ea278da78cad3b233a9d493f465ef6c263da75eb9b6eb80
+      config_sha256: 9ca50496d8937ef94f0199c0faaa58f2cb66bf343effd14a9b3f675ec2a206b1
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet152.a1_in1k
+        revision: 5529f135ee86e1bff01db5688add74a2c27ee16a
+        model_safetensors_sha256: 5a3518da3d35ee04e77a5e69289cff55c3a07a732d7287f6cab20bd4d330eda9
+  - platform: s100p
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: hbm
+      march: nash-m
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/s100p/resnet152_nashm_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/s100p/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/s100p/SHA256SUMS
+      size_bytes: 62127704
+      sha256: 892b1c9849ceb10cb555c1abf8a1b0a8abfec715c09962b74b9f1feb5c80ee34
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/s100p/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.7087
+        top5: 0.8816
+      runtime:
+        top1: 0.6927
+        top5: 0.8774
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.8423283333333333
+        observed_min_latency_ms: 1.81
+        observed_max_latency_ms: 2.196
+        aggregate_fps: 537.8209110148413
+      - threads: 2
+        average_latency_ms: 3.2080616666666666
+        observed_min_latency_ms: 2.019
+        observed_max_latency_ms: 3.534
+        aggregate_fps: 617.6614103680645
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 2108.666553
+        metrics_ms:
+          preprocess:
+            mean: 1.4968947533333334
+            p50: 1.4861065
+            p95: 1.7446003
+            min: 1.337299
+            max: 3.787198
+          runtime:
+            mean: 2.0087918283333335
+            p50: 1.980197
+            p95: 2.27670785
+            min: 1.951499
+            max: 2.563524
+          postprocess:
+            mean: 0.005797309999999999
+            p50: 0.00555
+            p95: 0.0076
+            min: 0.00455
+            max: 0.020625
+          end_to_end:
+            mean: 3.511483891666667
+            p50: 3.4865235
+            p95: 3.804135199999999
+            min: 3.311874
+            max: 5.804897
+        throughput_fps: 284.54000901488195
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 2202.666789
+        metrics_ms:
+          preprocess:
+            mean: 1.5821115633333336
+            p50: 1.5761875
+            p95: 1.78222945
+            min: 1.366615
+            max: 6.455075
+          runtime:
+            mean: 2.0655838816666665
+            p50: 2.045859
+            p95: 2.2225992499999996
+            min: 1.96281
+            max: 2.616455
+          postprocess:
+            mean: 0.0065282633333333335
+            p50: 0.006025
+            p95: 0.009802499999999997
+            min: 0.00465
+            max: 0.019825
+          end_to_end:
+            mean: 3.6542237083333333
+            p50: 3.610622
+            p95: 3.8769125
+            min: 3.347499
+            max: 9.027605
+        throughput_fps: 544.7941586048039
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet152-20261013-s100p-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: ad8fe8169b6c7d210ea278da78cad3b233a9d493f465ef6c263da75eb9b6eb80
+      config_sha256: 0daeac52a2866dad6b0d088c14aa6629ab9a621a53f4bacea3d4029e7eab4f6a
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet152.a1_in1k
+        revision: 5529f135ee86e1bff01db5688add74a2c27ee16a
+        model_safetensors_sha256: 5a3518da3d35ee04e77a5e69289cff55c3a07a732d7287f6cab20bd4d330eda9
+  - platform: s600
+    status: released
+    released_at: '2026-10-13'
+    artifact:
+      format: hbm
+      march: nash-p
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/s600/resnet152_nashp_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/s600/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/s600/SHA256SUMS
+      size_bytes: 62202184
+      sha256: 382582948c00baafe070ee702b71104d3f4bd48aa9e4651bfb387e77c625c6f9
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/resnet/resnet/cls/152-224/s600/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.7087
+        top5: 0.8816
+      runtime:
+        top1: 0.6922
+        top5: 0.8774
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.1365983333333334
+        observed_min_latency_ms: 1.118
+        observed_max_latency_ms: 1.375
+        aggregate_fps: 869.1948647967388
+      - threads: 2
+        average_latency_ms: 1.2328016666666668
+        observed_min_latency_ms: 1.145
+        observed_max_latency_ms: 2.236
+        aggregate_fps: 1598.1333802119125
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1284.142108
+        metrics_ms:
+          preprocess:
+            mean: 0.7862545616666667
+            p50: 0.792479
+            p95: 0.82401275
+            min: 0.736079
+            max: 0.865655
+          runtime:
+            mean: 1.346704875
+            p50: 1.3323065
+            p95: 1.4756117
+            min: 1.317307
+            max: 1.589558
+          postprocess:
+            mean: 0.0054711099999999995
+            p50: 0.005275
+            p95: 0.007252499999999998
+            min: 0.0047
+            max: 0.010075
+          end_to_end:
+            mean: 2.1384305466666667
+            p50: 2.1295485000000003
+            p95: 2.3013031999999995
+            min: 2.068211
+            max: 2.445612
+        throughput_fps: 467.2380075866183
+      - tool: classification_benchmark
+        implementation: native_cpp_classification_benchmark
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        frames_per_round: 200
+        frames_semantics: per stream
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 1443.924281
+        metrics_ms:
+          preprocess:
+            mean: 0.9605615508333335
+            p50: 0.8198415
+            p95: 0.9162111999999998
+            min: 0.744079
+            max: 6.522584
+          runtime:
+            mean: 1.4161095216666666
+            p50: 1.3954075000000001
+            p95: 1.5975830499999997
+            min: 1.315857
+            max: 2.363587
+          postprocess:
+            mean: 0.006406935833333334
+            p50: 0.006075
+            p95: 0.00895
+            min: 0.00475
+            max: 0.041151
+          end_to_end:
+            mean: 2.3830780083333334
+            p50: 2.2249365
+            p95: 2.5229567499999996
+            min: 2.100011
+            max: 7.965041
+        throughput_fps: 831.0685094712386
+    provenance:
+      repository_commit: ae66224ce61790af5d66087d7a86e123338263e3
+      build_id: resnet152-20261013-s600-attempt-01
+      source_status: clean committed tree (inputs/source-864ce8f3.tar.gz)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: ad8fe8169b6c7d210ea278da78cad3b233a9d493f465ef6c263da75eb9b6eb80
+      config_sha256: cba162ef48ad9feba55eba387bc5c1717d7eac3781d06eb010e92ddee276e6d1
+      campaign_sha256: 5f169592837e0420bec95b151a41c467115cd2ff46c2a0c8343380c9bb7a0de4
+      checkpoint:
+        repo_id: timm/resnet152.a1_in1k
+        revision: 5529f135ee86e1bff01db5688add74a2c27ee16a
+        model_safetensors_sha256: 5a3518da3d35ee04e77a5e69289cff55c3a07a732d7287f6cab20bd4d330eda9

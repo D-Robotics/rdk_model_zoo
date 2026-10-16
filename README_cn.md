@@ -54,6 +54,10 @@
 
 在线模型目录提供模型搜索、模型文件下载，以及性能、精度指标和对应测量条件。
 
+网站源码与已审核的网站发布数据位于 `main` 的
+[model_zoo_web/](model_zoo_web/README.md)，通过 `web-v*` 标签发布。
+样例继续使用 `docs/release/` 清单，网站构建读取自己的 `model_zoo_web/data/`。
+
 ---
 
 ## 仓库目录结构
@@ -127,6 +131,7 @@ rdk_model_zoo/
 |   `-- yoloworld/             # Open-vocabulary object detection
 |-- datasets/              # 数据集与下载脚本
 |-- docs/                  # 项目规范与参考文档
+|-- model_zoo_web/         # 静态网站与已审核的网站发布数据
 |-- skills/                # RDK Model Zoo 技能
 `-- utils/                 # 公共 C++ / Python 工具
 ```

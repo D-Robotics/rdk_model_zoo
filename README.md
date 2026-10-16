@@ -54,6 +54,10 @@ The `samples/` tree is the unified source for all maintained boards. Choose the 
 
 The online catalog presents released models as searchable cards with model assets, measured performance and accuracy results, and their measurement conditions.
 
+Website source and reviewed website release data live in [model_zoo_web/](model_zoo_web/README.md)
+on `main`. Website releases use `web-v*` tags. Samples continue to use the
+`docs/release/` manifests; website builds read their own `model_zoo_web/data/`.
+
 ---
 
 ## Directory Structure
@@ -127,6 +131,7 @@ rdk_model_zoo/
 |   `-- yoloworld/             # Open-vocabulary object detection
 |-- datasets/              # Sample datasets and download scripts
 |-- docs/                  # Project guidelines and reference documentation
+|-- model_zoo_web/         # Static website and reviewed website release data
 |-- skills/                # RDK Model Zoo Agent Skills
 `-- utils/                 # Shared C++ / Python utilities
 ```

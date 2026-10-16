@@ -1,0 +1,4539 @@
+{
+  "schema_version": 1,
+  "generated_from_run": "yolo-v8-v11-20261013/yolo11x-pose/s100/attempt-01",
+  "generated_at": "2026-10-14T00:00:00+08:00",
+  "model": {
+    "sample": "ultralytics_yolo",
+    "family": "yolo11",
+    "task": "pose",
+    "size": "x"
+  },
+  "target": {
+    "platform": "s100",
+    "march": "nash-e"
+  },
+  "toolchain": {
+    "hbdk": "4.7.5",
+    "hmct": "2.6.5",
+    "hb_compile": "3.5.3"
+  },
+  "io": {
+    "inputs": [
+      {
+        "name": "images_y",
+        "shape": [
+          1,
+          640,
+          640,
+          1
+        ],
+        "dtype": "uint8"
+      },
+      {
+        "name": "images_uv",
+        "shape": [
+          1,
+          320,
+          320,
+          2
+        ],
+        "dtype": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output0",
+        "shape": [
+          1,
+          80,
+          80,
+          1
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "1026",
+        "shape": [
+          1,
+          80,
+          80,
+          64
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "1034",
+        "shape": [
+          1,
+          80,
+          80,
+          51
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "1048",
+        "shape": [
+          1,
+          40,
+          40,
+          1
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "1056",
+        "shape": [
+          1,
+          40,
+          40,
+          64
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "1064",
+        "shape": [
+          1,
+          40,
+          40,
+          51
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "1078",
+        "shape": [
+          1,
+          20,
+          20,
+          1
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "1086",
+        "shape": [
+          1,
+          20,
+          20,
+          64
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "1094",
+        "shape": [
+          1,
+          20,
+          20,
+          51
+        ],
+        "dtype": "float32"
+      }
+    ]
+  },
+  "quantization": {
+    "summary": {
+      "total_nodes": 470,
+      "unit_counts": {
+        "BPU": 466,
+        "--": 4
+      },
+      "dtype_counts": {
+        "si8": 448,
+        "--": 4,
+        "si32": 9,
+        "f32": 9
+      },
+      "measured_nodes": 466,
+      "weakest_node": {
+        "name": "/model.2/Split",
+        "cosine": 0.875739
+      },
+      "weakest_nodes": [
+        {
+          "name": "/model.2/Split",
+          "cosine": 0.875739
+        },
+        {
+          "name": "/model.19/m.1/cv3/act/Mul",
+          "cosine": 0.909807
+        },
+        {
+          "name": "/model.19/m.1/cv2/act/Mul",
+          "cosine": 0.914809
+        },
+        {
+          "name": "/model.16/m.1/cv3/act/Mul",
+          "cosine": 0.916274
+        },
+        {
+          "name": "/model.2/m.1/cv2/act/Mul",
+          "cosine": 0.917483
+        }
+      ],
+      "cosine_percentiles": {
+        "p10": 0.93701,
+        "median": 0.967164
+      }
+    },
+    "nodes": [
+      {
+        "name": "/model.0/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.954695,
+        "calibrated_cosine": 0.999349,
+        "threshold": 1.0,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.0/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.95712,
+        "calibrated_cosine": 0.998255,
+        "threshold": 34.560902,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.93145,
+        "calibrated_cosine": 0.998194,
+        "threshold": 32.125648,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.934815,
+        "calibrated_cosine": 0.997506,
+        "threshold": 40.437675,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.952722,
+        "calibrated_cosine": 0.997145,
+        "threshold": 26.580147,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.932423,
+        "calibrated_cosine": 0.995146,
+        "threshold": 22.196863,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/Split",
+        "on": "BPU",
+        "type": "Split",
+        "cosine": 0.875739,
+        "calibrated_cosine": 0.99139,
+        "threshold": 8.269179,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.967465,
+        "calibrated_cosine": 0.997128,
+        "threshold": 8.315968,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.965345,
+        "calibrated_cosine": 0.996653,
+        "threshold": 10.658455,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/m/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.961485,
+        "calibrated_cosine": 0.995734,
+        "threshold": 6.988254,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/m/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.951091,
+        "calibrated_cosine": 0.993429,
+        "threshold": 10.881136,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/m/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.964296,
+        "calibrated_cosine": 0.99375,
+        "threshold": 7.403968,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/m/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.968746,
+        "calibrated_cosine": 0.995178,
+        "threshold": 7.631741,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/m/m.0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.97628,
+        "calibrated_cosine": 0.996896,
+        "threshold": 6.988254,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/m/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.967164,
+        "calibrated_cosine": 0.994309,
+        "threshold": 8.377657,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/m/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.946037,
+        "calibrated_cosine": 0.991751,
+        "threshold": 8.392809,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/m/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.971088,
+        "calibrated_cosine": 0.994596,
+        "threshold": 5.352279,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/m/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.969764,
+        "calibrated_cosine": 0.994168,
+        "threshold": 7.970221,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/m/m.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.980595,
+        "calibrated_cosine": 0.9971,
+        "threshold": 8.377657,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.939337,
+        "calibrated_cosine": 0.995906,
+        "threshold": 8.315968,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.944651,
+        "calibrated_cosine": 0.995235,
+        "threshold": 13.45472,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.971007,
+        "calibrated_cosine": 0.996562,
+        "threshold": 10.52317,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/cv3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.953059,
+        "calibrated_cosine": 0.993777,
+        "threshold": 10.52317,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.0/cv3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.9466,
+        "calibrated_cosine": 0.992158,
+        "threshold": 9.399468,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.97352,
+        "calibrated_cosine": 0.996395,
+        "threshold": 7.443316,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.97582,
+        "calibrated_cosine": 0.996442,
+        "threshold": 4.397845,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/m/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.960958,
+        "calibrated_cosine": 0.994412,
+        "threshold": 3.810414,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/m/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.935362,
+        "calibrated_cosine": 0.99084,
+        "threshold": 6.409643,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/m/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.964604,
+        "calibrated_cosine": 0.99374,
+        "threshold": 4.31657,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/m/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.963861,
+        "calibrated_cosine": 0.992523,
+        "threshold": 5.602732,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/m/m.0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.975248,
+        "calibrated_cosine": 0.995306,
+        "threshold": 3.810414,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/m/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.981648,
+        "calibrated_cosine": 0.995785,
+        "threshold": 5.730577,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/m/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.960701,
+        "calibrated_cosine": 0.991811,
+        "threshold": 5.280057,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/m/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.972473,
+        "calibrated_cosine": 0.992507,
+        "threshold": 3.305388,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/m/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.974901,
+        "calibrated_cosine": 0.992008,
+        "threshold": 10.051884,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/m/m.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.979001,
+        "calibrated_cosine": 0.995135,
+        "threshold": 5.730577,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.951149,
+        "calibrated_cosine": 0.993074,
+        "threshold": 7.443316,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.917483,
+        "calibrated_cosine": 0.987257,
+        "threshold": 7.090279,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.973194,
+        "calibrated_cosine": 0.994344,
+        "threshold": 10.027739,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/cv3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.9528,
+        "calibrated_cosine": 0.988646,
+        "threshold": 10.027739,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/m.1/cv3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.943339,
+        "calibrated_cosine": 0.989098,
+        "threshold": 9.017818,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.938628,
+        "calibrated_cosine": 0.992477,
+        "threshold": 8.269179,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.977328,
+        "calibrated_cosine": 0.996876,
+        "threshold": 8.520234,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.2/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.934359,
+        "calibrated_cosine": 0.988844,
+        "threshold": 8.330117,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.968821,
+        "calibrated_cosine": 0.992719,
+        "threshold": 3.189692,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.948678,
+        "calibrated_cosine": 0.990417,
+        "threshold": 5.316619,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.955449,
+        "calibrated_cosine": 0.990168,
+        "threshold": 4.844751,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.941877,
+        "calibrated_cosine": 0.988745,
+        "threshold": 5.860817,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/Split",
+        "on": "BPU",
+        "type": "Split",
+        "cosine": 0.934877,
+        "calibrated_cosine": 0.987549,
+        "threshold": 5.151809,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.969986,
+        "calibrated_cosine": 0.992873,
+        "threshold": 5.265041,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.970129,
+        "calibrated_cosine": 0.993809,
+        "threshold": 4.790114,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/m/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.984275,
+        "calibrated_cosine": 0.996111,
+        "threshold": 4.6315,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/m/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.9628,
+        "calibrated_cosine": 0.990686,
+        "threshold": 6.531658,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/m/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.979258,
+        "calibrated_cosine": 0.993547,
+        "threshold": 4.827969,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/m/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.971006,
+        "calibrated_cosine": 0.988962,
+        "threshold": 6.345292,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/m/m.0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.969235,
+        "calibrated_cosine": 0.9919,
+        "threshold": 4.6315,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/m/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.987023,
+        "calibrated_cosine": 0.996397,
+        "threshold": 6.119839,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/m/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.969625,
+        "calibrated_cosine": 0.991473,
+        "threshold": 5.900183,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/m/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.974378,
+        "calibrated_cosine": 0.99261,
+        "threshold": 4.634385,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/m/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.973321,
+        "calibrated_cosine": 0.991888,
+        "threshold": 7.421999,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/m/m.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.975327,
+        "calibrated_cosine": 0.992846,
+        "threshold": 6.119839,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.957165,
+        "calibrated_cosine": 0.992014,
+        "threshold": 5.265041,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.95041,
+        "calibrated_cosine": 0.99111,
+        "threshold": 5.768633,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.971138,
+        "calibrated_cosine": 0.992629,
+        "threshold": 7.975801,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/cv3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.974068,
+        "calibrated_cosine": 0.993182,
+        "threshold": 7.975801,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.0/cv3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.955921,
+        "calibrated_cosine": 0.988378,
+        "threshold": 6.95691,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.977001,
+        "calibrated_cosine": 0.994204,
+        "threshold": 5.865321,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.971755,
+        "calibrated_cosine": 0.992827,
+        "threshold": 5.136307,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/m/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.983905,
+        "calibrated_cosine": 0.996058,
+        "threshold": 4.820731,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/m/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.964689,
+        "calibrated_cosine": 0.990126,
+        "threshold": 6.672678,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/m/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.978769,
+        "calibrated_cosine": 0.993878,
+        "threshold": 5.338141,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/m/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.972706,
+        "calibrated_cosine": 0.992068,
+        "threshold": 6.328919,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/m/m.0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.972971,
+        "calibrated_cosine": 0.99242,
+        "threshold": 4.820731,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/m/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.985233,
+        "calibrated_cosine": 0.996026,
+        "threshold": 6.302321,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/m/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.970243,
+        "calibrated_cosine": 0.991374,
+        "threshold": 6.558314,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/m/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.981061,
+        "calibrated_cosine": 0.994635,
+        "threshold": 4.866233,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/m/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.979878,
+        "calibrated_cosine": 0.994256,
+        "threshold": 9.944299,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/m/m.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.979255,
+        "calibrated_cosine": 0.994049,
+        "threshold": 6.302321,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.964037,
+        "calibrated_cosine": 0.990897,
+        "threshold": 5.865321,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.953625,
+        "calibrated_cosine": 0.986998,
+        "threshold": 5.954182,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.976462,
+        "calibrated_cosine": 0.993221,
+        "threshold": 10.78615,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/cv3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.978292,
+        "calibrated_cosine": 0.994045,
+        "threshold": 10.78615,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/m.1/cv3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.966149,
+        "calibrated_cosine": 0.99052,
+        "threshold": 6.654561,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.95178,
+        "calibrated_cosine": 0.988964,
+        "threshold": 5.151809,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.978289,
+        "calibrated_cosine": 0.995034,
+        "threshold": 5.829839,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.4/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.943678,
+        "calibrated_cosine": 0.987509,
+        "threshold": 6.587502,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.5/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.973603,
+        "calibrated_cosine": 0.993674,
+        "threshold": 4.413411,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.5/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.954579,
+        "calibrated_cosine": 0.989184,
+        "threshold": 6.364182,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.965868,
+        "calibrated_cosine": 0.991821,
+        "threshold": 5.920167,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.954741,
+        "calibrated_cosine": 0.990043,
+        "threshold": 6.803241,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/Split",
+        "on": "BPU",
+        "type": "Split",
+        "cosine": 0.954397,
+        "calibrated_cosine": 0.990249,
+        "threshold": 6.673458,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.969748,
+        "calibrated_cosine": 0.99166,
+        "threshold": 6.357882,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.95764,
+        "calibrated_cosine": 0.989836,
+        "threshold": 6.880609,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/m/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.980553,
+        "calibrated_cosine": 0.995344,
+        "threshold": 6.854549,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/m/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.957067,
+        "calibrated_cosine": 0.987287,
+        "threshold": 7.316175,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/m/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.979423,
+        "calibrated_cosine": 0.992336,
+        "threshold": 6.570961,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/m/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.955151,
+        "calibrated_cosine": 0.976804,
+        "threshold": 7.43371,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/m/m.0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.952044,
+        "calibrated_cosine": 0.982551,
+        "threshold": 6.854549,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/m/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.976575,
+        "calibrated_cosine": 0.990255,
+        "threshold": 7.526208,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/m/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.951573,
+        "calibrated_cosine": 0.980427,
+        "threshold": 8.691578,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/m/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.967039,
+        "calibrated_cosine": 0.986239,
+        "threshold": 6.585827,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/m/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.962987,
+        "calibrated_cosine": 0.984548,
+        "threshold": 11.235663,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/m/m.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.957497,
+        "calibrated_cosine": 0.982038,
+        "threshold": 7.526208,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.966347,
+        "calibrated_cosine": 0.99198,
+        "threshold": 6.357882,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.957575,
+        "calibrated_cosine": 0.98926,
+        "threshold": 6.109405,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.95745,
+        "calibrated_cosine": 0.983233,
+        "threshold": 10.703742,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/cv3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.965215,
+        "calibrated_cosine": 0.985258,
+        "threshold": 10.703742,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.0/cv3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.953835,
+        "calibrated_cosine": 0.981806,
+        "threshold": 8.816361,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.968214,
+        "calibrated_cosine": 0.984445,
+        "threshold": 8.163527,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.960033,
+        "calibrated_cosine": 0.985004,
+        "threshold": 8.34535,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/m/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.97459,
+        "calibrated_cosine": 0.990165,
+        "threshold": 8.036511,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/m/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.961713,
+        "calibrated_cosine": 0.98582,
+        "threshold": 9.601322,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/m/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.975435,
+        "calibrated_cosine": 0.990466,
+        "threshold": 8.737433,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/m/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.966752,
+        "calibrated_cosine": 0.986803,
+        "threshold": 9.803142,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/m/m.0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.961212,
+        "calibrated_cosine": 0.98446,
+        "threshold": 8.036511,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/m/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.977478,
+        "calibrated_cosine": 0.990736,
+        "threshold": 9.675562,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/m/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.96765,
+        "calibrated_cosine": 0.986418,
+        "threshold": 8.886605,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/m/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.978025,
+        "calibrated_cosine": 0.99102,
+        "threshold": 8.037843,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/m/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.976553,
+        "calibrated_cosine": 0.989473,
+        "threshold": 9.8651,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/m/m.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.969395,
+        "calibrated_cosine": 0.986956,
+        "threshold": 9.675562,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.957869,
+        "calibrated_cosine": 0.977927,
+        "threshold": 8.163527,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.949328,
+        "calibrated_cosine": 0.981369,
+        "threshold": 5.976679,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.967719,
+        "calibrated_cosine": 0.986476,
+        "threshold": 10.455801,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/cv3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.97568,
+        "calibrated_cosine": 0.990076,
+        "threshold": 10.455801,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/m.1/cv3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.965146,
+        "calibrated_cosine": 0.986019,
+        "threshold": 7.326842,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.955667,
+        "calibrated_cosine": 0.986197,
+        "threshold": 6.673458,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.968563,
+        "calibrated_cosine": 0.990763,
+        "threshold": 7.182736,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.6/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.95348,
+        "calibrated_cosine": 0.988472,
+        "threshold": 7.725111,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.7/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.976312,
+        "calibrated_cosine": 0.992933,
+        "threshold": 6.912084,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.7/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.973219,
+        "calibrated_cosine": 0.991641,
+        "threshold": 6.342106,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.975654,
+        "calibrated_cosine": 0.992504,
+        "threshold": 6.304998,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.974438,
+        "calibrated_cosine": 0.992401,
+        "threshold": 6.271782,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/Split",
+        "on": "BPU",
+        "type": "Split",
+        "cosine": 0.971647,
+        "calibrated_cosine": 0.992997,
+        "threshold": 6.251881,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.981365,
+        "calibrated_cosine": 0.992043,
+        "threshold": 5.709117,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.979402,
+        "calibrated_cosine": 0.990797,
+        "threshold": 5.459552,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/m/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.981258,
+        "calibrated_cosine": 0.991999,
+        "threshold": 5.393001,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/m/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.976887,
+        "calibrated_cosine": 0.991171,
+        "threshold": 5.741256,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/m/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.983143,
+        "calibrated_cosine": 0.99346,
+        "threshold": 4.779042,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/m/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.982054,
+        "calibrated_cosine": 0.992338,
+        "threshold": 5.204296,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/m/m.0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.981227,
+        "calibrated_cosine": 0.992281,
+        "threshold": 5.393001,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/m/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.984631,
+        "calibrated_cosine": 0.993133,
+        "threshold": 5.768445,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/m/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.978911,
+        "calibrated_cosine": 0.990884,
+        "threshold": 4.804846,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/m/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.98137,
+        "calibrated_cosine": 0.992386,
+        "threshold": 4.430072,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/m/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.979664,
+        "calibrated_cosine": 0.991284,
+        "threshold": 5.051067,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/m/m.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.982859,
+        "calibrated_cosine": 0.992843,
+        "threshold": 5.768445,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.987139,
+        "calibrated_cosine": 0.993303,
+        "threshold": 5.709117,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.98801,
+        "calibrated_cosine": 0.993544,
+        "threshold": 3.994194,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.983177,
+        "calibrated_cosine": 0.992875,
+        "threshold": 6.435719,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/cv3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.984662,
+        "calibrated_cosine": 0.992912,
+        "threshold": 6.435719,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.0/cv3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.984456,
+        "calibrated_cosine": 0.991869,
+        "threshold": 4.877171,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.992733,
+        "calibrated_cosine": 0.995195,
+        "threshold": 4.640716,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.990661,
+        "calibrated_cosine": 0.993942,
+        "threshold": 4.79987,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/m/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.994259,
+        "calibrated_cosine": 0.995988,
+        "threshold": 4.583976,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/m/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.992175,
+        "calibrated_cosine": 0.994928,
+        "threshold": 4.009905,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/m/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.994838,
+        "calibrated_cosine": 0.99673,
+        "threshold": 3.885226,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/m/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.994337,
+        "calibrated_cosine": 0.996355,
+        "threshold": 3.568078,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/m/m.0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.992209,
+        "calibrated_cosine": 0.995035,
+        "threshold": 4.583976,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/m/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.99419,
+        "calibrated_cosine": 0.996649,
+        "threshold": 4.468158,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/m/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.99433,
+        "calibrated_cosine": 0.996678,
+        "threshold": 3.458381,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/m/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.995824,
+        "calibrated_cosine": 0.997687,
+        "threshold": 3.319627,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/m/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.995905,
+        "calibrated_cosine": 0.997605,
+        "threshold": 4.701041,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/m/m.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.994922,
+        "calibrated_cosine": 0.996772,
+        "threshold": 4.468158,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.993951,
+        "calibrated_cosine": 0.996778,
+        "threshold": 4.640716,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.988503,
+        "calibrated_cosine": 0.992988,
+        "threshold": 2.278166,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.99479,
+        "calibrated_cosine": 0.996698,
+        "threshold": 5.683353,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/cv3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.995609,
+        "calibrated_cosine": 0.997319,
+        "threshold": 5.683353,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/m.1/cv3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.995365,
+        "calibrated_cosine": 0.996977,
+        "threshold": 3.942186,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.979816,
+        "calibrated_cosine": 0.992807,
+        "threshold": 6.251881,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.982655,
+        "calibrated_cosine": 0.994148,
+        "threshold": 5.755183,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.8/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.981138,
+        "calibrated_cosine": 0.993739,
+        "threshold": 5.338919,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.9/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.983798,
+        "calibrated_cosine": 0.994589,
+        "threshold": 4.936881,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.9/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.983139,
+        "calibrated_cosine": 0.994633,
+        "threshold": 5.163687,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.9/m/MaxPool",
+        "on": "BPU",
+        "type": "MaxPool",
+        "cosine": 0.991128,
+        "calibrated_cosine": 0.997468,
+        "threshold": 5.133963,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.9/m_1/MaxPool",
+        "on": "BPU",
+        "type": "MaxPool",
+        "cosine": 0.993649,
+        "calibrated_cosine": 0.998217,
+        "threshold": 5.133963,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.9/m_2/MaxPool",
+        "on": "BPU",
+        "type": "MaxPool",
+        "cosine": 0.995017,
+        "calibrated_cosine": 0.998593,
+        "threshold": 5.133963,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.9/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.993396,
+        "calibrated_cosine": 0.998064,
+        "threshold": 5.133963,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.9/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.985133,
+        "calibrated_cosine": 0.995132,
+        "threshold": 7.14072,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.9/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.983575,
+        "calibrated_cosine": 0.99446,
+        "threshold": 5.348096,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.98556,
+        "calibrated_cosine": 0.994956,
+        "threshold": 5.31169,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.984434,
+        "calibrated_cosine": 0.994755,
+        "threshold": 5.922311,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/Split",
+        "on": "BPU",
+        "type": "Split",
+        "cosine": 0.979056,
+        "calibrated_cosine": 0.994108,
+        "threshold": 5.855217,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/qkv/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.991411,
+        "calibrated_cosine": 0.996131,
+        "threshold": 5.619562,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.991337,
+        "calibrated_cosine": 0.996131,
+        "threshold": 4.970688,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/Split",
+        "on": "BPU",
+        "type": "Split",
+        "cosine": 0.993124,
+        "calibrated_cosine": 0.996515,
+        "threshold": 4.970688,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.993124,
+        "calibrated_cosine": 0.996402,
+        "threshold": 4.970688,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/MatMul",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": 0.993478,
+        "calibrated_cosine": 0.996145,
+        "threshold": 4.970688,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.993478,
+        "calibrated_cosine": 0.996145,
+        "threshold": 83.882652,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/Transpose_1",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.996131,
+        "threshold": 14.828498,
+        "dtype": "--"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/ReduceMax",
+        "on": "BPU",
+        "type": "ReduceMax",
+        "cosine": 0.998736,
+        "calibrated_cosine": 0.999261,
+        "threshold": 14.828498,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/Sub",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": 0.997815,
+        "calibrated_cosine": 0.998736,
+        "threshold": 14.828498,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/Exp",
+        "on": "BPU",
+        "type": "Exp",
+        "cosine": 0.984378,
+        "calibrated_cosine": 0.991735,
+        "threshold": 24.949699,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/ReduceSum",
+        "on": "BPU",
+        "type": "ReduceSum",
+        "cosine": 0.994445,
+        "calibrated_cosine": 0.997561,
+        "threshold": 1.0,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/Div_reciprocal",
+        "on": "BPU",
+        "type": "Reciprocal",
+        "cosine": 0.966243,
+        "calibrated_cosine": 0.976956,
+        "threshold": 319.382446,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/Div_mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.961577,
+        "calibrated_cosine": 0.973795,
+        "threshold": 1.0,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/Transpose_2",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.973796,
+        "threshold": 0.215049,
+        "dtype": "--"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/MatMul_1",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": 0.986546,
+        "calibrated_cosine": 0.990464,
+        "threshold": 5.383352,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/Reshape_1",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.986546,
+        "calibrated_cosine": 0.990464,
+        "threshold": 4.93771,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/Reshape_2",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.989935,
+        "calibrated_cosine": 0.995757,
+        "threshold": 5.383352,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/pe/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.975808,
+        "calibrated_cosine": 0.995832,
+        "threshold": 5.383352,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/Reshape_1+/model.10/m/m.0/attn/Add",
+        "on": "BPU",
+        "type": "Reshape+Add",
+        "cosine": 0.975808,
+        "calibrated_cosine": 0.982697,
+        "threshold": 4.93771,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.985486,
+        "calibrated_cosine": 0.987227,
+        "threshold": 3.522375,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/Split+/model.10/m/m.0/Add",
+        "on": "BPU",
+        "type": "Split+Add",
+        "cosine": 0.985486,
+        "calibrated_cosine": 0.990911,
+        "threshold": 5.855217,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/ffn/ffn.0/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.990081,
+        "calibrated_cosine": 0.992979,
+        "threshold": 6.973139,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/ffn/ffn.0/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.990584,
+        "calibrated_cosine": 0.992631,
+        "threshold": 3.541774,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/ffn/ffn.1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.984102,
+        "calibrated_cosine": 0.993393,
+        "threshold": 3.324863,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/attn/proj/conv/Conv+/model.10/m/m.0/Add_1",
+        "on": "BPU",
+        "type": "Conv+Add",
+        "cosine": 0.984102,
+        "calibrated_cosine": 0.98991,
+        "threshold": 3.522375,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/qkv/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.986958,
+        "calibrated_cosine": 0.991141,
+        "threshold": 6.858114,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.986893,
+        "calibrated_cosine": 0.991141,
+        "threshold": 4.277429,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/Split",
+        "on": "BPU",
+        "type": "Split",
+        "cosine": 0.988289,
+        "calibrated_cosine": 0.99231,
+        "threshold": 4.277429,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.988289,
+        "calibrated_cosine": 0.992727,
+        "threshold": 4.277429,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/MatMul",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": 0.979549,
+        "calibrated_cosine": 0.989524,
+        "threshold": 4.277429,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.979549,
+        "calibrated_cosine": 0.989524,
+        "threshold": 113.166504,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/Transpose_1",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.989531,
+        "threshold": 20.005199,
+        "dtype": "--"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/ReduceMax",
+        "on": "BPU",
+        "type": "ReduceMax",
+        "cosine": 0.989609,
+        "calibrated_cosine": 0.994764,
+        "threshold": 20.005199,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/Sub",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": 0.987547,
+        "calibrated_cosine": 0.994169,
+        "threshold": 20.005199,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/Exp",
+        "on": "BPU",
+        "type": "Exp",
+        "cosine": 0.961011,
+        "calibrated_cosine": 0.971229,
+        "threshold": 33.146549,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/ReduceSum",
+        "on": "BPU",
+        "type": "ReduceSum",
+        "cosine": 0.975183,
+        "calibrated_cosine": 0.983374,
+        "threshold": 1.0,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/Div_reciprocal",
+        "on": "BPU",
+        "type": "Reciprocal",
+        "cosine": 0.949716,
+        "calibrated_cosine": 0.943816,
+        "threshold": 350.14325,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/Div_mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.92917,
+        "calibrated_cosine": 0.926442,
+        "threshold": 1.0,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/Transpose_2",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.92645,
+        "threshold": 0.217623,
+        "dtype": "--"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/MatMul_1",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": 0.968619,
+        "calibrated_cosine": 0.982304,
+        "threshold": 4.51318,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/Reshape_1",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.968619,
+        "calibrated_cosine": 0.982304,
+        "threshold": 4.226694,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/Reshape_2",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.985538,
+        "calibrated_cosine": 0.989807,
+        "threshold": 4.51318,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/pe/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.959255,
+        "calibrated_cosine": 0.989762,
+        "threshold": 4.51318,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/Reshape_1+/model.10/m/m.1/attn/Add",
+        "on": "BPU",
+        "type": "Reshape+Add",
+        "cosine": 0.959255,
+        "calibrated_cosine": 0.976331,
+        "threshold": 4.226694,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/proj/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.97972,
+        "calibrated_cosine": 0.982555,
+        "threshold": 4.784392,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.0/ffn/ffn.1/conv/Conv+/model.10/m/m.1/Add",
+        "on": "BPU",
+        "type": "Conv+Add",
+        "cosine": 0.97972,
+        "calibrated_cosine": 0.987996,
+        "threshold": 3.324863,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/ffn/ffn.0/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.986607,
+        "calibrated_cosine": 0.991921,
+        "threshold": 6.91819,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/ffn/ffn.0/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.986699,
+        "calibrated_cosine": 0.992899,
+        "threshold": 4.137381,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/ffn/ffn.1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.979396,
+        "calibrated_cosine": 0.99491,
+        "threshold": 4.025302,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/m/m.1/attn/proj/conv/Conv+/model.10/m/m.1/Add_1",
+        "on": "BPU",
+        "type": "Conv+Add",
+        "cosine": 0.979396,
+        "calibrated_cosine": 0.987675,
+        "threshold": 4.784392,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.979268,
+        "calibrated_cosine": 0.989202,
+        "threshold": 5.855217,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.983105,
+        "calibrated_cosine": 0.99132,
+        "threshold": 6.73162,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.10/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.980206,
+        "calibrated_cosine": 0.989559,
+        "threshold": 4.986474,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.11/Resize",
+        "on": "BPU",
+        "type": "Resize",
+        "cosine": 0.980207,
+        "calibrated_cosine": 0.989519,
+        "threshold": 4.672276,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.12/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.96334,
+        "calibrated_cosine": 0.98823,
+        "threshold": 4.672276,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.977121,
+        "calibrated_cosine": 0.992742,
+        "threshold": 6.207824,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.964091,
+        "calibrated_cosine": 0.989086,
+        "threshold": 6.408139,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/Split",
+        "on": "BPU",
+        "type": "Split",
+        "cosine": 0.965179,
+        "calibrated_cosine": 0.98906,
+        "threshold": 5.612241,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.977342,
+        "calibrated_cosine": 0.993359,
+        "threshold": 5.424139,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.962478,
+        "calibrated_cosine": 0.988546,
+        "threshold": 6.152243,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/m/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.978793,
+        "calibrated_cosine": 0.992704,
+        "threshold": 5.982469,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/m/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.961744,
+        "calibrated_cosine": 0.986459,
+        "threshold": 7.384266,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/m/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.976885,
+        "calibrated_cosine": 0.991532,
+        "threshold": 6.488697,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/m/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.967204,
+        "calibrated_cosine": 0.987313,
+        "threshold": 7.409517,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/m/m.0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.962027,
+        "calibrated_cosine": 0.986534,
+        "threshold": 5.982469,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/m/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.97857,
+        "calibrated_cosine": 0.991526,
+        "threshold": 7.470114,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/m/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.962095,
+        "calibrated_cosine": 0.984708,
+        "threshold": 7.667126,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/m/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.972503,
+        "calibrated_cosine": 0.988793,
+        "threshold": 6.57854,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/m/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.967204,
+        "calibrated_cosine": 0.986768,
+        "threshold": 8.95118,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/m/m.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.964972,
+        "calibrated_cosine": 0.986434,
+        "threshold": 7.470114,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.967741,
+        "calibrated_cosine": 0.990771,
+        "threshold": 5.424139,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.959147,
+        "calibrated_cosine": 0.98772,
+        "threshold": 5.758211,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.963646,
+        "calibrated_cosine": 0.986759,
+        "threshold": 9.374681,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/cv3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.972963,
+        "calibrated_cosine": 0.989649,
+        "threshold": 9.374681,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.0/cv3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.95881,
+        "calibrated_cosine": 0.984555,
+        "threshold": 7.265515,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.974597,
+        "calibrated_cosine": 0.990519,
+        "threshold": 6.2654,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.962829,
+        "calibrated_cosine": 0.985331,
+        "threshold": 6.245412,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/m/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.973574,
+        "calibrated_cosine": 0.989419,
+        "threshold": 6.085795,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/m/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.962311,
+        "calibrated_cosine": 0.984327,
+        "threshold": 7.584589,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/m/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.972247,
+        "calibrated_cosine": 0.988653,
+        "threshold": 6.462998,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/m/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.964854,
+        "calibrated_cosine": 0.984354,
+        "threshold": 7.087671,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/m/m.0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.961056,
+        "calibrated_cosine": 0.983192,
+        "threshold": 6.085795,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/m/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.973107,
+        "calibrated_cosine": 0.988115,
+        "threshold": 7.413829,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/m/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.962844,
+        "calibrated_cosine": 0.983354,
+        "threshold": 7.055949,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/m/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.967398,
+        "calibrated_cosine": 0.985715,
+        "threshold": 6.131609,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/m/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.964044,
+        "calibrated_cosine": 0.983449,
+        "threshold": 8.398445,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/m/m.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.9645,
+        "calibrated_cosine": 0.984026,
+        "threshold": 7.413829,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.964169,
+        "calibrated_cosine": 0.986106,
+        "threshold": 6.2654,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.957908,
+        "calibrated_cosine": 0.983004,
+        "threshold": 5.241666,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.963626,
+        "calibrated_cosine": 0.983918,
+        "threshold": 9.734786,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/cv3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.967384,
+        "calibrated_cosine": 0.985316,
+        "threshold": 9.734786,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/m.1/cv3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.954912,
+        "calibrated_cosine": 0.979684,
+        "threshold": 7.054938,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.961189,
+        "calibrated_cosine": 0.986106,
+        "threshold": 5.612241,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.980403,
+        "calibrated_cosine": 0.992723,
+        "threshold": 5.800311,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.13/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.957974,
+        "calibrated_cosine": 0.985194,
+        "threshold": 6.119097,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.14/Resize",
+        "on": "BPU",
+        "type": "Resize",
+        "cosine": 0.958534,
+        "calibrated_cosine": 0.985075,
+        "threshold": 4.437461,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.15/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.951823,
+        "calibrated_cosine": 0.986596,
+        "threshold": 4.437461,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.974432,
+        "calibrated_cosine": 0.992263,
+        "threshold": 4.426205,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.950905,
+        "calibrated_cosine": 0.985925,
+        "threshold": 5.558749,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/Split",
+        "on": "BPU",
+        "type": "Split",
+        "cosine": 0.947514,
+        "calibrated_cosine": 0.985279,
+        "threshold": 4.61415,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.97726,
+        "calibrated_cosine": 0.993098,
+        "threshold": 3.924526,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.980375,
+        "calibrated_cosine": 0.993958,
+        "threshold": 3.555435,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/m/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.984143,
+        "calibrated_cosine": 0.995129,
+        "threshold": 2.925349,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/m/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.957179,
+        "calibrated_cosine": 0.986653,
+        "threshold": 5.291335,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/m/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.968985,
+        "calibrated_cosine": 0.989774,
+        "threshold": 3.533585,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/m/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.94711,
+        "calibrated_cosine": 0.981071,
+        "threshold": 5.225019,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/m/m.0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.968634,
+        "calibrated_cosine": 0.989464,
+        "threshold": 2.925349,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/m/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.981668,
+        "calibrated_cosine": 0.993781,
+        "threshold": 4.158353,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/m/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.95496,
+        "calibrated_cosine": 0.984506,
+        "threshold": 5.999238,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/m/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.948611,
+        "calibrated_cosine": 0.98212,
+        "threshold": 3.960248,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/m/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.95138,
+        "calibrated_cosine": 0.982288,
+        "threshold": 9.664398,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/m/m.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.959183,
+        "calibrated_cosine": 0.985135,
+        "threshold": 4.158353,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.958484,
+        "calibrated_cosine": 0.98701,
+        "threshold": 3.924526,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.956039,
+        "calibrated_cosine": 0.985984,
+        "threshold": 6.664453,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.958167,
+        "calibrated_cosine": 0.985269,
+        "threshold": 9.154195,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/cv3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.960252,
+        "calibrated_cosine": 0.985807,
+        "threshold": 9.154195,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.0/cv3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.93701,
+        "calibrated_cosine": 0.978635,
+        "threshold": 6.69867,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.975757,
+        "calibrated_cosine": 0.991525,
+        "threshold": 5.266567,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.965823,
+        "calibrated_cosine": 0.988253,
+        "threshold": 3.610717,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/m/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.97162,
+        "calibrated_cosine": 0.990446,
+        "threshold": 2.239516,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/m/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.940815,
+        "calibrated_cosine": 0.979894,
+        "threshold": 5.201032,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/m/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.959047,
+        "calibrated_cosine": 0.986205,
+        "threshold": 4.070084,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/m/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.943836,
+        "calibrated_cosine": 0.98045,
+        "threshold": 5.753849,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/m/m.0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.94592,
+        "calibrated_cosine": 0.980997,
+        "threshold": 2.239516,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/m/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.964567,
+        "calibrated_cosine": 0.98772,
+        "threshold": 5.065056,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/m/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.930493,
+        "calibrated_cosine": 0.975064,
+        "threshold": 5.836717,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/m/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.942801,
+        "calibrated_cosine": 0.979661,
+        "threshold": 4.503303,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/m/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.94061,
+        "calibrated_cosine": 0.978026,
+        "threshold": 9.987639,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/m/m.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.942459,
+        "calibrated_cosine": 0.978857,
+        "threshold": 5.065056,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.936382,
+        "calibrated_cosine": 0.978264,
+        "threshold": 5.266567,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.922405,
+        "calibrated_cosine": 0.973901,
+        "threshold": 5.961163,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.939361,
+        "calibrated_cosine": 0.978047,
+        "threshold": 8.970843,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/cv3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.938362,
+        "calibrated_cosine": 0.97739,
+        "threshold": 8.970843,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/m.1/cv3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.916274,
+        "calibrated_cosine": 0.968752,
+        "threshold": 11.181622,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.936395,
+        "calibrated_cosine": 0.978423,
+        "threshold": 4.61415,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.969198,
+        "calibrated_cosine": 0.989415,
+        "threshold": 5.137094,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.16/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.925922,
+        "calibrated_cosine": 0.974481,
+        "threshold": 6.642598,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.17/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.941947,
+        "calibrated_cosine": 0.980844,
+        "threshold": 5.049015,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.17/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.918504,
+        "calibrated_cosine": 0.972049,
+        "threshold": 7.370757,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.18/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.937201,
+        "calibrated_cosine": 0.978092,
+        "threshold": 5.912824,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.956854,
+        "calibrated_cosine": 0.984733,
+        "threshold": 5.912824,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.925241,
+        "calibrated_cosine": 0.97335,
+        "threshold": 6.023855,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/Split",
+        "on": "BPU",
+        "type": "Split",
+        "cosine": 0.925559,
+        "calibrated_cosine": 0.973287,
+        "threshold": 5.449539,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.955722,
+        "calibrated_cosine": 0.984399,
+        "threshold": 5.353307,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.947073,
+        "calibrated_cosine": 0.980403,
+        "threshold": 4.431964,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/m/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.961192,
+        "calibrated_cosine": 0.985974,
+        "threshold": 4.243455,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/m/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.927904,
+        "calibrated_cosine": 0.971939,
+        "threshold": 6.48604,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/m/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.954835,
+        "calibrated_cosine": 0.982522,
+        "threshold": 5.465796,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/m/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.932958,
+        "calibrated_cosine": 0.972269,
+        "threshold": 5.92363,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/m/m.0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.941894,
+        "calibrated_cosine": 0.976392,
+        "threshold": 4.243455,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/m/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.960061,
+        "calibrated_cosine": 0.983942,
+        "threshold": 5.341795,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/m/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.928133,
+        "calibrated_cosine": 0.968682,
+        "threshold": 6.511146,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/m/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.940076,
+        "calibrated_cosine": 0.974015,
+        "threshold": 5.803002,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/m/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.938057,
+        "calibrated_cosine": 0.97096,
+        "threshold": 10.424702,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/m/m.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.942061,
+        "calibrated_cosine": 0.973763,
+        "threshold": 5.341795,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.933713,
+        "calibrated_cosine": 0.975455,
+        "threshold": 5.353307,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.925498,
+        "calibrated_cosine": 0.970419,
+        "threshold": 6.890731,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.938709,
+        "calibrated_cosine": 0.973108,
+        "threshold": 9.979653,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/cv3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.947022,
+        "calibrated_cosine": 0.976308,
+        "threshold": 9.979653,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.0/cv3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.93135,
+        "calibrated_cosine": 0.968526,
+        "threshold": 7.614593,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.957566,
+        "calibrated_cosine": 0.981432,
+        "threshold": 7.162408,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.942483,
+        "calibrated_cosine": 0.974473,
+        "threshold": 4.769031,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/m/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.953749,
+        "calibrated_cosine": 0.979749,
+        "threshold": 3.898226,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/m/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.926437,
+        "calibrated_cosine": 0.968246,
+        "threshold": 6.801195,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/m/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.943918,
+        "calibrated_cosine": 0.973406,
+        "threshold": 5.562025,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/m/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.932566,
+        "calibrated_cosine": 0.970106,
+        "threshold": 6.548906,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/m/m.0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.931427,
+        "calibrated_cosine": 0.969077,
+        "threshold": 3.898226,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/m/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.94775,
+        "calibrated_cosine": 0.972954,
+        "threshold": 5.959137,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/m/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.917621,
+        "calibrated_cosine": 0.960854,
+        "threshold": 7.36007,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/m/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.931285,
+        "calibrated_cosine": 0.96598,
+        "threshold": 5.108268,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/m/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.924399,
+        "calibrated_cosine": 0.962671,
+        "threshold": 9.519129,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/m/m.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.930632,
+        "calibrated_cosine": 0.966135,
+        "threshold": 5.959137,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.926674,
+        "calibrated_cosine": 0.966582,
+        "threshold": 7.162408,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.914809,
+        "calibrated_cosine": 0.959458,
+        "threshold": 5.859431,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.927871,
+        "calibrated_cosine": 0.964971,
+        "threshold": 8.436822,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/cv3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.927916,
+        "calibrated_cosine": 0.962284,
+        "threshold": 8.436822,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/m.1/cv3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.909807,
+        "calibrated_cosine": 0.95424,
+        "threshold": 8.478178,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.921471,
+        "calibrated_cosine": 0.965427,
+        "threshold": 5.449539,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.944009,
+        "calibrated_cosine": 0.973103,
+        "threshold": 6.474092,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.19/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.917497,
+        "calibrated_cosine": 0.960136,
+        "threshold": 7.289233,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.20/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.943052,
+        "calibrated_cosine": 0.972611,
+        "threshold": 6.345536,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.20/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.938043,
+        "calibrated_cosine": 0.970157,
+        "threshold": 7.132653,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.21/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.95305,
+        "calibrated_cosine": 0.976768,
+        "threshold": 6.401284,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.95537,
+        "calibrated_cosine": 0.978301,
+        "threshold": 6.401284,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.944846,
+        "calibrated_cosine": 0.970973,
+        "threshold": 6.339886,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/Split",
+        "on": "BPU",
+        "type": "Split",
+        "cosine": 0.941216,
+        "calibrated_cosine": 0.968101,
+        "threshold": 6.247694,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.958597,
+        "calibrated_cosine": 0.979078,
+        "threshold": 6.128529,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.950165,
+        "calibrated_cosine": 0.974868,
+        "threshold": 5.650185,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/m/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.962199,
+        "calibrated_cosine": 0.982037,
+        "threshold": 5.417382,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/m/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.948281,
+        "calibrated_cosine": 0.973544,
+        "threshold": 6.77348,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/m/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.960099,
+        "calibrated_cosine": 0.980623,
+        "threshold": 6.49872,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/m/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.952133,
+        "calibrated_cosine": 0.975455,
+        "threshold": 6.95402,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/m/m.0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.952147,
+        "calibrated_cosine": 0.975462,
+        "threshold": 5.417382,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/m/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.964751,
+        "calibrated_cosine": 0.982547,
+        "threshold": 7.038104,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/m/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.95112,
+        "calibrated_cosine": 0.974777,
+        "threshold": 6.487741,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/m/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.95762,
+        "calibrated_cosine": 0.977112,
+        "threshold": 6.222267,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/m/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.954406,
+        "calibrated_cosine": 0.974822,
+        "threshold": 8.056286,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/m/m.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.958266,
+        "calibrated_cosine": 0.977856,
+        "threshold": 7.038104,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.960308,
+        "calibrated_cosine": 0.980337,
+        "threshold": 6.128529,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.958989,
+        "calibrated_cosine": 0.97895,
+        "threshold": 5.155716,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.958342,
+        "calibrated_cosine": 0.977977,
+        "threshold": 8.768114,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/cv3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.956624,
+        "calibrated_cosine": 0.976169,
+        "threshold": 8.768114,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.0/cv3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.948774,
+        "calibrated_cosine": 0.972845,
+        "threshold": 7.30215,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.974053,
+        "calibrated_cosine": 0.986544,
+        "threshold": 7.228994,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.967996,
+        "calibrated_cosine": 0.984841,
+        "threshold": 5.538366,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/m/m.0/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.978333,
+        "calibrated_cosine": 0.989887,
+        "threshold": 5.321707,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/m/m.0/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.97088,
+        "calibrated_cosine": 0.984754,
+        "threshold": 6.369411,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/m/m.0/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.978116,
+        "calibrated_cosine": 0.988358,
+        "threshold": 5.828729,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/m/m.0/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.97429,
+        "calibrated_cosine": 0.98662,
+        "threshold": 6.466841,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/m/m.0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.971726,
+        "calibrated_cosine": 0.986,
+        "threshold": 5.321707,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/m/m.1/cv1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.981686,
+        "calibrated_cosine": 0.991078,
+        "threshold": 6.424277,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/m/m.1/cv1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.972018,
+        "calibrated_cosine": 0.984477,
+        "threshold": 6.85365,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/m/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.976925,
+        "calibrated_cosine": 0.986952,
+        "threshold": 5.611718,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/m/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.975959,
+        "calibrated_cosine": 0.986258,
+        "threshold": 8.689633,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/m/m.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.975849,
+        "calibrated_cosine": 0.987268,
+        "threshold": 6.424277,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.9514,
+        "calibrated_cosine": 0.971037,
+        "threshold": 7.228994,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.937226,
+        "calibrated_cosine": 0.960501,
+        "threshold": 4.10144,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.972356,
+        "calibrated_cosine": 0.984847,
+        "threshold": 8.054235,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/cv3/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.97745,
+        "calibrated_cosine": 0.986967,
+        "threshold": 8.054235,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/m.1/cv3/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.973527,
+        "calibrated_cosine": 0.984053,
+        "threshold": 6.983835,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.950638,
+        "calibrated_cosine": 0.973264,
+        "threshold": 6.247694,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/cv2/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.963074,
+        "calibrated_cosine": 0.979174,
+        "threshold": 6.536111,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.22/cv2/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.951584,
+        "calibrated_cosine": 0.971202,
+        "threshold": 6.544051,
+        "dtype": "si8"
+      },
+      {
+        "name": "....23/cv3.0/cv3.0.0/cv3.0.0.0/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.943227,
+        "calibrated_cosine": 0.978382,
+        "threshold": 5.049015,
+        "dtype": "si8"
+      },
+      {
+        "name": "...el.23/cv3.0/cv3.0.0/cv3.0.0.0/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.939713,
+        "calibrated_cosine": 0.976428,
+        "threshold": 5.740776,
+        "dtype": "si8"
+      },
+      {
+        "name": "....23/cv3.0/cv3.0.0/cv3.0.0.1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.947889,
+        "calibrated_cosine": 0.978945,
+        "threshold": 5.619285,
+        "dtype": "si8"
+      },
+      {
+        "name": "...el.23/cv3.0/cv3.0.0/cv3.0.0.1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.948087,
+        "calibrated_cosine": 0.97829,
+        "threshold": 4.396428,
+        "dtype": "si8"
+      },
+      {
+        "name": "....23/cv3.0/cv3.0.1/cv3.0.1.0/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.951363,
+        "calibrated_cosine": 0.979567,
+        "threshold": 3.827594,
+        "dtype": "si8"
+      },
+      {
+        "name": "...el.23/cv3.0/cv3.0.1/cv3.0.1.0/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.952454,
+        "calibrated_cosine": 0.97873,
+        "threshold": 4.922259,
+        "dtype": "si8"
+      },
+      {
+        "name": "....23/cv3.0/cv3.0.1/cv3.0.1.1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.977575,
+        "calibrated_cosine": 0.989417,
+        "threshold": 4.449342,
+        "dtype": "si8"
+      },
+      {
+        "name": "...el.23/cv3.0/cv3.0.1/cv3.0.1.1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.976923,
+        "calibrated_cosine": 0.988739,
+        "threshold": 6.898631,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv3.0/cv3.0.2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.999324,
+        "calibrated_cosine": 0.999612,
+        "threshold": 5.814838,
+        "dtype": "si32"
+      },
+      {
+        "name": "/model.23/Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.999324,
+        "calibrated_cosine": 0.999612,
+        "threshold": null,
+        "dtype": "f32"
+      },
+      {
+        "name": "/model.23/cv2.0/cv2.0.0/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.947404,
+        "calibrated_cosine": 0.97954,
+        "threshold": 5.049015,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv2.0/cv2.0.0/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.928614,
+        "calibrated_cosine": 0.971282,
+        "threshold": 6.877518,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv2.0/cv2.0.1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.935546,
+        "calibrated_cosine": 0.972667,
+        "threshold": 4.93382,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv2.0/cv2.0.1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.947354,
+        "calibrated_cosine": 0.976875,
+        "threshold": 18.96154,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv2.0/cv2.0.2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.989936,
+        "calibrated_cosine": 0.995473,
+        "threshold": 18.959249,
+        "dtype": "si32"
+      },
+      {
+        "name": "/model.23/Transpose_1",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.989935,
+        "calibrated_cosine": 0.995471,
+        "threshold": null,
+        "dtype": "f32"
+      },
+      {
+        "name": "/model.23/cv4.0/cv4.0.0/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.93341,
+        "calibrated_cosine": 0.973956,
+        "threshold": 5.049015,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv4.0/cv4.0.0/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.934757,
+        "calibrated_cosine": 0.973634,
+        "threshold": 10.099878,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv4.0/cv4.0.1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.933877,
+        "calibrated_cosine": 0.972721,
+        "threshold": 8.141731,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv4.0/cv4.0.1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.946195,
+        "calibrated_cosine": 0.97709,
+        "threshold": 8.867529,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv4.0/cv4.0.2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.97787,
+        "calibrated_cosine": 0.990226,
+        "threshold": 8.450748,
+        "dtype": "si32"
+      },
+      {
+        "name": "/model.23/Transpose_2",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.97787,
+        "calibrated_cosine": 0.990226,
+        "threshold": null,
+        "dtype": "f32"
+      },
+      {
+        "name": "....23/cv3.1/cv3.1.0/cv3.1.0.0/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.933057,
+        "calibrated_cosine": 0.967662,
+        "threshold": 6.345536,
+        "dtype": "si8"
+      },
+      {
+        "name": "...el.23/cv3.1/cv3.1.0/cv3.1.0.0/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.929714,
+        "calibrated_cosine": 0.964572,
+        "threshold": 6.325649,
+        "dtype": "si8"
+      },
+      {
+        "name": "....23/cv3.1/cv3.1.0/cv3.1.0.1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.941936,
+        "calibrated_cosine": 0.970376,
+        "threshold": 5.139388,
+        "dtype": "si8"
+      },
+      {
+        "name": "...el.23/cv3.1/cv3.1.0/cv3.1.0.1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.943269,
+        "calibrated_cosine": 0.96924,
+        "threshold": 8.350954,
+        "dtype": "si8"
+      },
+      {
+        "name": "....23/cv3.1/cv3.1.1/cv3.1.1.0/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.951714,
+        "calibrated_cosine": 0.974004,
+        "threshold": 6.007587,
+        "dtype": "si8"
+      },
+      {
+        "name": "...el.23/cv3.1/cv3.1.1/cv3.1.1.0/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.951418,
+        "calibrated_cosine": 0.972364,
+        "threshold": 7.107193,
+        "dtype": "si8"
+      },
+      {
+        "name": "....23/cv3.1/cv3.1.1/cv3.1.1.1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.978228,
+        "calibrated_cosine": 0.986665,
+        "threshold": 5.881257,
+        "dtype": "si8"
+      },
+      {
+        "name": "...el.23/cv3.1/cv3.1.1/cv3.1.1.1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.979591,
+        "calibrated_cosine": 0.98739,
+        "threshold": 10.86109,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv3.1/cv3.1.2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.998164,
+        "calibrated_cosine": 0.998944,
+        "threshold": 9.843085,
+        "dtype": "si32"
+      },
+      {
+        "name": "/model.23/Transpose_3",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.998164,
+        "calibrated_cosine": 0.998944,
+        "threshold": null,
+        "dtype": "f32"
+      },
+      {
+        "name": "/model.23/cv2.1/cv2.1.0/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.949131,
+        "calibrated_cosine": 0.976254,
+        "threshold": 6.345536,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv2.1/cv2.1.0/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.93479,
+        "calibrated_cosine": 0.967439,
+        "threshold": 7.185199,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv2.1/cv2.1.1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.943155,
+        "calibrated_cosine": 0.970728,
+        "threshold": 6.537878,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv2.1/cv2.1.1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.952284,
+        "calibrated_cosine": 0.973,
+        "threshold": 24.782877,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv2.1/cv2.1.2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.987831,
+        "calibrated_cosine": 0.992209,
+        "threshold": 24.782877,
+        "dtype": "si32"
+      },
+      {
+        "name": "/model.23/Transpose_4",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.987831,
+        "calibrated_cosine": 0.992209,
+        "threshold": null,
+        "dtype": "f32"
+      },
+      {
+        "name": "/model.23/cv4.1/cv4.1.0/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.952481,
+        "calibrated_cosine": 0.977261,
+        "threshold": 6.345536,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv4.1/cv4.1.0/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.958227,
+        "calibrated_cosine": 0.979737,
+        "threshold": 9.635185,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv4.1/cv4.1.1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.942717,
+        "calibrated_cosine": 0.971595,
+        "threshold": 7.107877,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv4.1/cv4.1.1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.947456,
+        "calibrated_cosine": 0.973426,
+        "threshold": 11.754619,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv4.1/cv4.1.2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.972079,
+        "calibrated_cosine": 0.986942,
+        "threshold": 11.6753,
+        "dtype": "si32"
+      },
+      {
+        "name": "/model.23/Transpose_5",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.972079,
+        "calibrated_cosine": 0.986942,
+        "threshold": null,
+        "dtype": "f32"
+      },
+      {
+        "name": "....23/cv3.2/cv3.2.0/cv3.2.0.0/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.967378,
+        "calibrated_cosine": 0.981881,
+        "threshold": 6.214182,
+        "dtype": "si8"
+      },
+      {
+        "name": "...el.23/cv3.2/cv3.2.0/cv3.2.0.0/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.964603,
+        "calibrated_cosine": 0.977808,
+        "threshold": 5.698997,
+        "dtype": "si8"
+      },
+      {
+        "name": "....23/cv3.2/cv3.2.0/cv3.2.0.1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.975853,
+        "calibrated_cosine": 0.980428,
+        "threshold": 4.710023,
+        "dtype": "si8"
+      },
+      {
+        "name": "...el.23/cv3.2/cv3.2.0/cv3.2.0.1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.98566,
+        "calibrated_cosine": 0.989646,
+        "threshold": 9.41946,
+        "dtype": "si8"
+      },
+      {
+        "name": "....23/cv3.2/cv3.2.1/cv3.2.1.0/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.986895,
+        "calibrated_cosine": 0.990629,
+        "threshold": 5.019185,
+        "dtype": "si8"
+      },
+      {
+        "name": "...el.23/cv3.2/cv3.2.1/cv3.2.1.0/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.985986,
+        "calibrated_cosine": 0.988891,
+        "threshold": 6.022918,
+        "dtype": "si8"
+      },
+      {
+        "name": "....23/cv3.2/cv3.2.1/cv3.2.1.1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.994839,
+        "calibrated_cosine": 0.995875,
+        "threshold": 5.515493,
+        "dtype": "si8"
+      },
+      {
+        "name": "...el.23/cv3.2/cv3.2.1/cv3.2.1.1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.992475,
+        "calibrated_cosine": 0.99316,
+        "threshold": 6.408208,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv3.2/cv3.2.2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.999022,
+        "calibrated_cosine": 0.999109,
+        "threshold": 6.396105,
+        "dtype": "si32"
+      },
+      {
+        "name": "/model.23/Transpose_6",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.999022,
+        "calibrated_cosine": 0.999109,
+        "threshold": null,
+        "dtype": "f32"
+      },
+      {
+        "name": "/model.23/cv2.2/cv2.2.0/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.970241,
+        "calibrated_cosine": 0.990039,
+        "threshold": 6.214182,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv2.2/cv2.2.0/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.96451,
+        "calibrated_cosine": 0.990924,
+        "threshold": 9.296862,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv2.2/cv2.2.1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.970855,
+        "calibrated_cosine": 0.994381,
+        "threshold": 9.290322,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv2.2/cv2.2.1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.974456,
+        "calibrated_cosine": 0.996454,
+        "threshold": 26.469038,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv2.2/cv2.2.2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.997687,
+        "calibrated_cosine": 0.999474,
+        "threshold": 26.469038,
+        "dtype": "si32"
+      },
+      {
+        "name": "/model.23/Transpose_7",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.997687,
+        "calibrated_cosine": 0.999474,
+        "threshold": null,
+        "dtype": "f32"
+      },
+      {
+        "name": "/model.23/cv4.2/cv4.2.0/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.968387,
+        "calibrated_cosine": 0.979433,
+        "threshold": 6.214182,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv4.2/cv4.2.0/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.967255,
+        "calibrated_cosine": 0.978551,
+        "threshold": 6.662148,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv4.2/cv4.2.1/conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.957843,
+        "calibrated_cosine": 0.97303,
+        "threshold": 6.628616,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv4.2/cv4.2.1/act/Mul",
+        "on": "BPU",
+        "type": "HzSwish",
+        "cosine": 0.961046,
+        "calibrated_cosine": 0.974944,
+        "threshold": 20.311058,
+        "dtype": "si8"
+      },
+      {
+        "name": "/model.23/cv4.2/cv4.2.2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.986977,
+        "calibrated_cosine": 0.991277,
+        "threshold": 20.311058,
+        "dtype": "si32"
+      },
+      {
+        "name": "/model.23/Transpose_8",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.986977,
+        "calibrated_cosine": 0.991277,
+        "threshold": null,
+        "dtype": "f32"
+      }
+    ],
+    "outputs": []
+  },
+  "subgraphs": [
+    {
+      "name": "subgraph_0",
+      "perf": {
+        "fps": 81.3,
+        "latency_ms": 12.3,
+        "latency_us": 12300.3,
+        "ddr_mb_per_frame": 182.51,
+        "bpu_ops_per_frame": 203138380800.0,
+        "core_number": 1,
+        "march": "nash-e"
+      },
+      "intervals": {
+        "count": 25,
+        "interval_ms": 0.5,
+        "utilization": [
+          0.96,
+          0.995,
+          0.951,
+          0.999,
+          0.999,
+          0.999,
+          0.998,
+          0.661,
+          0.897,
+          0.897,
+          0.947,
+          0.826,
+          0.999,
+          0.983,
+          0.993,
+          0.998,
+          0.997,
+          0.994,
+          0.979,
+          0.997,
+          0.872,
+          0.963,
+          0.941,
+          0.926,
+          0.588
+        ],
+        "load_bandwidth_mbs": [
+          1598,
+          9838,
+          11875,
+          5686,
+          7438,
+          8442,
+          7345,
+          12380,
+          3805,
+          3805,
+          9829,
+          17445,
+          10418,
+          12028,
+          11671,
+          12415,
+          13513,
+          13272,
+          11952,
+          11769,
+          15700,
+          12137,
+          18834,
+          20547,
+          8987
+        ],
+        "store_bandwidth_mbs": [
+          6796,
+          11355,
+          5577,
+          1757,
+          2343,
+          3222,
+          6210,
+          4042,
+          878,
+          878,
+          4394,
+          3398,
+          703,
+          1054,
+          3046,
+          3046,
+          6328,
+          6210,
+          5039,
+          3984,
+          2812,
+          1054,
+          2436,
+          3942,
+          1757
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "latency_ms": 12.3,
+    "fps_derived": 81.3,
+    "ddr_mb_per_frame": 182.51,
+    "bpu_ops_per_frame": 203138380800.0,
+    "derivation": "latency = sum of subgraph latency; fps_derived = 1000 / latency (sequential subgraph execution assumption); values from hbdk static estimation, not board measurement"
+  },
+  "similarity_provenance": {
+    "stage": "ptq-simulation",
+    "method": "hb_compile node_info.csv calibrated/quantized cosine (x86 PTQ simulation)",
+    "calibration_samples": 200,
+    "source_log": "output/hb_compile.log"
+  },
+  "performance_provenance": {
+    "stage": "compiler-static-estimate",
+    "source": "hb_compile-json",
+    "method": "hbdk-cc static latency estimate of the compiled release artifact",
+    "note": "Estimates describe the compiled artifact; on-board measurements live in the model benchmark."
+  },
+  "board_measurement": null,
+  "provenance": {
+    "artifact_sha256": "723b69c2846a0a2b63dbcd262aabd7d8f9feabbf2799e05d1f0ccd81087d7b1c",
+    "hb_compile_log_sha256": "fbf6100a0eefe19b333411909573c9ca71165ac9fcd8c0f681d0f684b1f225db",
+    "oe_report_json_sha256": "9be238393e91bf851686402cd9baffc1ad2486a3adeadafd15dea99bd36e46e7"
+  }
+}

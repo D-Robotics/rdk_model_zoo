@@ -1,0 +1,306 @@
+{
+  "schema_version": 1,
+  "generated_from_run": "yolo-v8-v11-20261013/yolov8l-detect/s100/attempt-01",
+  "generated_at": "2026-10-14T00:00:00+08:00",
+  "model": {
+    "sample": "ultralytics_yolo",
+    "family": "yolov8",
+    "task": "detect",
+    "size": "l"
+  },
+  "target": {
+    "platform": "s100",
+    "march": "nash-e"
+  },
+  "toolchain": {
+    "hbdk": "4.7.5",
+    "hmct": "2.6.5",
+    "hb_compile": "3.5.3"
+  },
+  "io": {
+    "inputs": [
+      {
+        "name": "images_y",
+        "shape": [
+          1,
+          640,
+          640,
+          1
+        ],
+        "dtype": "uint8"
+      },
+      {
+        "name": "images_uv",
+        "shape": [
+          1,
+          320,
+          320,
+          2
+        ],
+        "dtype": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output0",
+        "shape": [
+          1,
+          80,
+          80,
+          80
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "541",
+        "shape": [
+          1,
+          80,
+          80,
+          64
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "549",
+        "shape": [
+          1,
+          40,
+          40,
+          80
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "557",
+        "shape": [
+          1,
+          40,
+          40,
+          64
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "565",
+        "shape": [
+          1,
+          20,
+          20,
+          80
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "573",
+        "shape": [
+          1,
+          20,
+          20,
+          64
+        ],
+        "dtype": "float32"
+      }
+    ]
+  },
+  "quantization": {
+    "summary": {
+      "total_nodes": 0,
+      "unit_counts": {},
+      "dtype_counts": {},
+      "measured_nodes": 0,
+      "weakest_node": null,
+      "weakest_nodes": [],
+      "cosine_percentiles": {
+        "p10": null,
+        "median": null
+      }
+    },
+    "nodes": [],
+    "outputs": []
+  },
+  "subgraphs": [
+    {
+      "name": "subgraph_0",
+      "perf": {
+        "fps": 111.15,
+        "latency_ms": 9,
+        "latency_us": 8997.2,
+        "ddr_mb_per_frame": 126.14,
+        "bpu_ops_per_frame": 165147443200.0,
+        "core_number": 1,
+        "march": "nash-e"
+      },
+      "intervals": {
+        "count": 45,
+        "interval_ms": 0.2,
+        "utilization": [
+          0.984,
+          0.995,
+          0.996,
+          0.997,
+          0.961,
+          0.99,
+          0.999,
+          0.999,
+          0.999,
+          0.999,
+          0.983,
+          0.999,
+          1,
+          0.999,
+          0.944,
+          0.999,
+          0.826,
+          0.999,
+          0.98,
+          0.999,
+          0.821,
+          0.971,
+          0.996,
+          0.978,
+          0.928,
+          0.999,
+          0.999,
+          0.946,
+          0.999,
+          0.999,
+          0.998,
+          0.999,
+          0.961,
+          0.999,
+          0.999,
+          0.663,
+          0.999,
+          0.982,
+          0.89,
+          0.999,
+          0.999,
+          0.999,
+          0.787,
+          0.989,
+          0.879
+        ],
+        "load_bandwidth_mbs": [
+          3313,
+          14523,
+          14908,
+          15234,
+          17810,
+          7167,
+          8953,
+          7653,
+          1434,
+          0,
+          17714,
+          17682,
+          11776,
+          0,
+          16421,
+          0,
+          17398,
+          0,
+          23214,
+          4687,
+          17268,
+          14483,
+          8893,
+          10067,
+          21443,
+          1953,
+          0,
+          11599,
+          11979,
+          4553,
+          7452,
+          12731,
+          24277,
+          0,
+          1953,
+          11541,
+          10214,
+          17326,
+          19207,
+          9082,
+          6542,
+          5090,
+          24278,
+          13214,
+          0
+        ],
+        "store_bandwidth_mbs": [
+          12779,
+          12341,
+          7301,
+          7031,
+          7421,
+          7031,
+          5859,
+          5078,
+          3906,
+          5078,
+          2734,
+          5468,
+          2343,
+          2148,
+          2343,
+          1953,
+          2929,
+          1953,
+          1953,
+          2812,
+          1875,
+          0,
+          0,
+          5452,
+          1578,
+          0,
+          0,
+          8593,
+          7031,
+          1171,
+          2343,
+          5468,
+          2734,
+          0,
+          0,
+          4687,
+          0,
+          0,
+          1171,
+          2929,
+          2929,
+          2929,
+          8789,
+          1098,
+          4394
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "latency_ms": 9,
+    "fps_derived": 111.11,
+    "ddr_mb_per_frame": 126.14,
+    "bpu_ops_per_frame": 165147443200.0,
+    "derivation": "latency = sum of subgraph latency; fps_derived = 1000 / latency (sequential subgraph execution assumption); values from hbdk static estimation, not board measurement"
+  },
+  "similarity_provenance": {
+    "stage": "ptq-simulation",
+    "method": "hb_compile node_info.csv calibrated/quantized cosine (x86 PTQ simulation)",
+    "calibration_samples": 200,
+    "source_log": "output/hb_compile.log"
+  },
+  "performance_provenance": {
+    "stage": "compiler-static-estimate",
+    "source": "hb_compile-json",
+    "method": "hbdk-cc static latency estimate of the compiled release artifact",
+    "note": "Estimates describe the compiled artifact; on-board measurements live in the model benchmark."
+  },
+  "board_measurement": null,
+  "provenance": {
+    "artifact_sha256": "5bea453c5e33906e982cd0218b0f420a50dbb32786428e4afa549e2e453ea194",
+    "hb_compile_log_sha256": "143961f6fd1aefda470d13e45cd25c5cdc201e1e2bf1f1570cbf1a65eedb8079",
+    "oe_report_json_sha256": "e77f4319c7b5efc24f019b5971e82df50c84afd1d07d713ed56bb7dbdfdddad7"
+  }
+}

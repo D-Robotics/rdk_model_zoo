@@ -1,0 +1,1651 @@
+{
+  "schema_version": 1,
+  "generated_from_run": "resnet152-20261013-x5-attempt-01",
+  "generated_at": "2026-10-13T00:00:00+08:00",
+  "model": {
+    "sample": "resnet",
+    "family": "resnet",
+    "task": "cls",
+    "size": "152-224"
+  },
+  "target": {
+    "platform": "x5",
+    "march": "bayes-e"
+  },
+  "toolchain": {
+    "hbdk": "3.49.15",
+    "hb_mapper": "1.24.3",
+    "horizon_nn": "1.1.0",
+    "runtime": "3.15.55.0"
+  },
+  "io": {
+    "inputs": [
+      {
+        "name": "data",
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "dtype": "float32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "logits",
+        "shape": [
+          1,
+          1000
+        ],
+        "dtype": "float32"
+      }
+    ]
+  },
+  "quantization": {
+    "summary": {
+      "total_nodes": 159,
+      "unit_counts": {
+        "BPU": 159
+      },
+      "dtype_counts": {
+        "int8": 159
+      },
+      "measured_nodes": 159,
+      "weakest_node": {
+        "name": "/layer3/layer3.29/conv3/Conv",
+        "cosine": 0.826282
+      },
+      "weakest_nodes": [
+        {
+          "name": "/layer3/layer3.29/conv3/Conv",
+          "cosine": 0.826282
+        },
+        {
+          "name": "/layer2/layer2.1/conv3/Conv",
+          "cosine": 0.832713
+        },
+        {
+          "name": "/layer3/layer3.9/conv3/Conv",
+          "cosine": 0.834506
+        },
+        {
+          "name": "/layer4/layer4.1/conv1/Conv",
+          "cosine": 0.834593
+        },
+        {
+          "name": "/layer3/layer3.14/conv3/Conv",
+          "cosine": 0.835035
+        }
+      ],
+      "cosine_percentiles": {
+        "p10": 0.863546,
+        "median": 0.925951
+      }
+    },
+    "nodes": [
+      {
+        "name": "HZ_PREPROCESS_FOR_data",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedPreprocess",
+        "cosine": 0.999935,
+        "threshold": 127.0,
+        "dtype": "int8"
+      },
+      {
+        "name": "/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999995,
+        "threshold": 2.63079,
+        "dtype": "int8"
+      },
+      {
+        "name": "/maxpool/MaxPool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedMaxPool",
+        "cosine": 0.999776,
+        "threshold": 58.3406,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer1/layer1.0/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999552,
+        "threshold": 58.3406,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer1/layer1.0/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999938,
+        "threshold": 21.1452,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer1/layer1.0/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.99752,
+        "threshold": 41.689,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer1/layer1.0/downsample/downsample.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.997711,
+        "threshold": 58.3406,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer1/layer1.1/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.970945,
+        "threshold": 14.802,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer1/layer1.1/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.95807,
+        "threshold": 16.0111,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer1/layer1.1/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.960975,
+        "threshold": 19.4995,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer1/layer1.2/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.966952,
+        "threshold": 14.6936,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer1/layer1.2/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.984895,
+        "threshold": 8.75681,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer1/layer1.2/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.982547,
+        "threshold": 37.5456,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.0/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.8687,
+        "threshold": 14.445,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.0/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.962797,
+        "threshold": 15.2801,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.0/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.880298,
+        "threshold": 26.8293,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.0/downsample/downsample.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.909261,
+        "threshold": 14.445,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.1/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.932684,
+        "threshold": 39.4861,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.1/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.85125,
+        "threshold": 28.9292,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.1/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.832713,
+        "threshold": 18.8692,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.2/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.901451,
+        "threshold": 28.3485,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.2/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.925697,
+        "threshold": 18.7555,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.2/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.93245,
+        "threshold": 17.3257,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.3/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.909702,
+        "threshold": 32.5591,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.3/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.885411,
+        "threshold": 13.1955,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.3/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.887945,
+        "threshold": 15.9418,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.4/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.900833,
+        "threshold": 32.5419,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.4/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.908555,
+        "threshold": 11.8223,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.4/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.866869,
+        "threshold": 14.0132,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.5/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.904186,
+        "threshold": 43.359,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.5/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.910582,
+        "threshold": 12.3013,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.5/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.90372,
+        "threshold": 14.8782,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.6/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.894932,
+        "threshold": 30.8416,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.6/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.941348,
+        "threshold": 17.5071,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.6/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.971513,
+        "threshold": 16.5339,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.7/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.90643,
+        "threshold": 29.1402,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.7/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.924293,
+        "threshold": 11.2577,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer2/layer2.7/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.918312,
+        "threshold": 13.392,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.0/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.873682,
+        "threshold": 30.6436,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.0/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.950456,
+        "threshold": 16.152,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.0/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.888219,
+        "threshold": 18.9277,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.0/downsample/downsample.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.875036,
+        "threshold": 30.6436,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.1/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.935712,
+        "threshold": 61.8612,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.1/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.923368,
+        "threshold": 10.9833,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.1/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.851613,
+        "threshold": 10.0703,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.2/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.942551,
+        "threshold": 42.8697,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.2/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.951011,
+        "threshold": 14.8134,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.2/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.935334,
+        "threshold": 16.457,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.3/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.898735,
+        "threshold": 49.4351,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.3/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.907243,
+        "threshold": 9.21555,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.3/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.92099,
+        "threshold": 14.8709,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.4/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.911694,
+        "threshold": 49.893,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.4/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.918995,
+        "threshold": 12.1211,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.4/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.842492,
+        "threshold": 11.1373,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.5/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.918613,
+        "threshold": 42.3843,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.5/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.91331,
+        "threshold": 12.0608,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.5/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.908945,
+        "threshold": 16.5547,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.6/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.926005,
+        "threshold": 50.8744,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.6/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.934484,
+        "threshold": 13.5611,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.6/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.927189,
+        "threshold": 17.9116,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.7/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.905224,
+        "threshold": 51.1993,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.7/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.880231,
+        "threshold": 15.6897,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.7/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.921227,
+        "threshold": 14.9823,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.8/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.944723,
+        "threshold": 50.1789,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.8/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.940792,
+        "threshold": 13.0982,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.8/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.90302,
+        "threshold": 10.8361,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.9/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.918413,
+        "threshold": 42.2333,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.9/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.860286,
+        "threshold": 12.8555,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.9/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.834506,
+        "threshold": 14.6522,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.10/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.937279,
+        "threshold": 48.525,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.10/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.93932,
+        "threshold": 15.8385,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.10/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.872385,
+        "threshold": 16.6955,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.11/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.925951,
+        "threshold": 45.2925,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.11/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.924283,
+        "threshold": 14.2034,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.11/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.862868,
+        "threshold": 15.1478,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.12/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.934348,
+        "threshold": 44.3106,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.12/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.947248,
+        "threshold": 16.3562,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.12/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.862795,
+        "threshold": 12.3961,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.13/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.934109,
+        "threshold": 49.3153,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.13/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.940663,
+        "threshold": 14.8829,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.13/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.865863,
+        "threshold": 14.8884,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.14/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.939902,
+        "threshold": 47.8627,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.14/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.945192,
+        "threshold": 15.2172,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.14/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.835035,
+        "threshold": 13.1086,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.15/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.909875,
+        "threshold": 52.1409,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.15/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.924548,
+        "threshold": 13.1115,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.15/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.921088,
+        "threshold": 14.9214,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.16/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.948594,
+        "threshold": 48.3845,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.16/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.939728,
+        "threshold": 12.1195,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.16/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.863546,
+        "threshold": 17.0563,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.17/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.944669,
+        "threshold": 51.7976,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.17/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.944267,
+        "threshold": 15.0197,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.17/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.924936,
+        "threshold": 19.9616,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.18/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.941528,
+        "threshold": 54.5168,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.18/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.925292,
+        "threshold": 11.5434,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.18/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.90893,
+        "threshold": 15.9248,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.19/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.941898,
+        "threshold": 55.9483,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.19/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.945194,
+        "threshold": 14.0834,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.19/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.878908,
+        "threshold": 14.4364,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.20/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.958244,
+        "threshold": 59.9291,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.20/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.949089,
+        "threshold": 12.5306,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.20/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.927461,
+        "threshold": 18.6241,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.21/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.93909,
+        "threshold": 58.8726,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.21/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.931624,
+        "threshold": 10.9516,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.21/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.859458,
+        "threshold": 14.0678,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.22/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.948353,
+        "threshold": 60.2193,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.22/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.949532,
+        "threshold": 14.0825,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.22/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.881539,
+        "threshold": 13.5647,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.23/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.948839,
+        "threshold": 65.2694,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.23/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.9425,
+        "threshold": 12.4038,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.23/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.910884,
+        "threshold": 18.8255,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.24/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.955698,
+        "threshold": 60.42,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.24/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.964753,
+        "threshold": 12.8752,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.24/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.930458,
+        "threshold": 10.3201,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.25/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.933075,
+        "threshold": 59.0205,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.25/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.896928,
+        "threshold": 11.6597,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.25/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.894539,
+        "threshold": 14.09,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.26/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.94648,
+        "threshold": 62.608,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.26/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.888978,
+        "threshold": 10.9931,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.26/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.849411,
+        "threshold": 16.2903,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.27/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.940765,
+        "threshold": 67.1528,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.27/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.917937,
+        "threshold": 10.2109,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.27/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.84325,
+        "threshold": 15.4786,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.28/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.935009,
+        "threshold": 68.2214,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.28/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.929,
+        "threshold": 11.3831,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.28/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.888693,
+        "threshold": 16.3862,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.29/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.943251,
+        "threshold": 70.0267,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.29/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.91782,
+        "threshold": 10.8516,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.29/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.826282,
+        "threshold": 16.248,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.30/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.932636,
+        "threshold": 60.5759,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.30/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.931267,
+        "threshold": 12.259,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.30/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.874432,
+        "threshold": 14.4171,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.31/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.940955,
+        "threshold": 61.5031,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.31/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.937143,
+        "threshold": 10.7629,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.31/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.898861,
+        "threshold": 15.343,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.32/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.941164,
+        "threshold": 70.8442,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.32/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.919019,
+        "threshold": 10.069,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.32/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.862981,
+        "threshold": 17.0875,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.33/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.92977,
+        "threshold": 70.6742,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.33/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.935974,
+        "threshold": 9.72285,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.33/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.903916,
+        "threshold": 15.0988,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.34/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.937458,
+        "threshold": 59.0871,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.34/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.932396,
+        "threshold": 12.0686,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.34/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.940187,
+        "threshold": 15.832,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.35/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.946136,
+        "threshold": 74.6518,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.35/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.921865,
+        "threshold": 10.2217,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer3/layer3.35/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.881848,
+        "threshold": 12.9966,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer4/layer4.0/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.914329,
+        "threshold": 64.8861,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer4/layer4.0/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.918525,
+        "threshold": 12.2812,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer4/layer4.0/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.92035,
+        "threshold": 15.3294,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer4/layer4.0/downsample/downsample.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.915025,
+        "threshold": 64.8861,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer4/layer4.1/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.834593,
+        "threshold": 20.0754,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer4/layer4.1/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.957436,
+        "threshold": 20.0936,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer4/layer4.1/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.971594,
+        "threshold": 11.5659,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer4/layer4.2/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.945772,
+        "threshold": 18.5976,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer4/layer4.2/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.962537,
+        "threshold": 14.7339,
+        "dtype": "int8"
+      },
+      {
+        "name": "/layer4/layer4.2/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.927662,
+        "threshold": 13.3439,
+        "dtype": "int8"
+      },
+      {
+        "name": "/global_pool/pool/GlobalAveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedGlobalAveragePool",
+        "cosine": 0.964245,
+        "threshold": 14.6228,
+        "dtype": "int8"
+      },
+      {
+        "name": "/fc/Gemm",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999432,
+        "threshold": 1.99861,
+        "dtype": "int8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "logits",
+        "cosine": 0.999432,
+        "l1_distance": 0.387197,
+        "l2_distance": 0.014948,
+        "chebyshev_distance": 1.419748
+      }
+    ]
+  },
+  "subgraphs": [
+    {
+      "name": "main_graph_subgraph_0",
+      "perf": {
+        "fps": 89.61,
+        "latency_ms": 11.16,
+        "ddr_mb_per_frame": 77.456,
+        "bpu_ops_per_frame": 23028156416,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 23,
+        "interval_ms": 0.5,
+        "utilization": [
+          0.898,
+          0.875,
+          0.935,
+          0.684,
+          0.788,
+          0.758,
+          0.726,
+          0.78,
+          0.794,
+          0.722,
+          0.78,
+          0.725,
+          0.798,
+          0.72,
+          0.704,
+          0.723,
+          0.74,
+          0.396,
+          0.21,
+          0.204,
+          0.225,
+          0.193,
+          0.048
+        ],
+        "load_bandwidth_mbs": [
+          1691,
+          3084,
+          3865,
+          3816,
+          5483,
+          6540,
+          6697,
+          6632,
+          6398,
+          6593,
+          6692,
+          6559,
+          6519,
+          6780,
+          6786,
+          6714,
+          6785,
+          6332,
+          5912,
+          6038,
+          6149,
+          5916,
+          3845
+        ],
+        "store_bandwidth_mbs": [
+          1649,
+          1695,
+          1745,
+          1859,
+          1532,
+          1093,
+          1201,
+          1312,
+          1109,
+          1093,
+          1296,
+          1312,
+          1093,
+          1093,
+          1258,
+          1093,
+          1147,
+          656,
+          0,
+          125,
+          250,
+          130,
+          15
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "latency_ms": 11.16,
+    "fps_derived": 89.61,
+    "ddr_mb_per_frame": 77.456,
+    "bpu_ops_per_frame": 23028156416,
+    "derivation": "latency = sum of subgraph latency; fps_derived = 1000 / latency (sequential subgraph execution assumption); values from hbdk static estimation, not board measurement"
+  },
+  "similarity_provenance": {
+    "stage": "ptq-simulation",
+    "method": "x86 quantized simulation vs float ONNX (hb_mapper makertbin)",
+    "calibration_samples": 200,
+    "source_log": "output/hb_mapper_makertbin.log"
+  },
+  "performance_provenance": {
+    "stage": "compiler-static-estimate",
+    "source": "makertbin-workdir",
+    "method": "hbdk-cc static latency estimate of the compiled release artifact",
+    "note": "Estimates describe the compiled artifact; on-board measurements live in the model benchmark."
+  },
+  "board_measurement": null,
+  "provenance": {
+    "artifact_sha256": "76a029ff8b0db1ac98ffdbcdeb0bfae7552b03a5491e72815e7f3f46a4547497",
+    "makertbin_log_sha256": "416b163dbc123a06eca869fdb5bd17d80095320ab1f15e78b6aaa5bc9cf286e3",
+    "perf_reports": [
+      {
+        "name": "main_graph_subgraph_0",
+        "sha256": "f3904caaad7e8245e56bb40e08466a6027dc123af21281626c726c6372648a57"
+      }
+    ]
+  }
+}

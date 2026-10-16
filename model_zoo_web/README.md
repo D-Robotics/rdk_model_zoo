@@ -1,0 +1,170 @@
+# RDK Model Zoo Web
+
+This directory is the source of truth for the samples-only Model Zoo catalog
+and its static website on `main`. It reads its own `data/` records.
+The sample runtime manifests under `docs/release/` and the separate catalog
+data publisher are retained; neither is an input to this website.
+
+```text
+data/       reviewed release metadata grouped by model family and task
+src/        catalog UI and empty report-library shell
+public/     brand logo and interface icons
+scripts/    catalog, website, and validation scripts
+build/      generated catalog intermediate; ignored by Git
+dist/       generated website artifact; ignored by Git
+```
+
+New model submissions must follow [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Ownership
+
+- `samples/` owns conversion, evaluation, and runtime code.
+- `model_zoo_web/data/` owns website metadata for released sample models.
+- OSS owns binaries, release manifests, checksums, and complete OE reports.
+
+Catalog records use this layout:
+
+```text
+data/<domain>/<source>/<series>/<task>.yaml
+```
+
+Each task record groups model sizes and target platforms. Descriptions are
+authored in Chinese and English at the task level and describe model
+architecture only. Deployment formats, model statistics, accuracy, and
+performance remain in their dedicated release fields.
+
+Public artifacts use stable OSS paths:
+
+```text
+models/<source>/<series>/<task>/<size>/<platform>/<artifact>
+```
+
+Build dates, repository commits, and toolchain versions belong in release
+metadata rather than the object path.
+
+## Build and validation
+
+Install the local build dependencies and validate both the empty website shell
+and the samples-only catalog, including the JavaScript and Python unit tests.
+Use Python 3.12 and Node.js 22.12 or later in the Node 22 series, from a
+complete repository checkout:
+
+```bash
+python3 -m pip install -r model_zoo_web/requirements.txt
+npm ci --prefix model_zoo_web
+npm --prefix model_zoo_web run check
+```
+
+The catalog builder reads only `model_zoo_web/data/` and writes deterministic
+intermediate files to `model_zoo_web/build/`. Each record's `sample_path`
+must exist in the same checkout; CI does not fetch a separate source branch.
+For local review of historical layouts only, `MODEL_ZOO_SAMPLE_REF` can
+explicitly select an available Git ref when a sample is absent:
+
+```bash
+npm --prefix model_zoo_web run build:catalog
+npm --prefix model_zoo_web run check:catalog
+```
+
+The default website build remains an empty catalog shell. The release build
+uses the reviewed `release/inputs.json` manifest, regenerates
+`build/catalog.json`, and writes the complete site to `dist/`:
+
+```bash
+npm --prefix model_zoo_web run build:release
+
+npm --prefix model_zoo_web run check:release
+```
+
+`MODEL_ZOO_CATALOG` and `MODEL_ZOO_INPUTS` may optionally override the default
+catalog and release-input paths for local review.
+
+The model-detail view links an OE conversion report only when the imported
+release record supplies a reviewed public OSS URL. Missing reports keep the
+non-interactive placeholder; do not add an empty `href`, a fake `#` target, or
+a link to local report payloads.
+
+The input manifest is keyed at two levels. `models` supplies one shared cover
+per catalog model/task record, so every size and platform of YOLO26 Detect uses
+the same reviewed image. `releases` supplies optional structured OE data for a
+specific size/platform artifact:
+
+```json
+{
+  "schema_version": 1,
+  "models": {
+    "ultralytics_yolo/yolo26/detect": {
+      "cover": "results/yolo26-detect-cover.png"
+    }
+  },
+  "releases": {
+    "ultralytics_yolo/yolo26/detect/n/x5": {
+      "oe_data": "runs/yolo26n-x5/oe_report_data.json"
+    }
+  }
+}
+```
+
+Relative paths are resolved from the input-manifest directory. The preview
+build transforms every released size/platform entry into the UI's model
+contract. Structured OE JSON is copied into the site and matched to its exact
+artifact; complete OE HTML payloads remain outside the normal generated site.
+The website does not expose a separate original-HTML download action and does
+not read `platforms/` manifests.
+
+Runtime `threads` are displayed as Runtime submission concurrency. A separate
+`performance.end_to_end` record supplies the single-pipeline C++ latency and
+stage breakdown. Maximum-performance end-to-end records use every online CPU
+thread and must state the CPU governor and CPU/BPU frequencies explicitly.
+
+Compiled models, conversion outputs, and complete OE reports must not be
+committed here. Their stable OSS URLs and checksums are supplied through the
+reviewed catalog-generation step.
+
+## Ask AI local preview
+
+Ask AI calls the separate `rdk_model_zoo_service` Pi Agent API. To test it
+locally, start that service with its server-side `.env` in one terminal:
+
+```bash
+cd ../../rdk_model_zoo_service
+npm run dev
+```
+
+From `model_zoo_web/`, build and serve the release preview with the same-origin
+Ask AI proxy on port 4173 in another terminal:
+
+```bash
+npm run build:release
+npm run preview:ai
+```
+
+Open `http://127.0.0.1:4173/` and use the header Ask AI button or the model
+detail action. The browser calls `/api` on the preview origin; the preview
+server forwards those requests to `http://127.0.0.1:8787` by default. Set
+`PREVIEW_HOST` to the host's Tailscale IP to preview from another device, or
+`ASK_AI_BACKEND_URL` if the service uses another local address. Keep provider
+keys and the service's shared bearer token out of this static site. The
+model-request dialog is still a preview; no model request is submitted by it yet.
+
+## GitHub Pages release
+
+The CI and Pages workflows live with the website on `main`.
+Website and sample changes in pull requests or pushes to `main` run validation
+only. A semantic `web-v*` tag
+builds the reviewed release inputs and deploys `model_zoo_web/dist` to Pages.
+
+Merge the release into `main` before creating an unused release tag on that
+commit. For example, with the next unused version substituted below:
+
+```bash
+git tag -a web-v1.0.0 -m "RDK Model Zoo Web v1.0.0"
+git push origin web-v1.0.0
+```
+
+The deployment workflow rejects malformed tags and commits that are not part
+of `origin/main`. The repository Pages source must be set to GitHub
+Actions, and the `github-pages` environment must allow the release tag.
+
+The historical `model_zoo_web` branch remains reachable through the merge
+history. Start new website work from `main`; branch pushes do not deploy.

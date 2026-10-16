@@ -1,0 +1,305 @@
+(() => {
+  'use strict';
+
+  const data = window.MODEL_DATA || { models: [] };
+  const models = Array.isArray(data.models) ? data.models : [];
+  const facets = window.CatalogFacets;
+  const platforms = ['X3', 'X5', 'S100', 'S100P', 'S600'];
+  const selectedPlatforms = new Set();
+  const batchSize = 6;
+  const state = { query: '', scroll: 0, visibleCount: batchSize, domain: null, useCase: null };
+  let filteredItems = [];
+  let listObserver = null;
+
+  const $ = id => document.getElementById(id);
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, character => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[character]));
+  const modelPlatforms = model => (model.platforms || []).map(platform => String(platform).toUpperCase());
+  const groupKey = model => model.catalogId || model.sample || model.id;
+  const platformRank = platform => { const index = platforms.indexOf(platform); return index < 0 ? platforms.length : index; };
+  // Entry order when a card has no filtered platform to honor: strongest
+  // S-series first, X5 last — the same order the detail page presents.
+  const openPreference = ['S600', 'S100P', 'S100', 'X5', 'X3'];
+  const openRank = platform => { const index = openPreference.indexOf(platform); return index < 0 ? openPreference.length : index; };
+  const sizePreference = ['n', 's', 'm', 'l', 'x'];
+  const sizeRank = size => { const index = sizePreference.indexOf(String(size || '').toLowerCase()); return index < 0 ? sizePreference.length : index; };
+  // One grid card per model variant: the per-platform releases of the same
+  // model collapse into a single card listing its hardware targets, and the
+  // detail page's hardware selector navigates between them.
+  const groups = [...models.reduce((map, model) => {
+    const key = groupKey(model);
+    if (!map.has(key)) map.set(key, { members: [] });
+    map.get(key).members.push(model);
+    return map;
+  }, new Map()).values()].map(group => {
+    const primary = group.members[0];
+    return {
+      members: group.members,
+      entry: primary,
+      id: primary.id,
+      name: primary.name,
+      variantName: primary.variantName,
+      task: primary.task,
+      taskId: primary.taskId,
+      description: primary.description,
+      descriptionEn: primary.descriptionEn,
+      coverImage: primary.coverImage,
+      platforms: [...new Set(group.members.flatMap(modelPlatforms))].sort((a, b) => platformRank(a) - platformRank(b)),
+    };
+  });
+  const taskCount = taskId => groups.filter(group => group.members.some(member => facets.taskIds(member).includes(taskId))).length;
+  const domainCount = domain => groups.filter(group => group.members.some(member => facets.taskIds(member).some(id => domain.tasks.some(([taskId]) => taskId === id)))).length;
+  const repositoryUrl = data.repository?.url || 'https://github.com/D-Robotics/rdk_model_zoo';
+  const external = (url, label) => `<a href="${esc(url)}" target="_blank" rel="noopener">${label}<span aria-hidden="true"> ↗</span></a>`;
+
+  const languageSwitch = '<div class="language-switch" role="group" aria-label="Language / 语言"><button type="button" data-language="en" lang="en" aria-label="English">EN</button><button type="button" data-language="zh" lang="zh-CN" aria-label="简体中文">中文</button></div>';
+  const header = `<header class="header"><a href="#" class="brand"><img src="assets/rdk-brand/logo.png" alt="D-Robotics"><span class="brand-separator"></span><span>RDK <b>Model Zoo</b></span></a><div class="header-actions"><nav aria-label="主导航"><button type="button" class="header-action ask-nav-button" data-ask-open aria-controls="ask-ai-panel" aria-expanded="false"><span class="header-action-icon" style="--header-icon:url('assets/icons/sparkles.svg')" aria-hidden="true"></span>Ask AI</button><a class="header-action" href="${esc(repositoryUrl)}" target="_blank" rel="noopener"><span class="header-action-icon" style="--header-icon:url('assets/icons/external-link.svg')" aria-hidden="true"></span>GitHub</a></nav>${languageSwitch}</div></header>`;
+  const footer = `<footer><div class="footer-inner"><span>© ${new Date().getFullYear()} D-Robotics <span class="muted">/ Model Zoo</span></span></div></footer>`;
+  const search = '<label class="search"><span class="search-icon" aria-hidden="true"></span><input id="search" type="search" placeholder="搜索模型" aria-label="搜索模型"></label>';
+  const taskFilters = `<div id="filters" class="task-domains">${facets.groups.map(group => `<div class="task-domain${domainCount(group) ? '' : ' is-empty'}" data-domain="${group.id}"><div class="domain-heading"><button type="button" class="domain-label" data-task-group="${group.id}" aria-expanded="false" aria-controls="tasks-${group.id}" data-active="false"><span class="domain-symbol domain-symbol-${group.id}" aria-hidden="true"></span><span>${group.label}</span><small class="facet-count">${domainCount(group)}</small></button><button type="button" class="domain-toggle" data-toggle-group="${group.id}" aria-expanded="false" aria-controls="tasks-${group.id}" aria-label="${group.label}子类"></button></div><div class="task-children" id="tasks-${group.id}" hidden>${group.tasks.map(([id, label]) => `<button type="button" class="task-option${taskCount(id) ? '' : ' is-empty'}" data-task-id="${id}" aria-pressed="false"><span title="${label}">${label}</span><small class="facet-count">${taskCount(id)}</small><span class="selection-mark" aria-hidden="true"></span></button>`).join('')}</div></div>`).join('')}</div>`;
+  const platformFilters = `<fieldset class="sidebar-group"><legend>硬件平台</legend><div id="platform-filters">${platforms.map(platform => {
+    const count = groups.filter(group => group.platforms.includes(platform)).length;
+    if (!count) return '';
+    return `<button type="button" class="facet-option platform-filter" data-platform="${platform}" aria-pressed="false"><span class="selection-mark" aria-hidden="true"></span><span>RDK ${platform}</span><small class="facet-count">${count}</small></button>`;
+  }).join('')}</div></fieldset>`;
+  const catalog = `<h1 class="sr-only">RDK Model Zoo</h1><div class="catalog-layout"><details id="catalog-sidebar" class="catalog-sidebar" open><summary>筛选模型 <span id="filter-count"></span></summary><div class="sidebar-content"><div class="sidebar-top"><span>筛选条件</span><button id="reset" type="button">清除筛选</button></div>${search}<section class="facet-group task-section"><h2>任务类型</h2>${taskFilters}</section><section class="facet-group hardware-section"><h2>硬件平台</h2>${platformFilters}</section></div></details><section class="collection" aria-label="模型列表"><div class="collection-count"><span id="result-count" aria-live="polite"></span></div><div id="grid" class="model-grid"></div><div id="load-more-trigger" class="load-more-trigger" hidden><button id="load-more" type="button">加载更多</button></div><span id="load-status" class="sr-only" role="status" aria-live="polite"></span></section></div>`;
+
+  $('app').innerHTML = `${header}<main id="main" tabindex="-1"><div id="catalog">${catalog}</div><section id="detail" hidden></section></main>${footer}`;
+
+  function card(group, index = 0, arriving = false) {
+    const model = group.entry;
+    const description = window.HubI18n?.locale === 'en' ? (model.descriptionEn || model.description) : model.description;
+    const openModel = group.members.find(member => modelPlatforms(member).some(platform => selectedPlatforms.has(platform)))
+      || [...group.members].sort((a, b) =>
+           openRank(modelPlatforms(a)[0]) - openRank(modelPlatforms(b)[0])
+           || sizeRank(a.modelSize) - sizeRank(b.modelSize))[0];
+    const platformOrder = [...group.platforms].sort((a, b) => openRank(a) - openRank(b));
+    return `<article class="model-card${arriving ? ' is-arriving' : ''}" style="--i:${Math.min(index, 11)}"><a class="gallery-link" href="#model/${esc(openModel.id)}" aria-label="查看 ${esc(model.name)}" title="${esc(description)}"><div class="thumbnail" data-image="${esc(model.id)}"><img src="${esc(model.coverImage)}" alt="${esc(model.name)}" loading="lazy"></div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="card-task">${esc(model.task)}</p><div class="card-platforms">${platformOrder.map(platform => `<span>${esc(platform)}</span>`).join('')}</div></div></a></article>`;
+  }
+
+  function matchesTask(model) {
+    if (!state.domain) return true;
+    const ids = facets.taskIds(model);
+    if (state.useCase) return ids.includes(state.useCase);
+    const group = facets.groups.find(candidate => candidate.id === state.domain);
+    return Boolean(group?.tasks.some(([id]) => ids.includes(id)));
+  }
+
+  function groupMatchesTask(group) {
+    return group.members.some(matchesTask);
+  }
+
+  function syncTaskSelection() {
+    document.querySelectorAll('#filters [data-task-id]').forEach(button => {
+      const active = button.closest('[data-domain]').dataset.domain === state.domain && button.dataset.taskId === state.useCase;
+      button.setAttribute('aria-pressed', String(active));
+    });
+    for (const group of facets.groups) {
+      const button = document.querySelector(`[data-task-group="${group.id}"]`);
+      const expanded = group.id === state.domain;
+      button.dataset.active = String(expanded && !state.useCase);
+      button.setAttribute('aria-pressed', String(expanded && !state.useCase));
+      button.setAttribute('aria-expanded', String(expanded));
+      document.querySelector(`[data-toggle-group="${group.id}"]`).setAttribute('aria-expanded', String(expanded));
+      $('tasks-' + group.id).hidden = !expanded;
+    }
+    document.querySelectorAll('[data-platform]').forEach(button => {
+      button.setAttribute('aria-pressed', String(selectedPlatforms.has(button.dataset.platform)));
+    });
+  }
+
+  function syncLoadMore() {
+    const remaining = state.visibleCount < filteredItems.length;
+    $('load-more-trigger').hidden = !remaining;
+    $('load-status').textContent = `已显示 ${Math.min(state.visibleCount, filteredItems.length)} / ${filteredItems.length} 个模型`;
+    listObserver?.disconnect();
+    if (remaining && !$('catalog').hidden) listObserver?.observe($('load-more-trigger'));
+  }
+
+  // Cards fade in on the first render and with each loaded batch; later
+  // renders (filters, search) replace the list in place.
+  let rendered = false;
+  function render() {
+    const arriving = !rendered;
+    rendered = true;
+    state.visibleCount = batchSize;
+    listObserver?.disconnect();
+    const platformItems = groups.filter(group => !selectedPlatforms.size || group.platforms.some(platform => selectedPlatforms.has(platform)));
+    const query = state.query.toLowerCase().trim();
+    // Every whitespace-separated term must match, so "S600 pose" narrows
+    // instead of searching for the literal phrase.
+    const terms = query.split(/\s+/).filter(Boolean);
+    const items = platformItems.filter(group => {
+      // The catalog ID keeps the short Ultralytics task names (cls, seg), so
+      // they still match after the display names spelled them out.
+      const searchable = [group.name, group.entry.catalogId, ...group.members.map(member => member.variantName), group.task, group.description, group.descriptionEn, ...group.members.flatMap(member => facets.searchTerms(member)), ...group.platforms.map(platform => `RDK ${platform}`)].join(' ').toLowerCase();
+      return groupMatchesTask(group) && terms.every(term => searchable.includes(term));
+    });
+    filteredItems = items;
+    $('result-count').textContent = `共 ${items.length} 个模型`;
+
+    if (!models.length) {
+      $('grid').innerHTML = '<div class="empty"><p>当前目录暂未发布任何模型。</p></div>';
+    } else if (!items.length) {
+      $('grid').innerHTML = '<div class="empty"><h3>没有匹配的模型</h3><p>试试其他关键词，或清除筛选条件。</p><div class="ask-empty-actions"><button class="button secondary" id="empty-reset" type="button">清除筛选</button><button class="button secondary" type="button" data-ask-open>Ask AI</button><button class="button" type="button" data-ask-request>提交模型需求</button></div></div>';
+      $('empty-reset').addEventListener('click', reset);
+    } else {
+      $('grid').innerHTML = items.slice(0, state.visibleCount).map((group, index) => card(group, index, arriving)).join('');
+    }
+
+    const filterCount = Number(Boolean(state.domain)) + selectedPlatforms.size + Number(Boolean(query));
+    $('filter-count').textContent = filterCount ? `已选 ${filterCount} 项` : '';
+    $('reset').disabled = filterCount === 0;
+    syncTaskSelection();
+    syncLoadMore();
+    syncUrl();
+    window.HubI18n?.apply();
+  }
+
+  // Catalog filters live in the hash as "#?platform=S600&domain=vision&task=pose-estimation&q=…"
+  // so a filtered list can be shared and survives a reload. "#model/<id>"
+  // stays the detail route.
+  function filterHash() {
+    const params = new URLSearchParams();
+    const chosen = platforms.filter(platform => selectedPlatforms.has(platform));
+    if (chosen.length) params.set('platform', chosen.join(','));
+    if (state.domain) params.set('domain', state.domain);
+    if (state.useCase) params.set('task', state.useCase);
+    if (state.query.trim()) params.set('q', state.query.trim());
+    const query = params.toString();
+    return query ? `#?${query}` : '';
+  }
+
+  const isCatalogHash = hash => hash === '' || hash === '#' || hash.startsWith('#?');
+
+  function syncUrl() {
+    if ($('catalog').hidden || !isCatalogHash(location.hash)) return;
+    const hash = filterHash();
+    if (hash !== location.hash) history.replaceState(history.state, '', `${location.pathname}${location.search}${hash}`);
+  }
+
+  function applyFilterHash(hash) {
+    const params = new URLSearchParams(hash.replace(/^#\??/, ''));
+    selectedPlatforms.clear();
+    for (const platform of (params.get('platform') || '').toUpperCase().split(',')) {
+      if (platforms.includes(platform)) selectedPlatforms.add(platform);
+    }
+    const group = facets.groups.find(candidate => candidate.id === params.get('domain'));
+    state.domain = group ? group.id : null;
+    state.useCase = group?.tasks.some(([id]) => id === params.get('task')) ? params.get('task') : null;
+    state.query = params.get('q') || '';
+    $('search').value = state.query;
+  }
+
+  function loadNextBatch() {
+    if ($('catalog').hidden || state.visibleCount >= filteredItems.length) return;
+    const next = filteredItems.slice(state.visibleCount, state.visibleCount + batchSize);
+    state.visibleCount += next.length;
+    $('grid').insertAdjacentHTML('beforeend', next.map((group, index) => card(group, index, true)).join(''));
+    syncLoadMore();
+    window.HubI18n?.apply();
+  }
+
+  function reset() {
+    selectedPlatforms.clear();
+    state.query = '';
+    state.domain = null;
+    state.useCase = null;
+    $('search').value = '';
+    render();
+  }
+
+  $('search').addEventListener('input', event => {
+    state.query = event.target.value;
+    render();
+  });
+  $('reset').addEventListener('click', reset);
+  document.querySelector('.language-switch').addEventListener('click', event => {
+    const button = event.target.closest('[data-language]');
+    if (button) window.HubI18n.setLocale(button.dataset.language);
+  });
+  $('filters').addEventListener('click', event => {
+    const groupControl = event.target.closest('[data-toggle-group], [data-task-group]');
+    if (groupControl) {
+      const groupId = groupControl.dataset.toggleGroup || groupControl.dataset.taskGroup;
+      const alreadySelected = state.domain === groupId && state.useCase === null;
+      state.domain = alreadySelected ? null : groupId;
+      state.useCase = null;
+      render();
+      return;
+    }
+    const taskButton = event.target.closest('[data-task-id]');
+    if (!taskButton) return;
+    const groupId = taskButton.closest('[data-domain]').dataset.domain;
+    const alreadySelected = state.domain === groupId && state.useCase === taskButton.dataset.taskId;
+    state.domain = alreadySelected ? null : groupId;
+    state.useCase = alreadySelected ? null : taskButton.dataset.taskId;
+    render();
+  });
+  $('platform-filters').addEventListener('click', event => {
+    const button = event.target.closest('[data-platform]');
+    if (!button) return;
+    const platform = button.dataset.platform;
+    selectedPlatforms.has(platform) ? selectedPlatforms.delete(platform) : selectedPlatforms.add(platform);
+    render();
+  });
+  $('load-more').addEventListener('click', loadNextBatch);
+  // Once a card has arrived, showing the catalog again must not replay it.
+  const settleCard = card => card.classList.remove('is-arriving');
+  $('grid').addEventListener('animationend', event => {
+    if (event.target.classList.contains('model-card')) settleCard(event.target);
+  });
+
+  if ('IntersectionObserver' in window) {
+    listObserver = new window.IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) loadNextBatch();
+    }, { rootMargin: '240px 0px', threshold: 0 });
+  }
+
+  const mobile = window.matchMedia('(max-width: 760px)');
+  $('catalog-sidebar').open = !mobile.matches;
+  mobile.addEventListener('change', event => { $('catalog-sidebar').open = !event.matches; });
+
+  function route() {
+    const match = location.hash.match(/^#model\/([^/]+)/);
+    const model = match && models.find(candidate => candidate.id === decodeURIComponent(match[1]));
+    if (!model) {
+      const fromDetail = !$('detail').hidden;
+      window.ModelDetail.destroy();
+      $('detail').hidden = true;
+      $('catalog').hidden = false;
+      document.title = 'RDK Model Zoo';
+      // A filter link opened in place (pasted or edited by hand) replaces
+      // the current filters; any other catalog hash keeps them.
+      if (location.hash.startsWith('#?') && location.hash !== filterHash()) {
+        applyFilterHash(location.hash);
+        render();
+        return;
+      }
+      syncUrl();
+      // Return to the card the reader left from, not the top of the list.
+      if (fromDetail) window.scrollTo(0, state.scroll);
+      return;
+    }
+    document.title = `${model.variantName || model.name} · RDK ${model.releasePlatform || modelPlatforms(model)[0] || ''} · RDK Model Zoo`;
+    if (!$('catalog').hidden) state.scroll = window.scrollY;
+    // Switching platforms stays in place: only entering from the catalog
+    // (or opening a model link directly) scrolls to the top and animates.
+    const entering = $('detail').hidden;
+    const keepScroll = entering ? 0 : window.scrollY;
+    $('grid').querySelectorAll('.is-arriving').forEach(settleCard);
+    $('catalog').hidden = true;
+    $('detail').hidden = false;
+    $('detail').classList.toggle('is-entering', entering);
+    $('detail').innerHTML = window.ModelDetail.render({ model, models, data });
+    window.ModelDetail.bind($('detail'), model, models, data);
+    window.scrollTo(0, keepScroll);
+    window.HubI18n?.apply();
+  }
+
+  window.addEventListener('hashchange', route);
+  if (location.hash.startsWith('#?')) applyFilterHash(location.hash);
+  render();
+  route();
+})();

@@ -1,0 +1,291 @@
+{
+  "schema_version": 1,
+  "generated_from_run": "yolo-v8-v11-20261013/yolov8x-pose/s100/attempt-01",
+  "generated_at": "2026-10-14T00:00:00+08:00",
+  "model": {
+    "sample": "ultralytics_yolo",
+    "family": "yolov8",
+    "task": "pose",
+    "size": "x"
+  },
+  "target": {
+    "platform": "s100",
+    "march": "nash-e"
+  },
+  "toolchain": {
+    "hbdk": "4.7.5",
+    "hmct": "2.6.5",
+    "hb_compile": "3.5.3"
+  },
+  "io": {
+    "inputs": [
+      {
+        "name": "images_y",
+        "shape": [
+          1,
+          640,
+          640,
+          1
+        ],
+        "dtype": "uint8"
+      },
+      {
+        "name": "images_uv",
+        "shape": [
+          1,
+          320,
+          320,
+          2
+        ],
+        "dtype": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output0",
+        "shape": [
+          1,
+          80,
+          80,
+          1
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "559",
+        "shape": [
+          1,
+          80,
+          80,
+          64
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "567",
+        "shape": [
+          1,
+          80,
+          80,
+          51
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "575",
+        "shape": [
+          1,
+          40,
+          40,
+          1
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "583",
+        "shape": [
+          1,
+          40,
+          40,
+          64
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "591",
+        "shape": [
+          1,
+          40,
+          40,
+          51
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "599",
+        "shape": [
+          1,
+          20,
+          20,
+          1
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "607",
+        "shape": [
+          1,
+          20,
+          20,
+          64
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "615",
+        "shape": [
+          1,
+          20,
+          20,
+          51
+        ],
+        "dtype": "float32"
+      }
+    ]
+  },
+  "quantization": {
+    "summary": {
+      "total_nodes": 0,
+      "unit_counts": {},
+      "dtype_counts": {},
+      "measured_nodes": 0,
+      "weakest_node": null,
+      "weakest_nodes": [],
+      "cosine_percentiles": {
+        "p10": null,
+        "median": null
+      }
+    },
+    "nodes": [],
+    "outputs": []
+  },
+  "subgraphs": [
+    {
+      "name": "subgraph_0",
+      "perf": {
+        "fps": 67.08,
+        "latency_ms": 14.91,
+        "latency_us": 14908.3,
+        "ddr_mb_per_frame": 188.248,
+        "bpu_ops_per_frame": 263207104000.0,
+        "core_number": 1,
+        "march": "nash-e"
+      },
+      "intervals": {
+        "count": 30,
+        "interval_ms": 0.5,
+        "utilization": [
+          0.992,
+          0.998,
+          0.998,
+          0.998,
+          0.999,
+          0.999,
+          0.981,
+          0.857,
+          0.998,
+          0.972,
+          0.912,
+          0.999,
+          0.85,
+          0.868,
+          0.968,
+          0.921,
+          0.987,
+          0.97,
+          0.993,
+          0.999,
+          0.983,
+          0.917,
+          0.917,
+          0.874,
+          0.904,
+          1,
+          0.969,
+          0.971,
+          0.951,
+          0.748
+        ],
+        "load_bandwidth_mbs": [
+          1530,
+          7619,
+          12884,
+          13755,
+          5600,
+          3584,
+          9016,
+          14900,
+          5761,
+          9615,
+          6565,
+          7562,
+          11401,
+          10712,
+          14574,
+          8841,
+          5783,
+          6609,
+          12518,
+          5322,
+          17005,
+          8051,
+          8538,
+          10802,
+          19146,
+          4019,
+          1993,
+          21330,
+          7107,
+          13896
+        ],
+        "store_bandwidth_mbs": [
+          6734,
+          4986,
+          5693,
+          7976,
+          3906,
+          4492,
+          3906,
+          3320,
+          2246,
+          1660,
+          2441,
+          488,
+          3398,
+          1875,
+          0,
+          3515,
+          0,
+          585,
+          10424,
+          3293,
+          6552,
+          1604,
+          976,
+          2343,
+          585,
+          0,
+          48,
+          5615,
+          12,
+          1757
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "latency_ms": 14.91,
+    "fps_derived": 67.07,
+    "ddr_mb_per_frame": 188.248,
+    "bpu_ops_per_frame": 263207104000.0,
+    "derivation": "latency = sum of subgraph latency; fps_derived = 1000 / latency (sequential subgraph execution assumption); values from hbdk static estimation, not board measurement"
+  },
+  "similarity_provenance": {
+    "stage": "ptq-simulation",
+    "method": "hb_compile node_info.csv calibrated/quantized cosine (x86 PTQ simulation)",
+    "calibration_samples": 200,
+    "source_log": "output/hb_compile.log"
+  },
+  "performance_provenance": {
+    "stage": "compiler-static-estimate",
+    "source": "hb_compile-json",
+    "method": "hbdk-cc static latency estimate of the compiled release artifact",
+    "note": "Estimates describe the compiled artifact; on-board measurements live in the model benchmark."
+  },
+  "board_measurement": null,
+  "provenance": {
+    "artifact_sha256": "f6756b8185b2354523b651dad8dfe0f354c0cb683b8f01ecb547b972d8ee0269",
+    "hb_compile_log_sha256": "316166c29cbcdd78bcbd4df1b56a9f575fe77c757f9a60b82d7bf0efcaa5486b",
+    "oe_report_json_sha256": "0c7301049a1fb54e2e895ad74b1c8a18b8a48ba26fec4fff184921ce61e45dfd"
+  }
+}

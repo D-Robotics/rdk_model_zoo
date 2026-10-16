@@ -53,9 +53,15 @@ describe("legacy catalog redirect artifact", () => {
     expect(readme).toContain("not published");
     for (const name of workflows) {
       const workflow = await readFile(join(workflowDirectory, name), "utf8");
+      if (name === "model-zoo-web-pages.yml") {
+        // The website publisher uploads its own build, never this redirect.
+        expect(workflow).toContain("path: model_zoo_web/dist");
+        expect(workflow).not.toContain("catalog-redirect");
+        continue;
+      }
       // Referencing the redirect directory in a workflow (the catalog
       // classifier runs these tests when the artifact changes) is
-      // validation, not deployment; only publication actions are banned.
+      // validation, not deployment; other workflows cannot publish Pages.
       expect(workflow).not.toContain("upload-pages-artifact");
     }
   });

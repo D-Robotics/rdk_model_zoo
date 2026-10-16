@@ -33,6 +33,7 @@ X5 与 S（S100/S100P/S600）的 Sample 存放于 `samples/`。通过各 Sample 
 │   └── UCP_User_Guide.md                  # libdnn/libucp 接口指引
 ├── samples/                               # 统一 sample
 │   └── {vision,speech,robotics,llm,vla}/  # 每样本见下方 Sample 布局
+├── model_zoo_web/                         # 静态网站及其独立发布数据
 ├── utils/
 │   ├── py_utils/                          # Python 公共工具
 │   ├── c_utils/                           # C/C++ 公共工具

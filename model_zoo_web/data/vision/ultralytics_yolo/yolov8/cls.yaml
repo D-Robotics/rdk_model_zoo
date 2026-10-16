@@ -1,0 +1,3426 @@
+schema_version: 1
+id: ultralytics_yolo/yolov8/cls
+name: YOLOv8 Cls
+domain: vision
+source: ultralytics_yolo
+provider: ultralytics
+family: yolov8
+task: cls
+description:
+  zh: YOLOv8 Cls 以 YOLOv8 主干和分类头完成 ImageNet 1000 类图像分类。
+  en: YOLOv8 Cls classifies images into the 1000 ImageNet classes with the YOLOv8 backbone and a classification
+    head.
+license:
+  name: AGPL-3.0
+  url: https://www.ultralytics.com/license
+sample_path: samples/vision/ultralytics_yolo
+variants:
+- size: n
+  model:
+    parameter_count: 2719288
+    gflops: 0.414030848
+    gflops_method: Ultralytics 8.4.157 get_num_params / get_flops(imgsz=224); loaded checkpoint, no explicit
+      fuse
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      geometry: sample runtime stretch resize (resize_type 0, INTER_NEAREST)
+  platforms:
+  - platform: x5
+    status: released
+    released_at: '2026-10-14'
+    artifact:
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/n/x5/yolov8n_cls_bayese_224x224_nv12.bin
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/n/x5/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/n/x5/SHA256SUMS
+      size_bytes: 2889907
+      sha256: 17c13f40d42a17e3984d7061440c5312852fe0cb2a600eb10e71b408715b5f49
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/n/x5/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.4726
+        top5: 0.7104
+      runtime:
+        top1: 0.4529
+        top5: 0.6982
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.966475
+        observed_min_latency_ms: 0.755
+        observed_max_latency_ms: 1.754
+        aggregate_fps: 1024.6794034316513
+      - threads: 2
+        average_latency_ms: 0.9860466666666667
+        observed_min_latency_ms: 0.827
+        observed_max_latency_ms: 1.811
+        aggregate_fps: 2001.8149789142155
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input.bin: a4b53e5ef9d9cff9b65e711e8fe606ba48d8e552804b9cca81ff139c2256e089
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 2292.970392
+        metrics_ms:
+          preprocess:
+            mean: 2.757372
+            p50: 2.714446
+            p95: 2.781502
+            min: 2.644424
+            max: 10.684866
+          runtime:
+            mean: 0.960568
+            p50: 0.959483
+            p95: 0.994223
+            min: 0.907461
+            max: 1.406171
+          postprocess:
+            mean: 0.099616
+            p50: 0.098688
+            p95: 0.10271
+            min: 0.0905
+            max: 0.237251
+          end_to_end:
+            mean: 3.817557
+            p50: 3.774053
+            p95: 3.84952
+            min: 3.685178
+            max: 11.868287
+        throughput_fps: 261.669319
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 2355.224044
+        metrics_ms:
+          preprocess:
+            mean: 2.701587
+            p50: 2.708592
+            p95: 2.871803
+            min: 2.541508
+            max: 3.485344
+          runtime:
+            mean: 1.125392
+            p50: 1.081336
+            p95: 1.338212
+            min: 0.968128
+            max: 1.678214
+          postprocess:
+            mean: 0.093566
+            p50: 0.093917
+            p95: 0.096459
+            min: 0.087375
+            max: 0.272084
+          end_to_end:
+            mean: 3.920545
+            p50: 3.883158
+            p95: 4.11039
+            min: 3.76297
+            max: 4.697348
+        throughput_fps: 509.505668
+    provenance:
+      repository_commit: ce59a0c02419fb7e707ac0dbc1e3b905aae51d1e
+      build_id: yolo-v8-v11-20261013-yolov8n-cls-x5-attempt-01
+      source_status: clean committed tree (board source snapshot yolo-v8-v11-20261013-build-ce59a0c0)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      onnx_sha256: 2f899954b8308058392f84803979b4edd47153e6aa9a2525eef3f45b09979378
+      config_sha256: 6f517542a2166f04af4d520b0b662c1a4152260bf182b513f6781e1ab4a157fa
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8n-cls.pt
+      source_checkpoint_sha256: 11fa19f2aea79bc960d680a13f82f22105982b325eb9e17a4a5e1a9f8245980a
+  - platform: s100
+    status: released
+    released_at: '2026-10-15'
+    artifact:
+      format: hbm
+      march: nash-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/n/s100/yolov8n_cls_nashe_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/n/s100/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/n/s100/SHA256SUMS
+      size_bytes: 3366064
+      sha256: 9dc7262dabeec661a4e07b1f9578f0694f3b459d3d42b3e8e47aa7b5e86d83a1
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/n/s100/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.4726
+        top5: 0.7104
+      runtime:
+        top1: 0.4529
+        top5: 0.6949
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.43927333333333335
+        observed_min_latency_ms: 0.379
+        observed_max_latency_ms: 2.541
+        aggregate_fps: 2182.4927704926977
+      - threads: 2
+        average_latency_ms: 0.4862866666666667
+        observed_min_latency_ms: 0.401
+        observed_max_latency_ms: 2.18
+        aggregate_fps: 3930.354124906654
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input_y.bin: ad3b436b3f71da8c9e350cbf0d2ddc53eadaf685b65fea7f19b7f57668622e67
+          input_uv.bin: 36582cbf948b378c3b137edbe1be1d44ebe0d4075a5d4de1e7b03561e0060717
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 948.731697
+        metrics_ms:
+          preprocess:
+            mean: 1.00124
+            p50: 0.955385
+            p95: 1.270097
+            min: 0.943247
+            max: 2.723068
+          runtime:
+            mean: 0.552057
+            p50: 0.527761
+            p95: 0.704263
+            min: 0.494374
+            max: 1.974894
+          postprocess:
+            mean: 0.026306
+            p50: 0.024825
+            p95: 0.032277
+            min: 0.02335
+            max: 0.05855
+          end_to_end:
+            mean: 1.579602
+            p50: 1.512908
+            p95: 1.890546
+            min: 1.462371
+            max: 3.284866
+        throughput_fps: 632.423268
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 1019.383543
+        metrics_ms:
+          preprocess:
+            mean: 1.003116
+            p50: 0.956998
+            p95: 1.278816
+            min: 0.938098
+            max: 3.017992
+          runtime:
+            mean: 0.659163
+            p50: 0.608861
+            p95: 0.849005
+            min: 0.469749
+            max: 4.632238
+          postprocess:
+            mean: 0.026553
+            p50: 0.024762
+            p95: 0.03293
+            min: 0.022725
+            max: 0.07205
+          end_to_end:
+            mean: 1.688832
+            p50: 1.610921
+            p95: 2.06395
+            min: 1.441521
+            max: 5.91946
+        throughput_fps: 1177.182041
+    provenance:
+      repository_commit: 2838ca0a7a2aab68ab171091beba65ccfb0cc7e0
+      build_id: yolo-v8-v11-20261013-yolov8n-cls-s100-attempt-01
+      source_status: clean committed trees; board source snapshots accuracy 2838ca0a, cpp_smoke 2838ca0a,
+        benchmark 2838ca0a
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: eabe0309577af50ab1d9a524f15e86ca406003ea9a464dd033e22e3aa025a0b6
+      config_sha256: 92c44d163b8745c324ee83d3de95cf94d257ae4603b789797ca1c2b72aa529e5
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8n-cls.pt
+      source_checkpoint_sha256: 11fa19f2aea79bc960d680a13f82f22105982b325eb9e17a4a5e1a9f8245980a
+  - platform: s100p
+    status: released
+    released_at: '2026-10-15'
+    artifact:
+      format: hbm
+      march: nash-m
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/n/s100p/yolov8n_cls_nashm_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/n/s100p/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/n/s100p/SHA256SUMS
+      size_bytes: 3365040
+      sha256: 3fb5e2f7e01d08ea653bec2f1148a612c52b98ec0215d032806b58a08570ceae
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/n/s100p/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.4726
+        top5: 0.7104
+      runtime:
+        top1: 0.4529
+        top5: 0.6949
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.340555
+        observed_min_latency_ms: 0.324
+        observed_max_latency_ms: 0.643
+        aggregate_fps: 2851.548390776192
+      - threads: 2
+        average_latency_ms: 0.42573333333333335
+        observed_min_latency_ms: 0.359
+        observed_max_latency_ms: 0.796
+        aggregate_fps: 4498.864036830701
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input_y.bin: ad3b436b3f71da8c9e350cbf0d2ddc53eadaf685b65fea7f19b7f57668622e67
+          input_uv.bin: 36582cbf948b378c3b137edbe1be1d44ebe0d4075a5d4de1e7b03561e0060717
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 713.175502
+        metrics_ms:
+          preprocess:
+            mean: 0.719881
+            p50: 0.717704
+            p95: 0.738855
+            min: 0.709829
+            max: 0.773204
+          runtime:
+            mean: 0.448488
+            p50: 0.439377
+            p95: 0.476922
+            min: 0.410178
+            max: 0.79813
+          postprocess:
+            mean: 0.018962
+            p50: 0.01885
+            p95: 0.0199
+            min: 0.017275
+            max: 0.038176
+          end_to_end:
+            mean: 1.187332
+            p50: 1.177844
+            p95: 1.221606
+            min: 1.138157
+            max: 1.533584
+        throughput_fps: 841.307642
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 788.371434
+        metrics_ms:
+          preprocess:
+            mean: 0.71582
+            p50: 0.713904
+            p95: 0.734661
+            min: 0.703529
+            max: 0.764555
+          runtime:
+            mean: 0.577659
+            p50: 0.589079
+            p95: 0.660005
+            min: 0.420978
+            max: 1.062081
+          postprocess:
+            mean: 0.018884
+            p50: 0.018625
+            p95: 0.021577
+            min: 0.016851
+            max: 0.036151
+          end_to_end:
+            mean: 1.312363
+            p50: 1.323608
+            p95: 1.398868
+            min: 1.146582
+            max: 1.805986
+        throughput_fps: 1522.125166
+    provenance:
+      repository_commit: 2838ca0a7a2aab68ab171091beba65ccfb0cc7e0
+      build_id: yolo-v8-v11-20261013-yolov8n-cls-s100p-attempt-01
+      source_status: clean committed trees; board source snapshots accuracy 2838ca0a, cpp_smoke 2838ca0a,
+        benchmark 2838ca0a
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: eabe0309577af50ab1d9a524f15e86ca406003ea9a464dd033e22e3aa025a0b6
+      config_sha256: 21662d2555fea38e043c7611cd402a3af354499311be297d6d8da0a9c3e43be4
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8n-cls.pt
+      source_checkpoint_sha256: 11fa19f2aea79bc960d680a13f82f22105982b325eb9e17a4a5e1a9f8245980a
+  - platform: s600
+    status: released
+    released_at: '2026-10-15'
+    artifact:
+      format: hbm
+      march: nash-p
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/n/s600/yolov8n_cls_nashp_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/n/s600/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/n/s600/SHA256SUMS
+      size_bytes: 3273104
+      sha256: dbd89d2fca6ab9abef0480a30d3a8b4dd36f54abe06b440c5cd93e8570d8d752
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/n/s600/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.4726
+        top5: 0.7104
+      runtime:
+        top1: 0.454
+        top5: 0.6971
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.3194133333333333
+        observed_min_latency_ms: 0.303
+        observed_max_latency_ms: 0.758
+        aggregate_fps: 3001.170456478026
+      - threads: 2
+        average_latency_ms: 0.3271266666666667
+        observed_min_latency_ms: 0.299
+        observed_max_latency_ms: 0.891
+        aggregate_fps: 5813.502829238044
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input_y.bin: ad3b436b3f71da8c9e350cbf0d2ddc53eadaf685b65fea7f19b7f57668622e67
+          input_uv.bin: 36582cbf948b378c3b137edbe1be1d44ebe0d4075a5d4de1e7b03561e0060717
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 712.468352
+        metrics_ms:
+          preprocess:
+            mean: 0.629978
+            p50: 0.628607
+            p95: 0.649625
+            min: 0.61677
+            max: 0.675019
+          runtime:
+            mean: 0.535111
+            p50: 0.526545
+            p95: 0.564678
+            min: 0.501571
+            max: 0.780893
+          postprocess:
+            mean: 0.017509
+            p50: 0.0171
+            p95: 0.019625
+            min: 0.016425
+            max: 0.03805
+          end_to_end:
+            mean: 1.182598
+            p50: 1.172601
+            p95: 1.226146
+            min: 1.138515
+            max: 1.445437
+        throughput_fps: 842.14267
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 741.351806
+        metrics_ms:
+          preprocess:
+            mean: 0.642397
+            p50: 0.624381
+            p95: 0.708661
+            min: 0.615469
+            max: 0.744843
+          runtime:
+            mean: 0.572457
+            p50: 0.55262
+            p95: 0.661548
+            min: 0.503045
+            max: 0.971191
+          postprocess:
+            mean: 0.017564
+            p50: 0.01705
+            p95: 0.020149
+            min: 0.01635
+            max: 0.032525
+          end_to_end:
+            mean: 1.232419
+            p50: 1.231814
+            p95: 1.306679
+            min: 1.136164
+            max: 1.62336
+        throughput_fps: 1618.664702
+    provenance:
+      repository_commit: 2838ca0a7a2aab68ab171091beba65ccfb0cc7e0
+      build_id: yolo-v8-v11-20261013-yolov8n-cls-s600-attempt-01
+      source_status: clean committed trees; board source snapshots accuracy 2838ca0a, cpp_smoke 2838ca0a,
+        benchmark 2838ca0a
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: eabe0309577af50ab1d9a524f15e86ca406003ea9a464dd033e22e3aa025a0b6
+      config_sha256: 64b2285d93f11de8be9b9b92980bce3cb664fe0ffe094c63e2c571f0c69ab855
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8n-cls.pt
+      source_checkpoint_sha256: 11fa19f2aea79bc960d680a13f82f22105982b325eb9e17a4a5e1a9f8245980a
+- size: s
+  model:
+    parameter_count: 6361736
+    gflops: 1.544195072
+    gflops_method: Ultralytics 8.4.157 get_num_params / get_flops(imgsz=224); loaded checkpoint, no explicit
+      fuse
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      geometry: sample runtime stretch resize (resize_type 0, INTER_NEAREST)
+  platforms:
+  - platform: x5
+    status: released
+    released_at: '2026-10-14'
+    artifact:
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/s/x5/yolov8s_cls_bayese_224x224_nv12.bin
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/s/x5/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/s/x5/SHA256SUMS
+      size_bytes: 6363315
+      sha256: b97db73bbb80c601a662f5ceb6c6cb2f63994ace288a10ba09f1705bf4909029
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/s/x5/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.5409
+        top5: 0.7716
+      runtime:
+        top1: 0.5043
+        top5: 0.7402
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.7567363333333332
+        observed_min_latency_ms: 1.459
+        observed_max_latency_ms: 2.504
+        aggregate_fps: 565.5303590835015
+      - threads: 2
+        average_latency_ms: 2.3721566666666667
+        observed_min_latency_ms: 1.829
+        observed_max_latency_ms: 3.331
+        aggregate_fps: 836.0982638419551
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input.bin: a4b53e5ef9d9cff9b65e711e8fe606ba48d8e552804b9cca81ff139c2256e089
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 2902.885657
+        metrics_ms:
+          preprocess:
+            mean: 3.037268
+            p50: 2.846967
+            p95: 3.421465
+            min: 2.654884
+            max: 3.524887
+          runtime:
+            mean: 1.688599
+            p50: 1.68936
+            p95: 1.748839
+            min: 1.613589
+            max: 1.812131
+          postprocess:
+            mean: 0.108349
+            p50: 0.100708
+            p95: 0.122836
+            min: 0.089834
+            max: 0.151
+          end_to_end:
+            mean: 4.834215
+            p50: 4.690536
+            p95: 5.259858
+            min: 4.390639
+            max: 5.352601
+        throughput_fps: 206.690883
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 2916.745533
+        metrics_ms:
+          preprocess:
+            mean: 2.964205
+            p50: 2.885238
+            p95: 3.387104
+            min: 2.554758
+            max: 3.557095
+          runtime:
+            mean: 1.785665
+            p50: 1.754881
+            p95: 1.989307
+            min: 1.619047
+            max: 3.02601
+          postprocess:
+            mean: 0.104247
+            p50: 0.096646
+            p95: 0.1185
+            min: 0.088958
+            max: 0.177417
+          end_to_end:
+            mean: 4.854117
+            p50: 4.729973
+            p95: 5.285134
+            min: 4.318055
+            max: 6.416146
+        throughput_fps: 411.417447
+    provenance:
+      repository_commit: ce59a0c02419fb7e707ac0dbc1e3b905aae51d1e
+      build_id: yolo-v8-v11-20261013-yolov8s-cls-x5-attempt-01
+      source_status: clean committed tree (board source snapshot yolo-v8-v11-20261013-build-ce59a0c0)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      onnx_sha256: 1a17d9d4581a0526b31cf6b48825aa0cabbb35987d2e7aab9e9da81cceb013e1
+      config_sha256: 78dacfd277932f1a59456931b803135281407f0910fae9243ac2ade357d9f91a
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8s-cls.pt
+      source_checkpoint_sha256: 8079e739ded3ce0837ceaade760d6d17d496f38aaa4ed73c3da5b91ee5a9ca3c
+  - platform: s100
+    status: released
+    released_at: '2026-10-15'
+    artifact:
+      format: hbm
+      march: nash-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/s/s100/yolov8s_cls_nashe_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/s/s100/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/s/s100/SHA256SUMS
+      size_bytes: 7155376
+      sha256: 2dc2a019b5dc3368cebb80fb418732af479fd9fb7492cc0693ed85948259792a
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/s/s100/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.5409
+        top5: 0.7716
+      runtime:
+        top1: 0.5019
+        top5: 0.7403
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.55516
+        observed_min_latency_ms: 0.493
+        observed_max_latency_ms: 2.602
+        aggregate_fps: 1722.0546407937525
+      - threads: 2
+        average_latency_ms: 0.6257816666666667
+        observed_min_latency_ms: 0.497
+        observed_max_latency_ms: 2.479
+        aggregate_fps: 3049.0438706595596
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input_y.bin: ad3b436b3f71da8c9e350cbf0d2ddc53eadaf685b65fea7f19b7f57668622e67
+          input_uv.bin: 36582cbf948b378c3b137edbe1be1d44ebe0d4075a5d4de1e7b03561e0060717
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1118.138626
+        metrics_ms:
+          preprocess:
+            mean: 1.067581
+            p50: 0.964271
+            p95: 1.279415
+            min: 0.941334
+            max: 1.355753
+          runtime:
+            mean: 0.767414
+            p50: 0.637614
+            p95: 1.291393
+            min: 0.603115
+            max: 4.580076
+          postprocess:
+            mean: 0.027097
+            p50: 0.024499
+            p95: 0.033284
+            min: 0.022524
+            max: 0.051649
+          end_to_end:
+            mean: 1.862093
+            p50: 1.638073
+            p95: 2.567948
+            min: 1.571699
+            max: 5.752456
+        throughput_fps: 536.606093
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 1064.301067
+        metrics_ms:
+          preprocess:
+            mean: 1.009709
+            p50: 0.961796
+            p95: 1.285868
+            min: 0.938535
+            max: 2.601458
+          runtime:
+            mean: 0.722712
+            p50: 0.688327
+            p95: 0.9729
+            min: 0.593766
+            max: 3.299746
+          postprocess:
+            mean: 0.026391
+            p50: 0.024812
+            p95: 0.032924
+            min: 0.022749
+            max: 0.061974
+          end_to_end:
+            mean: 1.758811
+            p50: 1.689273
+            p95: 2.104692
+            min: 1.561649
+            max: 4.271806
+        throughput_fps: 1127.500514
+    provenance:
+      repository_commit: 2838ca0a7a2aab68ab171091beba65ccfb0cc7e0
+      build_id: yolo-v8-v11-20261013-yolov8s-cls-s100-attempt-01
+      source_status: clean committed trees; board source snapshots accuracy 2838ca0a, cpp_smoke 2838ca0a,
+        benchmark 2838ca0a
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: b1a0bc9a0e190fc122bea3d9f8229b6762329d84806ffe947124fde66099e592
+      config_sha256: d820d99bc5cbdefbfd4246fb5f0deef0f71062b2d980e7a8140fb9db321fe642
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8s-cls.pt
+      source_checkpoint_sha256: 8079e739ded3ce0837ceaade760d6d17d496f38aaa4ed73c3da5b91ee5a9ca3c
+  - platform: s100p
+    status: released
+    released_at: '2026-10-15'
+    artifact:
+      format: hbm
+      march: nash-m
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/s/s100p/yolov8s_cls_nashm_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/s/s100p/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/s/s100p/SHA256SUMS
+      size_bytes: 7129776
+      sha256: cfa89a7d2695777f4fb608ca9ad80c8886794ad182219e5d1f5632316c6c0479
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/s/s100p/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.5409
+        top5: 0.7716
+      runtime:
+        top1: 0.5019
+        top5: 0.7403
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.45354333333333335
+        observed_min_latency_ms: 0.432
+        observed_max_latency_ms: 0.755
+        aggregate_fps: 2137.003280300035
+      - threads: 2
+        average_latency_ms: 0.5420783333333333
+        observed_min_latency_ms: 0.494
+        observed_max_latency_ms: 0.977
+        aggregate_fps: 3570.1322734007294
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input_y.bin: ad3b436b3f71da8c9e350cbf0d2ddc53eadaf685b65fea7f19b7f57668622e67
+          input_uv.bin: 36582cbf948b378c3b137edbe1be1d44ebe0d4075a5d4de1e7b03561e0060717
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 782.692908
+        metrics_ms:
+          preprocess:
+            mean: 0.720082
+            p50: 0.716557
+            p95: 0.738522
+            min: 0.709124
+            max: 0.762757
+          runtime:
+            mean: 0.564236
+            p50: 0.549648
+            p95: 0.619626
+            min: 0.530788
+            max: 1.132021
+          postprocess:
+            mean: 0.018768
+            p50: 0.018736
+            p95: 0.019586
+            min: 0.017237
+            max: 0.024806
+          end_to_end:
+            mean: 1.303086
+            p50: 1.287063
+            p95: 1.368642
+            min: 1.259746
+            max: 1.89193
+        throughput_fps: 766.584179
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 815.0893
+        metrics_ms:
+          preprocess:
+            mean: 0.724029
+            p50: 0.718809
+            p95: 0.751672
+            min: 0.705082
+            max: 0.897457
+          runtime:
+            mean: 0.612344
+            p50: 0.600631
+            p95: 0.745958
+            min: 0.529061
+            max: 1.013145
+          postprocess:
+            mean: 0.019248
+            p50: 0.018612
+            p95: 0.022084
+            min: 0.017213
+            max: 0.043593
+          end_to_end:
+            mean: 1.355621
+            p50: 1.342688
+            p95: 1.512108
+            min: 1.257376
+            max: 1.753893
+        throughput_fps: 1472.231325
+    provenance:
+      repository_commit: 2838ca0a7a2aab68ab171091beba65ccfb0cc7e0
+      build_id: yolo-v8-v11-20261013-yolov8s-cls-s100p-attempt-01
+      source_status: clean committed trees; board source snapshots accuracy 2838ca0a, cpp_smoke 2838ca0a,
+        benchmark 2838ca0a
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: b1a0bc9a0e190fc122bea3d9f8229b6762329d84806ffe947124fde66099e592
+      config_sha256: 47d4dfa83e9818cbb218e649e7abc98959446f80538bd2fe6616a522b7f4bc21
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8s-cls.pt
+      source_checkpoint_sha256: 8079e739ded3ce0837ceaade760d6d17d496f38aaa4ed73c3da5b91ee5a9ca3c
+  - platform: s600
+    status: released
+    released_at: '2026-10-15'
+    artifact:
+      format: hbm
+      march: nash-p
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/s/s600/yolov8s_cls_nashp_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/s/s600/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/s/s600/SHA256SUMS
+      size_bytes: 7016080
+      sha256: fc36323eb38e89c82e730ba08a99a83bb2a2c44a4c8330effd8d5ac22224bbbc
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/s/s600/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.5409
+        top5: 0.7716
+      runtime:
+        top1: 0.5016
+        top5: 0.7399
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.36962833333333334
+        observed_min_latency_ms: 0.355
+        observed_max_latency_ms: 0.811
+        aggregate_fps: 2608.1059934275727
+      - threads: 2
+        average_latency_ms: 0.3795566666666667
+        observed_min_latency_ms: 0.36
+        observed_max_latency_ms: 0.998
+        aggregate_fps: 5046.978962509357
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input_y.bin: ad3b436b3f71da8c9e350cbf0d2ddc53eadaf685b65fea7f19b7f57668622e67
+          input_uv.bin: 36582cbf948b378c3b137edbe1be1d44ebe0d4075a5d4de1e7b03561e0060717
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 738.382388
+        metrics_ms:
+          preprocess:
+            mean: 0.629691
+            p50: 0.62774
+            p95: 0.648711
+            min: 0.616498
+            max: 0.674217
+          runtime:
+            mean: 0.579062
+            p50: 0.570453
+            p95: 0.602269
+            min: 0.554695
+            max: 0.846585
+          postprocess:
+            mean: 0.017262
+            p50: 0.016907
+            p95: 0.019285
+            min: 0.016381
+            max: 0.040066
+          end_to_end:
+            mean: 1.226015
+            p50: 1.216382
+            p95: 1.257998
+            min: 1.193522
+            max: 1.499019
+        throughput_fps: 812.587095
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 767.835745
+        metrics_ms:
+          preprocess:
+            mean: 0.636293
+            p50: 0.624872
+            p95: 0.711281
+            min: 0.616394
+            max: 0.741388
+          runtime:
+            mean: 0.619147
+            p50: 0.603802
+            p95: 0.722481
+            min: 0.558247
+            max: 0.987575
+          postprocess:
+            mean: 0.017604
+            p50: 0.016981
+            p95: 0.020134
+            min: 0.016305
+            max: 0.039413
+          end_to_end:
+            mean: 1.273044
+            p50: 1.249593
+            p95: 1.367953
+            min: 1.195349
+            max: 1.63658
+        throughput_fps: 1562.834249
+    provenance:
+      repository_commit: 2838ca0a7a2aab68ab171091beba65ccfb0cc7e0
+      build_id: yolo-v8-v11-20261013-yolov8s-cls-s600-attempt-01
+      source_status: clean committed trees; board source snapshots accuracy 2838ca0a, cpp_smoke 2838ca0a,
+        benchmark 2838ca0a
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: b1a0bc9a0e190fc122bea3d9f8229b6762329d84806ffe947124fde66099e592
+      config_sha256: e5ba14f48780711c5d9a8bfc7829ca6f6626f9d9d5ca4dfee81a3c27403d5a40
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8s-cls.pt
+      source_checkpoint_sha256: 8079e739ded3ce0837ceaade760d6d17d496f38aaa4ed73c3da5b91ee5a9ca3c
+- size: m
+  model:
+    parameter_count: 17053336
+    gflops: 5.134087168
+    gflops_method: Ultralytics 8.4.157 get_num_params / get_flops(imgsz=224); loaded checkpoint, no explicit
+      fuse
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      geometry: sample runtime stretch resize (resize_type 0, INTER_NEAREST)
+  platforms:
+  - platform: x5
+    status: released
+    released_at: '2026-10-14'
+    artifact:
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/m/x5/yolov8m_cls_bayese_224x224_nv12.bin
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/m/x5/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/m/x5/SHA256SUMS
+      size_bytes: 16455859
+      sha256: 014f0c6d40060f4a3398a253dcb7241f92ec4b926e01fe655b2dd87eb05b4b8a
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/m/x5/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.5876
+        top5: 0.8158
+      runtime:
+        top1: 0.575
+        top5: 0.8056
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 4.134212333333333
+        observed_min_latency_ms: 3.676
+        observed_max_latency_ms: 4.756
+        aggregate_fps: 241.0812009701107
+      - threads: 2
+        average_latency_ms: 6.765981666666667
+        observed_min_latency_ms: 4.581
+        observed_max_latency_ms: 7.791
+        aggregate_fps: 294.0359223686358
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input.bin: a4b53e5ef9d9cff9b65e711e8fe606ba48d8e552804b9cca81ff139c2256e089
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 4293.092606
+        metrics_ms:
+          preprocess:
+            mean: 3.141985
+            p50: 3.335489
+            p95: 3.402581
+            min: 2.652883
+            max: 3.511511
+          runtime:
+            mean: 3.894213
+            p50: 3.890055
+            p95: 3.937429
+            min: 3.831346
+            max: 4.243139
+          postprocess:
+            mean: 0.114755
+            p50: 0.120479
+            p95: 0.12525
+            min: 0.092334
+            max: 0.152459
+          end_to_end:
+            mean: 7.150953
+            p50: 7.33167
+            p95: 7.440501
+            min: 6.645647
+            max: 7.7999
+        throughput_fps: 139.759389
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 4325.961463
+        metrics_ms:
+          preprocess:
+            mean: 3.011282
+            p50: 3.084135
+            p95: 3.381392
+            min: 2.629383
+            max: 3.500053
+          runtime:
+            mean: 4.07815
+            p50: 3.985867
+            p95: 4.582094
+            min: 3.862387
+            max: 7.528858
+          postprocess:
+            mean: 0.106482
+            p50: 0.113542
+            p95: 0.119298
+            min: 0.091917
+            max: 0.153459
+          end_to_end:
+            mean: 7.195914
+            p50: 7.311462
+            p95: 7.470482
+            min: 6.74998
+            max: 10.92516
+        throughput_fps: 277.394982
+    provenance:
+      repository_commit: ce59a0c02419fb7e707ac0dbc1e3b905aae51d1e
+      build_id: yolo-v8-v11-20261013-yolov8m-cls-x5-attempt-01
+      source_status: clean committed tree (board source snapshot yolo-v8-v11-20261013-build-ce59a0c0)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      onnx_sha256: f066e60534fb789ae2a6d35577a68131bc2555ca5de03db04bc766fb013ca0c5
+      config_sha256: c89fce200671d21c30f972d70ad3ce227ca9c0a3c6054dc97fb1669dad14b656
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8m-cls.pt
+      source_checkpoint_sha256: 864010e833b46be542ed849b2eb0fdacf51e4679dc677c18dcc4505244d08ec1
+  - platform: s100
+    status: released
+    released_at: '2026-10-15'
+    artifact:
+      format: hbm
+      march: nash-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/m/s100/yolov8m_cls_nashe_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/m/s100/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/m/s100/SHA256SUMS
+      size_bytes: 18238640
+      sha256: f97245963f2fc1f966ff2f17b9dfb7f91cc917d1beec9ed8298457839e581a0c
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/m/s100/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.5876
+        top5: 0.8159
+      runtime:
+        top1: 0.5744
+        top5: 0.805
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.899905
+        observed_min_latency_ms: 0.836
+        observed_max_latency_ms: 4.019
+        aggregate_fps: 1080.6527142394004
+      - threads: 2
+        average_latency_ms: 1.20506
+        observed_min_latency_ms: 0.902
+        observed_max_latency_ms: 3.028
+        aggregate_fps: 1615.7916705939379
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input_y.bin: ad3b436b3f71da8c9e350cbf0d2ddc53eadaf685b65fea7f19b7f57668622e67
+          input_uv.bin: 36582cbf948b378c3b137edbe1be1d44ebe0d4075a5d4de1e7b03561e0060717
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1306.622713
+        metrics_ms:
+          preprocess:
+            mean: 1.119209
+            p50: 1.082724
+            p95: 1.304125
+            min: 0.948529
+            max: 1.719331
+          runtime:
+            mean: 1.027149
+            p50: 1.000586
+            p95: 1.287906
+            min: 0.946255
+            max: 2.346978
+          postprocess:
+            mean: 0.029431
+            p50: 0.029946
+            p95: 0.037975
+            min: 0.023247
+            max: 0.061017
+          end_to_end:
+            mean: 2.175789
+            p50: 2.188497
+            p95: 2.501052
+            min: 1.924905
+            max: 3.655636
+        throughput_fps: 459.19912
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 1354.258059
+        metrics_ms:
+          preprocess:
+            mean: 1.128597
+            p50: 1.039592
+            p95: 1.318058
+            min: 0.942379
+            max: 2.763697
+          runtime:
+            mean: 1.081869
+            p50: 1.040092
+            p95: 1.387792
+            min: 0.937555
+            max: 2.9303
+          postprocess:
+            mean: 0.029622
+            p50: 0.030346
+            p95: 0.039172
+            min: 0.022998
+            max: 0.064617
+          end_to_end:
+            mean: 2.240088
+            p50: 2.267597
+            p95: 2.553283
+            min: 1.91233
+            max: 4.494825
+        throughput_fps: 886.094044
+    provenance:
+      repository_commit: ce59a0c02419fb7e707ac0dbc1e3b905aae51d1e
+      build_id: yolo-v8-v11-20261013-yolov8m-cls-s100-attempt-01
+      source_status: clean committed trees; board source snapshots accuracy ce59a0c0, cpp_smoke ce59a0c0,
+        benchmark ce59a0c0
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: 25f0ed6fe5bd4f42ab1366f9e933da01ba183a05ab52557ca50239fd8ade1c51
+      config_sha256: 40af0ab5697f0e2976bfcb53680e203ba496e1dd6977828b437fc1b95e506ef4
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8m-cls.pt
+      source_checkpoint_sha256: 864010e833b46be542ed849b2eb0fdacf51e4679dc677c18dcc4505244d08ec1
+  - platform: s100p
+    status: released
+    released_at: '2026-10-15'
+    artifact:
+      format: hbm
+      march: nash-m
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/m/s100p/yolov8m_cls_nashm_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/m/s100p/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/m/s100p/SHA256SUMS
+      size_bytes: 18205104
+      sha256: 5060524e657b92fa5dd7b556284e341917b1f7a1003aa596dd170c1fa5d6ff4a
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/m/s100p/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.5876
+        top5: 0.8159
+      runtime:
+        top1: 0.5744
+        top5: 0.805
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.7547383333333334
+        observed_min_latency_ms: 0.726
+        observed_max_latency_ms: 1.053
+        aggregate_fps: 1300.4746732557385
+      - threads: 2
+        average_latency_ms: 1.0478933333333333
+        observed_min_latency_ms: 0.957
+        observed_max_latency_ms: 1.52
+        aggregate_fps: 1876.6948900725968
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input_y.bin: ad3b436b3f71da8c9e350cbf0d2ddc53eadaf685b65fea7f19b7f57668622e67
+          input_uv.bin: 36582cbf948b378c3b137edbe1be1d44ebe0d4075a5d4de1e7b03561e0060717
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 957.3311
+        metrics_ms:
+          preprocess:
+            mean: 0.720922
+            p50: 0.717939
+            p95: 0.741868
+            min: 0.709114
+            max: 0.766789
+          runtime:
+            mean: 0.853842
+            p50: 0.842691
+            p95: 0.887569
+            min: 0.815415
+            max: 1.287749
+          postprocess:
+            mean: 0.019327
+            p50: 0.019175
+            p95: 0.02064
+            min: 0.0176
+            max: 0.036101
+          end_to_end:
+            mean: 1.594092
+            p50: 1.580793
+            p95: 1.648519
+            min: 1.54438
+            max: 2.047989
+        throughput_fps: 626.742409
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 986.753011
+        metrics_ms:
+          preprocess:
+            mean: 0.728601
+            p50: 0.723689
+            p95: 0.75167
+            min: 0.710313
+            max: 1.268674
+          runtime:
+            mean: 0.893655
+            p50: 0.882592
+            p95: 0.981694
+            min: 0.824516
+            max: 1.57738
+          postprocess:
+            mean: 0.019261
+            p50: 0.018751
+            p95: 0.022476
+            min: 0.01725
+            max: 0.052051
+          end_to_end:
+            mean: 1.641517
+            p50: 1.628669
+            p95: 1.745511
+            min: 1.558805
+            max: 2.340821
+        throughput_fps: 1216.109793
+    provenance:
+      repository_commit: ce59a0c02419fb7e707ac0dbc1e3b905aae51d1e
+      build_id: yolo-v8-v11-20261013-yolov8m-cls-s100p-attempt-01
+      source_status: clean committed trees; board source snapshots accuracy ce59a0c0, cpp_smoke ce59a0c0,
+        benchmark ce59a0c0
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: 25f0ed6fe5bd4f42ab1366f9e933da01ba183a05ab52557ca50239fd8ade1c51
+      config_sha256: 3dc5dea559164b11600a27caae99d6ff9fab43ded194ea45c8d0be42f9a2099c
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8m-cls.pt
+      source_checkpoint_sha256: 864010e833b46be542ed849b2eb0fdacf51e4679dc677c18dcc4505244d08ec1
+  - platform: s600
+    status: released
+    released_at: '2026-10-15'
+    artifact:
+      format: hbm
+      march: nash-p
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/m/s600/yolov8m_cls_nashp_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/m/s600/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/m/s600/SHA256SUMS
+      size_bytes: 18284224
+      sha256: 3b693e40ff59b7087657b297114bd7002296dac5d960f0923c2318a68f9bcfa8
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/m/s600/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.5876
+        top5: 0.8159
+      runtime:
+        top1: 0.5733
+        top5: 0.8049
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.5729016666666666
+        observed_min_latency_ms: 0.558
+        observed_max_latency_ms: 1.005
+        aggregate_fps: 1700.4103657015894
+      - threads: 2
+        average_latency_ms: 0.5999316666666666
+        observed_min_latency_ms: 0.561
+        observed_max_latency_ms: 1.34
+        aggregate_fps: 3234.815238136315
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input_y.bin: ad3b436b3f71da8c9e350cbf0d2ddc53eadaf685b65fea7f19b7f57668622e67
+          input_uv.bin: 36582cbf948b378c3b137edbe1be1d44ebe0d4075a5d4de1e7b03561e0060717
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 862.350151
+        metrics_ms:
+          preprocess:
+            mean: 0.629732
+            p50: 0.626977
+            p95: 0.64903
+            min: 0.616177
+            max: 0.716653
+          runtime:
+            mean: 0.78474
+            p50: 0.772778
+            p95: 0.841795
+            min: 0.750928
+            max: 1.091978
+          postprocess:
+            mean: 0.017441
+            p50: 0.0169
+            p95: 0.019979
+            min: 0.016225
+            max: 0.04185
+          end_to_end:
+            mean: 1.431914
+            p50: 1.419042
+            p95: 1.509236
+            min: 1.38578
+            max: 1.73858
+        throughput_fps: 695.773056
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 904.182552
+        metrics_ms:
+          preprocess:
+            mean: 0.625117
+            p50: 0.62309
+            p95: 0.642353
+            min: 0.615377
+            max: 0.719528
+          runtime:
+            mean: 0.860396
+            p50: 0.858891
+            p95: 0.920194
+            min: 0.765703
+            max: 1.278979
+          postprocess:
+            mean: 0.017123
+            p50: 0.016775
+            p95: 0.01925
+            min: 0.01625
+            max: 0.03895
+          end_to_end:
+            mean: 1.502636
+            p50: 1.500742
+            p95: 1.565809
+            min: 1.401455
+            max: 1.928606
+        throughput_fps: 1327.165623
+    provenance:
+      repository_commit: ce59a0c02419fb7e707ac0dbc1e3b905aae51d1e
+      build_id: yolo-v8-v11-20261013-yolov8m-cls-s600-attempt-01
+      source_status: clean committed trees; board source snapshots accuracy ce59a0c0, cpp_smoke ce59a0c0,
+        benchmark ce59a0c0
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: 25f0ed6fe5bd4f42ab1366f9e933da01ba183a05ab52557ca50239fd8ade1c51
+      config_sha256: fefe35f6d0cab6b9d21e82c2bbc04cf0f06a938e387851ac0014ff662f3d7045
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8m-cls.pt
+      source_checkpoint_sha256: 864010e833b46be542ed849b2eb0fdacf51e4679dc677c18dcc4505244d08ec1
+- size: l
+  model:
+    parameter_count: 37480744
+    gflops: 12.144978944
+    gflops_method: Ultralytics 8.4.157 get_num_params / get_flops(imgsz=224); loaded checkpoint, no explicit
+      fuse
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      geometry: sample runtime stretch resize (resize_type 0, INTER_NEAREST)
+  platforms:
+  - platform: x5
+    status: released
+    released_at: '2026-10-14'
+    artifact:
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/l/x5/yolov8l_cls_bayese_224x224_nv12.bin
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/l/x5/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/l/x5/SHA256SUMS
+      size_bytes: 35395763
+      sha256: 87104aca84244314cddfeb4bf4f6a1ad7fd2606f786ca868e20f2cccafcf3981
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/l/x5/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.6164
+        top5: 0.8322
+      runtime:
+        top1: 0.5992
+        top5: 0.8228
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 8.394324666666666
+        observed_min_latency_ms: 7.996
+        observed_max_latency_ms: 9.066
+        aggregate_fps: 118.95750401778969
+      - threads: 2
+        average_latency_ms: 15.364812666666667
+        observed_min_latency_ms: 8.98
+        observed_max_latency_ms: 16.398001
+        aggregate_fps: 129.68626730501128
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input.bin: a4b53e5ef9d9cff9b65e711e8fe606ba48d8e552804b9cca81ff139c2256e089
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 7892.904974
+        metrics_ms:
+          preprocess:
+            mean: 4.593741
+            p50: 3.384012
+            p95: 6.653963
+            min: 2.655843
+            max: 6.738441
+          runtime:
+            mean: 8.390345
+            p50: 8.394321
+            p95: 8.459246
+            min: 8.183987
+            max: 8.654738
+          postprocess:
+            mean: 0.165681
+            p50: 0.122084
+            p95: 0.237088
+            min: 0.094751
+            max: 0.271334
+          end_to_end:
+            mean: 13.149767
+            p50: 11.860793
+            p95: 15.193766
+            min: 11.00358
+            max: 15.377096
+        throughput_fps: 76.017639
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 9247.179587
+        metrics_ms:
+          preprocess:
+            mean: 3.65103
+            p50: 2.801385
+            p95: 6.53754
+            min: 2.626176
+            max: 6.702232
+          runtime:
+            mean: 11.605805
+            p50: 12.504002
+            p95: 12.81447
+            min: 8.331196
+            max: 16.193808
+          postprocess:
+            mean: 0.130363
+            p50: 0.101375
+            p95: 0.225586
+            min: 0.092751
+            max: 0.284959
+          end_to_end:
+            mean: 15.387197
+            p50: 15.372034
+            p95: 15.744516
+            min: 11.192207
+            max: 22.899872
+        throughput_fps: 129.769298
+    provenance:
+      repository_commit: ce59a0c02419fb7e707ac0dbc1e3b905aae51d1e
+      build_id: yolo-v8-v11-20261013-yolov8l-cls-x5-attempt-01
+      source_status: clean committed tree (board source snapshot yolo-v8-v11-20261013-build-ce59a0c0)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      onnx_sha256: 7978a3f6c73bfb447d3036317face4c59053ddd2faa4254cc59747f9fc99d797
+      config_sha256: c85d0ea77fa4b31e25432543fbf3453bd2e9e810921dea2fa41e5f059ba9d665
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8l-cls.pt
+      source_checkpoint_sha256: d8c5632820bd627110f8dee97fe42edbc30f0f8c097d42bd41a3a83dda20bd84
+  - platform: s100
+    status: released
+    released_at: '2026-10-14'
+    artifact:
+      format: hbm
+      march: nash-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/l/s100/yolov8l_cls_nashe_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/l/s100/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/l/s100/SHA256SUMS
+      size_bytes: 38986416
+      sha256: 13ed13301ad796d35b3b4b019a30bc52b663f789769829391177a4e394fcd681
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/l/s100/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.6166
+        top5: 0.8322
+      runtime:
+        top1: 0.5977
+        top5: 0.8214
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.6950016666666667
+        observed_min_latency_ms: 1.622
+        observed_max_latency_ms: 3.824
+        aggregate_fps: 584.3732742726744
+      - threads: 2
+        average_latency_ms: 2.7668733333333333
+        observed_min_latency_ms: 1.666
+        observed_max_latency_ms: 4.778
+        aggregate_fps: 716.2306214852474
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input_y.bin: ad3b436b3f71da8c9e350cbf0d2ddc53eadaf685b65fea7f19b7f57668622e67
+          input_uv.bin: 36582cbf948b378c3b137edbe1be1d44ebe0d4075a5d4de1e7b03561e0060717
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1782.92797
+        metrics_ms:
+          preprocess:
+            mean: 1.110184
+            p50: 1.027079
+            p95: 1.288606
+            min: 0.944729
+            max: 2.248833
+          runtime:
+            mean: 1.830203
+            p50: 1.792493
+            p95: 2.175896
+            min: 1.723056
+            max: 3.670837
+          postprocess:
+            mean: 0.029451
+            p50: 0.030825
+            p95: 0.038706
+            min: 0.0234
+            max: 0.05665
+          end_to_end:
+            mean: 2.969838
+            p50: 2.972973
+            p95: 3.386631
+            min: 2.695634
+            max: 4.651191
+        throughput_fps: 336.525092
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 1808.95616
+        metrics_ms:
+          preprocess:
+            mean: 1.043284
+            p50: 0.966103
+            p95: 1.304581
+            min: 0.947453
+            max: 3.067111
+          runtime:
+            mean: 1.935741
+            p50: 1.881156
+            p95: 2.275567
+            min: 1.778556
+            max: 3.866138
+          postprocess:
+            mean: 0.02812
+            p50: 0.025825
+            p95: 0.0375
+            min: 0.0235
+            max: 0.068525
+          end_to_end:
+            mean: 3.007145
+            p50: 2.892447
+            p95: 3.326541
+            min: 2.768084
+            max: 6.003895
+        throughput_fps: 663.365993
+    provenance:
+      repository_commit: ce59a0c02419fb7e707ac0dbc1e3b905aae51d1e
+      build_id: yolo-v8-v11-20261013-yolov8l-cls-s100-attempt-01
+      source_status: clean committed tree (board source snapshot yolo-v8-v11-20261013-build-ce59a0c0)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: 39fb1b234df95b0d5fc34d168caf70544408ee2943b5361ec3b656cf71ded1b6
+      config_sha256: 3ab652803938dd27a560bbbcd563f805d42d4e290a98e4f42fd49f43fba8506b
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8l-cls.pt
+      source_checkpoint_sha256: d8c5632820bd627110f8dee97fe42edbc30f0f8c097d42bd41a3a83dda20bd84
+  - platform: s100p
+    status: released
+    released_at: '2026-10-14'
+    artifact:
+      format: hbm
+      march: nash-m
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/l/s100p/yolov8l_cls_nashm_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/l/s100p/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/l/s100p/SHA256SUMS
+      size_bytes: 39062192
+      sha256: cce280d851cacdb24aa6fa183b6097ee69cbd5eef73f8d961f4bab266d9a9a17
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/l/s100p/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.6166
+        top5: 0.8322
+      runtime:
+        top1: 0.5977
+        top5: 0.8214
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.41268
+        observed_min_latency_ms: 1.382
+        observed_max_latency_ms: 1.879
+        aggregate_fps: 700.4828661890931
+      - threads: 2
+        average_latency_ms: 2.3521833333333335
+        observed_min_latency_ms: 1.755
+        observed_max_latency_ms: 2.83
+        aggregate_fps: 841.9634587858886
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input_y.bin: ad3b436b3f71da8c9e350cbf0d2ddc53eadaf685b65fea7f19b7f57668622e67
+          input_uv.bin: 36582cbf948b378c3b137edbe1be1d44ebe0d4075a5d4de1e7b03561e0060717
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1360.492609
+        metrics_ms:
+          preprocess:
+            mean: 0.725071
+            p50: 0.721859
+            p95: 0.745992
+            min: 0.712322
+            max: 0.804796
+          runtime:
+            mean: 1.521135
+            p50: 1.502668
+            p95: 1.658733
+            min: 1.474368
+            max: 1.952965
+          postprocess:
+            mean: 0.019919
+            p50: 0.0193
+            p95: 0.022953
+            min: 0.01765
+            max: 0.049875
+          end_to_end:
+            mean: 2.266125
+            p50: 2.246927
+            p95: 2.426018
+            min: 2.20929
+            max: 2.688462
+        throughput_fps: 441.016729
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 1442.862205
+        metrics_ms:
+          preprocess:
+            mean: 0.733716
+            p50: 0.729222
+            p95: 0.759516
+            min: 0.717647
+            max: 0.798846
+          runtime:
+            mean: 1.646097
+            p50: 1.623567
+            p95: 1.843328
+            min: 1.570017
+            max: 2.915561
+          postprocess:
+            mean: 0.020606
+            p50: 0.020274
+            p95: 0.023202
+            min: 0.018324
+            max: 0.050124
+          end_to_end:
+            mean: 2.400419
+            p50: 2.377964
+            p95: 2.608051
+            min: 2.313764
+            max: 3.661858
+        throughput_fps: 831.68025
+    provenance:
+      repository_commit: ce59a0c02419fb7e707ac0dbc1e3b905aae51d1e
+      build_id: yolo-v8-v11-20261013-yolov8l-cls-s100p-attempt-01
+      source_status: clean committed tree (board source snapshot yolo-v8-v11-20261013-build-ce59a0c0)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: 39fb1b234df95b0d5fc34d168caf70544408ee2943b5361ec3b656cf71ded1b6
+      config_sha256: f921446793250bbbc2cfe67632c4ef125ae3343453746f2d49c514b94ff07219
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8l-cls.pt
+      source_checkpoint_sha256: d8c5632820bd627110f8dee97fe42edbc30f0f8c097d42bd41a3a83dda20bd84
+  - platform: s600
+    status: released
+    released_at: '2026-10-14'
+    artifact:
+      format: hbm
+      march: nash-p
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/l/s600/yolov8l_cls_nashp_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/l/s600/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/l/s600/SHA256SUMS
+      size_bytes: 39520632
+      sha256: 2c7c026633dc93c9a46ea79ddf1b82b0c2acb48c861d050b28e96c278eba42cc
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/l/s600/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.6166
+        top5: 0.8322
+      runtime:
+        top1: 0.5984
+        top5: 0.823
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.86714
+        observed_min_latency_ms: 0.846
+        observed_max_latency_ms: 1.115
+        aggregate_fps: 1135.870995344822
+      - threads: 2
+        average_latency_ms: 0.9480416666666667
+        observed_min_latency_ms: 0.857
+        observed_max_latency_ms: 1.764
+        aggregate_fps: 2069.250931162919
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input_y.bin: ad3b436b3f71da8c9e350cbf0d2ddc53eadaf685b65fea7f19b7f57668622e67
+          input_uv.bin: 36582cbf948b378c3b137edbe1be1d44ebe0d4075a5d4de1e7b03561e0060717
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1032.239587
+        metrics_ms:
+          preprocess:
+            mean: 0.627681
+            p50: 0.625236
+            p95: 0.645752
+            min: 0.616072
+            max: 0.696747
+          runtime:
+            mean: 1.07187
+            p50: 1.061083
+            p95: 1.12729
+            min: 1.044496
+            max: 1.314069
+          postprocess:
+            mean: 0.017365
+            p50: 0.016825
+            p95: 0.019899
+            min: 0.0162
+            max: 0.036325
+          end_to_end:
+            mean: 1.716915
+            p50: 1.704593
+            p95: 1.774261
+            min: 1.682593
+            max: 1.980966
+        throughput_fps: 581.260405
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 1059.087487
+        metrics_ms:
+          preprocess:
+            mean: 0.62593
+            p50: 0.623447
+            p95: 0.644448
+            min: 0.616147
+            max: 0.668098
+          runtime:
+            mean: 1.11647
+            p50: 1.099045
+            p95: 1.241619
+            min: 1.062471
+            max: 1.948167
+          postprocess:
+            mean: 0.01736
+            p50: 0.0168
+            p95: 0.019954
+            min: 0.016225
+            max: 0.0418
+          end_to_end:
+            mean: 1.75976
+            p50: 1.741906
+            p95: 1.895799
+            min: 1.701018
+            max: 2.596589
+        throughput_fps: 1133.050871
+    provenance:
+      repository_commit: ce59a0c02419fb7e707ac0dbc1e3b905aae51d1e
+      build_id: yolo-v8-v11-20261013-yolov8l-cls-s600-attempt-01
+      source_status: clean committed tree (board source snapshot yolo-v8-v11-20261013-build-ce59a0c0)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: 39fb1b234df95b0d5fc34d168caf70544408ee2943b5361ec3b656cf71ded1b6
+      config_sha256: aa8c9c911124ee9f749abb171b12179a03518f26c0c78a3f4f192bf6235d2eb4
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8l-cls.pt
+      source_checkpoint_sha256: d8c5632820bd627110f8dee97fe42edbc30f0f8c097d42bd41a3a83dda20bd84
+- size: x
+  model:
+    parameter_count: 57422840
+    gflops: 18.90549248
+    gflops_method: Ultralytics 8.4.157 get_num_params / get_flops(imgsz=224); loaded checkpoint, no explicit
+      fuse
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      geometry: sample runtime stretch resize (resize_type 0, INTER_NEAREST)
+  platforms:
+  - platform: x5
+    status: released
+    released_at: '2026-10-14'
+    artifact:
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/x/x5/yolov8x_cls_bayese_224x224_nv12.bin
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/x/x5/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/x/x5/SHA256SUMS
+      size_bytes: 53483699
+      sha256: 2c3620a4e5233de96611436e257e188d00b2850d32ff95c65da3e5adb004ad85
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/x/x5/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.6234
+        top5: 0.8404
+      runtime:
+        top1: 0.6157
+        top5: 0.8349
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 14.430432333333332
+        observed_min_latency_ms: 13.511
+        observed_max_latency_ms: 26.955
+        aggregate_fps: 69.18669198592097
+      - threads: 2
+        average_latency_ms: 27.056001000000002
+        observed_min_latency_ms: 14.768
+        observed_max_latency_ms: 40.112
+        aggregate_fps: 73.65566443363151
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input.bin: a4b53e5ef9d9cff9b65e711e8fe606ba48d8e552804b9cca81ff139c2256e089
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 10299.547431
+        metrics_ms:
+          preprocess:
+            mean: 2.83371
+            p50: 2.824613
+            p95: 2.930441
+            min: 2.717801
+            max: 5.334309
+          runtime:
+            mean: 14.22845
+            p50: 13.910463
+            p95: 16.861225
+            min: 13.63942
+            max: 24.122748
+          postprocess:
+            mean: 0.09841
+            p50: 0.097209
+            p95: 0.10534
+            min: 0.093959
+            max: 0.163001
+          end_to_end:
+            mean: 17.160571
+            p50: 16.831536
+            p95: 19.8175
+            min: 16.547847
+            max: 27.03084
+        throughput_fps: 58.254987
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 996.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 16142.60762
+        metrics_ms:
+          preprocess:
+            mean: 2.890229
+            p50: 2.88378
+            p95: 3.003111
+            min: 2.698175
+            max: 3.731345
+          runtime:
+            mean: 23.874245
+            p50: 23.013036
+            p95: 30.024771
+            min: 14.117422
+            max: 37.376333
+          postprocess:
+            mean: 0.101007
+            p50: 0.099542
+            p95: 0.110771
+            min: 0.093501
+            max: 0.173
+          end_to_end:
+            mean: 26.865482
+            p50: 26.010461
+            p95: 32.986912
+            min: 17.027641
+            max: 40.244051
+        throughput_fps: 74.337432
+    provenance:
+      repository_commit: ce59a0c02419fb7e707ac0dbc1e3b905aae51d1e
+      build_id: yolo-v8-v11-20261013-yolov8x-cls-x5-attempt-01
+      source_status: clean committed tree (board source snapshot yolo-v8-v11-20261013-build-ce59a0c0)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      onnx_sha256: b6f606ee1e4fbe667ea1e55a0d33f2c50a31195335011c7c577e6fc83b321485
+      config_sha256: 0e54dd518c62a6481c5a9ce8b4a4a7f2188652d0989cb3fca647178db751a687
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8x-cls.pt
+      source_checkpoint_sha256: 78eee110c8dddafcd5b0b7742eba9a351f117a2f67944c86019bd53138f00954
+  - platform: s100
+    status: released
+    released_at: '2026-10-14'
+    artifact:
+      format: hbm
+      march: nash-e
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/x/s100/yolov8x_cls_nashe_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/x/s100/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/x/s100/SHA256SUMS
+      size_bytes: 59238832
+      sha256: a233c86871df96202404b8b2720e7631ee889c4ea47fd6422a3c53da3d150d7e
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/x/s100/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.6234
+        top5: 0.8403
+      runtime:
+        top1: 0.6179
+        top5: 0.8376
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 2.3486866666666666
+        observed_min_latency_ms: 2.27
+        observed_max_latency_ms: 4.991
+        aggregate_fps: 421.646191059133
+      - threads: 2
+        average_latency_ms: 4.05187
+        observed_min_latency_ms: 2.433
+        observed_max_latency_ms: 5.608
+        aggregate_fps: 489.7111683529055
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input_y.bin: ad3b436b3f71da8c9e350cbf0d2ddc53eadaf685b65fea7f19b7f57668622e67
+          input_uv.bin: 36582cbf948b378c3b137edbe1be1d44ebe0d4075a5d4de1e7b03561e0060717
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 2178.429356
+        metrics_ms:
+          preprocess:
+            mean: 1.120328
+            p50: 1.159631
+            p95: 1.293642
+            min: 0.94442
+            max: 1.335417
+          runtime:
+            mean: 2.47904
+            p50: 2.436249
+            p95: 2.820778
+            min: 2.371962
+            max: 3.941279
+          postprocess:
+            mean: 0.029525
+            p50: 0.031363
+            p95: 0.036755
+            min: 0.023749
+            max: 0.085149
+          end_to_end:
+            mean: 3.628893
+            p50: 3.698593
+            p95: 3.982258
+            min: 3.348656
+            max: 5.236321
+        throughput_fps: 275.427798
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 2471.037953
+        metrics_ms:
+          preprocess:
+            mean: 1.127373
+            p50: 1.127807
+            p95: 1.30522
+            min: 0.945345
+            max: 3.124708
+          runtime:
+            mean: 2.954194
+            p50: 2.995383
+            p95: 3.436409
+            min: 2.448186
+            max: 5.204546
+          postprocess:
+            mean: 0.030164
+            p50: 0.03145
+            p95: 0.0389
+            min: 0.023425
+            max: 0.065125
+          end_to_end:
+            mean: 4.111731
+            p50: 4.040591
+            p95: 4.43612
+            min: 3.427756
+            max: 6.435865
+        throughput_fps: 485.625888
+    provenance:
+      repository_commit: ce59a0c02419fb7e707ac0dbc1e3b905aae51d1e
+      build_id: yolo-v8-v11-20261013-yolov8x-cls-s100-attempt-01
+      source_status: clean committed tree (board source snapshot yolo-v8-v11-20261013-build-ce59a0c0)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: 36f73dd6ca8ba2b6b75ca2d58b33ffe2b540fa1371da4ca301b5e8cac628ef63
+      config_sha256: f7df07ed52420dbc046c2852a9a2d7b2e38c5a01156b36ff6891a7042a33b01c
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8x-cls.pt
+      source_checkpoint_sha256: 78eee110c8dddafcd5b0b7742eba9a351f117a2f67944c86019bd53138f00954
+  - platform: s100p
+    status: released
+    released_at: '2026-10-14'
+    artifact:
+      format: hbm
+      march: nash-m
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/x/s100p/yolov8x_cls_nashm_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/x/s100p/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/x/s100p/SHA256SUMS
+      size_bytes: 59208624
+      sha256: e2960a5194a29a554afcdc81427b1e795bf08f54958660140ac1232b66aa59f2
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/x/s100p/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.6234
+        top5: 0.8403
+      runtime:
+        top1: 0.6179
+        top5: 0.8376
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.9964116666666667
+        observed_min_latency_ms: 1.964
+        observed_max_latency_ms: 2.304
+        aggregate_fps: 498.05840232825705
+      - threads: 2
+        average_latency_ms: 3.5267033333333333
+        observed_min_latency_ms: 2.288
+        observed_max_latency_ms: 3.961
+        aggregate_fps: 562.5826293236819
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input_y.bin: ad3b436b3f71da8c9e350cbf0d2ddc53eadaf685b65fea7f19b7f57668622e67
+          input_uv.bin: 36582cbf948b378c3b137edbe1be1d44ebe0d4075a5d4de1e7b03561e0060717
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1714.091088
+        metrics_ms:
+          preprocess:
+            mean: 0.724293
+            p50: 0.720888
+            p95: 0.744995
+            min: 0.711929
+            max: 0.772255
+          runtime:
+            mean: 2.11138
+            p50: 2.087045
+            p95: 2.380549
+            min: 2.065765
+            max: 2.535462
+          postprocess:
+            mean: 0.019595
+            p50: 0.019318
+            p95: 0.022346
+            min: 0.017693
+            max: 0.034387
+          end_to_end:
+            mean: 2.855267
+            p50: 2.831122
+            p95: 3.120593
+            min: 2.801904
+            max: 3.271433
+        throughput_fps: 350.039741
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 2133.86232
+        metrics_ms:
+          preprocess:
+            mean: 0.734681
+            p50: 0.729603
+            p95: 0.76222
+            min: 0.715509
+            max: 0.838862
+          runtime:
+            mean: 2.79583
+            p50: 2.77829
+            p95: 3.067663
+            min: 2.279973
+            max: 4.342387
+          postprocess:
+            mean: 0.02027
+            p50: 0.019643
+            p95: 0.023892
+            min: 0.017544
+            max: 0.047482
+          end_to_end:
+            mean: 3.550782
+            p50: 3.528066
+            p95: 3.820326
+            min: 3.030818
+            max: 5.083436
+        throughput_fps: 562.360556
+    provenance:
+      repository_commit: ce59a0c02419fb7e707ac0dbc1e3b905aae51d1e
+      build_id: yolo-v8-v11-20261013-yolov8x-cls-s100p-attempt-01
+      source_status: clean committed tree (board source snapshot yolo-v8-v11-20261013-build-ce59a0c0)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: 36f73dd6ca8ba2b6b75ca2d58b33ffe2b540fa1371da4ca301b5e8cac628ef63
+      config_sha256: aea39548d4774b63286bf9f8d4d9d6011b1a77990f47b14fe9ebe9809554b78f
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8x-cls.pt
+      source_checkpoint_sha256: 78eee110c8dddafcd5b0b7742eba9a351f117a2f67944c86019bd53138f00954
+  - platform: s600
+    status: released
+    released_at: '2026-10-14'
+    artifact:
+      format: hbm
+      march: nash-p
+      runtime_input: nv12
+      input_space_and_range: bt601_video
+      url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/x/s600/yolov8x_cls_nashp_224x224_nv12.hbm
+      release_manifest_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/x/s600/release.json
+      checksums_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/x/s600/SHA256SUMS
+      size_bytes: 59726080
+      sha256: c50b228d0f198480aa5164ddfbd929cf0f0dbb60d0f79ff35fd69298eda4ff79
+    reports:
+      oe_conversion_url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolov8/cls/x/s600/oe_report.html
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency (not ILSVRC2012 val)
+      task: classification
+      images: 10000
+      float_onnx:
+        top1: 0.6234
+        top5: 0.8403
+      runtime:
+        top1: 0.6185
+        top5: 0.8378
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      warmup_frames_per_condition: 20
+      warmup_scope: separate-process device warmup; tool enable_warmup default true
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed_nv12
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.2346933333333334
+        observed_min_latency_ms: 1.21
+        observed_max_latency_ms: 1.533
+        aggregate_fps: 801.304523764689
+      - threads: 2
+        average_latency_ms: 1.363615
+        observed_min_latency_ms: 1.243
+        observed_max_latency_ms: 2.413
+        aggregate_fps: 1446.5430033125836
+      fixed_input:
+        source_image: zebra_cls.jpg
+        source_image_sha256: 53c9f26d927b507fb3b9b68005fd8dd3ba329a0528f9c1f51acbde55e9525462
+        preprocessing: sample runtime resize_type=0, OpenCV BGR I420 to NV12
+        resize_type: 0
+        model_size:
+        - 224
+        - 224
+        padding:
+        - 0
+        - 0
+        - 0
+        - 0
+        files:
+          input_y.bin: ad3b436b3f71da8c9e350cbf0d2ddc53eadaf685b65fea7f19b7f57668622e67
+          input_uv.bin: 36582cbf948b378c3b137edbe1be1d44ebe0d4075a5d4de1e7b03561e0060717
+      end_to_end:
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 600
+        aggregate_wall_ms: 1264.733446
+        metrics_ms:
+          preprocess:
+            mean: 0.631057
+            p50: 0.629394
+            p95: 0.649471
+            min: 0.617519
+            max: 0.662693
+          runtime:
+            mean: 1.453297
+            p50: 1.439787
+            p95: 1.582974
+            min: 1.421387
+            max: 1.705334
+          postprocess:
+            mean: 0.018422
+            p50: 0.017925
+            p95: 0.02245
+            min: 0.016324
+            max: 0.037999
+          end_to_end:
+            mean: 2.102776
+            p50: 2.088306
+            p95: 2.239422
+            min: 2.061956
+            max: 2.365528
+        throughput_fps: 474.408265
+      - tool: ultralytics_yolo_cpp --benchmark
+        implementation: native_cpp_yolo_classify
+        timing_scope: in_memory_bgr_to_topk_predictions
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+        warmup_frames_per_round: 20
+        runs_per_round: 200
+        frames_per_round: 200
+        rounds: 3
+        timed_frames: 1200
+        aggregate_wall_ms: 1314.806428
+        metrics_ms:
+          preprocess:
+            mean: 0.629698
+            p50: 0.624144
+            p95: 0.6545
+            min: 0.615494
+            max: 0.748968
+          runtime:
+            mean: 1.534864
+            p50: 1.527198
+            p95: 1.68346
+            min: 1.435861
+            max: 2.886873
+          postprocess:
+            mean: 0.017683
+            p50: 0.01695
+            p95: 0.020525
+            min: 0.01625
+            max: 0.0401
+          end_to_end:
+            mean: 2.182245
+            p50: 2.17623
+            p95: 2.334887
+            min: 2.07083
+            max: 3.539867
+        throughput_fps: 912.681878
+    provenance:
+      repository_commit: ce59a0c02419fb7e707ac0dbc1e3b905aae51d1e
+      build_id: yolo-v8-v11-20261013-yolov8x-cls-s600-attempt-01
+      source_status: clean committed tree (board source snapshot yolo-v8-v11-20261013-build-ce59a0c0)
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      onnx_sha256: 36f73dd6ca8ba2b6b75ca2d58b33ffe2b540fa1371da4ca301b5e8cac628ef63
+      config_sha256: 521fc63889ff9681d6ba7097e36ac655891ee29fc601697793e1f36e6fed874a
+      source_weight_url: https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8x-cls.pt
+      source_checkpoint_sha256: 78eee110c8dddafcd5b0b7742eba9a351f117a2f67944c86019bd53138f00954

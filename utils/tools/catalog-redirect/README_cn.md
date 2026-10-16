@@ -4,7 +4,9 @@
 
 `https://d-robotics.github.io/rdk_model_zoo/` 是此前发布的模型看板地址。它是单页应用，因此其所有链接都使用同一路径上的查询字符串：`?model=…`、`?task=…`、`?benchmark=performance` 及其组合。这些链接已出现在聊天、问题跟踪和发布说明中，无法收回。
 
-看板现在作为文档站的静态模块发布在 `/model_zoo_doc/models/`。查询参数约定没有变化，原样转发查询字符串和片段标识即可保留所有深层链接。
+本目录保留此前将看板转发到 `/model_zoo_doc/models/` 的方案。
+当前网站在 `main` 的 [`model_zoo_web/`](../../../model_zoo_web/README.md)
+中维护，继续使用 `/rdk_model_zoo/` 地址。
 
 本目录中的 `index.html` 实现该转发。
 
@@ -15,7 +17,9 @@
 - `rdk_model_zoo` 的 GitHub Pages 站点根路径必须继续提供内容，因此需要向该 Pages 环境部署。发布即向该 Pages 环境部署，属于仓库发布方式的变更，数据构建 workflow 不涉及部署。
 - 发布会影响在线 URL，是用户可见的对外操作。
 
-模型仓库已移除 Pages 部署：`.github/workflows/model-catalog-data.yml` 只构建、上传 catalog 数据包。
+专用的 `model-zoo-web-pages.yml` workflow 发布网站；
+`model-catalog-data.yml` 继续构建、上传独立的 catalog 数据包。
+这两个 workflow 都不部署本目录的重定向文件。
 
 ## 发布方式（获批后）
 
@@ -29,4 +33,5 @@ https://d-robotics.github.io/rdk_model_zoo/?model=yolov8&benchmark=performance
 
 ## 为什么使用重定向
 
-维护两份看板会产生两套生成器、两条数据流水线，也会使两处数字发生偏差。看板现在使用 `utils/tools/catalog-publisher` 发布的带校验和数据包，该数据包只有一个消费者。
+该方案原本配合文档站使用的 catalog 数据发布器。发布器和 `docs/release/`
+暂时独立保留；当前网站读取自己的 `model_zoo_web/data/` 数据。

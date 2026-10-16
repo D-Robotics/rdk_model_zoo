@@ -2,6 +2,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { parse } from "yaml";
 import { repositoryRoot } from "./helpers/repository";
 
 const WORKFLOW_DIRECTORY = join(repositoryRoot, ".github", "workflows");
@@ -12,21 +13,23 @@ async function workflowNames(): Promise<string[]> {
 }
 
 /**
- * Catalog data and CI gate reports are the only things this repository
- * publishes from CI. These checks keep a website deployment from creeping
- * back into a model branch: the data workflow may build and upload, never
- * deploy; the sample-contract and host-validation workflows run host-side
- * checks and upload their reports. None of them is a website publisher.
+ * The data and host workflows remain separate from the website publisher.
+ * Only model-zoo-web-pages.yml may deploy; the data workflow still builds
+ * and uploads the retained catalog package without publishing a website.
  */
 describe("catalog release workflow", () => {
-  it("runs exactly the data, sample-contract and host-validation workflows and deploys no website", async () => {
+  it("keeps data and validation workflows separate from website deployment", async () => {
     expect(await workflowNames()).toEqual([
       "host-validation.yml",
       "model-catalog-data.yml",
+      "model-zoo-web-ci.yml",
+      "model-zoo-web-pages.yml",
       "sample-contract.yml",
     ]);
 
-    const workflows = await Promise.all((await workflowNames()).map((name) => readFile(join(WORKFLOW_DIRECTORY, name), "utf8")));
+    const workflows = await Promise.all((await workflowNames())
+      .filter((name) => name !== "model-zoo-web-pages.yml")
+      .map((name) => readFile(join(WORKFLOW_DIRECTORY, name), "utf8")));
     for (const workflow of workflows) {
       for (const forbidden of [
         "actions/deploy-pages",
@@ -39,6 +42,19 @@ describe("catalog release workflow", () => {
         expect(workflow).not.toContain(forbidden);
       }
     }
+  });
+
+  it("publishes the website only for release tags whose commit belongs to main", async () => {
+    const source = await readFile(join(WORKFLOW_DIRECTORY, "model-zoo-web-pages.yml"), "utf8");
+    const workflow = parse(source);
+    expect(workflow.on).toEqual({ push: { tags: ["web-v*"] } });
+    const steps = workflow.jobs.build.steps;
+    const ancestry = steps.find((step: { name: string }) => step.name === "Verify release tag and branch ancestry");
+    expect(ancestry.run).toContain('git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main');
+    expect(steps.find((step: { uses?: string }) => step.uses?.startsWith("actions/upload-pages-artifact")).with.path)
+      .toBe("model_zoo_web/dist");
+    expect(source).not.toContain("origin/model_zoo_web");
+    expect(source).not.toContain("origin/develop");
   });
 
   it("reads every platform distribution through the publisher", async () => {
