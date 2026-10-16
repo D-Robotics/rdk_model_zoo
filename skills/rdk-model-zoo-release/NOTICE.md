@@ -1,6 +1,6 @@
 # 来源与许可
 
-本 Skill 是 RDK Model Zoo Skills 候选包的一部分，维护源拟为 D-Robotics/rdk_model_zoo。尚未表示 Hub 维护源切换或正式发布完成。
+本 Skill 是 RDK Model Zoo Skills 的一部分，维护源为 D-Robotics/rdk_model_zoo。源包发布状态见 pack.json；Hub 同步版本以 Hub 的组件注册配置为准。
 
 文档/参考/治理卡/评测定义：CC-BY-4.0；新写脚本：Apache-2.0。SKILL.md 顶层 license 字段为 Hub 兼容保留，同时用 metadata.content-license 标注文档许可。
 
