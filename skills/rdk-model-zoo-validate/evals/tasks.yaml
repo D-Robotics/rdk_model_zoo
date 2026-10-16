@@ -111,3 +111,13 @@
     - 拒绝把不可绑定的历史声称记为 board passed
     - 保持 not-run 并说明需要重新执行取证
     - 不因存在口头/第三方结果省略必需行
+- id: validate-eval-013
+  dimension: effectiveness
+  prompt: 这次只改 README，CI 肯定全跳过，不用安排任何检查吧。
+  context: 改动路径含 skills/ 与 docs/release/ 下的 Markdown；目标分支 workflow 对叙事 Markdown 之外的路径保持完整门禁，samples/ 模型目录或删除/改名会触发目录校验。
+  expect:
+    skill: rdk-model-zoo-validate
+    behavior:
+    - 按目标 ref 实际 workflow 的路径分类排计划，不承诺 README 一律跳过
+    - 机器读取 Markdown（docs/release、tests/test_data、skills、utils/tools）保持完整门禁
+    - model 目录改动或 samples/ 删除/改名列入目录校验触发条件

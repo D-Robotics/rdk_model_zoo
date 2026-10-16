@@ -18,7 +18,7 @@
 
 ## Scope
 
-mode、repository、base/head/merge-base 或本地范围、sample/平台/任务/runtime、已读与未读文件；截断 patch/二进制缺失单列。
+mode、repository、base/head/merge-base 或本地范围、sample/平台/任务/runtime、已读与未读文件；截断 patch/二进制缺失单列。文档类改动按路径分列覆盖计数：全文语义阅读、全文静态扫描、关键词筛查各多少文件、哪些路径，含根/分类索引与 Manifest 对照；未读文件单列。
 
 ## Repository Standards
 
@@ -28,7 +28,7 @@ mode、repository、base/head/merge-base 或本地范围、sample/平台/任务/
 
 需求来源与逐项状态；没有规格时写 `No delivery specification available`。
 
-含 **README 可操作性走查**：按目标 ref 的 README 契约逐章列出必答问题的核对结果；标题齐全但内容缺输入/执行目录/结果解释、命令与代码默认值漂移逐条记录。走查未做或未按契约做时写 not-run，不写通过。
+含 **README 可操作性走查**：按目标 ref 的 README 契约逐章列出必答问题的核对结果；标题齐全但内容缺输入/执行目录/结果解释、命令与代码默认值漂移逐条记录。走查未做或未按契约做时写 not-run，不写通过。同一节记录：全局目录/索引行对照 Manifest 与 download/CLI/构建映射的结果，EN/CN 全文与 prose/示例核对结果，措辞清理项（写作意图/过程叙述/迁移史）与保留的真实事实（缺失输入、null 校验和、许可证、SDK 约束、编译/绑定），variant×size 覆盖结论及来源，改动前后可执行代码块比对结论。
 
 ## Technical Correctness & Regressions
 
