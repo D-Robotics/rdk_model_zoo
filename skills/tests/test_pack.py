@@ -43,10 +43,10 @@ class PackTests(unittest.TestCase):
         self.assertIn('`.drobotics-s/`',contract)
         self.assertNotIn('`.drobotics/`',contract)
         self.assertNotIn('`.horizon/`',contract)
-    def test_pack_and_member_versions_are_consistent(self):
+    def test_released_pack_and_member_versions_are_consistent(self):
         manifest=json.loads((ROOT/'pack.json').read_text(encoding='utf-8'))
         self.assertEqual(manifest['version'],'1.1.1')
-        self.assertEqual(manifest['release_state'],'unreleased-candidate')
+        self.assertEqual(manifest['release_state'],'released')
         self.assertEqual((ROOT/'VERSION').read_text(encoding='utf-8').strip(),manifest['version'])
         self.assertEqual({row['name']:row['version'] for row in manifest['skills']}, {
             'rdk-model-zoo':'1.1.2',
@@ -55,7 +55,7 @@ class PackTests(unittest.TestCase):
             'rdk-model-zoo-develop':'1.1.3',
             'rdk-model-zoo-validate':'1.1.2',
             'rdk-model-zoo-review':'1.1.2',
-            'rdk-model-zoo-release':'1.0.2',
+            'rdk-model-zoo-release':'1.0.3',
         })
         readme=(ROOT/'README.md').read_text(encoding='utf-8')
         # The README documents versions as a factual table; the documented
@@ -68,8 +68,8 @@ class PackTests(unittest.TestCase):
         self.assertNotIn('Pack 1.1.0 已发布',readme)
         changelog=(ROOT/'CHANGELOG.md').read_text(encoding='utf-8')
         self.assertIn('## Pack 1.1.0 — 2026-10-16',changelog)
-        self.assertIn('## Unreleased — candidate Pack 1.1.1',changelog)
-        self.assertNotIn('## Unreleased — candidate Pack 1.1.0',changelog)
+        self.assertIn('## Pack 1.1.1 — 2026-10-19',changelog)
+        self.assertNotIn('## Unreleased — candidate Pack 1.1.1',changelog)
         for row in manifest['skills']:
             skill_root=ROOT/row['name']
             text=(skill_root/'SKILL.md').read_text(encoding='utf-8')

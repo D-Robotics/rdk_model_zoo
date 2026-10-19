@@ -29,7 +29,7 @@
 | rdk-model-zoo-develop | 1.1.3 |
 | rdk-model-zoo-validate | 1.1.2 |
 | rdk-model-zoo-review | 1.1.2 |
-| rdk-model-zoo-release | 1.0.2 |
+| rdk-model-zoo-release | 1.0.3 |
 
 版本以 [`pack.json`](pack.json) 清单为准。
 

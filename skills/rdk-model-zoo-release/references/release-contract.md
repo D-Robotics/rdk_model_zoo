@@ -9,14 +9,15 @@
 | S100 / S100P / S600 模型 | 统一集成线为 `docs/release/s/VERSION`；交付线 ref（常见 `rdk_s`）按其自身 VERSION 布局 | s-vMAJOR.MINOR.PATCH | 按 Manifest 的 SoC 范围分别核对 |
 | X3 模型 | 目标 X3 ref 的 VERSION（常见 `rdk_x3`） | x3-vMAJOR.MINOR.PATCH | 保留目标 ref 的历史布局兼容 |
 | legacy 模型 | 用户指定的 legacy ref/tag | 该 ref 已有的模型 Tag | 不把历史交付重命名为当前平台版本 |
-| 统一仓库版本线 | 目标检出根 `VERSION` | 随该线自身的发布约定 | 独立于模型与 Skills 版本 |
-| Model Zoo Skills | skills/VERSION | vMAJOR.MINOR.PATCH | 独立 Pack 版本；不是全模型统一版本 |
+| 统一仓库版本线 | 目标检出根 `VERSION` | model-zoo-vMAJOR.MINOR.PATCH | 独立于模型与 Skills 版本；该线的正式发布持有 Latest |
+| Model Zoo Skills | skills/VERSION | vMAJOR.MINOR.PATCH | 独立 Pack 版本；不是全模型统一版本；裸 v* 保持 Hub canonical stable 兼容，Release 显式 latest=false，标题为 `RDK Model Zoo Skills Pack vX.Y.Z` |
+| 网站部署 | Pages workflow | web-v* | 网站部署 tag；不参与 Hub canonical 解析，不代表 Pack 或模型版本 |
 
 分支事实：交付默认分支为 `main`；`develop` 是 X5/S 样例统一后的集成/开发线；`rdk_x5`/`rdk_s` 为保留的历史分板卡交付线。具体检出的 ref 与默认分支仍以目标检出当天的 Git 状态为准；尚未执行的切换不得在发布检查与材料中写成已完成。
 
 Tag 标识整个提交，不是子目录。Hub 只镜像注册目录。Pack 版本与各成员 Skill 版本分别维护，本文不转写当前版本清单；发布核对一律读取目标 checkout 的实际元数据：Pack 版本与发布状态看 `skills/VERSION` 与 `skills/pack.json` 的 `version`、`release_state`，变更与未发布说明看 `skills/CHANGELOG.md`；每个成员的版本看该成员 `SKILL.md` frontmatter 的 `version`，其治理卡 `skill-card.md` 的版本行须与之一致。历史事实：上游 `rdk_x5` 已发布 Pack 1.0.1，旧 Hub 入口 `rdk-model-zoo` 为 1.0.0；这些状态描述历史发布，当前发布状态以目标 checkout 的元数据为准。Pack 与单 Skill 版本可以不同，不应校验成永远相等。
 
-裸 v* 的占用须发版前重新核验。Hub 当前 canonical stable 解析只接受严格 vMAJOR.MINOR.PATCH，不接受 skills-v*、branch、预发布或带数字前导零的版本。不能为了方便改变既有模型 Tag。
+裸 v* 的占用须发版前重新核验。Hub 当前 canonical stable 解析只接受严格 vMAJOR.MINOR.PATCH，不接受 skills-v*、model-zoo-v*、web-v*、branch、预发布或带数字前导零的版本。Latest 由统一仓库的 model-zoo-vX.Y.Z 正式发布持有；Skills Release 不设 Latest。历史平台 Tag（x5-v*/s-v*/x3-v*）不可变，不能为了方便改变既有模型 Tag。
 
 ## 发布模型
 
@@ -26,7 +27,7 @@ Tag 标识整个提交，不是子目录。Hub 只镜像注册目录。Pack 版�
 
 发布前：skills/VERSION 与 Pack 元数据一致；技能各自 version 与变更一致；完整单元/结构/引用检查；每个 Skill 独立镜像后能读齐必需资源；核心 Agent 行为验收及已知限制审阅。root VERSION 和模型 Manifest 不因 Skills 改动。
 
-发布物：已批准提交上的附注 stable Tag + 正式 GitHub Release。遵循当前 Hub 的标题/说明规范；按当前规范标题为 `RDK Skills vX.Y.Z`，正文首段标明 Component: RDK Model Zoo Skills。显式 `--verify-tag --latest=false`，既不创建隐式 lightweight Tag，也不抢 X5 Latest。非草稿、非 prerelease；不能用 prerelease 绕过 Latest。
+发布物：已批准提交上的附注 stable Tag + 正式 GitHub Release。标题与正文按本发布规范约定：标题为 `RDK Model Zoo Skills Pack vX.Y.Z`，正文首段标明 Component: RDK Model Zoo Skills；两者是表现形式约定，Hub 机器校验不解析标题或正文，只核对组件 ref 的严格 stable 版本、正式已发布的 Release 状态与附注 Tag 指向的 commit 身份。显式 `--verify-tag --latest=false`，既不创建隐式 lightweight Tag，也不把 Latest 从统一仓库 model-zoo-vX.Y.Z 发布上移走。非草稿、非 prerelease；不能用 prerelease 绕过 Latest。
 
 Tag 与 Release 不是原子操作。半失败时记录已经存在的 Tag 对象、commit 和批准说明摘要；只允许为同一不可变身份补建缺失 Release。来源变了就停止，不能删 Tag 重来。
 

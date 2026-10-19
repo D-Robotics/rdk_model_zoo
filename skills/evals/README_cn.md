@@ -2,7 +2,7 @@
 
 # Agent 行为评测
 
-七个 Model Zoo Skills 共定义 91 条核心行为用例，分别保存在各 Skill 的
+七个 Model Zoo Skills 共定义 92 条核心行为用例，分别保存在各 Skill 的
 `evals/tasks.yaml`。用例记录输入、fixture 和预期路由或行为。
 
 ## 评测记录

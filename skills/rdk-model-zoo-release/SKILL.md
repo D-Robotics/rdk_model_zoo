@@ -1,7 +1,7 @@
 ---
 name: rdk-model-zoo-release
 description: "Use when preparing or checking RDK Model Zoo model releases, Skills Pack releases, manifests, Hub registration migration, tags, or release isolation. 触发词：模型发版、Skills 发版、Hub 接入、Tag 兼容。Do not use for routine sample development, OE Pack releases, or publishing without explicit authorization."
-version: "1.0.2"
+version: "1.0.3"
 license: Apache-2.0
 metadata:
   author: "RDK Model Zoo maintainers"
@@ -28,8 +28,8 @@ metadata:
 
 1. 读取 [context-policy.md](references/context-policy.md)、目标仓库发版规范和 [release-contract.md](references/release-contract.md)。`main` 是交付默认分支，`develop` 是统一集成/开发线，保留的 `rdk_x5`/`rdk_s` 是历史分板卡交付线；具体检出的 ref 与默认分支仍以目标检出当天的 Git 状态为准，尚未执行的切换不得在发布材料中写成已完成。按目标 ref 识别 X5、S100/S100P/S600、X3 或 legacy，并核对该 ref 的 Manifest（有清单时）。记录发布类型、候选提交、版本、原 Tag/Latest/Manifest 状态和权限；用户指定的对象冲突时不切换分支。
 2. `model-release` 只修改该平台版本线的 VERSION、CHANGELOG、适用布局的 Manifest 与发布说明；已发布 Tag 不变。统一集成线上各平台版本线位于 `docs/release/{x5,s}/VERSION`，清单与基准数据位于 `docs/release/{x5,s}/models.yaml` 与 `benchmarks.yaml`；历史 ref 按其实际布局。遵循当前 S/X3 固定来源与 X5 目录发布流程，不把静态清单构建写成全量板测。
-3. `skills-release` 读取 skills/VERSION、技能自身版本与 skills/CHANGELOG；严格区分 Pack 版本和单 Skill 版本。裸 vMAJOR.MINOR.PATCH 只表示 Skills Pack；模型 x5-v*/s-v*/x3-v* 保持原样。核对技能自包含、引用、行为评测和许可/来源。
-4. 验证发布隔离：Skills 不改模型 Manifest/根 VERSION；非模型事件不进入 pages 并发组；Skills Release 正式、非草稿、非预发布，显式 latest=false。附注 Tag 指向批准的真实提交；不能把旧模型 Tag 重命名为 Skills Tag。
+3. `skills-release` 读取 skills/VERSION、技能自身版本与 skills/CHANGELOG；严格区分 Pack 版本和单 Skill 版本。Tag 命名各归其位：裸 vMAJOR.MINOR.PATCH 只表示 Skills Pack；统一仓库发布用 model-zoo-vMAJOR.MINOR.PATCH 并持有 Latest；`web-v*` 是网站部署 tag，不代表 Pack 或模型版本；历史模型 x5-v*/s-v*/x3-v* 保持原样，不改名、不删除。核对技能自包含、引用、行为评测和许可/来源。
+4. 验证发布隔离：Skills 不改模型 Manifest/根 VERSION；非模型事件不进入 pages 并发组；Skills Release 正式、非草稿、非预发布，显式 latest=false，Latest 归统一仓库 model-zoo-v* 发布。附注 Tag 指向批准的真实提交；不能把旧模型 Tag 重命名为 Skills Tag。
 5. `hub-onboarding` 核对组件 ref/源路径/catalog_dir 唯一。先发布真实 Skills 版本，再在同一个 Hub PR 中移除 Device 的 rdk-model-zoo 条目并新增 Model Zoo 组件。注册变更、镜像和生成物一起验证，不能依赖每小时同步会自动完成迁移。
 6. 默认输出 [release-checklist.md](assets/release-checklist.md)，列命令、审批点和失败回退。仓库级规则、App/Environment、发布通知和标签配置只读取；没有权限不能声称已配置。
 7. 只有用户明确授权了准确对象、提交、版本和副作用，才进入实际 Tag/Release/Hub 写入流程。使用只增不改的附注 Tag，创建 Release 需 verify-tag；Skills 必须 latest=false。发布前重验候选与审批后状态。

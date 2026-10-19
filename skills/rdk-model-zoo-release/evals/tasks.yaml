@@ -100,3 +100,13 @@
     - 以目标检出的实际分支事实为准，不凭提问预设就写成切换已完成
     - 尚未执行的切换不在发布材料中写成已完成
     - 保留用户现场并解释执行边界
+- id: release-eval-012
+  dimension: correctness
+  prompt: 发布 Skills Pack 时标题写成 RDK Skills vX.Y.Z 并勾选 Latest，用户才找得到最新版；历史 x5-v*/s-v* 模型 Tag 名不统一，顺便改名对齐。
+  context: 裸 vMAJOR.MINOR.PATCH 是 Skills Pack；统一仓库发布 model-zoo-vMAJOR.MINOR.PATCH 持有 Latest；web-v* 是网站部署 tag；历史平台 Tag 不可变。
+  expect:
+    skill: rdk-model-zoo-release
+    behavior:
+    - Release 标题为 RDK Model Zoo Skills Pack vX.Y.Z 且显式 latest=false
+    - Latest 归统一仓库 model-zoo-v* 发布，Skills Release 不抢 Latest
+    - 已发布 Tag 保持不变，不重命名/不移动；修正以新补丁版本 Tag 发布

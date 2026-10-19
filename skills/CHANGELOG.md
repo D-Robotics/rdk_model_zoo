@@ -1,9 +1,10 @@
 # Model Zoo Skills Changelog
 
-## Unreleased — candidate Pack 1.1.1
+## Pack 1.1.1 — 2026-10-19
 
-Unreleased candidate; not tagged or published. Evaluation entries added here
-are definitions, not executed results.
+Released from the unified `main` delivery branch. Structural validation and
+host unit tests pass; the 92 Agent evaluation definitions are not executed
+behavior results, and no board verification is claimed.
 
 - Sample usage/preparation/runtime documentation rules (MZ-SUP-01, MZ-DOC-03):
   published assets (task/variant/size/input/board) are judged separately from
@@ -25,9 +26,18 @@ are definitions, not executed results.
   `samples/**/model/**` changes and any `samples/` deletion/rename. Resolve
   the intended ref to its actual SHA and read that SHA's workflow file — it
   is authoritative; no "README changes always skip the full gate" promise.
+- Tag-naming reconciliation for the release skill: the unified repository's
+  own release line tags `model-zoo-vMAJOR.MINOR.PATCH` and its formal release
+  holds Latest; the Skills Pack keeps bare `vMAJOR.MINOR.PATCH`, which stays
+  compatible with the Hub's canonical stable resolution, titles its Release
+  `RDK Model Zoo Skills Pack vX.Y.Z` and stays explicitly `latest=false`;
+  `web-v*` remain website deployment tags outside Hub canonical resolution;
+  historical platform tags (`x5-v*`/`s-v*`/`x3-v*`) stay immutable. The
+  release contract, checklist and a new release-eval-012 cover the split.
 - New behavioral eval definitions: review-eval-015/016, develop-eval-014/015,
-  validate-eval-013 (86 → 91). Member versions: develop 1.1.3, review 1.1.2,
-  validate 1.1.2; skill cards and pack README version tables mirrored.
+  validate-eval-013, release-eval-012 (86 → 92). Member versions: develop
+  1.1.3, review 1.1.2, validate 1.1.2, release 1.0.2 → 1.0.3 for the
+  tag-naming guidance; skill cards and pack README version tables mirrored.
 
 ## Pack 1.1.0 — 2026-10-16
 
