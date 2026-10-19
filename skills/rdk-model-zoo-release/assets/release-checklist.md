@@ -15,7 +15,7 @@ release-kind、候选 commit、维护分支、计划版本/Tag、变更范围、
 
 ## Skills 发布适用项
 
-skills/VERSION/pack.json、各 Skill version、变更记录与许可、平铺资源闭包；stable annotated Tag；正式 Release、verify-tag、latest=false；不改模型清单与根 VERSION；Pages 并发隔离先上线。
+skills/VERSION/pack.json、各 Skill version、变更记录与许可、平铺资源闭包；stable annotated Tag；正式 Release（标题 `RDK Model Zoo Skills Pack vX.Y.Z`）、verify-tag、latest=false（Latest 归统一仓库 model-zoo-v* 发布）；不改模型清单与根 VERSION；Pages 并发隔离先上线。
 
 ## Hub 切换适用项
 
@@ -27,4 +27,4 @@ skills/VERSION/pack.json、各 Skill version、变更记录与许可、平铺资
 
 ## 失败回退
 
-合入前：撤回候选改动，不动旧 Tag。Tag 已推：保留，只能补建精确缺失 Release 或发新补丁。Hub 注册出错：获批准后修正/回指已存在合法版本，通过新 PR 与生成校验；不强制移动源 Tag。Latest 错误先报告，经授权恢复目标模型 Latest 并检查根因。
+合入前：撤回候选改动，不动旧 Tag。Tag 已推：保留，只能补建精确缺失 Release 或发新补丁。Hub 注册出错：获批准后修正/回指已存在合法版本，通过新 PR 与生成校验；不强制移动源 Tag。Latest 错误先报告，经授权把 Latest 恢复到统一仓库 model-zoo-v* 发布并检查根因；历史平台 Tag 不动。

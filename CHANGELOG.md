@@ -1,10 +1,11 @@
 # Changelog
 
-Version changes of the unified `develop` source and the two platform
-delivery lines:
+Version changes of the unified source and the two platform delivery lines.
+For the unified source, `main` is the delivery default branch and `develop`
+is the unified development/integration line:
 
-- **unified source** — repository root `VERSION` (2.0.0); unified tags use
-  `zoo-vX.Y.Z`
+- **unified source** — repository root `VERSION` (2.0.0); unified release
+  tags use `model-zoo-vX.Y.Z`
 - **rdk_x5** — `docs/release/x5/VERSION` (x5-v1.1.3)
 - **rdk_s** — `docs/release/s/VERSION` (s-v1.1.2)
 
@@ -14,14 +15,16 @@ both bodies, so every in-file link keeps resolving.
 
 ---
 
-## zoo-v2.0.0 — unified source 2.0.0
+## model-zoo-v2.0.0 — unified source 2.0.0
 
-Unified source 2.0.0: X5 and S samples maintained in one `develop` tree.
+Unified source 2.0.0: X5 and S samples maintained in one unified tree
+(`main` delivery default, `develop` development/integration).
 
-- Source version `2.0.0` at the repository root (`VERSION`); unified source
-  tags use `zoo-vX.Y.Z`. Platform artifact versions stay separate (X5
-  `x5-v1.1.3`, S `s-v1.1.2`); the Skills pack (1.1.0) keeps its own
-  independent versioning. Platform manifests live under `docs/release/{x5,s}/`
+- Source version `2.0.0` at the repository root (`VERSION`); unified release
+  tags use `model-zoo-vX.Y.Z`. Platform artifact versions stay separate (X5
+  `x5-v1.1.3`, S `s-v1.1.2`); the Skills pack keeps its own independent
+  versioning (`skills/VERSION`). Platform manifests live under
+  `docs/release/{x5,s}/`
   (`models.yaml`, `benchmarks.yaml`, `VERSION`) and platform identities under
   `docs/release/platforms.json`.
 - In-repo samples expose a unified model entry: each sample's `main.py`

@@ -29,7 +29,7 @@ Use the corresponding OE Skills for quantization, compilation and tuning. This P
 | rdk-model-zoo-develop | 1.1.3 |
 | rdk-model-zoo-validate | 1.1.2 |
 | rdk-model-zoo-review | 1.1.2 |
-| rdk-model-zoo-release | 1.0.2 |
+| rdk-model-zoo-release | 1.0.3 |
 
 The [`pack.json`](pack.json) manifest is authoritative for versions.
 
