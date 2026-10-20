@@ -199,6 +199,12 @@
   const yoloLabelFiles = { detect: 'coco_classes.names', seg: 'coco_classes.names', cls: 'imagenet_classes.names', obb: 'ultralytics_dota_classes.names' };
   // Native board commands for this exact artifact: fetch the file the page
   // publishes (its benchmark and checksum), then run the sample against it.
+  function quickstartSection(source, steps) {
+    if (!steps.length) return '';
+    const step = (index, title, command) => `<li class="mz-quickstart-step"><div class="mz-quickstart-label"><span>${index}</span>${title}</div><div class="mz-code"><pre><code data-no-i18n>${esc(command)}</code></pre><button type="button" class="mz-copy" data-copy-code aria-label="复制命令" title="复制命令">${icon('copy')}</button></div></li>`;
+    const link = source ? `<a href="${esc(source)}#quickstart" target="_blank" rel="noopener">完整说明</a>` : '';
+    return `<section class="mz-section mz-quickstart"><div class="mz-section-heading"><h2>快速上手</h2>${link}</div><ol class="mz-quickstart-steps">${steps.map((item, index) => step(index + 1, item.title, item.command)).join('')}</ol></section>`;
+  }
   function quickStart(model) {
     const asset = model.assets?.[0];
     const [sample, family, task] = String(model.catalogId || '').split('/');
@@ -212,8 +218,17 @@
       `  --model-path ${modelPath}${yoloLabelFiles[task] ? ' \\' : ''}`,
       ...(yoloLabelFiles[task] ? [`  --label-file ${root}/test_data/${yoloLabelFiles[task]}`] : []),
     ].join('\n');
-    const step = (index, title, command) => `<li class="mz-quickstart-step"><div class="mz-quickstart-label"><span>${index}</span>${title}</div><div class="mz-code"><pre><code data-no-i18n>${esc(command)}</code></pre><button type="button" class="mz-copy" data-copy-code aria-label="复制命令" title="复制命令">${icon('copy')}</button></div></li>`;
-    return `<section class="mz-section mz-quickstart"><div class="mz-section-heading"><h2>快速上手</h2>${model.source ? `<a href="${esc(model.source)}#quickstart" target="_blank" rel="noopener">完整说明</a>` : ''}</div><ol class="mz-quickstart-steps">${step(1, '下载模型', download)}${step(2, '运行推理', run)}</ol></section>`;
+    return quickstartSection(model.source, [
+      { title: '下载模型', command: download },
+      { title: '运行推理', command: run },
+    ]);
+  }
+  function pendingQuickStart(model) {
+    if (!model.dataPending) return '';
+    const steps = [];
+    if (model.quickstart?.download) steps.push({ title: '下载模型', command: model.quickstart.download });
+    if (model.quickstart?.run) steps.push({ title: '运行推理', command: model.quickstart.run });
+    return quickstartSection(model.source, steps);
   }
   const isRdkSampleSource = model => Boolean(model.source && (
     model.sourceType === 'repository'
@@ -402,7 +417,7 @@
       <section class="mz-overview"><div class="mz-introduction">${kicker}<h1>${m.name}</h1><p data-i18n-zh="${esc(m.description)}" data-i18n-en="${esc(m.descriptionEn || m.description)}">${esc(description)}</p><div class="mz-primary-actions">${acquireButton}<button class="button secondary mz-ask-model" type="button" data-ask-model><span class="mz-icon" style="--icon:url('assets/icons/sparkles.svg')" aria-hidden="true"></span>询问此模型</button>${repositoryLinks(m, 'mz-text-link')}</div></div>${cover}</section>
       <section class="mz-benchmark" aria-label="性能与精度"><div class="mz-benchmark-title"><h2>性能与精度</h2></div><div class="mz-configuration"><div><span>目标硬件</span>${dropdown('benchmark-hardware', '目标硬件', hardwareOptions.map(value => ({ value, label: value })), hardware)}</div><div><span>模型变体</span>${dropdown('benchmark-variant', '模型变体', variants.filter(other => hardwareOf(other, data) === hardware).sort((a, b) => sizeRank(a.modelSize) - sizeRank(b.modelSize) || String(a.variantName || a.name).localeCompare(String(b.variantName || b.name))).map(other => ({ value: other.id, label: other.variantName || other.name })), m.id)}</div><div><span>Runtime 并发</span>${dropdown('benchmark-condition', 'Runtime 并发', conditionChoices, conditionChoices[0]?.value || '', m.dataPending ? false : !conditionChoices.length)}</div></div>
       ${benchmarkBody}<div class="mz-report-actions">${reportAction}</div></section>
-      <div class="mz-information"><div class="mz-main-column"><section class="mz-section"><h2>模型参数</h2><dl class="mz-specifications">${propertyRows(m)}</dl></section>${upstreamLine}${conversionLine}${downloadLine}${usageLine}${quickStart(m)}
+      <div class="mz-information"><div class="mz-main-column"><section class="mz-section"><h2>模型参数</h2><dl class="mz-specifications">${propertyRows(m)}</dl></section>${upstreamLine}${conversionLine}${downloadLine}${usageLine}${quickStart(m)}${pendingQuickStart(m)}
       </div>
       <aside class="mz-side-column"><section><h2>目标平台</h2><div class="mz-platform-list">${hardwareOptions.map(platform => { const target = variants.find(other => hardwareOf(other, data) === platform && other.modelSize === m.modelSize) || variants.find(other => hardwareOf(other, data) === platform); const active = platform === hardware; return `<button type="button" class="mz-platform-option${active ? ' is-active' : ''}" data-platform-target="${esc(target?.id || '')}" ${active || !target ? 'disabled' : ''} aria-label="切换到 ${esc(platform)}"><span class="mz-platform-mark">${icon('cpu')}</span><strong>${esc(platform)}</strong></button>`; }).join('')}</div></section><section><h2>开发资源</h2><div class="mz-resource-links">${developerResourceLinks(m)}</div></section><section><h2>模型许可</h2><div class="mz-resource-links">${m.licenseName && m.licenseUrl ? external(m.licenseUrl, esc(m.licenseName)) : '<span>未声明</span>'}</div></section></aside></div>
       ${related.length ? `<section class="mz-related"><div class="mz-section-heading"><h2>相关模型</h2><a href="#">查看全部模型</a></div><div class="mz-related-grid">${related.map(other => `<a href="#model/${other.id}" class="mz-related-model"><img src="${esc(other.coverImage || (other.dataPending ? 'assets/pending-cover.svg' : ''))}" alt="${esc(other.name)}" loading="lazy"><div><h3>${other.name}</h3><span>${other.task}</span></div></a>`).join('')}</div></section>` : ''}

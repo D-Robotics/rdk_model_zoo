@@ -277,7 +277,7 @@ test('pending detail uses the published task tiles, parameter rows, and sidebar 
   assert.match(html, /Runtime 单路/);
   assert.match(html, /mz-report-link is-disabled/);
   assert.match(html, /查看转换详情/);
-  assert.doesNotMatch(html, /data-open-download|OE 转换报告|>精度</);
+  assert.doesNotMatch(html, /data-open-download|OE 转换报告|>精度<\/|快速上手/);
 
   const performanceRoot = { innerHTML: '' };
   const root = {
@@ -331,6 +331,10 @@ test('pending pages without a published task profile use named accuracy tiles an
       { filename: 'text_encoder.onnx', url: 'https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/clip/text_encoder.onnx' },
     ],
     sourceInput: { format: 'RGB', dtype: 'float32', layout: 'NCHW', shape: '(1,3,224,224)' },
+    quickstart: {
+      download: 'python3 samples/vision/clip/model/download.py --target x5',
+      run: 'python3 samples/vision/clip/runtime/python/main.py --target x5',
+    },
     benchmark: { documentation: true, performance: [], accuracy: [], stages: [], conditionOptions: [] },
   };
   const peer = { ...clip, id: 'siglip-demo', name: 'SigLIP', family: 'siglip', catalogId: 'siglip/siglip/embed', task: '视觉特征提取', taskId: 'image-embedding', tasks: ['image-embedding'] };
@@ -351,6 +355,13 @@ test('pending pages without a published task profile use named accuracy tiles an
   assert.match(html, /SigLIP/);
   assert.match(html, /Runtime 单路/);
   assert.match(html, /RGB · FLOAT32 · NCHW · 1 × 3 × 224 × 224/);
+  assert.match(html, /<h2>快速上手<\/h2><a href="https:\/\/github.com\/D-Robotics\/rdk_model_zoo\/tree\/abc\/samples\/vision\/clip#quickstart"/);
+  assert.match(html, /<span>1<\/span>下载模型/);
+  assert.match(html, /<span>2<\/span>运行推理/);
+  assert.match(html, /python3 samples\/vision\/clip\/model\/download\.py --target x5/);
+  assert.match(html, /python3 samples\/vision\/clip\/runtime\/python\/main\.py --target x5/);
+  assert.match(html, /aria-label="复制命令"/);
+  assert.doesNotMatch(html, /wget /);
 
   const performanceRoot = { innerHTML: '' };
   context.window.ModelDetail.bind({
@@ -369,4 +380,46 @@ test('pending pages without a published task profile use named accuracy tiles an
   assert.match(tiles, /CLIP zero-shot Top-1/);
   assert.match(tiles, /图文检索 R@1/);
   assert.equal(tiles.split('<strong>').length - 1, 5);
+});
+
+test('published quick start stays on YOLO pages and a pending step without a command is omitted', () => {
+  const published = {
+    id: 'resnet-demo',
+    catalogId: 'resnet/resnet/cls',
+    name: 'ResNet',
+    task: '图像分类',
+    description: '分类。',
+    source: 'https://github.com/D-Robotics/rdk_model_zoo/tree/abc/samples/vision/resnet',
+    sourceType: 'repository',
+    releasePlatform: 'S100',
+    assets: [{ url: 'https://example.invalid/resnet.hbm', filename: 'resnet.hbm', format: 'hbm' }],
+    benchmark: { performance: [], accuracy: [] },
+  };
+  assert.doesNotMatch(renderDetail(published), /快速上手/);
+
+  const yolo = {
+    ...published,
+    id: 'yolo11-demo',
+    catalogId: 'ultralytics_yolo/yolo11/detect',
+    name: 'YOLO11 Detect',
+    source: 'https://github.com/D-Robotics/rdk_model_zoo/tree/abc/samples/vision/ultralytics_yolo',
+    assets: [{ url: 'https://example.invalid/yolo11.bin', filename: 'yolo11n.bin', format: 'bin' }],
+  };
+  const yoloHtml = renderDetail(yolo);
+  assert.match(yoloHtml, /<h2>快速上手<\/h2>/);
+  assert.match(yoloHtml, /<span>1<\/span>下载模型/);
+  assert.match(yoloHtml, /<span>2<\/span>运行推理/);
+  assert.match(yoloHtml, /wget -O samples\/vision\/ultralytics_yolo\/model\/yolo11n\.bin/);
+
+  const pending = {
+    ...published,
+    dataPending: true,
+    releaseStatus: 'data-pending',
+    assets: [],
+    quickstart: { download: '', run: 'python3 samples/vision/convnext/runtime/python/main.py --target x5' },
+  };
+  const pendingHtml = renderDetail(pending);
+  assert.match(pendingHtml, /<span>1<\/span>运行推理/);
+  assert.doesNotMatch(pendingHtml, /下载模型/);
+  assert.match(pendingHtml, /python3 samples\/vision\/convnext\/runtime\/python\/main\.py --target x5/);
 });

@@ -279,6 +279,118 @@ function documentationBenchmark(rows, blobUrl) {
   };
 }
 
+const PLATFORM_TOKENS = ['s100p', 's100', 's600', 'x5'];
+
+function expandCommand(text, index) {
+  let start = text.lastIndexOf('\n', Math.max(0, index - 1)) + 1;
+  while (start > 0) {
+    const previousStart = text.lastIndexOf('\n', start - 2) + 1;
+    const previous = text.slice(previousStart, start - 1);
+    if (!/\\\s*$/.test(previous)) break;
+    start = previousStart;
+  }
+  const lines = [];
+  let position = start;
+  while (position < text.length) {
+    const lineEnd = text.indexOf('\n', position);
+    const end = lineEnd < 0 ? text.length : lineEnd;
+    const line = text.slice(position, end);
+    lines.push(line);
+    position = end + 1;
+    if (!/\\\s*$/.test(line) || lineEnd < 0) break;
+  }
+  return { command: lines.join('\n').replace(/\s+$/, ''), start, end: position };
+}
+
+// Join the cited lines back into the shell commands that contain them.
+// Continuation lines stay exactly as they appear in the pinned file.
+function verbatimCommands(text, lines) {
+  if (!text) return [];
+  const commands = [];
+  const spans = [];
+  let from = 0;
+  for (const line of lines || []) {
+    const needle = String(line || '');
+    if (!needle.trim()) continue;
+    let index = text.indexOf(needle, from);
+    const covered = spans.find(span => index >= span.start && index < span.end);
+    if (covered) {
+      from = covered.end;
+      index = text.indexOf(needle, from);
+    }
+    if (index < 0) continue;
+    const span = expandCommand(text, index);
+    if (span.command && !commands.includes(span.command)) {
+      commands.push(span.command);
+      spans.push(span);
+    }
+    from = Math.max(from, span.end);
+  }
+  return commands;
+}
+
+function commandWords(command) {
+  return command.replace(/\\\s*\n\s*/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function mentionedPlatforms(command) {
+  const found = [];
+  const lower = command.toLowerCase();
+  for (const token of PLATFORM_TOKENS) {
+    const pattern = new RegExp(`(?:^|[\\s=/:_'"\`-])${token}(?=$|[\\s=/:_.'"\\\`-])`);
+    if (pattern.test(lower)) found.push(token);
+  }
+  return found;
+}
+
+function isAuxiliaryCommand(command) {
+  return /(?:^|\s)--(?:dry-run|list-models)(?:\s|$)/.test(commandWords(command));
+}
+
+function isDownloadCommand(command) {
+  if (isAuxiliaryCommand(command)) return false;
+  const flat = commandWords(command);
+  if (/(?:^|\s)(?:wget|curl)(?:\s|$)/.test(flat)) {
+    return /\.(?:bin|hbm|onnx)(?:\s|['"]|$)/.test(flat);
+  }
+  return /(?:^|[\s/.])(?:download(?:\.(?:py|sh))?|download_model\.sh|model\.download)(?:\s|$)/.test(flat);
+}
+
+function isRunCommand(command) {
+  if (isAuxiliaryCommand(command) || isDownloadCommand(command)) return false;
+  const flat = commandWords(command);
+  return /(?:^|\s)(?:\S*\/runtime\/\S*(?:main\.py|run\.sh)|\S*runtime\.python\.main|run\.sh)(?:\s|$)/.test(flat);
+}
+
+function pickCommand(commands, platform) {
+  const token = String(platform || '').toLowerCase();
+  const eligible = commands.filter(command => {
+    const mentioned = mentionedPlatforms(command);
+    return !mentioned.length || mentioned.includes(token);
+  });
+  return eligible.find(command => mentionedPlatforms(command).includes(token)) || eligible[0] || '';
+}
+
+function quickstartForUsage(text, lines, platform) {
+  const commands = verbatimCommands(text, lines);
+  return {
+    download: pickCommand(commands.filter(isDownloadCommand), platform),
+    run: pickCommand(commands.filter(isRunCommand), platform),
+  };
+}
+
+function quickstartForRecord(record, platform) {
+  const commands = [];
+  for (const item of record.usage || []) {
+    const text = blobText(record.sample_revision, item.source);
+    commands.push(...verbatimCommands(text, item.lines));
+  }
+  return {
+    download: pickCommand(commands.filter(isDownloadCommand), platform),
+    run: pickCommand(commands.filter(isRunCommand), platform),
+  };
+}
+
 function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safeId }) {
   const models = [];
   for (const record of records) {
@@ -368,6 +480,7 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
         })),
         usage: (record.usage || []).flatMap(item => item.lines || []),
         usageSource: record.usage?.[0]?.source ? blobUrl(record.usage[0].source) : '',
+        quickstart: quickstartForRecord(record, group.platform),
         documentedDownloads: selectedDownloads.map(item => ({
           filename: item.filename,
           url: item.url,
@@ -382,4 +495,4 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
   return models;
 }
 
-export { buildPendingModels, variantGroups, annotate };
+export { buildPendingModels, variantGroups, annotate, quickstartForUsage };
