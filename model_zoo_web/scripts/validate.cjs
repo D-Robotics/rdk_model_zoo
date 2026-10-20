@@ -96,6 +96,13 @@ if (preview) {
           assert.match(model.heroProvenance?.modelUrl || '', /^https:\/\//, `${model.id}: host float hero needs the checkpoint URL`);
           assert.ok(model.heroProvenance?.framework, `${model.id}: host float hero needs a framework`);
           assert.equal(model.coverLabel, '浮点参考', `${model.id}: host float hero must not use a board result label`);
+          if (model.heroProvenance.kind === 'detection-overlay' || model.heroProvenance.kind === 'segmentation-overlay') {
+            const threshold = Number(model.heroProvenance.confidenceThreshold);
+            assert.ok(
+              threshold >= 0.5 && threshold <= 1,
+              `${model.id}: detection or segmentation hero needs a confidence threshold of at least 0.5`,
+            );
+          }
         }
       } else if (model.coverImage !== 'assets/pending-cover.svg') {
         assert.match(model.coverImage, /^https:\/\/raw\.githubusercontent\.com\/D-Robotics\/rdk_model_zoo\/[0-9a-f]{40}\//, `${model.id}: pending cover must be a file at the pinned revision`);

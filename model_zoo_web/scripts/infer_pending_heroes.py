@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 import yaml
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = Path(__file__).resolve().parents[2]
 REVISION = "7a97c1780b0cfa131ff0007d662e255e5e41c12e"
@@ -36,6 +36,40 @@ LABEL_COLOR = (24, 24, 28)
 BAR_TRACK = (226, 230, 235)
 BAR_FILL = (46, 100, 234)
 FONT_DIR = Path("/usr/share/fonts/truetype/macos")
+
+# Detection and segmentation drawing, measured on the published 1672x941 covers
+# release/assets/yolo11-detect.webp and release/assets/yolov8-seg.webp.
+# Vertical box strokes are a 4px near-white run. The top edge of a box grows
+# from a 6px corner inset to full width the way a radius-8 rounded stroke does.
+# The "chair 57%" tag is 113px wide: DejaVu Sans 20px ink is 101px, plus 6px
+# of white padding on each side. Tag height follows the 24px line box plus 5px
+# of padding. Text is rgb(20, 20, 20) on white, radius 8. Masks are the same
+# cyan wash recorded for the published segmentation banners, alpha 92/255,
+# with a white contour. Supersampling keeps those widths after downscale.
+DET_SUPERSAMPLE = 2
+BOX_WIDTH = 4
+BOX_RADIUS = 8
+TAG_FONT_SIZE = 20
+TAG_PAD_X = 6
+TAG_PAD_Y = 5
+TAG_RADIUS = 8
+TAG_TEXT = (20, 20, 20)
+WHITE = (255, 255, 255)
+MASK_RGB = (49, 203, 220)
+MASK_ALPHA = 92
+CONTOUR_WIDTH = 2
+CONFIDENCE_THRESHOLD = 0.5
+# A box that meets the source edge is already cut off by the photograph.
+# Drawing it would put the stroke on the cover edge.
+SOURCE_EDGE_MARGIN = 8.0
+DET_NOTE = (
+    "Host float reference, not board output. "
+    "Confidence threshold 0.5. Boxes that meet the source photo edge are omitted."
+)
+TAG_FONT_PATH = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
+# Landscape street from the pinned tree. The cars sit well inside the photo,
+# so the 16:9 cover can show every drawn box with margin and no crop.
+DET_SCENE = "samples/vision/pp_liteseg/test_data/street.png"
 
 CLASSIFIERS = [
     ("convnext", "model_zoo_web/data/vision/convnext/convnext/cls.yaml", "convnext_atto",
@@ -148,30 +182,180 @@ def render_classification(photo: Image.Image, topk: list[dict]) -> Image.Image:
     return canvas
 
 
-def frame_bgr(image, boxes: list[list[float]]):
-    """Cover-crop a BGR frame to the published 16:9 hero, keeping the top box in view."""
-    import cv2
-    height, width = image.shape[:2]
-    target = CANVAS[0] / CANVAS[1]
-    if width / height > target:
-        crop_h = height
-        crop_w = int(round(height * target))
-        x0 = max(0, (width - crop_w) // 2)
-        y0 = 0
+def tag_font(scale: int) -> ImageFont.FreeTypeFont:
+    return ImageFont.truetype(str(TAG_FONT_PATH), TAG_FONT_SIZE * scale)
+
+
+def shift_axis(start: float, end: float, limit: float, content_start: float, content_end: float) -> tuple[float, float]:
+    """Slide a window along one axis so it uses the photo before any blurred overflow."""
+    length = end - start
+    if length <= limit:
+        desired = min(max(start, 0.0), limit - length)
     else:
-        crop_w = width
-        crop_h = int(round(width / target))
-        x0 = 0
-        y0 = max(0, (height - crop_h) // 2)
-    if boxes:
-        cx = (boxes[0][0] + boxes[0][2]) / 2
-        cy = (boxes[0][1] + boxes[0][3]) / 2
-        if width / height > target:
-            x0 = int(min(max(cx - crop_w / 2, 0), width - crop_w))
+        desired = (limit - length) / 2
+    # Keep the content inside the window. Never trade that for a smaller blur.
+    desired = min(desired, content_start)
+    desired = max(desired, content_end - length)
+    return desired, desired + length
+
+
+def detection_window(boxes: list[list[float]], image_size: tuple[int, int]) -> tuple[float, float, float, float]:
+    """16:9 window that contains every box, with room above each box for its tag.
+
+    When the photo is wide enough, the window stays inside it. Overflow is only
+    the part that cannot move without cutting a box, and the caller blur-fills that.
+    """
+    width, height = image_size
+    target = CANVAS[0] / CANVAS[1]
+    x1 = min(box[0] for box in boxes)
+    y1 = min(box[1] for box in boxes)
+    x2 = max(box[2] for box in boxes)
+    y2 = max(box[3] for box in boxes)
+    span = max(x2 - x1, y2 - y1, 1.0)
+    margin = max(28.0, span * 0.06)
+    top_extra = margin
+    left = top = right = bottom = 0.0
+    for _ in range(4):
+        left, top = x1 - margin, y1 - margin - top_extra
+        right, bottom = x2 + margin, y2 + margin
+        box_w, box_h = max(right - left, 1.0), max(bottom - top, 1.0)
+        if box_w / box_h < target:
+            grow = (box_h * target - box_w) / 2
+            left -= grow
+            right += grow
         else:
-            y0 = int(min(max(cy - crop_h / 2, 0), height - crop_h))
-    cropped = image[y0:y0 + crop_h, x0:x0 + crop_w]
-    return cv2.resize(cropped, CANVAS, interpolation=cv2.INTER_AREA)
+            grow = (box_w / target - box_h) / 2
+            top -= grow
+            bottom += grow
+        scale = (CANVAS[0] * DET_SUPERSAMPLE) / (right - left)
+        wanted_top = (TAG_FONT_SIZE + TAG_PAD_Y * 2 + 16) * DET_SUPERSAMPLE / scale
+        wanted_margin = 32 * DET_SUPERSAMPLE / scale
+        if top_extra >= wanted_top - 0.5 and margin >= wanted_margin - 0.5:
+            break
+        top_extra = max(top_extra, wanted_top)
+        margin = max(margin, wanted_margin)
+    box_w, box_h = right - left, bottom - top
+    if box_w / box_h < target:
+        grow = (box_h * target - box_w) / 2
+        left -= grow
+        right += grow
+    elif box_w / box_h > target:
+        grow = (box_w / target - box_h) / 2
+        top -= grow
+        bottom += grow
+    content = (x1 - margin, y1 - margin - top_extra, x2 + margin, y2 + margin)
+    left, right = shift_axis(left, right, width, content[0], content[2])
+    top, bottom = shift_axis(top, bottom, height, content[1], content[3])
+    return left, top, right, bottom
+
+
+def compose_window(image: Image.Image, window: tuple[float, float, float, float]) -> tuple[Image.Image, callable]:
+    """Scale the photo into a 16:9 canvas. Overflow is a blurred extension of the photo."""
+    left, top, right, bottom = window
+    win_w = right - left
+    out_w = CANVAS[0] * DET_SUPERSAMPLE
+    out_h = CANVAS[1] * DET_SUPERSAMPLE
+    src = image.convert("RGB")
+    small = src.resize((max(8, src.width // 12), max(8, src.height // 12)), Image.Resampling.BILINEAR)
+    small = small.filter(ImageFilter.GaussianBlur(radius=8))
+    cover_scale = max(out_w / small.width, out_h / small.height)
+    cover = small.resize(
+        (max(1, round(small.width * cover_scale)), max(1, round(small.height * cover_scale))),
+        Image.Resampling.BILINEAR,
+    )
+    cx = max(0, (cover.width - out_w) // 2)
+    cy = max(0, (cover.height - out_h) // 2)
+    canvas = cover.crop((cx, cy, cx + out_w, cy + out_h))
+    scale = out_w / win_w
+    resized = src.resize(
+        (max(1, round(src.width * scale)), max(1, round(src.height * scale))),
+        Image.Resampling.LANCZOS,
+    )
+    canvas.paste(resized, (int(round(-left * scale)), int(round(-top * scale))))
+
+    def mapper(x: float, y: float) -> tuple[float, float]:
+        return (x - left) * scale, (y - top) * scale
+
+    return canvas, mapper
+
+
+def render_detections(image: Image.Image, instances: list[dict]) -> Image.Image:
+    """One drawer for boxes and masks. Coordinates are source pixels from the model."""
+    if not instances:
+        raise RuntimeError("no instances to draw")
+    bounds = [list(instance["box"]) for instance in instances]
+    for instance in instances:
+        for polygon in instance.get("polygons") or []:
+            xs = [point[0] for point in polygon]
+            ys = [point[1] for point in polygon]
+            if xs:
+                bounds.append([min(xs), min(ys), max(xs), max(ys)])
+    canvas, mapper = compose_window(image, detection_window(bounds, image.size))
+    scale = DET_SUPERSAMPLE
+    mask = Image.new("L", canvas.size, 0)
+    mask_draw = ImageDraw.Draw(mask)
+    contours = []
+    for instance in instances:
+        for polygon in instance.get("polygons") or []:
+            points = [mapper(point[0], point[1]) for point in polygon]
+            if len(points) >= 3:
+                mask_draw.polygon(points, fill=255)
+                contours.append(points)
+    if any(instance.get("polygons") for instance in instances):
+        faded = mask.point(lambda value: MASK_ALPHA if value else 0)
+        canvas = Image.composite(Image.new("RGB", canvas.size, MASK_RGB), canvas, faded)
+    draw = ImageDraw.Draw(canvas)
+    contour_width = CONTOUR_WIDTH * scale
+    for points in contours:
+        draw.line(points + [points[0]], fill=WHITE, width=contour_width, joint="curve")
+    font = tag_font(scale)
+    ascent, descent = font.getmetrics()
+    pad_x = TAG_PAD_X * scale
+    pad_y = TAG_PAD_Y * scale
+    placed = []
+    for instance in sorted(instances, key=lambda item: item["score"]):
+        x1, y1 = mapper(instance["box"][0], instance["box"][1])
+        x2, y2 = mapper(instance["box"][2], instance["box"][3])
+        if x2 < x1:
+            x1, x2 = x2, x1
+        if y2 < y1:
+            y1, y2 = y2, y1
+        inset = 2 * scale
+        if x1 < inset or y1 < inset or x2 > canvas.width - inset or y2 > canvas.height - inset:
+            raise RuntimeError(f"box leaves the frame: {instance['label']} {(x1, y1, x2, y2)}")
+        radius = min(BOX_RADIUS * scale, (x2 - x1) / 2, (y2 - y1) / 2)
+        draw.rounded_rectangle((x1, y1, x2, y2), radius=radius, outline=WHITE, width=BOX_WIDTH * scale)
+        text = f"{instance['label']} {int(instance['score'] * 100 + 0.5)}%"
+        ink = font.getbbox(text)
+        tag_w = (ink[2] - ink[0]) + 2 * pad_x
+        tag_h = ascent + descent + 2 * pad_y
+        tag_x = (x1 + x2) / 2 - tag_w / 2
+        tag_y = y1 - tag_h
+        tag_x = min(max(tag_x, inset), canvas.width - inset - tag_w)
+        tag_y = min(max(tag_y, inset), canvas.height - inset - tag_h)
+        tag_radius = min(TAG_RADIUS * scale, tag_w / 2, tag_h / 2)
+        draw.rounded_rectangle(
+            (tag_x, tag_y, tag_x + tag_w, tag_y + tag_h),
+            radius=tag_radius, fill=WHITE,
+        )
+        draw.text((tag_x + pad_x - ink[0], tag_y + pad_y), text, font=font, fill=TAG_TEXT)
+        placed.append((tag_x, tag_y, tag_x + tag_w, tag_y + tag_h))
+    for tag in placed:
+        if tag[0] < 0 or tag[1] < 0 or tag[2] > canvas.width or tag[3] > canvas.height:
+            raise RuntimeError(f"label leaves the frame: {tag}")
+    return canvas.resize(CANVAS, Image.Resampling.LANCZOS)
+
+
+def record_instances(instances: list[dict]) -> list[dict]:
+    ordered = sorted(instances, key=lambda item: item["score"], reverse=True)
+    return [
+        {
+            "label": instance["label"],
+            "score": round(float(instance["score"]), 6),
+            "box": [round(float(value), 2) for value in instance["box"]],
+        }
+        for instance in ordered
+    ]
 
 
 def upsert_hero(yaml_path: str, block: str) -> None:
@@ -233,7 +417,8 @@ def strip_hero(yaml_path: str, plain_image: str) -> None:
 
 
 def write_record(stem: str, yaml_path: str, kind: str, image: str, documented: str,
-                 model_file: str, model_url: str, framework: str, payload: dict) -> None:
+                 model_file: str, model_url: str, framework: str, payload: dict,
+                 note: str = NOTE) -> None:
     record = {
         "runtime": "host-float-reference",
         "commit": REVISION,
@@ -242,7 +427,7 @@ def write_record(stem: str, yaml_path: str, kind: str, image: str, documented: s
         "input": image,
         "framework": framework,
         "documented_in": documented,
-        "note": NOTE,
+        "note": note,
     }
     record.update(payload)
     canonical = json.loads(json.dumps(record))
@@ -254,13 +439,15 @@ def write_record(stem: str, yaml_path: str, kind: str, image: str, documented: s
         "input": image,
         "predictions_source": f"model_zoo_web/release/assets/pending-heroes/{json_name}",
         "runtime": "host-float-reference",
-        "note": NOTE,
+        "note": note,
         "model_file": model_file,
         "model_url": model_url,
         "framework": framework,
         "commit": REVISION,
         "documented_in": documented,
     }
+    if "confidence_threshold" in canonical:
+        hero["confidence_threshold"] = canonical["confidence_threshold"]
     if kind == "classification-panel":
         hero["topk"] = canonical["topk"]
     else:
@@ -271,6 +458,8 @@ def write_record(stem: str, yaml_path: str, kind: str, image: str, documented: s
         raise SystemExit(f"{stem} topk did not round-trip")
     if kind != "classification-panel" and loaded["detections"] != canonical["detections"]:
         raise SystemExit(f"{stem} detections did not round-trip")
+    if "confidence_threshold" in canonical and loaded.get("confidence_threshold") != canonical["confidence_threshold"]:
+        raise SystemExit(f"{stem} confidence threshold did not round-trip")
     upsert_hero(yaml_path, "hero_visual:\n" + "\n".join(f"  {line}" if line else "" for line in dumped.splitlines()) + "\n")
 
 
@@ -315,78 +504,107 @@ def run_classifiers() -> list[str]:
     return status
 
 
+def inside_source(box: list[float], size: tuple[int, int]) -> bool:
+    width, height = size
+    x1, y1, x2, y2 = box
+    return (
+        x1 >= SOURCE_EDGE_MARGIN and y1 >= SOURCE_EDGE_MARGIN
+        and x2 <= width - SOURCE_EDGE_MARGIN and y2 <= height - SOURCE_EDGE_MARGIN
+    )
+
+
+def save_overlay(stem: str, image: Image.Image, instances: list[dict]) -> list[dict]:
+    kept = [
+        instance for instance in instances
+        if instance["score"] >= CONFIDENCE_THRESHOLD and inside_source(instance["box"], image.size)
+    ]
+    if not kept:
+        raise RuntimeError(f"{stem}: nothing at or above {CONFIDENCE_THRESHOLD} fully inside the photo")
+    rendered = render_detections(image, kept)
+    rendered.save(OUT_DIR / f"{stem}.webp", "WEBP", quality=90, method=6)
+    return record_instances(kept)
+
+
 def run_yolov5(stem: str, yaml_path: str, weights_url: str, image: str, documented: str) -> str:
     """YOLOv5 v7 checkpoints need the ultralytics/yolov5 loader, not the YOLOv8 package."""
-    import cv2
     import torch
     print(f"yolov5 {stem}", flush=True)
     weights = CACHE / Path(weights_url).name
     if not weights.is_file():
         subprocess.run(["curl", "-fsSL", "-o", str(weights), weights_url], check=True)
     model = torch.hub.load("ultralytics/yolov5", "custom", path=str(weights), trust_repo=True)
-    model.conf = 0.35
-    source = str(materialize(image))
-    results = model(source)
-    prediction = results.xyxy[0].detach().cpu().numpy()
-    if len(prediction) == 0:
-        return f"FAIL {stem}: no detections"
+    model.conf = CONFIDENCE_THRESHOLD
+    photo = Image.open(materialize(image)).convert("RGB")
+    prediction = model(str(materialize(image))).xyxy[0].detach().cpu().numpy()
     names = model.names
-    drawn = []
-    for row in prediction[:15]:
-        drawn.append({
+    instances = []
+    for row in prediction:
+        score = float(row[4])
+        if score < CONFIDENCE_THRESHOLD:
+            continue
+        instances.append({
             "label": str(names[int(row[5])]),
-            "score": round(float(row[4]), 6),
-            "box": [round(float(value), 2) for value in row[:4]],
+            "score": score,
+            "box": [float(value) for value in row[:4]],
         })
-    rendered = results.render()[0]
-    if rendered.shape[2] == 3:
-        rendered = cv2.cvtColor(rendered, cv2.COLOR_RGB2BGR)
-    framed = frame_bgr(rendered, [row["box"] for row in drawn])
-    Image.fromarray(cv2.cvtColor(framed, cv2.COLOR_BGR2RGB)).save(OUT_DIR / f"{stem}.webp", "WEBP", quality=90, method=6)
-    write_record(stem, yaml_path, "detection-overlay", image, documented, weights.name, weights_url,
-                 f"yolov5-torch-hub-cpu/{torch.__version__}", {"detections": drawn})
+    drawn = save_overlay(stem, photo, instances)
+    write_record(
+        stem, yaml_path, "detection-overlay", image, documented, weights.name, weights_url,
+        f"yolov5-torch-hub-cpu/{torch.__version__}",
+        {"confidence_threshold": CONFIDENCE_THRESHOLD, "detections": drawn},
+        note=DET_NOTE,
+    )
     return f"ok {stem} {drawn[0]['label']} {drawn[0]['score']} n={len(drawn)}"
 
 
 def run_yolo(stem: str, yaml_path: str, kind: str, weights_url: str, image: str, documented: str) -> str:
-    import cv2
     from ultralytics import YOLO
     print(f"yolo {stem}", flush=True)
     weights = CACHE / Path(weights_url).name
     if not weights.is_file():
         subprocess.run(["curl", "-fsSL", "-o", str(weights), weights_url], check=True)
     model = YOLO(str(weights))
-    source = str(materialize(image))
-    result = model.predict(source, conf=0.35, iou=0.7, verbose=False, max_det=15)[0]
+    photo = Image.open(materialize(image)).convert("RGB")
+    result = model.predict(
+        str(materialize(image)), conf=CONFIDENCE_THRESHOLD, iou=0.7, verbose=False, max_det=30,
+    )[0]
     boxes = result.boxes
-    if boxes is None or len(boxes) == 0:
+    if boxes is None:
         return f"FAIL {stem}: no detections"
     names = result.names
-    drawn = []
+    instances = []
     for index in range(len(boxes)):
-        score = round(float(boxes.conf[index]), 6)
-        cls = int(boxes.cls[index])
-        xyxy = [round(float(value), 2) for value in boxes.xyxy[index].tolist()]
-        drawn.append({"label": str(names[cls]), "score": score, "box": xyxy})
-    annotated = result.plot(conf=True, labels=True, boxes=True, masks=bool(result.masks))
-    framed = frame_bgr(annotated, [row["box"] for row in drawn])
-    Image.fromarray(cv2.cvtColor(framed, cv2.COLOR_BGR2RGB)).save(OUT_DIR / f"{stem}.webp", "WEBP", quality=90, method=6)
-    payload = {"detections": drawn}
+        score = float(boxes.conf[index])
+        if score < CONFIDENCE_THRESHOLD:
+            continue
+        polygons = []
+        if result.masks is not None and index < len(result.masks.xy):
+            points = [[float(x), float(y)] for x, y in result.masks.xy[index]]
+            if len(points) >= 3:
+                polygons.append(points)
+        instances.append({
+            "label": str(names[int(boxes.cls[index])]),
+            "score": score,
+            "box": [float(value) for value in boxes.xyxy[index].tolist()],
+            "polygons": polygons,
+        })
+    if kind == "segmentation-overlay" and not any(instance.get("polygons") for instance in instances):
+        return f"FAIL {stem}: model returned boxes without masks"
+    drawn = save_overlay(stem, photo, instances)
+    payload = {"confidence_threshold": CONFIDENCE_THRESHOLD, "detections": drawn}
     if kind == "segmentation-overlay":
-        if result.masks is None:
-            return f"FAIL {stem}: model returned boxes without masks"
         payload["masks"] = True
-    write_record(stem, yaml_path, kind, image, documented, weights.name, weights_url,
-                 "ultralytics-cpu", payload)
+    write_record(
+        stem, yaml_path, kind, image, documented, weights.name, weights_url,
+        "ultralytics-cpu", payload, note=DET_NOTE,
+    )
     return f"ok {stem} {drawn[0]['label']} {drawn[0]['score']} n={len(drawn)}"
 
 
-def run_fasterrcnn() -> str:
-    import cv2
+def run_fasterrcnn(image: str) -> str:
     import torch
     from torchvision.models.detection import fasterrcnn_mobilenet_v3_large_320_fpn
     from torchvision.models.detection import FasterRCNN_MobileNet_V3_Large_320_FPN_Weights
-    from ultralytics.utils.plotting import Annotator, colors
     print("fasterrcnn", flush=True)
     weights = FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.COCO_V1
     url = weights.url
@@ -395,31 +613,21 @@ def run_fasterrcnn() -> str:
         return f"FAIL fasterrcnn: weight URL changed to {url}"
     model = fasterrcnn_mobilenet_v3_large_320_fpn(weights=weights)
     model.eval()
-    image = "samples/vision/fasterrcnn/test_data/bus.jpg"
-    frame = cv2.imread(str(materialize(image)))
-    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    tensor = weights.transforms()(Image.fromarray(rgb))
+    photo = Image.open(materialize(image)).convert("RGB")
+    tensor = weights.transforms()(photo)
     with torch.inference_mode():
         prediction = model([tensor])[0]
-    drawn = []
+    instances = []
     for score, label, box in zip(prediction["scores"], prediction["labels"], prediction["boxes"]):
         value = float(score)
-        if value < 0.5:
+        if value < CONFIDENCE_THRESHOLD:
             continue
-        name = weights.meta["categories"][int(label)]
-        xyxy = [round(float(item), 2) for item in box.tolist()]
-        drawn.append({"label": name, "score": round(value, 6), "box": xyxy})
-        if len(drawn) == 15:
-            break
-    if not drawn:
-        return "FAIL fasterrcnn: no detections"
-    annotator = Annotator(frame, line_width=max(2, round(frame.shape[0] / 300)))
-    for index, row in enumerate(drawn):
-        annotator.box_label(row["box"], f"{row['label']} {row['score']:.2f}", color=colors(index, True))
-    framed = frame_bgr(annotator.result(), [row["box"] for row in drawn])
-    Image.fromarray(cv2.cvtColor(framed, cv2.COLOR_BGR2RGB)).save(
-        OUT_DIR / "fasterrcnn-detect.webp", "WEBP", quality=90, method=6,
-    )
+        instances.append({
+            "label": weights.meta["categories"][int(label)],
+            "score": value,
+            "box": [float(item) for item in box.tolist()],
+        })
+    drawn = save_overlay("fasterrcnn-detect", photo, instances)
     write_record(
         "fasterrcnn-detect",
         "model_zoo_web/data/vision/fasterrcnn/fasterrcnn/detect.yaml",
@@ -429,7 +637,8 @@ def run_fasterrcnn() -> str:
         "fasterrcnn_mobilenet_v3_large_320_fpn-907ea3f9.pth",
         url,
         f"pytorch-cpu/{torch.__version__} torchvision",
-        {"detections": drawn},
+        {"confidence_threshold": CONFIDENCE_THRESHOLD, "detections": drawn},
+        note=DET_NOTE,
     )
     return f"ok fasterrcnn {drawn[0]['label']} {drawn[0]['score']} n={len(drawn)}"
 
@@ -443,7 +652,7 @@ def main() -> None:
             "yolov5-detect",
             "model_zoo_web/data/vision/yolov5/yolov5/detect.yaml",
             "https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5n.pt",
-            "samples/vision/yolov5/test_data/bus.jpg",
+            DET_SCENE,
             "samples/vision/yolov5/conversion/README.md",
         ))
     except Exception as exc:  # noqa: BLE001
@@ -454,15 +663,18 @@ def main() -> None:
         "model_zoo_web/data/vision/yoloe/yoloe11/seg.yaml",
         "segmentation-overlay",
         "https://github.com/ultralytics/assets/releases/download/v8.3.0/yoloe-11s-seg-pf.pt",
-        "samples/vision/yolov5/test_data/bus.jpg",
+        DET_SCENE,
         "samples/vision/yoloe/conversion/README.md",
         ))
     except Exception as exc:  # noqa: BLE001
         lines.append(f"FAIL yoloe11: {exc}")
     try:
-        lines.append(run_fasterrcnn())
+        lines.append(run_fasterrcnn(DET_SCENE))
     except Exception as exc:  # noqa: BLE001
         lines.append(f"FAIL fasterrcnn: {exc}")
+    if "--det-only" in sys.argv:
+        print("\n".join(lines))
+        return
     for yaml_path, plain in PLAIN:
         strip_hero(yaml_path, plain)
         lines.append(f"plain {yaml_path} -> {plain}")

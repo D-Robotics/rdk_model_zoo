@@ -698,6 +698,14 @@ def _validate_host_float_hero(entry: dict[str, Any], label: str, revision: str) 
             or not all(isinstance(item, (int, float)) and not isinstance(item, bool) for item in box)
         ):
             raise CatalogError(f"{label}.detections[{index}].box must be four numbers")
+    threshold = entry.get("confidence_threshold")
+    if isinstance(threshold, bool) or not isinstance(threshold, (int, float)) or not 0 < float(threshold) <= 1:
+        raise CatalogError(f"{label}.confidence_threshold must be a probability cutoff")
+    if payload.get("confidence_threshold") != threshold:
+        raise CatalogError(f"{label}.confidence_threshold does not match the inference record")
+    for index, row in enumerate(recorded):
+        if float(row["score"]) < float(threshold):
+            raise CatalogError(f"{label}.detections[{index}].score is below the confidence threshold")
     if kind == "segmentation-overlay" and not payload.get("masks"):
         raise CatalogError(f"{label} segmentation record must say masks were drawn")
 
@@ -709,7 +717,7 @@ def _validate_hero_visual(record: dict[str, Any], relative_source: str, revision
     allowed = {
         "file", "kind", "input", "predictions_source", "runtime", "quote", "labels", "scores",
         "crop", "note", "model_file", "model_url", "framework", "commit", "documented_in",
-        "topk", "detections",
+        "topk", "detections", "confidence_threshold",
     }
     unknown = sorted(set(entry) - allowed)
     if unknown:

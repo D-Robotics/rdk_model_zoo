@@ -493,6 +493,9 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
             note: record.hero_visual.note || '',
             modelUrl: record.hero_visual.model_url || '',
             framework: record.hero_visual.framework || '',
+            ...(record.hero_visual.confidence_threshold === undefined ? {} : {
+              confidenceThreshold: record.hero_visual.confidence_threshold,
+            }),
           },
         } : {}),
         sourceInput: record.source_input ? {
