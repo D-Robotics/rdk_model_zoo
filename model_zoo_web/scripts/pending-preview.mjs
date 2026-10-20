@@ -391,6 +391,37 @@ function quickstartForRecord(record, platform) {
   };
 }
 
+function commandSizeTokens(command) {
+  const tokens = String(command || '').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  const found = [];
+  for (const token of tokens) {
+    if (SIZE_TOKENS.includes(token) && !found.includes(token)) found.push(token);
+  }
+  return found;
+}
+
+function variantSizeTokens(label) {
+  const tokens = tokensOf(label);
+  return SIZE_TOKENS.filter(token => tokens.includes(token));
+}
+
+// A command that names atto stays on Atto. An unsized download stays on the
+// variants that have a documented file, unless no sibling has one.
+function scopeQuickstart(quickstart, label, variantHasDownload, downloadsAreSpecific) {
+  const variantSizes = variantSizeTokens(label);
+  const fit = (command, isDownload) => {
+    if (!command) return '';
+    const named = commandSizeTokens(command);
+    if (named.length) return named.every(token => variantSizes.includes(token)) ? command : '';
+    if (isDownload && downloadsAreSpecific && !variantHasDownload) return '';
+    return command;
+  };
+  return {
+    download: fit(quickstart?.download, true),
+    run: fit(quickstart?.run, false),
+  };
+}
+
 function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safeId }) {
   const models = [];
   for (const record of records) {
@@ -404,6 +435,9 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
     const sourceUrl = `${officialRepositoryUrl}/tree/${revision}/${record.sample_path}`;
     const blobUrl = path => `${officialRepositoryUrl}/blob/${revision}/${path}`;
     const exampleImage = record.example_image?.path || '';
+    const heroFile = String(record.hero_visual?.file || '');
+    const heroName = heroFile ? heroFile.split('/').pop() : '';
+    const heroCover = heroName ? `assets/models/pending-heroes/${heroName}` : '';
     const platformDownloads = new Map();
     const platformConfigs = new Map();
     const groups = variantGroups(record).map(group => {
@@ -448,14 +482,23 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
         description: record.description?.zh || '',
         descriptionEn: record.description?.en || '',
         platforms: [group.platform],
-        coverImage: exampleImage ? `https://raw.githubusercontent.com/D-Robotics/rdk_model_zoo/${revision}/${exampleImage}` : 'assets/pending-cover.svg',
+        coverImage: heroCover || (exampleImage ? `https://raw.githubusercontent.com/D-Robotics/rdk_model_zoo/${revision}/${exampleImage}` : 'assets/pending-cover.svg'),
+        ...(heroCover ? {
+          heroProvenance: {
+            kind: record.hero_visual.kind,
+            input: record.hero_visual.input,
+            predictionsSource: record.hero_visual.predictions_source || record.hero_visual.input,
+            revision,
+            runtime: 'display-composition',
+          },
+        } : {}),
         sourceInput: record.source_input ? {
           format: record.source_input.format || '',
           dtype: record.source_input.dtype || '',
           layout: record.source_input.layout || '',
           shape: record.source_input.shape || '',
         } : null,
-        coverLabel: exampleImage ? '示例图' : '封面待补充',
+        coverLabel: heroCover ? '参考结果' : (exampleImage ? '示例图' : '封面待补充'),
         sample: `${record.id}/${group.modelSize}`,
         source: sourceUrl,
         sourceType: 'repository',
@@ -480,7 +523,12 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
         })),
         usage: (record.usage || []).flatMap(item => item.lines || []),
         usageSource: record.usage?.[0]?.source ? blobUrl(record.usage[0].source) : '',
-        quickstart: quickstartForRecord(record, group.platform),
+        quickstart: scopeQuickstart(
+          quickstartForRecord(record, group.platform),
+          group.label,
+          selectedDownloads.length > 0,
+          Boolean(downloadIsSpecific.get(group.platform)),
+        ),
         documentedDownloads: selectedDownloads.map(item => ({
           filename: item.filename,
           url: item.url,
@@ -495,4 +543,4 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
   return models;
 }
 
-export { buildPendingModels, variantGroups, annotate, quickstartForUsage };
+export { buildPendingModels, variantGroups, annotate, quickstartForUsage, scopeQuickstart };

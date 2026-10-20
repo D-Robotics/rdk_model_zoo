@@ -789,6 +789,17 @@ if (technicalSelection) {
   await writeFile(resolve(outputRoot, 'technical-selection.json'), `${JSON.stringify(technicalSelection, null, 2)}\n`, 'utf8');
 }
 
+const pendingHeroSource = resolve(webRoot, 'release', 'assets', 'pending-heroes');
+const pendingHeroDest = resolve(outputRoot, 'assets', 'models', 'pending-heroes');
+const pendingHeroNames = [...new Set(models
+  .map(model => model.coverImage || '')
+  .filter(cover => cover.startsWith('assets/models/pending-heroes/'))
+  .map(cover => basename(cover)))];
+if (pendingHeroNames.length) await mkdir(pendingHeroDest, { recursive: true });
+for (const name of pendingHeroNames) {
+  await cp(resolve(pendingHeroSource, name), resolve(pendingHeroDest, name));
+}
+
 await writeFile(resolve(outputRoot, 'data.js'), `window.MODEL_DATA = ${JSON.stringify(data, null, 2)};\n`, 'utf8');
 await writeFile(
   resolve(outputRoot, 'model-properties.js'),

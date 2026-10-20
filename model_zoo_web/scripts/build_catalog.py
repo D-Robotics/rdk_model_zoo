@@ -620,6 +620,80 @@ def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> Non
         for field in present:
             _require_in_text(require_string(entry[field], f"{relative_source}.source_input.{field}"), text, f"{relative_source}.source_input.{field}")
 
+    if "hero_visual" in record:
+        _validate_hero_visual(record, relative_source, revision, text_of)
+
+
+def _validate_hero_visual(record: dict[str, Any], relative_source: str, revision: str, text_of) -> None:
+    """A pending hero is either a crop of a pinned result image or a panel whose words are quoted from it."""
+    label = f"{relative_source}.hero_visual"
+    entry = require_mapping(record.get("hero_visual"), label)
+    allowed = {"file", "kind", "input", "predictions_source", "runtime", "quote", "labels", "scores", "crop", "note"}
+    unknown = sorted(set(entry) - allowed)
+    if unknown:
+        raise CatalogError(f"{label} has unknown fields: {', '.join(unknown)}")
+    kind = require_string(entry.get("kind"), f"{label}.kind")
+    if kind not in {"classification-panel", "result-crop"}:
+        raise CatalogError(f"{label}.kind must be classification-panel or result-crop")
+    if entry.get("runtime") != "display-composition":
+        raise CatalogError(f"{label}.runtime must be display-composition")
+    image = validate_evidence_path(entry.get("input"), f"{label}.input")
+    suffix = PurePosixPath(image).suffix.lower()
+    if suffix not in {".jpg", ".jpeg", ".png", ".webp"}:
+        raise CatalogError(f"{label}.input must be an image")
+    found = _ls_tree(revision, image)
+    if found is None or found[1] != "blob":
+        raise CatalogError(f"{label}.input is not a file at {revision}: {image}")
+    source = validate_evidence_path(entry.get("predictions_source"), f"{label}.predictions_source")
+    hero_file = require_string(entry.get("file"), f"{label}.file")
+    hero_path = PurePosixPath(hero_file)
+    if hero_path.is_absolute() or ".." in hero_path.parts or hero_path.parts[:4] != (
+        "model_zoo_web", "release", "assets", "pending-heroes",
+    ) or hero_path.suffix.lower() != ".webp":
+        raise CatalogError(f"{label}.file must be a webp under model_zoo_web/release/assets/pending-heroes/")
+    if not (ROOT / hero_file).is_file():
+        raise CatalogError(f"{label}.file is missing: {hero_file}")
+    if kind == "result-crop":
+        if source != image:
+            raise CatalogError(f"{label}.predictions_source must be the cropped result image")
+        if "labels" in entry or "scores" in entry or "quote" in entry:
+            raise CatalogError(f"{label} result crop must not add labels")
+        crop = entry.get("crop")
+        if not isinstance(crop, list) or len(crop) != 4 or not all(isinstance(item, int) and item >= 0 for item in crop):
+            raise CatalogError(f"{label}.crop must be four non-negative integers")
+        if crop[2] <= crop[0] or crop[3] <= crop[1]:
+            raise CatalogError(f"{label}.crop must be a non-empty box")
+        return
+    quote = require_string(entry.get("quote"), f"{label}.quote")
+    _require_in_text(quote, text_of(source, f"{label}.predictions_source"), f"{label}.quote")
+    labels = entry.get("labels")
+    if not isinstance(labels, list) or not labels:
+        raise CatalogError(f"{label}.labels must list the quoted classes")
+    cursor = 0
+    for index, item in enumerate(labels):
+        text = require_string(item, f"{label}.labels[{index}]")
+        found_at = quote.find(text, cursor)
+        if found_at < 0:
+            raise CatalogError(f"{label}.labels[{index}] is not in the quote in order")
+        cursor = found_at + len(text)
+    scores = entry.get("scores", [])
+    if scores is None:
+        scores = []
+    if not isinstance(scores, list):
+        raise CatalogError(f"{label}.scores must be a list")
+    if scores and len(scores) != len(labels):
+        raise CatalogError(f"{label}.scores must align with labels")
+    for index, score in enumerate(scores):
+        score_text = require_string(score, f"{label}.scores[{index}]")
+        if score_text not in quote:
+            raise CatalogError(f"{label}.scores[{index}] is not in the quote")
+        try:
+            value = float(score_text)
+        except ValueError as exc:
+            raise CatalogError(f"{label}.scores[{index}] must be a decimal copied from the quote") from exc
+        if not 0 <= value <= 1:
+            raise CatalogError(f"{label}.scores[{index}] must be a ratio between 0 and 1")
+
 
 def validate_pending_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]:
     """Identity plus sourced facts. Released artifacts and unsourced measurements are refused."""
@@ -630,6 +704,7 @@ def validate_pending_record(record: dict[str, Any], source_path: Path) -> dict[s
         "facet_tasks", "manifest_tasks", "license", "provider",
         "upstream", "published_variants", "conversion_configs", "inputs", "usage",
         "sourced_benchmarks", "documented_downloads", "example_image", "source_input",
+        "hero_visual",
     }
     for field in PENDING_FORBIDDEN:
         if field in record:

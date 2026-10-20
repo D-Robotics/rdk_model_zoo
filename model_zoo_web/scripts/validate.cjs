@@ -82,7 +82,12 @@ if (preview) {
         if (row.model_stage !== undefined) assert.ok(['float', 'quantized', 'board'].includes(row.model_stage), `${model.id}: unknown model stage`);
         if (row.concurrency !== undefined) assert.ok(Number.isInteger(row.concurrency) && row.concurrency > 0, `${model.id}: concurrency must be a positive integer from the source`);
       }
-      if (model.coverImage !== 'assets/pending-cover.svg') {
+      if (model.coverImage.startsWith('assets/models/pending-heroes/')) {
+        assert.equal(model.heroProvenance?.runtime, 'display-composition', `${model.id}: a composed pending hero must record display-composition`);
+        assert.match(model.heroProvenance?.revision || '', /^[0-9a-f]{40}$/, `${model.id}: composed hero needs the pinned revision`);
+        assert.match(model.heroProvenance?.input || '', /^samples\/.+\.(?:jpg|jpeg|png|webp)$/i, `${model.id}: composed hero needs the source image`);
+        assert.ok(model.heroProvenance?.kind, `${model.id}: composed hero needs a kind`);
+      } else if (model.coverImage !== 'assets/pending-cover.svg') {
         assert.match(model.coverImage, /^https:\/\/raw\.githubusercontent\.com\/D-Robotics\/rdk_model_zoo\/[0-9a-f]{40}\//, `${model.id}: pending cover must be a file at the pinned revision`);
       }
       for (const download of model.documentedDownloads || []) {

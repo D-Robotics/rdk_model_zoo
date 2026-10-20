@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { quickstartForUsage } from '../pending-preview.mjs';
+import { quickstartForUsage, scopeQuickstart } from '../pending-preview.mjs';
 
 const revision = '7a97c1780b0cfa131ff0007d662e255e5e41c12e';
 const repoRoot = fileURLToPath(new URL('../../..', import.meta.url));
@@ -39,6 +39,29 @@ test('quick start commands are the pinned README text, including continuations',
     '  --label-file datasets/imagenet/imagenet_classes.names',
   ].join('\n'));
   assert.equal(blob('samples/vision/convnext/README.md').includes(convnext.run), true);
+});
+
+test('a sized quick start stays on the released variant it names', () => {
+  const quickstart = {
+    download: 'bash samples/vision/convnext/model/download.sh x5',
+    run: [
+      'python3 samples/vision/convnext/runtime/python/main.py \\',
+      '  --target x5 \\',
+      '  --asset-id x5:convnext:ConvNeXt_atto_224x224_nv12.bin \\',
+      '  --model-path samples/vision/convnext/model/ConvNeXt_atto_224x224_nv12.bin \\',
+    ].join('\n'),
+  };
+  const atto = scopeQuickstart(quickstart, 'ConvNeXt Atto 224x224', true, true);
+  assert.equal(atto.download, quickstart.download);
+  assert.equal(atto.run, quickstart.run);
+  const nano = scopeQuickstart(quickstart, 'ConvNeXt Nano 224x224', false, true);
+  assert.equal(nano.download, '');
+  assert.equal(nano.run, '');
+  const clip = {
+    download: 'python3 samples/vision/clip/model/download.py --target x5',
+    run: 'python3 samples/vision/clip/runtime/python/main.py --target x5',
+  };
+  assert.deepEqual(scopeQuickstart(clip, 'CLIP', false, false), clip);
 });
 
 test('a platform page keeps that platform command and drops dry runs', () => {
