@@ -72,8 +72,11 @@ if (preview) {
         if (row.model_stage !== undefined) assert.ok(['float', 'quantized', 'board'].includes(row.model_stage), `${model.id}: unknown model stage`);
         if (row.concurrency !== undefined) assert.ok(Number.isInteger(row.concurrency) && row.concurrency > 0, `${model.id}: concurrency must be a positive integer from the source`);
       }
-      if (model.coverImage) {
+      if (model.coverImage && model.coverImage !== 'assets/pending-cover.svg') {
         assert.match(model.coverImage, /^https:\/\/raw\.githubusercontent\.com\/D-Robotics\/rdk_model_zoo\/[0-9a-f]{40}\//, `${model.id}: pending cover must be a file at the pinned revision`);
+      }
+      if (model.coverImage === 'assets/pending-cover.svg') {
+        assert(fs.statSync(path.join(root, model.coverImage)).size > 0, `${model.id}: pending placeholder cover is missing`);
       }
       for (const download of model.documentedDownloads || []) {
         assert.match(download.url || '', /^https:\/\//, `${model.id}: documented download must be HTTPS`);
@@ -144,6 +147,7 @@ walk(path.join(root, 'assets'));
 assert(assetFiles.includes(path.join('rdk-brand', 'logo.png')));
 const allowedAssets = filename =>
   filename.startsWith(`icons${path.sep}`)
+  || filename === 'pending-cover.svg'
   || filename === path.join('rdk-brand', 'logo.png')
   || (preview && filename.startsWith(`models${path.sep}`));
 assert(

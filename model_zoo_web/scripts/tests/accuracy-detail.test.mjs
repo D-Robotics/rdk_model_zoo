@@ -221,3 +221,84 @@ test('technical Pose and OBB models link to the shared sample without exposing c
     assert.doesNotMatch(html, /huggingface\.co/);
   }
 });
+
+test('pending detail uses the published task tiles, parameter rows, and sidebar links', () => {
+  const source = 'https://github.com/D-Robotics/rdk_model_zoo/tree/abc/samples/vision/convnext';
+  const model = {
+    id: 'convnext-cls-nano-x5',
+    catalogId: 'convnext/convnext/cls',
+    name: 'ConvNeXt',
+    variantName: 'ConvNeXt Nano',
+    task: '图像分类',
+    taskId: 'image-classification',
+    description: 'ConvNeXt 面向 ImageNet-1k 分类。',
+    source,
+    sourceType: 'repository',
+    releaseStatus: 'data-pending',
+    dataPending: true,
+    hardware: 'RDK X5',
+    licenseName: 'Apache-2.0',
+    licenseUrl: 'https://www.apache.org/licenses/LICENSE-2.0',
+    usageSource: `${source.replace('/tree/', '/blob/')}/README.md`,
+    upstream: [{ kind: 'paper', name: 'arxiv', url: 'https://arxiv.org/abs/2201.03545' }],
+    inputs: [{ format: 'NV12', shape: '[ 224, 224 ]' }],
+    conversions: [{
+      path: 'samples/vision/convnext/conversion/ConvNeXt_nano.yaml',
+      url: 'https://github.com/D-Robotics/rdk_model_zoo/blob/abc/samples/vision/convnext/conversion/ConvNeXt_nano.yaml',
+      runtimeInput: 'nv12',
+      trainInput: 'rgb',
+      trainLayout: 'NCHW',
+      resolution: '224x224',
+    }],
+    benchmark: {
+      conditionOptions: [{ key: 'single', concurrency: 1, label: '单线程' }],
+      performance: [{ metric: 'latency', value: 5.71, unit: 'ms', conditionKey: 'single', condition: 'single-thread', source: 'https://example.invalid/bench' }],
+      accuracy: [{ metric: 'top-1', value: 71.75, unit: 'percent', model_stage: 'quantized', conditionKey: 'single', source: 'https://example.invalid/acc' }],
+      stages: [],
+      extras: [{ metric: 'bpu_usage', value: 80, unit: 'percent', conditionKey: 'single' }],
+    },
+  };
+  const html = renderDetail(model);
+  for (const label of ['参数量', '浮点计算量', '源模型输入', 'Runtime 输入', '量化精度']) {
+    assert.match(html, new RegExp(`<dt>${label}</dt>`));
+  }
+  assert.match(html, /RGB · NCHW · 224 × 224/);
+  assert.match(html, /NV12 · 224 × 224/);
+  assert.doesNotMatch(html, /记录的输入|转换输入|参数待补充|<h2>上游<\/h2>|<h2>转换配置<\/h2>|<h2>运行命令<\/h2>|<h2>文档中的下载<\/h2>/);
+  assert.match(html, /模型仓库/);
+  assert.match(html, /运行文档/);
+  assert.match(html, /\/tree\/abc\/samples\/vision\/convnext\/conversion/);
+  assert.match(html, />论文/);
+  assert.doesNotMatch(html, /data-open-download/);
+
+  const performanceRoot = { innerHTML: '' };
+  const root = {
+    addEventListener() {},
+    querySelectorAll: () => [],
+    querySelector: selector => {
+      if (selector === '#benchmark-condition') return { dataset: { value: 'single' }, addEventListener() {} };
+      if (selector === '#detail-performance') return performanceRoot;
+      return null;
+    },
+  };
+  const context = {
+    window: { HubI18n: { locale: 'zh', apply() {} } },
+    document: { addEventListener() {}, documentElement: { clientWidth: 1200, classList: { add() {}, remove() {} } } },
+    AbortController,
+    console,
+  };
+  vm.runInNewContext(detailSource, context);
+  context.window.ModelDetail.bind(root, model, [model], { release: { compatibility: { hardware: 'RDK X5' } } });
+  const tiles = performanceRoot.innerHTML;
+  assert.match(tiles, /Top-1 准确率/);
+  assert.match(tiles, /Top-5 准确率/);
+  assert.match(tiles, /检测 mAP50–95|Runtime 延迟/);
+  assert.doesNotMatch(tiles, /bpu_usage/);
+  const e2e = tiles.split('aria-label="端到端流水线条件">')[1].split('</span></button>')[0];
+  for (const label of ['实现', 'CPU 线程', '流水线', 'Runtime 提交', '前处理', '后处理', '端到端吞吐量']) {
+    assert.match(e2e, new RegExp(label));
+  }
+  assert.doesNotMatch(e2e, /条件|来源|文档说明|Runtime 延迟/);
+  assert.match(tiles, /aria-label="Runtime 延迟：查看来源和条件"/);
+  assert.match(tiles, /single-thread/);
+});

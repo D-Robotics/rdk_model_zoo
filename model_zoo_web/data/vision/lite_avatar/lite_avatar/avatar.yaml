@@ -7,8 +7,8 @@ source: lite_avatar
 family: lite_avatar
 task: avatar
 description:
-  zh: 本示例面向 S100、S100P 与 S600 提供一个 Python 运行时。`LiteAvatarPipeline` 类把四个已发布 HBM 产物串成每个阶段清晰可读的 `preprocess → infer → postprocess` 流程与一次整段音频的 `predict`：音频前端提取 Paraformer 特征（Kaldi fbank、7/6 低帧率堆叠、CMVN），音频编码器输出 50 路堆叠隐层状态， audio2mouth 把滑动的 30 帧窗口映射为嘴部参数（交叉淡化与 Butterworth 平滑），人脸解码器以参考帧特征金字塔为条件逐帧渲染。 每帧按羽化掩膜合成到背景循环帧上，交给板端 VPU 的 H.264 编码器； FFmpeg 把输入音频以 AAC 混入 MP4，`ffprobe` 校验交付文件确实同时持有两条轨道。完整 CLI 与 API 参考见 [运行时文档](runtime/python/README_cn.md)。
-  en: 'The sample ships one Python runtime for S100, S100P and S600. Each frame is composited over the background loop with the feathered mask and handed to the board''s VPU H.264 encoder. FFmpeg muxes the input audio as AAC into the MP4, and `ffprobe` verifies the delivered file holds both tracks. Full CLI and API reference: [runtime/python/README.md](runtime/python/README.md).'
+  zh: 本示例面向 S100、S100P 与 S600 提供一个 Python 运行时。LiteAvatarPipeline 类把四个已发布 HBM 产物串成每个阶段清晰可读的 preprocess → infer → postprocess 流程与一次整段音频的 predict：音频前端提取 Paraformer 特征（Kaldi fbank、7/6 低帧率堆叠、CMVN），音频编码器输出 50 路堆叠隐层状态， audio2mouth 把滑动的 30 帧窗口映射为嘴部参数（交叉淡化与 Butterworth 平滑），人脸解码器以参考帧特征金字塔为条件逐帧渲染。 每帧按羽化掩膜合成到背景循环帧上，交给板端 VPU 的 H.264 编码器； FFmpeg 把输入音频以 AAC 混入 MP4，ffprobe 校验交付文件确实同时持有两条轨道。完整 CLI 与 API 参考见 运行时文档。
+  en: 'The sample ships one Python runtime for S100, S100P and S600. Each frame is composited over the background loop with the feathered mask and handed to the board''s VPU H.264 encoder. FFmpeg muxes the input audio as AAC into the MP4, and ffprobe verifies the delivered file holds both tracks. Full CLI and API reference is in the runtime document.'
 sample_path: samples/vision/lite_avatar
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
 license:
