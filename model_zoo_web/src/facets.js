@@ -8,7 +8,9 @@
       ['pose-estimation', '姿态估计'], ['promptable-image-segmentation', '提示式分割'],
       ['monocular-depth-estimation', '深度估计'], ['multi-object-tracking', '目标跟踪'],
       ['image-embedding', '视觉特征提取'], ['ocr-text-detection', '文字检测'],
-      ['ocr-text-recognition', '文字识别'],
+      ['ocr-text-recognition', '文字识别'], ['license-plate-recognition', '车牌识别'],
+      ['portrait-matting', '人像抠图'], ['video-action-classification', '视频动作分类'],
+      ['audio-driven-talking-avatar', '语音驱动数字人'],
     ] },
     { id: 'llm', label: '语言模型', tasks: [['text-generation', '文本生成']] },
     { id: 'robotics', label: '机器人', tasks: [

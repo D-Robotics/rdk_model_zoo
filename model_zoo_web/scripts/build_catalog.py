@@ -26,14 +26,25 @@ CATALOG_PATH = BUILD_ROOT / "catalog.json"
 META_PATH = BUILD_ROOT / "catalog.meta.json"
 OSS_HOST = "rdk-model-zoo.oss-cn-beijing.aliyuncs.com"
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 # Samples live on develop; the Web branch does not have to carry their source. When a sample
 # directory is absent from this checkout, it is verified against this git ref instead.
 SAMPLE_REF_ENV = "MODEL_ZOO_SAMPLE_REF"
 SAMPLE_REF_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$")
 BUILD_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 SIZE_ORDER = {name: index for index, name in enumerate(("n", "s", "m", "l", "x"))}
+PLATFORM_ORDER = {name: index for index, name in enumerate(("x5", "s100", "s100p", "s600"))}
+KNOWN_PLATFORMS = set(PLATFORM_ORDER)
 ACCURACY_SCHEMA_PATH = WEB_ROOT / "accuracy-metrics.json"
 ACCURACY_SCHEMA = json.loads(ACCURACY_SCHEMA_PATH.read_text(encoding="utf-8"))
+TASK_REGISTRY_PATH = WEB_ROOT / "task-registry.json"
+TASK_REGISTRY = json.loads(TASK_REGISTRY_PATH.read_text(encoding="utf-8"))
+TASK_FACET_IDS = {item["facet_id"] for item in TASK_REGISTRY["tasks"].values()}
+# A pending record may name these boards only. Measurements stay out until the
+# record drops `registration: pending` and passes the released-record validator.
+PENDING_FORBIDDEN = (
+    "variants", "accuracy", "performance", "artifact", "assets", "benchmarks", "cover",
+)
 
 
 class CatalogError(ValueError):
@@ -92,28 +103,95 @@ def require_nonnegative_int(value: Any, label: str) -> int:
     return value
 
 
-def validate_sample_path(value: Any, label: str) -> str:
+def _safe_samples_path(value: Any, label: str) -> str:
     sample_path = require_string(value, label)
     pure_path = PurePosixPath(sample_path)
-    if pure_path.is_absolute() or ".." in pure_path.parts or pure_path.parts[0] != "samples":
+    if pure_path.is_absolute() or ".." in pure_path.parts or not pure_path.parts or pure_path.parts[0] != "samples":
         raise CatalogError(f"{label} must be a safe path below samples/")
-    if (ROOT / sample_path).is_dir():
-        return sample_path
+    return sample_path
+
+
+def _git_ref() -> str:
     ref = os.environ.get(SAMPLE_REF_ENV, "")
+    if ref and not SAMPLE_REF_RE.match(ref):
+        raise CatalogError(f"{SAMPLE_REF_ENV} is not a plain git ref: {ref!r}")
+    return ref
+
+
+def _ls_tree(ref: str, relative_path: str) -> tuple[str, str] | None:
+    listed = subprocess.run(
+        ["git", "-C", str(ROOT), "ls-tree", ref, "--", relative_path],
+        capture_output=True, text=True, check=False,
+    )
+    if listed.returncode != 0:
+        return None
+    lines = [line for line in listed.stdout.splitlines() if line.strip()]
+    if len(lines) != 1:
+        return None
+    meta, _, listed_path = lines[0].partition("\t")
+    if listed_path != relative_path:
+        return None
+    mode, object_type, _object_id = meta.split()
+    return mode, object_type
+
+
+def lookup_sample_entry(sample_path: str, label: str) -> str:
+    """Return ``directory`` or ``gitlink`` for a sample that exists locally or on the sample ref."""
+    if (ROOT / sample_path).is_dir():
+        return "directory"
+    ref = _git_ref()
     if not ref:
         raise CatalogError(
             f"{label} does not exist: {sample_path} "
             f"(set {SAMPLE_REF_ENV} to a git ref such as origin/develop to verify it there)"
         )
-    if not SAMPLE_REF_RE.match(ref):
-        raise CatalogError(f"{SAMPLE_REF_ENV} is not a plain git ref: {ref!r}")
+    found = _ls_tree(ref, sample_path)
+    if found == ("040000", "tree"):
+        return "directory"
+    if found == ("160000", "commit"):
+        return "gitlink"
+    raise CatalogError(f"{label} does not exist locally or in {ref}: {sample_path}")
+
+
+def validate_sample_path(value: Any, label: str) -> str:
+    sample_path = _safe_samples_path(value, label)
+    if lookup_sample_entry(sample_path, label) != "directory":
+        raise CatalogError(f"{label} is not a sample directory: {sample_path}")
+    return sample_path
+
+
+def validate_evidence_path(value: Any, label: str) -> str:
+    evidence = require_string(value, label)
+    pure_path = PurePosixPath(evidence)
+    if pure_path.is_absolute() or ".." in pure_path.parts or len(pure_path.parts) < 2:
+        raise CatalogError(f"{label} must be a safe repository path")
+    if not (evidence.startswith("docs/release/") or evidence.startswith("samples/")):
+        raise CatalogError(f"{label} must point at docs/release/ or samples/")
+    if (ROOT / evidence).exists():
+        return evidence
+    ref = _git_ref()
+    if not ref:
+        raise CatalogError(
+            f"{label} does not exist: {evidence} "
+            f"(set {SAMPLE_REF_ENV} to a git ref such as origin/develop to verify it there)"
+        )
+    found = _ls_tree(ref, evidence)
+    if found is None or found[1] not in {"blob", "tree"}:
+        raise CatalogError(f"{label} does not exist locally or in {ref}: {evidence}")
+    return evidence
+
+
+def validate_commit(value: Any, label: str) -> str:
+    revision = require_string(value, label)
+    if not COMMIT_RE.fullmatch(revision):
+        raise CatalogError(f"{label} must be a full 40-character commit SHA")
     kind = subprocess.run(
-        ["git", "-C", str(ROOT), "cat-file", "-t", f"{ref}:{sample_path}"],
+        ["git", "-C", str(ROOT), "cat-file", "-t", revision],
         capture_output=True, text=True, check=False,
     )
-    if kind.returncode != 0 or kind.stdout.strip() != "tree":
-        raise CatalogError(f"{label} does not exist locally or in {ref}: {sample_path}")
-    return sample_path
+    if kind.returncode != 0 or kind.stdout.strip() != "commit":
+        raise CatalogError(f"{label} is not a commit in this repository: {revision}")
+    return revision
 
 
 def validate_artifact(
@@ -299,10 +377,100 @@ def validate_accuracy(value: Any, task: str, label: str) -> None:
                 raise CatalogError(f"{metric_label} must be a ratio between 0 and 1")
 
 
+def validate_pending_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]:
+    """Identity-only registration. Measurements, artifacts and covers are refused here."""
+    relative_source = source_path.relative_to(ROOT).as_posix()
+    allowed = {
+        "schema_version", "registration", "id", "name", "domain", "source", "family", "task",
+        "description", "sample_path", "sample_revision", "sample_kind", "supported_platforms",
+        "facet_tasks", "manifest_tasks", "license", "provider",
+    }
+    for field in PENDING_FORBIDDEN:
+        if field in record:
+            raise CatalogError(
+                f"{relative_source}: pending records must not include {field}; "
+                "remove registration: pending when the released record is complete"
+            )
+    unknown = sorted(set(record) - allowed)
+    if unknown:
+        raise CatalogError(f"{relative_source}: unknown pending fields: {', '.join(unknown)}")
+    record_id = require_string(record.get("id"), f"{relative_source}.id")
+    domain = require_string(record.get("domain"), f"{relative_source}.domain")
+    source = require_string(record.get("source"), f"{relative_source}.source")
+    family = require_string(record.get("family"), f"{relative_source}.family")
+    task = require_string(record.get("task"), f"{relative_source}.task")
+    require_string(record.get("name"), f"{relative_source}.name")
+    if task not in TASK_REGISTRY["tasks"]:
+        known = ", ".join(sorted(TASK_REGISTRY["tasks"]))
+        raise CatalogError(f"{relative_source}.task must be one of {known}")
+    validate_localized_text(record.get("description"), f"{relative_source}.description")
+    expected_id = f"{source}/{family}/{task}"
+    if record_id != expected_id:
+        raise CatalogError(f"{relative_source}.id must be {expected_id}")
+    expected_source = DATA_ROOT / domain / source / family / f"{task}.yaml"
+    if source_path != expected_source:
+        raise CatalogError(f"{relative_source}: expected path {expected_source.relative_to(ROOT)}")
+
+    sample_path = _safe_samples_path(record.get("sample_path"), f"{relative_source}.sample_path")
+    entry_kind = lookup_sample_entry(sample_path, f"{relative_source}.sample_path")
+    declared_kind = record.get("sample_kind", "directory")
+    if declared_kind not in {"directory", "gitlink"}:
+        raise CatalogError(f"{relative_source}.sample_kind must be directory or gitlink")
+    if declared_kind != entry_kind:
+        raise CatalogError(
+            f"{relative_source}.sample_kind is {declared_kind} but {sample_path} is a {entry_kind}"
+        )
+    validate_commit(record.get("sample_revision"), f"{relative_source}.sample_revision")
+
+    if "license" in record:
+        license_info = require_mapping(record.get("license"), f"{relative_source}.license")
+        require_string(license_info.get("name"), f"{relative_source}.license.name")
+        license_url = require_string(license_info.get("url"), f"{relative_source}.license.url")
+        parsed_license_url = urlparse(license_url)
+        if parsed_license_url.scheme != "https" or not parsed_license_url.netloc:
+            raise CatalogError(f"{relative_source}.license.url must be an absolute HTTPS URL")
+    if "provider" in record:
+        require_string(record.get("provider"), f"{relative_source}.provider")
+
+    platforms = require_list(record.get("supported_platforms"), f"{relative_source}.supported_platforms")
+    seen_platforms: set[str] = set()
+    for index, platform_value in enumerate(platforms):
+        platform_label = f"{relative_source}.supported_platforms[{index}]"
+        platform_record = require_mapping(platform_value, platform_label)
+        platform = require_string(platform_record.get("platform"), f"{platform_label}.platform")
+        if platform not in KNOWN_PLATFORMS:
+            raise CatalogError(f"{platform_label}.platform must be one of {', '.join(sorted(KNOWN_PLATFORMS))}")
+        if platform in seen_platforms:
+            raise CatalogError(f"{relative_source}: duplicate supported platform {platform}")
+        seen_platforms.add(platform)
+        validate_evidence_path(platform_record.get("evidence"), f"{platform_label}.evidence")
+
+    facet_tasks = record.get("facet_tasks", [TASK_REGISTRY["tasks"][task]["facet_id"]])
+    if not isinstance(facet_tasks, list) or not facet_tasks:
+        raise CatalogError(f"{relative_source}.facet_tasks must be a non-empty list")
+    for index, facet_id in enumerate(facet_tasks):
+        if facet_id not in TASK_FACET_IDS:
+            raise CatalogError(f"{relative_source}.facet_tasks[{index}] is not a registered facet")
+    manifest_tasks = record.get("manifest_tasks", [])
+    if not isinstance(manifest_tasks, list) or any(not isinstance(item, str) or not item.strip() for item in manifest_tasks):
+        raise CatalogError(f"{relative_source}.manifest_tasks must be a list of strings")
+
+    normalized = copy.deepcopy(record)
+    normalized["source_file"] = relative_source
+    normalized["variants"] = []
+    normalized["supported_platforms"].sort(key=lambda item: PLATFORM_ORDER[item["platform"]])
+    return normalized
+
+
 def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]:
     relative_source = source_path.relative_to(ROOT).as_posix()
     if record.get("schema_version") != 1:
         raise CatalogError(f"{relative_source}: schema_version must be 1")
+    registration = record.get("registration")
+    if registration == "pending":
+        return validate_pending_record(record, source_path)
+    if registration is not None:
+        raise CatalogError(f"{relative_source}.registration must be pending or omitted")
 
     record_id = require_string(record.get("id"), f"{relative_source}.id")
     domain = require_string(record.get("domain"), f"{relative_source}.domain")
@@ -499,6 +667,7 @@ def build_catalog() -> tuple[bytes, bytes]:
     records: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
     release_count = 0
+    pending_count = 0
     for source_path in source_paths:
         with source_path.open(encoding="utf-8") as handle:
             record = require_mapping(yaml.safe_load(handle), source_path.relative_to(ROOT).as_posix())
@@ -506,7 +675,10 @@ def build_catalog() -> tuple[bytes, bytes]:
         if normalized["id"] in seen_ids:
             raise CatalogError(f"duplicate model id: {normalized['id']}")
         seen_ids.add(normalized["id"])
-        release_count += sum(len(variant["platforms"]) for variant in normalized["variants"])
+        if normalized.get("registration") == "pending":
+            pending_count += 1
+        else:
+            release_count += sum(len(variant["platforms"]) for variant in normalized["variants"])
         records.append(normalized)
 
     records.sort(key=lambda item: item["id"])
@@ -515,6 +687,7 @@ def build_catalog() -> tuple[bytes, bytes]:
         "source": "model_zoo_web/data",
         "model_count": len(records),
         "release_count": release_count,
+        "pending_count": pending_count,
         "models": records,
     }
     catalog_bytes = (json.dumps(catalog, ensure_ascii=False, indent=2) + "\n").encode()
@@ -526,6 +699,7 @@ def build_catalog() -> tuple[bytes, bytes]:
         "bytes": len(catalog_bytes),
         "model_count": len(records),
         "release_count": release_count,
+        "pending_count": pending_count,
         "generator": "model_zoo_web/scripts/build_catalog.py",
     }
     metadata_bytes = (json.dumps(metadata, ensure_ascii=False, indent=2) + "\n").encode()

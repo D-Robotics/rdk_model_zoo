@@ -12,6 +12,7 @@ import {
 import { selectTechnicalPassedEntries } from './technical-passed-selection.mjs';
 import { stampAssetVersions } from './asset-versions.mjs';
 import { loadVerifiedPreviewDownloads, previewDownloadAssets } from './preview-downloads.mjs';
+import { readFileSync } from 'node:fs';
 import { loadInferenceTaskBanners } from './task-banner-assets.mjs';
 
 const scriptRoot = dirname(fileURLToPath(import.meta.url));
@@ -358,6 +359,11 @@ const loadOeData = async (value, label) => {
 const usedModelInputs = new Set();
 const usedReleaseInputs = new Set();
 
+const taskRegistry = JSON.parse(readFileSync(resolve(webRoot, 'task-registry.json'), 'utf8'));
+const pendingIds = new Set((fullCatalog.models || [])
+  .filter(record => record.registration === 'pending')
+  .map(record => record.id));
+
 const taskMetadata = {
   detect: { id: 'object-detection', label: '目标检测', description: 'COCO 目标检测模型' },
   classify: { id: 'image-classification', label: '图像分类', description: '图像分类模型' },
@@ -396,6 +402,7 @@ await mkdir(assetsRoot, { recursive: true });
 await mkdir(reportsRoot, { recursive: true });
 
 for (const record of catalog.models || []) {
+  if (record.registration === 'pending') continue;
   const modelInput = inputs.models[record.id];
   if (!modelInput || typeof modelInput !== 'object' || Array.isArray(modelInput)) {
     throw new Error(`MODEL_ZOO_INPUTS.models is missing ${record.id}`);
@@ -609,6 +616,7 @@ for (const record of catalog.models || []) {
         descriptionEn: presentationOverrides.models[record.id]?.en
           || record.description?.en || `${record.family} ${record.task} model.`,
         platforms: [platform],
+        hardware: `RDK ${platform}`,
         coverImage: `assets/models/${coverFilename}`,
         coverLabel: inferenceCover?.cover_label || modelInput.cover_label || '模型参考推理结果',
         sample: `${record.source}/${record.family}/${record.task}/${variant.size}`,
@@ -718,9 +726,55 @@ for (const record of catalog.models || []) {
   }
 }
 
+const platformLabel = value => String(value || '').toUpperCase();
+if (!candidatePreview) for (const record of fullCatalog.models || []) {
+  if (record.registration !== 'pending') continue;
+  const taskInfo = taskRegistry.tasks[record.task];
+  if (!taskInfo) throw new Error(`Pending model ${record.id} uses unknown task ${record.task}`);
+  const facetTasks = Array.isArray(record.facet_tasks) && record.facet_tasks.length
+    ? record.facet_tasks
+    : [taskInfo.facet_id];
+  const revision = record.sample_revision;
+  const sourceUrl = `${officialRepositoryUrl}/tree/${revision}/${record.sample_path}`;
+  for (const supported of record.supported_platforms || []) {
+    const platform = platformLabel(supported.platform);
+    const id = safeId(record.source, record.family, record.task, supported.platform);
+    models.push({
+      id,
+      catalogId: record.id,
+      name: record.name,
+      variantName: record.name,
+      family: record.family,
+      modelSize: '',
+      releaseStatus: 'data-pending',
+      dataPending: true,
+      releasePlatform: platform,
+      hardware: `RDK ${platform}`,
+      task: taskInfo.label_zh,
+      taskId: taskInfo.facet_id,
+      tasks: facetTasks,
+      description: record.description?.zh || '',
+      descriptionEn: record.description?.en || '',
+      platforms: [platform],
+      coverImage: '',
+      coverLabel: '数据待补充',
+      sample: record.id,
+      source: sourceUrl,
+      sourceType: 'repository',
+      licenseName: record.license?.name || '',
+      licenseUrl: record.license?.url || '',
+      assets: [],
+      benchmark: null,
+    });
+  }
+}
+
 if (!models.length) throw new Error('The samples-only catalog contains no released models');
 const knownInputModelIds = new Set((fullCatalog.models || []).map(record => record.id));
 for (const modelId of Object.keys(inputs.models)) {
+  if (pendingIds.has(modelId)) {
+    throw new Error(`MODEL_ZOO_INPUTS must not attach a cover to pending model ${modelId}`);
+  }
   if (!knownInputModelIds.has(modelId)) throw new Error(`MODEL_ZOO_INPUTS references unknown model ${modelId}`);
   if (!technicalPassedPreview && !usedModelInputs.has(modelId)) {
     throw new Error(`MODEL_ZOO_INPUTS references unknown model ${modelId}`);
@@ -788,6 +842,7 @@ await writeFile(
 await stampAssetVersions(outputRoot);
 
 const localEntryCount = models.filter(model => localCandidateIds.has(model.catalogId)).length;
+const pendingEntryCount = models.filter(model => model.dataPending).length;
 console.log(localCandidate
   ? `Built local candidate preview with ${models.length - localEntryCount} released and ${localEntryCount} local candidate model entries.`
-  : `Built local Model Zoo ${candidatePreview ? 'candidate preview' : 'preview'} with ${models.length} ${candidatePreview ? 'candidate' : 'released'} model entries.`);
+  : `Built local Model Zoo ${candidatePreview ? 'candidate preview' : 'preview'} with ${models.length - pendingEntryCount} ${candidatePreview ? 'candidate' : 'released'} model entries and ${pendingEntryCount} pending entries.`);

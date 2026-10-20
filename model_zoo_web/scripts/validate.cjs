@@ -62,6 +62,16 @@ if (preview) {
   assert.equal(modelIds.size, data.models.length, 'Model ids must be unique');
 
   for (const model of data.models) {
+    if (model.releaseStatus === 'data-pending') {
+      assert.equal(model.dataPending, true, `${model.id}: pending models must set dataPending`);
+      assert.deepEqual(Array.from(model.assets), [], `${model.id}: pending models must not publish artifacts`);
+      assert.equal(model.benchmark, null, `${model.id}: pending models must not publish benchmarks`);
+      assert.equal(model.coverImage, '', `${model.id}: pending models must not publish a cover`);
+      assert.ok(model.platforms?.length, `${model.id}: pending models need a supported board`);
+      assert.match(model.source || '', /^https:\/\/github\.com\/D-Robotics\/rdk_model_zoo\/tree\/[0-9a-f]{40}\/samples\//, `${model.id}: pending models must link a sample tree`);
+      if (model.licenseUrl) assert.match(model.licenseUrl, /^https:\/\//, `${model.id}: licenseUrl must use HTTPS`);
+      continue;
+    }
     assert(model.coverImage, `${model.id}: coverImage is required`);
     assert(fs.statSync(path.join(root, model.coverImage)).size > 0, `${model.id}: cover image is missing`);
     assert(model.licenseName, `${model.id}: licenseName is required`);
