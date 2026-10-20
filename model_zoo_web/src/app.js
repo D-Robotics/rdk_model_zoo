@@ -79,8 +79,9 @@
     const thumb = model.coverImage
       ? `<img src="${esc(model.coverImage)}" alt="${esc(model.name)}" loading="lazy">`
       : '<span class="pending-placeholder">数据待补充</span>';
+    const pendingThumb = pending && !model.coverImage;
     const badge = pending ? '<span class="pending-badge">数据待补充</span>' : '';
-    return `<article class="model-card${arriving ? ' is-arriving' : ''}${pending ? ' is-pending' : ''}" style="--i:${Math.min(index, 11)}"><a class="gallery-link" href="#model/${esc(openModel.id)}" aria-label="查看 ${esc(model.name)}，${esc(model.task)}" title="${esc(description)}"><div class="thumbnail${pending ? ' is-pending' : ''}" data-image="${esc(model.id)}">${thumb}</div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="card-task">${esc(model.task)}${badge}</p><div class="card-platforms">${platformOrder.map(platform => `<span>${esc(platform)}</span>`).join('')}</div></div></a></article>`;
+    return `<article class="model-card${arriving ? ' is-arriving' : ''}${pending ? ' is-pending' : ''}" style="--i:${Math.min(index, 11)}"><a class="gallery-link" href="#model/${esc(openModel.id)}" aria-label="查看 ${esc(model.name)}，${esc(model.task)}" title="${esc(description)}"><div class="thumbnail${pendingThumb ? ' is-pending' : ''}" data-image="${esc(model.id)}">${thumb}</div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="card-task">${esc(model.task)}${badge}</p><div class="card-platforms">${platformOrder.map(platform => `<span>${esc(platform)}</span>`).join('')}</div></div></a></article>`;
   }
 
   function matchesTask(model) {

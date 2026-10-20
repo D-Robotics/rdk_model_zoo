@@ -57,7 +57,19 @@ metadata:
 - `manifest_tasks`：发布清单里的任务 id，便于和 `docs/release/{x5,s}/models.yaml` 对照
 - `facet_tasks`：这个示例实际覆盖的筛选项 id
 
-待补记录里禁止出现：`variants`、精度、延迟、吞吐、文件大小、SHA256、下载 URL、封面路径、转换报告。这些字段留到删除 `registration: pending` 之后，按完整记录的校验器填写。历史 `benchmarks.yaml` 里的数字是清单事实，不是网页完整基准；登记时不要把它们抄进来。
+待补记录可以带上仓库里已经写明的事实，但每一项都要有 `source`，并且原文能在 `sample_revision` 的那个文件里对上。允许的摘录：
+
+- `upstream`：README 或集成清单里出现的 https 仓库、论文或模型卡链接
+- `license`：原文点名的许可证。官方许可证页可以配已点名的 SPDX 名称；不要配原文没写的许可证
+- `published_variants`：支持表或清单里的变体名
+- `conversion_configs`：`conversion/` 下真实存在的 yaml 或 `mapper_*.py`，以及文件里写明的 march、输入类型和分辨率
+- `inputs`：`docs/release/*/benchmarks.yaml` 某一条里写明的 shape、layout、format
+- `usage`：README 快速体验代码块里的命令原文
+- `sourced_benchmarks`：基准清单里的数字，保留 metric、单位、统计量和条件（包括 “compiler estimate” 这种字样）。这不是本站正式发布基准
+- `documented_downloads`：`docs/release/*/models.yaml` 里已经写出的 https URL。`sha256: null` 不要填成哈希。S 系列只在文件名或 URL 点名具体板卡时写入
+- `example_image`：`test_data` 里适合当示例的图片。架构图和性能截图不要当封面
+
+仍然禁止用完整记录的字段名（`variants`、`accuracy`、`performance`、`assets`、`benchmarks`、`cover`）塞进待补记录。没有精度字段表、制品校验、Runtime 与 C++ 端到端的任务，即使摘录了数字，也保持 `registration: pending`。
 
 ## How to name a supported board
 

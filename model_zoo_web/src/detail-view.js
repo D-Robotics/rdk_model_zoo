@@ -139,6 +139,19 @@
     for (const output of p.componentOutputs || []) rows.push(row(output.name, shape(output.shape)));
     const labels = { image: '图像输入', image_feature: '图像特征', texts: '文本输入', text_features: '文本特征' };
     for (const input of p.interfaces || []) rows.push(row(labels[input.name] || input.name, `${shape(input.shape)} · ${input.dtype}`));
+    if (model.dataPending) {
+      for (const input of model.inputs || []) {
+        const value = [input.format, input.layout, input.shape].filter(Boolean).join(' · ');
+        if (value) rows.push(row('记录的输入', value));
+      }
+      const seen = new Set();
+      for (const config of model.conversions || []) {
+        const value = [config.resolution, config.runtimeInput, config.trainLayout, config.march].filter(Boolean).join(' · ');
+        if (!value || seen.has(value)) continue;
+        seen.add(value);
+        rows.push(row('转换输入', value));
+      }
+    }
     if (!rows.length) rows.push(model.dataPending ? row('模型参数', '参数待补充') : row('输入尺寸', model.shape || '—'));
     return rows.join('');
   }
@@ -171,11 +184,30 @@
     const dialogId = `get-model-${m.id}`;
     const description = window.HubI18n?.locale === 'en' ? (m.descriptionEn || m.description) : m.description;
     const cover = m.coverImage
-      ? `<figure class="mz-demo"><img src="${esc(m.coverImage)}" alt="${esc(m.name + ' · ' + m.coverLabel)}"></figure>`
+      ? `<figure class="mz-demo"><img src="${esc(m.coverImage)}" alt="${esc(m.name + ' · ' + m.coverLabel)}">${m.dataPending ? '<figcaption>示例图</figcaption>' : ''}</figure>`
       : '<figure class="mz-demo is-pending"><div class="pending-placeholder"><span>数据待补充</span></div><figcaption>封面待补充</figcaption></figure>';
+    const sourcedRows = m.sourcedBenchmarks || [];
+    const sourcedTable = sourcedRows.length
+      ? `<div class="mz-sourced-wrap"><table class="mz-sourced"><thead><tr><th>变体</th><th>指标</th><th>数值</th><th>条件</th><th>来源</th></tr></thead><tbody>${sourcedRows.map(item => `<tr><td>${esc(item.variant || '—')}</td><td>${esc(item.metric)}</td><td>${esc(item.value)} ${esc(item.unit)}${item.statistic ? ` (${esc(item.statistic)})` : ''}</td><td>${esc(item.condition || '—')}</td><td>${external(item.source, '记录')}</td></tr>`).join('')}</tbody></table></div><p class="mz-sourced-note">这些数字摘自仓库文档，不是本站正式发布的测量。</p>`
+      : '';
     const benchmarkEmpty = m.dataPending
-      ? `<div class="mz-benchmark-empty"><div><h3>基准数据待补充</h3><p>性能、精度、模型文件和转换报告尚未纳入网页发布。</p></div>${m.source ? external(m.source, '模型仓库') : ''}</div>`
+      ? `${sourcedTable || '<div class="mz-benchmark-empty"><div><h3>基准数据待补充</h3><p>性能、精度、模型文件和转换报告尚未纳入网页发布。</p></div></div>'}${m.source ? external(m.source, '模型仓库') : ''}`
       : `<div class="mz-benchmark-empty"><div><h3>暂无性能汇总</h3></div>${external(m.source + '/evaluator', '查看评测说明')}</div>`;
+    const variantLine = (m.publishedVariants || []).length
+      ? `<p class="mz-sourced-note">已记录变体：${m.publishedVariants.map(name => esc(name)).join('、')}</p>`
+      : '';
+    const upstreamLine = (m.upstream || []).length
+      ? `<section class="mz-section"><h2>上游</h2><div class="mz-resource-links">${m.upstream.map(item => external(item.url, esc(item.name))).join('')}</div></section>`
+      : '';
+    const conversionLine = (m.conversions || []).length
+      ? `<section class="mz-section"><h2>转换配置</h2><div class="mz-resource-links">${m.conversions.map(item => external(item.url, esc(item.path.split('/').pop()))).join('')}</div></section>`
+      : '';
+    const downloadLine = (m.documentedDownloads || []).length
+      ? `<section class="mz-section"><h2>文档中的下载</h2><p class="mz-sourced-note">这些链接写在发布清单里，本站尚未把它们核验为正式制品。</p><div class="mz-resource-links">${m.documentedDownloads.map(item => external(item.url, esc(item.filename))).join('')}</div></section>`
+      : '';
+    const usageLine = (m.usage || []).length
+      ? `<section class="mz-section mz-quickstart"><div class="mz-section-heading"><h2>运行命令</h2>${m.usageSource ? external(m.usageSource, '命令来源') : ''}</div><div class="mz-code"><pre><code data-no-i18n>${esc(m.usage.join('\n'))}</code></pre></div></section>`
+      : '';
     const platformSizes = platform => downloadModels.filter(other => hardwareOf(other, data) === platform).length;
     const selectedAsset = selectedDownloadModel?.assets[0];
     const downloadDialog = selectedDownloadModel ? `<dialog class="mz-download-dialog mz-store" id="${esc(dialogId)}" aria-labelledby="${esc(dialogId)}-title"><form method="dialog" class="mz-store-shell"><header class="mz-store-header"><div><span>获取模型</span><h2 id="${esc(dialogId)}-title">${esc(m.name)}</h2></div><button type="submit" value="cancel" class="mz-dialog-close" aria-label="关闭" title="关闭">${icon('x')}</button></header><div class="mz-store-body"><fieldset class="mz-store-step"><legend>选择芯片</legend><div class="mz-store-grid">${downloadPlatforms.map(platform => `<label class="mz-store-choice"><input type="radio" name="download-platform" value="${esc(platform)}" ${platform === selectedPlatform ? 'checked' : ''}><span class="mz-store-choice-main"><strong>${esc(platform)}</strong><small>${platformSizes(platform)} 个尺寸</small></span></label>`).join('')}</div></fieldset><fieldset class="mz-store-step"><legend>选择尺寸</legend><div class="mz-store-list">${downloadModels.map(model => { const platform = hardwareOf(model, data); const asset = model.assets[0]; return `<label class="mz-store-choice mz-model-choice" data-platform="${esc(platform)}" data-model-size="${esc(model.modelSize || '')}" ${platform === selectedPlatform ? '' : 'hidden'}><input type="radio" name="download-model" value="${esc(model.id)}" data-url="${esc(asset.url)}" ${model.id === selectedDownloadModel.id ? 'checked' : ''}><span class="mz-store-choice-main"><strong>${esc(model.variantName || model.name)}</strong></span>${choiceStats(model, data)}</label>`; }).join('')}</div></fieldset></div><footer class="mz-store-summary"><a class="button mz-dialog-download" data-download-link href="${esc(selectedAsset.url)}" target="_blank" rel="noopener">${icon('download')}下载</a></footer></form></dialog>` : '';
@@ -183,7 +215,7 @@
       <section class="mz-overview"><div class="mz-introduction"><span class="mz-task">${m.task}</span>${m.dataPending ? '<span class="pending-badge">数据待补充</span>' : ''}<h1>${m.name}</h1><p data-i18n-zh="${esc(m.description)}" data-i18n-en="${esc(m.descriptionEn || m.description)}">${esc(description)}</p><div class="mz-primary-actions">${m.assets?.length ? `<button class="button" type="button" data-open-download>${icon('download')}获取模型</button>` : ''}<button class="button secondary mz-ask-model" type="button" data-ask-model><span class="mz-icon" style="--icon:url('assets/icons/sparkles.svg')" aria-hidden="true"></span>询问此模型</button>${repositoryLinks(m, 'mz-text-link')}</div></div>${cover}</section>
       <section class="mz-benchmark" aria-label="性能与精度"><div class="mz-benchmark-title"><h2>性能与精度</h2></div><div class="mz-configuration"><div><span>目标硬件</span>${dropdown('benchmark-hardware', '目标硬件', hardwareOptions.map(value => ({ value, label: value })), hardware)}</div><div><span>模型变体</span>${dropdown('benchmark-variant', '模型变体', variants.filter(other => hardwareOf(other, data) === hardware).sort((a, b) => sizeRank(a.modelSize) - sizeRank(b.modelSize)).map(other => ({ value: other.id, label: other.variantName || other.name })), m.id, m.dataPending && variants.length < 2)}</div><div><span>Runtime 并发</span>${dropdown('benchmark-condition', 'Runtime 并发', conditions.map(value => ({ value: String(value), label: threadLabel(value) })), String(conditions[0] || ''), !conditions.length)}</div></div>
       ${b ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid" id="detail-performance" aria-live="polite"></div></div></div>` : benchmarkEmpty}<div class="mz-report-actions">${m.reportDataUrl ? `<a class="mz-report-link" href="reports.html?report=${encodeURIComponent(m.id)}&from=${encodeURIComponent(m.id)}">${icon('scan-eye')}查看转换详情</a>` : (m.reportUrl || m.reportSourceUrl) ? external(m.reportUrl || m.reportSourceUrl, 'OE 转换报告') : '<span class="mz-report-placeholder" aria-disabled="true">OE 转换报告</span>'}</div></section>
-      <div class="mz-information"><div class="mz-main-column"><section class="mz-section"><h2>模型参数</h2><dl class="mz-specifications">${propertyRows(m)}</dl></section>${quickStart(m)}
+      <div class="mz-information"><div class="mz-main-column"><section class="mz-section"><h2>模型参数</h2><dl class="mz-specifications">${propertyRows(m)}</dl></section>${variantLine}${upstreamLine}${conversionLine}${downloadLine}${usageLine}${quickStart(m)}
       </div>
       <aside class="mz-side-column"><section><h2>目标平台</h2><div class="mz-platform-list">${hardwareOptions.map(platform => { const target = variants.find(other => hardwareOf(other, data) === platform && other.modelSize === m.modelSize) || variants.find(other => hardwareOf(other, data) === platform); const active = platform === hardware; return `<button type="button" class="mz-platform-option${active ? ' is-active' : ''}" data-platform-target="${esc(target?.id || '')}" ${active || !target ? 'disabled' : ''} aria-label="切换到 ${esc(platform)}"><span class="mz-platform-mark">${icon('cpu')}</span><strong>${esc(platform)}</strong></button>`; }).join('')}</div></section><section><h2>开发资源</h2><div class="mz-resource-links">${developerResourceLinks(m)}</div></section><section><h2>模型许可</h2><div class="mz-resource-links">${m.licenseName && m.licenseUrl ? external(m.licenseUrl, esc(m.licenseName)) : '<span>未声明</span>'}</div></section></aside></div>
       ${related.length ? `<section class="mz-related"><div class="mz-section-heading"><h2>相关模型</h2><a href="#">查看全部模型</a></div><div class="mz-related-grid">${related.map(other => `<a href="#model/${other.id}" class="mz-related-model">${other.coverImage ? `<img src="${esc(other.coverImage)}" alt="${esc(other.name)}" loading="lazy">` : '<span class="pending-placeholder">数据待补充</span>'}<div><h3>${other.name}</h3><span>${other.task}</span></div></a>`).join('')}</div></section>` : ''}

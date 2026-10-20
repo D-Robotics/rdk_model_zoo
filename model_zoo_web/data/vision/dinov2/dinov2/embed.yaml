@@ -7,11 +7,24 @@ source: dinov2
 family: dinov2
 task: embed
 description:
-  zh: DINOv2 是自监督视觉 Transformer。ViT-S/14 骨干同时给出全局嵌入和稠密图像块特征。
-  en: DINOv2 is a self-supervised vision transformer. Its ViT-S/14 backbone produces
-    a global embedding and dense patch features.
+  zh: DINOv2 是用于图像表示的自监督视觉 Transformer。ViT-S/14 主干生成全局嵌入与稠密 patch 特征，可供下游视觉任务使用。本示例在 RDK S100、S100P 和 S600 上部署 int16 PTQ 模型。
+  en: DINOv2 is a self-supervised vision transformer for image representations. The ViT-S/14 backbone produces a global embedding and dense patch features for downstream visual tasks. This sample deploys its int16 PTQ model on RDK S100, S100P and S600.
 sample_path: samples/vision/dinov2
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/dinov2/README.md
+upstream:
+- kind: repository
+  name: facebookresearch/dinov2
+  url: https://github.com/facebookresearch/dinov2
+  source: samples/vision/dinov2/README.md
+- kind: repository
+  name: facebookresearch/dinov2.git
+  url: https://github.com/facebookresearch/dinov2.git
+  source: samples/vision/dinov2/conversion/README.md
 supported_platforms:
 - platform: s100
   evidence: docs/release/s/models.yaml
@@ -19,5 +32,114 @@ supported_platforms:
   evidence: docs/release/s/models.yaml
 - platform: s600
   evidence: docs/release/s/models.yaml
+published_variants:
+- name: vits14-224-int16
+  source: samples/vision/dinov2/README.md
 manifest_tasks:
 - image-embedding
+usage:
+- source: samples/vision/dinov2/README.md
+  lines:
+  - python3 samples/vision/dinov2/model/download.py --target s100
+  - python3 samples/vision/dinov2/runtime/python/main.py --target s100 --output cls_feat
+sourced_benchmarks:
+- id: dinov2-s100
+  platform: s100
+  metric: latency
+  value: 3.73
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: DINOv2 ViT-S/14 on RDK S100
+  condition: 200 frames
+  origin: samples/vision/dinov2/evaluator/README.md
+- id: dinov2-s100
+  platform: s100
+  metric: throughput
+  value: 267.44
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: DINOv2 ViT-S/14 on RDK S100
+  condition: 200 frames
+  origin: samples/vision/dinov2/evaluator/README.md
+- id: dinov2-s100
+  platform: s100
+  metric: throughput
+  value: 288.26
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: DINOv2 ViT-S/14 on RDK S100
+  condition: 200 frames
+  origin: samples/vision/dinov2/evaluator/README.md
+- id: dinov2-s100p
+  platform: s100p
+  metric: latency
+  value: 3.02
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: DINOv2 ViT-S/14 on RDK S100P
+  condition: 200 frames
+  origin: samples/vision/dinov2/evaluator/README.md
+- id: dinov2-s100p
+  platform: s100p
+  metric: throughput
+  value: 329.53
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: DINOv2 ViT-S/14 on RDK S100P
+  condition: 200 frames
+  origin: samples/vision/dinov2/evaluator/README.md
+- id: dinov2-s100p
+  platform: s100p
+  metric: throughput
+  value: 357.63
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: DINOv2 ViT-S/14 on RDK S100P
+  condition: 200 frames
+  origin: samples/vision/dinov2/evaluator/README.md
+- id: dinov2-s600
+  platform: s600
+  metric: latency
+  value: 2.25
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: DINOv2 ViT-S/14 on RDK S600
+  condition: 200 frames
+  origin: samples/vision/dinov2/evaluator/README.md
+- id: dinov2-s600
+  platform: s600
+  metric: throughput
+  value: 441.64
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: DINOv2 ViT-S/14 on RDK S600
+  condition: 200 frames
+  origin: samples/vision/dinov2/evaluator/README.md
+- id: dinov2-s600
+  platform: s600
+  metric: throughput
+  value: 1898.42
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: DINOv2 ViT-S/14 on RDK S600
+  condition: 200 frames, core_id 1,2,3,4
+  origin: samples/vision/dinov2/evaluator/README.md
+documented_downloads:
+- platform: s100
+  filename: nash-e/dinov2_vits14_224_int16_nashe.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/dinov2/nash-e/dinov2_vits14_224_int16_nashe.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100p
+  filename: nash-m/dinov2_vits14_224_int16_nashm.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/dinov2/nash-m/dinov2_vits14_224_int16_nashm.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s600
+  filename: nash-p/dinov2_vits14_224_int16_nashp.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/dinov2/nash-p/dinov2_vits14_224_int16_nashp.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+example_image:
+  path: samples/vision/dinov2/test_data/bus.jpg
+  source: samples/vision/dinov2/test_data/bus.jpg

@@ -2,7 +2,7 @@
 
 任务代码定义在 `model_zoo_web/task-registry.json`。`facet_id` 是网页筛选项，`label_zh` 是卡片上的任务名，`accuracy_profile` 指向 `accuracy-metrics.json` 里的精度字段。`null` 表示这种任务还不能标成完整。
 
-所有任务在待补状态下的必填、可选和禁止项相同，见 [registration-states.md](registration-states.md)。下表只增加“变成完整记录时，这种任务还要有什么”。
+所有任务在待补状态下的必填、可选摘录和禁止项相同，见 [registration-states.md](registration-states.md)。摘录了基准或下载链接也不会把记录变成完整发布。下表只增加“变成完整记录时，这种任务还要有什么”。
 
 共同的完整字段：身份、许可证、`sample_path`、每个规格的参数量与 GFLOPs、源输入与 Runtime 输入分开记录、每个已发布板卡的制品、OE 报告、Runtime 性能和 C++ 端到端。精度列是额外要求。
 

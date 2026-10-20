@@ -25,6 +25,19 @@ class PendingRegistrationTest(unittest.TestCase):
         self.assertTrue(normalized["supported_platforms"])
         self.assertEqual(normalized["sample_revision"], "7a97c1780b0cfa131ff0007d662e255e5e41c12e")
 
+    def test_sourced_benchmark_must_appear_in_the_cited_file(self):
+        record = yaml.safe_load(CLIP.read_text(encoding="utf-8"))
+        record["sourced_benchmarks"] = [{
+            "id": "clip",
+            "platform": "x5",
+            "metric": "latency",
+            "value": 12345.67,
+            "unit": "ms",
+            "source": "docs/release/x5/models.yaml",
+        }]
+        with self.assertRaisesRegex(catalog.CatalogError, "is not in the source file"):
+            catalog.validate_record(record, CLIP)
+
     def test_pending_record_rejects_variants(self):
         record = yaml.safe_load(CLIP.read_text(encoding="utf-8"))
         record["variants"] = [{"size": "base"}]

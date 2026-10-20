@@ -66,7 +66,17 @@ if (preview) {
       assert.equal(model.dataPending, true, `${model.id}: pending models must set dataPending`);
       assert.deepEqual(Array.from(model.assets), [], `${model.id}: pending models must not publish artifacts`);
       assert.equal(model.benchmark, null, `${model.id}: pending models must not publish benchmarks`);
-      assert.equal(model.coverImage, '', `${model.id}: pending models must not publish a cover`);
+      if (model.coverImage) {
+        assert.match(model.coverImage, /^https:\/\/raw\.githubusercontent\.com\/D-Robotics\/rdk_model_zoo\/[0-9a-f]{40}\//, `${model.id}: pending cover must be a file at the pinned revision`);
+      }
+      for (const row of model.sourcedBenchmarks || []) {
+        assert.ok(row.metric && row.unit && row.source, `${model.id}: sourced benchmark needs metric, unit and source`);
+        assert.match(String(row.source), /^https:\/\/github\.com\/D-Robotics\/rdk_model_zoo\/blob\/[0-9a-f]{40}\//, `${model.id}: sourced benchmark must cite a blob`);
+      }
+      for (const download of model.documentedDownloads || []) {
+        assert.match(download.url || '', /^https:\/\//, `${model.id}: documented download must be HTTPS`);
+        assert.ok(download.filename, `${model.id}: documented download needs a filename`);
+      }
       assert.ok(model.platforms?.length, `${model.id}: pending models need a supported board`);
       assert.match(model.source || '', /^https:\/\/github\.com\/D-Robotics\/rdk_model_zoo\/tree\/[0-9a-f]{40}\/samples\//, `${model.id}: pending models must link a sample tree`);
       if (model.licenseUrl) assert.match(model.licenseUrl, /^https:\/\//, `${model.id}: licenseUrl must use HTTPS`);

@@ -7,11 +7,24 @@ source: lite_avatar
 family: lite_avatar
 task: avatar
 description:
-  zh: LiteAvatar 把语音音频渲染成合成后的说话人视频，示例把多段已发布模型串成一条离线流水线。
-  en: LiteAvatar renders speech audio into a composited talking-avatar video, chaining
-    several published models in one offline pipeline.
+  zh: 本示例面向 S100、S100P 与 S600 提供一个 Python 运行时。`LiteAvatarPipeline` 类把四个已发布 HBM 产物串成每个阶段清晰可读的 `preprocess → infer → postprocess` 流程与一次整段音频的 `predict`：音频前端提取 Paraformer 特征（Kaldi fbank、7/6 低帧率堆叠、CMVN），音频编码器输出 50 路堆叠隐层状态， audio2mouth 把滑动的 30 帧窗口映射为嘴部参数（交叉淡化与 Butterworth 平滑），人脸解码器以参考帧特征金字塔为条件逐帧渲染。 每帧按羽化掩膜合成到背景循环帧上，交给板端 VPU 的 H.264 编码器； FFmpeg 把输入音频以 AAC 混入 MP4，`ffprobe` 校验交付文件确实同时持有两条轨道。完整 CLI 与 API 参考见 [运行时文档](runtime/python/README_cn.md)。
+  en: 'The sample ships one Python runtime for S100, S100P and S600. Each frame is composited over the background loop with the feathered mask and handed to the board''s VPU H.264 encoder. FFmpeg muxes the input audio as AAC into the MP4, and `ffprobe` verifies the delivered file holds both tracks. Full CLI and API reference: [runtime/python/README.md](runtime/python/README.md).'
 sample_path: samples/vision/lite_avatar
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/lite_avatar/README.md
+upstream:
+- kind: repository
+  name: HumanAIGC/lite-avatar
+  url: https://github.com/HumanAIGC/lite-avatar
+  source: samples/vision/lite_avatar/README.md
+- kind: repository
+  name: HumanAIGC/lite-avatar
+  url: https://github.com/HumanAIGC/lite-avatar/raw/5b7ec850945e03d56fb290b05fb68440c359fa86/data/sample_data.zip
+  source: samples/vision/lite_avatar/README.md
 supported_platforms:
 - platform: s100
   evidence: docs/release/s/models.yaml
@@ -21,3 +34,41 @@ supported_platforms:
   evidence: docs/release/s/models.yaml
 manifest_tasks:
 - audio-driven-talking-avatar
+conversion_configs:
+- path: samples/vision/lite_avatar/conversion/audio2mouth_int16_config.yaml
+  march: nash-e
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 30x50
+- path: samples/vision/lite_avatar/conversion/encoder_avatar_config.yaml
+  march: nash-e
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 400x560
+- path: samples/vision/lite_avatar/conversion/net_decode_deconv_inorm_fullrange_config.yaml
+  march: nash-e
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 384x384
+- path: samples/vision/lite_avatar/conversion/net_encode_int16_config.yaml
+  march: nash-e
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 384x384
+usage:
+- source: samples/vision/lite_avatar/README.md
+  lines:
+  - cd <anywhere>
+  - wget https://github.com/HumanAIGC/lite-avatar/raw/5b7ec850945e03d56fb290b05fb68440c359fa86/data/sample_data.zip
+  - echo "d1c77b2df48b7fd7f19e6eef52bc5107e3131dd9777162faf2576f9451f69d7b  sample_data.zip" | shasum -a 256 -c -
+  - unzip sample_data.zip -d <repo>/samples/vision/lite_avatar/test_data/
+  - cd <repo>
+  - python3 samples/vision/lite_avatar/test_data/prepare_background.py
+  - --data samples/vision/lite_avatar/test_data/preload
+  - python3 samples/vision/lite_avatar/model/verify.py --target s100
+  - bash samples/vision/lite_avatar/runtime/python/run.sh --target s100
+  - --audio samples/vision/lite_avatar/test_data/asr_example.wav

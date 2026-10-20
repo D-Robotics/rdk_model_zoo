@@ -7,13 +7,115 @@ source: 3dresnet
 family: 3dresnet
 task: video-cls
 description:
-  zh: R3D-18 用三维卷积把 ResNet-18 扩展到短视频，同时学习空间和时间特征，并给出动作类别。
-  en: R3D-18 extends ResNet-18 with 3D convolutions so a short video clip yields one
-    action class from joint spatial and temporal features.
+  zh: R3D-18 用于短视频片段的动作识别。它把 ResNet-18 的卷积扩展为三维卷积，同时学习空间与时间特征，预测 Kinetics 的 400 个动作类别。
+  en: R3D-18 recognizes actions in short video clips. It extends ResNet-18 with 3D convolutions to learn spatial and temporal features together, and predicts the 400 Kinetics action classes.
 sample_path: samples/vision/3dresnet
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/3dresnet/README.md
+upstream:
+- kind: paper
+  name: arxiv 1711.11248
+  url: https://arxiv.org/abs/1711.11248
+  source: samples/vision/3dresnet/README.md
 supported_platforms:
 - platform: s100
   evidence: docs/release/s/models.yaml
+published_variants:
+- name: R3D-18 / `r3d_18.hbm
+  source: samples/vision/3dresnet/README.md
 manifest_tasks:
 - video-action-classification
+usage:
+- source: samples/vision/3dresnet/README.md
+  lines:
+  - bash samples/vision/3dresnet/model/download.sh s100
+  - python3 samples/vision/3dresnet/runtime/python/main.py
+  - --target s100
+  - --asset-id s:3dresnet:s100/r3d_18.hbm
+  - bash run.sh --target s100 --asset-id s:3dresnet:s100/r3d_18.hbm
+sourced_benchmarks:
+- id: 3dresnet-s100
+  platform: s100
+  metric: latency
+  value: 182.68
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: 3D ResNet-18 on RDK S100
+  condition: 100 frames
+  origin: samples/vision/3dresnet/evaluator/README.md
+- id: 3dresnet-s100
+  platform: s100
+  metric: throughput
+  value: 5.47
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: 3D ResNet-18 on RDK S100
+  condition: 100 frames
+  origin: samples/vision/3dresnet/evaluator/README.md
+- id: 3dresnet-s100
+  platform: s100
+  metric: latency
+  value: 182.93
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: 3D ResNet-18 on RDK S100
+  condition: 100 frames
+  origin: samples/vision/3dresnet/evaluator/README.md
+- id: 3dresnet-s100
+  platform: s100
+  metric: throughput
+  value: 10.82
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: 3D ResNet-18 on RDK S100
+  condition: 100 frames
+  origin: samples/vision/3dresnet/evaluator/README.md
+- id: 3dresnet-s100
+  platform: s100
+  metric: latency
+  value: 185.03
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: 3D ResNet-18 on RDK S100
+  condition: 100 frames
+  origin: samples/vision/3dresnet/evaluator/README.md
+- id: 3dresnet-s100
+  platform: s100
+  metric: throughput
+  value: 21.07
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: 3D ResNet-18 on RDK S100
+  condition: 100 frames
+  origin: samples/vision/3dresnet/evaluator/README.md
+- id: 3dresnet-s100
+  platform: s100
+  metric: latency
+  value: 249.19
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: 3D ResNet-18 on RDK S100
+  condition: 100 frames
+  origin: samples/vision/3dresnet/evaluator/README.md
+- id: 3dresnet-s100
+  platform: s100
+  metric: throughput
+  value: 30.74
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: 3D ResNet-18 on RDK S100
+  condition: 100 frames
+  origin: samples/vision/3dresnet/evaluator/README.md
+documented_downloads:
+- platform: s100
+  filename: s100/r3d_18.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/3dresnet/r3d_18.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+example_image:
+  path: samples/vision/3dresnet/test_data/readme_img/image-1.png
+  source: samples/vision/3dresnet/test_data/readme_img/image-1.png

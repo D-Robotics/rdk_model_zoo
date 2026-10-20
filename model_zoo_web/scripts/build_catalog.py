@@ -40,11 +40,34 @@ ACCURACY_SCHEMA = json.loads(ACCURACY_SCHEMA_PATH.read_text(encoding="utf-8"))
 TASK_REGISTRY_PATH = WEB_ROOT / "task-registry.json"
 TASK_REGISTRY = json.loads(TASK_REGISTRY_PATH.read_text(encoding="utf-8"))
 TASK_FACET_IDS = {item["facet_id"] for item in TASK_REGISTRY["tasks"].values()}
-# A pending record may name these boards only. Measurements stay out until the
-# record drops `registration: pending` and passes the released-record validator.
+# Pending records stay out of the released-artifact schema. Sourced facts use
+# the names below (`sourced_benchmarks`, `documented_downloads`, `example_image`),
+# each tied to a file at sample_revision. The released names stay forbidden so a
+# placeholder cannot be mistaken for a published release.
 PENDING_FORBIDDEN = (
     "variants", "accuracy", "performance", "artifact", "assets", "benchmarks", "cover",
 )
+OFFICIAL_LICENSE_URLS = {
+    "Apache-2.0": "https://www.apache.org/licenses/LICENSE-2.0",
+    "MIT": "https://opensource.org/license/mit",
+    "BSD-2-Clause": "https://opensource.org/license/bsd-2-clause",
+    "BSD-3-Clause": "https://opensource.org/license/bsd-3-clause",
+    "GPL-2.0": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html",
+    "GPL-3.0": "https://www.gnu.org/licenses/gpl-3.0.html",
+    "LGPL-2.1": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html",
+    "LGPL-3.0": "https://www.gnu.org/licenses/lgpl-3.0.html",
+}
+LICENSE_NAME_MARKERS = {
+    "Apache-2.0": ("apache-2.0", "apache license, version 2.0", "apache license version 2.0"),
+    "MIT": ("mit license",),
+    "BSD-2-Clause": ("bsd 2-clause", "bsd-2-clause"),
+    "BSD-3-Clause": ("bsd 3-clause", "bsd-3-clause"),
+    "GPL-2.0": ("gpl-2.0", "gnu general public license version 2"),
+    "GPL-3.0": ("gpl-3.0", "gnu general public license version 3"),
+    "LGPL-2.1": ("lgpl-2.1",),
+    "LGPL-3.0": ("lgpl-3.0",),
+}
+_BLOB_TEXT: dict[str, str] = {}
 
 
 class CatalogError(ValueError):
@@ -179,6 +202,64 @@ def validate_evidence_path(value: Any, label: str) -> str:
     if found is None or found[1] not in {"blob", "tree"}:
         raise CatalogError(f"{label} does not exist locally or in {ref}: {evidence}")
     return evidence
+
+
+def blob_text(relative_path: str, label: str, revision: str) -> str:
+    """Text of a blob at the record's pinned revision, not the working tree."""
+    cached = _BLOB_TEXT.get((revision, relative_path))
+    if cached is not None:
+        return cached
+    found = _ls_tree(revision, relative_path)
+    if found is None or found[1] != "blob":
+        raise CatalogError(f"{label} is not a file at {revision}: {relative_path}")
+    shown = subprocess.run(
+        ["git", "-C", str(ROOT), "show", f"{revision}:{relative_path}"],
+        capture_output=True, text=True, check=False,
+    )
+    if shown.returncode != 0:
+        raise CatalogError(f"{label} could not be read from {revision}: {relative_path}")
+    _BLOB_TEXT[(revision, relative_path)] = shown.stdout
+    return shown.stdout
+
+
+def _window_around(text: str, marker: str, span: int = 8000) -> str:
+    index = text.find(marker)
+    if index < 0:
+        raise CatalogError(f"marker {marker!r} is not in the source file")
+    window = text[index:index + span]
+    # A benchmark id can sit a few kilobytes before the next list item. Do not
+    # treat the next item's numbers as evidence for this one.
+    boundary = window.find("\n  - id:", 1)
+    if boundary > 0:
+        window = window[:boundary]
+    return window
+
+
+def _require_in_text(needle: str, text: str, label: str) -> None:
+    if needle not in text:
+        raise CatalogError(f"{label} value {needle!r} is not in the source file")
+
+
+def _number_in_text(value: Any, text: str, label: str) -> None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise CatalogError(f"{label} must be a number copied from the source file")
+    if isinstance(value, float) and value.is_integer():
+        candidates = {str(int(value)), str(value)}
+    elif isinstance(value, float):
+        compact = format(value, "f").rstrip("0").rstrip(".")
+        candidates = {compact, str(value)}
+    else:
+        candidates = {str(value)}
+    if not any(candidate in text for candidate in candidates):
+        raise CatalogError(f"{label} value {value!r} is not in the source file")
+
+
+def _require_https(value: Any, label: str) -> str:
+    url = require_string(value, label)
+    parsed = urlparse(url)
+    if parsed.scheme != "https" or not parsed.netloc:
+        raise CatalogError(f"{label} must be an absolute HTTPS URL")
+    return url
 
 
 def validate_commit(value: Any, label: str) -> str:
@@ -377,13 +458,166 @@ def validate_accuracy(value: Any, task: str, label: str) -> None:
                 raise CatalogError(f"{metric_label} must be a ratio between 0 and 1")
 
 
+def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> None:
+    """Every optional fact must be a substring of the file it cites at sample_revision."""
+    revision = require_string(record.get("sample_revision"), f"{relative_source}.sample_revision")
+    def text_of(path: str, label: str) -> str:
+        return blob_text(path, label, revision)
+    upstream = record.get("upstream", [])
+    if not isinstance(upstream, list):
+        raise CatalogError(f"{relative_source}.upstream must be a list")
+    for index, item in enumerate(upstream):
+        label = f"{relative_source}.upstream[{index}]"
+        entry = require_mapping(item, label)
+        if set(entry) - {"kind", "name", "url", "source"}:
+            raise CatalogError(f"{label} has unknown fields")
+        if entry.get("kind") not in {"repository", "paper", "model-card"}:
+            raise CatalogError(f"{label}.kind must be repository, paper, or model-card")
+        require_string(entry.get("name"), f"{label}.name")
+        url = _require_https(entry.get("url"), f"{label}.url")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        _require_in_text(url, text_of(source, f"{label}.source"), label)
+
+    variants = record.get("published_variants", [])
+    if not isinstance(variants, list):
+        raise CatalogError(f"{relative_source}.published_variants must be a list")
+    for index, item in enumerate(variants):
+        label = f"{relative_source}.published_variants[{index}]"
+        entry = require_mapping(item, label)
+        if set(entry) - {"name", "source"}:
+            raise CatalogError(f"{label} has unknown fields")
+        name = require_string(entry.get("name"), f"{label}.name")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        _require_in_text(name, text_of(source, f"{label}.source"), label)
+
+    configs = record.get("conversion_configs", [])
+    if not isinstance(configs, list):
+        raise CatalogError(f"{relative_source}.conversion_configs must be a list")
+    for index, item in enumerate(configs):
+        label = f"{relative_source}.conversion_configs[{index}]"
+        entry = require_mapping(item, label)
+        if set(entry) - {"path", "march", "runtime_input", "train_input", "train_layout", "resolution"}:
+            raise CatalogError(f"{label} has unknown fields")
+        path = validate_evidence_path(entry.get("path"), f"{label}.path")
+        text = text_of(path, f"{label}.path")
+        for field in ("march", "runtime_input", "train_input", "train_layout"):
+            if field in entry:
+                _require_in_text(require_string(entry[field], f"{label}.{field}"), text, f"{label}.{field}")
+        if "resolution" in entry:
+            resolution = require_string(entry["resolution"], f"{label}.resolution")
+            if resolution not in path and resolution not in text:
+                raise CatalogError(f"{label}.resolution is not in the config path or file")
+
+    inputs = record.get("inputs", [])
+    if not isinstance(inputs, list):
+        raise CatalogError(f"{relative_source}.inputs must be a list")
+    for index, item in enumerate(inputs):
+        label = f"{relative_source}.inputs[{index}]"
+        entry = require_mapping(item, label)
+        if set(entry) - {"platform", "shape", "layout", "format", "source", "source_id"}:
+            raise CatalogError(f"{label} has unknown fields")
+        platform = require_string(entry.get("platform"), f"{label}.platform")
+        if platform not in KNOWN_PLATFORMS:
+            raise CatalogError(f"{label}.platform must be one of {', '.join(sorted(KNOWN_PLATFORMS))}")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        source_id = require_string(entry.get("source_id"), f"{label}.source_id")
+        window = _window_around(text_of(source, f"{label}.source"), source_id)
+        for field in ("shape", "layout", "format"):
+            if field in entry:
+                _require_in_text(require_string(entry[field], f"{label}.{field}"), window, f"{label}.{field}")
+        if not any(field in entry for field in ("shape", "layout", "format")):
+            raise CatalogError(f"{label} must record a shape, layout, or format")
+
+    usage = record.get("usage", [])
+    if not isinstance(usage, list):
+        raise CatalogError(f"{relative_source}.usage must be a list")
+    for index, item in enumerate(usage):
+        label = f"{relative_source}.usage[{index}]"
+        entry = require_mapping(item, label)
+        if set(entry) - {"source", "lines"}:
+            raise CatalogError(f"{label} has unknown fields")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        text = text_of(source, f"{label}.source")
+        lines = require_list(entry.get("lines"), f"{label}.lines")
+        for line_index, line in enumerate(lines):
+            command = require_string(line, f"{label}.lines[{line_index}]")
+            _require_in_text(command, text, f"{label}.lines[{line_index}]")
+
+    measurements = record.get("sourced_benchmarks", [])
+    if not isinstance(measurements, list):
+        raise CatalogError(f"{relative_source}.sourced_benchmarks must be a list")
+    for index, item in enumerate(measurements):
+        label = f"{relative_source}.sourced_benchmarks[{index}]"
+        entry = require_mapping(item, label)
+        if set(entry) - {"id", "platform", "variant", "metric", "value", "unit", "statistic", "condition", "source", "origin"}:
+            raise CatalogError(f"{label} has unknown fields")
+        platform = require_string(entry.get("platform"), f"{label}.platform")
+        if platform not in KNOWN_PLATFORMS:
+            raise CatalogError(f"{label}.platform must be one of {', '.join(sorted(KNOWN_PLATFORMS))}")
+        metric = require_string(entry.get("metric"), f"{label}.metric")
+        unit = require_string(entry.get("unit"), f"{label}.unit")
+        source_id = require_string(entry.get("id"), f"{label}.id")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        window = _window_around(text_of(source, f"{label}.source"), source_id, span=20000)
+        _require_in_text(metric, window, f"{label}.metric")
+        _require_in_text(unit, window, f"{label}.unit")
+        _number_in_text(entry.get("value"), window, f"{label}.value")
+        for field in ("variant", "statistic", "condition"):
+            if field in entry:
+                _require_in_text(require_string(entry[field], f"{label}.{field}"), window, f"{label}.{field}")
+        if "origin" in entry:
+            validate_evidence_path(entry.get("origin"), f"{label}.origin")
+
+    downloads = record.get("documented_downloads", [])
+    if not isinstance(downloads, list):
+        raise CatalogError(f"{relative_source}.documented_downloads must be a list")
+    for index, item in enumerate(downloads):
+        label = f"{relative_source}.documented_downloads[{index}]"
+        entry = require_mapping(item, label)
+        if set(entry) - {"platform", "filename", "url", "format", "sha256", "source"}:
+            raise CatalogError(f"{label} has unknown fields")
+        platform = require_string(entry.get("platform"), f"{label}.platform")
+        if platform not in KNOWN_PLATFORMS:
+            raise CatalogError(f"{label}.platform must be one of {', '.join(sorted(KNOWN_PLATFORMS))}")
+        filename = require_string(entry.get("filename"), f"{label}.filename")
+        url = _require_https(entry.get("url"), f"{label}.url")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        text = text_of(source, f"{label}.source")
+        _require_in_text(filename, text, f"{label}.filename")
+        _require_in_text(url, text, f"{label}.url")
+        if "format" in entry:
+            _require_in_text(require_string(entry["format"], f"{label}.format"), text, f"{label}.format")
+        if "sha256" in entry:
+            digest = require_string(entry.get("sha256"), f"{label}.sha256")
+            if not SHA256_RE.fullmatch(digest):
+                raise CatalogError(f"{label}.sha256 must be 64 lowercase hexadecimal characters")
+            _require_in_text(digest, text, f"{label}.sha256")
+
+    if "example_image" in record:
+        image = require_mapping(record.get("example_image"), f"{relative_source}.example_image")
+        if set(image) - {"path", "source"}:
+            raise CatalogError(f"{relative_source}.example_image has unknown fields")
+        path = validate_evidence_path(image.get("path"), f"{relative_source}.example_image.path")
+        source = validate_evidence_path(image.get("source"), f"{relative_source}.example_image.source")
+        if path != source:
+            raise CatalogError(f"{relative_source}.example_image.path and source must be the same blob")
+        suffix = PurePosixPath(path).suffix.lower()
+        if suffix not in {".jpg", ".jpeg", ".png", ".webp", ".gif"}:
+            raise CatalogError(f"{relative_source}.example_image.path must be an image")
+        found = _ls_tree(revision, path)
+        if found is None or found[1] != "blob":
+            raise CatalogError(f"{relative_source}.example_image.path is not a file at {revision}: {path}")
+
+
 def validate_pending_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]:
-    """Identity-only registration. Measurements, artifacts and covers are refused here."""
+    """Identity plus sourced facts. Released artifacts and unsourced measurements are refused."""
     relative_source = source_path.relative_to(ROOT).as_posix()
     allowed = {
         "schema_version", "registration", "id", "name", "domain", "source", "family", "task",
         "description", "sample_path", "sample_revision", "sample_kind", "supported_platforms",
         "facet_tasks", "manifest_tasks", "license", "provider",
+        "upstream", "published_variants", "conversion_configs", "inputs", "usage",
+        "sourced_benchmarks", "documented_downloads", "example_image",
     }
     for field in PENDING_FORBIDDEN:
         if field in record:
@@ -424,13 +658,29 @@ def validate_pending_record(record: dict[str, Any], source_path: Path) -> dict[s
 
     if "license" in record:
         license_info = require_mapping(record.get("license"), f"{relative_source}.license")
-        require_string(license_info.get("name"), f"{relative_source}.license.name")
-        license_url = require_string(license_info.get("url"), f"{relative_source}.license.url")
-        parsed_license_url = urlparse(license_url)
-        if parsed_license_url.scheme != "https" or not parsed_license_url.netloc:
-            raise CatalogError(f"{relative_source}.license.url must be an absolute HTTPS URL")
+        license_name = require_string(license_info.get("name"), f"{relative_source}.license.name")
+        license_url = _require_https(license_info.get("url"), f"{relative_source}.license.url")
+        unknown_license_keys = set(license_info) - {"name", "url", "source", "scope"}
+        if unknown_license_keys:
+            raise CatalogError(f"{relative_source}.license has unknown fields: {sorted(unknown_license_keys)}")
+        if "scope" in license_info and license_info["scope"] not in {"sample-code", "model"}:
+            raise CatalogError(f"{relative_source}.license.scope must be sample-code or model")
+        if "source" in license_info:
+            license_source = validate_evidence_path(license_info.get("source"), f"{relative_source}.license.source")
+            license_text = blob_text(
+                license_source, f"{relative_source}.license.source", record["sample_revision"],
+            ).lower()
+            markers = LICENSE_NAME_MARKERS.get(license_name, (license_name.lower(),))
+            if not any(marker in license_text for marker in markers):
+                raise CatalogError(f"{relative_source}.license.name is not named in {license_source}")
+            official = OFFICIAL_LICENSE_URLS.get(license_name)
+            if license_url not in license_text and license_url != official:
+                raise CatalogError(f"{relative_source}.license.url is neither in {license_source} nor the official page for {license_name}")
+        elif license_name in OFFICIAL_LICENSE_URLS and license_url != OFFICIAL_LICENSE_URLS[license_name]:
+            raise CatalogError(f"{relative_source}.license.url must be the official page when no source file is cited")
     if "provider" in record:
         require_string(record.get("provider"), f"{relative_source}.provider")
+    _validate_pending_facts(record, relative_source)
 
     platforms = require_list(record.get("supported_platforms"), f"{relative_source}.supported_platforms")
     seen_platforms: set[str] = set()

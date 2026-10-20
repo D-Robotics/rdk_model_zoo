@@ -7,13 +7,77 @@ source: vit
 family: vit
 task: cls
 description:
-  zh: ViT 把图像块当作序列，用自注意力做分类。该示例使用的是 CIFAR-10 权重，而不是 ImageNet 权重。
-  en: ViT treats image patches as a sequence and classifies them with self-attention.
-    This sample uses CIFAR-10 weights rather than ImageNet weights.
+  zh: ViT 把图像分块组织为序列，通过自注意力完成分类。本 sample 提供 S100 CIFAR-10 十分类的两个量化变体，不是 ImageNet 权重。
+  en: ViT treats image patches as a sequence and uses self-attention for classification. This sample uses two S100 CIFAR-10 artifacts (10 classes), not ImageNet weights.
 sample_path: samples/vision/vit
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/vit/README.md
+upstream:
+- kind: paper
+  name: arxiv 2010.11929
+  url: https://arxiv.org/abs/2010.11929
+  source: samples/vision/vit/README.md
+- kind: repository
+  name: google-research/vision_transformer
+  url: https://github.com/google-research/vision_transformer
+  source: samples/vision/vit/README.md
+- kind: repository
+  name: xiongqi123123/ViT_PyTorch.git
+  url: https://github.com/xiongqi123123/ViT_PyTorch.git
+  source: samples/vision/vit/conversion/README.md
 supported_platforms:
 - platform: s100
   evidence: docs/release/s/models.yaml
+published_variants:
+- name: ViT CIFAR-10 INT8
+  source: samples/vision/vit/README.md
+- name: ViT CIFAR-10 INT16
+  source: samples/vision/vit/README.md
 manifest_tasks:
 - image-classification
+conversion_configs:
+- path: samples/vision/vit/conversion/config_vit_nv12.yaml
+  march: nash-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+usage:
+- source: samples/vision/vit/README.md
+  lines:
+  - bash samples/vision/vit/model/download.sh s100 int8
+  - python3 samples/vision/vit/runtime/python/main.py --target s100 --variant int8 --test-img samples/vision/vit/test_data/airplane_0000.png --label-file samples/vision/vit/test_data/cifar10_classes.names --top-k 5
+sourced_benchmarks:
+- id: vit-s100-hbm
+  platform: s100
+  metric: top-1
+  value: 72.62
+  unit: percent
+  source: docs/release/s/benchmarks.yaml
+  variant: ViT CIFAR-10 HBM
+  origin: samples/vision/vit/evaluator/README.md
+- id: vit-s100-hbm
+  platform: s100
+  metric: top-5
+  value: 98.03
+  unit: percent
+  source: docs/release/s/benchmarks.yaml
+  variant: ViT CIFAR-10 HBM
+  origin: samples/vision/vit/evaluator/README.md
+documented_downloads:
+- platform: s100
+  filename: s100/vit_cifar10_batch1_int8.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ViT/vit_cifar10_batch1_int8.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100
+  filename: s100/vit_cifar10_batch1_int16.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ViT/vit_cifar10_batch1_int16.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+example_image:
+  path: samples/vision/vit/test_data/readme_img/gpu_info.png
+  source: samples/vision/vit/test_data/readme_img/gpu_info.png

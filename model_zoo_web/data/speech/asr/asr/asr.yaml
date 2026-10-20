@@ -7,11 +7,15 @@ source: asr
 family: asr
 task: asr
 description:
-  zh: 该示例用 Wav2Vec2 把音频转成文本。音频被切成固定长度的块，每块独立归一化后送入模型，再用固定词表解码。
-  en: This sample transcribes audio with Wav2Vec2. Audio is split into fixed-length
-    chunks that are normalized and decoded independently against a fixed vocabulary.
+  zh: 本样例使用已发布的 S 系列 Wav2Vec2 ASR 模型和固定 3503-token 词表转写音频。WAV/FLAC 按有限大小分块读取，声道平均为单声道，重采样到 16 kHz，再逐块归一化，每次推理输入 30000 点（1.875 秒）。处理完整文件，包括最后补零块；每个窗口独立处理并重置解码状态，运行时不跨窗口保留声学状态或执行重叠拼接。
+  en: This sample transcribes audio using the published S-series Wav2Vec2 ASR model and a fixed 3503-token vocabulary. It reads WAV/FLAC in bounded chunks, mixes channels to mono, resamples to 16 kHz, normalizes each chunk and submits 30000 samples per inference (1.875 seconds). It handles the whole file, including the final padded chunk. Each chunk is processed independently with fresh decoder state; the runtime does not carry acoustic state or overlap adjacent windows.
 sample_path: samples/speech/asr
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/speech/asr/README.md
 supported_platforms:
 - platform: s100
   evidence: docs/release/s/models.yaml
@@ -19,3 +23,42 @@ supported_platforms:
   evidence: docs/release/s/models.yaml
 manifest_tasks:
 - speech-recognition
+usage:
+- source: samples/speech/asr/README.md
+  lines:
+  - bash samples/speech/asr/runtime/python/run.sh --list-models
+  - bash samples/speech/asr/runtime/python/run.sh --target s100 --dry-run
+  - bash samples/speech/asr/runtime/python/run.sh --target s600 --dry-run
+  - bash samples/speech/asr/model/download.sh --target s100
+  - bash samples/speech/asr/runtime/python/run.sh --target s100 --output-dir outputs/asr-run1
+sourced_benchmarks:
+- id: asr-s100
+  platform: s100
+  metric: latency
+  value: 34.426
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: ASR Wav2Vec2 on RDK S100
+  statistic: mean
+  condition: 100 frames
+  origin: samples/speech/asr/evaluator/README.md
+- id: asr-s100
+  platform: s100
+  metric: throughput
+  value: 29.008
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: ASR Wav2Vec2 on RDK S100
+  condition: 100 frames
+  origin: samples/speech/asr/evaluator/README.md
+documented_downloads:
+- platform: s100
+  filename: s100/asr.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/asr/asr.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s600
+  filename: s600/asr.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/asr/asr.hbm
+  source: docs/release/s/models.yaml
+  format: hbm

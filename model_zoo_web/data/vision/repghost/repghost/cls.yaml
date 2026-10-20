@@ -7,13 +7,376 @@ source: repghost
 family: repghost
 task: cls
 description:
-  zh: RepGhost 用结构重参数化把特征拼接换成权重空间里的特征复用，构成轻量卷积分类网络。
-  en: RepGhost is a lightweight convolutional classifier that replaces explicit feature
-    concatenation with re-parameterized reuse in weight space.
+  zh: RepGhost 是面向硬件高效部署的轻量级 CNN 模型家族，通过将特征空间中的显式特征复用转移到权重空间中的重参数化复用，减少 `Concat` 带来的硬件开销，同时保持较好的分类性能。
+  en: RepGhost is a lightweight CNN family designed to improve hardware efficiency by replacing explicit feature reuse in feature space with re-parameterized reuse in weight space. It avoids costly `Concat` operations while keeping strong classification performance.
 sample_path: samples/vision/repghost
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/repghost/README.md
+upstream:
+- kind: paper
+  name: arxiv 2211.06088
+  url: https://arxiv.org/abs/2211.06088
+  source: samples/vision/repghost/README.md
+- kind: repository
+  name: ChengpengChen/RepGhost
+  url: https://github.com/ChengpengChen/RepGhost
+  source: samples/vision/repghost/README.md
+- kind: repository
+  name: apple/ml-mobileone.git
+  url: https://github.com/apple/ml-mobileone.git
+  source: samples/vision/repghost/conversion/README.md
 supported_platforms:
 - platform: x5
   evidence: docs/release/x5/models.yaml
+published_variants:
+- name: RepGhost-100
+  source: samples/vision/repghost/README.md
+- name: RepGhost-111
+  source: samples/vision/repghost/README.md
+- name: RepGhost-130
+  source: samples/vision/repghost/README.md
+- name: RepGhost-150
+  source: samples/vision/repghost/README.md
+- name: RepGhost-200
+  source: samples/vision/repghost/README.md
 manifest_tasks:
 - image-classification
+inputs:
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repghost-200-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repghost-150-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repghost-130-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repghost-111-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repghost-100-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repghost-200-multithread-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repghost-150-multithread-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repghost-130-multithread-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repghost-111-multithread-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repghost-100-multithread-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+conversion_configs:
+- path: samples/vision/repghost/conversion/RepGhost_100.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+- path: samples/vision/repghost/conversion/RepGhost_111.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+- path: samples/vision/repghost/conversion/RepGhost_130.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+- path: samples/vision/repghost/conversion/RepGhost_150.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+- path: samples/vision/repghost/conversion/RepGhost_200.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+usage:
+- source: samples/vision/repghost/README.md
+  lines:
+  - bash samples/vision/repghost/model/download.sh x5 100
+  - python3 samples/vision/repghost/runtime/python/main.py
+  - --target x5 --variant 100
+  - --test-img samples/vision/repghost/test_data/ibex.JPEG
+  - --label-file datasets/imagenet/imagenet_classes.names
+sourced_benchmarks:
+- id: repghost-200-x5
+  platform: x5
+  metric: latency
+  value: 2.89
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 200 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-200-x5
+  platform: x5
+  metric: throughput
+  value: 451.42
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 200 224x224
+  condition: multi-thread
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-200-x5
+  platform: x5
+  metric: top-1
+  value: 76.43
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 200 224x224
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-200-x5
+  platform: x5
+  metric: top-1
+  value: 75.25
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 200 224x224
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-150-x5
+  platform: x5
+  metric: latency
+  value: 2.2
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 150 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-150-x5
+  platform: x5
+  metric: throughput
+  value: 626.6
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 150 224x224
+  condition: multi-thread
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-150-x5
+  platform: x5
+  metric: top-1
+  value: 74.75
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 150 224x224
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-150-x5
+  platform: x5
+  metric: top-1
+  value: 73.5
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 150 224x224
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-130-x5
+  platform: x5
+  metric: latency
+  value: 1.87
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 130 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-130-x5
+  platform: x5
+  metric: throughput
+  value: 743.56
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 130 224x224
+  condition: multi-thread
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-130-x5
+  platform: x5
+  metric: top-1
+  value: 75.0
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 130 224x224
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-130-x5
+  platform: x5
+  metric: top-1
+  value: 73.57
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 130 224x224
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-111-x5
+  platform: x5
+  metric: latency
+  value: 1.71
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 111 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-111-x5
+  platform: x5
+  metric: throughput
+  value: 881.19
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 111 224x224
+  condition: multi-thread
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-111-x5
+  platform: x5
+  metric: top-1
+  value: 72.75
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 111 224x224
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-111-x5
+  platform: x5
+  metric: top-1
+  value: 71.25
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 111 224x224
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-100-x5
+  platform: x5
+  metric: latency
+  value: 1.55
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 100 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-100-x5
+  platform: x5
+  metric: throughput
+  value: 964.69
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 100 224x224
+  condition: multi-thread
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-100-x5
+  platform: x5
+  metric: top-1
+  value: 72.5
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 100 224x224
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-100-x5
+  platform: x5
+  metric: top-1
+  value: 72.25
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 100 224x224
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-200-multithread-x5
+  platform: x5
+  metric: latency
+  value: 8.76
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 200 224x224 Multi-thread
+  condition: multi-thread
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-150-multithread-x5
+  platform: x5
+  metric: latency
+  value: 6.3
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 150 224x224 Multi-thread
+  condition: multi-thread
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-130-multithread-x5
+  platform: x5
+  metric: latency
+  value: 5.3
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 130 224x224 Multi-thread
+  condition: multi-thread
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-111-multithread-x5
+  platform: x5
+  metric: latency
+  value: 4.47
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 111 224x224 Multi-thread
+  condition: multi-thread
+  origin: samples/vision/repghost/evaluator/README.md
+- id: repghost-100-multithread-x5
+  platform: x5
+  metric: latency
+  value: 4.08
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepGhost 100 224x224 Multi-thread
+  condition: multi-thread
+  origin: samples/vision/repghost/evaluator/README.md
+documented_downloads:
+- platform: x5
+  filename: RepGhost_100_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepGhost_100_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: RepGhost_111_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepGhost_111_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: RepGhost_130_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepGhost_130_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: RepGhost_150_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepGhost_150_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: RepGhost_200_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepGhost_200_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+example_image:
+  path: samples/vision/repghost/test_data/inference.png
+  source: samples/vision/repghost/test_data/inference.png

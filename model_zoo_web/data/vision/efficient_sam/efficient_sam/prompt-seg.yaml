@@ -7,12 +7,28 @@ source: efficient_sam
 family: efficient_sam
 task: prompt-seg
 description:
-  zh: EfficientSAM 用轻量图像编码器和掩码解码器做提示式分割。该示例部署 ViT-Tiny 编码器，并把两个正点提示固定在模型里。
-  en: EfficientSAM segments from prompts with a lightweight image encoder and a mask
-    decoder. This sample deploys the ViT-Tiny encoder with two positive point prompts
-    fixed in the model.
+  zh: EfficientSAM 使用轻量图像编码器完成提示式分割。本示例部署 ViT-Tiny 编码器与掩码解码器，解码器的两个正点提示固定在模型中。
+  en: EfficientSAM uses a lightweight image encoder to perform prompt-based segmentation. This sample deploys the ViT-Tiny encoder with a mask decoder whose two positive point prompts are fixed in the model.
 sample_path: samples/vision/efficient_sam
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/efficient_sam/README.md
+upstream:
+- kind: paper
+  name: arxiv 2312.00863
+  url: https://arxiv.org/abs/2312.00863
+  source: samples/vision/efficient_sam/README.md
+- kind: repository
+  name: yformer/EfficientSAM
+  url: https://github.com/yformer/EfficientSAM
+  source: samples/vision/efficient_sam/conversion/README.md
+- kind: repository
+  name: yformer/EfficientSAM.git
+  url: https://github.com/yformer/EfficientSAM.git
+  source: samples/vision/efficient_sam/conversion/README.md
 supported_platforms:
 - platform: x5
   evidence: docs/release/x5/models.yaml
@@ -22,5 +38,447 @@ supported_platforms:
   evidence: docs/release/s/models.yaml
 - platform: s600
   evidence: docs/release/s/models.yaml
+published_variants:
+- name: x5
+  source: samples/vision/efficient_sam/README.md
+- name: s100
+  source: samples/vision/efficient_sam/README.md
+- name: s100p
+  source: samples/vision/efficient_sam/README.md
+- name: s600
+  source: samples/vision/efficient_sam/README.md
 manifest_tasks:
 - promptable-image-segmentation
+inputs:
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: efficient-sam-encoder-one-thread-x5
+  shape: '[ 1, 3, 512, 512 ]'
+  layout: NCHW
+  format: float32
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: efficient-sam-encoder-eight-thread-x5
+  shape: '[ 1, 3, 512, 512 ]'
+  layout: NCHW
+  format: float32
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: efficient-sam-validation-x5
+  shape: 512x512
+  layout: NCHW
+  format: float32
+conversion_configs:
+- path: samples/vision/efficient_sam/conversion/configs/s100/efficient_sam_decoder_nashe_config.yaml
+  march: nash-e
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 256x32
+- path: samples/vision/efficient_sam/conversion/configs/s100/efficient_sam_encoder_nashe_config.yaml
+  march: nash-e
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 512x512
+- path: samples/vision/efficient_sam/conversion/configs/s100p/efficient_sam_decoder_nashm_config.yaml
+  march: nash-m
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 256x32
+- path: samples/vision/efficient_sam/conversion/configs/s100p/efficient_sam_encoder_nashm_config.yaml
+  march: nash-m
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 512x512
+- path: samples/vision/efficient_sam/conversion/configs/s600/efficient_sam_decoder_nashp_config.yaml
+  march: nash-p
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 256x32
+- path: samples/vision/efficient_sam/conversion/configs/s600/efficient_sam_encoder_nashp_config.yaml
+  march: nash-p
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 512x512
+- path: samples/vision/efficient_sam/conversion/configs/x5/efficient_sam_vitt_decoder_fixedprompt_512_default_config.yaml
+  march: bayes-e
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 256x32
+- path: samples/vision/efficient_sam/conversion/configs/x5/efficient_sam_vitt_encoder_featuremap_config.yaml
+  march: bayes-e
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 512x512
+usage:
+- source: samples/vision/efficient_sam/README.md
+  lines:
+  - python3 samples/vision/efficient_sam/model/download.py --target s100
+  - python3 samples/vision/efficient_sam/runtime/python/main.py --target s100
+sourced_benchmarks:
+- id: efficient-sam-encoder-one-thread-x5
+  platform: x5
+  metric: latency
+  value: 1451.073
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: EfficientSAM-Tiny Encoder
+  statistic: mean
+  condition: hrt_model_exec perf; default 200 frames
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-encoder-one-thread-x5
+  platform: x5
+  metric: throughput
+  value: 0.689135
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: EfficientSAM-Tiny Encoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-encoder-eight-thread-x5
+  platform: x5
+  metric: latency
+  value: 1974.671
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: EfficientSAM-Tiny Encoder
+  statistic: mean
+  condition: hrt_model_exec perf; default 200 frames
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-encoder-eight-thread-x5
+  platform: x5
+  metric: throughput
+  value: 3.96538
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: EfficientSAM-Tiny Encoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-decoder-one-thread-x5
+  platform: x5
+  metric: latency
+  value: 86.532
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: EfficientSAM-Tiny Fixed-prompt Decoder
+  statistic: mean
+  condition: hrt_model_exec perf; default 200 frames
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-decoder-one-thread-x5
+  platform: x5
+  metric: throughput
+  value: 11.553175
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: EfficientSAM-Tiny Fixed-prompt Decoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-decoder-eight-thread-x5
+  platform: x5
+  metric: latency
+  value: 155.994
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: EfficientSAM-Tiny Fixed-prompt Decoder
+  statistic: mean
+  condition: hrt_model_exec perf; default 200 frames
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-decoder-eight-thread-x5
+  platform: x5
+  metric: throughput
+  value: 50.565231
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: EfficientSAM-Tiny Fixed-prompt Decoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-validation-x5
+  platform: x5
+  metric: cosine_similarity
+  value: 0.968013
+  unit: ratio
+  source: docs/release/x5/benchmarks.yaml
+  variant: EfficientSAM-Tiny Encoder
+  condition: encoder final
+  origin: samples/vision/efficient_sam/README.md
+- id: efficient-sam-validation-x5-decoder
+  platform: x5
+  metric: cosine_similarity
+  value: 0.965641
+  unit: ratio
+  source: docs/release/x5/benchmarks.yaml
+  variant: EfficientSAM-Tiny Fixed-prompt Decoder
+  condition: fixed-prompt decoder low_res_masks
+  origin: samples/vision/efficient_sam/README.md
+- id: efficient-sam-validation-x5-decoder
+  platform: x5
+  metric: cosine_similarity
+  value: 0.997313
+  unit: ratio
+  source: docs/release/x5/benchmarks.yaml
+  variant: EfficientSAM-Tiny Fixed-prompt Decoder
+  condition: fixed-prompt decoder iou_predictions
+  origin: samples/vision/efficient_sam/README.md
+- id: efficient-sam-s100
+  platform: s100
+  metric: latency
+  value: 11.78
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S100
+  condition: encoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s100
+  platform: s100
+  metric: throughput
+  value: 84.75
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S100
+  condition: encoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s100
+  platform: s100
+  metric: latency
+  value: 22.93
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S100
+  condition: encoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s100
+  platform: s100
+  metric: throughput
+  value: 86.95
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S100
+  condition: encoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s100
+  platform: s100
+  metric: latency
+  value: 3.25
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S100
+  condition: decoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s100
+  platform: s100
+  metric: throughput
+  value: 306.31
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S100
+  condition: decoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s100
+  platform: s100
+  metric: latency
+  value: 5.94
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S100
+  condition: decoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s100
+  platform: s100
+  metric: throughput
+  value: 334.44
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S100
+  condition: decoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s100p
+  platform: s100p
+  metric: latency
+  value: 9.36
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S100P
+  condition: encoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s100p
+  platform: s100p
+  metric: throughput
+  value: 106.69
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S100P
+  condition: encoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s100p
+  platform: s100p
+  metric: latency
+  value: 18.2
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S100P
+  condition: encoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s100p
+  platform: s100p
+  metric: throughput
+  value: 109.52
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S100P
+  condition: encoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s100p
+  platform: s100p
+  metric: latency
+  value: 2.49
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S100P
+  condition: decoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s100p
+  platform: s100p
+  metric: throughput
+  value: 399.96
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S100P
+  condition: decoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s100p
+  platform: s100p
+  metric: latency
+  value: 4.47
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S100P
+  condition: decoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s100p
+  platform: s100p
+  metric: throughput
+  value: 445.74
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S100P
+  condition: decoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s600
+  platform: s600
+  metric: latency
+  value: 6.72
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S600
+  condition: encoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s600
+  platform: s600
+  metric: throughput
+  value: 148.6
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S600
+  condition: encoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s600
+  platform: s600
+  metric: latency
+  value: 19.58
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S600
+  condition: encoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s600
+  platform: s600
+  metric: throughput
+  value: 598.44
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S600
+  condition: encoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s600
+  platform: s600
+  metric: latency
+  value: 1.5
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S600
+  condition: decoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s600
+  platform: s600
+  metric: throughput
+  value: 662.55
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S600
+  condition: decoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s600
+  platform: s600
+  metric: latency
+  value: 4.08
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S600
+  condition: decoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+- id: efficient-sam-s600
+  platform: s600
+  metric: throughput
+  value: 2831.1
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: EfficientSAM encoder and decoder on RDK S600
+  condition: decoder
+  origin: samples/vision/efficient_sam/evaluator/README.md
+documented_downloads:
+- platform: x5
+  filename: efficient_sam_vitt_decoder_fixedprompt_512_default.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/efficient_sam/efficient_sam_vitt_decoder_fixedprompt_512_default.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: efficient_sam_vitt_encoder_512x512_default_none.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/efficient_sam/efficient_sam_vitt_encoder_512x512_default_none.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: s100
+  filename: nash-e/efficient_sam_vitt_encoder_512x512_nashe.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/efficient_sam/nash-e/efficient_sam_vitt_encoder_512x512_nashe.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100
+  filename: nash-e/efficient_sam_vitt_decoder_512_nashe.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/efficient_sam/nash-e/efficient_sam_vitt_decoder_512_nashe.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100p
+  filename: nash-m/efficient_sam_vitt_encoder_512x512_nashm.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/efficient_sam/nash-m/efficient_sam_vitt_encoder_512x512_nashm.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100p
+  filename: nash-m/efficient_sam_vitt_decoder_512_nashm.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/efficient_sam/nash-m/efficient_sam_vitt_decoder_512_nashm.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s600
+  filename: nash-p/efficient_sam_vitt_encoder_512x512_nashp.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/efficient_sam/nash-p/efficient_sam_vitt_encoder_512x512_nashp.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s600
+  filename: nash-p/efficient_sam_vitt_decoder_512_nashp.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/efficient_sam/nash-p/efficient_sam_vitt_decoder_512_nashp.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+example_image:
+  path: samples/vision/efficient_sam/test_data/dogs.jpg
+  source: samples/vision/efficient_sam/test_data/dogs.jpg

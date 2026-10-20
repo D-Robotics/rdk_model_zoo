@@ -7,15 +7,48 @@ source: unetmobilenet
 family: unetmobilenet
 task: semseg
 description:
-  zh: UNetMobileNet 把 U-Net 的编码器-解码器和轻量 MobileNet 骨干组合在一起，按 Cityscapes 类别做道路场景语义分割。
-  en: UNetMobileNet pairs a U-Net encoder-decoder with a lightweight MobileNet backbone
-    and labels road scenes with the Cityscapes classes.
+  zh: UNetMobileNet 结合 U-Net 编解码结构与轻量 MobileNet 主干，对道路场景进行 Cityscapes 19 类语义分割。本示例提供 S 系列的 Python 与 C++ 推理。
+  en: UNetMobileNet combines a U-Net encoder-decoder with a lightweight MobileNet backbone. This sample segments road scenes into the 19 Cityscapes classes and provides Python and C++ inference on the S series.
 sample_path: samples/vision/unetmobilenet
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+upstream:
+- kind: paper
+  name: arxiv 1505.04597
+  url: https://arxiv.org/abs/1505.04597
+  source: samples/vision/unetmobilenet/README.md
+- kind: paper
+  name: arxiv 1704.04861
+  url: https://arxiv.org/abs/1704.04861
+  source: samples/vision/unetmobilenet/README.md
 supported_platforms:
 - platform: s100
   evidence: docs/release/s/models.yaml
 - platform: s600
   evidence: docs/release/s/models.yaml
+published_variants:
+- name: s100
+  source: samples/vision/unetmobilenet/README.md
+- name: s600
+  source: samples/vision/unetmobilenet/README.md
 manifest_tasks:
 - semantic-segmentation
+usage:
+- source: samples/vision/unetmobilenet/README.md
+  lines:
+  - bash samples/vision/unetmobilenet/model/download.sh --target s100
+  - python3 samples/vision/unetmobilenet/runtime/python/main.py --target s100
+  - python3 samples/vision/unetmobilenet/runtime/python/main.py --dry-run --target s600
+documented_downloads:
+- platform: s100
+  filename: s100/unet_mobilenet_1024x2048_nv12.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/unet_mobilenet/unet_mobilenet_1024x2048_nv12.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s600
+  filename: s600/unet_mobilenet_1024x2048_nv12.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/unet_mobilenet/unet_mobilenet_1024x2048_nv12.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+example_image:
+  path: samples/vision/unetmobilenet/test_data/result.jpg
+  source: samples/vision/unetmobilenet/test_data/result.jpg

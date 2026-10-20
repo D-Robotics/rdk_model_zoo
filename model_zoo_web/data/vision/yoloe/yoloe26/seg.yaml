@@ -7,20 +7,112 @@ source: yoloe
 family: yoloe26
 task: seg
 description:
-  zh: YOLOE-26 是无提示实例分割模型。它不使用 DFL，框头直接输出四边距离，并用全局 Top-K 而不是 NMS 选择候选，掩码仍由系数和原型特征组成。
-  en: 'YOLOE-26 is a prompt-free instance segmenter without DFL: the box head emits
-    one distance per side, candidates are kept by global top-K instead of NMS, and
-    masks still combine coefficients with prototypes.'
+  zh: YOLOE 在本示例中提供固定 4585 类词表的 Prompt-Free（PF）实例分割。11（E11）使用 DFL16 框回归——64 个框通道在 stride 8/16/32 上按 LTRB 四边各解码为 16-bin 分布——随后做类别内 NMS。26（E26）不使用 DFL（reg_max=1）：框头对每边直接输出一个 LTRB 距离，候选筛选取全局 Top-K 分数，不做 NMS。模型词表固定，不提供任意文字或视觉提示输入。
+  en: 'YOLOE provides prompt-free (PF) instance segmentation over a fixed, ordered 4585-class vocabulary. Version 11 (E11) uses DFL16 box regression — the 64 box channels decode into a 16-bin distribution per LTRB side at strides 8/16/32 — followed by classwise NMS. Version 26 (E26) uses no DFL (reg_max=1): its box head directly emits one LTRB distance per side, and candidate selection keeps global Top-K scores without NMS. These exports do not accept arbitrary text or visual prompts.'
 sample_path: samples/vision/yoloe
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/yoloe/README.md
+upstream:
+- kind: paper
+  name: arxiv 2503.07465v1
+  url: https://arxiv.org/pdf/2503.07465v1
+  source: samples/vision/yoloe/README.md
+- kind: repository
+  name: um-assn/yoloe
+  url: https://github.com/um-assn/yoloe
+  source: samples/vision/yoloe/README.md
+- kind: repository
+  name: ultralytics/ultralytics
+  url: https://github.com/ultralytics/ultralytics
+  source: samples/vision/yoloe/README.md
+- kind: repository
+  name: um-assn/yoloe.git
+  url: https://github.com/um-assn/yoloe.git
+  source: samples/vision/yoloe/conversion/README.md
 supported_platforms:
 - platform: s100
   evidence: docs/release/s/models.yaml
 - platform: s100p
   evidence: docs/release/s/models.yaml
-manifest_tasks:
-- instance-segmentation
-- object-detection
+published_variants:
+- name: 26n/s/m/l/x
+  source: samples/vision/yoloe/README.md
 facet_tasks:
 - instance-segmentation
 - object-detection
+manifest_tasks:
+- instance-segmentation
+- object-detection
+usage:
+- source: samples/vision/yoloe/README.md
+  lines:
+  - python3 samples/vision/yoloe/runtime/python/main.py --list-models
+  - python3 samples/vision/yoloe/runtime/python/main.py --target s100 --variant 26n --dry-run
+documented_downloads:
+- platform: s100
+  filename: nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yoloe26_seg/nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+  sha256: bf4a03cb75fcfe67cdf6549ef0dec9541b5ae009cdef05e7879a4af9c75a5439
+- platform: s100
+  filename: nash-e/yoloe_26s_seg_pf_nashe_640x640_nv12.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yoloe26_seg/nash-e/yoloe_26s_seg_pf_nashe_640x640_nv12.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+  sha256: a27c313dc922b778d3537187c7b55a82f87b826edc66abdef027e15770243ee6
+- platform: s100
+  filename: nash-e/yoloe_26m_seg_pf_nashe_640x640_nv12.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yoloe26_seg/nash-e/yoloe_26m_seg_pf_nashe_640x640_nv12.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+  sha256: d257d502a5245de823cdb76cc734974a1568e68bff02bece232895db29aceeef
+- platform: s100
+  filename: nash-e/yoloe_26l_seg_pf_nashe_640x640_nv12.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yoloe26_seg/nash-e/yoloe_26l_seg_pf_nashe_640x640_nv12.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+  sha256: 695cd10aba09873bb9cd4f838113882945e979c745514185c7ab6f5cb17690c4
+- platform: s100
+  filename: nash-e/yoloe_26x_seg_pf_nashe_640x640_nv12.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yoloe26_seg/nash-e/yoloe_26x_seg_pf_nashe_640x640_nv12.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+  sha256: 119a6b069b32282915948e161f548b7b22136b765b70101c33d22680ac6fef24
+- platform: s100p
+  filename: nash-m/yoloe_26n_seg_pf_nashm_640x640_nv12.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yoloe26_seg/nash-m/yoloe_26n_seg_pf_nashm_640x640_nv12.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+  sha256: 58922c669bcccec7a00c11719db6c3b9c4eaa4e0388b58bd120fda914fe9d048
+- platform: s100p
+  filename: nash-m/yoloe_26s_seg_pf_nashm_640x640_nv12.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yoloe26_seg/nash-m/yoloe_26s_seg_pf_nashm_640x640_nv12.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+  sha256: 73f838c5d52a73451b8af50002c020d571d8fd75beeb29c54e0a6c956e0c45a5
+- platform: s100p
+  filename: nash-m/yoloe_26m_seg_pf_nashm_640x640_nv12.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yoloe26_seg/nash-m/yoloe_26m_seg_pf_nashm_640x640_nv12.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+  sha256: 8621baa458a94d3d1946665609633f1ecdd930efeeebe91d975f822ffd273af4
+- platform: s100p
+  filename: nash-m/yoloe_26l_seg_pf_nashm_640x640_nv12.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yoloe26_seg/nash-m/yoloe_26l_seg_pf_nashm_640x640_nv12.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+  sha256: 314df1d0d60c839f9ff4248ab0d4ff2adc3cc8e514a8e9cf9acca62527696738
+- platform: s100p
+  filename: nash-m/yoloe_26x_seg_pf_nashm_640x640_nv12.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/yoloe26_seg/nash-m/yoloe_26x_seg_pf_nashm_640x640_nv12.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+  sha256: 2abf9d30dd487f2d5eb53444b7272a71d7be18265a39bd463cfd5b0cd6c14539
+example_image:
+  path: samples/vision/yoloe/test_data/source_s11_result_figure.jpg
+  source: samples/vision/yoloe/test_data/source_s11_result_figure.jpg

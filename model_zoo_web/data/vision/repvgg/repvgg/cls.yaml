@@ -7,13 +7,442 @@ source: repvgg
 family: repvgg
 task: cls
 description:
-  zh: RepVGG 在训练时可以是多分支结构，部署时折叠成一串 3×3 卷积和 ReLU，形成 VGG 式分类网络。
-  en: RepVGG can train with multiple branches and deploys as a plain stack of 3×3
-    convolutions and ReLUs, a VGG-style image classifier.
+  zh: RepVGG 是一种 VGG 风格的卷积神经网络家族，核心思想是结构重参数化。训练阶段可以使用多分支结构，部署阶段转换为由 `3x3` 卷积和 ReLU 组成的直连结构，以提升推理效率。
+  en: RepVGG is a VGG-style convolutional network family that uses structural re-parameterization. During training it can use multi-branch structures, while during deployment it is converted into a plain stack of `3x3` convolution and ReLU layers for efficient inference.
 sample_path: samples/vision/repvgg
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/repvgg/README.md
+upstream:
+- kind: paper
+  name: arxiv 2101.03697
+  url: https://arxiv.org/abs/2101.03697
+  source: samples/vision/repvgg/README.md
+- kind: repository
+  name: DingXiaoH/RepVGG
+  url: https://github.com/DingXiaoH/RepVGG
+  source: samples/vision/repvgg/README.md
+- kind: repository
+  name: DingXiaoH/RepVGG.git
+  url: https://github.com/DingXiaoH/RepVGG.git
+  source: samples/vision/repvgg/conversion/README.md
 supported_platforms:
 - platform: x5
   evidence: docs/release/x5/models.yaml
+published_variants:
+- name: RepVGG-A0
+  source: samples/vision/repvgg/README.md
+- name: RepVGG-A1
+  source: samples/vision/repvgg/README.md
+- name: RepVGG-A2
+  source: samples/vision/repvgg/README.md
+- name: RepVGG-B0
+  source: samples/vision/repvgg/README.md
+- name: RepVGG-B1g2
+  source: samples/vision/repvgg/README.md
+- name: RepVGG-B1g4
+  source: samples/vision/repvgg/README.md
 manifest_tasks:
 - image-classification
+inputs:
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repvgg-b1g2-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repvgg-b1g4-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repvgg-b0-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repvgg-a2-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repvgg-a1-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repvgg-a0-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repvgg-b1g2-multithread-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repvgg-b1g4-multithread-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repvgg-b0-multithread-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repvgg-a2-multithread-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repvgg-a1-multithread-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: repvgg-a0-multithread-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+conversion_configs:
+- path: samples/vision/repvgg/conversion/RepVGG_A0_config.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+- path: samples/vision/repvgg/conversion/RepVGG_A1_config.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+- path: samples/vision/repvgg/conversion/RepVGG_A2_config.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+- path: samples/vision/repvgg/conversion/RepVGG_B0_config.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+- path: samples/vision/repvgg/conversion/RepVGG_B1g2_config.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+- path: samples/vision/repvgg/conversion/RepVGG_B1g4_config.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+usage:
+- source: samples/vision/repvgg/README.md
+  lines:
+  - bash samples/vision/repvgg/model/download.sh x5 a0
+  - python3 samples/vision/repvgg/runtime/python/main.py
+  - --target x5 --variant a0
+  - --test-img samples/vision/repvgg/test_data/gooze.JPEG
+  - --label-file datasets/imagenet/imagenet_classes.names
+sourced_benchmarks:
+- id: repvgg-b1g2-x5
+  platform: x5
+  metric: latency
+  value: 9.77
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG B1g2 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-b1g2-x5
+  platform: x5
+  metric: throughput
+  value: 109.61
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG B1g2 224x224
+  condition: multi-thread
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-b1g2-x5
+  platform: x5
+  metric: top-1
+  value: 77.78
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG B1g2 224x224
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-b1g2-x5
+  platform: x5
+  metric: top-1
+  value: 68.25
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG B1g2 224x224
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-b1g4-x5
+  platform: x5
+  metric: latency
+  value: 7.58
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG B1g4 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-b1g4-x5
+  platform: x5
+  metric: throughput
+  value: 144.39
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG B1g4 224x224
+  condition: multi-thread
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-b1g4-x5
+  platform: x5
+  metric: top-1
+  value: 77.58
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG B1g4 224x224
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-b1g4-x5
+  platform: x5
+  metric: top-1
+  value: 62.75
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG B1g4 224x224
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-b0-x5
+  platform: x5
+  metric: latency
+  value: 3.07
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG B0 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-b0-x5
+  platform: x5
+  metric: throughput
+  value: 410.55
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG B0 224x224
+  condition: multi-thread
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-b0-x5
+  platform: x5
+  metric: top-1
+  value: 75.14
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG B0 224x224
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-b0-x5
+  platform: x5
+  metric: top-1
+  value: 60.36
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG B0 224x224
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-a2-x5
+  platform: x5
+  metric: latency
+  value: 6.07
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG A2 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-a2-x5
+  platform: x5
+  metric: throughput
+  value: 186.04
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG A2 224x224
+  condition: multi-thread
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-a2-x5
+  platform: x5
+  metric: top-1
+  value: 76.48
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG A2 224x224
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-a2-x5
+  platform: x5
+  metric: top-1
+  value: 62.97
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG A2 224x224
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-a1-x5
+  platform: x5
+  metric: latency
+  value: 2.67
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG A1 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-a1-x5
+  platform: x5
+  metric: throughput
+  value: 482.2
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG A1 224x224
+  condition: multi-thread
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-a1-x5
+  platform: x5
+  metric: top-1
+  value: 74.46
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG A1 224x224
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-a1-x5
+  platform: x5
+  metric: top-1
+  value: 62.78
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG A1 224x224
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-a0-x5
+  platform: x5
+  metric: latency
+  value: 1.85
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG A0 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-a0-x5
+  platform: x5
+  metric: throughput
+  value: 757.73
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG A0 224x224
+  condition: multi-thread
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-a0-x5
+  platform: x5
+  metric: top-1
+  value: 72.41
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG A0 224x224
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-a0-x5
+  platform: x5
+  metric: top-1
+  value: 51.75
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG A0 224x224
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-b1g2-multithread-x5
+  platform: x5
+  metric: latency
+  value: 36.19
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG B1g2 224x224 Multi-thread
+  condition: multi-thread
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-b1g4-multithread-x5
+  platform: x5
+  metric: latency
+  value: 27.47
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG B1g4 224x224 Multi-thread
+  condition: multi-thread
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-b0-multithread-x5
+  platform: x5
+  metric: latency
+  value: 9.65
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG B0 224x224 Multi-thread
+  condition: multi-thread
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-a2-multithread-x5
+  platform: x5
+  metric: latency
+  value: 21.31
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG A2 224x224 Multi-thread
+  condition: multi-thread
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-a1-multithread-x5
+  platform: x5
+  metric: latency
+  value: 8.21
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG A1 224x224 Multi-thread
+  condition: multi-thread
+  origin: samples/vision/repvgg/evaluator/README.md
+- id: repvgg-a0-multithread-x5
+  platform: x5
+  metric: latency
+  value: 5.21
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: RepVGG A0 224x224 Multi-thread
+  condition: multi-thread
+  origin: samples/vision/repvgg/evaluator/README.md
+documented_downloads:
+- platform: x5
+  filename: RepVGG_A0_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepVGG_A0_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: RepVGG_A1_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepVGG_A1_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: RepVGG_A2_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepVGG_A2_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: RepVGG_B0_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepVGG_B0_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: RepVGG_B1g2_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepVGG_B1g2_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: RepVGG_B1g4_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/RepVGG_B1g4_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+example_image:
+  path: samples/vision/repvgg/test_data/inference.png
+  source: samples/vision/repvgg/test_data/inference.png

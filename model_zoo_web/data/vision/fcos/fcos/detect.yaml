@@ -7,13 +7,243 @@ source: fcos
 family: fcos
 task: detect
 description:
-  zh: FCOS 是单阶段无锚框检测器，在多层特征图上预测类别、到框四边的距离和中心度。
-  en: FCOS is a one-stage anchor-free detector. On each feature level it predicts
-    class scores, distances to the four box sides, and center-ness.
+  zh: FCOS 是单阶段、无 anchor 的检测器，在五个特征层上预测类别分数、左上右下距离和 center-ness。
+  en: FCOS is a one-stage anchor-free detector. On each feature level it predicts class scores, distances to the four box sides, and center-ness.
 sample_path: samples/vision/fcos
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/fcos/README.md
+upstream:
+- kind: paper
+  name: arxiv 1904.01355
+  url: https://arxiv.org/abs/1904.01355
+  source: samples/vision/fcos/README.md
+- kind: repository
+  name: tianzhi0549/FCOS
+  url: https://github.com/tianzhi0549/FCOS
+  source: samples/vision/fcos/README.md
 supported_platforms:
 - platform: x5
   evidence: docs/release/x5/models.yaml
+published_variants:
+- name: efficientnetb0 / 512
+  source: samples/vision/fcos/README.md
+- name: efficientnetb2 / 768
+  source: samples/vision/fcos/README.md
+- name: efficientnetb3 / 896
+  source: samples/vision/fcos/README.md
 manifest_tasks:
 - object-detection
+inputs:
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: fcos-efficientnetb0-x5
+  shape: 512x512
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: fcos-efficientnetb2-x5
+  shape: 768x768
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: fcos-efficientnetb3-x5
+  shape: 896x896
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: fcos-efficientnetb0-single-thread-x5
+  shape: 512x512
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: fcos-efficientnetb0-two-thread-x5
+  shape: 512x512
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: fcos-efficientnetb2-single-thread-x5
+  shape: 768x768
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: fcos-efficientnetb2-two-thread-x5
+  shape: 768x768
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: fcos-efficientnetb3-single-thread-x5
+  shape: 896x896
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: fcos-efficientnetb3-two-thread-x5
+  shape: 896x896
+  format: NV12
+usage:
+- source: samples/vision/fcos/README.md
+  lines:
+  - bash samples/vision/fcos/model/download.sh --target x5 --variant efficientnetb0
+  - python3 samples/vision/fcos/runtime/python/main.py
+  - --target x5
+  - --asset-id x5:fcos:fcos_efficientnetb0_detect_512x512_bayese_nv12.bin
+  - --test-img samples/vision/fcos/test_data/bus.jpg
+  - --img-save-path /tmp/fcos-result.jpg
+sourced_benchmarks:
+- id: fcos-efficientnetb0-x5
+  platform: x5
+  metric: post_process_latency
+  value: 9
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: FCOS EfficientNet B0 512x512
+  condition: Python post-process
+  origin: samples/vision/fcos/README.md
+- id: fcos-efficientnetb2-x5
+  platform: x5
+  metric: post_process_latency
+  value: 16
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: FCOS EfficientNet B2 768x768
+  condition: Python post-process
+  origin: samples/vision/fcos/README.md
+- id: fcos-efficientnetb3-x5
+  platform: x5
+  metric: post_process_latency
+  value: 20
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: FCOS EfficientNet B3 896x896
+  condition: Python post-process
+  origin: samples/vision/fcos/README.md
+- id: fcos-efficientnetb0-single-thread-x5
+  platform: x5
+  metric: latency
+  value: 3.3
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: FCOS EfficientNet B0 512x512 Single Thread
+  condition: BPU
+  origin: samples/vision/fcos/evaluator/README.md
+- id: fcos-efficientnetb0-single-thread-x5
+  platform: x5
+  metric: throughput
+  value: 298.0
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: FCOS EfficientNet B0 512x512 Single Thread
+  condition: BPU
+  origin: samples/vision/fcos/evaluator/README.md
+- id: fcos-efficientnetb0-two-thread-x5
+  platform: x5
+  metric: latency
+  value: 6.2
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: FCOS EfficientNet B0 512x512 Two Threads
+  condition: BPU
+  origin: samples/vision/fcos/evaluator/README.md
+- id: fcos-efficientnetb0-two-thread-x5
+  platform: x5
+  metric: throughput
+  value: 323.0
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: FCOS EfficientNet B0 512x512 Two Threads
+  condition: BPU
+  origin: samples/vision/fcos/evaluator/README.md
+- id: fcos-efficientnetb2-single-thread-x5
+  platform: x5
+  metric: latency
+  value: 14.4
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: FCOS EfficientNet B2 768x768 Single Thread
+  condition: BPU
+  origin: samples/vision/fcos/evaluator/README.md
+- id: fcos-efficientnetb2-single-thread-x5
+  platform: x5
+  metric: throughput
+  value: 69.5
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: FCOS EfficientNet B2 768x768 Single Thread
+  condition: BPU
+  origin: samples/vision/fcos/evaluator/README.md
+- id: fcos-efficientnetb2-two-thread-x5
+  platform: x5
+  metric: latency
+  value: 28.1
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: FCOS EfficientNet B2 768x768 Two Threads
+  condition: BPU
+  origin: samples/vision/fcos/evaluator/README.md
+- id: fcos-efficientnetb2-two-thread-x5
+  platform: x5
+  metric: throughput
+  value: 70.9
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: FCOS EfficientNet B2 768x768 Two Threads
+  condition: BPU
+  origin: samples/vision/fcos/evaluator/README.md
+- id: fcos-efficientnetb3-single-thread-x5
+  platform: x5
+  metric: latency
+  value: 26.1
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: FCOS EfficientNet B3 896x896 Single Thread
+  condition: BPU
+  origin: samples/vision/fcos/evaluator/README.md
+- id: fcos-efficientnetb3-single-thread-x5
+  platform: x5
+  metric: throughput
+  value: 38.2
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: FCOS EfficientNet B3 896x896 Single Thread
+  condition: BPU
+  origin: samples/vision/fcos/evaluator/README.md
+- id: fcos-efficientnetb3-two-thread-x5
+  platform: x5
+  metric: latency
+  value: 51.6
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: FCOS EfficientNet B3 896x896 Two Threads
+  condition: BPU
+  origin: samples/vision/fcos/evaluator/README.md
+- id: fcos-efficientnetb3-two-thread-x5
+  platform: x5
+  metric: throughput
+  value: 38.7
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: FCOS EfficientNet B3 896x896 Two Threads
+  condition: BPU
+  origin: samples/vision/fcos/evaluator/README.md
+documented_downloads:
+- platform: x5
+  filename: fcos_efficientnetb0_detect_512x512_bayese_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fcos_efficientnetb0_detect_512x512_bayese_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: fcos_efficientnetb2_detect_768x768_bayese_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fcos_efficientnetb2_detect_768x768_bayese_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: fcos_efficientnetb3_detect_896x896_bayese_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/fcos_efficientnetb3_detect_896x896_bayese_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+example_image:
+  path: samples/vision/fcos/test_data/demo_rdkx5_fcos_detect.jpg
+  source: samples/vision/fcos/test_data/demo_rdkx5_fcos_detect.jpg

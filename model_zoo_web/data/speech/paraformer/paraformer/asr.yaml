@@ -8,12 +8,117 @@ family: paraformer
 task: asr
 description:
   zh: Paraformer 把 16 kHz 语音转成文本，流水线包含前端、编码器、预测器、CPU 上的连续积分发放和译码器，对应多段分开部署的模型。
-  en: Paraformer converts 16 kHz speech to text through a frontend, encoder, predictor,
-    CPU continuous integrate-and-fire, and decoder, deployed as separate models.
+  en: Paraformer converts 16 kHz speech into text using a FunASR frontend, an encoder, a predictor, CPU continuous integrate-and-fire (CIF), and a decoder. The deployment uses three separately published S100 HBM files and an ordered 8,404-token vocabulary. CPU CIF is explicit between predictor and decoder; text decoding preserves repeated tokens and removes source special/BPE markers. There is no VAD, streaming, punctuation restoration, timestamp output or custom hotword support in this sample.
 sample_path: samples/speech/paraformer
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/speech/paraformer/README.md
+upstream:
+- kind: repository
+  name: modelscope/FunASR
+  url: https://github.com/modelscope/FunASR
+  source: samples/speech/paraformer/README.md
 supported_platforms:
 - platform: s100
   evidence: docs/release/s/models.yaml
+published_variants:
+- name: large, encoder 400×560 / predictor 400×512 / decoder 100×8404
+  source: samples/speech/paraformer/README.md
 manifest_tasks:
 - speech-recognition
+usage:
+- source: samples/speech/paraformer/README.md
+  lines:
+  - bash samples/speech/paraformer/model/download_model.sh --target s100 --dry-run
+  - python samples/speech/paraformer/runtime/python/main.py --target s100 --dry-run
+  - python samples/speech/paraformer/runtime/python/main.py --preprocess-only --output-dir outputs/paraformer-prepared
+  - bash samples/speech/paraformer/model/download_model.sh --target s100
+  - python samples/speech/paraformer/runtime/python/main.py --target s100 --output-dir outputs/paraformer-inference
+sourced_benchmarks:
+- id: paraformer-s100
+  platform: s100
+  metric: encoder-latency
+  value: 33.63
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: Paraformer large contextual ASR on RDK S100
+  condition: hbm_runtime
+  origin: samples/speech/paraformer/evaluator/README.md
+- id: paraformer-s100
+  platform: s100
+  metric: predictor-latency
+  value: 1.44
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: Paraformer large contextual ASR on RDK S100
+  condition: hbm_runtime
+  origin: samples/speech/paraformer/evaluator/README.md
+- id: paraformer-s100
+  platform: s100
+  metric: cpu-cif-latency
+  value: 3.41
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: Paraformer large contextual ASR on RDK S100
+  condition: hbm_runtime
+  origin: samples/speech/paraformer/evaluator/README.md
+- id: paraformer-s100
+  platform: s100
+  metric: decoder-latency
+  value: 7.12
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: Paraformer large contextual ASR on RDK S100
+  condition: hbm_runtime
+  origin: samples/speech/paraformer/evaluator/README.md
+- id: paraformer-s100
+  platform: s100
+  metric: end-to-end-latency
+  value: 45.61
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: Paraformer large contextual ASR on RDK S100
+  condition: hbm_runtime
+  origin: samples/speech/paraformer/evaluator/README.md
+- id: paraformer-s100
+  platform: s100
+  metric: end-to-end-latency
+  value: 40.81
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: Paraformer large contextual ASR on RDK S100
+  condition: C++ UCP
+  origin: samples/speech/paraformer/evaluator/README.md
+- id: paraformer-s100
+  platform: s100
+  metric: cer
+  value: 3.13
+  unit: percent
+  source: docs/release/s/benchmarks.yaml
+  variant: Paraformer large contextual ASR on RDK S100
+  condition: Python hbm_runtime and C++ UCP
+  origin: samples/speech/paraformer/evaluator/README.md
+documented_downloads:
+- platform: s100
+  filename: s100/paraformer_large_encoder_400x560_s100.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/paraformer/nash-e/encoder_int16.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100
+  filename: s100/paraformer_large_predictor_400x512_s100.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/paraformer/nash-e/predictor_int16.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100
+  filename: s100/paraformer_large_decoder_400x512_s100.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/paraformer/nash-e/decoder_int16.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100
+  filename: s100/tokens.json
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/paraformer/nash-e/tokens.json
+  source: docs/release/s/models.yaml
+  format: json

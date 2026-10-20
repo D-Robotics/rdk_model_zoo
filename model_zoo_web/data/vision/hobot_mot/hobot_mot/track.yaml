@@ -8,11 +8,19 @@ family: hobot_mot
 task: track
 description:
   zh: HobotMot 是运行在 CPU 上的多目标跟踪器。它接收每帧检测框、置信度和类别，输出轨迹编号以及轨迹消失通知，检测器结果需先转成它的输入格式。
-  en: HobotMot is a CPU multi-object tracker. Each frame supplies boxes, scores and
-    classes; it returns track ids and disappearance notices. A detector such as YOLO
-    must first convert its results into that input.
+  en: HobotMot is a CPU multi-object tracker. Each frame supplies boxes, scores and classes; it returns track ids and disappearance notices. A detector such as YOLO must first convert its results into that input.
 sample_path: samples/vision/hobot_mot
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/hobot_mot/README.md
+upstream:
+- kind: repository
+  name: D-Robotics/mot
+  url: https://github.com/D-Robotics/mot
+  source: samples/vision/hobot_mot/README.md
 supported_platforms:
 - platform: x5
   evidence: samples/vision/hobot_mot/README.md
@@ -24,3 +32,16 @@ supported_platforms:
   evidence: samples/vision/hobot_mot/README.md
 manifest_tasks:
 - multi-object-tracking
+usage:
+- source: samples/vision/hobot_mot/README.md
+  lines:
+  - python3 model/download.py
+  - cmake -B runtime/cpp/build -S runtime/cpp && cmake --build runtime/cpp/build
+  - ./runtime/cpp/run.sh
+documented_downloads:
+- platform: x5
+  filename: vendor/mot-0120205146d88c3474bfc2936522e349e169fa8d.tar.gz
+  url: https://codeload.github.com/D-Robotics/mot/tar.gz/0120205146d88c3474bfc2936522e349e169fa8d
+  source: docs/release/x5/models.yaml
+  format: tar.gz
+  sha256: a0bf3b9738af2f7c4be5885ac777cdf93dab6d4dd374a297ceebebe58268b54b
