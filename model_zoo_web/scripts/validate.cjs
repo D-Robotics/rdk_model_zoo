@@ -83,10 +83,20 @@ if (preview) {
         if (row.concurrency !== undefined) assert.ok(Number.isInteger(row.concurrency) && row.concurrency > 0, `${model.id}: concurrency must be a positive integer from the source`);
       }
       if (model.coverImage.startsWith('assets/models/pending-heroes/')) {
-        assert.equal(model.heroProvenance?.runtime, 'display-composition', `${model.id}: a composed pending hero must record display-composition`);
+        const runtime = model.heroProvenance?.runtime;
+        assert.ok(
+          runtime === 'display-composition' || runtime === 'host-float-reference',
+          `${model.id}: pending hero runtime must be display-composition or host-float-reference`,
+        );
         assert.match(model.heroProvenance?.revision || '', /^[0-9a-f]{40}$/, `${model.id}: composed hero needs the pinned revision`);
         assert.match(model.heroProvenance?.input || '', /^samples\/.+\.(?:jpg|jpeg|png|webp)$/i, `${model.id}: composed hero needs the source image`);
         assert.ok(model.heroProvenance?.kind, `${model.id}: composed hero needs a kind`);
+        if (runtime === 'host-float-reference') {
+          assert.match(model.heroProvenance?.note || '', /not board output/, `${model.id}: host float hero must say it is not board output`);
+          assert.match(model.heroProvenance?.modelUrl || '', /^https:\/\//, `${model.id}: host float hero needs the checkpoint URL`);
+          assert.ok(model.heroProvenance?.framework, `${model.id}: host float hero needs a framework`);
+          assert.equal(model.coverLabel, '浮点参考', `${model.id}: host float hero must not use a board result label`);
+        }
       } else if (model.coverImage !== 'assets/pending-cover.svg') {
         assert.match(model.coverImage, /^https:\/\/raw\.githubusercontent\.com\/D-Robotics\/rdk_model_zoo\/[0-9a-f]{40}\//, `${model.id}: pending cover must be a file at the pinned revision`);
       }

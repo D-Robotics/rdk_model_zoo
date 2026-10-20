@@ -489,7 +489,10 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
             input: record.hero_visual.input,
             predictionsSource: record.hero_visual.predictions_source || record.hero_visual.input,
             revision,
-            runtime: 'display-composition',
+            runtime: record.hero_visual.runtime,
+            note: record.hero_visual.note || '',
+            modelUrl: record.hero_visual.model_url || '',
+            framework: record.hero_visual.framework || '',
           },
         } : {}),
         sourceInput: record.source_input ? {
@@ -498,7 +501,9 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
           layout: record.source_input.layout || '',
           shape: record.source_input.shape || '',
         } : null,
-        coverLabel: heroCover ? '参考结果' : (exampleImage ? '示例图' : '封面待补充'),
+        coverLabel: heroCover
+          ? (record.hero_visual.runtime === 'host-float-reference' ? '浮点参考' : '参考结果')
+          : (exampleImage ? '示例图' : '封面待补充'),
         sample: `${record.id}/${group.modelSize}`,
         source: sourceUrl,
         sourceType: 'repository',

@@ -342,12 +342,52 @@ documented_downloads:
   format: hbm
 hero_visual:
   file: model_zoo_web/release/assets/pending-heroes/yolov5-detect.webp
-  kind: result-crop
-  input: samples/vision/yolov5/test_data/result.jpg
-  predictions_source: samples/vision/yolov5/test_data/result.jpg
-  runtime: display-composition
-  note: "Composed for the pending hero from the pinned file at sample_revision. Runtime is display-composition, not a board run and not a new inference."
-  crop: [0, 450, 1352, 900]
+  kind: detection-overlay
+  input: samples/vision/yolov5/test_data/bus.jpg
+  predictions_source: model_zoo_web/release/assets/pending-heroes/yolov5-detect.json
+  runtime: host-float-reference
+  note: Host float reference, not board output.
+  model_file: yolov5n.pt
+  model_url: https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5n.pt
+  framework: yolov5-torch-hub-cpu/2.14.1+cpu
+  commit: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+  documented_in: samples/vision/yolov5/conversion/README.md
+  detections:
+  - label: person
+    score: 0.866514
+    box:
+    - 54.72
+    - 395.8
+    - 212.78
+    - 893.01
+  - label: person
+    score: 0.76569
+    box:
+    - 683.21
+    - 373.3
+    - 810.0
+    - 880.42
+  - label: person
+    score: 0.761771
+    box:
+    - 218.12
+    - 406.98
+    - 343.99
+    - 866.19
+  - label: person
+    score: 0.478612
+    box:
+    - 0.0
+    - 570.94
+    - 72.92
+    - 895.38
+  - label: bus
+    score: 0.434787
+    box:
+    - 27.54
+    - 230.84
+    - 805.34
+    - 773.21
 
 example_image:
   path: samples/vision/yolov5/test_data/bus.jpg

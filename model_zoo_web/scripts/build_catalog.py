@@ -624,19 +624,97 @@ def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> Non
         _validate_hero_visual(record, relative_source, revision, text_of)
 
 
+def _hero_asset_path(value: Any, label: str, suffix: str) -> str:
+    hero_file = require_string(value, label)
+    hero_path = PurePosixPath(hero_file)
+    if hero_path.is_absolute() or ".." in hero_path.parts or hero_path.parts[:4] != (
+        "model_zoo_web", "release", "assets", "pending-heroes",
+    ) or hero_path.suffix.lower() != suffix:
+        raise CatalogError(f"{label} must be a {suffix} file under model_zoo_web/release/assets/pending-heroes/")
+    if not (ROOT / hero_file).is_file():
+        raise CatalogError(f"{label} is missing: {hero_file}")
+    return hero_file
+
+
+def _validate_host_float_hero(entry: dict[str, Any], label: str, revision: str) -> None:
+    """Predictions come from a host run of the documented float checkpoint, stored beside the hero."""
+    note = require_string(entry.get("note"), f"{label}.note")
+    if "not board output" not in note or "Host float reference" not in note:
+        raise CatalogError(f"{label}.note must say this is a host float reference, not board output")
+    if require_string(entry.get("commit"), f"{label}.commit") != revision:
+        raise CatalogError(f"{label}.commit must be the pinned sample revision")
+    model_url = require_string(entry.get("model_url"), f"{label}.model_url")
+    if not model_url.startswith("https://"):
+        raise CatalogError(f"{label}.model_url must be an https checkpoint URL")
+    require_string(entry.get("model_file"), f"{label}.model_file")
+    require_string(entry.get("framework"), f"{label}.framework")
+    documented = validate_evidence_path(entry.get("documented_in"), f"{label}.documented_in")
+    found = _ls_tree(revision, documented)
+    if found is None or found[1] != "blob":
+        raise CatalogError(f"{label}.documented_in is not a file at {revision}: {documented}")
+    source = _hero_asset_path(entry.get("predictions_source"), f"{label}.predictions_source", ".json")
+    payload = json.loads((ROOT / source).read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise CatalogError(f"{label}.predictions_source must be a JSON object")
+    for key in ("model_url", "model_file", "input", "framework", "commit", "runtime"):
+        if payload.get(key) != entry.get(key):
+            raise CatalogError(f"{label}.{key} does not match the inference record")
+    if payload.get("runtime") != "host-float-reference":
+        raise CatalogError(f"{label} inference record must be host-float-reference")
+    kind = entry["kind"]
+    if kind == "classification-panel":
+        recorded = payload.get("topk")
+        declared = entry.get("topk")
+        if not isinstance(recorded, list) or len(recorded) != 5:
+            raise CatalogError(f"{label} inference record needs five Top-K rows")
+        if recorded != declared:
+            raise CatalogError(f"{label}.topk must be the five recorded probabilities")
+        for index, row in enumerate(recorded):
+            if not isinstance(row, dict):
+                raise CatalogError(f"{label}.topk[{index}] must be an object")
+            require_string(row.get("label"), f"{label}.topk[{index}].label")
+            score = row.get("score")
+            if isinstance(score, bool) or not isinstance(score, (int, float)) or not 0 <= float(score) <= 1:
+                raise CatalogError(f"{label}.topk[{index}].score must be a probability")
+        return
+    if kind not in {"detection-overlay", "segmentation-overlay"}:
+        raise CatalogError(f"{label}.kind is not a host-float hero")
+    recorded = payload.get("detections")
+    declared = entry.get("detections")
+    if not isinstance(recorded, list) or not recorded:
+        raise CatalogError(f"{label} inference record needs at least one detection")
+    if recorded != declared:
+        raise CatalogError(f"{label}.detections must be the recorded boxes")
+    for index, row in enumerate(recorded):
+        if not isinstance(row, dict):
+            raise CatalogError(f"{label}.detections[{index}] must be an object")
+        require_string(row.get("label"), f"{label}.detections[{index}].label")
+        score = row.get("score")
+        box = row.get("box")
+        if isinstance(score, bool) or not isinstance(score, (int, float)) or not 0 <= float(score) <= 1:
+            raise CatalogError(f"{label}.detections[{index}].score must be a probability")
+        if (
+            not isinstance(box, list) or len(box) != 4
+            or not all(isinstance(item, (int, float)) and not isinstance(item, bool) for item in box)
+        ):
+            raise CatalogError(f"{label}.detections[{index}].box must be four numbers")
+    if kind == "segmentation-overlay" and not payload.get("masks"):
+        raise CatalogError(f"{label} segmentation record must say masks were drawn")
+
+
 def _validate_hero_visual(record: dict[str, Any], relative_source: str, revision: str, text_of) -> None:
-    """A pending hero is either a crop of a pinned result image or a panel whose words are quoted from it."""
+    """A pending hero is a host float render or a crop/quote taken from a pinned file."""
     label = f"{relative_source}.hero_visual"
     entry = require_mapping(record.get("hero_visual"), label)
-    allowed = {"file", "kind", "input", "predictions_source", "runtime", "quote", "labels", "scores", "crop", "note"}
+    allowed = {
+        "file", "kind", "input", "predictions_source", "runtime", "quote", "labels", "scores",
+        "crop", "note", "model_file", "model_url", "framework", "commit", "documented_in",
+        "topk", "detections",
+    }
     unknown = sorted(set(entry) - allowed)
     if unknown:
         raise CatalogError(f"{label} has unknown fields: {', '.join(unknown)}")
     kind = require_string(entry.get("kind"), f"{label}.kind")
-    if kind not in {"classification-panel", "result-crop"}:
-        raise CatalogError(f"{label}.kind must be classification-panel or result-crop")
-    if entry.get("runtime") != "display-composition":
-        raise CatalogError(f"{label}.runtime must be display-composition")
     image = validate_evidence_path(entry.get("input"), f"{label}.input")
     suffix = PurePosixPath(image).suffix.lower()
     if suffix not in {".jpg", ".jpeg", ".png", ".webp"}:
@@ -644,15 +722,16 @@ def _validate_hero_visual(record: dict[str, Any], relative_source: str, revision
     found = _ls_tree(revision, image)
     if found is None or found[1] != "blob":
         raise CatalogError(f"{label}.input is not a file at {revision}: {image}")
+    _hero_asset_path(entry.get("file"), f"{label}.file", ".webp")
+    runtime = entry.get("runtime")
+    if runtime == "host-float-reference":
+        _validate_host_float_hero(entry, label, revision)
+        return
+    if runtime != "display-composition":
+        raise CatalogError(f"{label}.runtime must be display-composition or host-float-reference")
+    if kind not in {"classification-panel", "result-crop"}:
+        raise CatalogError(f"{label}.kind must be classification-panel or result-crop")
     source = validate_evidence_path(entry.get("predictions_source"), f"{label}.predictions_source")
-    hero_file = require_string(entry.get("file"), f"{label}.file")
-    hero_path = PurePosixPath(hero_file)
-    if hero_path.is_absolute() or ".." in hero_path.parts or hero_path.parts[:4] != (
-        "model_zoo_web", "release", "assets", "pending-heroes",
-    ) or hero_path.suffix.lower() != ".webp":
-        raise CatalogError(f"{label}.file must be a webp under model_zoo_web/release/assets/pending-heroes/")
-    if not (ROOT / hero_file).is_file():
-        raise CatalogError(f"{label}.file is missing: {hero_file}")
     if kind == "result-crop":
         if source != image:
             raise CatalogError(f"{label}.predictions_source must be the cropped result image")

@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""Compose pending hero images from pinned photos and quoted results.
+"""Retired. Pending heroes are rendered by infer_pending_heroes.py.
 
-Classification panels copy the test image and the class names (and a score,
-when the README records one) from the pinned sample README. Result crops are
-pixels from a result image already in that sample. Nothing here is a new
-board run, and no class, box, or mask is typed in by hand.
+This file kept the old quote-and-crop composer. Running it would replace
+host-float covers with rank-1 panels, so the entry point now refuses.
 """
 
 from __future__ import annotations
@@ -320,4 +318,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit("use model_zoo_web/scripts/infer_pending_heroes.py")

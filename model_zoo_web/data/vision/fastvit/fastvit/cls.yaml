@@ -309,12 +309,25 @@ hero_visual:
   file: model_zoo_web/release/assets/pending-heroes/fastvit.webp
   kind: classification-panel
   input: samples/vision/fastvit/test_data/bucket.JPEG
-  predictions_source: samples/vision/fastvit/README.md
-  runtime: display-composition
-  note: "Composed for the pending hero from the pinned file at sample_revision. Runtime is display-composition, not a board run and not a new inference."
-  quote: "rank 1\nbeing class 463 (bucket)."
-  labels:
-  - "bucket"
+  predictions_source: model_zoo_web/release/assets/pending-heroes/fastvit.json
+  runtime: host-float-reference
+  note: Host float reference, not board output.
+  model_file: fastvit_t8
+  model_url: https://huggingface.co/timm/fastvit_t8.apple_in1k
+  framework: pytorch-cpu/2.14.1+cpu timm/1.0.30
+  commit: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+  documented_in: samples/vision/fastvit/conversion/README.md
+  topk:
+  - label: bucket
+    score: 0.98187
+  - label: caldron
+    score: 0.003426
+  - label: shopping basket
+    score: 0.001535
+  - label: cup
+    score: 0.000706
+  - label: ashcan
+    score: 0.000492
 
 example_image:
   path: samples/vision/fastvit/test_data/inference.png
