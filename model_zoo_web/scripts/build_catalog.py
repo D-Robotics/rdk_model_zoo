@@ -608,6 +608,18 @@ def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> Non
         if found is None or found[1] != "blob":
             raise CatalogError(f"{relative_source}.example_image.path is not a file at {revision}: {path}")
 
+    if "source_input" in record:
+        entry = require_mapping(record.get("source_input"), f"{relative_source}.source_input")
+        if set(entry) - {"format", "dtype", "layout", "shape", "source"}:
+            raise CatalogError(f"{relative_source}.source_input has unknown fields")
+        source = validate_evidence_path(entry.get("source"), f"{relative_source}.source_input.source")
+        text = text_of(source, f"{relative_source}.source_input.source")
+        present = [field for field in ("format", "dtype", "layout", "shape") if field in entry]
+        if not present:
+            raise CatalogError(f"{relative_source}.source_input needs a sourced format, dtype, layout, or shape")
+        for field in present:
+            _require_in_text(require_string(entry[field], f"{relative_source}.source_input.{field}"), text, f"{relative_source}.source_input.{field}")
+
 
 def validate_pending_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]:
     """Identity plus sourced facts. Released artifacts and unsourced measurements are refused."""
@@ -617,7 +629,7 @@ def validate_pending_record(record: dict[str, Any], source_path: Path) -> dict[s
         "description", "sample_path", "sample_revision", "sample_kind", "supported_platforms",
         "facet_tasks", "manifest_tasks", "license", "provider",
         "upstream", "published_variants", "conversion_configs", "inputs", "usage",
-        "sourced_benchmarks", "documented_downloads", "example_image",
+        "sourced_benchmarks", "documented_downloads", "example_image", "source_input",
     }
     for field in PENDING_FORBIDDEN:
         if field in record:

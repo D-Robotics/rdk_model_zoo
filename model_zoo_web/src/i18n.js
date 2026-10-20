@@ -129,6 +129,7 @@
     '模型导航': 'Model navigation',
     'Language / 语言': 'Language',
     '获取模型': 'Get model',
+    '模型产物待发布': 'Model artifact not published yet',
     '选择芯片': 'Select chip',
     '选择尺寸': 'Select size',
     '快速上手': 'Quick start',

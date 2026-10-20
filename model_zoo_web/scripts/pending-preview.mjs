@@ -337,6 +337,12 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
         descriptionEn: record.description?.en || '',
         platforms: [group.platform],
         coverImage: exampleImage ? `https://raw.githubusercontent.com/D-Robotics/rdk_model_zoo/${revision}/${exampleImage}` : 'assets/pending-cover.svg',
+        sourceInput: record.source_input ? {
+          format: record.source_input.format || '',
+          dtype: record.source_input.dtype || '',
+          layout: record.source_input.layout || '',
+          shape: record.source_input.shape || '',
+        } : null,
         coverLabel: exampleImage ? '示例图' : '封面待补充',
         sample: `${record.id}/${group.modelSize}`,
         source: sourceUrl,

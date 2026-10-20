@@ -242,6 +242,7 @@ test('pending detail uses the published task tiles, parameter rows, and sidebar 
     usageSource: `${source.replace('/tree/', '/blob/')}/README.md`,
     upstream: [{ kind: 'paper', name: 'arxiv', url: 'https://arxiv.org/abs/2201.03545' }],
     inputs: [{ format: 'NV12', shape: '[ 224, 224 ]' }],
+    sourceInput: { format: 'rgb', dtype: 'float32', layout: 'NCHW', shape: '1x3x224x224' },
     conversions: [{
       path: 'samples/vision/convnext/conversion/ConvNeXt_nano.yaml',
       url: 'https://github.com/D-Robotics/rdk_model_zoo/blob/abc/samples/vision/convnext/conversion/ConvNeXt_nano.yaml',
@@ -262,14 +263,21 @@ test('pending detail uses the published task tiles, parameter rows, and sidebar 
   for (const label of ['参数量', '浮点计算量', '源模型输入', 'Runtime 输入', '量化精度']) {
     assert.match(html, new RegExp(`<dt>${label}</dt>`));
   }
-  assert.match(html, /RGB · NCHW · 224 × 224/);
+  assert.match(html, /RGB · FLOAT32 · NCHW · 1 × 3 × 224 × 224/);
   assert.match(html, /NV12 · 224 × 224/);
   assert.doesNotMatch(html, /记录的输入|转换输入|参数待补充|<h2>上游<\/h2>|<h2>转换配置<\/h2>|<h2>运行命令<\/h2>|<h2>文档中的下载<\/h2>/);
   assert.match(html, /模型仓库/);
   assert.match(html, /运行文档/);
   assert.match(html, /\/tree\/abc\/samples\/vision\/convnext\/conversion/);
   assert.match(html, />论文/);
-  assert.doesNotMatch(html, /data-open-download/);
+  assert.match(html, /<div class="mz-kicker"><span class="mz-task">图像分类<\/span><span class="pending-badge">数据待补充<\/span><\/div><h1>/);
+  assert.match(html, /title="模型产物待发布"/);
+  assert.match(html, /获取模型/);
+  assert.match(html, /class="mz-demo is-frame"/);
+  assert.match(html, /Runtime 单路/);
+  assert.match(html, /mz-report-link is-disabled/);
+  assert.match(html, /查看转换详情/);
+  assert.doesNotMatch(html, /data-open-download|OE 转换报告|>精度</);
 
   const performanceRoot = { innerHTML: '' };
   const root = {
@@ -301,4 +309,64 @@ test('pending detail uses the published task tiles, parameter rows, and sidebar 
   assert.doesNotMatch(e2e, /条件|来源|文档说明|Runtime 延迟/);
   assert.match(tiles, /aria-label="Runtime 延迟：查看来源和条件"/);
   assert.match(tiles, /single-thread/);
+});
+
+test('pending pages without a published task profile use named accuracy tiles and related models', () => {
+  const clip = {
+    id: 'clip-demo',
+    catalogId: 'clip/clip/similarity',
+    name: 'CLIP',
+    task: '图文匹配',
+    taskId: 'image-text-similarity',
+    tasks: ['image-text-similarity'],
+    family: 'clip',
+    description: '图文匹配。',
+    source: 'https://github.com/D-Robotics/rdk_model_zoo/tree/abc/samples/vision/clip',
+    sourceType: 'repository',
+    releaseStatus: 'data-pending',
+    dataPending: true,
+    hardware: 'RDK X5',
+    documentedDownloads: [
+      { filename: 'img_encoder.bin', url: 'https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/clip/img_encoder.bin' },
+      { filename: 'text_encoder.onnx', url: 'https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/clip/text_encoder.onnx' },
+    ],
+    sourceInput: { format: 'RGB', dtype: 'float32', layout: 'NCHW', shape: '(1,3,224,224)' },
+    benchmark: { documentation: true, performance: [], accuracy: [], stages: [], conditionOptions: [] },
+  };
+  const peer = { ...clip, id: 'siglip-demo', name: 'SigLIP', family: 'siglip', catalogId: 'siglip/siglip/embed', task: '视觉特征提取', taskId: 'image-embedding', tasks: ['image-embedding'] };
+  const context = {
+    window: {
+      HubI18n: { locale: 'zh', apply() {} },
+      CatalogFacets: { groups: [{ id: 'multimodal', tasks: [['image-text-similarity', '图文匹配'], ['image-embedding', '视觉特征提取']] }] },
+    },
+    document: { addEventListener() {}, documentElement: { classList: { add() {}, remove() {} } } },
+    AbortController,
+    console,
+  };
+  vm.runInNewContext(detailSource, context);
+  const html = context.window.ModelDetail.render({ model: clip, models: [clip, peer], data: { release: { compatibility: { hardware: 'RDK X5' } } } });
+  assert.doesNotMatch(html, />精度</);
+  assert.match(html, /href="https:\/\/archive\.d-robotics\.cc\/downloads\/rdk_model_zoo\/rdk_x5\/clip\/img_encoder\.bin"/);
+  assert.match(html, /<h2>相关模型<\/h2>/);
+  assert.match(html, /SigLIP/);
+  assert.match(html, /Runtime 单路/);
+  assert.match(html, /RGB · FLOAT32 · NCHW · 1 × 3 × 224 × 224/);
+
+  const performanceRoot = { innerHTML: '' };
+  context.window.ModelDetail.bind({
+    addEventListener() {},
+    querySelectorAll: () => [],
+    querySelector: selector => {
+      if (selector === '#benchmark-condition') return { dataset: { value: '1' }, addEventListener() {} };
+      if (selector === '#detail-performance') return performanceRoot;
+      return null;
+    },
+  }, clip, [clip, peer], { release: { compatibility: { hardware: 'RDK X5' } } });
+  const tiles = performanceRoot.innerHTML;
+  assert.match(tiles, /Runtime 延迟/);
+  assert.match(tiles, /端到端延迟/);
+  assert.match(tiles, /吞吐量/);
+  assert.match(tiles, /CLIP zero-shot Top-1/);
+  assert.match(tiles, /图文检索 R@1/);
+  assert.equal(tiles.split('<strong>').length - 1, 5);
 });

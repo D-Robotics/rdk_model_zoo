@@ -27,6 +27,131 @@
   const sizePreference = ['n', 's', 'm', 'l', 'x', 'atto', 'femto', 'pico', 'nano', 'tiny', 'small', 'base', 'large', 'b0', 'b1', 'b2', 'b3', 'b4', 'b5', 's0', 's1', 's2', 's3', 's4'];
   const sizeRank = size => { const index = sizePreference.indexOf(String(size || '').toLowerCase()); return index < 0 ? sizePreference.length : index; };
   const relatedGroupId = model => model.family || model.catalogId || `${model.name}/${model.taskId || model.task}`;
+  const formatShape = value => {
+    if (Array.isArray(value)) return value.join(' × ');
+    const text = String(value ?? '').trim();
+    if (!text) return '';
+    const parts = text.replace(/^[\[(]+|[\]\)]+$/g, '').split(/[,x×]/i).map(part => part.trim()).filter(Boolean);
+    if (parts.length >= 2 && parts.every(part => /^\d+$/.test(part))) return parts.join(' × ');
+    return text.replace(/\s+x\s+/g, ' × ');
+  };
+  const formatSourceInput = source => {
+    if (!source) return '';
+    return [
+      source.format ? String(source.format).toUpperCase() : '',
+      source.dtype ? String(source.dtype).toUpperCase() : '',
+      source.layout || '',
+      formatShape(source.shape),
+    ].filter(Boolean).join(' · ');
+  };
+  const taskDomain = model => {
+    const ids = Array.isArray(model.tasks) && model.tasks.length ? model.tasks : (model.taskId ? [model.taskId] : []);
+    const groups = window.CatalogFacets?.groups || [];
+    return groups.find(group => group.tasks.some(([id]) => ids.includes(id)))?.id || '';
+  };
+  // Tasks with a published page use that page's accuracy tiles. Tasks without
+  // one still get two named accuracy tiles so the row stays five wide.
+  const pendingAccuracyTiles = {
+    cls: [
+      { metric: 'top-1', zh: 'Top-1 准确率', en: 'Top-1 accuracy' },
+      { metric: 'top-5', zh: 'Top-5 准确率', en: 'Top-5 accuracy' },
+    ],
+    detect: [{ metric: 'bbox-all-map-50-95', zh: '检测 mAP50–95', en: 'Detection mAP50–95' }],
+    seg: [
+      { metric: 'segmentation-box-all-map-50-95', zh: '检测框 AP50–95', en: 'Box AP50–95' },
+      { metric: 'mask-all-map-50-95', zh: '掩码 AP50–95', en: 'Mask AP50–95' },
+    ],
+    pose: [{ metric: 'keypoints-all-map-50-95', zh: '关键点 AP50–95', en: 'Keypoint AP50–95' }],
+    obb: [{ metric: 'obb-map-50', zh: '旋转框 mAP50', en: 'Oriented box mAP50' }],
+    semseg: [
+      { metric: 'miou', zh: 'mIoU', en: 'mIoU' },
+      { metric: 'pixel-accuracy', zh: '像素准确率', en: 'Pixel accuracy' },
+    ],
+    'prompt-seg': [
+      { metric: 'miou', zh: 'mIoU', en: 'mIoU' },
+      { metric: 'dice', zh: 'Dice', en: 'Dice' },
+    ],
+    depth: [
+      { metric: 'abs-rel', zh: 'AbsRel', en: 'AbsRel' },
+      { metric: 'delta-1', zh: 'δ1', en: 'δ1' },
+    ],
+    track: [
+      { metric: 'mota', zh: 'MOTA', en: 'MOTA' },
+      { metric: 'idf1', zh: 'IDF1', en: 'IDF1' },
+    ],
+    embed: [
+      { metric: 'knn-top1', zh: 'k-NN Top-1', en: 'k-NN Top-1' },
+      { metric: 'linear-top1', zh: '线性探测 Top-1', en: 'Linear probe Top-1' },
+    ],
+    'ocr-det': [
+      { metric: 'detection-precision', zh: '检测精确率', en: 'Detection precision' },
+      { metric: 'detection-recall', zh: '检测召回率', en: 'Detection recall' },
+    ],
+    'ocr-rec': [
+      { metric: 'recognition-accuracy', zh: '识别准确率', en: 'Recognition accuracy' },
+      { metric: 'cer', zh: '字符错误率', en: 'Character error rate' },
+    ],
+    similarity: [
+      { metric: 'clip-zeroshot-top1', zh: 'CLIP zero-shot Top-1', en: 'CLIP zero-shot Top-1' },
+      { metric: 'retrieval-r-at-1', zh: '图文检索 R@1', en: 'Image-text retrieval R@1' },
+    ],
+    'ov-detect': [
+      { metric: 'ov-map-50-95', zh: '开放词汇 mAP50–95', en: 'Open-vocabulary mAP50–95' },
+      { metric: 'ov-map-50', zh: '开放词汇 mAP50', en: 'Open-vocabulary mAP50' },
+    ],
+    lpr: [
+      { metric: 'plate-accuracy', zh: '车牌准确率', en: 'Plate accuracy' },
+      { metric: 'character-accuracy', zh: '字符准确率', en: 'Character accuracy' },
+    ],
+    matting: [
+      { metric: 'sad', zh: 'SAD', en: 'SAD' },
+      { metric: 'mse', zh: 'MSE', en: 'MSE' },
+    ],
+    'video-cls': [
+      { metric: 'top-1', zh: 'Top-1 准确率', en: 'Top-1 accuracy' },
+      { metric: 'top-5', zh: 'Top-5 准确率', en: 'Top-5 accuracy' },
+    ],
+    avatar: [
+      { metric: 'lse-d', zh: 'LSE-D', en: 'LSE-D' },
+      { metric: 'fid', zh: 'FID', en: 'FID' },
+    ],
+    'text-gen': [
+      { metric: 'perplexity', zh: '困惑度', en: 'Perplexity' },
+      { metric: 'generation-throughput', zh: '生成吞吐', en: 'Generation throughput' },
+    ],
+    vlm: [
+      { metric: 'vqa-accuracy', zh: 'VQA 准确率', en: 'VQA accuracy' },
+      { metric: 'retrieval-r-at-1', zh: '图文检索 R@1', en: 'Image-text retrieval R@1' },
+    ],
+    manip: [
+      { metric: 'success-rate', zh: '任务成功率', en: 'Task success rate' },
+      { metric: 'trajectory-error', zh: '轨迹误差', en: 'Trajectory error' },
+    ],
+    loco: [
+      { metric: 'velocity-error', zh: '速度跟踪误差', en: 'Velocity tracking error' },
+      { metric: 'survival-time', zh: '存活时间', en: 'Survival time' },
+    ],
+    drive: [
+      { metric: 'planning-error', zh: '规划误差', en: 'Planning error' },
+      { metric: 'collision-rate', zh: '碰撞率', en: 'Collision rate' },
+    ],
+    lane: [
+      { metric: 'lane-f1', zh: '车道线 F1', en: 'Lane F1' },
+      { metric: 'lane-accuracy', zh: '车道线准确率', en: 'Lane accuracy' },
+    ],
+    'point-seg': [
+      { metric: 'point-miou', zh: '点云 mIoU', en: 'Point mIoU' },
+      { metric: 'point-accuracy', zh: '点云准确率', en: 'Point accuracy' },
+    ],
+    asr: [
+      { metric: 'wer', zh: '词错误率 WER', en: 'Word error rate' },
+      { metric: 'cer', zh: '字错误率 CER', en: 'Character error rate' },
+    ],
+    kws: [
+      { metric: 'kws-accuracy', zh: '唤醒准确率', en: 'Spotting accuracy' },
+      { metric: 'false-alarm-rate', zh: '误唤醒率', en: 'False alarm rate' },
+    ],
+  };
   const byteSize = value => {
     const bytes = Number(value);
     if (!Number.isFinite(bytes) || bytes <= 0) return null;
@@ -127,7 +252,7 @@
   function propertyRows(model) {
     if (model.dataPending) return pendingPropertyRows(model);
     const p = window.MODEL_PROPERTIES?.[model.id] || {};
-    const shape = value => Array.isArray(value) ? value.join(' × ') : String(value).replace(/\s+x\s+/g, ' × ');
+    const shape = formatShape;
     const row = (label, value, title = '') => `<dt>${label}</dt><dd${title ? ` title="${esc(title)}"` : ''}>${esc(value)}</dd>`;
     const rows = [];
     if (p.parameterCount) rows.push(row('参数量', `${Number((p.parameterCount / 1e6).toFixed(3))} M`, String(p.parameterCount)));
@@ -137,11 +262,10 @@
       rows.push(row('浮点计算量', `${Number(Number(p.gflops).toFixed(2))} GFLOPs${resolution}`));
     }
     if (p.sourceInput) {
-      const source = p.sourceInput;
-      rows.push(row('源模型输入', [source.format?.toUpperCase(), source.dtype?.toUpperCase(), source.layout, shape(source.shape)].filter(Boolean).join(' · ')));
+      rows.push(row('源模型输入', formatSourceInput(p.sourceInput)));
     } else if (p.inputShape) rows.push(row('源模型输入', shape(p.inputShape)));
     else if (p.inputResolution) rows.push(row('输入尺寸', shape(p.inputResolution)));
-    if (p.runtimeInput) rows.push(row('Runtime 输入', [p.runtimeInput.format?.toUpperCase(), shape(p.runtimeInput.resolution)].filter(Boolean).join(' · ')));
+    if (p.runtimeInput) rows.push(row('Runtime 输入', [p.runtimeInput.format ? String(p.runtimeInput.format).toUpperCase() : '', shape(p.runtimeInput.resolution)].filter(Boolean).join(' · ')));
     else if (p.inputLayout) rows.push(row('输入布局', p.inputLayout));
     const precisionPolicy = model.benchmark?.precisionPolicy;
     if (typeof precisionPolicy === 'string' && precisionPolicy.trim()) {
@@ -166,20 +290,25 @@
   }
   function pendingPropertyRows(model) {
     const row = (label, value) => `<dt>${label}</dt><dd>${esc(value || '数据待补充')}</dd>`;
-    const shapeText = value => {
-      const text = String(value || '').trim();
-      if (!text) return '';
-      const parts = text.replace(/^\[|\]$/g, '').split(/[,x×]/i).map(part => part.trim()).filter(Boolean);
-      return parts.length >= 2 && parts.every(part => /^\d+$/.test(part)) ? parts.join(' × ') : text.replace(/\s*x\s*/gi, ' × ');
-    };
-    const config = (model.conversions || []).find(item => item.trainInput || item.trainLayout || item.resolution || item.runtimeInput) || {};
+    const config = (model.conversions || []).find(item => item.trainInput || item.trainDtype || item.trainLayout || item.trainShape || item.resolution || item.runtimeInput) || {};
     const input = (model.inputs || []).find(item => item.format || item.layout || item.shape) || {};
-    const sourceInput = [config.trainInput ? String(config.trainInput).toUpperCase() : '', config.trainLayout || '', shapeText(config.resolution)].filter(Boolean).join(' · ');
-    const runtimeInput = [(input.format || config.runtimeInput || '').toString().toUpperCase(), input.layout || '', shapeText(input.shape || (!input.format && config.resolution))].filter(Boolean).join(' · ');
+    const explicit = model.sourceInput;
+    const source = explicit && (explicit.format || explicit.dtype || explicit.layout || explicit.shape)
+      ? explicit
+      : {
+          format: config.trainInput,
+          dtype: config.trainDtype,
+          layout: config.trainLayout,
+          shape: config.trainShape || config.resolution,
+        };
+    const runtimeInput = [
+      (input.format || config.runtimeInput) ? String(input.format || config.runtimeInput).toUpperCase() : '',
+      formatShape(input.shape || config.resolution),
+    ].filter(Boolean).join(' · ');
     return [
       row('参数量', '数据待补充'),
       row('浮点计算量', '数据待补充'),
-      row('源模型输入', sourceInput),
+      row('源模型输入', formatSourceInput(source)),
       row('Runtime 输入', runtimeInput),
       row('量化精度', '数据待补充'),
     ].join('');
@@ -195,12 +324,15 @@
     const conditionChoices = m.dataPending
       ? (b?.conditionOptions?.length ? b.conditionOptions.map(option => ({
           value: option.key,
-          label: Number.isInteger(option.concurrency) ? threadLabel(option.concurrency) : (option.label || '未写明条件'),
-        })) : [{ value: '', label: '数据待补充' }])
+          label: Number.isInteger(option.concurrency) ? threadLabel(option.concurrency) : (option.label || 'Runtime 单路'),
+        })) : [{ value: '1', label: 'Runtime 单路' }])
       : [...new Set(performance.filter(p => ['latency', 'throughput'].includes(p.metric)).map(p => p.concurrency || 1))].sort((a, b) => a - b)
           .map(value => ({ value: String(value), label: threadLabel(value) }));
-    const relatedCandidates = models.filter(other => relatedGroupId(other) !== relatedGroupId(m)
-      && other.task === m.task);
+    const sameTask = models.filter(other => relatedGroupId(other) !== relatedGroupId(m) && other.task === m.task);
+    const domainPeers = !sameTask.length && m.dataPending
+      ? models.filter(other => relatedGroupId(other) !== relatedGroupId(m) && taskDomain(other) && taskDomain(other) === taskDomain(m))
+      : [];
+    const relatedCandidates = sameTask.length ? sameTask : domainPeers;
     const relatedByFamily = new Map();
     for (const other of relatedCandidates) {
       const key = relatedGroupId(other);
@@ -220,7 +352,7 @@
     const description = window.HubI18n?.locale === 'en' ? (m.descriptionEn || m.description) : m.description;
     const coverSrc = m.coverImage || (m.dataPending ? 'assets/pending-cover.svg' : '');
     const cover = coverSrc
-      ? `<figure class="mz-demo"><img src="${esc(coverSrc)}" alt="${esc(m.name)}"></figure>`
+      ? `<figure class="mz-demo${m.dataPending ? ' is-frame' : ''}"><img src="${esc(coverSrc)}" alt="${esc(m.name)}"></figure>`
       : '';
     const benchmarkEmpty = `<div class="mz-benchmark-empty"><div><h3>暂无性能汇总</h3></div>${m.source ? external(m.source + '/evaluator', '查看评测说明') : ''}</div>`;
     const benchmarkBody = b
@@ -238,13 +370,38 @@
     const usageLine = !m.dataPending && (m.usage || []).length
       ? `<section class="mz-section mz-quickstart"><div class="mz-section-heading"><h2>运行命令</h2>${m.usageSource ? external(m.usageSource, '命令来源') : ''}</div><div class="mz-code"><pre><code data-no-i18n>${esc(m.usage.join('\n'))}</code></pre></div></section>`
       : '';
+    const documentedDownloads = (m.documentedDownloads || []).filter(item => /^https:\/\//.test(item.url || ''));
+    const acquireButton = m.assets?.length
+      ? `<button class="button" type="button" data-open-download>${icon('download')}获取模型</button>`
+      : (m.dataPending && documentedDownloads.length > 1
+        ? `<button class="button" type="button" data-open-download>${icon('download')}获取模型</button>`
+        : (m.dataPending && documentedDownloads.length === 1
+          ? `<a class="button" href="${esc(documentedDownloads[0].url)}" target="_blank" rel="noopener">${icon('download')}获取模型</a>`
+          : (m.dataPending
+            ? `<span title="模型产物待发布"><button class="button" type="button" disabled>${icon('download')}获取模型</button></span>`
+            : '')));
+    const kicker = m.dataPending
+      ? `<div class="mz-kicker"><span class="mz-task">${m.task}</span><span class="pending-badge">数据待补充</span></div>`
+      : `<span class="mz-task">${m.task}</span>`;
+    const reportAction = m.reportDataUrl
+      ? `<a class="mz-report-link" href="reports.html?report=${encodeURIComponent(m.id)}&from=${encodeURIComponent(m.id)}">${icon('scan-eye')}查看转换详情</a>`
+      : (m.dataPending
+        ? ((m.reportUrl || m.reportSourceUrl)
+          ? `<a class="mz-report-link" href="${esc(m.reportUrl || m.reportSourceUrl)}" target="_blank" rel="noopener">${icon('scan-eye')}查看转换详情</a>`
+          : `<span class="mz-report-link is-disabled" aria-disabled="true">${icon('scan-eye')}查看转换详情</span>`)
+        : ((m.reportUrl || m.reportSourceUrl)
+          ? external(m.reportUrl || m.reportSourceUrl, 'OE 转换报告')
+          : '<span class="mz-report-placeholder" aria-disabled="true">OE 转换报告</span>'));
     const platformSizes = platform => downloadModels.filter(other => hardwareOf(other, data) === platform).length;
     const selectedAsset = selectedDownloadModel?.assets[0];
-    const downloadDialog = selectedDownloadModel ? `<dialog class="mz-download-dialog mz-store" id="${esc(dialogId)}" aria-labelledby="${esc(dialogId)}-title"><form method="dialog" class="mz-store-shell"><header class="mz-store-header"><div><span>获取模型</span><h2 id="${esc(dialogId)}-title">${esc(m.name)}</h2></div><button type="submit" value="cancel" class="mz-dialog-close" aria-label="关闭" title="关闭">${icon('x')}</button></header><div class="mz-store-body"><fieldset class="mz-store-step"><legend>选择芯片</legend><div class="mz-store-grid">${downloadPlatforms.map(platform => `<label class="mz-store-choice"><input type="radio" name="download-platform" value="${esc(platform)}" ${platform === selectedPlatform ? 'checked' : ''}><span class="mz-store-choice-main"><strong>${esc(platform)}</strong><small>${platformSizes(platform)} 个尺寸</small></span></label>`).join('')}</div></fieldset><fieldset class="mz-store-step"><legend>选择尺寸</legend><div class="mz-store-list">${downloadModels.map(model => { const platform = hardwareOf(model, data); const asset = model.assets[0]; return `<label class="mz-store-choice mz-model-choice" data-platform="${esc(platform)}" data-model-size="${esc(model.modelSize || '')}" ${platform === selectedPlatform ? '' : 'hidden'}><input type="radio" name="download-model" value="${esc(model.id)}" data-url="${esc(asset.url)}" ${model.id === selectedDownloadModel.id ? 'checked' : ''}><span class="mz-store-choice-main"><strong>${esc(model.variantName || model.name)}</strong></span>${choiceStats(model, data)}</label>`; }).join('')}</div></fieldset></div><footer class="mz-store-summary"><a class="button mz-dialog-download" data-download-link href="${esc(selectedAsset.url)}" target="_blank" rel="noopener">${icon('download')}下载</a></footer></form></dialog>` : '';
+    const documentedDialog = !selectedDownloadModel && documentedDownloads.length > 1
+      ? `<dialog class="mz-download-dialog mz-store" id="${esc(dialogId)}" aria-labelledby="${esc(dialogId)}-title"><form method="dialog" class="mz-store-shell"><header class="mz-store-header"><div><span>获取模型</span><h2 id="${esc(dialogId)}-title">${esc(m.name)}</h2></div><button type="submit" value="cancel" class="mz-dialog-close" aria-label="关闭" title="关闭">${icon('x')}</button></header><div class="mz-store-body"><div class="mz-resource-links">${documentedDownloads.map(item => external(item.url, esc(item.filename))).join('')}</div></div></form></dialog>`
+      : '';
+    const downloadDialog = selectedDownloadModel ? `<dialog class="mz-download-dialog mz-store" id="${esc(dialogId)}" aria-labelledby="${esc(dialogId)}-title"><form method="dialog" class="mz-store-shell"><header class="mz-store-header"><div><span>获取模型</span><h2 id="${esc(dialogId)}-title">${esc(m.name)}</h2></div><button type="submit" value="cancel" class="mz-dialog-close" aria-label="关闭" title="关闭">${icon('x')}</button></header><div class="mz-store-body"><fieldset class="mz-store-step"><legend>选择芯片</legend><div class="mz-store-grid">${downloadPlatforms.map(platform => `<label class="mz-store-choice"><input type="radio" name="download-platform" value="${esc(platform)}" ${platform === selectedPlatform ? 'checked' : ''}><span class="mz-store-choice-main"><strong>${esc(platform)}</strong><small>${platformSizes(platform)} 个尺寸</small></span></label>`).join('')}</div></fieldset><fieldset class="mz-store-step"><legend>选择尺寸</legend><div class="mz-store-list">${downloadModels.map(model => { const platform = hardwareOf(model, data); const asset = model.assets[0]; return `<label class="mz-store-choice mz-model-choice" data-platform="${esc(platform)}" data-model-size="${esc(model.modelSize || '')}" ${platform === selectedPlatform ? '' : 'hidden'}><input type="radio" name="download-model" value="${esc(model.id)}" data-url="${esc(asset.url)}" ${model.id === selectedDownloadModel.id ? 'checked' : ''}><span class="mz-store-choice-main"><strong>${esc(model.variantName || model.name)}</strong></span>${choiceStats(model, data)}</label>`; }).join('')}</div></fieldset></div><footer class="mz-store-summary"><a class="button mz-dialog-download" data-download-link href="${esc(selectedAsset.url)}" target="_blank" rel="noopener">${icon('download')}下载</a></footer></form></dialog>` : documentedDialog;
     return `<nav class="mz-breadcrumb" aria-label="模型导航"><a class="back-link" href="#">Model Zoo</a><span aria-hidden="true">/</span><span>${m.name}</span></nav>
-      <section class="mz-overview"><div class="mz-introduction"><span class="mz-task">${m.task}</span>${m.dataPending ? '<span class="pending-badge">数据待补充</span>' : ''}<h1>${m.name}</h1><p data-i18n-zh="${esc(m.description)}" data-i18n-en="${esc(m.descriptionEn || m.description)}">${esc(description)}</p><div class="mz-primary-actions">${m.assets?.length ? `<button class="button" type="button" data-open-download>${icon('download')}获取模型</button>` : ''}<button class="button secondary mz-ask-model" type="button" data-ask-model><span class="mz-icon" style="--icon:url('assets/icons/sparkles.svg')" aria-hidden="true"></span>询问此模型</button>${repositoryLinks(m, 'mz-text-link')}</div></div>${cover}</section>
-      <section class="mz-benchmark" aria-label="性能与精度"><div class="mz-benchmark-title"><h2>性能与精度</h2></div><div class="mz-configuration"><div><span>目标硬件</span>${dropdown('benchmark-hardware', '目标硬件', hardwareOptions.map(value => ({ value, label: value })), hardware)}</div><div><span>模型变体</span>${dropdown('benchmark-variant', '模型变体', variants.filter(other => hardwareOf(other, data) === hardware).sort((a, b) => sizeRank(a.modelSize) - sizeRank(b.modelSize) || String(a.variantName || a.name).localeCompare(String(b.variantName || b.name))).map(other => ({ value: other.id, label: other.variantName || other.name })), m.id)}</div><div><span>Runtime 并发</span>${dropdown('benchmark-condition', 'Runtime 并发', conditionChoices, conditionChoices[0]?.value || '', m.dataPending ? !b?.conditionOptions?.length : !conditionChoices.length)}</div></div>
-      ${benchmarkBody}<div class="mz-report-actions">${m.reportDataUrl ? `<a class="mz-report-link" href="reports.html?report=${encodeURIComponent(m.id)}&from=${encodeURIComponent(m.id)}">${icon('scan-eye')}查看转换详情</a>` : (m.reportUrl || m.reportSourceUrl) ? external(m.reportUrl || m.reportSourceUrl, 'OE 转换报告') : '<span class="mz-report-placeholder" aria-disabled="true">OE 转换报告</span>'}</div></section>
+      <section class="mz-overview"><div class="mz-introduction">${kicker}<h1>${m.name}</h1><p data-i18n-zh="${esc(m.description)}" data-i18n-en="${esc(m.descriptionEn || m.description)}">${esc(description)}</p><div class="mz-primary-actions">${acquireButton}<button class="button secondary mz-ask-model" type="button" data-ask-model><span class="mz-icon" style="--icon:url('assets/icons/sparkles.svg')" aria-hidden="true"></span>询问此模型</button>${repositoryLinks(m, 'mz-text-link')}</div></div>${cover}</section>
+      <section class="mz-benchmark" aria-label="性能与精度"><div class="mz-benchmark-title"><h2>性能与精度</h2></div><div class="mz-configuration"><div><span>目标硬件</span>${dropdown('benchmark-hardware', '目标硬件', hardwareOptions.map(value => ({ value, label: value })), hardware)}</div><div><span>模型变体</span>${dropdown('benchmark-variant', '模型变体', variants.filter(other => hardwareOf(other, data) === hardware).sort((a, b) => sizeRank(a.modelSize) - sizeRank(b.modelSize) || String(a.variantName || a.name).localeCompare(String(b.variantName || b.name))).map(other => ({ value: other.id, label: other.variantName || other.name })), m.id)}</div><div><span>Runtime 并发</span>${dropdown('benchmark-condition', 'Runtime 并发', conditionChoices, conditionChoices[0]?.value || '', m.dataPending ? false : !conditionChoices.length)}</div></div>
+      ${benchmarkBody}<div class="mz-report-actions">${reportAction}</div></section>
       <div class="mz-information"><div class="mz-main-column"><section class="mz-section"><h2>模型参数</h2><dl class="mz-specifications">${propertyRows(m)}</dl></section>${upstreamLine}${conversionLine}${downloadLine}${usageLine}${quickStart(m)}
       </div>
       <aside class="mz-side-column"><section><h2>目标平台</h2><div class="mz-platform-list">${hardwareOptions.map(platform => { const target = variants.find(other => hardwareOf(other, data) === platform && other.modelSize === m.modelSize) || variants.find(other => hardwareOf(other, data) === platform); const active = platform === hardware; return `<button type="button" class="mz-platform-option${active ? ' is-active' : ''}" data-platform-target="${esc(target?.id || '')}" ${active || !target ? 'disabled' : ''} aria-label="切换到 ${esc(platform)}"><span class="mz-platform-mark">${icon('cpu')}</span><strong>${esc(platform)}</strong></button>`; }).join('')}</div></section><section><h2>开发资源</h2><div class="mz-resource-links">${developerResourceLinks(m)}</div></section><section><h2>模型许可</h2><div class="mz-resource-links">${m.licenseName && m.licenseUrl ? external(m.licenseUrl, esc(m.licenseName)) : '<span>未声明</span>'}</div></section></aside></div>
@@ -481,28 +638,10 @@
       const metricTile = (label, record, matches) => `<div class="${record ? '' : 'is-unmeasured'}"><span class="mz-accuracy-label">${label}${help(label, provenance(matches))}</span><strong>${tileValue(record)}</strong></div>`;
       const accuracyRows = b?.accuracy || [];
       const taskCode = String(m.catalogId || '').split('/').at(-1);
-      const canonicalTiles = {
-        cls: [
-          { metric: 'top-1', zh: 'Top-1 准确率', en: 'Top-1 accuracy' },
-          { metric: 'top-5', zh: 'Top-5 准确率', en: 'Top-5 accuracy' },
-        ],
-        detect: [{ metric: 'bbox-all-map-50-95', zh: '检测 mAP50–95', en: 'Detection mAP50–95' }],
-        seg: [
-          { metric: 'segmentation-box-all-map-50-95', zh: '检测框 AP50–95', en: 'Box AP50–95' },
-          { metric: 'mask-all-map-50-95', zh: '掩码 AP50–95', en: 'Mask AP50–95' },
-        ],
-        pose: [{ metric: 'keypoints-all-map-50-95', zh: '关键点 AP50–95', en: 'Keypoint AP50–95' }],
-        obb: [{ metric: 'obb-map-50', zh: '旋转框 mAP50', en: 'Oriented box mAP50' }],
-      }[taskCode];
-      const tileSpecs = canonicalTiles || (() => {
-        const metrics = [...new Set(accuracyRows.map(row => row.metric))];
-        if (!metrics.length) return [{ metric: 'accuracy-pending', zh: '精度', en: 'Accuracy' }];
-        return metrics.map(metric => {
-          const label = metricName(metric, data);
-          const tile = typeof label === 'string' ? { zh: label, en: label } : label;
-          return { metric, zh: tile.zh || metric, en: tile.en || tile.zh || metric };
-        });
-      })();
+      const tileSpecs = pendingAccuracyTiles[taskCode] || [
+        { metric: 'task-metric-1', zh: '任务指标 1', en: 'Task metric 1' },
+        { metric: 'task-metric-2', zh: '任务指标 2', en: 'Task metric 2' },
+      ];
       const percentText = record => {
         if (!record) return '数据待补充';
         if (record.unit === 'ratio' || record.unit === 'percent') return `${amount(record, true)}%`;
