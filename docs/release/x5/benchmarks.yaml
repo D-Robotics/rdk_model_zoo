@@ -28,6 +28,17 @@ benchmarks:
       - { metric: latency, value: 0.350, unit: ms, qualifier: exact, statistic: mean, scope: "hbDNNInfer plus hbDNNWaitTaskDone; 100 inputs; 10 warm-up runs" }
       - { metric: throughput, value: 2853.09, unit: fps, qualifier: exact, scope: "sequential; 100 inputs; 10 warm-up runs" }
     source: *himloco_source
+  # Only Atto has a models.yaml asset (ConvNeXt_atto_224x224_nv12.bin).
+  # Nano, Pico, and Femto keep recorded measurements and have no published bin.
+  - id: convnext-atto-x5
+    sample_id: convnext
+    variant_id: convnext-atto-224
+    display_name: ConvNeXt Atto 224x224
+    input: { shape: [ 224, 224 ], format: NV12 }
+    environment: { hardware: RDK X5 }
+    performance: [ { metric: latency, value: 1.96, unit: ms, qualifier: exact, scope: "single-frame, single-thread, single-BPU-core", concurrency: 1 }, { metric: throughput, value: 732, unit: fps, qualifier: lower-bound, concurrency: 4, scope: "four-thread concurrent, 100% BPU utilization" } ]
+    accuracy: [ { metric: top-1, value: 73.25, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 69.75, unit: percent, qualifier: exact, model_stage: quantized } ]
+    source: &convnext_source { ref: 1e1c64decba4beb7551b0fed20e325eb9eab923e, path: samples/vision/convnext/README.md, section: "## Performance Data", provenance: existing-repository-documentation }
   - id: convnext-nano-x5
     sample_id: convnext
     variant_id: convnext-nano-224
@@ -36,7 +47,7 @@ benchmarks:
     environment: { hardware: RDK X5 }
     performance: [ { metric: latency, value: 5.71, unit: ms, qualifier: exact, scope: "single-frame, single-thread, single-BPU-core", concurrency: 1 }, { metric: throughput, value: 200, unit: fps, qualifier: lower-bound, concurrency: 4, scope: "four-thread concurrent, 100% BPU utilization" } ]
     accuracy: [ { metric: top-1, value: 77.37, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 71.75, unit: percent, qualifier: exact, model_stage: quantized } ]
-    source: &convnext_source { ref: 1e1c64decba4beb7551b0fed20e325eb9eab923e, path: samples/vision/convnext/README.md, section: "## Performance Data", provenance: existing-repository-documentation }
+    source: *convnext_source
   - id: convnext-pico-x5
     sample_id: convnext
     variant_id: convnext-pico-224
@@ -54,15 +65,6 @@ benchmarks:
     environment: { hardware: RDK X5 }
     performance: [ { metric: latency, value: 2.46, unit: ms, qualifier: exact, scope: "single-frame, single-thread, single-BPU-core", concurrency: 1 }, { metric: throughput, value: 556, unit: fps, qualifier: lower-bound, concurrency: 4, scope: "four-thread concurrent, 100% BPU utilization" } ]
     accuracy: [ { metric: top-1, value: 73.75, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 72.25, unit: percent, qualifier: exact, model_stage: quantized } ]
-    source: *convnext_source
-  - id: convnext-atto-x5
-    sample_id: convnext
-    variant_id: convnext-atto-224
-    display_name: ConvNeXt Atto 224x224
-    input: { shape: [ 224, 224 ], format: NV12 }
-    environment: { hardware: RDK X5 }
-    performance: [ { metric: latency, value: 1.96, unit: ms, qualifier: exact, scope: "single-frame, single-thread, single-BPU-core", concurrency: 1 }, { metric: throughput, value: 732, unit: fps, qualifier: lower-bound, concurrency: 4, scope: "four-thread concurrent, 100% BPU utilization" } ]
-    accuracy: [ { metric: top-1, value: 73.25, unit: percent, qualifier: exact, model_stage: float }, { metric: top-1, value: 69.75, unit: percent, qualifier: exact, model_stage: quantized } ]
     source: *convnext_source
   - id: edgenext-base-x5
     sample_id: edgenext

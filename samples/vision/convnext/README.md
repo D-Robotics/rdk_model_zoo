@@ -134,20 +134,22 @@ cheetah.JPEG, score 0.8048811](./test_data/inference.png)
 <a id="performance"></a>
 ## Performance data
 
-Published performance of the ConvNeXt series on RDK X5 (X5 release
+Measurements recorded for the ConvNeXt series on RDK X5 (X5 release
 x5-v1.1.3; Float Top-1 on the pre-quantization ONNX, Quant Top-1 on the
 deployment model; latency single-frame single-thread single-core, FPS
 4-thread concurrent; CPU 8xA55@1.8GHz performance mode, BPU
-1xBayes-e@1GHz):
+1xBayes-e@1GHz). The download script and the quick start above use the
+only published artifact, ConvNeXt Atto. The other rows keep their recorded
+numbers and have no downloadable bin.
 
-| Model | Size | Classes | Params (M) | Float Top-1 | Quant Top-1 | Latency (ms) | FPS |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ |
-| ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ |
-| ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ |
-| ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ |
+| Model | Size | Classes | Params (M) | Float Top-1 | Quant Top-1 | Latency (ms) | FPS | Artifact |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ | `ConvNeXt_atto_224x224_nv12.bin` |
+| ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ | not published |
+| ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ | not published |
+| ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ | not published |
 
-All rows are quoted from the published X5 release table. Prepare the atto artifact using [model/README.md](model/README.md); [conversion/](conversion/README.md) also documents the nano and femto PTQ configurations.
+Numbers are unchanged from the X5 release table. Prepare the atto artifact with [model/README.md](model/README.md). Pico has no PTQ config in this sample. [conversion/](conversion/README.md) has reference PTQ configs for nano and femto, and those configs are not published artifacts.
 
 <a id="entry-points"></a>
 ## Entry points

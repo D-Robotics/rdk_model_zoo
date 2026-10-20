@@ -119,20 +119,23 @@ Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并�
 <a id="performance"></a>
 ## 性能数据
 
-ConvNeXt 系列在 RDK X5 上的发布性能（X5 发布 x5-v1.1.3；Float Top-1 为
+ConvNeXt 系列在 RDK X5 上记录的测量（X5 发布 x5-v1.1.3；Float Top-1 为
 量化前 ONNX 结果，Quant Top-1 为部署模型结果；延迟为单帧单线程单核，
-FPS 为 4 线程并发；CPU 8xA55@1.8GHz 性能模式、BPU 1xBayes-e@1GHz）：
+FPS 为 4 线程并发；CPU 8xA55@1.8GHz 性能模式、BPU 1xBayes-e@1GHz）。
+上文的下载脚本和快速上手只使用唯一已发布制品 ConvNeXt Atto。其余行保留
+原记录的数字，没有可下载的 bin。
 
-| 模型 | 尺寸 | 类别数 | 参数量 (M) | Float Top-1 | Quant Top-1 | 延迟 (ms) | FPS |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ |
-| ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ |
-| ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ |
-| ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ |
+| 模型 | 尺寸 | 类别数 | 参数量 (M) | Float Top-1 | Quant Top-1 | 延迟 (ms) | FPS | 制品 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ | `ConvNeXt_atto_224x224_nv12.bin` |
+| ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ | 未发布制品 |
+| ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ | 未发布制品 |
+| ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ | 未发布制品 |
 
-全部数值引自 X5 发布的同一张性能表。仅 atto 提供可下载制品（见
-[model/README_cn.md](model/README_cn.md)）；nano 与 femto 对应
-[conversion/](conversion/README_cn.md) 中的参考 PTQ 配方，无已发布制品。
+数字与 X5 发布性能表相同，没有增删。atto 制品见
+[model/README_cn.md](model/README_cn.md)。本示例没有 pico 的 PTQ 配置。
+nano 与 femto 在 [conversion/](conversion/README_cn.md) 里有参考 PTQ
+配方，这些配方不是已发布制品。
 
 <a id="entry-points"></a>
 ## 入口
