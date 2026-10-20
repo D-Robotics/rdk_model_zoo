@@ -4,8 +4,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
+const { assertCoverResolves, assertLocalImageFile } = require('./cover-assets.cjs');
+
 const preview = process.argv.includes('--preview');
 const webRoot = path.resolve(__dirname, '..');
+const repoRoot = path.resolve(webRoot, '..');
 const root = path.join(webRoot, 'dist');
 const requiredFiles = [
   'index.html', 'app.js', 'data.js', 'style.css', 'gallery.css',
@@ -61,7 +64,14 @@ if (preview) {
   const modelIds = new Set(data.models.map(model => model.id));
   assert.equal(modelIds.size, data.models.length, 'Model ids must be unique');
 
+  const checkedCovers = new Set();
   for (const model of data.models) {
+    // Catalog cards (app.js) and detail heroes (detail-view.js) both request
+    // coverImage, falling back to the same relative placeholder.
+    if (!checkedCovers.has(model.coverImage)) {
+      assertCoverResolves(model.coverImage, root, repoRoot, `${model.id} catalog cover and detail hero`);
+      checkedCovers.add(model.coverImage);
+    }
     if (model.releaseStatus === 'data-pending') {
       assert.equal(model.dataPending, true, `${model.id}: pending models must set dataPending`);
       assert.deepEqual(Array.from(model.assets), [], `${model.id}: pending models must not publish artifacts`);
@@ -72,11 +82,8 @@ if (preview) {
         if (row.model_stage !== undefined) assert.ok(['float', 'quantized', 'board'].includes(row.model_stage), `${model.id}: unknown model stage`);
         if (row.concurrency !== undefined) assert.ok(Number.isInteger(row.concurrency) && row.concurrency > 0, `${model.id}: concurrency must be a positive integer from the source`);
       }
-      if (model.coverImage && model.coverImage !== 'assets/pending-cover.svg') {
+      if (model.coverImage !== 'assets/pending-cover.svg') {
         assert.match(model.coverImage, /^https:\/\/raw\.githubusercontent\.com\/D-Robotics\/rdk_model_zoo\/[0-9a-f]{40}\//, `${model.id}: pending cover must be a file at the pinned revision`);
-      }
-      if (model.coverImage === 'assets/pending-cover.svg') {
-        assert(fs.statSync(path.join(root, model.coverImage)).size > 0, `${model.id}: pending placeholder cover is missing`);
       }
       for (const download of model.documentedDownloads || []) {
         assert.match(download.url || '', /^https:\/\//, `${model.id}: documented download must be HTTPS`);
@@ -87,8 +94,6 @@ if (preview) {
       if (model.licenseUrl) assert.match(model.licenseUrl, /^https:\/\//, `${model.id}: licenseUrl must use HTTPS`);
       continue;
     }
-    assert(model.coverImage, `${model.id}: coverImage is required`);
-    assert(fs.statSync(path.join(root, model.coverImage)).size > 0, `${model.id}: cover image is missing`);
     assert(model.licenseName, `${model.id}: licenseName is required`);
     assert.match(model.licenseUrl || '', /^https:\/\//, `${model.id}: licenseUrl must use HTTPS`);
     for (const asset of model.assets || []) {
@@ -143,6 +148,8 @@ function walk(directory) {
     else assetFiles.push(path.relative(path.join(root, 'assets'), fullPath));
   }
 }
+assertLocalImageFile(path.join(root, 'assets', 'pending-cover.svg'), 'assets/pending-cover.svg');
+
 walk(path.join(root, 'assets'));
 assert(assetFiles.includes(path.join('rdk-brand', 'logo.png')));
 const allowedAssets = filename =>
