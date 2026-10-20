@@ -37,7 +37,7 @@ model_zoo_web/data/<domain>/<source>/<family>/<task>.yaml
 | `facet_tasks` | 可选。覆盖的筛选项；缺省时用该任务代码自己的筛选项 |
 | `variants`、`accuracy`、`performance`、`assets`、`benchmarks`、`cover` | 禁止。这些名字属于完整发布记录 |
 
-待补记录在发布预览里仍是 `releaseStatus: data-pending`：没有正式 `assets`，也没有正式 `benchmark`。详情页保留“数据待补充”。已经摘录的说明、上游链接、转换配置、运行命令、文档下载和基准表会显示出来，并链回原文。示例图只在 `test_data` 里真有图片时出现。获取模型按钮仍然不出现。
+待补记录在发布预览里仍是 `releaseStatus: data-pending`：没有正式 `assets`。详情页和已发布模型用同一套导航：一条模型页，用目标硬件、模型变体和 Runtime 并发切换规格与板卡，而不是按板卡拆成互不相关的页面。`sourced_benchmarks` 会填进同一套性能组件（Runtime 延迟、带 `?` 的端到端延迟、吞吐量、精度）。`?` 打开分段耗时和原文条件、来源。原文没有的槽位仍显示这个组件，数值为“数据待补充”。网格下方标明这些数字摘自仓库文档，不是本站正式测量。示例图只在 `test_data` 里真有图片时出现。获取模型按钮仍然不出现。
 
 `npm --prefix model_zoo_web run check` 仍然构建不含模型的空壳，并校验 YAML。访客看到的列表来自 `build:release` / `check:release`。
 

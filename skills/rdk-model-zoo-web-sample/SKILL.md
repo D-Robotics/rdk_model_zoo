@@ -65,7 +65,7 @@ metadata:
 - `conversion_configs`：`conversion/` 下真实存在的 yaml 或 `mapper_*.py`，以及文件里写明的 march、输入类型和分辨率
 - `inputs`：`docs/release/*/benchmarks.yaml` 某一条里写明的 shape、layout、format
 - `usage`：README 快速体验代码块里的命令原文
-- `sourced_benchmarks`：基准清单里的数字，保留 metric、单位、统计量和条件（包括 “compiler estimate” 这种字样）。这不是本站正式发布基准
+- `sourced_benchmarks`：基准清单里的数字，保留 metric、单位、统计量和条件（包括 “compiler estimate” 这种字样）。预览页把它们填进和正式模型相同的延迟、吞吐、精度和 `?` 分段说明里，并带来源。没有数字的槽位显示“数据待补充”。这不是本站正式发布基准
 - `documented_downloads`：`docs/release/*/models.yaml` 里已经写出的 https URL。`sha256: null` 不要填成哈希。S 系列只在文件名或 URL 点名具体板卡时写入
 - `example_image`：`test_data` 里适合当示例的图片。架构图和性能截图不要当封面
 

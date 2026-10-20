@@ -14,6 +14,7 @@ import { stampAssetVersions } from './asset-versions.mjs';
 import { loadVerifiedPreviewDownloads, previewDownloadAssets } from './preview-downloads.mjs';
 import { readFileSync } from 'node:fs';
 import { loadInferenceTaskBanners } from './task-banner-assets.mjs';
+import { buildPendingModels } from './pending-preview.mjs';
 
 const scriptRoot = dirname(fileURLToPath(import.meta.url));
 const webRoot = resolve(scriptRoot, '..');
@@ -726,85 +727,12 @@ for (const record of catalog.models || []) {
   }
 }
 
-const platformLabel = value => String(value || '').toUpperCase();
-if (!candidatePreview) for (const record of fullCatalog.models || []) {
-  if (record.registration !== 'pending') continue;
-  const taskInfo = taskRegistry.tasks[record.task];
-  if (!taskInfo) throw new Error(`Pending model ${record.id} uses unknown task ${record.task}`);
-  const facetTasks = Array.isArray(record.facet_tasks) && record.facet_tasks.length
-    ? record.facet_tasks
-    : [taskInfo.facet_id];
-  const revision = record.sample_revision;
-  const sourceUrl = `${officialRepositoryUrl}/tree/${revision}/${record.sample_path}`;
-  const blobUrl = path => `${officialRepositoryUrl}/blob/${revision}/${path}`;
-  const onPlatform = (item, platform) => !item.platform || platformLabel(item.platform) === platform;
-  for (const supported of record.supported_platforms || []) {
-    const platform = platformLabel(supported.platform);
-    const id = safeId(record.source, record.family, record.task, supported.platform);
-    const exampleImage = record.example_image?.path || '';
-    models.push({
-      id,
-      catalogId: record.id,
-      name: record.name,
-      variantName: record.name,
-      family: record.family,
-      modelSize: '',
-      releaseStatus: 'data-pending',
-      dataPending: true,
-      releasePlatform: platform,
-      hardware: `RDK ${platform}`,
-      task: taskInfo.label_zh,
-      taskId: taskInfo.facet_id,
-      tasks: facetTasks,
-      description: record.description?.zh || '',
-      descriptionEn: record.description?.en || '',
-      platforms: [platform],
-      coverImage: exampleImage ? `https://raw.githubusercontent.com/D-Robotics/rdk_model_zoo/${revision}/${exampleImage}` : '',
-      coverLabel: exampleImage ? '示例图' : '数据待补充',
-      sample: record.id,
-      source: sourceUrl,
-      sourceType: 'repository',
-      licenseName: record.license?.name || '',
-      licenseUrl: record.license?.url || '',
-      licenseScope: record.license?.scope || '',
-      upstream: (record.upstream || []).map(item => ({ name: item.name, url: item.url, kind: item.kind })),
-      publishedVariants: (record.published_variants || []).map(item => item.name),
-      inputs: (record.inputs || []).filter(item => onPlatform(item, platform)).map(item => ({
-        shape: item.shape || '',
-        layout: item.layout || '',
-        format: item.format || '',
-        source: blobUrl(item.source),
-      })),
-      conversions: (record.conversion_configs || []).map(item => ({
-        path: item.path,
-        url: blobUrl(item.path),
-        march: item.march || '',
-        runtimeInput: item.runtime_input || '',
-        trainInput: item.train_input || '',
-        trainLayout: item.train_layout || '',
-        resolution: item.resolution || '',
-      })),
-      usage: (record.usage || []).flatMap(item => item.lines || []),
-      usageSource: record.usage?.[0]?.source ? blobUrl(record.usage[0].source) : '',
-      sourcedBenchmarks: (record.sourced_benchmarks || []).filter(item => onPlatform(item, platform)).map(item => ({
-        variant: item.variant || '',
-        metric: item.metric,
-        value: item.value,
-        unit: item.unit,
-        statistic: item.statistic || '',
-        condition: item.condition || '',
-        source: blobUrl(item.source),
-      })),
-      documentedDownloads: (record.documented_downloads || []).filter(item => onPlatform(item, platform)).map(item => ({
-        filename: item.filename,
-        url: item.url,
-        format: item.format || '',
-        sha256: item.sha256 || '',
-      })),
-      assets: [],
-      benchmark: null,
-    });
-  }
+if (!candidatePreview) {
+  models.push(...buildPendingModels(fullCatalog.models || [], {
+    officialRepositoryUrl,
+    taskRegistry,
+    safeId,
+  }));
 }
 
 if (!models.length) throw new Error('The samples-only catalog contains no released models');
@@ -842,7 +770,7 @@ const data = {
       sample_count: new Set(models.map(model => model.sample)).size,
       asset_count: models.reduce((count, model) => count + model.assets.length, 0),
       downloadable_asset_count: models.reduce((count, model) => count + model.assets.length, 0),
-      benchmark_count: models.filter(model => model.benchmark).length,
+      benchmark_count: models.filter(model => model.benchmark && !model.benchmark.documentation).length,
     },
   },
   repository: { url: repositoryUrl },

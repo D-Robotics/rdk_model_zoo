@@ -24,7 +24,7 @@
     'RDK S600': 0, 'RDK S100P': 1, 'RDK S100': 2, 'RDK X5': 3,
   }[String(hardware)] ?? 99);
   const byPlatformOrder = (a, b) => platformDisplayOrder(a) - platformDisplayOrder(b) || String(a).localeCompare(String(b));
-  const sizePreference = ['n', 's', 'm', 'l', 'x'];
+  const sizePreference = ['n', 's', 'm', 'l', 'x', 'atto', 'femto', 'pico', 'nano', 'tiny', 'small', 'base', 'large', 'b0', 'b1', 'b2', 'b3', 'b4', 'b5', 's0', 's1', 's2', 's3', 's4'];
   const sizeRank = size => { const index = sizePreference.indexOf(String(size || '').toLowerCase()); return index < 0 ? sizePreference.length : index; };
   const relatedGroupId = model => model.family || model.catalogId || `${model.name}/${model.taskId || model.task}`;
   const byteSize = value => {
@@ -163,7 +163,13 @@
     const variants = models.filter(other => (other.catalogId || `${other.name}/${other.taskId || other.task}`) === groupId);
     const hardwareOptions = [...new Set(variants.map(other => hardwareOf(other, data)))].sort(byPlatformOrder);
     const performance = b?.performance || [];
-    const conditions = [...new Set(performance.filter(p => ['latency', 'throughput'].includes(p.metric)).map(p => p.concurrency || 1))].sort((a, b) => a - b);
+    const conditionChoices = m.dataPending
+      ? (b?.conditionOptions?.length ? b.conditionOptions.map(option => ({
+          value: option.key,
+          label: Number.isInteger(option.concurrency) ? threadLabel(option.concurrency) : (option.label || '未写明条件'),
+        })) : [{ value: '', label: '数据待补充' }])
+      : [...new Set(performance.filter(p => ['latency', 'throughput'].includes(p.metric)).map(p => p.concurrency || 1))].sort((a, b) => a - b)
+          .map(value => ({ value: String(value), label: threadLabel(value) }));
     const relatedCandidates = models.filter(other => relatedGroupId(other) !== relatedGroupId(m)
       && other.task === m.task);
     const relatedByFamily = new Map();
@@ -186,16 +192,10 @@
     const cover = m.coverImage
       ? `<figure class="mz-demo"><img src="${esc(m.coverImage)}" alt="${esc(m.name + ' · ' + m.coverLabel)}">${m.dataPending ? '<figcaption>示例图</figcaption>' : ''}</figure>`
       : '<figure class="mz-demo is-pending"><div class="pending-placeholder"><span>数据待补充</span></div><figcaption>封面待补充</figcaption></figure>';
-    const sourcedRows = m.sourcedBenchmarks || [];
-    const sourcedTable = sourcedRows.length
-      ? `<div class="mz-sourced-wrap"><table class="mz-sourced"><thead><tr><th>变体</th><th>指标</th><th>数值</th><th>条件</th><th>来源</th></tr></thead><tbody>${sourcedRows.map(item => `<tr><td>${esc(item.variant || '—')}</td><td>${esc(item.metric)}</td><td>${esc(item.value)} ${esc(item.unit)}${item.statistic ? ` (${esc(item.statistic)})` : ''}</td><td>${esc(item.condition || '—')}</td><td>${external(item.source, '记录')}</td></tr>`).join('')}</tbody></table></div><p class="mz-sourced-note">这些数字摘自仓库文档，不是本站正式发布的测量。</p>`
-      : '';
-    const benchmarkEmpty = m.dataPending
-      ? `${sourcedTable || '<div class="mz-benchmark-empty"><div><h3>基准数据待补充</h3><p>性能、精度、模型文件和转换报告尚未纳入网页发布。</p></div></div>'}${m.source ? external(m.source, '模型仓库') : ''}`
-      : `<div class="mz-benchmark-empty"><div><h3>暂无性能汇总</h3></div>${external(m.source + '/evaluator', '查看评测说明')}</div>`;
-    const variantLine = (m.publishedVariants || []).length
-      ? `<p class="mz-sourced-note">已记录变体：${m.publishedVariants.map(name => esc(name)).join('、')}</p>`
-      : '';
+    const benchmarkEmpty = `<div class="mz-benchmark-empty"><div><h3>暂无性能汇总</h3></div>${m.source ? external(m.source + '/evaluator', '查看评测说明') : ''}</div>`;
+    const benchmarkBody = b
+      ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid" id="detail-performance" aria-live="polite"></div></div>${m.dataPending ? '<p class="mz-sourced-note">这些数字摘自仓库文档，不是本站正式发布的测量。</p>' : ''}</div>`
+      : benchmarkEmpty;
     const upstreamLine = (m.upstream || []).length
       ? `<section class="mz-section"><h2>上游</h2><div class="mz-resource-links">${m.upstream.map(item => external(item.url, esc(item.name))).join('')}</div></section>`
       : '';
@@ -213,9 +213,9 @@
     const downloadDialog = selectedDownloadModel ? `<dialog class="mz-download-dialog mz-store" id="${esc(dialogId)}" aria-labelledby="${esc(dialogId)}-title"><form method="dialog" class="mz-store-shell"><header class="mz-store-header"><div><span>获取模型</span><h2 id="${esc(dialogId)}-title">${esc(m.name)}</h2></div><button type="submit" value="cancel" class="mz-dialog-close" aria-label="关闭" title="关闭">${icon('x')}</button></header><div class="mz-store-body"><fieldset class="mz-store-step"><legend>选择芯片</legend><div class="mz-store-grid">${downloadPlatforms.map(platform => `<label class="mz-store-choice"><input type="radio" name="download-platform" value="${esc(platform)}" ${platform === selectedPlatform ? 'checked' : ''}><span class="mz-store-choice-main"><strong>${esc(platform)}</strong><small>${platformSizes(platform)} 个尺寸</small></span></label>`).join('')}</div></fieldset><fieldset class="mz-store-step"><legend>选择尺寸</legend><div class="mz-store-list">${downloadModels.map(model => { const platform = hardwareOf(model, data); const asset = model.assets[0]; return `<label class="mz-store-choice mz-model-choice" data-platform="${esc(platform)}" data-model-size="${esc(model.modelSize || '')}" ${platform === selectedPlatform ? '' : 'hidden'}><input type="radio" name="download-model" value="${esc(model.id)}" data-url="${esc(asset.url)}" ${model.id === selectedDownloadModel.id ? 'checked' : ''}><span class="mz-store-choice-main"><strong>${esc(model.variantName || model.name)}</strong></span>${choiceStats(model, data)}</label>`; }).join('')}</div></fieldset></div><footer class="mz-store-summary"><a class="button mz-dialog-download" data-download-link href="${esc(selectedAsset.url)}" target="_blank" rel="noopener">${icon('download')}下载</a></footer></form></dialog>` : '';
     return `<nav class="mz-breadcrumb" aria-label="模型导航"><a class="back-link" href="#">Model Zoo</a><span aria-hidden="true">/</span><span>${m.name}</span></nav>
       <section class="mz-overview"><div class="mz-introduction"><span class="mz-task">${m.task}</span>${m.dataPending ? '<span class="pending-badge">数据待补充</span>' : ''}<h1>${m.name}</h1><p data-i18n-zh="${esc(m.description)}" data-i18n-en="${esc(m.descriptionEn || m.description)}">${esc(description)}</p><div class="mz-primary-actions">${m.assets?.length ? `<button class="button" type="button" data-open-download>${icon('download')}获取模型</button>` : ''}<button class="button secondary mz-ask-model" type="button" data-ask-model><span class="mz-icon" style="--icon:url('assets/icons/sparkles.svg')" aria-hidden="true"></span>询问此模型</button>${repositoryLinks(m, 'mz-text-link')}</div></div>${cover}</section>
-      <section class="mz-benchmark" aria-label="性能与精度"><div class="mz-benchmark-title"><h2>性能与精度</h2></div><div class="mz-configuration"><div><span>目标硬件</span>${dropdown('benchmark-hardware', '目标硬件', hardwareOptions.map(value => ({ value, label: value })), hardware)}</div><div><span>模型变体</span>${dropdown('benchmark-variant', '模型变体', variants.filter(other => hardwareOf(other, data) === hardware).sort((a, b) => sizeRank(a.modelSize) - sizeRank(b.modelSize)).map(other => ({ value: other.id, label: other.variantName || other.name })), m.id, m.dataPending && variants.length < 2)}</div><div><span>Runtime 并发</span>${dropdown('benchmark-condition', 'Runtime 并发', conditions.map(value => ({ value: String(value), label: threadLabel(value) })), String(conditions[0] || ''), !conditions.length)}</div></div>
-      ${b ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid" id="detail-performance" aria-live="polite"></div></div></div>` : benchmarkEmpty}<div class="mz-report-actions">${m.reportDataUrl ? `<a class="mz-report-link" href="reports.html?report=${encodeURIComponent(m.id)}&from=${encodeURIComponent(m.id)}">${icon('scan-eye')}查看转换详情</a>` : (m.reportUrl || m.reportSourceUrl) ? external(m.reportUrl || m.reportSourceUrl, 'OE 转换报告') : '<span class="mz-report-placeholder" aria-disabled="true">OE 转换报告</span>'}</div></section>
-      <div class="mz-information"><div class="mz-main-column"><section class="mz-section"><h2>模型参数</h2><dl class="mz-specifications">${propertyRows(m)}</dl></section>${variantLine}${upstreamLine}${conversionLine}${downloadLine}${usageLine}${quickStart(m)}
+      <section class="mz-benchmark" aria-label="性能与精度"><div class="mz-benchmark-title"><h2>性能与精度</h2></div><div class="mz-configuration"><div><span>目标硬件</span>${dropdown('benchmark-hardware', '目标硬件', hardwareOptions.map(value => ({ value, label: value })), hardware)}</div><div><span>模型变体</span>${dropdown('benchmark-variant', '模型变体', variants.filter(other => hardwareOf(other, data) === hardware).sort((a, b) => sizeRank(a.modelSize) - sizeRank(b.modelSize) || String(a.variantName || a.name).localeCompare(String(b.variantName || b.name))).map(other => ({ value: other.id, label: other.variantName || other.name })), m.id)}</div><div><span>Runtime 并发</span>${dropdown('benchmark-condition', 'Runtime 并发', conditionChoices, conditionChoices[0]?.value || '', m.dataPending ? !b?.conditionOptions?.length : !conditionChoices.length)}</div></div>
+      ${benchmarkBody}<div class="mz-report-actions">${m.reportDataUrl ? `<a class="mz-report-link" href="reports.html?report=${encodeURIComponent(m.id)}&from=${encodeURIComponent(m.id)}">${icon('scan-eye')}查看转换详情</a>` : (m.reportUrl || m.reportSourceUrl) ? external(m.reportUrl || m.reportSourceUrl, 'OE 转换报告') : '<span class="mz-report-placeholder" aria-disabled="true">OE 转换报告</span>'}</div></section>
+      <div class="mz-information"><div class="mz-main-column"><section class="mz-section"><h2>模型参数</h2><dl class="mz-specifications">${propertyRows(m)}</dl></section>${upstreamLine}${conversionLine}${downloadLine}${usageLine}${quickStart(m)}
       </div>
       <aside class="mz-side-column"><section><h2>目标平台</h2><div class="mz-platform-list">${hardwareOptions.map(platform => { const target = variants.find(other => hardwareOf(other, data) === platform && other.modelSize === m.modelSize) || variants.find(other => hardwareOf(other, data) === platform); const active = platform === hardware; return `<button type="button" class="mz-platform-option${active ? ' is-active' : ''}" data-platform-target="${esc(target?.id || '')}" ${active || !target ? 'disabled' : ''} aria-label="切换到 ${esc(platform)}"><span class="mz-platform-mark">${icon('cpu')}</span><strong>${esc(platform)}</strong></button>`; }).join('')}</div></section><section><h2>开发资源</h2><div class="mz-resource-links">${developerResourceLinks(m)}</div></section><section><h2>模型许可</h2><div class="mz-resource-links">${m.licenseName && m.licenseUrl ? external(m.licenseUrl, esc(m.licenseName)) : '<span>未声明</span>'}</div></section></aside></div>
       ${related.length ? `<section class="mz-related"><div class="mz-section-heading"><h2>相关模型</h2><a href="#">查看全部模型</a></div><div class="mz-related-grid">${related.map(other => `<a href="#model/${other.id}" class="mz-related-model">${other.coverImage ? `<img src="${esc(other.coverImage)}" alt="${esc(other.name)}" loading="lazy">` : '<span class="pending-placeholder">数据待补充</span>'}<div><h3>${other.name}</h3><span>${other.task}</span></div></a>`).join('')}</div></section>` : ''}
@@ -403,7 +403,93 @@
     listen(document, 'pointerdown', event => { if (openPopover && !openPopover.parentElement.contains(event.target)) closePopover(); });
     listen(document, 'keydown', event => { if (event.key === 'Escape' && openPopover) closePopover(); });
 
+    function pendingPerformance() {
+      const grid = root.querySelector('#detail-performance');
+      if (!grid) return;
+      const selected = root.querySelector('#benchmark-condition')?.dataset.value || '';
+      const inCondition = row => Boolean(selected) && row.conditionKey === selected;
+      const records = (b?.performance || []).filter(inCondition);
+      const headline = metric => {
+        const matches = records.filter(row => row.metric === metric);
+        return matches.find(row => row.statistic === 'mean') || matches.find(row => !row.statistic) || null;
+      };
+      const delay = headline('latency');
+      const speed = headline('throughput');
+      const stages = (b?.stages || []).filter(inCondition);
+      const stageReading = label => stages.find(row => row.stageLabel === label && (row.statistic === 'mean' || !row.statistic)) || stages.find(row => row.stageLabel === label);
+      const pendingText = record => record ? `${amount(record)} ${record.unit || ''}`.trim() : '数据待补充';
+      const tileValue = record => record ? `${amount(record)}<small>${esc(record.unit || '')}</small>` : '数据待补充';
+      const infoRow = (label, rowValue) => `<span class="mz-popover-row"><span>${esc(label)}</span><b>${esc(rowValue)}</b></span>`;
+      const sourceRow = record => record?.source ? `<span class="mz-popover-row"><span>来源</span><b>${external(record.source, '记录')}</b></span>` : '';
+      const detail = (label, record) => record ? `${infoRow(label, pendingText(record))}${record.condition ? infoRow('条件', record.condition) : ''}${record.statistic ? infoRow('统计量', record.statistic) : ''}${sourceRow(record)}` : infoRow(label, '数据待补充');
+      const preprocess = stageReading('前处理');
+      const postprocess = stageReading('后处理');
+      const endToEndLatency = stageReading('端到端');
+      const e2eRows = [
+        infoRow('实现', '数据待补充'),
+        infoRow('CPU 线程', '数据待补充'),
+        infoRow('流水线', '数据待补充'),
+        infoRow('Runtime 提交', '数据待补充'),
+        detail('前处理', preprocess),
+        detail('后处理', postprocess),
+        detail('端到端', endToEndLatency),
+        infoRow('端到端吞吐量', '数据待补充'),
+        ...(records.some(row => row.metric === 'latency') ? records.filter(row => row.metric === 'latency').map(row => detail(row.statistic ? `Runtime 延迟 · ${row.statistic}` : 'Runtime 延迟', row)) : [infoRow('Runtime 延迟', '数据待补充')]),
+        ...(records.some(row => row.metric === 'throughput') ? records.filter(row => row.metric === 'throughput').map(row => detail(row.statistic ? `吞吐量 · ${row.statistic}` : '吞吐量', row)) : [infoRow('吞吐量', '数据待补充')]),
+        ...stages.filter(row => !['前处理', '后处理', '端到端'].includes(row.stageLabel)).map(row => detail(row.stageLabel, row)),
+        infoRow('文档说明', '摘自仓库文档，不是本站正式发布的测量。'),
+      ].join('');
+      const endToEndTile = `<div class="${endToEndLatency ? '' : 'is-unmeasured'}"><span class="mz-accuracy-label">端到端延迟<button type="button" class="mz-accuracy-info" aria-label="端到端延迟：查看完整流水线条件" aria-haspopup="dialog">${icon('circle-help')}<span class="mz-accuracy-popover mz-e2e-popover mz-doc-popover" role="dialog" aria-label="端到端流水线条件">${e2eRows}</span></button></span><strong>${endToEndLatency ? tileValue(endToEndLatency) : '数据待补充'}</strong></div>`;
+      const accuracyRows = b?.accuracy || [];
+      const taskCode = String(m.catalogId || '').split('/').at(-1);
+      const fallbackMetric = { cls: 'top-1', detect: 'bbox-all-map-50-95', seg: 'mask-all-map-50-95', pose: 'keypoints-all-map-50-95', obb: 'obb-map-50' }[taskCode];
+      const accuracyMetrics = [...new Set(accuracyRows.map(row => row.metric))];
+      if (!accuracyMetrics.length) accuracyMetrics.push(fallbackMetric || 'accuracy-pending');
+      const percentText = record => {
+        if (!record) return '数据待补充';
+        if (record.unit === 'ratio' || record.unit === 'percent') return `${amount(record, true)}%`;
+        return pendingText(record);
+      };
+      const accuracyTiles = accuracyMetrics.map(metric => {
+        const rows = accuracyRows.filter(row => row.metric === metric);
+        const find = stage => rows.find(row => row.model_stage === stage);
+        const reference = find('float');
+        const quantized = find('quantized');
+        const board = find('board');
+        const unstaged = rows.filter(row => !row.model_stage);
+        const shown = quantized || board || (unstaged.length === 1 ? unstaged[0] : null) || reference;
+        const metricLabel = metric === 'accuracy-pending' ? { zh: '精度', en: 'Accuracy' } : metricName(metric, data);
+        const tileName = typeof metricLabel === 'string' ? { zh: metricLabel, en: metricLabel } : metricLabel;
+        const tileNameZh = esc(tileName.zh || metric);
+        const tileNameEn = esc(tileName.en || tileName.zh || metric);
+        const scale = record => record.unit === 'ratio' ? record.value * 100 : record.value;
+        const delta = reference && quantized && ['ratio', 'percent'].includes(reference.unit) && reference.unit === quantized.unit
+          ? Number((scale(quantized) - scale(reference)).toFixed(2))
+          : null;
+        const deltaText = delta === null ? '数据待补充' : `${delta > 0 ? '+' : delta < 0 ? '−' : ''}${Math.abs(delta)}%`;
+        const comparisonRows = [
+          infoRow('浮点参考', percentText(reference)),
+          infoRow('量化结果', percentText(quantized)),
+          infoRow('板端结果', percentText(board)),
+          infoRow('端到端差值', deltaText),
+          ...unstaged.map(row => detail(row.statistic ? `${tileName.zh} · ${row.statistic}` : tileName.zh, row)),
+          ...(reference ? [infoRow('条件', reference.condition || '数据待补充'), sourceRow(reference)] : []),
+          ...[quantized, board].filter(row => row && row.source && row.source !== reference?.source).map(sourceRow),
+          infoRow('文档说明', '摘自仓库文档，不是本站正式发布的测量。'),
+        ].join('');
+        const comparisonControl = `<button type="button" class="mz-accuracy-info" aria-label="${tileNameZh}：查看浮点参考" aria-haspopup="dialog">${icon('circle-help')}<span class="mz-accuracy-popover mz-doc-popover" role="dialog" aria-label="${tileNameZh}对照">${comparisonRows}</span></button>`;
+        return `<div class="${shown ? '' : 'is-unmeasured'}"><span class="mz-accuracy-label"><span data-i18n-zh="${tileNameZh}" data-i18n-en="${tileNameEn}">${tileNameZh}</span>${comparisonControl}</span><strong>${shown ? (shown.unit === 'ratio' || shown.unit === 'percent' ? `${amount(shown, true)}<small>%</small>` : tileValue(shown)) : '数据待补充'}</strong></div>`;
+      });
+      const extraTiles = [...new Set((b?.extras || []).filter(inCondition).map(row => row.metric))].map(metric => {
+        const row = (b.extras || []).filter(item => inCondition(item) && item.metric === metric).find(item => item.statistic === 'mean' || !item.statistic) || null;
+        return `<div class="${row ? '' : 'is-unmeasured'}"><span>${esc(metric)}</span><strong>${tileValue(row)}</strong></div>`;
+      });
+      grid.innerHTML = `<div class="${delay ? '' : 'is-unmeasured'}"><span>Runtime 延迟</span><strong>${tileValue(delay)}</strong></div>${endToEndTile}<div class="${speed ? '' : 'is-unmeasured'}"><span>吞吐量</span><strong>${tileValue(speed)}</strong></div>${accuracyTiles.join('')}${extraTiles.join('')}`;
+      refresh();
+    }
+
     function performance() {
+      if (m.dataPending) return pendingPerformance();
       if (!b) return;
       const records = b.performance || [];
       const threads = Number(root.querySelector('#benchmark-condition')?.dataset.value || 1);

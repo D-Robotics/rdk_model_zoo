@@ -65,13 +65,15 @@ if (preview) {
     if (model.releaseStatus === 'data-pending') {
       assert.equal(model.dataPending, true, `${model.id}: pending models must set dataPending`);
       assert.deepEqual(Array.from(model.assets), [], `${model.id}: pending models must not publish artifacts`);
-      assert.equal(model.benchmark, null, `${model.id}: pending models must not publish benchmarks`);
+      assert.equal(model.benchmark?.documentation, true, `${model.id}: pending benchmarks are documentation excerpts`);
+      for (const row of [...(model.benchmark.performance || []), ...(model.benchmark.accuracy || []), ...(model.benchmark.stages || []), ...(model.benchmark.extras || [])]) {
+        assert.ok(row.metric && row.unit && Number.isFinite(row.value), `${model.id}: documented metric needs metric, unit and value`);
+        assert.match(String(row.source || ''), /^https:\/\/github\.com\/D-Robotics\/rdk_model_zoo\/blob\/[0-9a-f]{40}\//, `${model.id}: documented metric must cite a blob`);
+        if (row.model_stage !== undefined) assert.ok(['float', 'quantized', 'board'].includes(row.model_stage), `${model.id}: unknown model stage`);
+        if (row.concurrency !== undefined) assert.ok(Number.isInteger(row.concurrency) && row.concurrency > 0, `${model.id}: concurrency must be a positive integer from the source`);
+      }
       if (model.coverImage) {
         assert.match(model.coverImage, /^https:\/\/raw\.githubusercontent\.com\/D-Robotics\/rdk_model_zoo\/[0-9a-f]{40}\//, `${model.id}: pending cover must be a file at the pinned revision`);
-      }
-      for (const row of model.sourcedBenchmarks || []) {
-        assert.ok(row.metric && row.unit && row.source, `${model.id}: sourced benchmark needs metric, unit and source`);
-        assert.match(String(row.source), /^https:\/\/github\.com\/D-Robotics\/rdk_model_zoo\/blob\/[0-9a-f]{40}\//, `${model.id}: sourced benchmark must cite a blob`);
       }
       for (const download of model.documentedDownloads || []) {
         assert.match(download.url || '', /^https:\/\//, `${model.id}: documented download must be HTTPS`);
