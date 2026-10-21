@@ -367,7 +367,7 @@
     const description = window.HubI18n?.locale === 'en' ? (m.descriptionEn || m.description) : m.description;
     const coverSrc = m.coverImage || (m.dataPending ? 'assets/pending-cover.svg' : '');
     const cover = coverSrc
-      ? `<figure class="mz-demo${m.dataPending ? ' is-frame' : ''}"><img src="${esc(coverSrc)}" alt="${esc(m.name)}"></figure>`
+      ? `<figure class="mz-demo"><img src="${esc(coverSrc)}" alt="${esc(m.name)}"></figure>`
       : '';
     const benchmarkEmpty = `<div class="mz-benchmark-empty"><div><h3>暂无性能汇总</h3></div>${m.source ? external(m.source + '/evaluator', '查看评测说明') : ''}</div>`;
     const benchmarkBody = b

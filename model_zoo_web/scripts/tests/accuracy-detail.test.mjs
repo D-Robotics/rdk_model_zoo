@@ -273,7 +273,8 @@ test('pending detail uses the published task tiles, parameter rows, and sidebar 
   assert.match(html, /<div class="mz-kicker"><span class="mz-task">图像分类<\/span><span class="pending-badge">数据待补充<\/span><\/div><h1>/);
   assert.match(html, /title="模型产物待发布"/);
   assert.match(html, /获取模型/);
-  assert.match(html, /class="mz-demo is-frame"/);
+  assert.match(html, /class="mz-demo"/);
+  assert.doesNotMatch(html, /is-frame/);
   assert.match(html, /Runtime 单路/);
   assert.match(html, /mz-report-link is-disabled/);
   assert.match(html, /查看转换详情/);

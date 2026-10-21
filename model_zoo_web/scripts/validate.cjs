@@ -1,10 +1,27 @@
 const assert = require('node:assert/strict');
+const { spawnSync } = require('node:child_process');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
 const { assertCoverResolves, assertLocalImageFile } = require('./cover-assets.cjs');
+
+function assertGeneratedCoverEdges() {
+  const heroes = path.join(root, 'assets', 'models', 'pending-heroes');
+  const result = spawnSync('python3', [
+    path.join(webRoot, 'scripts', 'check_cover_edges.py'),
+    path.join(webRoot, 'release', 'assets', 'resnet-cls.webp'),
+    heroes,
+    path.join(webRoot, 'release', 'assets', 'pending-heroes'),
+  ], { encoding: 'utf8' });
+  assert.equal(
+    result.status,
+    0,
+    `generated covers must be 1672x941 without a uniform border\n${result.stderr || result.stdout || result.error || ''}`,
+  );
+  if (result.stdout) process.stdout.write(result.stdout.endsWith('\n') ? result.stdout : `${result.stdout}\n`);
+}
 
 const preview = process.argv.includes('--preview');
 const webRoot = path.resolve(__dirname, '..');
@@ -194,6 +211,9 @@ for (const filename of ['app.js', 'ask-ai.js', 'i18n.js', 'facets.js', 'model-pr
 
 const appSource = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
 const detailSource = fs.readFileSync(path.join(root, 'detail-view.js'), 'utf8');
+const detailCss = fs.readFileSync(path.join(root, 'detail.css'), 'utf8');
+assert.doesNotMatch(detailSource, /is-frame/, 'detail heroes must use the published mz-demo markup');
+assert.doesNotMatch(detailCss, /mz-demo\.is-frame/, 'detail.css must not pad pending heroes with a white frame');
 assert.match(detailSource, /class="mz-report-placeholder" aria-disabled="true">OE 转换报告/);
 if (!preview) {
   assert.match(appSource, /当前目录暂未发布任何模型。/);
@@ -236,6 +256,7 @@ const localReportDirs = fs.readdirSync(path.join(root, 'reports'), { withFileTyp
   .filter(entry => entry.isDirectory()).map(entry => entry.name);
 if (preview) {
   assert(localReportDirs.includes('data'), 'The preview build must ship its report data payloads');
+  assertGeneratedCoverEdges();
 } else {
   assert.deepEqual(localReportDirs, [], 'The pre-migration site must not ship report payloads');
 }
