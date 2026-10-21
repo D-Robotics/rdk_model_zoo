@@ -11,6 +11,9 @@ model 目录不检入任何二进制；制品由规范化下载器按平台发�
 | 文件 | Target | 变体 | 阶段 | 来源 |
 | --- | --- | --- | --- | --- |
 | `ConvNeXt_atto_224x224_nv12.bin` | x5 | atto | single | download（`x5:convnext:ConvNeXt_atto_224x224_nv12.bin`） |
+| `ConvNeXt_nano_224x224_nv12.bin` | x5 | nano | single | download（`x5:convnext:ConvNeXt_nano_224x224_nv12.bin`） |
+| `ConvNeXt_pico_224x224_nv12.bin` | x5 | pico | single | download（`x5:convnext:ConvNeXt_pico_224x224_nv12.bin`） |
+| `ConvNeXt_femto_224x224_nv12.bin` | x5 | femto | single | download（`x5:convnext:ConvNeXt_femto_224x224_nv12.bin`） |
 
 该引用是 `docs/release/x5/models.yaml` 中的一行；Manifest 是 URL 与格式
 的事实源。X5 消费单个 packed NV12 张量，因此运行时总是把 `--model-path`
@@ -65,5 +68,8 @@ SHA-256（如有），原子落盘且不覆盖已有文件（校验失败保留�
 | 文件 | 格式 | SHA-256 |
 | --- | --- | --- |
 | `ConvNeXt_atto_224x224_nv12.bin` | bayes-e `.bin`，packed NV12 输入（224x224），F32 `[1,1000,1,1]` logits 输出 | null（未知） |
+| `ConvNeXt_nano_224x224_nv12.bin` | bayes-e `.bin`，packed NV12 输入（224x224），F32 `[1,1000,1,1]` logits 输出 | null（未知） |
+| `ConvNeXt_pico_224x224_nv12.bin` | bayes-e `.bin`，packed NV12 输入（224x224），F32 `[1,1000,1,1]` logits 输出 | null（未知） |
+| `ConvNeXt_femto_224x224_nv12.bin` | bayes-e `.bin`，packed NV12 输入（224x224），F32 `[1,1000,1,1]` logits 输出 | null（未知） |
 
 Manifest 中的 SHA-256 为 `null (unknown)`。下载器打印下载文件的 SHA-256，供本地记录。

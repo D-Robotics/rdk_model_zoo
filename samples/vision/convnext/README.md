@@ -34,8 +34,9 @@ blocks](./test_data/ConvNeXt_Block.png)
 
 *Figure: block comparison from the ConvNeXt paper — Swin Transformer
 block (left), ResNet block (middle), ConvNeXt block (right). The figure
-shows the upstream training architecture; the artifact deployed on X5 is
-the INT8-quantized atto variant at 224×224 NV12 (see
+shows the upstream training architecture; the default X5 artifact is
+the INT8-quantized atto variant at 224×224 NV12. Nano, Pico, and Femto
+are published at the same input (see
 [Support matrix](#support-matrix)).*
 
 Start with `runtime/python/main.py`; `classify.py` holds the model stages and `cli.py` handles options and results.
@@ -66,11 +67,14 @@ unpublished combination.
 | Model | Input | X5 | S100 | S100P | S600 |
 | --- | --- | --- | --- | --- | --- |
 | ConvNeXt-atto | 224x224 | ✓ | — | — | — |
+| ConvNeXt-nano | 224x224 | ✓ | — | — | — |
+| ConvNeXt-pico | 224x224 | ✓ | — | — | — |
+| ConvNeXt-femto | 224x224 | ✓ | — | — | — |
 
-Runtime coverage: the Python CLI serves the published combination with
-`--target auto|x5` and `--variant atto`. Only the X5 archive publishes
-`ConvNeXt_atto_224x224_nv12.bin`; `--target s100`, `s100p` and `s600`
-resolve no asset. The sample ships no C++ runtime.
+Runtime coverage: the Python CLI serves the published combinations with
+`--target auto|x5` and `--variant atto|nano|pico|femto`. The default
+variant is `atto`. `--target s100`, `s100p` and `s600` resolve no asset.
+The sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -113,7 +117,8 @@ python3 samples/vision/convnext/runtime/python/main.py \
   --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-The default variant is `atto`. Full commands:
+The default variant is `atto`. Nano, Pico, and Femto are selected with
+`--variant`. Full commands:
 [runtime/python/README.md](runtime/python/README.md).
 
 <a id="expected-results"></a>
@@ -138,18 +143,18 @@ Measurements recorded for the ConvNeXt series on RDK X5 (X5 release
 x5-v1.1.3; Float Top-1 on the pre-quantization ONNX, Quant Top-1 on the
 deployment model; latency single-frame single-thread single-core, FPS
 4-thread concurrent; CPU 8xA55@1.8GHz performance mode, BPU
-1xBayes-e@1GHz). The download script and the quick start above use the
-only published artifact, ConvNeXt Atto. The other rows keep their recorded
-numbers and have no downloadable bin.
+1xBayes-e@1GHz). The download script and the quick start above default to
+ConvNeXt Atto. Nano, Pico, and Femto are published bins with the same
+recorded numbers.
 
 | Model | Size | Classes | Params (M) | Float Top-1 | Quant Top-1 | Latency (ms) | FPS | Artifact |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ | `ConvNeXt_atto_224x224_nv12.bin` |
-| ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ | not published |
-| ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ | not published |
-| ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ | not published |
+| ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ | `ConvNeXt_nano_224x224_nv12.bin` |
+| ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ | `ConvNeXt_pico_224x224_nv12.bin` |
+| ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ | `ConvNeXt_femto_224x224_nv12.bin` |
 
-Numbers are unchanged from the X5 release table. Prepare the atto artifact with [model/README.md](model/README.md). Pico has no PTQ config in this sample. [conversion/](conversion/README.md) has reference PTQ configs for nano and femto, and those configs are not published artifacts.
+Numbers are unchanged from the X5 release table. Prepare an artifact with [model/README.md](model/README.md). Pico has no PTQ config in this sample. [conversion/](conversion/README.md) has reference PTQ configs for nano and femto; those YAML recipes are not the published bins.
 
 <a id="entry-points"></a>
 ## Entry points

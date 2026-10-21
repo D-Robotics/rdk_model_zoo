@@ -43,8 +43,8 @@ cwd: repository root. The minimal SDK-free invocation is the listing mode:
 python3 samples/vision/convnext/runtime/python/main.py --list-models --target auto
 ```
 
-A full run on a prepared X5 board (default variant is `atto`, the only
-published variant):
+A full run on a prepared X5 board (default variant is `atto`; nano, pico,
+and femto are also published):
 
 ```bash
 # prerequisites: bash samples/vision/convnext/model/download.sh x5

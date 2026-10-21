@@ -1662,6 +1662,24 @@ benchmarks:
       section: "## Performance data"
       provenance: existing-repository-documentation
 
+  - id: resnet152-archive-s100
+    sample_id: resnet
+    variant_id: resnet152-224-s100-archive
+    display_name: ResNet152 224x224 conversion reference
+    asset_filename: s100/resnet152_224x224_nv12.hbm
+    model_format: hbm
+    environment: { hardware: RDK S100, runtime: OpenExplore toolchain }
+    performance:
+      - { metric: latency, value: 2.23, unit: ms, scope: toolchain reference }
+      - { metric: throughput, value: 449.03, unit: fps, scope: toolchain reference }
+    accuracy:
+      - { metric: cosine-similarity, value: 0.992285, unit: ratio, model_stage: quantized, scope: conversion record }
+    source:
+      ref: 53d924f4c88175ec77634d24e5d711a3a0901eb6
+      path: samples/vision/resnet152/conversion/README.md
+      section: "## Original Conversion Records"
+      provenance: existing-repository-documentation
+
   - id: resnet152-s100p
     sample_id: resnet
     variant_id: resnet-152-224-s100p

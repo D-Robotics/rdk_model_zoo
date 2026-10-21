@@ -28,12 +28,12 @@ benchmarks:
       - { metric: latency, value: 0.350, unit: ms, qualifier: exact, statistic: mean, scope: "hbDNNInfer plus hbDNNWaitTaskDone; 100 inputs; 10 warm-up runs" }
       - { metric: throughput, value: 2853.09, unit: fps, qualifier: exact, scope: "sequential; 100 inputs; 10 warm-up runs" }
     source: *himloco_source
-  # Only Atto has a models.yaml asset (ConvNeXt_atto_224x224_nv12.bin).
-  # Nano, Pico, and Femto keep recorded measurements and have no published bin.
+  # Atto, Nano, Pico, and Femto each have a models.yaml bin. Atto stays the default.
   - id: convnext-atto-x5
     sample_id: convnext
     variant_id: convnext-atto-224
     display_name: ConvNeXt Atto 224x224
+    asset_filename: ConvNeXt_atto_224x224_nv12.bin
     input: { shape: [ 224, 224 ], format: NV12 }
     environment: { hardware: RDK X5 }
     performance: [ { metric: latency, value: 1.96, unit: ms, qualifier: exact, scope: "single-frame, single-thread, single-BPU-core", concurrency: 1 }, { metric: throughput, value: 732, unit: fps, qualifier: lower-bound, concurrency: 4, scope: "four-thread concurrent, 100% BPU utilization" } ]
@@ -43,6 +43,7 @@ benchmarks:
     sample_id: convnext
     variant_id: convnext-nano-224
     display_name: ConvNeXt Nano 224x224
+    asset_filename: ConvNeXt_nano_224x224_nv12.bin
     input: { shape: [ 224, 224 ], format: NV12 }
     environment: { hardware: RDK X5 }
     performance: [ { metric: latency, value: 5.71, unit: ms, qualifier: exact, scope: "single-frame, single-thread, single-BPU-core", concurrency: 1 }, { metric: throughput, value: 200, unit: fps, qualifier: lower-bound, concurrency: 4, scope: "four-thread concurrent, 100% BPU utilization" } ]
@@ -52,6 +53,7 @@ benchmarks:
     sample_id: convnext
     variant_id: convnext-pico-224
     display_name: ConvNeXt Pico 224x224
+    asset_filename: ConvNeXt_pico_224x224_nv12.bin
     input: { shape: [ 224, 224 ], format: NV12 }
     environment: { hardware: RDK X5 }
     performance: [ { metric: latency, value: 3.37, unit: ms, qualifier: exact, scope: "single-frame, single-thread, single-BPU-core", concurrency: 1 }, { metric: throughput, value: 364, unit: fps, qualifier: lower-bound, concurrency: 4, scope: "four-thread concurrent, 100% BPU utilization" } ]
@@ -61,6 +63,7 @@ benchmarks:
     sample_id: convnext
     variant_id: convnext-femto-224
     display_name: ConvNeXt Femto 224x224
+    asset_filename: ConvNeXt_femto_224x224_nv12.bin
     input: { shape: [ 224, 224 ], format: NV12 }
     environment: { hardware: RDK X5 }
     performance: [ { metric: latency, value: 2.46, unit: ms, qualifier: exact, scope: "single-frame, single-thread, single-BPU-core", concurrency: 1 }, { metric: throughput, value: 556, unit: fps, qualifier: lower-bound, concurrency: 4, scope: "four-thread concurrent, 100% BPU utilization" } ]

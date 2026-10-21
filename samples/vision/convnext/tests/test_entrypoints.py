@@ -14,6 +14,9 @@ MAIN = ROOT / "samples" / "vision" / "convnext" / "runtime" / "python" / "main.p
 
 PUBLISHED_FILENAMES = (
     "ConvNeXt_atto_224x224_nv12.bin",
+    "ConvNeXt_nano_224x224_nv12.bin",
+    "ConvNeXt_pico_224x224_nv12.bin",
+    "ConvNeXt_femto_224x224_nv12.bin",
 )
 
 
@@ -44,6 +47,9 @@ class EntrypointTests(unittest.TestCase):
     def test_dry_run_reports_source_contract_per_target_and_variant(self):
         cases = (
             ("x5", "atto", "224x224"),
+            ("x5", "nano", "224x224"),
+            ("x5", "pico", "224x224"),
+            ("x5", "femto", "224x224"),
         )
         for target, variant, geometry in cases:
             with self.subTest(target=target, variant=variant):

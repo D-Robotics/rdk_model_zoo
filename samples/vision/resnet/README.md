@@ -85,6 +85,9 @@ Runtime coverage:
   references): X5 publishes `resnet<size>_bayese_224x224_nv12.bin`; the S
   series publishes `resnet<size>_nashe/nashm/nashp_224x224_nv12.hbm` under
   `s100/`, `s100p/` and `s600/`. The default variant is ResNet-18.
+  Six rdk_s archive HBMs (`resnet18`, `resnet50`, and `resnet152` on S100
+  and S600, filenames without a march token) are downloadable from the same
+  sample and are not selected by `--variant`.
 - C++ ([runtime/cpp](runtime/cpp/README.md)) serves the same five variants on
   S100, S100P and S600 only (`VARIANT=18|34|50|101|152`, default 18); X5 has
   no C++ runtime.
@@ -223,6 +226,12 @@ reimplementation of Pillow's bicubic resize, which dominates its preprocessing
 time; the latency columns record this implementation's measured cost. To reproduce the accuracy numbers see the
 [evaluator](evaluator/README.md); the C++ timing tool is described in the
 [benchmark instructions](../../../utils/tools/classification/cpp/README.md).
+
+The table above belongs to the bayese/nashe/nashm/nashp artifacts. The
+rdk_s archive file `s100/resnet152_224x224_nv12.hbm` has a separate
+conversion record: latency 2.23 ms and throughput 449.03 fps (toolchain
+reference) and quantized cosine similarity 0.992285. The other five
+archive HBMs have no recorded metrics on `rdk_s`.
 
 ![Inference result](./test_data/inference.png)
 

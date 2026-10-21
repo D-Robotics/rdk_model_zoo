@@ -71,12 +71,13 @@ BPU 1xBayes-e@1GHz):
 | Model | Size | Classes | Params (M) | Float Top-1 | Quant Top-1 | Latency (ms) | FPS | Artifact |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ | `ConvNeXt_atto_224x224_nv12.bin` |
-| ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ | not published |
-| ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ | not published |
-| ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ | not published |
+| ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ | `ConvNeXt_nano_224x224_nv12.bin` |
+| ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ | `ConvNeXt_pico_224x224_nv12.bin` |
+| ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ | `ConvNeXt_femto_224x224_nv12.bin` |
 
 All rows are quoted from the same published source table ("Performance
-Data"); only atto has a downloadable artifact. In the published record the
+Data"). Atto, nano, pico, and femto each have a downloadable bin; atto is
+the default. In the published record the
 quantized Top-1 stays close to the float value for each variant (e.g.
 femto 72.25% vs 73.75%, atto 69.75% vs 73.25%).
 
@@ -86,14 +87,14 @@ Data version: `rdk_x5_legacy @ cb86079ae5befcef9ca50fb46c8a6d8980106dec`.
 
 X5 uses 1×Bayes-e. The eight-thread condition below applies to X3 measurements.
 
-Recorded measurements on RDK X5 and RDK X5 Module. Only Atto has a published bin:
+Recorded measurements on RDK X5 and RDK X5 Module. Atto, Nano, Pico, and Femto each have a published bin; Atto is the default:
 
 | Model        | Size    | Categories | Parameter | Floating point precision | Quantization accuracy | Latency/throughput (single-threaded) | Latency/throughput (multi-threaded) | Frame rate(FPS) | Artifact |
 | ------------ | ------- | ---- | ------ | ----- | ----- | ----------- | ----------- | ------- | --- |
 | ConvNeXt_atto  | 224x224 | 1000 | 3.69   | 73.25 | 69.75 | 1.96        | 5.39        | 732.10 | `ConvNeXt_atto_224x224_nv12.bin` |
-| ConvNeXt_nano  | 224x224 | 1000 | 15.59  | 77.37 | 71.75 | 5.71        | 19.80       | 200.18 | not published |
-| ConvNeXt_pico  | 224x224 | 1000 | 9.04   | 77.25 | 71.03 | 3.37        | 10.88       | 364.07 | not published |
-| ConvNeXt_femto | 224x224 | 1000 | 5.22   | 73.75 | 72.25 | 2.46        | 7.11        | 556.02 | not published |
+| ConvNeXt_nano  | 224x224 | 1000 | 15.59  | 77.37 | 71.75 | 5.71        | 19.80       | 200.18 | `ConvNeXt_nano_224x224_nv12.bin` |
+| ConvNeXt_pico  | 224x224 | 1000 | 9.04   | 77.25 | 71.03 | 3.37        | 10.88       | 364.07 | `ConvNeXt_pico_224x224_nv12.bin` |
+| ConvNeXt_femto | 224x224 | 1000 | 5.22   | 73.75 | 72.25 | 2.46        | 7.11        | 556.02 | `ConvNeXt_femto_224x224_nv12.bin` |
 
 
 Description:

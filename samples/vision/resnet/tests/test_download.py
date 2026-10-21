@@ -63,6 +63,31 @@ class DownloadTargetReferenceTests(unittest.TestCase):
                 )
                 self.assertEqual(digest, "0" * 64)
 
+    def test_archive_filename_does_not_replace_the_nashe_default(self):
+        captured = {}
+
+        def fake_download(asset, destination):
+            captured["reference"] = asset.reference
+            return "2" * 64
+
+        with mock.patch.object(download_mod, "download_asset", fake_download):
+            download_mod.download_target(
+                "s100",
+                self.output_dir,
+                variant="152",
+                filename="s100/resnet152_224x224_nv12.hbm",
+            )
+        self.assertEqual(
+            captured["reference"],
+            "s:resnet:s100/resnet152_224x224_nv12.hbm",
+        )
+        with mock.patch.object(download_mod, "download_asset", fake_download):
+            download_mod.download_target("s100", self.output_dir, variant="152")
+        self.assertEqual(
+            captured["reference"],
+            "s:resnet:s100/resnet152_nashe_224x224_nv12.hbm",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

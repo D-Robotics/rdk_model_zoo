@@ -41,7 +41,7 @@ cwd：仓库根目录。最小无 SDK 调用是清单模式：
 python3 samples/vision/convnext/runtime/python/main.py --list-models --target auto
 ```
 
-在已准备好的 X5 板卡上的完整运行（缺省变体为 `atto`，唯一已发布变体）：
+在已准备好的 X5 板卡上的完整运行（缺省变体为 `atto`；nano、pico、femto 同样已发布）：
 
 ```bash
 # 前置：bash samples/vision/convnext/model/download.sh x5

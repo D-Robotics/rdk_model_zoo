@@ -25,9 +25,12 @@ from utils.py_utils.assets import download_asset, resolve_asset
 
 
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent
-VARIANTS = ('atto',)
+VARIANTS = ('atto', 'nano', 'pico', 'femto')
 ASSET_REFERENCES = {
     ('x5', 'atto'): 'x5:convnext:ConvNeXt_atto_224x224_nv12.bin',
+    ('x5', 'nano'): 'x5:convnext:ConvNeXt_nano_224x224_nv12.bin',
+    ('x5', 'pico'): 'x5:convnext:ConvNeXt_pico_224x224_nv12.bin',
+    ('x5', 'femto'): 'x5:convnext:ConvNeXt_femto_224x224_nv12.bin',
 }
 TARGETS = ("x5",)
 

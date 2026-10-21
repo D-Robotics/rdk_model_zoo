@@ -34,7 +34,7 @@ cpp/
 | S100P | 26n/s/m/l/x; default 26n | Locally converted floating-output HBM with explicit SHA-256 | supported |
 | S600 | None | No published route; explicitly rejected | not-supported |
 
-Published artifacts run through the [Python runtime](../python/README.md) on their matching targets: the published X5 11s/m/l BINs fail this entry's output binding (`Task output requires NHWC aligned geometry.`), and the published S HBMs have quantized outputs. This entry runs locally converted models whose ten outputs are unquantized FLOAT32 NHWC — prepare them with the [conversion workflow](../../conversion/README.md), record their SHA-256. The 14 publication identities remain the model-selection keys; for a locally converted model the identity names its architecture reference.
+Published artifacts run through the [Python runtime](../python/README.md) on their matching targets: the published X5 11s/m/l BINs fail this entry's output binding (`Task output requires NHWC aligned geometry.`), and the published S HBMs have quantized outputs. This entry runs locally converted models whose ten outputs are unquantized FLOAT32 NHWC — prepare them with the [conversion workflow](../../conversion/README.md), record their SHA-256. The 16 publication identities remain the model-selection keys; for a locally converted model the identity names its architecture reference.
 
 ## Select, build and run
 

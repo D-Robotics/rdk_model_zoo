@@ -10,6 +10,9 @@ Prepare the model artifact with the downloader, which resolves its URL and forma
 | File | Target | Variant | Stage | Source |
 | --- | --- | --- | --- | --- |
 | `ConvNeXt_atto_224x224_nv12.bin` | x5 | atto | single | download (`x5:convnext:ConvNeXt_atto_224x224_nv12.bin`) |
+| `ConvNeXt_nano_224x224_nv12.bin` | x5 | nano | single | download (`x5:convnext:ConvNeXt_nano_224x224_nv12.bin`) |
+| `ConvNeXt_pico_224x224_nv12.bin` | x5 | pico | single | download (`x5:convnext:ConvNeXt_pico_224x224_nv12.bin`) |
+| `ConvNeXt_femto_224x224_nv12.bin` | x5 | femto | single | download (`x5:convnext:ConvNeXt_femto_224x224_nv12.bin`) |
 
 The reference is an exact row of `docs/release/x5/models.yaml`; the
 manifest is the authority for URL and format. X5 consumes one packed NV12
@@ -36,6 +39,7 @@ From the repository root:
 # input: manifest row for the target/variant — output: file under this directory
 # output: exit 0, observed digest printed; no partial files left behind
 bash samples/vision/convnext/model/download.sh x5
+bash samples/vision/convnext/model/download.sh x5 nano
 ```
 
 The Python form is equivalent:
@@ -61,5 +65,8 @@ location.
 | File | Format | SHA-256 |
 | --- | --- | --- |
 | `ConvNeXt_atto_224x224_nv12.bin` | bayes-e `.bin`, packed NV12 input (224x224), F32 `[1,1000,1,1]` logits output | null (unknown) |
+| `ConvNeXt_nano_224x224_nv12.bin` | bayes-e `.bin`, packed NV12 input (224x224), F32 `[1,1000,1,1]` logits output | null (unknown) |
+| `ConvNeXt_pico_224x224_nv12.bin` | bayes-e `.bin`, packed NV12 input (224x224), F32 `[1,1000,1,1]` logits output | null (unknown) |
+| `ConvNeXt_femto_224x224_nv12.bin` | bayes-e `.bin`, packed NV12 input (224x224), F32 `[1,1000,1,1]` logits output | null (unknown) |
 
 The manifest SHA-256 field is `null (unknown)`. The downloader prints the artifact's computed digest after transfer; keep it with that artifact identity.

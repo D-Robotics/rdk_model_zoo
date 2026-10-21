@@ -51,6 +51,16 @@ ASSET_REFERENCES = {
     ('s600', '152'): 's:resnet:s600/resnet152_nashp_224x224_nv12.hbm',
 }
 TARGETS = ("x5", "s100", "s100p", "s600")
+# rdk_s archive HBMs. They share the sample with the nashe/nashp defaults and
+# are selected by filename so variant 18/50/152 keeps a single runtime match.
+ARCHIVE_REFERENCES = {
+    's100/resnet18_224x224_nv12.hbm': 's:resnet:s100/resnet18_224x224_nv12.hbm',
+    's600/resnet18_224x224_nv12.hbm': 's:resnet:s600/resnet18_224x224_nv12.hbm',
+    's100/resnet50_224x224_nv12.hbm': 's:resnet:s100/resnet50_224x224_nv12.hbm',
+    's600/resnet50_224x224_nv12.hbm': 's:resnet:s600/resnet50_224x224_nv12.hbm',
+    's100/resnet152_224x224_nv12.hbm': 's:resnet:s100/resnet152_224x224_nv12.hbm',
+    's600/resnet152_224x224_nv12.hbm': 's:resnet:s600/resnet152_224x224_nv12.hbm',
+}
 
 
 def asset_reference(target: str, variant: str = '18') -> str:
@@ -72,15 +82,36 @@ def download_target(
     output_dir: Optional[str | Path] = None,
     *,
     variant: str = '18',
+    filename: Optional[str] = None,
 ) -> str:
     """Download an exact target artifact and return its observed SHA-256.
 
     ``output_dir`` preserves the sample's layout: X5 is flat while the S-series
     artifact stays under ``s100/``, ``s100p/`` or ``s600/``. Existing files are
     verified by the shared downloader and are never silently replaced.
+
+    ``filename`` selects one rdk_s archive HBM. Omitting it keeps the
+    nashe/nashp/bayese default for ``variant``.
     """
 
-    asset = resolve_asset(asset_reference(target, variant))
+    if filename is not None:
+        key = str(filename).strip()
+        try:
+            reference = ARCHIVE_REFERENCES[key]
+        except KeyError as exc:
+            available = ", ".join(ARCHIVE_REFERENCES)
+            raise ValueError(
+                f"Unknown ResNet archive filename {filename!r}; "
+                f"published archive files: {available}."
+            ) from exc
+        prefix = key.split("/", 1)[0]
+        if prefix != str(target).strip().lower():
+            raise ValueError(
+                f"Archive filename {key} does not belong to target {target}."
+            )
+    else:
+        reference = asset_reference(target, variant)
+    asset = resolve_asset(reference)
     root = Path(output_dir).expanduser() if output_dir is not None else DEFAULT_OUTPUT_DIR
     destination = root / Path(asset.filename)
     digest = download_asset(asset, destination)
@@ -110,6 +141,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Model variant to fetch (default: 18).",
     )
     parser.add_argument(
+        "--filename",
+        choices=tuple(ARCHIVE_REFERENCES),
+        default=None,
+        help="rdk_s archive HBM. Leaves the nashe/nashp default unchanged.",
+    )
+    parser.add_argument(
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
@@ -123,7 +160,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     args = build_parser().parse_args(argv)
     try:
-        download_target(args.target, args.output_dir, variant=args.variant)
+        download_target(
+            args.target,
+            args.output_dir,
+            variant=args.variant,
+            filename=args.filename,
+        )
     except (OSError, ValueError) as exc:
         print(f"error: {exc}")
         return 2

@@ -63,16 +63,20 @@ def fake_runtime(selection, integer=False):
 
 class RuntimeTests(unittest.TestCase):
     def test_published_matrix_and_defaults(self):
-        self.assertEqual(len(list_models()), 14)
+        self.assertEqual(len(list_models()), 16)
         for target, variant in [("x5", "11s"), ("s100", "11s"), ("s100p", "26n")]:
             selection = resolve_selection(target)
             self.assertEqual(selection.variant, variant)
             self.assertEqual(selection.published_float, target == "x5")
+        for variant in ("11m", "11l"):
+            selection = resolve_selection("s100", variant=variant)
+            self.assertEqual(selection.variant, variant)
+            self.assertFalse(selection.published_float)
+            self.assertTrue(selection.asset.filename.endswith(".hbm"))
         for target, variant in [
             ("s600", "26n"),
             ("s100p", "11s"),
             ("x5", "26n"),
-            ("s100", "11m"),
         ]:
             with self.assertRaises(ValueError):
                 resolve_selection(target, variant=variant)
