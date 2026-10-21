@@ -82,6 +82,24 @@ class DownloadTargetReferenceTests(unittest.TestCase):
             "s:resnet:s100/resnet152_224x224_nv12.hbm",
         )
         with mock.patch.object(download_mod, "download_asset", fake_download):
+            download_mod.download_target(
+                "s100",
+                self.output_dir,
+                variant="152",
+                filename="s100/s600/resnet152_224x224_nv12.hbm",
+            )
+        self.assertEqual(
+            captured["reference"],
+            "s:resnet:s100/s600/resnet152_224x224_nv12.hbm",
+        )
+        with self.assertRaises(ValueError):
+            download_mod.download_target(
+                "s600",
+                self.output_dir,
+                variant="152",
+                filename="s100/s600/resnet152_224x224_nv12.hbm",
+            )
+        with mock.patch.object(download_mod, "download_asset", fake_download):
             download_mod.download_target("s100", self.output_dir, variant="152")
         self.assertEqual(
             captured["reference"],

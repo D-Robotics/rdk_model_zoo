@@ -29,14 +29,14 @@ Prepare the model artifact with the downloader, which resolves its URL and forma
 | `s100/resnet152_nashe_224x224_nv12.hbm` | s100 | 152 | single | download (`s:resnet:s100/resnet152_nashe_224x224_nv12.hbm`) |
 | `s100p/resnet152_nashm_224x224_nv12.hbm` | s100p | 152 | single | download (`s:resnet:s100p/resnet152_nashm_224x224_nv12.hbm`) |
 | `s600/resnet152_nashp_224x224_nv12.hbm` | s600 | 152 | single | download (`s:resnet:s600/resnet152_nashp_224x224_nv12.hbm`) |
-| `s100/resnet18_224x224_nv12.hbm` | s100 | 18 archive | single | download (`s:resnet:s100/resnet18_224x224_nv12.hbm`) |
-| `s600/resnet18_224x224_nv12.hbm` | s600 | 18 archive | single | download (`s:resnet:s600/resnet18_224x224_nv12.hbm`) |
-| `s100/resnet50_224x224_nv12.hbm` | s100 | 50 archive | single | download (`s:resnet:s100/resnet50_224x224_nv12.hbm`) |
-| `s600/resnet50_224x224_nv12.hbm` | s600 | 50 archive | single | download (`s:resnet:s600/resnet50_224x224_nv12.hbm`) |
-| `s100/resnet152_224x224_nv12.hbm` | s100 | 152 archive | single | download (`s:resnet:s100/resnet152_224x224_nv12.hbm`) |
-| `s600/resnet152_224x224_nv12.hbm` | s600 | 152 archive | single | download (`s:resnet:s600/resnet152_224x224_nv12.hbm`) |
+| `s100/resnet18_224x224_nv12.hbm` | s100 | 18 archive | single | download (`s:resnet:s100/resnet18_224x224_nv12.hbm`); archive path `rdk_s100/ResNet/resnet18_224x224_nv12.hbm` |
+| `s100/s600/resnet18_224x224_nv12.hbm` | s100 | 18 archive | single | download (`s:resnet:s100/s600/resnet18_224x224_nv12.hbm`); archive path `rdk_s600/ResNet/resnet18_224x224_nv12.hbm` |
+| `s100/resnet50_224x224_nv12.hbm` | s100 | 50 archive | single | download (`s:resnet:s100/resnet50_224x224_nv12.hbm`); archive path `rdk_s100/ResNet/resnet50_224x224_nv12.hbm` |
+| `s100/s600/resnet50_224x224_nv12.hbm` | s100 | 50 archive | single | download (`s:resnet:s100/s600/resnet50_224x224_nv12.hbm`); archive path `rdk_s600/ResNet/resnet50_224x224_nv12.hbm` |
+| `s100/resnet152_224x224_nv12.hbm` | s100 | 152 archive | single | download (`s:resnet:s100/resnet152_224x224_nv12.hbm`); archive path `rdk_s100/ResNet/resnet152_224x224_nv12.hbm` |
+| `s100/s600/resnet152_224x224_nv12.hbm` | s100 | 152 archive | single | download (`s:resnet:s100/s600/resnet152_224x224_nv12.hbm`); archive path `rdk_s600/ResNet/resnet152_224x224_nv12.hbm` |
 
-Rows marked `archive` are the rdk_s HBMs. `--variant 18|50|152` still downloads the nashe/nashp file. Fetch an archive file with its manifest filename, for example `bash samples/vision/resnet/model/download.sh s100 152 s100/resnet152_224x224_nv12.hbm`. Only `s100/resnet152_224x224_nv12.hbm` has a recorded rdk_s benchmark (latency 2.23 ms, throughput 449.03 fps, quantized cosine similarity 0.992285). The other five archive files have no recorded metrics.
+Rows marked `archive` are the six untagged HBMs. All six are S100. Each depth is published twice, once from archive directory `rdk_s100/ResNet/` and once from `rdk_s600/ResNet/`. That directory is the only recorded difference; nothing else distinguishes the pair. The `rdk_s600` copies use manifest filenames `s100/s600/<basename>` so both URLs stay on S100; the `s600` segment names that archive directory and is not an S600 target. `--variant 18|50|152` still downloads the nashe or nashp file. The nashe S100 file already fills that variant, so binding either archive filename to it would make `--variant` match more than one asset. Fetch an archive file by filename on target s100, for example `bash samples/vision/resnet/model/download.sh s100 152 s100/resnet152_224x224_nv12.hbm`. Only `s100/resnet152_224x224_nv12.hbm` has the recorded conversion benchmark (latency 2.23 ms, throughput 449.03 fps, quantized cosine similarity 0.992285). The other five archive files have no recorded metrics.
 
 Each reference is an exact row of `docs/release/x5/models.yaml` or
 `docs/release/s/models.yaml`; the manifest is the authority for URL and

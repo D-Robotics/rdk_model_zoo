@@ -125,7 +125,9 @@ describe("multi-platform variant catalog", () => {
     // On 2026-10-21 ConvNeXt Nano/Pico/Femto bins joined their existing measured X5 variants.
     // YOLOE-11 S100 11m and 11l joined as download-only variants, and the rdk_s ResNet152 S100
     // archive HBM joined as its own measured variant. The other five ResNet archive HBMs share
-    // the existing depth/platform variants and carry no metrics: 642 variants, 761 benchmark rows.
+    // the existing depth/platform variants and carry no metrics. All six untagged archive HBMs
+    // are S100; the three from archive directory rdk_s600/ResNet/ use filename s100/s600/<basename>
+    // and share those same S100 variants: 642 variants, 761 benchmark rows.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(60);
     expect(variants).toHaveLength(642);

@@ -51,15 +51,16 @@ ASSET_REFERENCES = {
     ('s600', '152'): 's:resnet:s600/resnet152_nashp_224x224_nv12.hbm',
 }
 TARGETS = ("x5", "s100", "s100p", "s600")
-# rdk_s archive HBMs. They share the sample with the nashe/nashp defaults and
-# are selected by filename so variant 18/50/152 keeps a single runtime match.
+# Untagged rdk_s archive HBMs. All six are S100. The s600 path segment names
+# the rdk_s600 archive directory; it is not an S600 target.
+# Filename selection keeps variant 18/50/152 on the single nashe S100 file.
 ARCHIVE_REFERENCES = {
     's100/resnet18_224x224_nv12.hbm': 's:resnet:s100/resnet18_224x224_nv12.hbm',
-    's600/resnet18_224x224_nv12.hbm': 's:resnet:s600/resnet18_224x224_nv12.hbm',
+    's100/s600/resnet18_224x224_nv12.hbm': 's:resnet:s100/s600/resnet18_224x224_nv12.hbm',
     's100/resnet50_224x224_nv12.hbm': 's:resnet:s100/resnet50_224x224_nv12.hbm',
-    's600/resnet50_224x224_nv12.hbm': 's:resnet:s600/resnet50_224x224_nv12.hbm',
+    's100/s600/resnet50_224x224_nv12.hbm': 's:resnet:s100/s600/resnet50_224x224_nv12.hbm',
     's100/resnet152_224x224_nv12.hbm': 's:resnet:s100/resnet152_224x224_nv12.hbm',
-    's600/resnet152_224x224_nv12.hbm': 's:resnet:s600/resnet152_224x224_nv12.hbm',
+    's100/s600/resnet152_224x224_nv12.hbm': 's:resnet:s100/s600/resnet152_224x224_nv12.hbm',
 }
 
 
@@ -144,7 +145,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--filename",
         choices=tuple(ARCHIVE_REFERENCES),
         default=None,
-        help="rdk_s archive HBM. Leaves the nashe/nashp default unchanged.",
+        help="S100 rdk_s archive HBM. Leaves the nashe/nashp default unchanged.",
     )
     parser.add_argument(
         "--output-dir",

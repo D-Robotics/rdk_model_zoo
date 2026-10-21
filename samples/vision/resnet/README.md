@@ -85,9 +85,13 @@ Runtime coverage:
   references): X5 publishes `resnet<size>_bayese_224x224_nv12.bin`; the S
   series publishes `resnet<size>_nashe/nashm/nashp_224x224_nv12.hbm` under
   `s100/`, `s100p/` and `s600/`. The default variant is ResNet-18.
-  Six rdk_s archive HBMs (`resnet18`, `resnet50`, and `resnet152` on S100
-  and S600, filenames without a march token) are downloadable from the same
-  sample and are not selected by `--variant`.
+  Six untagged archive HBMs (ResNet-18, 50, and 152) are S100 artifacts.
+  Each depth has two archive URLs, from `rdk_s100/ResNet/` and from
+  `rdk_s600/ResNet/`. The second copy is `s100/s600/<basename>`; that `s600`
+  segment is the archive directory, not an S600 target. `--variant` does not
+  select them: the nashe S100 file already occupies that variant, so another
+  filename would make selection ambiguous. Download them by filename with
+  `--target s100`.
 - C++ ([runtime/cpp](runtime/cpp/README.md)) serves the same five variants on
   S100, S100P and S600 only (`VARIANT=18|34|50|101|152`, default 18); X5 has
   no C++ runtime.
@@ -228,10 +232,12 @@ time; the latency columns record this implementation's measured cost. To reprodu
 [benchmark instructions](../../../utils/tools/classification/cpp/README.md).
 
 The table above belongs to the bayese/nashe/nashm/nashp artifacts. The
-rdk_s archive file `s100/resnet152_224x224_nv12.hbm` has a separate
-conversion record: latency 2.23 ms and throughput 449.03 fps (toolchain
-reference) and quantized cosine similarity 0.992285. The other five
-archive HBMs have no recorded metrics on `rdk_s`.
+S100 archive file `s100/resnet152_224x224_nv12.hbm` (archive path
+`rdk_s100/ResNet/resnet152_224x224_nv12.hbm`) has a separate conversion
+record: latency 2.23 ms and throughput 449.03 fps (toolchain reference)
+and quantized cosine similarity 0.992285. The other five archive HBMs,
+including the ResNet152 file stored under `rdk_s600/ResNet/`, have no
+recorded metrics.
 
 ![Inference result](./test_data/inference.png)
 
