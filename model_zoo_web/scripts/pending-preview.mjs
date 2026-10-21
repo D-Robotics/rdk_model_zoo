@@ -151,16 +151,71 @@ function annotate(row, revision) {
   return annotated;
 }
 
+// Words that show up in benchmark prose but not in artifact filenames.
+// Dataset alias "pascal" is the same release as the VOC bins. "prompt" is
+// the MobileSAM box-prompt label; the bin is named "box" and "decoder".
+const LABEL_NOISE = new Set([
+  'on', 'rdk', 'pascal', 'prompt', 'nv12', 'bpu', 'default', 'the', 'and', 'for', 'with',
+  'x5', 's100', 's100p', 's600', 'hbm', 'bin',
+]);
+
 function tokensOf(name) {
-  return String(name || '').toLowerCase().split(/[^a-z0-9]+/).filter(token => token && !/^\d+$/.test(token));
+  const text = String(name || '').toLowerCase()
+    .replace(/3d[_\-\s]?resnet[_\-\s]?18/g, ' r3d18 ')
+    .replace(/vit[_\-]?s[_\-\/]?14/g, ' vits14 ')
+    .replace(/r3d[_\-]?18/g, ' r3d18 ')
+    .replace(/xx[_\-\s]?small/g, ' qxxs ')
+    .replace(/x[_\-\s]?small/g, ' qxs ')
+    .replace(/m(\d+)[._](\d+)/g, ' m$1p$2 ');
+  const alias = { qxxs: 'xx-small', qxs: 'x-small' };
+  return text.split(/[^a-z0-9]+/)
+    .filter(Boolean)
+    .map(token => alias[token] || token)
+    .map(token => {
+      const square = token.match(/^(\d+)x\1$/);
+      return square ? square[1] : token;
+    })
+    .filter(token => !LABEL_NOISE.has(token));
 }
 
-function sameVariant(left, right) {
-  const a = tokensOf(left);
-  const b = tokensOf(right);
-  if (!a.length || !b.length) return false;
+// "efficientnet" + "b0" is the same identity as the filename token "efficientnetb0".
+function glueTrailingSize(tokens) {
+  const glued = [];
+  for (const token of tokens) {
+    const size = SIZE_TOKENS.includes(token) ? token.replace(/-/g, '') : '';
+    const previous = glued[glued.length - 1];
+    if (size && previous && !SIZE_TOKENS.includes(previous) && !/\d/.test(previous)) glued[glued.length - 1] = previous + size;
+    else glued.push(token);
+  }
+  return glued;
+}
+
+function sameVariant(left, right, modelName = '') {
+  const drop = new Set(modelName ? tokensOf(modelName) : []);
+  const prepare = tokens => {
+    const joined = [];
+    for (const token of tokens) {
+      const previous = joined[joined.length - 1];
+      // "ResNeXt" + "50" is the filename token resnext50. Resolutions stay separate.
+      if (/^\d{1,2}$/.test(token) && previous && /^[a-z]+$/.test(previous) && !SIZE_TOKENS.includes(previous)) joined[joined.length - 1] = previous + token;
+      else joined.push(token);
+    }
+    const kept = joined.filter(token => !drop.has(token));
+    return glueTrailingSize(kept);
+  };
+  const a = prepare(tokensOf(left));
+  const b = prepare(tokensOf(right));
+  if (!a.length && !b.length) return true;
+  if (!a.length) return b.every(token => /^\d+$/.test(token));
+  if (!b.length) return a.every(token => /^\d+$/.test(token));
   const [small, large] = a.length <= b.length ? [a, b] : [b, a];
   return small.every(token => large.includes(token));
+}
+
+// "RepVGG B1g2 224x224 Multi-thread" is the same variant measured under
+// another runtime mode, not a second model.
+function canonicalVariant(label) {
+  return String(label || '').replace(/\s+multi[-\s]?thread\s*$/i, '').trim();
 }
 
 function sizeToken(label) {
@@ -180,7 +235,7 @@ function variantGroups(record) {
     const rows = (record.sourced_benchmarks || []).filter(row => !row.platform || String(row.platform).toUpperCase() === platform);
     const grouped = new Map();
     for (const row of rows) {
-      const label = row.variant || record.name;
+      const label = canonicalVariant(row.variant || record.name);
       const key = tokensOf(label).join('-') || 'model';
       if (!grouped.has(key)) grouped.set(key, { key, label, rows: [] });
       grouped.get(key).rows.push(row);
@@ -188,7 +243,7 @@ function variantGroups(record) {
     for (const published of record.published_variants || []) {
       const compact = String(published.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
       if (['x5', 's100', 's100p', 's600', 'rdkx5', 'rdks100', 'rdks100p', 'rdks600'].includes(compact)) continue;
-      const matches = [...grouped.values()].filter(group => sameVariant(group.label, published.name));
+      const matches = [...grouped.values()].filter(group => sameVariant(group.label, published.name, record.name));
       if (matches.length === 1) continue;
       if (matches.length > 1) continue;
       const key = tokensOf(published.name).join('-') || 'model';
@@ -215,13 +270,46 @@ function variantGroups(record) {
   return groups;
 }
 
+function distinctiveTokens(label, name) {
+  const drop = new Set(tokensOf(name));
+  return tokensOf(label).filter(token => !drop.has(token) && (token.length > 1 || SIZE_TOKENS.includes(token)));
+}
+
+// Size words must not leak across siblings ("small" is not "x-small").
+// A size written into a longer filename token still counts ("b0" inside
+// "efficientnetb0"). Digits stay exact so 224 does not match 384.
+function tokenSatisfied(token, fileTokens, compact) {
+  if (fileTokens.has(token)) return true;
+  if (/^\d+$/.test(token)) {
+    for (const other of fileTokens) {
+      if (other === token || other.startsWith(`${token}x`) || other.endsWith(`x${token}`)) return true;
+    }
+  }
+  if (token.length < 2) return false;
+  if (SIZE_TOKENS.includes(token)) {
+    for (const other of fileTokens) {
+      if (other !== token && SIZE_TOKENS.includes(other) && (other.includes(token) || token.includes(other))) return false;
+    }
+    return compact.includes(token.replace(/-/g, ''));
+  }
+  if (/\d/.test(token)) return false;
+  return compact.includes(token);
+}
+
 function namedSubset(items, label, name) {
-  const tokens = tokensOf(label).filter(token => token.length > 1 && !tokensOf(name).includes(token));
+  const tokens = distinctiveTokens(label, name);
   if (!tokens.length) return [];
   return items.filter(item => {
-    const haystack = `${item.filename || ''} ${item.path || ''}`.toLowerCase().replace(/[^a-z0-9]+/g, '');
-    return tokens.every(token => haystack.includes(token));
+    // nash-m / nash-e / nash-p are BPU march directories, not model sizes.
+    const cleaned = `${item.filename || ''} ${item.path || ''}`.replace(/nash-[emp]/gi, ' ').replace(/bayes-?e/gi, ' ');
+    const fileTokens = new Set(tokensOf(cleaned));
+    const compact = [...fileTokens].join('');
+    return tokens.every(token => tokenSatisfied(token, fileTokens, compact));
   });
+}
+
+function isCommonDownload(item) {
+  return String(item.filename || '').toLowerCase().startsWith('common/');
 }
 
 function conditionKey(row) {
@@ -392,9 +480,8 @@ function quickstartForRecord(record, platform) {
 }
 
 function commandSizeTokens(command) {
-  const tokens = String(command || '').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
   const found = [];
-  for (const token of tokens) {
+  for (const token of tokensOf(command)) {
     if (SIZE_TOKENS.includes(token) && !found.includes(token)) found.push(token);
   }
   return found;
@@ -448,9 +535,16 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
       return group;
     });
     const downloadIsSpecific = new Map();
+    const downloadMatches = new Map();
     const configIsSpecific = new Map();
     for (const [platform, downloads] of platformDownloads) {
-      downloadIsSpecific.set(platform, groups.some(group => group.platform === platform && namedSubset(downloads, group.label, record.name).length));
+      const platformGroups = groups.filter(group => group.platform === platform);
+      const matched = new Map(platformGroups.map(group => [group, namedSubset(downloads, group.label, record.name)]));
+      const covered = new Set([...matched.values()].flat().map(item => item.url));
+      const complete = [...matched.values()].some(list => list.length)
+        && downloads.every(item => covered.has(item.url) || isCommonDownload(item));
+      downloadIsSpecific.set(platform, complete);
+      downloadMatches.set(platform, matched);
     }
     for (const [platform, configs] of platformConfigs) {
       configIsSpecific.set(platform, groups.some(group => group.platform === platform && namedSubset(configs, group.label, record.name).length));
@@ -459,7 +553,11 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
       const annotated = group.rows.map(row => annotate(row, revision));
       const downloads = platformDownloads.get(group.platform) || [];
       const configs = platformConfigs.get(group.platform) || [];
-      const selectedDownloads = downloadIsSpecific.get(group.platform) ? namedSubset(downloads, group.label, record.name) : downloads;
+      const matchedDownloads = downloadMatches.get(group.platform)?.get(group) || [];
+      const commonDownloads = downloads.filter(isCommonDownload);
+      const selectedDownloads = downloadIsSpecific.get(group.platform)
+        ? [...matchedDownloads, ...commonDownloads.filter(item => !matchedDownloads.includes(item))]
+        : downloads;
       const selectedConfigs = configIsSpecific.get(group.platform) ? namedSubset(configs, group.label, record.name) : configs;
       const rowIds = new Set(annotated.map(row => row.id));
       let inputs = (record.inputs || []).filter(item => !item.platform || String(item.platform).toUpperCase() === group.platform);
@@ -551,4 +649,4 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
   return models;
 }
 
-export { buildPendingModels, variantGroups, annotate, quickstartForUsage, scopeQuickstart };
+export { buildPendingModels, variantGroups, annotate, quickstartForUsage, scopeQuickstart, tokensOf, namedSubset, sameVariant };
