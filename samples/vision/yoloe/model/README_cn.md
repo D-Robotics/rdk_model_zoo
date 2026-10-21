@@ -5,7 +5,7 @@
 <a id="artifacts"></a>
 ## 制品
 
-下表列出 14 个原始发布制品。Python 运行时直接支持 S 发布制品的混合浮点/SCALE 输出；也可按[转换说明](../conversion/README_cn.md)准备本地浮点模型。
+下表列出 16 个原始发布制品。Python 运行时直接支持 S 发布制品的混合浮点/SCALE 输出；也可按[转换说明](../conversion/README_cn.md)准备本地浮点模型。S100 11m 与 11l 在本仓库没有记录的 benchmark。
 
 | Asset ID | Target | Variant | Output route |
 | --- | --- | --- | --- |
@@ -13,6 +13,8 @@
 | `x5:yoloe:yoloe_11m_seg_pf_bayese_640x640_nv12.bin` | x5 | 11m | floating |
 | `x5:yoloe:yoloe_11l_seg_pf_bayese_640x640_nv12.bin` | x5 | 11l | floating |
 | `s:yoloe11_seg:yoloe_11s_seg_pf_nashe_640x640_nv12.hbm` | s100 | 11s | 原生 SCALE outputs (Python) |
+| `s:yoloe11_seg:yoloe_11m_seg_pf_nashe_640x640_nv12.hbm` | s100 | 11m | 原生 SCALE outputs (Python) |
+| `s:yoloe11_seg:yoloe_11l_seg_pf_nashe_640x640_nv12.hbm` | s100 | 11l | 原生 SCALE outputs (Python) |
 | `s:yoloe26_seg:nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26n | 原生 SCALE outputs (Python) |
 | `s:yoloe26_seg:nash-e/yoloe_26s_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26s | 原生 SCALE outputs (Python) |
 | `s:yoloe26_seg:nash-e/yoloe_26m_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26m | 原生 SCALE outputs (Python) |
@@ -86,6 +88,8 @@ X5 为 BIN，S 为 HBM。已知值取自活跃发布清单；S11 发布哈希未
 | `x5:yoloe:yoloe_11m_seg_pf_bayese_640x640_nv12.bin` | `ec5607ba89bb981b8155db18a9cd2af9c006ade2474de5de7a0bb34185aa9e31` | `docs/release/x5/models.yaml` |
 | `x5:yoloe:yoloe_11l_seg_pf_bayese_640x640_nv12.bin` | `a5ab9d7912bd6d44187c1075a621bbdef36ff3717d16d3246b09f347828a9ed2` | `docs/release/x5/models.yaml` |
 | `s:yoloe11_seg:yoloe_11s_seg_pf_nashe_640x640_nv12.hbm` | `null (unknown)` | `docs/release/s/models.yaml` |
+| `s:yoloe11_seg:yoloe_11m_seg_pf_nashe_640x640_nv12.hbm` | `null (unknown)` | `docs/release/s/models.yaml` |
+| `s:yoloe11_seg:yoloe_11l_seg_pf_nashe_640x640_nv12.hbm` | `null (unknown)` | `docs/release/s/models.yaml` |
 | `s:yoloe26_seg:nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12.hbm` | `bf4a03cb75fcfe67cdf6549ef0dec9541b5ae009cdef05e7879a4af9c75a5439` | `docs/release/s/models.yaml` |
 | `s:yoloe26_seg:nash-e/yoloe_26s_seg_pf_nashe_640x640_nv12.hbm` | `a27c313dc922b778d3537187c7b55a82f87b826edc66abdef027e15770243ee6` | `docs/release/s/models.yaml` |
 | `s:yoloe26_seg:nash-e/yoloe_26m_seg_pf_nashe_640x640_nv12.hbm` | `d257d502a5245de823cdb76cc734974a1568e68bff02bece232895db29aceeef` | `docs/release/s/models.yaml` |

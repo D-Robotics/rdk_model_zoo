@@ -38,10 +38,10 @@ Checkpoint export, conversion preparation and evaluation workflows are documente
 | Variant | x5 | s100 | s100p | s600 | Python | C++ |
 | --- | --- | --- | --- | --- | --- | --- |
 | 11s | supported | supported (Python)* | not-supported | not-supported | X5/S published* | float-output model only† |
-| 11m / 11l | supported | not-supported | not-supported | not-supported | X5 | float-output model only† |
+| 11m / 11l | supported | supported (Python)* | not-supported | not-supported | X5/S published* | float-output model only† |
 | 26n/s/m/l/x | not-supported | supported (Python)* | supported (Python)* | not-supported | S published* | float-output model only† |
 
-* Python supports the published S11 mixed float32/int32/int16 outputs and S26 int32/int8 outputs. Integer heads require valid runtime SCALE metadata; postprocess dequantizes them before running the same logit/sigmoid decode as the float heads. Optional local float models require an explicit SHA-256. S600 has no published YOLOE model.
+* Python supports the published S11 mixed float32/int32/int16 outputs and S26 int32/int8 outputs. Integer heads require valid runtime SCALE metadata; postprocess dequantizes them before running the same logit/sigmoid decode as the float heads. Optional local float models require an explicit SHA-256. S100 11m and 11l are published artifacts and have no latency row in this repository. S600 has no published YOLOE model.
 
 † The C++ runtime binds only unquantized FLOAT32 NHWC outputs and runs locally converted floating-output models with an explicit SHA-256. Published artifacts — the X5 11s/m/l BINs and the S quantized HBMs — run with the Python runtime. See the [C++ runtime](runtime/cpp/README.md).
 

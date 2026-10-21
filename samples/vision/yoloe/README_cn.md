@@ -38,10 +38,10 @@ yoloe/
 | 变体 | x5 | s100 | s100p | s600 | Python | C++ |
 | --- | --- | --- | --- | --- | --- | --- |
 | 11s | 支持 | 支持（Python）* | 不支持 | 不支持 | X5/S 发布制品* | 仅浮点输出模型† |
-| 11m / 11l | 支持 | 不支持 | 不支持 | 不支持 | X5 | 仅浮点输出模型† |
+| 11m / 11l | 支持 | 支持（Python）* | 不支持 | 不支持 | X5/S 发布制品* | 仅浮点输出模型† |
 | 26n/s/m/l/x | 不支持 | 支持（Python）* | 支持（Python）* | 不支持 | S 发布制品* | 仅浮点输出模型† |
 
-* Python 支持 S11 发布制品的混合 float32/int32/int16 输出与 S26 的 int32/int8 输出。整数头需要有效的运行时 SCALE 元数据，postprocess 先反量化，再执行与浮点头相同的 logit/sigmoid 解码。可选本地浮点模型需显式 SHA-256。S600 没有发布 YOLOE 模型。
+* Python 支持 S11 发布制品的混合 float32/int32/int16 输出与 S26 的 int32/int8 输出。整数头需要有效的运行时 SCALE 元数据，postprocess 先反量化，再执行与浮点头相同的 logit/sigmoid 解码。可选本地浮点模型需显式 SHA-256。S100 11m 与 11l 是已发布制品，本仓库没有它们的延迟记录。S600 没有发布 YOLOE 模型。
 
 † C++ 运行时只绑定未量化 FLOAT32 NHWC 输出，仅运行显式提供 SHA-256 的本地转换浮点输出模型。已发布制品——X5 11s/m/l BIN 与 S 量化 HBM——请使用 Python 运行时运行。详见 [C++ 运行时](runtime/cpp/README_cn.md)。
 

@@ -2,7 +2,9 @@
 
 The conversion directory is a verbatim rdk_x5 @ac11571 delivery: three PTQ
 reference configs (atto/femto/nano, march ``bayes-e``, calibration
-``default``) while the X5 manifest publishes exactly one asset (atto).
+``default``). The X5 manifest publishes atto, nano, pico, and femto bins;
+the YAML output prefix is still variant-less, so a recipe is not the
+published filename.
 Adjusting a pinned file is a source-branch change, not a local edit.  The
 source recipes carry quirks these tests pin instead of silently repairing:
 the ONNX references are mutually inconsistent (atto points at
@@ -29,7 +31,7 @@ VERBATIM_SHA256 = {
     "ConvNeXt_nano.yaml": "f844e099d6080417fa44d76cace538574d6322671e4d616c6d0c91e85116437f",
 }
 
-#: The only filename the X5 manifest publishes for this sample.
+#: Atto remains the default published filename used by the prefix check.
 MANIFEST_BASENAME = "ConvNeXt_atto_224x224_nv12.bin"
 #: The femto recipe points outside the sample tree (common model zoo).
 EXTERNAL_ONNX_REFERENCE = (
@@ -109,10 +111,10 @@ class RecipeConsistencyTests(unittest.TestCase):
                 self.assertNotEqual(f"{prefix}.bin", MANIFEST_BASENAME)
         self.assertTrue(MANIFEST_BASENAME.startswith("ConvNeXt_atto_"))
 
-    def test_only_atto_is_published_femto_and_nano_are_recipes_only(self):
-        """The manifest carries exactly one ConvNeXt row (atto).  femto and
-        nano exist as conversion recipes with no published asset — the
-        runtime binding must not grow variants for them."""
+    def test_published_bins_stay_distinct_from_recipe_yamls(self):
+        """The manifest publishes atto, nano, pico, and femto bins. Atto
+        stays the default. The femto and nano YAMLs remain conversion
+        recipes; pico still has no PTQ config."""
 
         from samples.vision.convnext.runtime.python.cli import (
             BINDING_TABLE,
@@ -120,10 +122,23 @@ class RecipeConsistencyTests(unittest.TestCase):
         )
 
         records = list_available_assets("auto")
-        self.assertEqual([r.filename for r in records], [MANIFEST_BASENAME])
-        self.assertEqual(set(BINDING_TABLE.filename_variants.values()), {"atto"})
-        self.assertNotIn("femto", BINDING_TABLE.filename_variants.values())
-        self.assertNotIn("nano", BINDING_TABLE.filename_variants.values())
+        self.assertEqual(
+            sorted(r.filename for r in records),
+            [
+                "ConvNeXt_atto_224x224_nv12.bin",
+                "ConvNeXt_femto_224x224_nv12.bin",
+                "ConvNeXt_nano_224x224_nv12.bin",
+                "ConvNeXt_pico_224x224_nv12.bin",
+            ],
+        )
+        self.assertEqual(BINDING_TABLE.default_variant, "atto")
+        self.assertEqual(
+            set(BINDING_TABLE.filename_variants.values()),
+            {"atto", "femto", "nano", "pico"},
+        )
+        self.assertTrue((CONVERSION / "ConvNeXt_femto.yaml").is_file())
+        self.assertTrue((CONVERSION / "ConvNeXt_nano.yaml").is_file())
+        self.assertFalse((CONVERSION / "ConvNeXt_pico.yaml").is_file())
 
     def test_int16_placement_counts_are_pinned(self):
         """The node_info tables place 8/5/8 int16 nodes (atto/femto/nano) —

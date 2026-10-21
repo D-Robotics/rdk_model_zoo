@@ -2,8 +2,8 @@
 
 The variant must be forwarded into the manifest reference.  These tests pin
 the exact published reference every supported (target, variant) combination
-must resolve to — the single atto row — with the network downloader stubbed
-out.
+must resolve to, with the network downloader stubbed out. Atto stays the
+default.
 """
 
 from __future__ import annotations
@@ -16,6 +16,9 @@ from samples.vision.convnext.model import download as download_mod
 
 EXPECTED_REFERENCES = {
     ('x5', 'atto'): 'x5:convnext:ConvNeXt_atto_224x224_nv12.bin',
+    ('x5', 'nano'): 'x5:convnext:ConvNeXt_nano_224x224_nv12.bin',
+    ('x5', 'pico'): 'x5:convnext:ConvNeXt_pico_224x224_nv12.bin',
+    ('x5', 'femto'): 'x5:convnext:ConvNeXt_femto_224x224_nv12.bin',
 }
 
 

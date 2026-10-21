@@ -34,7 +34,7 @@ cpp/
 | S100P | 26n/s/m/l/x；默认 26n | 自行转换的浮点输出 HBM，显式提供 SHA-256 | 支持 |
 | S600 | 无 | 无发布路线，显式拒绝 | 不支持 |
 
-已发布制品请在匹配板卡上通过 [Python 运行时](../python/README_cn.md)运行：X5 已发布 11s/m/l BIN 无法通过本入口的输出绑定（`Task output requires NHWC aligned geometry.`），S 已发布 HBM 的输出为量化数据。本入口运行自行转换、十个输出均为未量化 FLOAT32 NHWC 的模型——请通过[转换流程](../../conversion/README_cn.md)准备并记录其 SHA-256。14 个发布身份仍是模型选择键；本地转换模型的发布身份即其架构参考。
+已发布制品请在匹配板卡上通过 [Python 运行时](../python/README_cn.md)运行：X5 已发布 11s/m/l BIN 无法通过本入口的输出绑定（`Task output requires NHWC aligned geometry.`），S 已发布 HBM 的输出为量化数据。本入口运行自行转换、十个输出均为未量化 FLOAT32 NHWC 的模型——请通过[转换流程](../../conversion/README_cn.md)准备并记录其 SHA-256。16 个发布身份仍是模型选择键；本地转换模型的发布身份即其架构参考。
 
 ## 选择、构建与运行
 

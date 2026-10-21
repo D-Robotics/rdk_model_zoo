@@ -122,9 +122,11 @@ describe("multi-platform variant catalog", () => {
     // On 2026-10-15 YOLO26 OBB moved to the 1024x1024 builds the Web publishes: the 10 S records of the
     // old 640x640 builds became 20 measured records (X5, S100, S100P, S600); the 10 X5/S100P OBB assets
     // that stood alone now share a variant with their record: 760 benchmark rows, variants unchanged.
+    // On 2026-10-21 ConvNeXt Nano/Pico/Femto bins joined their existing measured X5 variants.
+    // YOLOE-11 S100 11m and 11l joined as download-only variants: 641 variants, 760 benchmark rows.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(60);
-    expect(variants).toHaveLength(639);
+    expect(variants).toHaveLength(641);
     expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(760);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
@@ -226,8 +228,9 @@ describe("multi-platform variant catalog", () => {
     // share a URL, while two URLs cannot make one duplicate identity valid.
     // 190 since HobotMot added its dependency source asset on 2026-10-13; 194 since ResNet replaced
     // its one X5 artifact with the five ResNet-18/34/50/101/152 builds the same day.
+    // 197 since ConvNeXt Nano, Pico, and Femto joined the existing Atto bin.
     expect(new Set(x5Entries).size).toBe(x5Entries.length);
-    expect(x5Entries).toHaveLength(194);
+    expect(x5Entries).toHaveLength(197);
     expect(x5Models.summary.asset_count).toBe(x5Entries.length);
   });
 

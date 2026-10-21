@@ -25,8 +25,9 @@ ConvNeXt 是从原始 ResNet 出发、逐步借鉴 Swin Transformer 设计改造
 ![ConvNeXt block 与 ResNet、Swin Transformer block 的对比](./test_data/ConvNeXt_Block.png)
 
 *图：ConvNeXt 论文的 block 对比——Swin Transformer block（左）、ResNet
-block（中）、ConvNeXt block（右）。图中为上游训练结构；X5 上部署的制品
-为 INT8 量化的 atto 变体（224×224 NV12，见[支持范围](#support-matrix)）。*
+block（中）、ConvNeXt block（右）。图中为上游训练结构；X5 缺省制品为
+INT8 量化的 atto 变体。nano、pico、femto 以相同 224×224 NV12 输入发布
+（见[支持范围](#support-matrix)）。*
 
 Python 入口见 `runtime/python/main.py`，模型推理流程在 `classify.py`，参数和结果展示在 `cli.py`。
 [runtime/python/README_cn.md](runtime/python/README_cn.md)
@@ -55,9 +56,12 @@ convnext/
 | 模型 | 输入 | X5 | S100 | S100P | S600 |
 | --- | --- | --- | --- | --- | --- |
 | ConvNeXt-atto | 224x224 | ✓ | — | — | — |
+| ConvNeXt-nano | 224x224 | ✓ | — | — | — |
+| ConvNeXt-pico | 224x224 | ✓ | — | — | — |
+| ConvNeXt-femto | 224x224 | ✓ | — | — | — |
 
-运行时覆盖：Python CLI 通过 `--target auto|x5` 和 `--variant atto` 运行已
-发布的组合。仅 X5 归档发布 `ConvNeXt_atto_224x224_nv12.bin`；`--target
+运行时覆盖：Python CLI 通过 `--target auto|x5` 和 `--variant
+atto|nano|pico|femto` 运行已发布组合。缺省变体为 `atto`。`--target
 s100`、`s100p`、`s600` 不会解析出任何资产。本 Sample 不提供 C++ 运行时。
 
 <a id="prerequisites"></a>
@@ -99,7 +103,7 @@ python3 samples/vision/convnext/runtime/python/main.py \
   --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-缺省变体（未指定时）为 `atto`，即唯一已发布变体。
+缺省变体（未指定时）为 `atto`。nano、pico、femto 通过 `--variant` 选择。
 完整命令见 [runtime/python/README_cn.md](runtime/python/README_cn.md)。
 
 <a id="expected-results"></a>
@@ -122,20 +126,20 @@ Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并�
 ConvNeXt 系列在 RDK X5 上记录的测量（X5 发布 x5-v1.1.3；Float Top-1 为
 量化前 ONNX 结果，Quant Top-1 为部署模型结果；延迟为单帧单线程单核，
 FPS 为 4 线程并发；CPU 8xA55@1.8GHz 性能模式、BPU 1xBayes-e@1GHz）。
-上文的下载脚本和快速上手只使用唯一已发布制品 ConvNeXt Atto。其余行保留
-原记录的数字，没有可下载的 bin。
+上文的下载脚本和快速上手缺省使用 ConvNeXt Atto。nano、pico、femto
+同样是已发布 bin，数字与原记录相同。
 
 | 模型 | 尺寸 | 类别数 | 参数量 (M) | Float Top-1 | Quant Top-1 | 延迟 (ms) | FPS | 制品 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ | `ConvNeXt_atto_224x224_nv12.bin` |
-| ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ | 未发布制品 |
-| ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ | 未发布制品 |
-| ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ | 未发布制品 |
+| ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ | `ConvNeXt_nano_224x224_nv12.bin` |
+| ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ | `ConvNeXt_pico_224x224_nv12.bin` |
+| ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ | `ConvNeXt_femto_224x224_nv12.bin` |
 
-数字与 X5 发布性能表相同，没有增删。atto 制品见
+数字与 X5 发布性能表相同，没有增删。制品见
 [model/README_cn.md](model/README_cn.md)。本示例没有 pico 的 PTQ 配置。
 nano 与 femto 在 [conversion/](conversion/README_cn.md) 里有参考 PTQ
-配方，这些配方不是已发布制品。
+配方；这些 YAML 配方不是已发布 bin。
 
 <a id="entry-points"></a>
 ## 入口

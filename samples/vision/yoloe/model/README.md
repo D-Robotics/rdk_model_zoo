@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="artifacts"></a>
 ## Artifacts
 
-These are the 14 original published artifacts. The Python runtime supports the published S mixed float/SCALE output models directly. Optional local float models can be prepared via [conversion](../conversion/README.md).
+These are the 16 original published artifacts. The Python runtime supports the published S mixed float/SCALE output models directly. Optional local float models can be prepared via [conversion](../conversion/README.md). S100 11m and 11l have no recorded benchmark in this repository.
 
 | Asset ID | Target | Variant | Output route |
 | --- | --- | --- | --- |
@@ -13,6 +13,8 @@ These are the 14 original published artifacts. The Python runtime supports the p
 | `x5:yoloe:yoloe_11m_seg_pf_bayese_640x640_nv12.bin` | x5 | 11m | floating |
 | `x5:yoloe:yoloe_11l_seg_pf_bayese_640x640_nv12.bin` | x5 | 11l | floating |
 | `s:yoloe11_seg:yoloe_11s_seg_pf_nashe_640x640_nv12.hbm` | s100 | 11s | native SCALE outputs (Python) |
+| `s:yoloe11_seg:yoloe_11m_seg_pf_nashe_640x640_nv12.hbm` | s100 | 11m | native SCALE outputs (Python) |
+| `s:yoloe11_seg:yoloe_11l_seg_pf_nashe_640x640_nv12.hbm` | s100 | 11l | native SCALE outputs (Python) |
 | `s:yoloe26_seg:nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26n | native SCALE outputs (Python) |
 | `s:yoloe26_seg:nash-e/yoloe_26s_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26s | native SCALE outputs (Python) |
 | `s:yoloe26_seg:nash-e/yoloe_26m_seg_pf_nashe_640x640_nv12.hbm` | s100 | 26m | native SCALE outputs (Python) |
@@ -86,6 +88,8 @@ X5 uses BIN and S uses HBM. Known digests come from active manifests. S11 publis
 | `x5:yoloe:yoloe_11m_seg_pf_bayese_640x640_nv12.bin` | `ec5607ba89bb981b8155db18a9cd2af9c006ade2474de5de7a0bb34185aa9e31` | `docs/release/x5/models.yaml` |
 | `x5:yoloe:yoloe_11l_seg_pf_bayese_640x640_nv12.bin` | `a5ab9d7912bd6d44187c1075a621bbdef36ff3717d16d3246b09f347828a9ed2` | `docs/release/x5/models.yaml` |
 | `s:yoloe11_seg:yoloe_11s_seg_pf_nashe_640x640_nv12.hbm` | `null (unknown)` | `docs/release/s/models.yaml` |
+| `s:yoloe11_seg:yoloe_11m_seg_pf_nashe_640x640_nv12.hbm` | `null (unknown)` | `docs/release/s/models.yaml` |
+| `s:yoloe11_seg:yoloe_11l_seg_pf_nashe_640x640_nv12.hbm` | `null (unknown)` | `docs/release/s/models.yaml` |
 | `s:yoloe26_seg:nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12.hbm` | `bf4a03cb75fcfe67cdf6549ef0dec9541b5ae009cdef05e7879a4af9c75a5439` | `docs/release/s/models.yaml` |
 | `s:yoloe26_seg:nash-e/yoloe_26s_seg_pf_nashe_640x640_nv12.hbm` | `a27c313dc922b778d3537187c7b55a82f87b826edc66abdef027e15770243ee6` | `docs/release/s/models.yaml` |
 | `s:yoloe26_seg:nash-e/yoloe_26m_seg_pf_nashe_640x640_nv12.hbm` | `d257d502a5245de823cdb76cc734974a1568e68bff02bece232895db29aceeef` | `docs/release/s/models.yaml` |

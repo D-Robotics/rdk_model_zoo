@@ -36,8 +36,8 @@ from utils.py_utils.platform_profile import (
 
 #: Targets the shared classification machinery can address.
 SUPPORTED_TARGETS = _SHARED_TARGETS
-#: ConvNeXt variants published across the manifests (X5 atto only).
-SUPPORTED_VARIANTS = ('atto',)
+#: ConvNeXt variants published on X5. Atto remains the default.
+SUPPORTED_VARIANTS = ('atto', 'nano', 'pico', 'femto')
 _SAMPLE_DIR = Path(__file__).resolve().parents[2]
 
 #: Platform deployment profiles for this sample.  X5 publishes flat
@@ -61,11 +61,13 @@ def _x5_224_facts() -> VariantFacts:
     )
 
 
-#: The single published variant is 224x224 (manifest filename and YAML
-#: input agree); the unpublished femto/nano recipes share the geometry but
-#: publish no asset and never reach this table.
+#: Every published X5 variant is 224x224. The conversion YAMLs stay recipes;
+#: these rows bind the archive bins.
 _FACTS = {
     ('atto', 'x5'): _x5_224_facts(),
+    ('nano', 'x5'): _x5_224_facts(),
+    ('pico', 'x5'): _x5_224_facts(),
+    ('femto', 'x5'): _x5_224_facts(),
 }
 
 BINDING_TABLE = SampleBindingTable(
@@ -75,6 +77,9 @@ BINDING_TABLE = SampleBindingTable(
     ),
     filename_variants={
         'ConvNeXt_atto_224x224_nv12.bin': 'atto',
+        'ConvNeXt_nano_224x224_nv12.bin': 'nano',
+        'ConvNeXt_pico_224x224_nv12.bin': 'pico',
+        'ConvNeXt_femto_224x224_nv12.bin': 'femto',
     },
     default_variant='atto',
     facts=_FACTS,

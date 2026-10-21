@@ -30,7 +30,7 @@ class BindingTableTests(unittest.TestCase):
         )
 
         records = list_available_assets("auto")
-        self.assertEqual(len(records), 1)
+        self.assertEqual(len(records), 4)
         table = self._table()
         for record in records:
             self.assertEqual(
@@ -54,6 +54,9 @@ class BindingTableTests(unittest.TestCase):
             sorted(record.filename for record in records),
             [
                 "ConvNeXt_atto_224x224_nv12.bin",
+                "ConvNeXt_femto_224x224_nv12.bin",
+                "ConvNeXt_nano_224x224_nv12.bin",
+                "ConvNeXt_pico_224x224_nv12.bin",
             ],
         )
 
@@ -79,8 +82,9 @@ class BindingTableTests(unittest.TestCase):
     def test_no_default_mapping_is_an_error_even_with_one_asset(self):
         """B2-N1 boundary (re-review counterexample): a target without a
         declared default must reject an omitted variant explicitly — a lone
-        published asset is not an implicit default.  ConvNeXt is the
-        single-asset case (x5 publishes exactly one atto artifact)."""
+        published asset is not an implicit default.  Stripping the declared
+        default must still reject an omitted variant when several X5 bins
+        are published."""
 
         import dataclasses
 
@@ -104,6 +108,9 @@ class BindingTableTests(unittest.TestCase):
 
         expected = {
             ('atto', 'x5'): (224, 224, 'softmax', 'source_declared_logits', 1, 'linear'),
+            ('nano', 'x5'): (224, 224, 'softmax', 'source_declared_logits', 1, 'linear'),
+            ('pico', 'x5'): (224, 224, 'softmax', 'source_declared_logits', 1, 'linear'),
+            ('femto', 'x5'): (224, 224, 'softmax', 'source_declared_logits', 1, 'linear'),
         }
         self.assertEqual(set(expected), set(self._table().facts))
         for (variant, target), (height, width, policy, semantics, resize, interp) in expected.items():
