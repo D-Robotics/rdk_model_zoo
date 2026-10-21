@@ -29,14 +29,6 @@ Prepare the model artifact with the downloader, which resolves its URL and forma
 | `s100/resnet152_nashe_224x224_nv12.hbm` | s100 | 152 | single | download (`s:resnet:s100/resnet152_nashe_224x224_nv12.hbm`) |
 | `s100p/resnet152_nashm_224x224_nv12.hbm` | s100p | 152 | single | download (`s:resnet:s100p/resnet152_nashm_224x224_nv12.hbm`) |
 | `s600/resnet152_nashp_224x224_nv12.hbm` | s600 | 152 | single | download (`s:resnet:s600/resnet152_nashp_224x224_nv12.hbm`) |
-| `s100/resnet18_224x224_nv12.hbm` | s100 | 18 archive | single | download (`s:resnet:s100/resnet18_224x224_nv12.hbm`); archive path `rdk_s100/ResNet/resnet18_224x224_nv12.hbm` |
-| `s100/s600/resnet18_224x224_nv12.hbm` | s100 | 18 archive | single | download (`s:resnet:s100/s600/resnet18_224x224_nv12.hbm`); archive path `rdk_s600/ResNet/resnet18_224x224_nv12.hbm` |
-| `s100/resnet50_224x224_nv12.hbm` | s100 | 50 archive | single | download (`s:resnet:s100/resnet50_224x224_nv12.hbm`); archive path `rdk_s100/ResNet/resnet50_224x224_nv12.hbm` |
-| `s100/s600/resnet50_224x224_nv12.hbm` | s100 | 50 archive | single | download (`s:resnet:s100/s600/resnet50_224x224_nv12.hbm`); archive path `rdk_s600/ResNet/resnet50_224x224_nv12.hbm` |
-| `s100/resnet152_224x224_nv12.hbm` | s100 | 152 archive | single | download (`s:resnet:s100/resnet152_224x224_nv12.hbm`); archive path `rdk_s100/ResNet/resnet152_224x224_nv12.hbm` |
-| `s100/s600/resnet152_224x224_nv12.hbm` | s100 | 152 archive | single | download (`s:resnet:s100/s600/resnet152_224x224_nv12.hbm`); archive path `rdk_s600/ResNet/resnet152_224x224_nv12.hbm` |
-
-Rows marked `archive` are the six untagged HBMs. All six are S100. Each depth is published twice, once from archive directory `rdk_s100/ResNet/` and once from `rdk_s600/ResNet/`. That directory is the only recorded difference; nothing else distinguishes the pair. The `rdk_s600` copies use manifest filenames `s100/s600/<basename>` so both URLs stay on S100; the `s600` segment names that archive directory and is not an S600 target. `--variant 18|50|152` still downloads the nashe or nashp file. The nashe S100 file already fills that variant, so binding either archive filename to it would make `--variant` match more than one asset. Fetch an archive file by filename on target s100, for example `bash samples/vision/resnet/model/download.sh s100 152 s100/resnet152_224x224_nv12.hbm`. Only `s100/resnet152_224x224_nv12.hbm` has the recorded conversion benchmark (latency 2.23 ms, throughput 449.03 fps, quantized cosine similarity 0.992285). The other five archive files have no recorded metrics.
 
 Each reference is an exact row of `docs/release/x5/models.yaml` or
 `docs/release/s/models.yaml`; the manifest is the authority for URL and
@@ -116,7 +108,7 @@ locations.
 | `s100p/resnet152_nashm_224x224_nv12.hbm` | nash-m `.hbm`, split Y/UV input (224x224), F32 `[1,1000]` logits output | `892b1c9849ceb10cb555c1abf8a1b0a8abfec715c09962b74b9f1feb5c80ee34` |
 | `s600/resnet152_nashp_224x224_nv12.hbm` | nash-p `.hbm`, split Y/UV input (224x224), F32 `[1,1000]` logits output | `382582948c00baafe070ee702b71104d3f4bd48aa9e4651bfb387e77c625c6f9` |
 
-The six archive HBMs above have `sha256: null` in the manifest. Every file in this table is a post-training INT8 quantization of a pinned
+Every artifact is a post-training INT8 quantization of a pinned
 [timm](https://github.com/huggingface/pytorch-image-models) checkpoint
 (`resnet18.a1_in1k`, `resnet34.a1_in1k`, `resnet50.a1_in1k`, `resnet101.a1_in1k` and
 `resnet152.a1_in1k`, Apache-2.0), compiled with the

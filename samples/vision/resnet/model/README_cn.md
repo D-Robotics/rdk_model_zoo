@@ -30,14 +30,6 @@ model 目录不提交任何二进制；制品由 下载器按平台发布 Manife
 | `s100/resnet152_nashe_224x224_nv12.hbm` | s100 | 152 | 单阶段 | 下载（`s:resnet:s100/resnet152_nashe_224x224_nv12.hbm`） |
 | `s100p/resnet152_nashm_224x224_nv12.hbm` | s100p | 152 | 单阶段 | 下载（`s:resnet:s100p/resnet152_nashm_224x224_nv12.hbm`） |
 | `s600/resnet152_nashp_224x224_nv12.hbm` | s600 | 152 | 单阶段 | 下载（`s:resnet:s600/resnet152_nashp_224x224_nv12.hbm`） |
-| `s100/resnet18_224x224_nv12.hbm` | s100 | 18 归档 | 单阶段 | 下载（`s:resnet:s100/resnet18_224x224_nv12.hbm`）；归档路径 `rdk_s100/ResNet/resnet18_224x224_nv12.hbm` |
-| `s100/s600/resnet18_224x224_nv12.hbm` | s100 | 18 归档 | 单阶段 | 下载（`s:resnet:s100/s600/resnet18_224x224_nv12.hbm`）；归档路径 `rdk_s600/ResNet/resnet18_224x224_nv12.hbm` |
-| `s100/resnet50_224x224_nv12.hbm` | s100 | 50 归档 | 单阶段 | 下载（`s:resnet:s100/resnet50_224x224_nv12.hbm`）；归档路径 `rdk_s100/ResNet/resnet50_224x224_nv12.hbm` |
-| `s100/s600/resnet50_224x224_nv12.hbm` | s100 | 50 归档 | 单阶段 | 下载（`s:resnet:s100/s600/resnet50_224x224_nv12.hbm`）；归档路径 `rdk_s600/ResNet/resnet50_224x224_nv12.hbm` |
-| `s100/resnet152_224x224_nv12.hbm` | s100 | 152 归档 | 单阶段 | 下载（`s:resnet:s100/resnet152_224x224_nv12.hbm`）；归档路径 `rdk_s100/ResNet/resnet152_224x224_nv12.hbm` |
-| `s100/s600/resnet152_224x224_nv12.hbm` | s100 | 152 归档 | 单阶段 | 下载（`s:resnet:s100/s600/resnet152_224x224_nv12.hbm`）；归档路径 `rdk_s600/ResNet/resnet152_224x224_nv12.hbm` |
-
-标记为归档的六行全部是 S100。每个深度发布两次，一次来自归档目录 `rdk_s100/ResNet/`，一次来自 `rdk_s600/ResNet/`。目录是两者之间唯一有记录的差别。`rdk_s600` 那一份的 manifest 文件名是 `s100/s600/<文件名>`，这样两个 URL 都留在 S100；其中的 `s600` 段只表示该归档目录，不是 S600 target。`--variant 18|50|152` 仍下载 nashe 或 nashp 文件。nashe S100 文件已经占用该变体，把任一归档文件名绑到同一变体会使 `--variant` 匹配到多个制品。归档文件在 target s100 上按文件名获取，例如 `bash samples/vision/resnet/model/download.sh s100 152 s100/resnet152_224x224_nv12.hbm`。只有 `s100/resnet152_224x224_nv12.hbm` 有记录的转换 benchmark（延迟 2.23 ms、吞吐 449.03 fps、量化余弦相似度 0.992285）。其余五个归档文件没有记录的指标。
 
 每个引用对应 `docs/release/x5/models.yaml` 或 `docs/release/s/models.yaml`
 中的一行；URL 与格式以 Manifest 为权威。X5 消费一个 packed NV12 张量；
@@ -119,7 +111,7 @@ SHA-256 校验，原子落盘且不覆盖已有文件（校验失败时保留原
 | `s100p/resnet152_nashm_224x224_nv12.hbm` | nash-m `.hbm`，split Y/UV 输入 (224x224), F32 `[1,1000]` logits 输出 | `892b1c9849ceb10cb555c1abf8a1b0a8abfec715c09962b74b9f1feb5c80ee34` |
 | `s600/resnet152_nashp_224x224_nv12.hbm` | nash-p `.hbm`，split Y/UV 输入 (224x224), F32 `[1,1000]` logits 输出 | `382582948c00baafe070ee702b71104d3f4bd48aa9e4651bfb387e77c625c6f9` |
 
-制品清单里的六个归档 HBM 在 Manifest 中 `sha256` 为 `null`。本表中的每个文件都是对固定版本 [timm](https://github.com/huggingface/pytorch-image-models)
+所有制品都是对固定版本 [timm](https://github.com/huggingface/pytorch-image-models)
 检查点（`resnet18.a1_in1k`、`resnet34.a1_in1k`、`resnet50.a1_in1k`、`resnet101.a1_in1k`、`resnet152.a1_in1k`，Apache-2.0）做训练后 INT8 量化的结果，
 并按文件名中的 march 标记编译：`bayese`（bayes-e，X5）、`nashe`（nash-e，
 S100）、`nashm`（nash-m，S100P）、`nashp`（nash-p，S600）。网络输入的归一化

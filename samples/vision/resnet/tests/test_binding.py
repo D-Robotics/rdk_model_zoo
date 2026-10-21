@@ -57,32 +57,6 @@ class BindingTableTests(unittest.TestCase):
                 f"unexpected manifest source: {record.source_manifest}",
             )
 
-    def test_untagged_archive_hbms_are_s100_downloads_not_variants(self):
-        from samples.vision.resnet.runtime.python.cli import (
-            BINDING_TABLE,
-            list_available_assets,
-            resolve_selection,
-        )
-
-        archive = {
-            "s100/resnet18_224x224_nv12.hbm",
-            "s100/s600/resnet18_224x224_nv12.hbm",
-            "s100/resnet50_224x224_nv12.hbm",
-            "s100/s600/resnet50_224x224_nv12.hbm",
-            "s100/resnet152_224x224_nv12.hbm",
-            "s100/s600/resnet152_224x224_nv12.hbm",
-        }
-        self.assertTrue(archive.isdisjoint(BINDING_TABLE.filename_variants))
-        listed = {record.filename for record in list_available_assets("s100")}
-        self.assertTrue(archive.isdisjoint(listed))
-        for variant, nashe in (
-            ("18", "s100/resnet18_nashe_224x224_nv12.hbm"),
-            ("50", "s100/resnet50_nashe_224x224_nv12.hbm"),
-            ("152", "s100/resnet152_nashe_224x224_nv12.hbm"),
-        ):
-            selection = resolve_selection("s100", variant=variant)
-            self.assertTrue(str(selection.model_path).endswith(nashe), variant)
-
     def test_listing_equals_the_published_matrix(self):
         from samples.vision.resnet.runtime.python.cli import (
             list_available_assets,

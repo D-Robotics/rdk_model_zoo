@@ -76,12 +76,7 @@ INT8、224x224 的 ImageNet-1k 分类模型。
   Manifest 制品（`--list-models` 打印精确引用）：X5 发布
   `resnet<size>_bayese_224x224_nv12.bin`；S 系列在 `s100/`、`s100p/`、`s600/`
   目录下发布 `resnet<size>_nashe/nashm/nashp_224x224_nv12.hbm`。默认变体为
-  ResNet-18。另有六个不含 march 标记的归档 HBM（ResNet-18、50、152），
-  全部属于 S100。每个深度有两个归档 URL，分别来自 `rdk_s100/ResNet/` 和
-  `rdk_s600/ResNet/`。后一份的文件名是 `s100/s600/<文件名>`；其中的 `s600`
-  段是归档目录，不是 S600 target。`--variant` 不会选中它们：nashe S100
-  文件已经占用该变体，再绑一个文件名会使选择不唯一。请用 `--target s100`
-  按文件名下载。
+  ResNet-18。
 - C++（[runtime/cpp](runtime/cpp/README.md)）覆盖相同的五个变体，仅限
   S100、S100P、S600（`VARIANT=18|34|50|101|152`，默认 18）；X5 没有 C++
   运行时。
@@ -209,13 +204,6 @@ GFLOPs 按每次 Conv 与 Gemm 乘加计 2 次运算。
 各板卡的 CPU 与 BPU 频率不同，比较不同 target 时需谨慎。C++ 流水线使用对
 Pillow 双三次缩放的标量、逐位一致的重新实现，它主导了前处理耗时；表中延迟列为该实现的实测值。复现精度数字见[评测器](evaluator/README_cn.md)；C++ 计时工具
 见[基准说明](../../../utils/tools/classification/cpp/README.md)。
-
-上表对应 bayese/nashe/nashm/nashp 制品。S100 归档文件
-`s100/resnet152_224x224_nv12.hbm`（归档路径
-`rdk_s100/ResNet/resnet152_224x224_nv12.hbm`）另有一条转换记录：延迟
-2.23 ms、吞吐 449.03 fps（toolchain reference），量化余弦相似度
-0.992285。其余五个归档 HBM，包括放在 `rdk_s600/ResNet/` 下的 ResNet152
-文件，没有记录的指标。
 
 ![推理结果](./test_data/inference.png)
 

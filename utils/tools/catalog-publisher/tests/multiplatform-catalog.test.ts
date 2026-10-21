@@ -123,15 +123,11 @@ describe("multi-platform variant catalog", () => {
     // old 640x640 builds became 20 measured records (X5, S100, S100P, S600); the 10 X5/S100P OBB assets
     // that stood alone now share a variant with their record: 760 benchmark rows, variants unchanged.
     // On 2026-10-21 ConvNeXt Nano/Pico/Femto bins joined their existing measured X5 variants.
-    // YOLOE-11 S100 11m and 11l joined as download-only variants, and the rdk_s ResNet152 S100
-    // archive HBM joined as its own measured variant. The other five ResNet archive HBMs share
-    // the existing depth/platform variants and carry no metrics. All six untagged archive HBMs
-    // are S100; the three from archive directory rdk_s600/ResNet/ use filename s100/s600/<basename>
-    // and share those same S100 variants: 642 variants, 761 benchmark rows.
+    // YOLOE-11 S100 11m and 11l joined as download-only variants: 641 variants, 760 benchmark rows.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(60);
-    expect(variants).toHaveLength(642);
-    expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(761);
+    expect(variants).toHaveLength(641);
+    expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(760);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
   });
