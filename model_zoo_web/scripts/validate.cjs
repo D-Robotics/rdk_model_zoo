@@ -1,5 +1,4 @@
 const assert = require('node:assert/strict');
-const { spawnSync } = require('node:child_process');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -7,20 +6,83 @@ const vm = require('node:vm');
 
 const { assertCoverResolves, assertLocalImageFile } = require('./cover-assets.cjs');
 
-function assertGeneratedCoverEdges() {
-  const heroes = path.join(root, 'assets', 'models', 'pending-heroes');
-  const result = spawnSync('python3', [
-    path.join(webRoot, 'scripts', 'check_cover_edges.py'),
-    path.join(webRoot, 'release', 'assets', 'resnet-cls.webp'),
-    heroes,
-    path.join(webRoot, 'release', 'assets', 'pending-heroes'),
-  ], { encoding: 'utf8' });
-  assert.equal(
-    result.status,
-    0,
-    `generated covers must be 1672x941 without a uniform border\n${result.stderr || result.stdout || result.error || ''}`,
+const HERO_WIDTH = 1672;
+const HERO_HEIGHT = 941;
+
+// Detail heroes used to ship as <figure class="mz-demo is-frame">, and the
+// matching CSS padded the bitmap with a white mat. Pending and published
+// pages share one figure class, so the generated files must not grow that
+// class or rule back.
+function assertDetailHeroMarkup(detailJs) {
+  const heroFiles = [
+    'index.html', 'reports.html', 'detail-view.js', 'detail.css', 'product-ui.css',
+    'style.css', 'gallery.css', 'reference.css', 'refresh.css',
+  ];
+  for (const filename of heroFiles) {
+    const source = fs.readFileSync(path.join(root, filename), 'utf8');
+    assert.doesNotMatch(
+      source,
+      /is-frame/,
+      `${filename} must not put an is-frame class or rule on detail heroes`,
+    );
+  }
+  const figures = [...detailJs.matchAll(/<figure\b[^>]*>/g)].map(match => match[0]);
+  assert.deepEqual(
+    figures,
+    ['<figure class="mz-demo">'],
+    'pending and published detail pages must use the same <figure class="mz-demo"> hero',
   );
-  if (result.stdout) process.stdout.write(result.stdout.endsWith('\n') ? result.stdout : `${result.stdout}\n`);
+}
+
+function rasterSize(bytes, label) {
+  if (bytes[0] === 0x89 && bytes.toString('ascii', 1, 4) === 'PNG') {
+    assert.equal(bytes.toString('ascii', 12, 16), 'IHDR', `${label}: PNG is missing IHDR`);
+    return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+  }
+  assert.equal(bytes.toString('ascii', 0, 4), 'RIFF', `${label}: cover is not a PNG or WebP`);
+  assert.equal(bytes.toString('ascii', 8, 12), 'WEBP', `${label}: cover is not a WebP`);
+  const chunk = bytes.toString('ascii', 12, 16);
+  if (chunk === 'VP8 ') {
+    assert.equal(bytes[20] & 1, 0, `${label}: VP8 cover is not a keyframe`);
+    assert.deepEqual([bytes[23], bytes[24], bytes[25]], [0x9d, 0x01, 0x2a], `${label}: VP8 start code mismatch`);
+    return {
+      width: bytes.readUInt16LE(26) & 0x3fff,
+      height: bytes.readUInt16LE(28) & 0x3fff,
+    };
+  }
+  if (chunk === 'VP8L') {
+    assert.equal(bytes[20], 0x2f, `${label}: VP8L signature mismatch`);
+    const bits = bytes.readUInt32LE(21);
+    return { width: 1 + (bits & 0x3fff), height: 1 + ((bits >>> 14) & 0x3fff) };
+  }
+  if (chunk === 'VP8X') {
+    return {
+      width: 1 + (bytes[24] | (bytes[25] << 8) | (bytes[26] << 16)),
+      height: 1 + (bytes[27] | (bytes[28] << 8) | (bytes[29] << 16)),
+    };
+  }
+  assert.fail(`${label}: unsupported WebP chunk ${JSON.stringify(chunk)}`);
+}
+
+function assertGeneratedCoverSizes() {
+  const directory = path.join(root, 'assets', 'models');
+  const covers = [];
+  function walk(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(fullPath);
+      else if (/\.(?:png|webp)$/i.test(entry.name)) covers.push(fullPath);
+    }
+  }
+  walk(directory);
+  assert(covers.length > 0, 'the preview must ship generated PNG or WebP covers');
+  for (const filePath of covers) {
+    const label = path.relative(root, filePath);
+    const size = rasterSize(fs.readFileSync(filePath), label);
+    assert.equal(size.width, HERO_WIDTH, `${label} must be ${HERO_WIDTH}px wide`);
+    assert.equal(size.height, HERO_HEIGHT, `${label} must be ${HERO_HEIGHT}px tall`);
+  }
+  return covers.length;
 }
 
 const preview = process.argv.includes('--preview');
@@ -211,9 +273,7 @@ for (const filename of ['app.js', 'ask-ai.js', 'i18n.js', 'facets.js', 'model-pr
 
 const appSource = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
 const detailSource = fs.readFileSync(path.join(root, 'detail-view.js'), 'utf8');
-const detailCss = fs.readFileSync(path.join(root, 'detail.css'), 'utf8');
-assert.doesNotMatch(detailSource, /is-frame/, 'detail heroes must use the published mz-demo markup');
-assert.doesNotMatch(detailCss, /mz-demo\.is-frame/, 'detail.css must not pad pending heroes with a white frame');
+assertDetailHeroMarkup(detailSource);
 assert.match(detailSource, /class="mz-report-placeholder" aria-disabled="true">OE 转换报告/);
 if (!preview) {
   assert.match(appSource, /当前目录暂未发布任何模型。/);
@@ -256,7 +316,8 @@ const localReportDirs = fs.readdirSync(path.join(root, 'reports'), { withFileTyp
   .filter(entry => entry.isDirectory()).map(entry => entry.name);
 if (preview) {
   assert(localReportDirs.includes('data'), 'The preview build must ship its report data payloads');
-  assertGeneratedCoverEdges();
+  const coverCount = assertGeneratedCoverSizes();
+  console.log(`PASS: ${coverCount} generated covers are ${HERO_WIDTH}x${HERO_HEIGHT}, and detail heroes have no is-frame`);
 } else {
   assert.deepEqual(localReportDirs, [], 'The pre-migration site must not ship report payloads');
 }
