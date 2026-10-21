@@ -80,6 +80,17 @@ class SamplePathTest(unittest.TestCase):
                 with self.assertRaisesRegex(build_catalog.CatalogError, "plain git ref"):
                     build_catalog.validate_sample_path("samples/vision/demo", LABEL)
 
+    def test_a_gitlink_is_a_sample_entry_but_not_a_directory(self):
+        os.environ[ENV] = "develop"
+        git(self.root, "checkout", "-q", "develop")
+        git(self.root, "update-index", "--add", "--cacheinfo",
+            "160000,0123456789abcdef0123456789abcdef01234567,samples/vla/act")
+        git(self.root, "commit", "-q", "-m", "record a sample gitlink")
+        git(self.root, "checkout", "-q", "model_zoo_web")
+        self.assertEqual(build_catalog.lookup_sample_entry("samples/vla/act", LABEL), "gitlink")
+        with self.assertRaisesRegex(build_catalog.CatalogError, "not a sample directory"):
+            build_catalog.validate_sample_path("samples/vla/act", LABEL)
+
     def test_path_rules_are_unchanged(self):
         os.environ[ENV] = "develop"
         for bad in ("/abs/samples/x", "samples/../etc", "docs/x"):

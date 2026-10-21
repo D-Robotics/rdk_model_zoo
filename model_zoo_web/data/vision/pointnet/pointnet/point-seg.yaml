@@ -1,0 +1,50 @@
+schema_version: 1
+registration: pending
+id: pointnet/pointnet/point-seg
+name: PointNet
+domain: vision
+source: pointnet
+family: pointnet
+task: point-seg
+description:
+  zh: PointNet 使用共享 MLP 和对称最大池化进行点云分割。本示例识别椅子的四种部件：靠背、座面、椅腿和扶手，输出保持输入点顺序。
+  en: 'PointNet segments point clouds using shared MLPs and symmetric max pooling. This sample identifies four parts of a chair: back, seat, leg and arm, while keeping the input point order.'
+sample_path: samples/vision/pointnet
+sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/pointnet/README.md
+upstream:
+- kind: paper
+  name: arxiv 1612.00593
+  url: https://arxiv.org/abs/1612.00593
+  source: samples/vision/pointnet/README.md
+- kind: repository
+  name: charlesq34/pointnet
+  url: https://github.com/charlesq34/pointnet
+  source: samples/vision/pointnet/README.md
+supported_platforms:
+- platform: s100
+  evidence: docs/release/s/models.yaml
+published_variants:
+- name: s100
+  source: samples/vision/pointnet/README.md
+manifest_tasks:
+- point-cloud-segmentation
+usage:
+- source: samples/vision/pointnet/README.md
+  lines:
+  - python3 -m pip install numpy PyYAML matplotlib
+  - bash samples/vision/pointnet/model/download.sh --target s100
+  - python3 samples/vision/pointnet/runtime/python/main.py --target s100
+documented_downloads:
+- platform: s100
+  filename: s100/pointnet.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/PointNet/pointnet.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+example_image:
+  path: samples/vision/pointnet/test_data/readme_img/chair.png
+  source: samples/vision/pointnet/test_data/readme_img/chair.png

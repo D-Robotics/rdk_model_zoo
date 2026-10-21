@@ -1,0 +1,114 @@
+schema_version: 1
+registration: pending
+id: gemma4-e2b/gemma4-e2b/vlm
+name: Gemma4-E2B
+domain: llm
+source: gemma4-e2b
+family: gemma4-e2b
+task: vlm
+description:
+  zh: Gemma4-E2B 是 Google 推出的轻量多模态模型，由 Vision ViT 编码器与 2B 参数 Text LLM decoder 组成。
+  en: Gemma4-E2B is a lightweight multimodal model from Google, combining a Vision ViT encoder with a 2B-parameter Text LLM decoder.
+sample_path: samples/llm/gemma4-e2b
+sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+upstream:
+- kind: model-card
+  name: huggingface.co/google/gemma-4-e2b
+  url: https://huggingface.co/google/gemma-4-e2b
+  source: samples/llm/gemma4-e2b/README.md
+- kind: repository
+  name: shockley6668/gemma4-e2b-rdk-s100p
+  url: https://github.com/shockley6668/gemma4-e2b-rdk-s100p
+  source: samples/llm/gemma4-e2b/README.md
+- kind: repository
+  name: xiongqi123123/RDK_OE_LLM_ZOO.git
+  url: https://github.com/xiongqi123123/RDK_OE_LLM_ZOO.git
+  source: samples/llm/gemma4-e2b/conversion/QUANTIZATION_TUTORIAL.md
+- kind: model-card
+  name: huggingface.co/google/gemma-4-e2b-pt
+  url: https://huggingface.co/google/gemma-4-e2b-pt
+  source: samples/llm/gemma4-e2b/conversion/QUANTIZATION_TUTORIAL.md
+- kind: repository
+  name: gflags/gflags
+  url: https://github.com/gflags/gflags
+  source: samples/llm/gemma4-e2b/runtime/cpp/README.md
+- kind: repository
+  name: mlc-ai/tokenizers-cpp
+  url: https://github.com/mlc-ai/tokenizers-cpp
+  source: samples/llm/gemma4-e2b/third_party/README.md
+supported_platforms:
+- platform: s100p
+  evidence: docs/release/s/models.yaml
+- platform: s600
+  evidence: docs/release/s/models.yaml
+manifest_tasks:
+- vision-language-model
+usage:
+- source: samples/llm/gemma4-e2b/README.md
+  lines:
+  - cd samples/llm/gemma4-e2b
+  - export GEMMA4_HOME=~/gemma4_e2b_s600
+  - GEMMA4_SOC=s600 bash model/download_model.sh
+  - bash third_party/install_tokenizers_cpp.sh
+  - cd runtime/cpp
+  - ./run.sh --target s600 --build
+  - ./run.sh --target s600
+  - ./run.sh --target s600 server --port=8000
+  - ./run.sh --target s600 main --max_tokens=512
+  - gemma4> /image ../../test_data/image1.jpg
+  - gemma4> Describe this image
+  - gemma4> /context
+documented_downloads:
+- platform: s100p
+  filename: s100p/gemma4-e2b_vit_ptq.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/gemma4_e2b/model/gemma4-e2b_vit_ptq.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100p
+  filename: s100p/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/gemma4_e2b/model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s600
+  filename: s600/gemma4-e2b_vit_ptq.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/gemma4_e2b/model/gemma4-e2b_vit_ptq.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s600
+  filename: s600/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/gemma4_e2b/model/gemma4-e2b_lm_chunk_256_cache_4096_ptq.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100p
+  filename: common/tok_embeddings.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/gemma4_e2b/model/tok_embeddings.bin
+  source: docs/release/s/models.yaml
+  format: bin
+- platform: s100p
+  filename: common/tokenizer/tokenizer.json
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/gemma4_e2b/tokenizer/tokenizer.json
+  source: docs/release/s/models.yaml
+  format: json
+- platform: s100p
+  filename: common/tokenizer/tokenizer_config.json
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/gemma4_e2b/tokenizer/tokenizer_config.json
+  source: docs/release/s/models.yaml
+  format: json
+- platform: s600
+  filename: common/tok_embeddings.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/gemma4_e2b/model/tok_embeddings.bin
+  source: docs/release/s/models.yaml
+  format: bin
+- platform: s600
+  filename: common/tokenizer/tokenizer.json
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/gemma4_e2b/tokenizer/tokenizer.json
+  source: docs/release/s/models.yaml
+  format: json
+- platform: s600
+  filename: common/tokenizer/tokenizer_config.json
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/gemma4_e2b/tokenizer/tokenizer_config.json
+  source: docs/release/s/models.yaml
+  format: json
+example_image:
+  path: samples/llm/gemma4-e2b/test_data/image1.jpg
+  source: samples/llm/gemma4-e2b/test_data/image1.jpg

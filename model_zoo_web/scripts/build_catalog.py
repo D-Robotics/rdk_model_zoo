@@ -26,14 +26,48 @@ CATALOG_PATH = BUILD_ROOT / "catalog.json"
 META_PATH = BUILD_ROOT / "catalog.meta.json"
 OSS_HOST = "rdk-model-zoo.oss-cn-beijing.aliyuncs.com"
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 # Samples live on develop; the Web branch does not have to carry their source. When a sample
 # directory is absent from this checkout, it is verified against this git ref instead.
 SAMPLE_REF_ENV = "MODEL_ZOO_SAMPLE_REF"
 SAMPLE_REF_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$")
 BUILD_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 SIZE_ORDER = {name: index for index, name in enumerate(("n", "s", "m", "l", "x"))}
+PLATFORM_ORDER = {name: index for index, name in enumerate(("x5", "s100", "s100p", "s600"))}
+KNOWN_PLATFORMS = set(PLATFORM_ORDER)
 ACCURACY_SCHEMA_PATH = WEB_ROOT / "accuracy-metrics.json"
 ACCURACY_SCHEMA = json.loads(ACCURACY_SCHEMA_PATH.read_text(encoding="utf-8"))
+TASK_REGISTRY_PATH = WEB_ROOT / "task-registry.json"
+TASK_REGISTRY = json.loads(TASK_REGISTRY_PATH.read_text(encoding="utf-8"))
+TASK_FACET_IDS = {item["facet_id"] for item in TASK_REGISTRY["tasks"].values()}
+# Pending records stay out of the released-artifact schema. Sourced facts use
+# the names below (`sourced_benchmarks`, `documented_downloads`, `example_image`),
+# each tied to a file at sample_revision. The released names stay forbidden so a
+# placeholder cannot be mistaken for a published release.
+PENDING_FORBIDDEN = (
+    "variants", "accuracy", "performance", "artifact", "assets", "benchmarks", "cover",
+)
+OFFICIAL_LICENSE_URLS = {
+    "Apache-2.0": "https://www.apache.org/licenses/LICENSE-2.0",
+    "MIT": "https://opensource.org/license/mit",
+    "BSD-2-Clause": "https://opensource.org/license/bsd-2-clause",
+    "BSD-3-Clause": "https://opensource.org/license/bsd-3-clause",
+    "GPL-2.0": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html",
+    "GPL-3.0": "https://www.gnu.org/licenses/gpl-3.0.html",
+    "LGPL-2.1": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html",
+    "LGPL-3.0": "https://www.gnu.org/licenses/lgpl-3.0.html",
+}
+LICENSE_NAME_MARKERS = {
+    "Apache-2.0": ("apache-2.0", "apache license, version 2.0", "apache license version 2.0"),
+    "MIT": ("mit license",),
+    "BSD-2-Clause": ("bsd 2-clause", "bsd-2-clause"),
+    "BSD-3-Clause": ("bsd 3-clause", "bsd-3-clause"),
+    "GPL-2.0": ("gpl-2.0", "gnu general public license version 2"),
+    "GPL-3.0": ("gpl-3.0", "gnu general public license version 3"),
+    "LGPL-2.1": ("lgpl-2.1",),
+    "LGPL-3.0": ("lgpl-3.0",),
+}
+_BLOB_TEXT: dict[str, str] = {}
 
 
 class CatalogError(ValueError):
@@ -92,28 +126,153 @@ def require_nonnegative_int(value: Any, label: str) -> int:
     return value
 
 
-def validate_sample_path(value: Any, label: str) -> str:
+def _safe_samples_path(value: Any, label: str) -> str:
     sample_path = require_string(value, label)
     pure_path = PurePosixPath(sample_path)
-    if pure_path.is_absolute() or ".." in pure_path.parts or pure_path.parts[0] != "samples":
+    if pure_path.is_absolute() or ".." in pure_path.parts or not pure_path.parts or pure_path.parts[0] != "samples":
         raise CatalogError(f"{label} must be a safe path below samples/")
-    if (ROOT / sample_path).is_dir():
-        return sample_path
+    return sample_path
+
+
+def _git_ref() -> str:
     ref = os.environ.get(SAMPLE_REF_ENV, "")
+    if ref and not SAMPLE_REF_RE.match(ref):
+        raise CatalogError(f"{SAMPLE_REF_ENV} is not a plain git ref: {ref!r}")
+    return ref
+
+
+def _ls_tree(ref: str, relative_path: str) -> tuple[str, str] | None:
+    listed = subprocess.run(
+        ["git", "-C", str(ROOT), "ls-tree", ref, "--", relative_path],
+        capture_output=True, text=True, check=False,
+    )
+    if listed.returncode != 0:
+        return None
+    lines = [line for line in listed.stdout.splitlines() if line.strip()]
+    if len(lines) != 1:
+        return None
+    meta, _, listed_path = lines[0].partition("\t")
+    if listed_path != relative_path:
+        return None
+    mode, object_type, _object_id = meta.split()
+    return mode, object_type
+
+
+def lookup_sample_entry(sample_path: str, label: str) -> str:
+    """Return ``directory`` or ``gitlink`` for a sample that exists locally or on the sample ref."""
+    if (ROOT / sample_path).is_dir():
+        return "directory"
+    ref = _git_ref()
     if not ref:
         raise CatalogError(
             f"{label} does not exist: {sample_path} "
             f"(set {SAMPLE_REF_ENV} to a git ref such as origin/develop to verify it there)"
         )
-    if not SAMPLE_REF_RE.match(ref):
-        raise CatalogError(f"{SAMPLE_REF_ENV} is not a plain git ref: {ref!r}")
-    kind = subprocess.run(
-        ["git", "-C", str(ROOT), "cat-file", "-t", f"{ref}:{sample_path}"],
+    found = _ls_tree(ref, sample_path)
+    if found == ("040000", "tree"):
+        return "directory"
+    if found == ("160000", "commit"):
+        return "gitlink"
+    raise CatalogError(f"{label} does not exist locally or in {ref}: {sample_path}")
+
+
+def validate_sample_path(value: Any, label: str) -> str:
+    sample_path = _safe_samples_path(value, label)
+    if lookup_sample_entry(sample_path, label) != "directory":
+        raise CatalogError(f"{label} is not a sample directory: {sample_path}")
+    return sample_path
+
+
+def validate_evidence_path(value: Any, label: str) -> str:
+    evidence = require_string(value, label)
+    pure_path = PurePosixPath(evidence)
+    if pure_path.is_absolute() or ".." in pure_path.parts or len(pure_path.parts) < 2:
+        raise CatalogError(f"{label} must be a safe repository path")
+    if not (evidence.startswith("docs/release/") or evidence.startswith("samples/")):
+        raise CatalogError(f"{label} must point at docs/release/ or samples/")
+    if (ROOT / evidence).exists():
+        return evidence
+    ref = _git_ref()
+    if not ref:
+        raise CatalogError(
+            f"{label} does not exist: {evidence} "
+            f"(set {SAMPLE_REF_ENV} to a git ref such as origin/develop to verify it there)"
+        )
+    found = _ls_tree(ref, evidence)
+    if found is None or found[1] not in {"blob", "tree"}:
+        raise CatalogError(f"{label} does not exist locally or in {ref}: {evidence}")
+    return evidence
+
+
+def blob_text(relative_path: str, label: str, revision: str) -> str:
+    """Text of a blob at the record's pinned revision, not the working tree."""
+    cached = _BLOB_TEXT.get((revision, relative_path))
+    if cached is not None:
+        return cached
+    found = _ls_tree(revision, relative_path)
+    if found is None or found[1] != "blob":
+        raise CatalogError(f"{label} is not a file at {revision}: {relative_path}")
+    shown = subprocess.run(
+        ["git", "-C", str(ROOT), "show", f"{revision}:{relative_path}"],
         capture_output=True, text=True, check=False,
     )
-    if kind.returncode != 0 or kind.stdout.strip() != "tree":
-        raise CatalogError(f"{label} does not exist locally or in {ref}: {sample_path}")
-    return sample_path
+    if shown.returncode != 0:
+        raise CatalogError(f"{label} could not be read from {revision}: {relative_path}")
+    _BLOB_TEXT[(revision, relative_path)] = shown.stdout
+    return shown.stdout
+
+
+def _window_around(text: str, marker: str, span: int = 8000) -> str:
+    index = text.find(marker)
+    if index < 0:
+        raise CatalogError(f"marker {marker!r} is not in the source file")
+    window = text[index:index + span]
+    # A benchmark id can sit a few kilobytes before the next list item. Do not
+    # treat the next item's numbers as evidence for this one.
+    boundary = window.find("\n  - id:", 1)
+    if boundary > 0:
+        window = window[:boundary]
+    return window
+
+
+def _require_in_text(needle: str, text: str, label: str) -> None:
+    if needle not in text:
+        raise CatalogError(f"{label} value {needle!r} is not in the source file")
+
+
+def _number_in_text(value: Any, text: str, label: str) -> None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise CatalogError(f"{label} must be a number copied from the source file")
+    if isinstance(value, float) and value.is_integer():
+        candidates = {str(int(value)), str(value)}
+    elif isinstance(value, float):
+        compact = format(value, "f").rstrip("0").rstrip(".")
+        candidates = {compact, str(value)}
+    else:
+        candidates = {str(value)}
+    if not any(candidate in text for candidate in candidates):
+        raise CatalogError(f"{label} value {value!r} is not in the source file")
+
+
+def _require_https(value: Any, label: str) -> str:
+    url = require_string(value, label)
+    parsed = urlparse(url)
+    if parsed.scheme != "https" or not parsed.netloc:
+        raise CatalogError(f"{label} must be an absolute HTTPS URL")
+    return url
+
+
+def validate_commit(value: Any, label: str) -> str:
+    revision = require_string(value, label)
+    if not COMMIT_RE.fullmatch(revision):
+        raise CatalogError(f"{label} must be a full 40-character commit SHA")
+    kind = subprocess.run(
+        ["git", "-C", str(ROOT), "cat-file", "-t", revision],
+        capture_output=True, text=True, check=False,
+    )
+    if kind.returncode != 0 or kind.stdout.strip() != "commit":
+        raise CatalogError(f"{label} is not a commit in this repository: {revision}")
+    return revision
 
 
 def validate_artifact(
@@ -299,10 +458,443 @@ def validate_accuracy(value: Any, task: str, label: str) -> None:
                 raise CatalogError(f"{metric_label} must be a ratio between 0 and 1")
 
 
+def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> None:
+    """Every optional fact must be a substring of the file it cites at sample_revision."""
+    revision = require_string(record.get("sample_revision"), f"{relative_source}.sample_revision")
+    def text_of(path: str, label: str) -> str:
+        return blob_text(path, label, revision)
+    upstream = record.get("upstream", [])
+    if not isinstance(upstream, list):
+        raise CatalogError(f"{relative_source}.upstream must be a list")
+    for index, item in enumerate(upstream):
+        label = f"{relative_source}.upstream[{index}]"
+        entry = require_mapping(item, label)
+        if set(entry) - {"kind", "name", "url", "source"}:
+            raise CatalogError(f"{label} has unknown fields")
+        if entry.get("kind") not in {"repository", "paper", "model-card"}:
+            raise CatalogError(f"{label}.kind must be repository, paper, or model-card")
+        require_string(entry.get("name"), f"{label}.name")
+        url = _require_https(entry.get("url"), f"{label}.url")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        _require_in_text(url, text_of(source, f"{label}.source"), label)
+
+    variants = record.get("published_variants", [])
+    if not isinstance(variants, list):
+        raise CatalogError(f"{relative_source}.published_variants must be a list")
+    for index, item in enumerate(variants):
+        label = f"{relative_source}.published_variants[{index}]"
+        entry = require_mapping(item, label)
+        if set(entry) - {"name", "source"}:
+            raise CatalogError(f"{label} has unknown fields")
+        name = require_string(entry.get("name"), f"{label}.name")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        _require_in_text(name, text_of(source, f"{label}.source"), label)
+
+    configs = record.get("conversion_configs", [])
+    if not isinstance(configs, list):
+        raise CatalogError(f"{relative_source}.conversion_configs must be a list")
+    for index, item in enumerate(configs):
+        label = f"{relative_source}.conversion_configs[{index}]"
+        entry = require_mapping(item, label)
+        if set(entry) - {"path", "march", "runtime_input", "train_input", "train_layout", "resolution"}:
+            raise CatalogError(f"{label} has unknown fields")
+        path = validate_evidence_path(entry.get("path"), f"{label}.path")
+        text = text_of(path, f"{label}.path")
+        for field in ("march", "runtime_input", "train_input", "train_layout"):
+            if field in entry:
+                _require_in_text(require_string(entry[field], f"{label}.{field}"), text, f"{label}.{field}")
+        if "resolution" in entry:
+            resolution = require_string(entry["resolution"], f"{label}.resolution")
+            if resolution not in path and resolution not in text:
+                raise CatalogError(f"{label}.resolution is not in the config path or file")
+
+    inputs = record.get("inputs", [])
+    if not isinstance(inputs, list):
+        raise CatalogError(f"{relative_source}.inputs must be a list")
+    for index, item in enumerate(inputs):
+        label = f"{relative_source}.inputs[{index}]"
+        entry = require_mapping(item, label)
+        if set(entry) - {"platform", "shape", "layout", "format", "source", "source_id"}:
+            raise CatalogError(f"{label} has unknown fields")
+        platform = require_string(entry.get("platform"), f"{label}.platform")
+        if platform not in KNOWN_PLATFORMS:
+            raise CatalogError(f"{label}.platform must be one of {', '.join(sorted(KNOWN_PLATFORMS))}")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        source_id = require_string(entry.get("source_id"), f"{label}.source_id")
+        window = _window_around(text_of(source, f"{label}.source"), source_id)
+        for field in ("shape", "layout", "format"):
+            if field in entry:
+                _require_in_text(require_string(entry[field], f"{label}.{field}"), window, f"{label}.{field}")
+        if not any(field in entry for field in ("shape", "layout", "format")):
+            raise CatalogError(f"{label} must record a shape, layout, or format")
+
+    usage = record.get("usage", [])
+    if not isinstance(usage, list):
+        raise CatalogError(f"{relative_source}.usage must be a list")
+    for index, item in enumerate(usage):
+        label = f"{relative_source}.usage[{index}]"
+        entry = require_mapping(item, label)
+        if set(entry) - {"source", "lines"}:
+            raise CatalogError(f"{label} has unknown fields")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        text = text_of(source, f"{label}.source")
+        lines = require_list(entry.get("lines"), f"{label}.lines")
+        for line_index, line in enumerate(lines):
+            command = require_string(line, f"{label}.lines[{line_index}]")
+            _require_in_text(command, text, f"{label}.lines[{line_index}]")
+
+    measurements = record.get("sourced_benchmarks", [])
+    if not isinstance(measurements, list):
+        raise CatalogError(f"{relative_source}.sourced_benchmarks must be a list")
+    for index, item in enumerate(measurements):
+        label = f"{relative_source}.sourced_benchmarks[{index}]"
+        entry = require_mapping(item, label)
+        if set(entry) - {"id", "platform", "variant", "metric", "value", "unit", "statistic", "condition", "source", "origin"}:
+            raise CatalogError(f"{label} has unknown fields")
+        platform = require_string(entry.get("platform"), f"{label}.platform")
+        if platform not in KNOWN_PLATFORMS:
+            raise CatalogError(f"{label}.platform must be one of {', '.join(sorted(KNOWN_PLATFORMS))}")
+        metric = require_string(entry.get("metric"), f"{label}.metric")
+        unit = require_string(entry.get("unit"), f"{label}.unit")
+        source_id = require_string(entry.get("id"), f"{label}.id")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        window = _window_around(text_of(source, f"{label}.source"), source_id, span=20000)
+        _require_in_text(metric, window, f"{label}.metric")
+        _require_in_text(unit, window, f"{label}.unit")
+        _number_in_text(entry.get("value"), window, f"{label}.value")
+        for field in ("variant", "statistic", "condition"):
+            if field in entry:
+                _require_in_text(require_string(entry[field], f"{label}.{field}"), window, f"{label}.{field}")
+        if "origin" in entry:
+            validate_evidence_path(entry.get("origin"), f"{label}.origin")
+
+    downloads = record.get("documented_downloads", [])
+    if not isinstance(downloads, list):
+        raise CatalogError(f"{relative_source}.documented_downloads must be a list")
+    for index, item in enumerate(downloads):
+        label = f"{relative_source}.documented_downloads[{index}]"
+        entry = require_mapping(item, label)
+        if set(entry) - {"platform", "filename", "url", "format", "sha256", "source"}:
+            raise CatalogError(f"{label} has unknown fields")
+        platform = require_string(entry.get("platform"), f"{label}.platform")
+        if platform not in KNOWN_PLATFORMS:
+            raise CatalogError(f"{label}.platform must be one of {', '.join(sorted(KNOWN_PLATFORMS))}")
+        filename = require_string(entry.get("filename"), f"{label}.filename")
+        url = _require_https(entry.get("url"), f"{label}.url")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        text = text_of(source, f"{label}.source")
+        _require_in_text(filename, text, f"{label}.filename")
+        _require_in_text(url, text, f"{label}.url")
+        if "format" in entry:
+            _require_in_text(require_string(entry["format"], f"{label}.format"), text, f"{label}.format")
+        if "sha256" in entry:
+            digest = require_string(entry.get("sha256"), f"{label}.sha256")
+            if not SHA256_RE.fullmatch(digest):
+                raise CatalogError(f"{label}.sha256 must be 64 lowercase hexadecimal characters")
+            _require_in_text(digest, text, f"{label}.sha256")
+
+    if "example_image" in record:
+        image = require_mapping(record.get("example_image"), f"{relative_source}.example_image")
+        if set(image) - {"path", "source"}:
+            raise CatalogError(f"{relative_source}.example_image has unknown fields")
+        path = validate_evidence_path(image.get("path"), f"{relative_source}.example_image.path")
+        source = validate_evidence_path(image.get("source"), f"{relative_source}.example_image.source")
+        if path != source:
+            raise CatalogError(f"{relative_source}.example_image.path and source must be the same blob")
+        suffix = PurePosixPath(path).suffix.lower()
+        if suffix not in {".jpg", ".jpeg", ".png", ".webp", ".gif"}:
+            raise CatalogError(f"{relative_source}.example_image.path must be an image")
+        found = _ls_tree(revision, path)
+        if found is None or found[1] != "blob":
+            raise CatalogError(f"{relative_source}.example_image.path is not a file at {revision}: {path}")
+
+    if "source_input" in record:
+        entry = require_mapping(record.get("source_input"), f"{relative_source}.source_input")
+        if set(entry) - {"format", "dtype", "layout", "shape", "source"}:
+            raise CatalogError(f"{relative_source}.source_input has unknown fields")
+        source = validate_evidence_path(entry.get("source"), f"{relative_source}.source_input.source")
+        text = text_of(source, f"{relative_source}.source_input.source")
+        present = [field for field in ("format", "dtype", "layout", "shape") if field in entry]
+        if not present:
+            raise CatalogError(f"{relative_source}.source_input needs a sourced format, dtype, layout, or shape")
+        for field in present:
+            _require_in_text(require_string(entry[field], f"{relative_source}.source_input.{field}"), text, f"{relative_source}.source_input.{field}")
+
+    if "hero_visual" in record:
+        _validate_hero_visual(record, relative_source, revision, text_of)
+
+
+def _hero_asset_path(value: Any, label: str, suffix: str) -> str:
+    hero_file = require_string(value, label)
+    hero_path = PurePosixPath(hero_file)
+    if hero_path.is_absolute() or ".." in hero_path.parts or hero_path.parts[:4] != (
+        "model_zoo_web", "release", "assets", "pending-heroes",
+    ) or hero_path.suffix.lower() != suffix:
+        raise CatalogError(f"{label} must be a {suffix} file under model_zoo_web/release/assets/pending-heroes/")
+    if not (ROOT / hero_file).is_file():
+        raise CatalogError(f"{label} is missing: {hero_file}")
+    return hero_file
+
+
+def _validate_host_float_hero(entry: dict[str, Any], label: str, revision: str) -> None:
+    """Predictions come from a host run of the documented float checkpoint, stored beside the hero."""
+    note = require_string(entry.get("note"), f"{label}.note")
+    if "not board output" not in note or "Host float reference" not in note:
+        raise CatalogError(f"{label}.note must say this is a host float reference, not board output")
+    if require_string(entry.get("commit"), f"{label}.commit") != revision:
+        raise CatalogError(f"{label}.commit must be the pinned sample revision")
+    model_url = require_string(entry.get("model_url"), f"{label}.model_url")
+    if not model_url.startswith("https://"):
+        raise CatalogError(f"{label}.model_url must be an https checkpoint URL")
+    require_string(entry.get("model_file"), f"{label}.model_file")
+    require_string(entry.get("framework"), f"{label}.framework")
+    documented = validate_evidence_path(entry.get("documented_in"), f"{label}.documented_in")
+    found = _ls_tree(revision, documented)
+    if found is None or found[1] != "blob":
+        raise CatalogError(f"{label}.documented_in is not a file at {revision}: {documented}")
+    source = _hero_asset_path(entry.get("predictions_source"), f"{label}.predictions_source", ".json")
+    payload = json.loads((ROOT / source).read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise CatalogError(f"{label}.predictions_source must be a JSON object")
+    for key in ("model_url", "model_file", "input", "framework", "commit", "runtime"):
+        if payload.get(key) != entry.get(key):
+            raise CatalogError(f"{label}.{key} does not match the inference record")
+    if payload.get("runtime") != "host-float-reference":
+        raise CatalogError(f"{label} inference record must be host-float-reference")
+    kind = entry["kind"]
+    if kind == "classification-panel":
+        recorded = payload.get("topk")
+        declared = entry.get("topk")
+        if not isinstance(recorded, list) or len(recorded) != 5:
+            raise CatalogError(f"{label} inference record needs five Top-K rows")
+        if recorded != declared:
+            raise CatalogError(f"{label}.topk must be the five recorded probabilities")
+        for index, row in enumerate(recorded):
+            if not isinstance(row, dict):
+                raise CatalogError(f"{label}.topk[{index}] must be an object")
+            require_string(row.get("label"), f"{label}.topk[{index}].label")
+            score = row.get("score")
+            if isinstance(score, bool) or not isinstance(score, (int, float)) or not 0 <= float(score) <= 1:
+                raise CatalogError(f"{label}.topk[{index}].score must be a probability")
+        return
+    if kind not in {"detection-overlay", "segmentation-overlay"}:
+        raise CatalogError(f"{label}.kind is not a host-float hero")
+    recorded = payload.get("detections")
+    declared = entry.get("detections")
+    if not isinstance(recorded, list) or not recorded:
+        raise CatalogError(f"{label} inference record needs at least one detection")
+    if recorded != declared:
+        raise CatalogError(f"{label}.detections must be the recorded boxes")
+    for index, row in enumerate(recorded):
+        if not isinstance(row, dict):
+            raise CatalogError(f"{label}.detections[{index}] must be an object")
+        require_string(row.get("label"), f"{label}.detections[{index}].label")
+        score = row.get("score")
+        box = row.get("box")
+        if isinstance(score, bool) or not isinstance(score, (int, float)) or not 0 <= float(score) <= 1:
+            raise CatalogError(f"{label}.detections[{index}].score must be a probability")
+        if (
+            not isinstance(box, list) or len(box) != 4
+            or not all(isinstance(item, (int, float)) and not isinstance(item, bool) for item in box)
+        ):
+            raise CatalogError(f"{label}.detections[{index}].box must be four numbers")
+    threshold = entry.get("confidence_threshold")
+    if isinstance(threshold, bool) or not isinstance(threshold, (int, float)) or not 0 < float(threshold) <= 1:
+        raise CatalogError(f"{label}.confidence_threshold must be a probability cutoff")
+    if payload.get("confidence_threshold") != threshold:
+        raise CatalogError(f"{label}.confidence_threshold does not match the inference record")
+    for index, row in enumerate(recorded):
+        if float(row["score"]) < float(threshold):
+            raise CatalogError(f"{label}.detections[{index}].score is below the confidence threshold")
+    if kind == "segmentation-overlay" and not payload.get("masks"):
+        raise CatalogError(f"{label} segmentation record must say masks were drawn")
+
+
+def _validate_hero_visual(record: dict[str, Any], relative_source: str, revision: str, text_of) -> None:
+    """A pending hero is a host float render or a crop/quote taken from a pinned file."""
+    label = f"{relative_source}.hero_visual"
+    entry = require_mapping(record.get("hero_visual"), label)
+    allowed = {
+        "file", "kind", "input", "predictions_source", "runtime", "quote", "labels", "scores",
+        "crop", "note", "model_file", "model_url", "framework", "commit", "documented_in",
+        "topk", "detections", "confidence_threshold",
+    }
+    unknown = sorted(set(entry) - allowed)
+    if unknown:
+        raise CatalogError(f"{label} has unknown fields: {', '.join(unknown)}")
+    kind = require_string(entry.get("kind"), f"{label}.kind")
+    image = validate_evidence_path(entry.get("input"), f"{label}.input")
+    suffix = PurePosixPath(image).suffix.lower()
+    if suffix not in {".jpg", ".jpeg", ".png", ".webp"}:
+        raise CatalogError(f"{label}.input must be an image")
+    found = _ls_tree(revision, image)
+    if found is None or found[1] != "blob":
+        raise CatalogError(f"{label}.input is not a file at {revision}: {image}")
+    _hero_asset_path(entry.get("file"), f"{label}.file", ".webp")
+    runtime = entry.get("runtime")
+    if runtime == "host-float-reference":
+        _validate_host_float_hero(entry, label, revision)
+        return
+    if runtime != "display-composition":
+        raise CatalogError(f"{label}.runtime must be display-composition or host-float-reference")
+    if kind not in {"classification-panel", "result-crop"}:
+        raise CatalogError(f"{label}.kind must be classification-panel or result-crop")
+    source = validate_evidence_path(entry.get("predictions_source"), f"{label}.predictions_source")
+    if kind == "result-crop":
+        if source != image:
+            raise CatalogError(f"{label}.predictions_source must be the cropped result image")
+        if "labels" in entry or "scores" in entry or "quote" in entry:
+            raise CatalogError(f"{label} result crop must not add labels")
+        crop = entry.get("crop")
+        if not isinstance(crop, list) or len(crop) != 4 or not all(isinstance(item, int) and item >= 0 for item in crop):
+            raise CatalogError(f"{label}.crop must be four non-negative integers")
+        if crop[2] <= crop[0] or crop[3] <= crop[1]:
+            raise CatalogError(f"{label}.crop must be a non-empty box")
+        return
+    quote = require_string(entry.get("quote"), f"{label}.quote")
+    _require_in_text(quote, text_of(source, f"{label}.predictions_source"), f"{label}.quote")
+    labels = entry.get("labels")
+    if not isinstance(labels, list) or not labels:
+        raise CatalogError(f"{label}.labels must list the quoted classes")
+    cursor = 0
+    for index, item in enumerate(labels):
+        text = require_string(item, f"{label}.labels[{index}]")
+        found_at = quote.find(text, cursor)
+        if found_at < 0:
+            raise CatalogError(f"{label}.labels[{index}] is not in the quote in order")
+        cursor = found_at + len(text)
+    scores = entry.get("scores", [])
+    if scores is None:
+        scores = []
+    if not isinstance(scores, list):
+        raise CatalogError(f"{label}.scores must be a list")
+    if scores and len(scores) != len(labels):
+        raise CatalogError(f"{label}.scores must align with labels")
+    for index, score in enumerate(scores):
+        score_text = require_string(score, f"{label}.scores[{index}]")
+        if score_text not in quote:
+            raise CatalogError(f"{label}.scores[{index}] is not in the quote")
+        try:
+            value = float(score_text)
+        except ValueError as exc:
+            raise CatalogError(f"{label}.scores[{index}] must be a decimal copied from the quote") from exc
+        if not 0 <= value <= 1:
+            raise CatalogError(f"{label}.scores[{index}] must be a ratio between 0 and 1")
+
+
+def validate_pending_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]:
+    """Identity plus sourced facts. Released artifacts and unsourced measurements are refused."""
+    relative_source = source_path.relative_to(ROOT).as_posix()
+    allowed = {
+        "schema_version", "registration", "id", "name", "domain", "source", "family", "task",
+        "description", "sample_path", "sample_revision", "sample_kind", "supported_platforms",
+        "facet_tasks", "manifest_tasks", "license", "provider",
+        "upstream", "published_variants", "conversion_configs", "inputs", "usage",
+        "sourced_benchmarks", "documented_downloads", "example_image", "source_input",
+        "hero_visual",
+    }
+    for field in PENDING_FORBIDDEN:
+        if field in record:
+            raise CatalogError(
+                f"{relative_source}: pending records must not include {field}; "
+                "remove registration: pending when the released record is complete"
+            )
+    unknown = sorted(set(record) - allowed)
+    if unknown:
+        raise CatalogError(f"{relative_source}: unknown pending fields: {', '.join(unknown)}")
+    record_id = require_string(record.get("id"), f"{relative_source}.id")
+    domain = require_string(record.get("domain"), f"{relative_source}.domain")
+    source = require_string(record.get("source"), f"{relative_source}.source")
+    family = require_string(record.get("family"), f"{relative_source}.family")
+    task = require_string(record.get("task"), f"{relative_source}.task")
+    require_string(record.get("name"), f"{relative_source}.name")
+    if task not in TASK_REGISTRY["tasks"]:
+        known = ", ".join(sorted(TASK_REGISTRY["tasks"]))
+        raise CatalogError(f"{relative_source}.task must be one of {known}")
+    validate_localized_text(record.get("description"), f"{relative_source}.description")
+    expected_id = f"{source}/{family}/{task}"
+    if record_id != expected_id:
+        raise CatalogError(f"{relative_source}.id must be {expected_id}")
+    expected_source = DATA_ROOT / domain / source / family / f"{task}.yaml"
+    if source_path != expected_source:
+        raise CatalogError(f"{relative_source}: expected path {expected_source.relative_to(ROOT)}")
+
+    sample_path = _safe_samples_path(record.get("sample_path"), f"{relative_source}.sample_path")
+    entry_kind = lookup_sample_entry(sample_path, f"{relative_source}.sample_path")
+    declared_kind = record.get("sample_kind", "directory")
+    if declared_kind not in {"directory", "gitlink"}:
+        raise CatalogError(f"{relative_source}.sample_kind must be directory or gitlink")
+    if declared_kind != entry_kind:
+        raise CatalogError(
+            f"{relative_source}.sample_kind is {declared_kind} but {sample_path} is a {entry_kind}"
+        )
+    validate_commit(record.get("sample_revision"), f"{relative_source}.sample_revision")
+
+    if "license" in record:
+        license_info = require_mapping(record.get("license"), f"{relative_source}.license")
+        license_name = require_string(license_info.get("name"), f"{relative_source}.license.name")
+        license_url = _require_https(license_info.get("url"), f"{relative_source}.license.url")
+        unknown_license_keys = set(license_info) - {"name", "url", "source", "scope"}
+        if unknown_license_keys:
+            raise CatalogError(f"{relative_source}.license has unknown fields: {sorted(unknown_license_keys)}")
+        if "scope" in license_info and license_info["scope"] not in {"sample-code", "model"}:
+            raise CatalogError(f"{relative_source}.license.scope must be sample-code or model")
+        if "source" in license_info:
+            license_source = validate_evidence_path(license_info.get("source"), f"{relative_source}.license.source")
+            license_text = blob_text(
+                license_source, f"{relative_source}.license.source", record["sample_revision"],
+            ).lower()
+            markers = LICENSE_NAME_MARKERS.get(license_name, (license_name.lower(),))
+            if not any(marker in license_text for marker in markers):
+                raise CatalogError(f"{relative_source}.license.name is not named in {license_source}")
+            official = OFFICIAL_LICENSE_URLS.get(license_name)
+            if license_url not in license_text and license_url != official:
+                raise CatalogError(f"{relative_source}.license.url is neither in {license_source} nor the official page for {license_name}")
+        elif license_name in OFFICIAL_LICENSE_URLS and license_url != OFFICIAL_LICENSE_URLS[license_name]:
+            raise CatalogError(f"{relative_source}.license.url must be the official page when no source file is cited")
+    if "provider" in record:
+        require_string(record.get("provider"), f"{relative_source}.provider")
+    _validate_pending_facts(record, relative_source)
+
+    platforms = require_list(record.get("supported_platforms"), f"{relative_source}.supported_platforms")
+    seen_platforms: set[str] = set()
+    for index, platform_value in enumerate(platforms):
+        platform_label = f"{relative_source}.supported_platforms[{index}]"
+        platform_record = require_mapping(platform_value, platform_label)
+        platform = require_string(platform_record.get("platform"), f"{platform_label}.platform")
+        if platform not in KNOWN_PLATFORMS:
+            raise CatalogError(f"{platform_label}.platform must be one of {', '.join(sorted(KNOWN_PLATFORMS))}")
+        if platform in seen_platforms:
+            raise CatalogError(f"{relative_source}: duplicate supported platform {platform}")
+        seen_platforms.add(platform)
+        validate_evidence_path(platform_record.get("evidence"), f"{platform_label}.evidence")
+
+    facet_tasks = record.get("facet_tasks", [TASK_REGISTRY["tasks"][task]["facet_id"]])
+    if not isinstance(facet_tasks, list) or not facet_tasks:
+        raise CatalogError(f"{relative_source}.facet_tasks must be a non-empty list")
+    for index, facet_id in enumerate(facet_tasks):
+        if facet_id not in TASK_FACET_IDS:
+            raise CatalogError(f"{relative_source}.facet_tasks[{index}] is not a registered facet")
+    manifest_tasks = record.get("manifest_tasks", [])
+    if not isinstance(manifest_tasks, list) or any(not isinstance(item, str) or not item.strip() for item in manifest_tasks):
+        raise CatalogError(f"{relative_source}.manifest_tasks must be a list of strings")
+
+    normalized = copy.deepcopy(record)
+    normalized["source_file"] = relative_source
+    normalized["variants"] = []
+    normalized["supported_platforms"].sort(key=lambda item: PLATFORM_ORDER[item["platform"]])
+    return normalized
+
+
 def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]:
     relative_source = source_path.relative_to(ROOT).as_posix()
     if record.get("schema_version") != 1:
         raise CatalogError(f"{relative_source}: schema_version must be 1")
+    registration = record.get("registration")
+    if registration == "pending":
+        return validate_pending_record(record, source_path)
+    if registration is not None:
+        raise CatalogError(f"{relative_source}.registration must be pending or omitted")
 
     record_id = require_string(record.get("id"), f"{relative_source}.id")
     domain = require_string(record.get("domain"), f"{relative_source}.domain")
@@ -499,6 +1091,7 @@ def build_catalog() -> tuple[bytes, bytes]:
     records: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
     release_count = 0
+    pending_count = 0
     for source_path in source_paths:
         with source_path.open(encoding="utf-8") as handle:
             record = require_mapping(yaml.safe_load(handle), source_path.relative_to(ROOT).as_posix())
@@ -506,7 +1099,10 @@ def build_catalog() -> tuple[bytes, bytes]:
         if normalized["id"] in seen_ids:
             raise CatalogError(f"duplicate model id: {normalized['id']}")
         seen_ids.add(normalized["id"])
-        release_count += sum(len(variant["platforms"]) for variant in normalized["variants"])
+        if normalized.get("registration") == "pending":
+            pending_count += 1
+        else:
+            release_count += sum(len(variant["platforms"]) for variant in normalized["variants"])
         records.append(normalized)
 
     records.sort(key=lambda item: item["id"])
@@ -515,6 +1111,7 @@ def build_catalog() -> tuple[bytes, bytes]:
         "source": "model_zoo_web/data",
         "model_count": len(records),
         "release_count": release_count,
+        "pending_count": pending_count,
         "models": records,
     }
     catalog_bytes = (json.dumps(catalog, ensure_ascii=False, indent=2) + "\n").encode()
@@ -526,6 +1123,7 @@ def build_catalog() -> tuple[bytes, bytes]:
         "bytes": len(catalog_bytes),
         "model_count": len(records),
         "release_count": release_count,
+        "pending_count": pending_count,
         "generator": "model_zoo_web/scripts/build_catalog.py",
     }
     metadata_bytes = (json.dumps(metadata, ensure_ascii=False, indent=2) + "\n").encode()

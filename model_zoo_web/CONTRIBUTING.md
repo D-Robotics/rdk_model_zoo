@@ -51,6 +51,12 @@ model_zoo_web/data/vision/ultralytics_yolo/yolo26/detect.yaml
 缺少任一正式发布证据时，不应伪造数值、URL 或占位下载链接，也不应将状态标记为
 `released`。
 
+已经进入 `main` / `develop` 的示例，在证据齐套之前可以先登记为 `registration: pending`。
+登记只写能核对的身份、任务、示例路径和支持的板卡，并标明证据文件；性能、精度、
+文件大小、下载地址、封面和转换报告留空。字段规则、任务代码和“待补”与“完整”的
+界限见 [`skills/rdk-model-zoo-web-sample/SKILL.md`](../skills/rdk-model-zoo-web-sample/SKILL.md)。
+待补条目会出现在发布预览里，卡片和详情标为“数据待补充”，不进入下载和报告校验。
+
 ## 3. 仓库与 OSS 边界
 
 提交到 Git：

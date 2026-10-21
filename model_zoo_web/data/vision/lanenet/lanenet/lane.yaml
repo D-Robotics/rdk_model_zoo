@@ -1,0 +1,79 @@
+schema_version: 1
+registration: pending
+id: lanenet/lanenet/lane
+name: LaneNet
+domain: vision
+source: lanenet
+family: lanenet
+task: lane
+description:
+  zh: LaneNet 通过二值分割分支预测车道像素，通过嵌入分支学习区分车道实例的特征。本示例提供 RDK S100 的 Python 与 C++ 推理，输出二值标签和原始嵌入。
+  en: LaneNet predicts lane pixels with a binary segmentation branch and learns embedding features for lane-instance separation. This sample exposes binary labels and raw embeddings through Python and C++ inference on RDK S100.
+sample_path: samples/vision/lanenet
+sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/lanenet/README.md
+upstream:
+- kind: paper
+  name: arxiv 1802.05591
+  url: https://arxiv.org/abs/1802.05591
+  source: samples/vision/lanenet/README.md
+- kind: repository
+  name: MaybeShewill-CV/lanenet-lane-detection
+  url: https://github.com/MaybeShewill-CV/lanenet-lane-detection
+  source: samples/vision/lanenet/README.md
+- kind: repository
+  name: TuSimple/tusimple-benchmark
+  url: https://github.com/TuSimple/tusimple-benchmark/issues/3
+  source: samples/vision/lanenet/conversion/README.md
+supported_platforms:
+- platform: s100
+  evidence: docs/release/s/models.yaml
+manifest_tasks:
+- lane-detection
+conversion_configs:
+- path: samples/vision/lanenet/conversion/config.yaml
+  march: nash-e
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 256x512
+usage:
+- source: samples/vision/lanenet/README.md
+  lines:
+  - python3 -m samples.vision.lanenet.runtime.python.main --list-models
+  - python3 -m samples.vision.lanenet.runtime.python.main --target s100 --dry-run
+  - bash samples/vision/lanenet/model/download.sh --target s100
+  - bash samples/vision/lanenet/runtime/python/run.sh --target s100 --output outputs/lanenet_python_first
+  - bash samples/vision/lanenet/runtime/cpp/run.sh --target s100 --build --output outputs/lanenet_cpp_first
+sourced_benchmarks:
+- id: lanenet-s100
+  platform: s100
+  metric: latency
+  value: 14.245
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: LaneNet 256x512 on RDK S100
+  condition: 200 frames
+  origin: samples/vision/lanenet/conversion/README.md
+- id: lanenet-s100
+  platform: s100
+  metric: throughput
+  value: 69.894
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: LaneNet 256x512 on RDK S100
+  condition: 200 frames
+  origin: samples/vision/lanenet/conversion/README.md
+documented_downloads:
+- platform: s100
+  filename: s100/lanenet256x512.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/Lanenet/lanenet256x512.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+example_image:
+  path: samples/vision/lanenet/test_data/lane.jpg
+  source: samples/vision/lanenet/test_data/lane.jpg

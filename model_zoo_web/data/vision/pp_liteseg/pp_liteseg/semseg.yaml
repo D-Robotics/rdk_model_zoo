@@ -1,0 +1,77 @@
+schema_version: 1
+registration: pending
+id: pp_liteseg/pp_liteseg/semseg
+name: PP-LiteSeg
+domain: vision
+source: pp_liteseg
+family: pp_liteseg
+task: semseg
+description:
+  zh: PP-LiteSeg 是轻量语义分割网络。本示例使用 STDC1 主干，对道路场景预测 Cityscapes 的 19 类语义，运行于 RDK X5。
+  en: PP-LiteSeg is a lightweight semantic segmentation network. The STDC1 variant in this sample labels road scenes with the 19 Cityscapes classes and runs on RDK X5.
+sample_path: samples/vision/pp_liteseg
+sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+upstream:
+- kind: paper
+  name: arxiv 2204.02681
+  url: https://arxiv.org/abs/2204.02681
+  source: samples/vision/pp_liteseg/README.md
+- kind: repository
+  name: PaddlePaddle/PaddleSeg
+  url: https://github.com/PaddlePaddle/PaddleSeg
+  source: samples/vision/pp_liteseg/README.md
+supported_platforms:
+- platform: x5
+  evidence: docs/release/x5/models.yaml
+published_variants:
+- name: x5
+  source: samples/vision/pp_liteseg/README.md
+manifest_tasks:
+- semantic-segmentation
+inputs:
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: pp-liteseg-stdc1-openexplorer-x5
+  shape: 1024x512
+  format: NV12
+conversion_configs:
+- path: samples/vision/pp_liteseg/conversion/ptq_yamls/pp_liteseg_stdc1_cityscapes_1024x512_nv12.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 1024x512
+usage:
+- source: samples/vision/pp_liteseg/README.md
+  lines:
+  - bash samples/vision/pp_liteseg/model/download.sh --target x5
+  - python3 samples/vision/pp_liteseg/runtime/python/main.py
+  - python3 samples/vision/pp_liteseg/runtime/python/main.py --dry-run --target x5
+sourced_benchmarks:
+- id: pp-liteseg-stdc1-openexplorer-x5
+  platform: x5
+  metric: throughput
+  value: 95
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: PP-LiteSeg-STDC1 1024x512 OpenExplorer
+  condition: Expected OpenExplorer Docker hb_perf reference;1024×512;single core;not an on-board measurement
+  origin: samples/vision/pp_liteseg/evaluator/README.md
+- id: pp-liteseg-stdc1-openexplorer-x5
+  platform: x5
+  metric: latency
+  value: 10.5
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: PP-LiteSeg-STDC1 1024x512 OpenExplorer
+  condition: Expected OpenExplorer Docker hb_perf reference;1024×512;single core;not an on-board measurement
+  origin: samples/vision/pp_liteseg/evaluator/README.md
+documented_downloads:
+- platform: x5
+  filename: pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/pp_liteseg/pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+example_image:
+  path: samples/vision/pp_liteseg/test_data/street.png
+  source: samples/vision/pp_liteseg/test_data/street.png

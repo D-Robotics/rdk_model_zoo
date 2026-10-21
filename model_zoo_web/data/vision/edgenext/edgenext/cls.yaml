@@ -1,0 +1,338 @@
+schema_version: 1
+registration: pending
+id: edgenext/edgenext/cls
+name: EdgeNeXt
+domain: vision
+source: edgenext
+family: edgenext
+task: cls
+description:
+  zh: EdgeNeXt 是面向移动视觉的高效 CNN-Transformer 混合架构：四级金字塔把卷积编码器与 SDTA（Split Depth-wise Transpose Attention）编码器组合在一起，在分类精度、模型体积与推理速度之间取得平衡，面向 ImageNet-1k 1000 类分类。
+  en: 'EdgeNeXt is an efficient hybrid CNN-Transformer architecture for mobile vision: a four-stage pyramid combines convolutional encoders with SDTA (Split Depth-wise Transpose Attention) encoders to balance classification accuracy, model size, and inference speed. It targets ImageNet-1k 1000-class classification.'
+sample_path: samples/vision/edgenext
+sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/edgenext/README.md
+upstream:
+- kind: paper
+  name: arxiv 2206.10589
+  url: https://arxiv.org/abs/2206.10589
+  source: samples/vision/edgenext/README.md
+- kind: repository
+  name: mmaaz60/EdgeNeXt
+  url: https://github.com/mmaaz60/EdgeNeXt
+  source: samples/vision/edgenext/README.md
+supported_platforms:
+- platform: x5
+  evidence: docs/release/x5/models.yaml
+published_variants:
+- name: EdgeNeXt-xx-small
+  source: samples/vision/edgenext/README.md
+- name: EdgeNeXt-x-small
+  source: samples/vision/edgenext/README.md
+- name: EdgeNeXt-small
+  source: samples/vision/edgenext/README.md
+- name: EdgeNeXt-base
+  source: samples/vision/edgenext/README.md
+manifest_tasks:
+- image-classification
+inputs:
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: edgenext-base-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: edgenext-small-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: edgenext-x-small-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: edgenext-xx-small-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: edgenext-base-multithread-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: edgenext-small-multithread-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: edgenext-x-small-multithread-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: edgenext-xx-small-multithread-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+conversion_configs:
+- path: samples/vision/edgenext/conversion/EdgeNeXt_base_config.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+- path: samples/vision/edgenext/conversion/EdgeNeXt_small_config.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+- path: samples/vision/edgenext/conversion/EdgeNeXt_x_small_config.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+- path: samples/vision/edgenext/conversion/EdgeNeXt_xx_small_config.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+usage:
+- source: samples/vision/edgenext/README.md
+  lines:
+  - bash samples/vision/edgenext/model/download.sh x5 base
+  - python3 samples/vision/edgenext/runtime/python/main.py
+  - --target x5
+  - --asset-id x5:edgenext:EdgeNeXt_base_224x224_nv12.bin
+  - --model-path samples/vision/edgenext/model/EdgeNeXt_base_224x224_nv12.bin
+  - --test-img samples/vision/edgenext/test_data/Zebra.jpg
+  - --label-file datasets/imagenet/imagenet_classes.names
+sourced_benchmarks:
+- id: edgenext-base-x5
+  platform: x5
+  metric: latency
+  value: 8.8
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt Base 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-base-x5
+  platform: x5
+  metric: throughput
+  value: 113.35
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt Base 224x224
+  condition: multi-thread
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-base-x5
+  platform: x5
+  metric: top-1
+  value: 78.21
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt Base 224x224
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-base-x5
+  platform: x5
+  metric: top-1
+  value: 74.52
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt Base 224x224
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-small-x5
+  platform: x5
+  metric: latency
+  value: 4.41
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt Small 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-small-x5
+  platform: x5
+  metric: throughput
+  value: 226.15
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt Small 224x224
+  condition: multi-thread
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-small-x5
+  platform: x5
+  metric: top-1
+  value: 76.5
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt Small 224x224
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-small-x5
+  platform: x5
+  metric: top-1
+  value: 71.75
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt Small 224x224
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-x-small-x5
+  platform: x5
+  metric: latency
+  value: 2.88
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt X-Small 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-x-small-x5
+  platform: x5
+  metric: throughput
+  value: 345.73
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt X-Small 224x224
+  condition: multi-thread
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-x-small-x5
+  platform: x5
+  metric: top-1
+  value: 71.75
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt X-Small 224x224
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-x-small-x5
+  platform: x5
+  metric: top-1
+  value: 66.25
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt X-Small 224x224
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-xx-small-x5
+  platform: x5
+  metric: latency
+  value: 2.47
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt XX-Small 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-xx-small-x5
+  platform: x5
+  metric: throughput
+  value: 403.49
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt XX-Small 224x224
+  condition: multi-thread
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-xx-small-x5
+  platform: x5
+  metric: top-1
+  value: 69.5
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt XX-Small 224x224
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-xx-small-x5
+  platform: x5
+  metric: top-1
+  value: 64.25
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt XX-Small 224x224
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-base-multithread-x5
+  platform: x5
+  metric: latency
+  value: 32.31
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt Base 224x224 Multi-thread
+  condition: multi-thread
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-small-multithread-x5
+  platform: x5
+  metric: latency
+  value: 14.93
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt Small 224x224 Multi-thread
+  condition: multi-thread
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-x-small-multithread-x5
+  platform: x5
+  metric: latency
+  value: 9.63
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt X-Small 224x224 Multi-thread
+  condition: multi-thread
+  origin: samples/vision/edgenext/evaluator/README.md
+- id: edgenext-xx-small-multithread-x5
+  platform: x5
+  metric: latency
+  value: 7.24
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: EdgeNeXt XX-Small 224x224 Multi-thread
+  condition: multi-thread
+  origin: samples/vision/edgenext/evaluator/README.md
+documented_downloads:
+- platform: x5
+  filename: EdgeNeXt_base_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EdgeNeXt_base_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: EdgeNeXt_small_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EdgeNeXt_small_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: EdgeNeXt_x_small_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EdgeNeXt_x_small_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: EdgeNeXt_xx_small_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/EdgeNeXt_xx_small_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+hero_visual:
+  file: model_zoo_web/release/assets/pending-heroes/edgenext.webp
+  kind: classification-panel
+  input: samples/vision/edgenext/test_data/Zebra.jpg
+  predictions_source: model_zoo_web/release/assets/pending-heroes/edgenext.json
+  runtime: host-float-reference
+  note: Host float reference, not board output.
+  model_file: edgenext_xx_small
+  model_url: https://huggingface.co/timm/edgenext_xx_small.in1k
+  framework: pytorch-cpu/2.14.1+cpu timm/1.0.30
+  commit: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+  documented_in: samples/vision/edgenext/conversion/README.md
+  topk:
+  - label: zebra
+    score: 0.824477
+  - label: tiger
+    score: 0.013314
+  - label: tiger cat
+    score: 0.012481
+  - label: gazelle
+    score: 0.002572
+  - label: impala
+    score: 0.002269
+
+example_image:
+  path: samples/vision/edgenext/test_data/inference.png
+  source: samples/vision/edgenext/test_data/inference.png

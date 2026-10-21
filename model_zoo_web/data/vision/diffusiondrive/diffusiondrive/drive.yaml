@@ -1,0 +1,252 @@
+schema_version: 1
+registration: pending
+id: diffusiondrive/diffusiondrive/drive
+name: DiffusionDrive
+domain: vision
+source: diffusiondrive
+family: diffusiondrive
+task: drive
+description:
+  zh: DiffusionDrive 根据相机、LiDAR 和自车状态特征规划未来轨迹。截断扩散解码器预测八个未来位姿，并提供 Agent 状态和 BEV 语义辅助输出。本示例在 RDK S100P 和 S600 上运行已准备的 NAVSIM 特征。
+  en: DiffusionDrive plans future vehicle trajectories from camera, LiDAR and ego-state features. Its truncated diffusion decoder predicts eight future poses, with auxiliary agent-state and BEV semantic heads. This sample runs prepared NAVSIM features on RDK S100P and S600.
+sample_path: samples/vision/diffusiondrive
+sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/diffusiondrive/README.md
+upstream:
+- kind: repository
+  name: hustvl/DiffusionDrive
+  url: https://github.com/hustvl/DiffusionDrive
+  source: samples/vision/diffusiondrive/README.md
+- kind: repository
+  name: autonomousvision/navsim
+  url: https://github.com/autonomousvision/navsim
+  source: samples/vision/diffusiondrive/README.md
+supported_platforms:
+- platform: s100p
+  evidence: docs/release/s/models.yaml
+- platform: s600
+  evidence: docs/release/s/models.yaml
+manifest_tasks:
+- autonomous-driving
+conversion_configs:
+- path: samples/vision/diffusiondrive/conversion/configs/diffusiondrive_r34_256x1024_s100p.yaml
+  march: nash-m
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 256x1024
+- path: samples/vision/diffusiondrive/conversion/configs/diffusiondrive_r34_256x1024_s600.yaml
+  march: nash-p
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 256x1024
+usage:
+- source: samples/vision/diffusiondrive/README.md
+  lines:
+  - python3 -m samples.vision.diffusiondrive.runtime.python.main --list-models
+  - python3 -m samples.vision.diffusiondrive.runtime.python.main --target s600 --dry-run
+  - bash samples/vision/diffusiondrive/model/download.sh --target s600
+  - bash samples/vision/diffusiondrive/runtime/python/run.sh --target s600 --output outputs/diffusiondrive
+  - bash samples/vision/diffusiondrive/evaluator/run_all_cases.sh --target s600 --output outputs/diffusiondrive_cases
+sourced_benchmarks:
+- id: diffusiondrive-s100p
+  platform: s100p
+  metric: latency
+  value: 14.37
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S100P
+  condition: single-thread, case_017 valid INT16 input
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s100p
+  platform: s100p
+  metric: throughput
+  value: 69.375
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S100P
+  condition: single-thread, case_017 valid INT16 input
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s100p
+  platform: s100p
+  metric: latency
+  value: 28.024
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S100P
+  condition: two-thread average task latency
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s100p
+  platform: s100p
+  metric: throughput
+  value: 71.109
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S100P
+  condition: two-thread aggregate throughput
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s100p
+  platform: s100p
+  metric: cpu-inference-time
+  value: 0.0
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S100P
+  condition: board inference
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s100p
+  platform: s100p
+  metric: trajectory-cosine-similarity
+  value: 0.999857
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S100P
+  condition: case_000 direct platform comparison
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s100p
+  platform: s100p
+  metric: agent-state-cosine-similarity
+  value: 0.996879
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S100P
+  condition: case_000 direct platform comparison
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s100p
+  platform: s100p
+  metric: bev-cosine-similarity
+  value: 0.998913
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S100P
+  condition: case_000 direct platform comparison
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s100p
+  platform: s100p
+  metric: bev-pixel-agreement
+  value: 0.943726
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S100P
+  condition: case_000 direct platform comparison
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s100p
+  platform: s100p
+  metric: bev-mean-iou
+  value: 0.865501
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S100P
+  condition: case_000 direct platform comparison
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s600
+  platform: s600
+  metric: latency
+  value: 7.215
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S600
+  condition: single-thread, case_017 valid INT16 input
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s600
+  platform: s600
+  metric: throughput
+  value: 138.247
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S600
+  condition: single-thread, case_017 valid INT16 input
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s600
+  platform: s600
+  metric: latency
+  value: 13.856
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S600
+  condition: two-thread average task latency
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s600
+  platform: s600
+  metric: throughput
+  value: 143.767
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S600
+  condition: two-thread aggregate throughput
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s600
+  platform: s600
+  metric: cpu-inference-time
+  value: 0.0
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S600
+  condition: board inference
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s600
+  platform: s600
+  metric: trajectory-cosine-similarity
+  value: 0.999833
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S600
+  condition: case_000 direct platform comparison
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s600
+  platform: s600
+  metric: agent-state-cosine-similarity
+  value: 0.997052
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S600
+  condition: case_000 direct platform comparison
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s600
+  platform: s600
+  metric: bev-cosine-similarity
+  value: 0.998918
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S600
+  condition: case_000 direct platform comparison
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s600
+  platform: s600
+  metric: bev-pixel-agreement
+  value: 0.944061
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S600
+  condition: case_000 direct platform comparison
+  origin: samples/vision/diffusiondrive/README.md
+- id: diffusiondrive-s600
+  platform: s600
+  metric: bev-mean-iou
+  value: 0.868425
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: DiffusionDrive R34 on RDK S600
+  condition: case_000 direct platform comparison
+  origin: samples/vision/diffusiondrive/README.md
+documented_downloads:
+- platform: s100p
+  filename: s100p/diffusiondrive_r34_256x1024_s100p.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/diffusiondrive_r34_256x1024_s100p.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+  sha256: 5829a1a318116e2eba5c3ba313841fbd064fe2d48fe3cd37eb1ec7d9a0ffa8fa
+- platform: s600
+  filename: s600/diffusiondrive_r34_256x1024_s600.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/diffusiondrive_r34_256x1024_s600.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+  sha256: 78605b5aaa573fbaa2bf4788c6c8922bcab39d90c195e264aa3a8d3a78321c53
+example_image:
+  path: samples/vision/diffusiondrive/test_data/reference_result.png
+  source: samples/vision/diffusiondrive/test_data/reference_result.png

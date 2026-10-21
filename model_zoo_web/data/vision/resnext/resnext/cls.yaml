@@ -1,0 +1,138 @@
+schema_version: 1
+registration: pending
+id: resnext/resnext/cls
+name: ResNeXt
+domain: vision
+source: resnext
+family: resnext
+task: cls
+description:
+  zh: ResNeXt 在残差网络的基础上引入 split-transform-merge 设计，通过增加 cardinality 而不只是单纯增加网络深度或宽度，提升模型表达能力。该结构保留了简洁的残差主干，并通过组卷积提高表示效率。
+  en: ResNeXt extends the residual network family with a split-transform-merge design that increases cardinality instead of only scaling depth or width. It keeps a simple residual backbone while using grouped convolution to improve representation efficiency.
+sample_path: samples/vision/resnext
+sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/resnext/README.md
+upstream:
+- kind: paper
+  name: arxiv 1611.05431
+  url: https://arxiv.org/abs/1611.05431
+  source: samples/vision/resnext/README.md
+- kind: repository
+  name: facebookresearch/ResNeXt
+  url: https://github.com/facebookresearch/ResNeXt
+  source: samples/vision/resnext/README.md
+supported_platforms:
+- platform: x5
+  evidence: docs/release/x5/models.yaml
+published_variants:
+- name: ResNeXt-50 32x4d
+  source: samples/vision/resnext/README.md
+manifest_tasks:
+- image-classification
+inputs:
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: resnext50-32x4d-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: resnext50-32x4d-multithread-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+conversion_configs:
+- path: samples/vision/resnext/conversion/ResNeXt50_32x4d_config.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+usage:
+- source: samples/vision/resnext/README.md
+  lines:
+  - bash samples/vision/resnext/model/download.sh x5 50_32x4d
+  - python3 samples/vision/resnext/runtime/python/main.py
+  - --target x5 --variant 50_32x4d
+  - --test-img samples/vision/resnext/test_data/bee_eater.JPEG
+  - --label-file datasets/imagenet/imagenet_classes.names
+sourced_benchmarks:
+- id: resnext50-32x4d-x5
+  platform: x5
+  metric: latency
+  value: 5.89
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: ResNeXt50 32x4d 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/resnext/evaluator/README.md
+- id: resnext50-32x4d-x5
+  platform: x5
+  metric: throughput
+  value: 189.61
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: ResNeXt50 32x4d 224x224
+  condition: multi-thread
+  origin: samples/vision/resnext/evaluator/README.md
+- id: resnext50-32x4d-x5
+  platform: x5
+  metric: top-1
+  value: 76.25
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: ResNeXt50 32x4d 224x224
+  origin: samples/vision/resnext/evaluator/README.md
+- id: resnext50-32x4d-x5
+  platform: x5
+  metric: top-1
+  value: 76
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: ResNeXt50 32x4d 224x224
+  origin: samples/vision/resnext/evaluator/README.md
+- id: resnext50-32x4d-multithread-x5
+  platform: x5
+  metric: latency
+  value: 20.9
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: ResNeXt50 32x4d 224x224 Multi-thread
+  condition: multi-thread
+  origin: samples/vision/resnext/evaluator/README.md
+documented_downloads:
+- platform: x5
+  filename: ResNeXt50_32x4d_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ResNeXt50_32x4d_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+hero_visual:
+  file: model_zoo_web/release/assets/pending-heroes/resnext.webp
+  kind: classification-panel
+  input: samples/vision/resnext/test_data/bee_eater.JPEG
+  predictions_source: model_zoo_web/release/assets/pending-heroes/resnext.json
+  runtime: host-float-reference
+  note: Host float reference, not board output.
+  model_file: resnext50_32x4d
+  model_url: https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-rsb-weights/resnext50_32x4d_a1h-0146ab0a.pth
+  framework: pytorch-cpu/2.14.1+cpu timm/1.0.30
+  commit: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+  documented_in: samples/vision/resnext/conversion/README.md
+  topk:
+  - label: bee eater
+    score: 0.763247
+  - label: goldfinch
+    score: 0.003139
+  - label: jacamar
+    score: 0.001548
+  - label: bulbul
+    score: 0.001417
+  - label: toucan
+    score: 0.001085
+
+example_image:
+  path: samples/vision/resnext/test_data/inference.png
+  source: samples/vision/resnext/test_data/inference.png

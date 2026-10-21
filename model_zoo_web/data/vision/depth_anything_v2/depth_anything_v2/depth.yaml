@@ -1,0 +1,117 @@
+schema_version: 1
+registration: pending
+id: depth_anything_v2/depth_anything_v2/depth
+name: Depth Anything V2
+domain: vision
+source: depth_anything_v2
+family: depth_anything_v2
+task: depth
+description:
+  zh: Depth Anything V2 从单张图像估计稠密相对深度，用教师模型和伪标签提升细节。
+  en: Depth Anything V2 estimates dense relative depth from a single image. It uses synthetic labeled images, a larger teacher and pseudo-labeled real images to improve fine detail. This sample provides inference and depth visualization on RDK S100.
+sample_path: samples/vision/depth_anything_v2
+sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+upstream:
+- kind: paper
+  name: arxiv 2406.19675
+  url: https://arxiv.org/abs/2406.19675
+  source: samples/vision/depth_anything_v2/README.md
+- kind: repository
+  name: DepthAnything/Depth-Anything-V2
+  url: https://github.com/DepthAnything/Depth-Anything-V2
+  source: samples/vision/depth_anything_v2/README.md
+supported_platforms:
+- platform: s100
+  evidence: docs/release/s/models.yaml
+manifest_tasks:
+- monocular-depth-estimation
+usage:
+- source: samples/vision/depth_anything_v2/README.md
+  lines:
+  - python -m samples.vision.depth_anything_v2.runtime.python.main --list-models
+  - python -m samples.vision.depth_anything_v2.runtime.python.main --target s100 --dry-run
+  - bash samples/vision/depth_anything_v2/model/download.sh --target s100
+  - bash samples/vision/depth_anything_v2/runtime/python/run.sh --target s100
+  - --output outputs/depth-anything-s100
+sourced_benchmarks:
+- id: depth-anything-v2-s100
+  platform: s100
+  metric: latency
+  value: 137.38
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: Depth Anything V2 on RDK S100
+  condition: 100 frames
+  origin: samples/vision/depth_anything_v2/evaluator/README.md
+- id: depth-anything-v2-s100
+  platform: s100
+  metric: throughput
+  value: 7.27
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: Depth Anything V2 on RDK S100
+  condition: 100 frames
+  origin: samples/vision/depth_anything_v2/evaluator/README.md
+- id: depth-anything-v2-s100
+  platform: s100
+  metric: latency
+  value: 263.74
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: Depth Anything V2 on RDK S100
+  condition: 100 frames
+  origin: samples/vision/depth_anything_v2/evaluator/README.md
+- id: depth-anything-v2-s100
+  platform: s100
+  metric: throughput
+  value: 7.54
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: Depth Anything V2 on RDK S100
+  condition: 100 frames
+  origin: samples/vision/depth_anything_v2/evaluator/README.md
+- id: depth-anything-v2-s100
+  platform: s100
+  metric: latency
+  value: 521.9
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: Depth Anything V2 on RDK S100
+  condition: 100 frames
+  origin: samples/vision/depth_anything_v2/evaluator/README.md
+- id: depth-anything-v2-s100
+  platform: s100
+  metric: throughput
+  value: 7.54
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: Depth Anything V2 on RDK S100
+  condition: 100 frames
+  origin: samples/vision/depth_anything_v2/evaluator/README.md
+- id: depth-anything-v2-s100
+  platform: s100
+  metric: latency
+  value: 1020.35
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: Depth Anything V2 on RDK S100
+  condition: 100 frames
+  origin: samples/vision/depth_anything_v2/evaluator/README.md
+- id: depth-anything-v2-s100
+  platform: s100
+  metric: throughput
+  value: 7.54
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: Depth Anything V2 on RDK S100
+  condition: 100 frames
+  origin: samples/vision/depth_anything_v2/evaluator/README.md
+documented_downloads:
+- platform: s100
+  filename: s100/depth_any.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/depth_any/depth_any.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+example_image:
+  path: samples/vision/depth_anything_v2/test_data/furseal.jpg
+  source: samples/vision/depth_anything_v2/test_data/furseal.jpg

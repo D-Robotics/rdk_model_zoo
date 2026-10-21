@@ -4,8 +4,90 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
+const { assertCoverResolves, assertLocalImageFile } = require('./cover-assets.cjs');
+
+const HERO_WIDTH = 1672;
+const HERO_HEIGHT = 941;
+
+// Detail heroes used to ship as <figure class="mz-demo is-frame">, and the
+// matching CSS padded the bitmap with a white mat. Pending and published
+// pages share one figure class, so the generated files must not grow that
+// class or rule back.
+function assertDetailHeroMarkup(detailJs) {
+  const heroFiles = [
+    'index.html', 'reports.html', 'detail-view.js', 'detail.css', 'product-ui.css',
+    'style.css', 'gallery.css', 'reference.css', 'refresh.css',
+  ];
+  for (const filename of heroFiles) {
+    const source = fs.readFileSync(path.join(root, filename), 'utf8');
+    assert.doesNotMatch(
+      source,
+      /is-frame/,
+      `${filename} must not put an is-frame class or rule on detail heroes`,
+    );
+  }
+  const figures = [...detailJs.matchAll(/<figure\b[^>]*>/g)].map(match => match[0]);
+  assert.deepEqual(
+    figures,
+    ['<figure class="mz-demo">'],
+    'pending and published detail pages must use the same <figure class="mz-demo"> hero',
+  );
+}
+
+function rasterSize(bytes, label) {
+  if (bytes[0] === 0x89 && bytes.toString('ascii', 1, 4) === 'PNG') {
+    assert.equal(bytes.toString('ascii', 12, 16), 'IHDR', `${label}: PNG is missing IHDR`);
+    return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+  }
+  assert.equal(bytes.toString('ascii', 0, 4), 'RIFF', `${label}: cover is not a PNG or WebP`);
+  assert.equal(bytes.toString('ascii', 8, 12), 'WEBP', `${label}: cover is not a WebP`);
+  const chunk = bytes.toString('ascii', 12, 16);
+  if (chunk === 'VP8 ') {
+    assert.equal(bytes[20] & 1, 0, `${label}: VP8 cover is not a keyframe`);
+    assert.deepEqual([bytes[23], bytes[24], bytes[25]], [0x9d, 0x01, 0x2a], `${label}: VP8 start code mismatch`);
+    return {
+      width: bytes.readUInt16LE(26) & 0x3fff,
+      height: bytes.readUInt16LE(28) & 0x3fff,
+    };
+  }
+  if (chunk === 'VP8L') {
+    assert.equal(bytes[20], 0x2f, `${label}: VP8L signature mismatch`);
+    const bits = bytes.readUInt32LE(21);
+    return { width: 1 + (bits & 0x3fff), height: 1 + ((bits >>> 14) & 0x3fff) };
+  }
+  if (chunk === 'VP8X') {
+    return {
+      width: 1 + (bytes[24] | (bytes[25] << 8) | (bytes[26] << 16)),
+      height: 1 + (bytes[27] | (bytes[28] << 8) | (bytes[29] << 16)),
+    };
+  }
+  assert.fail(`${label}: unsupported WebP chunk ${JSON.stringify(chunk)}`);
+}
+
+function assertGeneratedCoverSizes() {
+  const directory = path.join(root, 'assets', 'models');
+  const covers = [];
+  function walk(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(fullPath);
+      else if (/\.(?:png|webp)$/i.test(entry.name)) covers.push(fullPath);
+    }
+  }
+  walk(directory);
+  assert(covers.length > 0, 'the preview must ship generated PNG or WebP covers');
+  for (const filePath of covers) {
+    const label = path.relative(root, filePath);
+    const size = rasterSize(fs.readFileSync(filePath), label);
+    assert.equal(size.width, HERO_WIDTH, `${label} must be ${HERO_WIDTH}px wide`);
+    assert.equal(size.height, HERO_HEIGHT, `${label} must be ${HERO_HEIGHT}px tall`);
+  }
+  return covers.length;
+}
+
 const preview = process.argv.includes('--preview');
 const webRoot = path.resolve(__dirname, '..');
+const repoRoot = path.resolve(webRoot, '..');
 const root = path.join(webRoot, 'dist');
 const requiredFiles = [
   'index.html', 'app.js', 'data.js', 'style.css', 'gallery.css',
@@ -61,9 +143,58 @@ if (preview) {
   const modelIds = new Set(data.models.map(model => model.id));
   assert.equal(modelIds.size, data.models.length, 'Model ids must be unique');
 
+  const checkedCovers = new Set();
   for (const model of data.models) {
-    assert(model.coverImage, `${model.id}: coverImage is required`);
-    assert(fs.statSync(path.join(root, model.coverImage)).size > 0, `${model.id}: cover image is missing`);
+    // Catalog cards (app.js) and detail heroes (detail-view.js) both request
+    // coverImage, falling back to the same relative placeholder.
+    if (!checkedCovers.has(model.coverImage)) {
+      assertCoverResolves(model.coverImage, root, repoRoot, `${model.id} catalog cover and detail hero`);
+      checkedCovers.add(model.coverImage);
+    }
+    if (model.releaseStatus === 'data-pending') {
+      assert.equal(model.dataPending, true, `${model.id}: pending models must set dataPending`);
+      assert.deepEqual(Array.from(model.assets), [], `${model.id}: pending models must not publish artifacts`);
+      assert.equal(model.benchmark?.documentation, true, `${model.id}: pending benchmarks are documentation excerpts`);
+      for (const row of [...(model.benchmark.performance || []), ...(model.benchmark.accuracy || []), ...(model.benchmark.stages || []), ...(model.benchmark.extras || [])]) {
+        assert.ok(row.metric && row.unit && Number.isFinite(row.value), `${model.id}: documented metric needs metric, unit and value`);
+        assert.match(String(row.source || ''), /^https:\/\/github\.com\/D-Robotics\/rdk_model_zoo\/blob\/[0-9a-f]{40}\//, `${model.id}: documented metric must cite a blob`);
+        if (row.model_stage !== undefined) assert.ok(['float', 'quantized', 'board'].includes(row.model_stage), `${model.id}: unknown model stage`);
+        if (row.concurrency !== undefined) assert.ok(Number.isInteger(row.concurrency) && row.concurrency > 0, `${model.id}: concurrency must be a positive integer from the source`);
+      }
+      if (model.coverImage.startsWith('assets/models/pending-heroes/')) {
+        const runtime = model.heroProvenance?.runtime;
+        assert.ok(
+          runtime === 'display-composition' || runtime === 'host-float-reference',
+          `${model.id}: pending hero runtime must be display-composition or host-float-reference`,
+        );
+        assert.match(model.heroProvenance?.revision || '', /^[0-9a-f]{40}$/, `${model.id}: composed hero needs the pinned revision`);
+        assert.match(model.heroProvenance?.input || '', /^samples\/.+\.(?:jpg|jpeg|png|webp)$/i, `${model.id}: composed hero needs the source image`);
+        assert.ok(model.heroProvenance?.kind, `${model.id}: composed hero needs a kind`);
+        if (runtime === 'host-float-reference') {
+          assert.match(model.heroProvenance?.note || '', /not board output/, `${model.id}: host float hero must say it is not board output`);
+          assert.match(model.heroProvenance?.modelUrl || '', /^https:\/\//, `${model.id}: host float hero needs the checkpoint URL`);
+          assert.ok(model.heroProvenance?.framework, `${model.id}: host float hero needs a framework`);
+          assert.equal(model.coverLabel, '浮点参考', `${model.id}: host float hero must not use a board result label`);
+          if (model.heroProvenance.kind === 'detection-overlay' || model.heroProvenance.kind === 'segmentation-overlay') {
+            const threshold = Number(model.heroProvenance.confidenceThreshold);
+            assert.ok(
+              threshold >= 0.5 && threshold <= 1,
+              `${model.id}: detection or segmentation hero needs a confidence threshold of at least 0.5`,
+            );
+          }
+        }
+      } else if (model.coverImage !== 'assets/pending-cover.svg') {
+        assert.match(model.coverImage, /^https:\/\/raw\.githubusercontent\.com\/D-Robotics\/rdk_model_zoo\/[0-9a-f]{40}\//, `${model.id}: pending cover must be a file at the pinned revision`);
+      }
+      for (const download of model.documentedDownloads || []) {
+        assert.match(download.url || '', /^https:\/\//, `${model.id}: documented download must be HTTPS`);
+        assert.ok(download.filename, `${model.id}: documented download needs a filename`);
+      }
+      assert.ok(model.platforms?.length, `${model.id}: pending models need a supported board`);
+      assert.match(model.source || '', /^https:\/\/github\.com\/D-Robotics\/rdk_model_zoo\/tree\/[0-9a-f]{40}\/samples\//, `${model.id}: pending models must link a sample tree`);
+      if (model.licenseUrl) assert.match(model.licenseUrl, /^https:\/\//, `${model.id}: licenseUrl must use HTTPS`);
+      continue;
+    }
     assert(model.licenseName, `${model.id}: licenseName is required`);
     assert.match(model.licenseUrl || '', /^https:\/\//, `${model.id}: licenseUrl must use HTTPS`);
     for (const asset of model.assets || []) {
@@ -118,10 +249,13 @@ function walk(directory) {
     else assetFiles.push(path.relative(path.join(root, 'assets'), fullPath));
   }
 }
+assertLocalImageFile(path.join(root, 'assets', 'pending-cover.svg'), 'assets/pending-cover.svg');
+
 walk(path.join(root, 'assets'));
 assert(assetFiles.includes(path.join('rdk-brand', 'logo.png')));
 const allowedAssets = filename =>
   filename.startsWith(`icons${path.sep}`)
+  || filename === 'pending-cover.svg'
   || filename === path.join('rdk-brand', 'logo.png')
   || (preview && filename.startsWith(`models${path.sep}`));
 assert(
@@ -139,6 +273,7 @@ for (const filename of ['app.js', 'ask-ai.js', 'i18n.js', 'facets.js', 'model-pr
 
 const appSource = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
 const detailSource = fs.readFileSync(path.join(root, 'detail-view.js'), 'utf8');
+assertDetailHeroMarkup(detailSource);
 assert.match(detailSource, /class="mz-report-placeholder" aria-disabled="true">OE 转换报告/);
 if (!preview) {
   assert.match(appSource, /当前目录暂未发布任何模型。/);
@@ -181,6 +316,8 @@ const localReportDirs = fs.readdirSync(path.join(root, 'reports'), { withFileTyp
   .filter(entry => entry.isDirectory()).map(entry => entry.name);
 if (preview) {
   assert(localReportDirs.includes('data'), 'The preview build must ship its report data payloads');
+  const coverCount = assertGeneratedCoverSizes();
+  console.log(`PASS: ${coverCount} generated covers are ${HERO_WIDTH}x${HERO_HEIGHT}, and detail heroes have no is-frame`);
 } else {
   assert.deepEqual(localReportDirs, [], 'The pre-migration site must not ship report payloads');
 }

@@ -12,7 +12,9 @@ import {
 import { selectTechnicalPassedEntries } from './technical-passed-selection.mjs';
 import { stampAssetVersions } from './asset-versions.mjs';
 import { loadVerifiedPreviewDownloads, previewDownloadAssets } from './preview-downloads.mjs';
+import { readFileSync } from 'node:fs';
 import { loadInferenceTaskBanners } from './task-banner-assets.mjs';
+import { buildPendingModels } from './pending-preview.mjs';
 
 const scriptRoot = dirname(fileURLToPath(import.meta.url));
 const webRoot = resolve(scriptRoot, '..');
@@ -358,6 +360,11 @@ const loadOeData = async (value, label) => {
 const usedModelInputs = new Set();
 const usedReleaseInputs = new Set();
 
+const taskRegistry = JSON.parse(readFileSync(resolve(webRoot, 'task-registry.json'), 'utf8'));
+const pendingIds = new Set((fullCatalog.models || [])
+  .filter(record => record.registration === 'pending')
+  .map(record => record.id));
+
 const taskMetadata = {
   detect: { id: 'object-detection', label: '目标检测', description: 'COCO 目标检测模型' },
   classify: { id: 'image-classification', label: '图像分类', description: '图像分类模型' },
@@ -396,6 +403,7 @@ await mkdir(assetsRoot, { recursive: true });
 await mkdir(reportsRoot, { recursive: true });
 
 for (const record of catalog.models || []) {
+  if (record.registration === 'pending') continue;
   const modelInput = inputs.models[record.id];
   if (!modelInput || typeof modelInput !== 'object' || Array.isArray(modelInput)) {
     throw new Error(`MODEL_ZOO_INPUTS.models is missing ${record.id}`);
@@ -609,6 +617,7 @@ for (const record of catalog.models || []) {
         descriptionEn: presentationOverrides.models[record.id]?.en
           || record.description?.en || `${record.family} ${record.task} model.`,
         platforms: [platform],
+        hardware: `RDK ${platform}`,
         coverImage: `assets/models/${coverFilename}`,
         coverLabel: inferenceCover?.cover_label || modelInput.cover_label || '模型参考推理结果',
         sample: `${record.source}/${record.family}/${record.task}/${variant.size}`,
@@ -718,9 +727,20 @@ for (const record of catalog.models || []) {
   }
 }
 
+if (!candidatePreview) {
+  models.push(...buildPendingModels(fullCatalog.models || [], {
+    officialRepositoryUrl,
+    taskRegistry,
+    safeId,
+  }));
+}
+
 if (!models.length) throw new Error('The samples-only catalog contains no released models');
 const knownInputModelIds = new Set((fullCatalog.models || []).map(record => record.id));
 for (const modelId of Object.keys(inputs.models)) {
+  if (pendingIds.has(modelId)) {
+    throw new Error(`MODEL_ZOO_INPUTS must not attach a cover to pending model ${modelId}`);
+  }
   if (!knownInputModelIds.has(modelId)) throw new Error(`MODEL_ZOO_INPUTS references unknown model ${modelId}`);
   if (!technicalPassedPreview && !usedModelInputs.has(modelId)) {
     throw new Error(`MODEL_ZOO_INPUTS references unknown model ${modelId}`);
@@ -750,7 +770,7 @@ const data = {
       sample_count: new Set(models.map(model => model.sample)).size,
       asset_count: models.reduce((count, model) => count + model.assets.length, 0),
       downloadable_asset_count: models.reduce((count, model) => count + model.assets.length, 0),
-      benchmark_count: models.filter(model => model.benchmark).length,
+      benchmark_count: models.filter(model => model.benchmark && !model.benchmark.documentation).length,
     },
   },
   repository: { url: repositoryUrl },
@@ -767,6 +787,17 @@ const data = {
 
 if (technicalSelection) {
   await writeFile(resolve(outputRoot, 'technical-selection.json'), `${JSON.stringify(technicalSelection, null, 2)}\n`, 'utf8');
+}
+
+const pendingHeroSource = resolve(webRoot, 'release', 'assets', 'pending-heroes');
+const pendingHeroDest = resolve(outputRoot, 'assets', 'models', 'pending-heroes');
+const pendingHeroNames = [...new Set(models
+  .map(model => model.coverImage || '')
+  .filter(cover => cover.startsWith('assets/models/pending-heroes/'))
+  .map(cover => basename(cover)))];
+if (pendingHeroNames.length) await mkdir(pendingHeroDest, { recursive: true });
+for (const name of pendingHeroNames) {
+  await cp(resolve(pendingHeroSource, name), resolve(pendingHeroDest, name));
 }
 
 await writeFile(resolve(outputRoot, 'data.js'), `window.MODEL_DATA = ${JSON.stringify(data, null, 2)};\n`, 'utf8');
@@ -788,6 +819,7 @@ await writeFile(
 await stampAssetVersions(outputRoot);
 
 const localEntryCount = models.filter(model => localCandidateIds.has(model.catalogId)).length;
+const pendingEntryCount = models.filter(model => model.dataPending).length;
 console.log(localCandidate
   ? `Built local candidate preview with ${models.length - localEntryCount} released and ${localEntryCount} local candidate model entries.`
-  : `Built local Model Zoo ${candidatePreview ? 'candidate preview' : 'preview'} with ${models.length} ${candidatePreview ? 'candidate' : 'released'} model entries.`);
+  : `Built local Model Zoo ${candidatePreview ? 'candidate preview' : 'preview'} with ${models.length - pendingEntryCount} ${candidatePreview ? 'candidate' : 'released'} model entries and ${pendingEntryCount} pending entries.`);

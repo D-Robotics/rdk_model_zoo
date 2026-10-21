@@ -1,0 +1,1261 @@
+schema_version: 1
+registration: pending
+id: siglip/siglip/embed
+name: SigLIP
+domain: vision
+source: siglip
+family: siglip
+task: embed
+description:
+  zh: SigLIP 通过 sigmoid 损失学习图文表示。本示例提供视觉编码器的八种变体，生成全局图像嵌入或 patch 特征，供下游应用使用。
+  en: SigLIP learns image-text representations with a sigmoid loss. This sample provides its vision encoder, with eight variants that produce global image embeddings or patch features for downstream applications.
+sample_path: samples/vision/siglip
+sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/siglip/README.md
+upstream:
+- kind: paper
+  name: arxiv 2303.15343
+  url: https://arxiv.org/abs/2303.15343
+  source: samples/vision/siglip/README.md
+- kind: repository
+  name: google-research/big_vision
+  url: https://github.com/google-research/big_vision
+  source: samples/vision/siglip/README.md
+- kind: repository
+  name: huggingface/transformers
+  url: https://github.com/huggingface/transformers/blob/main/src/transformers/models/siglip/modeling_siglip.py
+  source: samples/vision/siglip/runtime/python/README.md
+supported_platforms:
+- platform: s100
+  evidence: docs/release/s/models.yaml
+- platform: s100p
+  evidence: docs/release/s/benchmarks.yaml
+published_variants:
+- name: base-patch16-224
+  source: samples/vision/siglip/README.md
+- name: base-patch16-384
+  source: samples/vision/siglip/README.md
+- name: base-patch16-512
+  source: samples/vision/siglip/README.md
+- name: large-patch16-256
+  source: samples/vision/siglip/README.md
+- name: large-patch16-384
+  source: samples/vision/siglip/README.md
+- name: so400m-patch14-224
+  source: samples/vision/siglip/README.md
+- name: so400m-patch14-384
+  source: samples/vision/siglip/README.md
+- name: so400m-patch16-256-i18n
+  source: samples/vision/siglip/README.md
+facet_tasks:
+- image-embedding
+- image-text-similarity
+manifest_tasks:
+- vision-embedding
+- image-text-similarity
+usage:
+- source: samples/vision/siglip/README.md
+  lines:
+  - python3 samples/vision/siglip/model/download.py --target s100 --variant base-patch16-224
+  - python3 samples/vision/siglip/runtime/python/main.py --target s100 --variant base-patch16-224 --submodel pooler_output
+sourced_benchmarks:
+- id: siglip-base-224-s100
+  platform: s100
+  metric: latency
+  value: 26.8
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 224 on RDK S100
+  condition: pooler output
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-224-s100
+  platform: s100
+  metric: latency
+  value: 26.0
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 224 on RDK S100
+  condition: last hidden state
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-224-s100
+  platform: s100
+  metric: top-1
+  value: 0.7118
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 224 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-224-s100
+  platform: s100
+  metric: top-5
+  value: 0.9144
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 224 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-224-s100
+  platform: s100
+  metric: top-1
+  value: 0.7123
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 224 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-224-s100
+  platform: s100
+  metric: top-5
+  value: 0.9143
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 224 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-224-s100
+  platform: s100
+  metric: cosine-similarity
+  value: 0.991
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 224 on RDK S100
+  condition: last hidden state mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-224-s100
+  platform: s100
+  metric: mse
+  value: 0.087
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 224 on RDK S100
+  condition: last hidden state MSE mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-384-s100
+  platform: s100
+  metric: latency
+  value: 46.7
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 384 on RDK S100
+  condition: pooler output
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-384-s100
+  platform: s100
+  metric: latency
+  value: 45.9
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 384 on RDK S100
+  condition: last hidden state
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-384-s100
+  platform: s100
+  metric: top-1
+  value: 0.7418
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 384 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-384-s100
+  platform: s100
+  metric: top-5
+  value: 0.9319
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 384 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-384-s100
+  platform: s100
+  metric: top-1
+  value: 0.7411
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 384 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-384-s100
+  platform: s100
+  metric: top-5
+  value: 0.9318
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 384 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-384-s100
+  platform: s100
+  metric: cosine-similarity
+  value: 0.989
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 384 on RDK S100
+  condition: last hidden state mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-384-s100
+  platform: s100
+  metric: mse
+  value: 0.113
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 384 on RDK S100
+  condition: last hidden state MSE mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-224-s100p
+  platform: s100p
+  metric: latency
+  value: 18.8
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 224 on RDK S100P
+  condition: pooler output
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-224-s100p
+  platform: s100p
+  metric: latency
+  value: 18.3
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 224 on RDK S100P
+  condition: last hidden state
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-224-s100p
+  platform: s100p
+  metric: top-1
+  value: 0.7118
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 224 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-224-s100p
+  platform: s100p
+  metric: top-5
+  value: 0.9144
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 224 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-224-s100p
+  platform: s100p
+  metric: top-1
+  value: 0.7123
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 224 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-224-s100p
+  platform: s100p
+  metric: top-5
+  value: 0.9143
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 224 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-224-s100p
+  platform: s100p
+  metric: cosine-similarity
+  value: 0.991
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 224 on RDK S100P
+  condition: last hidden state mean
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-224-s100p
+  platform: s100p
+  metric: mse
+  value: 0.087
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 224 on RDK S100P
+  condition: last hidden state MSE mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-384-s100p
+  platform: s100p
+  metric: latency
+  value: 32.3
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 384 on RDK S100P
+  condition: pooler output
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-384-s100p
+  platform: s100p
+  metric: latency
+  value: 31.7
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 384 on RDK S100P
+  condition: last hidden state
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-384-s100p
+  platform: s100p
+  metric: top-1
+  value: 0.7418
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 384 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-384-s100p
+  platform: s100p
+  metric: top-5
+  value: 0.9319
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 384 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-384-s100p
+  platform: s100p
+  metric: top-1
+  value: 0.7411
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 384 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-384-s100p
+  platform: s100p
+  metric: top-5
+  value: 0.9318
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 384 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-384-s100p
+  platform: s100p
+  metric: cosine-similarity
+  value: 0.989
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 384 on RDK S100P
+  condition: last hidden state mean
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-384-s100p
+  platform: s100p
+  metric: mse
+  value: 0.113
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 384 on RDK S100P
+  condition: last hidden state MSE mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-512-s100
+  platform: s100
+  metric: latency
+  value: 81.7
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base 512 on RDK S100
+  condition: pooler output
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-512-s100
+  platform: s100
+  metric: latency
+  value: 80.8
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base 512 on RDK S100
+  condition: last hidden state
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-512-s100
+  platform: s100
+  metric: top-1
+  value: 0.7482
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base 512 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-512-s100
+  platform: s100
+  metric: top-5
+  value: 0.934
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base 512 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-512-s100
+  platform: s100
+  metric: top-1
+  value: 0.749
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base 512 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-512-s100
+  platform: s100
+  metric: top-5
+  value: 0.9343
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base 512 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-512-s100
+  platform: s100
+  metric: cosine-similarity
+  value: 0.987
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base 512 on RDK S100
+  condition: last hidden state mean
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-512-s100
+  platform: s100
+  metric: mse
+  value: 0.142
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base 512 on RDK S100
+  condition: last hidden state MSE mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-512-s100p
+  platform: s100p
+  metric: latency
+  value: 55.8
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 512 on RDK S100P
+  condition: pooler output
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-512-s100p
+  platform: s100p
+  metric: latency
+  value: 55.3
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 512 on RDK S100P
+  condition: last hidden state
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-512-s100p
+  platform: s100p
+  metric: top-1
+  value: 0.7482
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 512 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-512-s100p
+  platform: s100p
+  metric: top-5
+  value: 0.934
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 512 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-512-s100p
+  platform: s100p
+  metric: top-1
+  value: 0.749
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 512 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-512-s100p
+  platform: s100p
+  metric: top-5
+  value: 0.9343
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 512 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-512-s100p
+  platform: s100p
+  metric: cosine-similarity
+  value: 0.987
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 512 on RDK S100P
+  condition: last hidden state mean
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-base-512-s100p
+  platform: s100p
+  metric: mse
+  value: 0.142
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP base patch16 512 on RDK S100P
+  condition: last hidden state MSE mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-256-s100
+  platform: s100
+  metric: latency
+  value: 68.8
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large 256 on RDK S100
+  condition: pooler output
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-256-s100
+  platform: s100
+  metric: latency
+  value: 67.6
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large 256 on RDK S100
+  condition: last hidden state
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-256-s100
+  platform: s100
+  metric: top-1
+  value: 0.749
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large 256 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-256-s100
+  platform: s100
+  metric: top-5
+  value: 0.9242
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large 256 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-256-s100
+  platform: s100
+  metric: top-1
+  value: 0.749
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large 256 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-256-s100
+  platform: s100
+  metric: top-5
+  value: 0.9238
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large 256 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-256-s100
+  platform: s100
+  metric: cosine-similarity
+  value: 0.99
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large 256 on RDK S100
+  condition: last hidden state mean
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-256-s100
+  platform: s100
+  metric: mse
+  value: 0.069
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large 256 on RDK S100
+  condition: last hidden state MSE mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-256-s100p
+  platform: s100p
+  metric: latency
+  value: 47.2
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large patch16 256 on RDK S100P
+  condition: pooler output
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-256-s100p
+  platform: s100p
+  metric: latency
+  value: 46.5
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large patch16 256 on RDK S100P
+  condition: last hidden state
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-256-s100p
+  platform: s100p
+  metric: top-1
+  value: 0.749
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large patch16 256 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-256-s100p
+  platform: s100p
+  metric: top-5
+  value: 0.9242
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large patch16 256 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-256-s100p
+  platform: s100p
+  metric: top-1
+  value: 0.749
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large patch16 256 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-256-s100p
+  platform: s100p
+  metric: top-5
+  value: 0.9238
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large patch16 256 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-256-s100p
+  platform: s100p
+  metric: cosine-similarity
+  value: 0.99
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large patch16 256 on RDK S100P
+  condition: last hidden state mean
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-256-s100p
+  platform: s100p
+  metric: mse
+  value: 0.069
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large patch16 256 on RDK S100P
+  condition: last hidden state MSE mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-384-s100
+  platform: s100
+  metric: latency
+  value: 132.5
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large 384 on RDK S100
+  condition: pooler output
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-384-s100
+  platform: s100
+  metric: latency
+  value: 131.3
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large 384 on RDK S100
+  condition: last hidden state
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-384-s100
+  platform: s100
+  metric: top-1
+  value: 0.7595
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large 384 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-384-s100
+  platform: s100
+  metric: top-5
+  value: 0.9256
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large 384 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-384-s100
+  platform: s100
+  metric: top-1
+  value: 0.7584
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large 384 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-384-s100
+  platform: s100
+  metric: top-5
+  value: 0.9252
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large 384 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-384-s100
+  platform: s100
+  metric: cosine-similarity
+  value: 0.985
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large 384 on RDK S100
+  condition: last hidden state mean
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-384-s100
+  platform: s100
+  metric: mse
+  value: 0.111
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large 384 on RDK S100
+  condition: last hidden state MSE mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-384-s100p
+  platform: s100p
+  metric: latency
+  value: 91.4
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large patch16 384 on RDK S100P
+  condition: pooler output
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-384-s100p
+  platform: s100p
+  metric: latency
+  value: 90.5
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large patch16 384 on RDK S100P
+  condition: last hidden state
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-384-s100p
+  platform: s100p
+  metric: top-1
+  value: 0.7595
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large patch16 384 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-384-s100p
+  platform: s100p
+  metric: top-5
+  value: 0.9256
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large patch16 384 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-384-s100p
+  platform: s100p
+  metric: top-1
+  value: 0.7584
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large patch16 384 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-384-s100p
+  platform: s100p
+  metric: top-5
+  value: 0.9252
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large patch16 384 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-384-s100p
+  platform: s100p
+  metric: cosine-similarity
+  value: 0.985
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large patch16 384 on RDK S100P
+  condition: last hidden state mean
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-large-384-s100p
+  platform: s100p
+  metric: mse
+  value: 0.111
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP large patch16 384 on RDK S100P
+  condition: last hidden state MSE mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-224-s100
+  platform: s100
+  metric: latency
+  value: 89.8
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 224 on RDK S100
+  condition: pooler output
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-224-s100
+  platform: s100
+  metric: latency
+  value: 88.6
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 224 on RDK S100
+  condition: last hidden state
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-224-s100
+  platform: s100
+  metric: top-1
+  value: 0.7651
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 224 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-224-s100
+  platform: s100
+  metric: top-5
+  value: 0.9357
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 224 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-224-s100
+  platform: s100
+  metric: top-1
+  value: 0.7659
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 224 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-224-s100
+  platform: s100
+  metric: top-5
+  value: 0.9361
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 224 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-224-s100
+  platform: s100
+  metric: cosine-similarity
+  value: 0.984
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 224 on RDK S100
+  condition: last hidden state mean
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-224-s100
+  platform: s100
+  metric: mse
+  value: 0.104
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 224 on RDK S100
+  condition: last hidden state MSE mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-224-s100p
+  platform: s100p
+  metric: latency
+  value: 62.2
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch14 224 on RDK S100P
+  condition: pooler output
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-224-s100p
+  platform: s100p
+  metric: latency
+  value: 61.4
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch14 224 on RDK S100P
+  condition: last hidden state
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-224-s100p
+  platform: s100p
+  metric: top-1
+  value: 0.7651
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch14 224 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-224-s100p
+  platform: s100p
+  metric: top-5
+  value: 0.9357
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch14 224 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-224-s100p
+  platform: s100p
+  metric: top-1
+  value: 0.7659
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch14 224 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-224-s100p
+  platform: s100p
+  metric: top-5
+  value: 0.9361
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch14 224 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-224-s100p
+  platform: s100p
+  metric: cosine-similarity
+  value: 0.984
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch14 224 on RDK S100P
+  condition: last hidden state mean
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-224-s100p
+  platform: s100p
+  metric: mse
+  value: 0.104
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch14 224 on RDK S100P
+  condition: last hidden state MSE mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-384-s100
+  platform: s100
+  metric: latency
+  value: 255.7
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 384 on RDK S100
+  condition: pooler output
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-384-s100
+  platform: s100
+  metric: latency
+  value: 254.2
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 384 on RDK S100
+  condition: last hidden state
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-384-s100
+  platform: s100
+  metric: top-1
+  value: 0.7893
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 384 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-384-s100
+  platform: s100
+  metric: top-5
+  value: 0.9447
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 384 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-384-s100
+  platform: s100
+  metric: top-1
+  value: 0.7872
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 384 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-384-s100
+  platform: s100
+  metric: top-5
+  value: 0.9433
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 384 on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-384-s100
+  platform: s100
+  metric: cosine-similarity
+  value: 0.98
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 384 on RDK S100
+  condition: last hidden state mean
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-384-s100
+  platform: s100
+  metric: mse
+  value: 0.14
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 384 on RDK S100
+  condition: last hidden state MSE mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-384-s100p
+  platform: s100p
+  metric: latency
+  value: 175.5
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch14 384 on RDK S100P
+  condition: pooler output
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-384-s100p
+  platform: s100p
+  metric: latency
+  value: 174.5
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch14 384 on RDK S100P
+  condition: last hidden state
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-384-s100p
+  platform: s100p
+  metric: top-1
+  value: 0.7893
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch14 384 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-384-s100p
+  platform: s100p
+  metric: top-5
+  value: 0.9447
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch14 384 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-384-s100p
+  platform: s100p
+  metric: top-1
+  value: 0.7872
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch14 384 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-384-s100p
+  platform: s100p
+  metric: top-5
+  value: 0.9433
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch14 384 on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-384-s100p
+  platform: s100p
+  metric: cosine-similarity
+  value: 0.98
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch14 384 on RDK S100P
+  condition: last hidden state mean
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-384-s100p
+  platform: s100p
+  metric: mse
+  value: 0.14
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch14 384 on RDK S100P
+  condition: last hidden state MSE mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-256-i18n-s100
+  platform: s100
+  metric: latency
+  value: 89.6
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 256 i18n on RDK S100
+  condition: pooler output
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-256-i18n-s100
+  platform: s100
+  metric: latency
+  value: 88.3
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 256 i18n on RDK S100
+  condition: last hidden state
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-256-i18n-s100
+  platform: s100
+  metric: top-1
+  value: 0.7668
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 256 i18n on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-256-i18n-s100
+  platform: s100
+  metric: top-5
+  value: 0.9397
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 256 i18n on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-256-i18n-s100
+  platform: s100
+  metric: top-1
+  value: 0.7678
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 256 i18n on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-256-i18n-s100
+  platform: s100
+  metric: top-5
+  value: 0.9395
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 256 i18n on RDK S100
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-256-i18n-s100
+  platform: s100
+  metric: cosine-similarity
+  value: 0.984
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 256 i18n on RDK S100
+  condition: last hidden state mean
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-256-i18n-s100
+  platform: s100
+  metric: mse
+  value: 0.082
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m 256 i18n on RDK S100
+  condition: last hidden state MSE mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-256-i18n-s100p
+  platform: s100p
+  metric: latency
+  value: 61.9
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch16 256 i18n on RDK S100P
+  condition: pooler output
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-256-i18n-s100p
+  platform: s100p
+  metric: latency
+  value: 61.1
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch16 256 i18n on RDK S100P
+  condition: last hidden state
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-256-i18n-s100p
+  platform: s100p
+  metric: top-1
+  value: 0.7668
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch16 256 i18n on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-256-i18n-s100p
+  platform: s100p
+  metric: top-5
+  value: 0.9397
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch16 256 i18n on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-256-i18n-s100p
+  platform: s100p
+  metric: top-1
+  value: 0.7678
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch16 256 i18n on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-256-i18n-s100p
+  platform: s100p
+  metric: top-5
+  value: 0.9395
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch16 256 i18n on RDK S100P
+  condition: pooler output zero-shot classification
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-256-i18n-s100p
+  platform: s100p
+  metric: cosine-similarity
+  value: 0.984
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch16 256 i18n on RDK S100P
+  condition: last hidden state mean
+  origin: samples/vision/siglip/evaluator/README.md
+- id: siglip-so400m-256-i18n-s100p
+  platform: s100p
+  metric: mse
+  value: 0.082
+  unit: ratio
+  source: docs/release/s/benchmarks.yaml
+  variant: SigLIP so400m patch16 256 i18n on RDK S100P
+  condition: last hidden state MSE mean; source also reports range and 1% low
+  origin: samples/vision/siglip/evaluator/README.md
+documented_downloads:
+- platform: s100
+  filename: s100/bpu-siglip-base-patch16-224.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-base-patch16-224.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100
+  filename: s100/bpu-siglip-base-patch16-384.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-base-patch16-384.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100
+  filename: s100/bpu-siglip-base-patch16-512.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-base-patch16-512.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100
+  filename: s100/bpu-siglip-large-patch16-256.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-large-patch16-256.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100
+  filename: s100/bpu-siglip-large-patch16-384.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-large-patch16-384.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100
+  filename: s100/bpu-siglip-so400m-patch14-224.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-so400m-patch14-224.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100
+  filename: s100/bpu-siglip-so400m-patch14-384.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-so400m-patch14-384.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100
+  filename: s100/bpu-siglip-so400m-patch16-256-i18n.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/SigLIP/bpu-siglip-so400m-patch16-256-i18n.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+example_image:
+  path: samples/vision/siglip/test_data/dog.jpg
+  source: samples/vision/siglip/test_data/dog.jpg

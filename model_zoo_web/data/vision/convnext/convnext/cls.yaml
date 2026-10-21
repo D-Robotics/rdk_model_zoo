@@ -1,0 +1,276 @@
+schema_version: 1
+registration: pending
+id: convnext/convnext/cls
+name: ConvNeXt
+domain: vision
+source: convnext
+family: convnext
+task: cls
+description:
+  zh: ConvNeXt 是从原始 ResNet 出发、逐步借鉴 Swin Transformer 设计改造而来的纯卷积网络（"A ConvNet for the 2020s"）。它面向 ImageNet-1k 1000 类图像分类，输出 Top-K 类别及置信度。
+  en: 'ConvNeXt is a pure convolutional network modernized from the original ResNet by progressively adopting designs borrowed from the Swin Transformer ("A ConvNet for the 2020s"). It targets ImageNet-1k 1000-class image classification and outputs Top-K classes with confidence scores.'
+sample_path: samples/vision/convnext
+sample_revision: 489adba143277b218f696e29ba79243f26d607a0
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/convnext/README.md
+upstream:
+- kind: paper
+  name: arxiv 2201.03545
+  url: https://arxiv.org/abs/2201.03545
+  source: samples/vision/convnext/README.md
+- kind: repository
+  name: facebookresearch/ConvNeXt
+  url: https://github.com/facebookresearch/ConvNeXt
+  source: samples/vision/convnext/README.md
+supported_platforms:
+- platform: x5
+  evidence: docs/release/x5/models.yaml
+published_variants:
+- name: ConvNeXt-atto
+  source: samples/vision/convnext/README.md
+manifest_tasks:
+- image-classification
+inputs:
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: convnext-nano-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: convnext-pico-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: convnext-femto-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: convnext-atto-x5
+  shape: '[ 224, 224 ]'
+  format: NV12
+conversion_configs:
+- path: samples/vision/convnext/conversion/ConvNeXt_atto.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+- path: samples/vision/convnext/conversion/ConvNeXt_femto.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+- path: samples/vision/convnext/conversion/ConvNeXt_nano.yaml
+  march: bayes-e
+  runtime_input: nv12
+  train_input: rgb
+  train_layout: NCHW
+  resolution: 224x224
+usage:
+- source: samples/vision/convnext/README.md
+  lines:
+  - bash samples/vision/convnext/model/download.sh x5
+  - python3 samples/vision/convnext/runtime/python/main.py
+  - --target x5
+  - --asset-id x5:convnext:ConvNeXt_atto_224x224_nv12.bin
+  - --model-path samples/vision/convnext/model/ConvNeXt_atto_224x224_nv12.bin
+  - --test-img samples/vision/convnext/test_data/cheetah.JPEG
+  - --label-file datasets/imagenet/imagenet_classes.names
+sourced_benchmarks:
+- id: convnext-nano-x5
+  platform: x5
+  metric: latency
+  value: 5.71
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: ConvNeXt Nano 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/convnext/README.md
+- id: convnext-nano-x5
+  platform: x5
+  metric: throughput
+  value: 200
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: ConvNeXt Nano 224x224
+  condition: four-thread concurrent, 100% BPU utilization
+  origin: samples/vision/convnext/README.md
+- id: convnext-nano-x5
+  platform: x5
+  metric: top-1
+  value: 77.37
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: ConvNeXt Nano 224x224
+  origin: samples/vision/convnext/README.md
+- id: convnext-nano-x5
+  platform: x5
+  metric: top-1
+  value: 71.75
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: ConvNeXt Nano 224x224
+  origin: samples/vision/convnext/README.md
+- id: convnext-pico-x5
+  platform: x5
+  metric: latency
+  value: 3.37
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: ConvNeXt Pico 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/convnext/README.md
+- id: convnext-pico-x5
+  platform: x5
+  metric: throughput
+  value: 364
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: ConvNeXt Pico 224x224
+  condition: four-thread concurrent, 100% BPU utilization
+  origin: samples/vision/convnext/README.md
+- id: convnext-pico-x5
+  platform: x5
+  metric: top-1
+  value: 77.25
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: ConvNeXt Pico 224x224
+  origin: samples/vision/convnext/README.md
+- id: convnext-pico-x5
+  platform: x5
+  metric: top-1
+  value: 71.03
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: ConvNeXt Pico 224x224
+  origin: samples/vision/convnext/README.md
+- id: convnext-femto-x5
+  platform: x5
+  metric: latency
+  value: 2.46
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: ConvNeXt Femto 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/convnext/README.md
+- id: convnext-femto-x5
+  platform: x5
+  metric: throughput
+  value: 556
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: ConvNeXt Femto 224x224
+  condition: four-thread concurrent, 100% BPU utilization
+  origin: samples/vision/convnext/README.md
+- id: convnext-femto-x5
+  platform: x5
+  metric: top-1
+  value: 73.75
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: ConvNeXt Femto 224x224
+  origin: samples/vision/convnext/README.md
+- id: convnext-femto-x5
+  platform: x5
+  metric: top-1
+  value: 72.25
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: ConvNeXt Femto 224x224
+  origin: samples/vision/convnext/README.md
+- id: convnext-atto-x5
+  platform: x5
+  metric: latency
+  value: 1.96
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: ConvNeXt Atto 224x224
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/convnext/README.md
+- id: convnext-atto-x5
+  platform: x5
+  metric: throughput
+  value: 732
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: ConvNeXt Atto 224x224
+  condition: four-thread concurrent, 100% BPU utilization
+  origin: samples/vision/convnext/README.md
+- id: convnext-atto-x5
+  platform: x5
+  metric: top-1
+  value: 73.25
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: ConvNeXt Atto 224x224
+  origin: samples/vision/convnext/README.md
+- id: convnext-atto-x5
+  platform: x5
+  metric: top-1
+  value: 69.75
+  unit: percent
+  source: docs/release/x5/benchmarks.yaml
+  variant: ConvNeXt Atto 224x224
+  origin: samples/vision/convnext/README.md
+documented_downloads:
+- platform: x5
+  filename: ConvNeXt_atto_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ConvNeXt_atto_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: ConvNeXt_nano_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ConvNeXt_nano_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: ConvNeXt_pico_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ConvNeXt_pico_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: ConvNeXt_femto_224x224_nv12.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/ConvNeXt_femto_224x224_nv12.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+hero_visual:
+  file: model_zoo_web/release/assets/pending-heroes/convnext.webp
+  kind: classification-panel
+  input: samples/vision/convnext/test_data/cheetah.JPEG
+  predictions_source: model_zoo_web/release/assets/pending-heroes/convnext.json
+  runtime: host-float-reference
+  note: Host float reference, not board output.
+  model_file: convnext_atto
+  model_url: https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-rsb-weights/convnext_atto_d2-01bb0f51.pth
+  framework: pytorch-cpu/2.14.1+cpu timm/1.0.30
+  commit: 489adba143277b218f696e29ba79243f26d607a0
+  documented_in: samples/vision/convnext/conversion/README.md
+  topk:
+  - label: cheetah
+    score: 0.859628
+  - label: leopard
+    score: 0.025283
+  - label: jaguar
+    score: 0.001285
+  - label: gazelle
+    score: 0.000794
+  - label: hyena
+    score: 0.00066
+
+example_image:
+  path: samples/vision/convnext/test_data/cheetah.JPEG
+  source: samples/vision/convnext/test_data/cheetah.JPEG
+source_input:
+  format: rgb
+  dtype: float32
+  layout: NCHW
+  shape: 1x3x224x224
+  source: samples/vision/convnext/conversion/README.md

@@ -1,0 +1,68 @@
+schema_version: 1
+registration: pending
+id: kws/kws/kws
+name: MDTC KWS
+domain: speech
+source: kws
+family: kws
+task: kws
+description:
+  zh: 本样例使用已发布的 MDTC 唤醒词模型处理单声道 16 kHz 音频，返回片段内模型概率的最大值，以及按阈值判断是否出现“hey snips”的结果；它不转写语音或检测任意关键词。只使用前 60000 个采样点，短音频补零；16 kHz 下为 3.75 秒。长录音需由调用者明确分窗。
+  en: This sample runs the published MDTC wake-word model on mono 16 kHz audio. It returns the maximum model probability over the supplied clip and an optional threshold decision for “hey snips”; it does not transcribe speech or detect arbitrary keywords. Only the first 60000 samples are used; shorter clips are zero-padded. At 16 kHz this is 3.75 seconds. Longer recordings require explicitly selected windows.
+sample_path: samples/speech/kws
+sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/speech/kws/README.md
+supported_platforms:
+- platform: s100
+  evidence: docs/release/s/models.yaml
+manifest_tasks:
+- keyword-spotting
+usage:
+- source: samples/speech/kws/README.md
+  lines:
+  - bash samples/speech/kws/runtime/python/run.sh --list-models
+  - bash samples/speech/kws/runtime/python/run.sh --target s100 --dry-run
+  - bash samples/speech/kws/model/download.sh --target s100
+  - bash samples/speech/kws/runtime/python/run.sh --target s100 --output-dir outputs/kws-run1
+  - bash samples/speech/kws/runtime/python/run.sh --target s100
+  - --asset-id s:kws:s100/kws.hbm --model-path /path/to/kws.hbm
+  - --audio-file /path/to/mono-16k.wav --output-dir outputs/kws-run2
+sourced_benchmarks:
+- id: kws-s100
+  platform: s100
+  metric: latency
+  value: 1.176
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: KWS MDTC on RDK S100
+  statistic: mean
+  condition: 100 frames
+  origin: samples/speech/kws/evaluator/README.md
+- id: kws-s100
+  platform: s100
+  metric: throughput
+  value: 830.875
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: KWS MDTC on RDK S100
+  condition: 100 frames
+  origin: samples/speech/kws/evaluator/README.md
+- id: kws-s100
+  platform: s100
+  metric: keyword-confidence
+  value: 98.5
+  unit: percent
+  source: docs/release/s/benchmarks.yaml
+  variant: KWS MDTC on RDK S100
+  condition: 'keyword: hey snips'
+  origin: samples/speech/kws/evaluator/README.md
+documented_downloads:
+- platform: s100
+  filename: s100/kws.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/kws/kws.hbm
+  source: docs/release/s/models.yaml
+  format: hbm

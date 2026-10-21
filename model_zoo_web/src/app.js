@@ -70,12 +70,27 @@
   function card(group, index = 0, arriving = false) {
     const model = group.entry;
     const description = window.HubI18n?.locale === 'en' ? (model.descriptionEn || model.description) : model.description;
-    const openModel = group.members.find(member => modelPlatforms(member).some(platform => selectedPlatforms.has(platform)))
-      || [...group.members].sort((a, b) =>
-           openRank(modelPlatforms(a)[0]) - openRank(modelPlatforms(b)[0])
-           || sizeRank(a.modelSize) - sizeRank(b.modelSize))[0];
+    // A card opens the variant whose file is actually published when only
+    // some siblings have one (ConvNeXt Atto). Families where every member
+    // has an artifact, or none does, keep the previous size and insertion order.
+    const released = member => (member.assets?.length || member.documentedDownloads?.length) > 0;
+    const chooseOpen = members => {
+      const releasedMembers = members.filter(released);
+      const pool = releasedMembers.length && releasedMembers.length < members.length ? releasedMembers : members;
+      return [...pool].sort((a, b) =>
+        openRank(modelPlatforms(a)[0]) - openRank(modelPlatforms(b)[0])
+        || sizeRank(a.modelSize) - sizeRank(b.modelSize))[0];
+    };
+    const platformMembers = group.members.filter(member => modelPlatforms(member).some(platform => selectedPlatforms.has(platform)));
+    const partialRelease = platformMembers.some(released) && platformMembers.some(member => !released(member));
+    const openModel = platformMembers.length
+      ? (partialRelease ? chooseOpen(platformMembers) : platformMembers[0])
+      : chooseOpen(group.members);
     const platformOrder = [...group.platforms].sort((a, b) => openRank(a) - openRank(b));
-    return `<article class="model-card${arriving ? ' is-arriving' : ''}" style="--i:${Math.min(index, 11)}"><a class="gallery-link" href="#model/${esc(openModel.id)}" aria-label="查看 ${esc(model.name)}" title="${esc(description)}"><div class="thumbnail" data-image="${esc(model.id)}"><img src="${esc(model.coverImage)}" alt="${esc(model.name)}" loading="lazy"></div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="card-task">${esc(model.task)}</p><div class="card-platforms">${platformOrder.map(platform => `<span>${esc(platform)}</span>`).join('')}</div></div></a></article>`;
+    const pending = group.members.every(member => member.dataPending);
+    const thumb = `<img src="${esc(model.coverImage || 'assets/pending-cover.svg')}" alt="${esc(model.name)}" loading="lazy">`;
+    const badge = pending ? '<span class="pending-badge">数据待补充</span>' : '';
+    return `<article class="model-card${arriving ? ' is-arriving' : ''}${pending ? ' is-pending' : ''}" style="--i:${Math.min(index, 11)}"><a class="gallery-link" href="#model/${esc(openModel.id)}" aria-label="查看 ${esc(model.name)}，${esc(model.task)}" title="${esc(description)}"><div class="thumbnail" data-image="${esc(model.id)}">${thumb}</div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="card-task">${esc(model.task)}${badge}</p><div class="card-platforms">${platformOrder.map(platform => `<span>${esc(platform)}</span>`).join('')}</div></div></a></article>`;
   }
 
   function matchesTask(model) {

@@ -1,0 +1,91 @@
+schema_version: 1
+registration: pending
+id: modnet/modnet/matting
+name: MODNet
+domain: vision
+source: modnet
+family: modnet
+task: matting
+description:
+  zh: MODNet 是单阶段人像抠图网络，从一张图像直接预测 alpha 遮罩，不需要 trimap。
+  en: MODNet is a one-stage portrait matting network.
+sample_path: samples/vision/modnet
+sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/modnet/README.md
+upstream:
+- kind: repository
+  name: ZHKKKe/MODNet
+  url: https://github.com/ZHKKKe/MODNet
+  source: samples/vision/modnet/README.md
+- kind: paper
+  name: arxiv 2011.11961
+  url: https://arxiv.org/abs/2011.11961
+  source: samples/vision/modnet/README.md
+supported_platforms:
+- platform: x5
+  evidence: docs/release/x5/models.yaml
+published_variants:
+- name: X5
+  source: samples/vision/modnet/README.md
+manifest_tasks:
+- portrait-matting
+inputs:
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: modnet-single-thread-x5
+  shape: '[ 512, 512 ]'
+  layout: NCHW
+  format: RGB
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: modnet-two-thread-x5
+  shape: '[ 512, 512 ]'
+  layout: NCHW
+  format: RGB
+usage:
+- source: samples/vision/modnet/README.md
+  lines:
+  - python3 -m samples.vision.modnet.runtime.python.main --target x5
+  - --asset-id x5:modnet:modnet_512x512_rgb.bin
+sourced_benchmarks:
+- id: modnet-single-thread-x5
+  platform: x5
+  metric: latency
+  value: 89.88
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: MODNet 512x512
+  condition: single-frame, single-thread, single-BPU-core
+  origin: samples/vision/modnet/README.md
+- id: modnet-single-thread-x5
+  platform: x5
+  metric: throughput
+  value: 11.12
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: MODNet 512x512
+  origin: samples/vision/modnet/README.md
+- id: modnet-two-thread-x5
+  platform: x5
+  metric: latency
+  value: 130.49
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: MODNet 512x512
+  origin: samples/vision/modnet/README.md
+- id: modnet-two-thread-x5
+  platform: x5
+  metric: throughput
+  value: 15.27
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: MODNet 512x512
+  condition: two-thread concurrent inference
+  origin: samples/vision/modnet/README.md
+example_image:
+  path: samples/vision/modnet/test_data/bg.jpg
+  source: samples/vision/modnet/test_data/bg.jpg

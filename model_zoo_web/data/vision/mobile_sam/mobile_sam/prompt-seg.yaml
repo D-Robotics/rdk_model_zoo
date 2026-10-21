@@ -1,0 +1,480 @@
+schema_version: 1
+registration: pending
+id: mobile_sam/mobile_sam/prompt-seg
+name: MobileSAM
+domain: vision
+source: mobile_sam
+family: mobile_sam
+task: prompt-seg
+description:
+  zh: MobileSAM 使用 TinyViT 替换 SAM 的图像编码器，降低提示式分割的计算成本。本示例使用一个框提示，从解码器候选结果中选择分割掩码。
+  en: MobileSAM replaces SAM’s image encoder with TinyViT to reduce the cost of prompt-based segmentation. This sample uses one box prompt to select a mask from the decoder’s candidates.
+sample_path: samples/vision/mobile_sam
+sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+license:
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: sample-code
+  source: samples/vision/mobile_sam/README.md
+upstream:
+- kind: paper
+  name: arxiv 2306.14289
+  url: https://arxiv.org/abs/2306.14289
+  source: samples/vision/mobile_sam/README.md
+- kind: repository
+  name: ChaoningZhang/MobileSAM
+  url: https://github.com/ChaoningZhang/MobileSAM
+  source: samples/vision/mobile_sam/README.md
+supported_platforms:
+- platform: x5
+  evidence: docs/release/x5/models.yaml
+- platform: s100
+  evidence: docs/release/s/models.yaml
+- platform: s100p
+  evidence: docs/release/s/models.yaml
+- platform: s600
+  evidence: docs/release/s/models.yaml
+published_variants:
+- name: x5
+  source: samples/vision/mobile_sam/README.md
+- name: s100
+  source: samples/vision/mobile_sam/README.md
+- name: s100p
+  source: samples/vision/mobile_sam/README.md
+- name: s600
+  source: samples/vision/mobile_sam/README.md
+manifest_tasks:
+- promptable-image-segmentation
+inputs:
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: mobile-sam-encoder-one-thread-x5
+  shape: '[ 1, 3, 512, 512 ]'
+  layout: NCHW
+  format: float32
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: mobile-sam-encoder-eight-thread-x5
+  shape: '[ 1, 3, 512, 512 ]'
+  layout: NCHW
+  format: float32
+- platform: x5
+  source: docs/release/x5/benchmarks.yaml
+  source_id: mobile-sam-validation-x5
+  shape: 512x512
+  layout: NCHW
+  format: float32
+conversion_configs:
+- path: samples/vision/mobile_sam/conversion/configs/s100/mobile_sam_decoder_512_nashe_config.yaml
+  march: nash-e
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 256x32
+- path: samples/vision/mobile_sam/conversion/configs/s100/mobile_sam_encoder_nashe_config.yaml
+  march: nash-e
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 512x512
+- path: samples/vision/mobile_sam/conversion/configs/s100p/mobile_sam_decoder_512_nashm_config.yaml
+  march: nash-m
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 256x32
+- path: samples/vision/mobile_sam/conversion/configs/s100p/mobile_sam_encoder_nashm_config.yaml
+  march: nash-m
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 512x512
+- path: samples/vision/mobile_sam/conversion/configs/s600/mobile_sam_decoder_512_nashp_config.yaml
+  march: nash-p
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 256x32
+- path: samples/vision/mobile_sam/conversion/configs/s600/mobile_sam_encoder_nashp_config.yaml
+  march: nash-p
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 512x512
+- path: samples/vision/mobile_sam/conversion/configs/x5/mobile_sam_decoder_512_box_default_config.yaml
+  march: bayes-e
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 256x32
+- path: samples/vision/mobile_sam/conversion/configs/x5/mobile_sam_image_encoder_norm_512x512_config.yaml
+  march: bayes-e
+  runtime_input: featuremap
+  train_input: featuremap
+  train_layout: NCHW
+  resolution: 512x512
+usage:
+- source: samples/vision/mobile_sam/README.md
+  lines:
+  - python3 samples/vision/mobile_sam/model/download.py --target s100
+  - python3 samples/vision/mobile_sam/runtime/python/main.py --target s100 --box 185,120,380,445
+sourced_benchmarks:
+- id: mobile-sam-encoder-one-thread-x5
+  platform: x5
+  metric: latency
+  value: 1402.542
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: MobileSAM Encoder
+  statistic: mean
+  condition: hrt_model_exec perf; default 200 frames
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-encoder-one-thread-x5
+  platform: x5
+  metric: throughput
+  value: 0.712979
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: MobileSAM Encoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-encoder-eight-thread-x5
+  platform: x5
+  metric: latency
+  value: 2091.229
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: MobileSAM Encoder
+  statistic: mean
+  condition: hrt_model_exec perf; default 200 frames
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-encoder-eight-thread-x5
+  platform: x5
+  metric: throughput
+  value: 3.772934
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: MobileSAM Encoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-decoder-one-thread-x5
+  platform: x5
+  metric: latency
+  value: 96.198
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: MobileSAM Box-prompt Decoder
+  statistic: mean
+  condition: hrt_model_exec perf; default 200 frames
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-decoder-one-thread-x5
+  platform: x5
+  metric: throughput
+  value: 10.393262
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: MobileSAM Box-prompt Decoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-decoder-eight-thread-x5
+  platform: x5
+  metric: latency
+  value: 171.752
+  unit: ms
+  source: docs/release/x5/benchmarks.yaml
+  variant: MobileSAM Box-prompt Decoder
+  statistic: mean
+  condition: hrt_model_exec perf; default 200 frames
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-decoder-eight-thread-x5
+  platform: x5
+  metric: throughput
+  value: 45.783301
+  unit: fps
+  source: docs/release/x5/benchmarks.yaml
+  variant: MobileSAM Box-prompt Decoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-validation-x5
+  platform: x5
+  metric: cosine_similarity
+  value: 0.961277
+  unit: ratio
+  source: docs/release/x5/benchmarks.yaml
+  variant: MobileSAM Encoder
+  condition: encoder final
+  origin: samples/vision/mobile_sam/README.md
+- id: mobile-sam-validation-x5-decoder
+  platform: x5
+  metric: cosine_similarity
+  value: 0.997539
+  unit: ratio
+  source: docs/release/x5/benchmarks.yaml
+  variant: MobileSAM Box-prompt Decoder
+  condition: decoder low_res_masks
+  origin: samples/vision/mobile_sam/README.md
+- id: mobile-sam-validation-x5-decoder
+  platform: x5
+  metric: cosine_similarity
+  value: 0.999972
+  unit: ratio
+  source: docs/release/x5/benchmarks.yaml
+  variant: MobileSAM Box-prompt Decoder
+  condition: decoder iou_predictions
+  origin: samples/vision/mobile_sam/README.md
+- id: mobile-sam-s100
+  platform: s100
+  metric: latency
+  value: 10.97
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S100
+  condition: encoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s100
+  platform: s100
+  metric: throughput
+  value: 91.03
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S100
+  condition: encoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s100
+  platform: s100
+  metric: latency
+  value: 21.29
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S100
+  condition: encoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s100
+  platform: s100
+  metric: throughput
+  value: 93.61
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S100
+  condition: encoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s100
+  platform: s100
+  metric: latency
+  value: 3.3
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S100
+  condition: decoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s100
+  platform: s100
+  metric: throughput
+  value: 297.47
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S100
+  condition: decoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s100
+  platform: s100
+  metric: latency
+  value: 4.42
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S100
+  condition: decoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s100
+  platform: s100
+  metric: throughput
+  value: 443.42
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S100
+  condition: decoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s100p
+  platform: s100p
+  metric: latency
+  value: 8.52
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S100P
+  condition: encoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s100p
+  platform: s100p
+  metric: throughput
+  value: 117.26
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S100P
+  condition: encoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s100p
+  platform: s100p
+  metric: latency
+  value: 16.5
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S100P
+  condition: encoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s100p
+  platform: s100p
+  metric: throughput
+  value: 120.79
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S100P
+  condition: encoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s100p
+  platform: s100p
+  metric: latency
+  value: 2.84
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S100P
+  condition: decoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s100p
+  platform: s100p
+  metric: throughput
+  value: 345.15
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S100P
+  condition: decoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s100p
+  platform: s100p
+  metric: latency
+  value: 3.88
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S100P
+  condition: decoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s100p
+  platform: s100p
+  metric: throughput
+  value: 505.87
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S100P
+  condition: decoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s600
+  platform: s600
+  metric: latency
+  value: 5.52
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S600
+  condition: encoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s600
+  platform: s600
+  metric: throughput
+  value: 180.7
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S600
+  condition: encoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s600
+  platform: s600
+  metric: latency
+  value: 15.87
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S600
+  condition: encoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s600
+  platform: s600
+  metric: throughput
+  value: 738.48
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S600
+  condition: encoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s600
+  platform: s600
+  metric: latency
+  value: 2.58
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S600
+  condition: decoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s600
+  platform: s600
+  metric: throughput
+  value: 381.09
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S600
+  condition: decoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s600
+  platform: s600
+  metric: latency
+  value: 6.42
+  unit: ms
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S600
+  condition: decoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+- id: mobile-sam-s600
+  platform: s600
+  metric: throughput
+  value: 1772.04
+  unit: fps
+  source: docs/release/s/benchmarks.yaml
+  variant: MobileSAM encoder and decoder on RDK S600
+  condition: decoder
+  origin: samples/vision/mobile_sam/evaluator/README.md
+documented_downloads:
+- platform: x5
+  filename: mobile_sam_decoder_512_box_default.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/mobile_sam/mobile_sam_decoder_512_box_default.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: x5
+  filename: mobile_sam_image_encoder_norm_512x512_allint16.bin
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/mobile_sam/mobile_sam_image_encoder_norm_512x512_allint16.bin
+  source: docs/release/x5/models.yaml
+  format: bin
+- platform: s100
+  filename: nash-e/mobile_sam_image_encoder_norm_512x512_nashe.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/mobile_sam/nash-e/mobile_sam_image_encoder_norm_512x512_nashe.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100
+  filename: nash-e/mobile_sam_decoder_512_nashe.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/mobile_sam/nash-e/mobile_sam_decoder_512_nashe.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100p
+  filename: nash-m/mobile_sam_image_encoder_norm_512x512_nashm.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/mobile_sam/nash-m/mobile_sam_image_encoder_norm_512x512_nashm.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s100p
+  filename: nash-m/mobile_sam_decoder_512_nashm.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/mobile_sam/nash-m/mobile_sam_decoder_512_nashm.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s600
+  filename: nash-p/mobile_sam_image_encoder_norm_512x512_nashp.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/mobile_sam/nash-p/mobile_sam_image_encoder_norm_512x512_nashp.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+- platform: s600
+  filename: nash-p/mobile_sam_decoder_512_nashp.hbm
+  url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/mobile_sam/nash-p/mobile_sam_decoder_512_nashp.hbm
+  source: docs/release/s/models.yaml
+  format: hbm
+example_image:
+  path: samples/vision/mobile_sam/test_data/dogs.jpg
+  source: samples/vision/mobile_sam/test_data/dogs.jpg
