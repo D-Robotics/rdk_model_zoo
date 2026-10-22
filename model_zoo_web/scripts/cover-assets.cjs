@@ -1,12 +1,10 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { spawnSync } = require('node:child_process');
 
 // Catalog cards and detail heroes both use model.coverImage. A root-absolute
 // path 404s on GitHub Pages project sites, and an SVG with illegal XML
 // control bytes is a broken image even when the file itself returns 200.
-const RAW_COVER = /^https:\/\/raw\.githubusercontent\.com\/D-Robotics\/rdk_model_zoo\/([0-9a-f]{40})\/(.+)$/;
 
 function assertWellFormedSvg(text, label) {
   assert(
@@ -45,21 +43,15 @@ function assertLocalImageFile(filePath, label) {
   assert(png || jpg || gif || webp, `${label}: cover is not a PNG, JPEG, GIF, WebP, or SVG`);
 }
 
-function assertCoverResolves(coverImage, distRoot, repoRoot, label) {
+function assertCoverResolves(coverImage, distRoot, label) {
   assert(coverImage, `${label}: catalog cover and detail hero image are missing`);
   assert(
     !coverImage.startsWith('/'),
     `${label}: cover ${coverImage} is root-absolute and 404s under a GitHub Pages project path`,
   );
-  if (coverImage.startsWith('https://')) {
-    const match = RAW_COVER.exec(coverImage);
-    assert(match, `${label}: remote cover is not a pinned raw.githubusercontent blob`);
-    const spec = `${match[1]}:${decodeURIComponent(match[2])}`;
-    const probe = spawnSync('git', ['-C', repoRoot, 'cat-file', '-e', spec], { encoding: 'utf8' });
-    assert.equal(probe.status, 0, `${label}: cover would 404, blob missing at ${spec}`);
-    return;
-  }
-  assert(!coverImage.includes('://'), `${label}: unsupported cover URL ${coverImage}`);
+  assert(!/^[a-z][a-z0-9+.-]*:/i.test(coverImage), `${label}: cover must be a local asset: ${coverImage}`);
+  const relative = path.relative(distRoot, path.resolve(distRoot, coverImage));
+  assert(relative && !relative.startsWith('..') && !path.isAbsolute(relative), `${label}: cover must stay inside the site`);
   assertLocalImageFile(path.join(distRoot, coverImage), `${label}: ${coverImage}`);
 }
 

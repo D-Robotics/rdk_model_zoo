@@ -43,7 +43,7 @@ metadata:
 - `id`，等于 `<source>/<family>/<task>`，并且与文件路径 `data/<domain>/<source>/<family>/<task>.yaml` 一致
 - `name`、`domain`、`source`、`family`、`task`
 - `description.zh` 和 `description.en`：只写架构或示例实际在做什么。不写帧率、精度、体积、宣传语
-- `sample_path`：`samples/` 下的真实目录。本地没有时，用 `MODEL_ZOO_SAMPLE_REF`（CI 为 `refs/remotes/origin/develop`）核对
+- `sample_path`：`sample_revision` 中 `samples/` 下的真实目录；子模块按该提交里的 gitlink 核对，不依赖本地目录或当前 `develop`
 - `sample_revision`：读到这些事实时的完整 40 位提交。链接必须指向这次提交里的示例目录
 - `supported_platforms`：至少一块板卡。每项是 `platform`（`x5`、`s100`、`s100p`、`s600`）和 `evidence`（`docs/release/` 或 `samples/` 里真实存在的文件）
 
@@ -60,14 +60,14 @@ metadata:
 待补记录可以带上仓库里已经写明的事实，但每一项都要有 `source`，并且原文能在 `sample_revision` 的那个文件里对上。允许的摘录：
 
 - `upstream`：README 或集成清单里出现的 https 仓库、论文或模型卡链接
-- `license`：原文点名的许可证。官方许可证页可以配已点名的 SPDX 名称；不要配原文没写的许可证
+- `license`：原文点名的许可证。官方许可证页可以配已点名的 SPDX 名称；不要配原文没写的许可证。`scope: sample-code` 在页面上单独标为示例代码许可，不表示模型许可
 - `published_variants`：支持表或清单里的变体名
 - `conversion_configs`：`conversion/` 下真实存在的 yaml 或 `mapper_*.py`，以及文件里写明的 march、输入类型和分辨率
 - `inputs`：`docs/release/*/benchmarks.yaml` 某一条里写明的 shape、layout、format
 - `usage`：README 快速体验代码块里的命令原文
 - `sourced_benchmarks`：基准清单里的数字，保留 metric、单位、统计量和条件（包括 “compiler estimate” 这种字样）。预览页把它们填进该任务已发布页的同一组瓦片；没有数字的槽位显示“数据待补充”。端到端 `?` 只有已发布的七行，条件和来源写在对应数字自己的 `?` 里。这不是本站正式发布基准
 - `documented_downloads`：`docs/release/*/models.yaml` 里已经写出的 https URL。`sha256: null` 不要填成哈希。S 系列只在文件名或 URL 点名具体板卡时写入
-- `example_image`：`test_data` 里适合当示例的图片。架构图和性能截图不要当封面
+- `example_image`：`test_data` 里的来源图片证据，不自动作为远程封面。只有审核后的本地 `hero_visual` 用作封面，其余使用统一中性 SVG；不热链图片
 
 仍然禁止用完整记录的字段名（`variants`、`accuracy`、`performance`、`assets`、`benchmarks`、`cover`）塞进待补记录。没有精度字段表、制品校验、Runtime 与 C++ 端到端的任务，即使摘录了数字，也保持 `registration: pending`。
 
@@ -98,9 +98,12 @@ X3 是历史平台，不写入新的网页记录。
 5. 运行：
 
 ```bash
-MODEL_ZOO_SAMPLE_REF=refs/remotes/origin/develop python3 model_zoo_web/scripts/build_catalog.py
+export MODEL_ZOO_SAMPLE_REF=7a97c1780b0cfa131ff0007d662e255e5e41c12e
+python3 model_zoo_web/scripts/build_catalog.py
 npm --prefix model_zoo_web run check
 ```
+
+上述固定引用只供没有 `sample_revision` 的现有完整记录作备用源码来源。待补记录的路径和所有证据按各自提交核验。CI 使用完整历史检出；本地缺少提交时执行 `git fetch --no-tags origin <sample_revision>`，不改用当前 develop 代替。
 
 发布预览（待补卡片会出现在这里）再跑 `npm --prefix model_zoo_web run build:release` 和 `npm --prefix model_zoo_web run check:release`。
 

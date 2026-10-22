@@ -60,6 +60,26 @@ function renderDetail(model) {
   });
 }
 
+test('sample-code licenses stay separate from model licenses', () => {
+  const model = {
+    id: 'license-fixture', catalogId: 'fixture/fixture/cls', name: 'Fixture',
+    task: '图像分类', dataPending: true, hardware: 'RDK X5', assets: [],
+    licenseName: 'Apache-2.0', licenseUrl: 'https://www.apache.org/licenses/LICENSE-2.0',
+    licenseScope: 'sample-code',
+  };
+  const html = renderDetail(model);
+  const modelSection = html.match(/<section><h2>模型许可<\/h2>([\s\S]*?)<\/section>/)?.[1];
+  assert.match(modelSection, /未声明/);
+  assert.doesNotMatch(modelSection, /Apache-2.0/);
+  assert.match(html, /<h2>示例代码许可<\/h2>[\s\S]*?Apache-2.0/);
+
+  for (const scope of [{ licenseScope: 'model' }, { dataPending: false, licenseScope: undefined }]) {
+    const released = renderDetail({ ...model, ...scope });
+    assert.match(released, /<h2>模型许可<\/h2>[\s\S]*?Apache-2.0/);
+    assert.doesNotMatch(released, /示例代码许可/);
+  }
+});
+
 test('detail accuracy tiles use task labels and show float/runtime comparison values', () => {
   const records = accuracyRecords('seg',
     { box_ap: 0.7, mask_ap: 0.6 },
