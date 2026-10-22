@@ -264,6 +264,17 @@
     }
     return `${external(model.source, '模型仓库')}${external(model.source + '/runtime/python', '运行文档')}${external(model.source + '/conversion', '模型转换')}`;
   };
+  const licenseSections = model => {
+    const link = model.licenseName && model.licenseUrl ? external(model.licenseUrl, esc(model.licenseName)) : '';
+    const section = (title, content) => `<section><h2>${title}</h2><div class="mz-resource-links">${content || '<span>未声明</span>'}</div></section>`;
+    if (model.licenseScope === 'sample-code') {
+      return section('模型许可', '') + section('示例代码许可', link);
+    }
+    if (model.dataPending && model.licenseScope !== 'model' && link) {
+      return section('模型许可', '') + section('许可范围未声明', link);
+    }
+    return section('模型许可', link);
+  };
   function propertyRows(model) {
     if (model.dataPending) return pendingPropertyRows(model);
     const p = window.MODEL_PROPERTIES?.[model.id] || {};
@@ -419,7 +430,7 @@
       ${benchmarkBody}<div class="mz-report-actions">${reportAction}</div></section>
       <div class="mz-information"><div class="mz-main-column"><section class="mz-section"><h2>模型参数</h2><dl class="mz-specifications">${propertyRows(m)}</dl></section>${upstreamLine}${conversionLine}${downloadLine}${usageLine}${quickStart(m)}${pendingQuickStart(m)}
       </div>
-      <aside class="mz-side-column"><section><h2>目标平台</h2><div class="mz-platform-list">${hardwareOptions.map(platform => { const target = variants.find(other => hardwareOf(other, data) === platform && other.modelSize === m.modelSize) || variants.find(other => hardwareOf(other, data) === platform); const active = platform === hardware; return `<button type="button" class="mz-platform-option${active ? ' is-active' : ''}" data-platform-target="${esc(target?.id || '')}" ${active || !target ? 'disabled' : ''} aria-label="切换到 ${esc(platform)}"><span class="mz-platform-mark">${icon('cpu')}</span><strong>${esc(platform)}</strong></button>`; }).join('')}</div></section><section><h2>开发资源</h2><div class="mz-resource-links">${developerResourceLinks(m)}</div></section><section><h2>模型许可</h2><div class="mz-resource-links">${m.licenseName && m.licenseUrl ? external(m.licenseUrl, esc(m.licenseName)) : '<span>未声明</span>'}</div></section></aside></div>
+      <aside class="mz-side-column"><section><h2>目标平台</h2><div class="mz-platform-list">${hardwareOptions.map(platform => { const target = variants.find(other => hardwareOf(other, data) === platform && other.modelSize === m.modelSize) || variants.find(other => hardwareOf(other, data) === platform); const active = platform === hardware; return `<button type="button" class="mz-platform-option${active ? ' is-active' : ''}" data-platform-target="${esc(target?.id || '')}" ${active || !target ? 'disabled' : ''} aria-label="切换到 ${esc(platform)}"><span class="mz-platform-mark">${icon('cpu')}</span><strong>${esc(platform)}</strong></button>`; }).join('')}</div></section><section><h2>开发资源</h2><div class="mz-resource-links">${developerResourceLinks(m)}</div></section>${licenseSections(m)}</aside></div>
       ${related.length ? `<section class="mz-related"><div class="mz-section-heading"><h2>相关模型</h2><a href="#">查看全部模型</a></div><div class="mz-related-grid">${related.map(other => `<a href="#model/${other.id}" class="mz-related-model"><img src="${esc(other.coverImage || (other.dataPending ? 'assets/pending-cover.svg' : ''))}" alt="${esc(other.name)}" loading="lazy"><div><h3>${other.name}</h3><span>${other.task}</span></div></a>`).join('')}</div></section>` : ''}
       ${downloadDialog}
       `;

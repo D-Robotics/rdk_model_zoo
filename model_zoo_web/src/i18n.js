@@ -101,6 +101,8 @@
     '摘自仓库文档，不是本站正式发布的测量。': 'Copied from repository documents, not a release measurement published by this site.',
     '论文': 'Paper',
     '上游仓库': 'Upstream repository',
+    '示例代码许可': 'Sample code license',
+    '许可范围未声明': 'License scope unspecified',
     '记录值': 'Recorded value',
     '统计量': 'Statistic',
     '文档说明': 'Documentation note',

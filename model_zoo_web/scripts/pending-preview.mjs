@@ -521,7 +521,6 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
     const revision = record.sample_revision;
     const sourceUrl = `${officialRepositoryUrl}/tree/${revision}/${record.sample_path}`;
     const blobUrl = path => `${officialRepositoryUrl}/blob/${revision}/${path}`;
-    const exampleImage = record.example_image?.path || '';
     const heroFile = String(record.hero_visual?.file || '');
     const heroName = heroFile ? heroFile.split('/').pop() : '';
     const heroCover = heroName ? `assets/models/pending-heroes/${heroName}` : '';
@@ -580,7 +579,7 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
         description: record.description?.zh || '',
         descriptionEn: record.description?.en || '',
         platforms: [group.platform],
-        coverImage: heroCover || (exampleImage ? `https://raw.githubusercontent.com/D-Robotics/rdk_model_zoo/${revision}/${exampleImage}` : 'assets/pending-cover.svg'),
+        coverImage: heroCover || 'assets/pending-cover.svg',
         ...(heroCover ? {
           heroProvenance: {
             kind: record.hero_visual.kind,
@@ -604,7 +603,7 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
         } : null,
         coverLabel: heroCover
           ? (record.hero_visual.runtime === 'host-float-reference' ? '浮点参考' : '参考结果')
-          : (exampleImage ? '示例图' : '封面待补充'),
+          : '封面待补充',
         sample: `${record.id}/${group.modelSize}`,
         source: sourceUrl,
         sourceType: 'repository',

@@ -158,8 +158,15 @@ def _ls_tree(ref: str, relative_path: str) -> tuple[str, str] | None:
     return mode, object_type
 
 
-def lookup_sample_entry(sample_path: str, label: str) -> str:
-    """Return ``directory`` or ``gitlink`` for a sample that exists locally or on the sample ref."""
+def lookup_sample_entry(sample_path: str, label: str, revision: str | None = None) -> str:
+    """Resolve pinned samples only in their commit; unpinned records retain the local/ref fallback."""
+    if revision is not None:
+        found = _ls_tree(revision, sample_path)
+        if found == ("040000", "tree"):
+            return "directory"
+        if found == ("160000", "commit"):
+            return "gitlink"
+        raise CatalogError(f"{label} does not exist at pinned revision {revision}: {sample_path}")
     if (ROOT / sample_path).is_dir():
         return "directory"
     ref = _git_ref()
@@ -183,13 +190,18 @@ def validate_sample_path(value: Any, label: str) -> str:
     return sample_path
 
 
-def validate_evidence_path(value: Any, label: str) -> str:
+def validate_evidence_path(value: Any, label: str, revision: str | None = None) -> str:
     evidence = require_string(value, label)
     pure_path = PurePosixPath(evidence)
     if pure_path.is_absolute() or ".." in pure_path.parts or len(pure_path.parts) < 2:
         raise CatalogError(f"{label} must be a safe repository path")
     if not (evidence.startswith("docs/release/") or evidence.startswith("samples/")):
         raise CatalogError(f"{label} must point at docs/release/ or samples/")
+    if revision is not None:
+        found = _ls_tree(revision, evidence)
+        if found is None or found[1] not in {"blob", "tree"}:
+            raise CatalogError(f"{label} does not exist at pinned revision {revision}: {evidence}")
+        return evidence
     if (ROOT / evidence).exists():
         return evidence
     ref = _git_ref()
@@ -466,6 +478,7 @@ def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> Non
     upstream = record.get("upstream", [])
     if not isinstance(upstream, list):
         raise CatalogError(f"{relative_source}.upstream must be a list")
+    seen_upstream: set[str] = set()
     for index, item in enumerate(upstream):
         label = f"{relative_source}.upstream[{index}]"
         entry = require_mapping(item, label)
@@ -475,7 +488,17 @@ def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> Non
             raise CatalogError(f"{label}.kind must be repository, paper, or model-card")
         require_string(entry.get("name"), f"{label}.name")
         url = _require_https(entry.get("url"), f"{label}.url")
-        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        resource_path = urlparse(url).path.rstrip("/")
+        if entry["kind"] == "repository" and (
+            "/releases/download/" in resource_path
+            or re.search(r"\.(?:pt|pth|onnx|bin|hbm|zip|tar\.gz)$", resource_path, re.IGNORECASE)
+        ):
+            raise CatalogError(f"{label}: repository links must not be weight or archive downloads")
+        canonical_url = url.rstrip("/").removesuffix(".git")
+        if canonical_url in seen_upstream:
+            raise CatalogError(f"{label}: duplicate upstream URL {canonical_url}")
+        seen_upstream.add(canonical_url)
+        source = validate_evidence_path(entry.get("source"), f"{label}.source", revision)
         _require_in_text(url, text_of(source, f"{label}.source"), label)
 
     variants = record.get("published_variants", [])
@@ -487,7 +510,7 @@ def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> Non
         if set(entry) - {"name", "source"}:
             raise CatalogError(f"{label} has unknown fields")
         name = require_string(entry.get("name"), f"{label}.name")
-        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source", revision)
         _require_in_text(name, text_of(source, f"{label}.source"), label)
 
     configs = record.get("conversion_configs", [])
@@ -498,7 +521,7 @@ def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> Non
         entry = require_mapping(item, label)
         if set(entry) - {"path", "march", "runtime_input", "train_input", "train_layout", "resolution"}:
             raise CatalogError(f"{label} has unknown fields")
-        path = validate_evidence_path(entry.get("path"), f"{label}.path")
+        path = validate_evidence_path(entry.get("path"), f"{label}.path", revision)
         text = text_of(path, f"{label}.path")
         for field in ("march", "runtime_input", "train_input", "train_layout"):
             if field in entry:
@@ -519,7 +542,7 @@ def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> Non
         platform = require_string(entry.get("platform"), f"{label}.platform")
         if platform not in KNOWN_PLATFORMS:
             raise CatalogError(f"{label}.platform must be one of {', '.join(sorted(KNOWN_PLATFORMS))}")
-        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source", revision)
         source_id = require_string(entry.get("source_id"), f"{label}.source_id")
         window = _window_around(text_of(source, f"{label}.source"), source_id)
         for field in ("shape", "layout", "format"):
@@ -536,7 +559,7 @@ def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> Non
         entry = require_mapping(item, label)
         if set(entry) - {"source", "lines"}:
             raise CatalogError(f"{label} has unknown fields")
-        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source", revision)
         text = text_of(source, f"{label}.source")
         lines = require_list(entry.get("lines"), f"{label}.lines")
         for line_index, line in enumerate(lines):
@@ -557,7 +580,7 @@ def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> Non
         metric = require_string(entry.get("metric"), f"{label}.metric")
         unit = require_string(entry.get("unit"), f"{label}.unit")
         source_id = require_string(entry.get("id"), f"{label}.id")
-        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source", revision)
         window = _window_around(text_of(source, f"{label}.source"), source_id, span=20000)
         _require_in_text(metric, window, f"{label}.metric")
         _require_in_text(unit, window, f"{label}.unit")
@@ -566,7 +589,7 @@ def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> Non
             if field in entry:
                 _require_in_text(require_string(entry[field], f"{label}.{field}"), window, f"{label}.{field}")
         if "origin" in entry:
-            validate_evidence_path(entry.get("origin"), f"{label}.origin")
+            validate_evidence_path(entry.get("origin"), f"{label}.origin", revision)
 
     downloads = record.get("documented_downloads", [])
     if not isinstance(downloads, list):
@@ -581,7 +604,7 @@ def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> Non
             raise CatalogError(f"{label}.platform must be one of {', '.join(sorted(KNOWN_PLATFORMS))}")
         filename = require_string(entry.get("filename"), f"{label}.filename")
         url = _require_https(entry.get("url"), f"{label}.url")
-        source = validate_evidence_path(entry.get("source"), f"{label}.source")
+        source = validate_evidence_path(entry.get("source"), f"{label}.source", revision)
         text = text_of(source, f"{label}.source")
         _require_in_text(filename, text, f"{label}.filename")
         _require_in_text(url, text, f"{label}.url")
@@ -597,8 +620,8 @@ def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> Non
         image = require_mapping(record.get("example_image"), f"{relative_source}.example_image")
         if set(image) - {"path", "source"}:
             raise CatalogError(f"{relative_source}.example_image has unknown fields")
-        path = validate_evidence_path(image.get("path"), f"{relative_source}.example_image.path")
-        source = validate_evidence_path(image.get("source"), f"{relative_source}.example_image.source")
+        path = validate_evidence_path(image.get("path"), f"{relative_source}.example_image.path", revision)
+        source = validate_evidence_path(image.get("source"), f"{relative_source}.example_image.source", revision)
         if path != source:
             raise CatalogError(f"{relative_source}.example_image.path and source must be the same blob")
         suffix = PurePosixPath(path).suffix.lower()
@@ -612,7 +635,7 @@ def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> Non
         entry = require_mapping(record.get("source_input"), f"{relative_source}.source_input")
         if set(entry) - {"format", "dtype", "layout", "shape", "source"}:
             raise CatalogError(f"{relative_source}.source_input has unknown fields")
-        source = validate_evidence_path(entry.get("source"), f"{relative_source}.source_input.source")
+        source = validate_evidence_path(entry.get("source"), f"{relative_source}.source_input.source", revision)
         text = text_of(source, f"{relative_source}.source_input.source")
         present = [field for field in ("format", "dtype", "layout", "shape") if field in entry]
         if not present:
@@ -648,7 +671,7 @@ def _validate_host_float_hero(entry: dict[str, Any], label: str, revision: str) 
         raise CatalogError(f"{label}.model_url must be an https checkpoint URL")
     require_string(entry.get("model_file"), f"{label}.model_file")
     require_string(entry.get("framework"), f"{label}.framework")
-    documented = validate_evidence_path(entry.get("documented_in"), f"{label}.documented_in")
+    documented = validate_evidence_path(entry.get("documented_in"), f"{label}.documented_in", revision)
     found = _ls_tree(revision, documented)
     if found is None or found[1] != "blob":
         raise CatalogError(f"{label}.documented_in is not a file at {revision}: {documented}")
@@ -723,7 +746,7 @@ def _validate_hero_visual(record: dict[str, Any], relative_source: str, revision
     if unknown:
         raise CatalogError(f"{label} has unknown fields: {', '.join(unknown)}")
     kind = require_string(entry.get("kind"), f"{label}.kind")
-    image = validate_evidence_path(entry.get("input"), f"{label}.input")
+    image = validate_evidence_path(entry.get("input"), f"{label}.input", revision)
     suffix = PurePosixPath(image).suffix.lower()
     if suffix not in {".jpg", ".jpeg", ".png", ".webp"}:
         raise CatalogError(f"{label}.input must be an image")
@@ -739,7 +762,7 @@ def _validate_hero_visual(record: dict[str, Any], relative_source: str, revision
         raise CatalogError(f"{label}.runtime must be display-composition or host-float-reference")
     if kind not in {"classification-panel", "result-crop"}:
         raise CatalogError(f"{label}.kind must be classification-panel or result-crop")
-    source = validate_evidence_path(entry.get("predictions_source"), f"{label}.predictions_source")
+    source = validate_evidence_path(entry.get("predictions_source"), f"{label}.predictions_source", revision)
     if kind == "result-crop":
         if source != image:
             raise CatalogError(f"{label}.predictions_source must be the cropped result image")
@@ -819,8 +842,9 @@ def validate_pending_record(record: dict[str, Any], source_path: Path) -> dict[s
     if source_path != expected_source:
         raise CatalogError(f"{relative_source}: expected path {expected_source.relative_to(ROOT)}")
 
+    revision = validate_commit(record.get("sample_revision"), f"{relative_source}.sample_revision")
     sample_path = _safe_samples_path(record.get("sample_path"), f"{relative_source}.sample_path")
-    entry_kind = lookup_sample_entry(sample_path, f"{relative_source}.sample_path")
+    entry_kind = lookup_sample_entry(sample_path, f"{relative_source}.sample_path", revision)
     declared_kind = record.get("sample_kind", "directory")
     if declared_kind not in {"directory", "gitlink"}:
         raise CatalogError(f"{relative_source}.sample_kind must be directory or gitlink")
@@ -828,7 +852,6 @@ def validate_pending_record(record: dict[str, Any], source_path: Path) -> dict[s
         raise CatalogError(
             f"{relative_source}.sample_kind is {declared_kind} but {sample_path} is a {entry_kind}"
         )
-    validate_commit(record.get("sample_revision"), f"{relative_source}.sample_revision")
 
     if "license" in record:
         license_info = require_mapping(record.get("license"), f"{relative_source}.license")
@@ -840,7 +863,7 @@ def validate_pending_record(record: dict[str, Any], source_path: Path) -> dict[s
         if "scope" in license_info and license_info["scope"] not in {"sample-code", "model"}:
             raise CatalogError(f"{relative_source}.license.scope must be sample-code or model")
         if "source" in license_info:
-            license_source = validate_evidence_path(license_info.get("source"), f"{relative_source}.license.source")
+            license_source = validate_evidence_path(license_info.get("source"), f"{relative_source}.license.source", revision)
             license_text = blob_text(
                 license_source, f"{relative_source}.license.source", record["sample_revision"],
             ).lower()
@@ -867,7 +890,7 @@ def validate_pending_record(record: dict[str, Any], source_path: Path) -> dict[s
         if platform in seen_platforms:
             raise CatalogError(f"{relative_source}: duplicate supported platform {platform}")
         seen_platforms.add(platform)
-        validate_evidence_path(platform_record.get("evidence"), f"{platform_label}.evidence")
+        validate_evidence_path(platform_record.get("evidence"), f"{platform_label}.evidence", revision)
 
     facet_tasks = record.get("facet_tasks", [TASK_REGISTRY["tasks"][task]["facet_id"]])
     if not isinstance(facet_tasks, list) or not facet_tasks:

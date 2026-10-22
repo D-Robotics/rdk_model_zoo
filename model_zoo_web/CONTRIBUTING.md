@@ -190,11 +190,17 @@ variants:
 
 - `id` 必须等于 `<source>/<family>/<task>`。
 - YAML 路径必须与 `domain/source/family/task` 完全对应。
-- `sample_path` 必须位于本仓库 `samples/` 下且真实存在：本地检出中有该目录，或在
-  `MODEL_ZOO_SAMPLE_REF` 指定的 git 引用（CI 使用 `refs/remotes/origin/develop`）中存在。
-  示例源码只需合入 `develop`，Web 分支不必携带；两处都找不到时构建失败。
+- 待补记录的 `sample_path`、子模块类型和所有证据路径必须在该记录的
+  `sample_revision` 中存在，不以本地文件或当前 `develop` 代替。
+  Web 分支不必携带这些源码；本地 Git 对象库必须包含所引用的提交。
+  现有未填写 `sample_revision` 的完整记录仍先检查本地目录，缺少时可使用
+  `MODEL_ZOO_SAMPLE_REF` 指定的 Git 引用。
 - 中文和英文描述只说明架构特点，不写板端性能、宣传语或下载说明。
 - `license.url` 必须是官方 HTTPS 页面。
+- 待补记录的 `license.scope: sample-code` 仅表示示例代码许可，网页单独展示，
+  不作为模型许可。未知的模型许可保持“未声明”。
+- `upstream` 只保留仓库、论文和模型卡链接；仓库地址去掉 `.git` 后去重。
+  不把权重或压缩包下载标成仓库；不同版本或语言的链接使用可区分的名称。
 - Source 输入和 Runtime 输入必须分开记录，例如 `NCHW float32 RGB` 与
   `NV12 runtime` 不能混写成一个输入格式。
 - 模型参数量使用整数，GFLOPs 使用对应输入尺寸下的真实值。
@@ -267,6 +273,8 @@ variants:
 
 封面要求：
 
+- 发布产物只使用站内相对路径，不热链远程图片。待补记录没有审核后的
+  `hero_visual` 时统一使用中性 SVG，占位图不表示已有推理结果。
 - 16:9，主体清楚，适合网页横向卡片和详情页。
 - 同一模型系列和任务共用一张封面。
 - 图片应直接体现任务，不使用纯装饰性背景代替模型结果。
@@ -287,7 +295,14 @@ OE 报告要求：
 ```bash
 python3 -m pip install -r model_zoo_web/requirements.txt
 npm ci --prefix model_zoo_web
+export MODEL_ZOO_SAMPLE_REF=7a97c1780b0cfa131ff0007d662e255e5e41c12e
 ```
+
+待补记录按各自的 `sample_revision` 校验。Web 检出缺少现有完整记录的源码时，
+`check` 和 `build:release` 仍需上面的 `MODEL_ZOO_SAMPLE_REF`；CI 和 Pages 使用同一
+不可变提交作为这些未填写 `sample_revision` 的完整记录的备用来源。
+浅克隆先执行 `git fetch --unshallow`；如果仍缺少某个记录引用的提交，执行
+`git fetch --no-tags origin <sample_revision>` 获取该完整 SHA。构建不会自动联网。
 
 验证网页空壳和 Catalog：
 

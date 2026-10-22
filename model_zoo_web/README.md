@@ -48,6 +48,7 @@ and the samples-only catalog:
 ```bash
 python3 -m pip install -r model_zoo_web/requirements.txt
 npm ci --prefix model_zoo_web
+export MODEL_ZOO_SAMPLE_REF=7a97c1780b0cfa131ff0007d662e255e5e41c12e
 npm --prefix model_zoo_web run check
 ```
 
@@ -71,6 +72,23 @@ npm --prefix model_zoo_web run check:release
 
 `MODEL_ZOO_CATALOG` and `MODEL_ZOO_INPUTS` may optionally override the default
 catalog and release-input paths for local review.
+
+Pending records resolve `sample_path` and every evidence path at their own
+40-character `sample_revision`. They do not require `MODEL_ZOO_SAMPLE_REF` or
+the current `develop` tree. Use a full-history checkout (`git fetch --unshallow`
+for a shallow clone); if a pinned commit is still missing, fetch that exact
+SHA with `git fetch --no-tags origin <sample_revision>`. The build reads local
+Git objects and never fetches automatically. CI and Pages use `fetch-depth: 0`.
+For existing released records without `sample_revision`, local sample paths
+are checked first. When their source is absent from the Web checkout, the
+`MODEL_ZOO_SAMPLE_REF` export above is required for `check` and `build:release`.
+CI and Pages use the same immutable fallback commit for those released records.
+
+Every cover must be a site-relative local asset. Pending records without a
+reviewed `hero_visual` use the shared SVG placeholder, even when an
+`example_image` is recorded as source evidence. Sample code licenses are
+displayed separately from model licenses; `scope: sample-code` does not
+declare the model's license.
 
 The model-detail view links an OE conversion report only when the imported
 release record supplies a reviewed public OSS URL. Missing reports keep the

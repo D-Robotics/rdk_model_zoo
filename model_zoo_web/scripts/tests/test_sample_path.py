@@ -98,6 +98,24 @@ class SamplePathTest(unittest.TestCase):
                 with self.assertRaisesRegex(build_catalog.CatalogError, "safe path below samples"):
                     build_catalog.validate_sample_path(bad, LABEL)
 
+    def test_pinned_sample_and_evidence_survive_develop_deletion(self):
+        revision = subprocess.check_output(["git", "-C", str(self.root), "rev-parse", "develop"], text=True).strip()
+        git(self.root, "branch", "-f", "develop", "HEAD")
+        os.environ[ENV] = "develop"
+        self.assertEqual(build_catalog.lookup_sample_entry("samples/vision/demo", LABEL, revision), "directory")
+        self.assertEqual(build_catalog.validate_evidence_path("samples/vision/demo/README.md", LABEL, revision),
+                         "samples/vision/demo/README.md")
+
+    def test_pinned_paths_cannot_be_rescued_by_untracked_local_files(self):
+        revision = subprocess.check_output(["git", "-C", str(self.root), "rev-parse", "develop"], text=True).strip()
+        local = self.root / "samples/vision/local-only"
+        local.mkdir()
+        (local / "README.md").write_text("local\n")
+        with self.assertRaisesRegex(build_catalog.CatalogError, revision):
+            build_catalog.lookup_sample_entry("samples/vision/local-only", LABEL, revision)
+        with self.assertRaisesRegex(build_catalog.CatalogError, revision):
+            build_catalog.validate_evidence_path("samples/vision/local-only/README.md", LABEL, revision)
+
 
 if __name__ == "__main__":
     unittest.main()

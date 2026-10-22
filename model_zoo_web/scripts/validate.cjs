@@ -148,7 +148,7 @@ if (preview) {
     // Catalog cards (app.js) and detail heroes (detail-view.js) both request
     // coverImage, falling back to the same relative placeholder.
     if (!checkedCovers.has(model.coverImage)) {
-      assertCoverResolves(model.coverImage, root, repoRoot, `${model.id} catalog cover and detail hero`);
+      assertCoverResolves(model.coverImage, root, `${model.id} catalog cover and detail hero`);
       checkedCovers.add(model.coverImage);
     }
     if (model.releaseStatus === 'data-pending') {
@@ -184,7 +184,7 @@ if (preview) {
           }
         }
       } else if (model.coverImage !== 'assets/pending-cover.svg') {
-        assert.match(model.coverImage, /^https:\/\/raw\.githubusercontent\.com\/D-Robotics\/rdk_model_zoo\/[0-9a-f]{40}\//, `${model.id}: pending cover must be a file at the pinned revision`);
+        assert.fail(`${model.id}: pending cover must be a reviewed local hero or the shared placeholder`);
       }
       for (const download of model.documentedDownloads || []) {
         assert.match(download.url || '', /^https:\/\//, `${model.id}: documented download must be HTTPS`);
