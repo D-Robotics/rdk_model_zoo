@@ -496,8 +496,14 @@ function variantSizeTokens(label) {
 // variants that have a documented file, unless no sibling has one.
 function scopeQuickstart(quickstart, label, variantHasDownload, downloadsAreSpecific) {
   const variantSizes = variantSizeTokens(label);
+  const labelTokens = new Set(tokensOf(label));
   const fit = (command, isDownload) => {
     if (!command) return '';
+    // A scale word alone cannot distinguish base-patch16-224 from 384,
+    // or composite names such as YOLOE's 11s and 11m.
+    const argument = commandWords(command).match(/(?:^|\s)--variant(?:\s+|=)(?:"([^"]+)"|'([^']+)'|(\S+))/);
+    const variant = argument && (argument[1] || argument[2] || argument[3]);
+    if (variant && !tokensOf(variant).every(token => labelTokens.has(token))) return '';
     const named = commandSizeTokens(command);
     if (named.length) return named.every(token => variantSizes.includes(token)) ? command : '';
     if (isDownload && downloadsAreSpecific && !variantHasDownload) return '';
