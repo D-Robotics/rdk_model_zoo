@@ -64,6 +64,36 @@ test('a sized quick start stays on the released variant it names', () => {
   assert.deepEqual(scopeQuickstart(clip, 'CLIP', false, false), clip);
 });
 
+test('SigLIP quick starts keep their patch size and resolution', () => {
+  const quickstart = {
+    download: 'python3 samples/vision/siglip/model/download.py --target s100 --variant base-patch16-224',
+    run: 'python3 samples/vision/siglip/runtime/python/main.py --target s100 --variant base-patch16-224 --submodel pooler_output',
+  };
+  assert.deepEqual(scopeQuickstart(quickstart, 'SigLIP base patch16 224 on RDK S100', true, true), quickstart);
+  for (const label of ['SigLIP base patch16 384 on RDK S100', 'SigLIP base patch16 512 on RDK S100', 'SigLIP base patch32 224']) {
+    assert.deepEqual(scopeQuickstart(quickstart, label, true, true), { download: '', run: '' });
+  }
+});
+
+test('YOLOE quick starts do not cross composite model sizes', () => {
+  const quickstart = {
+    download: 'bash samples/vision/yoloe/model/download.sh --target x5 --variant 11s',
+    run: 'python3 samples/vision/yoloe/runtime/python/main.py --target x5 --variant 11s',
+  };
+  assert.deepEqual(scopeQuickstart(quickstart, '11s', true, true), quickstart);
+  for (const label of ['11m', '11l', '26s']) {
+    assert.deepEqual(scopeQuickstart(quickstart, label, true, true), { download: '', run: '' });
+  }
+});
+
+test('quoted and equals-style variant arguments keep the same matching rules', () => {
+  for (const argument of ['--variant=11s', '--variant "11s"', "--variant='11s'"]) {
+    const quickstart = { download: '', run: `python3 sample/runtime/python/main.py ${argument}` };
+    assert.equal(scopeQuickstart(quickstart, '11s', true, true).run, quickstart.run);
+    assert.equal(scopeQuickstart(quickstart, '11m', true, true).run, '');
+  }
+});
+
 test('a platform page keeps that platform command and drops dry runs', () => {
   const text = [
     'python3 sample/model/download.py --target s100',
