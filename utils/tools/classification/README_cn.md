@@ -26,12 +26,12 @@ python -m pip install -r utils/tools/classification/requirements.lock.txt
 
 ## 权重与预处理
 
-权重清单记录上游默认配置和显式部署合同。V1 的 mean/std 为 0.5，其他模型采用各自记录的 ImageNet 归一化。
+权重清单记录上游默认配置，以及部署用的均值、标准差和裁剪。MobileNetV1 的 mean/std 为 0.5；其余模型为 ImageNet 均值 `0.485 0.456 0.406`、标准差 `0.229 0.224 0.225`。Sample PTQ YAML 将其写成 `mean_value`（均值 × 255）和 `scale_value`（1 / (255 × 标准差)）：V1 为 `127.5` / `0.0078431372549`，其余为 `123.675 116.28 103.53` / `0.0171247538317 0.0175070028011 0.0174291938998`。
 使用 PIL bicubic 短边缩放后中心裁剪；尺寸与 `crop_pct` 显式指定，上游 `test_input_size` 不自动覆盖部署尺寸。
 
 新 ONNX 输入为归一化 RGB float32 NCHW `[1,3,H,W]`，输出为 `[1,1000]` logits。
 类别顺序采用 timm `ImageNetInfo(ilsvrc2012)` 的 0–999 索引。
-历史 manifest 制品可能采用其他来源、预处理、形状和概率输出，需要按各自合同使用。
+历史 manifest 制品可能采用其他来源、预处理、形状和概率输出，需要按各自的预处理和输出使用。
 
 ```bash
 python utils/tools/classification/workflow.py fetch --model v4-small \
@@ -121,7 +121,7 @@ python samples/vision/mobilenetv4/evaluator/evaluate.py \
 回执记录真实 ORT provider；请求的 CUDA provider 不可用时失败。
 当前基线是 RGB FP32，不含 NV12 往返。后续板端评测应调用 `prepare_rgb`，将连续 BGR 裁剪图
 传入相同尺寸、`resize_type=0` 的 sample 分类器，明确记录 NV12 与量化带来的差异。
-这套新 checkpoint 合同不采用历史 CLI 的默认 letterbox。
+这套新 checkpoint 不采用历史 CLI 的默认 letterbox。
 
 ## 主机检查
 

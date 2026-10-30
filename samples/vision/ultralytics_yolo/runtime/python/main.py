@@ -12,24 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Ultralytics YOLO unified inference entry point.
+"""Ultralytics YOLO inference entry.
 
-This file stays deliberately small: parse the arguments, resolve the plan,
-construct the selected task model, call ``predict``, present the result —
-the construct/predict/presentation sequence runs inline in ``main()``.
-Option declarations, the platform/asset registry, task dispatch, the
-model-free listing/dry-run/download-preparation modes and result
-presentation live in ``cli.py``; each task's readable flow lives in its task
-module (``detect.py`` for the DFL/LTRB/v10 detection families).
+Parse arguments, select the published model, build the task model, call
+``predict``, and print or save the result. Options and dry-run live in
+``cli.py``. Each task implements preprocess, infer, and postprocess in its
+own module, starting with ``detect.py``.
 
-One script drives every supported Ultralytics YOLO task on every supported
-platform. The platform decides the artifact format, the download location,
-the NV12 input tensor protocol and the documented default thresholds; the
-task decides which wrapper runs.
-
-The board runtime `hbm_runtime` is imported only when a model is actually
-loaded. `--help`, `--list-models` and `--dry-run` therefore work on a
-development host that has no board runtime installed.
+The selected target picks the artifact, NV12 layout, and default thresholds.
+The task picks the model class. ``--help``, ``--list-models``, and
+``--dry-run`` do not import ``hbm_runtime``.
 
 Examples:
     python main.py --task detect --platform x5

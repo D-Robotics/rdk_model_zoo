@@ -23,7 +23,7 @@ OpenExplorer（OE）工具链容器中运行。
   ImageNet-1k 分类模型，权重不做修改。许可证：Apache-2.0（检查点 model card）。
 
 <a id="preprocessing"></a>
-### 预处理合同
+### 预处理
 
 校准、评测与 runtime 使用同一几何，跟随检查点自带的评测设置（`crop_pct`）：
 
@@ -38,6 +38,8 @@ OpenExplorer（OE）工具链容器中运行。
 1 / (255 x 标准差)），因此 runtime 送入由 224x224 裁剪图转换的 NV12。NV12
 转换使用 OpenCV 的有限范围 BT.601 变换，所以两种配置都设置
 `input_space_and_range: bt601_video`。
+
+`checkpoints.json` 记录均值/标准差 `0.5`。本目录 PTQ YAML 将其编译进模型：`norm_type: data_mean_and_scale`，`mean_value: 127.5 127.5 127.5`，`scale_value: 0.0078431372549 0.0078431372549 0.0078431372549`，`input_type_rt: nv12`，`calibration_type: default`。
 
 <a id="directory"></a>
 ## 目录结构
@@ -94,7 +96,7 @@ python3 samples/vision/mobilenetv1/conversion/export.py --model v1-100 \
 
 `export.py` 校验检查点哈希，严格加载权重，简化计算图，并用真实图像把 logits
 与 Top-5 同 PyTorch 对比。`export.json` 记录每张图像的最大绝对误差，并把 ONNX
-的 SHA-256 与检查点、预处理合同和依赖版本绑定。
+的 SHA-256 与检查点、预处理设置和依赖版本绑定。
 
 <a id="calibration"></a>
 ## 校准

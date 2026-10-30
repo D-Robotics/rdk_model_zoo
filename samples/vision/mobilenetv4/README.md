@@ -6,14 +6,12 @@ MobileNetV4 is a family of image classifiers built around universal inverted bot
 
 Sources: [timm/models/MobileNetV4.py](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/MobileNetV4.py) · [MobileNetV4 -- Universal Models for the Mobile Ecosystem](https://arxiv.org/abs/2404.10518)
 
-[中文说明](README_cn.md)
-
 <a id="overview"></a>
 
 ## Overview
 
-The sample ships one Python runtime for all targets. The `MobileNetV4Classifier` class runs a `preprocess → infer → postprocess` flow chained by `predict`: it resolves one exact artifact reference from the platform release manifest for the detected board, verifies the board identity, loads `hbm_runtime` lazily, and returns a typed Top-K result
-([runtime/python/README.md](runtime/python/README.md)).
+From `runtime/python`, run `python3 main.py`; the classifier is `classify.py`.
+Boards and artifacts are in the support table below. Options and model selection: [runtime/python/README.md](runtime/python/README.md).
 
 ### Algorithm background
 

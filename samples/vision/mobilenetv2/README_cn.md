@@ -10,13 +10,10 @@ MobileNetV2 使用倒残差模块和线性瓶颈完成轻量图像分类。
 
 ## 概述
 
-本样例为全部目标提供 Python 运行时，另为 S 系列提供 C++ 运行时。
-`MobileNetV2Classifier` 类执行由 `predict` 串联的
-`preprocess → infer → postprocess` 流程：按检测到的板卡从平台发布
-Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，
-返回带类型的 Top-K 结果（见
-[runtime/python/README_cn.md](runtime/python/README_cn.md)）。C++ 侧为
-S 系列 `hbDNNInferV2` 实现（见 [runtime/cpp/README_cn.md](runtime/cpp/README_cn.md)）。
+Python 覆盖支持表中的全部板卡，C++ 覆盖 S100、S100P、S600。
+在 `runtime/python` 运行 `python3 main.py`，分类实现在 `classify.py`。
+参数和模型选择见 [runtime/python/README_cn.md](runtime/python/README_cn.md)，
+C++ 构建与运行见 [runtime/cpp/README_cn.md](runtime/cpp/README_cn.md)。
 
 ### 算法背景
 

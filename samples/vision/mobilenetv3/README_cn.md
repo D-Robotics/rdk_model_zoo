@@ -10,8 +10,8 @@ MobileNetV3 将倒残差模块与通道注意力结合，用于移动端图像�
 
 ## 概述
 
-本样例为全部目标提供同一个 Python 运行时。
-`MobileNetV3Classifier` 类执行由 `predict` 串联的 `preprocess → infer → postprocess` 流程：按检测到的板卡从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，返回带类型的 Top-K 结果（见 [runtime/python/README_cn.md](runtime/python/README_cn.md)）。
+在 `runtime/python` 运行 `python3 main.py`，分类实现在 `classify.py`。
+支持的板卡和制品见下方支持表。参数与模型选择见 [runtime/python/README_cn.md](runtime/python/README_cn.md)。
 
 ### 算法背景
 

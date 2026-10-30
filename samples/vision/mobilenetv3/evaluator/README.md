@@ -2,7 +2,7 @@ English | [简体中文](README_cn.md)
 
 # MobileNetV3 evaluation
 
-For the pinned timm checkpoint workflow, use [`evaluate.py`](evaluate.py) and the [shared host workflow](../../../../utils/tools/classification/README.md). It records the exact checkpoint, center-crop preprocessing, batch-one logits contract, and full-dataset evaluation inputs. The existing artifact commands below retain their own contracts.
+For the pinned timm checkpoint workflow, use [`evaluate.py`](evaluate.py) and the [shared host workflow](../../../../utils/tools/classification/README.md). It records the exact checkpoint, center-crop preprocessing, batch-one logits, and full-dataset evaluation inputs. The existing artifact commands below keep their own preprocessing and outputs.
 Use the bundled image for a single-image classification check. For dataset accuracy, prepare the matching validation set and per-image ground-truth class indices, then compare those indices with the runtime’s Top-1 class IDs.
 
 
@@ -11,7 +11,7 @@ Use the bundled image for a single-image classification check. For dataset accur
 `evaluate_board.py` loads one compiled model and evaluates every image in the
 frozen ImageNetV2 MatchedFrequency manifest. Use the matching artifact for the
 board (S100, S100P or S600 `.hbm`), with NV12 `bt601_video` input
-and float32 logits, and select the checkpoint's preprocessing contract with
+and float32 logits, and select the checkpoint's preprocessing with
 `--variant` (`v3-large-100` or `v3-small-100`). The evaluator uses PIL bicubic
 shorter-edge resize (256 for large, 256 for small) and a center crop to the model input (224),
 followed by the sample's OpenCV NV12 conversion; this is the same geometry

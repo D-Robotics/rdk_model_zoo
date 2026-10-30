@@ -1,10 +1,9 @@
 """Download one published EfficientFormer artifact through the shared manifest.
 
-The script deliberately contains only stable target/variant-to-reference
-mappings. URL, format, and optional publisher hash facts are read from the
-platform manifest by ``utils.py_utils.assets``. It is safe to import this
-module on a host without the board SDK; network access occurs only when
-``download_target`` is called.
+Map a target and variant to one manifest reference and download that file.
+URLs and publisher hashes come from the platform manifest
+(``utils.py_utils.assets``). Importing this module does not load the board
+SDK or use the network; ``download_target`` performs the download.
 """
 
 from __future__ import annotations
@@ -14,9 +13,7 @@ from pathlib import Path
 import sys
 from typing import Optional, Sequence
 
-# Direct execution from any working directory is supported. This is the one
-# entrypoint-local import-path adjustment; importing the module itself remains
-# SDK-free and side-effect free.
+# Allow running this file from any working directory.
 ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))

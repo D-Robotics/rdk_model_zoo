@@ -78,6 +78,16 @@ S 系列使用 `--target s100|s100p|s600`。可选的 `--test-img`、阶段模�
 | S600 | 编码器 | 1 / 12 | 5.52 / 15.87 | 180.70 / 738.48 |
 | S600 | 解码器 | 1 / 12 | 2.58 / 6.42 | 381.09 / 1772.04 |
 
+### X5 量化余弦（源记录）
+
+`rdk_x5` 样本 README 的 Validation 记录了 RDK X5 上下列制品的 cosine。原文没有写对照张量或图片数量。
+
+| 制品 | 范围 | cosine |
+| --- | --- | --- |
+| `mobile_sam_image_encoder_norm_512x512_allint16.bin` | encoder final | 0.961277 |
+| `mobile_sam_decoder_512_box_default.bin` | `low_res_masks` | 0.997539 |
+| `mobile_sam_decoder_512_box_default.bin` | `iou_predictions` | 0.999972 |
+
 运行完成后读取输出目录中的 `comparison.json` 和 NumPy 数组，比较输入、原始输出与掩码结果。
 
 ### 单模型性能测量

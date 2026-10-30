@@ -76,6 +76,16 @@ The following values are source measurements from the source evaluator READMEs:
 | S600 | encoder | 1 / 12 | 6.72 / 19.58 | 148.60 / 598.44 |
 | S600 | decoder | 1 / 12 | 1.50 / 4.08 | 662.55 / 2831.10 |
 
+### X5 quantization cosine (source record)
+
+The `rdk_x5` sample README Validation section records these cosine values on RDK X5. That note does not name the reference tensor or the image count.
+
+| Artifact | Scope | cosine |
+| --- | --- | --- |
+| `efficient_sam_vitt_encoder_512x512_default_none.bin` | encoder final | 0.968013 |
+| `efficient_sam_vitt_decoder_fixedprompt_512_default.bin` | fixed-prompt `low_res_masks` | 0.965641 |
+| `efficient_sam_vitt_decoder_fixedprompt_512_default.bin` | fixed-prompt `iou_predictions` | 0.997313 |
+
 A successful local or board invocation is the reference evidence for its selected target and prepared pair; preserve the complete output directory for review.
 
 ### Per-model performance measurement

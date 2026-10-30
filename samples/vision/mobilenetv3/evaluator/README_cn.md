@@ -2,7 +2,7 @@
 
 # MobileNetV3 评估
 
-固定版本 timm checkpoint 流程使用 [`evaluate.py`](evaluate.py)，命令见[公共主机流程](../../../../utils/tools/classification/README_cn.md)。该流程明确记录权重、中心裁剪预处理、batch=1 logits 合同和全量评测输入；下文既有制品命令按各自合同使用。
+固定版本 timm checkpoint 流程使用 [`evaluate.py`](evaluate.py)，命令见[公共主机流程](../../../../utils/tools/classification/README_cn.md)。该流程明确记录权重、中心裁剪预处理、batch=1 logits 和全量评测输入；下文既有制品命令仍按各自的预处理和输出使用。
 使用随附图片进行单图分类检查。计算数据集精度时，准备对应验证集及逐图真值类别索引，并将其与运行时返回的 Top-1 类别 ID 对照。
 
 
@@ -10,7 +10,7 @@
 
 `evaluate_board.py` 加载一次模型，对冻结的 ImageNetV2 MatchedFrequency 清单逐图评测。
 使用与板卡匹配的制品（S100、S100P 或 S600 `.hbm`），输入为
-`bt601_video` NV12，输出为 float32 logits，并用 `--variant`（`v3-large-100`、`v3-small-100`）选择检查点的预处理合同。前处理为 PIL bicubic 短边缩放
+`bt601_video` NV12，输出为 float32 logits，并用 `--variant`（`v3-large-100`、`v3-small-100`）选择检查点的预处理。前处理为 PIL bicubic 短边缩放
 （large 为 256，small 为 256）、中心裁剪到模型输入尺寸（224），再调用样例的 OpenCV NV12 转换；
 这与 runtime 使用 `--resize-type 2` 时的几何相同。campaign 固定标签顺序、
 几何变换和完整 10,000 张图片数量；程序校验每张图片与模型的 SHA256。
