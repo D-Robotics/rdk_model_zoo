@@ -93,7 +93,7 @@ The six input/reference pairs include S600 visualizations. The [evaluator guide]
 Inputs are a three-camera RGB panorama, a LiDAR BEV histogram, ego status and explicit diffusion noise. Prepare these NAVSIM features before inference. The outputs support trajectory visualization and float-reference comparison; a complete NAVSIM score requires its dataset evaluator.
 
 <a id="entry-points"></a>
-## Entry points for people and agents
+## Entry points
 
 Use `DiffusionDrivePlanner.predict`, or the stages `preprocess` → `infer` → `postprocess` that it composes; the `pre_process`/`forward`/`post_process` spellings remain importable aliases of the same implementation. The task handles planning tensor semantics only; SDK loading/scheduling, NPZ IO, download, rendering and metrics are outside it. The shared `NamedArrayRunner` preserves all named physical tensors and checks board/artifact identity. A [complete API example](runtime/python/README.md#integration-example) shows variables and input loading.
 

@@ -119,7 +119,7 @@ S100、S100P、S600 换用对应的 `s:` 引用（见 `--list-models`）与根�
 Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并退出 0；除非给出
 `--img-save-path`，否则不写任何输出文件。使用内置测试图 `great_grey_owl.JPEG` 时，Top-1 为
 class 24（`great grey owl`）；使用 `zebra_cls.jpg` 时 Top-1 为 class 340（`zebra`），X5、S100、S100P、S600 上的
-三个变体都是如此。按支持矩阵选择目标并准备对应制品；运行时会在加载模型前核验板卡身份。
+三个变体都是如此。按支持矩阵选择目标并准备对应制品，在对应板卡上运行。
 
 <a id="performance"></a>
 ## 性能数据

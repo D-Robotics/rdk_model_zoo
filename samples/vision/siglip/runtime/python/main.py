@@ -1,13 +1,11 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Native SigLIP CLI: model selection, image/file I/O and feature summaries.
+"""SigLIP entry.
 
-This file stays deliberately small: parse the arguments, handle the
-model-free listing/dry-run modes, resolve the selection, construct the
-task, call ``predict``, show the result.  Option declarations, the
-model-free modes, the feature summary and the optional NumPy save live in
-``cli.py``; the feature flow itself (preprocess → infer → postprocess)
-lives in ``embedding.py``.
+Parse arguments, build the encoder, call ``predict``, and print the features.
+``cli.py`` holds options, the summary, and the optional NumPy save.
+``embedding.py`` holds preprocess, infer, and postprocess.
+``--list-models`` and ``--dry-run`` do not load the board SDK.
 """
 from __future__ import annotations
 from pathlib import Path

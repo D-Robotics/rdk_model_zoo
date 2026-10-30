@@ -80,7 +80,7 @@ S 系列使用 `--target s100|s100p|s600`。可选的 `--test-img`、阶段模�
 
 ### X5 量化余弦（源记录）
 
-`rdk_x5` 样本 README 的 Validation 记录了 RDK X5 上下列制品的 cosine。原文没有写对照张量或图片数量。
+录自 `rdk_x5` Validation；原文未写对照张量与图片数。
 
 | 制品 | 范围 | cosine |
 | --- | --- | --- |

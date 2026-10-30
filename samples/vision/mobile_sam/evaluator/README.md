@@ -80,7 +80,7 @@ The following values are source-recorded measurements from the fixed source eval
 
 ### X5 quantization cosine (source record)
 
-The `rdk_x5` sample README Validation section records these cosine values on RDK X5. That note does not name the reference tensor or the image count.
+Recorded from the `rdk_x5` Validation section. The source did not name the reference tensor or image count.
 
 | Artifact | Scope | cosine |
 | --- | --- | --- |
