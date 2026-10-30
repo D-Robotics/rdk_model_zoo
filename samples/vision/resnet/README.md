@@ -6,21 +6,14 @@ ResNet uses residual connections to train deep image classifiers.
 
 Sources: [timm/models/resnet](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/resnet.py) · [Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385) · [ResNet strikes back](https://arxiv.org/abs/2110.00476)
 
-[中文说明](README_cn.md)
-
 <a id="overview"></a>
 
 ## Overview
 
-The sample ships one Python runtime for all targets plus one S-series C++
-runtime. The `ResNetClassifier` class runs a `preprocess → infer →
-postprocess` flow chained by `predict`: it resolves one exact artifact
-reference from the platform release manifest for the detected board,
-verifies the board identity, loads `hbm_runtime` lazily, and returns a
-typed Top-K result
-([runtime/python/README.md](runtime/python/README.md)). The C++ flow is
-the S-series `hbDNNInferV2` implementation
-([runtime/cpp/README.md](runtime/cpp/README.md)).
+Python covers every board in the support table. C++ covers S100, S100P, and S600.
+From `runtime/python`, run `python3 main.py`; the classifier is `classify.py`.
+Options and model selection: [runtime/python/README.md](runtime/python/README.md).
+C++ build and run: [runtime/cpp/README.md](runtime/cpp/README.md).
 
 ### Algorithm background
 

@@ -2,8 +2,8 @@ English | [简体中文](README_cn.md)
 
 # YOLO26 Depth conversion
 
-This directory combines the X5 Mapper and S-series `hb_compile` recipes while
-keeping their input representations separate. It prepares ONNX, deterministic
+This directory gives the X5 Mapper and S-series `hb_compile` steps and keeps
+their input representations separate. It prepares ONNX, deterministic
 calibration tensors, resolved compiler configurations, logs and artifact hashes.
 Torch export and OpenExplorer compilation run in their corresponding host
 environments; the board is validated by the runtime samples.
@@ -43,17 +43,17 @@ These maps are relative depth, not independently calibrated distances in metres.
 
 ```text
 conversion/
-├── ptq_yamls/  # Files for ptq_yamls
+├── ptq_yamls/  # X5 / S compiler YAML
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── compile.py  # Python script
-├── export.py  # Python script
-├── extract_sunrgbd_subset.py  # Python script
-├── mapper.py  # Python script
-├── prepare_calibration.py  # Python script
-├── requirements-s-source.txt  # Source or data file
-├── requirements-x5-source.txt  # Source or data file
-└── requirements.txt  # Source or data file
+├── compile.py  # render a config and invoke the compiler
+├── export.py  # export ONNX
+├── extract_sunrgbd_subset.py  # draw a fixed SUN RGB-D subset
+├── mapper.py  # direct X5 hb_mapper entry
+├── prepare_calibration.py  # write calibration tensors
+├── requirements-s-source.txt  # recorded S source environment
+├── requirements-x5-source.txt  # recorded X5 source environment
+└── requirements.txt  # host calibration and config dependencies
 ```
 
 <a id="toolchain-targets"></a>

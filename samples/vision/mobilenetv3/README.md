@@ -6,14 +6,12 @@ MobileNetV3 combines inverted residual blocks and squeeze-and-excitation for mob
 
 Sources: [timm/models/mobilenetv3.py](https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/mobilenetv3.py) · [Searching for MobileNetV3](https://arxiv.org/abs/1905.02244)
 
-[中文说明](README_cn.md)
-
 <a id="overview"></a>
 
 ## Overview
 
-The sample ships one Python runtime for all targets. The `MobileNetV3Classifier` class runs a `preprocess → infer → postprocess` flow chained by `predict`: it resolves one exact artifact reference from the platform release manifest for the detected board, verifies the board identity, loads `hbm_runtime` lazily, and returns a typed Top-K result
-([runtime/python/README.md](runtime/python/README.md)).
+From `runtime/python`, run `python3 main.py`; the classifier is `classify.py`.
+Boards and artifacts are in the support table below. Options and model selection: [runtime/python/README.md](runtime/python/README.md).
 
 ### Algorithm background
 

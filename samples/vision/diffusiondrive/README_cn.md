@@ -93,7 +93,7 @@ S600 参考可视化：
 输入包括三相机 RGB 全景、LiDAR BEV 直方图、自车状态和显式扩散噪声。推理前准备这些 NAVSIM 特征。输出可用于轨迹可视化与浮点参考比较；完整 NAVSIM 得分需使用其数据集评估器。
 
 <a id="entry-points"></a>
-## 人与 Agent 的入口
+## 入口
 
 使用 `DiffusionDrivePlanner.predict`，或由它组合的 `preprocess` → `infer` → `postprocess` 阶段。模型类负责规划张量处理与 Runtime 初始化；CLI 负责 NPZ 读写、下载命令和绘图，指标由评估器计算。共享 `NamedArrayRunner` 保留全部具名物理张量并检查板卡/资产身份。[完整 API 示例](runtime/python/README_cn.md#integration-example)包括变量和输入加载过程。
 

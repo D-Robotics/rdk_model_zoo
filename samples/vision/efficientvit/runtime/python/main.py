@@ -1,11 +1,9 @@
-"""People and Agent entrypoint for the EfficientViT classification sample.
+"""Entry point for the EfficientViT classification sample.
 
-This file stays deliberately small: parse the arguments, resolve the model,
-construct the classifier, call ``predict``, show the result.  Option
-declarations and the model-free listing/dry-run modes live in ``cli.py``;
-the classification flow itself (preprocess → infer → postprocess) lives in
-``classify.py``.  Listing and dry-run are deliberately model-free; model
-preparation remains an explicit user action.
+Parse arguments, build the classifier, call ``predict``, and print Top-K.
+``cli.py`` holds options, model selection, and result printing.
+``classify.py`` holds preprocess, infer, and postprocess.
+``--list-models`` and ``--dry-run`` do not load the board SDK.
 """
 
 from __future__ import annotations
@@ -16,8 +14,7 @@ from typing import Sequence
 
 _ROOT = Path(__file__).resolve().parents[5]
 if str(_ROOT) not in sys.path:
-    # Direct ``python samples/.../main.py`` is a supported full-checkout entry.
-    # This compatibility adjustment is kept at the entry boundary only.
+    # Allow `python samples/.../main.py` from a full checkout.
     sys.path.insert(0, str(_ROOT))
 
 from samples.vision.efficientvit.runtime.python.cli import (  # noqa: E402
@@ -69,14 +66,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         if not selection.model_path.is_file():
             raise FileNotFoundError(f"model file not found: {selection.model_path}")
 
-        # A path existing on disk is not execution authorization.  Require the
-        # exact detected board before touching hbm_runtime.
+        # Load the runtime only when this board matches the selected target.
         from utils.py_utils.platforms import require_execution_target
 
         require_execution_target(selection.target)
 
-        # Imported inside real execution: OpenCV and hbm_runtime load only
-        # after the selection, file, and board checks above have passed.
+        # Import the classifier only for a real run, so --help stays SDK-free.
         from samples.vision.efficientvit.runtime.python.classify import EfficientViTClassifier
 
         contract = selection.contract

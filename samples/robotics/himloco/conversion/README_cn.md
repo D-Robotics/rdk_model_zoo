@@ -119,7 +119,7 @@ python3 samples/robotics/himloco/conversion/prepare_calibration.py \
 ```
 
 每个 `.bin` 包含 270 个连续 float32（1080 字节）。`calibration-manifest.json` 记录
-源文件哈希、选中行号、统计量和预处理合同。不能把序列化 `.pt` 直接改名为 `.bin`。
+源文件哈希、选中行号、统计量和预处理设置。不能把序列化 `.pt` 直接改名为 `.bin`。
 
 <a id="compile"></a>
 ## 3. 执行 Checker 和 MIX PTQ

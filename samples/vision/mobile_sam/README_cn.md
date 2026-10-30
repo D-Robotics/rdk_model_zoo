@@ -65,7 +65,7 @@ python3 samples/vision/mobile_sam/runtime/python/main.py --target s100 --box 185
 <a id="expected-results"></a>
 ## 预期结果
 
-默认图像为 `test_data/dogs.jpg`。成功运行会生成 `512x512` 叠加图和二值掩码；IoU 与掩码 index 是模型输出，`mobile_sam_binary_mask.png` 是保留的参考参考。
+默认图像为 `test_data/dogs.jpg`。成功运行会生成 `512x512` 叠加图和二值掩码；IoU 与掩码 index 是模型输出，`mobile_sam_binary_mask.png` 是保留的源参考图。
 
 输入拉伸至 512×512；`[x1,y1,x2,y2]` 框与输出掩码使用该坐标系。RGB 归一化采用 mean `[123.675,116.28,103.53]`、std `[58.395,57.12,57.375]`。编码器生成 `(1,256,32,32)` 嵌入。解码器返回三个掩码候选及 IoU 分数，选中掩码采用 logits `>0`。
 

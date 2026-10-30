@@ -2,7 +2,7 @@
 
 # YOLO26 Depth 模型转换
 
-本目录统一 X5 Mapper 与 S 系列 `hb_compile` 入口，同时保留各自的数据格式。
+本目录给出 X5 Mapper 与 S 系列 `hb_compile` 的步骤，两边的数据格式分开保留。
 流程包括 ONNX 导出、确定性校准数据、解析后的编译配置、日志和制品摘要。
 Torch 导出与 OpenExplorer 编译在对应主机环境中执行；板端验证由运行时示例完成。
 
@@ -38,17 +38,17 @@ log 边界止于 clip 与 scale/bias；**exp 和最终尺寸还原在 CPU 上执
 
 ```text
 conversion/
-├── ptq_yamls/  # ptq_yamls 相关文件
+├── ptq_yamls/  # X5 / S 编译 YAML
 ├── README.md  # 英文说明
 ├── README_cn.md  # 中文说明
-├── compile.py  # Python 脚本
-├── export.py  # Python 脚本
-├── extract_sunrgbd_subset.py  # Python 脚本
-├── mapper.py  # Python 脚本
-├── prepare_calibration.py  # Python 脚本
-├── requirements-s-source.txt  # 源码或数据文件
-├── requirements-x5-source.txt  # 源码或数据文件
-└── requirements.txt  # 源码或数据文件
+├── compile.py  # 渲染配置并调用编译器
+├── export.py  # 导出 ONNX
+├── extract_sunrgbd_subset.py  # 从 SUN RGB-D 抽取固定子集
+├── mapper.py  # X5 hb_mapper 直接入口
+├── prepare_calibration.py  # 生成校准张量
+├── requirements-s-source.txt  # S 源环境依赖记录
+├── requirements-x5-source.txt  # X5 源环境依赖记录
+└── requirements.txt  # 主机校准与配置依赖
 ```
 
 <a id="toolchain-targets"></a>

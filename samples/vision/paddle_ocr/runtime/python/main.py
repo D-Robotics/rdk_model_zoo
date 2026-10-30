@@ -12,17 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Native entrypoint for the bounded Python PaddleOCR composition pilot.
+"""PaddleOCR entry.
 
-This file stays deliberately small: parse the arguments, handle the
-model-free listing/dry-run/prepare modes, resolve the pair, construct the
-two-stage pipeline, call ``predict``, show the result.  Option
-declarations, the model-free modes and result rendering live in
-``cli.py``; the detection → crop → recognition composition itself lives
-in ``ocr.py``.  The entrypoint is the only module that adjusts
-``sys.path`` for direct full-checkout invocation; SDK, OpenCV and
-pyclipper imports stay behind the selected operation so help/list/dry-run
-remain host-safe.
+Parse arguments, build the two-stage pipeline, call ``predict``, and print the text.
+``cli.py`` holds options, model selection, and rendering.
+``ocr.py`` runs detection, crop, then recognition.
+``--help``, ``--list-models``, and ``--dry-run`` do not load the board SDK.
 """
 
 from __future__ import annotations

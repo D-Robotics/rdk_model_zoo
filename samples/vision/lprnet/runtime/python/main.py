@@ -1,12 +1,12 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""People and Agent entrypoint for the LPRNet recognition sample.
+"""LPRNet recognition entry.
 
-This file stays deliberately small: parse the arguments, resolve the model,
-construct the recognizer, call ``predict``, present the result. Option
-declarations and model-free listing/dry-run live in ``cli.py``; the
-recognition flow lives in ``lprnet.py``.
+Parse arguments, build the recognizer, call ``predict``, and print the plate.
+``cli.py`` holds options and model selection.
+``lprnet.py`` holds preprocess, infer, and postprocess.
+``--list-models`` and ``--dry-run`` do not load the board SDK.
 """
 
 from __future__ import annotations
@@ -15,8 +15,7 @@ from pathlib import Path
 import json
 import sys
 
-# Make direct ``python /abs/path/main.py`` work from any cwd without importing
-# the board SDK or changing the host-safe list/dry-run paths.
+# Allow running this file from a full checkout.
 _ROOT = Path(__file__).resolve().parents[5]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))

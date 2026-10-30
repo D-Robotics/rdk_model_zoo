@@ -1,11 +1,9 @@
-"""SDK-free CLI and board entrypoint for EfficientSAM-Tiny.
+"""EfficientSAM entry.
 
-This file stays deliberately small: parse the arguments, handle the
-model-free listing/dry-run modes, resolve the selection, construct the
-model pipeline, call ``predict``, show the
-result.  Option declarations, the model-free modes, image reading and the
-overlay/mask writes live in ``cli.py``; the encoder → decoder composition
-lives in ``pipeline.py``.
+Parse arguments, build the pipeline, call ``predict``, and save the mask.
+``cli.py`` holds options, model selection, and image output.
+``pipeline.py`` runs the encoder and then the decoder.
+``--list-models`` and ``--dry-run`` do not load the board SDK.
 """
 from __future__ import annotations
 

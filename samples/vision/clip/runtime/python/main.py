@@ -1,13 +1,11 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""CLIP native CLI: prepare an exact encoder pair and match text to one image.
+"""CLIP entry.
 
-This file stays deliberately small: parse the arguments, handle the
-model-free listing/dry-run modes, resolve the pair, construct the task,
-call ``predict``, show the result.  Option declarations, prompt parsing,
-result presentation and the annotated-image write live in ``cli.py``; the
-matching flow itself (preprocess → infer → postprocess) lives in
-``matching.py``.
+Parse arguments, build the matcher, call ``predict``, and print the scores.
+``cli.py`` holds options, prompts, and the annotated image.
+``matching.py`` holds preprocess, infer, and postprocess.
+``--list-models`` and ``--dry-run`` do not load the board SDK.
 """
 import sys
 from pathlib import Path

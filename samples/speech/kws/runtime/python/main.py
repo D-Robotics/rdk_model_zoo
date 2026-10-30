@@ -1,14 +1,11 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Canonical KWS command: explicit preparation and a probability report.
+"""KWS entry.
 
-This file stays deliberately small: parse the arguments, handle the
-model-free listing/dry-run modes, gate the board, construct the ``KWS``
-task through ``KWS.from_model``, apply scheduling, call ``predict`` once,
-present the report. Option declarations, published selection, the model-free rendering, audio
-loading and the report records live in ``cli.py``; the MDTC frontend, the
-readable preprocess → infer → postprocess chain, the raw runner construction
-and the model-owned loader live in ``kws.py``.
+Parse arguments, build ``KWS``, call ``predict`` once, and write the probability report.
+``cli.py`` holds options, audio loading, and the report.
+``kws.py`` holds preprocess, infer, and postprocess.
+``--list-models`` and ``--dry-run`` do not load the board SDK.
 """
 
 from pathlib import Path

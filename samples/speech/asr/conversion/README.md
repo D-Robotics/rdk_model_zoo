@@ -21,7 +21,7 @@ The active manifest publishes separate S100 and S600 HBM files. Use the OE/compi
 
 <a id="export"></a>
 ## Export
-Export takes the exact checkpoint and architecture/configuration, vocabulary/token ordering, preprocessing contract, exporter versions and ONNX opset as its inputs. Expected runtime input is float32 `[1,30000]`; expected output is `[1,T,3503]` logits. `T` is observed from the actual export/model, not taken from an unrelated Wav2Vec2 model. Verify blank ID 0 and the pinned vocabulary before comparing text.
+Export takes the exact checkpoint and architecture/configuration, vocabulary/token ordering, preprocessing settings, exporter versions and ONNX opset as its inputs. Expected runtime input is float32 `[1,30000]`; expected output is `[1,T,3503]` logits. `T` is observed from the actual export/model, not taken from an unrelated Wav2Vec2 model. Verify blank ID 0 and the pinned vocabulary before comparing text.
 
 <a id="calibration"></a>
 ## Calibration

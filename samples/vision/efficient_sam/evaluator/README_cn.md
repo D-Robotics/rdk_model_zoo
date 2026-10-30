@@ -76,6 +76,16 @@ S 系列使用 `--target s100|s100p|s600`。可选的 `--test-img`、`--encoder-
 | S600 | 编码器 | 1 / 12 | 6.72 / 19.58 | 148.60 / 598.44 |
 | S600 | 解码器 | 1 / 12 | 1.50 / 4.08 | 662.55 / 2831.10 |
 
+### X5 量化余弦（源记录）
+
+录自 `rdk_x5` Validation；原文未写对照张量与图片数。
+
+| 制品 | 范围 | cosine |
+| --- | --- | --- |
+| `efficient_sam_vitt_encoder_512x512_default_none.bin` | encoder final | 0.968013 |
+| `efficient_sam_vitt_decoder_fixedprompt_512_default.bin` | fixed-prompt `low_res_masks` | 0.965641 |
+| `efficient_sam_vitt_decoder_fixedprompt_512_default.bin` | fixed-prompt `iou_predictions` | 0.997313 |
+
 运行完成后读取输出目录中的 `comparison.json` 和 NumPy 数组，比较输入、原始输出与掩码结果。
 
 ### 单模型性能测量

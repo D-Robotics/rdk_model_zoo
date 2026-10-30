@@ -7,18 +7,13 @@ EfficientNet scales network depth, width, and image resolution together for imag
 Sources: [EfficientNet: Rethinking Model Scaling
 for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946) · [TensorFlow TPU EfficientNet-Lite](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet)
 
-[中文说明](README_cn.md)
-
 <a id="overview"></a>
 
 ## Overview
 
-A single Python runtime serves all supported targets.
-The `EfficientNetClassifier` class runs a `preprocess → infer →
-postprocess` flow chained by `predict`: it resolves one exact artifact
-reference from the platform release manifest for the detected board,
-verifies the board identity, loads `hbm_runtime` lazily, and returns a
-typed Top-K result ([runtime/python/README.md](runtime/python/README.md)).
+From `runtime/python`, run `python3 main.py`; the classifier is `classify.py`.
+Boards and artifacts are in the support table below. Options and model selection:
+[runtime/python/README.md](runtime/python/README.md).
 
 ### Algorithm background
 

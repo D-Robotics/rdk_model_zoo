@@ -6,14 +6,12 @@ MobileNetV1 uses depthwise separable convolution for lightweight image classific
 
 Sources: [tensorflow/models MobileNetV1](https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet_v1.md) · [MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications](https://arxiv.org/abs/1704.04861)
 
-[中文说明](README_cn.md)
-
 <a id="overview"></a>
 
 ## Overview
 
-The sample ships one Python runtime for all targets. The `MobileNetV1Classifier` class runs a `preprocess → infer → postprocess` flow chained by `predict`: it resolves one exact artifact reference from the platform release manifest for the detected board, verifies the board identity, loads `hbm_runtime` lazily, and returns a typed Top-K result
-([runtime/python/README.md](runtime/python/README.md)).
+From `runtime/python`, run `python3 main.py`; the classifier is `classify.py`.
+Boards and artifacts are in the support table below. Options and model selection: [runtime/python/README.md](runtime/python/README.md).
 
 ### Algorithm background
 

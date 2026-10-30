@@ -123,7 +123,7 @@ python3 samples/robotics/himloco/conversion/prepare_calibration.py \
 
 Each generated `.bin` contains 270 contiguous float32 values (1080 bytes).
 `calibration-manifest.json` records the source hash, selected source indexes,
-statistics, and preprocessing contract. Do not rename the serialized `.pt`
+statistics, and preprocessing settings. Do not rename the serialized `.pt`
 file to `.bin`.
 
 <a id="compile"></a>

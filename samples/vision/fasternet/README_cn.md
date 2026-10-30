@@ -122,7 +122,7 @@ python3 samples/vision/fasternet/runtime/python/main.py \
 
 Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并退出 0；除非
 指定 `--img-save-path`，不写任何输出文件。使用随附 `drake.JPEG` 时
-Top-5 含鸭相关 ImageNet 类别。按支持矩阵选择目标并准备对应制品；运行时会在加载模型前核验板卡身份。
+Top-5 含鸭相关 ImageNet 类别。按支持矩阵选择目标并准备对应制品，在对应板卡上运行。
 
 下图为 X5 发布的参考运行效果：demo 将 Top-5 排名叠画在随附的
 `drake.JPEG` 上，rank 1 为 class 97（drake）。

@@ -10,13 +10,10 @@ ResNet 通过残差连接训练深层图像分类网络。
 
 ## 概述
 
-本样例为全部目标提供 Python 运行时，另为 S 系列提供 C++ 运行时。
-`ResNetClassifier` 类执行由 `predict` 串联的
-`preprocess → infer → postprocess` 流程：按检测到的板卡从平台发布
-Manifest 解析唯一的制品引用，核验板卡身份，懒加载 `hbm_runtime`，
-返回带类型的 Top-K 结果（见
-[runtime/python/README_cn.md](runtime/python/README_cn.md)）。C++ 侧为
-S 系列 `hbDNNInferV2` 实现（见 [runtime/cpp/README_cn.md](runtime/cpp/README_cn.md)）。
+Python 覆盖支持表中的全部板卡，C++ 覆盖 S100、S100P、S600。
+在 `runtime/python` 运行 `python3 main.py`，分类实现在 `classify.py`。
+参数和模型选择见 [runtime/python/README_cn.md](runtime/python/README_cn.md)，
+C++ 构建与运行见 [runtime/cpp/README_cn.md](runtime/cpp/README_cn.md)。
 
 ### 算法背景
 
@@ -134,7 +131,7 @@ C++ 流程（S100、S100P、S600）使用 `bash samples/vision/resnet/runtime/cp
 Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并退出 0；除非给出
 `--img-save-path`，否则不写任何输出文件。使用内置测试图 `white_wolf.JPEG` 时，Top-1 为
 class 270（`white wolf`）；使用 `zebra_cls.jpg` 时 Top-1 为 class 340（`zebra`），X5、S100、S100P、S600 上的
-五个变体都是如此。按支持矩阵选择目标并准备对应制品；运行时会在加载模型前核验板卡身份。
+五个变体都是如此。按支持矩阵选择目标并准备对应制品，在对应板卡上运行。
 
 <a id="performance"></a>
 ## 性能数据

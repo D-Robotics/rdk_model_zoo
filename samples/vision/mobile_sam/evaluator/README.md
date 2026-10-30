@@ -78,6 +78,16 @@ The following values are source-recorded measurements from the fixed source eval
 | S600 | encoder | 1 / 12 | 5.52 / 15.87 | 180.70 / 738.48 |
 | S600 | decoder | 1 / 12 | 2.58 / 6.42 | 381.09 / 1772.04 |
 
+### X5 quantization cosine (source record)
+
+Recorded from the `rdk_x5` Validation section. The source did not name the reference tensor or image count.
+
+| Artifact | Scope | cosine |
+| --- | --- | --- |
+| `mobile_sam_image_encoder_norm_512x512_allint16.bin` | encoder final | 0.961277 |
+| `mobile_sam_decoder_512_box_default.bin` | `low_res_masks` | 0.997539 |
+| `mobile_sam_decoder_512_box_default.bin` | `iou_predictions` | 0.999972 |
+
 A successful local or board invocation is the reference evidence for its selected target, pair and box; preserve the complete output directory for review.
 
 ### Per-model performance measurement

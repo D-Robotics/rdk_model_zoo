@@ -1,14 +1,11 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""LiteAvatar entry: parse, select, construct, predict, deliver the video.
+"""LiteAvatar entry.
 
-This file stays deliberately small and keeps the flow visible: parse the
-arguments, validate them, handle the model-free listing/dry-run modes, gate
-the board, construct the four-model :class:`LiteAvatarPipeline`, call
-``pipeline.predict`` once for the whole clip, then hand the result to
-:func:`deliver_frames` for video delivery.  Option declarations, published
-selection, the writers and the delivery loop live in ``cli.py``; the stage
-composition lives in ``avatar.py``.
+Parse arguments, build ``LiteAvatarPipeline``, call ``predict`` once for the clip, and write the video.
+``cli.py`` holds options, model selection, and ``deliver_frames``.
+``avatar.py`` runs the four stages.
+``--list-models`` and ``--dry-run`` do not load the board SDK.
 """
 
 from __future__ import annotations
