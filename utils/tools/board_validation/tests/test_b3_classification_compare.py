@@ -305,9 +305,12 @@ class B3CompareProtocolTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             tmp = Path(td)
             harness = _Harness(tmp, "convnext")
-            rc, err, _ = harness.run(variant="nano")
+            # atto/nano/pico/femto are published ConvNeXt variants. This
+            # refusal is for a name that is not in that set; pairing a real
+            # variant with the harness's atto asset id is a different error.
+            rc, err, _ = harness.run(variant="not-a-variant")
             self.assertEqual(rc, 2)
-            self.assertIn("Unknown sample variant", err)
+            self.assertIn("Unknown sample variant 'not-a-variant'", err)
             self.assertFalse((tmp / "evidence").exists())
         with tempfile.TemporaryDirectory() as td:
             tmp = Path(td)
