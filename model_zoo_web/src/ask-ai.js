@@ -79,7 +79,7 @@
   const routeModel = () => {
     const match = location.hash.match(/^#model\/([^/]+)/);
     if (!match) return null;
-    try { return models.find(model => model.id === decodeURIComponent(match[1])) || null; }
+    try { return models.find(model => model.id === decodeURIComponent(match[1]) && model.releaseStatus !== 'converted') || null; }
     catch { return null; }
   };
 
@@ -89,9 +89,10 @@
 
   function renderIntro() {
     const model = scopedModel;
-    const platforms = [...new Set(models.map(item => item.releasePlatform).filter(Boolean))];
+    const recommendationModels = models.filter(item => item.releaseStatus !== 'converted');
+    const platforms = [...new Set(recommendationModels.map(item => item.releasePlatform).filter(Boolean))];
     const featured = platforms.includes('S600') ? 'S600' : platforms[0];
-    const example = models.find(item => item.releasePlatform === featured) || models[0];
+    const example = recommendationModels.find(item => item.releasePlatform === featured) || recommendationModels[0];
     const prompts = model ? [
       t('这个模型的精度是怎么测的？', 'How was this model evaluated?'),
       t(`它在 RDK ${model.releasePlatform} 上的延迟是多少？`, `What is its latency on RDK ${model.releasePlatform}?`),

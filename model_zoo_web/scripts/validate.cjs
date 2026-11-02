@@ -197,6 +197,14 @@ if (preview) {
     }
     assert(model.licenseName, `${model.id}: licenseName is required`);
     assert.match(model.licenseUrl || '', /^https:\/\//, `${model.id}: licenseUrl must use HTTPS`);
+    if (model.releaseStatus === 'converted') {
+      assert(model.assets?.length, `${model.id}: a converted model needs a real artifact`);
+      assert.equal(model.validation?.conversion, 'passed', `${model.id}: conversion must pass`);
+      assert.equal(model.validation?.host_smoke, 'passed', `${model.id}: host smoke must pass`);
+      assert.equal(model.validation?.artifact_sha256, model.assets[0].sha256, `${model.id}: validation must match the artifact`);
+      assert(Number.isInteger(model.metadataRevision) && model.metadataRevision > 0, `${model.id}: metadata revision is required`);
+      if (model.validation.accuracy !== 'passed') assert.deepEqual(Array.from(model.benchmark?.accuracy || []), [], `${model.id}: unmeasured accuracy cannot be displayed`);
+    }
     for (const asset of model.assets || []) {
       assert(asset.url && asset.sha256 && asset.sizeBytes, `${model.id}: assets need url, sha256 and size_bytes`);
     }

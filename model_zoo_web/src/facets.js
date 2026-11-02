@@ -48,5 +48,9 @@
     return groups.filter(group => group.tasks.some(([id]) => ids.includes(id)))
       .map(group => [group.id, group.label, ...group.tasks.filter(([id]) => ids.includes(id)).flat()].join(' ')).join(' ');
   }
-  window.CatalogFacets = { groups, taskIds, quantizations, searchTerms };
+  const isDownloadable = model => (model.assets || []).some(asset => asset.url && asset.sha256 && Number(asset.sizeBytes) > 0);
+  const isVerified = model => model.releaseStatus === 'released' && isDownloadable(model);
+  const matchesAvailability = (model, mode) => mode === 'downloadable' ? isDownloadable(model)
+    : mode === 'verified' ? isVerified(model) : true;
+  window.CatalogFacets = { groups, taskIds, quantizations, searchTerms, isDownloadable, isVerified, matchesAvailability };
 })();

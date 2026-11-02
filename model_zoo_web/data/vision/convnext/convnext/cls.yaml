@@ -7,8 +7,12 @@ source: convnext
 family: convnext
 task: cls
 description:
-  zh: ConvNeXt 是从原始 ResNet 出发、逐步借鉴 Swin Transformer 设计改造而来的纯卷积网络（"A ConvNet for the 2020s"）。它面向 ImageNet-1k 1000 类图像分类，输出 Top-K 类别及置信度。
-  en: 'ConvNeXt is a pure convolutional network modernized from the original ResNet by progressively adopting designs borrowed from the Swin Transformer ("A ConvNet for the 2020s"). It targets ImageNet-1k 1000-class image classification and outputs Top-K classes with confidence scores.'
+  zh: ConvNeXt 是从原始 ResNet 出发、逐步借鉴 Swin Transformer 设计改造而来的纯卷积网络（"A ConvNet for the
+    2020s"）。它面向 ImageNet-1k 1000 类图像分类，输出 Top-K 类别及置信度。
+  en: ConvNeXt is a pure convolutional network modernized from the original ResNet
+    by progressively adopting designs borrowed from the Swin Transformer ("A ConvNet
+    for the 2020s"). It targets ImageNet-1k 1000-class image classification and outputs
+    Top-K classes with confidence scores.
 sample_path: samples/vision/convnext
 sample_revision: 489adba143277b218f696e29ba79243f26d607a0
 license:
@@ -264,7 +268,6 @@ hero_visual:
     score: 0.000794
   - label: hyena
     score: 0.00066
-
 example_image:
   path: samples/vision/convnext/test_data/cheetah.JPEG
   source: samples/vision/convnext/test_data/cheetah.JPEG
@@ -274,3 +277,119 @@ source_input:
   layout: NCHW
   shape: 1x3x224x224
   source: samples/vision/convnext/conversion/README.md
+provider: Ross Wightman / timm
+model_license:
+  name: Apache-2.0
+  url: https://huggingface.co/timm/convnext_atto.d2_in1k/blob/435c0a8d02d5b872e90c8cde36887465982cb399/README.md
+  scope: model
+variants:
+- size: atto-d2-224
+  model:
+    parameter_count: 3695520
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: x5
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 1
+    artifact:
+      filename: convnext_atto_d2_bayese_224x224_nv12.bin
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      runtime_dtype: uint8
+      runtime_layout: packed
+      sha256: c334e6c87ae202a0ef8d78b4506ecdab7fafb4684ce720fc4407f9bf990ea101
+      size_bytes: 4528264
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/convnext/convnext_atto_d2_bayese_224x224_nv12.bin
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/convnext/convnext_atto_d2_bayese_224x224_nv12/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/convnext/convnext_atto_d2_bayese_224x224_nv12/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/convnext/convnext_atto_d2_bayese_224x224_nv12/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/convnext/convnext_atto_d2_bayese_224x224_nv12/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: output
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        type: nv12
+        color_space: bt601_video
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      preprocessing: Pillow bicubic shorter edge 256, rounded center crop 224; OpenCV
+        NV12 BT.601 video; mapper-fused ImageNet normalization
+      compiler_versions:
+        hbdk: 3.49.15
+        hb_mapper: 1.24.3
+        horizon_nn: 1.1.0
+        runtime: 3.15.55.0
+      calibration_samples: 200
+      host_check:
+        method: one deterministic random input; PyTorch vs ONNX Runtime CPU; not dataset
+          accuracy or board inference
+        max_absolute_error: 9.179115295410156e-06
+        versions:
+          torch: 2.8.0+cu128
+          timm: 1.0.20
+          onnx: 1.17.0
+          onnxruntime: 1.19.2
+    validation:
+      artifact_sha256: c334e6c87ae202a0ef8d78b4506ecdab7fafb4684ce720fc4407f9bf990ea101
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: 3a5a9f2dce9754f2b768935e728177edb9b70802
+      build_id: convnext-atto-d2-x5-20261102-r02
+      runtime_variant: atto-d2
+      onnx_sha256: 84f5c46cd116fe75d93138a0afa8b174efa8e676cfeaf28444af1a48e2852cc3
+      config_sha256: fdce34ce18f311e7c0ea49bb9071f4569885565b5a489310a14d0792754913e3
+      recipe_sha256: 2e79fa5412d19cc21309f55b041965198f8d0c8d0f056cacea53e4447df79a07
+      source_checkpoint_sha256: 0f70bc49f1896c8c15af857d2d1d418abfaf097a62b4e29a35e6e65b752f5953
+      source_weight_url: https://huggingface.co/timm/convnext_atto.d2_in1k/resolve/435c0a8d02d5b872e90c8cde36887465982cb399/model.safetensors
+      checkpoint_revision: 435c0a8d02d5b872e90c8cde36887465982cb399
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      toolchain_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      exporter_sha256: 2f740d0c630bb714c47301df4e8b75b63cbb037272563d3e6c062d8c870434fa
+      calibration_manifest_sha256: d75cf2de648a27a47b4320279e8eaf5a0e1b040181c5cd98f6ea85b8992a54a8
+      calibration_producer_sha256: b871dc2be23bce8866f5dc2867b4aa617c89883d4359b6d6efe75d113b797e61
+      precision_policy: int8
+      compile_log_sha256: 7766a2fc2c7580fce2e7bd5c26470b26ea7beb23e2d3ca3739d72f9c6263e5fc
+      model_info_log_sha256: d7d2d43eb991437a344543baca145b9ac120d6b09e4e829c6cffaa2e9685ae24
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 21964654fbb5b52a7d229150f332530481bc0db46879e22cb7d4e8dd236f36e4
+    runtime_command: python3 samples/vision/convnext/runtime/python/main.py --target
+      x5 --asset-id x5:convnext:convnext_atto_d2_bayese_224x224_nv12.bin --model-path
+      /path/to/convnext_atto_d2_bayese_224x224_nv12.bin --test-img /path/to/image.jpg

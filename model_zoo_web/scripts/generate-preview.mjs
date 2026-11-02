@@ -183,7 +183,7 @@ const expectedReleaseStatus = record =>
   candidatePreview || localCandidateIds.has(record.id) ? 'candidate' : 'released';
 const candidateReleaseIds = new Set((fullCatalog.models || []).flatMap(record =>
   (record.variants || []).flatMap(variant => (variant.platforms || [])
-    .filter(release => release.status === expectedReleaseStatus(record))
+    .filter(release => release.status === expectedReleaseStatus(record) || (!candidatePreview && release.status === 'converted'))
     .map(release => `${record.id}/${variant.size}/${release.platform}`))));
 let catalog = fullCatalog;
 let technicalSelection = null;
@@ -362,7 +362,7 @@ const usedReleaseInputs = new Set();
 
 const taskRegistry = JSON.parse(readFileSync(resolve(webRoot, 'task-registry.json'), 'utf8'));
 const pendingIds = new Set((fullCatalog.models || [])
-  .filter(record => record.registration === 'pending')
+  .filter(record => record.registration === 'pending' && !record.variants?.length)
   .map(record => record.id));
 
 const taskMetadata = {
@@ -404,15 +404,18 @@ await mkdir(assetsRoot, { recursive: true });
 await mkdir(reportsRoot, { recursive: true });
 
 for (const record of catalog.models || []) {
-  if (record.registration === 'pending') continue;
-  const modelInput = inputs.models[record.id];
+  if (record.registration === 'pending' && !record.variants?.length) continue;
+  const conversionOnly = record.variants.every(variant => variant.platforms.every(platform => platform.status === 'converted'));
+  const suppliedModelInput = inputs.models[record.id];
+  const modelInput = suppliedModelInput || (conversionOnly ? { cover_label: '任务示意图' } : null);
   if (!modelInput || typeof modelInput !== 'object' || Array.isArray(modelInput)) {
     throw new Error(`MODEL_ZOO_INPUTS.models is missing ${record.id}`);
   }
-  usedModelInputs.add(record.id);
+  if (suppliedModelInput) usedModelInputs.add(record.id);
   const inferenceCover = inferenceTaskBanners?.items.get(record.id);
   const coverPath = inferenceCover?.path
-    || await resolveInputFile(modelInput.cover, `MODEL_ZOO_INPUTS.models.${record.id}.cover`);
+    || (modelInput.cover ? await resolveInputFile(modelInput.cover, `MODEL_ZOO_INPUTS.models.${record.id}.cover`)
+      : resolve(outputRoot, 'assets', 'pending-cover.svg'));
   const coverExtension = extname(coverPath).toLowerCase();
   if (!['.jpg', '.jpeg', '.png', '.webp', '.svg'].includes(coverExtension)) {
     throw new Error(`Unsupported cover image extension for ${record.id}: ${coverExtension || 'missing'}`);
@@ -429,7 +432,8 @@ for (const record of catalog.models || []) {
   const localRecord = localCandidateIds.has(record.id);
   for (const variant of record.variants || []) {
     for (const release of variant.platforms || []) {
-      if (release.status !== expectedReleaseStatus(record)) continue;
+      const converted = !candidatePreview && release.status === 'converted';
+      if (!converted && release.status !== expectedReleaseStatus(record)) continue;
       const platform = String(release.platform).toUpperCase();
       const id = safeId(record.source, record.family, record.task, variant.size, release.platform);
       const releaseId = `${record.id}/${variant.size}/${release.platform}`;
@@ -454,7 +458,7 @@ for (const record of catalog.models || []) {
         ? sampleLinkedCandidate
           ? `${officialRepositoryUrl}/tree/${sourceRepositoryCommit}/${record.sample_path}`
           : release.provenance?.source_weight_url || null
-        : `${repositoryUrl}/tree/${record.sample_revision || (releasedDevelopTask ? 'develop' : release.provenance.repository_commit)}/${record.sample_path}`;
+        : `${repositoryUrl}/tree/${release.metadata_revision ? release.provenance.repository_commit : record.sample_revision || (releasedDevelopTask ? 'develop' : release.provenance.repository_commit)}/${record.sample_path}`;
       const floatAccuracy = release.accuracy?.float_onnx;
       const runtimeAccuracy = release.accuracy?.runtime;
       const performance = release.performance || {};
@@ -558,7 +562,7 @@ for (const record of catalog.models || []) {
       const comparisonEvidenceValid = comparison?.status === 'valid-evidence'
         && comparison?.direct_metric_comparison === 'valid'
         && comparison?.comparison_scope?.comparable === true;
-      const stagedAccuracyRecords = localRecord
+      const stagedAccuracyRecords = converted && !release.accuracy ? [] : localRecord
         ? accuracyRecords(record.task, floatAccuracy, runtimeAccuracy, accuracyMetadata)
         : candidatePreview
         ? technicalPassedPreview
@@ -638,7 +642,7 @@ for (const record of catalog.models || []) {
         platforms: [platform],
         hardware: `RDK ${platform}`,
         coverImage: `assets/models/${coverFilename}`,
-        coverLabel: inferenceCover?.cover_label || modelInput.cover_label || '模型参考推理结果',
+        coverLabel: inferenceCover?.cover_label || modelInput.cover_label || (converted ? '任务示意图' : '模型参考推理结果'),
         sample: `${record.source}/${record.family}/${record.task}/${variant.size}`,
         source: sourceUrl,
         ...(localRecord && release.source_archive ? { sourceArchive: localAssets[1].url } : {}),
@@ -656,8 +660,11 @@ for (const record of catalog.models || []) {
             sourceCheckpointSha256: release.provenance?.source_checkpoint_sha256 || null,
           },
         } : {}),
-        licenseName: record.license?.name,
-        licenseUrl: record.license?.url,
+        licenseName: (record.model_license || record.license)?.name,
+        licenseUrl: (record.model_license || record.license)?.url,
+        ...(converted ? { validation: release.validation, metadataRevision: release.metadata_revision,
+          releaseManifestUrl: artifact.release_manifest_url, checksumsUrl: artifact.checksums_url } : {}),
+        ...(release.runtime_command ? { runtimeCommand: release.runtime_command } : {}),
         shape: (variant.input.source?.shape || [1, 3, variant.input.height, variant.input.width]).join(' × '),
         reportUrl,
         reportDataUrl,
@@ -736,9 +743,10 @@ for (const record of catalog.models || []) {
           accuracy: stagedAccuracyRecords,
         },
       });
+      if (converted && !performance.tool) delete models.at(-1).benchmark.timing;
       properties[id] = {
-        parameterCount: Number(variant.model?.parameter_count),
-        gflops: Number(variant.model?.gflops),
+        ...(variant.model?.parameter_count ? { parameterCount: Number(variant.model.parameter_count) } : {}),
+        ...(variant.model?.gflops ? { gflops: Number(variant.model.gflops) } : {}),
         ...(variant.model?.measurement_method ? { computeMethod: variant.model.measurement_method } : {}),
         inputShape: variant.input.source?.shape || [1, 3, variant.input.height, variant.input.width],
         sourceInput: variant.input.source,
@@ -795,7 +803,9 @@ const data = {
       sample_count: new Set(models.map(model => model.sample)).size,
       asset_count: models.reduce((count, model) => count + model.assets.length, 0),
       downloadable_asset_count: models.reduce((count, model) => count + model.assets.length, 0),
-      benchmark_count: models.filter(model => model.benchmark && !model.benchmark.documentation).length,
+      benchmark_count: models.filter(model => model.benchmark && !model.benchmark.documentation && model.releaseStatus !== 'converted').length,
+      converted_count: models.filter(model => model.releaseStatus === 'converted').length,
+      verified_count: models.filter(model => model.releaseStatus === 'released').length,
     },
   },
   repository: { url: repositoryUrl },
@@ -845,6 +855,7 @@ await stampAssetVersions(outputRoot);
 
 const localEntryCount = models.filter(model => localCandidateIds.has(model.catalogId)).length;
 const pendingEntryCount = models.filter(model => model.dataPending).length;
+const convertedEntryCount = models.filter(model => model.releaseStatus === 'converted').length;
 console.log(localCandidate
   ? `Built local candidate preview with ${models.length - localEntryCount} released and ${localEntryCount} local candidate model entries.`
-  : `Built local Model Zoo ${candidatePreview ? 'candidate preview' : 'preview'} with ${models.length - pendingEntryCount} ${candidatePreview ? 'candidate' : 'released'} model entries and ${pendingEntryCount} pending entries.`);
+  : `Built local Model Zoo ${candidatePreview ? 'candidate preview' : 'preview'} with ${models.length - pendingEntryCount - convertedEntryCount} ${candidatePreview ? 'candidate' : 'released'}, ${convertedEntryCount} converted and ${pendingEntryCount} pending entries.`);

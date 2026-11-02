@@ -7,7 +7,7 @@
   const platforms = ['X3', 'X5', 'S100', 'S100P', 'S600'];
   const selectedPlatforms = new Set();
   const batchSize = 6;
-  const state = { query: '', scroll: 0, visibleCount: batchSize, domain: null, useCase: null };
+  const state = { query: '', scroll: 0, visibleCount: batchSize, domain: null, useCase: null, availability: 'all' };
   let filteredItems = [];
   let listObserver = null;
 
@@ -63,7 +63,8 @@
     if (!count) return '';
     return `<button type="button" class="facet-option platform-filter" data-platform="${platform}" aria-pressed="false"><span class="selection-mark" aria-hidden="true"></span><span>RDK ${platform}</span><small class="facet-count">${count}</small></button>`;
   }).join('')}</div></fieldset>`;
-  const catalog = `<h1 class="sr-only">RDK Model Zoo</h1><div class="catalog-layout"><details id="catalog-sidebar" class="catalog-sidebar" open><summary>筛选模型 <span id="filter-count"></span></summary><div class="sidebar-content"><div class="sidebar-top"><span>筛选条件</span><button id="reset" type="button">清除筛选</button></div>${search}<section class="facet-group task-section"><h2>任务类型</h2>${taskFilters}</section><section class="facet-group hardware-section"><h2>硬件平台</h2>${platformFilters}</section></div></details><section class="collection" aria-label="模型列表"><div class="collection-count"><span id="result-count" aria-live="polite"></span></div><div id="grid" class="model-grid"></div><div id="load-more-trigger" class="load-more-trigger" hidden><button id="load-more" type="button">加载更多</button></div><span id="load-status" class="sr-only" role="status" aria-live="polite"></span></section></div>`;
+  const availabilityFilters = `<fieldset class="sidebar-group"><legend>模型状态</legend><div id="availability-filters">${[['all','全部'],['downloadable','模型可下载'],['verified','板测完成']].map(([value,label]) => `<button type="button" class="facet-option" data-availability="${value}" aria-pressed="${value === 'all'}"><span class="selection-mark" aria-hidden="true"></span><span>${label}</span></button>`).join('')}</div></fieldset>`;
+  const catalog = `<h1 class="sr-only">RDK Model Zoo</h1><div class="catalog-layout"><details id="catalog-sidebar" class="catalog-sidebar" open><summary>筛选模型 <span id="filter-count"></span></summary><div class="sidebar-content"><div class="sidebar-top"><span>筛选条件</span><button id="reset" type="button">清除筛选</button></div>${search}<section class="facet-group availability-section">${availabilityFilters}</section><section class="facet-group task-section"><h2>任务类型</h2>${taskFilters}</section><section class="facet-group hardware-section"><h2>硬件平台</h2>${platformFilters}</section></div></details><section class="collection" aria-label="模型列表"><div class="collection-count"><span id="result-count" aria-live="polite"></span></div><div id="grid" class="model-grid"></div><div id="load-more-trigger" class="load-more-trigger" hidden><button id="load-more" type="button">加载更多</button></div><span id="load-status" class="sr-only" role="status" aria-live="polite"></span></section></div>`;
 
   $('app').innerHTML = `${header}<main id="main" tabindex="-1"><div id="catalog">${catalog}</div><section id="detail" hidden></section></main>${footer}`;
 
@@ -74,22 +75,25 @@
     // some siblings have one (ConvNeXt Atto). Families where every member
     // has an artifact, or none does, keep the previous size and insertion order.
     const released = member => (member.assets?.length || member.documentedDownloads?.length) > 0;
+    const matchesAvailability = member => facets.matchesAvailability(member, state.availability);
     const chooseOpen = members => {
+      const availableMembers = members.filter(facets.isDownloadable);
+      if (availableMembers.length) members = availableMembers;
       const releasedMembers = members.filter(released);
       const pool = releasedMembers.length && releasedMembers.length < members.length ? releasedMembers : members;
       return [...pool].sort((a, b) =>
         openRank(modelPlatforms(a)[0]) - openRank(modelPlatforms(b)[0])
         || sizeRank(a.modelSize) - sizeRank(b.modelSize))[0];
     };
-    const platformMembers = group.members.filter(member => modelPlatforms(member).some(platform => selectedPlatforms.has(platform)));
-    const partialRelease = platformMembers.some(released) && platformMembers.some(member => !released(member));
+    const platformMembers = group.members.filter(member => modelPlatforms(member).some(platform => selectedPlatforms.has(platform)) && matchesAvailability(member));
     const openModel = platformMembers.length
-      ? (partialRelease ? chooseOpen(platformMembers) : platformMembers[0])
-      : chooseOpen(group.members);
+      ? chooseOpen(platformMembers)
+      : chooseOpen(group.members.filter(matchesAvailability));
     const platformOrder = [...group.platforms].sort((a, b) => openRank(a) - openRank(b));
     const pending = group.members.every(member => member.dataPending);
     const thumb = `<img src="${esc(model.coverImage || 'assets/pending-cover.svg')}" alt="${esc(model.name)}" loading="lazy">`;
-    const badge = pending ? '<span class="pending-badge">数据待补充</span>' : '';
+    const converted = group.members.some(member => member.releaseStatus === 'converted') && !group.members.some(facets.isVerified);
+    const badge = pending ? '<span class="pending-badge">数据待补充</span>' : converted ? '<span class="pending-badge converted-badge">已转换</span>' : '';
     return `<article class="model-card${arriving ? ' is-arriving' : ''}${pending ? ' is-pending' : ''}" style="--i:${Math.min(index, 11)}"><a class="gallery-link" href="#model/${esc(openModel.id)}" aria-label="查看 ${esc(model.name)}，${esc(model.task)}" title="${esc(description)}"><div class="thumbnail" data-image="${esc(model.id)}">${thumb}</div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="card-task">${esc(model.task)}${badge}</p><div class="card-platforms">${platformOrder.map(platform => `<span>${esc(platform)}</span>`).join('')}</div></div></a></article>`;
   }
 
@@ -106,6 +110,7 @@
   }
 
   function syncTaskSelection() {
+    document.querySelectorAll('[data-availability]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.availability === state.availability)));
     document.querySelectorAll('#filters [data-task-id]').forEach(button => {
       const active = button.closest('[data-domain]').dataset.domain === state.domain && button.dataset.taskId === state.useCase;
       button.setAttribute('aria-pressed', String(active));
@@ -149,7 +154,9 @@
       // The catalog ID keeps the short Ultralytics task names (cls, seg), so
       // they still match after the display names spelled them out.
       const searchable = [group.name, group.entry.catalogId, ...group.members.map(member => member.variantName), group.task, group.description, group.descriptionEn, ...group.members.flatMap(member => facets.searchTerms(member)), ...group.platforms.map(platform => `RDK ${platform}`)].join(' ').toLowerCase();
-      return groupMatchesTask(group) && terms.every(term => searchable.includes(term));
+      return groupMatchesTask(group) && group.members.some(member =>
+        (!selectedPlatforms.size || modelPlatforms(member).some(platform => selectedPlatforms.has(platform)))
+        && facets.matchesAvailability(member, state.availability)) && terms.every(term => searchable.includes(term));
     });
     filteredItems = items;
     $('result-count').textContent = `共 ${items.length} 个模型`;
@@ -163,7 +170,7 @@
       $('grid').innerHTML = items.slice(0, state.visibleCount).map((group, index) => card(group, index, arriving)).join('');
     }
 
-    const filterCount = Number(Boolean(state.domain)) + selectedPlatforms.size + Number(Boolean(query));
+    const filterCount = Number(Boolean(state.domain)) + selectedPlatforms.size + Number(Boolean(query)) + Number(state.availability !== 'all');
     $('filter-count').textContent = filterCount ? `已选 ${filterCount} 项` : '';
     $('reset').disabled = filterCount === 0;
     syncTaskSelection();
@@ -179,6 +186,7 @@
     const params = new URLSearchParams();
     const chosen = platforms.filter(platform => selectedPlatforms.has(platform));
     if (chosen.length) params.set('platform', chosen.join(','));
+    if (state.availability !== 'all') params.set('availability', state.availability);
     if (state.domain) params.set('domain', state.domain);
     if (state.useCase) params.set('task', state.useCase);
     if (state.query.trim()) params.set('q', state.query.trim());
@@ -203,6 +211,7 @@
     const group = facets.groups.find(candidate => candidate.id === params.get('domain'));
     state.domain = group ? group.id : null;
     state.useCase = group?.tasks.some(([id]) => id === params.get('task')) ? params.get('task') : null;
+    state.availability = ['downloadable','verified'].includes(params.get('availability')) ? params.get('availability') : 'all';
     state.query = params.get('q') || '';
     $('search').value = state.query;
   }
@@ -221,6 +230,7 @@
     state.query = '';
     state.domain = null;
     state.useCase = null;
+    state.availability = 'all';
     $('search').value = '';
     render();
   }
@@ -257,6 +267,12 @@
     if (!button) return;
     const platform = button.dataset.platform;
     selectedPlatforms.has(platform) ? selectedPlatforms.delete(platform) : selectedPlatforms.add(platform);
+    render();
+  });
+  $('availability-filters').addEventListener('click', event => {
+    const button = event.target.closest('[data-availability]');
+    if (!button) return;
+    state.availability = button.dataset.availability;
     render();
   });
   $('load-more').addEventListener('click', loadNextBatch);

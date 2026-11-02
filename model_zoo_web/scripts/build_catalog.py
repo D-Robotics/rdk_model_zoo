@@ -49,7 +49,7 @@ TASK_FACET_IDS = {item["facet_id"] for item in TASK_REGISTRY["tasks"].values()}
 # each tied to a file at sample_revision. The released names stay forbidden so a
 # placeholder cannot be mistaken for a published release.
 PENDING_FORBIDDEN = (
-    "variants", "accuracy", "performance", "artifact", "assets", "benchmarks", "cover",
+    "accuracy", "performance", "artifact", "assets", "benchmarks", "cover",
 )
 OFFICIAL_LICENSE_URLS = {
     "Apache-2.0": "https://www.apache.org/licenses/LICENSE-2.0",
@@ -301,6 +301,7 @@ def validate_artifact(
     platform: str,
     label: str,
     build_id: str | None = None,
+    metadata_revision: int | None = None,
 ) -> str:
     url = require_string(artifact.get("url"), f"{label}.url")
     parsed = urlparse(url)
@@ -334,8 +335,11 @@ def validate_artifact(
         "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/"
         f"rdk_{platform}/{source}/{PurePosixPath(filename).stem}"
     )
+    if metadata_revision is not None:
+        require_positive_int(metadata_revision, f"{label}.metadata_revision")
+        base_url += f"/v{metadata_revision}"
     # Published OSS packages remain valid while their live Catalog migrates.
-    if (parsed.netloc == "rdk-model-zoo.oss-cn-beijing.aliyuncs.com"
+    if (metadata_revision is None and parsed.netloc == "rdk-model-zoo.oss-cn-beijing.aliyuncs.com"
             and artifact.get("release_manifest_url") == f"{model_base_url}/release.json"):
         base_url = model_base_url
     for field, expected_name in (
@@ -837,7 +841,7 @@ def validate_pending_record(record: dict[str, Any], source_path: Path) -> dict[s
         "facet_tasks", "manifest_tasks", "license", "provider",
         "upstream", "published_variants", "conversion_configs", "inputs", "usage",
         "sourced_benchmarks", "documented_downloads", "example_image", "source_input",
-        "hero_visual",
+        "hero_visual", "variants", "model_license",
     }
     for field in PENDING_FORBIDDEN:
         if field in record:
@@ -928,8 +932,162 @@ def validate_pending_record(record: dict[str, Any], source_path: Path) -> dict[s
     normalized = copy.deepcopy(record)
     normalized["source_file"] = relative_source
     normalized["variants"] = []
+    if "variants" in record:
+        # Existing sourced references can coexist with independently published
+        # artifacts. Their historical metrics never populate the new artifact.
+        if not record.get("model_license"):
+            raise CatalogError(f"{relative_source}: pending records must not include variants without an explicit model_license")
+        model_license = require_mapping(record.get("model_license"), f"{relative_source}.model_license")
+        if model_license.get("scope") != "model":
+            raise CatalogError(f"{relative_source}.model_license.scope must be model")
+        artifact_record = {**record, "license": model_license}
+        artifact_record.pop("registration")
+        normalized["variants"] = validate_record(artifact_record, source_path)["variants"]
     normalized["supported_platforms"].sort(key=lambda item: PLATFORM_ORDER[item["platform"]])
     return normalized
+
+
+def validate_performance(performance_value: Any, platform_label: str, *, complete: bool = True) -> None:
+    platform_record = {"performance": performance_value}
+    performance = require_mapping(platform_record.get("performance"), f"{platform_label}.performance")
+    require_string(performance.get("tool"), f"{platform_label}.performance.tool")
+    require_string(performance.get("implementation"), f"{platform_label}.performance.implementation")
+    require_string(performance.get("timing_scope"), f"{platform_label}.performance.timing_scope")
+    thread_semantics = require_string(
+        performance.get("thread_semantics"),
+        f"{platform_label}.performance.thread_semantics",
+    )
+    if thread_semantics != "runtime_submission_concurrency":
+        raise CatalogError(
+            f"{platform_label}.performance.thread_semantics must be "
+            "runtime_submission_concurrency"
+        )
+    require_nonnegative_int(performance.get("core_id"), f"{platform_label}.performance.core_id")
+    require_nonnegative_int(
+        performance.get("warmup_frames_per_condition"),
+        f"{platform_label}.performance.warmup_frames_per_condition",
+    )
+    require_positive_int(
+        performance.get("runs_per_condition"),
+        f"{platform_label}.performance.runs_per_condition",
+    )
+    require_positive_int(performance.get("frames_per_run"), f"{platform_label}.performance.frames_per_run")
+
+    stages = require_mapping(performance.get("stages"), f"{platform_label}.performance.stages")
+    for stage in ("preprocess", "runtime", "postprocess", "end_to_end"):
+        status = require_string(stages.get(stage), f"{platform_label}.performance.stages.{stage}")
+        if status not in {"measured", "not_measured"}:
+            raise CatalogError(
+                f"{platform_label}.performance.stages.{stage} must be measured or not_measured"
+            )
+    if stages["runtime"] != "measured" and (complete or performance.get("measurements")):
+        raise CatalogError(f"{platform_label}.performance.stages.runtime must be measured")
+
+    measurements = performance.get("measurements", [])
+    if complete or measurements != []:
+        measurements = require_list(measurements, f"{platform_label}.performance.measurements")
+    seen_threads: set[int] = set()
+    for measurement_index, measurement_value in enumerate(measurements):
+        measurement_label = f"{platform_label}.performance.measurements[{measurement_index}]"
+        measurement = require_mapping(measurement_value, measurement_label)
+        threads = require_positive_int(measurement.get("threads"), f"{measurement_label}.threads")
+        if threads in seen_threads:
+            raise CatalogError(f"{platform_label}.performance: duplicate thread count {threads}")
+        seen_threads.add(threads)
+        latency = require_number(
+            measurement.get("average_latency_ms"),
+            f"{measurement_label}.average_latency_ms",
+        )
+        minimum = require_number(
+            measurement.get("observed_min_latency_ms"),
+            f"{measurement_label}.observed_min_latency_ms",
+        )
+        maximum = require_number(
+            measurement.get("observed_max_latency_ms"),
+            f"{measurement_label}.observed_max_latency_ms",
+        )
+        fps = require_number(measurement.get("aggregate_fps"), f"{measurement_label}.aggregate_fps")
+        if min(latency, minimum, maximum, fps) <= 0:
+            raise CatalogError(f"{measurement_label} values must be greater than zero")
+        if not minimum <= latency <= maximum:
+            raise CatalogError(f"{measurement_label} latency must be within the observed range")
+
+    end_to_end_label = f"{platform_label}.performance.end_to_end"
+    end_to_end_value = performance.get("end_to_end")
+    if isinstance(end_to_end_value, dict):
+        end_to_end_records = [end_to_end_value]
+    elif not complete and end_to_end_value in (None, []):
+        end_to_end_records = []
+    else:
+        end_to_end_records = require_list(end_to_end_value, end_to_end_label)
+    if not measurements and not end_to_end_records:
+        raise CatalogError(f"{platform_label}.performance must contain an actual measured condition")
+    seen_pipeline_streams: set[int] = set()
+    for condition_index, condition_value in enumerate(end_to_end_records):
+        condition_label = f"{end_to_end_label}[{condition_index}]"
+        condition = require_mapping(condition_value, condition_label)
+        pipeline_streams = validate_end_to_end_record(condition, condition_label)
+        if pipeline_streams in seen_pipeline_streams:
+            raise CatalogError(
+                f"{end_to_end_label}: duplicate pipeline_streams {pipeline_streams}"
+            )
+        seen_pipeline_streams.add(pipeline_streams)
+
+
+def validate_converted_platform(platform: dict[str, Any], license_info: dict[str, Any], label: str) -> None:
+    """Validate a downloadable artifact without claiming unmeasured board results."""
+    if license_info.get("scope") == "sample-code":
+        raise CatalogError(f"{label}: converted artifacts require a model license")
+    if "runtime_command" in platform:
+        require_string(platform["runtime_command"], f"{label}.runtime_command")
+    require_positive_int(platform.get("metadata_revision"), f"{label}.metadata_revision")
+    artifact = platform["artifact"]
+    provenance = require_mapping(platform.get("provenance"), f"{label}.provenance")
+    for key in ("onnx_sha256", "config_sha256", "source_checkpoint_sha256"):
+        if not SHA256_RE.fullmatch(str(provenance.get(key, ""))):
+            raise CatalogError(f"{label}.provenance.{key} must identify the actual conversion input")
+    validate_commit(provenance.get("repository_commit"), f"{label}.provenance.repository_commit")
+    if not COMMIT_RE.fullmatch(str(provenance.get("checkpoint_revision", ""))):
+        raise CatalogError(f"{label}.provenance.checkpoint_revision must be immutable")
+    _require_https(provenance.get("source_weight_url"), f"{label}.provenance.source_weight_url")
+    for key in ("toolchain_image", "toolchain_image_id", "build_id", "precision_policy"):
+        require_string(provenance.get(key), f"{label}.provenance.{key}")
+    conversion = require_mapping(platform.get("conversion"), f"{label}.conversion")
+    outputs = require_list(conversion.get("outputs"), f"{label}.conversion.outputs")
+    for index, output in enumerate(outputs):
+        require_string(output.get("name"), f"{label}.conversion.outputs[{index}].name")
+        require_string(output.get("dtype"), f"{label}.conversion.outputs[{index}].dtype")
+        for dimension in require_list(output.get("shape"), f"{label}.conversion.outputs[{index}].shape"):
+            require_positive_int(dimension, f"{label}.conversion.outputs[{index}].shape")
+    validation = require_mapping(platform.get("validation"), f"{label}.validation")
+    if validation.get("artifact_sha256") != artifact["sha256"]:
+        raise CatalogError(f"{label}.validation must identify the same artifact SHA256")
+    for key in ("conversion", "host_smoke"):
+        if validation.get(key) != "passed":
+            raise CatalogError(f"{label}.validation.{key} must be passed")
+    board_checks = ("board_smoke", "accuracy", "runtime_1", "runtime_2", "cpp_1", "cpp_2")
+    for key in board_checks:
+        if validation.get(key) not in {"not-run", "passed", "failed"}:
+            raise CatalogError(f"{label}.validation.{key} must declare its actual execution state")
+        if validation[key] == "passed":
+            evidence = require_mapping(validation.get("evidence", {}).get(key), f"{label}.validation.evidence.{key}")
+            if evidence.get("artifact_sha256") != artifact["sha256"]:
+                raise CatalogError(f"{label}.validation.evidence.{key} belongs to another artifact")
+            _require_https(evidence.get("url"), f"{label}.validation.evidence.{key}.url")
+    if platform.get("status") == "released" and any(validation[key] != "passed" for key in board_checks):
+        raise CatalogError(f"{label}: promotion to released requires every board check to pass")
+    if ("accuracy" in platform) != (validation["accuracy"] == "passed"):
+        raise CatalogError(f"{label}: accuracy values and the passed accuracy check must be supplied together")
+    performance = platform.get("performance", {})
+    runtime_conditions = {item.get("threads") for item in performance.get("measurements", [])}
+    cpp = performance.get("end_to_end", [])
+    cpp_conditions = {item.get("pipeline_streams") for item in ([cpp] if isinstance(cpp, dict) else cpp)}
+    for prefix, conditions in (("runtime", runtime_conditions), ("cpp", cpp_conditions)):
+        for count in (1, 2):
+            if (count in conditions) != (validation[f"{prefix}_{count}"] == "passed"):
+                raise CatalogError(f"{label}: {prefix} {count} measurements must match their passed check")
+    if any(count not in {1, 2} for count in runtime_conditions | cpp_conditions):
+        raise CatalogError(f"{label}: converted board conditions must be explicitly tracked as 1 or 2")
 
 
 def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]:
@@ -981,10 +1139,14 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
         for dimension in ("width", "height"):
             require_positive_int(input_config.get(dimension), f"{variant_label}.input.{dimension}")
 
-        model_info = require_mapping(variant.get("model"), f"{variant_label}.model")
-        require_positive_int(model_info.get("parameter_count"), f"{variant_label}.model.parameter_count")
-        if require_number(model_info.get("gflops"), f"{variant_label}.model.gflops") <= 0:
-            raise CatalogError(f"{variant_label}.model.gflops must be greater than zero")
+        platforms = require_list(variant.get("platforms"), f"{variant_label}.platforms")
+        conversion_only = all(isinstance(item, dict) and item.get("status") == "converted" for item in platforms)
+        model_info = require_mapping(variant.get("model", {}), f"{variant_label}.model")
+        if not conversion_only or "parameter_count" in model_info:
+            require_positive_int(model_info.get("parameter_count"), f"{variant_label}.model.parameter_count")
+        if not conversion_only or "gflops" in model_info:
+            if require_number(model_info.get("gflops"), f"{variant_label}.model.gflops") <= 0:
+                raise CatalogError(f"{variant_label}.model.gflops must be greater than zero")
 
         source_input = require_mapping(input_config.get("source"), f"{variant_label}.input.source")
         require_string(source_input.get("format"), f"{variant_label}.input.source.format")
@@ -1009,9 +1171,11 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
             if platform in seen_platforms:
                 raise CatalogError(f"{variant_label}: duplicate platform {platform}")
             seen_platforms.add(platform)
-            if platform_record.get("status") != "released":
-                raise CatalogError(f"{platform_label}.status must be released")
-            require_string(platform_record.get("released_at"), f"{platform_label}.released_at")
+            status = platform_record.get("status")
+            if status not in {"released", "converted"}:
+                raise CatalogError(f"{platform_label}.status must be released or converted")
+            require_string(platform_record.get("converted_at" if status == "converted" else "released_at"),
+                           f"{platform_label}.{'converted_at' if status == 'converted' else 'released_at'}")
             artifact = require_mapping(platform_record.get("artifact"), f"{platform_label}.artifact")
             release_base_url = validate_artifact(
                 artifact,
@@ -1022,6 +1186,7 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
                 platform=platform,
                 label=f"{platform_label}.artifact",
                 build_id=(platform_record.get("provenance") or {}).get("build_id"),
+                metadata_revision=platform_record.get("metadata_revision"),
             )
 
             reports = require_mapping(platform_record.get("reports"), f"{platform_label}.reports")
@@ -1036,97 +1201,29 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
                     f"{platform_label}.reports.oe_data_url must be {expected_data_url}"
                 )
 
+            if status == "converted" or "validation" in platform_record and platform_record.get("metadata_revision"):
+                validate_converted_platform(platform_record, license_info, platform_label)
+            if status == "converted":
+                if "accuracy" not in platform_record and "performance" not in platform_record:
+                    continue
+                if "accuracy" in platform_record:
+                    validate_accuracy(platform_record["accuracy"], task, f"{platform_label}.accuracy")
+                if "performance" in platform_record:
+                    validate_performance(platform_record["performance"], platform_label, complete=False)
+                continue
+
             validate_accuracy(
                 platform_record.get("accuracy"),
                 task,
                 f"{platform_label}.accuracy",
             )
-            performance = require_mapping(platform_record.get("performance"), f"{platform_label}.performance")
-            require_string(performance.get("tool"), f"{platform_label}.performance.tool")
-            require_string(performance.get("implementation"), f"{platform_label}.performance.implementation")
-            require_string(performance.get("timing_scope"), f"{platform_label}.performance.timing_scope")
-            thread_semantics = require_string(
-                performance.get("thread_semantics"),
-                f"{platform_label}.performance.thread_semantics",
-            )
-            if thread_semantics != "runtime_submission_concurrency":
-                raise CatalogError(
-                    f"{platform_label}.performance.thread_semantics must be "
-                    "runtime_submission_concurrency"
-                )
-            require_nonnegative_int(performance.get("core_id"), f"{platform_label}.performance.core_id")
-            require_nonnegative_int(
-                performance.get("warmup_frames_per_condition"),
-                f"{platform_label}.performance.warmup_frames_per_condition",
-            )
-            require_positive_int(
-                performance.get("runs_per_condition"),
-                f"{platform_label}.performance.runs_per_condition",
-            )
-            require_positive_int(performance.get("frames_per_run"), f"{platform_label}.performance.frames_per_run")
-
-            stages = require_mapping(performance.get("stages"), f"{platform_label}.performance.stages")
-            for stage in ("preprocess", "runtime", "postprocess", "end_to_end"):
-                status = require_string(stages.get(stage), f"{platform_label}.performance.stages.{stage}")
-                if status not in {"measured", "not_measured"}:
-                    raise CatalogError(
-                        f"{platform_label}.performance.stages.{stage} must be measured or not_measured"
-                    )
-            if stages["runtime"] != "measured":
-                raise CatalogError(f"{platform_label}.performance.stages.runtime must be measured")
-
-            measurements = require_list(
-                performance.get("measurements"),
-                f"{platform_label}.performance.measurements",
-            )
-            seen_threads: set[int] = set()
-            for measurement_index, measurement_value in enumerate(measurements):
-                measurement_label = f"{platform_label}.performance.measurements[{measurement_index}]"
-                measurement = require_mapping(measurement_value, measurement_label)
-                threads = require_positive_int(measurement.get("threads"), f"{measurement_label}.threads")
-                if threads in seen_threads:
-                    raise CatalogError(f"{platform_label}.performance: duplicate thread count {threads}")
-                seen_threads.add(threads)
-                latency = require_number(
-                    measurement.get("average_latency_ms"),
-                    f"{measurement_label}.average_latency_ms",
-                )
-                minimum = require_number(
-                    measurement.get("observed_min_latency_ms"),
-                    f"{measurement_label}.observed_min_latency_ms",
-                )
-                maximum = require_number(
-                    measurement.get("observed_max_latency_ms"),
-                    f"{measurement_label}.observed_max_latency_ms",
-                )
-                fps = require_number(measurement.get("aggregate_fps"), f"{measurement_label}.aggregate_fps")
-                if min(latency, minimum, maximum, fps) <= 0:
-                    raise CatalogError(f"{measurement_label} values must be greater than zero")
-                if not minimum <= latency <= maximum:
-                    raise CatalogError(f"{measurement_label} latency must be within the observed range")
-
-            end_to_end_label = f"{platform_label}.performance.end_to_end"
-            end_to_end_value = performance.get("end_to_end")
-            if isinstance(end_to_end_value, dict):
-                end_to_end_records = [end_to_end_value]
-            else:
-                end_to_end_records = require_list(end_to_end_value, end_to_end_label)
-            seen_pipeline_streams: set[int] = set()
-            for condition_index, condition_value in enumerate(end_to_end_records):
-                condition_label = f"{end_to_end_label}[{condition_index}]"
-                condition = require_mapping(condition_value, condition_label)
-                pipeline_streams = validate_end_to_end_record(condition, condition_label)
-                if pipeline_streams in seen_pipeline_streams:
-                    raise CatalogError(
-                        f"{end_to_end_label}: duplicate pipeline_streams {pipeline_streams}"
-                    )
-                seen_pipeline_streams.add(pipeline_streams)
+            validate_performance(platform_record.get("performance"), platform_label)
 
     normalized = copy.deepcopy(record)
     normalized["source_file"] = relative_source
     # Sizes outside the n/s/m/l/x ladder (for example conv-small-224) order by parameter count.
     normalized["variants"].sort(
-        key=lambda item: (SIZE_ORDER.get(item["size"], 99), item["model"]["parameter_count"], item["size"])
+        key=lambda item: (SIZE_ORDER.get(item["size"], 99), item.get("model", {}).get("parameter_count", float("inf")), item["size"])
     )
     for variant in normalized["variants"]:
         variant["platforms"].sort(key=lambda item: item["platform"])
@@ -1144,6 +1241,7 @@ def build_catalog() -> tuple[bytes, bytes]:
     records: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
     release_count = 0
+    converted_count = 0
     pending_count = 0
     for source_path in source_paths:
         with source_path.open(encoding="utf-8") as handle:
@@ -1154,8 +1252,9 @@ def build_catalog() -> tuple[bytes, bytes]:
         seen_ids.add(normalized["id"])
         if normalized.get("registration") == "pending":
             pending_count += 1
-        else:
-            release_count += sum(len(variant["platforms"]) for variant in normalized["variants"])
+        states = [platform["status"] for variant in normalized["variants"] for platform in variant["platforms"]]
+        release_count += states.count("released")
+        converted_count += states.count("converted")
         records.append(normalized)
 
     records.sort(key=lambda item: item["id"])
@@ -1164,6 +1263,7 @@ def build_catalog() -> tuple[bytes, bytes]:
         "source": "model_zoo_web/data",
         "model_count": len(records),
         "release_count": release_count,
+        "converted_count": converted_count,
         "pending_count": pending_count,
         "models": records,
     }
@@ -1176,6 +1276,7 @@ def build_catalog() -> tuple[bytes, bytes]:
         "bytes": len(catalog_bytes),
         "model_count": len(records),
         "release_count": release_count,
+        "converted_count": converted_count,
         "pending_count": pending_count,
         "generator": "model_zoo_web/scripts/build_catalog.py",
     }

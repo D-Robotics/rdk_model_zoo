@@ -79,7 +79,7 @@ class PendingRegistrationTest(unittest.TestCase):
             for variant in model["variants"]
             for platform in variant["platforms"]
         ))
-        self.assertTrue(all(not model["variants"] for model in pending))
+        self.assertTrue(all(not model["variants"] or model.get("model_license", {}).get("scope") == "model" for model in pending))
 
 
 if __name__ == "__main__":
