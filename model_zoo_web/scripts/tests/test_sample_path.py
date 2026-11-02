@@ -116,6 +116,15 @@ class SamplePathTest(unittest.TestCase):
         with self.assertRaisesRegex(build_catalog.CatalogError, revision):
             build_catalog.validate_evidence_path("samples/vision/local-only/README.md", LABEL, revision)
 
+    def test_released_sample_validation_uses_the_pinned_revision(self):
+        revision = subprocess.check_output(["git", "-C", str(self.root), "rev-parse", "develop"], text=True).strip()
+        os.environ[ENV] = "missing-live-branch"
+        self.assertEqual(build_catalog.validate_sample_path("samples/vision/demo", LABEL, revision),
+                         "samples/vision/demo")
+        (self.root / "samples/vision/local-only").mkdir()
+        with self.assertRaisesRegex(build_catalog.CatalogError, revision):
+            build_catalog.validate_sample_path("samples/vision/local-only", LABEL, revision)
+
 
 if __name__ == "__main__":
     unittest.main()

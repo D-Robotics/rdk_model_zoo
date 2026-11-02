@@ -1,7 +1,11 @@
 import copy
 import importlib.util
+import json
+import os
+import subprocess
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import yaml
 
@@ -44,6 +48,20 @@ class ReleaseCatalogContractTests(unittest.TestCase):
             label="fixture.artifact", build_id=build_id,
         )
 
+    def test_native_workers_have_no_opencv_threads_and_match_stream_count(self):
+        evidence = copy.deepcopy(self.platform["performance"]["end_to_end"])
+        if isinstance(evidence, list):
+            evidence = evidence[0]
+        evidence.pop("opencv_threads", None)
+        evidence.update(cpu_backend="native", cpu_thread_policy="fixed",
+                        cpu_worker_threads=evidence["pipeline_streams"])
+        catalog.validate_end_to_end_record(evidence, "native")
+        for change in ({"cpu_worker_threads": evidence["pipeline_streams"] + 1},
+                       {"opencv_threads": 1}, {"cpu_backend": "unknown"},
+                       {"cpu_thread_policy": "all_online"}):
+            with self.subTest(change=change), self.assertRaises(catalog.CatalogError):
+                catalog.validate_end_to_end_record({**evidence, **change}, "native")
+
     def test_rebuild_url_must_match_the_recorded_build_id(self):
         artifact = copy.deepcopy(self.platform["artifact"])
         self.validate_artifact(artifact)
@@ -57,6 +75,53 @@ class ReleaseCatalogContractTests(unittest.TestCase):
             with self.subTest(build_id=mismatched_id):
                 with self.assertRaises(catalog.CatalogError):
                     self.validate_artifact(artifact, mismatched_id)
+
+    def test_archive_uses_the_same_model_identity_beneath_its_public_root(self):
+        artifact = copy.deepcopy(self.platform["artifact"])
+        old_base = artifact["url"].rsplit("/", 1)[0]
+        new_base = (
+            "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/"
+            f"rdk_{self.platform['platform']}/ultralytics_yolo"
+        )
+        for field in ("url", "release_manifest_url", "checksums_url"):
+            artifact[field] = artifact[field].replace(old_base, new_base)
+        self.validate_artifact(artifact)
+        for bad_url in (
+            artifact["url"].replace("https:", "http:"),
+            artifact["url"] + "?signature=temporary",
+            artifact["url"] + "#fragment",
+            artifact["url"].replace("archive.d-robotics.cc", "archive.d-robotics.cc.example.org"),
+            artifact["url"].replace("/downloads/rdk_model_zoo_web/", "/downloads/rdk_model_zoo/"),
+            artifact["url"].replace("/ultralytics_yolo/", "/another-sample/"),
+            artifact["url"].replace(f"/rdk_{self.platform['platform']}/", "/rdk_unknown/"),
+            artifact["url"].replace(new_base, "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/models/ultralytics_yolo/yolo26/detect/n/x5"),
+        ):
+            with self.subTest(url=bad_url), self.assertRaises(catalog.CatalogError):
+                self.validate_artifact({**artifact, "url": bad_url})
+        with self.assertRaises(catalog.CatalogError):
+            self.validate_artifact({**artifact, "checksums_url": self.platform["artifact"]["checksums_url"]})
+
+    def test_osnet_release_matches_its_pinned_native_models(self):
+        path = catalog.DATA_ROOT / "vision/osnet/osnet/reid.yaml"
+        record = yaml.safe_load(path.read_text(encoding="utf-8"))
+        with mock.patch.dict(os.environ, {catalog.SAMPLE_REF_ENV: "missing-live-branch"}):
+            normalized = catalog.validate_record(record, path)
+        revision = normalized["sample_revision"]
+        native = json.loads(subprocess.check_output([
+            "git", "-C", str(catalog.ROOT), "show",
+            f"{revision}:samples/vision/osnet/model/artifacts.json",
+        ], text=True))
+        platforms = normalized["variants"][0]["platforms"]
+        self.assertEqual({row["platform"] for row in platforms}, {"x5", "s100", "s100p", "s600"})
+        self.assertEqual(normalized["license"]["name"], "Research use only")
+        for row in platforms:
+            artifact = native["artifacts"][row["provenance"]["runtime_variant"]]
+            self.assertEqual(row["artifact"]["sha256"], artifact["sha256"])
+            self.assertEqual(row["artifact"]["size_bytes"], artifact["size_bytes"])
+            self.assertTrue(row["artifact"]["url"].startswith(
+                "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/"
+                f"rdk_{row['platform']}/osnet/"
+            ))
 
 
 if __name__ == "__main__":

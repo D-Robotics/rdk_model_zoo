@@ -39,7 +39,7 @@ model_zoo_web/data/vision/ultralytics_yolo/yolo26/detect.yaml
 模型必须满足以下条件后，才能将平台状态标记为 `released`：
 
 - `samples/` 中存在可复现的转换、评测和板端运行入口。
-- 已生成目标平台可部署模型，并上传到稳定的 OSS 路径。
+- 已生成目标平台可部署模型，并上传到稳定的 OSS 或 Archive 路径。
 - 已完成目标数据集全量精度测试，不使用少量图片结果代替正式精度。
 - 已完成 Runtime 单路和 2 路并发测试。
 - 已完成 C++ 端到端单路和 2 路流水线测试。
@@ -57,7 +57,7 @@ model_zoo_web/data/vision/ultralytics_yolo/yolo26/detect.yaml
 界限见 [`skills/rdk-model-zoo-web-sample/SKILL.md`](../skills/rdk-model-zoo-web-sample/SKILL.md)。
 待补条目会出现在发布预览里，卡片和详情标为“数据待补充”，不进入下载和报告校验。
 
-## 3. 仓库与 OSS 边界
+## 3. 仓库与资产服务器边界
 
 提交到 Git：
 
@@ -74,7 +74,7 @@ model_zoo_web/data/vision/ultralytics_yolo/yolo26/detect.yaml
 - `node_modules/`、`__pycache__/` 和本地 workbench 文件。
 - AccessKey、Secret、临时签名 URL 或其他凭据。
 
-模型、发布清单、校验和文件和 OE 报告放在 OSS：
+模型、发布清单、校验和文件和 OE 报告放在 OSS 或 Archive：
 
 ```text
 models/<source>/<series>/<task>/<size>/<platform>/
@@ -86,6 +86,16 @@ models/<source>/<series>/<task>/<size>/<platform>/
 
 对象路径中不加入日期、Git 提交或 OE 版本层级。构建日期、提交和工具链版本记录在
 发布元数据中。
+
+上述 `models/` 层级用于 Workbench 逻辑对象键及 OSS：
+`https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/...`。
+Archive 按服务器已有的板卡 / Sample 目录存放：
+`https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_<platform>/<source>/<filename>`，
+例如 `rdk_x5/osnet/osnet_x1_0_bayes_e_256x128_rgb.bin`。Archive 不增加 `models/`、
+重复的来源/系列或任务/规格目录；任务与规格仍在 Catalog 字段和模型文件名中登记。
+同一平台的模型、`release.json`、`SHA256SUMS` 与 `oe_report.html` 必须位于同一目录。
+首次上传不覆盖内容不同的同名文件；登记前须
+完整回读校验，并通过匿名 HTTPS 下载核对字节数和 SHA-256。上传不代表 Git 或网站部署已获授权。
 
 ## 4. Catalog YAML
 
@@ -195,6 +205,8 @@ variants:
   Web 分支不必携带这些源码；本地 Git 对象库必须包含所引用的提交。
   现有未填写 `sample_revision` 的完整记录仍先检查本地目录，缺少时可使用
   `MODEL_ZOO_SAMPLE_REF` 指定的 Git 引用。
+- 完整记录也可用 `sample_revision` 固定原生样例提交；设置后只检查该提交中的
+  Sample，并将示例源码链接固定到该提交，不回退到工作树或全局参考分支。
 - 中文和英文描述只说明架构特点，不写板端性能、宣传语或下载说明。
 - `license.url` 必须是官方 HTTPS 页面。
 - 待补记录的 `license.scope: sample-code` 仅表示示例代码许可，网页单独展示，
@@ -204,7 +216,7 @@ variants:
 - Source 输入和 Runtime 输入必须分开记录，例如 `NCHW float32 RGB` 与
   `NV12 runtime` 不能混写成一个输入格式。
 - 模型参数量使用整数，GFLOPs 使用对应输入尺寸下的真实值。
-- OSS URL 必须是无查询参数的稳定 HTTPS 地址。
+- OSS 或 Archive URL 必须是无查询参数的稳定 HTTPS 地址。
 - Web 构建不会下载模型重新计算 SHA256；Catalog 中的 SHA256 用于制品身份和
   OE 数据关联，只做格式与一致性检查，且不会显示在网页上。
 - `released_at` 使用实际发布日期，不填写未来日期。
@@ -226,9 +238,12 @@ variants:
   | Seg | `bbox/AP`、`segm/AP` | `box_ap`、`mask_ap` |
   | Pose | `keypoints/AP` | `keypoints_ap` |
   | OBB | `mAP50` | `map_50` |
+  | ReID | `rank1`、`map` | `rank1`、`map` |
 
 - OBB 的 `dataset` 记为 `DOTA val`，`evaluation_scope` 必须是 `local_dota_val_single_scale`；评测范围保留在数据中供审计，详情页不展示该范围说明，不得标成官方 test 结果。
 - 网页中的精度说明必须能追溯到评测命令和输出文件。
+- OSNet 的 ReID 使用 Market1501 单查询、L2 归一化、平方欧氏距离且无重排的完整评测；
+  `evaluation_scope` 为 `market1501_single_query_l2_no_rerank`。检索 mAP 与检测 AP 使用各自字段。
 
 ### Runtime 性能
 
@@ -246,6 +261,8 @@ variants:
 - 每项记录 mean、p50、p95、min 和 max。
 - 单路和 2 路流水线分别记录，2 路吞吐量按总完成帧数与共同墙钟时间计算。
 - `runtime_submission_threads` 必须与 `pipeline_streams` 一致。
+- 使用原生 CPU worker 的流水线填写 `cpu_backend: native`、`cpu_thread_policy: fixed`
+  和等于流数的 `cpu_worker_threads`，不填写 OpenCV 线程数；现有 OpenCV 流水线保持原字段。
 - 最大性能测试使用全部在线 CPU 线程，并记录 OpenCV 线程数、CPU governor、
   CPU 频率和 BPU 频率。
 

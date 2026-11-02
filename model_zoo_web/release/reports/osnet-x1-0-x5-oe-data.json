@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "generated_from_run": "osnet-x1.0-x5-20261030-r02",
+  "model": {
+    "sample": "osnet",
+    "family": "osnet",
+    "task": "reid",
+    "size": "x1.0"
+  },
+  "target": {
+    "platform": "x5",
+    "march": "bayes-e"
+  },
+  "toolchain": {
+    "hb_mapper": "1.24.3",
+    "hbdk": "3.49.15",
+    "horizon_nn": "1.1.0",
+    "runtime": "3.15.55.0"
+  },
+  "io": {
+    "inputs": [
+      {
+        "name": "images",
+        "shape": [
+          1,
+          256,
+          128,
+          3
+        ],
+        "dtype": "int8",
+        "layout": "NHWC",
+        "payload_layout": "CHW",
+        "format": "RGB"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "embedding",
+        "shape": [
+          1,
+          512,
+          1,
+          1
+        ],
+        "dtype": "float32"
+      }
+    ]
+  },
+  "quantization": {
+    "summary": {},
+    "nodes": [],
+    "outputs": []
+  },
+  "subgraphs": [
+    {
+      "name": "torch_jit_subgraph_0",
+      "perf": {
+        "fps": 132.31,
+        "latency_ms": 7.56,
+        "ddr_mb_per_frame": 13.878,
+        "bpu_ops_per_frame": 1959389184,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 38,
+        "interval_ms": 0.2,
+        "utilization": [
+          0.783,
+          0.718,
+          0.714,
+          0.712,
+          0.706,
+          0.716,
+          0.713,
+          0.722,
+          0.706,
+          0.711,
+          0.714,
+          0.714,
+          0.71,
+          0.719,
+          0.713,
+          0.702,
+          0.699,
+          0.641,
+          0.901,
+          0.894,
+          0.863,
+          0.548,
+          0.742,
+          0.812,
+          0.742,
+          0.915,
+          0.918,
+          0.712,
+          0.559,
+          0.941,
+          0.71,
+          0.868,
+          0.809,
+          0.661,
+          0.861,
+          0.635,
+          0.655,
+          0.254
+        ],
+        "load_bandwidth_mbs": [
+          542,
+          271,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          26,
+          732,
+          852,
+          272,
+          714,
+          2425,
+          2236,
+          591,
+          895,
+          1696,
+          1538,
+          2562,
+          4828,
+          4952,
+          3128,
+          1500,
+          1901,
+          2403,
+          2003,
+          3112,
+          3621,
+          3139
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          39,
+          78,
+          78,
+          78,
+          78,
+          78,
+          78,
+          58,
+          58,
+          78,
+          78,
+          78,
+          78,
+          78,
+          78,
+          74,
+          148,
+          960,
+          1160,
+          550,
+          402,
+          1324,
+          2377,
+          2187,
+          1282,
+          625,
+          312,
+          2500,
+          2656,
+          625,
+          468,
+          0,
+          1465,
+          1640,
+          174,
+          0,
+          19
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "latency_ms": 7.56,
+    "ddr_mb_per_frame": 13.878,
+    "bpu_ops_per_frame": 1959389184,
+    "derivation": "Single BPU subgraph static estimate from hb_perf; CPU nodes excluded"
+  },
+  "similarity_provenance": {
+    "stage": "unavailable",
+    "method": "Original per-layer PTQ similarity report was not recovered; this run does not invent it"
+  },
+  "performance_provenance": {
+    "stage": "compiler-static-estimate",
+    "source": "hb_perf-exact-bin",
+    "method": "Regenerated analysis of the exact preserved BIN, not a new compile"
+  },
+  "board_measurement": null,
+  "provenance": {
+    "artifact_sha256": "91a24b4a074576f41f24b97c0ad00c4ce7f2bc880fbfe92319dd9a2622549abc",
+    "oe_report_html_sha256": "612931c42e4f551edb6f65d7841e0a8735cb4c837b83de53b270240ffaf75068",
+    "source_log_sha256": "4ac71152f63c9cd669ce7ee8a620f1745f5d4014694e5a2392ed0de05fbf8fb2"
+  }
+}

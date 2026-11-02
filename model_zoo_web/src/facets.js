@@ -8,6 +8,7 @@
       ['pose-estimation', '姿态估计'], ['promptable-image-segmentation', '提示式分割'],
       ['monocular-depth-estimation', '深度估计'], ['multi-object-tracking', '目标跟踪'],
       ['image-embedding', '视觉特征提取'], ['ocr-text-detection', '文字检测'],
+      ['person-reidentification', '行人重识别'],
       ['ocr-text-recognition', '文字识别'], ['license-plate-recognition', '车牌识别'],
       ['portrait-matting', '人像抠图'], ['video-action-classification', '视频动作分类'],
       ['audio-driven-talking-avatar', '语音驱动数字人'],

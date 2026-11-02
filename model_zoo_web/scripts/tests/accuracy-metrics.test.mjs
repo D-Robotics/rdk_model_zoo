@@ -10,6 +10,16 @@ import {
 
 const values = fields => Object.fromEntries(fields.map((field, index) => [field, (index + 1) / 10]));
 
+test('ReID keeps Rank-1 and retrieval mAP as ratios under the frozen protocol', () => {
+  const metadata = { dataset: 'Market1501', evaluation_scope: 'market1501_single_query_l2_no_rerank' };
+  const records = accuracyRecords('reid', { rank1: 0.94, map: 0.83 }, { rank1: 0.93, map: 0.82 }, metadata);
+  assert.deepEqual(records.map(r => r.metric), ['reid-rank-1', 'reid-rank-1', 'reid-map', 'reid-map']);
+  assert.equal(records[0].value, 0.94);
+  assert.throws(() => accuracyRecords('reid', { rank1: 94, map: 83 }, { rank1: 93, map: 82 }, metadata), /finite ratio/);
+  assert.throws(() => accuracyRecords('reid', { rank1: 0.94, map: 0.83 }, { rank1: 0.93, map: 0.82 },
+    { ...metadata, evaluation_scope: 'reranked' }), /evaluation_scope/);
+});
+
 test('each YOLO26 task maps its measured fields to float and quantized preview metrics', () => {
   const receiptFields = {
     cls: [['top1', 'top1'], ['top5', 'top5']],

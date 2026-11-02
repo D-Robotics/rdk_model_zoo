@@ -366,6 +366,7 @@ const pendingIds = new Set((fullCatalog.models || [])
   .map(record => record.id));
 
 const taskMetadata = {
+  reid: { id: 'person-reidentification', label: '行人重识别', description: '行人外观特征提取与检索模型' },
   detect: { id: 'object-detection', label: '目标检测', description: 'COCO 目标检测模型' },
   classify: { id: 'image-classification', label: '图像分类', description: '图像分类模型' },
   cls: { id: 'image-classification', label: '图像分类', description: '图像分类模型' },
@@ -439,7 +440,7 @@ for (const record of catalog.models || []) {
       const poseObbTechnicalCandidate = technicalPassedPreview && ['pose', 'obb'].includes(record.task);
       const sampleLinkedCandidate = clsSegCandidate || poseObbTechnicalCandidate;
       const conversionRepositoryCommit = release.provenance?.workbench_repository_commit || null;
-      const sourceRepositoryCommit = sampleLinkedCandidate ? candidateSampleReferenceCommit : null;
+      const sourceRepositoryCommit = sampleLinkedCandidate ? candidateSampleReferenceCommit : record.sample_revision || null;
       // Samples that land on upstream develop link there. For the MobileNet and ResNet families the build
       // commit still holds the superseded sample, so linking to it would show users code that no longer
       // matches the models.
@@ -448,11 +449,12 @@ for (const record of catalog.models || []) {
         || ['mobilenetv1', 'mobilenetv2', 'mobilenetv3', 'mobilenetv4', 'resnet'].includes(record.family));
       // Drafts link the existing upstream develop sample; their own source
       // changes are not pushed yet.
-      const sourceUrl = localRecord ? `${officialRepositoryUrl}/tree/develop/${record.sample_path}` : candidatePreview
+      const sourceUrl = localRecord ? (release.provenance?.sample_pending_publication
+        ? null : `${officialRepositoryUrl}/tree/develop/${record.sample_path}`) : candidatePreview
         ? sampleLinkedCandidate
           ? `${officialRepositoryUrl}/tree/${sourceRepositoryCommit}/${record.sample_path}`
           : release.provenance?.source_weight_url || null
-        : `${repositoryUrl}/tree/${releasedDevelopTask ? 'develop' : release.provenance.repository_commit}/${record.sample_path}`;
+        : `${repositoryUrl}/tree/${record.sample_revision || (releasedDevelopTask ? 'develop' : release.provenance.repository_commit)}/${record.sample_path}`;
       const floatAccuracy = release.accuracy?.float_onnx;
       const runtimeAccuracy = release.accuracy?.runtime;
       const performance = release.performance || {};
@@ -482,7 +484,7 @@ for (const record of catalog.models || []) {
           throw new Error(`MODEL_ZOO_INPUTS.releases.${releaseId} must be an object`);
         }
         usedReleaseInputs.add(releaseId);
-        if (localRecord && releaseInput.oe_html && !releaseInput.oe_data) {
+        if (localRecord && releaseInput.oe_html) {
           const reportPath = await resolveInputFile(releaseInput.oe_html, `${releaseId}.oe_html`);
           localReport = await readFile(reportPath);
           if (sha256Bytes(localReport) !== releaseInput.oe_html_sha256
@@ -490,7 +492,8 @@ for (const record of catalog.models || []) {
               || !/<(?:!doctype\s+html|html)[\s>]/i.test(localReport.subarray(0, 512).toString('utf8'))) {
             throw new Error(`${releaseId}: local OE HTML identity or format mismatch`);
           }
-        } else {
+        }
+        if (releaseInput.oe_data) {
           oeData = await loadOeData(
             releaseInput.oe_data,
             `MODEL_ZOO_INPUTS.releases.${releaseId}.oe_data`,
@@ -508,7 +511,8 @@ for (const record of catalog.models || []) {
         const reportFilename = `${id}-oe-report.html`;
         await writeFile(resolve(reportsRoot, reportFilename), localReport);
         reportUrl = `reports/models/${reportFilename}`;
-      } else if (oeData) {
+      }
+      if (oeData) {
         // Structured path: ship the small extracted JSON. Full HTML payloads
         // stay out of dist and are only retained as a report fallback source.
         const dataRoot = resolve(outputRoot, 'reports', 'data');
@@ -517,7 +521,7 @@ for (const record of catalog.models || []) {
         const dataBytes = JSON.stringify(oeData, null, 2);
         await writeFile(resolve(dataRoot, dataFilename), dataBytes, 'utf8');
         reportDataUrl = `reports/data/${dataFilename}`;
-      } else if (reportSourceUrl) {
+      } else if (!localReport && reportSourceUrl) {
         const response = await fetch(reportSourceUrl);
         if (!response.ok) throw new Error(`Unable to fetch OE report: ${response.status} ${reportSourceUrl}`);
         const reportBytes = Buffer.from(await response.arrayBuffer());
@@ -540,7 +544,7 @@ for (const record of catalog.models || []) {
           bytes: reportDataUrl
             ? Buffer.byteLength(JSON.stringify(oeData), 'utf8')
             : 0,
-          path: reportDataUrl ? reportSourceUrl || reportDataUrl : reportUrl,
+          path: reportSourceUrl || reportUrl || reportDataUrl,
           dataUrl: reportDataUrl,
           modelIds: [id],
           sources: [oeData?.generated_from_run].filter(Boolean),
@@ -598,6 +602,20 @@ for (const record of catalog.models || []) {
           sha256: artifact.sha256,
           sizeBytes: artifactBytes.length,
         }];
+        if (release.source_archive) {
+          const sourceArchive = release.source_archive;
+          const sourcePath = await resolveInputFile(sourceArchive.local_path, `${releaseId}.source_archive.local_path`);
+          const sourceBytes = await readFile(sourcePath);
+          const sourceName = sourceArchive.filename;
+          if (typeof sourceName !== 'string' || basename(sourceName) !== sourceName
+              || sha256Bytes(sourceBytes) !== sourceArchive.sha256
+              || sourceBytes.length !== Number(sourceArchive.size_bytes)) {
+            throw new Error(`${releaseId}: local source archive identity mismatch`);
+          }
+          await writeFile(resolve(outputRoot, 'downloads', id, sourceName), sourceBytes);
+          localAssets.push({ role: '示例源码', format: 'tar.gz', filename: sourceName,
+            url: `downloads/${id}/${sourceName}`, sha256: sourceArchive.sha256, sizeBytes: sourceBytes.length });
+        }
       }
 
       models.push({
@@ -609,6 +627,7 @@ for (const record of catalog.models || []) {
         modelSize: variant.size,
         releaseStatus: release.status,
         releasePlatform: platform,
+        ...(release.provenance?.runtime_variant ? { runtimeVariant: release.provenance.runtime_variant } : {}),
         task: task.label,
         taskId: task.id,
         tasks: [task.id],
@@ -622,6 +641,7 @@ for (const record of catalog.models || []) {
         coverLabel: inferenceCover?.cover_label || modelInput.cover_label || '模型参考推理结果',
         sample: `${record.source}/${record.family}/${record.task}/${variant.size}`,
         source: sourceUrl,
+        ...(localRecord && release.source_archive ? { sourceArchive: localAssets[1].url } : {}),
         ...(localRecord ? { sourceType: 'repository' } : {}),
         ...(clsSegCandidate ? {
           upstreamWeightUrl: release.provenance?.source_weight_url || null,
@@ -676,7 +696,10 @@ for (const record of catalog.models || []) {
               runtimeSubmissionThreads: Number(endToEnd.runtime_submission_threads),
               cpuThreadPolicy: endToEnd.cpu_thread_policy,
               onlineCpuThreads: Number(endToEnd.online_cpu_threads),
-              opencvThreads: Number(endToEnd.opencv_threads),
+              cpuBackend: endToEnd.cpu_backend || 'opencv',
+              ...(endToEnd.cpu_backend === 'native'
+                ? { cpuWorkerThreads: Number(endToEnd.cpu_worker_threads) }
+                : { opencvThreads: Number(endToEnd.opencv_threads) }),
               cpuGovernor: endToEnd.cpu_governor,
               cpuFrequencyMhz: Number(endToEnd.cpu_frequency_mhz),
               bpuFrequencyMhz: Number(endToEnd.bpu_frequency_mhz),
@@ -716,11 +739,13 @@ for (const record of catalog.models || []) {
       properties[id] = {
         parameterCount: Number(variant.model?.parameter_count),
         gflops: Number(variant.model?.gflops),
+        ...(variant.model?.measurement_method ? { computeMethod: variant.model.measurement_method } : {}),
         inputShape: variant.input.source?.shape || [1, 3, variant.input.height, variant.input.width],
         sourceInput: variant.input.source,
         runtimeInput: {
           format: artifact.runtime_input,
           resolution: [variant.input.height, variant.input.width],
+          ...(artifact.runtime_tensor || {}),
         },
       };
     }

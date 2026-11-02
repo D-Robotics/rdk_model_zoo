@@ -94,19 +94,21 @@ test('detail accuracy tiles use task labels and show float/runtime comparison va
   assert.doesNotMatch(html, /mAP50-95/);
 });
 
-test('detail labels cover classification, segmentation, pose, and oriented boxes', () => {
+test('detail labels cover vision tasks without evaluation scope captions', () => {
   const labels = accuracyMetricLabels();
-  for (const task of ['cls', 'seg', 'pose', 'obb']) {
+  for (const task of ['cls', 'seg', 'pose', 'obb', 'reid']) {
     const profile = accuracyMetricsSchema.tasks[task];
     const source = Object.fromEntries(profile.required.map(field => [field, 0.75]));
-    const html = renderAccuracy(accuracyRecords(task, source, source, {
+    const records = accuracyRecords(task, source, source, {
       dataset: profile.dataset,
       evaluation_scope: profile.evaluation_scope?.value,
-    }), labels);
+    });
+    const html = renderAccuracy(records, labels);
     for (const { metric } of profile.display) {
       assert.ok(html.includes(`data-i18n-en="${labels[metric].en}"`), `${task}: ${metric}`);
     }
     if (profile.evaluation_scope) {
+      assert.ok(records.every(record => record.scope === profile.evaluation_scope.labels));
       assert.ok(!html.includes(profile.evaluation_scope.labels.en));
       assert.ok(!html.includes(profile.evaluation_scope.labels.zh));
     }

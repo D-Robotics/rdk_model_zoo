@@ -1,0 +1,1173 @@
+schema_version: 1
+id: osnet/osnet/reid
+name: OSNet
+domain: vision
+source: osnet
+provider: Kaiyang Zhou
+family: osnet
+task: reid
+description:
+  zh: OSNet 通过多尺度卷积分支与统一通道门控，将行人裁剪图编码为 512 维外观特征。
+  en: OSNet combines omni-scale convolutional branches with unified channel gating
+    to encode person crops as 512-dimensional appearance features.
+license:
+  name: Research use only
+  url: https://github.com/KaiyangZhou/deep-person-reid/issues/520
+sample_path: samples/vision/osnet
+variants:
+- size: x1.0
+  model:
+    parameter_count: 2169508
+    gflops: 1.957750784
+    macs: 978875392
+    input_shape:
+    - 1
+    - 3
+    - 256
+    - 128
+    fused: false
+    measurement_method: Executed inference modules only; Conv2d/Linear MACs x2; excludes
+      normalization, activations, pooling and classifier
+    torch: 2.14.0+cpu
+    source_sha256: c7c1c29187d6330f859c91da229271531920464c7011aec13842a086b2263cae
+    weights_sha256: 2809d3227f7d078f6045f7feb874a34d0684f0e0057b264b99adccf7d4519154
+  input:
+    width: 128
+    height: 256
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 256
+      - 128
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: x5
+    status: released
+    artifact:
+      filename: osnet_x1_0_bayes_e_256x128_rgb.bin
+      format: bin
+      march: bayes-e
+      runtime_input: rgb
+      sha256: 91a24b4a074576f41f24b97c0ad00c4ce7f2bc880fbfe92319dd9a2622549abc
+      size_bytes: 5257516
+      runtime_tensor:
+        dtype: int8
+        payload_layout: CHW
+        metadata_layout: NHWC
+        shape:
+        - 1
+        - 256
+        - 128
+        - 3
+        packing: Signed planar RGB minus 128, reshaped to metadata NHWC; use the OSNet
+          sample adapter
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/osnet/osnet_x1_0_bayes_e_256x128_rgb.bin
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/osnet/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/osnet/SHA256SUMS
+    accuracy:
+      dataset: Market1501
+      task: person-reidentification
+      images: 19281
+      query_images: 3368
+      gallery_images: 15913
+      evaluation_scope: market1501_single_query_l2_no_rerank
+      float_onnx:
+        label: FP32 spatial ONNX; CPUExecutionProvider
+        rank1: 0.9423990498812351
+        map: 0.8356955287745265
+      runtime:
+        rank1: 0.9406175771971497
+        map: 0.8336425885471624
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 1
+      warmup_frames_per_condition: 20
+      warmup_scope: separate_process_device_warmup
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed signed planar RGB
+      input_sha256: 54ce32c4d441cf9f1a58d95406454a53f9d93c9800f0801ef50567ee1175817e
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 8.189100333333334
+        observed_min_latency_ms: 7.814
+        observed_max_latency_ms: 8.82
+        aggregate_fps: 121.93575448967448
+      - threads: 2
+        average_latency_ms: 15.047929
+        observed_min_latency_ms: 8.75
+        observed_max_latency_ms: 16.117001
+        aggregate_fps: 132.42188819046152
+      raw_measurements:
+      - threads: 1
+        round: 1
+        frames: 200
+        wall_ms: 1640.914
+        mean_ms: 8.193142
+        min_ms: 7.818
+        max_ms: 8.744
+        reported_fps: 121.883292
+        log: runs/benchmark/osnet-x1.0-x5-20261030-r03/work/board/logs/perf-t1-r1.log
+        log_sha256: 714063c681154b98c956b44e6c92e8091098de3c2d5fd60c86867b05e139355c
+      - threads: 1
+        round: 2
+        frames: 200
+        wall_ms: 1637.079
+        mean_ms: 8.172159
+        min_ms: 7.814
+        max_ms: 8.669
+        reported_fps: 122.168814
+        log: runs/benchmark/osnet-x1.0-x5-20261030-r03/work/board/logs/perf-t1-r2.log
+        log_sha256: e982a2de3274914a9898d8ea47bb4c2c395f2284e1b0d81f366bbd27b81d5735
+      - threads: 1
+        round: 3
+        frames: 200
+        wall_ms: 1642.631
+        mean_ms: 8.202
+        min_ms: 7.822
+        max_ms: 8.82
+        reported_fps: 121.75589
+        log: runs/benchmark/osnet-x1.0-x5-20261030-r03/work/board/logs/perf-t1-r3.log
+        log_sha256: 8286b2c28931cc299b2f2cfc716e6fd3a78f4af134aea20399067599291e55a0
+      - threads: 2
+        round: 1
+        frames: 200
+        wall_ms: 1510.419
+        mean_ms: 15.050882
+        min_ms: 9.066
+        max_ms: 16.117001
+        reported_fps: 132.413589
+        log: runs/benchmark/osnet-x1.0-x5-20261030-r03/work/board/logs/perf-t2-r1.log
+        log_sha256: 25c20bc8b6d1058798bbac6257122c846d318b2b08db5aa3f993e3db435b090d
+      - threads: 2
+        round: 2
+        frames: 200
+        wall_ms: 1509.791
+        mean_ms: 15.046033
+        min_ms: 8.752
+        max_ms: 15.897
+        reported_fps: 132.468666
+        log: runs/benchmark/osnet-x1.0-x5-20261030-r03/work/board/logs/perf-t2-r2.log
+        log_sha256: 7c5f6656a17ea697bbe65d3d581f97f43a950cdec9ecf26962243f2a005c8b2d
+      - threads: 2
+        round: 3
+        frames: 200
+        wall_ms: 1510.763
+        mean_ms: 15.046872
+        min_ms: 8.75
+        max_ms: 15.59
+        reported_fps: 132.383438
+        log: runs/benchmark/osnet-x1.0-x5-20261030-r03/work/board/logs/perf-t2-r3.log
+        log_sha256: c45efaa9b9372252808e4e06f85c8493d7c09818ff76f5681402faa2ddb0cfa0
+      end_to_end:
+      - tool: osnet
+        implementation: native_cpp_neon
+        timing_scope: decoded_rgb_to_l2_feature
+        core_id: 1
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_backend: native
+        cpu_thread_policy: fixed
+        cpu_worker_threads: 1
+        online_cpu_threads: 8
+        warmup_frames_per_round: 20
+        warmup_scope: per_worker_in_process
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 600
+        aggregate_wall_ms: 5261.331453
+        throughput_fps: 114.039574461
+        functional:
+          fixtures_per_worker: 32
+          preprocess_byte_exact: true
+          max_feature_abs_error: 0
+          max_l2_norm_error: 4.10137168894e-07
+        metrics_ms:
+          preprocess:
+            mean: 0.539969841667
+            p50: 0.2483755
+            p95: 1.2023652
+            min: 0.225292
+            max: 1.330795
+          runtime:
+            mean: 8.22123120667
+            p50: 8.3615645
+            p95: 8.4973924
+            min: 7.841605
+            max: 8.615732
+          postprocess:
+            mean: 0.00721245666667
+            p50: 0.003208
+            p95: 0.015792
+            min: 0.003042
+            max: 0.015917
+          end_to_end:
+            mean: 8.768413505
+            p50: 8.62594
+            p95: 9.68659715
+            min: 8.084147
+            max: 9.836235
+        round_wall_ms:
+        - 1762.144299
+        - 1751.678187
+        - 1747.508967
+        raw_frame_order: round,worker,frame
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1050.0
+        cpu_frequency_mhz_observed_range:
+        - 300.0
+        - 1500.0
+        bpu_frequency_mhz: 996.0
+      - tool: osnet
+        implementation: native_cpp_neon
+        timing_scope: decoded_rgb_to_l2_feature
+        core_id: 1
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_backend: native
+        cpu_thread_policy: fixed
+        cpu_worker_threads: 2
+        online_cpu_threads: 8
+        warmup_frames_per_round: 20
+        warmup_scope: per_worker_in_process
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 1200
+        aggregate_wall_ms: 9054.544036
+        throughput_fps: 132.530141245
+        functional:
+          fixtures_per_worker: 32
+          preprocess_byte_exact: true
+          max_feature_abs_error: 0
+          max_l2_norm_error: 4.10137168894e-07
+        metrics_ms:
+          preprocess:
+            mean: 0.6177848275
+            p50: 0.2317505
+            p95: 1.12546345
+            min: 0.219292
+            max: 1.295128
+          runtime:
+            mean: 14.4447469183
+            p50: 15.0281035
+            p95: 15.3983455
+            min: 7.924147
+            max: 15.670084
+          postprocess:
+            mean: 0.00895930666667
+            p50: 0.003375
+            p95: 0.016041
+            min: 0.003083
+            max: 0.073917
+          end_to_end:
+            mean: 15.0714910525
+            p50: 15.2608335
+            p95: 15.63750305
+            min: 8.157313
+            max: 15.904335
+        round_wall_ms:
+        - 3018.380221
+        - 3017.99047
+        - 3018.173345
+        raw_frame_order: round,worker,frame
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        cpu_frequency_mhz_observed_range:
+        - 300.0
+        - 1500.0
+        bpu_frequency_mhz: 996.0
+    provenance:
+      repository_commit: 362f5672b04d5a3cbc69be361698cdf9ba8e38dd
+      build_id: osnet-x1.0-x5-20261030-r03
+      precision_policy: mixed-int8-int16
+      float_run: osnet-x1.0-x5-20261030-r02
+      oe_run: osnet-x1.0-x5-20261030-r02
+      float_source_commit: 42a6d2076c3b6cf20e9e5cffc03a35af894d698c
+      reuse_reason: Only benchmark fixture locking and legacy C++ return changed;
+        export/evaluator/model source bytes unchanged
+      source_weight_url: https://drive.google.com/file/d/1vduhq5DpN2q1g4fYEZfPI17MJeh9qyrA/view
+      onnx_sha256: 6cb4175f05504be53d68d8153b91f5f34a08bad55d160012479ed1094db8eab9
+      weights_sha256: 2809d3227f7d078f6045f7feb874a34d0684f0e0057b264b99adccf7d4519154
+      campaign_sha256: d5443c0279df4901d00a8fd6807e4686ce310e3cf4582081b4cfff6433398159
+      oe_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      dataset_manifest_sha256: e52da536c8ac03e4c6be5edfc2fa042795a5b3c558b37e9bb0c271ec93d29adf
+      original_conversion_archive_available: false
+      license_review:
+        date: '2026-11-02'
+        original_release_sha256: 7aa025a08e5f455f910a3a487c2a57ff7081ba33ba8236017f0f6757dfc85206
+        source_code_license: MIT
+        source_code_license_scope: upstream-code
+        evidence: https://github.com/KaiyangZhou/deep-person-reid/issues/520
+        hbm_bin_bytes_changed: false
+      runtime_variant: spatial-rgb-late8
+      archive_assets_verified_at: '2026-11-02'
+      formal_release_approval: user-approved research-use registration
+      accepted_runtime_source_commit: 0684357376bcf7ff38e1000900f18bc068438ead
+      accepted_source_archive:
+        commit: 0684357376bcf7ff38e1000900f18bc068438ead
+        filename: osnet-sample-source.tar.gz
+        sha256: eef5c48478dad72596e0b29d8c5fd4618760a0aec40e69bd1eef21b905666db9
+        size_bytes: 205377
+      approval_record: model_zoo_web/release/osnet/approval.json
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/osnet/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/osnet/oe_report_data.json
+    released_at: '2026-11-02'
+  - platform: s100
+    status: released
+    artifact:
+      filename: osnet_x1_0_nashe_256x128_f32_int16.hbm
+      format: hbm
+      march: nash-e
+      runtime_input: featuremap
+      sha256: 99de82c91b8cf1c0ce27550a0330d8e07166d9d46d118a6aea26dc2a06ef910b
+      size_bytes: 7577360
+      runtime_tensor:
+        dtype: float32
+        payload_layout: NCHW
+        metadata_layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 256
+        - 128
+        packing: RGB /255, ImageNet mean/std; contiguous NCHW float32
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/osnet/osnet_x1_0_nashe_256x128_f32_int16.hbm
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/osnet/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/osnet/SHA256SUMS
+    accuracy:
+      dataset: Market1501
+      task: person-reidentification
+      images: 19281
+      query_images: 3368
+      gallery_images: 15913
+      evaluation_scope: market1501_single_query_l2_no_rerank
+      float_onnx:
+        label: FP32 spatial opset19 ONNX; CPUExecutionProvider
+        rank1: 0.9423990498812351
+        map: 0.8356955287745265
+      runtime:
+        rank1: 0.9409144893111638
+        map: 0.835073034801312
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 1
+      warmup_frames_per_condition: 20
+      warmup_scope: separate_process_device_warmup; enable_warmup=false for timed
+        runs
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed normalized RGB float32 NCHW featuremap
+      input_sha256: 5bde29eecf99f82ae2cc51faddef5180abe1bd84ee2a3d7b04a4184a6658144c
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.8579799731572468
+        observed_min_latency_ms: 1.8
+        observed_max_latency_ms: 3.085
+        aggregate_fps: 534.0116399479319
+      - threads: 2
+        average_latency_ms: 3.190848191579183
+        observed_min_latency_ms: 2.667
+        observed_max_latency_ms: 4.662
+        aggregate_fps: 622.059476654118
+      raw_measurements:
+      - threads: 1
+        round: 1
+        frames: 200
+        average_latency_ms: 1.8435800075531006
+        minimum_latency_ms: 1.8
+        maximum_latency_ms: 2.652
+        fps: 539.3626708984375
+        wall_time_ms: 371.05999755859375
+        log: work/board/output/profile/perf-t1-r1/profiler.log
+        sha256: 3a8573457e628b9620182a17565a31bad1d2376240a5d8a63a00a55461595b08
+      - threads: 1
+        round: 2
+        frames: 200
+        average_latency_ms: 1.869784951210022
+        minimum_latency_ms: 1.81
+        maximum_latency_ms: 3.085
+        fps: 529.8237915039062
+        wall_time_ms: 377.7460021972656
+        log: work/board/output/profile/perf-t1-r2/profiler.log
+        sha256: 6648e07801be39d8271d8152f86c85e804f02ac94de5b09ba217f364040a328f
+      - threads: 1
+        round: 3
+        frames: 200
+        average_latency_ms: 1.8605749607086182
+        minimum_latency_ms: 1.807
+        maximum_latency_ms: 3.065
+        fps: 534.0140380859375
+        wall_time_ms: 374.7650146484375
+        log: work/board/output/profile/perf-t1-r3/profiler.log
+        sha256: b79e7014761243e5d0a154d8d88520a0e57df43b57452cfd70c64ee5e7c8c19a
+      - threads: 2
+        round: 1
+        frames: 200
+        average_latency_ms: 3.194584846496582
+        minimum_latency_ms: 2.694
+        maximum_latency_ms: 4.139
+        fps: 622.3937377929688
+        wall_time_ms: 321.5610046386719
+        log: work/board/output/profile/perf-t2-r1/profiler.log
+        sha256: 3349f1b0ed4c81a7d603c0178d34ce9e9f60e41b35e56b2bd50d64772ec96a5f
+      - threads: 2
+        round: 2
+        frames: 200
+        average_latency_ms: 3.1886849403381348
+        minimum_latency_ms: 2.667
+        maximum_latency_ms: 4.098
+        fps: 623.091796875
+        wall_time_ms: 321.21600341796875
+        log: work/board/output/profile/perf-t2-r2/profiler.log
+        sha256: d6be0aff6fd0a894b29d8e300d5ea7b078f4fae9f13f4615a28074a1b3492fcc
+      - threads: 2
+        round: 3
+        frames: 200
+        average_latency_ms: 3.189274787902832
+        minimum_latency_ms: 3.024
+        maximum_latency_ms: 4.662
+        fps: 622.0414428710938
+        wall_time_ms: 321.760986328125
+        log: work/board/output/profile/perf-t2-r3/profiler.log
+        sha256: f59cc0ef2b364add72e0734f1e0c262417ac92ee95a63487956450e88f86069a
+      end_to_end:
+      - tool: osnet
+        implementation: native_cpp_neon
+        timing_scope: decoded_rgb_to_l2_feature
+        core_id: 1
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_backend: native
+        cpu_thread_policy: fixed
+        cpu_worker_threads: 1
+        online_cpu_threads: 6
+        warmup_frames_per_round: 20
+        warmup_scope: per_worker_in_process
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 600
+        aggregate_wall_ms: 1357.855438
+        throughput_fps: 441.873253374
+        functional:
+          fixtures_per_worker: 32
+          preprocess_byte_exact: true
+          max_feature_abs_error: 0
+          max_l2_norm_error: 3.2268210548e-07
+        metrics_ms:
+          preprocess:
+            mean: 0.329405753333
+            p50: 0.326878
+            p95: 0.346278
+            min: 0.325603
+            max: 0.483354
+          runtime:
+            mean: 1.9321498
+            p50: 1.9058555
+            p95: 2.1167075
+            min: 1.875243
+            max: 3.355907
+          postprocess:
+            mean: 0.00139596833333
+            p50: 0.001375
+            p95: 0.001525
+            min: 0.00125
+            max: 0.0031
+          end_to_end:
+            mean: 2.26295152167
+            p50: 2.235871
+            p95: 2.4625455
+            min: 2.203221
+            max: 3.68471
+        round_wall_ms:
+        - 452.804673
+        - 450.634877
+        - 454.415888
+        raw_frame_order: round,worker,frame
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+      - tool: osnet
+        implementation: native_cpp_neon
+        timing_scope: decoded_rgb_to_l2_feature
+        core_id: 1
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_backend: native
+        cpu_thread_policy: fixed
+        cpu_worker_threads: 2
+        online_cpu_threads: 6
+        warmup_frames_per_round: 20
+        warmup_scope: per_worker_in_process
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 1200
+        aggregate_wall_ms: 1923.672623
+        throughput_fps: 623.806767146
+        functional:
+          fixtures_per_worker: 32
+          preprocess_byte_exact: true
+          max_feature_abs_error: 0
+          max_l2_norm_error: 3.2268210548e-07
+        metrics_ms:
+          preprocess:
+            mean: 0.335434685833
+            p50: 0.332128
+            p95: 0.3608355
+            min: 0.326178
+            max: 0.386229
+          runtime:
+            mean: 2.86481863083
+            p50: 2.841464
+            p95: 3.22703375
+            min: 2.11752
+            max: 3.860686
+          postprocess:
+            mean: 0.00163118333333
+            p50: 0.001475
+            p95: 0.0025525
+            min: 0.00125
+            max: 0.0232
+          end_to_end:
+            mean: 3.2018845
+            p50: 3.176655
+            p95: 3.55923525
+            min: 2.449423
+            max: 4.188664
+        round_wall_ms:
+        - 641.003864
+        - 641.205466
+        - 641.463293
+        raw_frame_order: round,worker,frame
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000.0
+    provenance:
+      repository_commit: da21b52950330c12e4bc18e8da698038261921b4
+      build_id: osnet-s100-20261030-r03
+      precision_policy: int16
+      requested_quant_config:
+        model_config:
+          all_node_type: int16
+      runtime_variant: s100-f32-int16
+      float_run: osnet-s-float-20261030-r02
+      export_run: osnet-s-20261030-export-r02
+      oe_run: osnet-s100-20261030-r03
+      conversion_source_commit: cb84e9d558dc8fbd66071eca50ea123c5a77df75
+      float_source_commit: b5df9dfc01fd6db104c5a20e03a79fc1f1f00f62
+      source_weight_url: https://drive.google.com/file/d/1vduhq5DpN2q1g4fYEZfPI17MJeh9qyrA/view
+      onnx_sha256: 9ffe062f378bfa9efd3950c2cb4303693d2657002e37fb6fd354c0f3f8386dc3
+      weights_sha256: 2809d3227f7d078f6045f7feb874a34d0684f0e0057b264b99adccf7d4519154
+      campaign_sha256: 0d455d3cbe2b6056e93bb059fe3f73d5c630ffe7e55e58f9ab266dfd54542830
+      oe_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      dataset_manifest_sha256: e52da536c8ac03e4c6be5edfc2fa042795a5b3c558b37e9bb0c271ec93d29adf
+      original_conversion_archive_available: true
+      actual_calibration_batch: 8
+      calibration_samples: 128
+      license_review:
+        date: '2026-11-02'
+        original_release_sha256: 320aa80b4b87a6b19dbc75f066576ef4db296ed8045631d3f773229efaa6d3a7
+        source_code_license: MIT
+        source_code_license_scope: upstream-code
+        evidence: https://github.com/KaiyangZhou/deep-person-reid/issues/520
+        hbm_bin_bytes_changed: false
+      archive_assets_verified_at: '2026-11-02'
+      formal_release_approval: user-approved research-use registration
+      accepted_runtime_source_commit: 300c202e763b73a3d68aef013841a44ebcddf714
+      accepted_source_archive:
+        commit: 300c202e763b73a3d68aef013841a44ebcddf714
+        filename: osnet-sample-source.tar.gz
+        sha256: 06481e8e23f139dad598786af3fb5d561bd57716712d28bb78d73ef83d31be66
+        size_bytes: 227527
+      approval_record: model_zoo_web/release/osnet/approval.json
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/osnet/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/osnet/oe_report_data.json
+    released_at: '2026-11-02'
+  - platform: s100p
+    status: released
+    artifact:
+      filename: osnet_x1_0_nashm_256x128_f32_int16.hbm
+      format: hbm
+      march: nash-m
+      runtime_input: featuremap
+      sha256: 7350a251da95d7487ef6411b1c350fa56b9b7963db5633d3b136ad4aea2f6d4d
+      size_bytes: 7467792
+      runtime_tensor:
+        dtype: float32
+        payload_layout: NCHW
+        metadata_layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 256
+        - 128
+        packing: RGB /255, ImageNet mean/std; contiguous NCHW float32
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/osnet/osnet_x1_0_nashm_256x128_f32_int16.hbm
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/osnet/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/osnet/SHA256SUMS
+    accuracy:
+      dataset: Market1501
+      task: person-reidentification
+      images: 19281
+      query_images: 3368
+      gallery_images: 15913
+      evaluation_scope: market1501_single_query_l2_no_rerank
+      float_onnx:
+        label: FP32 spatial opset19 ONNX; CPUExecutionProvider
+        rank1: 0.9423990498812351
+        map: 0.8356955287745265
+      runtime:
+        rank1: 0.9409144893111638
+        map: 0.835073034801312
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 1
+      warmup_frames_per_condition: 20
+      warmup_scope: separate_process_device_warmup; enable_warmup=false for timed
+        runs
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed normalized RGB float32 NCHW featuremap
+      input_sha256: 5bde29eecf99f82ae2cc51faddef5180abe1bd84ee2a3d7b04a4184a6658144c
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.5115266640981038
+        observed_min_latency_ms: 1.458
+        observed_max_latency_ms: 2.153
+        aggregate_fps: 655.5249300724062
+      - threads: 2
+        average_latency_ms: 2.5434067249298096
+        observed_min_latency_ms: 2.203
+        observed_max_latency_ms: 3.689
+        aggregate_fps: 779.2764652982214
+      raw_measurements:
+      - threads: 1
+        round: 1
+        frames: 200
+        average_latency_ms: 1.5130250453948975
+        minimum_latency_ms: 1.467
+        maximum_latency_ms: 2.11
+        fps: 654.6301879882812
+        wall_time_ms: 305.7489929199219
+        log: work/board/output/profile/perf-t1-r1/profiler.log
+        sha256: 1e3ffc02de980b6e8be63167bcf6feabb60e6dc62021610a910b9e9064e43d9a
+      - threads: 1
+        round: 2
+        frames: 200
+        average_latency_ms: 1.509779930114746
+        minimum_latency_ms: 1.469
+        maximum_latency_ms: 2.122
+        fps: 656.5104370117188
+        wall_time_ms: 304.8840026855469
+        log: work/board/output/profile/perf-t1-r2/profiler.log
+        sha256: 05cd01df64d1e0b89c080d33d56d82291cee5812e29c7715649021fe2145d159
+      - threads: 1
+        round: 3
+        frames: 200
+        average_latency_ms: 1.511775016784668
+        minimum_latency_ms: 1.458
+        maximum_latency_ms: 2.153
+        fps: 656.9503784179688
+        wall_time_ms: 304.66400146484375
+        log: work/board/output/profile/perf-t1-r3/profiler.log
+        sha256: 5625ba2b5f7f6f75b167c62c81391997f4b6a403cd110e70182dfb545c2bd826
+      - threads: 2
+        round: 1
+        frames: 200
+        average_latency_ms: 2.540225028991699
+        minimum_latency_ms: 2.255
+        maximum_latency_ms: 3.403
+        fps: 779.772705078125
+        wall_time_ms: 256.6969909667969
+        log: work/board/output/profile/perf-t2-r1/profiler.log
+        sha256: 355ee2700a05a4f906b16f4b572f8353ec2fdf1df4498198d2f8f350281222c7
+      - threads: 2
+        round: 2
+        frames: 200
+        average_latency_ms: 2.546765089035034
+        minimum_latency_ms: 2.203
+        maximum_latency_ms: 3.358
+        fps: 780.0372924804688
+        wall_time_ms: 256.5989990234375
+        log: work/board/output/profile/perf-t2-r2/profiler.log
+        sha256: 3d95bdc4ea75ac4c3edcc9a46a9c821201b3baf1ac2ce7c935484edec714eb42
+      - threads: 2
+        round: 3
+        frames: 200
+        average_latency_ms: 2.5432300567626953
+        minimum_latency_ms: 2.393
+        maximum_latency_ms: 3.689
+        fps: 779.8760986328125
+        wall_time_ms: 256.64898681640625
+        log: work/board/output/profile/perf-t2-r3/profiler.log
+        sha256: d573b0941793a0895c0d5efb75d430354332dc34975749c3cff33c45cb64d573
+      end_to_end:
+      - tool: osnet
+        implementation: native_cpp_neon
+        timing_scope: decoded_rgb_to_l2_feature
+        core_id: 1
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_backend: native
+        cpu_thread_policy: fixed
+        cpu_worker_threads: 1
+        online_cpu_threads: 6
+        warmup_frames_per_round: 20
+        warmup_scope: per_worker_in_process
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 600
+        aggregate_wall_ms: 1099.488888
+        throughput_fps: 545.708107238
+        functional:
+          fixtures_per_worker: 32
+          preprocess_byte_exact: true
+          max_feature_abs_error: 0
+          max_l2_norm_error: 3.2268210548e-07
+        metrics_ms:
+          preprocess:
+            mean: 0.248138298333
+            p50: 0.24547
+            p95: 0.26702125
+            min: 0.244245
+            max: 0.298344
+          runtime:
+            mean: 1.58312886833
+            p50: 1.560194
+            p95: 1.6815132
+            min: 1.518845
+            max: 1.951311
+          postprocess:
+            mean: 0.00108648166667
+            p50: 0.001075
+            p95: 0.001225
+            min: 0.000925
+            max: 0.0024
+          end_to_end:
+            mean: 1.83235364833
+            p50: 1.808939
+            p95: 1.9409898
+            min: 1.765015
+            max: 2.197581
+        round_wall_ms:
+        - 366.415644
+        - 367.073456
+        - 365.999788
+        raw_frame_order: round,worker,frame
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+      - tool: osnet
+        implementation: native_cpp_neon
+        timing_scope: decoded_rgb_to_l2_feature
+        core_id: 1
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_backend: native
+        cpu_thread_policy: fixed
+        cpu_worker_threads: 2
+        online_cpu_threads: 6
+        warmup_frames_per_round: 20
+        warmup_scope: per_worker_in_process
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 1200
+        aggregate_wall_ms: 1537.749004
+        throughput_fps: 780.361422364
+        functional:
+          fixtures_per_worker: 32
+          preprocess_byte_exact: true
+          max_feature_abs_error: 0
+          max_l2_norm_error: 3.2268210548e-07
+        metrics_ms:
+          preprocess:
+            mean: 0.2542143525
+            p50: 0.251595
+            p95: 0.27708025
+            min: 0.244345
+            max: 0.325419
+          runtime:
+            mean: 2.30408176667
+            p50: 2.2886165
+            p95: 2.5656115
+            min: 1.711616
+            max: 3.120413
+          postprocess:
+            mean: 0.00122009833333
+            p50: 0.001175
+            p95: 0.00175
+            min: 0.000925
+            max: 0.00305
+          end_to_end:
+            mean: 2.5595162175
+            p50: 2.542462
+            p95: 2.8146465
+            min: 1.957611
+            max: 3.391057
+        round_wall_ms:
+        - 512.750221
+        - 512.427738
+        - 512.571045
+        raw_frame_order: round,worker,frame
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: 1500.0
+    provenance:
+      repository_commit: 775d2b7fc6942eb2505be34fd5b114d9ada7ffd8
+      build_id: osnet-s100p-20261030-r01
+      precision_policy: int16
+      requested_quant_config:
+        model_config:
+          all_node_type: int16
+      runtime_variant: s100p-f32-int16
+      float_run: osnet-s-float-20261030-r02
+      export_run: osnet-s-20261030-export-r02
+      oe_run: osnet-s100p-20261030-r01
+      conversion_source_commit: cb84e9d558dc8fbd66071eca50ea123c5a77df75
+      float_source_commit: b5df9dfc01fd6db104c5a20e03a79fc1f1f00f62
+      source_weight_url: https://drive.google.com/file/d/1vduhq5DpN2q1g4fYEZfPI17MJeh9qyrA/view
+      onnx_sha256: 9ffe062f378bfa9efd3950c2cb4303693d2657002e37fb6fd354c0f3f8386dc3
+      weights_sha256: 2809d3227f7d078f6045f7feb874a34d0684f0e0057b264b99adccf7d4519154
+      campaign_sha256: db5db13f16161c0d396f1cba550481f82a3c7f5556c034675d6f4b513fc782e5
+      oe_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      dataset_manifest_sha256: e52da536c8ac03e4c6be5edfc2fa042795a5b3c558b37e9bb0c271ec93d29adf
+      original_conversion_archive_available: true
+      actual_calibration_batch: 8
+      calibration_samples: 128
+      license_review:
+        date: '2026-11-02'
+        original_release_sha256: dffe68c7134daed6a96933fcdf9982c4158c2c416716b5954833fcd094804cc6
+        source_code_license: MIT
+        source_code_license_scope: upstream-code
+        evidence: https://github.com/KaiyangZhou/deep-person-reid/issues/520
+        hbm_bin_bytes_changed: false
+      archive_assets_verified_at: '2026-11-02'
+      formal_release_approval: user-approved research-use registration
+      accepted_runtime_source_commit: 300c202e763b73a3d68aef013841a44ebcddf714
+      accepted_source_archive:
+        commit: 300c202e763b73a3d68aef013841a44ebcddf714
+        filename: osnet-sample-source.tar.gz
+        sha256: 06481e8e23f139dad598786af3fb5d561bd57716712d28bb78d73ef83d31be66
+        size_bytes: 227527
+      approval_record: model_zoo_web/release/osnet/approval.json
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/osnet/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/osnet/oe_report_data.json
+    released_at: '2026-11-02'
+  - platform: s600
+    status: released
+    artifact:
+      filename: osnet_x1_0_nashp_256x128_f32_int16.hbm
+      format: hbm
+      march: nash-p
+      runtime_input: featuremap
+      sha256: 5bd9941e84bd487011cd3da38faf44f5012cdf665273b20f2e9b51837de46708
+      size_bytes: 9489576
+      runtime_tensor:
+        dtype: float32
+        payload_layout: NCHW
+        metadata_layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 256
+        - 128
+        packing: RGB /255, ImageNet mean/std; contiguous NCHW float32
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/osnet/osnet_x1_0_nashp_256x128_f32_int16.hbm
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/osnet/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/osnet/SHA256SUMS
+    accuracy:
+      dataset: Market1501
+      task: person-reidentification
+      images: 19281
+      query_images: 3368
+      gallery_images: 15913
+      evaluation_scope: market1501_single_query_l2_no_rerank
+      float_onnx:
+        label: FP32 spatial opset19 ONNX; CPUExecutionProvider
+        rank1: 0.9423990498812351
+        map: 0.8356955287745265
+      runtime:
+        rank1: 0.9409144893111638
+        map: 0.8351212017953202
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 1
+      warmup_frames_per_condition: 20
+      warmup_scope: separate_process_device_warmup; enable_warmup=false for timed
+        runs
+      runs_per_condition: 3
+      frames_per_run: 200
+      input_kind: fixed normalized RGB float32 NCHW featuremap
+      input_sha256: 5bde29eecf99f82ae2cc51faddef5180abe1bd84ee2a3d7b04a4184a6658144c
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.2121599912643433
+        observed_min_latency_ms: 1.176
+        observed_max_latency_ms: 2.134
+        aggregate_fps: 816.8889021661404
+      - threads: 2
+        average_latency_ms: 1.9649182955423992
+        observed_min_latency_ms: 1.778
+        observed_max_latency_ms: 3.14
+        aggregate_fps: 1008.2728601503727
+      raw_measurements:
+      - threads: 1
+        round: 1
+        frames: 200
+        average_latency_ms: 1.214359998703003
+        minimum_latency_ms: 1.178
+        maximum_latency_ms: 2.134
+        fps: 815.6607055664062
+        wall_time_ms: 245.39199829101562
+        log: work/board/output/profile/perf-t1-r1/profiler.log
+        sha256: e3b2ccabde4223703d8403fb97e29bcf2016298baf14e3811f0490556b9d6995
+      - threads: 1
+        round: 2
+        frames: 200
+        average_latency_ms: 1.2088450193405151
+        minimum_latency_ms: 1.176
+        maximum_latency_ms: 1.864
+        fps: 820.765380859375
+        wall_time_ms: 243.86199951171875
+        log: work/board/output/profile/perf-t1-r2/profiler.log
+        sha256: 2db075ba77e58b81584518eeb80ebdc8e18a5ae6d6934d43641881f896446887
+      - threads: 1
+        round: 3
+        frames: 200
+        average_latency_ms: 1.2132749557495117
+        minimum_latency_ms: 1.184
+        maximum_latency_ms: 1.895
+        fps: 816.1666259765625
+        wall_time_ms: 245.24000549316406
+        log: work/board/output/profile/perf-t1-r3/profiler.log
+        sha256: a638691492da3aec344bdce717db0b20406b89c64a00ef7ea911ed3b07ae1fe5
+      - threads: 2
+        round: 1
+        frames: 200
+        average_latency_ms: 1.9649949073791504
+        minimum_latency_ms: 1.853
+        maximum_latency_ms: 3.14
+        fps: 1008.8781127929688
+        wall_time_ms: 198.41200256347656
+        log: work/board/output/profile/perf-t2-r1/profiler.log
+        sha256: 769f5419f6b778ec8903c10c56b0099da33448bda67ad9be220debd216e4234a
+      - threads: 2
+        round: 2
+        frames: 200
+        average_latency_ms: 1.9653149843215942
+        minimum_latency_ms: 1.86
+        maximum_latency_ms: 3.062
+        fps: 1009.3923950195312
+        wall_time_ms: 198.31100463867188
+        log: work/board/output/profile/perf-t2-r2/profiler.log
+        sha256: 39178d2fc188c818498f265b835ab16d7baeb3635c5317e8a8ba941743e2c3d1
+      - threads: 2
+        round: 3
+        frames: 200
+        average_latency_ms: 1.9644449949264526
+        minimum_latency_ms: 1.778
+        maximum_latency_ms: 2.881
+        fps: 1009.1682739257812
+        wall_time_ms: 198.35400390625
+        log: work/board/output/profile/perf-t2-r3/profiler.log
+        sha256: 9e73552fcd658f79310a271f6533491af6b4daed9396515be331e58bc912d326
+      end_to_end:
+      - tool: osnet
+        implementation: native_cpp_neon
+        timing_scope: decoded_rgb_to_l2_feature
+        core_id: 1
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_backend: native
+        cpu_thread_policy: fixed
+        cpu_worker_threads: 1
+        online_cpu_threads: 18
+        warmup_frames_per_round: 20
+        warmup_scope: per_worker_in_process
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 600
+        aggregate_wall_ms: 909.027846
+        throughput_fps: 660.04578698
+        functional:
+          fixtures_per_worker: 32
+          preprocess_byte_exact: true
+          max_feature_abs_error: 0
+          max_l2_norm_error: 3.4329881371e-07
+        metrics_ms:
+          preprocess:
+            mean: 0.232870178333
+            p50: 0.2318645
+            p95: 0.245782
+            min: 0.228527
+            max: 0.284602
+          runtime:
+            mean: 1.281149555
+            p50: 1.270586
+            p95: 1.3175123
+            min: 1.25636
+            max: 1.534564
+          postprocess:
+            mean: 0.000959341666667
+            p50: 0.000925
+            p95: 0.00105
+            min: 0.000875
+            max: 0.001975
+          end_to_end:
+            mean: 1.514979075
+            p50: 1.5033505
+            p95: 1.5534052
+            min: 1.488212
+            max: 1.808191
+        round_wall_ms:
+        - 303.1622
+        - 302.718046
+        - 303.1476
+        raw_frame_order: round,worker,frame
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+      - tool: osnet
+        implementation: native_cpp_neon
+        timing_scope: decoded_rgb_to_l2_feature
+        core_id: 1
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_backend: native
+        cpu_thread_policy: fixed
+        cpu_worker_threads: 2
+        online_cpu_threads: 18
+        warmup_frames_per_round: 20
+        warmup_scope: per_worker_in_process
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 1200
+        aggregate_wall_ms: 1185.130568
+        throughput_fps: 1012.54666144
+        functional:
+          fixtures_per_worker: 32
+          preprocess_byte_exact: true
+          max_feature_abs_error: 0
+          max_l2_norm_error: 3.4329881371e-07
+        metrics_ms:
+          preprocess:
+            mean: 0.233795220833
+            p50: 0.232402
+            p95: 0.2463533
+            min: 0.228352
+            max: 0.307177
+          runtime:
+            mean: 1.73797311167
+            p50: 1.7286025
+            p95: 1.77287755
+            min: 1.399562
+            max: 2.516622
+          postprocess:
+            mean: 0.000951885
+            p50: 0.000925
+            p95: 0.001
+            min: 0.000875
+            max: 0.001975
+          end_to_end:
+            mean: 1.9727202175
+            p50: 1.962242
+            p95: 2.0233017
+            min: 1.636064
+            max: 2.754399
+        round_wall_ms:
+        - 395.153023
+        - 394.964772
+        - 395.012773
+        raw_frame_order: round,worker,frame
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: 1500.0
+    provenance:
+      repository_commit: 8b555ec3cdd67f08a026901f288addb3ec387961
+      build_id: osnet-s600-20261030-r01
+      precision_policy: int16
+      requested_quant_config:
+        model_config:
+          all_node_type: int16
+      runtime_variant: s600-f32-int16
+      float_run: osnet-s-float-20261030-r02
+      export_run: osnet-s-20261030-export-r02
+      oe_run: osnet-s600-20261030-r01
+      conversion_source_commit: da21b52950330c12e4bc18e8da698038261921b4
+      float_source_commit: b5df9dfc01fd6db104c5a20e03a79fc1f1f00f62
+      source_weight_url: https://drive.google.com/file/d/1vduhq5DpN2q1g4fYEZfPI17MJeh9qyrA/view
+      onnx_sha256: 9ffe062f378bfa9efd3950c2cb4303693d2657002e37fb6fd354c0f3f8386dc3
+      weights_sha256: 2809d3227f7d078f6045f7feb874a34d0684f0e0057b264b99adccf7d4519154
+      campaign_sha256: 455e8383d468f6fb3ac0b49ba7d1dd69683f834627c9395fa13565e492ef92be
+      oe_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      dataset_manifest_sha256: e52da536c8ac03e4c6be5edfc2fa042795a5b3c558b37e9bb0c271ec93d29adf
+      original_conversion_archive_available: true
+      actual_calibration_batch: 8
+      calibration_samples: 128
+      license_review:
+        date: '2026-11-02'
+        original_release_sha256: 530cca28709c2ca3670627c2c16a58dd16c503484a76e10af2b08f067ae5a455
+        source_code_license: MIT
+        source_code_license_scope: upstream-code
+        evidence: https://github.com/KaiyangZhou/deep-person-reid/issues/520
+        hbm_bin_bytes_changed: false
+      archive_assets_verified_at: '2026-11-02'
+      formal_release_approval: user-approved research-use registration
+      accepted_runtime_source_commit: 300c202e763b73a3d68aef013841a44ebcddf714
+      accepted_source_archive:
+        commit: 300c202e763b73a3d68aef013841a44ebcddf714
+        filename: osnet-sample-source.tar.gz
+        sha256: 06481e8e23f139dad598786af3fb5d561bd57716712d28bb78d73ef83d31be66
+        size_bytes: 227527
+      approval_record: model_zoo_web/release/osnet/approval.json
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/osnet/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/osnet/oe_report_data.json
+    released_at: '2026-11-02'
+sample_revision: 6e9748b01024931bc573dc7d373a5a8ce286415c

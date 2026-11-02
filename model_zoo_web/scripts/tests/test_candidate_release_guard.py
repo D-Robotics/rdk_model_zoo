@@ -18,7 +18,7 @@ class CandidateReleaseGuardTest(unittest.TestCase):
     def test_candidate_batch_is_outside_active_catalog_scan(self):
         # This test is about which YAML files are scanned, not about sample sources, which the Web
         # branch does not have to carry (see MODEL_ZOO_SAMPLE_REF in build_catalog.py).
-        with mock.patch.object(build_catalog, "validate_sample_path", lambda value, label: value):
+        with mock.patch.object(build_catalog, "validate_sample_path", lambda value, label, revision=None: value):
             catalog, _ = build_catalog.build_catalog()
         parsed = yaml.safe_load(catalog)
         self.assertEqual(parsed["source"], "model_zoo_web/data")

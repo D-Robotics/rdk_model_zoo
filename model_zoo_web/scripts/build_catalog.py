@@ -25,6 +25,10 @@ BUILD_ROOT = WEB_ROOT / "build"
 CATALOG_PATH = BUILD_ROOT / "catalog.json"
 META_PATH = BUILD_ROOT / "catalog.meta.json"
 OSS_HOST = "rdk-model-zoo.oss-cn-beijing.aliyuncs.com"
+ARTIFACT_ROOTS = {
+    OSS_HOST: "/models",
+    "archive.d-robotics.cc": "/downloads/rdk_model_zoo_web",
+}
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 # Samples live on develop; the Web branch does not have to carry their source. When a sample
@@ -183,9 +187,9 @@ def lookup_sample_entry(sample_path: str, label: str, revision: str | None = Non
     raise CatalogError(f"{label} does not exist locally or in {ref}: {sample_path}")
 
 
-def validate_sample_path(value: Any, label: str) -> str:
+def validate_sample_path(value: Any, label: str, revision: str | None = None) -> str:
     sample_path = _safe_samples_path(value, label)
-    if lookup_sample_entry(sample_path, label) != "directory":
+    if lookup_sample_entry(sample_path, label, revision) != "directory":
         raise CatalogError(f"{label} is not a sample directory: {sample_path}")
     return sample_path
 
@@ -300,14 +304,20 @@ def validate_artifact(
 ) -> None:
     url = require_string(artifact.get("url"), f"{label}.url")
     parsed = urlparse(url)
-    if parsed.scheme != "https" or parsed.netloc != OSS_HOST or parsed.query or parsed.fragment:
-        raise CatalogError(f"{label}.url must be a direct HTTPS URL on {OSS_HOST}")
+    root = ARTIFACT_ROOTS.get(parsed.netloc)
+    if parsed.scheme != "https" or root is None or parsed.query or parsed.fragment:
+        raise CatalogError(
+            f"{label}.url must be a direct HTTPS URL on " + " or ".join(ARTIFACT_ROOTS)
+        )
     filename = PurePosixPath(unquote(parsed.path)).name
-    expected_path = f"/models/{source}/{family}/{task}/{size}/{platform}/{filename}"
+    if parsed.netloc == "archive.d-robotics.cc":
+        expected_path = f"{root}/rdk_{platform}/{source}/{filename}"
+    else:
+        expected_path = f"{root}/{source}/{family}/{task}/{size}/{platform}/{filename}"
     allowed_paths = {expected_path}
     if isinstance(build_id, str) and BUILD_ID_RE.fullmatch(build_id):
         allowed_paths.add(
-            f"/models/{source}/{family}/{task}/{size}/{platform}/rebuilds/{build_id}/{filename}"
+            f"{PurePosixPath(expected_path).parent}/rebuilds/{build_id}/{filename}"
         )
     if unquote(parsed.path) not in allowed_paths:
         raise CatalogError(f"{label}.url must use {expected_path}")
@@ -355,15 +365,19 @@ def validate_end_to_end_record(end_to_end: dict[str, Any], label: str) -> int:
         end_to_end.get("online_cpu_threads"),
         f"{label}.online_cpu_threads",
     )
-    opencv_threads = require_positive_int(
-        end_to_end.get("opencv_threads"),
-        f"{label}.opencv_threads",
-    )
-    if cpu_thread_policy == "all_online" and opencv_threads != online_cpu_threads:
-        raise CatalogError(
-            f"{label}.opencv_threads must equal online_cpu_threads "
-            "for the all_online policy"
-        )
+    cpu_backend = end_to_end.get("cpu_backend", "opencv")
+    if cpu_backend == "native":
+        workers = require_positive_int(end_to_end.get("cpu_worker_threads"), f"{label}.cpu_worker_threads")
+        if cpu_thread_policy != "fixed" or workers != pipeline_streams:
+            raise CatalogError(f"{label}: native pipeline requires fixed workers equal to pipeline_streams")
+        if "opencv_threads" in end_to_end:
+            raise CatalogError(f"{label}: native pipeline must omit opencv_threads")
+    elif cpu_backend == "opencv":
+        opencv_threads = require_positive_int(end_to_end.get("opencv_threads"), f"{label}.opencv_threads")
+        if cpu_thread_policy == "all_online" and opencv_threads != online_cpu_threads:
+            raise CatalogError(f"{label}.opencv_threads must equal online_cpu_threads for the all_online policy")
+    else:
+        raise CatalogError(f"{label}.cpu_backend must be opencv or native")
     require_string(end_to_end.get("cpu_governor"), f"{label}.cpu_governor")
     require_positive_number(
         end_to_end.get("cpu_frequency_mhz"),
@@ -939,7 +953,10 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
     expected_source = DATA_ROOT / domain / source / family / f"{task}.yaml"
     if source_path != expected_source:
         raise CatalogError(f"{relative_source}: expected path {expected_source.relative_to(ROOT)}")
-    validate_sample_path(record.get("sample_path"), f"{relative_source}.sample_path")
+    revision = None
+    if record.get("sample_revision") is not None:
+        revision = validate_commit(record["sample_revision"], f"{relative_source}.sample_revision")
+    validate_sample_path(record.get("sample_path"), f"{relative_source}.sample_path", revision)
 
     variants = require_list(record.get("variants"), f"{relative_source}.variants")
     seen_sizes: set[str] = set()

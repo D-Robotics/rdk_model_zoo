@@ -6,7 +6,10 @@
   const amount = (record, accuracy = false) => {
     if (!record) return '—';
     const value = accuracy && record.unit === 'ratio' ? record.value * 100 : record.value;
-    return `${record.qualifier === 'lower-bound' ? '≥ ' : record.qualifier === 'approximate' ? '≈ ' : ''}${Number(value.toFixed(2))}`;
+    const magnitude = Math.abs(value);
+    const digits = !accuracy && magnitude > 0 && magnitude < 0.01
+      ? Math.min(6, -Math.floor(Math.log10(magnitude)) + 1) : 2;
+    return `${record.qualifier === 'lower-bound' ? '≥ ' : record.qualifier === 'approximate' ? '≈ ' : ''}${Number(value.toFixed(digits))}`;
   };
   const metricName = (metric, data) => data?.accuracyMetricLabels?.[metric] || ({
     latency: 'Runtime 延迟', throughput: '吞吐量', pre_process_latency: '前处理延迟',
@@ -208,6 +211,10 @@
   function quickStart(model) {
     const asset = model.assets?.[0];
     const [sample, family, task] = String(model.catalogId || '').split('/');
+    if (sample === 'osnet' && task === 'reid' && asset?.filename) {
+      const command = `python3 samples/vision/osnet/runtime/python/main.py \\\n  --target ${String(model.releasePlatform).toLowerCase()} --variant ${model.runtimeVariant || 'spatial-rgb-late8'} \\\n  --model-path /path/to/${asset.filename} \\\n  --test-img /path/to/person_crop.jpg --output feature.npy`;
+      return `<section class="mz-section mz-quickstart"><div class="mz-section-heading"><h2>快速上手</h2></div><p>将下载的模型和行人裁剪图路径代入命令。输出为 L2 归一化的 512 维特征。</p><div class="mz-code"><pre><code data-no-i18n>${esc(command)}</code></pre><button type="button" class="mz-copy" data-copy-code aria-label="复制命令" title="复制命令">${icon('copy')}</button></div></section>`;
+    }
     if (sample !== 'ultralytics_yolo' || !asset?.url || !model.releasePlatform || !family || !task) return '';
     const root = 'samples/vision/ultralytics_yolo';
     const modelPath = `${root}/model/${asset.filename}`;
@@ -239,6 +246,7 @@
     return external(model.source, '模型仓库', cls);
   };
   const developerResourceLinks = model => {
+    if (model.sourceArchive) return external(model.sourceArchive, '示例源码');
     if (!model.source || (model.releaseStatus === 'candidate' && !isRdkSampleSource(model))) return '';
     if (model.dataPending) {
       const links = [external(model.source, '模型仓库')];
@@ -285,18 +293,18 @@
     if (p.parameterCountMillions) rows.push(row('参数量', `${p.parameterCountMillions} M`));
     if (p.gflops) {
       const resolution = Array.isArray(p.inputShape) ? ` @ ${p.inputShape.slice(-2).join(' × ')}` : '';
-      rows.push(row('浮点计算量', `${Number(Number(p.gflops).toFixed(2))} GFLOPs${resolution}`));
+      rows.push(row('浮点计算量', `${Number(Number(p.gflops).toFixed(2))} GFLOPs${resolution}`, p.computeMethod || ''));
     }
     if (p.sourceInput) {
       rows.push(row('源模型输入', formatSourceInput(p.sourceInput)));
     } else if (p.inputShape) rows.push(row('源模型输入', shape(p.inputShape)));
     else if (p.inputResolution) rows.push(row('输入尺寸', shape(p.inputResolution)));
-    if (p.runtimeInput) rows.push(row('Runtime 输入', [p.runtimeInput.format ? String(p.runtimeInput.format).toUpperCase() : '', shape(p.runtimeInput.resolution)].filter(Boolean).join(' · ')));
+    if (p.runtimeInput) rows.push(row('Runtime 输入', [p.runtimeInput.format ? String(p.runtimeInput.format).toUpperCase() : '', p.runtimeInput.dtype?.toUpperCase(), p.runtimeInput.payload_layout, shape(p.runtimeInput.resolution)].filter(Boolean).join(' · '), p.runtimeInput.packing || ''));
     else if (p.inputLayout) rows.push(row('输入布局', p.inputLayout));
     const precisionPolicy = model.benchmark?.precisionPolicy;
     if (typeof precisionPolicy === 'string' && precisionPolicy.trim()) {
       const policy = precisionPolicy.trim().toLowerCase();
-      const precisionLabel = policy === 'int8-int16'
+      const precisionLabel = ['int8-int16', 'mixed-int8-int16'].includes(policy)
         ? 'INT8 + INT16 混合精度'
         : policy === 'int8-fp16'
           ? 'INT8 + FP16 混合精度'
@@ -717,7 +725,8 @@
       const endToEndLatency = endToEnd?.metrics?.endToEnd || pick('end_to_end_latency');
       const value = (record, unit) => record ? `${amount(record)}<small>${esc(unit)}</small>` : '—';
       const plainLatency = record => record ? `${amount(record)} ${record.unit || 'ms'}` : '未测';
-      const e2eThreads = Number(endToEnd?.timing?.opencvThreads);
+      const e2eThreads = Number(endToEnd?.timing?.cpuBackend === 'native'
+        ? endToEnd.timing.cpuWorkerThreads : endToEnd?.timing?.opencvThreads);
       const e2eStreams = Number(endToEnd?.timing?.pipelineStreams);
       const e2eSubmissionThreads = Number(endToEnd?.timing?.runtimeSubmissionThreads);
       const e2eThroughput = Number(endToEnd?.throughputFps);
@@ -742,9 +751,10 @@
         const tileName = typeof metricLabel === 'string' ? { zh: metricLabel, en: metricLabel } : metricLabel;
         const tileNameZh = esc(tileName.zh || metric);
         const tileNameEn = esc(tileName.en || tileName.zh || metric);
-        const scope = metric === 'obb-map-50' ? null : board?.scope || quantized?.scope || reference?.scope;
+        const isReid = metric.startsWith('reid-');
+        const scope = metric === 'obb-map-50' || isReid ? null : board?.scope || quantized?.scope || reference?.scope;
         const paired = Boolean(reference && quantized);
-        const sourceScope = paired ? null : board?.source_scope;
+        const sourceScope = paired || isReid ? null : board?.source_scope;
         const scopeNote = [sourceScope, scope].filter(Boolean).map(note =>
           `<small class="mz-accuracy-scope" data-i18n-zh="${esc(note.zh)}" data-i18n-en="${esc(note.en)}">${esc(note.zh)}</small>`,
         ).join('');

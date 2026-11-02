@@ -5,6 +5,40 @@
     "segment": "seg"
   },
   "tasks": {
+    "reid": {
+      "required": [
+        "rank1",
+        "map"
+      ],
+      "dataset": "Market1501",
+      "evaluation_scope": {
+        "value": "market1501_single_query_l2_no_rerank",
+        "labels": {
+          "zh": "单查询 · L2 归一化 · 无重排序",
+          "en": "Single query · L2 normalized · No reranking"
+        }
+      },
+      "display": [
+        {
+          "receipt_field": "rank1",
+          "field": "rank1",
+          "metric": "reid-rank-1",
+          "labels": {
+            "zh": "Rank-1 准确率",
+            "en": "Rank-1 accuracy"
+          }
+        },
+        {
+          "receipt_field": "mAP",
+          "field": "map",
+          "metric": "reid-map",
+          "labels": {
+            "zh": "检索 mAP",
+            "en": "Retrieval mAP"
+          }
+        }
+      ]
+    },
     "detect": {
       "required": ["map_50_95", "map_50", "map_75"],
       "display": [

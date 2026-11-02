@@ -47,12 +47,13 @@
       ? 1000 / (profiler.average_latency_ms - boardCpu.avg_time)
       : profiler?.fps ?? catalogThroughput?.value;
     const fpsBoard = bpuScopedFps ?? catalogThroughput?.value;
+    const fpsEstimate = aggregate.fps_derived ?? (data.subgraphs?.length === 1 ? data.subgraphs[0].perf?.fps : null);
     const pairCard = (pairedLabel, fallbackLabel, estimateText, boardText, suffix = '') => boardText != null
       ? `<div class="rd-card"><span class="rd-card-label">${pairedLabel}</span><strong>${estimateText} / ${boardText}${suffix}</strong></div>`
       : `<div class="rd-card"><span class="rd-card-label">${fallbackLabel}</span><strong>${estimateText}${suffix}</strong></div>`;
     const cards = [
       pairCard('估算 / 实测延迟', '估算延迟', aggregate.latency_ms != null ? fmt(aggregate.latency_ms) : '—', latencyBoard != null ? fmt(latencyBoard) : null, ' ms'),
-      pairCard('估算 / 实测 FPS', '估算 FPS', fmt(aggregate.fps_derived), fpsBoard != null ? fmt(fpsBoard) : null),
+      pairCard('估算 / 实测 FPS', '估算 FPS', fmt(fpsEstimate), fpsBoard != null ? fmt(fpsBoard) : null),
       `<div class="rd-card"><span>估算 DDR</span><strong>${aggregate.ddr_mb_per_frame != null ? `${fmt(aggregate.ddr_mb_per_frame, 1)} MB` : '—'}</strong></div>`,
       `<div class="rd-card"><span>BPU OPs</span><strong>${giga(aggregate.bpu_ops_per_frame)}</strong></div>`,
       `<div class="rd-card"><span>量化节点</span><strong>${summary.total_nodes != null ? `${summary.total_nodes} 层` : '—'}</strong></div>`,
@@ -79,7 +80,8 @@
     const outputs = (data.io?.outputs || []).map(item => chip(item.name, `${item.shape.join(' × ')} · ${item.dtype}`)).join('') || '<span class="rd-muted">—</span>';
     const toolchain = data.toolchain || {};
     const toolchainChips = [
-      ['hbdk', toolchain.hbdk], ['hb_mapper', toolchain.hb_mapper],
+      ['hbdk', toolchain.hbdk], ['hb_compile', toolchain.hb_compile],
+      ['hmct', toolchain.hmct], ['hb_mapper', toolchain.hb_mapper],
       ['horizon_nn', toolchain.horizon_nn], ['runtime', toolchain.runtime],
       ['march', data.target?.march],
     ].filter(([, value]) => value).map(([label, value]) => chip(label, value)).join('');

@@ -74,3 +74,12 @@ test('partial subgraph metadata renders a dash for nodes without an index', asyn
   assert.match(bodyHtml, /<td>—<\/td>/);
   assert.doesNotMatch(bodyHtml, /undefined/);
 });
+
+test('S-series overview retains the compiler and HMCT versions', async () => {
+  const { reportHtml } = await renderReport({
+    toolchain: { hbdk: '4.7.5', hb_compile: '3.5.3', hmct: '2.6.5' },
+  });
+  for (const value of ['hbdk', '4.7.5', 'hb_compile', '3.5.3', 'hmct', '2.6.5']) {
+    assert.ok(reportHtml.includes(value), `Missing toolchain value: ${value}`);
+  }
+});
