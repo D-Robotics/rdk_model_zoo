@@ -22,6 +22,8 @@ conversion/
 ├── export.py  # Python script
 ├── export_heads.py  # Python script
 ├── prepare.py  # Python script
+├── UPSTREAM_NOTICE.md  # Pinned public weights and per-candidate license
+├── licenses/  # Original upstream license
 ├── requirements-export.txt  # Source or data file
 └── requirements-host.txt  # Source or data file
 ```
@@ -72,6 +74,14 @@ python3 samples/vision/yoloe/conversion/export.py \
 ```
 
 `--weights`, `--variant` and `--output-dir` are required. The eight variants are 11s/m/l and 26n/s/m/l/x. `--threads` defaults to 2 and must be positive. If `--test-image` is omitted, validation uses a CPU random tensor with seed 0; an image is recommended for a meaningful model comparison. No checkpoint download or compiler runs implicitly. Existing output directories are rejected. An export failure exits nonzero (2 for handled input/validation errors) and, once preparation starts, preserves `export.json` with the failed stage rather than reporting success.
+
+For a release candidate, repeat `--validation-image <image>` to add real images and use
+`--validate-random` to include the native seed-0 random tensor alongside `--test-image`.
+All cases use the same exported ONNX graph and retain the original raw-anchor, decoded,
+prototype and E26 selected-identity gates. `export.json` records each planned case;
+`status=float_checked` requires every case to pass. The single-image/default behavior
+remains available. Public input versions for the current 11s/X5 and 26n/S100 candidates
+are recorded in [UPSTREAM_NOTICE.md](UPSTREAM_NOTICE.md).
 
 E11 uses the source cv2/cv3/cv5 branches, DFL16 and opset 11. E26 uses one2one branches, direct LTRB and opset 17. Linear vocabulary weights are applied as equivalent dense 1x1 convolutions without replacing checkpoint parameters; existing vocabulary convolutions are retained. Raw heads return all anchors and ten NHWC tensors, with no proposal filtering. Backbone layer routing and `model.<index>` node names are preserved for X5 attention configuration.
 

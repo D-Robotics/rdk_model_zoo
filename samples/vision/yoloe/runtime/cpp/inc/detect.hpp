@@ -44,6 +44,7 @@ struct Nv12Input {
   std::vector<uint8_t> y, uv;
 };
 Nv12Input to_nv12(const cv::Mat &pixels);
+Nv12Input to_regular_nv12(const cv::Mat &pixels);
 
 // Owned model-canvas candidate. Geometry/mask restoration is a separate stage.
 struct RawDetection {
@@ -63,6 +64,7 @@ class Runner {
 public:
   virtual ~Runner() = default;
   virtual Protocol protocol() const = 0;
+  virtual bool full_range_nv12() const { return false; }
   virtual Heads infer(const Nv12Input &input) = 0;
 };
 
@@ -72,6 +74,8 @@ struct SdkModel {
   std::string path, target, variant;
 };
 inline bool supported_native_model(const SdkModel &model) {
+  if (model.variant == "11s-native-20261102")
+    return model.target == "x5";
   const bool e11 = model.variant == "11s" || model.variant == "11m" ||
                    model.variant == "11l";
   const bool e26 = model.variant == "26n" || model.variant == "26s" ||
@@ -200,6 +204,7 @@ public:
   SdkRunner(const SdkRunner &) = delete;
   SdkRunner &operator=(const SdkRunner &) = delete;
   Protocol protocol() const override;
+  bool full_range_nv12() const override;
   Heads infer(const Nv12Input &input) override;
 
 private:

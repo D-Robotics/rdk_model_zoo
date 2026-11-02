@@ -37,6 +37,7 @@ Checkpoint export, conversion preparation and evaluation workflows are documente
 
 | Variant | x5 | s100 | s100p | s600 | Python | C++ |
 | --- | --- | --- | --- | --- | --- | --- |
+| 11s-native-20261102 | converted; board not tested | not-supported | not-supported | not-supported | float heads | float heads |
 | 11s | supported | supported (Python)* | not-supported | not-supported | X5/S published* | float-output model only† |
 | 11m / 11l | supported | supported (Python)* | not-supported | not-supported | X5/S published* | float-output model only† |
 | 26n/s/m/l/x | not-supported | supported (Python)* | supported (Python)* | not-supported | S published* | float-output model only† |

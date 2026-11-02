@@ -29,7 +29,8 @@ def make_config(selection, root, graph):
         "input_type_rt": "nv12",
         "input_type_train": "rgb",
         "input_layout_train": "NCHW",
-        "scale_value": 1 / 255,
+        # OE parses normalization values as scalar/list strings.
+        "scale_value": str(1 / 255),
     }
     calibration = {
         "cal_data_dir": str(root / "calibration"),

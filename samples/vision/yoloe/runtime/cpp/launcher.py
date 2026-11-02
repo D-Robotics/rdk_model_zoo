@@ -31,7 +31,7 @@ def build_parser():
     parser.add_argument(
         "--target", choices=("auto", "x5", "s100", "s100p", "s600"), default="auto"
     )
-    parser.add_argument("--variant", help="Defaults: x5/s100=11s, s100p=26n.")
+    parser.add_argument("--variant", help="Includes x5 11s-native-20261102; legacy defaults unchanged.")
     parser.add_argument(
         "--asset-id", help="Exact reference from the active publication manifest."
     )

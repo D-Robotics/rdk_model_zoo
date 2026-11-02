@@ -20,6 +20,8 @@ template <class F> void rejects(F fn) {
 }
 int main(int argc, char **argv) {
   expect(argc == 4);
+  expect(yoloe::supported_native_model({"", "x5", "11s-native-20261102"}));
+  expect(!yoloe::supported_native_model({"", "s100", "11s-native-20261102"}));
   std::string model_path = argv[1], labels = argv[2], expected = argv[3];
   yoloe::SdkModel model{model_path, "s100p", "26n"};
   rdk::NativeIdentity actual{"S100\n", "RDK S100P\n", "", ""};

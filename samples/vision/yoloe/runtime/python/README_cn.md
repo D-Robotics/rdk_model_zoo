@@ -2,6 +2,8 @@
 
 # YOLOE Python 运行时
 
+新转换的 X5 制品通过 `--target x5 --variant 11s-native-20261102` 显式选择，保留完整十个 FLOAT32 输出头，并使用该制品专用的 full-range NV12 输入转换。精确身份见[模型说明](../../model/README_cn.md)。旧默认选项和历史实测保持不变；该制品尚无板端精度或性能测量。
+
 <a id="overview"></a>
 ## Python 推理
 

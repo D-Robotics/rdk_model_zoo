@@ -26,6 +26,14 @@ These are the 16 original published artifacts. The Python runtime supports the p
 | `s:yoloe26_seg:nash-m/yoloe_26l_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26l | native SCALE outputs (Python) |
 | `s:yoloe26_seg:nash-m/yoloe_26x_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26x | native SCALE outputs (Python) |
 
+## Converted X5 11s (2026-11-02)
+
+The independent variant `11s-native-20261102` selects `x5:yoloe:yoloe_11s_seg_pf_bayese_640x640_nv12_float_20261102.bin` (12,841,075 bytes; SHA-256 `352e8b8e4b445a8223c2a76a7fdad5594b3317a6ea04e47cd70bdc2066fdc7df`). It preserves all ten NHWC FLOAT32 heads and the fixed 4585-class vocabulary. OE X5 1.2.8 completed with 200 real COCO calibration images; the host export passed the original gates on three real images and seed-0 random input. Input is full-range packed NV12 matching the SDK calibration transformer (float32 coefficients, uint8 truncation, top-left chroma sampling); the BIN graph descriptor is INT8 NHWC `[1,640,640,3]`, while the source ONNX input is FLOAT32 NCHW `[1,3,640,640]`. Preprocessing keeps native linear letterbox, truncated dimensions, padding 127 and RGB /255 once.
+
+Select it explicitly with `--target x5 --variant 11s-native-20261102` in the downloader or Python/C++ launcher. The original `11s` default and historical measurements remain unchanged. This artifact's model license is AGPL-3.0; [public source and weight identities](../conversion/UPSTREAM_NOTICE.md) retain the original license text.
+
+The complete OE report contains all ten output cosine diagnostics (0.798033–0.981209); the comparison sample count is unknown. These values describe quantization diagnostics, not dataset accuracy. Dataset accuracy, board validation and board performance have not been measured for this artifact.
+
 <a id="directory"></a>
 ## Directory structure
 

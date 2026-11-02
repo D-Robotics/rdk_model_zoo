@@ -26,6 +26,14 @@
 | `s:yoloe26_seg:nash-m/yoloe_26l_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26l | 原生 SCALE outputs (Python) |
 | `s:yoloe26_seg:nash-m/yoloe_26x_seg_pf_nashm_640x640_nv12.hbm` | s100p | 26x | 原生 SCALE outputs (Python) |
 
+## 新转换的 X5 11s（2026-11-02）
+
+独立变体 `11s-native-20261102` 对应 `x5:yoloe:yoloe_11s_seg_pf_bayese_640x640_nv12_float_20261102.bin`，大小 12,841,075 字节，SHA-256 为 `352e8b8e4b445a8223c2a76a7fdad5594b3317a6ea04e47cd70bdc2066fdc7df`。保留完整十个 NHWC FLOAT32 输出头和固定 4585 类词表。OE X5 1.2.8 使用 200 张真实 COCO 图片完成校准；浮点导出按原门禁通过三张实图及 seed-0 随机输入。运行输入为与 SDK 校准转换器一致的 full-range packed NV12（float32 系数、uint8 截断、左上角色度采样）；BIN 图描述符为 INT8 NHWC `[1,640,640,3]`，源 ONNX 输入为 FLOAT32 NCHW `[1,3,640,640]`。预处理保持原生线性等比缩放、截断尺寸、127 填充和一次 RGB /255。
+
+下载器及 Python/C++ 启动器显式选择 `--target x5 --variant 11s-native-20261102`。旧 `11s` 默认选项与历史实测数据保持不变。该模型制品遵循 AGPL-3.0；[公开源码及权重身份](../conversion/UPSTREAM_NOTICE.md)保留许可原文。
+
+完整 OE 报告保留十个输出的余弦诊断值（0.798033–0.981209），比较样本数未知。这些值是量化诊断，不是数据集精度。本制品尚未测量数据集精度、板端验证或板端性能。
+
 <a id="directory"></a>
 ## 目录结构
 

@@ -92,6 +92,13 @@ E26 还要求选中的 `(anchor, class)` 集合与上游完全一致，再按这
 
 `s` 取 8、16、32，共十个 float32 输出。形状一致证明的是张量接口；权重尺寸、架构、标签语义与精度由导出器检查和评估器验证。报告用 `variant_declared` 标记此阶段的尺寸为调用者声明；请将导出元数据与准备目录一并保存。
 
+本次发布候选可重复传入 `--validation-image <图像>` 增加真实图像，并用
+`--validate-random` 在 `--test-image` 之外加入原生 seed-0 随机输入。所有输入检查
+同一份 ONNX 图，保留原有全部 raw anchors、解码、prototype 与 E26 Top-K 身份集合
+门禁。`export.json` 逐例记录计划和结果，所有输入通过后才写 `status=float_checked`；
+原有单图/默认行为保持可用。11s/X5 与 26n/S100 候选的公开输入版本与许可见
+[UPSTREAM_NOTICE.md](UPSTREAM_NOTICE.md)。
+
 <a id="calibration"></a>
 ## 校准
 

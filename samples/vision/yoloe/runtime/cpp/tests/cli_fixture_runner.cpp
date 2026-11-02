@@ -18,6 +18,7 @@ SdkRunner::SdkRunner(SdkModel model, SdkPreflight gate)
 }
 SdkRunner::~SdkRunner() = default;
 Protocol SdkRunner::protocol() const { return Protocol::E26; }
+bool SdkRunner::full_range_nv12() const { return false; }
 Heads SdkRunner::infer(const Nv12Input &input) {
   if (input.y.size() != 640 * 640 || input.uv.size() != 640 * 320)
     throw std::invalid_argument("Fixture NV12 length");

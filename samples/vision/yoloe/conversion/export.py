@@ -18,7 +18,8 @@ from samples.vision.yoloe.model.vocabulary import LABELS_SHA256
 VARIANTS = ("11s", "11m", "11l", "26n", "26s", "26m", "26l", "26x")
 
 
-def export_checkpoint(*, weights, variant, output_dir, test_image=None, threads=2):
+def export_checkpoint(*, weights, variant, output_dir, test_image=None, threads=2,
+                      validation_images=(), validate_random=False):
     """Write a fresh export directory; no downloads, compiler, board or target claim."""
     if variant not in VARIANTS:
         raise ValueError(f"Unknown PF variant: {variant}")
@@ -97,45 +98,52 @@ def export_checkpoint(*, weights, variant, output_dir, test_image=None, threads=
         names_path = root / f"yoloe_{variant}_seg_pf.names"
         names_path.write_bytes(labels)
         wrapper = RawPFModel(network, variant).eval()
-        if test_image is None:
-            sample = torch.rand(
-                (1, 3, 640, 640), generator=torch.Generator().manual_seed(0)
-            )
-            report["validation_input"] = {"kind": "seeded_random", "seed": 0}
-        else:
-            import cv2
-
-            image_path = Path(test_image).expanduser().resolve()
-            image_bytes = image_path.read_bytes()
-            image = (
-                cv2.imdecode(
-                    np.frombuffer(image_bytes, dtype=np.uint8), cv2.IMREAD_COLOR
+        def make_sample(image_path):
+            if image_path is None:
+                value = torch.rand(
+                    (1, 3, 640, 640), generator=torch.Generator().manual_seed(0)
                 )
-                if image_bytes
-                else None
-            )
-            if image is None:
-                raise ValueError(f"Unreadable test image: {image_path}")
-            tensor = (
-                prepare_rgb(image)
-                if variant.startswith("26")
-                else calibration_tensor(image, "x5", variant) / 255
-            )
-            sample = torch.from_numpy(tensor)
-            report["validation_input"] = {
-                "kind": "image",
-                "path": str(image_path),
-                "sha256": sha256(image_bytes).hexdigest(),
-            }
-        report["validation_input"]["tensor_sha256"] = sha256(
-            sample.numpy().tobytes()
-        ).hexdigest()
+                record = {"kind": "seeded_random", "seed": 0}
+            else:
+                import cv2
+
+                image_path = Path(image_path).expanduser().resolve()
+                image_bytes = image_path.read_bytes()
+                image = cv2.imdecode(np.frombuffer(image_bytes, dtype=np.uint8),
+                                     cv2.IMREAD_COLOR) if image_bytes else None
+                if image is None:
+                    raise ValueError(f"Unreadable test image: {image_path}")
+                tensor = prepare_rgb(image) if variant.startswith("26") else (
+                    calibration_tensor(image, "x5", variant) / 255
+                )
+                value = torch.from_numpy(tensor)
+                record = {"kind": "image", "path": str(image_path),
+                          "sha256": sha256(image_bytes).hexdigest()}
+            record["tensor_sha256"] = sha256(value.numpy().tobytes()).hexdigest()
+            return value, record
+
+        image_cases = [test_image, *validation_images]
+        if validate_random and test_image is not None:
+            image_cases.append(None)
+        samples = [make_sample(path) for path in image_cases]
+        sample = samples[0][0]
+        report["validation_input"] = samples[0][1]
+        report["validation_cases"] = [
+            {"input": record, "upstream_static_pf": "not-run", "onnx_float": "not-run"}
+            for _, record in samples
+        ]
+        report["planned_validation_cases"] = len(samples)
         onnx_path = root / f"yoloe_{variant}_seg_pf.onnx"
         with torch.inference_mode():
             report["validation"]["upstream_static_pf"] = "running"
             expected, comparison = reference_outputs(wrapper, sample)
             report["validation"]["upstream_comparison"] = comparison
-            report["validation"]["upstream_static_pf"] = "passed"
+            report["validation_cases"][0].update(
+                upstream_static_pf="passed", upstream_comparison=comparison
+            )
+            report["validation"]["upstream_static_pf"] = (
+                "passed" if len(samples) == 1 else "partial"
+            )
             report["validation"]["onnx_graph"] = "running"
             torch.onnx.export(
                 wrapper,
@@ -161,21 +169,34 @@ def export_checkpoint(*, weights, variant, output_dir, test_image=None, threads=
         session = ort.InferenceSession(
             str(onnx_path), options, providers=["CPUExecutionProvider"]
         )
-        actual = session.run(list(OUTPUT_NAMES), {"images": sample.numpy()})
         errors = {}
         report["validation"]["onnx_max_abs_error"] = errors
-        for name, reference, result in zip(OUTPUT_NAMES, expected, actual, strict=True):
-            reference = reference.numpy()
-            if result.shape != reference.shape or result.dtype != np.float32:
-                raise ValueError(f"ONNX output shape/dtype mismatch: {name}")
-            if not np.isfinite(result).all() or not np.isfinite(reference).all():
-                raise ValueError(f"Non-finite float output: {name}")
-            errors[name] = float(np.max(np.abs(result - reference)))
-            np.testing.assert_allclose(
-                result, reference, rtol=2e-3, atol=2e-3, err_msg=name
-            )
+        for index, (sample, _) in enumerate(samples):
+            case = report["validation_cases"][index]
+            if index:
+                case["upstream_static_pf"] = "running"
+                with torch.inference_mode():
+                    expected, comparison = reference_outputs(wrapper, sample)
+                case.update(upstream_static_pf="passed", upstream_comparison=comparison)
+            case["onnx_float"] = "running"
+            actual = session.run(list(OUTPUT_NAMES), {"images": sample.numpy()})
+            case_errors = {}
+            case["onnx_max_abs_error"] = case_errors
+            for name, reference, result in zip(OUTPUT_NAMES, expected, actual, strict=True):
+                reference = reference.numpy()
+                if result.shape != reference.shape or result.dtype != np.float32:
+                    raise ValueError(f"ONNX output shape/dtype mismatch: {name}")
+                if not np.isfinite(result).all() or not np.isfinite(reference).all():
+                    raise ValueError(f"Non-finite float output: {name}")
+                case_errors[name] = float(np.max(np.abs(result - reference)))
+                errors[name] = max(errors.get(name, 0.0), case_errors[name])
+                np.testing.assert_allclose(
+                    result, reference, rtol=2e-3, atol=2e-3, err_msg=name
+                )
+            case["onnx_float"] = "passed"
         report["validation"].update(
-            onnx_float="passed", onnx_max_abs_error=errors, rtol=2e-3, atol=2e-3
+            upstream_static_pf="passed", onnx_float="passed",
+            onnx_max_abs_error=errors, rtol=2e-3, atol=2e-3
         )
         report.update(
             status="float_checked",
@@ -187,6 +208,10 @@ def export_checkpoint(*, weights, variant, output_dir, test_image=None, threads=
         for stage, value in report["validation"].items():
             if value == "running":
                 report["validation"][stage] = "failed"
+        for case in report.get("validation_cases", []):
+            for stage in ("upstream_static_pf", "onnx_float"):
+                if case[stage] == "running":
+                    case[stage] = "failed"
         report.update(status="export_failed", error=f"{type(error).__name__}: {error}")
         raise
     finally:
@@ -204,6 +229,10 @@ def build_parser():
     parser.add_argument("--variant", choices=VARIANTS, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--test-image", type=Path)
+    parser.add_argument("--validation-image", type=Path, action="append", default=[],
+                        help="Additional real image checked against the same exported graph; repeatable.")
+    parser.add_argument("--validate-random", action="store_true",
+                        help="Also run the native seed-0 random case when test-image is provided.")
     parser.add_argument("--threads", type=int, default=2)
     return parser
 
@@ -217,6 +246,8 @@ def main(argv=None):
             output_dir=args.output_dir,
             test_image=args.test_image,
             threads=args.threads,
+            validation_images=args.validation_image,
+            validate_random=args.validate_random,
         )
         print(json.dumps(result, indent=2))
         return 0

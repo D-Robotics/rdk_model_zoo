@@ -154,7 +154,7 @@ class ConversionTests(unittest.TestCase):
         self.assertNotIn("remove_node_type", config["model_parameters"])
         self.assertNotIn("remove_node_name", config["model_parameters"])
         self.assertEqual(config["model_parameters"]["march"], "nash-e")
-        self.assertEqual(config["input_parameters"]["scale_value"], 1 / 255)
+        self.assertEqual(float(config["input_parameters"]["scale_value"]), 1 / 255)
         records = json.loads((self.root / "out/calibration.json").read_text())
         self.assertEqual([Path(r["source"]).name for r in records], ["a.png", "c.png"])
         tensor = np.load(

@@ -29,6 +29,12 @@ SAMPLE_DIR = Path(__file__).resolve().parents[2]
 
 
 DEFAULTS = {"x5": "11s", "s100": "11s", "s100p": "26n"}
+CONVERTED_X5 = {
+    "yoloe_11s_seg_pf_bayese_640x640_nv12_float_20261102.bin": (
+        "11s-native-20261102",
+        "352e8b8e4b445a8223c2a76a7fdad5594b3317a6ea04e47cd70bdc2066fdc7df",
+    ),
+}
 
 
 @dataclass(frozen=True)
@@ -55,6 +61,14 @@ def list_models(target=None):
     rows = []
     for group, sample in [("x5", "yoloe"), ("s", "yoloe11_seg"), ("s", "yoloe26_seg")]:
         for asset in list_assets(group, sample):
+            converted = CONVERTED_X5.get(asset.filename) if group == "x5" else None
+            if converted is not None:
+                variant, digest = converted
+                if asset.sha256 != digest or asset.format != "bin":
+                    raise ValueError(f"Converted YOLOE identity mismatch: {asset.reference}.")
+                if target in (None, "auto", "x5"):
+                    rows.append(("x5", variant, asset))
+                continue
             match = re.fullmatch(
                 r"(?:nash-[em]/)?yoloe_(11[sml]|26[nslmx])_seg_pf_(bayese|nashe|nashm)_640x640_nv12\.(bin|hbm)",
                 asset.filename,
@@ -123,7 +137,7 @@ def build_parser():
     p.add_argument(
         "--variant",
         default=None,
-        help="11s/m/l or 26n/s/m/l/x; defaults x5/s100=11s, s100p=26n.",
+        help="11s/m/l, 26n/s/m/l/x, or x5 11s-native-20261102; defaults unchanged.",
     )
     p.add_argument(
         "--asset-id", default=None, help="Exact original publication identity."

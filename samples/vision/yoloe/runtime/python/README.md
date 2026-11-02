@@ -2,6 +2,8 @@ English | [简体中文](README_cn.md)
 
 # YOLOE Python runtime
 
+The converted X5 artifact is selected explicitly with `--target x5 --variant 11s-native-20261102`; it retains all ten FLOAT32 heads and uses the artifact-specific full-range NV12 input conversion. See the [exact artifact identity](../../model/README.md#converted-x5-11s-2026-11-02). Legacy defaults and measurements remain unchanged; this artifact has no board accuracy or performance measurement.
+
 <a id="overview"></a>
 ## Python inference
 
