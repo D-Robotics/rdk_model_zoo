@@ -489,6 +489,332 @@
         "oe_report": "74eb2586e706bb533ad942d6b1ffa335f3642009106600acec99ed6950b4dab2",
         "oe_data": "a79ca76438827d426fa68ea0e742030c4e9dcca95077a65d996e05fc0c707f61"
       }
+    },
+    {
+      "job": {
+        "family": "repghost",
+        "model": "repghostnet_150.in1k",
+        "repo_id": "timm/repghostnet_150.in1k",
+        "platform": "x5",
+        "size": "150-in1k-224",
+        "variant": "timm-150-in1k",
+        "filename": "repghostnet_150_in1k_bayese_224x224_nv12.bin",
+        "run_id": "repghostnet_150_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T12:01:40.308362+00:00",
+        "reason": "[Errno 32] Broken pipe",
+        "sha256": "bc91f55fb287169b910c23cd42952614862972c9f2f780d0b7d57d77816d7f5f",
+        "size_bytes": 7477221,
+        "recovery_receipt_sha256": "5a9da88583c65f65e7f34c3657b4b3c66495e3d72bb878f150c5f0dd5735d9c2"
+      },
+      "source": {
+        "repo_id": "timm/repghostnet_150.in1k",
+        "revision": "577d935410a68c6efc6a0fee9f11f88f942ac690",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "072dca6fc462f1b48bc00ffcfb8168cbc8718609b83a753c93a58147e16193fc",
+        "size_bytes": 26576440,
+        "url": "https://huggingface.co/timm/repghostnet_150.in1k/resolve/577d935410a68c6efc6a0fee9f11f88f942ac690/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repghostnet_150.in1k/blob/577d935410a68c6efc6a0fee9f11f88f942ac690/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "repghostnet_150.in1k",
+        "checkpoint_sha256": "072dca6fc462f1b48bc00ffcfb8168cbc8718609b83a753c93a58147e16193fc",
+        "onnx_sha256": "adebb23f30cca0f3a58a7545020dec6270d11f05c4a45d4b30a3798236d9d14b",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "f7987738317d65dfc9f6b4d6add56e6c752ab7aeb87b4dcbc7ad384d7e61876b",
+        "parameter_count": 6575336,
+        "deployment_parameter_count": 6553064,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.875,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          7.62939453125e-06,
+          2.384185791015625e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "repghost",
+          "family": "repghost",
+          "task": "cls",
+          "size": "150-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "bc91f55fb287169b910c23cd42952614862972c9f2f780d0b7d57d77816d7f5f",
+            "name": "repghostnet_150_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 7477221
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "161b8bf61742aa34e5640a7475581a7104b92f55aee946cc193cf2764c692831",
+        "controller_sha256": "3da0f3e12b1d92fd4a2d7b049bf8ff866add68576797d3b05c842983df2902b1",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "161b8bf61742aa34e5640a7475581a7104b92f55aee946cc193cf2764c692831",
+        "compile_log": "c1807466ce2999466090aeecbc2981c9bd6d0f12f42498121241a75917236fb8",
+        "model_info": "1530d2f5ae8c46c42020c71f51736e31938e3cfb14418bfcc32765f9575f75b0",
+        "oe_report": "25cf86b5fb24f3536dd8ebec08cce1373a2940924beedcc2189d92fd31b9705f",
+        "oe_data": "0c4f4b30bc29a9964fedbd2222bfdb36a88e7596e25fd414c06f0414512a9963"
+      }
+    },
+    {
+      "job": {
+        "family": "repghost",
+        "model": "repghostnet_200.in1k",
+        "repo_id": "timm/repghostnet_200.in1k",
+        "platform": "x5",
+        "size": "200-in1k-224",
+        "variant": "timm-200-in1k",
+        "filename": "repghostnet_200_in1k_bayese_224x224_nv12.bin",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "run_id": "repghostnet_200_in1k-x5-20261102-r03",
+        "status": "converted",
+        "updated_at": "2026-11-02T13:44:59.956343+00:00",
+        "sha256": "733b1ba3d50f71fe71bd2664905af19dd726c9012a5349de0b05a45438d8411e",
+        "size_bytes": 10688485
+      },
+      "source": {
+        "repo_id": "timm/repghostnet_200.in1k",
+        "revision": "0c520f5e8de77f9bfedc23f2104c344b1d685530",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "f6893f8b09f793f16eaa5f78476059e02d0c74709cfddb4f7459557c5b0b986e",
+        "size_bytes": 39527744,
+        "url": "https://huggingface.co/timm/repghostnet_200.in1k/resolve/0c520f5e8de77f9bfedc23f2104c344b1d685530/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repghostnet_200.in1k/blob/0c520f5e8de77f9bfedc23f2104c344b1d685530/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "repghostnet_200.in1k",
+        "checkpoint_sha256": "f6893f8b09f793f16eaa5f78476059e02d0c74709cfddb4f7459557c5b0b986e",
+        "onnx_sha256": "e4e772af45a64c1b58753c9e375289cae13a4cda4840ce7ddec3913e50c0ce13",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "f7987738317d65dfc9f6b4d6add56e6c752ab7aeb87b4dcbc7ad384d7e61876b",
+        "parameter_count": 9796124,
+        "deployment_parameter_count": 9766460,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.875,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          2.9802322387695312e-06,
+          5.7220458984375e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "repghost",
+          "family": "repghost",
+          "task": "cls",
+          "size": "200-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "733b1ba3d50f71fe71bd2664905af19dd726c9012a5349de0b05a45438d8411e",
+            "name": "repghostnet_200_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 10688485
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "133cb71ee12f00818a133e50f95e9db66f4ff5811d02a273a64a558f2fc4ba91",
+        "controller_sha256": "89537afa42205e91b58214a83fa89af4e19fc1fcb2a18b7f97caa49e3bbdf6f3",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "133cb71ee12f00818a133e50f95e9db66f4ff5811d02a273a64a558f2fc4ba91",
+        "compile_log": "551d097ab63cc81a1a11d7058d45c4842f1359ac0d7a0ef40f9935353d03e539",
+        "model_info": "93a106658c2f6db85851d6ae1efcf094aa576f8b248aa52a460bc41ef77851cb",
+        "oe_report": "31bd4f4533c277334e24652f15a96978889214dbddd3085a5f48b9c3699cffd4",
+        "oe_data": "8a21081fbd1afee6121f4534f304d710cc74d1dbe554d03a2e97a81e912c9726"
+      }
     }
   ]
 }

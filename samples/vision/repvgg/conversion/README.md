@@ -174,3 +174,19 @@ Compiled paths are listed above. Published files and per-variant targets are lis
 ## Additional preparation
 
 Load the matching RepVGG training checkpoint, create the selected model with `deploy=False`, and run `repvgg_model_convert` before ONNX export. Export the graph at the path in the selected YAML with RGB/NCHW 1×3×224×224 input and ImageNet-1k output; inspect input names and shapes before compilation. Prepare `./calibration_data_rgb_f32` as float32 RGB data using mean `123.675/116.28/103.53` and scale `0.01712475/0.017507/0.01742919`. Each YAML writes a variant-specific directory; use the manifest filename when saving the deployment artifact.
+
+<!-- converted-batch-20261102 -->
+## Pinned converted recipes
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model repvgg_a0.rvgg_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/repvgg/conversion/recipes/timm-a0-rvgg-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+Use the model/tag, pinned checkpoint and matching YAML from `converted.json`; use a fresh attempt directory. The calibration producer uses raw RGB float32 binary tensors. Do not apply normalization twice or inherit historical board metrics.
+<!-- /converted-batch-20261102 -->

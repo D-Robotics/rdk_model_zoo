@@ -147,6 +147,8 @@ C++ 1/2 流均为 **not-run**，历史指标和截图不适用于这些产物。
 | `timm-100-in1k` | `repghostnet_100_in1k_bayese_224x224_nv12.bin` | [`3c79eee5f138`](https://huggingface.co/timm/repghostnet_100.in1k/blob/3c79eee5f138318c2cb58957105b91bb50259b29/README.md) | not-run |
 | `timm-111-in1k` | `repghostnet_111_in1k_bayese_224x224_nv12.bin` | [`03ffb284f8ea`](https://huggingface.co/timm/repghostnet_111.in1k/blob/03ffb284f8ea7ae1c41a1c2617d4dab98d7cd9f4/README.md) | not-run |
 | `timm-130-in1k` | `repghostnet_130_in1k_bayese_224x224_nv12.bin` | [`efb0a7881fad`](https://huggingface.co/timm/repghostnet_130.in1k/blob/efb0a7881fada70cec140ce2810f9c0a7d416704/README.md) | not-run |
+| `timm-150-in1k` | `repghostnet_150_in1k_bayese_224x224_nv12.bin` | [`577d935410a6`](https://huggingface.co/timm/repghostnet_150.in1k/blob/577d935410a68c6efc6a0fee9f11f88f942ac690/README.md) | not-run |
+| `timm-200-in1k` | `repghostnet_200_in1k_bayese_224x224_nv12.bin` | [`0c520f5e8de7`](https://huggingface.co/timm/repghostnet_200.in1k/blob/0c520f5e8de77f9bfedc23f2104c344b1d685530/README.md) | not-run |
 
 ```bash
 python3 samples/vision/repghost/model/download.py --target x5 --variant timm-100-in1k

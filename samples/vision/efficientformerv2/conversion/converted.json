@@ -1,0 +1,384 @@
+{
+  "schema_version": 1,
+  "status": "converted",
+  "board_validation": "not-run",
+  "profile": "raw RGB, Pillow bicubic short256, rounded center crop224, checkpoint normalization fused by mapper",
+  "models": [
+    {
+      "job": {
+        "family": "efficientformerv2",
+        "model": "efficientformerv2_s0.snap_dist_in1k",
+        "repo_id": "timm/efficientformerv2_s0.snap_dist_in1k",
+        "platform": "x5",
+        "size": "s0-snap-dist-in1k-224",
+        "variant": "timm-s0-snap-dist-in1k",
+        "filename": "efficientformerv2_s0_snap_dist_in1k_bayese_224x224_nv12.bin",
+        "run_id": "efficientformerv2_s0_snap_dist_in1k-x5-20261102-r01",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T13:01:41.483656+00:00",
+        "sha256": "9801c094b4ad082a5adae8d1d626aa0db76265662096fda7adcc4956c4085c4e",
+        "size_bytes": 4863380
+      },
+      "source": {
+        "repo_id": "timm/efficientformerv2_s0.snap_dist_in1k",
+        "revision": "aa226e91a076e760bc7957e5990f19f6ae322c5f",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "ad4ce93472a2589572d46370ea214937a10bd522e35da9ccb7b10fd7eeb68f0c",
+        "size_bytes": 14659080,
+        "url": "https://huggingface.co/timm/efficientformerv2_s0.snap_dist_in1k/resolve/aa226e91a076e760bc7957e5990f19f6ae322c5f/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientformerv2_s0.snap_dist_in1k/blob/aa226e91a076e760bc7957e5990f19f6ae322c5f/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "efficientformerv2_s0.snap_dist_in1k",
+        "checkpoint_sha256": "ad4ce93472a2589572d46370ea214937a10bd522e35da9ccb7b10fd7eeb68f0c",
+        "onnx_sha256": "e0524ba38893dc5bb5f24dda3723e62d61ef83367aa1958856b05c04d09068fe",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "dec0265c7035fd35ecefe5d03ffbdbb46bea82b9a26e3c3ae70106f594a192b7",
+        "parameter_count": 3600256,
+        "deployment_parameter_count": 3600256,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.95,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          2.5510787963867188e-05,
+          3.8623809814453125e-05
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "efficientformerv2",
+          "family": "efficientformerv2",
+          "task": "cls",
+          "size": "s0-snap-dist-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "9801c094b4ad082a5adae8d1d626aa0db76265662096fda7adcc4956c4085c4e",
+            "name": "efficientformerv2_s0_snap_dist_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 4863380
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "66e891979987b5b61c8def0050c7e59b433106d1debe6fecb56f63d9129a205d",
+        "controller_sha256": "56b746069bba643fee2cb39b942e3b19a651e41731c11e6c06a653e20c3a6eb5",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "66e891979987b5b61c8def0050c7e59b433106d1debe6fecb56f63d9129a205d",
+        "compile_log": "fe5db8d0802ca09c1a00555b18b99611dad4b33fbe014774e07051aa9af3e8a9",
+        "model_info": "0017e188483315ce0e9f88bc592df638ad7d21d883c69f701f99d5b6a9006810",
+        "oe_report": "07624a0edfef2ea9c383df4a9dfab81654d83600d9515421bf326e46931c6df6",
+        "oe_data": "9bbf5bb14e6a1e35921e6a06b5f33fb7335e574110282660d264ab6b288040c9"
+      },
+      "original_reports": [
+        {
+          "name": "main_graph_subgraph_0.html",
+          "sha256": "d5b4ecf16d12bd3aeace1092494a3c6e9bc651e9148358867ad7537e3a428088"
+        },
+        {
+          "name": "main_graph_subgraph_1.html",
+          "sha256": "045f37c0f8850ce1ab53a412048e8d289dd57865d7a04fffcf3cd368e62acdb6"
+        },
+        {
+          "name": "main_graph_subgraph_2.html",
+          "sha256": "3218d68b159dfb9ebbb1e31851815d2408566318c5d5585b18e471c24ee8b714"
+        },
+        {
+          "name": "main_graph_subgraph_3.html",
+          "sha256": "6dc0031a6a0346278cebcd7cbc91b05d8a000d7ba061ad4bcb0d84e17072ca4a"
+        },
+        {
+          "name": "main_graph_subgraph_4.html",
+          "sha256": "965997dd520402343ea859e9e23614c18a013d0c025ced0095997f73e7fe7dfa"
+        },
+        {
+          "name": "main_graph_subgraph_5.html",
+          "sha256": "d76e13f71da28c1ab1ce6396a5f6cea5be6941757d542068cdefd0a4b02a6c80"
+        }
+      ]
+    },
+    {
+      "job": {
+        "family": "efficientformerv2",
+        "model": "efficientformerv2_s1.snap_dist_in1k",
+        "repo_id": "timm/efficientformerv2_s1.snap_dist_in1k",
+        "platform": "x5",
+        "size": "s1-snap-dist-in1k-224",
+        "variant": "timm-s1-snap-dist-in1k",
+        "filename": "efficientformerv2_s1_snap_dist_in1k_bayese_224x224_nv12.bin",
+        "run_id": "efficientformerv2_s1_snap_dist_in1k-x5-20261102-r01",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T13:42:09.167194+00:00",
+        "sha256": "57cdfcf0cb3361856d3a61e66db44cba81d04de6d90041ee3334cef6695ee109",
+        "size_bytes": 7484820
+      },
+      "source": {
+        "repo_id": "timm/efficientformerv2_s1.snap_dist_in1k",
+        "revision": "0c1fc60a0e89b6309d9de451cdacc11ac0a8b987",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "3ef67aa25321c2a3d145e12ef4823e5f7da4356ed1656f9f1bd6b9af339e5655",
+        "size_bytes": 25103088,
+        "url": "https://huggingface.co/timm/efficientformerv2_s1.snap_dist_in1k/resolve/0c1fc60a0e89b6309d9de451cdacc11ac0a8b987/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientformerv2_s1.snap_dist_in1k/blob/0c1fc60a0e89b6309d9de451cdacc11ac0a8b987/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "efficientformerv2_s1.snap_dist_in1k",
+        "checkpoint_sha256": "3ef67aa25321c2a3d145e12ef4823e5f7da4356ed1656f9f1bd6b9af339e5655",
+        "onnx_sha256": "200b917c38afdc98ef69d91c62476f4f150a833117224550107bc833f502408a",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "dec0265c7035fd35ecefe5d03ffbdbb46bea82b9a26e3c3ae70106f594a192b7",
+        "parameter_count": 6185560,
+        "deployment_parameter_count": 6185560,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.95,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          3.24249267578125e-05,
+          0.00011277198791503906
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "efficientformerv2",
+          "family": "efficientformerv2",
+          "task": "cls",
+          "size": "s1-snap-dist-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "57cdfcf0cb3361856d3a61e66db44cba81d04de6d90041ee3334cef6695ee109",
+            "name": "efficientformerv2_s1_snap_dist_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 7484820
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "c8f2edb408bd65d5fec14490124a30628fd87f676e051023b92bfc8829dbe2d2",
+        "controller_sha256": "56b746069bba643fee2cb39b942e3b19a651e41731c11e6c06a653e20c3a6eb5",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "c8f2edb408bd65d5fec14490124a30628fd87f676e051023b92bfc8829dbe2d2",
+        "compile_log": "8c28437401650ad97f37ab10bcf7fe24c247647399be9903ecd507b4ee3d565e",
+        "model_info": "53e9634cd4722f0071e054a84ab7d92fdc82d89c55a646157e8ba4b8b0229e52",
+        "oe_report": "31b584738a6de65eb64358d9aeb07f4ba2431747857e074ecc3e200c0bdc5d0d",
+        "oe_data": "804533a606adff71299a2555a4fe8c12a841f71efbcd4546f9fb947c67d75fc5"
+      },
+      "original_reports": [
+        {
+          "name": "main_graph_subgraph_0.html",
+          "sha256": "7c03552ab5571ebc1b069534c59eaa3e5537c2ca66f618c2900ade35fe186616"
+        },
+        {
+          "name": "main_graph_subgraph_1.html",
+          "sha256": "b11e9fae44a3ce0e8dbc8fd42464a894ebef6d617b6935bda8c2f6eff2e773bb"
+        },
+        {
+          "name": "main_graph_subgraph_2.html",
+          "sha256": "e9c0c619174c49bbb49a7de9167febe4d08da6623e4e0c5baeacdfc142773be8"
+        },
+        {
+          "name": "main_graph_subgraph_3.html",
+          "sha256": "e561a51eccddccc2bf0d1fe3b6123268087137729a619b6c377f241d9af6cde3"
+        },
+        {
+          "name": "main_graph_subgraph_4.html",
+          "sha256": "26a4baa3f5972a79d32e1f124a4440b11b856895f78d86a4f2149e9d2d817c5c"
+        },
+        {
+          "name": "main_graph_subgraph_5.html",
+          "sha256": "8332e7c9e9866b6db620c8e98af6b2a0aa42a8bb69da1772625ed76743580765"
+        }
+      ]
+    }
+  ]
+}

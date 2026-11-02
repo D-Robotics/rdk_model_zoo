@@ -32,8 +32,8 @@ TARGETS = ("x5",)
 
 
 # BEGIN CONVERTED ARTIFACT BINDINGS
-VARIANTS = VARIANTS + ('timm-l1-snap-dist-in1k',)
-ASSET_REFERENCES.update({('x5', 'timm-l1-snap-dist-in1k'): 'x5:efficientformer:efficientformer_l1_snap_dist_in1k_bayese_224x224_nv12.bin'})
+VARIANTS = VARIANTS + ('timm-l1-snap-dist-in1k', 'timm-l3-snap-dist-in1k')
+ASSET_REFERENCES.update({('x5', 'timm-l1-snap-dist-in1k'): 'x5:efficientformer:efficientformer_l1_snap_dist_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-l3-snap-dist-in1k'): 'x5:efficientformer:efficientformer_l3_snap_dist_in1k_bayese_224x224_nv12.bin'})
 # END CONVERTED ARTIFACT BINDINGS
 
 def asset_reference(target: str, variant: str = 'l3') -> str:

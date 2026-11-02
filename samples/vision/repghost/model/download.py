@@ -48,8 +48,8 @@ TARGETS = ("x5",)
 
 
 # BEGIN CONVERTED ARTIFACT BINDINGS
-VARIANTS = VARIANTS + ('timm-100-in1k', 'timm-111-in1k', 'timm-130-in1k')
-ASSET_REFERENCES.update({('x5', 'timm-100-in1k'): 'x5:repghost:repghostnet_100_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-111-in1k'): 'x5:repghost:repghostnet_111_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-130-in1k'): 'x5:repghost:repghostnet_130_in1k_bayese_224x224_nv12.bin'})
+VARIANTS = VARIANTS + ('timm-100-in1k', 'timm-111-in1k', 'timm-130-in1k', 'timm-150-in1k', 'timm-200-in1k')
+ASSET_REFERENCES.update({('x5', 'timm-100-in1k'): 'x5:repghost:repghostnet_100_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-111-in1k'): 'x5:repghost:repghostnet_111_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-130-in1k'): 'x5:repghost:repghostnet_130_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-150-in1k'): 'x5:repghost:repghostnet_150_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-200-in1k'): 'x5:repghost:repghostnet_200_in1k_bayese_224x224_nv12.bin'})
 # END CONVERTED ARTIFACT BINDINGS
 
 def asset_reference(target: str, variant: str = '100') -> str:

@@ -1,4 +1,12 @@
 """RepVGG host acceptance tests; no inference on hardware."""
+
+# Converted artifact fixtures extend, rather than replace, historical assertions.
+import json as _converted_json
+from pathlib import Path as _ConvertedPath
+_CONVERTED_MODELS = _converted_json.loads((_ConvertedPath(__file__).resolve().parents[1] / 'conversion/converted.json').read_text())['models']
+_CONVERTED_FILES = [row['job']['filename'] for row in _CONVERTED_MODELS]
+_CONVERTED_VARIANTS = [row['job']['variant'] for row in _CONVERTED_MODELS]
+
 from pathlib import Path
 import contextlib
 import importlib.util
@@ -15,6 +23,8 @@ from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # no
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / 'samples/vision/repvgg'
 FILENAMES = {'a0': 'RepVGG_A0_224x224_nv12.bin', 'a1': 'RepVGG_A1_224x224_nv12.bin', 'a2': 'RepVGG_A2_224x224_nv12.bin', 'b0': 'RepVGG_B0_224x224_nv12.bin', 'b1g2': 'RepVGG_B1g2_224x224_nv12.bin', 'b1g4': 'RepVGG_B1g4_224x224_nv12.bin'}
+HISTORICAL_VARIANTS = tuple(FILENAMES)
+FILENAMES.update({row['job']['variant']: row['job']['filename'] for row in _CONVERTED_MODELS})
 VARIANTS = tuple(FILENAMES)
 
 
@@ -157,7 +167,7 @@ class SourceComparisonTests(unittest.TestCase):
     def test_conversion_recipes_remain_identical_to_source(self):
         source = legacy_tree('x5/samples/vision/repvgg/conversion')
         recipes = list(source.glob('*.yaml'))
-        self.assertEqual(len(recipes), len(VARIANTS))
+        self.assertEqual(len(recipes), len(HISTORICAL_VARIANTS))
         for recipe in recipes:
             self.assertEqual((SAMPLE/'conversion'/recipe.name).read_bytes(), recipe.read_bytes())
 

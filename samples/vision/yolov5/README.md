@@ -28,8 +28,9 @@ yolov5/
 
 | target | variant(s) | Python | C++ | note |
 |---|---|---|---|---|
-| X5 | n-v7.0, s/m/l/x-v2.0, s/m/l/x-v7.0 | supported | supported | all nine Python variants; C++ build/run per `runtime/cpp/` |
+| X5 | n-v7.0, s/m/l/x-v2.0, s/m/l/x-v7.0 | supported | supported | all nine historical Python variants; C++ build/run per `runtime/cpp/` |
 | S100 | x-672 | supported | supported | Python uses `kite.jpg`; C++ per `runtime/cpp/` |
+| S100 | n-v7.0-native-20261102 | host bindings checked | not-supported | converted; board not-run; Python 640/F32 |
 | S100P | — | not-supported | not-supported | no YOLOv5 manifest asset; explicitly rejected |
 | S600 | x-672 | supported | supported | Python uses `kite.jpg`; C++ per `runtime/cpp/` |
 
@@ -40,7 +41,7 @@ The Python X5 path uses one packed NV12 input and defaults to direct stretch; S 
 <a id="prerequisites"></a>
 ## Prerequisites
 
-Use Python 3, NumPy, OpenCV and PyYAML. Board inference additionally requires the matching target image and `hbm_runtime`; S tracking/detection CPU post-processing may need SciPy, `lap==0.5.12`, and `cython-bbox==0.1.5`. Conversion needs the matching RDK OpenExplorer environment. Published SHA-256 values are unknown in the active manifests.
+Use Python 3, NumPy, OpenCV and PyYAML. Board inference additionally requires the matching target image and `hbm_runtime`; S tracking/detection CPU post-processing may need SciPy, `lap==0.5.12`, and `cython-bbox==0.1.5`. Conversion needs the matching RDK OpenExplorer environment. Historical artifacts retain unknown publisher SHA-256 values; converted additions record exact digests in the active manifests.
 
 <a id="quickstart"></a>
 ## Quick start
@@ -93,4 +94,19 @@ The source X5 reference table:
 <a id="license"></a>
 ## License
 
-Repository helper code and source sample documentation follow Apache-2.0. The upstream YOLOv5 project and any downloaded weights retain their own license and provenance; a manifest `sha256: null (unknown)` is not authentication.
+Repository helper code and source sample documentation follow Apache-2.0. The upstream YOLOv5 project and any downloaded weights retain their own license and provenance; historical entries with `sha256: null (unknown)` are not authenticated publisher digests. Converted additions retain their exact hashes and upstream model licenses.
+
+<!-- completed-s-converted-20261102 -->
+## Converted S artifacts
+
+| Target | Variant | Artifact | Board |
+|---|---|---|---|
+| S100 | `n-v7.0-native-20261102` | `s100/yolov5n_tag_v7.0_native_640x640_nashe_nv12_20261102.hbm` | not-run |
+
+```bash
+python3 -m samples.vision.yolov5.model.download --target s100 --variant n-v7.0-native-20261102
+python3 -m samples.vision.yolov5.runtime.python.main --target s100 --variant n-v7.0-native-20261102 --dry-run
+```
+
+These 640×640 profiles use split UINT8 Y/UV inputs and three NHWC float32 raw heads. Python bindings and host parity are checked; board inference, accuracy and performance are not-run. Historical 672×672 C++ bindings are incompatible. Exact URLs, SHA-256 and model license are in `docs/release/s/models.yaml` and the public release manifest.
+<!-- /completed-s-converted-20261102 -->

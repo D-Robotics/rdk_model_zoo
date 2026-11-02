@@ -1,0 +1,27 @@
+model_parameters:
+  onnx_model: ./model.onnx
+  march: bayes-e
+  working_dir: ./compiled
+  output_model_file_prefix: efficientformer_l3_snap_dist_in1k_bayese_224x224_nv12
+  layer_out_dump: false
+input_parameters:
+  input_name: data
+  input_type_rt: nv12
+  input_space_and_range: bt601_video
+  input_type_train: rgb
+  input_layout_train: NCHW
+  input_shape: 1x3x224x224
+  norm_type: data_mean_and_scale
+  mean_value: 123.675 116.28 103.53
+  scale_value: 0.017124753831663668 0.01750700280112045 0.017429193899782137
+calibration_parameters:
+  cal_data_dir: ./calibration_rgb_f32
+  cal_data_type: float32
+  calibration_type: default
+compiler_parameters:
+  compile_mode: latency
+  optimize_level: O3
+  debug: false
+  core_num: 1
+  input_source:
+    data: pyramid

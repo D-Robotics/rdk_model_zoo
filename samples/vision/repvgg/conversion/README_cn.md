@@ -171,3 +171,19 @@ python3 samples/vision/repvgg/runtime/python/main.py --target x5 \
 ## 补充准备
 
 加载匹配的 RepVGG 训练权重，以 `deploy=False` 创建所选模型，并在 ONNX 导出前运行 `repvgg_model_convert`。将模型图导出至所选 YAML 路径，输入 RGB/NCHW 1×3×224×224、输出 ImageNet-1k；编译前检查输入名称与形状。按 mean `123.675/116.28/103.53` 和 scale `0.01712475/0.017507/0.01742919` 准备 `./calibration_data_rgb_f32` float32 RGB 数据。各 YAML 使用变体专属目录；部署文件按 Manifest 文件名保存。
+
+<!-- converted-batch-20261102 -->
+## 固定版本转换配方
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model repvgg_a0.rvgg_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/repvgg/conversion/recipes/timm-a0-rvgg-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+各规格使用 converted.json 中对应的模型、固定权重及 recipes 配方，输出到全新目录。校准为原始 RGB float32 二进制张量，不重复归一化，不套用历史板端数据。
+<!-- /converted-batch-20261102 -->

@@ -166,6 +166,7 @@ C++ 1/2 流均为 **not-run**，历史指标和截图不适用于这些产物。
 | 规格 | 模型文件 | 权重版本 | 板端 |
 |---|---|---|---|
 | `timm-l1-snap-dist-in1k` | `efficientformer_l1_snap_dist_in1k_bayese_224x224_nv12.bin` | [`8738a5819080`](https://huggingface.co/timm/efficientformer_l1.snap_dist_in1k/blob/8738a58190800aaf5995f453b05f643df453a565/README.md) | not-run |
+| `timm-l3-snap-dist-in1k` | `efficientformer_l3_snap_dist_in1k_bayese_224x224_nv12.bin` | [`ca929ef48f05`](https://huggingface.co/timm/efficientformer_l3.snap_dist_in1k/blob/ca929ef48f056232098ad9226a69e4c29a00cc46/README.md) | not-run |
 
 ```bash
 python3 samples/vision/efficientformer/model/download.py --target x5 --variant timm-l1-snap-dist-in1k

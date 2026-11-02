@@ -84,13 +84,14 @@ BINDING_TABLE = SampleBindingTable(
 
 # BEGIN CONVERTED ARTIFACT BINDINGS
 from dataclasses import replace as _with_converted_bindings
-CONVERTED_VARIANTS = ('timm-l1-snap-dist-in1k',)
+CONVERTED_VARIANTS = ('timm-l1-snap-dist-in1k', 'timm-l3-snap-dist-in1k')
 SUPPORTED_VARIANTS = SUPPORTED_VARIANTS + CONVERTED_VARIANTS
 BINDING_TABLE = _with_converted_bindings(
     BINDING_TABLE,
-    filename_variants={**BINDING_TABLE.filename_variants, **{'efficientformer_l1_snap_dist_in1k_bayese_224x224_nv12.bin': 'timm-l1-snap-dist-in1k'}},
+    filename_variants={**BINDING_TABLE.filename_variants, **{'efficientformer_l1_snap_dist_in1k_bayese_224x224_nv12.bin': 'timm-l1-snap-dist-in1k', 'efficientformer_l3_snap_dist_in1k_bayese_224x224_nv12.bin': 'timm-l3-snap-dist-in1k'}},
     facts={**BINDING_TABLE.facts,
         ('timm-l1-snap-dist-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-l3-snap-dist-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
     },
 )
 # END CONVERTED ARTIFACT BINDINGS

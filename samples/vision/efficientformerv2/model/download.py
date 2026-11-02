@@ -30,6 +30,10 @@ ASSET_REFERENCES = {
 }
 TARGETS = ("x5",)
 
+# BEGIN CONVERTED ARTIFACT BINDINGS
+VARIANTS = VARIANTS + ('timm-s0-snap-dist-in1k', 'timm-s1-snap-dist-in1k')
+ASSET_REFERENCES.update({('x5', 'timm-s0-snap-dist-in1k'): 'x5:efficientformerv2:efficientformerv2_s0_snap_dist_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-s1-snap-dist-in1k'): 'x5:efficientformerv2:efficientformerv2_s1_snap_dist_in1k_bayese_224x224_nv12.bin'})
+# END CONVERTED ARTIFACT BINDINGS
 
 def asset_reference(target: str, variant: str = 's0') -> str:
     """Return the exact manifest reference for a supported target/variant."""

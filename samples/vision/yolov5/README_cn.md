@@ -28,8 +28,9 @@ yolov5/
 
 | 目标 | 变体 | Python | C++ | 说明 |
 |---|---|---|---|---|
-| X5 | n-v7.0、s/m/l/x-v2.0、s/m/l/x-v7.0 | 支持 | 支持 | Python 覆盖全部九个变体；C++ 构建运行见 `runtime/cpp/` |
+| X5 | n-v7.0、s/m/l/x-v2.0、s/m/l/x-v7.0 | 支持 | 支持 | Python 覆盖历史九个变体；C++ 构建运行见 `runtime/cpp/` |
 | S100 | x-672 | 支持 | 支持 | Python 使用 `kite.jpg`；C++ 见 `runtime/cpp/` |
+| S100 | n-v7.0-native-20261102 | 已核对主机绑定 | 不支持 | 已转换；板端 not-run；Python 640/F32 |
 | S100P | — | 不支持 | 不支持 | 清单无 YOLOv5 制品；显式拒绝 |
 | S600 | x-672 | 支持 | 支持 | Python 使用 `kite.jpg`；C++ 见 `runtime/cpp/` |
 
@@ -40,7 +41,7 @@ Python X5 使用单个 packed NV12 输入且默认直接拉伸；S Python 使用
 <a id="prerequisites"></a>
 ## 环境前提
 
-主机检查需要 Python 3、NumPy、OpenCV；清单工具还需要 PyYAML。板端推理需要匹配目标系统和 `hbm_runtime`；S 的跟踪/检测 CPU 后处理还需要 SciPy、`lap==0.5.12` 和 `cython-bbox==0.1.5`。转换需要对应 RDK OpenExplorer。active 清单中发布 SHA-256 均未知。
+主机检查需要 Python 3、NumPy、OpenCV；清单工具还需要 PyYAML。板端推理需要匹配目标系统和 `hbm_runtime`；S 的跟踪/检测 CPU 后处理还需要 SciPy、`lap==0.5.12` 和 `cython-bbox==0.1.5`。转换需要对应 RDK OpenExplorer。历史制品的发布 SHA-256 仍未知；新增转换制品在 active 清单中记录精确摘要。
 
 <a id="quickstart"></a>
 ## 快速体验
@@ -93,4 +94,19 @@ python3 -m samples.vision.yolov5.runtime.python.main \
 <a id="license"></a>
 ## 许可
 
-仓库脚本和源示例文档遵循 Apache-2.0。上游 YOLOv5 工程及下载权重遵循各自许可和来源；清单记录为 `sha256: null (unknown)`，发布者认证以发布摘要为准。
+仓库脚本和源示例文档遵循 Apache-2.0。上游 YOLOv5 工程及下载权重遵循各自许可和来源；历史清单中的 `sha256: null (unknown)` 不代表已认证的发布摘要；新增制品保留精确摘要及对应上游模型许可。
+
+<!-- completed-s-converted-20261102 -->
+## 已完成转换的 S 制品
+
+| 目标 | 规格 | 文件 | 板端 |
+|---|---|---|---|
+| S100 | `n-v7.0-native-20261102` | `s100/yolov5n_tag_v7.0_native_640x640_nashe_nv12_20261102.hbm` | not-run |
+
+```bash
+python3 -m samples.vision.yolov5.model.download --target s100 --variant n-v7.0-native-20261102
+python3 -m samples.vision.yolov5.runtime.python.main --target s100 --variant n-v7.0-native-20261102 --dry-run
+```
+
+这些 640×640 规格使用拆分 UINT8 Y/UV 输入和三个 NHWC float32 raw head。已核对 Python 绑定和主机对照；板端推理、精度和性能均为 not-run。历史 672×672 C++ 绑定不适用。精确 URL、SHA-256 和模型许可见 `docs/release/s/models.yaml` 及公开 release 清单。
+<!-- /completed-s-converted-20261102 -->
