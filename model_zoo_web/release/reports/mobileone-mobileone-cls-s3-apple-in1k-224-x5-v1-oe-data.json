@@ -1,0 +1,634 @@
+{
+  "schema_version": 1,
+  "generated_from_run": "mobileone_s3_apple_in1k-x5-20261102-r02",
+  "generated_at": "2026-11-02T11:08:30.327852+00:00",
+  "model": {
+    "source": "mobileone",
+    "family": "mobileone",
+    "task": "cls",
+    "size": "s3-apple-in1k-224"
+  },
+  "target": {
+    "platform": "x5",
+    "march": "bayes-e"
+  },
+  "toolchain": {
+    "hbdk": "3.49.15",
+    "hb_mapper": "1.24.3",
+    "horizon_nn": "1.1.0",
+    "runtime": "3.15.55.0"
+  },
+  "io": {
+    "inputs": [
+      {
+        "name": "data",
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "dtype": "float32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output",
+        "shape": [
+          1,
+          1000
+        ],
+        "dtype": "float32"
+      }
+    ]
+  },
+  "quantization": {
+    "summary": {
+      "total_nodes": 46,
+      "unit_counts": {
+        "BPU": 46
+      },
+      "dtype_counts": {
+        "int8": 46
+      },
+      "measured_nodes": 46,
+      "weakest_node": {
+        "name": "/stages/stages.3/stages.3.0/reparam_conv/Conv",
+        "cosine": 0.616205
+      },
+      "weakest_nodes": [
+        {
+          "name": "/stages/stages.3/stages.3.0/reparam_conv/Conv",
+          "cosine": 0.616205
+        },
+        {
+          "name": "/stages/stages.2/stages.2.18/reparam_conv/Conv",
+          "cosine": 0.746582
+        },
+        {
+          "name": "/stages/stages.2/stages.2.16/reparam_conv/Conv",
+          "cosine": 0.748141
+        },
+        {
+          "name": "/stages/stages.2/stages.2.19/reparam_conv/Conv",
+          "cosine": 0.754579
+        },
+        {
+          "name": "/stages/stages.2/stages.2.17/reparam_conv/Conv",
+          "cosine": 0.757789
+        }
+      ],
+      "cosine_percentiles": {
+        "p10": 0.757789,
+        "median": 0.946433
+      }
+    },
+    "nodes": [
+      {
+        "name": "HZ_PREPROCESS_FOR_data",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedPreprocess",
+        "cosine": 0.999941,
+        "threshold": 127.0,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stem/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999928,
+        "threshold": 2.63945,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/stages.0.0/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.997606,
+        "threshold": 9.00267,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/stages.0.1/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.994685,
+        "threshold": 13.7655,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/stages.0.2/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.990276,
+        "threshold": 5.74373,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/stages.0.3/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.978575,
+        "threshold": 9.2829,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.0/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.992166,
+        "threshold": 6.15009,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.1/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.98461,
+        "threshold": 5.67212,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.2/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.968937,
+        "threshold": 2.31213,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.3/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.974931,
+        "threshold": 3.8997,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.4/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.962419,
+        "threshold": 3.63605,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.5/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.972774,
+        "threshold": 4.19001,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.6/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.964753,
+        "threshold": 2.97876,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.7/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.970933,
+        "threshold": 4.58004,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.8/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.960974,
+        "threshold": 2.58217,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.9/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.968094,
+        "threshold": 5.18879,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.10/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.963539,
+        "threshold": 2.97409,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.11/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.948308,
+        "threshold": 4.73968,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.12/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.958684,
+        "threshold": 3.22161,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.13/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.946433,
+        "threshold": 5.12715,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.14/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.953536,
+        "threshold": 3.587,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.15/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.956804,
+        "threshold": 5.93005,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.0/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.953005,
+        "threshold": 3.3738,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.1/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.927775,
+        "threshold": 5.69475,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.2/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.928857,
+        "threshold": 2.06093,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.3/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.942218,
+        "threshold": 4.64848,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.4/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.92907,
+        "threshold": 2.81067,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.5/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.923316,
+        "threshold": 5.27153,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.6/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.920917,
+        "threshold": 2.94038,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.7/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.915886,
+        "threshold": 5.36941,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.8/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.925163,
+        "threshold": 3.17008,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.9/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.894794,
+        "threshold": 5.87857,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.10/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.871029,
+        "threshold": 3.6086,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.11/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.84719,
+        "threshold": 6.83327,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.12/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.871344,
+        "threshold": 3.97929,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.13/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.847821,
+        "threshold": 7.72534,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.14/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.848483,
+        "threshold": 4.95471,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.15/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.797224,
+        "threshold": 8.75426,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.16/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.748141,
+        "threshold": 7.21915,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.17/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.757789,
+        "threshold": 9.89623,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.18/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.746582,
+        "threshold": 8.52212,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.19/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.754579,
+        "threshold": 7.66623,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/stages.3.0/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.616205,
+        "threshold": 8.38738,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/stages.3.1/reparam_conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.867879,
+        "threshold": 3.90013,
+        "dtype": "int8"
+      },
+      {
+        "name": "/head/global_pool/pool/GlobalAveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedGlobalAveragePool",
+        "cosine": 0.929837,
+        "threshold": 16.8267,
+        "dtype": "int8"
+      },
+      {
+        "name": "/head/fc/Gemm",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.90361,
+        "threshold": 6.4066,
+        "dtype": "int8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output",
+        "cosine": 0.90361,
+        "l1_distance": 0.282529,
+        "l2_distance": 0.011538,
+        "chebyshev_distance": 1.324676
+      }
+    ]
+  },
+  "subgraphs": [
+    {
+      "name": "main_graph_subgraph_0",
+      "perf": {
+        "fps": 436.7,
+        "latency_ms": 2.29,
+        "ddr_mb_per_frame": 9.593,
+        "bpu_ops_per_frame": 3792484352,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 23,
+        "interval_ms": 0.1,
+        "utilization": [
+          0.929,
+          0.961,
+          0.985,
+          0.985,
+          0.993,
+          0.978,
+          0.527,
+          0.453,
+          0.584,
+          0.495,
+          0.733,
+          0.355,
+          0.541,
+          0.812,
+          0.402,
+          0.439,
+          0.999,
+          0.656,
+          0.162,
+          0.168,
+          0.097,
+          0.188,
+          0.187
+        ],
+        "load_bandwidth_mbs": [
+          1339,
+          2299,
+          2529,
+          1463,
+          1307,
+          3912,
+          4943,
+          3713,
+          4461,
+          4335,
+          2634,
+          4154,
+          5537,
+          3312,
+          4567,
+          5546,
+          3253,
+          2877,
+          4665,
+          5882,
+          6240,
+          6275,
+          5439
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          273,
+          717,
+          546,
+          102,
+          0,
+          0,
+          410,
+          820,
+          410,
+          0,
+          0,
+          0,
+          0,
+          39,
+          76
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "latency_ms": 2.29,
+    "fps_derived": 436.68,
+    "ddr_mb_per_frame": 9.593,
+    "bpu_ops_per_frame": 3792484352,
+    "derivation": "latency = sum of subgraph latency; fps_derived = 1000 / latency (sequential subgraph execution assumption); values from hbdk static estimation, not board measurement"
+  },
+  "similarity_provenance": {
+    "stage": "ptq-simulation",
+    "method": "x86 quantized simulation vs float ONNX (hb_mapper makertbin)",
+    "calibration_samples": 200,
+    "source_log": "output/hb_mapper_makertbin.log"
+  },
+  "performance_provenance": {
+    "stage": "compiler-static-estimate",
+    "source": "makertbin-workdir",
+    "method": "hbdk-cc static latency estimate of the compiled release artifact",
+    "note": "Estimates describe the compiled artifact; on-board measurements live in the model benchmark."
+  },
+  "board_measurement": null,
+  "provenance": {
+    "artifact_sha256": "def6a1ae035182b3b9d094895ca8ed3b179f7c5f1eb097024e6ac03d62916efc",
+    "makertbin_log_sha256": "882710f5c24fad12758b57e98beb2288b3c2a0566a17e3185b5fa9f504186ba0",
+    "perf_reports": [
+      {
+        "name": "main_graph_subgraph_0",
+        "sha256": "eaecbe0164ee6bc5eda0a746c9abbb6a1e4e1231fcbbb7b2317d8ec612e04025"
+      }
+    ]
+  }
+}

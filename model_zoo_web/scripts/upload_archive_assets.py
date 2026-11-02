@@ -113,7 +113,7 @@ def main():
             member.size = len(data)
             archive.addfile(member, io.BytesIO(data))
     command = shlex.join(['python3', '-c', REMOTE_INSTALL, REMOTE_ROOT, prefix])
-    result = subprocess.run(['ssh', '-J', args.jump_host, '-o', 'BatchMode=yes', '-o',
+    result = subprocess.run(['ssh', '-J', args.jump_host, '-o', 'BatchMode=yes', '-o', 'ControlMaster=auto', '-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/rdk-modelzoo-bulk-%r-%h-%p', '-o', 'ServerAliveInterval=15', '-o', 'ServerAliveCountMax=2', '-o',
         'ConnectTimeout=15', args.ssh_host, command], input=payload.getvalue(), capture_output=True, check=True)
     receipt = json.loads(result.stdout)
     receipt['anonymous_https'] = {}

@@ -1,0 +1,1252 @@
+{
+  "schema_version": 1,
+  "generated_from_run": "repghostnet_111_in1k-x5-20261102-r02",
+  "generated_at": "2026-11-02T11:57:38.282673+00:00",
+  "model": {
+    "source": "repghost",
+    "family": "repghost",
+    "task": "cls",
+    "size": "111-in1k-224"
+  },
+  "target": {
+    "platform": "x5",
+    "march": "bayes-e"
+  },
+  "toolchain": {
+    "hbdk": "3.49.15",
+    "hb_mapper": "1.24.3",
+    "horizon_nn": "1.1.0",
+    "runtime": "3.15.55.0"
+  },
+  "io": {
+    "inputs": [
+      {
+        "name": "data",
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "dtype": "float32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output",
+        "shape": [
+          1,
+          1000
+        ],
+        "dtype": "float32"
+      }
+    ]
+  },
+  "quantization": {
+    "summary": {
+      "total_nodes": 119,
+      "unit_counts": {
+        "BPU": 119
+      },
+      "dtype_counts": {
+        "int8": 119
+      },
+      "measured_nodes": 119,
+      "weakest_node": {
+        "name": "/blocks/blocks.8/blocks.8.3/se/conv_expand/Conv",
+        "cosine": 0.946968
+      },
+      "weakest_nodes": [
+        {
+          "name": "/blocks/blocks.8/blocks.8.3/se/conv_expand/Conv",
+          "cosine": 0.946968
+        },
+        {
+          "name": "/blocks/blocks.8/blocks.8.1/se/conv_expand/Conv",
+          "cosine": 0.966545
+        },
+        {
+          "name": "...blocks.4/blocks.4.0/ghost2/cheap_operation/Conv",
+          "cosine": 0.974221
+        },
+        {
+          "name": "...ks/blocks.6/blocks.6.3/shortcut/shortcut.0/Conv",
+          "cosine": 0.978082
+        },
+        {
+          "name": "...blocks.6/blocks.6.4/ghost2/cheap_operation/Conv",
+          "cosine": 0.979864
+        }
+      ],
+      "cosine_percentiles": {
+        "p10": 0.981999,
+        "median": 0.990828
+      }
+    },
+    "nodes": [
+      {
+        "name": "HZ_PREPROCESS_FOR_data",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedPreprocess",
+        "cosine": 0.999941,
+        "threshold": 127.0,
+        "dtype": "int8"
+      },
+      {
+        "name": "/conv_stem/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999979,
+        "threshold": 2.63945,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.0.0/ghost1/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999532,
+        "threshold": 28.2216,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.0/blocks.0.0/ghost1/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.99917,
+        "threshold": 16.4886,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.0.0/ghost2/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999716,
+        "threshold": 66.4715,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.0/blocks.0.0/ghost2/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.995899,
+        "threshold": 12.6582,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.1.0/ghost1/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.998877,
+        "threshold": 60.6819,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.1/blocks.1.0/ghost1/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.994722,
+        "threshold": 16.5887,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.1/blocks.1.0/conv_dw/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.994927,
+        "threshold": 35.055,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.1.0/ghost2/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.998527,
+        "threshold": 35.5359,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.1/blocks.1.0/ghost2/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.994892,
+        "threshold": 6.42796,
+        "dtype": "int8"
+      },
+      {
+        "name": "...ks/blocks.1/blocks.1.0/shortcut/shortcut.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.996278,
+        "threshold": 60.6819,
+        "dtype": "int8"
+      },
+      {
+        "name": "...ks/blocks.1/blocks.1.0/shortcut/shortcut.2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.998239,
+        "threshold": 24.9605,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.2.0/ghost1/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.996947,
+        "threshold": 14.4005,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.2/blocks.2.0/ghost1/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.990853,
+        "threshold": 6.2198,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.2.0/ghost2/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.995155,
+        "threshold": 29.2768,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.2/blocks.2.0/ghost2/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.98031,
+        "threshold": 9.44156,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.3.0/ghost1/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.995995,
+        "threshold": 38.5446,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.3/blocks.3.0/ghost1/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.982959,
+        "threshold": 6.6069,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.0/conv_dw/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.991309,
+        "threshold": 19.9423,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.0/se/ReduceMean",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedGlobalAveragePool",
+        "cosine": 0.995217,
+        "threshold": 14.855,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.0/se/conv_reduce/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.998508,
+        "threshold": 6.42279,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.0/se/conv_expand/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999776,
+        "threshold": 4.00404,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.0/se/gate/HardSigmoid",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.999974,
+        "threshold": 3.0,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.3/blocks.3.0/se/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseMul",
+        "cosine": 0.990828,
+        "threshold": 14.855,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.3.0/ghost2/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.995822,
+        "threshold": 9.65898,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.3/blocks.3.0/ghost2/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.988478,
+        "threshold": 8.11961,
+        "dtype": "int8"
+      },
+      {
+        "name": "...ks/blocks.3/blocks.3.0/shortcut/shortcut.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.986738,
+        "threshold": 38.5446,
+        "dtype": "int8"
+      },
+      {
+        "name": "...ks/blocks.3/blocks.3.0/shortcut/shortcut.2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.988282,
+        "threshold": 23.4224,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.4.0/ghost1/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.996811,
+        "threshold": 21.3444,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.4/blocks.4.0/ghost1/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.989921,
+        "threshold": 4.18706,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.4/blocks.4.0/se/ReduceMean",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedGlobalAveragePool",
+        "cosine": 0.996404,
+        "threshold": 32.38,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.4/blocks.4.0/se/conv_reduce/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.998028,
+        "threshold": 3.74781,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.4/blocks.4.0/se/conv_expand/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.998425,
+        "threshold": 6.05007,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.4/blocks.4.0/se/gate/HardSigmoid",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.999867,
+        "threshold": 3.0,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.4/blocks.4.0/se/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseMul",
+        "cosine": 0.98562,
+        "threshold": 32.38,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.4.0/ghost2/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.988307,
+        "threshold": 6.69777,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.4/blocks.4.0/ghost2/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.974221,
+        "threshold": 7.29358,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.5.0/ghost1/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.992953,
+        "threshold": 20.4953,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.5/blocks.5.0/ghost1/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.987936,
+        "threshold": 7.87556,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.5/blocks.5.0/conv_dw/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.987718,
+        "threshold": 17.2698,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.5.0/ghost2/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.996977,
+        "threshold": 24.2663,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.5/blocks.5.0/ghost2/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.989454,
+        "threshold": 6.95795,
+        "dtype": "int8"
+      },
+      {
+        "name": "...ks/blocks.5/blocks.5.0/shortcut/shortcut.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.985275,
+        "threshold": 20.4953,
+        "dtype": "int8"
+      },
+      {
+        "name": "...ks/blocks.5/blocks.5.0/shortcut/shortcut.2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.989266,
+        "threshold": 17.2536,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.6.0/ghost1/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.995082,
+        "threshold": 33.3144,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.6/blocks.6.0/ghost1/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.987572,
+        "threshold": 8.61367,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.6.0/ghost2/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.989145,
+        "threshold": 17.1419,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.6/blocks.6.0/ghost2/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.987669,
+        "threshold": 6.54091,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.6.1/ghost1/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.992821,
+        "threshold": 28.6347,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.6/blocks.6.1/ghost1/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.988627,
+        "threshold": 7.13998,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.6.1/ghost2/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.984763,
+        "threshold": 15.965,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.6/blocks.6.1/ghost2/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.982057,
+        "threshold": 6.48852,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.6.2/ghost1/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.99119,
+        "threshold": 30.3205,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.6/blocks.6.2/ghost1/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.990725,
+        "threshold": 7.24416,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.6.2/ghost2/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.984028,
+        "threshold": 15.6074,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.6/blocks.6.2/ghost2/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.981999,
+        "threshold": 6.30893,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.6.3/ghost1/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.989212,
+        "threshold": 33.508,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.6/blocks.6.3/ghost1/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.980205,
+        "threshold": 7.06391,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.6/blocks.6.3/se/ReduceMean",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedGlobalAveragePool",
+        "cosine": 0.993844,
+        "threshold": 25.7438,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.6/blocks.6.3/se/conv_reduce/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.993842,
+        "threshold": 4.16636,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.6/blocks.6.3/se/conv_expand/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.989539,
+        "threshold": 9.22108,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.6/blocks.6.3/se/gate/HardSigmoid",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.999566,
+        "threshold": 3.0,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.6/blocks.6.3/se/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseMul",
+        "cosine": 0.98194,
+        "threshold": 25.7438,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.6.3/ghost2/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.987508,
+        "threshold": 7.20085,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.6/blocks.6.3/ghost2/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.98196,
+        "threshold": 8.30646,
+        "dtype": "int8"
+      },
+      {
+        "name": "...ks/blocks.6/blocks.6.3/shortcut/shortcut.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.978082,
+        "threshold": 33.508,
+        "dtype": "int8"
+      },
+      {
+        "name": "...ks/blocks.6/blocks.6.3/shortcut/shortcut.2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.980685,
+        "threshold": 15.5448,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.6.4/ghost1/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.988742,
+        "threshold": 25.361,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.6/blocks.6.4/ghost1/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.99009,
+        "threshold": 7.52908,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.6/blocks.6.4/se/ReduceMean",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedGlobalAveragePool",
+        "cosine": 0.994161,
+        "threshold": 29.2749,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.6/blocks.6.4/se/conv_reduce/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.99428,
+        "threshold": 4.42712,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.6/blocks.6.4/se/conv_expand/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.990285,
+        "threshold": 6.95833,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.6/blocks.6.4/se/gate/HardSigmoid",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.999442,
+        "threshold": 3.0,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.6/blocks.6.4/se/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseMul",
+        "cosine": 0.982873,
+        "threshold": 29.2749,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.6.4/ghost2/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.9846,
+        "threshold": 12.1417,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.6/blocks.6.4/ghost2/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.979864,
+        "threshold": 7.20501,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.7.0/ghost1/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.986592,
+        "threshold": 22.2986,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.7/blocks.7.0/ghost1/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.989267,
+        "threshold": 11.4265,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.7/blocks.7.0/conv_dw/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.990121,
+        "threshold": 24.8744,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.7/blocks.7.0/se/ReduceMean",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedGlobalAveragePool",
+        "cosine": 0.990659,
+        "threshold": 20.1019,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.7/blocks.7.0/se/conv_reduce/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.994092,
+        "threshold": 5.26312,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.7/blocks.7.0/se/conv_expand/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.993497,
+        "threshold": 7.03027,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.7/blocks.7.0/se/gate/HardSigmoid",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.999404,
+        "threshold": 3.0,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.7/blocks.7.0/se/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseMul",
+        "cosine": 0.989534,
+        "threshold": 20.1019,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.7.0/ghost2/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.993284,
+        "threshold": 11.3659,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.7/blocks.7.0/ghost2/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.990384,
+        "threshold": 7.86431,
+        "dtype": "int8"
+      },
+      {
+        "name": "...ks/blocks.7/blocks.7.0/shortcut/shortcut.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.984719,
+        "threshold": 22.2986,
+        "dtype": "int8"
+      },
+      {
+        "name": "...ks/blocks.7/blocks.7.0/shortcut/shortcut.2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.987245,
+        "threshold": 10.5994,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.8.0/ghost1/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.994908,
+        "threshold": 25.1797,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.8/blocks.8.0/ghost1/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.994081,
+        "threshold": 6.69262,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.8.0/ghost2/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.986436,
+        "threshold": 15.5124,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.8/blocks.8.0/ghost2/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.986251,
+        "threshold": 7.16667,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.8.1/ghost1/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.993395,
+        "threshold": 25.9957,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.8/blocks.8.1/ghost1/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.990343,
+        "threshold": 6.52344,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.8/blocks.8.1/se/ReduceMean",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedGlobalAveragePool",
+        "cosine": 0.992867,
+        "threshold": 34.4039,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.8/blocks.8.1/se/conv_reduce/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.995401,
+        "threshold": 8.95001,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.8/blocks.8.1/se/conv_expand/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.966545,
+        "threshold": 16.0476,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.8/blocks.8.1/se/gate/HardSigmoid",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.998575,
+        "threshold": 3.0,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.8/blocks.8.1/se/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseMul",
+        "cosine": 0.98635,
+        "threshold": 34.4039,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.8.1/ghost2/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.986699,
+        "threshold": 20.6381,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.8/blocks.8.1/ghost2/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.987398,
+        "threshold": 9.62214,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.8.2/ghost1/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.994877,
+        "threshold": 32.7085,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.8/blocks.8.2/ghost1/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.991588,
+        "threshold": 5.66374,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.8.2/ghost2/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.982751,
+        "threshold": 18.8405,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.8/blocks.8.2/ghost2/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.985599,
+        "threshold": 8.11282,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.8.3/ghost1/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.993245,
+        "threshold": 35.3958,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.8/blocks.8.3/ghost1/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.99236,
+        "threshold": 6.33474,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.8/blocks.8.3/se/ReduceMean",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedGlobalAveragePool",
+        "cosine": 0.994559,
+        "threshold": 31.3779,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.8/blocks.8.3/se/conv_reduce/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.997018,
+        "threshold": 13.4549,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.8/blocks.8.3/se/conv_expand/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.946968,
+        "threshold": 11.7062,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.8/blocks.8.3/se/gate/HardSigmoid",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.996701,
+        "threshold": 3.0,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.8/blocks.8.3/se/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseMul",
+        "cosine": 0.982884,
+        "threshold": 31.3779,
+        "dtype": "int8"
+      },
+      {
+        "name": "...cks.8.3/ghost2/primary_conv/primary_conv.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.982033,
+        "threshold": 11.978,
+        "dtype": "int8"
+      },
+      {
+        "name": "...blocks.8/blocks.8.3/ghost2/cheap_operation/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.980776,
+        "threshold": 7.52722,
+        "dtype": "int8"
+      },
+      {
+        "name": "/blocks/blocks.9/blocks.9.0/conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.995686,
+        "threshold": 44.851,
+        "dtype": "int8"
+      },
+      {
+        "name": "/global_pool/pool/GlobalAveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedGlobalAveragePool",
+        "cosine": 0.991062,
+        "threshold": 22.914,
+        "dtype": "int8"
+      },
+      {
+        "name": "/conv_head/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.992519,
+        "threshold": 4.46715,
+        "dtype": "int8"
+      },
+      {
+        "name": "/classifier/Gemm",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.983566,
+        "threshold": 3.03752,
+        "dtype": "int8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output",
+        "cosine": 0.983566,
+        "l1_distance": 0.108247,
+        "l2_distance": 0.004332,
+        "chebyshev_distance": 0.634144
+      }
+    ]
+  },
+  "subgraphs": [
+    {
+      "name": "main_graph_subgraph_0",
+      "perf": {
+        "fps": 1102.28,
+        "latency_ms": 0.91,
+        "ddr_mb_per_frame": 4.851,
+        "bpu_ops_per_frame": 341151616,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 10,
+        "interval_ms": 0.1,
+        "utilization": [
+          0.872,
+          0.912,
+          0.441,
+          0.332,
+          0.052,
+          0.232,
+          0.11,
+          0.198,
+          0.112,
+          0.054
+        ],
+        "load_bandwidth_mbs": [
+          1269,
+          2606,
+          4972,
+          5808,
+          6298,
+          6630,
+          6238,
+          5940,
+          6034,
+          3192
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          26,
+          53,
+          49
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "latency_ms": 0.91,
+    "fps_derived": 1098.9,
+    "ddr_mb_per_frame": 4.851,
+    "bpu_ops_per_frame": 341151616,
+    "derivation": "latency = sum of subgraph latency; fps_derived = 1000 / latency (sequential subgraph execution assumption); values from hbdk static estimation, not board measurement"
+  },
+  "similarity_provenance": {
+    "stage": "ptq-simulation",
+    "method": "x86 quantized simulation vs float ONNX (hb_mapper makertbin)",
+    "calibration_samples": 200,
+    "source_log": "output/hb_mapper_makertbin.log"
+  },
+  "performance_provenance": {
+    "stage": "compiler-static-estimate",
+    "source": "makertbin-workdir",
+    "method": "hbdk-cc static latency estimate of the compiled release artifact",
+    "note": "Estimates describe the compiled artifact; on-board measurements live in the model benchmark."
+  },
+  "board_measurement": null,
+  "provenance": {
+    "artifact_sha256": "8635b4cdfc4e17fec084999fae9685545182671ddb6367f554a924b66e3cd66b",
+    "makertbin_log_sha256": "b329ded160ea1dbaf55973081af3951299e89f6067353e7c5efe71e736321b18",
+    "perf_reports": [
+      {
+        "name": "main_graph_subgraph_0",
+        "sha256": "efda9f57af0365f868540f0a58fb32de076cf85acff512405ed78a89e0ac15fd"
+      }
+    ]
+  }
+}

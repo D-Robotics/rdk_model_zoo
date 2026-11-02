@@ -7,8 +7,12 @@ source: hgnetv2
 family: hgnetv2
 task: cls
 description:
-  zh: HGNetV2 是用于视觉任务的卷积骨干网络；本 sample 提供 b0–b4 的 ImageNet-1k 分类入口。它是面向精度/延迟平衡设计的下一代 CNN 骨干， 是原 HGNet 的后继，在分类、检测与分割任务中均有良好表现。
-  en: HGNetV2 is a convolutional backbone for vision tasks; this sample exposes b0–b4 ImageNet-1k classification models. HGNetV2 is a next-generation CNN backbone designed for a strong accuracy/latency balance, succeeding the original HGNet, and performing well in classification, detection and segmentation.
+  zh: HGNetV2 是用于视觉任务的卷积骨干网络；本 sample 提供 b0–b4 的 ImageNet-1k 分类入口。它是面向精度/延迟平衡设计的下一代
+    CNN 骨干， 是原 HGNet 的后继，在分类、检测与分割任务中均有良好表现。
+  en: HGNetV2 is a convolutional backbone for vision tasks; this sample exposes b0–b4
+    ImageNet-1k classification models. HGNetV2 is a next-generation CNN backbone designed
+    for a strong accuracy/latency balance, succeeding the original HGNet, and performing
+    well in classification, detection and segmentation.
 sample_path: samples/vision/hgnetv2
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
 license:
@@ -371,7 +375,669 @@ hero_visual:
     score: 0.039507
   - label: swing
     score: 0.020423
-
 example_image:
   path: samples/vision/hgnetv2/test_data/result.jpg
   source: samples/vision/hgnetv2/test_data/result.jpg
+provider: Ross Wightman / timm
+model_license: &id001
+  name: Apache-2.0
+  url: https://huggingface.co/timm/hgnetv2_b0.ssld_stage2_ft_in1k/blob/9e0a904b210d65e4fcd6582f8ca6e0921fac2650/README.md
+  scope: model
+variants:
+- size: b0-ssld-stage2-ft-in1k-224
+  model:
+    parameter_count: 5996550
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: x5
+    license: *id001
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 1
+    artifact:
+      filename: hgnetv2_b0_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      runtime_dtype: uint8
+      runtime_layout: packed
+      sha256: 954668728414f5190755572dd843718c5ec292cb22ff134d67b27fbb98e1cf0b
+      size_bytes: 6035444
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/hgnetv2/hgnetv2_b0_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b0_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b0_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b0_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b0_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: output
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        type: nv12
+        color_space: bt601_video
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      preprocessing: Pillow bicubic shorter edge 256, rounded center crop 224; OpenCV
+        NV12 BT.601 video; mapper-fused checkpoint normalization
+      compiler_versions:
+        hbdk: 3.49.15
+        hb_mapper: 1.24.3
+        horizon_nn: 1.1.0
+        runtime: 3.15.55.0
+      calibration_samples: 200
+      host_check:
+        method: Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity;
+          not dataset accuracy or board inference
+        max_absolute_errors:
+        - 6.198883056640625e-06
+        - 1.239776611328125e-05
+        inputs:
+        - deterministic-random
+        - frozen-calibration-image
+        versions:
+          torch: 2.8.0+cu128
+          timm: 1.0.20
+          onnx: 1.17.0
+          onnxruntime: 1.19.2
+      upstream_data_config:
+        input_size:
+        - 3
+        - 224
+        - 224
+        crop_pct: 0.965
+        crop_mode: center
+        interpolation: bicubic
+      quantization_policy: Compiler default INT8 PTQ with its actual per-node precision
+        policy; float32 output logits
+    validation:
+      artifact_sha256: 954668728414f5190755572dd843718c5ec292cb22ff134d67b27fbb98e1cf0b
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
+      build_id: hgnetv2_b0_ssld_stage2_ft_in1k-x5-20261102-r02
+      runtime_variant: timm-b0-ssld-stage2-ft-in1k
+      onnx_sha256: f90a95e6825348f132d2950a9676d605fc19a1b6e6e154940b529718b1dd69c6
+      config_sha256: 9798856058571e3e6fdd6235f247d913ee5bbb18477ecde519045a306f9d92a1
+      recipe_sha256: 2279b370bfc19229567116300e2ecd1cdf7c2f305c7a9c85ca8c11b02c16ab8e
+      source_checkpoint_sha256: a84094d2a9edc77106d797ee48ed41a806123f5ca786b32388f344577da0d150
+      source_weight_url: https://huggingface.co/timm/hgnetv2_b0.ssld_stage2_ft_in1k/resolve/9e0a904b210d65e4fcd6582f8ca6e0921fac2650/model.safetensors
+      checkpoint_revision: 9e0a904b210d65e4fcd6582f8ca6e0921fac2650
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      toolchain_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      exporter_sha256: 24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b
+      exporter_repository_commit: 954b2c71b774513819ae5715da4f5beb9cea88fc
+      implementation_sha256: 41ca4a093de9930838d86308a46e9534c35b10cfaffde865472d14561b1ece92
+      calibration_manifest_sha256: e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9
+      calibration_producer_sha256: 425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84
+      precision_policy: int8
+      compile_log_sha256: 2f8c115e01c23787efd60270780a997bcb5d9fc94627f61823b9385f2b4bb28d
+      model_info_log_sha256: 2fdc282439b625bec48c7d6d15a7b3fe99f24ecacfc7fe77a21f2d0b4574fdab
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 2e07646f433ae7578e8ef8e5ac58a4abbb978f9cb0940b9445d76e30c4816cbe
+    runtime_command: python3 samples/vision/hgnetv2/runtime/python/main.py --target
+      x5 --asset-id x5:hgnetv2:hgnetv2_b0_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      --model-path /path/to/hgnetv2_b0_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      --test-img /path/to/image.jpg
+- size: b1-ssld-stage2-ft-in1k-224
+  model:
+    parameter_count: 6343158
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: x5
+    license:
+      name: Apache-2.0
+      url: https://huggingface.co/timm/hgnetv2_b1.ssld_stage2_ft_in1k/blob/ec7014d7f1d0dd1ea2bf3012bc51dc95c5919fd2/README.md
+      scope: model
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 1
+    artifact:
+      filename: hgnetv2_b1_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      runtime_dtype: uint8
+      runtime_layout: packed
+      sha256: 9ab984ea54bbb9d1094791c7bd806c7d658f60d321a32dff5945f1fb1297608a
+      size_bytes: 6428660
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/hgnetv2/hgnetv2_b1_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b1_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b1_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b1_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b1_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: output
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        type: nv12
+        color_space: bt601_video
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      preprocessing: Pillow bicubic shorter edge 256, rounded center crop 224; OpenCV
+        NV12 BT.601 video; mapper-fused checkpoint normalization
+      compiler_versions:
+        hbdk: 3.49.15
+        hb_mapper: 1.24.3
+        horizon_nn: 1.1.0
+        runtime: 3.15.55.0
+      calibration_samples: 200
+      host_check:
+        method: Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity;
+          not dataset accuracy or board inference
+        max_absolute_errors:
+        - 5.841255187988281e-06
+        - 2.86102294921875e-05
+        inputs:
+        - deterministic-random
+        - frozen-calibration-image
+        versions:
+          torch: 2.8.0+cu128
+          timm: 1.0.20
+          onnx: 1.17.0
+          onnxruntime: 1.19.2
+      upstream_data_config:
+        input_size:
+        - 3
+        - 224
+        - 224
+        crop_pct: 0.965
+        crop_mode: center
+        interpolation: bicubic
+      quantization_policy: Compiler default INT8 PTQ with its actual per-node precision
+        policy; float32 output logits
+    validation:
+      artifact_sha256: 9ab984ea54bbb9d1094791c7bd806c7d658f60d321a32dff5945f1fb1297608a
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
+      build_id: hgnetv2_b1_ssld_stage2_ft_in1k-x5-20261102-r02
+      runtime_variant: timm-b1-ssld-stage2-ft-in1k
+      onnx_sha256: ed7358156ead03da9608613a896a9f411c3c74c71a37b8b82ace8ab02f34d902
+      config_sha256: f79aa4b542ddba92c426f310cd2df7ed51aa8557f323d54a30aacec16cc3922f
+      recipe_sha256: 78af29eac3a88e90dc70a39eee89fbf5b3ddd9732b2b2411e08bfc48decf356f
+      source_checkpoint_sha256: 4a9d49b24bcab4d76136c5468ba9c982962cad85dda3efae4484446592331957
+      source_weight_url: https://huggingface.co/timm/hgnetv2_b1.ssld_stage2_ft_in1k/resolve/ec7014d7f1d0dd1ea2bf3012bc51dc95c5919fd2/model.safetensors
+      checkpoint_revision: ec7014d7f1d0dd1ea2bf3012bc51dc95c5919fd2
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      toolchain_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      exporter_sha256: 24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b
+      exporter_repository_commit: 954b2c71b774513819ae5715da4f5beb9cea88fc
+      implementation_sha256: 41ca4a093de9930838d86308a46e9534c35b10cfaffde865472d14561b1ece92
+      calibration_manifest_sha256: e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9
+      calibration_producer_sha256: 425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84
+      precision_policy: int8
+      compile_log_sha256: ff8f697092f9f77a5bf76e9710a91c9ea094ca8d11f4ed0c42cfd965abf44826
+      model_info_log_sha256: b9c3cd369fea736de1b8ec22c022d8061fd246dfbd1edc342266bd071f4b2282
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 9e89943236522275108be7e7025b573b0a2bbd1ab36864bdcc48c18aa5d80a3e
+    runtime_command: python3 samples/vision/hgnetv2/runtime/python/main.py --target
+      x5 --asset-id x5:hgnetv2:hgnetv2_b1_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      --model-path /path/to/hgnetv2_b1_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      --test-img /path/to/image.jpg
+- size: b2-ssld-stage2-ft-in1k-224
+  model:
+    parameter_count: 11221356
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: x5
+    license:
+      name: Apache-2.0
+      url: https://huggingface.co/timm/hgnetv2_b2.ssld_stage2_ft_in1k/blob/7a3092bc87118c7974bb9000b1eb6d9c560f8f75/README.md
+      scope: model
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 1
+    artifact:
+      filename: hgnetv2_b2_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      runtime_dtype: uint8
+      runtime_layout: packed
+      sha256: 9d16c0d3686c79bdf9031b1ccdde120e37bfb6df6c82e6c6f82a20bdb0f0e9f0
+      size_bytes: 11278324
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/hgnetv2/hgnetv2_b2_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b2_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b2_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b2_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b2_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: output
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        type: nv12
+        color_space: bt601_video
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      preprocessing: Pillow bicubic shorter edge 256, rounded center crop 224; OpenCV
+        NV12 BT.601 video; mapper-fused checkpoint normalization
+      compiler_versions:
+        hbdk: 3.49.15
+        hb_mapper: 1.24.3
+        horizon_nn: 1.1.0
+        runtime: 3.15.55.0
+      calibration_samples: 200
+      host_check:
+        method: Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity;
+          not dataset accuracy or board inference
+        max_absolute_errors:
+        - 4.291534423828125e-06
+        - 9.5367431640625e-06
+        inputs:
+        - deterministic-random
+        - frozen-calibration-image
+        versions:
+          torch: 2.8.0+cu128
+          timm: 1.0.20
+          onnx: 1.17.0
+          onnxruntime: 1.19.2
+      upstream_data_config:
+        input_size:
+        - 3
+        - 224
+        - 224
+        crop_pct: 0.965
+        crop_mode: center
+        interpolation: bicubic
+      quantization_policy: Compiler default INT8 PTQ with its actual per-node precision
+        policy; float32 output logits
+    validation:
+      artifact_sha256: 9d16c0d3686c79bdf9031b1ccdde120e37bfb6df6c82e6c6f82a20bdb0f0e9f0
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
+      build_id: hgnetv2_b2_ssld_stage2_ft_in1k-x5-20261102-r02
+      runtime_variant: timm-b2-ssld-stage2-ft-in1k
+      onnx_sha256: 5fe4b817e362924db61a7a42a352f5314c20fb29be642ebed5749c564af072ba
+      config_sha256: 713cc71c77b1d89fad8a137c25e4cedcc68b66bb0649e5de50c3fa16d8b21bd1
+      recipe_sha256: 924ac38d1c54b1fc95fed805c3e74ce8ca9d3ec6fa3ec6abbb74fefdcc1792ef
+      source_checkpoint_sha256: 184700043cfb108f74b88537344f37ab97060d2e47afe1485c823e551b85655a
+      source_weight_url: https://huggingface.co/timm/hgnetv2_b2.ssld_stage2_ft_in1k/resolve/7a3092bc87118c7974bb9000b1eb6d9c560f8f75/model.safetensors
+      checkpoint_revision: 7a3092bc87118c7974bb9000b1eb6d9c560f8f75
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      toolchain_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      exporter_sha256: 24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b
+      exporter_repository_commit: 954b2c71b774513819ae5715da4f5beb9cea88fc
+      implementation_sha256: 41ca4a093de9930838d86308a46e9534c35b10cfaffde865472d14561b1ece92
+      calibration_manifest_sha256: e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9
+      calibration_producer_sha256: 425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84
+      precision_policy: int8
+      compile_log_sha256: aaa99e1e0a98761f7939952679e65ff451a0af7182cfeba239d1028b05a9925c
+      model_info_log_sha256: faf58e48f6fcbba8175cfec638480c3bc1bfa7114c60fb2dde51356433cb610e
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 83b5ed8e4f1c3a2ce69ce70189c5307f5ca0a114af6eed2a08c0ed4655971f1a
+    runtime_command: python3 samples/vision/hgnetv2/runtime/python/main.py --target
+      x5 --asset-id x5:hgnetv2:hgnetv2_b2_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      --model-path /path/to/hgnetv2_b2_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      --test-img /path/to/image.jpg
+- size: b3-ssld-stage2-ft-in1k-224
+  model:
+    parameter_count: 16292216
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: x5
+    license:
+      name: Apache-2.0
+      url: https://huggingface.co/timm/hgnetv2_b3.ssld_stage2_ft_in1k/blob/1aac877b3ea55ab0f06d57cad9889d1e601bd472/README.md
+      scope: model
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 1
+    artifact:
+      filename: hgnetv2_b3_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      runtime_dtype: uint8
+      runtime_layout: packed
+      sha256: 30ffaf3fdd73a46f17f4050225d4867e3b730f2902c43dd23f2f3e2037698050
+      size_bytes: 16127988
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/hgnetv2/hgnetv2_b3_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b3_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b3_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b3_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b3_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: output
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        type: nv12
+        color_space: bt601_video
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      preprocessing: Pillow bicubic shorter edge 256, rounded center crop 224; OpenCV
+        NV12 BT.601 video; mapper-fused checkpoint normalization
+      compiler_versions:
+        hbdk: 3.49.15
+        hb_mapper: 1.24.3
+        horizon_nn: 1.1.0
+        runtime: 3.15.55.0
+      calibration_samples: 200
+      host_check:
+        method: Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity;
+          not dataset accuracy or board inference
+        max_absolute_errors:
+        - 7.62939453125e-06
+        - 5.7220458984375e-06
+        inputs:
+        - deterministic-random
+        - frozen-calibration-image
+        versions:
+          torch: 2.8.0+cu128
+          timm: 1.0.20
+          onnx: 1.17.0
+          onnxruntime: 1.19.2
+      upstream_data_config:
+        input_size:
+        - 3
+        - 224
+        - 224
+        crop_pct: 0.965
+        crop_mode: center
+        interpolation: bicubic
+      quantization_policy: Compiler default INT8 PTQ with its actual per-node precision
+        policy; float32 output logits
+    validation:
+      artifact_sha256: 30ffaf3fdd73a46f17f4050225d4867e3b730f2902c43dd23f2f3e2037698050
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
+      build_id: hgnetv2_b3_ssld_stage2_ft_in1k-x5-20261102-r02
+      runtime_variant: timm-b3-ssld-stage2-ft-in1k
+      onnx_sha256: d91ff344809cb25a4dee596e0498456fb12d61a64ae52b29d9c68fb9f4b0d628
+      config_sha256: 7ec12ac699d86345a799aa0ebe8c771521b1b6fb6717e95a09b3d5ef0c74555a
+      recipe_sha256: 77d63c173706a32775a1650c622cb023d9845fc471b0f93bd2ecdb6ad0a2d8d6
+      source_checkpoint_sha256: f9769b32ab1f6a4f127821f5776f6a19b736149af4f3ec22bab339748bf2dac7
+      source_weight_url: https://huggingface.co/timm/hgnetv2_b3.ssld_stage2_ft_in1k/resolve/1aac877b3ea55ab0f06d57cad9889d1e601bd472/model.safetensors
+      checkpoint_revision: 1aac877b3ea55ab0f06d57cad9889d1e601bd472
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      toolchain_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      exporter_sha256: 24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b
+      exporter_repository_commit: 954b2c71b774513819ae5715da4f5beb9cea88fc
+      implementation_sha256: 41ca4a093de9930838d86308a46e9534c35b10cfaffde865472d14561b1ece92
+      calibration_manifest_sha256: e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9
+      calibration_producer_sha256: 425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84
+      precision_policy: int8
+      compile_log_sha256: f419ea2651e0987d94532ba0c6a3fe34f8f561aeedebc06c5a7ea3d66e31ad36
+      model_info_log_sha256: eac56f4b3140654c256cbcd66778c91c2079e954d902b48c6a3a4679012a41de
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: d8b7cfea7c0a3c0086a5c5d33624b4f3c50e64d42c1782b2ddf634da760c8a13
+    runtime_command: python3 samples/vision/hgnetv2/runtime/python/main.py --target
+      x5 --asset-id x5:hgnetv2:hgnetv2_b3_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      --model-path /path/to/hgnetv2_b3_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      --test-img /path/to/image.jpg
+- size: b4-ssld-stage2-ft-in1k-224
+  model:
+    parameter_count: 19796680
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: x5
+    license:
+      name: Apache-2.0
+      url: https://huggingface.co/timm/hgnetv2_b4.ssld_stage2_ft_in1k/blob/3c808d9d9d9873ed5e37b00509ba2a4882e816e8/README.md
+      scope: model
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 1
+    artifact:
+      filename: hgnetv2_b4_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      runtime_dtype: uint8
+      runtime_layout: packed
+      sha256: c3aef8c8372e6702b29e9c3df4f312bb37d2ab0902c8a59107d06dc1b3675f2c
+      size_bytes: 19011572
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/hgnetv2/hgnetv2_b4_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b4_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b4_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b4_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/hgnetv2/hgnetv2_b4_ssld_stage2_ft_in1k_bayese_224x224_nv12/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: output
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        type: nv12
+        color_space: bt601_video
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      preprocessing: Pillow bicubic shorter edge 256, rounded center crop 224; OpenCV
+        NV12 BT.601 video; mapper-fused checkpoint normalization
+      compiler_versions:
+        hbdk: 3.49.15
+        hb_mapper: 1.24.3
+        horizon_nn: 1.1.0
+        runtime: 3.15.55.0
+      calibration_samples: 200
+      host_check:
+        method: Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity;
+          not dataset accuracy or board inference
+        max_absolute_errors:
+        - 1.9073486328125e-06
+        - 5.0067901611328125e-06
+        inputs:
+        - deterministic-random
+        - frozen-calibration-image
+        versions:
+          torch: 2.8.0+cu128
+          timm: 1.0.20
+          onnx: 1.17.0
+          onnxruntime: 1.19.2
+      upstream_data_config:
+        input_size:
+        - 3
+        - 224
+        - 224
+        crop_pct: 0.965
+        crop_mode: center
+        interpolation: bicubic
+      quantization_policy: Compiler default INT8 PTQ with its actual per-node precision
+        policy; float32 output logits
+    validation:
+      artifact_sha256: c3aef8c8372e6702b29e9c3df4f312bb37d2ab0902c8a59107d06dc1b3675f2c
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
+      build_id: hgnetv2_b4_ssld_stage2_ft_in1k-x5-20261102-r02
+      runtime_variant: timm-b4-ssld-stage2-ft-in1k
+      onnx_sha256: 59ab3e6c59f369cc6485500d5ad2edef54c6db827f3f983fe696d0e9a1021568
+      config_sha256: fcb2c8698fe4895d6e06a957fc665cc4ddd78d555c77eab4d3562047829849c8
+      recipe_sha256: 09be99d8587e8d5c2d2ee9cab3f70e4b1efb13d384a33e0660f8a3daa50cfa0d
+      source_checkpoint_sha256: 8d05f750c5301cd5c7d5139ae2417d13711da2c6ab067653579848bf31dcbeba
+      source_weight_url: https://huggingface.co/timm/hgnetv2_b4.ssld_stage2_ft_in1k/resolve/3c808d9d9d9873ed5e37b00509ba2a4882e816e8/model.safetensors
+      checkpoint_revision: 3c808d9d9d9873ed5e37b00509ba2a4882e816e8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      toolchain_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      exporter_sha256: 24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b
+      exporter_repository_commit: 954b2c71b774513819ae5715da4f5beb9cea88fc
+      implementation_sha256: 41ca4a093de9930838d86308a46e9534c35b10cfaffde865472d14561b1ece92
+      calibration_manifest_sha256: e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9
+      calibration_producer_sha256: 425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84
+      precision_policy: int8
+      compile_log_sha256: 0baca6382f558d6292502b267fdec68b58882356166b18910929cdfd3d0eaca0
+      model_info_log_sha256: fd201ac3fe55a69ba721153232cc2c1dc63df6a961f1b3f29ca4c94589846387
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 61b4dd838c046343f61fea0f616ea30175d203c8d8075dee7cb0e19149ca74f9
+    runtime_command: python3 samples/vision/hgnetv2/runtime/python/main.py --target
+      x5 --asset-id x5:hgnetv2:hgnetv2_b4_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      --model-path /path/to/hgnetv2_b4_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
+      --test-img /path/to/image.jpg

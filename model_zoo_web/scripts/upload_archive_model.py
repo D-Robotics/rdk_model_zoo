@@ -69,10 +69,10 @@ def main():
     with args.model.open('rb') as stream:
         for block in iter(lambda:stream.read(1024*1024),b''):digest.update(block)
     if digest.hexdigest()!=artifact['sha256'] or args.model.stat().st_size!=artifact['size_bytes']:raise ValueError('Local model identity differs')
-    ssh=['ssh','-J',args.jump_host,'-o','BatchMode=yes','-o','ConnectTimeout=15',args.ssh_host]
+    ssh=['ssh','-J',args.jump_host,'-o','BatchMode=yes','-o','ControlMaster=auto','-o','ControlPersist=600','-o','ControlPath=/tmp/rdk-modelzoo-bulk-%r-%h-%p','-o','ServerAliveInterval=15','-o','ServerAliveCountMax=2','-o','ConnectTimeout=15',args.ssh_host]
     temp_command=shlex.join(['python3','-c','import os,tempfile;fd,p=tempfile.mkstemp(prefix=".archive-model-upload-",dir=os.path.expanduser("~"));os.close(fd);print(p)'])
     stage=subprocess.check_output(ssh+[temp_command],text=True).strip()
-    subprocess.run(['scp','-J',args.jump_host,'-o','BatchMode=yes',str(args.model),args.ssh_host+':'+stage],check=True)
+    subprocess.run(['scp','-J',args.jump_host,'-o','BatchMode=yes','-o','ControlMaster=auto','-o','ControlPersist=600','-o','ControlPath=/tmp/rdk-modelzoo-bulk-%r-%h-%p','-o','ServerAliveInterval=15','-o','ServerAliveCountMax=2',str(args.model),args.ssh_host+':'+stage],check=True)
     command=shlex.join(['python3','-c',INSTALL_MODEL,REMOTE_ROOT,prefix,filename,artifact['sha256'],str(artifact['size_bytes']),stage])
     receipt=json.loads(subprocess.check_output(ssh+[command],text=True))
     digest=hashlib.sha256();size=0

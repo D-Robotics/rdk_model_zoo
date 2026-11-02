@@ -73,6 +73,20 @@ class ConvertedCatalogTest(unittest.TestCase):
         self.validate()
         self.assertEqual(self.row['validation']['runtime_2'],'not-run')
 
+    def test_artifact_license_can_differ_without_rewriting_existing_family_license(self):
+        original=copy.deepcopy(self.record['license'])
+        self.row['license']={'name':'MIT','url':'https://opensource.org/license/mit','scope':'model'}
+        self.validate()
+        self.assertEqual(self.record['license'],original)
+        self.row['license']['scope']='sample-code'
+        with self.assertRaises(catalog.CatalogError):self.validate()
+
+    def test_direct_vendor_checkpoint_uses_its_exact_sha_as_an_immutable_version(self):
+        self.row['provenance']['checkpoint_revision']='sha256:'+self.row['provenance']['source_checkpoint_sha256']
+        self.validate()
+        self.row['provenance']['checkpoint_revision']='sha256:'+'f'*64
+        with self.assertRaises(catalog.CatalogError):self.validate()
+
     def test_metadata_version_and_model_license_cannot_be_bypassed(self):
         self.row['metadata_revision']=2
         with self.assertRaises(catalog.CatalogError): self.validate()

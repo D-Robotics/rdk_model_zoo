@@ -8,7 +8,8 @@ family: efficientformerv2
 task: cls
 description:
   zh: EfficientFormerV2 以 MobileNet 的尺寸和速度重新审视视觉 Transformer。细粒度联合搜索同时优化延迟、参数量与精度。
-  en: EfficientFormerV2 revisits vision transformers at MobileNet size and speed. A fine-grained joint search optimizes latency, parameters, and accuracy together.
+  en: EfficientFormerV2 revisits vision transformers at MobileNet size and speed.
+    A fine-grained joint search optimizes latency, parameters, and accuracy together.
 sample_path: samples/vision/efficientformerv2
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
 license:
@@ -266,7 +267,462 @@ hero_visual:
     score: 0.000303
   - label: rock beauty
     score: 0.000302
-
 example_image:
   path: samples/vision/efficientformerv2/test_data/inference.png
   source: samples/vision/efficientformerv2/test_data/inference.png
+provider: Ross Wightman / timm
+model_license: &id001
+  name: Apache-2.0
+  url: https://huggingface.co/timm/efficientformerv2_s0.snap_dist_in1k/blob/aa226e91a076e760bc7957e5990f19f6ae322c5f/README.md
+  scope: model
+variants:
+- size: s0-snap-dist-in1k-224
+  model:
+    parameter_count: 3600256
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: x5
+    license: *id001
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 2
+    artifact:
+      filename: efficientformerv2_s0_snap_dist_in1k_bayese_224x224_nv12.bin
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      runtime_dtype: uint8
+      runtime_layout: packed
+      sha256: 9801c094b4ad082a5adae8d1d626aa0db76265662096fda7adcc4956c4085c4e
+      size_bytes: 4863380
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/efficientformerv2/efficientformerv2_s0_snap_dist_in1k_bayese_224x224_nv12.bin
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientformerv2/efficientformerv2_s0_snap_dist_in1k_bayese_224x224_nv12/v2/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientformerv2/efficientformerv2_s0_snap_dist_in1k_bayese_224x224_nv12/v2/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientformerv2/efficientformerv2_s0_snap_dist_in1k_bayese_224x224_nv12/v2/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientformerv2/efficientformerv2_s0_snap_dist_in1k_bayese_224x224_nv12/v2/oe_report_data.json
+    conversion:
+      outputs:
+      - name: output
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        type: nv12
+        color_space: bt601_video
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      preprocessing: Pillow bicubic shorter edge 256, rounded center crop 224; OpenCV
+        NV12 BT.601 video; mapper-fused checkpoint normalization
+      compiler_versions:
+        hbdk: 3.49.15
+        hb_mapper: 1.24.3
+        horizon_nn: 1.1.0
+        runtime: 3.15.55.0
+      calibration_samples: 200
+      host_check:
+        method: Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity;
+          not dataset accuracy or board inference
+        max_absolute_errors:
+        - 2.5510787963867188e-05
+        - 3.8623809814453125e-05
+        inputs:
+        - deterministic-random
+        - frozen-calibration-image
+        versions:
+          torch: 2.8.0+cu128
+          timm: 1.0.20
+          onnx: 1.17.0
+          onnxruntime: 1.19.2
+      upstream_data_config:
+        input_size:
+        - 3
+        - 224
+        - 224
+        crop_pct: 0.95
+        crop_mode: center
+        interpolation: bicubic
+      quantization_policy: Compiler default INT8 PTQ with its actual per-node precision
+        policy; float32 output logits
+      original_oe_reports:
+      - name: main_graph_subgraph_0.html
+        sha256: d5b4ecf16d12bd3aeace1092494a3c6e9bc651e9148358867ad7537e3a428088
+      - name: main_graph_subgraph_1.html
+        sha256: 045f37c0f8850ce1ab53a412048e8d289dd57865d7a04fffcf3cd368e62acdb6
+      - name: main_graph_subgraph_2.html
+        sha256: 3218d68b159dfb9ebbb1e31851815d2408566318c5d5585b18e471c24ee8b714
+      - name: main_graph_subgraph_3.html
+        sha256: 6dc0031a6a0346278cebcd7cbc91b05d8a000d7ba061ad4bcb0d84e17072ca4a
+      - name: main_graph_subgraph_4.html
+        sha256: 965997dd520402343ea859e9e23614c18a013d0c025ced0095997f73e7fe7dfa
+      - name: main_graph_subgraph_5.html
+        sha256: d76e13f71da28c1ab1ce6396a5f6cea5be6941757d542068cdefd0a4b02a6c80
+    validation:
+      artifact_sha256: 9801c094b4ad082a5adae8d1d626aa0db76265662096fda7adcc4956c4085c4e
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: 3c927f9bffd143d29c666224ea4c828e9ed081cd
+      build_id: efficientformerv2_s0_snap_dist_in1k-x5-20261102-r01
+      runtime_variant: timm-s0-snap-dist-in1k
+      onnx_sha256: e0524ba38893dc5bb5f24dda3723e62d61ef83367aa1958856b05c04d09068fe
+      config_sha256: 66e891979987b5b61c8def0050c7e59b433106d1debe6fecb56f63d9129a205d
+      recipe_sha256: 88824fa3bb725cfbc09dfdb23b55352b2ca1915ca8436797822f1f8115e489d8
+      source_checkpoint_sha256: ad4ce93472a2589572d46370ea214937a10bd522e35da9ccb7b10fd7eeb68f0c
+      source_weight_url: https://huggingface.co/timm/efficientformerv2_s0.snap_dist_in1k/resolve/aa226e91a076e760bc7957e5990f19f6ae322c5f/model.safetensors
+      checkpoint_revision: aa226e91a076e760bc7957e5990f19f6ae322c5f
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      toolchain_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      exporter_sha256: 24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b
+      exporter_repository_commit: 954b2c71b774513819ae5715da4f5beb9cea88fc
+      implementation_sha256: dec0265c7035fd35ecefe5d03ffbdbb46bea82b9a26e3c3ae70106f594a192b7
+      calibration_manifest_sha256: e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9
+      calibration_producer_sha256: 425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84
+      precision_policy: int8
+      compile_log_sha256: fe5db8d0802ca09c1a00555b18b99611dad4b33fbe014774e07051aa9af3e8a9
+      model_info_log_sha256: 0017e188483315ce0e9f88bc592df638ad7d21d883c69f701f99d5b6a9006810
+      metadata_correction:
+        previous_metadata_revision: 1
+        field: repository_commit
+        reason: Expand the abbreviated native source commit to its full immutable
+          identity; model bytes unchanged
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 42bcf33f7efb523b5bdd794a16a39557faef0224ab444af32f3a8b351a6a4a44
+    runtime_command: python3 samples/vision/efficientformerv2/runtime/python/main.py
+      --target x5 --asset-id x5:efficientformerv2:efficientformerv2_s0_snap_dist_in1k_bayese_224x224_nv12.bin
+      --model-path /path/to/efficientformerv2_s0_snap_dist_in1k_bayese_224x224_nv12.bin
+      --test-img /path/to/image.jpg
+- size: s1-snap-dist-in1k-224
+  model:
+    parameter_count: 6185560
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: x5
+    license:
+      name: Apache-2.0
+      url: https://huggingface.co/timm/efficientformerv2_s1.snap_dist_in1k/blob/0c1fc60a0e89b6309d9de451cdacc11ac0a8b987/README.md
+      scope: model
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 2
+    artifact:
+      filename: efficientformerv2_s1_snap_dist_in1k_bayese_224x224_nv12.bin
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      runtime_dtype: uint8
+      runtime_layout: packed
+      sha256: 57cdfcf0cb3361856d3a61e66db44cba81d04de6d90041ee3334cef6695ee109
+      size_bytes: 7484820
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/efficientformerv2/efficientformerv2_s1_snap_dist_in1k_bayese_224x224_nv12.bin
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientformerv2/efficientformerv2_s1_snap_dist_in1k_bayese_224x224_nv12/v2/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientformerv2/efficientformerv2_s1_snap_dist_in1k_bayese_224x224_nv12/v2/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientformerv2/efficientformerv2_s1_snap_dist_in1k_bayese_224x224_nv12/v2/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientformerv2/efficientformerv2_s1_snap_dist_in1k_bayese_224x224_nv12/v2/oe_report_data.json
+    conversion:
+      outputs:
+      - name: output
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        type: nv12
+        color_space: bt601_video
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      preprocessing: Pillow bicubic shorter edge 256, rounded center crop 224; OpenCV
+        NV12 BT.601 video; mapper-fused checkpoint normalization
+      compiler_versions:
+        hbdk: 3.49.15
+        hb_mapper: 1.24.3
+        horizon_nn: 1.1.0
+        runtime: 3.15.55.0
+      calibration_samples: 200
+      host_check:
+        method: Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity;
+          not dataset accuracy or board inference
+        max_absolute_errors:
+        - 3.24249267578125e-05
+        - 0.00011277198791503906
+        inputs:
+        - deterministic-random
+        - frozen-calibration-image
+        versions:
+          torch: 2.8.0+cu128
+          timm: 1.0.20
+          onnx: 1.17.0
+          onnxruntime: 1.19.2
+      upstream_data_config:
+        input_size:
+        - 3
+        - 224
+        - 224
+        crop_pct: 0.95
+        crop_mode: center
+        interpolation: bicubic
+      quantization_policy: Compiler default INT8 PTQ with its actual per-node precision
+        policy; float32 output logits
+      original_oe_reports:
+      - name: main_graph_subgraph_0.html
+        sha256: 7c03552ab5571ebc1b069534c59eaa3e5537c2ca66f618c2900ade35fe186616
+      - name: main_graph_subgraph_1.html
+        sha256: b11e9fae44a3ce0e8dbc8fd42464a894ebef6d617b6935bda8c2f6eff2e773bb
+      - name: main_graph_subgraph_2.html
+        sha256: e9c0c619174c49bbb49a7de9167febe4d08da6623e4e0c5baeacdfc142773be8
+      - name: main_graph_subgraph_3.html
+        sha256: e561a51eccddccc2bf0d1fe3b6123268087137729a619b6c377f241d9af6cde3
+      - name: main_graph_subgraph_4.html
+        sha256: 26a4baa3f5972a79d32e1f124a4440b11b856895f78d86a4f2149e9d2d817c5c
+      - name: main_graph_subgraph_5.html
+        sha256: 8332e7c9e9866b6db620c8e98af6b2a0aa42a8bb69da1772625ed76743580765
+    validation:
+      artifact_sha256: 57cdfcf0cb3361856d3a61e66db44cba81d04de6d90041ee3334cef6695ee109
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: 3c927f9bffd143d29c666224ea4c828e9ed081cd
+      build_id: efficientformerv2_s1_snap_dist_in1k-x5-20261102-r01
+      runtime_variant: timm-s1-snap-dist-in1k
+      onnx_sha256: 200b917c38afdc98ef69d91c62476f4f150a833117224550107bc833f502408a
+      config_sha256: c8f2edb408bd65d5fec14490124a30628fd87f676e051023b92bfc8829dbe2d2
+      recipe_sha256: f9dc5509e3cc372761d43b8247e4af043e2bb77fdb07a8f08d72b0eb48f1ec54
+      source_checkpoint_sha256: 3ef67aa25321c2a3d145e12ef4823e5f7da4356ed1656f9f1bd6b9af339e5655
+      source_weight_url: https://huggingface.co/timm/efficientformerv2_s1.snap_dist_in1k/resolve/0c1fc60a0e89b6309d9de451cdacc11ac0a8b987/model.safetensors
+      checkpoint_revision: 0c1fc60a0e89b6309d9de451cdacc11ac0a8b987
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      toolchain_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      exporter_sha256: 24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b
+      exporter_repository_commit: 954b2c71b774513819ae5715da4f5beb9cea88fc
+      implementation_sha256: dec0265c7035fd35ecefe5d03ffbdbb46bea82b9a26e3c3ae70106f594a192b7
+      calibration_manifest_sha256: e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9
+      calibration_producer_sha256: 425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84
+      precision_policy: int8
+      compile_log_sha256: 8c28437401650ad97f37ab10bcf7fe24c247647399be9903ecd507b4ee3d565e
+      model_info_log_sha256: 53e9634cd4722f0071e054a84ab7d92fdc82d89c55a646157e8ba4b8b0229e52
+      metadata_correction:
+        previous_metadata_revision: 1
+        field: repository_commit
+        reason: Expand the abbreviated native source commit to its full immutable
+          identity; model bytes unchanged
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 985b408686e3aa23cdbf73d982b495090f09a8cb190bd6b193c211a6718db265
+    runtime_command: python3 samples/vision/efficientformerv2/runtime/python/main.py
+      --target x5 --asset-id x5:efficientformerv2:efficientformerv2_s1_snap_dist_in1k_bayese_224x224_nv12.bin
+      --model-path /path/to/efficientformerv2_s1_snap_dist_in1k_bayese_224x224_nv12.bin
+      --test-img /path/to/image.jpg
+- size: s2-snap-dist-in1k-224
+  model:
+    parameter_count: 12710112
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: x5
+    license:
+      name: Apache-2.0
+      url: https://huggingface.co/timm/efficientformerv2_s2.snap_dist_in1k/blob/1c56a76355000c79568559d34ba3fa24416b5107/README.md
+      scope: model
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 1
+    artifact:
+      filename: efficientformerv2_s2_snap_dist_in1k_bayese_224x224_nv12.bin
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      runtime_dtype: uint8
+      runtime_layout: packed
+      sha256: a21ded802247f01a73016b9f967b6b356bb677f8db13d3579cfb2d6336057476
+      size_bytes: 14441549
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/efficientformerv2/efficientformerv2_s2_snap_dist_in1k_bayese_224x224_nv12.bin
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientformerv2/efficientformerv2_s2_snap_dist_in1k_bayese_224x224_nv12/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientformerv2/efficientformerv2_s2_snap_dist_in1k_bayese_224x224_nv12/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientformerv2/efficientformerv2_s2_snap_dist_in1k_bayese_224x224_nv12/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientformerv2/efficientformerv2_s2_snap_dist_in1k_bayese_224x224_nv12/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: output
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        type: nv12
+        color_space: bt601_video
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      preprocessing: Pillow bicubic shorter edge 256, rounded center crop 224; OpenCV
+        NV12 BT.601 video; mapper-fused checkpoint normalization
+      compiler_versions:
+        hbdk: 3.49.15
+        hb_mapper: 1.24.3
+        horizon_nn: 1.1.0
+        runtime: 3.15.55.0
+      calibration_samples: 200
+      host_check:
+        method: Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity;
+          not dataset accuracy or board inference
+        max_absolute_errors:
+        - 3.4928321838378906e-05
+        - 3.4809112548828125e-05
+        inputs:
+        - deterministic-random
+        - frozen-calibration-image
+        versions:
+          torch: 2.8.0+cu128
+          timm: 1.0.20
+          onnx: 1.17.0
+          onnxruntime: 1.19.2
+      upstream_data_config:
+        input_size:
+        - 3
+        - 224
+        - 224
+        crop_pct: 0.95
+        crop_mode: center
+        interpolation: bicubic
+      quantization_policy: Compiler default INT8 PTQ with its actual per-node precision
+        policy; float32 output logits
+      original_oe_reports:
+      - name: main_graph_subgraph_0.html
+        sha256: 40b6dcf8deb599f1e133fbfcb84b1689fbf61c821ec9bc6c5b493a553760eb31
+      - name: main_graph_subgraph_1.html
+        sha256: ec36e0b1d8ac8601c7691b9fa0f9426842e1037674ccb75ded3c257281464320
+      - name: main_graph_subgraph_2.html
+        sha256: 683b911d406de53d519b11b6877823fa444729ccfe269fd54a6e078f214cd341
+      - name: main_graph_subgraph_3.html
+        sha256: d94cb875e3723a5687cc40a43f7f666f699f07434ff5645475b3de759dc808b2
+      - name: main_graph_subgraph_4.html
+        sha256: 3931451adcd7f4284e7c4b68d9b9bacd5b91ad59fdeed85b4c00401cac550d60
+      - name: main_graph_subgraph_5.html
+        sha256: 0a4c9630270188e8b41abb1cb4b790b900fa471d1624214682d076ec3b206f97
+      - name: main_graph_subgraph_6.html
+        sha256: e11c568c7168d55999fe103e733829fa01f201dccafd7d981a45ce9f16017bef
+      - name: main_graph_subgraph_7.html
+        sha256: 0b41029511136faf9a89918ede70878ef178f460db4116b3e2d3b1169be68471
+      - name: main_graph_subgraph_8.html
+        sha256: 5777e0af8d855fa7cacba50cb61e6d27103793a94518e783de8261b5067e37f7
+      - name: main_graph_subgraph_9.html
+        sha256: 910b3a539552e705aab98ac50ac88d871e1a4180a8015b11d7a2620822718305
+    validation:
+      artifact_sha256: a21ded802247f01a73016b9f967b6b356bb677f8db13d3579cfb2d6336057476
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: 88b1cc252809382b675a8c448534590db882abec
+      build_id: efficientformerv2_s2_snap_dist_in1k-x5-20261102-r01
+      runtime_variant: timm-s2-snap-dist-in1k
+      onnx_sha256: 4f4642e69f7823eca97727dda2982a8c3a0c69dd3cf24331decb8addef775ada
+      config_sha256: a13372d68221b9bf5f69ae69e9ff63793952151d724c12710566b6a4fc16c679
+      recipe_sha256: 4fa10092fb8fe2031a4344b13b650566bc27cd85248a0813ff0ca8239e5a5697
+      source_checkpoint_sha256: c46c28768173ee0e518b7cd94af1e832cb88d2115068a81386c08650cc22a24f
+      source_weight_url: https://huggingface.co/timm/efficientformerv2_s2.snap_dist_in1k/resolve/1c56a76355000c79568559d34ba3fa24416b5107/model.safetensors
+      checkpoint_revision: 1c56a76355000c79568559d34ba3fa24416b5107
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      toolchain_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      exporter_sha256: 24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b
+      exporter_repository_commit: 954b2c71b774513819ae5715da4f5beb9cea88fc
+      implementation_sha256: dec0265c7035fd35ecefe5d03ffbdbb46bea82b9a26e3c3ae70106f594a192b7
+      calibration_manifest_sha256: e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9
+      calibration_producer_sha256: 425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84
+      precision_policy: int8
+      compile_log_sha256: c63ab9b5d1ff34050eede5ceb487f017c8f3626039c726e7a4db83c3e2ba9650
+      model_info_log_sha256: 0614419179d21f131a6958d71abe741454950facf2e4981856d7d3c155583882
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: e8dbc479fd71d99503501b34d0d37b7e16b21c0fe7e4f5eebcc92eb6546c9295
+    runtime_command: python3 samples/vision/efficientformerv2/runtime/python/main.py
+      --target x5 --asset-id x5:efficientformerv2:efficientformerv2_s2_snap_dist_in1k_bayese_224x224_nv12.bin
+      --model-path /path/to/efficientformerv2_s2_snap_dist_in1k_bayese_224x224_nv12.bin
+      --test-img /path/to/image.jpg

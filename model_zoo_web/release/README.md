@@ -49,6 +49,14 @@ For later measurements, upload a new metadata revision and register with
 revision. Promotion to released requires all board checks and full metrics.
 
 The canonical Workbench procedure is
-`/home/zhengyi/work/rdk_model_zoo_workbench/GUIDELINE.md` v2.10, section 11.
+`/home/zhengyi/work/rdk_model_zoo_workbench/GUIDELINE.md` v2.11, section 11.
 Its embedded helper sources match these scripts. Generic website builds use the
 same committed inputs and require no Workbench connection.
+
+For independent converted weights, a platform row may carry its own model
+`license`; it takes precedence over the family default without rewriting older
+artifacts. Pin a 40-character checkpoint revision, or use
+`sha256:<source_checkpoint_sha256>` for an official direct-download checkpoint.
+Preserve the publisher's actual license and source notices. Multiple compiler
+subgraphs use `scripts/bundle_oe_html.py` to retain every original HTML byte in
+one companion report; static estimates remain separate from board measurements.

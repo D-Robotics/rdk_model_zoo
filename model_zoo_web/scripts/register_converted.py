@@ -25,9 +25,9 @@ def main():
     if record['id']!=f"{model['source']}/{model['family']}/{model['task']}": raise ValueError('Catalog identity mismatch')
     for key in ('accuracy','performance'):
         if key in manifest and not args.supplement: raise ValueError('Initial registration does not import board metrics')
-    record['provider']=model['provider']
-    if record.get('registration')=='pending': record['model_license']=manifest['license']
-    else: record['license']=manifest['license']
+    record.setdefault('provider',model['provider'])
+    if record.get('registration')=='pending': record.setdefault('model_license',manifest['license'])
+    else: record.setdefault('license',manifest['license'])
     variants=record.setdefault('variants',[])
     variant=next((v for v in variants if v['size']==size),None)
     if variant is None:
@@ -43,7 +43,7 @@ def main():
             if key in facts and facts[key]!=model[key]:raise ValueError('Supplementation cannot change existing model facts')
             if key not in facts and not args.supplement:raise ValueError('New model facts require --supplement')
             facts[key]=model[key]
-    fields=('status','converted_at','released_at','metadata_revision','artifact','reports','conversion','validation','provenance','runtime_command','accuracy','performance')
+    fields=('license','status','converted_at','released_at','metadata_revision','artifact','reports','conversion','validation','provenance','runtime_command','accuracy','performance')
     row={'platform':platform,**{key:manifest[key] for key in fields if key in manifest}}
     existing=next((p for p in variant['platforms'] if p['platform']==platform),None)
     if existing is not None:

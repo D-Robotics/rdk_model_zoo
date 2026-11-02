@@ -7,8 +7,14 @@ source: efficientnet
 family: efficientnet
 task: cls
 description:
-  zh: 本样例为全部受支持目标提供同一个 Python 运行时。 EfficientNetClassifier 类执行由 predict 串联的 preprocess → infer → postprocess 流程：按检测到的板卡从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 hbm_runtime， 返回带类型的 Top-K 结果（见 runtime/python/README_cn.md）。
-  en: 'A single Python runtime serves all supported targets. The EfficientNetClassifier class runs a preprocess → infer → postprocess flow chained by predict: it resolves one exact artifact reference from the platform release manifest for the detected board, verifies the board identity, loads hbm_runtime lazily, and returns a typed Top-K result (runtime/python/README.md).'
+  zh: 本样例为全部受支持目标提供同一个 Python 运行时。 EfficientNetClassifier 类执行由 predict 串联的 preprocess
+    → infer → postprocess 流程：按检测到的板卡从平台发布 Manifest 解析唯一的制品引用，核验板卡身份，懒加载 hbm_runtime，
+    返回带类型的 Top-K 结果（见 runtime/python/README_cn.md）。
+  en: 'A single Python runtime serves all supported targets. The EfficientNetClassifier
+    class runs a preprocess → infer → postprocess flow chained by predict: it resolves
+    one exact artifact reference from the platform release manifest for the detected
+    board, verifies the board identity, loads hbm_runtime lazily, and returns a typed
+    Top-K result (runtime/python/README.md).'
 sample_path: samples/vision/efficientnet
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
 license:
@@ -364,7 +370,405 @@ hero_visual:
     score: 0.000855
   - label: red-backed sandpiper
     score: 0.000851
-
 example_image:
   path: samples/vision/efficientnet/test_data/inference.png
   source: samples/vision/efficientnet/test_data/inference.png
+provider: Ross Wightman / timm
+model_license: &id001
+  name: Apache-2.0
+  url: https://huggingface.co/timm/efficientnet_b2.ra_in1k/blob/3577c4a7d84723645311bb5a9e5086f1b62ec8e2/README.md
+  scope: model
+variants:
+- size: b2-ra-in1k-224
+  model:
+    parameter_count: 9109994
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: x5
+    license: *id001
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 1
+    artifact:
+      filename: efficientnet_b2_ra_in1k_bayese_224x224_nv12.bin
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      runtime_dtype: uint8
+      runtime_layout: packed
+      sha256: 283ad677dfa003e2829e4c38eff83f04d923d68c1637cfcde14018968a8710e7
+      size_bytes: 11147249
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/efficientnet/efficientnet_b2_ra_in1k_bayese_224x224_nv12.bin
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientnet/efficientnet_b2_ra_in1k_bayese_224x224_nv12/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientnet/efficientnet_b2_ra_in1k_bayese_224x224_nv12/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientnet/efficientnet_b2_ra_in1k_bayese_224x224_nv12/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientnet/efficientnet_b2_ra_in1k_bayese_224x224_nv12/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: output
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        type: nv12
+        color_space: bt601_video
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      preprocessing: Pillow bicubic shorter edge 256, rounded center crop 224; OpenCV
+        NV12 BT.601 video; mapper-fused checkpoint normalization
+      compiler_versions:
+        hbdk: 3.49.15
+        hb_mapper: 1.24.3
+        horizon_nn: 1.1.0
+        runtime: 3.15.55.0
+      calibration_samples: 200
+      host_check:
+        method: Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity;
+          not dataset accuracy or board inference
+        max_absolute_errors:
+        - 2.086162567138672e-06
+        - 2.86102294921875e-06
+        inputs:
+        - deterministic-random
+        - frozen-calibration-image
+        versions:
+          torch: 2.8.0+cu128
+          timm: 1.0.20
+          onnx: 1.17.0
+          onnxruntime: 1.19.2
+      upstream_data_config:
+        input_size:
+        - 3
+        - 256
+        - 256
+        crop_pct: 0.875
+        crop_mode: center
+        interpolation: bicubic
+      quantization_policy: Compiler default INT8 PTQ with its actual per-node precision
+        policy; float32 output logits
+    validation:
+      artifact_sha256: 283ad677dfa003e2829e4c38eff83f04d923d68c1637cfcde14018968a8710e7
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
+      build_id: efficientnet_b2_ra_in1k-x5-20261102-r02
+      runtime_variant: timm-b2-ra-in1k
+      onnx_sha256: 3c35e61742a79c02f1736275fb2a78a56c10a62eebe0ce88074724abf9667b3d
+      config_sha256: d20376e27036758a950c8c37b534ba3138222b35b70235773379e682307864bc
+      recipe_sha256: cee8eeae6f8888eddf6786d5ecc8c0b29bed90bdb9532902b7296617947d50f5
+      source_checkpoint_sha256: e9adbcce7e5d5055c571c4cafdcc7f920b6a6ec42e643c49dff1aabe1d5f53c5
+      source_weight_url: https://huggingface.co/timm/efficientnet_b2.ra_in1k/resolve/3577c4a7d84723645311bb5a9e5086f1b62ec8e2/model.safetensors
+      checkpoint_revision: 3577c4a7d84723645311bb5a9e5086f1b62ec8e2
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      toolchain_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      exporter_sha256: 24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b
+      exporter_repository_commit: 954b2c71b774513819ae5715da4f5beb9cea88fc
+      implementation_sha256: 825955eeb0151ac0596519be89489456b66852accc913d02ad9a7e68db8bc6e0
+      calibration_manifest_sha256: e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9
+      calibration_producer_sha256: 425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84
+      precision_policy: int8
+      compile_log_sha256: 1e60465cd19f2faae6b66ef2aaeea71aacef2b07f7e389b04fa14feced512575
+      model_info_log_sha256: be0378cc7e7ec516086565ab0aefa585ea871bc6eadf4f9cbaf62d38c3e67957
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: e36add2e2958972b222806576985a3490b710df823a0408a1113b0c452caefd1
+    runtime_command: python3 samples/vision/efficientnet/runtime/python/main.py --target
+      x5 --asset-id x5:efficientnet:efficientnet_b2_ra_in1k_bayese_224x224_nv12.bin
+      --model-path /path/to/efficientnet_b2_ra_in1k_bayese_224x224_nv12.bin --test-img
+      /path/to/image.jpg
+- size: b3-ra2-in1k-224
+  model:
+    parameter_count: 12233232
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: x5
+    license:
+      name: Apache-2.0
+      url: https://huggingface.co/timm/efficientnet_b3.ra2_in1k/blob/0366a75518620e0f2077789202073759f2d61393/README.md
+      scope: model
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 1
+    artifact:
+      filename: efficientnet_b3_ra2_in1k_bayese_224x224_nv12.bin
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      runtime_dtype: uint8
+      runtime_layout: packed
+      sha256: fd2e4c54191461f1df4ab32f16dca0f05f7d49fbdcbadd8df0aa1aaf7488f2e7
+      size_bytes: 14817269
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/efficientnet/efficientnet_b3_ra2_in1k_bayese_224x224_nv12.bin
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientnet/efficientnet_b3_ra2_in1k_bayese_224x224_nv12/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientnet/efficientnet_b3_ra2_in1k_bayese_224x224_nv12/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientnet/efficientnet_b3_ra2_in1k_bayese_224x224_nv12/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientnet/efficientnet_b3_ra2_in1k_bayese_224x224_nv12/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: output
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        type: nv12
+        color_space: bt601_video
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      preprocessing: Pillow bicubic shorter edge 256, rounded center crop 224; OpenCV
+        NV12 BT.601 video; mapper-fused checkpoint normalization
+      compiler_versions:
+        hbdk: 3.49.15
+        hb_mapper: 1.24.3
+        horizon_nn: 1.1.0
+        runtime: 3.15.55.0
+      calibration_samples: 200
+      host_check:
+        method: Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity;
+          not dataset accuracy or board inference
+        max_absolute_errors:
+        - 1.4901161193847656e-06
+        - 2.86102294921875e-06
+        inputs:
+        - deterministic-random
+        - frozen-calibration-image
+        versions:
+          torch: 2.8.0+cu128
+          timm: 1.0.20
+          onnx: 1.17.0
+          onnxruntime: 1.19.2
+      upstream_data_config:
+        input_size:
+        - 3
+        - 288
+        - 288
+        crop_pct: 0.875
+        crop_mode: center
+        interpolation: bicubic
+      quantization_policy: Compiler default INT8 PTQ with its actual per-node precision
+        policy; float32 output logits
+    validation:
+      artifact_sha256: fd2e4c54191461f1df4ab32f16dca0f05f7d49fbdcbadd8df0aa1aaf7488f2e7
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
+      build_id: efficientnet_b3_ra2_in1k-x5-20261102-r02
+      runtime_variant: timm-b3-ra2-in1k
+      onnx_sha256: ecfa9d4002d501a12f7b9da646d32323e52b81f8891c349a82a57875e7b314c9
+      config_sha256: a1d8198a80a6a6b9f8fe2c49e41ee59e1affef9dc20ec4edb87d055357c9b9a5
+      recipe_sha256: ff872f3806f96533c1cd96bd623a8600e9a8d70fa61e56dca7fcc28d64fe8b43
+      source_checkpoint_sha256: 279d2a53898aa89dab43fd6bd7df9f706aea4cb9cf916223988bbcb8e5850469
+      source_weight_url: https://huggingface.co/timm/efficientnet_b3.ra2_in1k/resolve/0366a75518620e0f2077789202073759f2d61393/model.safetensors
+      checkpoint_revision: 0366a75518620e0f2077789202073759f2d61393
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      toolchain_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      exporter_sha256: 24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b
+      exporter_repository_commit: 954b2c71b774513819ae5715da4f5beb9cea88fc
+      implementation_sha256: 825955eeb0151ac0596519be89489456b66852accc913d02ad9a7e68db8bc6e0
+      calibration_manifest_sha256: e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9
+      calibration_producer_sha256: 425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84
+      precision_policy: int8
+      compile_log_sha256: 5c6ef0511e28021ba49dde7aa55a7dc1ba5ad682e1d271fdef31fe8bb6363225
+      model_info_log_sha256: 4a27d03f0f66b37828f3e288d9c5befcf878c347044edd6f4cb14ab5541fb3ca
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 82ab37a53eebccf9a0ff99c5c6cd6a2caf5c90d7ba8d79a4ce9bb5cc33638adc
+    runtime_command: python3 samples/vision/efficientnet/runtime/python/main.py --target
+      x5 --asset-id x5:efficientnet:efficientnet_b3_ra2_in1k_bayese_224x224_nv12.bin
+      --model-path /path/to/efficientnet_b3_ra2_in1k_bayese_224x224_nv12.bin --test-img
+      /path/to/image.jpg
+- size: b4-ra2-in1k-224
+  model:
+    parameter_count: 19341616
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: x5
+    license:
+      name: Apache-2.0
+      url: https://huggingface.co/timm/efficientnet_b4.ra2_in1k/blob/442c00e15609ff467772913d230768706a406aca/README.md
+      scope: model
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 1
+    artifact:
+      filename: efficientnet_b4_ra2_in1k_bayese_224x224_nv12.bin
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      runtime_dtype: uint8
+      runtime_layout: packed
+      sha256: 3aa041aee0d94b02346413f92ca7c884f1601965cd3f30f4d15fd5b3daf7e8b8
+      size_bytes: 22616053
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/efficientnet/efficientnet_b4_ra2_in1k_bayese_224x224_nv12.bin
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientnet/efficientnet_b4_ra2_in1k_bayese_224x224_nv12/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientnet/efficientnet_b4_ra2_in1k_bayese_224x224_nv12/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientnet/efficientnet_b4_ra2_in1k_bayese_224x224_nv12/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientnet/efficientnet_b4_ra2_in1k_bayese_224x224_nv12/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: output
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        type: nv12
+        color_space: bt601_video
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      preprocessing: Pillow bicubic shorter edge 256, rounded center crop 224; OpenCV
+        NV12 BT.601 video; mapper-fused checkpoint normalization
+      compiler_versions:
+        hbdk: 3.49.15
+        hb_mapper: 1.24.3
+        horizon_nn: 1.1.0
+        runtime: 3.15.55.0
+      calibration_samples: 200
+      host_check:
+        method: Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity;
+          not dataset accuracy or board inference
+        max_absolute_errors:
+        - 2.4437904357910156e-06
+        - 5.245208740234375e-06
+        inputs:
+        - deterministic-random
+        - frozen-calibration-image
+        versions:
+          torch: 2.8.0+cu128
+          timm: 1.0.20
+          onnx: 1.17.0
+          onnxruntime: 1.19.2
+      upstream_data_config:
+        input_size:
+        - 3
+        - 320
+        - 320
+        crop_pct: 0.875
+        crop_mode: center
+        interpolation: bicubic
+      quantization_policy: Compiler default INT8 PTQ with its actual per-node precision
+        policy; float32 output logits
+    validation:
+      artifact_sha256: 3aa041aee0d94b02346413f92ca7c884f1601965cd3f30f4d15fd5b3daf7e8b8
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
+      build_id: efficientnet_b4_ra2_in1k-x5-20261102-r02
+      runtime_variant: timm-b4-ra2-in1k
+      onnx_sha256: adafa6a2436e6d8ffe5f06cedde9f597ad3865906deb426f6491d394e4069f26
+      config_sha256: 01a9aef8482ad097af0c96fd546d8368d6a63c894dc84a36bfc8fd19384f7296
+      recipe_sha256: 6544d7b15a3e37ce987f44399e7b356924cd7e9477043053f91ada6d20008797
+      source_checkpoint_sha256: 8030f9c929ed71a06728db4b61323960e573b463e68f310bd1bfb31ed62cbf91
+      source_weight_url: https://huggingface.co/timm/efficientnet_b4.ra2_in1k/resolve/442c00e15609ff467772913d230768706a406aca/model.safetensors
+      checkpoint_revision: 442c00e15609ff467772913d230768706a406aca
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      toolchain_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      exporter_sha256: 24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b
+      exporter_repository_commit: 954b2c71b774513819ae5715da4f5beb9cea88fc
+      implementation_sha256: 825955eeb0151ac0596519be89489456b66852accc913d02ad9a7e68db8bc6e0
+      calibration_manifest_sha256: e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9
+      calibration_producer_sha256: 425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84
+      precision_policy: int8
+      compile_log_sha256: ebe3365d48f2569225058a8fbe872e55bdcf25495ebffb6e7fb1facd1aff648d
+      model_info_log_sha256: c7beb53e2ff0202008848815f19948ef295d522da4fe5e364c281b50e379a63a
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 0396c2a20abba1c39047dea061f67a2cb641b123945454248501002859d1cec7
+    runtime_command: python3 samples/vision/efficientnet/runtime/python/main.py --target
+      x5 --asset-id x5:efficientnet:efficientnet_b4_ra2_in1k_bayese_224x224_nv12.bin
+      --model-path /path/to/efficientnet_b4_ra2_in1k_bayese_224x224_nv12.bin --test-img
+      /path/to/image.jpg

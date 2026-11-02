@@ -1,0 +1,1220 @@
+{
+  "schema_version": 1,
+  "generated_from_run": "efficientformer_l1_snap_dist_in1k-x5-20261102-r01",
+  "generated_at": "2026-11-02T12:31:05.267231+00:00",
+  "model": {
+    "source": "efficientformer",
+    "family": "efficientformer",
+    "task": "cls",
+    "size": "l1-snap-dist-in1k-224"
+  },
+  "target": {
+    "platform": "x5",
+    "march": "bayes-e"
+  },
+  "toolchain": {
+    "hbdk": "3.49.15",
+    "hb_mapper": "1.24.3",
+    "horizon_nn": "1.1.0",
+    "runtime": "3.15.55.0"
+  },
+  "io": {
+    "inputs": [
+      {
+        "name": "data",
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "dtype": "float32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output",
+        "shape": [
+          1,
+          1000
+        ],
+        "dtype": "float32"
+      }
+    ]
+  },
+  "quantization": {
+    "summary": {
+      "total_nodes": 105,
+      "unit_counts": {
+        "BPU": 105
+      },
+      "dtype_counts": {
+        "int8": 105
+      },
+      "measured_nodes": 105,
+      "weakest_node": {
+        "name": "/stages/stages.3/blocks/blocks.4/norm1/Pow",
+        "cosine": 0.259353
+      },
+      "weakest_nodes": [
+        {
+          "name": "/stages/stages.3/blocks/blocks.4/norm1/Pow",
+          "cosine": 0.259353
+        },
+        {
+          "name": "/stages/stages.3/blocks/blocks.4/norm1/ReduceMean",
+          "cosine": 0.285959
+        },
+        {
+          "name": "...ges/stages.3/blocks/blocks.4/norm1/ReduceMean_1",
+          "cosine": 0.300287
+        },
+        {
+          "name": "/stages/stages.3/blocks/blocks.2/mlp/fc2/Conv",
+          "cosine": 0.424333
+        },
+        {
+          "name": "/stages/stages.2/blocks/blocks.1/mlp/fc2/Conv",
+          "cosine": 0.475203
+        }
+      ],
+      "cosine_percentiles": {
+        "p10": 0.540177,
+        "median": 0.892635
+      }
+    },
+    "nodes": [
+      {
+        "name": "HZ_PREPROCESS_FOR_data",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedPreprocess",
+        "cosine": 0.999937,
+        "threshold": 127.0,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stem/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999765,
+        "threshold": 2.63208,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stem/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999706,
+        "threshold": 20.079,
+        "dtype": "int8"
+      },
+      {
+        "name": "....0/blocks/blocks.0/token_mixer/pool/AveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedAveragePool",
+        "cosine": 0.999948,
+        "threshold": 16.9941,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.0/token_mixer/Sub",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseSub",
+        "cosine": 0.99556,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.0/ls1/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.908931,
+        "threshold": 8.89932,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.0/mlp/fc1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.99264,
+        "threshold": 11.8881,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.0/mlp/act/Mul_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.976651,
+        "threshold": 56.2916,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.0/mlp/fc2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.979389,
+        "threshold": 10.8118,
+        "dtype": "int8"
+      },
+      {
+        "name": "....0/blocks/blocks.1/token_mixer/pool/AveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedAveragePool",
+        "cosine": 0.996544,
+        "threshold": 39.8695,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.1/token_mixer/Sub",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseSub",
+        "cosine": 0.959646,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.1/ls1/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.915894,
+        "threshold": 18.6169,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.1/mlp/fc1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.955271,
+        "threshold": 63.9078,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.1/mlp/act/Mul_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.935923,
+        "threshold": 34.0459,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.1/mlp/fc2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.919765,
+        "threshold": 10.7345,
+        "dtype": "int8"
+      },
+      {
+        "name": "....0/blocks/blocks.2/token_mixer/pool/AveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedAveragePool",
+        "cosine": 0.979591,
+        "threshold": 78.602,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.2/token_mixer/Sub",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseSub",
+        "cosine": 0.904164,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.2/ls1/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.8981,
+        "threshold": 60.8443,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.2/mlp/fc1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.976094,
+        "threshold": 44.6256,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.2/mlp/act/Mul_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.90016,
+        "threshold": 25.2093,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.2/mlp/fc2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.911504,
+        "threshold": 2.02038,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/downsample/conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.965764,
+        "threshold": 42.589,
+        "dtype": "int8"
+      },
+      {
+        "name": "....1/blocks/blocks.0/token_mixer/pool/AveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedAveragePool",
+        "cosine": 0.975941,
+        "threshold": 28.5801,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/blocks/blocks.0/token_mixer/Sub",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseSub",
+        "cosine": 0.954592,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/blocks/blocks.0/ls1/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.915563,
+        "threshold": 22.0603,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/blocks/blocks.0/mlp/fc1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.976903,
+        "threshold": 28.8246,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/blocks/blocks.0/mlp/act/Mul_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.946967,
+        "threshold": 7.36812,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/blocks/blocks.0/mlp/fc2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.936088,
+        "threshold": 1.29693,
+        "dtype": "int8"
+      },
+      {
+        "name": "....1/blocks/blocks.1/token_mixer/pool/AveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedAveragePool",
+        "cosine": 0.97959,
+        "threshold": 36.9511,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/blocks/blocks.1/token_mixer/Sub",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseSub",
+        "cosine": 0.914348,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/blocks/blocks.1/ls1/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.912966,
+        "threshold": 29.8394,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/blocks/blocks.1/mlp/fc1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.985443,
+        "threshold": 22.8638,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/blocks/blocks.1/mlp/act/Mul_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.906385,
+        "threshold": 14.1013,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.1/blocks/blocks.1/mlp/fc2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.892635,
+        "threshold": 1.06514,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/downsample/conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.947491,
+        "threshold": 25.4283,
+        "dtype": "int8"
+      },
+      {
+        "name": "....2/blocks/blocks.0/token_mixer/pool/AveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedAveragePool",
+        "cosine": 0.954275,
+        "threshold": 21.3937,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.0/token_mixer/Sub",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseSub",
+        "cosine": 0.938706,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.0/ls1/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.923882,
+        "threshold": 15.4012,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.0/mlp/fc1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.987385,
+        "threshold": 14.2576,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.0/mlp/act/Mul_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.919846,
+        "threshold": 18.4097,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.0/mlp/fc2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.765444,
+        "threshold": 1.66729,
+        "dtype": "int8"
+      },
+      {
+        "name": "....2/blocks/blocks.1/token_mixer/pool/AveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedAveragePool",
+        "cosine": 0.906529,
+        "threshold": 15.0434,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.1/token_mixer/Sub",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseSub",
+        "cosine": 0.862784,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.1/ls1/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.834421,
+        "threshold": 19.5477,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.1/mlp/fc1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.969061,
+        "threshold": 20.521,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.1/mlp/act/Mul_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.768231,
+        "threshold": 17.3929,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.1/mlp/fc2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.475203,
+        "threshold": 7.08473,
+        "dtype": "int8"
+      },
+      {
+        "name": "....2/blocks/blocks.2/token_mixer/pool/AveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedAveragePool",
+        "cosine": 0.85738,
+        "threshold": 71.9669,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.2/token_mixer/Sub",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseSub",
+        "cosine": 0.665117,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.2/ls1/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.645374,
+        "threshold": 53.7561,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.2/mlp/fc1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.868719,
+        "threshold": 79.6345,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.2/mlp/act/Mul_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.813532,
+        "threshold": 15.8207,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.2/mlp/fc2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.734279,
+        "threshold": 3.64065,
+        "dtype": "int8"
+      },
+      {
+        "name": "....2/blocks/blocks.3/token_mixer/pool/AveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedAveragePool",
+        "cosine": 0.855539,
+        "threshold": 82.5276,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.3/token_mixer/Sub",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseSub",
+        "cosine": 0.530289,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.3/ls1/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.718099,
+        "threshold": 63.0715,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.3/mlp/fc1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.944004,
+        "threshold": 73.0441,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.3/mlp/act/Mul_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.944386,
+        "threshold": 7.02662,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.3/mlp/fc2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.732142,
+        "threshold": 1.30562,
+        "dtype": "int8"
+      },
+      {
+        "name": "....2/blocks/blocks.4/token_mixer/pool/AveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedAveragePool",
+        "cosine": 0.850438,
+        "threshold": 82.7311,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.4/token_mixer/Sub",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseSub",
+        "cosine": 0.743088,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.4/ls1/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.703762,
+        "threshold": 57.6771,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.4/mlp/fc1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.961608,
+        "threshold": 38.2444,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.4/mlp/act/Mul_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.961884,
+        "threshold": 7.13196,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.4/mlp/fc2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.77106,
+        "threshold": 0.565548,
+        "dtype": "int8"
+      },
+      {
+        "name": "....2/blocks/blocks.5/token_mixer/pool/AveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedAveragePool",
+        "cosine": 0.841281,
+        "threshold": 86.9843,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.5/token_mixer/Sub",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseSub",
+        "cosine": 0.79796,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.5/ls1/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.743197,
+        "threshold": 61.3838,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.5/mlp/fc1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.953517,
+        "threshold": 39.7052,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.5/mlp/act/Mul_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.706197,
+        "threshold": 13.4771,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.2/blocks/blocks.5/mlp/fc2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.683821,
+        "threshold": 2.28803,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/downsample/conv/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.844864,
+        "threshold": 35.3453,
+        "dtype": "int8"
+      },
+      {
+        "name": "....3/blocks/blocks.0/token_mixer/pool/AveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedAveragePool",
+        "cosine": 0.877474,
+        "threshold": 10.131,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.0/token_mixer/Sub",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseSub",
+        "cosine": 0.803962,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.0/ls1/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.740514,
+        "threshold": 7.12832,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.0/mlp/fc1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.972234,
+        "threshold": 9.13428,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.0/mlp/act/Mul_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.865823,
+        "threshold": 19.835,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.0/mlp/fc2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.823311,
+        "threshold": 1.39595,
+        "dtype": "int8"
+      },
+      {
+        "name": "....3/blocks/blocks.1/token_mixer/pool/AveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedAveragePool",
+        "cosine": 0.913738,
+        "threshold": 25.7017,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.1/token_mixer/Sub",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseSub",
+        "cosine": 0.761864,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.1/ls1/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.7457,
+        "threshold": 13.4381,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.1/mlp/fc1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.967888,
+        "threshold": 22.5216,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.1/mlp/act/Mul_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.85903,
+        "threshold": 10.3659,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.1/mlp/fc2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.744928,
+        "threshold": 1.84214,
+        "dtype": "int8"
+      },
+      {
+        "name": "....3/blocks/blocks.2/token_mixer/pool/AveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedAveragePool",
+        "cosine": 0.918088,
+        "threshold": 48.771,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.2/token_mixer/Sub",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseSub",
+        "cosine": 0.702642,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.2/ls1/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.668344,
+        "threshold": 30.5094,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.2/mlp/fc1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.914708,
+        "threshold": 59.5172,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.2/mlp/act/Mul_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.73162,
+        "threshold": 12.8968,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.2/mlp/fc2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.424333,
+        "threshold": 2.04649,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.3/Reshape",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Reshape",
+        "cosine": 0.539776,
+        "threshold": 237.364,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.3/Transpose",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Transpose",
+        "cosine": 0.539775,
+        "threshold": 237.364,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.4/norm1/ReduceMean",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedReduceMean",
+        "cosine": 0.285959,
+        "threshold": 237.364,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.4/norm1/Sub",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseSub",
+        "cosine": 0.540177,
+        "threshold": 237.364,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.4/norm1/Pow",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.259353,
+        "threshold": 236.394,
+        "dtype": "int8"
+      },
+      {
+        "name": "...ges/stages.3/blocks/blocks.4/norm1/ReduceMean_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedReduceMean",
+        "cosine": 0.300287,
+        "threshold": 343327.0,
+        "dtype": "int8"
+      },
+      {
+        "name": "...s/stages.3/blocks/blocks.4/norm1/Div_reciprocal",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzLut",
+        "cosine": 0.919841,
+        "threshold": 930.467,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.4/norm1/Div_mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseMul",
+        "cosine": 0.797037,
+        "threshold": 236.394,
+        "dtype": "int8"
+      },
+      {
+        "name": "...stages.3/blocks/blocks.4/token_mixer/qkv/MatMul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.721473,
+        "threshold": 19.4104,
+        "dtype": "int8"
+      },
+      {
+        "name": "...er/qkv/Add_output_0_reshape_transpose_Reshape_0",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Reshape",
+        "cosine": 0.721473,
+        "threshold": 8.04159,
+        "dtype": "int8"
+      },
+      {
+        "name": ".../stages.3/blocks/blocks.4/token_mixer/Transpose",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Transpose",
+        "cosine": 0.721473,
+        "threshold": 8.04159,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.4/token_mixer/Split",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Split",
+        "cosine": 0.730351,
+        "threshold": 8.04159,
+        "dtype": "int8"
+      },
+      {
+        "name": "...tages.3/blocks/blocks.4/token_mixer/Transpose_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Transpose",
+        "cosine": 0.623149,
+        "threshold": 8.04159,
+        "dtype": "int8"
+      },
+      {
+        "name": "...ges/stages.3/blocks/blocks.4/token_mixer/MatMul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedMatmul",
+        "cosine": 0.486258,
+        "threshold": 8.04159,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.3/blocks/blocks.4/token_mixer/Mul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.486258,
+        "threshold": 60.3718,
+        "dtype": "int8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output",
+        "cosine": 0.848815,
+        "l1_distance": 0.443522,
+        "l2_distance": 0.017715,
+        "chebyshev_distance": 1.732671
+      }
+    ]
+  },
+  "subgraphs": [
+    {
+      "name": "main_graph_subgraph_0",
+      "perf": {
+        "fps": 474.87,
+        "latency_ms": 2.11,
+        "ddr_mb_per_frame": 9.122,
+        "bpu_ops_per_frame": 2376354960,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 22,
+        "interval_ms": 0.1,
+        "utilization": [
+          0.865,
+          0.964,
+          0.962,
+          0.954,
+          0.971,
+          0.962,
+          0.97,
+          0.95,
+          0.799,
+          0.396,
+          0.44,
+          0.117,
+          0.365,
+          0.12,
+          0.367,
+          0.073,
+          0.58,
+          0.269,
+          0.316,
+          0.91,
+          0.872,
+          0.0
+        ],
+        "load_bandwidth_mbs": [
+          1144,
+          733,
+          641,
+          1280,
+          3774,
+          5878,
+          5791,
+          5600,
+          4698,
+          5003,
+          5548,
+          5822,
+          6164,
+          6361,
+          6606,
+          6385,
+          4622,
+          3981,
+          5691,
+          3323,
+          401,
+          140
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          48,
+          273,
+          224,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          104,
+          104,
+          524,
+          717
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_1",
+      "perf": {
+        "fps": 998.58,
+        "latency_ms": 1.0,
+        "ddr_mb_per_frame": 3.191,
+        "bpu_ops_per_frame": 209020880,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 11,
+        "interval_ms": 0.1,
+        "utilization": [
+          0.569,
+          0.54,
+          0.432,
+          0.492,
+          0.639,
+          0.709,
+          0.0,
+          0.873,
+          0.997,
+          0.98,
+          0.0
+        ],
+        "load_bandwidth_mbs": [
+          5656,
+          4652,
+          4269,
+          4359,
+          3773,
+          3005,
+          4690,
+          3916,
+          372,
+          0,
+          0
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          3,
+          19
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "latency_ms": 3.11,
+    "fps_derived": 321.54,
+    "ddr_mb_per_frame": 12.313,
+    "bpu_ops_per_frame": 2585375840,
+    "derivation": "latency = sum of subgraph latency; fps_derived = 1000 / latency (sequential subgraph execution assumption); values from hbdk static estimation, not board measurement"
+  },
+  "similarity_provenance": {
+    "stage": "ptq-simulation",
+    "method": "x86 quantized simulation vs float ONNX (hb_mapper makertbin)",
+    "calibration_samples": 200,
+    "source_log": "output/hb_mapper_makertbin.log"
+  },
+  "performance_provenance": {
+    "stage": "compiler-static-estimate",
+    "source": "makertbin-workdir",
+    "method": "hbdk-cc static latency estimate of the compiled release artifact",
+    "note": "Estimates describe the compiled artifact; on-board measurements live in the model benchmark."
+  },
+  "board_measurement": null,
+  "provenance": {
+    "artifact_sha256": "eff4f89b4c1006bbbe0ff729a83028674f6638aa1560e0a1068eb1a98a991b46",
+    "makertbin_log_sha256": "d630d9f89d083019a43a139e08e72b44e78f942cc9107eab92291020b6ef8649",
+    "perf_reports": [
+      {
+        "name": "main_graph_subgraph_0",
+        "sha256": "f319029e188861244b268ace1c14522713feb176fc40dd3d96035396cd170371"
+      },
+      {
+        "name": "main_graph_subgraph_1",
+        "sha256": "31850d26717e5dfefd99cd1f11612c35253aa0a160caeb2409a81591093c561e"
+      }
+    ]
+  }
+}

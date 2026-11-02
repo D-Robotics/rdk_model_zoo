@@ -1036,6 +1036,12 @@ def validate_performance(performance_value: Any, platform_label: str, *, complet
 
 def validate_converted_platform(platform: dict[str, Any], license_info: dict[str, Any], label: str) -> None:
     """Validate a downloadable artifact without claiming unmeasured board results."""
+    if "license" in platform:
+        license_info = require_mapping(platform["license"], f"{label}.license")
+        require_string(license_info.get("name"), f"{label}.license.name")
+        _require_https(license_info.get("url"), f"{label}.license.url")
+        if license_info.get("scope") != "model":
+            raise CatalogError(f"{label}.license.scope must be model")
     if license_info.get("scope") == "sample-code":
         raise CatalogError(f"{label}: converted artifacts require a model license")
     if "runtime_command" in platform:
@@ -1047,8 +1053,10 @@ def validate_converted_platform(platform: dict[str, Any], license_info: dict[str
         if not SHA256_RE.fullmatch(str(provenance.get(key, ""))):
             raise CatalogError(f"{label}.provenance.{key} must identify the actual conversion input")
     validate_commit(provenance.get("repository_commit"), f"{label}.provenance.repository_commit")
-    if not COMMIT_RE.fullmatch(str(provenance.get("checkpoint_revision", ""))):
-        raise CatalogError(f"{label}.provenance.checkpoint_revision must be immutable")
+    checkpoint_revision = str(provenance.get("checkpoint_revision", ""))
+    if not (COMMIT_RE.fullmatch(checkpoint_revision)
+            or checkpoint_revision == "sha256:" + provenance["source_checkpoint_sha256"]):
+        raise CatalogError(f"{label}.provenance.checkpoint_revision must be an immutable revision or the exact checkpoint SHA256")
     _require_https(provenance.get("source_weight_url"), f"{label}.provenance.source_weight_url")
     for key in ("toolchain_image", "toolchain_image_id", "build_id", "precision_policy"):
         require_string(provenance.get(key), f"{label}.provenance.{key}")

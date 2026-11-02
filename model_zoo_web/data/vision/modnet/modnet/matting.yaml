@@ -89,3 +89,151 @@ sourced_benchmarks:
 example_image:
   path: samples/vision/modnet/test_data/bg.jpg
   source: samples/vision/modnet/test_data/bg.jpg
+provider: ZHKKKe / MODNet
+model_license: &id001
+  name: Apache-2.0
+  url: https://github.com/ZHKKKe/MODNet/blob/28165a451e4610c9d77cfdf925a94610bb2810fb/README.md#license
+  scope: model
+variants:
+- size: photographic-portrait-512-20261102
+  model: {}
+  input:
+    width: 512
+    height: 512
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 512
+      - 512
+      scale: 0.00392156862745098
+      mean:
+      - 0.5
+      - 0.5
+      - 0.5
+      std:
+      - 0.5
+      - 0.5
+      - 0.5
+  platforms:
+  - platform: x5
+    license: *id001
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 1
+    artifact:
+      filename: modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin
+      format: bin
+      march: bayes-e
+      runtime_input: featuremap
+      runtime_dtype: float32
+      runtime_layout: NCHW
+      sha256: 5cd47792bb599750b3aecab915f66907f9df1ba0d420e05c75b5a30dc9ddfdac
+      size_bytes: 8000311
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/modnet/modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/modnet/modnet_photographic_portrait_512x512_rgb_bayese_20261102/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/modnet/modnet_photographic_portrait_512x512_rgb_bayese_20261102/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/modnet/modnet_photographic_portrait_512x512_rgb_bayese_20261102/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/modnet/modnet_photographic_portrait_512x512_rgb_bayese_20261102/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: matte
+        shape:
+        - 1
+        - 1
+        - 512
+        - 512
+        dtype: float32
+        layout: NCHW
+        semantics: alpha matte [0,1]
+      runtime_input:
+        name: input
+        shape:
+        - 1
+        - 3
+        - 512
+        - 512
+        dtype: float32
+        layout: NCHW
+        type: featuremap
+        source: ddr
+        color: RGB
+        normalization: (pixel-127.5)/127.5 before resize
+        geometry: INTER_AREA long-side resize to 512, center-pad zeros in normalized
+          domain
+      preprocessing: BGR->RGB; (pixel-127.5)/127.5; long-side INTER_AREA to 512; center
+        zero-pad; float32 NCHW
+      compiler_versions:
+        hbdk: 3.49.15
+        hb_mapper: 1.24.3
+        horizon_nn: 1.1.0
+        runtime: 3.15.55.0
+      calibration_samples: 200
+      host_check:
+        method: Strict pinned checkpoint; native MODNet versus original ONNX-export
+          implementation and ORT CPU; three real inputs plus deterministic random
+          input; not board inference or dataset accuracy
+        passed: true
+        rtol: 0.001
+        atol: 0.0001
+        max_absolute_errors:
+        - 0.00015461444854736328
+        - 0.000125885009765625
+        - 0.0002790689468383789
+        - 1.6510486602783203e-05
+        versions:
+          torch: 2.8.0+cu128
+          onnx_version: 1.17.0
+          onnxruntime: 1.19.2
+      original_oe_reports:
+      - name: main_graph_subgraph_0.html
+        sha256: 63433f47b71c64194c00a69f0aa3f1558cca82d7fc92b2b5895b3d4f79b81f5b
+      - name: main_graph_subgraph_1.html
+        sha256: 36859e47f3af63e1af3d8d6f9c6c67f9ecc3f8201c9ab7847e55b0b81535c87a
+      cpu_fallbacks:
+      - SE Expand between two BPU subgraphs
+    validation:
+      artifact_sha256: 5cd47792bb599750b3aecab915f66907f9df1ba0d420e05c75b5a30dc9ddfdac
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: af893416c091c1763656e1a7b6cefef2c0855ade
+      build_id: modnet-x5-20261102-r02
+      runtime_variant: photographic-portrait-512-20261102
+      source_repository: https://github.com/ZHKKKe/MODNet
+      source_repository_commit: 28165a451e4610c9d77cfdf925a94610bb2810fb
+      checkpoint_revision: sha256:7c22235f0925deba15d4d63e53afcb654c47055bbcd98f56e393ab2584007ed8
+      source_weight_url: https://drive.usercontent.google.com/download?id=1mcr7ALciuAsHCpLnrtG_eop5-EYhbCmz&export=download&confirm=t
+      source_checkpoint_sha256: 7c22235f0925deba15d4d63e53afcb654c47055bbcd98f56e393ab2584007ed8
+      publisher_checkpoint_sha256: null
+      onnx_sha256: 1f8cd24cebf823044b738548969461452c938899964ee05af2f8f5c945798a92
+      config_sha256: 63b28c9ccf9b46c9de187a838cc5c5bf94c7c441dad5f3931e300f7c27f7da34
+      recipe_sha256: ad0f33338ef20a73412e76d23444db7335bccf61c5d5792782a4a1c7061f94e9
+      exporter_sha256: 9236a4400749b29921580bfc58cf5bce84e76f3376849b4690b1158ce3e37258
+      canonical_exporter_sha256: ad0f33338ef20a73412e76d23444db7335bccf61c5d5792782a4a1c7061f94e9
+      implementation_sha256: 0502cad1b7ab0bf2f866179960454c1e63df096390db05e93cb40145dbc26e1f
+      calibration_manifest_sha256: e479be0ee83000e1f58110dab21c015f77ad91e25c96e94d6c538ab987ce33a0
+      calibration_producer_sha256: 9236a4400749b29921580bfc58cf5bce84e76f3376849b4690b1158ce3e37258
+      preprocess_sha256: cfa59cb4735fd9b0c9d01b9f770fb206fdddc4bffb7fcf0bde5354557693dbc6
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      toolchain_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      precision_policy: int8
+      compile_log_sha256: 9d0a4800e88a8416351194435a1488fef55cb114078ee35e0f5b8fec33526b64
+      model_info_log_sha256: 239b44d3fd980643e83adb40dd54dcb7d395602f41c14d791cf8018c44ff574b
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: c34c4a559f3e50a0d0a6a74566a974c60dba7d5f7564e8dc39aedcb8869131ad
+    runtime_command: python3 samples/vision/modnet/runtime/python/main.py --target
+      x5 --asset-id x5:modnet:modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin
+      --model-path /path/to/modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin
+      --test-img /path/to/portrait.jpg

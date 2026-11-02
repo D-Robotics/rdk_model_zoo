@@ -503,3 +503,19 @@ SHA256 与大小后，将制品复制到 `dist-local-candidate/downloads/<id>/`�
 
 输出仅位于被忽略的 `model_zoo_web/dist-local-candidate/`，不能用于发布门禁的替代证明。
 模型制品、完整报告、评测数据和输入清单继续保存在仓库外 workbench。
+
+
+## 可下载、板端待测的转换产物
+
+`status: converted` 沿用 Workbench Guide 第 11 节：固定来源与完整哈希，
+通过浮点图对照、模型校验和真实编译，核对部署输入输出后，可先上传模型。
+板端精度、Runtime 1/2 和 C++ 1/2 均单独记为 `not-run`，不套用历史数据。
+各产物的平台条目可保留自己的 `license.scope: model`；新增权重不能改写
+已有产物许可。官方直链权重没有 Git revision 时，以完整 `sha256:<digest>`
+标识不可变版本，并保留来源与原始许可。
+
+模型仍在 `rdk_<platform>/<source>/`；五份附属文件在
+`assets/rdk_<platform>/<source>/<model-stem>/vN/`。多个 BPU 子图的原始 HTML
+用 `scripts/bundle_oe_html.py` 逐份保留并嵌入报告；全部子图的 JSON 与模型
+SHA 必须一致。上传和匿名回读完成后，使用 `register_converted.py` 登记
+独立规格；普通推理继续使用 Sample 原生下载和 Runtime 命令。
