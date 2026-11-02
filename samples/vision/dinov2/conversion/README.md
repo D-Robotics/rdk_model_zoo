@@ -182,12 +182,13 @@ The exporter validates the ONNX graph and enforces upstream-to-rewrite and upstr
 
 ## Converted artifacts (2026-11-02)
 
-The explicit variant `vits14_224_int16_20261102_o1` currently provides 2 separately compiled O1 HBM artifacts for `s100`, `s100p`. The historical default remains selected when `--variant` and `--asset-id` are omitted. These artifacts passed float graph checks, native conversion, and static HBM IO/march inspection. Board smoke, accuracy, and Python/C++ performance checks are **not-run**; historical measurements do not describe these files.
+The explicit variant `vits14_224_int16_20261102_o1` currently provides 3 separately compiled O1 HBM artifacts for `s100`, `s100p`, `s600`. The historical default remains selected when `--variant` and `--asset-id` are omitted. These artifacts passed float graph checks, native conversion, and static HBM IO/march inspection. Board smoke, accuracy, and Python/C++ performance checks are **not-run**; historical measurements do not describe these files.
 
 | Target | HBM | SHA-256 |
 | --- | --- | --- |
 | s100 | `dinov2_vits14_224_int16_nashe_20261102_o1.hbm` | `40d9654edb2b83b12928a4b23e8f482ec30c415d2389af5e64957d9921a9df1a` |
 | s100p | `dinov2_vits14_224_int16_nashm_20261102_o1.hbm` | `05a94aae2cb7da14a6a0810c7c7e5e5bff604012b943dd66708e4cd9cc224cbe` |
+| s600 | `dinov2_vits14_224_int16_nashp_20261102_o1.hbm` | `e7b720b39d5475d440d8631ba0ac008f230fa28e8a5b1d12d887a60a7cd2c549` |
 
 ```bash
 python3 samples/vision/dinov2/model/download.py --target s100 --variant vits14_224_int16_20261102_o1

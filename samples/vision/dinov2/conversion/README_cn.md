@@ -183,12 +183,13 @@ S100P 改用 `--march nash-m` 与前缀 `dinov2_vits14_224_int16_nashm_20261102_
 
 ## 新转换制品（2026-11-02）
 
-显式版本 `vits14_224_int16_20261102_o1` 当前提供 2 个分别编译的 O1 HBM，目标为 `s100`, `s100p`。不传 `--variant` 或 `--asset-id` 时仍选择历史默认模型。新文件已通过浮点图对照、原装转换及 HBM 输入输出/架构静态检查；板端功能、精度、Python/C++ 性能均为 **not-run**，历史测量数据不适用于这些文件。
+显式版本 `vits14_224_int16_20261102_o1` 当前提供 3 个分别编译的 O1 HBM，目标为 `s100`, `s100p`, `s600`。不传 `--variant` 或 `--asset-id` 时仍选择历史默认模型。新文件已通过浮点图对照、原装转换及 HBM 输入输出/架构静态检查；板端功能、精度、Python/C++ 性能均为 **not-run**，历史测量数据不适用于这些文件。
 
 | Target | HBM | SHA-256 |
 | --- | --- | --- |
 | s100 | `dinov2_vits14_224_int16_nashe_20261102_o1.hbm` | `40d9654edb2b83b12928a4b23e8f482ec30c415d2389af5e64957d9921a9df1a` |
 | s100p | `dinov2_vits14_224_int16_nashm_20261102_o1.hbm` | `05a94aae2cb7da14a6a0810c7c7e5e5bff604012b943dd66708e4cd9cc224cbe` |
+| s600 | `dinov2_vits14_224_int16_nashp_20261102_o1.hbm` | `e7b720b39d5475d440d8631ba0ac008f230fa28e8a5b1d12d887a60a7cd2c549` |
 
 ```bash
 python3 samples/vision/dinov2/model/download.py --target s100 --variant vits14_224_int16_20261102_o1
