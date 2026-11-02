@@ -193,6 +193,16 @@ def resize_with_padding(image: np.ndarray, target_size: int) -> tuple[np.ndarray
     return padded, GeometryContext(height, width, pad_x, pad_y, resized_width, resized_height, target_size)
 
 
+def preprocess_image(image: np.ndarray) -> tuple[np.ndarray, GeometryContext]:
+    """Return the runtime/calibration RGB tensor and its restore geometry."""
+    if image is None:
+        raise ValueError("Input image is None.")
+    rgb = cv2.cvtColor(np.asarray(image), cv2.COLOR_BGR2RGB)
+    normalized = (rgb.astype(np.float32) - 127.5) / 127.5
+    padded, context = resize_with_padding(normalized, REF_SIZE)
+    return np.transpose(padded, (2, 0, 1))[None].astype(np.float32, copy=True), context
+
+
 class MODNetMatting:
     """Extract one portrait matte with a compiled MODNet model.
 
@@ -238,12 +248,7 @@ class MODNetMatting:
         Raises:
             ValueError: The image is None or not an HWC three-channel array.
         """
-        if image is None:
-            raise ValueError("Input image is None.")
-        rgb = cv2.cvtColor(np.asarray(image), cv2.COLOR_BGR2RGB)
-        normalized = (rgb.astype(np.float32) - 127.5) / 127.5
-        padded, context = resize_with_padding(normalized, REF_SIZE)
-        tensor = np.transpose(padded, (2, 0, 1))[None].astype(np.float32, copy=True)
+        tensor, context = preprocess_image(image)
         return PreparedInput({self.binding.input_name: tensor}, context)
 
     def infer(self, tensors: Mapping[str, np.ndarray]) -> np.ndarray:
@@ -337,4 +342,4 @@ class MODNetMatting:
         return self.predict(image)
 
 
-__all__ = ["GeometryContext", "MODNetMatting", "PreparedInput", "resize_with_padding"]
+__all__ = ["GeometryContext", "MODNetMatting", "PreparedInput", "preprocess_image", "resize_with_padding"]

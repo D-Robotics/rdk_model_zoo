@@ -33,6 +33,8 @@ modnet/
 
 Runtime language: Python. Prepare the external model manually before inference.
 
+The public photographic model has a separate [conversion recipe](conversion/README.md). Its new filename `modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin` uses exact asset ID `x5:modnet:modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin`; the historical manual model remains the default. Board performance and accuracy for the new model are pending; the historical table below does not describe it.
+
 <a id="prerequisites"></a>
 ## Prerequisites
 
@@ -48,7 +50,7 @@ python3 -m samples.vision.modnet.runtime.python.main --target x5 \
   --asset-id x5:modnet:modnet_512x512_rgb.bin
 ```
 
-The command reads `test_data/person.jpg`, writes `test_data/matte.png`, and, when `test_data/bg.jpg` exists, writes `test_data/result.png`. Success is exit code `0` and JSON naming the output paths. No downloader can obtain this manual asset; `model/download.py` only prints the exact preparation requirement and exits `2`.
+The command reads `test_data/person.jpg`, writes `test_data/matte.png`, and, when `test_data/bg.jpg` exists, writes `test_data/result.png`. Success is exit code `0` and JSON naming the output paths. No downloader can obtain this manual asset; `model/download.py` reports this legacy manual requirement and exits `2`; an explicitly selected published photographic artifact uses the manifest downloader.
 
 <a id="expected-results"></a>
 ## Expected results

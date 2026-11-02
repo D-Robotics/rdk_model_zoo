@@ -33,6 +33,8 @@ modnet/
 
 本示例没有 C++ 实现。
 
+公开摄影人像模型的独立转换配方见[转换说明](conversion/README_cn.md)。新文件 `modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin` 使用精确 asset ID `x5:modnet:modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin`，与旧手工模型保持独立。新模型的板端性能和精度待补测，后文历史数据不代表新模型。
+
 <a id="prerequisites"></a>
 ## 环境前提
 
@@ -48,7 +50,7 @@ python3 -m samples.vision.modnet.runtime.python.main --target x5 \
   --asset-id x5:modnet:modnet_512x512_rgb.bin
 ```
 
-命令读取 `test_data/person.jpg`，写出 `test_data/matte.png`；当 `test_data/bg.jpg` 存在时同时写出 `test_data/result.png`。成功判断为退出码 `0` 且 JSON 列出输出路径。该 manual 制品没有可用下载器；`model/download.py` 只打印精确准备要求并返回 `2`。
+命令读取 `test_data/person.jpg`，写出 `test_data/matte.png`；当 `test_data/bg.jpg` 存在时同时写出 `test_data/result.png`。成功判断为退出码 `0` 且 JSON 列出输出路径。该 manual 制品没有可用下载器；`model/download.py` 对旧手工模型打印准备要求并返回 `2`；显式选择已发布摄影人像制品时通过清单下载。
 
 <a id="expected-results"></a>
 ## 预期结果

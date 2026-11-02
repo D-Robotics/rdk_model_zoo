@@ -1,7 +1,7 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Manual MODNet asset preparation; the manifest has no URL or publisher hash."""
+"""Prepare the legacy manual MODNet or an explicitly selected converted asset."""
 
 from __future__ import annotations
 
@@ -23,8 +23,16 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     if args.asset_id != ASSET_ID:
-        print(f"error: expected exact asset-id {ASSET_ID}")
-        return 2
+        from samples.vision.modnet.runtime.python.cli import resolve_selection
+        from utils.py_utils.assets import download_asset
+        try:
+            selection = resolve_selection(args.target, asset_id=args.asset_id)
+            digest = download_asset(selection.asset, args.output_dir / selection.asset.filename)
+            print(f"Downloaded {selection.asset.reference}; SHA-256: {digest}")
+            return 0
+        except (OSError, ValueError) as exc:
+            print(f"error: {exc}")
+            return 2
     print(
         "MODNet is a manual asset: no public URL and sha256: null (unknown). "
         f"Obtain the external model and place it at {args.output_dir / 'modnet_512x512_rgb.bin'}; "

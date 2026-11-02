@@ -39,13 +39,22 @@ python3 -m samples.vision.modnet.runtime.python.main --target x5 \
 
 Success is exit code `0`, `matte_path` in the JSON, and a written uint8 matte. The default background is composited to `test_data/result.png` when readable. `bash samples/vision/modnet/runtime/python/run.sh --target x5 --asset-id x5:modnet:modnet_512x512_rgb.bin` is equivalent.
 
+Once the photographic artifact is registered and downloaded, select its exact asset ID; omission still selects the legacy manual model. Preview its contract without loading the SDK:
+
+```bash
+python3 -m samples.vision.modnet.runtime.python.main --target x5 --dry-run \
+  --asset-id x5:modnet:modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin
+```
+
+Remove `--dry-run` for board inference with the same RGB float32 NCHW normalization/resize/padding protocol. Board execution of this new artifact remains pending.
+
 <a id="parameters"></a>
 ## Parameters
 
 | option | default | meaning |
 |---|---|---|
 | `--target` | `auto` | resolves the only published target, X5 |
-| `--asset-id` | `null` | exact manual identity, required with external model path |
+| `--asset-id` | `null` | exact artifact identity, required with external model path |
 | `--model-path` | `null` | existing external model path; no download |
 | `--test-img` | `samples/vision/modnet/test_data/person.jpg` | BGR input image |
 | `--bg-img` | `samples/vision/modnet/test_data/bg.jpg` | optional BGR background; missing file skips composite |

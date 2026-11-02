@@ -26,7 +26,7 @@ model/
 <a id="preparation"></a>
 ## 准备步骤
 
-active 清单没有公开 URL。通过授权模型提供方取得外部模型，确认身份为 `x5:modnet:modnet_512x512_rgb.bin`，并放到 `samples/vision/modnet/model/modnet_512x512_rgb.bin`。下方准备命令会提示模型放置位置：
+历史手工制品没有公开 URL。通过授权模型提供方取得外部模型，确认身份为 `x5:modnet:modnet_512x512_rgb.bin`，并放到 `samples/vision/modnet/model/modnet_512x512_rgb.bin`。下方准备命令会提示模型放置位置：
 
 ```bash
 # cwd：仓库根目录
@@ -36,6 +36,17 @@ python3 -m samples.vision.modnet.model.download \
 ```
 
 它会打印手工准备要求并返回 `2`；由于没有 URL，这是预期行为。
+
+### 公开摄影人像制品
+
+新制品使用 `x5:modnet:modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin`，文件为 `modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin`。完成清单登记后按以下命令获取；URL 和 SHA-256 以平台清单为准，下载器会校验已有文件，不覆盖旧模型。
+
+```bash
+python3 -m samples.vision.modnet.model.download --target x5 \
+  --asset-id x5:modnet:modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin
+```
+
+公开权重与模型采用上游 Apache-2.0；精确源码、权重摘要和预处理见[转换说明](../conversion/README_cn.md)。板端性能和抠像精度待补测。
 
 <a id="accompanying-files"></a>
 ## 伴随文件
@@ -51,4 +62,4 @@ python3 -m samples.vision.modnet.model.download \
 <a id="formats-checksums"></a>
 ## 格式与校验值
 
-期望制品是 X5 `bin` 部署模型。清单记录 `url: null` 和 `sha256: null (unknown)`。任何本地观测都不视为发布者认证。
+期望制品是 X5 `bin` 部署模型。旧条目记录 `url: null` 和 `sha256: null (unknown)`。任何本地观测都不视为发布者认证。
