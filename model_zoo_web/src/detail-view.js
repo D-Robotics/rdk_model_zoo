@@ -213,7 +213,7 @@
     const [sample, family, task] = String(model.catalogId || '').split('/');
     if (sample === 'osnet' && task === 'reid' && asset?.filename) {
       const command = `python3 samples/vision/osnet/runtime/python/main.py \\\n  --target ${String(model.releasePlatform).toLowerCase()} --variant ${model.runtimeVariant || 'spatial-rgb-late8'} \\\n  --model-path /path/to/${asset.filename} \\\n  --test-img /path/to/person_crop.jpg --output feature.npy`;
-      return `<section class="mz-section mz-quickstart"><div class="mz-section-heading"><h2>快速上手</h2></div><p>将下载的模型和行人裁剪图路径代入命令。输出为 L2 归一化的 512 维特征。</p><div class="mz-code"><pre><code data-no-i18n>${esc(command)}</code></pre><button type="button" class="mz-copy" data-copy-code aria-label="复制命令" title="复制命令">${icon('copy')}</button></div></section>`;
+      return `<section class="mz-section mz-quickstart"><div class="mz-section-heading"><h2>快速上手</h2></div><div class="mz-code"><pre><code data-no-i18n>${esc(command)}</code></pre><button type="button" class="mz-copy" data-copy-code aria-label="复制命令" title="复制命令">${icon('copy')}</button></div></section>`;
     }
     if (sample !== 'ultralytics_yolo' || !asset?.url || !model.releasePlatform || !family || !task) return '';
     const root = 'samples/vision/ultralytics_yolo';

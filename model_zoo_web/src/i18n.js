@@ -73,7 +73,6 @@
     '图像分类': 'Image classification',
     '行人重识别': 'Person re-identification',
     '示例源码': 'Sample source',
-    '将下载的模型和行人裁剪图路径代入命令。输出为 L2 归一化的 512 维特征。': 'Replace the paths with your downloaded model and person crop. The output is a 512-dimensional L2-normalized feature.',
     '旋转框检测': 'Oriented object detection',
     '实例分割': 'Instance segmentation',
     '语义分割': 'Semantic segmentation',
