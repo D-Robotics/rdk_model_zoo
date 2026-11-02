@@ -16,6 +16,7 @@ PUBLISHED_FILENAMES = (
     "ConvNeXt_atto_224x224_nv12.bin",
     "ConvNeXt_nano_224x224_nv12.bin",
     "ConvNeXt_pico_224x224_nv12.bin",
+    "convnext_atto_d2_bayese_224x224_nv12.bin",
     "ConvNeXt_femto_224x224_nv12.bin",
 )
 
@@ -50,6 +51,7 @@ class EntrypointTests(unittest.TestCase):
             ("x5", "nano", "224x224"),
             ("x5", "pico", "224x224"),
             ("x5", "femto", "224x224"),
+            ("x5", "atto-d2", "224x224"),
         )
         for target, variant, geometry in cases:
             with self.subTest(target=target, variant=variant):

@@ -11,8 +11,8 @@ the ONNX references are mutually inconsistent (atto points at
 ``convnext_femto.onnx``, femto at an external common-zoo ``convnext_atto.onnx``
 path, nano at ``convnext_pico.onnx``), and the shared output prefix is
 variant-less (``ConvNeXt-deploy_224x224_nv12``), so reproducing the published
-atto artifact needs an explicit rename step.  No exporter script and no
-``calibration_data_rgb_f32`` producer ship with the delivery.
+atto artifact needs an explicit rename step.  The historical delivery contained no exporter or calibration producer.
+The new Atto D2 exporter, producer and recipe are maintained separately.
 """
 
 from __future__ import annotations
@@ -61,7 +61,7 @@ class ProvenanceTests(unittest.TestCase):
     def test_conversion_directory_is_exactly_the_source_set(self):
         names = sorted(p.name for p in CONVERSION.iterdir() if p.suffix in {".yaml", ".py"})
         self.assertEqual(
-            names, sorted(VERBATIM_SHA256),
+            names, sorted([*VERBATIM_SHA256, "convnext_atto_d2_x5.yaml", "export.py", "prepare_calibration.py"]),
             "the conversion set must change only together with its provenance pins",
         )
 
@@ -129,12 +129,13 @@ class RecipeConsistencyTests(unittest.TestCase):
                 "ConvNeXt_femto_224x224_nv12.bin",
                 "ConvNeXt_nano_224x224_nv12.bin",
                 "ConvNeXt_pico_224x224_nv12.bin",
+                "convnext_atto_d2_bayese_224x224_nv12.bin",
             ],
         )
         self.assertEqual(BINDING_TABLE.default_variant, "atto")
         self.assertEqual(
             set(BINDING_TABLE.filename_variants.values()),
-            {"atto", "femto", "nano", "pico"},
+            {"atto", "femto", "nano", "pico", "atto-d2"},
         )
         self.assertTrue((CONVERSION / "ConvNeXt_femto.yaml").is_file())
         self.assertTrue((CONVERSION / "ConvNeXt_nano.yaml").is_file())
@@ -156,18 +157,13 @@ class RecipeConsistencyTests(unittest.TestCase):
                 self.assertNotIn("debug_mode", text)
                 self.assertNotIn("set_all_nodes_int16", text)
 
-    def test_no_exporter_or_calibration_producer_is_claimed(self):
-        """The X5 delivery ships reference configs only: no exporter script
-        for the ONNX inputs and no producer for ``calibration_data_rgb_f32``
-        exists in this directory, and the test set must stay that way."""
-
-        py_files = sorted(p.name for p in CONVERSION.glob("*.py"))
-        self.assertEqual(py_files, [])
-        self.assertFalse(
-            (CONVERSION / "calibration_data_rgb_f32").exists(),
-            "no producer ships for this directory; checked-in data would "
-            "fake a reproducible pipeline",
-        )
+    def test_new_flow_has_separate_exporter_recipe_and_no_checked_in_dataset(self):
+        self.assertEqual(sorted(p.name for p in CONVERSION.glob("*.py")),
+                         ["export.py", "prepare_calibration.py"])
+        self.assertFalse((CONVERSION / "calibration_rgb_f32").exists())
+        recipe = _yaml_text("convnext_atto_d2_x5.yaml")
+        self.assertIn("convnext_atto_d2_224x224.onnx", recipe)
+        self.assertIn("input_space_and_range: bt601_video", recipe)
 
 
 if __name__ == "__main__":

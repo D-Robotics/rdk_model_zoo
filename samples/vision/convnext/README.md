@@ -70,9 +70,10 @@ unpublished combination.
 | ConvNeXt-nano | 224x224 | ✓ | — | — | — |
 | ConvNeXt-pico | 224x224 | ✓ | — | — | — |
 | ConvNeXt-femto | 224x224 | ✓ | — | — | — |
+| ConvNeXt-atto-d2 (converted / 板端待测) | 224x224 | ✓ | — | — | — |
 
 Runtime coverage: the Python CLI serves the published combinations with
-`--target auto|x5` and `--variant atto|nano|pico|femto`. The default
+`--target auto|x5` and `--variant atto|nano|pico|femto|atto-d2`. The default
 variant is `atto`. `--target s100`, `s100p` and `s600` resolve no asset.
 The sample ships no C++ runtime.
 
@@ -172,3 +173,21 @@ source models are the upstream ConvNeXt distribution
 ([facebookresearch/ConvNeXt](https://github.com/facebookresearch/ConvNeXt));
 upstream model/weights licensing is governed by that distribution.
 Published artifact use follows the applicable platform release terms.
+
+## Atto D2 converted artifact (2026-11-02)
+
+`atto-d2` is a separate conversion of [timm/convnext_atto.d2_in1k](https://huggingface.co/timm/convnext_atto.d2_in1k/tree/435c0a8d02d5b872e90c8cde36887465982cb399) (Apache-2.0), pinned to `435c0a8d02d5b872e90c8cde36887465982cb399`. The default `atto` and the four historical artifacts retain their identities and measurements.
+
+The new 4,528,264-byte BIN has SHA-256 `c334e6c87ae202a0ef8d78b4506ecdab7fafb4684ce720fc4407f9bf990ea101`. Export and host PyTorch/ONNX comparison passed; board smoke, accuracy, Runtime 1/2 and C++ 1/2 are **not-run**. Historical performance tables do not describe this file. Its preprocessing is Pillow bicubic resize (shorter edge 256), rounded center crop 224, then OpenCV BT.601 video-range NV12. Mapper fuses ImageNet normalization. Output is float32 logits for 1,000 classes; runtime applies softmax. Pillow is required for this variant.
+
+```bash
+# From the repository root; download and verify the registered artifact.
+python3 samples/vision/convnext/model/download.py --target x5 --variant atto-d2
+# Inspect the contract on a host; no SDK, download or board inference.
+python3 samples/vision/convnext/runtime/python/main.py --target x5 --variant atto-d2 --dry-run
+# On a prepared X5 board; not executed for this converted-only release.
+python3 samples/vision/convnext/runtime/python/main.py \
+  --target x5 --asset-id x5:convnext:convnext_atto_d2_bayese_224x224_nv12.bin \
+  --model-path samples/vision/convnext/model/convnext_atto_d2_bayese_224x224_nv12.bin \
+  --test-img samples/vision/convnext/test_data/cheetah.JPEG
+```

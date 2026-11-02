@@ -30,7 +30,7 @@ class BindingTableTests(unittest.TestCase):
         )
 
         records = list_available_assets("auto")
-        self.assertEqual(len(records), 4)
+        self.assertEqual(len(records), 5)
         table = self._table()
         for record in records:
             self.assertEqual(
@@ -57,6 +57,7 @@ class BindingTableTests(unittest.TestCase):
                 "ConvNeXt_femto_224x224_nv12.bin",
                 "ConvNeXt_nano_224x224_nv12.bin",
                 "ConvNeXt_pico_224x224_nv12.bin",
+                "convnext_atto_d2_bayese_224x224_nv12.bin",
             ],
         )
 
@@ -111,6 +112,7 @@ class BindingTableTests(unittest.TestCase):
             ('nano', 'x5'): (224, 224, 'softmax', 'source_declared_logits', 1, 'linear'),
             ('pico', 'x5'): (224, 224, 'softmax', 'source_declared_logits', 1, 'linear'),
             ('femto', 'x5'): (224, 224, 'softmax', 'source_declared_logits', 1, 'linear'),
+            ('atto-d2', 'x5'): (224, 224, 'softmax', 'source_declared_logits', 2, 'linear'),
         }
         self.assertEqual(set(expected), set(self._table().facts))
         for (variant, target), (height, width, policy, semantics, resize, interp) in expected.items():
@@ -126,6 +128,8 @@ class BindingTableTests(unittest.TestCase):
             self.assertEqual(
                 contract.resize_interpolation, interp, f"{variant}/{target} interp"
             )
+            if variant == "atto-d2":
+                self.assertEqual(contract.resize_shorter, 256)
             self.assertEqual(contract.class_count, 1000)
             self.assertEqual(contract.output_transform, "raw_f32")
             self.assertEqual(contract.input_protocol, "packed_nv12")

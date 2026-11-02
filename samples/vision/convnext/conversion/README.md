@@ -2,203 +2,73 @@ English | [简体中文](README_cn.md)
 
 # ConvNeXt conversion
 
-This directory provides the conversion assets for rebuilding the RDK X5
-deployment models of the ConvNeXt sample: three reference PTQ YAMLs
-(`ConvNeXt_atto.yaml`, `ConvNeXt_femto.yaml`, `ConvNeXt_nano.yaml`).
-The `atto` YAML maps to the manifest-backed variant; `femto` and `nano` are additional build variants. Before compiling, prepare variant-matched ONNX graphs and calibration data at the YAML paths, then run the OE commands below.
+## Reproducible Atto D2 X5 recipe
 
-<a id="source-model"></a>
-## Source model
+The maintained recipe `convnext_atto_d2_x5.yaml` builds a **new** artifact from
+[timm/convnext_atto.d2_in1k](https://huggingface.co/timm/convnext_atto.d2_in1k/tree/435c0a8d02d5b872e90c8cde36887465982cb399)
+(Apache-2.0), revision `435c0a8d02d5b872e90c8cde36887465982cb399`.
+The weight SHA-256 is `0f70bc49f1896c8c15af857d2d1d418abfaf097a62b4e29a35e6e65b752f5953`.
+The small Atto/Femto/Pico/Nano variants are timm extensions to the ConvNeXt
+architecture from [A ConvNet for the 2020s](https://arxiv.org/abs/2201.03545).
 
-ConvNeXt (paper [A ConvNet for the 2020s](https://arxiv.org/abs/2201.03545),
-reference implementation
-[facebookresearch/ConvNeXt](https://github.com/facebookresearch/ConvNeXt)).
-The atto/femto/nano sizes come from the official ConvNeXt size ladder. The
-YAMLs' `onnx_model` entries do **not** line up with their own variant names
-(see gap 1); verify the ONNX provenance of every config before compiling,
-with the current file values listed in [Additional preparation](#known-gaps).
-
-<a id="directory"></a>
-## Directory structure
-
-```text
-conversion/
-├── ConvNeXt_atto.yaml  # Configuration
-├── ConvNeXt_femto.yaml  # Configuration
-├── ConvNeXt_nano.yaml  # Configuration
-├── README.md  # English instructions
-└── README_cn.md  # Chinese instructions
-```
-
-<a id="toolchain-targets"></a>
-## Toolchain and targets
-
-Run model conversion on an x86 Linux host inside the RDK X5 OpenExplorer
-Docker (march `bayes-e`). Prepare the toolchain with
-`hb_mapper`, `hb_perf`, and `hrt_model_exec`; offline Docker images are
-available from the D-Robotics developer forum
-([topic 35229](https://forum.d-robotics.cc/t/topic/35229)).
-
-<a id="export"></a>
-## Export
-
-Export the selected ConvNeXt variant to ONNX with the official repository
-or a compatible pipeline, then set the selected YAML `onnx_model` field
-to that graph before running `hb_mapper`. Note that the three YAMLs point at **different and
-cross-swapped** files — the atto config consumes
-`./convnext_femto.onnx`, the femto config points at
-`../../../01_common/model_zoo/mapper/classification/ConvNeXt/convnext_atto.onnx`
-(a path outside this sample), and the nano config points at
-`./convnext_pico.onnx` (a size not otherwise present in this directory).
-
-### ONNX export example
-
-Run this example in the x86 export environment with PyTorch installed. The simplification step also requires `onnxsim`. Match the exported filename to `onnx_model` in the selected YAML.
-
-The onnx model is transformed using models from the timm library (PyTorch Image Models). Install the required packages using the following command:
-
-```shell
-pip install timm onnx
-```
-
-Model transformation takes convnext_atto as an example, and the other three models are the same:
-
-```Python
-import torch
-import torch.onnx
-import onnx
-from onnxsim import simplify
-from timm.models import create_model
-
-from timm.models.convnext import convnext_atto, convnext_femto, convnext_pico, convnext_tiny
-
-def count_parameters(onnx_model_path):
-    # Load the ONNX model
-    model = onnx.load(onnx_model_path)
-    # Get the initializers (weights in the model)
-    initializer = model.graph.initializer
-
-    # Calculate the total number of parameters
-    total_params = 0
-    for tensor in initializer:
-        # Get the dimensions of each weight
-        dims = tensor.dims
-        # Calculate the number of parameters in this weight (product of all dimensions)
-        params = 1
-        for dim in dims:
-            params *= dim
-        total_params += params
-
-    return total_params
-
-if __name__ == "__main__":
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = create_model('convnext_atto', pretrained=True)
-    model.eval()
-
-    # print the model structure
-
-    dummy_input = torch.randn(1, 3, 224, 224, device="cpu")
-    onnx_file_path = "convnext_atto.onnx"
-
-    torch.onnx.export(
-        model,
-        dummy_input,
-        onnx_file_path,
-        opset_version=11,
-        verbose=True,
-        input_names=["data"],  # Input name
-        output_names=["output"],  # Output name
-    )
-
-    # Simplify the ONNX model
-    model_simp, check = simplify(onnx_file_path)
-
-    if check:
-        print("Simplified model is valid.")
-        simplified_onnx_file_path = "convnext_atto.onnx"
-        onnx.save(model_simp, simplified_onnx_file_path)
-        print(f"Simplified model saved to {simplified_onnx_file_path}")
-    else:
-        print("Simplified model is invalid!")
-
-    onnx_model_path = simplified_onnx_file_path  # Replace with your ONNX model path
-    total_params = count_parameters(onnx_model_path)
-    print(f"Total number of parameters in the model: {total_params}")
-```
-
-<a id="calibration"></a>
-## Calibration
-
-All three YAMLs expect `./calibration_data_rgb_f32` (float32 RGB `.npy`) and use `calibration_type: 'default'`. Prepare 224x224 inputs using mean `123.675 116.28 103.53` and scale `0.01712475 0.017507 0.01742919`.
-
-<a id="compile"></a>
-## Compile
-
-In the OE environment, with both inputs prepared (atto shown), first
-verify the ONNX model, then build the deployment model:
+`export.py` loads local safetensors strictly without downloading a changing
+`pretrained=True` checkpoint. It exports fixed 1×3×224×224 RGB float32 ONNX
+(opset 11), simplifies/checks the graph and compares logits against PyTorch
+with ONNX Runtime CPU on one deterministic input. The adjacent `.export.json`
+records input, output, source hashes and versions. This is a host graph check,
+not ImageNet accuracy or board inference.
 
 ```bash
-# cwd: this conversion directory
-# input: the YAML's onnx_model target (see gap 1 — as delivered this is
-#        ./convnext_femto.onnx for the atto config) + ./calibration_data_rgb_f32
-# output: working_dir 'ConvNeXt-deploy_224x224_nv12', emitted
-#         ConvNeXt-deploy_224x224_nv12.bin — rename required, see gaps
-hb_mapper checker --config ConvNeXt_atto.yaml
-hb_mapper makertbin --config ConvNeXt_atto.yaml
+# Repository root, export environment: torch 2.8.0, timm 1.0.20,
+# safetensors, onnx 1.17.0, onnxsim 0.4.36, onnxruntime 1.19.2.
+python3 samples/vision/convnext/conversion/export.py --variant atto \
+  --checkpoint /path/to/pinned/model.safetensors \
+  --output /path/to/run/convnext_atto_d2_224x224.onnx
+python3 samples/vision/convnext/conversion/prepare_calibration.py \
+  --images /path/to/frozen/images --count 200 \
+  --output /path/to/run/calibration_rgb_f32
+cp samples/vision/convnext/conversion/convnext_atto_d2_x5.yaml /path/to/run/compile.yaml
+# X5 OE container, cwd /path/to/run; resolve recipe paths inside this container.
+hb_mapper checker --model convnext_atto_d2_224x224.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+hb_model_info compiled/convnext_atto_d2_bayese_224x224_nv12.bin
+hb_perf compiled/convnext_atto_d2_bayese_224x224_nv12.bin
 ```
 
-Repeat the same workflow with `ConvNeXt_femto.yaml` or
-`ConvNeXt_nano.yaml` to convert the other variants.
+Use the already provisioned X5 image
+`registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8` on x86 Linux.
+The observed tools are hb_mapper 1.24.3, hbdk 3.49.15 and HBRT 3.15.55.0.
+The target is `bayes-e` (X5); no S100/S100P/S600 conversion is claimed.
 
-All three YAMLs share the deployment protocol `march: bayes-e`, runtime
-input `nv12`, training input `rgb` with `NCHW` layout, normalization
-`data_mean_and_scale`, and prefix `ConvNeXt-deploy_224x224_nv12`. They set
-`compile_mode: 'latency'` / `optimize_level: 'O3'` and place
-depthwise/normalization nodes on the BPU with int16 I/O via `node_info`
-(8 placements in atto, 5 in femto, 8 in nano; no Softmax placements —
-ConvNeXt has no attention softmax). None carries `debug_mode` or
-`set_all_nodes_int16`. Before conversion, confirm `onnx_model`,
-`cal_data_dir`, `working_dir`, and `output_model_file_prefix` in the
-selected YAML.
+## Calibration and runtime contract
 
-<a id="validation"></a>
-## Validation
+`prepare_calibration.py` freezes a sorted image set and writes raw float32
+RGB/NCHW tensors using `numpy.tofile` (`.rgb`, **not** `.npy`). Values remain
+0–255. It uses the same Pillow bicubic shorter-edge 256 / rounded center crop
+224 geometry as the native `atto-d2` runtime. Mapper fuses ImageNet mean/scale;
+do not normalize twice. The adjacent manifest records source/tensor hashes,
+count and producer identity. Keep calibration images/tensors private.
 
-Inspect the compiled model on the x86 host:
+The recipe declares BT.601 video-range NV12 runtime input, matching OpenCV's
+native conversion, and float32 1,000-class logits output. It uses default PTQ,
+latency/O3 and the unique output prefix `convnext_atto_d2_bayese_224x224_nv12`.
+The emitted file is registered separately as native variant `atto-d2`.
+See [model artifacts](../model/README.md) and [runtime](../runtime/python/README.md).
 
-```bash
-# cwd: this conversion directory; input: the emitted .bin (see gap 3 for
-# the rename to the manifest name)
-hb_perf model_perf \
-    --model ./ConvNeXt-deploy_224x224_nv12.bin \
-    --input-shape data 1x3x224x224
-```
+## Acceptance and publication
 
-```bash
-# cwd: this conversion directory
-hrt_model_exec perf \
-    --model_file ./ConvNeXt-deploy_224x224_nv12.bin \
-    --thread_num 1
-```
+The 2026-11-02 conversion passed checker/compiler and host graph comparison.
+The model is **converted**, with board smoke, accuracy, Runtime 1/2 concurrency,
+and C++ 1/2 streams all **not-run**. `hb_perf` and OE HTML contain compiler
+estimates only; they must not populate board benchmarks. Publish the BIN and
+SHA256SUMS under `rdk_model_zoo_web/rdk_x5/convnext/`; store versioned companions
+under `rdk_model_zoo_web/assets/rdk_x5/convnext/<model-stem>/v1/`.
 
-The functional check on board is the sample runtime
-(`python3 samples/vision/convnext/runtime/python/main.py --target x5
---asset-id x5:convnext:ConvNeXt_atto_224x224_nv12.bin ...`, see
-[runtime/python/README.md](../runtime/python/README.md)). The expected
-runtime protocol is NV12 input at 224x224 and an F32 `1x1000x1x1` output.
+## Historical reference recipes
 
-<a id="artifacts"></a>
-## Conversion files
-
-The three YAML files define the variants, input paths and X5 compiler settings summarized above.
-
-<a id="known-gaps"></a>
-## Additional preparation
-
-Before compiling, match each graph to its selected YAML and variant:
-
-- The current `onnx_model` values are atto → `./convnext_femto.onnx`, femto → `../../../01_common/model_zoo/mapper/classification/ConvNeXt/convnext_atto.onnx`, and nano → `./convnext_pico.onnx`. Export or select the corresponding atto/femto/nano graph, then set the selected YAML's `onnx_model` to that file.
-- Prepare `./calibration_data_rgb_f32` as float32 RGB `.npy` data using `calibration_type: 'default'`, mean `123.675 116.28 103.53`, scale `0.01712475 0.017507 0.01742919`, and 224x224 inputs.
-- Each YAML uses `output_model_file_prefix: 'ConvNeXt-deploy_224x224_nv12'`. The emitted file is `ConvNeXt-deploy_224x224_nv12.bin`; use an isolated output directory for each variant and give the selected artifact its manifest filename before deployment. The manifest lists atto as the downloadable variant.
-- Run the OE checker and compiler commands above with the YAML that matches the graph and calibration data.
+`ConvNeXt_atto.yaml`, `ConvNeXt_femto.yaml` and `ConvNeXt_nano.yaml` remain
+verbatim `rdk_x5@ac11571` historical references. Their ONNX paths are cross-swapped
+(atto → femto, femto → external atto, nano → pico), and all share the output
+prefix `ConvNeXt-deploy_224x224_nv12`. They cannot identify the new Atto D2 BIN.
+The four historical manifest files and their recorded measurements remain
+unchanged. Do not use those historical metrics for the newly converted file.

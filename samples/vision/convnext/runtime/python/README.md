@@ -150,3 +150,21 @@ steps.
 | `model_path requires --asset-id` | Pass the exact qualified reference from `--list-models` with `--asset-id`. |
 | input shape or dtype mismatch | Check that the artifact reference, target and tensor metadata match the sample contract. |
 | output differs from a reference run | Compare the same artifact, image, resize mode, Top-K, and raw output before changing score semantics. |
+
+## Atto D2 converted artifact (2026-11-02)
+
+`atto-d2` is a separate conversion of [timm/convnext_atto.d2_in1k](https://huggingface.co/timm/convnext_atto.d2_in1k/tree/435c0a8d02d5b872e90c8cde36887465982cb399) (Apache-2.0), pinned to `435c0a8d02d5b872e90c8cde36887465982cb399`. The default `atto` and the four historical artifacts retain their identities and measurements.
+
+The new 4,528,264-byte BIN has SHA-256 `c334e6c87ae202a0ef8d78b4506ecdab7fafb4684ce720fc4407f9bf990ea101`. Export and host PyTorch/ONNX comparison passed; board smoke, accuracy, Runtime 1/2 and C++ 1/2 are **not-run**. Historical performance tables do not describe this file. Its preprocessing is Pillow bicubic resize (shorter edge 256), rounded center crop 224, then OpenCV BT.601 video-range NV12. Mapper fuses ImageNet normalization. Output is float32 logits for 1,000 classes; runtime applies softmax. Pillow is required for this variant.
+
+```bash
+# From the repository root; download and verify the registered artifact.
+python3 samples/vision/convnext/model/download.py --target x5 --variant atto-d2
+# Inspect the contract on a host; no SDK, download or board inference.
+python3 samples/vision/convnext/runtime/python/main.py --target x5 --variant atto-d2 --dry-run
+# On a prepared X5 board; not executed for this converted-only release.
+python3 samples/vision/convnext/runtime/python/main.py \
+  --target x5 --asset-id x5:convnext:convnext_atto_d2_bayese_224x224_nv12.bin \
+  --model-path samples/vision/convnext/model/convnext_atto_d2_bayese_224x224_nv12.bin \
+  --test-img samples/vision/convnext/test_data/cheetah.JPEG
+```

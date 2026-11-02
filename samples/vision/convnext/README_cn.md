@@ -59,6 +59,7 @@ convnext/
 | ConvNeXt-nano | 224x224 | ✓ | — | — | — |
 | ConvNeXt-pico | 224x224 | ✓ | — | — | — |
 | ConvNeXt-femto | 224x224 | ✓ | — | — | — |
+| ConvNeXt-atto-d2 (converted / 板端待测) | 224x224 | ✓ | — | — | — |
 
 运行时覆盖：Python CLI 通过 `--target auto|x5` 和 `--variant
 atto|nano|pico|femto` 运行已发布组合。缺省变体为 `atto`。`--target
@@ -154,3 +155,21 @@ nano 与 femto 在 [conversion/](conversion/README_cn.md) 里有参考 PTQ
 
 样例代码遵循仓库顶层 LICENSE（Apache-2.0）。源模型与权重遵循上游 ConvNeXt 发行版
 （[facebookresearch/ConvNeXt](https://github.com/facebookresearch/ConvNeXt)）的许可。已发布制品按平台发布 Manifest 提供。
+
+## Atto D2 已转换产物（2026-11-02）
+
+`atto-d2` 是单独转换的 [timm/convnext_atto.d2_in1k](https://huggingface.co/timm/convnext_atto.d2_in1k/tree/435c0a8d02d5b872e90c8cde36887465982cb399)（Apache-2.0），权重版本固定为 `435c0a8d02d5b872e90c8cde36887465982cb399`。默认 `atto` 及四个历史产物的身份和历史数据保持原样。
+
+新 BIN 为 4,528,264 字节，SHA-256 为 `c334e6c87ae202a0ef8d78b4506ecdab7fafb4684ce720fc4407f9bf990ea101`。导出和主机 PyTorch/ONNX 对照已通过；板端冒烟、精度、Runtime 1/2 并发、C++ 1/2 流均为 **not-run**。历史性能表不适用于此文件。预处理为 Pillow bicubic 短边缩放至 256、四舍五入居中裁剪 224，然后通过 OpenCV 转 BT.601 video-range NV12；ImageNet 归一化融合于 Mapper。输出为 1,000 类 float32 logits，Runtime 再做 softmax。此规格需要 Pillow。
+
+```bash
+# 仓库根目录：下载并验证已登记模型。
+python3 samples/vision/convnext/model/download.py --target x5 --variant atto-d2
+# 主机检查契约，不加载 SDK、不下载、不推理。
+python3 samples/vision/convnext/runtime/python/main.py --target x5 --variant atto-d2 --dry-run
+# 已准备好的 X5 板端命令；本次仅转换交付未执行。
+python3 samples/vision/convnext/runtime/python/main.py \
+  --target x5 --asset-id x5:convnext:convnext_atto_d2_bayese_224x224_nv12.bin \
+  --model-path samples/vision/convnext/model/convnext_atto_d2_bayese_224x224_nv12.bin \
+  --test-img samples/vision/convnext/test_data/cheetah.JPEG
+```

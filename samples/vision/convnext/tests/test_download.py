@@ -19,6 +19,7 @@ EXPECTED_REFERENCES = {
     ('x5', 'nano'): 'x5:convnext:ConvNeXt_nano_224x224_nv12.bin',
     ('x5', 'pico'): 'x5:convnext:ConvNeXt_pico_224x224_nv12.bin',
     ('x5', 'femto'): 'x5:convnext:ConvNeXt_femto_224x224_nv12.bin',
+    ('x5', 'atto-d2'): 'x5:convnext:convnext_atto_d2_bayese_224x224_nv12.bin',
 }
 
 

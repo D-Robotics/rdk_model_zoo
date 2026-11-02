@@ -37,7 +37,7 @@ from utils.py_utils.platform_profile import (
 #: Targets the shared classification machinery can address.
 SUPPORTED_TARGETS = _SHARED_TARGETS
 #: ConvNeXt variants published on X5. Atto remains the default.
-SUPPORTED_VARIANTS = ('atto', 'nano', 'pico', 'femto')
+SUPPORTED_VARIANTS = ('atto', 'nano', 'pico', 'femto', 'atto-d2')
 _SAMPLE_DIR = Path(__file__).resolve().parents[2]
 
 #: Platform deployment profiles for this sample.  X5 publishes flat
@@ -68,6 +68,11 @@ _FACTS = {
     ('nano', 'x5'): _x5_224_facts(),
     ('pico', 'x5'): _x5_224_facts(),
     ('femto', 'x5'): _x5_224_facts(),
+    ('atto-d2', 'x5'): VariantFacts(
+        input_height=224, input_width=224,
+        output_semantics='source_declared_logits', output_score_policy='softmax',
+        resize_type=2, resize_shorter=256,
+    ),
 }
 
 BINDING_TABLE = SampleBindingTable(
@@ -80,6 +85,7 @@ BINDING_TABLE = SampleBindingTable(
         'ConvNeXt_nano_224x224_nv12.bin': 'nano',
         'ConvNeXt_pico_224x224_nv12.bin': 'pico',
         'ConvNeXt_femto_224x224_nv12.bin': 'femto',
+        'convnext_atto_d2_bayese_224x224_nv12.bin': 'atto-d2',
     },
     default_variant='atto',
     facts=_FACTS,
