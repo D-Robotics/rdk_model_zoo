@@ -2,7 +2,9 @@
 
 正式记录位于 `model_zoo_web/data/vision/osnet/osnet/reid.yaml`，包含 OSNet x1.0 的 X5、S100、S100P、S600 四个平台。输入清单位于 `release/inputs.json`，轻量 OE 数据位于 `release/reports/osnet-x1-0-<platform>-oe-data.json`，封面为 `release/assets/osnet-reid-cover-ai.png`。
 
-Archive 目录沿用服务器既有结构：`downloads/rdk_model_zoo_web/rdk_<platform>/osnet/<filename>`。四套模型和报告共 20 个文件均完成服务器回读与匿名 HTTPS 哈希、字节数核验；模型与原始 OE 报告未改变。Workbench 的逻辑对象键不作为 Archive 的实际物理目录。
+Archive 模型目录沿用服务器既有结构：`downloads/rdk_model_zoo_web/rdk_<platform>/osnet/<filename>`，模型 URL、字节及哈希不变，目录校验清单只登记模型。
+
+release/OE 附属文件位于 `downloads/rdk_model_zoo_web/assets/rdk_<platform>/osnet/<model-stem>/`。每个平台包含派生 `release.json`、逐字节保留的 `release.source.json`、原始 `oe_report.html`、轻量 `oe_report_data.json` 和 `SHA256SUMS`。派生清单只更新位置并记录原始清单身份，原始状态、研究用途许可和实测数据保留。校验完整下载包时，将模型与四个附属文件放在同一个本地目录。
 
 `approval.json` 保存用户明确同意的研究用途登记范围。用户未提供额外授权；原作者的研究用途说明保留为模型许可依据，BIN/HBM 的额外再分发条款没有被假定已获授权。数据集、原始权重和私有 fixture 不随此记录分发。
 

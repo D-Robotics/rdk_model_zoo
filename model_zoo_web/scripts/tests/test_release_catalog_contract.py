@@ -99,7 +99,39 @@ class ReleaseCatalogContractTests(unittest.TestCase):
             with self.subTest(url=bad_url), self.assertRaises(catalog.CatalogError):
                 self.validate_artifact({**artifact, "url": bad_url})
         with self.assertRaises(catalog.CatalogError):
-            self.validate_artifact({**artifact, "checksums_url": self.platform["artifact"]["checksums_url"]})
+            self.validate_artifact({**artifact, "checksums_url": new_base + "/SHA256SUMS"})
+
+    def test_companions_use_the_platform_sample_and_model_specific_assets_directory(self):
+        artifact = copy.deepcopy(self.platform["artifact"])
+        original_model_url = artifact["url"]
+        filename = original_model_url.rsplit("/", 1)[1]
+        base = (
+            "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/"
+            f"rdk_{self.platform['platform']}/ultralytics_yolo/{Path(filename).stem}"
+        )
+        artifact.update(release_manifest_url=base+"/release.json", checksums_url=base+"/SHA256SUMS")
+        self.validate_artifact(artifact)
+        self.assertEqual(artifact["url"], original_model_url)
+        for invalid_base in (
+            base.replace("/assets/", "/"),
+            base.replace("/ultralytics_yolo/", "/resnet/"),
+            base.replace(f"/rdk_{self.platform['platform']}/", "/rdk_unknown/"),
+            base + "-other-model",
+        ):
+            with self.subTest(base=invalid_base), self.assertRaises(catalog.CatalogError):
+                self.validate_artifact({**artifact, "release_manifest_url": invalid_base+"/release.json",
+                                       "checksums_url": invalid_base+"/SHA256SUMS"})
+        with self.assertRaises(catalog.CatalogError):
+            self.validate_artifact({**artifact, "checksums_url": base+"-other/SHA256SUMS"})
+
+    def test_reports_cannot_reference_another_models_companions(self):
+        path = catalog.DATA_ROOT / "vision/osnet/osnet/reid.yaml"
+        for field in ("oe_conversion_url", "oe_data_url"):
+            record = yaml.safe_load(path.read_text(encoding="utf-8"))
+            reports = record["variants"][0]["platforms"][0]["reports"]
+            reports[field] = reports[field].replace("/osnet/", "/another-sample/")
+            with self.subTest(field=field), self.assertRaises(catalog.CatalogError):
+                catalog.validate_record(record, path)
 
     def test_osnet_release_matches_its_pinned_native_models(self):
         path = catalog.DATA_ROOT / "vision/osnet/osnet/reid.yaml"

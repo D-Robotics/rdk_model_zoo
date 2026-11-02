@@ -301,7 +301,7 @@ def validate_artifact(
     platform: str,
     label: str,
     build_id: str | None = None,
-) -> None:
+) -> str:
     url = require_string(artifact.get("url"), f"{label}.url")
     parsed = urlparse(url)
     root = ARTIFACT_ROOTS.get(parsed.netloc)
@@ -329,7 +329,15 @@ def validate_artifact(
     if isinstance(size_bytes, bool) or not isinstance(size_bytes, int) or size_bytes <= 0:
         raise CatalogError(f"{label}.size_bytes must be a positive integer")
 
-    base_url = url.rsplit("/", 1)[0]
+    model_base_url = url.rsplit("/", 1)[0]
+    base_url = (
+        "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/"
+        f"rdk_{platform}/{source}/{PurePosixPath(filename).stem}"
+    )
+    # Published OSS packages remain valid while their live Catalog migrates.
+    if (parsed.netloc == "rdk-model-zoo.oss-cn-beijing.aliyuncs.com"
+            and artifact.get("release_manifest_url") == f"{model_base_url}/release.json"):
+        base_url = model_base_url
     for field, expected_name in (
         ("release_manifest_url", "release.json"),
         ("checksums_url", "SHA256SUMS"),
@@ -337,6 +345,7 @@ def validate_artifact(
         expected_url = f"{base_url}/{expected_name}"
         if artifact.get(field) != expected_url:
             raise CatalogError(f"{label}.{field} must be {expected_url}")
+    return base_url
 
 
 def validate_end_to_end_record(end_to_end: dict[str, Any], label: str) -> int:
@@ -1004,7 +1013,7 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
                 raise CatalogError(f"{platform_label}.status must be released")
             require_string(platform_record.get("released_at"), f"{platform_label}.released_at")
             artifact = require_mapping(platform_record.get("artifact"), f"{platform_label}.artifact")
-            validate_artifact(
+            release_base_url = validate_artifact(
                 artifact,
                 source=source,
                 family=family,
@@ -1016,11 +1025,15 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
             )
 
             reports = require_mapping(platform_record.get("reports"), f"{platform_label}.reports")
-            release_base_url = artifact["url"].rsplit("/", 1)[0]
             expected_report_url = f"{release_base_url}/oe_report.html"
             if reports.get("oe_conversion_url") != expected_report_url:
                 raise CatalogError(
                     f"{platform_label}.reports.oe_conversion_url must be {expected_report_url}"
+                )
+            expected_data_url = f"{release_base_url}/oe_report_data.json"
+            if ("/assets/" in release_base_url or "oe_data_url" in reports) and reports.get("oe_data_url") != expected_data_url:
+                raise CatalogError(
+                    f"{platform_label}.reports.oe_data_url must be {expected_data_url}"
                 )
 
             validate_accuracy(

@@ -74,27 +74,43 @@ model_zoo_web/data/vision/ultralytics_yolo/yolo26/detect.yaml
 - `node_modules/`、`__pycache__/` 和本地 workbench 文件。
 - AccessKey、Secret、临时签名 URL 或其他凭据。
 
-模型、发布清单、校验和文件和 OE 报告放在 OSS 或 Archive：
+模型文件保留已登记的 OSS 或 Archive 下载地址。发布清单和 OE 报告统一放在
+Archive 的 Web 资产区，按平台、Sample 和模型文件名区分：
 
 ```text
-models/<source>/<series>/<task>/<size>/<platform>/
-├── <deployment-model>
-├── release.json
-├── SHA256SUMS
-└── oe_report.html
+rdk_model_zoo_web/
+├── rdk_<platform>/<source>/
+│   ├── <deployment-model>.bin|hbm
+│   └── SHA256SUMS                  # 只登记本目录的模型
+└── assets/rdk_<platform>/<source>/<model-stem>/
+    ├── release.json                # 更新资产位置的派生清单
+    ├── release.source.json         # 原始冻结清单，字节不变
+    ├── oe_report.html              # 原始完整报告，字节不变
+    ├── oe_report_data.json         # 与 Git 中的轻量 OE 数据一致
+    └── SHA256SUMS                  # 模型和上述四文件，不含自身
 ```
 
 对象路径中不加入日期、Git 提交或 OE 版本层级。构建日期、提交和工具链版本记录在
 发布元数据中。
 
-上述 `models/` 层级用于 Workbench 逻辑对象键及 OSS：
+Workbench 的原始冻结发布包及既有 OSS 模型仍使用 `models/` 层级：
 `https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/...`。
 Archive 按服务器已有的板卡 / Sample 目录存放：
 `https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_<platform>/<source>/<filename>`，
 例如 `rdk_x5/osnet/osnet_x1_0_bayes_e_256x128_rgb.bin`。Archive 不增加 `models/`、
 重复的来源/系列或任务/规格目录；任务与规格仍在 Catalog 字段和模型文件名中登记。
-同一平台的模型、`release.json`、`SHA256SUMS` 与 `oe_report.html` 必须位于同一目录。
-首次上传不覆盖内容不同的同名文件；登记前须
+`model-stem` 为模型文件名去掉最后一个扩展名。所有附属链接必须指向同一个
+`https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_<platform>/<source>/<model-stem>/`
+目录。Git 的 `release/reports/` 保留轻量 OE 数据，供站点构建直接使用；公开副本字节一致。
+
+派生 `release.json` 只改模型及附属文件的位置字段，并增加
+`provenance.asset_publication` 记录原始清单与校验清单身份。原始状态、源码版本、
+许可证和实测结果不变；原始清单完整保存在 `release.source.json`。
+校验时将模型与四个附属文件下载到同一个本地目录，再执行 `sha256sum -c SHA256SUMS`。
+不要在服务器 assets 目录里假设旁边有模型文件。
+
+迁移期间保留仍被线上引用的 OSS 对象。历史 OSS 同目录清单仍可读取，新登记采用
+Archive assets 布局；Archive 模型目录不再存放 release/OE。首次上传不覆盖内容不同的同名文件；登记前须
 完整回读校验，并通过匿名 HTTPS 下载核对字节数和 SHA-256。上传不代表 Git 或网站部署已获授权。
 
 ## 4. Catalog YAML
@@ -144,12 +160,13 @@ variants:
           march: bayes-e
           runtime_input: nv12
           url: https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/<source>/<series>/<task>/<size>/<platform>/<file>.bin
-          release_manifest_url: <same-directory>/release.json
-          checksums_url: <same-directory>/SHA256SUMS
+          release_manifest_url: <archive-assets-directory>/release.json
+          checksums_url: <archive-assets-directory>/SHA256SUMS
           size_bytes: <integer>
           sha256: <64 lowercase hexadecimal characters>
         reports:
-          oe_conversion_url: <same-directory>/oe_report.html
+          oe_conversion_url: <archive-assets-directory>/oe_report.html
+          oe_data_url: <archive-assets-directory>/oe_report_data.json
         accuracy:
           dataset: <dataset name>
           task: <evaluation task>
