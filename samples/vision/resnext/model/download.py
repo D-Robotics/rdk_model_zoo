@@ -42,6 +42,10 @@ ASSET_REFERENCES = {
 }
 TARGETS = ("x5",)
 
+# BEGIN CONVERTED ARTIFACT BINDINGS
+VARIANTS = VARIANTS + ('timm-50-32x4d-a1h-in1k',)
+ASSET_REFERENCES.update({('x5', 'timm-50-32x4d-a1h-in1k'): 'x5:resnext:resnext50_32x4d_a1h_in1k_bayese_224x224_nv12.bin'})
+# END CONVERTED ARTIFACT BINDINGS
 
 def asset_reference(target: str, variant: str = '50_32x4d') -> str:
     """Return the exact manifest reference for a supported target/variant."""

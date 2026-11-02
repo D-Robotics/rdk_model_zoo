@@ -30,7 +30,7 @@ yolov5/
 |---|---|---|---|---|
 | X5 | n-v7.0、s/m/l/x-v2.0、s/m/l/x-v7.0 | 支持 | 支持 | Python 覆盖历史九个变体；C++ 构建运行见 `runtime/cpp/` |
 | S100 | x-672 | 支持 | 支持 | Python 使用 `kite.jpg`；C++ 见 `runtime/cpp/` |
-| S100 | n-v7.0-native-20261102 | 已核对主机绑定 | 不支持 | 已转换；板端 not-run；Python 640/F32 |
+| S100 | n-v7.0-native-20261102 / s-v2.0-native-20261102 | 已核对主机绑定 | 不支持 | 已转换；板端 not-run；Python 640/F32 |
 | S100P | — | 不支持 | 不支持 | 清单无 YOLOv5 制品；显式拒绝 |
 | S600 | x-672 | 支持 | 支持 | Python 使用 `kite.jpg`；C++ 见 `runtime/cpp/` |
 
@@ -102,6 +102,7 @@ python3 -m samples.vision.yolov5.runtime.python.main \
 | 目标 | 规格 | 文件 | 板端 |
 |---|---|---|---|
 | S100 | `n-v7.0-native-20261102` | `s100/yolov5n_tag_v7.0_native_640x640_nashe_nv12_20261102.hbm` | not-run |
+| S100 | `s-v2.0-native-20261102` | `s100/yolov5s_tag_v2.0_native_640x640_nashe_nv12_20261102.hbm` | not-run |
 
 ```bash
 python3 -m samples.vision.yolov5.model.download --target s100 --variant n-v7.0-native-20261102

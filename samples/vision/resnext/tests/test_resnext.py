@@ -1,4 +1,12 @@
 """ResNeXt host acceptance tests; no inference on hardware."""
+
+# Converted artifact fixtures extend, rather than replace, historical assertions.
+import json as _converted_json
+from pathlib import Path as _ConvertedPath
+_CONVERTED_MODELS = _converted_json.loads((_ConvertedPath(__file__).resolve().parents[1] / 'conversion/converted.json').read_text())['models']
+_CONVERTED_FILES = [row['job']['filename'] for row in _CONVERTED_MODELS]
+_CONVERTED_VARIANTS = [row['job']['variant'] for row in _CONVERTED_MODELS]
+
 from pathlib import Path
 import contextlib
 import importlib.util
@@ -15,6 +23,7 @@ from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # no
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / 'samples/vision/resnext'
 FILENAMES = {'50_32x4d': 'ResNeXt50_32x4d_224x224_nv12.bin'}
+FILENAMES.update({row['job']['variant']: row['job']['filename'] for row in _CONVERTED_MODELS})
 VARIANTS = tuple(FILENAMES)
 
 

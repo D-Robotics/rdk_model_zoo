@@ -70,6 +70,18 @@ BINDING_TABLE = SampleBindingTable(
     ) for v in SUPPORTED_VARIANTS},
 )
 
+# BEGIN CONVERTED ARTIFACT BINDINGS
+from dataclasses import replace as _with_converted_bindings
+CONVERTED_VARIANTS = ('timm-50-32x4d-a1h-in1k',)
+SUPPORTED_VARIANTS = SUPPORTED_VARIANTS + CONVERTED_VARIANTS
+BINDING_TABLE = _with_converted_bindings(
+    BINDING_TABLE,
+    filename_variants={**BINDING_TABLE.filename_variants, **{'resnext50_32x4d_a1h_in1k_bayese_224x224_nv12.bin': 'timm-50-32x4d-a1h-in1k'}},
+    facts={**BINDING_TABLE.facts,
+        ('timm-50-32x4d-a1h-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+    },
+)
+# END CONVERTED ARTIFACT BINDINGS
 
 def list_available_assets(target: Optional[str] = None) -> tuple[AssetRecord, ...]:
     """Return the finite sample assets read from the existing manifests.

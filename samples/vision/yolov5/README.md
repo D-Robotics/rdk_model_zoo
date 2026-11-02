@@ -30,7 +30,7 @@ yolov5/
 |---|---|---|---|---|
 | X5 | n-v7.0, s/m/l/x-v2.0, s/m/l/x-v7.0 | supported | supported | all nine historical Python variants; C++ build/run per `runtime/cpp/` |
 | S100 | x-672 | supported | supported | Python uses `kite.jpg`; C++ per `runtime/cpp/` |
-| S100 | n-v7.0-native-20261102 | host bindings checked | not-supported | converted; board not-run; Python 640/F32 |
+| S100 | n-v7.0-native-20261102 / s-v2.0-native-20261102 | host bindings checked | not-supported | converted; board not-run; Python 640/F32 |
 | S100P | — | not-supported | not-supported | no YOLOv5 manifest asset; explicitly rejected |
 | S600 | x-672 | supported | supported | Python uses `kite.jpg`; C++ per `runtime/cpp/` |
 
@@ -102,6 +102,7 @@ Repository helper code and source sample documentation follow Apache-2.0. The up
 | Target | Variant | Artifact | Board |
 |---|---|---|---|
 | S100 | `n-v7.0-native-20261102` | `s100/yolov5n_tag_v7.0_native_640x640_nashe_nv12_20261102.hbm` | not-run |
+| S100 | `s-v2.0-native-20261102` | `s100/yolov5s_tag_v2.0_native_640x640_nashe_nv12_20261102.hbm` | not-run |
 
 ```bash
 python3 -m samples.vision.yolov5.model.download --target s100 --variant n-v7.0-native-20261102

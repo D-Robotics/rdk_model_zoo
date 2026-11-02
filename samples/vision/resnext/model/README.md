@@ -49,3 +49,28 @@ Files land at `samples/vision/resnext/model/<filename>`. The default runtime sel
 ## Formats and checksums
 
 For every file above: `format: bin`, `sha256: null (unknown)` in `docs/release/x5/models.yaml`. The downloader prints the computed digest after transfer; the manifest SHA-256 is `null (unknown)`.
+
+<!-- converted-batch-20261102 -->
+## Converted-only additions (2026-11-02)
+
+These independently converted timm weights have passed strict checkpoint loading,
+reparameterization and two-input PyTorch/ONNX host comparison, checker and compiler.
+Board smoke, accuracy, Runtime 1/2 and C++ 1/2 are **not-run**; historical metrics
+and screenshots do not describe these artifacts. Existing defaults are retained.
+Pillow is needed for the explicit bicubic shorter-edge 256 / rounded center crop
+224 profile. Normalization is fused in Mapper from the actual checkpoint config;
+output is float32 1,000-class logits followed by native softmax.
+
+| Variant | Artifact | Checkpoint revision | Board |
+|---|---|---|---|
+| `timm-50-32x4d-a1h-in1k` | `resnext50_32x4d_a1h_in1k_bayese_224x224_nv12.bin` | [`cc736cb09401`](https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/blob/cc736cb0940158d05966023116d90fca4c38dae3/README.md) | not-run |
+
+```bash
+python3 samples/vision/resnext/model/download.py --target x5 --variant timm-50-32x4d-a1h-in1k
+python3 samples/vision/resnext/runtime/python/main.py --target x5 --variant timm-50-32x4d-a1h-in1k --dry-run
+```
+
+Exact model URLs/SHA-256/size are in `docs/release/x5/models.yaml`; source and host
+receipts are in `conversion/converted.json`. Each weight retains its own model
+license in its public release manifest. No board result is implied by download.
+<!-- /converted-batch-20261102 -->

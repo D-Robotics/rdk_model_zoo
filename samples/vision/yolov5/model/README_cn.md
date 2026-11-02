@@ -78,6 +78,7 @@ S100/S600 使用 `--target s100 --variant x-672` 或 `--target s600 --variant x-
 | 目标 | 规格 | 文件 | 板端 |
 |---|---|---|---|
 | S100 | `n-v7.0-native-20261102` | `s100/yolov5n_tag_v7.0_native_640x640_nashe_nv12_20261102.hbm` | not-run |
+| S100 | `s-v2.0-native-20261102` | `s100/yolov5s_tag_v2.0_native_640x640_nashe_nv12_20261102.hbm` | not-run |
 
 ```bash
 python3 -m samples.vision.yolov5.model.download --target s100 --variant n-v7.0-native-20261102

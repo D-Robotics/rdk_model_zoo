@@ -154,3 +154,19 @@ Published artifacts and landing paths: [model preparation](../model/README.md#ar
 ## Additional preparation
 
 For inference, use the manifest-backed X5 artifact in [model/README.md](../model/README.md). A rebuild uses `ResNeXt50_32x4d.onnx`, RGB/NCHW 1×3×224×224 input, float32 RGB calibration data at `./calibration_data_rgb_f32`, mean `123.675/116.28/103.53`, scale `0.01712475/0.017507/0.01742919`, and the X5 `bayes-e` configuration described above. Select a matching upstream weight and OE toolchain before building.
+
+<!-- converted-batch-20261102 -->
+## Pinned converted recipes
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model resnext50_32x4d.a1h_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/resnext/conversion/recipes/timm-50-32x4d-a1h-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+Use the model/tag, pinned checkpoint and matching YAML from `converted.json`; use a fresh attempt directory. The calibration producer uses raw RGB float32 binary tensors. Do not apply normalization twice or inherit historical board metrics.
+<!-- /converted-batch-20261102 -->
