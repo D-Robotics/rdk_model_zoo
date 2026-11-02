@@ -8,7 +8,9 @@ family: depth_anything_v2
 task: depth
 description:
   zh: Depth Anything V2 从单张图像估计稠密相对深度，用教师模型和伪标签提升细节。
-  en: Depth Anything V2 estimates dense relative depth from a single image. It uses synthetic labeled images, a larger teacher and pseudo-labeled real images to improve fine detail. This sample provides inference and depth visualization on RDK S100.
+  en: Depth Anything V2 estimates dense relative depth from a single image. It uses
+    synthetic labeled images, a larger teacher and pseudo-labeled real images to improve
+    fine detail. This sample provides inference and depth visualization on RDK S100.
 sample_path: samples/vision/depth_anything_v2
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
 upstream:
@@ -115,3 +117,314 @@ documented_downloads:
 example_image:
   path: samples/vision/depth_anything_v2/test_data/furseal.jpg
   source: samples/vision/depth_anything_v2/test_data/furseal.jpg
+provider: Depth Anything V2
+model_license: &id001
+  name: Apache-2.0
+  url: https://github.com/DepthAnything/Depth-Anything-V2/blob/a561b849ebae10a6f5ef49e26c83cbbcd36c71bf/LICENSE
+  scope: model
+variants:
+- size: small-518x686-o1-20261102
+  model:
+    parameter_count: 24785089
+  input:
+    width: 686
+    height: 518
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 518
+      - 686
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: s100
+    license: *id001
+    status: converted
+    converted_at: '2026-11-02T17:47:45.964267+00:00'
+    metadata_revision: 1
+    artifact:
+      filename: depth_anything_v2_small_518x686_nashe_20261102_o1.hbm
+      format: hbm
+      march: nash-e
+      runtime_input: featuremap
+      runtime_dtype: float32
+      runtime_layout: NCHW
+      runtime_tensor:
+        dtype: float32
+        payload_layout: NCHW
+      sha256: 8b012b7eab63358a4f9fc8f70035134723c0135c09cc51a2d194ef243018af4b
+      size_bytes: 126860200
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/depth_anything_v2/depth_anything_v2_small_518x686_nashe_20261102_o1.hbm
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/depth_anything_v2/depth_anything_v2_small_518x686_nashe_20261102_o1/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/depth_anything_v2/depth_anything_v2_small_518x686_nashe_20261102_o1/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/depth_anything_v2/depth_anything_v2_small_518x686_nashe_20261102_o1/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/depth_anything_v2/depth_anything_v2_small_518x686_nashe_20261102_o1/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: depth
+        dtype: float32
+        shape:
+        - 1
+        - 518
+        - 686
+        layout: NHW
+        semantics: relative depth; not metric distance
+      runtime_input:
+        name: images
+        dtype: float32
+        shape:
+        - 1
+        - 3
+        - 518
+        - 686
+        layout: NCHW
+        type: featuremap
+        source: ddr
+        color: RGB
+        normalization: (RGB/255-ImageNet mean)/ImageNet std outside the graph
+      preprocessing: RGB float64 /255; cubic stretch 686x518; ImageNet mean/std; float32
+        NCHW
+      output_transform: relative depth; optional original-size OpenCV INTER_LINEAR
+        restoration
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      optimization_level: O1
+      backend_parameter_diff:
+        status: passed
+        changed_backend_parameter_only: 'opt: 2 -> 1'
+        native_debug_log_lines:
+          O2: '2026-11-02 22:54:51,055 file: hbm_builder.py func: hbm_builder line
+            No: 66 Compile params: {''jobs'': 2, ''balance'': 100, ''advice'': 1.0,
+            ''progress_bar'': True, ''opt'': 2, ''core_num'': 1, ''max_l2m_size'':
+            0, ''max_time_per_fc'': 0, ''debug'': True, ''cache_mode'': ''disable''}'
+          O1: '2026-11-03 00:09:35,118 file: hbm_builder.py func: hbm_builder line
+            No: 66 Compile params: {''jobs'': 2, ''balance'': 100, ''advice'': 1.0,
+            ''progress_bar'': True, ''opt'': 1, ''core_num'': 1, ''max_l2m_size'':
+            0, ''max_time_per_fc'': 0, ''debug'': True, ''cache_mode'': ''disable''}'
+        actual_parameters:
+          O2:
+            jobs: 2
+            balance: 100
+            advice: 1.0
+            progress_bar: true
+            opt: 2
+            core_num: 1
+            max_l2m_size: 0
+            max_time_per_fc: 0
+            debug: true
+            cache_mode: disable
+          O1:
+            jobs: 2
+            balance: 100
+            advice: 1.0
+            progress_bar: true
+            opt: 1
+            core_num: 1
+            max_l2m_size: 0
+            max_time_per_fc: 0
+            debug: true
+            cache_mode: disable
+        o2_debug_log_snapshot:
+          sha256: 71bcecc8720afed22e29aeef428ea93ced757e309f1e5318577c60bc6e274b6d
+          size_bytes: 304791
+      calibration_samples: 200
+      calibration:
+        sample_count: 200
+        actual_batch: 1
+        seed: 42
+        source_run: runs/conversion/depth-v2-small-s100-20261102-r03
+        new_calibration_in_recovery: false
+        manifest:
+          sha256: 0f45b88e5a6fb57877933f16d3befd3d16ff52877d84f1ad653790791ffaaab2
+          size_bytes: 55331
+        source_image_manifest_sha256: 1d50d53df79c85c9129db9b90570b0f67ef1347c5285a68f4397a4ce1a2c0921
+        producer_sha256: 00d87e9e0c86cbba7acc2515400eb3ee46825d355f8969ad560a5111d7972d70
+        quantized_snapshot_files:
+          depth_anything_v2_small_518x686_nashe_20261102_ptq_model.onnx:
+            source_path: runs/conversion/depth-v2-small-s100-20261102-r03/output/depth_anything_v2_small_518x686_nashe_20261102_ptq_model.onnx
+            sha256: 7c87dce84aa67d77667b8c7cbb244d5bc85f56ffc220fa57ea30136bcf865bd3
+            size_bytes: 100607504
+          depth_anything_v2_small_518x686_nashe_20261102_optimized_float_model.onnx:
+            source_path: runs/conversion/depth-v2-small-s100-20261102-r03/output/depth_anything_v2_small_518x686_nashe_20261102_optimized_float_model.onnx
+            sha256: 815c83558d944fd1dc4aae65ad59a967bebf2c55c69248fb16f83fd0bfff72b8
+            size_bytes: 99629187
+          depth_anything_v2_small_518x686_nashe_20261102_quant_info.json:
+            source_path: runs/conversion/depth-v2-small-s100-20261102-r03/output/depth_anything_v2_small_518x686_nashe_20261102_quant_info.json
+            sha256: bf372db861979b641b711053ac83d5da81018d25f5dec11ef0e5f46552ec903a
+            size_bytes: 396828
+        source_log_snapshot_sha256: 88b0a4221e074a89cee92b2d6b0a9008f40e253b9b5d2b6b500b16bde10a6a7e
+      node_info_source:
+        method: original native NodeInfo optimized ONNX vs quantized BC simulation
+        input_count: 1
+        input: first calibration tensor 000000004478.npy
+        input_value_sha256: 658217d7c6df5c4cefb5e7cc59287cb154dc22a07e82a9b22f1d0d6c928eecf2
+        input_shape:
+        - 1
+        - 3
+        - 518
+        - 686
+        input_dtype: float32
+        node_info:
+          sha256: 9113da29f11990ad9b1cce7eb4ddc3dcaba623349bda12e6f99a3c19eb4ef397
+          size_bytes: 52989
+        source_run: runs/conversion/depth-v2-small-s100-20261102-r04
+        executed_in_current_run: false
+        quantized_bc_sha256: 72f86dbee956fb187494e9e63d43439fa88d991fe2ae58da11a5225b80d8e239
+        board_accuracy: not-run
+      host_check:
+        status: passed
+        source_commit: a561b849ebae10a6f5ef49e26c83cbbcd36c71bf
+        checkpoint_sha256: 715fade13be8f229f8a70cc02066f656f2423a59effd0579197bbf57860e1378
+        checkpoint_size_bytes: 99218434
+        onnx_sha256: e6e6b19d5167ed414d12989ec7b0636633399e18ef9ab42a3bb5a62d7bb5392d
+        onnx_size_bytes: 98940281
+        exporter_sha256: 1f5f30d7af4605a77554030f05b5a6b69e2d736bab39c4797be20b3e898b5d11
+        image_sha256: 3ade3b006e8e3f5662cf80ba915b298981c5ad0f8713e419ad0ffb3b2501eeb2
+        model: DepthAnythingV2(encoder=vits,features=64,out_channels=[48,96,192,384])
+        parameter_count: 24785089
+        source_modifications: []
+        graph_refinements: []
+        opset: 17
+        input:
+          name: images
+          shape:
+          - 1
+          - 3
+          - 518
+          - 686
+          dtype: float32
+        output:
+          name: depth
+          shape:
+          - 1
+          - 518
+          - 686
+          dtype: float32
+        preprocess: BGR->RGB float64/255; cubic stretch to 518x686; ImageNet mean/std;
+          F32 NCHW
+        versions:
+          torch: 2.8.0+cu128
+          onnx: 1.17.0
+          onnxruntime: 1.19.2
+          numpy: 2.2.6
+          opencv: 4.11.0
+        comparisons:
+        - input: real
+          max_abs_error: 0.0003204047679901123
+          mean_abs_error: 4.976361370833117e-07
+          rtol: 0.001
+          atol: 0.001
+          finite: true
+          passed: true
+        - input: random_seed42
+          max_abs_error: 5.0067901611328125e-06
+          mean_abs_error: 1.336825562614124e-06
+          rtol: 0.001
+          atol: 0.001
+          finite: true
+          passed: true
+        report:
+          sha256: 63aa1a34f87b7aa8266ae88fa43b35705888b97bacf4a59f4e1d0789052c0de9
+          size_bytes: 1635
+        onnx:
+          sha256: e6e6b19d5167ed414d12989ec7b0636633399e18ef9ab42a3bb5a62d7bb5392d
+          size_bytes: 98940281
+      execution_environment:
+        HBTL_THREAD_NUM: '2'
+        OMP_WAIT_POLICY: PASSIVE
+        GOMP_SPINCOUNT: '0'
+        OMP_NUM_THREADS: '2'
+        MKL_NUM_THREADS: '2'
+        OPENBLAS_NUM_THREADS: '2'
+        NVIDIA_TF32_OVERRIDE: '0'
+        PYTHONFAULTHANDLER: '1'
+        HORIZON_TC_UI_DEBUG: '1'
+      quantization_policy: Internal INT16 configuration; public input and relative-depth
+        output FLOAT32
+      original_oe_reports:
+      - name: depth_anything_v2_small_518x686_nashe_20261102.html
+        sha256: 1d2dc8662c24d0ad4996980136b195bc130fc33860f2a867b1dd6cb595b6754a
+      original_oe_json_sha256: ac9321a0c90ba1f9c02393e989c2543e72369755a769df7435ad741716eb441f
+      evidence:
+        raw_perf_html:
+          sha256: 1d2dc8662c24d0ad4996980136b195bc130fc33860f2a867b1dd6cb595b6754a
+          size_bytes: 7758041
+        raw_perf_json:
+          sha256: ac9321a0c90ba1f9c02393e989c2543e72369755a769df7435ad741716eb441f
+          size_bytes: 10370549
+        oe_report:
+          sha256: 49172f3bec36c3b867eba628973c2271318875ee3135842e36e407fe0d5194d7
+          size_bytes: 175610
+        abi:
+          sha256: 22a3266c1ab533ba6e63c962f5676a275026a4c5df3699e24ecfd65a5842559a
+          size_bytes: 714
+        build_receipt:
+          sha256: 134a11849577f23578132ef8d34c2e139ee4bb33a80bef7a3c610ef9d2c16d3c
+          size_bytes: 1772
+        effective_config:
+          sha256: cb4a18002bc44dc2fdfa0dea5e81e3efd4e657526e3020cc7ad4b60e14a29a6b
+          size_bytes: 908
+        official_full_template:
+          sha256: edae81a5e573fdec3f87c7d17d3b302972c1e080a127721fbd05427a159a5028
+          size_bytes: 767
+        template_origin:
+          sha256: 9961b78ab93bedf7a128d7bb1f309ade6bea2c89f2e3578f31b2a3e01ae4e944
+          size_bytes: 827
+        quantization_source:
+          sha256: f4c5a6acd21f7af0c02ebb863c08a4b68a61ff626f3d99e019c19d4c4ac26ab8
+          size_bytes: 2350
+        o1_source:
+          sha256: d7118d2aa074c2a458395aa2ab2a088f62523318ac4b1e149926fd30b0280e9c
+          size_bytes: 6595
+        backend_parameter_diff:
+          sha256: 22677d3ed35cc44a8592f7b8d8f2e6a98b9c8828de9434bd1d5adfe150320efa
+          size_bytes: 1476
+    validation:
+      artifact_sha256: 8b012b7eab63358a4f9fc8f70035134723c0135c09cc51a2d194ef243018af4b
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: f30cfebd6e4f8aacf899b12352ead18fdbbc0318
+      build_id: depth-v2-small-s100-20261102-r05-o1
+      runtime_variant: small-518x686-o1
+      source_repository_commit: a561b849ebae10a6f5ef49e26c83cbbcd36c71bf
+      checkpoint_revision: 03876f8651c73a60fe4c2c48294e09fcb6838fcf
+      source_checkpoint_sha256: 715fade13be8f229f8a70cc02066f656f2423a59effd0579197bbf57860e1378
+      source_weight_url: https://huggingface.co/depth-anything/Depth-Anything-V2-Small/resolve/03876f8651c73a60fe4c2c48294e09fcb6838fcf/depth_anything_v2_vits.pth
+      onnx_sha256: e6e6b19d5167ed414d12989ec7b0636633399e18ef9ab42a3bb5a62d7bb5392d
+      exporter_sha256: 1f5f30d7af4605a77554030f05b5a6b69e2d736bab39c4797be20b3e898b5d11
+      config_sha256: cb4a18002bc44dc2fdfa0dea5e81e3efd4e657526e3020cc7ad4b60e14a29a6b
+      calibration_manifest_sha256: 0f45b88e5a6fb57877933f16d3befd3d16ff52877d84f1ad653790791ffaaab2
+      calibration_producer_sha256: 00d87e9e0c86cbba7acc2515400eb3ee46825d355f8969ad560a5111d7972d70
+      quantized_bc_sha256: 72f86dbee956fb187494e9e63d43439fa88d991fe2ae58da11a5225b80d8e239
+      build_receipt_sha256: 134a11849577f23578132ef8d34c2e139ee4bb33a80bef7a3c610ef9d2c16d3c
+      toolchain_image: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      toolchain_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      precision_policy: int16
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 5f283f3d57c5e2f7bb0b3ec1b3ba4e01805a2c29cab9b8b5eb81a9f57628e3a2
+    runtime_command: python3 samples/vision/depth_anything_v2/runtime/python/main.py
+      --target s100 --asset-id s:depth_anything_v2:s100/depth_anything_v2_small_518x686_nashe_20261102_o1.hbm
+      --model-path /path/to/depth_anything_v2_small_518x686_nashe_20261102_o1.hbm
+      --test-img /path/to/image.jpg

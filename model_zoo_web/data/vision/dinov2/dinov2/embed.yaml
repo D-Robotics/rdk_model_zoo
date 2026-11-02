@@ -7,8 +7,11 @@ source: dinov2
 family: dinov2
 task: embed
 description:
-  zh: DINOv2 是用于图像表示的自监督视觉 Transformer。ViT-S/14 主干生成全局嵌入与稠密 patch 特征，可供下游视觉任务使用。本示例在 RDK S100、S100P 和 S600 上部署 int16 PTQ 模型。
-  en: DINOv2 is a self-supervised vision transformer for image representations. The ViT-S/14 backbone produces a global embedding and dense patch features for downstream visual tasks. This sample deploys its int16 PTQ model on RDK S100, S100P and S600.
+  zh: DINOv2 是用于图像表示的自监督视觉 Transformer。ViT-S/14 主干生成全局嵌入与稠密 patch 特征，可供下游视觉任务使用。本示例在
+    RDK S100、S100P 和 S600 上部署 int16 PTQ 模型。
+  en: DINOv2 is a self-supervised vision transformer for image representations. The
+    ViT-S/14 backbone produces a global embedding and dense patch features for downstream
+    visual tasks. This sample deploys its int16 PTQ model on RDK S100, S100P and S600.
 sample_path: samples/vision/dinov2
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
 license:
@@ -139,3 +142,1305 @@ documented_downloads:
 example_image:
   path: samples/vision/dinov2/test_data/bus.jpg
   source: samples/vision/dinov2/test_data/bus.jpg
+provider: Meta / DINOv2
+model_license: &id001
+  name: Apache-2.0
+  url: https://github.com/facebookresearch/dinov2/blob/7764ea0f912e53c92e82eb78a2a1631e92725fc8/LICENSE
+  scope: model
+variants:
+- size: vits14-224-int16-20261102-o1
+  model: {}
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: s100
+    license: *id001
+    status: converted
+    converted_at: '2026-11-02T17:21:44.630634+00:00'
+    metadata_revision: 1
+    artifact:
+      filename: dinov2_vits14_224_int16_nashe_20261102_o1.hbm
+      format: hbm
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/dinov2/dinov2_vits14_224_int16_nashe_20261102_o1.hbm
+      sha256: 40d9654edb2b83b12928a4b23e8f482ec30c415d2389af5e64957d9921a9df1a
+      size_bytes: 28096936
+      march: nash-e
+      runtime_input: featuremap
+      runtime_dtype: float32
+      runtime_layout: NCHW
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/dinov2/dinov2_vits14_224_int16_nashe_20261102_o1/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/dinov2/dinov2_vits14_224_int16_nashe_20261102_o1/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/dinov2/dinov2_vits14_224_int16_nashe_20261102_o1/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/dinov2/dinov2_vits14_224_int16_nashe_20261102_o1/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: cls_feat
+        shape:
+        - 1
+        - 384
+        dtype: float32
+      - name: patch_feat
+        shape:
+        - 1
+        - 256
+        - 384
+        dtype: float32
+      runtime_input:
+        name: input
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+        dtype: float32
+        layout: NCHW
+        type: featuremap
+        source: ddr
+        color: RGB
+        normalization: (pixel/255 - ImageNet mean) / ImageNet std
+      preprocessing: cv2 BGR to RGB; INTER_CUBIC short side 256; floor resize dimensions
+        and floor center 224 crop; float32 /255; ImageNet mean/std; contiguous NCHW
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 50
+      calibration:
+        count: 50
+        manifest:
+          relative_path: runs/conversion/dinov2-batch-20261102-r05/shared/calibration_manifest.json
+          sha256: 0791d68b1ddeb1d7bc1f9ea5ce8301e43be8d8c45bd495dd26d5cf24886f60e9
+          size_bytes: 21057
+        source_manifest_sha256: 1d50d53df79c85c9129db9b90570b0f67ef1347c5285a68f4397a4ce1a2c0921
+        producer_sha256: e572e09790f6543f1829750dd84a9b4c423e5adf41b1cfce318bd3a14e4e738c
+        dataset: COCO 2017 train2017
+        sampling: first 50 image names sorted from frozen seed42 200-image manifest
+        preprocess: cv2 BGR to RGB; INTER_CUBIC short side 256; floor resize dimensions
+          and floor center 224 crop; float32 /255; ImageNet mean/std; contiguous NCHW
+      calibration_method:
+        configured: unset; native modelwise search
+        selected: max
+        source_log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r02/s100/logs/compile.log
+          sha256: fda941c22c96637f2db8cec771c5e88c1311a00ac4a55f4b6b0881a305f2942b
+          size_bytes: 11229
+      host_check:
+        status: passed
+        real_input_count: 3
+        atol: 0.001
+        rtol: 0.001
+        minimum_cosine_required: 0.99999
+        min_cosine_observed: 0.9999999999385822
+        max_abs_observed: 0.00043648481369018555
+        report:
+          relative_path: runs/conversion/dinov2-batch-20261102-r05/shared/host_parity.json
+          sha256: afeabfaae8b0d5ce11e2a9c1962d463d7923b839aa52f12befe590d2c15fc889
+          size_bytes: 4427
+        scope: unmodified upstream -> rewritten PyTorch -> ORT; float graph only,
+          not HBM board accuracy
+      host_resources:
+        cpus: 4
+        memory_gib: 8
+      execution_environment:
+        HBTL_THREAD_NUM: '2'
+        OMP_NUM_THREADS: '2'
+        MKL_NUM_THREADS: '2'
+        OPENBLAS_NUM_THREADS: '2'
+        OMP_WAIT_POLICY: PASSIVE
+        GOMP_SPINCOUNT: '0'
+        NVIDIA_TF32_OVERRIDE: '0'
+        HORIZON_TC_UI_DEBUG: '1'
+      hbtl_threads_observed: 2
+      recalibration: false
+      static_abi: passed
+      optimization_level: O1
+      compile_parameter_diff:
+        status: passed
+        changed_backend_parameter_only: 'opt: 2 -> 1'
+        old_actual:
+          jobs: 2
+          balance: 100
+          advice: 1.0
+          progress_bar: true
+          opt: 2
+          core_num: 1
+          max_l2m_size: 0
+          max_time_per_fc: 0
+          debug: false
+          cache_mode: disable
+          input_no_padding: true
+          output_no_padding: true
+        new_actual:
+          jobs: 2
+          balance: 100
+          advice: 1.0
+          progress_bar: true
+          opt: 1
+          core_num: 1
+          max_l2m_size: 0
+          max_time_per_fc: 0
+          debug: false
+          cache_mode: disable
+          input_no_padding: true
+          output_no_padding: true
+        actual_line: '2026-11-03 00:34:23,509 file: hbm_builder.py func: hbm_builder
+          line No: 66 Compile params: {''jobs'': 2, ''balance'': 100, ''advice'':
+          1.0, ''progress_bar'': True, ''opt'': 1, ''core_num'': 1, ''max_l2m_size'':
+          0, ''max_time_per_fc'': 0, ''debug'': False, ''cache_mode'': ''disable'',
+          ''input_no_padding'': True, ''output_no_padding'': True}'
+      node_info_source:
+        status: passed
+        source_run: runs/conversion/dinov2-batch-20261102-r05/s100
+        source_quantized_bc_sha256: 19af627efc433e2fa96848fc1ecd9654a4e6ab9e2b1cf1f023663317cc5d5f9a
+        compile_input_bc_sha256: 19af627efc433e2fa96848fc1ecd9654a4e6ab9e2b1cf1f023663317cc5d5f9a
+        csv:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/input/o2-evidence/dinov2_vits14_224_int16_nashe_20261102_node_info.csv
+          sha256: 49a0168f1092efa74f69665e2ac08182d89e96a189058ba75f67010fc7e120ce
+          size_bytes: 47750
+        node_rows: 639
+        execution_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+        execution_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+        execution_environment:
+          HBTL_THREAD_NUM: '2'
+          OMP_WAIT_POLICY: PASSIVE
+          GOMP_SPINCOUNT: '0'
+          NVIDIA_TF32_OVERRIDE: '0'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+          OPENBLAS_NUM_THREADS: '2'
+        comparison_input_count: 1
+        first_real_input_bytes_sha256: 971c9e4e011a415b3d25b63405b88f541bff60bc5c02ede652d06cc55ed4a34e
+        new_node_info_executed_during_o1_compile: false
+        stage_note: Original full NodeInfo completed before O2 backend compilation
+        board_accuracy: not-run
+      quantization_policy: Internal all_node_type/model_output_type int16 configuration
+        retained; actual public HBM outputs float32
+      memory_guard:
+        captured_at: '2026-11-02T17:15:42.999605+00:00'
+        source_state:
+          relative_path: inbox/converted-batch-20261102/memory-window-yoloe-r02-20261102-v2/state.json
+          sha256: a9d6b91e6cca51aa58f07f0aca662bf06a7b6cadd17950c1b2e3f63c06f0fd32
+          size_bytes: 1165
+        container_id: dd9800fe61dd4b3e6d60084b54d72907cf6c6d8c11a6b7f74a70ffe5115f7cc7
+        events: []
+        scope: parent memory guard events observed through artifact completion; compiler
+          parameters unchanged
+      node_info_scope: Native full-node recovery diagnostics; not dataset accuracy
+        or board inference
+      output_transform: Raw FLOAT32 public outputs; no L2 normalization or softmax
+      evidence:
+        run.yaml:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/run.yaml
+          sha256: 46fd32252fe8b12535f83ed574e0bf61d76b4d7cb95d6bc92fc228ec4ea932a0
+          size_bytes: 83
+        result.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/result.json
+          sha256: fdb2afcfb92538e9a452cafa007fda11f874d0bd2376576b90440346d9309d97
+          size_bytes: 1854
+        output/oe_report.html:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/output/oe_report.html
+          sha256: b0f0e091db69c43741b2473d4f88536a028bcd6ea61da72bdbc17c9fbcb98e64
+          size_bytes: 1650040
+        output/oe_report_data.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/output/oe_report_data.json
+          sha256: 3b8273d21d64cf3a72c40151bc88481ee3e3a10d0e006f3345eeca4498be9ad7
+          size_bytes: 159088
+        output/dinov2_vits14_224_int16_nashe_20261102.html:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/output/dinov2_vits14_224_int16_nashe_20261102.html
+          sha256: b0f0e091db69c43741b2473d4f88536a028bcd6ea61da72bdbc17c9fbcb98e64
+          size_bytes: 1650040
+        output/abi_check.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/output/abi_check.json
+          sha256: 3baffb95dff95dd349b79e0206e4d212c6f20257bd60458b0a5245a7e029e832
+          size_bytes: 707
+        output/build_receipt.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/output/build_receipt.json
+          sha256: c15d16a9b4dad2f27bf8daf43ef5188441cbd5c49a784c2fee3796ce2bce4df1
+          size_bytes: 2333
+        output/oe_report_data_source.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/output/oe_report_data_source.json
+          sha256: 2cc842dc0a169ecb30fbdf07474e2a0c18aa9a8b15dc9eb2160f5b81c2c3fe2c
+          size_bytes: 18027
+        output/hb_compile.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/output/hb_compile.log
+          sha256: 668c23bb20d4d8bac9089e5326fcf2460664f3ede21525954b7c89723b26d673
+          size_bytes: 16334
+        output/node-info-source.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/output/node-info-source.json
+          sha256: cb9bd9b46afe532a0138339c14cda3cf07c759b5706bdccd5908320b88a7cf02
+          size_bytes: 720
+        output/dinov2_vits14_224_int16_nashe_20261102.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/output/dinov2_vits14_224_int16_nashe_20261102.json
+          sha256: 2cc842dc0a169ecb30fbdf07474e2a0c18aa9a8b15dc9eb2160f5b81c2c3fe2c
+          size_bytes: 18027
+        output/hb_compile_native.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/output/hb_compile_native.log
+          sha256: 5578d1e435c1030d11203548afe6631a2301b61e9d122185c2bd93fac93e961c
+          size_bytes: 3721
+        output/dinov2_vits14_224_int16_nashe_20261102_o1_node_info.csv:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/output/dinov2_vits14_224_int16_nashe_20261102_o1_node_info.csv
+          sha256: 49a0168f1092efa74f69665e2ac08182d89e96a189058ba75f67010fc7e120ce
+          size_bytes: 47750
+        input/compile.yaml:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/input/compile.yaml
+          sha256: e55dcb4e5b3390343a80fd7ac974aa92917b4b1314716e84636cbe6540c93f51
+          size_bytes: 1250
+        input/o1-source-receipt.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/input/o1-source-receipt.json
+          sha256: f3859c2c87d165fda5c4b4a396b8c9304be2ee2e82b1764773d3f6385669fa31
+          size_bytes: 7667
+        logs/original-container-before-stop.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/original-container-before-stop.json
+          sha256: e6d443fff04e8caa33dd48a7db5b0f902aa0406c2a3cd5553c78e4b21542c28b
+          size_bytes: 6681
+        logs/postprocessing-failure.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/postprocessing-failure.json
+          sha256: bf2037073631a5b84e231415ee721d1bda9e0c092b842db83963c122d2d9c5c2
+          size_bytes: 551
+        logs/compile.receipt.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/compile.receipt.json
+          sha256: 8723c68cb7f4273166c4acfc0807709f96ac43144cb0125cc209083712173e65
+          size_bytes: 1507
+        logs/compile.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/compile.log
+          sha256: 3bac7804e636c5de6ed9a7df238a8fb4ef0f8606bb03721e64123ac0561403d5
+          size_bytes: 8777
+        logs/converted-bc-public-io.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/converted-bc-public-io.json
+          sha256: b741b466a6e8ade0316d388428e199a032f07496c012d7727f7dc975c44f6afd
+          size_bytes: 786
+        logs/controller.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/controller.log
+          sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+          size_bytes: 0
+        logs/hbm_info.command.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/hbm_info.command.json
+          sha256: 5e7318afcadd9e654c3691367052ec8a61ee1ef33cb8cc8e3cc14985b6b59f5b
+          size_bytes: 1304
+        logs/hbm_info.receipt.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/hbm_info.receipt.json
+          sha256: 0189feb3ddfce62c8308cd4d5745e38a61fe7d3bd0c68b935070f73254e3fd70
+          size_bytes: 1375
+        logs/original-context-retirement.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/original-context-retirement.json
+          sha256: 1090d41bc11d58a3706d1e2ebff06107f501bced75b06859c55f18d0beade0f8
+          size_bytes: 1431
+        logs/compile-parameter-diff.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/compile-parameter-diff.json
+          sha256: ea95b50b4ec9c52362bb570efd8436ea3f3086b07562efc02b0bba42f5988322
+          size_bytes: 1000
+        logs/hbm_info.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/hbm_info.log
+          sha256: a1728a85750063d8ff4c39948bd17857409e8c7846602c38291002cde105eb08
+          size_bytes: 7499
+        logs/memory-guard-snapshot.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/memory-guard-snapshot.json
+          sha256: c16771721fa79de62bc18a8bce64a7697bdf89e1c275842b3889998670d47e83
+          size_bytes: 635
+        logs/o2-stop-receipt.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/o2-stop-receipt.json
+          sha256: 2d3fa4f404df4ee79f4d52d5d4ffcd752048a0459ab6a1b4c7ca3811c9ee1dea
+          size_bytes: 1870
+        logs/o2-container-before-stop.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/o2-container-before-stop.json
+          sha256: d3f0f4a31423097b84da0b87721d1e9e6e1d99fc3ee035c1b43b1b3477e6f7b9
+          size_bytes: 9627
+        logs/report-input-provenance.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/report-input-provenance.json
+          sha256: 08088ae96393f3e6989940f46e8f838716d7f8931984c85c86ae22f21e207f9c
+          size_bytes: 1206
+        logs/abi-contract-correction.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/abi-contract-correction.json
+          sha256: f9aadeb23a957440064819edc89ed5e03564d9d3f1d23df1e2de003aa9f437d6
+          size_bytes: 956
+        logs/compile.command.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/compile.command.json
+          sha256: 1e6d61e318e12409be67277502e5d295810311ddba8fe17ed49f2d0fe81a8bff
+          size_bytes: 1436
+        logs/bc-entry-audit.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/bc-entry-audit.json
+          sha256: f9cfead64881dc268f81b6040479975dd03d2fccc0a8a8e1362ef14eab87ca5a
+          size_bytes: 1373
+        logs/extract_oe_report.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/extract_oe_report.log
+          sha256: 98bf6a06777519abf96769ce4381f9657ae712375446eaa1bd7d58fa8df0c1be
+          size_bytes: 369
+        logs/controller-start.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/logs/controller-start.json
+          sha256: 09afde5f7793fb951e5569a8107ae16b9ee09e0fcbfe8c94635995202ba6aa7c
+          size_bytes: 239
+        work/hb_compile.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/work/hb_compile.log
+          sha256: 5578d1e435c1030d11203548afe6631a2301b61e9d122185c2bd93fac93e961c
+          size_bytes: 3721
+        work/hb_model_info.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/work/hb_model_info.log
+          sha256: 495575d8d585058a3a435fd7eb2e1eb6ebf52adf8684d63d137395b4d3270826
+          size_bytes: 11486
+        work/.hb_model_info/dinov2_vits14_224_int16_nashe_20261102.html:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/work/.hb_model_info/dinov2_vits14_224_int16_nashe_20261102.html
+          sha256: b0f0e091db69c43741b2473d4f88536a028bcd6ea61da72bdbc17c9fbcb98e64
+          size_bytes: 1650040
+        work/.hb_model_info/dinov2_vits14_224_int16_nashe_20261102.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/work/.hb_model_info/dinov2_vits14_224_int16_nashe_20261102.json
+          sha256: 2cc842dc0a169ecb30fbdf07474e2a0c18aa9a8b15dc9eb2160f5b81c2c3fe2c
+          size_bytes: 18027
+        input/frozen/dinov2_vits14_224_int16_nashe_20261102_quant_info.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/input/frozen/dinov2_vits14_224_int16_nashe_20261102_quant_info.json
+          sha256: a45d7c1ab02571e47454fb0fec6f0d8a7b143bde2501a6872c6c5dedfa3254ec
+          size_bytes: 358244
+        input/o2-evidence/dinov2_vits14_224_int16_nashe_20261102_node_info.csv:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/input/o2-evidence/dinov2_vits14_224_int16_nashe_20261102_node_info.csv
+          sha256: 49a0168f1092efa74f69665e2ac08182d89e96a189058ba75f67010fc7e120ce
+          size_bytes: 47750
+        input/o2-evidence/compile.yaml:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/input/o2-evidence/compile.yaml
+          sha256: d6728a1ebe287e9cc484f5feef3cdfb943fc88c3cd67032ff956bc7b1dd87e8a
+          size_bytes: 1244
+        input/o2-evidence/recovery-runtime.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/input/o2-evidence/recovery-runtime.json
+          sha256: 2b994ce3e376e8c617139de5887151617954e3b9e47252222197beb8e2357b7a
+          size_bytes: 1414
+        input/o2-evidence/source-pause.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/input/o2-evidence/source-pause.json
+          sha256: 58d06cd81624ac871b11c4ce6372a667d4b26f60bd7d15a57c781fb874facedb
+          size_bytes: 362
+        input/o2-evidence/route.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/input/o2-evidence/route.json
+          sha256: d1eaef93977b80fe688d8814dac0aa09625740b6af8fbbb47a00cce3ca6d6fcb
+          size_bytes: 3000
+        input/o2-evidence/recovery.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/input/o2-evidence/recovery.log
+          sha256: 289e360e3b104d2802ad553a042eca0f76fef9a57c11ce38d1c183076f229bb6
+          size_bytes: 128639
+        input/o2-evidence/hb_compile.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/input/o2-evidence/hb_compile.log
+          sha256: 1347e04cb0cf84552d0accdc458c9e34cd48a4803a71f6116e0e67b3e952501d
+          size_bytes: 259926
+        input/o2-evidence/full_compile_config.yaml:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/input/o2-evidence/full_compile_config.yaml
+          sha256: 244fcb0117abcd8628d4eb74c10f5555f63150bc5a4092a905ffb2d7020cae29
+          size_bytes: 720
+        input/o2-evidence/original_compile.yaml:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100/input/o2-evidence/original_compile.yaml
+          sha256: c89f7327a5437b3933b02de2b59d572edc00aa4a11730758446e357d3597b6eb
+          size_bytes: 1244
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: 40d9654edb2b83b12928a4b23e8f482ec30c415d2389af5e64957d9921a9df1a
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: dc1cecf898171ef8c0b0fa875e616873f387e4f4
+      build_id: dinov2-batch-20261102-r06-o1-s100
+      source_repository_commit: 7764ea0f912e53c92e82eb78a2a1631e92725fc8
+      source_checkpoint_sha256: b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9
+      checkpoint_revision: sha256:b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9
+      source_weight_url: https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth
+      onnx_sha256: 93a2ec95730d985f78be03b98284b4d4bd6ea979a5ea0a9d2122bee57a712758
+      config_sha256: e55dcb4e5b3390343a80fd7ac974aa92917b4b1314716e84636cbe6540c93f51
+      exporter_sha256: 8972ad60d74800f0938898188cdc840d132051181540064e6055951b49ec69e4
+      mapper_sha256: e572e09790f6543f1829750dd84a9b4c423e5adf41b1cfce318bd3a14e4e738c
+      calibration_manifest_sha256: 0791d68b1ddeb1d7bc1f9ea5ce8301e43be8d8c45bd495dd26d5cf24886f60e9
+      calibration_producer_sha256: e572e09790f6543f1829750dd84a9b4c423e5adf41b1cfce318bd3a14e4e738c
+      source_ptq_sha256: 9890ec9c8e599aa1cbb60f1e9f48bf127bed0c48d11a5f01ed30478fa0afb609
+      source_quantized_bc_sha256: 19af627efc433e2fa96848fc1ecd9654a4e6ab9e2b1cf1f023663317cc5d5f9a
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      toolchain_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      quantization_image: ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0
+      quantization_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      precision_policy: int16
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 944bd58275777524e364f41b2985a4c0efa8924f03c487baef370346f460db26
+    runtime_command: python3 samples/vision/dinov2/runtime/python/main.py --target
+      s100 --asset-id s:dinov2:nash-e/dinov2_vits14_224_int16_nashe_20261102_o1.hbm
+      --model-path /path/to/dinov2_vits14_224_int16_nashe_20261102_o1.hbm --test-img
+      /path/to/image.jpg
+  - platform: s100p
+    license:
+      name: Apache-2.0
+      url: https://github.com/facebookresearch/dinov2/blob/7764ea0f912e53c92e82eb78a2a1631e92725fc8/LICENSE
+      scope: model
+    status: converted
+    converted_at: '2026-11-02T17:21:44.631686+00:00'
+    metadata_revision: 1
+    artifact:
+      filename: dinov2_vits14_224_int16_nashm_20261102_o1.hbm
+      format: hbm
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/dinov2/dinov2_vits14_224_int16_nashm_20261102_o1.hbm
+      sha256: 05a94aae2cb7da14a6a0810c7c7e5e5bff604012b943dd66708e4cd9cc224cbe
+      size_bytes: 28374832
+      march: nash-m
+      runtime_input: featuremap
+      runtime_dtype: float32
+      runtime_layout: NCHW
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/dinov2/dinov2_vits14_224_int16_nashm_20261102_o1/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/dinov2/dinov2_vits14_224_int16_nashm_20261102_o1/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/dinov2/dinov2_vits14_224_int16_nashm_20261102_o1/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/dinov2/dinov2_vits14_224_int16_nashm_20261102_o1/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: cls_feat
+        shape:
+        - 1
+        - 384
+        dtype: float32
+      - name: patch_feat
+        shape:
+        - 1
+        - 256
+        - 384
+        dtype: float32
+      runtime_input:
+        name: input
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+        dtype: float32
+        layout: NCHW
+        type: featuremap
+        source: ddr
+        color: RGB
+        normalization: (pixel/255 - ImageNet mean) / ImageNet std
+      preprocessing: cv2 BGR to RGB; INTER_CUBIC short side 256; floor resize dimensions
+        and floor center 224 crop; float32 /255; ImageNet mean/std; contiguous NCHW
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 50
+      calibration:
+        count: 50
+        manifest:
+          relative_path: runs/conversion/dinov2-batch-20261102-r05/shared/calibration_manifest.json
+          sha256: 0791d68b1ddeb1d7bc1f9ea5ce8301e43be8d8c45bd495dd26d5cf24886f60e9
+          size_bytes: 21057
+        source_manifest_sha256: 1d50d53df79c85c9129db9b90570b0f67ef1347c5285a68f4397a4ce1a2c0921
+        producer_sha256: e572e09790f6543f1829750dd84a9b4c423e5adf41b1cfce318bd3a14e4e738c
+        dataset: COCO 2017 train2017
+        sampling: first 50 image names sorted from frozen seed42 200-image manifest
+        preprocess: cv2 BGR to RGB; INTER_CUBIC short side 256; floor resize dimensions
+          and floor center 224 crop; float32 /255; ImageNet mean/std; contiguous NCHW
+      calibration_method:
+        configured: unset; native modelwise search
+        selected: max
+        source_log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r03/s100p/logs/compile.log
+          sha256: 540a3c280b4cb930b41475b2fbbf95db23cad447926852bdc2c76ccdf19aa9a8
+          size_bytes: 10912
+      host_check:
+        status: passed
+        real_input_count: 3
+        atol: 0.001
+        rtol: 0.001
+        minimum_cosine_required: 0.99999
+        min_cosine_observed: 0.9999999999385822
+        max_abs_observed: 0.00043648481369018555
+        report:
+          relative_path: runs/conversion/dinov2-batch-20261102-r05/shared/host_parity.json
+          sha256: afeabfaae8b0d5ce11e2a9c1962d463d7923b839aa52f12befe590d2c15fc889
+          size_bytes: 4427
+        scope: unmodified upstream -> rewritten PyTorch -> ORT; float graph only,
+          not HBM board accuracy
+      host_resources:
+        cpus: 4
+        memory_gib: 8
+      execution_environment:
+        HBTL_THREAD_NUM: '2'
+        OMP_NUM_THREADS: '2'
+        MKL_NUM_THREADS: '2'
+        OPENBLAS_NUM_THREADS: '2'
+        OMP_WAIT_POLICY: PASSIVE
+        GOMP_SPINCOUNT: '0'
+        NVIDIA_TF32_OVERRIDE: '0'
+        HORIZON_TC_UI_DEBUG: '1'
+      hbtl_threads_observed: 2
+      recalibration: false
+      static_abi: passed
+      optimization_level: O1
+      compile_parameter_diff:
+        status: passed
+        changed_backend_parameter_only: 'opt: 2 -> 1'
+        old_actual:
+          jobs: 2
+          balance: 100
+          advice: 1.0
+          progress_bar: true
+          opt: 2
+          core_num: 1
+          max_l2m_size: 0
+          max_time_per_fc: 0
+          debug: false
+          cache_mode: disable
+          input_no_padding: true
+          output_no_padding: true
+        new_actual:
+          jobs: 2
+          balance: 100
+          advice: 1.0
+          progress_bar: true
+          opt: 1
+          core_num: 1
+          max_l2m_size: 0
+          max_time_per_fc: 0
+          debug: false
+          cache_mode: disable
+          input_no_padding: true
+          output_no_padding: true
+        actual_line: '2026-11-03 00:34:37,850 file: hbm_builder.py func: hbm_builder
+          line No: 66 Compile params: {''jobs'': 2, ''balance'': 100, ''advice'':
+          1.0, ''progress_bar'': True, ''opt'': 1, ''core_num'': 1, ''max_l2m_size'':
+          0, ''max_time_per_fc'': 0, ''debug'': False, ''cache_mode'': ''disable'',
+          ''input_no_padding'': True, ''output_no_padding'': True}'
+      node_info_source:
+        status: passed
+        source_run: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/node-info-recovery
+        source_quantized_bc_sha256: 874d707164ef4e5523858496f0ee9e6536a8281ddbc458c3222c7878a71686ae
+        compile_input_bc_sha256: 874d707164ef4e5523858496f0ee9e6536a8281ddbc458c3222c7878a71686ae
+        csv:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/node-info-recovery/dinov2_vits14_224_int16_nashm_20261102_node_info.csv
+          sha256: e67251a6a568c63e313b83277e9205db1c6e511b2952736f71bcae3362f5f02e
+          size_bytes: 45960
+        node_rows: 639
+        execution_image: ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0
+        execution_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+        execution_environment:
+          HBTL_THREAD_NUM: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+          OPENBLAS_NUM_THREADS: '2'
+          OMP_WAIT_POLICY: PASSIVE
+          GOMP_SPINCOUNT: '0'
+          NVIDIA_TF32_OVERRIDE: '0'
+        comparison_input_count: 1
+        first_real_input_bytes_sha256: 971c9e4e011a415b3d25b63405b88f541bff60bc5c02ede652d06cc55ed4a34e
+        new_node_info_executed_during_o1_compile: false
+        stage_note: CPU recovery of missing CUDA report
+        board_accuracy: not-run
+      quantization_policy: Internal all_node_type/model_output_type int16 configuration
+        retained; actual public HBM outputs float32
+      memory_guard:
+        captured_at: '2026-11-02T17:15:43.078321+00:00'
+        source_state:
+          relative_path: inbox/converted-batch-20261102/memory-window-yoloe-r02-20261102-v2/state.json
+          sha256: a9d6b91e6cca51aa58f07f0aca662bf06a7b6cadd17950c1b2e3f63c06f0fd32
+          size_bytes: 1165
+        container_id: 38cd92237261c7771a9883c6293e9da3b6690723be75091d185ae1d0c5009d52
+        events: []
+        scope: parent memory guard events observed through artifact completion; compiler
+          parameters unchanged
+      node_info_scope: Native full-node recovery diagnostics; not dataset accuracy
+        or board inference
+      output_transform: Raw FLOAT32 public outputs; no L2 normalization or softmax
+      evidence:
+        run.yaml:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/run.yaml
+          sha256: b8261eaab56a011ea5fece2698a166eaaa1237e5ad31e60719c138af6467cd28
+          size_bytes: 84
+        result.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/result.json
+          sha256: fb6e85e7b6afaa573bca718e2daf83ffac1e0ee2e4e1e973c99b6353805c736a
+          size_bytes: 1883
+        output/oe_report.html:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/output/oe_report.html
+          sha256: ca63308a58658671378f5b2b1f9c38b558e5b39fe507cc6952ba0fb5729dea8a
+          size_bytes: 1648799
+        output/oe_report_data.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/output/oe_report_data.json
+          sha256: a38d54a47991a8ef841f88e2ec3ea09f5500c7f3e0a2447a78889e3fa9aad72a
+          size_bytes: 156729
+        output/abi_check.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/output/abi_check.json
+          sha256: 35c9b74f53887f98e903d261406a84e8ef91387bba6a838a2f479416158f2802
+          size_bytes: 707
+        output/build_receipt.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/output/build_receipt.json
+          sha256: f34839e0c13b1c3a08260f96de6369e512acd7c7b1f37369f364b8d5c25fb8eb
+          size_bytes: 2361
+        output/oe_report_data_source.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/output/oe_report_data_source.json
+          sha256: 123d106acb7916142551de3db1f5fe75ba6cecb65b92d6c3752605621648baa0
+          size_bytes: 14541
+        output/dinov2_vits14_224_int16_nashm_20261102_o1_node_info.csv:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/output/dinov2_vits14_224_int16_nashm_20261102_o1_node_info.csv
+          sha256: e67251a6a568c63e313b83277e9205db1c6e511b2952736f71bcae3362f5f02e
+          size_bytes: 45960
+        output/hb_compile.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/output/hb_compile.log
+          sha256: 8d8031ba2532fe3ca0920b170e66b5d0e3dcf023c77d74efc3ece0dda3fac54d
+          size_bytes: 16348
+        output/node-info-source.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/output/node-info-source.json
+          sha256: a7bc5b2e5ac0ad061a14184154fe5aff90c7f11b881e7c5de40ee6b8e627cbee
+          size_bytes: 745
+        output/dinov2_vits14_224_int16_nashm_20261102.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/output/dinov2_vits14_224_int16_nashm_20261102.json
+          sha256: 123d106acb7916142551de3db1f5fe75ba6cecb65b92d6c3752605621648baa0
+          size_bytes: 14541
+        output/dinov2_vits14_224_int16_nashm_20261102.html:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/output/dinov2_vits14_224_int16_nashm_20261102.html
+          sha256: ca63308a58658671378f5b2b1f9c38b558e5b39fe507cc6952ba0fb5729dea8a
+          size_bytes: 1648799
+        output/hb_compile_native.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/output/hb_compile_native.log
+          sha256: 7d64a2c2b440ce64212d2ef94092a6dbce9cff653d77c3785097044738f0d309
+          size_bytes: 3725
+        node-info-recovery/dinov2_vits14_224_int16_nashm_20261102_node_info.csv:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/node-info-recovery/dinov2_vits14_224_int16_nashm_20261102_node_info.csv
+          sha256: e67251a6a568c63e313b83277e9205db1c6e511b2952736f71bcae3362f5f02e
+          size_bytes: 45960
+        node-info-recovery/dinov2_vits14_224_int16_nashm_20261102_quant_info.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/node-info-recovery/dinov2_vits14_224_int16_nashm_20261102_quant_info.json
+          sha256: a5d0c667a63a41156e4f1ffbaf96fd3c1697d6b2aff5a7536d4d02a253ddb54a
+          size_bytes: 358230
+        node-info-recovery/recovery-result.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/node-info-recovery/recovery-result.json
+          sha256: 6716aa8aafe3a6f7359446eb650dc757ebaee3cb8d9faa3f56f1c085a8577d99
+          size_bytes: 795
+        node-info-recovery/node-info-config.yaml:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/node-info-recovery/node-info-config.yaml
+          sha256: 3058e263de8380c6cc72bf8c77d7062b62515723eb6bc16261ae65c7be663495
+          size_bytes: 1260
+        input/compile.yaml:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/input/compile.yaml
+          sha256: 7c8e1e80f3c9c5019c924bd3302c129cb1a67c59a4a11db9ac8a1b3c273bd589
+          size_bytes: 1251
+        input/o1-source-receipt.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/input/o1-source-receipt.json
+          sha256: 96e652a2ed16d7f992fadca5d0e0ea9d093eabd9163397e2c8e2b2ff8d142487
+          size_bytes: 8462
+        logs/original-container-before-stop.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/original-container-before-stop.json
+          sha256: 5a299793db50c0fa4eda838bace2b6c2b9f409767e1849e5256a2d33e3892937
+          size_bytes: 8472
+        logs/nodeinfo-cpu.receipt.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/nodeinfo-cpu.receipt.json
+          sha256: 357a90c29282c069f8730b006ec41257f2a34dae36331e5add25945060839895
+          size_bytes: 1458
+        logs/postprocessing-failure.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/postprocessing-failure.json
+          sha256: 14e0750b65cb9972511ce0a381ca18674aac224159cd827258bbfecefc6fb3b4
+          size_bytes: 554
+        logs/compile.receipt.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/compile.receipt.json
+          sha256: 0e017cd14f89faa3ffed800533bb966e9696cf02910effce23f61f688cde2325
+          size_bytes: 1511
+        logs/compile.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/compile.log
+          sha256: 975c735946787d60617e1c159d210f3b32e9cb6ae05d23500f6782049f53a90c
+          size_bytes: 8782
+        logs/converted-bc-public-io.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/converted-bc-public-io.json
+          sha256: dc974c3a56655d6773364251bc82a7c9fbf6d235d43d274a5c2c96d3e5c3cc6d
+          size_bytes: 787
+        logs/nodeinfo-cpu.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/nodeinfo-cpu.log
+          sha256: bc3b295f45404ee92733f9009b32d59980de110d0e5e191c69cde31f2903364d
+          size_bytes: 124631
+        logs/nodeinfo-controller.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/nodeinfo-controller.log
+          sha256: 7049f3d978dca7611870745c7ef9cc6fad3ea06548516ec7fb16051af0010ea9
+          size_bytes: 1266
+        logs/controller.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/controller.log
+          sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+          size_bytes: 0
+        logs/hbm_info.command.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/hbm_info.command.json
+          sha256: 66fe93ea04ca55a99c0e067ef69e59401352618965dca10e5901f1ef380391da
+          size_bytes: 1307
+        logs/hbm_info.receipt.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/hbm_info.receipt.json
+          sha256: edceb7d2560a68aaede54644451dc04beca5c2811386357c55a1a1b7c782b4c6
+          size_bytes: 1378
+        logs/original-context-retirement.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/original-context-retirement.json
+          sha256: feae0f89337b71cec2df353c8462952338489ee6bf45a84a3a93388cc74e31ad
+          size_bytes: 1149
+        logs/compile-parameter-diff.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/compile-parameter-diff.json
+          sha256: 46556acdad10a83cd4a51eecfbb164726b34f2b53a059ebadc831d1a64d542d5
+          size_bytes: 1000
+        logs/hbm_info.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/hbm_info.log
+          sha256: ebb52ddbd1ae4b9c6679571aecd43ebb3c7c8975f44b0853a76a859a9ab4b1c3
+          size_bytes: 7508
+        logs/memory-guard-snapshot.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/memory-guard-snapshot.json
+          sha256: 14429c479159e6fd77072621adc7c183e3cefdcebda137ff62b426b7867bff52
+          size_bytes: 635
+        logs/o2-stop-receipt.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/o2-stop-receipt.json
+          sha256: 8f3fca33d53afe0b7e831570e3a3a81f4f142364c7a7a24e1242b363be0d2740
+          size_bytes: 1813
+        logs/o2-container-before-stop.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/o2-container-before-stop.json
+          sha256: 9a63c3534ae22522e9f994a29f1e42b00834d0567e0bfc21650f22579bbd2b17
+          size_bytes: 9627
+        logs/report-input-provenance.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/report-input-provenance.json
+          sha256: 1b72b2427e6229a854c7630014c6b9e01fe26fd9dc2df87b60b2ef1b8d7d0051
+          size_bytes: 1210
+        logs/nodeinfo-controller-start.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/nodeinfo-controller-start.json
+          sha256: b1e7ddc85f33670a516ada30627317e66ba70b837f0ea5941e533d1cd67ad770
+          size_bytes: 17
+        logs/abi-contract-correction.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/abi-contract-correction.json
+          sha256: fef899dc9933950ec79da908193f3026d9080bb8df439dfc7ccacab040d61147
+          size_bytes: 957
+        logs/compile.command.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/compile.command.json
+          sha256: 4a797105aff7a21bad109f5fb2029b7d22807165ad3d02a38e1bb3a3f44323c1
+          size_bytes: 1440
+        logs/bc-entry-audit.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/bc-entry-audit.json
+          sha256: bd49b7a0eb7137bfbb18b2050431fc72f5f0c90cbf5ce2844674feb3f06b7df6
+          size_bytes: 1374
+        logs/extract_oe_report.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/extract_oe_report.log
+          sha256: 7501cd3197add0deabd348870d3311897a8cf98fd31fb8b6e8afc8b69bc75b02
+          size_bytes: 370
+        logs/controller-start.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/logs/controller-start.json
+          sha256: 909193a4398409bb81ffdac077f0548514b8f11ad3dd606c774cb359be373d6e
+          size_bytes: 240
+        work/node_info_recovery.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/work/node_info_recovery.log
+          sha256: 6bd8454a3c06478bb5d99310d79f8381aa4ce1892c6ab561e8ab931a4300e137
+          size_bytes: 258443
+        work/hb_compile.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/work/hb_compile.log
+          sha256: 7d64a2c2b440ce64212d2ef94092a6dbce9cff653d77c3785097044738f0d309
+          size_bytes: 3725
+        work/hb_model_info.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/work/hb_model_info.log
+          sha256: 5e01040901df257b4ff02294ed9907a62786eb22c565845a597ce091b8399b4e
+          size_bytes: 11491
+        work/.hb_model_info/dinov2_vits14_224_int16_nashm_20261102.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/work/.hb_model_info/dinov2_vits14_224_int16_nashm_20261102.json
+          sha256: 123d106acb7916142551de3db1f5fe75ba6cecb65b92d6c3752605621648baa0
+          size_bytes: 14541
+        work/.hb_model_info/dinov2_vits14_224_int16_nashm_20261102.html:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/work/.hb_model_info/dinov2_vits14_224_int16_nashm_20261102.html
+          sha256: ca63308a58658671378f5b2b1f9c38b558e5b39fe507cc6952ba0fb5729dea8a
+          size_bytes: 1648799
+        input/frozen/dinov2_vits14_224_int16_nashm_20261102_quant_info.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/input/frozen/dinov2_vits14_224_int16_nashm_20261102_quant_info.json
+          sha256: a5d0c667a63a41156e4f1ffbaf96fd3c1697d6b2aff5a7536d4d02a253ddb54a
+          size_bytes: 358230
+        input/o2-evidence/compile.yaml:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/input/o2-evidence/compile.yaml
+          sha256: 6ca74bc5d77fcb0eec66667a6edb1e3d8703968c61f4d2db3352b596f9042ea2
+          size_bytes: 1245
+        input/o2-evidence/recovery-runtime.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/input/o2-evidence/recovery-runtime.json
+          sha256: 3c3353f1a7d3c5fba3eb820572e9b58fb247c1f42f58c2ea474f4e52af0bcace
+          size_bytes: 1414
+        input/o2-evidence/source-pause.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/input/o2-evidence/source-pause.json
+          sha256: 7971452c3c3b1e39cae58421d605f8dc6a9e804df42ca6cfa2601e80c9ff4761
+          size_bytes: 363
+        input/o2-evidence/route.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/input/o2-evidence/route.json
+          sha256: 843394beeff819126c40e94f7083786d7d37e879b5c5e7a55cf2bbbdc0cba73a
+          size_bytes: 3008
+        input/o2-evidence/recovery.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/input/o2-evidence/recovery.log
+          sha256: 6dbe126f1eb1c1fdd080ce36ed11adf71df900cee119b3e91a005c88c45f87fe
+          size_bytes: 7091
+        input/o2-evidence/hb_compile.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/input/o2-evidence/hb_compile.log
+          sha256: 2db488e66b598a605f03d5bc2ad57aaf6fbe48768557daec8ee9f88ef5990c11
+          size_bytes: 25303
+        input/o2-evidence/full_compile_config.yaml:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/input/o2-evidence/full_compile_config.yaml
+          sha256: 15116226f9a2d7b05c3c1d28b914b043bd58c3ce8f86a2c6665b07917e55e9da
+          size_bytes: 720
+        input/o2-evidence/original_compile.yaml:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/input/o2-evidence/original_compile.yaml
+          sha256: 16ba623fe99ec24270c1740c9b001443e0aef82e8337bee4bf75d6e6b950de77
+          size_bytes: 1245
+        input/o2-evidence/missing-node-info.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s100p/input/o2-evidence/missing-node-info.json
+          sha256: 6747841f8315937b45334a80b5018645a7e4af033604eb0859ab4026d6cf4425
+          size_bytes: 1252
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: 05a94aae2cb7da14a6a0810c7c7e5e5bff604012b943dd66708e4cd9cc224cbe
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: dc1cecf898171ef8c0b0fa875e616873f387e4f4
+      build_id: dinov2-batch-20261102-r06-o1-s100p
+      source_repository_commit: 7764ea0f912e53c92e82eb78a2a1631e92725fc8
+      source_checkpoint_sha256: b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9
+      checkpoint_revision: sha256:b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9
+      source_weight_url: https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth
+      onnx_sha256: 93a2ec95730d985f78be03b98284b4d4bd6ea979a5ea0a9d2122bee57a712758
+      config_sha256: 7c8e1e80f3c9c5019c924bd3302c129cb1a67c59a4a11db9ac8a1b3c273bd589
+      exporter_sha256: 8972ad60d74800f0938898188cdc840d132051181540064e6055951b49ec69e4
+      mapper_sha256: e572e09790f6543f1829750dd84a9b4c423e5adf41b1cfce318bd3a14e4e738c
+      calibration_manifest_sha256: 0791d68b1ddeb1d7bc1f9ea5ce8301e43be8d8c45bd495dd26d5cf24886f60e9
+      calibration_producer_sha256: e572e09790f6543f1829750dd84a9b4c423e5adf41b1cfce318bd3a14e4e738c
+      source_ptq_sha256: d61162c10d9221ac74b9cb55d013861c0c32b4aa39e3b6d99f7e4caa41ea7757
+      source_quantized_bc_sha256: 874d707164ef4e5523858496f0ee9e6536a8281ddbc458c3222c7878a71686ae
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      toolchain_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      quantization_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      quantization_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      precision_policy: int16
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: ac50ad4e8fdea26c31f24f35838999f3d9d4c4f0c0fc6ab3cf0379ce8bf282a0
+    runtime_command: python3 samples/vision/dinov2/runtime/python/main.py --target
+      s100p --asset-id s:dinov2:nash-m/dinov2_vits14_224_int16_nashm_20261102_o1.hbm
+      --model-path /path/to/dinov2_vits14_224_int16_nashm_20261102_o1.hbm --test-img
+      /path/to/image.jpg
+  - platform: s600
+    license:
+      name: Apache-2.0
+      url: https://github.com/facebookresearch/dinov2/blob/7764ea0f912e53c92e82eb78a2a1631e92725fc8/LICENSE
+      scope: model
+    status: converted
+    converted_at: '2026-11-02T17:28:00.233780+00:00'
+    metadata_revision: 1
+    artifact:
+      filename: dinov2_vits14_224_int16_nashp_20261102_o1.hbm
+      format: hbm
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/dinov2/dinov2_vits14_224_int16_nashp_20261102_o1.hbm
+      sha256: e7b720b39d5475d440d8631ba0ac008f230fa28e8a5b1d12d887a60a7cd2c549
+      size_bytes: 29648128
+      march: nash-p
+      runtime_input: featuremap
+      runtime_dtype: float32
+      runtime_layout: NCHW
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/dinov2/dinov2_vits14_224_int16_nashp_20261102_o1/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/dinov2/dinov2_vits14_224_int16_nashp_20261102_o1/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/dinov2/dinov2_vits14_224_int16_nashp_20261102_o1/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/dinov2/dinov2_vits14_224_int16_nashp_20261102_o1/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: cls_feat
+        shape:
+        - 1
+        - 384
+        dtype: float32
+      - name: patch_feat
+        shape:
+        - 1
+        - 256
+        - 384
+        dtype: float32
+      runtime_input:
+        name: input
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+        dtype: float32
+        layout: NCHW
+        type: featuremap
+        source: ddr
+        color: RGB
+        normalization: (pixel/255 - ImageNet mean) / ImageNet std
+      preprocessing: cv2 BGR to RGB; INTER_CUBIC short side 256; floor resize dimensions
+        and floor center 224 crop; float32 /255; ImageNet mean/std; contiguous NCHW
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 50
+      calibration:
+        count: 50
+        manifest:
+          relative_path: runs/conversion/dinov2-batch-20261102-r05/shared/calibration_manifest.json
+          sha256: 0791d68b1ddeb1d7bc1f9ea5ce8301e43be8d8c45bd495dd26d5cf24886f60e9
+          size_bytes: 21057
+        source_manifest_sha256: 1d50d53df79c85c9129db9b90570b0f67ef1347c5285a68f4397a4ce1a2c0921
+        producer_sha256: e572e09790f6543f1829750dd84a9b4c423e5adf41b1cfce318bd3a14e4e738c
+        dataset: COCO 2017 train2017
+        sampling: first 50 image names sorted from frozen seed42 200-image manifest
+        preprocess: cv2 BGR to RGB; INTER_CUBIC short side 256; floor resize dimensions
+          and floor center 224 crop; float32 /255; ImageNet mean/std; contiguous NCHW
+      calibration_method:
+        configured: unset; native modelwise search
+        selected: max
+        source_log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r04/s600/logs/compile.log
+          sha256: 17b59240cec77c094a407153bff6644af37aa190888f248b7c7f145824e5394e
+          size_bytes: 135131
+      host_check:
+        status: passed
+        real_input_count: 3
+        atol: 0.001
+        rtol: 0.001
+        minimum_cosine_required: 0.99999
+        min_cosine_observed: 0.9999999999385822
+        max_abs_observed: 0.00043648481369018555
+        report:
+          relative_path: runs/conversion/dinov2-batch-20261102-r05/shared/host_parity.json
+          sha256: afeabfaae8b0d5ce11e2a9c1962d463d7923b839aa52f12befe590d2c15fc889
+          size_bytes: 4427
+        scope: unmodified upstream -> rewritten PyTorch -> ORT; float graph only,
+          not HBM board accuracy
+      host_resources:
+        cpus: 4
+        memory_gib: 8
+      execution_environment:
+        HBTL_THREAD_NUM: '2'
+        OMP_NUM_THREADS: '2'
+        MKL_NUM_THREADS: '2'
+        OPENBLAS_NUM_THREADS: '2'
+        OMP_WAIT_POLICY: PASSIVE
+        GOMP_SPINCOUNT: '0'
+        NVIDIA_TF32_OVERRIDE: '0'
+        HORIZON_TC_UI_DEBUG: '1'
+      hbtl_threads_observed: 2
+      recalibration: false
+      static_abi: passed
+      optimization_level: O1
+      compile_parameter_diff:
+        status: passed
+        changed_backend_parameter_only: 'opt: 2 -> 1'
+        old_actual:
+          jobs: 2
+          balance: 100
+          advice: 1.0
+          progress_bar: true
+          opt: 2
+          core_num: 1
+          max_l2m_size: 0
+          max_time_per_fc: 0
+          debug: false
+          cache_mode: disable
+          input_no_padding: true
+          output_no_padding: true
+        new_actual:
+          jobs: 2
+          balance: 100
+          advice: 1.0
+          progress_bar: true
+          opt: 1
+          core_num: 1
+          max_l2m_size: 0
+          max_time_per_fc: 0
+          debug: false
+          cache_mode: disable
+          input_no_padding: true
+          output_no_padding: true
+        actual_line: '2026-11-03 00:34:30,632 file: hbm_builder.py func: hbm_builder
+          line No: 66 Compile params: {''jobs'': 2, ''balance'': 100, ''advice'':
+          1.0, ''progress_bar'': True, ''opt'': 1, ''core_num'': 1, ''max_l2m_size'':
+          0, ''max_time_per_fc'': 0, ''debug'': False, ''cache_mode'': ''disable'',
+          ''input_no_padding'': True, ''output_no_padding'': True}'
+      node_info_source:
+        status: passed
+        source_run: runs/conversion/dinov2-batch-20261102-r05/s600
+        source_quantized_bc_sha256: c0c850a11ebb9ab3decbdde69000ca074d90021fe05c60149c33dd06a1c513d1
+        compile_input_bc_sha256: c0c850a11ebb9ab3decbdde69000ca074d90021fe05c60149c33dd06a1c513d1
+        csv:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/input/o2-evidence/dinov2_vits14_224_int16_nashp_20261102_node_info.csv
+          sha256: 7d4f1c7cdbdc2c4fdde866f660947be743d3a17bbd18fc9cc9f01aebddc3b5ba
+          size_bytes: 47726
+        node_rows: 639
+        execution_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+        execution_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+        execution_environment:
+          HBTL_THREAD_NUM: '2'
+          OMP_WAIT_POLICY: PASSIVE
+          GOMP_SPINCOUNT: '0'
+          NVIDIA_TF32_OVERRIDE: '0'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+          OPENBLAS_NUM_THREADS: '2'
+        comparison_input_count: 1
+        first_real_input_bytes_sha256: 971c9e4e011a415b3d25b63405b88f541bff60bc5c02ede652d06cc55ed4a34e
+        new_node_info_executed_during_o1_compile: false
+        stage_note: Original full NodeInfo completed before O2 backend compilation
+        board_accuracy: not-run
+      quantization_policy: Internal all_node_type/model_output_type int16 configuration
+        retained; actual public HBM outputs float32
+      memory_guard:
+        captured_at: '2026-11-02T17:22:57.987126+00:00'
+        source_state:
+          relative_path: inbox/converted-batch-20261102/memory-window-yoloe-r02-20261102-v2/state.json
+          sha256: e31383f92f63274d0bbb3755b13bf276484c05b655633ede75e4ca06d9cbfd0c
+          size_bytes: 1165
+        container_id: a5b95d719974d83d130533465f3a255ff70f1a05d04c239deb8aa7ef06e5cb7e
+        events: []
+        scope: parent memory guard events observed through artifact completion; compiler
+          parameters unchanged
+      node_info_scope: Native full-node recovery diagnostics; not dataset accuracy
+        or board inference
+      output_transform: Raw FLOAT32 public outputs; no L2 normalization or softmax
+      evidence:
+        run.yaml:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/run.yaml
+          sha256: 6aa382709b34e57b94d729fc9a0196292b96a8c93169fa3aed7ea621912ff8f3
+          size_bytes: 83
+        result.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/result.json
+          sha256: 3cfe31528d7e755fada6bc7323a273b4c0d25f03872fe887ca4192841474fc99
+          size_bytes: 1854
+        output/oe_report.html:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/output/oe_report.html
+          sha256: fd835f821c10f8e5707344d4a94ceafc5373df38eeb39103400349b66a24d69b
+          size_bytes: 1648118
+        output/oe_report_data.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/output/oe_report_data.json
+          sha256: e06a1689624d7e08057fa7cf05dcf4c34b15e67e804fbd6ef8d6b7f0dfd80cef
+          size_bytes: 158309
+        output/dinov2_vits14_224_int16_nashp_20261102.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/output/dinov2_vits14_224_int16_nashp_20261102.json
+          sha256: 3be1a7dd0dbfb416ac6f831e0e028523dbb59b5b0ef546a9c03a8949d3e8baf6
+          size_bytes: 12603
+        output/abi_check.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/output/abi_check.json
+          sha256: 0f8845f2c409846b2f4fbd6436f93c96538ce0c5522898f082ce2d5ffe61a7c5
+          size_bytes: 707
+        output/build_receipt.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/output/build_receipt.json
+          sha256: 99422ebd5958c6d84f33eac60daca50219a6b58aa9b541319d9de0cfc6a6a9f3
+          size_bytes: 2333
+        output/oe_report_data_source.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/output/oe_report_data_source.json
+          sha256: 3be1a7dd0dbfb416ac6f831e0e028523dbb59b5b0ef546a9c03a8949d3e8baf6
+          size_bytes: 12603
+        output/hb_compile.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/output/hb_compile.log
+          sha256: e67f0528e7f1cbe4756a37d634e57cb41fdadaf673d19be24a7e1e9515410240
+          size_bytes: 15993
+        output/node-info-source.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/output/node-info-source.json
+          sha256: aefb6c9d9667c1cd11cfe53ca49b663761eb0b39ab2d0ba788067043da594d2c
+          size_bytes: 720
+        output/hb_compile_native.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/output/hb_compile_native.log
+          sha256: 812b74924ddd19d47e8de2d4048aa427c04adf3eb1b8009d569246aa3b15352d
+          size_bytes: 3721
+        output/dinov2_vits14_224_int16_nashp_20261102_o1_node_info.csv:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/output/dinov2_vits14_224_int16_nashp_20261102_o1_node_info.csv
+          sha256: 7d4f1c7cdbdc2c4fdde866f660947be743d3a17bbd18fc9cc9f01aebddc3b5ba
+          size_bytes: 47726
+        output/dinov2_vits14_224_int16_nashp_20261102.html:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/output/dinov2_vits14_224_int16_nashp_20261102.html
+          sha256: fd835f821c10f8e5707344d4a94ceafc5373df38eeb39103400349b66a24d69b
+          size_bytes: 1648118
+        input/compile.yaml:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/input/compile.yaml
+          sha256: 54f887f70b7d067f14d8cee37d99cefc862e3d2280aafefe42b9f1f7d87bfaa6
+          size_bytes: 1250
+        input/o1-source-receipt.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/input/o1-source-receipt.json
+          sha256: 1cbf0ec013f3b7e841a2e848db8e6806628f9a0f1f1ae0488ebeaf6396d2048e
+          size_bytes: 7667
+        logs/original-container-before-stop.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/original-container-before-stop.json
+          sha256: 07c04d6f5fd2e8e37fb1bd12c5513cceeb1add9eceafa9a1c6ce390cc6beadd4
+          size_bytes: 8534
+        logs/postprocessing-failure.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/postprocessing-failure.json
+          sha256: dd17178f9804931b772ccd49677a8a5080a6424ffe35a3f3f720758a4fe86ac6
+          size_bytes: 551
+        logs/compile.receipt.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/compile.receipt.json
+          sha256: 44c4258f894f7426a8269213337457b120148199f40837da612e1ef057c83dee
+          size_bytes: 1507
+        logs/compile.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/compile.log
+          sha256: 6e9c05a6437f0767273980f280e6e65878d59f8f12c473da83f435f68e33e14a
+          size_bytes: 8436
+        logs/converted-bc-public-io.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/converted-bc-public-io.json
+          sha256: 62c80e9c3d888125a5538d94de9f3afd98fefacab2ad03188255f19ff906fd45
+          size_bytes: 786
+        logs/controller.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/controller.log
+          sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+          size_bytes: 0
+        logs/hbm_info.command.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/hbm_info.command.json
+          sha256: 26cd65483193e0088a23b2e54dc57867851478d559a846541fe21078b3f31890
+          size_bytes: 1304
+        logs/hbm_info.receipt.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/hbm_info.receipt.json
+          sha256: c81daedb79daedaf583090d5659c93a9434ff59d037a04deb49acc014398534e
+          size_bytes: 1375
+        logs/original-context-retirement.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/original-context-retirement.json
+          sha256: f15e6122c89697b3918fd6b45eb1c3d253c5807af32d12c05f640ffbaaf2b5a1
+          size_bytes: 1393
+        logs/compile-parameter-diff.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/compile-parameter-diff.json
+          sha256: 0dc55071bae993f59bffddedc55c7d73ebe95dc9a38dd354d9413a8cbb91ebaf
+          size_bytes: 1000
+        logs/hbm_info.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/hbm_info.log
+          sha256: db639f7be137d62106c718cf3b91e58917fa3f30a3b4431496ab7f258e22f9a0
+          size_bytes: 7499
+        logs/memory-guard-snapshot.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/memory-guard-snapshot.json
+          sha256: ffd450bffbeca4f0b0a827b1dffb1176f13c13c6ed266be14bcc91db95987ec2
+          size_bytes: 635
+        logs/o2-stop-receipt.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/o2-stop-receipt.json
+          sha256: feff3a7bbb6392dd963be8c8d13247d93710fca9446b7de14c39b9f19090d559
+          size_bytes: 1843
+        logs/o2-container-before-stop.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/o2-container-before-stop.json
+          sha256: 36768f12f881a76d464ae2efc51324964f5d7700cec13c874e0de559182fde6e
+          size_bytes: 9629
+        logs/report-input-provenance.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/report-input-provenance.json
+          sha256: 873f33cccdff756054097ab6bce297de74a96388d15feaadc2da7892c4628a02
+          size_bytes: 1206
+        logs/abi-contract-correction.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/abi-contract-correction.json
+          sha256: 8e6a33edaaab9eb2b943cd2031e59baa665198ffb0e005f6703a827f11e22507
+          size_bytes: 956
+        logs/compile.command.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/compile.command.json
+          sha256: 23cf3809b3489f0598d4e921fa65abffa27083eea7e3ce87071781d034232aae
+          size_bytes: 1436
+        logs/bc-entry-audit.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/bc-entry-audit.json
+          sha256: 73946d43b54e81c89a280f37c0027c37fa0f3f5375cd96443ad5a49878f0c57f
+          size_bytes: 1373
+        logs/extract_oe_report.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/extract_oe_report.log
+          sha256: c445d27d2d2f89c7fa6c4116e4bb09ae40caf66c1cac85af75e7fc20bbb30753
+          size_bytes: 368
+        logs/controller-start.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/logs/controller-start.json
+          sha256: bf723cbd7c86c641119f8bbea92513201e9d08d6ca09132c294924c0c3bd0c3c
+          size_bytes: 239
+        work/hb_compile.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/work/hb_compile.log
+          sha256: 812b74924ddd19d47e8de2d4048aa427c04adf3eb1b8009d569246aa3b15352d
+          size_bytes: 3721
+        work/hb_model_info.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/work/hb_model_info.log
+          sha256: 7e53af5ff27d6ff69ee8a990bbb6e0617760d95dfbbb277b8ce3fa1ae359bb8c
+          size_bytes: 11486
+        work/.hb_model_info/dinov2_vits14_224_int16_nashp_20261102.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/work/.hb_model_info/dinov2_vits14_224_int16_nashp_20261102.json
+          sha256: 3be1a7dd0dbfb416ac6f831e0e028523dbb59b5b0ef546a9c03a8949d3e8baf6
+          size_bytes: 12603
+        work/.hb_model_info/dinov2_vits14_224_int16_nashp_20261102.html:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/work/.hb_model_info/dinov2_vits14_224_int16_nashp_20261102.html
+          sha256: fd835f821c10f8e5707344d4a94ceafc5373df38eeb39103400349b66a24d69b
+          size_bytes: 1648118
+        input/frozen/dinov2_vits14_224_int16_nashp_20261102_quant_info.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/input/frozen/dinov2_vits14_224_int16_nashp_20261102_quant_info.json
+          sha256: a5d0c667a63a41156e4f1ffbaf96fd3c1697d6b2aff5a7536d4d02a253ddb54a
+          size_bytes: 358230
+        input/o2-evidence/compile.yaml:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/input/o2-evidence/compile.yaml
+          sha256: a97ecf726c8f85c087dcba1f21cc052ccc558fc09e5ee4588daf4514c69d6565
+          size_bytes: 1244
+        input/o2-evidence/recovery-runtime.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/input/o2-evidence/recovery-runtime.json
+          sha256: 8701935f2cb9b408f7d5d097b5e12d8d996e6b1a624ae8d9a51bb60da3409baf
+          size_bytes: 1414
+        input/o2-evidence/source-pause.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/input/o2-evidence/source-pause.json
+          sha256: 9da7d38759bdf1062162e30f70daa0e5bc8bd63c5e8ac3a3a9695da353ef8450
+          size_bytes: 362
+        input/o2-evidence/route.json:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/input/o2-evidence/route.json
+          sha256: e25acffe64adbdd453e6522273e8b80bd7ca3e288aedcf8f0eb33d2c19d5321e
+          size_bytes: 3000
+        input/o2-evidence/dinov2_vits14_224_int16_nashp_20261102_node_info.csv:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/input/o2-evidence/dinov2_vits14_224_int16_nashp_20261102_node_info.csv
+          sha256: 7d4f1c7cdbdc2c4fdde866f660947be743d3a17bbd18fc9cc9f01aebddc3b5ba
+          size_bytes: 47726
+        input/o2-evidence/recovery.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/input/o2-evidence/recovery.log
+          sha256: dbe019ca7dc9adf81b96b285663817c3b10bca216de1eab57d6b16aef8bc6c80
+          size_bytes: 127616
+        input/o2-evidence/hb_compile.log:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/input/o2-evidence/hb_compile.log
+          sha256: 39f162ca0f91d02dc65e8695f692fed2b73d3b4567b0ca834ce92cacac185cbd
+          size_bytes: 259954
+        input/o2-evidence/full_compile_config.yaml:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/input/o2-evidence/full_compile_config.yaml
+          sha256: e8292b8eb9575ad824046e8ecb6cba4658741eca33b6f177975c31593f16f3ce
+          size_bytes: 720
+        input/o2-evidence/original_compile.yaml:
+          relative_path: runs/conversion/dinov2-batch-20261102-r06-o1/s600/input/o2-evidence/original_compile.yaml
+          sha256: cbac09aee8e67c74f14dac118f86170ac5f698403e71637dc3b2c6928fa798b0
+          size_bytes: 1244
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: e7b720b39d5475d440d8631ba0ac008f230fa28e8a5b1d12d887a60a7cd2c549
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: 3ea1d789f39f8c19f7aa7247790a6b679325afa3
+      build_id: dinov2-batch-20261102-r06-o1-s600
+      source_repository_commit: 7764ea0f912e53c92e82eb78a2a1631e92725fc8
+      source_checkpoint_sha256: b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9
+      checkpoint_revision: sha256:b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9
+      source_weight_url: https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth
+      onnx_sha256: 93a2ec95730d985f78be03b98284b4d4bd6ea979a5ea0a9d2122bee57a712758
+      config_sha256: 54f887f70b7d067f14d8cee37d99cefc862e3d2280aafefe42b9f1f7d87bfaa6
+      exporter_sha256: 8972ad60d74800f0938898188cdc840d132051181540064e6055951b49ec69e4
+      mapper_sha256: e572e09790f6543f1829750dd84a9b4c423e5adf41b1cfce318bd3a14e4e738c
+      calibration_manifest_sha256: 0791d68b1ddeb1d7bc1f9ea5ce8301e43be8d8c45bd495dd26d5cf24886f60e9
+      calibration_producer_sha256: e572e09790f6543f1829750dd84a9b4c423e5adf41b1cfce318bd3a14e4e738c
+      source_ptq_sha256: c7db66fafbf22c627ca0443b204541e8ec79ae8e302954ca2e776e96abf7e307
+      source_quantized_bc_sha256: c0c850a11ebb9ab3decbdde69000ca074d90021fe05c60149c33dd06a1c513d1
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      toolchain_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      quantization_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      quantization_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      precision_policy: int16
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 97ee4a770c15e810d09363b559730be8dc45dced658b903c2b21d4f6eed9527c
+    runtime_command: python3 samples/vision/dinov2/runtime/python/main.py --target
+      s600 --asset-id s:dinov2:nash-p/dinov2_vits14_224_int16_nashp_20261102_o1.hbm
+      --model-path /path/to/dinov2_vits14_224_int16_nashp_20261102_o1.hbm --test-img
+      /path/to/image.jpg

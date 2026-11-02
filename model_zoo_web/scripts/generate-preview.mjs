@@ -374,6 +374,8 @@ const taskMetadata = {
   seg: { id: 'instance-segmentation', label: '实例分割', description: '实例分割模型' },
   pose: { id: 'pose-estimation', label: '姿态估计', description: '人体姿态估计模型' },
   matting: { id: 'portrait-matting', label: '人像抠图', description: '人像 alpha 遮罩预测模型' },
+  embed: { id: 'image-embedding', label: '视觉特征提取', description: '图像向量与局部特征提取模型' },
+  depth: { id: 'monocular-depth-estimation', label: '深度估计', description: '单张图像的相对深度估计模型' },
   obb: { id: 'object-detection', label: '旋转框检测', description: '旋转框目标检测模型' },
 };
 
@@ -387,13 +389,17 @@ const displayNames = (record, size) => {
       .map(part => (/^\d/.test(part) ? part : part[0].toUpperCase() + part.slice(1))).join(' ');
     return { model: record.name, variant: `${record.name} ${sizeName}` };
   }
-  const familyName = family.replace(/^yolo/i, 'YOLO');
+  const familyName = /^yoloe/i.test(family)
+    ? family.replace(/^yoloe/i, 'YOLOE')
+    : family.replace(/^yolo/i, 'YOLO');
   // Spell tasks the way Ultralytics names them ("YOLO26 Classify",
   // "YOLO26 Segment") and keep acronyms whole: "YOLO26 OBB", not "Obb".
   const taskName = { detect: 'Detect', cls: 'Classify', seg: 'Segment', obb: 'OBB' }[task] || task[0].toUpperCase() + task.slice(1);
+  const yoloeSeries = /^yoloe(\d+)$/i.exec(family);
+  const variantFamily = yoloeSeries && size.startsWith(yoloeSeries[1]) ? 'YOLOE' : familyName;
   return {
     model: `${familyName} ${taskName}`,
-    variant: `${familyName}${size} ${taskName}`,
+    variant: `${variantFamily}${size} ${taskName}`,
   };
 };
 const models = [];
@@ -754,6 +760,10 @@ for (const record of catalog.models || []) {
         runtimeInput: {
           format: artifact.runtime_input,
           resolution: [variant.input.height, variant.input.width],
+          ...(converted && artifact.runtime_input === 'featuremap' ? {
+            ...(artifact.runtime_dtype ? { dtype: artifact.runtime_dtype } : {}),
+            ...(artifact.runtime_layout ? { payload_layout: artifact.runtime_layout } : {}),
+          } : {}),
           ...(artifact.runtime_tensor || {}),
         },
       };

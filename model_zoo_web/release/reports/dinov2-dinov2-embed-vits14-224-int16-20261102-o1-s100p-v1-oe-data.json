@@ -1,0 +1,6013 @@
+{
+  "schema_version": 1,
+  "generated_from_run": "dinov2-s100p-20261102-r06-o1",
+  "generated_at": "2026-11-02T16:31:50.110245+00:00",
+  "model": {
+    "source": "dinov2",
+    "family": "dinov2",
+    "task": "embedding",
+    "size": "vits14_224_int16_20261102_o1"
+  },
+  "target": {
+    "platform": "s100p",
+    "march": "nash-m"
+  },
+  "toolchain": {
+    "hbdk": "4.7.5",
+    "hmct": "2.6.5",
+    "hb_compile": "3.5.3"
+  },
+  "io": {
+    "inputs": [
+      {
+        "name": "input",
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "dtype": "float32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "cls_feat",
+        "shape": [
+          1,
+          384
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "patch_feat",
+        "shape": [
+          1,
+          256,
+          384
+        ],
+        "dtype": "float32"
+      }
+    ]
+  },
+  "quantization": {
+    "summary": {
+      "total_nodes": 639,
+      "unit_counts": {
+        "--": 639
+      },
+      "dtype_counts": {
+        "--": 639
+      },
+      "measured_nodes": 317,
+      "weakest_node": {
+        "name": "...tn/qkv/Add_output_0_reshape_Transpose",
+        "cosine": 0.943723
+      },
+      "weakest_nodes": [
+        {
+          "name": "...tn/qkv/Add_output_0_reshape_Transpose",
+          "cosine": 0.943723
+        },
+        {
+          "name": "/blocks.3/attn/Reshape",
+          "cosine": 0.943723
+        },
+        {
+          "name": "/blocks.2/attn/Transpose_3",
+          "cosine": 0.988949
+        },
+        {
+          "name": "...ks.2/attn/proj/MatMul_reshape_to_4dim",
+          "cosine": 0.988949
+        },
+        {
+          "name": "/blocks.2/attn/proj/MatMul_transpose_in",
+          "cosine": 0.988949
+        }
+      ],
+      "cosine_percentiles": {
+        "p10": 0.994893,
+        "median": 0.997891
+      }
+    },
+    "nodes": [
+      {
+        "name": "/patch_embed/proj/Conv",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.999888,
+        "calibrated_cosine": 0.999888,
+        "threshold": 2.64,
+        "dtype": "--"
+      },
+      {
+        "name": "/patch_embed/Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.999888,
+        "threshold": 1.87338,
+        "dtype": "--"
+      },
+      {
+        "name": "/patch_embed/Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.999888,
+        "threshold": 1.87338,
+        "dtype": "--"
+      },
+      {
+        "name": "/Concat",
+        "on": "--",
+        "type": "Concat",
+        "cosine": 0.999888,
+        "calibrated_cosine": 0.999888,
+        "threshold": 1.87338,
+        "dtype": "--"
+      },
+      {
+        "name": "/Add",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.999885,
+        "calibrated_cosine": 0.999885,
+        "threshold": 1.87338,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/norm1/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999947,
+        "threshold": 1.873783,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/norm1/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.999885,
+        "threshold": 1.873783,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/norm1/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999989,
+        "threshold": 1.862968,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/norm1/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 1.0,
+        "threshold": 3.47065,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.0/norm1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 1.0,
+        "threshold": 0.192521,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/norm1/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999822,
+        "threshold": 1.862968,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/norm1/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.99966,
+        "threshold": 10.623995,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/norm1/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.999571,
+        "threshold": 10.933531,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.0/attn/qkv/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.999496,
+        "calibrated_cosine": 0.999571,
+        "threshold": 10.535583,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/attn/qkv/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.999496,
+        "calibrated_cosine": 0.999571,
+        "threshold": 10.535583,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/attn/qkv/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.99992,
+        "calibrated_cosine": 0.999983,
+        "threshold": 10.535583,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/qkv/Add_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.995188,
+        "calibrated_cosine": 0.999982,
+        "threshold": 17.192043,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/attn/Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.995188,
+        "calibrated_cosine": 0.999982,
+        "threshold": 17.192043,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/attn/Split",
+        "on": "--",
+        "type": "Split",
+        "cosine": 0.999772,
+        "calibrated_cosine": 0.999975,
+        "threshold": 17.192043,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/attn/Squeeze_1",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.999966,
+        "calibrated_cosine": 0.99999,
+        "threshold": 17.192043,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/attn/Squeeze_2",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.999652,
+        "calibrated_cosine": 0.999757,
+        "threshold": 17.192043,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/attn/Transpose_1",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.999758,
+        "threshold": 17.192043,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/attn/Mul",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999975,
+        "threshold": 7.951601,
+        "dtype": "--"
+      },
+      {
+        "name": "...0/attn/Mul_output_0_transpose_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.999772,
+        "calibrated_cosine": 0.999975,
+        "threshold": 0.99395,
+        "dtype": "--"
+      },
+      {
+        "name": ".../blocks.0/attn/Mul_output_0_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.999772,
+        "calibrated_cosine": 0.999975,
+        "threshold": 0.99395,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/attn/Transpose_2",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.999991,
+        "threshold": 17.192043,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/attn/MatMul",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": 0.999916,
+        "calibrated_cosine": 0.999994,
+        "threshold": 0.99395,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.999991,
+        "threshold": 150.261063,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.789105,
+        "threshold": 150.261063,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.998294,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.999362,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.999961,
+        "threshold": 69.06694,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Mul",
+        "cosine": 0.997844,
+        "calibrated_cosine": 0.999936,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/attn/MatMul_1",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.997562,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/attn/Transpose_3",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.99543,
+        "calibrated_cosine": 0.997562,
+        "threshold": 8.501547,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.0/attn/proj/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.99543,
+        "calibrated_cosine": 0.997562,
+        "threshold": 8.501547,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/attn/proj/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.99543,
+        "calibrated_cosine": 0.997563,
+        "threshold": 8.501547,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/attn/proj/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.99669,
+        "calibrated_cosine": 0.999659,
+        "threshold": 8.501547,
+        "dtype": "--"
+      },
+      {
+        "name": "....0/ls1/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.99669,
+        "calibrated_cosine": 0.999659,
+        "threshold": 1.687605,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.0/ls1/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.99669,
+        "calibrated_cosine": 0.999659,
+        "threshold": 1.687605,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/Add",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.998492,
+        "calibrated_cosine": 0.999778,
+        "threshold": 1.873783,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/norm2/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.998381,
+        "threshold": 2.266026,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/norm2/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.999779,
+        "threshold": 2.266026,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/norm2/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999881,
+        "threshold": 2.268719,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/norm2/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999972,
+        "threshold": 5.147088,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.0/norm2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999952,
+        "threshold": 0.131872,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/norm2/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.99962,
+        "threshold": 2.268719,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/norm2/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999838,
+        "threshold": 16.177507,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/norm2/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.999842,
+        "threshold": 136.444809,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/mlp/fc1/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998705,
+        "calibrated_cosine": 0.999842,
+        "threshold": 138.858612,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/mlp/fc1/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998705,
+        "calibrated_cosine": 0.999843,
+        "threshold": 138.858612,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/mlp/fc1/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.99877,
+        "calibrated_cosine": 0.999893,
+        "threshold": 138.858612,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/mlp/act/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.999328,
+        "threshold": 21.828953,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/mlp/fc2/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998624,
+        "calibrated_cosine": 0.999772,
+        "threshold": 14.903049,
+        "dtype": "--"
+      },
+      {
+        "name": "....0/ls2/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998625,
+        "calibrated_cosine": 0.999772,
+        "threshold": 2.408564,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.0/ls2/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998625,
+        "calibrated_cosine": 0.999772,
+        "threshold": 2.408564,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.0/Add_1",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.998253,
+        "calibrated_cosine": 0.998911,
+        "threshold": 2.266026,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/norm1/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999676,
+        "threshold": 0.909981,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/norm1/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.99891,
+        "threshold": 0.909981,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/norm1/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999869,
+        "threshold": 0.903884,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/norm1/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999986,
+        "threshold": 0.817006,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.1/norm1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999995,
+        "threshold": 0.046253,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/norm1/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998129,
+        "threshold": 0.903884,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/norm1/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997765,
+        "threshold": 14.953361,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/norm1/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.997577,
+        "threshold": 20.815836,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.1/attn/qkv/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.996406,
+        "calibrated_cosine": 0.997577,
+        "threshold": 20.281473,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/attn/qkv/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.996406,
+        "calibrated_cosine": 0.997577,
+        "threshold": 20.281473,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/attn/qkv/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.999414,
+        "calibrated_cosine": 0.999692,
+        "threshold": 20.281473,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/qkv/Add_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.999408,
+        "calibrated_cosine": 0.999691,
+        "threshold": 12.504793,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/attn/Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.999408,
+        "calibrated_cosine": 0.999691,
+        "threshold": 12.504793,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/attn/Split",
+        "on": "--",
+        "type": "Split",
+        "cosine": 0.998615,
+        "calibrated_cosine": 0.999241,
+        "threshold": 12.504793,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/attn/Squeeze_1",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.999674,
+        "calibrated_cosine": 0.999838,
+        "threshold": 12.504793,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/attn/Squeeze_2",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.995414,
+        "calibrated_cosine": 0.997094,
+        "threshold": 12.504793,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/attn/Transpose_1",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.997095,
+        "threshold": 12.504793,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/attn/Mul",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999241,
+        "threshold": 10.631594,
+        "dtype": "--"
+      },
+      {
+        "name": "...1/attn/Mul_output_0_transpose_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998616,
+        "calibrated_cosine": 0.999241,
+        "threshold": 1.328949,
+        "dtype": "--"
+      },
+      {
+        "name": ".../blocks.1/attn/Mul_output_0_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998616,
+        "calibrated_cosine": 0.999241,
+        "threshold": 1.328949,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/attn/Transpose_2",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.999838,
+        "threshold": 12.504793,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/attn/MatMul",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": 0.999681,
+        "calibrated_cosine": 0.999911,
+        "threshold": 1.328949,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.999953,
+        "threshold": 75.125526,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.881997,
+        "threshold": 75.125526,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.998555,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.998812,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.999407,
+        "threshold": 58.056206,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Mul",
+        "cosine": 0.99875,
+        "calibrated_cosine": 0.99913,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/attn/MatMul_1",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.994621,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/attn/Transpose_3",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.991846,
+        "calibrated_cosine": 0.994621,
+        "threshold": 5.366253,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.1/attn/proj/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.991846,
+        "calibrated_cosine": 0.994621,
+        "threshold": 5.366253,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/attn/proj/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.991846,
+        "calibrated_cosine": 0.994621,
+        "threshold": 5.366253,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/attn/proj/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998139,
+        "calibrated_cosine": 0.998951,
+        "threshold": 5.366253,
+        "dtype": "--"
+      },
+      {
+        "name": "....1/ls1/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998138,
+        "calibrated_cosine": 0.998951,
+        "threshold": 0.976549,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.1/ls1/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998138,
+        "calibrated_cosine": 0.998951,
+        "threshold": 0.976549,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/Add",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.998165,
+        "calibrated_cosine": 0.999057,
+        "threshold": 0.909981,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/norm2/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.997206,
+        "threshold": 0.770966,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/norm2/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.999061,
+        "threshold": 0.770966,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/norm2/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998825,
+        "threshold": 0.766828,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/norm2/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999881,
+        "threshold": 0.588025,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.1/norm2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999951,
+        "threshold": 0.030914,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/norm2/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998451,
+        "threshold": 0.766828,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/norm2/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997566,
+        "threshold": 14.770906,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/norm2/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.997508,
+        "threshold": 20.741901,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/mlp/fc1/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.994311,
+        "calibrated_cosine": 0.997508,
+        "threshold": 20.770437,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/mlp/fc1/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.994311,
+        "calibrated_cosine": 0.997508,
+        "threshold": 20.770437,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/mlp/fc1/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.997002,
+        "calibrated_cosine": 0.998739,
+        "threshold": 20.770437,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/mlp/act/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.998545,
+        "threshold": 14.552708,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/mlp/fc2/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.997741,
+        "calibrated_cosine": 0.998871,
+        "threshold": 12.761071,
+        "dtype": "--"
+      },
+      {
+        "name": "....1/ls2/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.997741,
+        "calibrated_cosine": 0.998871,
+        "threshold": 0.666329,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.1/ls2/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.997741,
+        "calibrated_cosine": 0.998871,
+        "threshold": 0.666329,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.1/Add_1",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.996818,
+        "calibrated_cosine": 0.998672,
+        "threshold": 0.770966,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/norm1/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.996191,
+        "threshold": 0.707199,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/norm1/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.998677,
+        "threshold": 0.707199,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/norm1/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998618,
+        "threshold": 0.707771,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/norm1/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999929,
+        "threshold": 0.50094,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.2/norm1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999977,
+        "threshold": 0.019571,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/norm1/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998294,
+        "threshold": 0.707771,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/norm1/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998256,
+        "threshold": 12.963698,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/norm1/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.998135,
+        "threshold": 22.563654,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.2/attn/qkv/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.995829,
+        "calibrated_cosine": 0.998135,
+        "threshold": 22.551235,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/attn/qkv/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.995829,
+        "calibrated_cosine": 0.998135,
+        "threshold": 22.551235,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/attn/qkv/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.99861,
+        "calibrated_cosine": 0.999434,
+        "threshold": 22.551235,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/qkv/Add_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998608,
+        "calibrated_cosine": 0.999433,
+        "threshold": 11.545671,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/attn/Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998608,
+        "calibrated_cosine": 0.999433,
+        "threshold": 11.545671,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/attn/Split",
+        "on": "--",
+        "type": "Split",
+        "cosine": 0.998353,
+        "calibrated_cosine": 0.999354,
+        "threshold": 11.545671,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/attn/Squeeze_1",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.999028,
+        "calibrated_cosine": 0.999607,
+        "threshold": 11.545671,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/attn/Squeeze_2",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.993455,
+        "calibrated_cosine": 0.997081,
+        "threshold": 11.545671,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/attn/Transpose_1",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.997082,
+        "threshold": 11.545671,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/attn/Mul",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999354,
+        "threshold": 9.746837,
+        "dtype": "--"
+      },
+      {
+        "name": "...2/attn/Mul_output_0_transpose_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998353,
+        "calibrated_cosine": 0.999354,
+        "threshold": 1.218355,
+        "dtype": "--"
+      },
+      {
+        "name": ".../blocks.2/attn/Mul_output_0_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998353,
+        "calibrated_cosine": 0.999354,
+        "threshold": 1.218355,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/attn/Transpose_2",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.999606,
+        "threshold": 11.545671,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/attn/MatMul",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": 0.999486,
+        "calibrated_cosine": 0.999857,
+        "threshold": 1.218355,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.999953,
+        "threshold": 82.773026,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.874546,
+        "threshold": 82.773026,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.996194,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.99398,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.999478,
+        "threshold": 74.343552,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Mul",
+        "cosine": 0.998677,
+        "calibrated_cosine": 0.999279,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/attn/MatMul_1",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.994774,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/attn/Transpose_3",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.988949,
+        "calibrated_cosine": 0.994773,
+        "threshold": 3.549252,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.2/attn/proj/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.988949,
+        "calibrated_cosine": 0.994773,
+        "threshold": 3.549252,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/attn/proj/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.988949,
+        "calibrated_cosine": 0.994773,
+        "threshold": 3.549252,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/attn/proj/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.992056,
+        "calibrated_cosine": 0.997426,
+        "threshold": 3.549252,
+        "dtype": "--"
+      },
+      {
+        "name": "....2/ls1/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.992056,
+        "calibrated_cosine": 0.997426,
+        "threshold": 0.795544,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.2/ls1/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.992056,
+        "calibrated_cosine": 0.997426,
+        "threshold": 0.795544,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/Add",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.997252,
+        "calibrated_cosine": 0.998758,
+        "threshold": 0.707199,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/norm2/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.996899,
+        "threshold": 0.500178,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/norm2/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.998765,
+        "threshold": 0.500178,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/norm2/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998968,
+        "threshold": 0.50194,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/norm2/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999913,
+        "threshold": 0.251944,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.2/norm2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999973,
+        "threshold": 0.018284,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/norm2/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998195,
+        "threshold": 0.50194,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/norm2/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997816,
+        "threshold": 13.178258,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/norm2/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.997657,
+        "threshold": 26.01857,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/mlp/fc1/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.994489,
+        "calibrated_cosine": 0.997657,
+        "threshold": 25.928728,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/mlp/fc1/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.994489,
+        "calibrated_cosine": 0.997658,
+        "threshold": 25.928728,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/mlp/fc1/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998183,
+        "calibrated_cosine": 0.999241,
+        "threshold": 25.928728,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/mlp/act/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.998333,
+        "threshold": 13.065537,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/mlp/fc2/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.995871,
+        "calibrated_cosine": 0.998262,
+        "threshold": 13.065537,
+        "dtype": "--"
+      },
+      {
+        "name": "....2/ls2/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.995871,
+        "calibrated_cosine": 0.998262,
+        "threshold": 1.233026,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.2/ls2/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.995871,
+        "calibrated_cosine": 0.998262,
+        "threshold": 1.233026,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.2/Add_1",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.997789,
+        "calibrated_cosine": 0.998888,
+        "threshold": 0.500178,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/norm1/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.996141,
+        "threshold": 1.701834,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/norm1/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.998897,
+        "threshold": 1.701834,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/norm1/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999901,
+        "threshold": 1.697823,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/norm1/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999981,
+        "threshold": 2.882603,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.3/norm1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999994,
+        "threshold": 0.010511,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/norm1/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998781,
+        "threshold": 1.697823,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/norm1/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999253,
+        "threshold": 17.312124,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/norm1/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.999192,
+        "threshold": 30.423672,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.3/attn/qkv/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998392,
+        "calibrated_cosine": 0.999192,
+        "threshold": 29.607677,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/attn/qkv/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998392,
+        "calibrated_cosine": 0.999192,
+        "threshold": 29.607677,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/attn/qkv/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.999924,
+        "calibrated_cosine": 0.999964,
+        "threshold": 29.607677,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/qkv/Add_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.943723,
+        "calibrated_cosine": 0.999965,
+        "threshold": 38.685146,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/attn/Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.943723,
+        "calibrated_cosine": 0.999965,
+        "threshold": 38.685146,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/attn/Split",
+        "on": "--",
+        "type": "Split",
+        "cosine": 0.99944,
+        "calibrated_cosine": 0.999722,
+        "threshold": 38.685146,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/attn/Squeeze_1",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.999967,
+        "calibrated_cosine": 0.999984,
+        "threshold": 38.685146,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/attn/Squeeze_2",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.996201,
+        "calibrated_cosine": 0.998335,
+        "threshold": 38.685146,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/attn/Transpose_1",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.998335,
+        "threshold": 38.685146,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/attn/Mul",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999722,
+        "threshold": 13.570332,
+        "dtype": "--"
+      },
+      {
+        "name": "...3/attn/Mul_output_0_transpose_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.999439,
+        "calibrated_cosine": 0.999722,
+        "threshold": 1.696291,
+        "dtype": "--"
+      },
+      {
+        "name": ".../blocks.3/attn/Mul_output_0_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.999439,
+        "calibrated_cosine": 0.999722,
+        "threshold": 1.696291,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/attn/Transpose_2",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.999984,
+        "threshold": 38.685146,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/attn/MatMul",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": 0.999978,
+        "calibrated_cosine": 0.999988,
+        "threshold": 1.696291,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.999991,
+        "threshold": 380.125336,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.900126,
+        "threshold": 380.125336,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.991991,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.995875,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.996812,
+        "threshold": 54.768299,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Mul",
+        "cosine": 0.994229,
+        "calibrated_cosine": 0.994502,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/attn/MatMul_1",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.996893,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/attn/Transpose_3",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.994553,
+        "calibrated_cosine": 0.996893,
+        "threshold": 2.669652,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.3/attn/proj/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.994553,
+        "calibrated_cosine": 0.996893,
+        "threshold": 2.669652,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/attn/proj/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.994553,
+        "calibrated_cosine": 0.996893,
+        "threshold": 2.669652,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/attn/proj/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.995682,
+        "calibrated_cosine": 0.997612,
+        "threshold": 2.669652,
+        "dtype": "--"
+      },
+      {
+        "name": "....3/ls1/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.995682,
+        "calibrated_cosine": 0.997612,
+        "threshold": 0.321591,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.3/ls1/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.995682,
+        "calibrated_cosine": 0.997612,
+        "threshold": 0.321591,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/Add",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.99677,
+        "calibrated_cosine": 0.99812,
+        "threshold": 1.701834,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/norm2/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.997383,
+        "threshold": 1.623343,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/norm2/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.998125,
+        "threshold": 1.623343,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/norm2/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.99987,
+        "threshold": 1.619164,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/norm2/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999934,
+        "threshold": 2.621692,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.3/norm2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999981,
+        "threshold": 0.010677,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/norm2/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997693,
+        "threshold": 1.619164,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/norm2/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997136,
+        "threshold": 17.228489,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/norm2/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.996954,
+        "threshold": 31.320822,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/mlp/fc1/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.994429,
+        "calibrated_cosine": 0.996954,
+        "threshold": 32.103741,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/mlp/fc1/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.994429,
+        "calibrated_cosine": 0.996954,
+        "threshold": 32.103741,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/mlp/fc1/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998137,
+        "calibrated_cosine": 0.998933,
+        "threshold": 32.103741,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/mlp/act/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.997122,
+        "threshold": 10.41367,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/mlp/fc2/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.994585,
+        "calibrated_cosine": 0.996855,
+        "threshold": 4.202585,
+        "dtype": "--"
+      },
+      {
+        "name": "....3/ls2/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.994585,
+        "calibrated_cosine": 0.996855,
+        "threshold": 0.357223,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.3/ls2/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.994585,
+        "calibrated_cosine": 0.996855,
+        "threshold": 0.357223,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.3/Add_1",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.997013,
+        "calibrated_cosine": 0.998239,
+        "threshold": 1.623343,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/norm1/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.998,
+        "threshold": 1.568553,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/norm1/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.998242,
+        "threshold": 1.568553,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/norm1/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999799,
+        "threshold": 1.56348,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/norm1/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999931,
+        "threshold": 2.444468,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.4/norm1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.99998,
+        "threshold": 0.008981,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/norm1/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998065,
+        "threshold": 1.56348,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/norm1/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997946,
+        "threshold": 16.614891,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/norm1/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.997823,
+        "threshold": 24.235689,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.4/attn/qkv/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.996189,
+        "calibrated_cosine": 0.997823,
+        "threshold": 22.433275,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/attn/qkv/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.996189,
+        "calibrated_cosine": 0.997823,
+        "threshold": 22.433275,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/attn/qkv/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.9982,
+        "calibrated_cosine": 0.998964,
+        "threshold": 22.433275,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/qkv/Add_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998199,
+        "calibrated_cosine": 0.998963,
+        "threshold": 7.887097,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/attn/Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998199,
+        "calibrated_cosine": 0.998963,
+        "threshold": 7.887097,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/attn/Split",
+        "on": "--",
+        "type": "Split",
+        "cosine": 0.99854,
+        "calibrated_cosine": 0.999133,
+        "threshold": 7.887097,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/attn/Squeeze_1",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998358,
+        "calibrated_cosine": 0.999065,
+        "threshold": 7.887097,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/attn/Squeeze_2",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.994236,
+        "calibrated_cosine": 0.996816,
+        "threshold": 7.887097,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/attn/Transpose_1",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.996816,
+        "threshold": 7.887097,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/attn/Mul",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999133,
+        "threshold": 6.942087,
+        "dtype": "--"
+      },
+      {
+        "name": "...4/attn/Mul_output_0_transpose_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.99854,
+        "calibrated_cosine": 0.999133,
+        "threshold": 0.867761,
+        "dtype": "--"
+      },
+      {
+        "name": ".../blocks.4/attn/Mul_output_0_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.99854,
+        "calibrated_cosine": 0.999134,
+        "threshold": 0.867761,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/attn/Transpose_2",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.999065,
+        "threshold": 7.887097,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/attn/MatMul",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": 0.999339,
+        "calibrated_cosine": 0.999619,
+        "threshold": 0.867761,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.999963,
+        "threshold": 26.172115,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.96474,
+        "threshold": 26.172115,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.997072,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.997804,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.999183,
+        "threshold": 73.475159,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Mul",
+        "cosine": 0.998235,
+        "calibrated_cosine": 0.998698,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/attn/MatMul_1",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.996663,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/attn/Transpose_3",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.993733,
+        "calibrated_cosine": 0.996663,
+        "threshold": 2.858957,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.4/attn/proj/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.993733,
+        "calibrated_cosine": 0.996663,
+        "threshold": 2.858957,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/attn/proj/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.993733,
+        "calibrated_cosine": 0.996663,
+        "threshold": 2.858957,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/attn/proj/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.994932,
+        "calibrated_cosine": 0.997266,
+        "threshold": 2.858957,
+        "dtype": "--"
+      },
+      {
+        "name": "....4/ls1/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.994932,
+        "calibrated_cosine": 0.997266,
+        "threshold": 0.321447,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.4/ls1/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.994932,
+        "calibrated_cosine": 0.997266,
+        "threshold": 0.321447,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/Add",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.996556,
+        "calibrated_cosine": 0.997909,
+        "threshold": 1.568553,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/norm2/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.997539,
+        "threshold": 1.54526,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/norm2/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.997912,
+        "threshold": 1.54526,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/norm2/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999776,
+        "threshold": 1.539558,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/norm2/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.99995,
+        "threshold": 2.370238,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.4/norm2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999987,
+        "threshold": 0.00867,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/norm2/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997609,
+        "threshold": 1.539558,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/norm2/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997162,
+        "threshold": 16.711109,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/norm2/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.996973,
+        "threshold": 31.481701,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/mlp/fc1/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.994893,
+        "calibrated_cosine": 0.996973,
+        "threshold": 32.32679,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/mlp/fc1/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.994893,
+        "calibrated_cosine": 0.996973,
+        "threshold": 32.32679,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/mlp/fc1/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998277,
+        "calibrated_cosine": 0.998992,
+        "threshold": 32.32679,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/mlp/act/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.99699,
+        "threshold": 7.970493,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/mlp/fc2/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.994922,
+        "calibrated_cosine": 0.996986,
+        "threshold": 3.531861,
+        "dtype": "--"
+      },
+      {
+        "name": "....4/ls2/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.994922,
+        "calibrated_cosine": 0.996987,
+        "threshold": 0.845461,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.4/ls2/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.994922,
+        "calibrated_cosine": 0.996987,
+        "threshold": 0.845461,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.4/Add_1",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.996904,
+        "calibrated_cosine": 0.998018,
+        "threshold": 1.54526,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/norm1/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.997631,
+        "threshold": 1.531854,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/norm1/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.99802,
+        "threshold": 1.531854,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/norm1/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999618,
+        "threshold": 1.525249,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/norm1/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999936,
+        "threshold": 2.326385,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.5/norm1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999981,
+        "threshold": 0.01239,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/norm1/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997846,
+        "threshold": 1.525249,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/norm1/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997597,
+        "threshold": 13.937583,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/norm1/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.997464,
+        "threshold": 21.780073,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.5/attn/qkv/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.995973,
+        "calibrated_cosine": 0.997464,
+        "threshold": 19.199297,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/attn/qkv/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.995973,
+        "calibrated_cosine": 0.997464,
+        "threshold": 19.199297,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/attn/qkv/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998201,
+        "calibrated_cosine": 0.998852,
+        "threshold": 19.199297,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/qkv/Add_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998201,
+        "calibrated_cosine": 0.998851,
+        "threshold": 8.717119,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/attn/Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998201,
+        "calibrated_cosine": 0.998851,
+        "threshold": 8.717119,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/attn/Split",
+        "on": "--",
+        "type": "Split",
+        "cosine": 0.998204,
+        "calibrated_cosine": 0.998875,
+        "threshold": 8.717119,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/attn/Squeeze_1",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998717,
+        "calibrated_cosine": 0.999157,
+        "threshold": 8.717119,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/attn/Squeeze_2",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.995116,
+        "calibrated_cosine": 0.996866,
+        "threshold": 8.717119,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/attn/Transpose_1",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.996867,
+        "threshold": 8.717119,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/attn/Mul",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998875,
+        "threshold": 8.717119,
+        "dtype": "--"
+      },
+      {
+        "name": "...5/attn/Mul_output_0_transpose_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998204,
+        "calibrated_cosine": 0.998875,
+        "threshold": 1.08964,
+        "dtype": "--"
+      },
+      {
+        "name": ".../blocks.5/attn/Mul_output_0_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998204,
+        "calibrated_cosine": 0.998875,
+        "threshold": 1.08964,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/attn/Transpose_2",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.999157,
+        "threshold": 8.717119,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/attn/MatMul",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": 0.999386,
+        "calibrated_cosine": 0.999588,
+        "threshold": 1.08964,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.999955,
+        "threshold": 19.353386,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.991112,
+        "threshold": 19.353386,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.99644,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.997205,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.999065,
+        "threshold": 36.584175,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Mul",
+        "cosine": 0.997987,
+        "calibrated_cosine": 0.998558,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/attn/MatMul_1",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.997251,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/attn/Transpose_3",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.99552,
+        "calibrated_cosine": 0.997251,
+        "threshold": 2.245336,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.5/attn/proj/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.99552,
+        "calibrated_cosine": 0.997251,
+        "threshold": 2.245336,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/attn/proj/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.99552,
+        "calibrated_cosine": 0.99725,
+        "threshold": 2.245336,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/attn/proj/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.99669,
+        "calibrated_cosine": 0.997939,
+        "threshold": 2.245336,
+        "dtype": "--"
+      },
+      {
+        "name": "....5/ls1/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.99669,
+        "calibrated_cosine": 0.997939,
+        "threshold": 0.907031,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.5/ls1/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.99669,
+        "calibrated_cosine": 0.997939,
+        "threshold": 0.907031,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/Add",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.996561,
+        "calibrated_cosine": 0.997801,
+        "threshold": 1.531854,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/norm2/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.99809,
+        "threshold": 1.46704,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/norm2/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.9978,
+        "threshold": 1.46704,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/norm2/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999361,
+        "threshold": 1.460449,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/norm2/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.99994,
+        "threshold": 2.132912,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.5/norm2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999985,
+        "threshold": 0.008742,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/norm2/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997582,
+        "threshold": 1.460449,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/norm2/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997667,
+        "threshold": 15.956067,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/norm2/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.997449,
+        "threshold": 31.596991,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/mlp/fc1/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.995908,
+        "calibrated_cosine": 0.997449,
+        "threshold": 33.045235,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/mlp/fc1/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.995908,
+        "calibrated_cosine": 0.997449,
+        "threshold": 33.045235,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/mlp/fc1/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998583,
+        "calibrated_cosine": 0.999118,
+        "threshold": 33.045235,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/mlp/act/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.996868,
+        "threshold": 7.631037,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/mlp/fc2/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.995767,
+        "calibrated_cosine": 0.997176,
+        "threshold": 3.767958,
+        "dtype": "--"
+      },
+      {
+        "name": "....5/ls2/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.995767,
+        "calibrated_cosine": 0.997176,
+        "threshold": 0.920649,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.5/ls2/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.995767,
+        "calibrated_cosine": 0.997176,
+        "threshold": 0.920649,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.5/Add_1",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.99707,
+        "calibrated_cosine": 0.998065,
+        "threshold": 1.46704,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/norm1/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.998599,
+        "threshold": 1.518101,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/norm1/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.998064,
+        "threshold": 1.518101,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/norm1/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999171,
+        "threshold": 1.50997,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/norm1/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999948,
+        "threshold": 2.280009,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.6/norm1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999987,
+        "threshold": 0.01338,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/norm1/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998063,
+        "threshold": 1.50997,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/norm1/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997804,
+        "threshold": 13.524562,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/norm1/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.99764,
+        "threshold": 23.697449,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.6/attn/qkv/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.996453,
+        "calibrated_cosine": 0.99764,
+        "threshold": 22.986088,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/attn/qkv/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.996453,
+        "calibrated_cosine": 0.997641,
+        "threshold": 22.986088,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/attn/qkv/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998263,
+        "calibrated_cosine": 0.998826,
+        "threshold": 22.986088,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/qkv/Add_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998262,
+        "calibrated_cosine": 0.998826,
+        "threshold": 7.752465,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/attn/Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998262,
+        "calibrated_cosine": 0.998826,
+        "threshold": 7.752465,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/attn/Split",
+        "on": "--",
+        "type": "Split",
+        "cosine": 0.998365,
+        "calibrated_cosine": 0.998899,
+        "threshold": 7.752465,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/attn/Squeeze_1",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998581,
+        "calibrated_cosine": 0.999045,
+        "threshold": 7.752465,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/attn/Squeeze_2",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.996132,
+        "calibrated_cosine": 0.997347,
+        "threshold": 7.752465,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/attn/Transpose_1",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.997347,
+        "threshold": 7.752465,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/attn/Mul",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998899,
+        "threshold": 7.752465,
+        "dtype": "--"
+      },
+      {
+        "name": "...6/attn/Mul_output_0_transpose_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998365,
+        "calibrated_cosine": 0.998899,
+        "threshold": 0.969058,
+        "dtype": "--"
+      },
+      {
+        "name": ".../blocks.6/attn/Mul_output_0_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998365,
+        "calibrated_cosine": 0.998899,
+        "threshold": 0.969058,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/attn/Transpose_2",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.999044,
+        "threshold": 7.752465,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/attn/MatMul",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": 0.999356,
+        "calibrated_cosine": 0.999554,
+        "threshold": 0.969058,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.999946,
+        "threshold": 15.965371,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.998623,
+        "threshold": 15.965371,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.996625,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.99839,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.999099,
+        "threshold": 92.018448,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Mul",
+        "cosine": 0.99787,
+        "calibrated_cosine": 0.998523,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/attn/MatMul_1",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.99851,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/attn/Transpose_3",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.9976,
+        "calibrated_cosine": 0.99851,
+        "threshold": 3.138971,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.6/attn/proj/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.9976,
+        "calibrated_cosine": 0.99851,
+        "threshold": 3.138971,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/attn/proj/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.9976,
+        "calibrated_cosine": 0.99851,
+        "threshold": 3.138971,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/attn/proj/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998055,
+        "calibrated_cosine": 0.998732,
+        "threshold": 3.138971,
+        "dtype": "--"
+      },
+      {
+        "name": "....6/ls1/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998055,
+        "calibrated_cosine": 0.998732,
+        "threshold": 1.449754,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.6/ls1/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998055,
+        "calibrated_cosine": 0.998732,
+        "threshold": 1.449754,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/Add",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.996623,
+        "calibrated_cosine": 0.997787,
+        "threshold": 1.518101,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/norm2/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.99838,
+        "threshold": 1.182968,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/norm2/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.997785,
+        "threshold": 1.182968,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/norm2/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999061,
+        "threshold": 1.177158,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/norm2/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999955,
+        "threshold": 1.3857,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.6/norm2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999989,
+        "threshold": 0.007027,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/norm2/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997684,
+        "threshold": 1.177158,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/norm2/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997488,
+        "threshold": 14.634743,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/norm2/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.997386,
+        "threshold": 30.91485,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/mlp/fc1/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.996018,
+        "calibrated_cosine": 0.997386,
+        "threshold": 35.630829,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/mlp/fc1/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.996018,
+        "calibrated_cosine": 0.997385,
+        "threshold": 35.630829,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/mlp/fc1/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998953,
+        "calibrated_cosine": 0.999304,
+        "threshold": 35.630829,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/mlp/act/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.996769,
+        "threshold": 6.540939,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/mlp/fc2/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.996695,
+        "calibrated_cosine": 0.997887,
+        "threshold": 4.387569,
+        "dtype": "--"
+      },
+      {
+        "name": "....6/ls2/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.996695,
+        "calibrated_cosine": 0.997887,
+        "threshold": 1.994552,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.6/ls2/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.996695,
+        "calibrated_cosine": 0.997887,
+        "threshold": 1.994552,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.6/Add_1",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.996729,
+        "calibrated_cosine": 0.997873,
+        "threshold": 1.182968,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/norm1/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999461,
+        "threshold": 3.120702,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/norm1/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.997863,
+        "threshold": 3.120702,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/norm1/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999633,
+        "threshold": 3.107363,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/norm1/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999922,
+        "threshold": 9.655706,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.7/norm1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999979,
+        "threshold": 0.031836,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/norm1/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997836,
+        "threshold": 3.107363,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/norm1/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997782,
+        "threshold": 17.807001,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/norm1/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.997604,
+        "threshold": 23.048229,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.7/attn/qkv/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.996418,
+        "calibrated_cosine": 0.997604,
+        "threshold": 19.833021,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/attn/qkv/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.996418,
+        "calibrated_cosine": 0.997605,
+        "threshold": 19.833021,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/attn/qkv/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998395,
+        "calibrated_cosine": 0.998882,
+        "threshold": 19.833021,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/qkv/Add_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998395,
+        "calibrated_cosine": 0.998882,
+        "threshold": 8.295947,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/attn/Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998395,
+        "calibrated_cosine": 0.998882,
+        "threshold": 8.295947,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/attn/Split",
+        "on": "--",
+        "type": "Split",
+        "cosine": 0.998633,
+        "calibrated_cosine": 0.999037,
+        "threshold": 8.295947,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/attn/Squeeze_1",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998678,
+        "calibrated_cosine": 0.99908,
+        "threshold": 8.295947,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/attn/Squeeze_2",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.994907,
+        "calibrated_cosine": 0.996536,
+        "threshold": 8.295947,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/attn/Transpose_1",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.996536,
+        "threshold": 8.295947,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/attn/Mul",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999037,
+        "threshold": 8.295947,
+        "dtype": "--"
+      },
+      {
+        "name": "...7/attn/Mul_output_0_transpose_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998633,
+        "calibrated_cosine": 0.999037,
+        "threshold": 1.036993,
+        "dtype": "--"
+      },
+      {
+        "name": ".../blocks.7/attn/Mul_output_0_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998633,
+        "calibrated_cosine": 0.999037,
+        "threshold": 1.036993,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/attn/Transpose_2",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.99908,
+        "threshold": 8.295947,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/attn/MatMul",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": 0.99912,
+        "calibrated_cosine": 0.99932,
+        "threshold": 1.036993,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.999949,
+        "threshold": 20.171618,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.991418,
+        "threshold": 20.171618,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.997601,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.998836,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.999084,
+        "threshold": 47.35157,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Mul",
+        "cosine": 0.997858,
+        "calibrated_cosine": 0.998571,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/attn/MatMul_1",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.997965,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/attn/Transpose_3",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.996959,
+        "calibrated_cosine": 0.997965,
+        "threshold": 2.095357,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.7/attn/proj/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.996959,
+        "calibrated_cosine": 0.997965,
+        "threshold": 2.095357,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/attn/proj/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.996959,
+        "calibrated_cosine": 0.997965,
+        "threshold": 2.095357,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/attn/proj/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998942,
+        "calibrated_cosine": 0.999294,
+        "threshold": 2.095357,
+        "dtype": "--"
+      },
+      {
+        "name": "....7/ls1/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998942,
+        "calibrated_cosine": 0.999294,
+        "threshold": 1.812726,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.7/ls1/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998942,
+        "calibrated_cosine": 0.999294,
+        "threshold": 1.812726,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/Add",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.997018,
+        "calibrated_cosine": 0.998018,
+        "threshold": 3.120702,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/norm2/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999178,
+        "threshold": 1.532815,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/norm2/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.998016,
+        "threshold": 1.532815,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/norm2/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999298,
+        "threshold": 1.525021,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/norm2/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999957,
+        "threshold": 2.32569,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.7/norm2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999988,
+        "threshold": 0.017054,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/norm2/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997916,
+        "threshold": 1.525021,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/norm2/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997713,
+        "threshold": 14.368829,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/norm2/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.997594,
+        "threshold": 19.616163,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/mlp/fc1/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.996381,
+        "calibrated_cosine": 0.997594,
+        "threshold": 20.726664,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/mlp/fc1/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.996381,
+        "calibrated_cosine": 0.997594,
+        "threshold": 20.726664,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/mlp/fc1/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.999178,
+        "calibrated_cosine": 0.999452,
+        "threshold": 20.726664,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/mlp/act/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.997251,
+        "threshold": 9.398877,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/mlp/fc2/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.997488,
+        "calibrated_cosine": 0.998316,
+        "threshold": 9.398877,
+        "dtype": "--"
+      },
+      {
+        "name": "....7/ls2/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.997488,
+        "calibrated_cosine": 0.998316,
+        "threshold": 2.312502,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.7/ls2/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.997488,
+        "calibrated_cosine": 0.998316,
+        "threshold": 2.312502,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.7/Add_1",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.996872,
+        "calibrated_cosine": 0.997915,
+        "threshold": 1.532815,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/norm1/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999375,
+        "threshold": 3.481413,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/norm1/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.997906,
+        "threshold": 3.481413,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/norm1/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999117,
+        "threshold": 3.468105,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/norm1/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.99987,
+        "threshold": 12.027751,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.8/norm1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999968,
+        "threshold": 0.089211,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/norm1/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.99778,
+        "threshold": 3.468105,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/norm1/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.99791,
+        "threshold": 17.945372,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/norm1/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.997733,
+        "threshold": 27.918957,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.8/attn/qkv/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.996742,
+        "calibrated_cosine": 0.997733,
+        "threshold": 23.699879,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/attn/qkv/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.996742,
+        "calibrated_cosine": 0.997733,
+        "threshold": 23.699879,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/attn/qkv/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998384,
+        "calibrated_cosine": 0.998857,
+        "threshold": 23.699879,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/qkv/Add_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998384,
+        "calibrated_cosine": 0.998857,
+        "threshold": 8.877167,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/attn/Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998384,
+        "calibrated_cosine": 0.998857,
+        "threshold": 8.877167,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/attn/Split",
+        "on": "--",
+        "type": "Split",
+        "cosine": 0.998492,
+        "calibrated_cosine": 0.998938,
+        "threshold": 8.877167,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/attn/Squeeze_1",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.99866,
+        "calibrated_cosine": 0.999047,
+        "threshold": 8.877167,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/attn/Squeeze_2",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.996481,
+        "calibrated_cosine": 0.997512,
+        "threshold": 8.877167,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/attn/Transpose_1",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.997512,
+        "threshold": 8.877167,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/attn/Mul",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998938,
+        "threshold": 8.877167,
+        "dtype": "--"
+      },
+      {
+        "name": "...8/attn/Mul_output_0_transpose_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998492,
+        "calibrated_cosine": 0.998938,
+        "threshold": 1.109646,
+        "dtype": "--"
+      },
+      {
+        "name": ".../blocks.8/attn/Mul_output_0_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998492,
+        "calibrated_cosine": 0.998938,
+        "threshold": 1.109646,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/attn/Transpose_2",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.999047,
+        "threshold": 8.877167,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/attn/MatMul",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": 0.999316,
+        "calibrated_cosine": 0.999541,
+        "threshold": 1.109646,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.999943,
+        "threshold": 17.685358,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.998148,
+        "threshold": 17.685358,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.996856,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.998323,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.999046,
+        "threshold": 48.753883,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Mul",
+        "cosine": 0.998094,
+        "calibrated_cosine": 0.998493,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/attn/MatMul_1",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.99879,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/attn/Transpose_3",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998337,
+        "calibrated_cosine": 0.99879,
+        "threshold": 2.825197,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.8/attn/proj/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998337,
+        "calibrated_cosine": 0.99879,
+        "threshold": 2.825197,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/attn/proj/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998337,
+        "calibrated_cosine": 0.998791,
+        "threshold": 2.825197,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/attn/proj/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998915,
+        "calibrated_cosine": 0.999229,
+        "threshold": 2.825197,
+        "dtype": "--"
+      },
+      {
+        "name": "....8/ls1/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998915,
+        "calibrated_cosine": 0.999229,
+        "threshold": 2.283317,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.8/ls1/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998915,
+        "calibrated_cosine": 0.999229,
+        "threshold": 2.283317,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/Add",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.997356,
+        "calibrated_cosine": 0.99818,
+        "threshold": 3.481413,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/norm2/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.998078,
+        "threshold": 1.648107,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/norm2/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.998181,
+        "threshold": 1.648107,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/norm2/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998836,
+        "threshold": 1.652019,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/norm2/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999936,
+        "threshold": 2.729168,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.8/norm2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999985,
+        "threshold": 0.063663,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/norm2/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998029,
+        "threshold": 1.652019,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/norm2/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.99812,
+        "threshold": 12.565862,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/norm2/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.998115,
+        "threshold": 25.484051,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/mlp/fc1/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.99726,
+        "calibrated_cosine": 0.998115,
+        "threshold": 27.665438,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/mlp/fc1/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.99726,
+        "calibrated_cosine": 0.998115,
+        "threshold": 27.665438,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/mlp/fc1/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.999531,
+        "calibrated_cosine": 0.999673,
+        "threshold": 27.665438,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/mlp/act/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.997653,
+        "threshold": 8.78897,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/mlp/fc2/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.997326,
+        "calibrated_cosine": 0.998179,
+        "threshold": 4.506665,
+        "dtype": "--"
+      },
+      {
+        "name": "....8/ls2/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.997327,
+        "calibrated_cosine": 0.998179,
+        "threshold": 4.815622,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.8/ls2/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.997327,
+        "calibrated_cosine": 0.998179,
+        "threshold": 4.815622,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.8/Add_1",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.997242,
+        "calibrated_cosine": 0.998115,
+        "threshold": 1.648107,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/norm1/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.99875,
+        "threshold": 5.905749,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/norm1/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.998113,
+        "threshold": 5.905749,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/norm1/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999289,
+        "threshold": 5.876896,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/norm1/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999846,
+        "threshold": 34.537907,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.9/norm1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999964,
+        "threshold": 0.199157,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/norm1/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998082,
+        "threshold": 5.876896,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/norm1/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998463,
+        "threshold": 17.341934,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/norm1/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.998307,
+        "threshold": 29.369198,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.9/attn/qkv/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.997602,
+        "calibrated_cosine": 0.998307,
+        "threshold": 28.265324,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/attn/qkv/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.997602,
+        "calibrated_cosine": 0.998307,
+        "threshold": 28.265324,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/attn/qkv/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998921,
+        "calibrated_cosine": 0.999237,
+        "threshold": 28.265324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/qkv/Add_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998922,
+        "calibrated_cosine": 0.999236,
+        "threshold": 9.627187,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/attn/Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998922,
+        "calibrated_cosine": 0.999236,
+        "threshold": 9.627187,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/attn/Split",
+        "on": "--",
+        "type": "Split",
+        "cosine": 0.999005,
+        "calibrated_cosine": 0.999296,
+        "threshold": 9.627187,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/attn/Squeeze_1",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.999121,
+        "calibrated_cosine": 0.999393,
+        "threshold": 9.627187,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/attn/Squeeze_2",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.996809,
+        "calibrated_cosine": 0.997624,
+        "threshold": 9.627187,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/attn/Transpose_1",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.997624,
+        "threshold": 9.627187,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/attn/Mul",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999296,
+        "threshold": 9.193836,
+        "dtype": "--"
+      },
+      {
+        "name": "...9/attn/Mul_output_0_transpose_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.999005,
+        "calibrated_cosine": 0.999296,
+        "threshold": 1.14923,
+        "dtype": "--"
+      },
+      {
+        "name": ".../blocks.9/attn/Mul_output_0_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.999005,
+        "calibrated_cosine": 0.999296,
+        "threshold": 1.14923,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/attn/Transpose_2",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.999393,
+        "threshold": 9.627187,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/attn/MatMul",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": 0.99937,
+        "calibrated_cosine": 0.99958,
+        "threshold": 1.14923,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.999947,
+        "threshold": 25.700558,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.987729,
+        "threshold": 25.700558,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.996298,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.997755,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.999068,
+        "threshold": 52.794285,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Mul",
+        "cosine": 0.998022,
+        "calibrated_cosine": 0.99851,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/attn/MatMul_1",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.998798,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/attn/Transpose_3",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998336,
+        "calibrated_cosine": 0.998798,
+        "threshold": 3.028353,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.9/attn/proj/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998336,
+        "calibrated_cosine": 0.998798,
+        "threshold": 3.028353,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/attn/proj/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998336,
+        "calibrated_cosine": 0.998798,
+        "threshold": 3.028353,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/attn/proj/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.999018,
+        "calibrated_cosine": 0.999293,
+        "threshold": 3.028353,
+        "dtype": "--"
+      },
+      {
+        "name": "....9/ls1/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.999018,
+        "calibrated_cosine": 0.999293,
+        "threshold": 2.077512,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.9/ls1/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.999018,
+        "calibrated_cosine": 0.999293,
+        "threshold": 2.077512,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/Add",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.997454,
+        "calibrated_cosine": 0.99823,
+        "threshold": 5.905749,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/norm2/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.998476,
+        "threshold": 4.463677,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/norm2/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.99823,
+        "threshold": 4.463677,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/norm2/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998644,
+        "threshold": 4.441787,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/norm2/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999912,
+        "threshold": 19.729473,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.9/norm2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999979,
+        "threshold": 0.157057,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/norm2/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998186,
+        "threshold": 4.441787,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/norm2/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998233,
+        "threshold": 14.641199,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/norm2/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.998158,
+        "threshold": 21.67864,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/mlp/fc1/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.997385,
+        "calibrated_cosine": 0.998158,
+        "threshold": 23.521235,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/mlp/fc1/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.997385,
+        "calibrated_cosine": 0.998158,
+        "threshold": 23.521235,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/mlp/fc1/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.999413,
+        "calibrated_cosine": 0.999586,
+        "threshold": 23.521235,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/mlp/act/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.997637,
+        "threshold": 10.266283,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/mlp/fc2/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.997021,
+        "calibrated_cosine": 0.997926,
+        "threshold": 10.266283,
+        "dtype": "--"
+      },
+      {
+        "name": "....9/ls2/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.997021,
+        "calibrated_cosine": 0.997926,
+        "threshold": 10.35219,
+        "dtype": "--"
+      },
+      {
+        "name": "...ul_/blocks.9/ls2/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.997021,
+        "calibrated_cosine": 0.997926,
+        "threshold": 10.35219,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.9/Add_1",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.997127,
+        "calibrated_cosine": 0.998008,
+        "threshold": 4.463677,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.10/norm1/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.998402,
+        "threshold": 13.917477,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/norm1/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.998006,
+        "threshold": 13.917477,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/norm1/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999766,
+        "threshold": 13.875077,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.10/norm1/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.99986,
+        "threshold": 192.517761,
+        "dtype": "--"
+      },
+      {
+        "name": "...s.10/norm1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999952,
+        "threshold": 0.596294,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/norm1/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997854,
+        "threshold": 13.875077,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/norm1/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.99838,
+        "threshold": 18.069504,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/norm1/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.998147,
+        "threshold": 40.114109,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.10/attn/qkv/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.997399,
+        "calibrated_cosine": 0.998147,
+        "threshold": 34.538914,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/attn/qkv/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.997399,
+        "calibrated_cosine": 0.998148,
+        "threshold": 34.538914,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/attn/qkv/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998424,
+        "calibrated_cosine": 0.998852,
+        "threshold": 34.538914,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/qkv/Add_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998424,
+        "calibrated_cosine": 0.998852,
+        "threshold": 9.6856,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/attn/Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998424,
+        "calibrated_cosine": 0.998852,
+        "threshold": 9.6856,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/attn/Split",
+        "on": "--",
+        "type": "Split",
+        "cosine": 0.998785,
+        "calibrated_cosine": 0.999102,
+        "threshold": 9.6856,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/attn/Squeeze_1",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998433,
+        "calibrated_cosine": 0.998874,
+        "threshold": 9.6856,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/attn/Squeeze_2",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.99642,
+        "calibrated_cosine": 0.997407,
+        "threshold": 9.6856,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/attn/Transpose_1",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.997407,
+        "threshold": 9.6856,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/attn/Mul",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999102,
+        "threshold": 9.6856,
+        "dtype": "--"
+      },
+      {
+        "name": "...0/attn/Mul_output_0_transpose_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998785,
+        "calibrated_cosine": 0.999102,
+        "threshold": 1.2107,
+        "dtype": "--"
+      },
+      {
+        "name": "...blocks.10/attn/Mul_output_0_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998785,
+        "calibrated_cosine": 0.999102,
+        "threshold": 1.2107,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/attn/Transpose_2",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.998875,
+        "threshold": 9.6856,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/attn/MatMul",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": 0.998399,
+        "calibrated_cosine": 0.998892,
+        "threshold": 1.2107,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.999958,
+        "threshold": 14.625446,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.99975,
+        "threshold": 14.625446,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.998642,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.999037,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.999496,
+        "threshold": 37.960453,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Mul",
+        "cosine": 0.999086,
+        "calibrated_cosine": 0.99925,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/attn/MatMul_1",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.998566,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/attn/Transpose_3",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998183,
+        "calibrated_cosine": 0.998566,
+        "threshold": 2.615805,
+        "dtype": "--"
+      },
+      {
+        "name": "...s.10/attn/proj/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998183,
+        "calibrated_cosine": 0.998566,
+        "threshold": 2.615805,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/attn/proj/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998183,
+        "calibrated_cosine": 0.998566,
+        "threshold": 2.615805,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/attn/proj/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998701,
+        "calibrated_cosine": 0.998987,
+        "threshold": 2.615805,
+        "dtype": "--"
+      },
+      {
+        "name": "...10/ls1/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998701,
+        "calibrated_cosine": 0.998987,
+        "threshold": 2.982489,
+        "dtype": "--"
+      },
+      {
+        "name": "...l_/blocks.10/ls1/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998701,
+        "calibrated_cosine": 0.998987,
+        "threshold": 2.982489,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/Add",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.997112,
+        "calibrated_cosine": 0.997978,
+        "threshold": 13.917477,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.10/norm2/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.998944,
+        "threshold": 11.708872,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/norm2/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.997973,
+        "threshold": 11.708872,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/norm2/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999264,
+        "threshold": 11.666277,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.10/norm2/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999904,
+        "threshold": 136.10202,
+        "dtype": "--"
+      },
+      {
+        "name": "...s.10/norm2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999971,
+        "threshold": 0.495775,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/norm2/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997867,
+        "threshold": 11.666277,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/norm2/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997968,
+        "threshold": 16.906958,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/norm2/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.997877,
+        "threshold": 35.84626,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.10/mlp/fc1/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.996987,
+        "calibrated_cosine": 0.997877,
+        "threshold": 33.693169,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/mlp/fc1/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.996987,
+        "calibrated_cosine": 0.997876,
+        "threshold": 33.693169,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/mlp/fc1/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.999417,
+        "calibrated_cosine": 0.999584,
+        "threshold": 33.693169,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/mlp/act/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.99661,
+        "threshold": 8.42398,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/mlp/fc2/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.996093,
+        "calibrated_cosine": 0.997207,
+        "threshold": 6.10028,
+        "dtype": "--"
+      },
+      {
+        "name": "...10/ls2/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.996093,
+        "calibrated_cosine": 0.997208,
+        "threshold": 16.143799,
+        "dtype": "--"
+      },
+      {
+        "name": "...l_/blocks.10/ls2/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.996093,
+        "calibrated_cosine": 0.997208,
+        "threshold": 16.143799,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.10/Add_1",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.996407,
+        "calibrated_cosine": 0.997446,
+        "threshold": 11.708872,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.11/norm1/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.997998,
+        "threshold": 18.706062,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/norm1/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.997445,
+        "threshold": 18.706062,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/norm1/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.99984,
+        "threshold": 18.684807,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.11/norm1/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999847,
+        "threshold": 349.122009,
+        "dtype": "--"
+      },
+      {
+        "name": "...s.11/norm1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999932,
+        "threshold": 2.013412,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/norm1/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997217,
+        "threshold": 18.684807,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/norm1/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997811,
+        "threshold": 17.880171,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/norm1/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.997547,
+        "threshold": 40.860046,
+        "dtype": "--"
+      },
+      {
+        "name": "...ks.11/attn/qkv/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.996684,
+        "calibrated_cosine": 0.997547,
+        "threshold": 36.600349,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/attn/qkv/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.996684,
+        "calibrated_cosine": 0.997546,
+        "threshold": 36.600349,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/attn/qkv/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998969,
+        "calibrated_cosine": 0.999238,
+        "threshold": 36.600349,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/qkv/Add_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.992969,
+        "calibrated_cosine": 0.999238,
+        "threshold": 19.375078,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/attn/Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.992969,
+        "calibrated_cosine": 0.999238,
+        "threshold": 19.375078,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/attn/Split",
+        "on": "--",
+        "type": "Split",
+        "cosine": 0.998197,
+        "calibrated_cosine": 0.998681,
+        "threshold": 19.375078,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/attn/Squeeze_1",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.999488,
+        "calibrated_cosine": 0.999625,
+        "threshold": 19.375078,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/attn/Squeeze_2",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.995805,
+        "calibrated_cosine": 0.996834,
+        "threshold": 19.375078,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/attn/Transpose_1",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.996834,
+        "threshold": 19.375078,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/attn/Mul",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998681,
+        "threshold": 9.738116,
+        "dtype": "--"
+      },
+      {
+        "name": "...1/attn/Mul_output_0_transpose_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998197,
+        "calibrated_cosine": 0.998681,
+        "threshold": 1.217265,
+        "dtype": "--"
+      },
+      {
+        "name": "...blocks.11/attn/Mul_output_0_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998197,
+        "calibrated_cosine": 0.998681,
+        "threshold": 1.217265,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/attn/Transpose_2",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.999624,
+        "threshold": 19.375078,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/attn/MatMul",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": 0.999706,
+        "calibrated_cosine": 0.999806,
+        "threshold": 1.217265,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.999923,
+        "threshold": 39.362457,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.992396,
+        "threshold": 39.362457,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.994047,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.997219,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.998103,
+        "threshold": 78.67556,
+        "dtype": "--"
+      },
+      {
+        "name": "...tn/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Mul",
+        "cosine": 0.99563,
+        "calibrated_cosine": 0.996675,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/attn/MatMul_1",
+        "on": "--",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.998466,
+        "threshold": 1.0,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/attn/Transpose_3",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998037,
+        "calibrated_cosine": 0.998466,
+        "threshold": 3.420625,
+        "dtype": "--"
+      },
+      {
+        "name": "...s.11/attn/proj/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998037,
+        "calibrated_cosine": 0.998466,
+        "threshold": 3.420625,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/attn/proj/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998037,
+        "calibrated_cosine": 0.998466,
+        "threshold": 3.420625,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/attn/proj/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.998447,
+        "calibrated_cosine": 0.99881,
+        "threshold": 3.420625,
+        "dtype": "--"
+      },
+      {
+        "name": "...11/ls1/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.998446,
+        "calibrated_cosine": 0.99881,
+        "threshold": 13.836972,
+        "dtype": "--"
+      },
+      {
+        "name": "...l_/blocks.11/ls1/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.998446,
+        "calibrated_cosine": 0.99881,
+        "threshold": 13.836972,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/Add",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.99823,
+        "calibrated_cosine": 0.998662,
+        "threshold": 18.706062,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.11/norm2/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.998711,
+        "threshold": 15.407187,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/norm2/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.998662,
+        "threshold": 15.407187,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/norm2/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999075,
+        "threshold": 15.394298,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.11/norm2/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999932,
+        "threshold": 236.984406,
+        "dtype": "--"
+      },
+      {
+        "name": "...s.11/norm2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999982,
+        "threshold": 2.455776,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/norm2/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998652,
+        "threshold": 15.394298,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/norm2/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998517,
+        "threshold": 12.707666,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/norm2/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.998402,
+        "threshold": 19.287413,
+        "dtype": "--"
+      },
+      {
+        "name": "...cks.11/mlp/fc1/MatMul_reshape_to_4dim",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.997891,
+        "calibrated_cosine": 0.998402,
+        "threshold": 18.091602,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/mlp/fc1/MatMul_transpose_in",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.997891,
+        "calibrated_cosine": 0.998402,
+        "threshold": 18.091602,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/mlp/fc1/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.999508,
+        "calibrated_cosine": 0.999621,
+        "threshold": 18.091602,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/mlp/act/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.998453,
+        "threshold": 5.984806,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/mlp/fc2/MatMul",
+        "on": "--",
+        "type": "Conv",
+        "cosine": 0.997866,
+        "calibrated_cosine": 0.998444,
+        "threshold": 5.207313,
+        "dtype": "--"
+      },
+      {
+        "name": "...11/ls2/Mul_output_0_reshape_Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": 0.997866,
+        "calibrated_cosine": 0.998444,
+        "threshold": 9.638813,
+        "dtype": "--"
+      },
+      {
+        "name": "...l_/blocks.11/ls2/Mul_output_0_Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": 0.997866,
+        "calibrated_cosine": 0.998444,
+        "threshold": 9.638813,
+        "dtype": "--"
+      },
+      {
+        "name": "/blocks.11/Add_1",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.997634,
+        "calibrated_cosine": 0.998224,
+        "threshold": 15.407187,
+        "dtype": "--"
+      },
+      {
+        "name": "/norm/LayerNormalization_mean1",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.99737,
+        "threshold": 11.630239,
+        "dtype": "--"
+      },
+      {
+        "name": "/norm/LayerNormalization_sub1",
+        "on": "--",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.998224,
+        "threshold": 11.630239,
+        "dtype": "--"
+      },
+      {
+        "name": "/norm/LayerNormalization_mul1",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997776,
+        "threshold": 11.728888,
+        "dtype": "--"
+      },
+      {
+        "name": "/norm/LayerNormalization_mean2",
+        "on": "--",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999927,
+        "threshold": 137.566803,
+        "dtype": "--"
+      },
+      {
+        "name": "/norm/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999978,
+        "threshold": 1.954406,
+        "dtype": "--"
+      },
+      {
+        "name": "/norm/LayerNormalization_mul2",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998139,
+        "threshold": 11.728888,
+        "dtype": "--"
+      },
+      {
+        "name": "/norm/LayerNormalization_mul3",
+        "on": "--",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998196,
+        "threshold": 10.300821,
+        "dtype": "--"
+      },
+      {
+        "name": "/norm/LayerNormalization_add",
+        "on": "--",
+        "type": "Add",
+        "cosine": 0.997504,
+        "calibrated_cosine": 0.998158,
+        "threshold": 23.656002,
+        "dtype": "--"
+      },
+      {
+        "name": "/Gather",
+        "on": "--",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.998708,
+        "threshold": 22.609205,
+        "dtype": "--"
+      },
+      {
+        "name": "/Slice",
+        "on": "--",
+        "type": "Slice",
+        "cosine": 0.997502,
+        "calibrated_cosine": 0.998156,
+        "threshold": 22.609205,
+        "dtype": "--"
+      }
+    ],
+    "outputs": []
+  },
+  "subgraphs": [
+    {
+      "name": "subgraph_0",
+      "perf": {
+        "fps": 363.23,
+        "latency_ms": 2.75,
+        "latency_us": 2753.1,
+        "ddr_mb_per_frame": 55.404,
+        "bpu_ops_per_frame": 12247123968.0,
+        "core_number": 1,
+        "march": "nash-m"
+      },
+      "intervals": {
+        "count": 28,
+        "interval_ms": 0.1,
+        "utilization": [
+          0.716,
+          0.976,
+          0.823,
+          0.866,
+          0.88,
+          0.896,
+          0.886,
+          0.859,
+          0.975,
+          0.838,
+          0.831,
+          0.856,
+          0.823,
+          0.851,
+          0.876,
+          0.846,
+          0.878,
+          0.914,
+          0.878,
+          0.885,
+          0.852,
+          0.953,
+          0.824,
+          0.899,
+          0.914,
+          0.843,
+          0.883,
+          0.415
+        ],
+        "load_bandwidth_mbs": [
+          16781,
+          10602,
+          18662,
+          12181,
+          18498,
+          14774,
+          13544,
+          19919,
+          11251,
+          18565,
+          11675,
+          20141,
+          15855,
+          17902,
+          16220,
+          16657,
+          17035,
+          13749,
+          17929,
+          12960,
+          20527,
+          10503,
+          18708,
+          14016,
+          18229,
+          11299,
+          18096,
+          9375
+        ],
+        "store_bandwidth_mbs": [
+          3984,
+          2021,
+          7163,
+          2826,
+          3984,
+          6005,
+          3984,
+          3984,
+          2411,
+          7461,
+          2138,
+          3984,
+          4951,
+          3984,
+          4951,
+          3984,
+          4951,
+          3984,
+          4951,
+          3984,
+          3984,
+          2021,
+          7143,
+          1791,
+          5194,
+          4795,
+          3984,
+          3764
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "latency_ms": 2.75,
+    "fps_derived": 363.64,
+    "ddr_mb_per_frame": 55.404,
+    "bpu_ops_per_frame": 12247123968.0,
+    "derivation": "latency = sum of subgraph latency; fps_derived = 1000 / latency (sequential subgraph execution assumption); values from hbdk static estimation, not board measurement"
+  },
+  "similarity_provenance": {
+    "stage": "ptq-simulation",
+    "method": "hb_compile node_info.csv calibrated/quantized cosine (x86 PTQ simulation)",
+    "calibration_samples": null,
+    "source_log": "output/hb_compile.log",
+    "node_info_source": {
+      "status": "passed",
+      "source_run": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/dinov2-batch-20261102-r06-o1/s100p/node-info-recovery",
+      "source_quantized_bc_sha256": "874d707164ef4e5523858496f0ee9e6536a8281ddbc458c3222c7878a71686ae",
+      "compile_input_bc_sha256": "874d707164ef4e5523858496f0ee9e6536a8281ddbc458c3222c7878a71686ae",
+      "csv": {
+        "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/dinov2-batch-20261102-r06-o1/s100p/node-info-recovery/dinov2_vits14_224_int16_nashm_20261102_node_info.csv",
+        "relative_path": "runs/conversion/dinov2-batch-20261102-r06-o1/s100p/node-info-recovery/dinov2_vits14_224_int16_nashm_20261102_node_info.csv",
+        "sha256": "e67251a6a568c63e313b83277e9205db1c6e511b2952736f71bcae3362f5f02e",
+        "size_bytes": 45960
+      },
+      "node_rows": 639,
+      "execution_image": "ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0",
+      "execution_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+      "execution_environment": {
+        "HBTL_THREAD_NUM": "2",
+        "OMP_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "OMP_WAIT_POLICY": "PASSIVE",
+        "GOMP_SPINCOUNT": "0",
+        "NVIDIA_TF32_OVERRIDE": "0"
+      },
+      "comparison_input_count": 1,
+      "first_real_input_bytes_sha256": "971c9e4e011a415b3d25b63405b88f541bff60bc5c02ede652d06cc55ed4a34e",
+      "new_node_info_executed_during_o1_compile": false,
+      "stage_note": "CPU recovery of missing CUDA report",
+      "board_accuracy": "not-run"
+    },
+    "comparison_input_count": 1,
+    "new_node_info_executed_during_o1_compile": false
+  },
+  "performance_provenance": {
+    "stage": "compiler-static-estimate",
+    "source": "hb_compile-json",
+    "method": "hbdk-cc static latency estimate of the compiled release artifact",
+    "note": "Estimates describe the compiled artifact; on-board measurements live in the model benchmark."
+  },
+  "board_measurement": null,
+  "provenance": {
+    "artifact_sha256": "05a94aae2cb7da14a6a0810c7c7e5e5bff604012b943dd66708e4cd9cc224cbe",
+    "hb_compile_log_sha256": "8d8031ba2532fe3ca0920b170e66b5d0e3dcf023c77d74efc3ece0dda3fac54d",
+    "oe_report_json_sha256": "123d106acb7916142551de3db1f5fe75ba6cecb65b92d6c3752605621648baa0"
+  }
+}
