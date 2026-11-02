@@ -150,3 +150,19 @@ python3 samples/vision/hgnetv2/runtime/python/main.py --target x5 --variant b0
 ## 补充准备
 
 导出脚本运行时会获取 `hgnetv2_b*.ssld_stage2_ft_in1k`。构建时记录 timm 版本与权重哈希。准备 20–50 张 ImageNet 风格 JPEG 作为校准数据，再按上文逐制品 YAML 和编译命令操作。保持各已发布输出文件名、目标与配置一一对应。
+
+<!-- converted-batch-20261102 -->
+## 固定版本转换配方
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model hgnetv2_b0.ssld_stage2_ft_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/hgnetv2/conversion/recipes/timm-b0-ssld-stage2-ft-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+各规格使用 converted.json 中对应的模型、固定权重及 recipes 配方，输出到全新目录。校准为原始 RGB float32 二进制张量，不重复归一化，不套用历史板端数据。
+<!-- /converted-batch-20261102 -->

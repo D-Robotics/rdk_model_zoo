@@ -168,6 +168,7 @@ C++ 1/2 流均为 **not-run**，历史指标和截图不适用于这些产物。
 | `timm-t8-apple-in1k` | `fastvit_t8_apple_in1k_bayese_224x224_nv12.bin` | [`cbc6c66a2490`](https://huggingface.co/timm/fastvit_t8.apple_in1k/blob/cbc6c66a249060c66b8236284c7c3998e900e944/README.md) | not-run |
 | `timm-t12-apple-in1k` | `fastvit_t12_apple_in1k_bayese_224x224_nv12.bin` | [`7630f7ea7919`](https://huggingface.co/timm/fastvit_t12.apple_in1k/blob/7630f7ea7919657fcfcf7f84808793b8c3b39e1d/README.md) | not-run |
 | `timm-s12-apple-in1k` | `fastvit_s12_apple_in1k_bayese_224x224_nv12.bin` | [`662e9e267777`](https://huggingface.co/timm/fastvit_s12.apple_in1k/blob/662e9e2677774a03870672a03974c6a3cfe575ac/README.md) | not-run |
+| `timm-sa12-apple-in1k` | `fastvit_sa12_apple_in1k_bayese_224x224_nv12.bin` | [`4f87441b01b5`](https://huggingface.co/timm/fastvit_sa12.apple_in1k/blob/4f87441b01b509bc759497692b7d342c2999923b/README.md) | not-run |
 
 ```bash
 python3 samples/vision/fastvit/model/download.py --target x5 --variant timm-t8-apple-in1k

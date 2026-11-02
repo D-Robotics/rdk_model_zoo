@@ -172,3 +172,19 @@ ImageNet-1k 分类 logits。
 ## 补充准备
 
 从匹配的上游权重与导出流程准备 `efficientformer_l1.onnx` 或 `efficientformer_l3.onnx`。按所选 YAML 的 RGB/NCHW 归一化准备 `./calibration_data_rgb_f32`（mean `123.675 116.28 103.53`、scale `0.01712475 0.017507 0.01742919`）。两份 YAML 共用 `working_dir: 'EfficientFormer_224x224_nv12_int16'` 与 `output_model_file_prefix: 'EfficientFormer_224x224_nv12'`；每次在独立工作目录构建一个变体，并在部署前使用对应 Manifest 文件名。使用匹配 YAML 执行上文 OE 命令。
+
+<!-- converted-batch-20261102 -->
+## 固定版本转换配方
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model efficientformer_l1.snap_dist_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/efficientformer/conversion/recipes/timm-l1-snap-dist-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+各规格使用 converted.json 中对应的模型、固定权重及 recipes 配方，输出到全新目录。校准为原始 RGB float32 二进制张量，不重复归一化，不套用历史板端数据。
+<!-- /converted-batch-20261102 -->

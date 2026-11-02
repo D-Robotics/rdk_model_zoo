@@ -172,3 +172,19 @@ ImageNet-1k classification logits.
 ## Additional preparation
 
 For the selected variant, prepare the ONNX file named by its YAML (`edgenext_<variant>.onnx`) with the expected RGB/NCHW 224x224 input. Prepare `./calibration_data_rgb_f32` as float32 RGB `.npy` data using the YAML mean `123.675 116.28 103.53` and scale `0.01712475 0.017507 0.01742919`. The output prefix carries the variant name, so the emitted `.bin` uses the published filename. Run the checker and compiler commands above with that variant's YAML.
+
+<!-- converted-batch-20261102 -->
+## Pinned converted recipes
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model edgenext_xx_small.in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/edgenext/conversion/recipes/timm-xx-small-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+Use the model/tag, pinned checkpoint and matching YAML from `converted.json`; use a fresh attempt directory. The calibration producer uses raw RGB float32 binary tensors. Do not apply normalization twice or inherit historical board metrics.
+<!-- /converted-batch-20261102 -->

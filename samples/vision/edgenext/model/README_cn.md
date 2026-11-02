@@ -75,3 +75,28 @@ SHA-256（如有），原子落盘且不覆盖已有文件（校验失败保留�
 | `EdgeNeXt_xx_small_224x224_nv12.bin` | bayes-e `.bin`，packed NV12 输入（224x224），F32 `[1,1000,1,1]` logits 输出 | null（未知） |
 
 Manifest 中的 SHA-256 为 `null (unknown)`。下载器打印下载文件的 SHA-256，供本地记录。
+
+<!-- converted-batch-20261102 -->
+## 已转换新增规格（2026-11-02）
+
+以下 timm 权重单独转换，已通过严格权重加载、结构重参数化及两组输入的
+PyTorch/ONNX 主机对照、checker 和编译。板端冒烟、精度、Runtime 1/2 并发和
+C++ 1/2 流均为 **not-run**，历史指标和截图不适用于这些产物。原有默认规格保留。
+新规格需要 Pillow，使用 bicubic 短边 256、四舍五入居中裁剪 224；Mapper 融合
+该权重实际的归一化参数。输出为 float32 1,000 类 logits，由原生 Runtime 做 softmax。
+
+| 规格 | 模型文件 | 权重版本 | 板端 |
+|---|---|---|---|
+| `timm-xx-small-in1k` | `edgenext_xx_small_in1k_bayese_224x224_nv12.bin` | [`e10d04b6e70f`](https://huggingface.co/timm/edgenext_xx_small.in1k/blob/e10d04b6e70f33cfb54ebd4bce2ede078f4c9ba2/README.md) | not-run |
+| `timm-x-small-in1k` | `edgenext_x_small_in1k_bayese_224x224_nv12.bin` | [`8525b3ecc3c7`](https://huggingface.co/timm/edgenext_x_small.in1k/blob/8525b3ecc3c7a25c07406163de827d8814f5f1ef/README.md) | not-run |
+| `timm-small-usi-in1k` | `edgenext_small_usi_in1k_bayese_224x224_nv12.bin` | [`81bd8f2ee563`](https://huggingface.co/timm/edgenext_small.usi_in1k/blob/81bd8f2ee56330bdf6a7a2e47e1b2b82eb34f978/README.md) | not-run |
+| `timm-base-usi-in1k` | `edgenext_base_usi_in1k_bayese_224x224_nv12.bin` | [`ce0946556d0e`](https://huggingface.co/timm/edgenext_base.usi_in1k/blob/ce0946556d0ed93eaa61c686955e3118814573bb/README.md) | not-run |
+
+```bash
+python3 samples/vision/edgenext/model/download.py --target x5 --variant timm-xx-small-in1k
+python3 samples/vision/edgenext/runtime/python/main.py --target x5 --variant timm-xx-small-in1k --dry-run
+```
+
+精确 URL、SHA-256 和大小登记在 `docs/release/x5/models.yaml`；来源及主机对照
+记录见 `conversion/converted.json`。模型许可逐项保留在公开 release 清单中。
+<!-- /converted-batch-20261102 -->

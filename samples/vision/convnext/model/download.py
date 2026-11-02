@@ -38,6 +38,10 @@ TARGETS = ("x5",)
 
 
 
+
+
+
+
 # BEGIN CONVERTED ARTIFACT BINDINGS
 VARIANTS = VARIANTS + ('timm-femto-d1-in1k', 'timm-pico-d1-in1k', 'timm-nano-d1h-in1k')
 ASSET_REFERENCES.update({('x5', 'timm-femto-d1-in1k'): 'x5:convnext:convnext_femto_d1_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-pico-d1-in1k'): 'x5:convnext:convnext_pico_d1_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-nano-d1h-in1k'): 'x5:convnext:convnext_nano_d1h_in1k_bayese_224x224_nv12.bin'})

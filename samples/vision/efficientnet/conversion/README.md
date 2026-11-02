@@ -241,3 +241,19 @@ that B3 does not.
 ## Additional preparation
 
 For X5, prepare B2/B3/B4 ONNX graphs and `./calibration_data_rgb_f32` float32 RGB `.npy` inputs. Apply the YAML values: mean `123.675 116.28 103.53`, scale `0.01712475 0.017507 0.01742919`, input 224x224. All three X5 YAMLs use `output_model_file_prefix: 'EfficientNet_224x224_nv12'` and `debug_mode: 'dump_calibration_data'`; B3 uses `working_dir: 'model_output'`, while B2/B4 use `'EfficientNet_224x224_nv12'`. Build each variant in an isolated directory and name its output with the matching manifest filename. Use the checker/compiler commands above and the X5 OE toolchain. For S100/S600, follow the complete `hb_compile` recipes earlier in this guide.
+
+<!-- converted-batch-20261102 -->
+## Pinned converted recipes
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model efficientnet_b2.ra_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/efficientnet/conversion/recipes/timm-b2-ra-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+Use the model/tag, pinned checkpoint and matching YAML from `converted.json`; use a fresh attempt directory. The calibration producer uses raw RGB float32 binary tensors. Do not apply normalization twice or inherit historical board metrics.
+<!-- /converted-batch-20261102 -->

@@ -173,3 +173,19 @@ with its matching ONNX graph and calibration directory.
 ## Additional preparation
 
 Prepare `efficientformer_l1.onnx` or `efficientformer_l3.onnx` from the matching upstream checkpoint and export flow. Use `./calibration_data_rgb_f32` with the RGB/NCHW normalization in the selected YAML (mean `123.675 116.28 103.53`, scale `0.01712475 0.017507 0.01742919`). Both YAMLs share `working_dir: 'EfficientFormer_224x224_nv12_int16'` and `output_model_file_prefix: 'EfficientFormer_224x224_nv12'`; build one variant at a time in an isolated working directory and assign its manifest filename before deployment. Run the OE commands above with the matching YAML.
+
+<!-- converted-batch-20261102 -->
+## Pinned converted recipes
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model efficientformer_l1.snap_dist_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/efficientformer/conversion/recipes/timm-l1-snap-dist-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+Use the model/tag, pinned checkpoint and matching YAML from `converted.json`; use a fresh attempt directory. The calibration producer uses raw RGB float32 binary tensors. Do not apply normalization twice or inherit historical board metrics.
+<!-- /converted-batch-20261102 -->

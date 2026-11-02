@@ -169,3 +169,19 @@ The per-variant published filenames are listed above and downloaded under `sampl
 ## Additional preparation
 
 For each variant, select the matching PyTorch/timm checkpoint and record its revision and digest. Export a graph beside the corresponding YAML with RGB/NCHW input; inspect its actual input and output metadata because `input_shape` and `input_name` are empty. Prepare `./calibration_data_rgb_f32` with float32 RGB values, `cal_data_type: float32`, `calibration: default`, mean `123.675/116.28/103.53`, and scale `0.01712475/0.017507/0.01742919`. Build variants in separate workspaces because each YAML writes `RepGhost_224x224_nv12/RepGhost_224x224_nv12.bin`.
+
+<!-- converted-batch-20261102 -->
+## Pinned converted recipes
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model repghostnet_100.in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/repghost/conversion/recipes/timm-100-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+Use the model/tag, pinned checkpoint and matching YAML from `converted.json`; use a fresh attempt directory. The calibration producer uses raw RGB float32 binary tensors. Do not apply normalization twice or inherit historical board metrics.
+<!-- /converted-batch-20261102 -->

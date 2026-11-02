@@ -32,6 +32,14 @@ ASSET_REFERENCES = {
 TARGETS = ("x5",)
 
 
+
+
+
+# BEGIN CONVERTED ARTIFACT BINDINGS
+VARIANTS = VARIANTS + ('timm-xx-small-in1k', 'timm-x-small-in1k', 'timm-small-usi-in1k', 'timm-base-usi-in1k')
+ASSET_REFERENCES.update({('x5', 'timm-xx-small-in1k'): 'x5:edgenext:edgenext_xx_small_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-x-small-in1k'): 'x5:edgenext:edgenext_x_small_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-small-usi-in1k'): 'x5:edgenext:edgenext_small_usi_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-base-usi-in1k'): 'x5:edgenext:edgenext_base_usi_in1k_bayese_224x224_nv12.bin'})
+# END CONVERTED ARTIFACT BINDINGS
+
 def asset_reference(target: str, variant: str = 'base') -> str:
     """Return the exact manifest reference for a supported target/variant."""
 

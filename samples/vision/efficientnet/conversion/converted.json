@@ -1,0 +1,494 @@
+{
+  "schema_version": 1,
+  "status": "converted",
+  "board_validation": "not-run",
+  "profile": "raw RGB, Pillow bicubic short256, rounded center crop224, checkpoint normalization fused by mapper",
+  "models": [
+    {
+      "job": {
+        "family": "efficientnet",
+        "model": "efficientnet_b2.ra_in1k",
+        "repo_id": "timm/efficientnet_b2.ra_in1k",
+        "platform": "x5",
+        "size": "b2-ra-in1k-224",
+        "variant": "timm-b2-ra-in1k",
+        "filename": "efficientnet_b2_ra_in1k_bayese_224x224_nv12.bin",
+        "run_id": "efficientnet_b2_ra_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:24:10.597389+00:00",
+        "sha256": "283ad677dfa003e2829e4c38eff83f04d923d68c1637cfcde14018968a8710e7",
+        "size_bytes": 11147249
+      },
+      "source": {
+        "repo_id": "timm/efficientnet_b2.ra_in1k",
+        "revision": "3577c4a7d84723645311bb5a9e5086f1b62ec8e2",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "e9adbcce7e5d5055c571c4cafdcc7f920b6a6ec42e643c49dff1aabe1d5f53c5",
+        "size_bytes": 36757206,
+        "url": "https://huggingface.co/timm/efficientnet_b2.ra_in1k/resolve/3577c4a7d84723645311bb5a9e5086f1b62ec8e2/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientnet_b2.ra_in1k/blob/3577c4a7d84723645311bb5a9e5086f1b62ec8e2/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "efficientnet_b2.ra_in1k",
+        "checkpoint_sha256": "e9adbcce7e5d5055c571c4cafdcc7f920b6a6ec42e643c49dff1aabe1d5f53c5",
+        "onnx_sha256": "3c35e61742a79c02f1736275fb2a78a56c10a62eebe0ce88074724abf9667b3d",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "825955eeb0151ac0596519be89489456b66852accc913d02ad9a7e68db8bc6e0",
+        "parameter_count": 9109994,
+        "deployment_parameter_count": 9109994,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            256,
+            256
+          ],
+          "crop_pct": 0.875,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          2.086162567138672e-06,
+          2.86102294921875e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "efficientnet",
+          "family": "efficientnet",
+          "task": "cls",
+          "size": "b2-ra-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "283ad677dfa003e2829e4c38eff83f04d923d68c1637cfcde14018968a8710e7",
+            "name": "efficientnet_b2_ra_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 11147249
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "d20376e27036758a950c8c37b534ba3138222b35b70235773379e682307864bc",
+        "controller_sha256": "3da0f3e12b1d92fd4a2d7b049bf8ff866add68576797d3b05c842983df2902b1",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "d20376e27036758a950c8c37b534ba3138222b35b70235773379e682307864bc",
+        "compile_log": "1e60465cd19f2faae6b66ef2aaeea71aacef2b07f7e389b04fa14feced512575",
+        "model_info": "be0378cc7e7ec516086565ab0aefa585ea871bc6eadf4f9cbaf62d38c3e67957",
+        "oe_report": "be8d1398a75a8a12b13d65deb573ce5f573af56addbb404d0c70397820b0a3ef",
+        "oe_data": "ca61a8fab882ec5635a07d7fe7484c4190c9c4c72adfc056321f12154bd59c2d"
+      }
+    },
+    {
+      "job": {
+        "family": "efficientnet",
+        "model": "efficientnet_b3.ra2_in1k",
+        "repo_id": "timm/efficientnet_b3.ra2_in1k",
+        "platform": "x5",
+        "size": "b3-ra2-in1k-224",
+        "variant": "timm-b3-ra2-in1k",
+        "filename": "efficientnet_b3_ra2_in1k_bayese_224x224_nv12.bin",
+        "run_id": "efficientnet_b3_ra2_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:25:59.712479+00:00",
+        "sha256": "fd2e4c54191461f1df4ab32f16dca0f05f7d49fbdcbadd8df0aa1aaf7488f2e7",
+        "size_bytes": 14817269
+      },
+      "source": {
+        "repo_id": "timm/efficientnet_b3.ra2_in1k",
+        "revision": "0366a75518620e0f2077789202073759f2d61393",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "279d2a53898aa89dab43fd6bd7df9f706aea4cb9cf916223988bbcb8e5850469",
+        "size_bytes": 49335454,
+        "url": "https://huggingface.co/timm/efficientnet_b3.ra2_in1k/resolve/0366a75518620e0f2077789202073759f2d61393/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientnet_b3.ra2_in1k/blob/0366a75518620e0f2077789202073759f2d61393/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "efficientnet_b3.ra2_in1k",
+        "checkpoint_sha256": "279d2a53898aa89dab43fd6bd7df9f706aea4cb9cf916223988bbcb8e5850469",
+        "onnx_sha256": "ecfa9d4002d501a12f7b9da646d32323e52b81f8891c349a82a57875e7b314c9",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "825955eeb0151ac0596519be89489456b66852accc913d02ad9a7e68db8bc6e0",
+        "parameter_count": 12233232,
+        "deployment_parameter_count": 12233232,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            288,
+            288
+          ],
+          "crop_pct": 0.875,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          1.4901161193847656e-06,
+          2.86102294921875e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "efficientnet",
+          "family": "efficientnet",
+          "task": "cls",
+          "size": "b3-ra2-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "fd2e4c54191461f1df4ab32f16dca0f05f7d49fbdcbadd8df0aa1aaf7488f2e7",
+            "name": "efficientnet_b3_ra2_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 14817269
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "a1d8198a80a6a6b9f8fe2c49e41ee59e1affef9dc20ec4edb87d055357c9b9a5",
+        "controller_sha256": "3da0f3e12b1d92fd4a2d7b049bf8ff866add68576797d3b05c842983df2902b1",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "a1d8198a80a6a6b9f8fe2c49e41ee59e1affef9dc20ec4edb87d055357c9b9a5",
+        "compile_log": "5c6ef0511e28021ba49dde7aa55a7dc1ba5ad682e1d271fdef31fe8bb6363225",
+        "model_info": "4a27d03f0f66b37828f3e288d9c5befcf878c347044edd6f4cb14ab5541fb3ca",
+        "oe_report": "85265e092fa6e2dda44f795ad799ccde96ae6958db0a4422b9d0e1a8a66289db",
+        "oe_data": "31df30dbe086eb2d8de3d4e9b174e14d2b20a9a6fbdd7c4d16ecf6768faecbd5"
+      }
+    },
+    {
+      "job": {
+        "family": "efficientnet",
+        "model": "efficientnet_b4.ra2_in1k",
+        "repo_id": "timm/efficientnet_b4.ra2_in1k",
+        "platform": "x5",
+        "size": "b4-ra2-in1k-224",
+        "variant": "timm-b4-ra2-in1k",
+        "filename": "efficientnet_b4_ra2_in1k_bayese_224x224_nv12.bin",
+        "run_id": "efficientnet_b4_ra2_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:39:51.319753+00:00",
+        "sha256": "3aa041aee0d94b02346413f92ca7c884f1601965cd3f30f4d15fd5b3daf7e8b8",
+        "size_bytes": 22616053
+      },
+      "source": {
+        "repo_id": "timm/efficientnet_b4.ra2_in1k",
+        "revision": "442c00e15609ff467772913d230768706a406aca",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "8030f9c929ed71a06728db4b61323960e573b463e68f310bd1bfb31ed62cbf91",
+        "size_bytes": 77933206,
+        "url": "https://huggingface.co/timm/efficientnet_b4.ra2_in1k/resolve/442c00e15609ff467772913d230768706a406aca/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientnet_b4.ra2_in1k/blob/442c00e15609ff467772913d230768706a406aca/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "efficientnet_b4.ra2_in1k",
+        "checkpoint_sha256": "8030f9c929ed71a06728db4b61323960e573b463e68f310bd1bfb31ed62cbf91",
+        "onnx_sha256": "adafa6a2436e6d8ffe5f06cedde9f597ad3865906deb426f6491d394e4069f26",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "825955eeb0151ac0596519be89489456b66852accc913d02ad9a7e68db8bc6e0",
+        "parameter_count": 19341616,
+        "deployment_parameter_count": 19341616,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            320,
+            320
+          ],
+          "crop_pct": 0.875,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          2.4437904357910156e-06,
+          5.245208740234375e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "efficientnet",
+          "family": "efficientnet",
+          "task": "cls",
+          "size": "b4-ra2-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "3aa041aee0d94b02346413f92ca7c884f1601965cd3f30f4d15fd5b3daf7e8b8",
+            "name": "efficientnet_b4_ra2_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 22616053
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "01a9aef8482ad097af0c96fd546d8368d6a63c894dc84a36bfc8fd19384f7296",
+        "controller_sha256": "3da0f3e12b1d92fd4a2d7b049bf8ff866add68576797d3b05c842983df2902b1",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "01a9aef8482ad097af0c96fd546d8368d6a63c894dc84a36bfc8fd19384f7296",
+        "compile_log": "ebe3365d48f2569225058a8fbe872e55bdcf25495ebffb6e7fb1facd1aff648d",
+        "model_info": "c7beb53e2ff0202008848815f19948ef295d522da4fe5e364c281b50e379a63a",
+        "oe_report": "c516ae77ba5689e710aa7fd474c2f30b3f33c018e146662f0d8c5f276063dbb9",
+        "oe_data": "ab2e60b350b8e125beb2014d56e284f272feab0ee983313c3f681527451ef790"
+      }
+    }
+  ]
+}

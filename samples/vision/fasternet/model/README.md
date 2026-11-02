@@ -70,3 +70,31 @@ locations.
 | `FasterNet_T2_224x224_nv12.bin` | bayes-e `.bin`, packed NV12 input (224x224), F32 `[1,1000,1,1]` logits output | null (unknown) |
 
 The manifest SHA-256 fields are `null (unknown)`. The downloader prints each artifact's computed digest after transfer; keep that digest with its artifact identity.
+
+<!-- converted-batch-20261102 -->
+## Converted-only additions (2026-11-02)
+
+These independently converted timm weights have passed strict checkpoint loading,
+reparameterization and two-input PyTorch/ONNX host comparison, checker and compiler.
+Board smoke, accuracy, Runtime 1/2 and C++ 1/2 are **not-run**; historical metrics
+and screenshots do not describe these artifacts. Existing defaults are retained.
+Pillow is needed for the explicit bicubic shorter-edge 256 / rounded center crop
+224 profile. Normalization is fused in Mapper from the actual checkpoint config;
+output is float32 1,000-class logits followed by native softmax.
+
+| Variant | Artifact | Checkpoint revision | Board |
+|---|---|---|---|
+| `timm-t0-in1k` | `fasternet_t0_in1k_bayese_224x224_nv12.bin` | [`a8c465730c78`](https://huggingface.co/timm/fasternet_t0.in1k/blob/a8c465730c7896ba51d860a6e384fad94e7cfb44/README.md) | not-run |
+| `timm-t1-in1k` | `fasternet_t1_in1k_bayese_224x224_nv12.bin` | [`2c27a878042e`](https://huggingface.co/timm/fasternet_t1.in1k/blob/2c27a878042ecd9de0c2f045fbf8169704f9aae6/README.md) | not-run |
+| `timm-t2-in1k` | `fasternet_t2_in1k_bayese_224x224_nv12.bin` | [`945917af8387`](https://huggingface.co/timm/fasternet_t2.in1k/blob/945917af83878941c27f52a011f4340824fc4f41/README.md) | not-run |
+| `timm-s-in1k` | `fasternet_s_in1k_bayese_224x224_nv12.bin` | [`8c427163d414`](https://huggingface.co/timm/fasternet_s.in1k/blob/8c427163d414879c948337c43795c7fd60aec2c4/README.md) | not-run |
+
+```bash
+python3 samples/vision/fasternet/model/download.py --target x5 --variant timm-t0-in1k
+python3 samples/vision/fasternet/runtime/python/main.py --target x5 --variant timm-t0-in1k --dry-run
+```
+
+Exact model URLs/SHA-256/size are in `docs/release/x5/models.yaml`; source and host
+receipts are in `conversion/converted.json`. Each weight retains its own model
+license in its public release manifest. No board result is implied by download.
+<!-- /converted-batch-20261102 -->

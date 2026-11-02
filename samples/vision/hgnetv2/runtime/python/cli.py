@@ -75,6 +75,26 @@ BINDING_TABLE = SampleBindingTable(
 )
 
 
+
+
+
+# BEGIN CONVERTED ARTIFACT BINDINGS
+from dataclasses import replace as _with_converted_bindings
+CONVERTED_VARIANTS = ('timm-b0-ssld-stage2-ft-in1k', 'timm-b1-ssld-stage2-ft-in1k', 'timm-b2-ssld-stage2-ft-in1k', 'timm-b3-ssld-stage2-ft-in1k', 'timm-b4-ssld-stage2-ft-in1k')
+SUPPORTED_VARIANTS = SUPPORTED_VARIANTS + CONVERTED_VARIANTS
+BINDING_TABLE = _with_converted_bindings(
+    BINDING_TABLE,
+    filename_variants={**BINDING_TABLE.filename_variants, **{'hgnetv2_b0_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin': 'timm-b0-ssld-stage2-ft-in1k', 'hgnetv2_b1_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin': 'timm-b1-ssld-stage2-ft-in1k', 'hgnetv2_b2_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin': 'timm-b2-ssld-stage2-ft-in1k', 'hgnetv2_b3_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin': 'timm-b3-ssld-stage2-ft-in1k', 'hgnetv2_b4_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin': 'timm-b4-ssld-stage2-ft-in1k'}},
+    facts={**BINDING_TABLE.facts,
+        ('timm-b0-ssld-stage2-ft-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-b1-ssld-stage2-ft-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-b2-ssld-stage2-ft-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-b3-ssld-stage2-ft-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-b4-ssld-stage2-ft-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+    },
+)
+# END CONVERTED ARTIFACT BINDINGS
+
 def list_available_assets(target: Optional[str] = None) -> tuple[AssetRecord, ...]:
     """Return the finite sample assets read from the existing manifests.
 

@@ -32,6 +32,14 @@ ASSET_REFERENCES = {
 TARGETS = ("x5",)
 
 
+
+
+
+# BEGIN CONVERTED ARTIFACT BINDINGS
+VARIANTS = VARIANTS + ('timm-t0-in1k', 'timm-t1-in1k', 'timm-t2-in1k', 'timm-s-in1k')
+ASSET_REFERENCES.update({('x5', 'timm-t0-in1k'): 'x5:fasternet:fasternet_t0_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-t1-in1k'): 'x5:fasternet:fasternet_t1_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-t2-in1k'): 'x5:fasternet:fasternet_t2_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-s-in1k'): 'x5:fasternet:fasternet_s_in1k_bayese_224x224_nv12.bin'})
+# END CONVERTED ARTIFACT BINDINGS
+
 def asset_reference(target: str, variant: str = 's') -> str:
     """Return the exact manifest reference for a supported target/variant."""
 

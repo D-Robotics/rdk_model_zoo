@@ -2,6 +2,14 @@
 
 from __future__ import annotations
 
+# Converted artifact fixtures extend, rather than replace, historical assertions.
+import json as _converted_json
+from pathlib import Path as _ConvertedPath
+_CONVERTED_MODELS = _converted_json.loads((_ConvertedPath(__file__).resolve().parents[1] / 'conversion/converted.json').read_text())['models']
+_CONVERTED_FILES = [row['job']['filename'] for row in _CONVERTED_MODELS]
+_CONVERTED_VARIANTS = [row['job']['variant'] for row in _CONVERTED_MODELS]
+
+
 import os
 from pathlib import Path
 import subprocess
@@ -26,7 +34,7 @@ PUBLISHED_FILENAMES = (
     "s600/efficientnet_lite2_260x260_nv12.hbm",
     "s600/efficientnet_lite3_300x300_nv12.hbm",
     "s600/efficientnet_lite4_380x380_nv12.hbm",
-)
+) + tuple(_CONVERTED_FILES)
 
 
 class EntrypointTests(unittest.TestCase):

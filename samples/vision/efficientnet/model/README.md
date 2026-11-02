@@ -104,3 +104,30 @@ explicit `--model-path` when using such a copy.
 | `s600/efficientnet_lite4_380x380_nv12.hbm` | nash-p `.hbm`, split Y/UV input (380x380), F32 `[1,1000]` logits output | null (unknown) |
 
 The manifest SHA-256 fields are `null (unknown)`. The downloader prints each artifact's computed digest after transfer; keep it with that artifact identity.
+
+<!-- converted-batch-20261102 -->
+## Converted-only additions (2026-11-02)
+
+These independently converted timm weights have passed strict checkpoint loading,
+reparameterization and two-input PyTorch/ONNX host comparison, checker and compiler.
+Board smoke, accuracy, Runtime 1/2 and C++ 1/2 are **not-run**; historical metrics
+and screenshots do not describe these artifacts. Existing defaults are retained.
+Pillow is needed for the explicit bicubic shorter-edge 256 / rounded center crop
+224 profile. Normalization is fused in Mapper from the actual checkpoint config;
+output is float32 1,000-class logits followed by native softmax.
+
+| Variant | Artifact | Checkpoint revision | Board |
+|---|---|---|---|
+| `timm-b2-ra-in1k` | `efficientnet_b2_ra_in1k_bayese_224x224_nv12.bin` | [`3577c4a7d847`](https://huggingface.co/timm/efficientnet_b2.ra_in1k/blob/3577c4a7d84723645311bb5a9e5086f1b62ec8e2/README.md) | not-run |
+| `timm-b3-ra2-in1k` | `efficientnet_b3_ra2_in1k_bayese_224x224_nv12.bin` | [`0366a7551862`](https://huggingface.co/timm/efficientnet_b3.ra2_in1k/blob/0366a75518620e0f2077789202073759f2d61393/README.md) | not-run |
+| `timm-b4-ra2-in1k` | `efficientnet_b4_ra2_in1k_bayese_224x224_nv12.bin` | [`442c00e15609`](https://huggingface.co/timm/efficientnet_b4.ra2_in1k/blob/442c00e15609ff467772913d230768706a406aca/README.md) | not-run |
+
+```bash
+python3 samples/vision/efficientnet/model/download.py --target x5 --variant timm-b2-ra-in1k
+python3 samples/vision/efficientnet/runtime/python/main.py --target x5 --variant timm-b2-ra-in1k --dry-run
+```
+
+Exact model URLs/SHA-256/size are in `docs/release/x5/models.yaml`; source and host
+receipts are in `conversion/converted.json`. Each weight retains its own model
+license in its public release manifest. No board result is implied by download.
+<!-- /converted-batch-20261102 -->

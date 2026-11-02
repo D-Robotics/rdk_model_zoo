@@ -88,17 +88,22 @@ BINDING_TABLE = SampleBindingTable(
 
 
 
+
+
+
+
 # BEGIN CONVERTED ARTIFACT BINDINGS
 from dataclasses import replace as _with_converted_bindings
-CONVERTED_VARIANTS = ('timm-t8-apple-in1k', 'timm-t12-apple-in1k', 'timm-s12-apple-in1k')
+CONVERTED_VARIANTS = ('timm-t8-apple-in1k', 'timm-t12-apple-in1k', 'timm-s12-apple-in1k', 'timm-sa12-apple-in1k')
 SUPPORTED_VARIANTS = SUPPORTED_VARIANTS + CONVERTED_VARIANTS
 BINDING_TABLE = _with_converted_bindings(
     BINDING_TABLE,
-    filename_variants={**BINDING_TABLE.filename_variants, **{'fastvit_t8_apple_in1k_bayese_224x224_nv12.bin': 'timm-t8-apple-in1k', 'fastvit_t12_apple_in1k_bayese_224x224_nv12.bin': 'timm-t12-apple-in1k', 'fastvit_s12_apple_in1k_bayese_224x224_nv12.bin': 'timm-s12-apple-in1k'}},
+    filename_variants={**BINDING_TABLE.filename_variants, **{'fastvit_t8_apple_in1k_bayese_224x224_nv12.bin': 'timm-t8-apple-in1k', 'fastvit_t12_apple_in1k_bayese_224x224_nv12.bin': 'timm-t12-apple-in1k', 'fastvit_s12_apple_in1k_bayese_224x224_nv12.bin': 'timm-s12-apple-in1k', 'fastvit_sa12_apple_in1k_bayese_224x224_nv12.bin': 'timm-sa12-apple-in1k'}},
     facts={**BINDING_TABLE.facts,
         ('timm-t8-apple-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
         ('timm-t12-apple-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
         ('timm-s12-apple-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-sa12-apple-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
     },
 )
 # END CONVERTED ARTIFACT BINDINGS

@@ -125,6 +125,24 @@ BINDING_TABLE = SampleBindingTable(
 )
 
 
+
+
+
+# BEGIN CONVERTED ARTIFACT BINDINGS
+from dataclasses import replace as _with_converted_bindings
+CONVERTED_VARIANTS = ('timm-b2-ra-in1k', 'timm-b3-ra2-in1k', 'timm-b4-ra2-in1k')
+SUPPORTED_VARIANTS = SUPPORTED_VARIANTS + CONVERTED_VARIANTS
+BINDING_TABLE = _with_converted_bindings(
+    BINDING_TABLE,
+    filename_variants={**BINDING_TABLE.filename_variants, **{'efficientnet_b2_ra_in1k_bayese_224x224_nv12.bin': 'timm-b2-ra-in1k', 'efficientnet_b3_ra2_in1k_bayese_224x224_nv12.bin': 'timm-b3-ra2-in1k', 'efficientnet_b4_ra2_in1k_bayese_224x224_nv12.bin': 'timm-b4-ra2-in1k'}},
+    facts={**BINDING_TABLE.facts,
+        ('timm-b2-ra-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-b3-ra2-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-b4-ra2-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+    },
+)
+# END CONVERTED ARTIFACT BINDINGS
+
 def list_available_assets(target: Optional[str] = None) -> tuple[AssetRecord, ...]:
     """Return the finite sample assets read from the existing manifests.
 

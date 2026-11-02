@@ -85,6 +85,25 @@ BINDING_TABLE = SampleBindingTable(
 )
 
 
+
+
+
+# BEGIN CONVERTED ARTIFACT BINDINGS
+from dataclasses import replace as _with_converted_bindings
+CONVERTED_VARIANTS = ('timm-xx-small-in1k', 'timm-x-small-in1k', 'timm-small-usi-in1k', 'timm-base-usi-in1k')
+SUPPORTED_VARIANTS = SUPPORTED_VARIANTS + CONVERTED_VARIANTS
+BINDING_TABLE = _with_converted_bindings(
+    BINDING_TABLE,
+    filename_variants={**BINDING_TABLE.filename_variants, **{'edgenext_xx_small_in1k_bayese_224x224_nv12.bin': 'timm-xx-small-in1k', 'edgenext_x_small_in1k_bayese_224x224_nv12.bin': 'timm-x-small-in1k', 'edgenext_small_usi_in1k_bayese_224x224_nv12.bin': 'timm-small-usi-in1k', 'edgenext_base_usi_in1k_bayese_224x224_nv12.bin': 'timm-base-usi-in1k'}},
+    facts={**BINDING_TABLE.facts,
+        ('timm-xx-small-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-x-small-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-small-usi-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-base-usi-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+    },
+)
+# END CONVERTED ARTIFACT BINDINGS
+
 def list_available_assets(target: Optional[str] = None) -> tuple[AssetRecord, ...]:
     """Return the finite sample assets read from the existing manifests.
 

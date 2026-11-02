@@ -47,6 +47,14 @@ ASSET_REFERENCES = {
 TARGETS = ("x5",)
 
 
+
+
+
+# BEGIN CONVERTED ARTIFACT BINDINGS
+VARIANTS = VARIANTS + ('timm-b0-ssld-stage2-ft-in1k', 'timm-b1-ssld-stage2-ft-in1k', 'timm-b2-ssld-stage2-ft-in1k', 'timm-b3-ssld-stage2-ft-in1k', 'timm-b4-ssld-stage2-ft-in1k')
+ASSET_REFERENCES.update({('x5', 'timm-b0-ssld-stage2-ft-in1k'): 'x5:hgnetv2:hgnetv2_b0_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-b1-ssld-stage2-ft-in1k'): 'x5:hgnetv2:hgnetv2_b1_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-b2-ssld-stage2-ft-in1k'): 'x5:hgnetv2:hgnetv2_b2_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-b3-ssld-stage2-ft-in1k'): 'x5:hgnetv2:hgnetv2_b3_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-b4-ssld-stage2-ft-in1k'): 'x5:hgnetv2:hgnetv2_b4_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin'})
+# END CONVERTED ARTIFACT BINDINGS
+
 def asset_reference(target: str, variant: str = 'b0') -> str:
     """Return the exact manifest reference for a supported target/variant."""
 

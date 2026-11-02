@@ -8,6 +8,14 @@ resolve to — all 13 rows — with the network downloader stubbed out.
 
 from __future__ import annotations
 
+# Converted artifact fixtures extend, rather than replace, historical assertions.
+import json as _converted_json
+from pathlib import Path as _ConvertedPath
+_CONVERTED_MODELS = _converted_json.loads((_ConvertedPath(__file__).resolve().parents[1] / 'conversion/converted.json').read_text())['models']
+_CONVERTED_FILES = [row['job']['filename'] for row in _CONVERTED_MODELS]
+_CONVERTED_VARIANTS = [row['job']['variant'] for row in _CONVERTED_MODELS]
+
+
 from pathlib import Path
 import unittest
 from unittest import mock
@@ -29,6 +37,7 @@ EXPECTED_REFERENCES = {
     ('s600', 'lite3'): 's:efficientnet:s600/efficientnet_lite3_300x300_nv12.hbm',
     ('s600', 'lite4'): 's:efficientnet:s600/efficientnet_lite4_380x380_nv12.hbm',
 }
+EXPECTED_REFERENCES.update({('x5', row['job']['variant']): 'x5:' + row['job']['family'] + ':' + row['job']['filename'] for row in _CONVERTED_MODELS})
 
 
 class DownloadTargetReferenceTests(unittest.TestCase):

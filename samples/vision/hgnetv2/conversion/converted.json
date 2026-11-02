@@ -1,0 +1,818 @@
+{
+  "schema_version": 1,
+  "status": "converted",
+  "board_validation": "not-run",
+  "profile": "raw RGB, Pillow bicubic short256, rounded center crop224, checkpoint normalization fused by mapper",
+  "models": [
+    {
+      "job": {
+        "family": "hgnetv2",
+        "model": "hgnetv2_b0.ssld_stage2_ft_in1k",
+        "repo_id": "timm/hgnetv2_b0.ssld_stage2_ft_in1k",
+        "platform": "x5",
+        "size": "b0-ssld-stage2-ft-in1k-224",
+        "variant": "timm-b0-ssld-stage2-ft-in1k",
+        "filename": "hgnetv2_b0_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin",
+        "run_id": "hgnetv2_b0_ssld_stage2_ft_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:42:43.594023+00:00",
+        "sha256": "954668728414f5190755572dd843718c5ec292cb22ff134d67b27fbb98e1cf0b",
+        "size_bytes": 6035444
+      },
+      "source": {
+        "repo_id": "timm/hgnetv2_b0.ssld_stage2_ft_in1k",
+        "revision": "9e0a904b210d65e4fcd6582f8ca6e0921fac2650",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "a84094d2a9edc77106d797ee48ed41a806123f5ca786b32388f344577da0d150",
+        "size_bytes": 24069368,
+        "url": "https://huggingface.co/timm/hgnetv2_b0.ssld_stage2_ft_in1k/resolve/9e0a904b210d65e4fcd6582f8ca6e0921fac2650/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/hgnetv2_b0.ssld_stage2_ft_in1k/blob/9e0a904b210d65e4fcd6582f8ca6e0921fac2650/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "hgnetv2_b0.ssld_stage2_ft_in1k",
+        "checkpoint_sha256": "a84094d2a9edc77106d797ee48ed41a806123f5ca786b32388f344577da0d150",
+        "onnx_sha256": "f90a95e6825348f132d2950a9676d605fc19a1b6e6e154940b529718b1dd69c6",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "41ca4a093de9930838d86308a46e9534c35b10cfaffde865472d14561b1ece92",
+        "parameter_count": 5996550,
+        "deployment_parameter_count": 5996550,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.965,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          6.198883056640625e-06,
+          1.239776611328125e-05
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "hgnetv2",
+          "family": "hgnetv2",
+          "task": "cls",
+          "size": "b0-ssld-stage2-ft-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "954668728414f5190755572dd843718c5ec292cb22ff134d67b27fbb98e1cf0b",
+            "name": "hgnetv2_b0_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 6035444
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "9798856058571e3e6fdd6235f247d913ee5bbb18477ecde519045a306f9d92a1",
+        "controller_sha256": "3da0f3e12b1d92fd4a2d7b049bf8ff866add68576797d3b05c842983df2902b1",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "9798856058571e3e6fdd6235f247d913ee5bbb18477ecde519045a306f9d92a1",
+        "compile_log": "2f8c115e01c23787efd60270780a997bcb5d9fc94627f61823b9385f2b4bb28d",
+        "model_info": "2fdc282439b625bec48c7d6d15a7b3fe99f24ecacfc7fe77a21f2d0b4574fdab",
+        "oe_report": "ae7497cf59b3d120b3cd9129d9f8b9632d1a64f5a5a2108d39967ae8da1ee289",
+        "oe_data": "3908c52790279d780bf3363ba77ec5dc94cfbb97d88b2086b69e23dfa2043df0"
+      }
+    },
+    {
+      "job": {
+        "family": "hgnetv2",
+        "model": "hgnetv2_b1.ssld_stage2_ft_in1k",
+        "repo_id": "timm/hgnetv2_b1.ssld_stage2_ft_in1k",
+        "platform": "x5",
+        "size": "b1-ssld-stage2-ft-in1k-224",
+        "variant": "timm-b1-ssld-stage2-ft-in1k",
+        "filename": "hgnetv2_b1_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin",
+        "run_id": "hgnetv2_b1_ssld_stage2_ft_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:43:27.029235+00:00",
+        "sha256": "9ab984ea54bbb9d1094791c7bd806c7d658f60d321a32dff5945f1fb1297608a",
+        "size_bytes": 6428660
+      },
+      "source": {
+        "repo_id": "timm/hgnetv2_b1.ssld_stage2_ft_in1k",
+        "revision": "ec7014d7f1d0dd1ea2bf3012bc51dc95c5919fd2",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "4a9d49b24bcab4d76136c5468ba9c982962cad85dda3efae4484446592331957",
+        "size_bytes": 25463072,
+        "url": "https://huggingface.co/timm/hgnetv2_b1.ssld_stage2_ft_in1k/resolve/ec7014d7f1d0dd1ea2bf3012bc51dc95c5919fd2/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/hgnetv2_b1.ssld_stage2_ft_in1k/blob/ec7014d7f1d0dd1ea2bf3012bc51dc95c5919fd2/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "hgnetv2_b1.ssld_stage2_ft_in1k",
+        "checkpoint_sha256": "4a9d49b24bcab4d76136c5468ba9c982962cad85dda3efae4484446592331957",
+        "onnx_sha256": "ed7358156ead03da9608613a896a9f411c3c74c71a37b8b82ace8ab02f34d902",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "41ca4a093de9930838d86308a46e9534c35b10cfaffde865472d14561b1ece92",
+        "parameter_count": 6343158,
+        "deployment_parameter_count": 6343158,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.965,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          5.841255187988281e-06,
+          2.86102294921875e-05
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "hgnetv2",
+          "family": "hgnetv2",
+          "task": "cls",
+          "size": "b1-ssld-stage2-ft-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "9ab984ea54bbb9d1094791c7bd806c7d658f60d321a32dff5945f1fb1297608a",
+            "name": "hgnetv2_b1_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 6428660
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "f79aa4b542ddba92c426f310cd2df7ed51aa8557f323d54a30aacec16cc3922f",
+        "controller_sha256": "3da0f3e12b1d92fd4a2d7b049bf8ff866add68576797d3b05c842983df2902b1",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "f79aa4b542ddba92c426f310cd2df7ed51aa8557f323d54a30aacec16cc3922f",
+        "compile_log": "ff8f697092f9f77a5bf76e9710a91c9ea094ca8d11f4ed0c42cfd965abf44826",
+        "model_info": "b9c3cd369fea736de1b8ec22c022d8061fd246dfbd1edc342266bd071f4b2282",
+        "oe_report": "bded70ad37aaa97bac0d4916659672fc703eb11181f322e0cb1a21e534502a8c",
+        "oe_data": "3b4d9f9a83b53ae90102a092ae232108462014e425f6d2ab1184c5c247c89527"
+      }
+    },
+    {
+      "job": {
+        "family": "hgnetv2",
+        "model": "hgnetv2_b2.ssld_stage2_ft_in1k",
+        "repo_id": "timm/hgnetv2_b2.ssld_stage2_ft_in1k",
+        "platform": "x5",
+        "size": "b2-ssld-stage2-ft-in1k-224",
+        "variant": "timm-b2-ssld-stage2-ft-in1k",
+        "filename": "hgnetv2_b2_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin",
+        "run_id": "hgnetv2_b2_ssld_stage2_ft_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:48:03.698654+00:00",
+        "sha256": "9d16c0d3686c79bdf9031b1ccdde120e37bfb6df6c82e6c6f82a20bdb0f0e9f0",
+        "size_bytes": 11278324
+      },
+      "source": {
+        "repo_id": "timm/hgnetv2_b2.ssld_stage2_ft_in1k",
+        "revision": "7a3092bc87118c7974bb9000b1eb6d9c560f8f75",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "184700043cfb108f74b88537344f37ab97060d2e47afe1485c823e551b85655a",
+        "size_bytes": 45040952,
+        "url": "https://huggingface.co/timm/hgnetv2_b2.ssld_stage2_ft_in1k/resolve/7a3092bc87118c7974bb9000b1eb6d9c560f8f75/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/hgnetv2_b2.ssld_stage2_ft_in1k/blob/7a3092bc87118c7974bb9000b1eb6d9c560f8f75/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "hgnetv2_b2.ssld_stage2_ft_in1k",
+        "checkpoint_sha256": "184700043cfb108f74b88537344f37ab97060d2e47afe1485c823e551b85655a",
+        "onnx_sha256": "5fe4b817e362924db61a7a42a352f5314c20fb29be642ebed5749c564af072ba",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "41ca4a093de9930838d86308a46e9534c35b10cfaffde865472d14561b1ece92",
+        "parameter_count": 11221356,
+        "deployment_parameter_count": 11221356,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.965,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          4.291534423828125e-06,
+          9.5367431640625e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "hgnetv2",
+          "family": "hgnetv2",
+          "task": "cls",
+          "size": "b2-ssld-stage2-ft-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "9d16c0d3686c79bdf9031b1ccdde120e37bfb6df6c82e6c6f82a20bdb0f0e9f0",
+            "name": "hgnetv2_b2_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 11278324
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "713cc71c77b1d89fad8a137c25e4cedcc68b66bb0649e5de50c3fa16d8b21bd1",
+        "controller_sha256": "3da0f3e12b1d92fd4a2d7b049bf8ff866add68576797d3b05c842983df2902b1",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "713cc71c77b1d89fad8a137c25e4cedcc68b66bb0649e5de50c3fa16d8b21bd1",
+        "compile_log": "aaa99e1e0a98761f7939952679e65ff451a0af7182cfeba239d1028b05a9925c",
+        "model_info": "faf58e48f6fcbba8175cfec638480c3bc1bfa7114c60fb2dde51356433cb610e",
+        "oe_report": "ff21324f39dd913ddd1cdee4c4dd3bb95406db9e0a11ecff7705980f70be0839",
+        "oe_data": "0b340e62642ff410a61c8db2543c6326dda243dabc7185db5c2ab1315cc099ae"
+      }
+    },
+    {
+      "job": {
+        "family": "hgnetv2",
+        "model": "hgnetv2_b3.ssld_stage2_ft_in1k",
+        "repo_id": "timm/hgnetv2_b3.ssld_stage2_ft_in1k",
+        "platform": "x5",
+        "size": "b3-ssld-stage2-ft-in1k-224",
+        "variant": "timm-b3-ssld-stage2-ft-in1k",
+        "filename": "hgnetv2_b3_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin",
+        "run_id": "hgnetv2_b3_ssld_stage2_ft_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:50:29.718940+00:00",
+        "sha256": "30ffaf3fdd73a46f17f4050225d4867e3b730f2902c43dd23f2f3e2037698050",
+        "size_bytes": 16127988
+      },
+      "source": {
+        "repo_id": "timm/hgnetv2_b3.ssld_stage2_ft_in1k",
+        "revision": "1aac877b3ea55ab0f06d57cad9889d1e601bd472",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "f9769b32ab1f6a4f127821f5776f6a19b736149af4f3ec22bab339748bf2dac7",
+        "size_bytes": 65364096,
+        "url": "https://huggingface.co/timm/hgnetv2_b3.ssld_stage2_ft_in1k/resolve/1aac877b3ea55ab0f06d57cad9889d1e601bd472/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/hgnetv2_b3.ssld_stage2_ft_in1k/blob/1aac877b3ea55ab0f06d57cad9889d1e601bd472/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "hgnetv2_b3.ssld_stage2_ft_in1k",
+        "checkpoint_sha256": "f9769b32ab1f6a4f127821f5776f6a19b736149af4f3ec22bab339748bf2dac7",
+        "onnx_sha256": "d91ff344809cb25a4dee596e0498456fb12d61a64ae52b29d9c68fb9f4b0d628",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "41ca4a093de9930838d86308a46e9534c35b10cfaffde865472d14561b1ece92",
+        "parameter_count": 16292216,
+        "deployment_parameter_count": 16292216,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.965,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          7.62939453125e-06,
+          5.7220458984375e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "hgnetv2",
+          "family": "hgnetv2",
+          "task": "cls",
+          "size": "b3-ssld-stage2-ft-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "30ffaf3fdd73a46f17f4050225d4867e3b730f2902c43dd23f2f3e2037698050",
+            "name": "hgnetv2_b3_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 16127988
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "7ec12ac699d86345a799aa0ebe8c771521b1b6fb6717e95a09b3d5ef0c74555a",
+        "controller_sha256": "3da0f3e12b1d92fd4a2d7b049bf8ff866add68576797d3b05c842983df2902b1",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "7ec12ac699d86345a799aa0ebe8c771521b1b6fb6717e95a09b3d5ef0c74555a",
+        "compile_log": "f419ea2651e0987d94532ba0c6a3fe34f8f561aeedebc06c5a7ea3d66e31ad36",
+        "model_info": "eac56f4b3140654c256cbcd66778c91c2079e954d902b48c6a3a4679012a41de",
+        "oe_report": "506de94ba3511f567771b2ed7341334e017c040331f657462c383dfc6cfffba1",
+        "oe_data": "a65dc5e6f3eae604450536624209c25ce537b91792f57253136c8c0adbe1bad2"
+      }
+    },
+    {
+      "job": {
+        "family": "hgnetv2",
+        "model": "hgnetv2_b4.ssld_stage2_ft_in1k",
+        "repo_id": "timm/hgnetv2_b4.ssld_stage2_ft_in1k",
+        "platform": "x5",
+        "size": "b4-ssld-stage2-ft-in1k-224",
+        "variant": "timm-b4-ssld-stage2-ft-in1k",
+        "filename": "hgnetv2_b4_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin",
+        "run_id": "hgnetv2_b4_ssld_stage2_ft_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:54:26.763766+00:00",
+        "sha256": "c3aef8c8372e6702b29e9c3df4f312bb37d2ab0902c8a59107d06dc1b3675f2c",
+        "size_bytes": 19011572
+      },
+      "source": {
+        "repo_id": "timm/hgnetv2_b4.ssld_stage2_ft_in1k",
+        "revision": "3c808d9d9d9873ed5e37b00509ba2a4882e816e8",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "8d05f750c5301cd5c7d5139ae2417d13711da2c6ab067653579848bf31dcbeba",
+        "size_bytes": 79423192,
+        "url": "https://huggingface.co/timm/hgnetv2_b4.ssld_stage2_ft_in1k/resolve/3c808d9d9d9873ed5e37b00509ba2a4882e816e8/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/hgnetv2_b4.ssld_stage2_ft_in1k/blob/3c808d9d9d9873ed5e37b00509ba2a4882e816e8/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "hgnetv2_b4.ssld_stage2_ft_in1k",
+        "checkpoint_sha256": "8d05f750c5301cd5c7d5139ae2417d13711da2c6ab067653579848bf31dcbeba",
+        "onnx_sha256": "59ab3e6c59f369cc6485500d5ad2edef54c6db827f3f983fe696d0e9a1021568",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "41ca4a093de9930838d86308a46e9534c35b10cfaffde865472d14561b1ece92",
+        "parameter_count": 19796680,
+        "deployment_parameter_count": 19796680,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.965,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          1.9073486328125e-06,
+          5.0067901611328125e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "hgnetv2",
+          "family": "hgnetv2",
+          "task": "cls",
+          "size": "b4-ssld-stage2-ft-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "c3aef8c8372e6702b29e9c3df4f312bb37d2ab0902c8a59107d06dc1b3675f2c",
+            "name": "hgnetv2_b4_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 19011572
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "fcb2c8698fe4895d6e06a957fc665cc4ddd78d555c77eab4d3562047829849c8",
+        "controller_sha256": "3da0f3e12b1d92fd4a2d7b049bf8ff866add68576797d3b05c842983df2902b1",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "fcb2c8698fe4895d6e06a957fc665cc4ddd78d555c77eab4d3562047829849c8",
+        "compile_log": "0baca6382f558d6292502b267fdec68b58882356166b18910929cdfd3d0eaca0",
+        "model_info": "fd201ac3fe55a69ba721153232cc2c1dc63df6a961f1b3f29ca4c94589846387",
+        "oe_report": "65a98f07b4390a8f921f1c2d2000ff8f3967da7396b4dc44cc1b2b6e68cf1883",
+        "oe_data": "ffaf389eb94fb0c32816fafebc1930c1c2df0fa124383a4c48cc75a3ee776453"
+      }
+    }
+  ]
+}

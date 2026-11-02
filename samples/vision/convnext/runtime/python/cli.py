@@ -97,6 +97,10 @@ BINDING_TABLE = SampleBindingTable(
 
 
 
+
+
+
+
 # BEGIN CONVERTED ARTIFACT BINDINGS
 from dataclasses import replace as _with_converted_bindings
 CONVERTED_VARIANTS = ('timm-femto-d1-in1k', 'timm-pico-d1-in1k', 'timm-nano-d1h-in1k')

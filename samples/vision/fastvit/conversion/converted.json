@@ -495,6 +495,184 @@
         "oe_report": "d500370ff18892034da758a59b4f7560a07d57e986a1c599721ceee5d22a754e",
         "oe_data": "4bce53f6d7b0eeb1c1e74c77fd1349c840435424e2c6085e9dd4ff9453fa0f0f"
       }
+    },
+    {
+      "job": {
+        "family": "fastvit",
+        "model": "fastvit_sa12.apple_in1k",
+        "repo_id": "timm/fastvit_sa12.apple_in1k",
+        "platform": "x5",
+        "size": "sa12-apple-in1k-224",
+        "variant": "timm-sa12-apple-in1k",
+        "filename": "fastvit_sa12_apple_in1k_bayese_224x224_nv12.bin",
+        "run_id": "fastvit_sa12_apple_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:15:47.816697+00:00",
+        "sha256": "86768f530bfcd68e6d0e2a09919f05bbb056fa66fa41a562b8a5fa7a31547760",
+        "size_bytes": 12199543
+      },
+      "source": {
+        "repo_id": "timm/fastvit_sa12.apple_in1k",
+        "revision": "4f87441b01b509bc759497692b7d342c2999923b",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "4c41bc351018c691167b661e3bb03bcd713a2915ef7128e118877ca0ca5b5afa",
+        "size_bytes": 46522920,
+        "url": "https://huggingface.co/timm/fastvit_sa12.apple_in1k/resolve/4f87441b01b509bc759497692b7d342c2999923b/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fastvit_sa12.apple_in1k/blob/4f87441b01b509bc759497692b7d342c2999923b/README.md",
+        "license_url": "https://github.com/apple/ml-fastvit/blob/8af5928238cab99c45f64fc3e4e7b1516b8224ba/LICENSE",
+        "license_sha256": "b621c8500147987044c1ce3f7c524f09e804e3ec4dbdb3d06db16cfbd4c60697"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "fastvit_sa12.apple_in1k",
+        "checkpoint_sha256": "4c41bc351018c691167b661e3bb03bcd713a2915ef7128e118877ca0ca5b5afa",
+        "onnx_sha256": "801c91b452ce721739782d2469d51c090b1aca7bf6326e789f41b3a846d34650",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "276eba1ecdd29731ba1033bda608d5cf469a0f70b946dad44ffbf909a13cdf02",
+        "parameter_count": 11580968,
+        "deployment_parameter_count": 11545320,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            256,
+            256
+          ],
+          "crop_pct": 0.9,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          1.6391277313232422e-05,
+          1.5914440155029297e-05
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "fastvit",
+          "family": "fastvit",
+          "task": "cls",
+          "size": "sa12-apple-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "86768f530bfcd68e6d0e2a09919f05bbb056fa66fa41a562b8a5fa7a31547760",
+            "name": "fastvit_sa12_apple_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 12199543
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "1c2232dc55810f9d73bed25f959ef2211dad839844948b5dab9e28dede7f9b56",
+        "controller_sha256": "ffe81251b3cbf8f65289e72698526c52de4a0eaffa1ab796ae1e258cd32f5604",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "1c2232dc55810f9d73bed25f959ef2211dad839844948b5dab9e28dede7f9b56",
+        "compile_log": "b6614562b6549f9eb28a93bd3109f53a5884672763507aac137fa1eb4f775db2",
+        "model_info": "e3ed33ca5647a81bc1eb9479802929bef2eff3d722307d2494530305acde73c9",
+        "oe_report": "2a49603aed5c70e486112d7988641fa4218fddd1e0420977bb1798f3b4439fb8",
+        "oe_data": "6a42cd3fec1d54636a5dfa79e0f2c51660db5aba527b685b1e4df0aa0079ce71"
+      },
+      "original_reports": [
+        {
+          "name": "main_graph_subgraph_0.html",
+          "sha256": "a9eb02b29fe319f82a8d8bbcd855c4c37843efdf3de31d3d7dfc6f9529a2917c"
+        },
+        {
+          "name": "main_graph_subgraph_1.html",
+          "sha256": "e9047b0aac016feb444775580941eb202390dc6f5562d48b5aef462bed4a7a1c"
+        },
+        {
+          "name": "main_graph_subgraph_2.html",
+          "sha256": "72d6ce71dc2b27718ba2036eb2490dec240f41e887f14fd468fb93ac6c6ab58d"
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,656 @@
+{
+  "schema_version": 1,
+  "status": "converted",
+  "board_validation": "not-run",
+  "profile": "raw RGB, Pillow bicubic short256, rounded center crop224, checkpoint normalization fused by mapper",
+  "models": [
+    {
+      "job": {
+        "family": "fasternet",
+        "model": "fasternet_t0.in1k",
+        "repo_id": "timm/fasternet_t0.in1k",
+        "platform": "x5",
+        "size": "t0-in1k-224",
+        "variant": "timm-t0-in1k",
+        "filename": "fasternet_t0_in1k_bayese_224x224_nv12.bin",
+        "run_id": "fasternet_t0_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:28:38.171218+00:00",
+        "sha256": "6184220a85312ab715e1fb4556f1b53ace7ddce3bfed9beb56a965cfd3fa5fde",
+        "size_bytes": 4265945
+      },
+      "source": {
+        "repo_id": "timm/fasternet_t0.in1k",
+        "revision": "a8c465730c7896ba51d860a6e384fad94e7cfb44",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "976c37b7aa986e91d80d011f6c4004c245da0bc55631bb448321cd64921f2234",
+        "size_bytes": 15674224,
+        "url": "https://huggingface.co/timm/fasternet_t0.in1k/resolve/a8c465730c7896ba51d860a6e384fad94e7cfb44/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fasternet_t0.in1k/blob/a8c465730c7896ba51d860a6e384fad94e7cfb44/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "fasternet_t0.in1k",
+        "checkpoint_sha256": "976c37b7aa986e91d80d011f6c4004c245da0bc55631bb448321cd64921f2234",
+        "onnx_sha256": "c28ce04d1e6a2ef9a32d2593cd43d0b9988c04fb08678e197f13cfc77666132e",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "1f4b742836fad6e56bdfba4a26515f1e97c5fc6c84f396f6c3c7137a2fd80fc9",
+        "parameter_count": 3905500,
+        "deployment_parameter_count": 3905500,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 1.0,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          1.811981201171875e-05,
+          1.3828277587890625e-05
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "fasternet",
+          "family": "fasternet",
+          "task": "cls",
+          "size": "t0-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "6184220a85312ab715e1fb4556f1b53ace7ddce3bfed9beb56a965cfd3fa5fde",
+            "name": "fasternet_t0_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 4265945
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "a633aef3cfacc4c282eaf050e1e6ae338c7ad76a94ee958bec4fc3047d5f5a37",
+        "controller_sha256": "3da0f3e12b1d92fd4a2d7b049bf8ff866add68576797d3b05c842983df2902b1",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "a633aef3cfacc4c282eaf050e1e6ae338c7ad76a94ee958bec4fc3047d5f5a37",
+        "compile_log": "bcb030b26a4a7ffff996a3d442e2623314961dcd76e12b03ef2f61c6aa379db0",
+        "model_info": "420157ae52be134aac7b202b4a6efc9b4c355112e2d6d0c377b56e52ca587068",
+        "oe_report": "c30db662e3af5698025ca11ce4f58989f8f664d989a03620687e1a4339216c0d",
+        "oe_data": "4126289760d8116b59f07ee02f71988f452aa14873f366e643c647ba8472b1f0"
+      }
+    },
+    {
+      "job": {
+        "family": "fasternet",
+        "model": "fasternet_t1.in1k",
+        "repo_id": "timm/fasternet_t1.in1k",
+        "platform": "x5",
+        "size": "t1-in1k-224",
+        "variant": "timm-t1-in1k",
+        "filename": "fasternet_t1_in1k_bayese_224x224_nv12.bin",
+        "run_id": "fasternet_t1_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:31:56.542029+00:00",
+        "sha256": "a258b14522e97c4b94d067108b46ce71e154e9c732be0ee2da2a6aa42d2f2757",
+        "size_bytes": 8001497
+      },
+      "source": {
+        "repo_id": "timm/fasternet_t1.in1k",
+        "revision": "2c27a878042ecd9de0c2f045fbf8169704f9aae6",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "223419d5d6164b2f985162b14ec6666394f80b40aa0349e5fb99909fb3a27fdb",
+        "size_bytes": 30457032,
+        "url": "https://huggingface.co/timm/fasternet_t1.in1k/resolve/2c27a878042ecd9de0c2f045fbf8169704f9aae6/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fasternet_t1.in1k/blob/2c27a878042ecd9de0c2f045fbf8169704f9aae6/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "fasternet_t1.in1k",
+        "checkpoint_sha256": "223419d5d6164b2f985162b14ec6666394f80b40aa0349e5fb99909fb3a27fdb",
+        "onnx_sha256": "6dc25cc4ba94ff9fb53462c1ea7f47ee21fb40d0a1456bcbc4b4da0f5222d47f",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "1f4b742836fad6e56bdfba4a26515f1e97c5fc6c84f396f6c3c7137a2fd80fc9",
+        "parameter_count": 7595368,
+        "deployment_parameter_count": 7595368,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 1.0,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          8.225440979003906e-06,
+          8.821487426757812e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "fasternet",
+          "family": "fasternet",
+          "task": "cls",
+          "size": "t1-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "a258b14522e97c4b94d067108b46ce71e154e9c732be0ee2da2a6aa42d2f2757",
+            "name": "fasternet_t1_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 8001497
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "471d3b205a33d7a32eada694b91af0b632312e752df109660c54d88e3dd656a5",
+        "controller_sha256": "3da0f3e12b1d92fd4a2d7b049bf8ff866add68576797d3b05c842983df2902b1",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "471d3b205a33d7a32eada694b91af0b632312e752df109660c54d88e3dd656a5",
+        "compile_log": "ef5e07b47eb771d76f8b202d8c94b56ed421d6cfc05bac2c25d9a1afb66349e9",
+        "model_info": "5d2d675892f6b6e7ab9a049ca8598ce9ebf35b3d90942f4a65c39cac5ca9948b",
+        "oe_report": "5179b3d34999563e767a3324e00f6ff073ccae7d02fdd5e7e88bc148a9d38203",
+        "oe_data": "cf60b4ea1df23285a3ff78fbd7f4f60c1730ed761ffcd24b7379667062621ed5"
+      }
+    },
+    {
+      "job": {
+        "family": "fasternet",
+        "model": "fasternet_t2.in1k",
+        "repo_id": "timm/fasternet_t2.in1k",
+        "platform": "x5",
+        "size": "t2-in1k-224",
+        "variant": "timm-t2-in1k",
+        "filename": "fasternet_t2_in1k_bayese_224x224_nv12.bin",
+        "run_id": "fasternet_t2_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:35:16.578911+00:00",
+        "sha256": "8ef79e32621b475814c7d2d781e6e0e24d09c6f381c2b7efade3a577bb097012",
+        "size_bytes": 15538137
+      },
+      "source": {
+        "repo_id": "timm/fasternet_t2.in1k",
+        "revision": "945917af83878941c27f52a011f4340824fc4f41",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "5df709f4a671d15847e0398331c62180eaee6b40c8862c85c619389ed40bf84f",
+        "size_bytes": 60038128,
+        "url": "https://huggingface.co/timm/fasternet_t2.in1k/resolve/945917af83878941c27f52a011f4340824fc4f41/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fasternet_t2.in1k/blob/945917af83878941c27f52a011f4340824fc4f41/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "fasternet_t2.in1k",
+        "checkpoint_sha256": "5df709f4a671d15847e0398331c62180eaee6b40c8862c85c619389ed40bf84f",
+        "onnx_sha256": "4d1c5d8eca1b9bcc2946cf5d283e65041b09e5a1b4c7220db6a844d5904939e6",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "1f4b742836fad6e56bdfba4a26515f1e97c5fc6c84f396f6c3c7137a2fd80fc9",
+        "parameter_count": 14982888,
+        "deployment_parameter_count": 14982888,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 1.0,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          8.821487426757812e-06,
+          4.76837158203125e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "fasternet",
+          "family": "fasternet",
+          "task": "cls",
+          "size": "t2-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "8ef79e32621b475814c7d2d781e6e0e24d09c6f381c2b7efade3a577bb097012",
+            "name": "fasternet_t2_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 15538137
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "ca6c544e9d790f3be40c446639363dcb876a76a892132d048568dcafdf892bf9",
+        "controller_sha256": "3da0f3e12b1d92fd4a2d7b049bf8ff866add68576797d3b05c842983df2902b1",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "ca6c544e9d790f3be40c446639363dcb876a76a892132d048568dcafdf892bf9",
+        "compile_log": "d9e536b3b7a7660fcabda8e7671416e7fbc1375f36dcc055434895f5244d930a",
+        "model_info": "fd3ff33bb72a9190e43710389c6faf72aa2cff4f4ea589f0424b78020ba4345f",
+        "oe_report": "5dda1dc078db297296ec365ff591e12f2c233681fd34fbec197af64a4c393195",
+        "oe_data": "ba1acfed6e87add5ab1b59d344fc16280cc4ac08968a8f4c7a41bb1b56ee48cf"
+      }
+    },
+    {
+      "job": {
+        "family": "fasternet",
+        "model": "fasternet_s.in1k",
+        "repo_id": "timm/fasternet_s.in1k",
+        "platform": "x5",
+        "size": "s-in1k-224",
+        "variant": "timm-s-in1k",
+        "filename": "fasternet_s_in1k_bayese_224x224_nv12.bin",
+        "run_id": "fasternet_s_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:39:52.205590+00:00",
+        "sha256": "d9c176d83bf1a2df7277bbaa7e1202f489041be584137a9b57faa1e27c2fe63e",
+        "size_bytes": 32053205
+      },
+      "source": {
+        "repo_id": "timm/fasternet_s.in1k",
+        "revision": "8c427163d414879c948337c43795c7fd60aec2c4",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "f0c036af07be8e179c0507ab09306357c64d2a4fd66c37e540032c3740c81dff",
+        "size_bytes": 124907072,
+        "url": "https://huggingface.co/timm/fasternet_s.in1k/resolve/8c427163d414879c948337c43795c7fd60aec2c4/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fasternet_s.in1k/blob/8c427163d414879c948337c43795c7fd60aec2c4/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "fasternet_s.in1k",
+        "checkpoint_sha256": "f0c036af07be8e179c0507ab09306357c64d2a4fd66c37e540032c3740c81dff",
+        "onnx_sha256": "a6d708f65a579ba5480a1e73e72b6dffc038e581d2e49dd7e89ac1a099100261",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "1f4b742836fad6e56bdfba4a26515f1e97c5fc6c84f396f6c3c7137a2fd80fc9",
+        "parameter_count": 31181032,
+        "deployment_parameter_count": 31181032,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 1.0,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          4.76837158203125e-06,
+          6.9141387939453125e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "fasternet",
+          "family": "fasternet",
+          "task": "cls",
+          "size": "s-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "d9c176d83bf1a2df7277bbaa7e1202f489041be584137a9b57faa1e27c2fe63e",
+            "name": "fasternet_s_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 32053205
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "49beab1ad617489a88845b01e8daa39ff460ef59876ed316d3e2b0739f18b2ef",
+        "controller_sha256": "3da0f3e12b1d92fd4a2d7b049bf8ff866add68576797d3b05c842983df2902b1",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "49beab1ad617489a88845b01e8daa39ff460ef59876ed316d3e2b0739f18b2ef",
+        "compile_log": "4048e2d684deb56057a923f2e82552098625055bda86992e0cde7174018a2002",
+        "model_info": "f996b08b27616747b5dee03459e9829e62b66fd5307793ee90c72c274da909d4",
+        "oe_report": "f4fffd9fa205b7b32a50f7558b31e6d44cbb5952efb3643b2cc2adb57f40e2ce",
+        "oe_data": "b04ee747c0894fcb35015b66bad23fe3a21ca072bc15f2149b23337b2f6a0fe5"
+      }
+    }
+  ]
+}

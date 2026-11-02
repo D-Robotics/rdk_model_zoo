@@ -49,6 +49,14 @@ DEFAULT_VARIANTS = {
 }
 
 
+
+
+
+# BEGIN CONVERTED ARTIFACT BINDINGS
+VARIANTS = VARIANTS + ('timm-b2-ra-in1k', 'timm-b3-ra2-in1k', 'timm-b4-ra2-in1k')
+ASSET_REFERENCES.update({('x5', 'timm-b2-ra-in1k'): 'x5:efficientnet:efficientnet_b2_ra_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-b3-ra2-in1k'): 'x5:efficientnet:efficientnet_b3_ra2_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-b4-ra2-in1k'): 'x5:efficientnet:efficientnet_b4_ra2_in1k_bayese_224x224_nv12.bin'})
+# END CONVERTED ARTIFACT BINDINGS
+
 def asset_reference(target: str, variant: Optional[str] = None) -> str:
     """Return the exact manifest reference for a supported target/variant.
 

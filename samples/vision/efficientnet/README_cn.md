@@ -168,3 +168,27 @@ oystercatcher、dowitcher。*
 样例代码遵循仓库顶层 LICENSE（Apache-2.0）。源模型为上游 EfficientNet /
 EfficientNet-Lite 发行版；模型/权重许可由上游发行版约束（见上方论文
 链接）。已发布制品遵循平台发布 Manifest。模型与权重按上游许可使用。
+
+<!-- converted-batch-20261102 -->
+## 已转换新增规格（2026-11-02）
+
+以下 timm 权重单独转换，已通过严格权重加载、结构重参数化及两组输入的
+PyTorch/ONNX 主机对照、checker 和编译。板端冒烟、精度、Runtime 1/2 并发和
+C++ 1/2 流均为 **not-run**，历史指标和截图不适用于这些产物。原有默认规格保留。
+新规格需要 Pillow，使用 bicubic 短边 256、四舍五入居中裁剪 224；Mapper 融合
+该权重实际的归一化参数。输出为 float32 1,000 类 logits，由原生 Runtime 做 softmax。
+
+| 规格 | 模型文件 | 权重版本 | 板端 |
+|---|---|---|---|
+| `timm-b2-ra-in1k` | `efficientnet_b2_ra_in1k_bayese_224x224_nv12.bin` | [`3577c4a7d847`](https://huggingface.co/timm/efficientnet_b2.ra_in1k/blob/3577c4a7d84723645311bb5a9e5086f1b62ec8e2/README.md) | not-run |
+| `timm-b3-ra2-in1k` | `efficientnet_b3_ra2_in1k_bayese_224x224_nv12.bin` | [`0366a7551862`](https://huggingface.co/timm/efficientnet_b3.ra2_in1k/blob/0366a75518620e0f2077789202073759f2d61393/README.md) | not-run |
+| `timm-b4-ra2-in1k` | `efficientnet_b4_ra2_in1k_bayese_224x224_nv12.bin` | [`442c00e15609`](https://huggingface.co/timm/efficientnet_b4.ra2_in1k/blob/442c00e15609ff467772913d230768706a406aca/README.md) | not-run |
+
+```bash
+python3 samples/vision/efficientnet/model/download.py --target x5 --variant timm-b2-ra-in1k
+python3 samples/vision/efficientnet/runtime/python/main.py --target x5 --variant timm-b2-ra-in1k --dry-run
+```
+
+精确 URL、SHA-256 和大小登记在 `docs/release/x5/models.yaml`；来源及主机对照
+记录见 `conversion/converted.json`。模型许可逐项保留在公开 release 清单中。
+<!-- /converted-batch-20261102 -->

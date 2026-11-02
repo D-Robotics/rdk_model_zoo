@@ -163,3 +163,19 @@ python3 samples/vision/repghost/runtime/python/main.py --target x5 \
 ## 补充准备
 
 每个变体选择对应的 PyTorch/timm 权重并记录其修订与摘要。在对应 YAML 旁导出 RGB/NCHW 模型图；由于 `input_shape` 和 `input_name` 为空，应检查实际输入输出 元数据。按 float32 RGB、`cal_data_type: float32`、`calibration: default`、mean `123.675/116.28/103.53` 与 scale `0.01712475/0.017507/0.01742919` 准备 `./calibration_data_rgb_f32`。每份 YAML 都写入 `RepGhost_224x224_nv12/RepGhost_224x224_nv12.bin`，各变体应使用独立工作区构建。
+
+<!-- converted-batch-20261102 -->
+## 固定版本转换配方
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model repghostnet_100.in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/repghost/conversion/recipes/timm-100-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+各规格使用 converted.json 中对应的模型、固定权重及 recipes 配方，输出到全新目录。校准为原始 RGB float32 二进制张量，不重复归一化，不套用历史板端数据。
+<!-- /converted-batch-20261102 -->

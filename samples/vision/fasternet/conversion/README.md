@@ -190,3 +190,19 @@ SHA-256 digests are:
 ## Additional preparation
 
 Prepare the ONNX graph for the selected `fasternet_<variant>.onnx` and RGB float32 calibration data under `./calibration_data_rgb_f32`, using the YAML's 224x224 input and normalization values. All four YAMLs share `output_model_file_prefix: 'FasterNet_224x224_nv12'`, while their `working_dir` values are `model_output` (S), `FasterNet_224x224_nv12_mix` (T0), and `FasterNet_224x224_nv12` (T1/T2). Build variants in separate directories and save each output with its manifest filename. Run the OE commands above with the matching YAML.
+
+<!-- converted-batch-20261102 -->
+## Pinned converted recipes
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model fasternet_t0.in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/fasternet/conversion/recipes/timm-t0-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+Use the model/tag, pinned checkpoint and matching YAML from `converted.json`; use a fresh attempt directory. The calibration producer uses raw RGB float32 binary tensors. Do not apply normalization twice or inherit historical board metrics.
+<!-- /converted-batch-20261102 -->
