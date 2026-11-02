@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import os
 import shlex
 import subprocess
@@ -266,6 +267,26 @@ class ExportWrapper(nn.Module):
         return f["x_norm_clstoken"], f["x_norm_patchtokens"]
 
 
+def check_parity(reference, actual, *, stage, sample):
+    """Require finite, shape-correct and numerically close embedding outputs."""
+    if len(reference) != 2 or len(actual) != 2:
+        raise ValueError(f"{stage}/{sample}: expected both embedding outputs")
+    records = []
+    for name, shape, a, b in zip(("cls_feat", "patch_feat"), ((1, 384), (1, 256, 384)), reference, actual):
+        a, b = np.asarray(a), np.asarray(b)
+        if a.shape != shape or b.shape != shape or not np.isfinite(a).all() or not np.isfinite(b).all():
+            raise ValueError(f"{stage}/{sample}/{name}: invalid shape or non-finite output")
+        np.testing.assert_allclose(b, a, atol=1e-3, rtol=1e-3,
+                                   err_msg=f"{stage}/{sample}/{name}")
+        af, bf = a.astype(np.float64).ravel(), b.astype(np.float64).ravel()
+        cosine = float(af @ bf / (np.linalg.norm(af) * np.linalg.norm(bf) + 1e-12))
+        if cosine < 0.99999:
+            raise ValueError(f"{stage}/{sample}/{name}: cosine {cosine} below 0.99999")
+        records.append({"stage": stage, "sample": sample, "output": name,
+                        "cosine": cosine, "max_abs": float(np.abs(a - b).max())})
+    return records
+
+
 def main() -> None:
     """Export the pinned DINOv2 checkpoint to ONNX and report parity.
 
@@ -280,18 +301,32 @@ def main() -> None:
     parser.add_argument("--repo", type=str, default=".", help="Path to a local clone of facebookresearch/dinov2.")
     parser.add_argument("--repo-revision", type=str, default=DINOV2_SOURCE_REVISION, help="Required git revision for the DINOv2 source clone.")
     parser.add_argument("--out", type=str, default="dinov2_vits14_224.onnx", help="Output ONNX path.")
+    parser.add_argument("--parity-input", action="append", default=[], help="Normalized float32 NCHW NPY from real calibration images; repeatable.")
+    parser.add_argument("--parity-report", help="Write the successful upstream/rewrite/ONNX comparison report.")
     args = parser.parse_args()
 
     verify_repo_revision(args.repo, args.repo_revision)
     checkpoint = load_checkpoint(args.weights, args.weights_sha256)
     model = build_model(args.repo, checkpoint)
+    torch.manual_seed(0)
+    inputs = [("random_seed_0", torch.randn(1, 3, IMAGE_SIZE, IMAGE_SIZE))]
+    for path in args.parity_input:
+        tensor = np.load(path, allow_pickle=False)
+        if tensor.shape != (1, 3, IMAGE_SIZE, IMAGE_SIZE) or tensor.dtype != np.float32 or not np.isfinite(tensor).all():
+            raise ValueError(f"Invalid normalized parity input: {path}")
+        inputs.append((path, torch.from_numpy(tensor)))
+    with torch.no_grad():
+        upstream = [[value.numpy() for value in ExportWrapper(model)(tensor)] for _, tensor in inputs]
     bake_pos_embed(model)
     patch_attention(model)
     wrapper = ExportWrapper(model).eval()
 
-    x = torch.randn(1, 3, IMAGE_SIZE, IMAGE_SIZE)
+    x = inputs[0][1]
     with torch.no_grad():
-        cls_t, patch_t = wrapper(x)
+        rewritten = [[value.numpy() for value in wrapper(tensor)] for _, tensor in inputs]
+    comparisons = []
+    for (sample, _), a, b in zip(inputs, upstream, rewritten):
+        comparisons.extend(check_parity(a, b, stage="upstream_to_rewrite", sample=sample))
 
     torch.onnx.export(
         wrapper,
@@ -307,13 +342,19 @@ def main() -> None:
 
     import onnxruntime as ort
     sess = ort.InferenceSession(args.out, providers=["CPUExecutionProvider"])
-    cls_o, patch_o = sess.run(None, {"input": x.numpy()})
-    for name, a, b in (("cls", cls_t.numpy(), cls_o), ("patch", patch_t.numpy(), patch_o)):
-        cos = float(np.sum(a * b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-12))
-        print(f"[parity] {name}: cosine={cos:.6f} max_abs={np.abs(a - b).max():.2e}")
+    for (sample, tensor), reference in zip(inputs, upstream):
+        actual = sess.run(None, {"input": tensor.numpy()})
+        comparisons.extend(check_parity(reference, actual, stage="upstream_to_onnx", sample=sample))
+    report = {"status": "passed", "atol": 1e-3, "rtol": 1e-3, "minimum_cosine": 0.99999,
+              "real_input_count": len(args.parity_input), "comparisons": comparisons}
+    print("[parity] " + json.dumps(report))
+    if args.parity_report:
+        with open(args.parity_report, "w") as handle:
+            json.dump(report, handle, indent=2)
 
     import onnx
     m = onnx.load(args.out)
+    onnx.checker.check_model(m)
     ops = {}
     for n in m.graph.node:
         ops[n.op_type] = ops.get(n.op_type, 0) + 1

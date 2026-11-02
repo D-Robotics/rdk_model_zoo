@@ -22,8 +22,8 @@ S100/S100P/S600 (Nash architecture).
 Key Features:
 - Exports the FAIR DINOv2 ViT-S/14 checkpoint to a BPU-friendly ONNX graph.
 - Automates calibration data preparation (Image -> NPY, ImageNet-normalized).
-- Generates the hb_compile configuration with the validated recipe:
-  featuremap float32 input + all-int16 + default (KL) calibration.
+- Generates the hb_compile configuration with the native recipe:
+  featuremap float32 input + all-int16 + default modelwise calibration search.
 - Invokes `hb_compile` and copies the .hbm artifact to the output directory.
 
 The quantization recipe is fixed on purpose: int8 activations and
@@ -67,9 +67,10 @@ IMAGE_SIZE = 224
 IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 
-# The measured recipe: featuremap input, all-int16, KL (default) calibration.
+# The native recipe: featuremap input, all-int16, default modelwise search.
 # calibration_type is intentionally NOT written into the yaml: hmct's default
-# "modelwise search" calibration is what makes int16 pass on DINOv2.
+# modelwise search chooses a method from the calibration data. Retain the
+# selected method in the conversion log; it is not a forced KL setting.
 QUANT_CONFIG = """
   quant_config:
     {
@@ -96,6 +97,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--march", type=str, default="nash-e", choices=["nash-e", "nash-m", "nash-p"], help="Target Nash march.")
     parser.add_argument("--output-dir", type=str, default=".", help="Directory to save the converted model.")
     parser.add_argument("--jobs", type=int, default=16, help="Number of parallel compilation jobs.")
+    parser.add_argument("--optimize-level", choices=("O1", "O2"), default="O2", help="Backend optimization level; the historical default is O2.")
+    parser.add_argument("--output-prefix", default=None, help="Explicit HBM filename prefix; omission retains the historical target filename.")
     parser.add_argument("--save-cache", action="store_true", help="Keep temporary intermediate files (workspace).")
     return parser.parse_args()
 
@@ -115,7 +118,7 @@ def check_toolchain() -> None:
         sys.exit(1)
 
 
-def export_onnx(opt: argparse.Namespace, ws: str) -> str:
+def export_onnx(opt: argparse.Namespace, ws: str, cal_dir: str | None = None) -> str:
     """Run the ONNX export step and return the exported model path.
 
     Args:
@@ -135,7 +138,11 @@ def export_onnx(opt: argparse.Namespace, ws: str) -> str:
         "--repo", opt.repo,
         "--repo-revision", opt.repo_revision,
         "--out", onnx_path,
+        "--parity-report", os.path.join(ws, "host_parity.json"),
     ]
+    if cal_dir is not None:
+        for name in sorted(os.listdir(cal_dir))[:3]:
+            cmd.extend(["--parity-input", os.path.join(cal_dir, name)])
     logger.info("Exporting ONNX: %s", " ".join(cmd))
     subprocess.run(cmd, check=True)
     return onnx_path
@@ -224,6 +231,14 @@ def prepare_calibration(opt: argparse.Namespace, ws: str) -> str:
     return cal_dir
 
 
+def output_prefix(opt: argparse.Namespace) -> str:
+    """Resolve the artifact basename while retaining historical defaults."""
+    prefix = getattr(opt, "output_prefix", None) or f"dinov2_vits14_224_int16_{opt.march.replace('-', '')}"
+    if prefix != os.path.basename(prefix) or prefix in (".", "..") or "'" in prefix or "\n" in prefix:
+        raise ValueError("output-prefix must be a filename basename without quotes or newlines")
+    return prefix
+
+
 def generate_yaml(opt: argparse.Namespace, onnx_path: str, cal_dir: str, ws: str) -> str:
     """Generate the hb_compile configuration with the validated recipe.
 
@@ -238,7 +253,8 @@ def generate_yaml(opt: argparse.Namespace, onnx_path: str, cal_dir: str, ws: str
     """
 
     march_str = opt.march.replace("-", "")
-    prefix = f"dinov2_vits14_224_int16_{march_str}"
+    prefix = output_prefix(opt)
+    optimize_level = getattr(opt, "optimize_level", "O2")
     # All paths in the yaml are absolute: hb_compile resolves them against its
     # own working directory, not against the yaml location.
     working_dir = os.path.join(os.path.abspath(ws), f"out_{march_str}")
@@ -264,7 +280,7 @@ compiler_parameters:
   core_num: 1
   debug: False
   jobs: {opt.jobs}
-  optimize_level: 'O2'
+  optimize_level: '{optimize_level}'
   advice: 1
 '''
     yaml_path = os.path.join(ws, "config.yaml")
@@ -304,11 +320,12 @@ def collect_artifacts(opt: argparse.Namespace, ws: str) -> None:
 
     march_str = opt.march.replace("-", "")
     working_dir = os.path.join(os.path.abspath(ws), f"out_{march_str}")
-    hbm = os.path.join(working_dir, f"dinov2_vits14_224_int16_{march_str}.hbm")
+    filename = output_prefix(opt) + ".hbm"
+    hbm = os.path.join(working_dir, filename)
     if not os.path.isfile(hbm):
         logger.error("Expected hbm not found: %s", hbm)
         sys.exit(1)
-    dst = os.path.join(opt.output_dir, f"dinov2_vits14_224_int16_{march_str}.hbm")
+    dst = os.path.join(opt.output_dir, filename)
     shutil.copy2(hbm, dst)
     log_src = os.path.join(working_dir, "hb_compile.log")
     if os.path.isfile(log_src):
@@ -331,8 +348,8 @@ def main() -> None:
     os.makedirs(ws, exist_ok=True)
     os.makedirs(opt.output_dir, exist_ok=True)
 
-    onnx_path = export_onnx(opt, ws)
     cal_dir = prepare_calibration(opt, ws)
+    onnx_path = export_onnx(opt, ws, cal_dir)
     yaml_path = generate_yaml(opt, os.path.abspath(onnx_path), os.path.abspath(cal_dir), ws)
     run_compile(yaml_path)
     collect_artifacts(opt, ws)

@@ -61,14 +61,25 @@ class ReadmeTests(unittest.TestCase):
                 elif args[1].endswith('/model/download.py'):
                     download_parser().parse_args(args[2:])
 
-    def test_checkpoint_digest_and_conversion_scripts_match_fixed_source(self):
+    def test_checkpoint_and_native_conversion_contracts_keep_fixed_source(self):
         files = ['mapper.py', 'onnx_export/export_dinov2.py']
         source = legacy_tree('s/samples/vision/dinov2/conversion')
         digests = set()
         for rel in files:
             code = (SAMPLE/'conversion'/rel).read_bytes()
-            self.assertEqual(code, (source/rel).read_bytes())
+            # Preserve source identity and numerical transformations while
+            # allowing the new finite/tolerance validation around export.
+            old_tree = ast.parse((source/rel).read_bytes())
             tree = ast.parse(code)
+            stable_functions = ('resize_short_side_and_center_crop', 'prepare_calibration') if rel == 'mapper.py' else ('build_model', 'bake_pos_embed', 'patch_attention', 'load_checkpoint', '_load_verified_checkpoint', '_sha256_file', 'verify_repo_revision', 'ExportWrapper')
+            for name in stable_functions:
+                before = next(n for n in old_tree.body if isinstance(n, (ast.FunctionDef, ast.ClassDef)) and n.name == name)
+                after = next(n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.ClassDef)) and n.name == name)
+                self.assertEqual(ast.dump(before), ast.dump(after), name)
+            for name in ('DINOV2_SOURCE_REVISION', 'WEIGHTS_SHA256', 'WEIGHTS_URL'):
+                def constant(parsed):
+                    return next(ast.literal_eval(n.value) for n in parsed.body if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == name for t in n.targets))
+                self.assertEqual(constant(tree), constant(old_tree), name)
             for statement in tree.body:
                 if isinstance(statement, ast.Assign) and any(isinstance(name, ast.Name) and name.id == 'WEIGHTS_SHA256' for name in statement.targets):
                     digests.add(ast.literal_eval(statement.value))

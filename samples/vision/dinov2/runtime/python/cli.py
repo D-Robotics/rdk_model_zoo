@@ -23,6 +23,7 @@ from utils.py_utils.platforms import resolve_target
 SAMPLE_DIR = Path(__file__).resolve().parents[2]
 SUPPORTED_TARGETS = ("s100", "s100p", "s600")
 MARCHES = {"s100": "nash-e", "s100p": "nash-m", "s600": "nash-p"}
+VARIANTS = ("legacy", "vits14_224_int16_20261102_o1")
 OUTPUTS = ("cls_feat", "patch_feat")
 OUTPUT_SHAPES = {
     "cls_feat": (1, 384),
@@ -50,14 +51,15 @@ class ModelSelection:
     explicit_model_path: bool = False
 
 
-def _expected_filename(target: str) -> str:
+def _expected_filename(target: str, variant: str = "legacy") -> str:
     march = MARCHES[target]
     suffix = {"nash-e": "nashe", "nash-m": "nashm", "nash-p": "nashp"}[march]
-    return f"{march}/dinov2_vits14_224_int16_{suffix}.hbm"
+    version = "_20261102_o1" if variant == "vits14_224_int16_20261102_o1" else ""
+    return f"{march}/dinov2_vits14_224_int16_{suffix}{version}.hbm"
 
 
 def list_available_assets(target: Optional[str] = None) -> tuple[Asset, ...]:
-    """Return the three exact HBM rows from the S publication manifest.
+    """Return the reviewed HBM rows from the S publication manifest.
 
     Args:
         target: Concrete target filter; ``auto``/None lists all publications.
@@ -73,20 +75,22 @@ def list_available_assets(target: Optional[str] = None) -> tuple[Asset, ...]:
             return ()
         raise ValueError(f"Unknown target: {target}")
     assets = list_assets("s", "dinov2")
-    expected = {_expected_filename(key) for key in SUPPORTED_TARGETS}
+    legacy = {_expected_filename(key) for key in SUPPORTED_TARGETS}
+    expected = {_expected_filename(key, v) for key in SUPPORTED_TARGETS for v in VARIANTS}
     actual = {asset.filename for asset in assets}
-    if actual != expected or any(asset.format != "hbm" for asset in assets):
+    if len(actual) != len(assets) or not legacy.issubset(actual) or not actual.issubset(expected) or any(asset.format != "hbm" for asset in assets):
         raise ValueError("DINOv2 publication changed; review its finite contracts first.")
     if target in (None, "auto"):
         return tuple(asset for asset in assets if asset.filename in expected)
-    filename = _expected_filename(target)
-    return tuple(asset for asset in assets if asset.filename == filename)
+    filenames = {_expected_filename(target, v) for v in VARIANTS}
+    return tuple(asset for asset in assets if asset.filename in filenames)
 
 
 def resolve_selection(
     target: str = "auto",
     *,
     asset_id: Optional[str] = None,
+    variant: Optional[str] = None,
     model_path: "str | Path | None" = None,
     soc_name: Optional[str] = None,
     board_type: Optional[str] = None,
@@ -114,11 +118,15 @@ def resolve_selection(
     if model_path is not None and asset_id is None:
         raise ValueError("An external model-path requires the exact manifest asset-id.")
 
+    if variant is not None and variant not in VARIANTS:
+        raise ValueError(f"Unknown DINOv2 variant: {variant}")
     assets = list_available_assets(resolved)
     if asset_id is None:
-        matches = assets
+        matches = tuple(a for a in assets if a.filename == _expected_filename(resolved, variant or "legacy"))
     else:
-        matches = tuple(asset for asset in assets if asset.reference == asset_id)
+        matches = tuple(a for a in assets if a.reference == asset_id)
+        if variant is not None:
+            matches = tuple(a for a in matches if a.filename == _expected_filename(resolved, variant))
     if len(matches) != 1:
         available = ", ".join(asset.reference for asset in assets)
         raise ValueError(f"Unknown DINOv2 asset-id {asset_id!r}; available: {available}")
@@ -133,6 +141,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="DINOv2 ViT-S/14 image embedding")
     parser.add_argument("--target", choices=("auto", *SUPPORTED_TARGETS), default="auto", help="Concrete execution target.")
     parser.add_argument("--asset-id", default=None, help="Exact qualified manifest asset reference.")
+    parser.add_argument("--variant", choices=VARIANTS, default=None, help="Explicit artifact variant; omission retains the historical default.")
     parser.add_argument("--model-path", default=None, help="Explicit local HBM path; requires --asset-id.")
     parser.add_argument("--test-img", default=str(DEFAULT_TEST_IMAGE), help="First BGR image path.")
     parser.add_argument("--second-img", default=str(DEFAULT_SECOND_IMAGE), help="Optional second image for cosine similarity.")

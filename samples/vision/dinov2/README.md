@@ -28,7 +28,7 @@ dinov2/
 <a id="support-matrix"></a>
 ## Support Matrix
 
-The one published variant has independent HBM artifacts for Nash-E, Nash-M, and Nash-P. Python is supported; no C++ runtime is provided.
+The historical variant has independent HBM artifacts for Nash-E, Nash-M, and Nash-P. Availability of the explicit O1 variant is listed below. Python is supported; no C++ runtime is provided.
 
 | Variant | x5 | s100 | s100p | s600 | Python | C++ |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -76,6 +76,22 @@ Outputs are `cls_feat` `(1,384)` and `patch_feat` `(1,256,384)`, returned as own
 - C++ runtime: not provided; C++ is `not-supported`.
 - Conversion: [`conversion/README.md`](conversion/README.md) — pinned source, ONNX export, calibration, and compile commands.
 - Evaluation: [`evaluator/README.md`](evaluator/README.md) — source-recorded board tables and cosine reproduction conditions.
+
+## Converted artifacts (2026-11-02)
+
+The explicit variant `vits14_224_int16_20261102_o1` currently provides 2 separately compiled O1 HBM artifacts for `s100`, `s100p`. The historical default remains selected when `--variant` and `--asset-id` are omitted. These artifacts passed float graph checks, native conversion, and static HBM IO/march inspection. Board smoke, accuracy, and Python/C++ performance checks are **not-run**; historical measurements do not describe these files.
+
+| Target | HBM | SHA-256 |
+| --- | --- | --- |
+| s100 | `dinov2_vits14_224_int16_nashe_20261102_o1.hbm` | `40d9654edb2b83b12928a4b23e8f482ec30c415d2389af5e64957d9921a9df1a` |
+| s100p | `dinov2_vits14_224_int16_nashm_20261102_o1.hbm` | `05a94aae2cb7da14a6a0810c7c7e5e5bff604012b943dd66708e4cd9cc224cbe` |
+
+```bash
+python3 samples/vision/dinov2/model/download.py --target s100 --variant vits14_224_int16_20261102_o1
+python3 samples/vision/dinov2/runtime/python/main.py --target s100 --variant vits14_224_int16_20261102_o1 --dry-run
+```
+
+Only the targets in the table are available for this variant; selecting an unpublished target fails. You can also select the exact `s:dinov2:nash-*/filename.hbm` asset ID. The input remains normalized RGB float32 FEATUREMAP `(1,3,224,224)`. The actual public outputs are float32 and follow the existing metadata-bound `raw_f32` path. Internal quantization retains the int16 recipe; no L2 normalization or softmax is added. Source/weight revisions, full digests, the 50-image calibration recipe, actual environments and validation facts are in the [conversion record](conversion/converted.json).
 
 <a id="license"></a>
 ## License

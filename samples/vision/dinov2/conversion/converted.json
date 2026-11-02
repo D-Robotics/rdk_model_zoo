@@ -1,0 +1,404 @@
+{
+  "schema_version": 1,
+  "variant": "vits14_224_int16_20261102_o1",
+  "status": "converted",
+  "board_validation": "not-run",
+  "source": {
+    "repository": "https://github.com/facebookresearch/dinov2",
+    "source_repository_commit": "7764ea0f912e53c92e82eb78a2a1631e92725fc8",
+    "checkpoint_revision": "sha256:b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9",
+    "source_weight_url": "https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth",
+    "source_checkpoint_sha256": "b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9",
+    "license": "Apache-2.0",
+    "onnx": {
+      "relative_path": "runs/conversion/dinov2-batch-20261102-r05/shared/dinov2_vits14_224.onnx",
+      "sha256": "93a2ec95730d985f78be03b98284b4d4bd6ea979a5ea0a9d2122bee57a712758",
+      "size_bytes": 86591621
+    },
+    "exporter_sha256": "8972ad60d74800f0938898188cdc840d132051181540064e6055951b49ec69e4",
+    "mapper_sha256": "e572e09790f6543f1829750dd84a9b4c423e5adf41b1cfce318bd3a14e4e738c",
+    "rebuild_mapper": {
+      "repository_path": "samples/vision/dinov2/conversion/mapper.py",
+      "sha256": "5e265db8ad32e05136c2f2e527a7f96c35b806c398024b5d0ec1743e0d93c96a",
+      "note": "Published from-source O1 option; frozen calibration producer digest above remains the actual original producer."
+    }
+  },
+  "calibration": {
+    "count": 50,
+    "manifest": {
+      "relative_path": "runs/conversion/dinov2-batch-20261102-r05/shared/calibration_manifest.json",
+      "sha256": "0791d68b1ddeb1d7bc1f9ea5ce8301e43be8d8c45bd495dd26d5cf24886f60e9",
+      "size_bytes": 21057,
+      "repository_path": "samples/vision/dinov2/conversion/records/20261102/calibration_manifest.json"
+    },
+    "source_manifest_sha256": "1d50d53df79c85c9129db9b90570b0f67ef1347c5285a68f4397a4ce1a2c0921",
+    "producer_sha256": "e572e09790f6543f1829750dd84a9b4c423e5adf41b1cfce318bd3a14e4e738c",
+    "dataset": "COCO 2017 train2017",
+    "sampling": "first 50 image names sorted from frozen seed42 200-image manifest",
+    "preprocess": "cv2 BGR to RGB; INTER_CUBIC short side 256; floor resize dimensions and floor center 224 crop; float32 /255; ImageNet mean/std; contiguous NCHW"
+  },
+  "host_smoke": {
+    "status": "passed",
+    "real_input_count": 3,
+    "atol": 0.001,
+    "rtol": 0.001,
+    "minimum_cosine_required": 0.99999,
+    "min_cosine_observed": 0.9999999999385822,
+    "max_abs_observed": 0.00043648481369018555,
+    "report": {
+      "relative_path": "runs/conversion/dinov2-batch-20261102-r05/shared/host_parity.json",
+      "sha256": "afeabfaae8b0d5ce11e2a9c1962d463d7923b839aa52f12befe590d2c15fc889",
+      "size_bytes": 4427,
+      "repository_path": "samples/vision/dinov2/conversion/records/20261102/host_parity.json"
+    },
+    "scope": "unmodified upstream -> rewritten PyTorch -> ORT; float graph only, not HBM board accuracy"
+  },
+  "models": [
+    {
+      "target": "s100",
+      "march": "nash-e",
+      "status": "converted",
+      "asset_id": "s:dinov2:nash-e/dinov2_vits14_224_int16_nashe_20261102_o1.hbm",
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "static_abi": "passed",
+        "artifact_sha256": "40d9654edb2b83b12928a4b23e8f482ec30c415d2389af5e64957d9921a9df1a",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "config_sha256": "e55dcb4e5b3390343a80fd7ac974aa92917b4b1314716e84636cbe6540c93f51",
+      "source_ptq_sha256": "9890ec9c8e599aa1cbb60f1e9f48bf127bed0c48d11a5f01ed30478fa0afb609",
+      "recalibration": false,
+      "calibration_method": {
+        "configured": "unset; native modelwise search",
+        "selected": "max",
+        "source_log": {
+          "relative_path": "runs/conversion/dinov2-batch-20261102-r02/s100/logs/compile.log",
+          "sha256": "fda941c22c96637f2db8cec771c5e88c1311a00ac4a55f4b6b0881a305f2942b",
+          "size_bytes": 11229
+        }
+      },
+      "toolchain": {
+        "hbdk": "4.7.5",
+        "hmct": "2.6.5",
+        "hb_compile": "3.5.3"
+      },
+      "optimization_level": "O1",
+      "precision_policy": "Internal all_node_type/model_output_type int16 configuration retained; actual public HBM outputs float32",
+      "compile_parameter_diff": {
+        "status": "passed",
+        "changed_backend_parameter_only": "opt: 2 -> 1",
+        "old_actual": {
+          "jobs": 2,
+          "balance": 100,
+          "advice": 1.0,
+          "progress_bar": true,
+          "opt": 2,
+          "core_num": 1,
+          "max_l2m_size": 0,
+          "max_time_per_fc": 0,
+          "debug": false,
+          "cache_mode": "disable",
+          "input_no_padding": true,
+          "output_no_padding": true
+        },
+        "new_actual": {
+          "jobs": 2,
+          "balance": 100,
+          "advice": 1.0,
+          "progress_bar": true,
+          "opt": 1,
+          "core_num": 1,
+          "max_l2m_size": 0,
+          "max_time_per_fc": 0,
+          "debug": false,
+          "cache_mode": "disable",
+          "input_no_padding": true,
+          "output_no_padding": true
+        },
+        "actual_line": "2026-11-03 00:34:23,509 file: hbm_builder.py func: hbm_builder line No: 66 Compile params: {'jobs': 2, 'balance': 100, 'advice': 1.0, 'progress_bar': True, 'opt': 1, 'core_num': 1, 'max_l2m_size': 0, 'max_time_per_fc': 0, 'debug': False, 'cache_mode': 'disable', 'input_no_padding': True, 'output_no_padding': True}"
+      },
+      "node_info_source": {
+        "status": "passed",
+        "source_run": "runs/conversion/dinov2-batch-20261102-r05/s100",
+        "source_quantized_bc_sha256": "19af627efc433e2fa96848fc1ecd9654a4e6ab9e2b1cf1f023663317cc5d5f9a",
+        "compile_input_bc_sha256": "19af627efc433e2fa96848fc1ecd9654a4e6ab9e2b1cf1f023663317cc5d5f9a",
+        "csv": {
+          "relative_path": "runs/conversion/dinov2-batch-20261102-r06-o1/s100/input/o2-evidence/dinov2_vits14_224_int16_nashe_20261102_node_info.csv",
+          "sha256": "49a0168f1092efa74f69665e2ac08182d89e96a189058ba75f67010fc7e120ce",
+          "size_bytes": 47750
+        },
+        "node_rows": 639,
+        "execution_image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0",
+        "execution_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92",
+        "execution_environment": {
+          "HBTL_THREAD_NUM": "2",
+          "OMP_WAIT_POLICY": "PASSIVE",
+          "GOMP_SPINCOUNT": "0",
+          "NVIDIA_TF32_OVERRIDE": "0",
+          "OMP_NUM_THREADS": "2",
+          "MKL_NUM_THREADS": "2",
+          "OPENBLAS_NUM_THREADS": "2"
+        },
+        "comparison_input_count": 1,
+        "first_real_input_bytes_sha256": "971c9e4e011a415b3d25b63405b88f541bff60bc5c02ede652d06cc55ed4a34e",
+        "new_node_info_executed_during_o1_compile": false,
+        "stage_note": "Original full NodeInfo completed before O2 backend compilation",
+        "board_accuracy": "not-run"
+      },
+      "resource_limits": {
+        "cpus": 4,
+        "memory_gib": 8
+      },
+      "memory_guard": {
+        "captured_at": "2026-11-02T17:15:42.999605+00:00",
+        "source_state": {
+          "relative_path": "inbox/converted-batch-20261102/memory-window-yoloe-r02-20261102-v2/state.json",
+          "sha256": "a9d6b91e6cca51aa58f07f0aca662bf06a7b6cadd17950c1b2e3f63c06f0fd32",
+          "size_bytes": 1165
+        },
+        "container_id": "dd9800fe61dd4b3e6d60084b54d72907cf6c6d8c11a6b7f74a70ffe5115f7cc7",
+        "events": [],
+        "scope": "parent memory guard events observed through artifact completion; compiler parameters unchanged"
+      },
+      "original_resource_adjustments": [
+        {
+          "relative_path": "runs/conversion/dinov2-batch-20261102-r02/resource-adjustment-20261102T123200Z.json",
+          "sha256": "80fc65eead10e972986ee560ffe1f70d10ba1f684e26f2e7065a5881e4a020ae",
+          "size_bytes": 595
+        }
+      ],
+      "compile_image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0",
+      "compile_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92",
+      "quantization_image": "ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0",
+      "quantization_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+      "execution_environment": {
+        "HBTL_THREAD_NUM": "2",
+        "OMP_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "OMP_WAIT_POLICY": "PASSIVE",
+        "GOMP_SPINCOUNT": "0",
+        "NVIDIA_TF32_OVERRIDE": "0",
+        "HORIZON_TC_UI_DEBUG": "1"
+      },
+      "hbtl_threads_observed": 2,
+      "io": {
+        "inputs": [
+          {
+            "name": "input",
+            "shape": [
+              1,
+              3,
+              224,
+              224
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "cls_feat",
+            "shape": [
+              1,
+              384
+            ],
+            "dtype": "float32"
+          },
+          {
+            "name": "patch_feat",
+            "shape": [
+              1,
+              256,
+              384
+            ],
+            "dtype": "float32"
+          }
+        ]
+      },
+      "artifact": {
+        "filename": "dinov2_vits14_224_int16_nashe_20261102_o1.hbm",
+        "format": "hbm",
+        "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/dinov2/dinov2_vits14_224_int16_nashe_20261102_o1.hbm",
+        "sha256": "40d9654edb2b83b12928a4b23e8f482ec30c415d2389af5e64957d9921a9df1a",
+        "size_bytes": 28096936
+      },
+      "recorded_config_path": "samples/vision/dinov2/conversion/records/20261102/s100_o1.yaml"
+    },
+    {
+      "target": "s100p",
+      "march": "nash-m",
+      "status": "converted",
+      "asset_id": "s:dinov2:nash-m/dinov2_vits14_224_int16_nashm_20261102_o1.hbm",
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "static_abi": "passed",
+        "artifact_sha256": "05a94aae2cb7da14a6a0810c7c7e5e5bff604012b943dd66708e4cd9cc224cbe",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "config_sha256": "7c8e1e80f3c9c5019c924bd3302c129cb1a67c59a4a11db9ac8a1b3c273bd589",
+      "source_ptq_sha256": "d61162c10d9221ac74b9cb55d013861c0c32b4aa39e3b6d99f7e4caa41ea7757",
+      "recalibration": false,
+      "calibration_method": {
+        "configured": "unset; native modelwise search",
+        "selected": "max",
+        "source_log": {
+          "relative_path": "runs/conversion/dinov2-batch-20261102-r03/s100p/logs/compile.log",
+          "sha256": "540a3c280b4cb930b41475b2fbbf95db23cad447926852bdc2c76ccdf19aa9a8",
+          "size_bytes": 10912
+        }
+      },
+      "toolchain": {
+        "hbdk": "4.7.5",
+        "hmct": "2.6.5",
+        "hb_compile": "3.5.3"
+      },
+      "optimization_level": "O1",
+      "precision_policy": "Internal all_node_type/model_output_type int16 configuration retained; actual public HBM outputs float32",
+      "compile_parameter_diff": {
+        "status": "passed",
+        "changed_backend_parameter_only": "opt: 2 -> 1",
+        "old_actual": {
+          "jobs": 2,
+          "balance": 100,
+          "advice": 1.0,
+          "progress_bar": true,
+          "opt": 2,
+          "core_num": 1,
+          "max_l2m_size": 0,
+          "max_time_per_fc": 0,
+          "debug": false,
+          "cache_mode": "disable",
+          "input_no_padding": true,
+          "output_no_padding": true
+        },
+        "new_actual": {
+          "jobs": 2,
+          "balance": 100,
+          "advice": 1.0,
+          "progress_bar": true,
+          "opt": 1,
+          "core_num": 1,
+          "max_l2m_size": 0,
+          "max_time_per_fc": 0,
+          "debug": false,
+          "cache_mode": "disable",
+          "input_no_padding": true,
+          "output_no_padding": true
+        },
+        "actual_line": "2026-11-03 00:34:37,850 file: hbm_builder.py func: hbm_builder line No: 66 Compile params: {'jobs': 2, 'balance': 100, 'advice': 1.0, 'progress_bar': True, 'opt': 1, 'core_num': 1, 'max_l2m_size': 0, 'max_time_per_fc': 0, 'debug': False, 'cache_mode': 'disable', 'input_no_padding': True, 'output_no_padding': True}"
+      },
+      "node_info_source": {
+        "status": "passed",
+        "source_run": "runs/conversion/dinov2-batch-20261102-r06-o1/s100p/node-info-recovery",
+        "source_quantized_bc_sha256": "874d707164ef4e5523858496f0ee9e6536a8281ddbc458c3222c7878a71686ae",
+        "compile_input_bc_sha256": "874d707164ef4e5523858496f0ee9e6536a8281ddbc458c3222c7878a71686ae",
+        "csv": {
+          "relative_path": "runs/conversion/dinov2-batch-20261102-r06-o1/s100p/node-info-recovery/dinov2_vits14_224_int16_nashm_20261102_node_info.csv",
+          "sha256": "e67251a6a568c63e313b83277e9205db1c6e511b2952736f71bcae3362f5f02e",
+          "size_bytes": 45960
+        },
+        "node_rows": 639,
+        "execution_image": "ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0",
+        "execution_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+        "execution_environment": {
+          "HBTL_THREAD_NUM": "2",
+          "OMP_NUM_THREADS": "2",
+          "MKL_NUM_THREADS": "2",
+          "OPENBLAS_NUM_THREADS": "2",
+          "OMP_WAIT_POLICY": "PASSIVE",
+          "GOMP_SPINCOUNT": "0",
+          "NVIDIA_TF32_OVERRIDE": "0"
+        },
+        "comparison_input_count": 1,
+        "first_real_input_bytes_sha256": "971c9e4e011a415b3d25b63405b88f541bff60bc5c02ede652d06cc55ed4a34e",
+        "new_node_info_executed_during_o1_compile": false,
+        "stage_note": "CPU recovery of missing CUDA report",
+        "board_accuracy": "not-run"
+      },
+      "resource_limits": {
+        "cpus": 4,
+        "memory_gib": 8
+      },
+      "memory_guard": {
+        "captured_at": "2026-11-02T17:15:43.078321+00:00",
+        "source_state": {
+          "relative_path": "inbox/converted-batch-20261102/memory-window-yoloe-r02-20261102-v2/state.json",
+          "sha256": "a9d6b91e6cca51aa58f07f0aca662bf06a7b6cadd17950c1b2e3f63c06f0fd32",
+          "size_bytes": 1165
+        },
+        "container_id": "38cd92237261c7771a9883c6293e9da3b6690723be75091d185ae1d0c5009d52",
+        "events": [],
+        "scope": "parent memory guard events observed through artifact completion; compiler parameters unchanged"
+      },
+      "original_resource_adjustments": [],
+      "compile_image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0",
+      "compile_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92",
+      "quantization_image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0",
+      "quantization_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92",
+      "execution_environment": {
+        "HBTL_THREAD_NUM": "2",
+        "OMP_NUM_THREADS": "2",
+        "MKL_NUM_THREADS": "2",
+        "OPENBLAS_NUM_THREADS": "2",
+        "OMP_WAIT_POLICY": "PASSIVE",
+        "GOMP_SPINCOUNT": "0",
+        "NVIDIA_TF32_OVERRIDE": "0",
+        "HORIZON_TC_UI_DEBUG": "1"
+      },
+      "hbtl_threads_observed": 2,
+      "io": {
+        "inputs": [
+          {
+            "name": "input",
+            "shape": [
+              1,
+              3,
+              224,
+              224
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "cls_feat",
+            "shape": [
+              1,
+              384
+            ],
+            "dtype": "float32"
+          },
+          {
+            "name": "patch_feat",
+            "shape": [
+              1,
+              256,
+              384
+            ],
+            "dtype": "float32"
+          }
+        ]
+      },
+      "artifact": {
+        "filename": "dinov2_vits14_224_int16_nashm_20261102_o1.hbm",
+        "format": "hbm",
+        "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/dinov2/dinov2_vits14_224_int16_nashm_20261102_o1.hbm",
+        "sha256": "05a94aae2cb7da14a6a0810c7c7e5e5bff604012b943dd66708e4cd9cc224cbe",
+        "size_bytes": 28374832
+      },
+      "recorded_config_path": "samples/vision/dinov2/conversion/records/20261102/s100p_o1.yaml"
+    }
+  ]
+}

@@ -28,7 +28,7 @@ dinov2/
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
 
-唯一发布 variant 为 Nash-E、Nash-M、Nash-P 分别提供独立 HBM 制品。Python 为 supported；未提供 C++ runtime。
+历史 variant 为 Nash-E、Nash-M、Nash-P 分别提供独立 HBM 制品。显式 O1 版本已完成的目标见下文。Python 为 supported；未提供 C++ runtime。
 
 | Variant | x5 | s100 | s100p | s600 | Python | C++ |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -76,6 +76,22 @@ CLI 打印包含 `output`、`shape`、`dtype`、`mean`、`std`、`min`、`max`�
 - C++ 运行：未提供；C++ 为 `not-supported`。
 - 模型转换：[`conversion/README_cn.md`](conversion/README_cn.md) —— 固定源、ONNX 导出、校准和编译命令。
 - 模型评估：[`evaluator/README_cn.md`](evaluator/README_cn.md) —— 板端源记录表格和 cosine 复现条件。
+
+## 新转换制品（2026-11-02）
+
+显式版本 `vits14_224_int16_20261102_o1` 当前提供 2 个分别编译的 O1 HBM，目标为 `s100`, `s100p`。不传 `--variant` 或 `--asset-id` 时仍选择历史默认模型。新文件已通过浮点图对照、原装转换及 HBM 输入输出/架构静态检查；板端功能、精度、Python/C++ 性能均为 **not-run**，历史测量数据不适用于这些文件。
+
+| Target | HBM | SHA-256 |
+| --- | --- | --- |
+| s100 | `dinov2_vits14_224_int16_nashe_20261102_o1.hbm` | `40d9654edb2b83b12928a4b23e8f482ec30c415d2389af5e64957d9921a9df1a` |
+| s100p | `dinov2_vits14_224_int16_nashm_20261102_o1.hbm` | `05a94aae2cb7da14a6a0810c7c7e5e5bff604012b943dd66708e4cd9cc224cbe` |
+
+```bash
+python3 samples/vision/dinov2/model/download.py --target s100 --variant vits14_224_int16_20261102_o1
+python3 samples/vision/dinov2/runtime/python/main.py --target s100 --variant vits14_224_int16_20261102_o1 --dry-run
+```
+
+此版本仅开放表中已完成的目标；尚未发布的目标会报错，不会回退。也可用完整的 `s:dinov2:nash-*/filename.hbm` 资产 ID 选择。输入仍是已归一化 RGB float32 FEATUREMAP `(1,3,224,224)`；实际公开输出为 float32，沿用元数据绑定的 `raw_f32` 路径；内部量化仍为 int16 配方，不添加 L2 归一化或 softmax。来源/权重版本、完整哈希、50 张真实图像校准配方、实际环境和验证记录见[转换记录](conversion/converted.json)。
 
 <a id="license"></a>
 ## 许可说明

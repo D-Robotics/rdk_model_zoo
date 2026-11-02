@@ -40,7 +40,7 @@ def main(argv=None) -> int:
             return run_list_models(args.target)
         if args.dry_run and args.target == "auto":
             raise ValueError("Host dry-run requires --target s100, s100p, or s600; no board detection performed.")
-        selection = resolve_selection(args.target, asset_id=args.asset_id, model_path=args.model_path)
+        selection = resolve_selection(args.target, asset_id=args.asset_id, variant=args.variant, model_path=args.model_path)
         if args.dry_run:
             return run_dry_run(selection)
         from utils.py_utils.platforms import require_execution_target
