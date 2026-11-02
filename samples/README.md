@@ -3,7 +3,7 @@ English | [简体中文](README_cn.md)
 # Choose a sample by task
 
 
-Find models, conversion instructions and evaluation programs by task. There are 51 samples: 45 vision, three speech, one robotics policy and two language-model examples.
+Find models, conversion instructions and evaluation programs by task. There are 52 samples: 46 vision, three speech, one robotics policy and two language-model examples.
 
 ## Image classification
 
@@ -37,6 +37,7 @@ Find models, conversion instructions and evaluation programs by task. There are 
 | Sample | Conversion | Evaluation |
 |---|---|---|
 | [ultralytics_yolo](vision/ultralytics_yolo/README.md) | [conversion](vision/ultralytics_yolo/conversion/README.md) | [evaluator](vision/ultralytics_yolo/evaluator/README.md) |
+| [osnet](vision/osnet/README.md) | [conversion](vision/osnet/conversion/README.md) | [evaluator](vision/osnet/evaluator/README.md) |
 | [paddle_ocr](vision/paddle_ocr/README.md) | [conversion](vision/paddle_ocr/conversion/README.md) | [evaluator](vision/paddle_ocr/evaluator/README.md) |
 | [yoloe](vision/yoloe/README.md) | [conversion](vision/yoloe/conversion/README.md) | [evaluator](vision/yoloe/evaluator/README.md) |
 | [yolov5](vision/yolov5/README.md) | [conversion](vision/yolov5/conversion/README.md) | [evaluator](vision/yolov5/evaluator/README.md) |

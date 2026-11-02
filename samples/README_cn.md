@@ -3,7 +3,7 @@
 # 按任务选择 Sample
 
 
-按任务查找模型、转换方法和评估程序。共 51 个 Sample：45 个视觉、3 个语音、1 个机器人策略和 2 个大模型示例。
+按任务查找模型、转换方法和评估程序。共 52 个 Sample：46 个视觉、3 个语音、1 个机器人策略和 2 个大模型示例。
 
 ## 图像分类
 
@@ -37,6 +37,7 @@
 | Sample | 转换 | 评估 |
 |---|---|---|
 | [ultralytics_yolo](vision/ultralytics_yolo/README_cn.md) | [conversion](vision/ultralytics_yolo/conversion/README_cn.md) | [evaluator](vision/ultralytics_yolo/evaluator/README_cn.md) |
+| [osnet](vision/osnet/README_cn.md) | [conversion](vision/osnet/conversion/README_cn.md) | [evaluator](vision/osnet/evaluator/README_cn.md) |
 | [paddle_ocr](vision/paddle_ocr/README_cn.md) | [conversion](vision/paddle_ocr/conversion/README_cn.md) | [evaluator](vision/paddle_ocr/evaluator/README_cn.md) |
 | [yoloe](vision/yoloe/README_cn.md) | [conversion](vision/yoloe/conversion/README_cn.md) | [evaluator](vision/yoloe/evaluator/README_cn.md) |
 | [yolov5](vision/yolov5/README_cn.md) | [conversion](vision/yolov5/conversion/README_cn.md) | [evaluator](vision/yolov5/evaluator/README_cn.md) |

@@ -1,0 +1,1166 @@
+{
+  "date": "2026-10-30",
+  "scope": "OSNet x1.0, S100/S100P/S600; Workbench GUIDELINE v2.8",
+  "publication_authorized": false,
+  "status": "technically-accepted",
+  "platforms": {
+    "s100": {
+      "build_id": "osnet-s100-20261030-r03",
+      "artifact": {
+        "filename": "osnet_x1_0_nashe_256x128_f32_int16.hbm",
+        "format": "hbm",
+        "march": "nash-e",
+        "runtime_input": "featuremap",
+        "sha256": "99de82c91b8cf1c0ce27550a0330d8e07166d9d46d118a6aea26dc2a06ef910b",
+        "size_bytes": 7577360,
+        "runtime_tensor": {
+          "dtype": "float32",
+          "payload_layout": "NCHW",
+          "metadata_layout": "NCHW",
+          "shape": [
+            1,
+            3,
+            256,
+            128
+          ],
+          "packing": "RGB /255, ImageNet mean/std; contiguous NCHW float32"
+        }
+      },
+      "accuracy": {
+        "dataset": "Market1501",
+        "task": "person-reidentification",
+        "images": 19281,
+        "query_images": 3368,
+        "gallery_images": 15913,
+        "evaluation_scope": "market1501_single_query_l2_no_rerank",
+        "float_onnx": {
+          "label": "FP32 spatial opset19 ONNX; CPUExecutionProvider",
+          "rank1": 0.9423990498812351,
+          "map": 0.8356955287745265
+        },
+        "runtime": {
+          "rank1": 0.9409144893111638,
+          "map": 0.835073034801312
+        }
+      },
+      "performance": {
+        "tool": "hrt_model_exec perf",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "model_runtime",
+        "thread_semantics": "runtime_submission_concurrency",
+        "core_id": 1,
+        "warmup_frames_per_condition": 20,
+        "warmup_scope": "separate_process_device_warmup; enable_warmup=false for timed runs",
+        "runs_per_condition": 3,
+        "frames_per_run": 200,
+        "input_kind": "fixed normalized RGB float32 NCHW featuremap",
+        "input_sha256": "5bde29eecf99f82ae2cc51faddef5180abe1bd84ee2a3d7b04a4184a6658144c",
+        "stages": {
+          "preprocess": "not_measured",
+          "runtime": "measured",
+          "postprocess": "not_measured",
+          "end_to_end": "not_measured"
+        },
+        "measurements": [
+          {
+            "threads": 1,
+            "average_latency_ms": 1.8579799731572468,
+            "observed_min_latency_ms": 1.8,
+            "observed_max_latency_ms": 3.085,
+            "aggregate_fps": 534.0116399479319
+          },
+          {
+            "threads": 2,
+            "average_latency_ms": 3.190848191579183,
+            "observed_min_latency_ms": 2.667,
+            "observed_max_latency_ms": 4.662,
+            "aggregate_fps": 622.059476654118
+          }
+        ],
+        "raw_measurements": [
+          {
+            "threads": 1,
+            "round": 1,
+            "frames": 200,
+            "average_latency_ms": 1.8435800075531006,
+            "minimum_latency_ms": 1.8,
+            "maximum_latency_ms": 2.652,
+            "fps": 539.3626708984375,
+            "wall_time_ms": 371.05999755859375,
+            "log": "work/board/output/profile/perf-t1-r1/profiler.log",
+            "sha256": "3a8573457e628b9620182a17565a31bad1d2376240a5d8a63a00a55461595b08"
+          },
+          {
+            "threads": 1,
+            "round": 2,
+            "frames": 200,
+            "average_latency_ms": 1.869784951210022,
+            "minimum_latency_ms": 1.81,
+            "maximum_latency_ms": 3.085,
+            "fps": 529.8237915039062,
+            "wall_time_ms": 377.7460021972656,
+            "log": "work/board/output/profile/perf-t1-r2/profiler.log",
+            "sha256": "6648e07801be39d8271d8152f86c85e804f02ac94de5b09ba217f364040a328f"
+          },
+          {
+            "threads": 1,
+            "round": 3,
+            "frames": 200,
+            "average_latency_ms": 1.8605749607086182,
+            "minimum_latency_ms": 1.807,
+            "maximum_latency_ms": 3.065,
+            "fps": 534.0140380859375,
+            "wall_time_ms": 374.7650146484375,
+            "log": "work/board/output/profile/perf-t1-r3/profiler.log",
+            "sha256": "b79e7014761243e5d0a154d8d88520a0e57df43b57452cfd70c64ee5e7c8c19a"
+          },
+          {
+            "threads": 2,
+            "round": 1,
+            "frames": 200,
+            "average_latency_ms": 3.194584846496582,
+            "minimum_latency_ms": 2.694,
+            "maximum_latency_ms": 4.139,
+            "fps": 622.3937377929688,
+            "wall_time_ms": 321.5610046386719,
+            "log": "work/board/output/profile/perf-t2-r1/profiler.log",
+            "sha256": "3349f1b0ed4c81a7d603c0178d34ce9e9f60e41b35e56b2bd50d64772ec96a5f"
+          },
+          {
+            "threads": 2,
+            "round": 2,
+            "frames": 200,
+            "average_latency_ms": 3.1886849403381348,
+            "minimum_latency_ms": 2.667,
+            "maximum_latency_ms": 4.098,
+            "fps": 623.091796875,
+            "wall_time_ms": 321.21600341796875,
+            "log": "work/board/output/profile/perf-t2-r2/profiler.log",
+            "sha256": "d6be0aff6fd0a894b29d8e300d5ea7b078f4fae9f13f4615a28074a1b3492fcc"
+          },
+          {
+            "threads": 2,
+            "round": 3,
+            "frames": 200,
+            "average_latency_ms": 3.189274787902832,
+            "minimum_latency_ms": 3.024,
+            "maximum_latency_ms": 4.662,
+            "fps": 622.0414428710938,
+            "wall_time_ms": 321.760986328125,
+            "log": "work/board/output/profile/perf-t2-r3/profiler.log",
+            "sha256": "f59cc0ef2b364add72e0734f1e0c262417ac92ee95a63487956450e88f86069a"
+          }
+        ],
+        "end_to_end": [
+          {
+            "tool": "osnet",
+            "implementation": "native_cpp_neon",
+            "timing_scope": "decoded_rgb_to_l2_feature",
+            "core_id": 1,
+            "pipeline_streams": 1,
+            "runtime_submission_threads": 1,
+            "cpu_backend": "native",
+            "cpu_thread_policy": "fixed",
+            "cpu_worker_threads": 1,
+            "online_cpu_threads": 6,
+            "warmup_frames_per_round": 20,
+            "warmup_scope": "per_worker_in_process",
+            "rounds": 3,
+            "frames_per_round": 200,
+            "timed_frames": 600,
+            "aggregate_wall_ms": 1357.855438,
+            "throughput_fps": 441.873253374,
+            "functional": {
+              "fixtures_per_worker": 32,
+              "preprocess_byte_exact": true,
+              "max_feature_abs_error": 0,
+              "max_l2_norm_error": 3.2268210548e-07
+            },
+            "metrics_ms": {
+              "preprocess": {
+                "mean": 0.329405753333,
+                "p50": 0.326878,
+                "p95": 0.346278,
+                "min": 0.325603,
+                "max": 0.483354
+              },
+              "runtime": {
+                "mean": 1.9321498,
+                "p50": 1.9058555,
+                "p95": 2.1167075,
+                "min": 1.875243,
+                "max": 3.355907
+              },
+              "postprocess": {
+                "mean": 0.00139596833333,
+                "p50": 0.001375,
+                "p95": 0.001525,
+                "min": 0.00125,
+                "max": 0.0031
+              },
+              "end_to_end": {
+                "mean": 2.26295152167,
+                "p50": 2.235871,
+                "p95": 2.4625455,
+                "min": 2.203221,
+                "max": 3.68471
+              }
+            },
+            "round_wall_ms": [
+              452.804673,
+              450.634877,
+              454.415888
+            ],
+            "raw_frame_order": "round,worker,frame",
+            "cpu_governor": "performance",
+            "cpu_frequency_mhz": 1500.0,
+            "bpu_frequency_mhz": 1000.0
+          },
+          {
+            "tool": "osnet",
+            "implementation": "native_cpp_neon",
+            "timing_scope": "decoded_rgb_to_l2_feature",
+            "core_id": 1,
+            "pipeline_streams": 2,
+            "runtime_submission_threads": 2,
+            "cpu_backend": "native",
+            "cpu_thread_policy": "fixed",
+            "cpu_worker_threads": 2,
+            "online_cpu_threads": 6,
+            "warmup_frames_per_round": 20,
+            "warmup_scope": "per_worker_in_process",
+            "rounds": 3,
+            "frames_per_round": 200,
+            "timed_frames": 1200,
+            "aggregate_wall_ms": 1923.672623,
+            "throughput_fps": 623.806767146,
+            "functional": {
+              "fixtures_per_worker": 32,
+              "preprocess_byte_exact": true,
+              "max_feature_abs_error": 0,
+              "max_l2_norm_error": 3.2268210548e-07
+            },
+            "metrics_ms": {
+              "preprocess": {
+                "mean": 0.335434685833,
+                "p50": 0.332128,
+                "p95": 0.3608355,
+                "min": 0.326178,
+                "max": 0.386229
+              },
+              "runtime": {
+                "mean": 2.86481863083,
+                "p50": 2.841464,
+                "p95": 3.22703375,
+                "min": 2.11752,
+                "max": 3.860686
+              },
+              "postprocess": {
+                "mean": 0.00163118333333,
+                "p50": 0.001475,
+                "p95": 0.0025525,
+                "min": 0.00125,
+                "max": 0.0232
+              },
+              "end_to_end": {
+                "mean": 3.2018845,
+                "p50": 3.176655,
+                "p95": 3.55923525,
+                "min": 2.449423,
+                "max": 4.188664
+              }
+            },
+            "round_wall_ms": [
+              641.003864,
+              641.205466,
+              641.463293
+            ],
+            "raw_frame_order": "round,worker,frame",
+            "cpu_governor": "performance",
+            "cpu_frequency_mhz": 1500.0,
+            "bpu_frequency_mhz": 1000.0
+          }
+        ]
+      },
+      "environment": {
+        "board": "D-Robotics RDK S100",
+        "os": "Ubuntu 22.04.5 LTS",
+        "kernel": "6.1.158-rt58-DR-4.0.5-2607151844-g7bb74b-gd7fa6f-dirty",
+        "runtime": "3.13.6",
+        "hbrt": "4.7.5",
+        "cpu_governor": "performance",
+        "cpu_governor_by_policy": {
+          "/sys/devices/system/cpu/cpufreq/policy4": "performance",
+          "/sys/devices/system/cpu/cpufreq/policy0": "performance"
+        },
+        "cpu_frequency_mhz": 1500.0,
+        "cpu_frequency_mhz_observed_range": [
+          1500.0,
+          1500.0
+        ],
+        "cpu_frequency_ceiling_mhz_by_policy": {
+          "/sys/devices/system/cpu/cpufreq/policy4": 1500.0,
+          "/sys/devices/system/cpu/cpufreq/policy0": 1500.0
+        },
+        "bpu_frequency_mhz": 1000.0,
+        "temperature_before_c": 50.413,
+        "temperature_after_c": 51.884,
+        "temperature_max_c": 52.619,
+        "observation_scope": "0.2 second trace; stable BPU frequency, CPU governor and CPU frequency ceilings; no policy changes made",
+        "source_logs": [
+          "work/board/logs/environment-before.log",
+          "work/board/logs/environment-trace.jsonl",
+          "work/board/logs/environment-after.log"
+        ],
+        "online_cpu_threads": 6
+      },
+      "provenance": {
+        "repository_commit": "da21b52950330c12e4bc18e8da698038261921b4",
+        "build_id": "osnet-s100-20261030-r03",
+        "precision_policy": "int16",
+        "requested_quant_config": {
+          "model_config": {
+            "all_node_type": "int16"
+          }
+        },
+        "runtime_variant": "s100-f32-int16",
+        "sample_pending_publication": true,
+        "float_run": "osnet-s-float-20261030-r02",
+        "export_run": "osnet-s-20261030-export-r02",
+        "oe_run": "osnet-s100-20261030-r03",
+        "conversion_source_commit": "cb84e9d558dc8fbd66071eca50ea123c5a77df75",
+        "float_source_commit": "b5df9dfc01fd6db104c5a20e03a79fc1f1f00f62",
+        "source_weight_url": "https://drive.google.com/file/d/1vduhq5DpN2q1g4fYEZfPI17MJeh9qyrA/view",
+        "onnx_sha256": "9ffe062f378bfa9efd3950c2cb4303693d2657002e37fb6fd354c0f3f8386dc3",
+        "weights_sha256": "2809d3227f7d078f6045f7feb874a34d0684f0e0057b264b99adccf7d4519154",
+        "campaign_sha256": "0d455d3cbe2b6056e93bb059fe3f73d5c630ffe7e55e58f9ab266dfd54542830",
+        "oe_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92",
+        "dataset_manifest_sha256": "e52da536c8ac03e4c6be5edfc2fa042795a5b3c558b37e9bb0c271ec93d29adf",
+        "original_conversion_archive_available": true,
+        "actual_calibration_batch": 8,
+        "calibration_samples": 128
+      },
+      "validation": {
+        "board_smoke": "passed",
+        "native_launcher": "passed",
+        "cpp_functional": "passed",
+        "runtime_perf": "passed",
+        "cpp_e2e": "passed",
+        "input_contract_review": "passed",
+        "environment_review": "passed",
+        "full_dataset_review": "passed",
+        "license_review": "local-evaluation-only",
+        "release_approval": "not-run",
+        "approved_by": null,
+        "technical_acceptance": "passed",
+        "publication_authorized": false,
+        "evidence": {
+          "campaign_sha256": "0d455d3cbe2b6056e93bb059fe3f73d5c630ffe7e55e58f9ab266dfd54542830",
+          "board_identities": {
+            "model_sha256": "99de82c91b8cf1c0ce27550a0330d8e07166d9d46d118a6aea26dc2a06ef910b",
+            "executable_sha256": "79af5f36314114f961d5f85d5f7e43ebe47eed4a15a7670d63e7bce19c6febbb",
+            "input_sha256": "5bde29eecf99f82ae2cc51faddef5180abe1bd84ee2a3d7b04a4184a6658144c",
+            "reference_sha256": "f46dc627138a722bb261dd4b7b8f6f73af5264df34196eb303d1aeff3f6be891",
+            "runner_sha256": "413365e2827c6ce3d218d43233e636282f0fd0205d6483218fd64de787b98909",
+            "fixture_sha256": "006343540706182c205c14e286033d5290b4a8b77d8ddb2687a3a3e9a70b6bdd",
+            "source_archive_sha256": "06a5a5bf3809c937a3f0a6b72e55cab06375578b50dd57ba3cba3f6af74676e7"
+          },
+          "float_accuracy_sha256": "96a6f070353d934287b2b44dd2f91adffdab273f26432889447911eb090b3e88",
+          "board_accuracy_sha256": "f99d043d95ca30fe7e6e31088e4a782e84a6f3cfd004ff51ad9e8bdfaef7bd2c",
+          "environment_trace_sha256": "52016684ad7d78018e395f22db5c632a5e5823d420db90f5accf4db2b555a768",
+          "official_dataset_manifest_sha256": "e52da536c8ac03e4c6be5edfc2fa042795a5b3c558b37e9bb0c271ec93d29adf",
+          "fixed_input_review_sha256": "548a4b96f2029b65d8d99723a09c3828722afdd9d9d248fdb4010f0b05ec1ba8"
+        }
+      }
+    },
+    "s100p": {
+      "build_id": "osnet-s100p-20261030-r01",
+      "artifact": {
+        "filename": "osnet_x1_0_nashm_256x128_f32_int16.hbm",
+        "format": "hbm",
+        "march": "nash-m",
+        "runtime_input": "featuremap",
+        "sha256": "7350a251da95d7487ef6411b1c350fa56b9b7963db5633d3b136ad4aea2f6d4d",
+        "size_bytes": 7467792,
+        "runtime_tensor": {
+          "dtype": "float32",
+          "payload_layout": "NCHW",
+          "metadata_layout": "NCHW",
+          "shape": [
+            1,
+            3,
+            256,
+            128
+          ],
+          "packing": "RGB /255, ImageNet mean/std; contiguous NCHW float32"
+        }
+      },
+      "accuracy": {
+        "dataset": "Market1501",
+        "task": "person-reidentification",
+        "images": 19281,
+        "query_images": 3368,
+        "gallery_images": 15913,
+        "evaluation_scope": "market1501_single_query_l2_no_rerank",
+        "float_onnx": {
+          "label": "FP32 spatial opset19 ONNX; CPUExecutionProvider",
+          "rank1": 0.9423990498812351,
+          "map": 0.8356955287745265
+        },
+        "runtime": {
+          "rank1": 0.9409144893111638,
+          "map": 0.835073034801312
+        }
+      },
+      "performance": {
+        "tool": "hrt_model_exec perf",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "model_runtime",
+        "thread_semantics": "runtime_submission_concurrency",
+        "core_id": 1,
+        "warmup_frames_per_condition": 20,
+        "warmup_scope": "separate_process_device_warmup; enable_warmup=false for timed runs",
+        "runs_per_condition": 3,
+        "frames_per_run": 200,
+        "input_kind": "fixed normalized RGB float32 NCHW featuremap",
+        "input_sha256": "5bde29eecf99f82ae2cc51faddef5180abe1bd84ee2a3d7b04a4184a6658144c",
+        "stages": {
+          "preprocess": "not_measured",
+          "runtime": "measured",
+          "postprocess": "not_measured",
+          "end_to_end": "not_measured"
+        },
+        "measurements": [
+          {
+            "threads": 1,
+            "average_latency_ms": 1.5115266640981038,
+            "observed_min_latency_ms": 1.458,
+            "observed_max_latency_ms": 2.153,
+            "aggregate_fps": 655.5249300724062
+          },
+          {
+            "threads": 2,
+            "average_latency_ms": 2.5434067249298096,
+            "observed_min_latency_ms": 2.203,
+            "observed_max_latency_ms": 3.689,
+            "aggregate_fps": 779.2764652982214
+          }
+        ],
+        "raw_measurements": [
+          {
+            "threads": 1,
+            "round": 1,
+            "frames": 200,
+            "average_latency_ms": 1.5130250453948975,
+            "minimum_latency_ms": 1.467,
+            "maximum_latency_ms": 2.11,
+            "fps": 654.6301879882812,
+            "wall_time_ms": 305.7489929199219,
+            "log": "work/board/output/profile/perf-t1-r1/profiler.log",
+            "sha256": "1e3ffc02de980b6e8be63167bcf6feabb60e6dc62021610a910b9e9064e43d9a"
+          },
+          {
+            "threads": 1,
+            "round": 2,
+            "frames": 200,
+            "average_latency_ms": 1.509779930114746,
+            "minimum_latency_ms": 1.469,
+            "maximum_latency_ms": 2.122,
+            "fps": 656.5104370117188,
+            "wall_time_ms": 304.8840026855469,
+            "log": "work/board/output/profile/perf-t1-r2/profiler.log",
+            "sha256": "05cd01df64d1e0b89c080d33d56d82291cee5812e29c7715649021fe2145d159"
+          },
+          {
+            "threads": 1,
+            "round": 3,
+            "frames": 200,
+            "average_latency_ms": 1.511775016784668,
+            "minimum_latency_ms": 1.458,
+            "maximum_latency_ms": 2.153,
+            "fps": 656.9503784179688,
+            "wall_time_ms": 304.66400146484375,
+            "log": "work/board/output/profile/perf-t1-r3/profiler.log",
+            "sha256": "5625ba2b5f7f6f75b167c62c81391997f4b6a403cd110e70182dfb545c2bd826"
+          },
+          {
+            "threads": 2,
+            "round": 1,
+            "frames": 200,
+            "average_latency_ms": 2.540225028991699,
+            "minimum_latency_ms": 2.255,
+            "maximum_latency_ms": 3.403,
+            "fps": 779.772705078125,
+            "wall_time_ms": 256.6969909667969,
+            "log": "work/board/output/profile/perf-t2-r1/profiler.log",
+            "sha256": "355ee2700a05a4f906b16f4b572f8353ec2fdf1df4498198d2f8f350281222c7"
+          },
+          {
+            "threads": 2,
+            "round": 2,
+            "frames": 200,
+            "average_latency_ms": 2.546765089035034,
+            "minimum_latency_ms": 2.203,
+            "maximum_latency_ms": 3.358,
+            "fps": 780.0372924804688,
+            "wall_time_ms": 256.5989990234375,
+            "log": "work/board/output/profile/perf-t2-r2/profiler.log",
+            "sha256": "3d95bdc4ea75ac4c3edcc9a46a9c821201b3baf1ac2ce7c935484edec714eb42"
+          },
+          {
+            "threads": 2,
+            "round": 3,
+            "frames": 200,
+            "average_latency_ms": 2.5432300567626953,
+            "minimum_latency_ms": 2.393,
+            "maximum_latency_ms": 3.689,
+            "fps": 779.8760986328125,
+            "wall_time_ms": 256.64898681640625,
+            "log": "work/board/output/profile/perf-t2-r3/profiler.log",
+            "sha256": "d573b0941793a0895c0d5efb75d430354332dc34975749c3cff33c45cb64d573"
+          }
+        ],
+        "end_to_end": [
+          {
+            "tool": "osnet",
+            "implementation": "native_cpp_neon",
+            "timing_scope": "decoded_rgb_to_l2_feature",
+            "core_id": 1,
+            "pipeline_streams": 1,
+            "runtime_submission_threads": 1,
+            "cpu_backend": "native",
+            "cpu_thread_policy": "fixed",
+            "cpu_worker_threads": 1,
+            "online_cpu_threads": 6,
+            "warmup_frames_per_round": 20,
+            "warmup_scope": "per_worker_in_process",
+            "rounds": 3,
+            "frames_per_round": 200,
+            "timed_frames": 600,
+            "aggregate_wall_ms": 1099.488888,
+            "throughput_fps": 545.708107238,
+            "functional": {
+              "fixtures_per_worker": 32,
+              "preprocess_byte_exact": true,
+              "max_feature_abs_error": 0,
+              "max_l2_norm_error": 3.2268210548e-07
+            },
+            "metrics_ms": {
+              "preprocess": {
+                "mean": 0.248138298333,
+                "p50": 0.24547,
+                "p95": 0.26702125,
+                "min": 0.244245,
+                "max": 0.298344
+              },
+              "runtime": {
+                "mean": 1.58312886833,
+                "p50": 1.560194,
+                "p95": 1.6815132,
+                "min": 1.518845,
+                "max": 1.951311
+              },
+              "postprocess": {
+                "mean": 0.00108648166667,
+                "p50": 0.001075,
+                "p95": 0.001225,
+                "min": 0.000925,
+                "max": 0.0024
+              },
+              "end_to_end": {
+                "mean": 1.83235364833,
+                "p50": 1.808939,
+                "p95": 1.9409898,
+                "min": 1.765015,
+                "max": 2.197581
+              }
+            },
+            "round_wall_ms": [
+              366.415644,
+              367.073456,
+              365.999788
+            ],
+            "raw_frame_order": "round,worker,frame",
+            "cpu_governor": "performance",
+            "cpu_frequency_mhz": 2000.0,
+            "bpu_frequency_mhz": 1500.0
+          },
+          {
+            "tool": "osnet",
+            "implementation": "native_cpp_neon",
+            "timing_scope": "decoded_rgb_to_l2_feature",
+            "core_id": 1,
+            "pipeline_streams": 2,
+            "runtime_submission_threads": 2,
+            "cpu_backend": "native",
+            "cpu_thread_policy": "fixed",
+            "cpu_worker_threads": 2,
+            "online_cpu_threads": 6,
+            "warmup_frames_per_round": 20,
+            "warmup_scope": "per_worker_in_process",
+            "rounds": 3,
+            "frames_per_round": 200,
+            "timed_frames": 1200,
+            "aggregate_wall_ms": 1537.749004,
+            "throughput_fps": 780.361422364,
+            "functional": {
+              "fixtures_per_worker": 32,
+              "preprocess_byte_exact": true,
+              "max_feature_abs_error": 0,
+              "max_l2_norm_error": 3.2268210548e-07
+            },
+            "metrics_ms": {
+              "preprocess": {
+                "mean": 0.2542143525,
+                "p50": 0.251595,
+                "p95": 0.27708025,
+                "min": 0.244345,
+                "max": 0.325419
+              },
+              "runtime": {
+                "mean": 2.30408176667,
+                "p50": 2.2886165,
+                "p95": 2.5656115,
+                "min": 1.711616,
+                "max": 3.120413
+              },
+              "postprocess": {
+                "mean": 0.00122009833333,
+                "p50": 0.001175,
+                "p95": 0.00175,
+                "min": 0.000925,
+                "max": 0.00305
+              },
+              "end_to_end": {
+                "mean": 2.5595162175,
+                "p50": 2.542462,
+                "p95": 2.8146465,
+                "min": 1.957611,
+                "max": 3.391057
+              }
+            },
+            "round_wall_ms": [
+              512.750221,
+              512.427738,
+              512.571045
+            ],
+            "raw_frame_order": "round,worker,frame",
+            "cpu_governor": "performance",
+            "cpu_frequency_mhz": 2000.0,
+            "bpu_frequency_mhz": 1500.0
+          }
+        ]
+      },
+      "environment": {
+        "board": "D-Robotics RDK S100P",
+        "os": "Ubuntu 22.04.5 LTS",
+        "kernel": "6.1.158-rt58-DR-4.0.5-2603191535-gf29a43-g94bc27",
+        "runtime": "3.13.6",
+        "hbrt": "4.7.5",
+        "cpu_governor": "performance",
+        "cpu_governor_by_policy": {
+          "/sys/devices/system/cpu/cpufreq/policy4": "performance",
+          "/sys/devices/system/cpu/cpufreq/policy0": "performance"
+        },
+        "cpu_frequency_mhz": 2000.0,
+        "cpu_frequency_mhz_observed_range": [
+          2000.0,
+          2000.0
+        ],
+        "cpu_frequency_ceiling_mhz_by_policy": {
+          "/sys/devices/system/cpu/cpufreq/policy4": 2000.0,
+          "/sys/devices/system/cpu/cpufreq/policy0": 2000.0
+        },
+        "bpu_frequency_mhz": 1500.0,
+        "temperature_before_c": 51.338,
+        "temperature_after_c": 53.544,
+        "temperature_max_c": 54.28,
+        "observation_scope": "0.2 second trace; stable BPU frequency, CPU governor and CPU frequency ceilings; no policy changes made",
+        "source_logs": [
+          "work/board/logs/environment-before.log",
+          "work/board/logs/environment-trace.jsonl",
+          "work/board/logs/environment-after.log"
+        ],
+        "online_cpu_threads": 6
+      },
+      "provenance": {
+        "repository_commit": "775d2b7fc6942eb2505be34fd5b114d9ada7ffd8",
+        "build_id": "osnet-s100p-20261030-r01",
+        "precision_policy": "int16",
+        "requested_quant_config": {
+          "model_config": {
+            "all_node_type": "int16"
+          }
+        },
+        "runtime_variant": "s100p-f32-int16",
+        "sample_pending_publication": true,
+        "float_run": "osnet-s-float-20261030-r02",
+        "export_run": "osnet-s-20261030-export-r02",
+        "oe_run": "osnet-s100p-20261030-r01",
+        "conversion_source_commit": "cb84e9d558dc8fbd66071eca50ea123c5a77df75",
+        "float_source_commit": "b5df9dfc01fd6db104c5a20e03a79fc1f1f00f62",
+        "source_weight_url": "https://drive.google.com/file/d/1vduhq5DpN2q1g4fYEZfPI17MJeh9qyrA/view",
+        "onnx_sha256": "9ffe062f378bfa9efd3950c2cb4303693d2657002e37fb6fd354c0f3f8386dc3",
+        "weights_sha256": "2809d3227f7d078f6045f7feb874a34d0684f0e0057b264b99adccf7d4519154",
+        "campaign_sha256": "db5db13f16161c0d396f1cba550481f82a3c7f5556c034675d6f4b513fc782e5",
+        "oe_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92",
+        "dataset_manifest_sha256": "e52da536c8ac03e4c6be5edfc2fa042795a5b3c558b37e9bb0c271ec93d29adf",
+        "original_conversion_archive_available": true,
+        "actual_calibration_batch": 8,
+        "calibration_samples": 128
+      },
+      "validation": {
+        "board_smoke": "passed",
+        "native_launcher": "passed",
+        "cpp_functional": "passed",
+        "runtime_perf": "passed",
+        "cpp_e2e": "passed",
+        "input_contract_review": "passed",
+        "environment_review": "passed",
+        "full_dataset_review": "passed",
+        "license_review": "local-evaluation-only",
+        "release_approval": "not-run",
+        "approved_by": null,
+        "technical_acceptance": "passed",
+        "publication_authorized": false,
+        "evidence": {
+          "campaign_sha256": "db5db13f16161c0d396f1cba550481f82a3c7f5556c034675d6f4b513fc782e5",
+          "board_identities": {
+            "model_sha256": "7350a251da95d7487ef6411b1c350fa56b9b7963db5633d3b136ad4aea2f6d4d",
+            "executable_sha256": "79af5f36314114f961d5f85d5f7e43ebe47eed4a15a7670d63e7bce19c6febbb",
+            "input_sha256": "5bde29eecf99f82ae2cc51faddef5180abe1bd84ee2a3d7b04a4184a6658144c",
+            "reference_sha256": "f46dc627138a722bb261dd4b7b8f6f73af5264df34196eb303d1aeff3f6be891",
+            "runner_sha256": "413365e2827c6ce3d218d43233e636282f0fd0205d6483218fd64de787b98909",
+            "fixture_sha256": "006343540706182c205c14e286033d5290b4a8b77d8ddb2687a3a3e9a70b6bdd",
+            "source_archive_sha256": "e45aebcf9039693d928eeff62e83357350690c4d72fdf36688f88ada395c8460"
+          },
+          "float_accuracy_sha256": "96a6f070353d934287b2b44dd2f91adffdab273f26432889447911eb090b3e88",
+          "board_accuracy_sha256": "21d67d443fe1058f8e226bf1b831f9e94dc4859813890b5fe5368d69dc4cc2fa",
+          "environment_trace_sha256": "31c8257ae0c5b16226051935731e56b2b7a7139cf4af989f402a4c3b985f9880",
+          "official_dataset_manifest_sha256": "e52da536c8ac03e4c6be5edfc2fa042795a5b3c558b37e9bb0c271ec93d29adf",
+          "fixed_input_review_sha256": "a8a26255e19035f286b0a8aeb08362bcc6a26bdd4e7dd3ea4e813ff84c63abc7"
+        }
+      }
+    },
+    "s600": {
+      "build_id": "osnet-s600-20261030-r01",
+      "artifact": {
+        "filename": "osnet_x1_0_nashp_256x128_f32_int16.hbm",
+        "format": "hbm",
+        "march": "nash-p",
+        "runtime_input": "featuremap",
+        "sha256": "5bd9941e84bd487011cd3da38faf44f5012cdf665273b20f2e9b51837de46708",
+        "size_bytes": 9489576,
+        "runtime_tensor": {
+          "dtype": "float32",
+          "payload_layout": "NCHW",
+          "metadata_layout": "NCHW",
+          "shape": [
+            1,
+            3,
+            256,
+            128
+          ],
+          "packing": "RGB /255, ImageNet mean/std; contiguous NCHW float32"
+        }
+      },
+      "accuracy": {
+        "dataset": "Market1501",
+        "task": "person-reidentification",
+        "images": 19281,
+        "query_images": 3368,
+        "gallery_images": 15913,
+        "evaluation_scope": "market1501_single_query_l2_no_rerank",
+        "float_onnx": {
+          "label": "FP32 spatial opset19 ONNX; CPUExecutionProvider",
+          "rank1": 0.9423990498812351,
+          "map": 0.8356955287745265
+        },
+        "runtime": {
+          "rank1": 0.9409144893111638,
+          "map": 0.8351212017953202
+        }
+      },
+      "performance": {
+        "tool": "hrt_model_exec perf",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "model_runtime",
+        "thread_semantics": "runtime_submission_concurrency",
+        "core_id": 1,
+        "warmup_frames_per_condition": 20,
+        "warmup_scope": "separate_process_device_warmup; enable_warmup=false for timed runs",
+        "runs_per_condition": 3,
+        "frames_per_run": 200,
+        "input_kind": "fixed normalized RGB float32 NCHW featuremap",
+        "input_sha256": "5bde29eecf99f82ae2cc51faddef5180abe1bd84ee2a3d7b04a4184a6658144c",
+        "stages": {
+          "preprocess": "not_measured",
+          "runtime": "measured",
+          "postprocess": "not_measured",
+          "end_to_end": "not_measured"
+        },
+        "measurements": [
+          {
+            "threads": 1,
+            "average_latency_ms": 1.2121599912643433,
+            "observed_min_latency_ms": 1.176,
+            "observed_max_latency_ms": 2.134,
+            "aggregate_fps": 816.8889021661404
+          },
+          {
+            "threads": 2,
+            "average_latency_ms": 1.9649182955423992,
+            "observed_min_latency_ms": 1.778,
+            "observed_max_latency_ms": 3.14,
+            "aggregate_fps": 1008.2728601503727
+          }
+        ],
+        "raw_measurements": [
+          {
+            "threads": 1,
+            "round": 1,
+            "frames": 200,
+            "average_latency_ms": 1.214359998703003,
+            "minimum_latency_ms": 1.178,
+            "maximum_latency_ms": 2.134,
+            "fps": 815.6607055664062,
+            "wall_time_ms": 245.39199829101562,
+            "log": "work/board/output/profile/perf-t1-r1/profiler.log",
+            "sha256": "e3b2ccabde4223703d8403fb97e29bcf2016298baf14e3811f0490556b9d6995"
+          },
+          {
+            "threads": 1,
+            "round": 2,
+            "frames": 200,
+            "average_latency_ms": 1.2088450193405151,
+            "minimum_latency_ms": 1.176,
+            "maximum_latency_ms": 1.864,
+            "fps": 820.765380859375,
+            "wall_time_ms": 243.86199951171875,
+            "log": "work/board/output/profile/perf-t1-r2/profiler.log",
+            "sha256": "2db075ba77e58b81584518eeb80ebdc8e18a5ae6d6934d43641881f896446887"
+          },
+          {
+            "threads": 1,
+            "round": 3,
+            "frames": 200,
+            "average_latency_ms": 1.2132749557495117,
+            "minimum_latency_ms": 1.184,
+            "maximum_latency_ms": 1.895,
+            "fps": 816.1666259765625,
+            "wall_time_ms": 245.24000549316406,
+            "log": "work/board/output/profile/perf-t1-r3/profiler.log",
+            "sha256": "a638691492da3aec344bdce717db0b20406b89c64a00ef7ea911ed3b07ae1fe5"
+          },
+          {
+            "threads": 2,
+            "round": 1,
+            "frames": 200,
+            "average_latency_ms": 1.9649949073791504,
+            "minimum_latency_ms": 1.853,
+            "maximum_latency_ms": 3.14,
+            "fps": 1008.8781127929688,
+            "wall_time_ms": 198.41200256347656,
+            "log": "work/board/output/profile/perf-t2-r1/profiler.log",
+            "sha256": "769f5419f6b778ec8903c10c56b0099da33448bda67ad9be220debd216e4234a"
+          },
+          {
+            "threads": 2,
+            "round": 2,
+            "frames": 200,
+            "average_latency_ms": 1.9653149843215942,
+            "minimum_latency_ms": 1.86,
+            "maximum_latency_ms": 3.062,
+            "fps": 1009.3923950195312,
+            "wall_time_ms": 198.31100463867188,
+            "log": "work/board/output/profile/perf-t2-r2/profiler.log",
+            "sha256": "39178d2fc188c818498f265b835ab16d7baeb3635c5317e8a8ba941743e2c3d1"
+          },
+          {
+            "threads": 2,
+            "round": 3,
+            "frames": 200,
+            "average_latency_ms": 1.9644449949264526,
+            "minimum_latency_ms": 1.778,
+            "maximum_latency_ms": 2.881,
+            "fps": 1009.1682739257812,
+            "wall_time_ms": 198.35400390625,
+            "log": "work/board/output/profile/perf-t2-r3/profiler.log",
+            "sha256": "9e73552fcd658f79310a271f6533491af6b4daed9396515be331e58bc912d326"
+          }
+        ],
+        "end_to_end": [
+          {
+            "tool": "osnet",
+            "implementation": "native_cpp_neon",
+            "timing_scope": "decoded_rgb_to_l2_feature",
+            "core_id": 1,
+            "pipeline_streams": 1,
+            "runtime_submission_threads": 1,
+            "cpu_backend": "native",
+            "cpu_thread_policy": "fixed",
+            "cpu_worker_threads": 1,
+            "online_cpu_threads": 18,
+            "warmup_frames_per_round": 20,
+            "warmup_scope": "per_worker_in_process",
+            "rounds": 3,
+            "frames_per_round": 200,
+            "timed_frames": 600,
+            "aggregate_wall_ms": 909.027846,
+            "throughput_fps": 660.04578698,
+            "functional": {
+              "fixtures_per_worker": 32,
+              "preprocess_byte_exact": true,
+              "max_feature_abs_error": 0,
+              "max_l2_norm_error": 3.4329881371e-07
+            },
+            "metrics_ms": {
+              "preprocess": {
+                "mean": 0.232870178333,
+                "p50": 0.2318645,
+                "p95": 0.245782,
+                "min": 0.228527,
+                "max": 0.284602
+              },
+              "runtime": {
+                "mean": 1.281149555,
+                "p50": 1.270586,
+                "p95": 1.3175123,
+                "min": 1.25636,
+                "max": 1.534564
+              },
+              "postprocess": {
+                "mean": 0.000959341666667,
+                "p50": 0.000925,
+                "p95": 0.00105,
+                "min": 0.000875,
+                "max": 0.001975
+              },
+              "end_to_end": {
+                "mean": 1.514979075,
+                "p50": 1.5033505,
+                "p95": 1.5534052,
+                "min": 1.488212,
+                "max": 1.808191
+              }
+            },
+            "round_wall_ms": [
+              303.1622,
+              302.718046,
+              303.1476
+            ],
+            "raw_frame_order": "round,worker,frame",
+            "cpu_governor": "performance",
+            "cpu_frequency_mhz": 2100.0,
+            "bpu_frequency_mhz": 1500.0
+          },
+          {
+            "tool": "osnet",
+            "implementation": "native_cpp_neon",
+            "timing_scope": "decoded_rgb_to_l2_feature",
+            "core_id": 1,
+            "pipeline_streams": 2,
+            "runtime_submission_threads": 2,
+            "cpu_backend": "native",
+            "cpu_thread_policy": "fixed",
+            "cpu_worker_threads": 2,
+            "online_cpu_threads": 18,
+            "warmup_frames_per_round": 20,
+            "warmup_scope": "per_worker_in_process",
+            "rounds": 3,
+            "frames_per_round": 200,
+            "timed_frames": 1200,
+            "aggregate_wall_ms": 1185.130568,
+            "throughput_fps": 1012.54666144,
+            "functional": {
+              "fixtures_per_worker": 32,
+              "preprocess_byte_exact": true,
+              "max_feature_abs_error": 0,
+              "max_l2_norm_error": 3.4329881371e-07
+            },
+            "metrics_ms": {
+              "preprocess": {
+                "mean": 0.233795220833,
+                "p50": 0.232402,
+                "p95": 0.2463533,
+                "min": 0.228352,
+                "max": 0.307177
+              },
+              "runtime": {
+                "mean": 1.73797311167,
+                "p50": 1.7286025,
+                "p95": 1.77287755,
+                "min": 1.399562,
+                "max": 2.516622
+              },
+              "postprocess": {
+                "mean": 0.000951885,
+                "p50": 0.000925,
+                "p95": 0.001,
+                "min": 0.000875,
+                "max": 0.001975
+              },
+              "end_to_end": {
+                "mean": 1.9727202175,
+                "p50": 1.962242,
+                "p95": 2.0233017,
+                "min": 1.636064,
+                "max": 2.754399
+              }
+            },
+            "round_wall_ms": [
+              395.153023,
+              394.964772,
+              395.012773
+            ],
+            "raw_frame_order": "round,worker,frame",
+            "cpu_governor": "performance",
+            "cpu_frequency_mhz": 2100.0,
+            "bpu_frequency_mhz": 1500.0
+          }
+        ]
+      },
+      "environment": {
+        "board": "D-Robotics RDK S600",
+        "os": "RDK OS",
+        "kernel": "6.1.158-rt58-DR-5.1.0-2605251554-g369e4b-gf8e87c",
+        "runtime": "3.13.6",
+        "hbrt": "4.7.5",
+        "cpu_governor": "performance",
+        "cpu_governor_by_policy": {
+          "/sys/devices/system/cpu/cpufreq/policy6": "performance",
+          "/sys/devices/system/cpu/cpufreq/policy2": "performance",
+          "/sys/devices/system/cpu/cpufreq/policy14": "performance",
+          "/sys/devices/system/cpu/cpufreq/policy0": "performance",
+          "/sys/devices/system/cpu/cpufreq/policy10": "performance"
+        },
+        "cpu_frequency_mhz": 2100.0,
+        "cpu_frequency_mhz_observed_range": [
+          2100.0,
+          2100.0
+        ],
+        "cpu_frequency_ceiling_mhz_by_policy": {
+          "/sys/devices/system/cpu/cpufreq/policy6": 2100.0,
+          "/sys/devices/system/cpu/cpufreq/policy2": 2100.0,
+          "/sys/devices/system/cpu/cpufreq/policy14": 2100.0,
+          "/sys/devices/system/cpu/cpufreq/policy0": 2100.0,
+          "/sys/devices/system/cpu/cpufreq/policy10": 2100.0
+        },
+        "bpu_frequency_mhz": 1500.0,
+        "temperature_before_c": 45.717,
+        "temperature_after_c": 44.982,
+        "temperature_max_c": 48.722,
+        "observation_scope": "0.2 second trace; stable BPU frequency, CPU governor and CPU frequency ceilings; no policy changes made",
+        "source_logs": [
+          "work/board/logs/environment-before.log",
+          "work/board/logs/environment-trace.jsonl",
+          "work/board/logs/environment-after.log"
+        ],
+        "online_cpu_threads": 18
+      },
+      "provenance": {
+        "repository_commit": "8b555ec3cdd67f08a026901f288addb3ec387961",
+        "build_id": "osnet-s600-20261030-r01",
+        "precision_policy": "int16",
+        "requested_quant_config": {
+          "model_config": {
+            "all_node_type": "int16"
+          }
+        },
+        "runtime_variant": "s600-f32-int16",
+        "sample_pending_publication": true,
+        "float_run": "osnet-s-float-20261030-r02",
+        "export_run": "osnet-s-20261030-export-r02",
+        "oe_run": "osnet-s600-20261030-r01",
+        "conversion_source_commit": "da21b52950330c12e4bc18e8da698038261921b4",
+        "float_source_commit": "b5df9dfc01fd6db104c5a20e03a79fc1f1f00f62",
+        "source_weight_url": "https://drive.google.com/file/d/1vduhq5DpN2q1g4fYEZfPI17MJeh9qyrA/view",
+        "onnx_sha256": "9ffe062f378bfa9efd3950c2cb4303693d2657002e37fb6fd354c0f3f8386dc3",
+        "weights_sha256": "2809d3227f7d078f6045f7feb874a34d0684f0e0057b264b99adccf7d4519154",
+        "campaign_sha256": "455e8383d468f6fb3ac0b49ba7d1dd69683f834627c9395fa13565e492ef92be",
+        "oe_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92",
+        "dataset_manifest_sha256": "e52da536c8ac03e4c6be5edfc2fa042795a5b3c558b37e9bb0c271ec93d29adf",
+        "original_conversion_archive_available": true,
+        "actual_calibration_batch": 8,
+        "calibration_samples": 128
+      },
+      "validation": {
+        "board_smoke": "passed",
+        "native_launcher": "passed",
+        "cpp_functional": "passed",
+        "runtime_perf": "passed",
+        "cpp_e2e": "passed",
+        "input_contract_review": "passed",
+        "environment_review": "passed",
+        "full_dataset_review": "passed",
+        "license_review": "local-evaluation-only",
+        "release_approval": "not-run",
+        "approved_by": null,
+        "technical_acceptance": "passed",
+        "publication_authorized": false,
+        "evidence": {
+          "campaign_sha256": "455e8383d468f6fb3ac0b49ba7d1dd69683f834627c9395fa13565e492ef92be",
+          "board_identities": {
+            "model_sha256": "5bd9941e84bd487011cd3da38faf44f5012cdf665273b20f2e9b51837de46708",
+            "executable_sha256": "b96c04e7065ce5b114026489f268566b67e60aebf6569df4ce06ed821afd5087",
+            "input_sha256": "5bde29eecf99f82ae2cc51faddef5180abe1bd84ee2a3d7b04a4184a6658144c",
+            "reference_sha256": "29901cbd9ad4b0951e3efa05a5d6ae12ba348163ffdcf8761923059c5d02a4ff",
+            "runner_sha256": "413365e2827c6ce3d218d43233e636282f0fd0205d6483218fd64de787b98909",
+            "fixture_sha256": "006343540706182c205c14e286033d5290b4a8b77d8ddb2687a3a3e9a70b6bdd",
+            "source_archive_sha256": "94e368e29aecc7a9c6c8f21ddcc6f7d6c9bc430dfcf829345cd5fdc9e0192c42"
+          },
+          "float_accuracy_sha256": "96a6f070353d934287b2b44dd2f91adffdab273f26432889447911eb090b3e88",
+          "board_accuracy_sha256": "52c1c2bbfd305687c07b098cfbf89e458dd37a1832c9395c0da484ad21533923",
+          "environment_trace_sha256": "ce1a7a3df085e264901137a561e19914526e7bd718fb3eb14608ae8ed587ca37",
+          "official_dataset_manifest_sha256": "e52da536c8ac03e4c6be5edfc2fa042795a5b3c558b37e9bb0c271ec93d29adf",
+          "fixed_input_review_sha256": "a39dc3e5c902f4e26841a033aba9be75d112d78f21b1cffecf604fa10e9f3d50"
+        }
+      }
+    }
+  },
+  "failed_baseline": {
+    "technical_acceptance": "failed",
+    "reason": "mAP drop exceeds 1 percentage point",
+    "rank1_percent": 93.43824228028504,
+    "map_percent": 81.84487101706895,
+    "map_drop_percentage_points": 1.724681860383697,
+    "publication_authorized": false
+  },
+  "host_tests": [
+    {
+      "suite": "osnet",
+      "path": "samples/vision/osnet/tests",
+      "exit_code": 0
+    },
+    {
+      "suite": "shared",
+      "path": "utils/py_utils/tests",
+      "exit_code": 0
+    },
+    {
+      "suite": "resnet",
+      "path": "samples/vision/resnet/tests",
+      "exit_code": 0
+    },
+    {
+      "suite": "yolo",
+      "path": "samples/vision/ultralytics_yolo/tests",
+      "exit_code": 0
+    },
+    {
+      "suite": "ocr",
+      "path": "samples/vision/paddle_ocr/tests",
+      "exit_code": 0
+    },
+    {
+      "suite": "strict-contract",
+      "exit_code": 0
+    }
+  ],
+  "migration": {
+    "native_branch": "codex/osnet-s-series",
+    "web_branch": "codex/osnet-s-web",
+    "public_catalog": "unchanged",
+    "public_artifact_urls": "not-created"
+  }
+}

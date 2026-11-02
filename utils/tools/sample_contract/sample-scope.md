@@ -46,6 +46,7 @@ scope.
 | vision | mobilenetv3 |
 | vision | mobilenetv4 |
 | vision | modnet |
+| vision | osnet |
 | vision | paddle_ocr |
 | vision | pp_liteseg |
 | vision | pointnet |

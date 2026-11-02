@@ -107,6 +107,7 @@ rdk_model_zoo/
 |   |   |-- mobilenetv4/           # Image classification
 |   |   |-- mobileone/             # Image classification
 |   |   |-- modnet/                # Image matting
+|   |   |-- osnet/                 # 行人重识别
 |   |   |-- paddle_ocr/            # OCR text detection and recognition
 |   |   |-- pointnet/              # Point cloud part segmentation
 |   |   |-- pp_liteseg/            # Semantic segmentation
@@ -194,6 +195,7 @@ python3 main.py \
 | 图像分类 | ResNeXt | `samples/vision/resnext` | RDK X5 | [详情](./samples/vision/resnext) |
 | 图像分类 | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [详情](./samples/vision/vargconvnet) |
 | 图像分类 | ViT | `samples/vision/vit` | RDK S100 | [详情](./samples/vision/vit) |
+| 行人重识别 | OSNet x1.0 | `samples/vision/osnet` | RDK X5 / S100 / S100P / S600（Archive，仅供研究） | [详情](./samples/vision/osnet) |
 | 多目标跟踪 | ByteTrack | `samples/vision/bytetrack` | RDK X5 / RDK S100 / RDK S100P（需准备本地检测模型）/ RDK S600 | [详情](./samples/vision/bytetrack) |
 | 多目标跟踪 | HobotMot（IOU 2.0） | `samples/vision/hobot_mot` | RDK X5 / RDK S100 / RDK S100P / RDK S600（基于检测框的 CPU 跟踪器） | [详情](./samples/vision/hobot_mot) |
 | 目标检测 / 行人跟踪 | Faster R-CNN MobileNetV3-Large-320-FPN | `samples/vision/fasterrcnn` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/fasterrcnn) |

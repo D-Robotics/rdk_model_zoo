@@ -13,12 +13,12 @@ release:
     repository_wide_board_test: false
     statement: Published model files, download URLs and checksums. Runtime requirements are listed in each sample README.
 summary:
-  sample_count: 35
-  download_script_count: 31
-  asset_count: 419
-  downloadable_asset_count: 404
+  sample_count: 36
+  download_script_count: 32
+  asset_count: 422
+  downloadable_asset_count: 407
   manual_asset_count: 15
-  sha256_recorded_count: 271
+  sha256_recorded_count: 274
   sha256_unrecorded_count: 148
   benchmark_count: 470
   performance_metric_count: 2032
@@ -2061,3 +2061,38 @@ models:
         url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/minicpm5-2b_s600_oellm2_w8_ctx4096_20260908.tar.gz
         sha256: 8f2bef6fc7d2290f05055570e7dcfb1cf4e8c07c9a6bb0d0acc24dd202a83841
     notes: S100/S100P use OELLM 1.0.0. S600 requires the separately supplied OELLM 2.0.0-beta1 SDK and OELLM 2.0.4 runtime. The downloader checks each archive SHA-256 and extracts model files and SHA256SUMS into a per-board directory. Follow samples/llm/minicpm5-2b/README.md for model preparation, build and run commands.
+  - id: osnet
+    name: OSNet
+    tasks:
+    - person-reidentification
+    sample_path: samples/vision/osnet
+    download_scripts:
+    - samples/vision/osnet/model/download.sh
+    availability: download
+    publication_status: assets-uploaded
+    assets:
+    - filename: s100/osnet_x1_0_nashe_256x128_f32_int16.hbm
+      format: hbm
+      target: s100
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/models/osnet/osnet/reid/x1.0/s100/osnet_x1_0_nashe_256x128_f32_int16.hbm
+      sha256: 99de82c91b8cf1c0ce27550a0330d8e07166d9d46d118a6aea26dc2a06ef910b
+      size_bytes: 7577360
+      publication_status: assets-uploaded
+    - filename: s100p/osnet_x1_0_nashm_256x128_f32_int16.hbm
+      format: hbm
+      target: s100p
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/models/osnet/osnet/reid/x1.0/s100p/osnet_x1_0_nashm_256x128_f32_int16.hbm
+      sha256: 7350a251da95d7487ef6411b1c350fa56b9b7963db5633d3b136ad4aea2f6d4d
+      size_bytes: 7467792
+      publication_status: assets-uploaded
+    - filename: s600/osnet_x1_0_nashp_256x128_f32_int16.hbm
+      format: hbm
+      target: s600
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/models/osnet/osnet/reid/x1.0/s600/osnet_x1_0_nashp_256x128_f32_int16.hbm
+      sha256: 5bd9941e84bd487011cd3da38faf44f5012cdf665273b20f2e9b51837de46708
+      size_bytes: 9489576
+      publication_status: assets-uploaded
+    notes: Research-use-only x1.0 assets uploaded and anonymously SHA-256 verified
+      on 2026-11-02. Not part of the historical release tag above. Local research-use
+      registration was approved; remote source push and website deployment remain pending. Use model/download.py
+      --download or import an existing delivery with --candidate-dir.
