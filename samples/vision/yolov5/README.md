@@ -33,6 +33,7 @@ yolov5/
 | S100 | n-v7.0-native-20261102 / s-v2.0-native-20261102 | host bindings checked | not-supported | converted; board not-run; Python 640/F32 |
 | S100P | — | not-supported | not-supported | no YOLOv5 manifest asset; explicitly rejected |
 | S600 | x-672 | supported | supported | Python uses `kite.jpg`; C++ per `runtime/cpp/` |
+| S600 | n-v7.0-native-20261102 / s-v2.0-native-20261102 | host bindings checked | not-supported | converted; board not-run; Python 640/F32 |
 
 Python and C++ entries use the target-specific artifacts listed above. Prepare the selected variant and its matching board SDK before running; choose `bus.jpg` for X5 and `kite.jpg` for the S100/S600 672×672 model. Dataset scoring follows the [evaluator](evaluator/README.md).
 
@@ -102,7 +103,9 @@ Repository helper code and source sample documentation follow Apache-2.0. The up
 | Target | Variant | Artifact | Board |
 |---|---|---|---|
 | S100 | `n-v7.0-native-20261102` | `s100/yolov5n_tag_v7.0_native_640x640_nashe_nv12_20261102.hbm` | not-run |
+| S600 | `n-v7.0-native-20261102` | `s600/yolov5n_tag_v7.0_native_640x640_nashp_nv12_20261102.hbm` | not-run |
 | S100 | `s-v2.0-native-20261102` | `s100/yolov5s_tag_v2.0_native_640x640_nashe_nv12_20261102.hbm` | not-run |
+| S600 | `s-v2.0-native-20261102` | `s600/yolov5s_tag_v2.0_native_640x640_nashp_nv12_20261102.hbm` | not-run |
 
 ```bash
 python3 -m samples.vision.yolov5.model.download --target s100 --variant n-v7.0-native-20261102

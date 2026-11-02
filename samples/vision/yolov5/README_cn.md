@@ -33,6 +33,7 @@ yolov5/
 | S100 | n-v7.0-native-20261102 / s-v2.0-native-20261102 | 已核对主机绑定 | 不支持 | 已转换；板端 not-run；Python 640/F32 |
 | S100P | — | 不支持 | 不支持 | 清单无 YOLOv5 制品；显式拒绝 |
 | S600 | x-672 | 支持 | 支持 | Python 使用 `kite.jpg`；C++ 见 `runtime/cpp/` |
+| S600 | n-v7.0-native-20261102 / s-v2.0-native-20261102 | 已核对主机绑定 | 不支持 | 已转换；板端 not-run；Python 640/F32 |
 
 Python 和 C++ 入口使用上表的目标制品。运行前准备所选变体与匹配板端 SDK；X5 使用 `bus.jpg`，S100/S600 的 672×672 模型使用 `kite.jpg`。数据集计分见[评估指南](evaluator/README_cn.md)。
 
@@ -102,7 +103,9 @@ python3 -m samples.vision.yolov5.runtime.python.main \
 | 目标 | 规格 | 文件 | 板端 |
 |---|---|---|---|
 | S100 | `n-v7.0-native-20261102` | `s100/yolov5n_tag_v7.0_native_640x640_nashe_nv12_20261102.hbm` | not-run |
+| S600 | `n-v7.0-native-20261102` | `s600/yolov5n_tag_v7.0_native_640x640_nashp_nv12_20261102.hbm` | not-run |
 | S100 | `s-v2.0-native-20261102` | `s100/yolov5s_tag_v2.0_native_640x640_nashe_nv12_20261102.hbm` | not-run |
+| S600 | `s-v2.0-native-20261102` | `s600/yolov5s_tag_v2.0_native_640x640_nashp_nv12_20261102.hbm` | not-run |
 
 ```bash
 python3 -m samples.vision.yolov5.model.download --target s100 --variant n-v7.0-native-20261102
