@@ -26,6 +26,16 @@ conversion/
 └── converted_targets_20261103.json   # S 制品、配置与验收证据
 ```
 
+<a id="toolchain-targets"></a>
+## 工具链与目标
+
+S100/S100P/S600 分别使用 nash-e/nash-m/nash-p。独立 S 转换使用已有 SDK 3.7.0，实测 hb_compile 3.5.3、HMCT 2.6.5、HBDK 4.7.5；每个规格的真实镜像 ID 和配置摘要见转换清单。模型、ONNX 和校准张量保存在 dev-server。
+
+在 x86 Linux 的既有 X5 工具链镜像
+`registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8` 中转换。
+实测工具版本为 hb_mapper 1.24.3、hbdk 3.49.15、HBRT 3.15.55.0。
+以上 X5 工具对应 `bayes-e`；下方独立验收的 S 系列规格使用 S 工具链。
+
 <a id="export"></a>
 ## 模型导出
 
@@ -51,25 +61,6 @@ hb_model_info compiled/convnext_atto_d2_bayese_224x224_nv12.bin
 hb_perf compiled/convnext_atto_d2_bayese_224x224_nv12.bin
 ```
 
-<a id="toolchain-targets"></a>
-## 工具链与目标
-
-S100/S100P/S600 分别使用 nash-e/nash-m/nash-p。独立 S 转换使用已有 SDK 3.7.0，实测 hb_compile 3.5.3、HMCT 2.6.5、HBDK 4.7.5；每个规格的真实镜像 ID 和配置摘要见转换清单。模型、ONNX 和校准张量保存在 dev-server。
-
-在 x86 Linux 的既有 X5 工具链镜像
-`registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8` 中转换。
-实测工具版本为 hb_mapper 1.24.3、hbdk 3.49.15、HBRT 3.15.55.0。
-以上 X5 工具对应 `bayes-e`；下方独立验收的 S 系列规格使用 S 工具链。
-
-<a id="compile"></a>
-## 编译
-
-X5 使用上方 Mapper 命令。S 使用清单中与 target、规格匹配的独立 YAML，在 dev-server 的新工作目录解析 ONNX、归一化校准数据和输出路径后执行：
-
-```bash
-hb_compile -c compile.yaml
-```
-
 <a id="calibration"></a>
 ## 校准与 Runtime 契约
 
@@ -84,13 +75,25 @@ ImageNet mean/scale 由 Mapper 融合，避免重复归一化。相邻 manifest 
 `convnext_atto_d2_bayese_224x224_nv12`。生成的 BIN 对应原生 `atto-d2` 规格。
 见[模型目录](../model/README_cn.md)和[Runtime](../runtime/python/README_cn.md)。
 
+<a id="compile"></a>
+## 编译
+
+X5 使用上方 Mapper 命令。S 使用清单中与 target、规格匹配的独立 YAML，在 dev-server 的新工作目录解析 ONNX、归一化校准数据和输出路径后执行：
+
+```bash
+hb_compile -c compile.yaml
+```
+
 <a id="validation"></a>
-<a id="artifacts"></a>
-## 验收与发布
+## 运行编译后的模型
 
 2026-11-02 的 checker/compiler、主机图对照已通过。当前为 **converted**：
 板端冒烟、精度、Runtime 1/2 并发、C++ 1/2 流均 **not-run**。
 `hb_perf` 和 OE HTML 是编译器估计，不得写入板端性能指标。
+
+<a id="artifacts"></a>
+## 产物
+
 BIN 与 SHA256SUMS 放在 `rdk_model_zoo_web/rdk_x5/convnext/`；版本化附属材料放在
 `rdk_model_zoo_web/assets/rdk_x5/convnext/<model-stem>/v1/`。
 
@@ -155,3 +158,4 @@ Models and intermediate outputs stay on dev-server. The Mac holds code and metad
 | s600 | `timm-atto-d2-s-int16-cpuptq-o1-20261104` | `s600/convnext_atto_d2_nashp_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm` | `d8a4c3663d916f951c9257e52ef0c42fe8355633182772b1fd972f1300f8f65d` | 9055384 |
 
 <!-- END CPU S CONVERSIONS 20261104 -->
+

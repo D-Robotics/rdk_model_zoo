@@ -25,6 +25,16 @@ conversion/
 └── converted_targets_20261103.json   # exact S artifacts, recipes and evidence
 ```
 
+<a id="toolchain-targets"></a>
+## Toolchains and targets
+
+S100/S100P/S600 use nash-e/nash-m/nash-p respectively. Independent S conversions use the existing SDK 3.7.0: hb_compile 3.5.3, HMCT 2.6.5 and HBDK 4.7.5. Each profile records its actual image ID and configuration hash. Keep models, ONNX and calibration tensors on dev-server.
+
+Use the already provisioned X5 image
+`registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8` on x86 Linux.
+The observed tools are hb_mapper 1.24.3, hbdk 3.49.15 and HBRT 3.15.55.0.
+These X5 tools apply to `bayes-e`; the independently accepted S profiles below use the S toolchain.
+
 <a id="export"></a>
 ## Export
 
@@ -52,25 +62,6 @@ hb_model_info compiled/convnext_atto_d2_bayese_224x224_nv12.bin
 hb_perf compiled/convnext_atto_d2_bayese_224x224_nv12.bin
 ```
 
-<a id="toolchain-targets"></a>
-## Toolchains and targets
-
-S100/S100P/S600 use nash-e/nash-m/nash-p respectively. Independent S conversions use the existing SDK 3.7.0: hb_compile 3.5.3, HMCT 2.6.5 and HBDK 4.7.5. Each profile records its actual image ID and configuration hash. Keep models, ONNX and calibration tensors on dev-server.
-
-Use the already provisioned X5 image
-`registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8` on x86 Linux.
-The observed tools are hb_mapper 1.24.3, hbdk 3.49.15 and HBRT 3.15.55.0.
-These X5 tools apply to `bayes-e`; the independently accepted S profiles below use the S toolchain.
-
-<a id="compile"></a>
-## Compile
-
-X5 uses the Mapper commands above. For S, select the YAML matching the exact target and variant, resolve its ONNX, normalized calibration and output paths in a fresh dev-server work directory, then run:
-
-```bash
-hb_compile -c compile.yaml
-```
-
 <a id="calibration"></a>
 ## Calibration and runtime contract
 
@@ -87,14 +78,27 @@ latency/O3 and the unique output prefix `convnext_atto_d2_bayese_224x224_nv12`.
 The emitted file is registered separately as native variant `atto-d2`.
 See [model artifacts](../model/README.md) and [runtime](../runtime/python/README.md).
 
+<a id="compile"></a>
+## Compile
+
+X5 uses the Mapper commands above. For S, select the YAML matching the exact target and variant, resolve its ONNX, normalized calibration and output paths in a fresh dev-server work directory, then run:
+
+```bash
+hb_compile -c compile.yaml
+```
+
 <a id="validation"></a>
-<a id="artifacts"></a>
-## Acceptance and publication
+## Validate artifacts
 
 The 2026-11-02 conversion passed checker/compiler and host graph comparison.
 The model is **converted**, with board smoke, accuracy, Runtime 1/2 concurrency,
 and C++ 1/2 streams all **not-run**. `hb_perf` and OE HTML contain compiler
-estimates only; they must not populate board benchmarks. Publish the BIN and
+estimates only; they must not populate board benchmarks.
+
+<a id="artifacts"></a>
+## Artifacts
+
+Publish the BIN and
 SHA256SUMS under `rdk_model_zoo_web/rdk_x5/convnext/`; store versioned companions
 under `rdk_model_zoo_web/assets/rdk_x5/convnext/<model-stem>/v1/`.
 
@@ -161,3 +165,4 @@ Models and intermediate outputs stay on dev-server. The Mac holds code and metad
 | s600 | `timm-atto-d2-s-int16-cpuptq-o1-20261104` | `s600/convnext_atto_d2_nashp_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm` | `d8a4c3663d916f951c9257e52ef0c42fe8355633182772b1fd972f1300f8f65d` | 9055384 |
 
 <!-- END CPU S CONVERSIONS 20261104 -->
+

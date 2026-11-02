@@ -78,7 +78,7 @@ Full CLI evaluation requires the complete Market1501 query/gallery sizes and 512
 
 Use `evaluator/workbench.py measure --weights WEIGHTS --output MEASUREMENT` to count executed inference parameters and Conv/Linear MACs (2 FLOPs/MAC; classifier excluded). Commit the reviewed sample before `freeze --workspace WB --dataset DATASET --model BIN --measurement MEASUREMENT --guide GUIDE --fixture FIXTURE --build-id ID --image-id IMAGE_ID`. The immutable campaign pins the source, artifact, complete image-byte manifest and quality budget before evaluation. ReID uses 3,368 query + 15,913 valid gallery images, L2, squared Euclidean distance, same-ID/same-camera exclusion and no reranking. Local technical acceptance permits at most 0.01 ratio loss in each of Rank-1 and mAP; publication approval remains separate.
 
-Use the native evaluator for both the spatial ONNX and reused BIN. `--onnx-threads` defaults to 4. `--capture-only` saves the complete features and image-byte manifest without scoring; score that capture on the host with `--capture-dir`. Capture-only is not an accuracy pass. Preserve `capture.json` as well as the later `accuracy.json`.
+Use the native evaluator for both the spatial ONNX and reused BIN. `--onnx-threads` defaults to 4. `--capture-only` saves the complete features and image-byte manifest without scoring; score that capture on the host with `--capture-dir`, which checks `dataset-sha256.json` against the current Market1501 image bytes. Capture-only is not an accuracy pass. Preserve `capture.json` as well as the later `accuracy.json`.
 
 ```bash
 python3 samples/vision/osnet/evaluator/main.py --backend onnx --model-path /absolute/spatial.onnx --dataset /absolute/Market1501 --output-dir /absolute/new/float
