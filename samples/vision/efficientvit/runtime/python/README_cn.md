@@ -143,3 +143,7 @@ print(result.class_ids, result.scores, result.labels)
 | `model_path requires --asset-id` | 从 `--list-models` 复制完整限定引用；不要使用裸文件名。 |
 | 输入形状或 dtype 不匹配 | 核对制品引用与运行时元数据；不得跨平台复用 X5 制品。 |
 | 输出与参考运行不一致 | 先在同一制品、图像、resize 模式、Top-K 和原始输出上对照，再考虑分数语义。 |
+
+<!-- converted-batch-20261102 -->
+`conversion/converted.json` 中的新增规格使用模式 2：Pillow bicubic 短边 256、四舍五入居中裁剪 224。板端结果为 not-run；外部模型路径须配合精确 asset id 使用。
+<!-- /converted-batch-20261102 -->

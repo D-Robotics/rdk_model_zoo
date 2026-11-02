@@ -96,3 +96,19 @@ conversion asset; its SHA-256 digest is:
 ## Additional preparation
 
 Prepare the ONNX graph as `./efficientvit_m5.onnx` and calibration data under `./calibration_data_rgb_f32` as float32 RGB `.npy` for 224x224 input. Use `calibration_type: 'max'`, `max_percentile: 0.99999`, mean `123.675 116.28 103.53`, and scale `0.01712475 0.017507 0.01742919`. The YAML emits `EfficientViT_msra_224x224_nv12.bin`; name the deployed file `EfficientViT_m5_224x224_nv12.bin` to match the manifest. Run the checker and compiler commands above with this YAML.
+
+<!-- converted-batch-20261102 -->
+## Pinned converted recipes
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model efficientvit_m5.r224_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/efficientvit/conversion/recipes/timm-m5-r224-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+Use the model/tag, pinned checkpoint and matching YAML from `converted.json`; use a fresh attempt directory. The calibration producer uses raw RGB float32 binary tensors. Do not apply normalization twice or inherit historical board metrics.
+<!-- /converted-batch-20261102 -->

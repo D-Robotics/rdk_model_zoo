@@ -63,3 +63,28 @@ location.
 | `EfficientViT_m5_224x224_nv12.bin` | bayes-e `.bin`, packed NV12 input (224x224), F32 `[1,1000,1,1]` logits output | null (unknown) |
 
 The manifest SHA-256 field is `null (unknown)`. The downloader prints the artifact's computed digest after transfer; keep it with that artifact identity.
+
+<!-- converted-batch-20261102 -->
+## Converted-only additions (2026-11-02)
+
+These independently converted timm weights have passed strict checkpoint loading,
+reparameterization and two-input PyTorch/ONNX host comparison, checker and compiler.
+Board smoke, accuracy, Runtime 1/2 and C++ 1/2 are **not-run**; historical metrics
+and screenshots do not describe these artifacts. Existing defaults are retained.
+Pillow is needed for the explicit bicubic shorter-edge 256 / rounded center crop
+224 profile. Normalization is fused in Mapper from the actual checkpoint config;
+output is float32 1,000-class logits followed by native softmax.
+
+| Variant | Artifact | Checkpoint revision | Board |
+|---|---|---|---|
+| `timm-m5-r224-in1k` | `efficientvit_m5_r224_in1k_bayese_224x224_nv12.bin` | [`e45d80f65cd8`](https://huggingface.co/timm/efficientvit_m5.r224_in1k/blob/e45d80f65cd8ef0964ab526dd4f8025abbff4e19/README.md) | not-run |
+
+```bash
+python3 samples/vision/efficientvit/model/download.py --target x5 --variant timm-m5-r224-in1k
+python3 samples/vision/efficientvit/runtime/python/main.py --target x5 --variant timm-m5-r224-in1k --dry-run
+```
+
+Exact model URLs/SHA-256/size are in `docs/release/x5/models.yaml`; source and host
+receipts are in `conversion/converted.json`. Each weight retains its own model
+license in its public release manifest. No board result is implied by download.
+<!-- /converted-batch-20261102 -->

@@ -97,3 +97,19 @@ SHA-256 如下，可用于核对本地副本：
 ## 补充准备
 
 将 ONNX 图准备为 `./efficientvit_m5.onnx`，并在 `./calibration_data_rgb_f32` 准备 224x224 输入的 float32 RGB `.npy` 校准数据。使用 `calibration_type: 'max'`、`max_percentile: 0.99999`、mean `123.675 116.28 103.53` 和 scale `0.01712475 0.017507 0.01742919`。YAML 产出 `EfficientViT_msra_224x224_nv12.bin`；部署前将文件命名为与 Manifest 一致的 `EfficientViT_m5_224x224_nv12.bin`。使用上文命令运行 checker 与编译。
+
+<!-- converted-batch-20261102 -->
+## 固定版本转换配方
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model efficientvit_m5.r224_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/efficientvit/conversion/recipes/timm-m5-r224-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+各规格使用 converted.json 中对应的模型、固定权重及 recipes 配方，输出到全新目录。校准为原始 RGB float32 二进制张量，不重复归一化，不套用历史板端数据。
+<!-- /converted-batch-20261102 -->
