@@ -162,3 +162,7 @@ python3 samples/vision/convnext/runtime/python/main.py \
   --model-path samples/vision/convnext/model/convnext_atto_d2_bayese_224x224_nv12.bin \
   --test-img samples/vision/convnext/test_data/cheetah.JPEG
 ```
+
+<!-- converted-batch-20261102 -->
+`conversion/converted.json` 中的新增规格使用模式 2：Pillow bicubic 短边 256、四舍五入居中裁剪 224。板端结果为 not-run；外部模型路径须配合精确 asset id 使用。
+<!-- /converted-batch-20261102 -->

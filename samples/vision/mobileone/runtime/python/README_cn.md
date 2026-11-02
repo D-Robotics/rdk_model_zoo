@@ -128,3 +128,7 @@ print(result.class_ids, result.scores, result.labels)
 ## 排障
 
 缺模型：先显式准备。`model_path requires --asset-id`：补全精确引用。未知板卡或目标不匹配：主机用 `--dry-run --target x5`，真实推理只在匹配 X5 上执行。S 选择失败：没有发布制品。张量不匹配：核对制品引用、目标与张量 元数据 是否符合样例契约。
+
+<!-- converted-batch-20261102 -->
+`conversion/converted.json` 中的新增规格使用模式 2：Pillow bicubic 短边 256、四舍五入居中裁剪 224。板端结果为 not-run；外部模型路径须配合精确 asset id 使用。
+<!-- /converted-batch-20261102 -->

@@ -168,3 +168,7 @@ python3 samples/vision/convnext/runtime/python/main.py \
   --model-path samples/vision/convnext/model/convnext_atto_d2_bayese_224x224_nv12.bin \
   --test-img samples/vision/convnext/test_data/cheetah.JPEG
 ```
+
+<!-- converted-batch-20261102 -->
+Converted variants listed in `conversion/converted.json` use resize mode 2: Pillow bicubic shorter-edge 256 and rounded center crop 224. Their board results are not-run; use an exact asset id with any external model path.
+<!-- /converted-batch-20261102 -->

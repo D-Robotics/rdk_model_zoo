@@ -1,4 +1,12 @@
 """MobileOne host acceptance tests; no inference on hardware."""
+
+# Converted artifact fixtures extend, rather than replace, historical assertions.
+import json as _converted_json
+from pathlib import Path as _ConvertedPath
+_CONVERTED_MODELS = _converted_json.loads((_ConvertedPath(__file__).resolve().parents[1] / 'conversion/converted.json').read_text())['models']
+_CONVERTED_FILES = [row['job']['filename'] for row in _CONVERTED_MODELS]
+_CONVERTED_VARIANTS = [row['job']['variant'] for row in _CONVERTED_MODELS]
+
 from pathlib import Path
 import contextlib
 import importlib.util
@@ -15,6 +23,7 @@ from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # no
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / 'samples/vision/mobileone'
 FILENAMES = {'s0': 'MobileOne_S0_224x224_nv12.bin', 's1': 'MobileOne_S1_224x224_nv12.bin', 's2': 'MobileOne_S2_224x224_nv12.bin', 's3': 'MobileOne_S3_224x224_nv12.bin', 's4': 'MobileOne_S4_224x224_nv12.bin'}
+FILENAMES.update({row['job']['variant']: row['job']['filename'] for row in _CONVERTED_MODELS})
 VARIANTS = tuple(FILENAMES)
 
 
@@ -211,7 +220,7 @@ class SourceComparisonTests(unittest.TestCase):
     def test_conversion_recipes_remain_identical_to_source(self):
         source = legacy_tree('x5/samples/vision/mobileone/conversion')
         recipes = list(source.glob('*.yaml'))
-        self.assertEqual(len(recipes), len(VARIANTS))
+        self.assertEqual(len(recipes), len(VARIANTS) - len(_CONVERTED_MODELS))
         for recipe in recipes:
             self.assertEqual((SAMPLE/'conversion'/recipe.name).read_bytes(), recipe.read_bytes())
 

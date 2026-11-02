@@ -173,3 +173,27 @@ python3 samples/vision/convnext/runtime/python/main.py \
   --model-path samples/vision/convnext/model/convnext_atto_d2_bayese_224x224_nv12.bin \
   --test-img samples/vision/convnext/test_data/cheetah.JPEG
 ```
+
+<!-- converted-batch-20261102 -->
+## 已转换新增规格（2026-11-02）
+
+以下 timm 权重单独转换，已通过严格权重加载、结构重参数化及两组输入的
+PyTorch/ONNX 主机对照、checker 和编译。板端冒烟、精度、Runtime 1/2 并发和
+C++ 1/2 流均为 **not-run**，历史指标和截图不适用于这些产物。原有默认规格保留。
+新规格需要 Pillow，使用 bicubic 短边 256、四舍五入居中裁剪 224；Mapper 融合
+该权重实际的归一化参数。输出为 float32 1,000 类 logits，由原生 Runtime 做 softmax。
+
+| 规格 | 模型文件 | 权重版本 | 板端 |
+|---|---|---|---|
+| `timm-femto-d1-in1k` | `convnext_femto_d1_in1k_bayese_224x224_nv12.bin` | [`1e0c02df687c`](https://huggingface.co/timm/convnext_femto.d1_in1k/blob/1e0c02df687c47abf0819e1a4f858293e17e0c50/README.md) | not-run |
+| `timm-pico-d1-in1k` | `convnext_pico_d1_in1k_bayese_224x224_nv12.bin` | [`0d879cb0cfd9`](https://huggingface.co/timm/convnext_pico.d1_in1k/blob/0d879cb0cfd9b851a13f007d3ed170dd049f1476/README.md) | not-run |
+| `timm-nano-d1h-in1k` | `convnext_nano_d1h_in1k_bayese_224x224_nv12.bin` | [`fe9cba6df2f1`](https://huggingface.co/timm/convnext_nano.d1h_in1k/blob/fe9cba6df2f17352639e23ca89e1aa6b37f51462/README.md) | not-run |
+
+```bash
+python3 samples/vision/convnext/model/download.py --target x5 --variant timm-femto-d1-in1k
+python3 samples/vision/convnext/runtime/python/main.py --target x5 --variant timm-femto-d1-in1k --dry-run
+```
+
+精确 URL、SHA-256 和大小登记在 `docs/release/x5/models.yaml`；来源及主机对照
+记录见 `conversion/converted.json`。模型许可逐项保留在公开 release 清单中。
+<!-- /converted-batch-20261102 -->

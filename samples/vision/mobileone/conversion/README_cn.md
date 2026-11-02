@@ -175,3 +175,19 @@ python3 samples/vision/mobileone/runtime/python/main.py --target x5 \
 ## 补充准备
 
 重新构建 MobileOne 时，加载匹配的未融合权重（例如 `mobileone_s0_unfused.pth.tar`），执行 `reparameterize_model(model)`，再导出并简化为所选 YAML 路径下的 RGB/NCHW 1×3×224×224 模型图。按 YAML 的 mean `123.675/116.28/103.53`、scale `0.01712475/0.017507/0.01742919` 与 `default` 校准准备 `./calibration_data_rgb_f32` float32 RGB 数据。使用 X5 `bayes-e` 配置构建，并记录实际框架与 OE 版本。
+
+<!-- converted-batch-20261102 -->
+## 固定版本转换配方
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model mobileone_s0.apple_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/mobileone/conversion/recipes/timm-s0-apple-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+各规格使用 converted.json 中对应的模型、固定权重及 recipes 配方，输出到全新目录。校准为原始 RGB float32 二进制张量，不重复归一化，不套用历史板端数据。
+<!-- /converted-batch-20261102 -->

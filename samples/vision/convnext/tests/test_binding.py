@@ -2,6 +2,14 @@
 
 from __future__ import annotations
 
+# Converted artifact fixtures extend, rather than replace, historical assertions.
+import json as _converted_json
+from pathlib import Path as _ConvertedPath
+_CONVERTED_MODELS = _converted_json.loads((_ConvertedPath(__file__).resolve().parents[1] / 'conversion/converted.json').read_text())['models']
+_CONVERTED_FILES = [row['job']['filename'] for row in _CONVERTED_MODELS]
+_CONVERTED_VARIANTS = [row['job']['variant'] for row in _CONVERTED_MODELS]
+
+
 from pathlib import PurePosixPath
 import unittest
 
@@ -30,7 +38,7 @@ class BindingTableTests(unittest.TestCase):
         )
 
         records = list_available_assets("auto")
-        self.assertEqual(len(records), 5)
+        self.assertEqual(len(records), 5 + len(_CONVERTED_MODELS))
         table = self._table()
         for record in records:
             self.assertEqual(
@@ -52,13 +60,13 @@ class BindingTableTests(unittest.TestCase):
             )
         self.assertEqual(
             sorted(record.filename for record in records),
-            [
+            sorted([
                 "ConvNeXt_atto_224x224_nv12.bin",
                 "ConvNeXt_femto_224x224_nv12.bin",
                 "ConvNeXt_nano_224x224_nv12.bin",
                 "ConvNeXt_pico_224x224_nv12.bin",
                 "convnext_atto_d2_bayese_224x224_nv12.bin",
-            ],
+            ] + _CONVERTED_FILES),
         )
 
     def test_s_targets_publish_nothing_and_reject_selection(self):
@@ -114,6 +122,7 @@ class BindingTableTests(unittest.TestCase):
             ('femto', 'x5'): (224, 224, 'softmax', 'source_declared_logits', 1, 'linear'),
             ('atto-d2', 'x5'): (224, 224, 'softmax', 'source_declared_logits', 2, 'linear'),
         }
+        expected.update({(row['job']['variant'], 'x5'): (224, 224, 'softmax', 'source_declared_logits', 2, 'linear') for row in _CONVERTED_MODELS})
         self.assertEqual(set(expected), set(self._table().facts))
         for (variant, target), (height, width, policy, semantics, resize, interp) in expected.items():
             selection = resolve_selection(target, variant=variant)

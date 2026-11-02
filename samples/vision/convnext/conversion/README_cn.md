@@ -66,3 +66,19 @@ BIN 与 SHA256SUMS 放在 `rdk_model_zoo_web/rdk_x5/convnext/`；版本化附属
 `rdk_x5@ac11571` 原始字节。ONNX 路径存在交叉（atto → femto、femto → 外部 atto、
 nano → pico），输出前缀均为 `ConvNeXt-deploy_224x224_nv12`，不能据此识别本次新 BIN。
 四个历史模型及测量记录保留原样，历史指标不得套用到新产物。
+
+<!-- converted-batch-20261102 -->
+## 固定版本转换配方
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model convnext_femto.d1_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/convnext/conversion/recipes/timm-femto-d1-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+各规格使用 converted.json 中对应的模型、固定权重及 recipes 配方，输出到全新目录。校准为原始 RGB float32 二进制张量，不重复归一化，不套用历史板端数据。
+<!-- /converted-batch-20261102 -->

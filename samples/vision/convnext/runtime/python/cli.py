@@ -92,6 +92,26 @@ BINDING_TABLE = SampleBindingTable(
 )
 
 
+
+
+
+
+
+# BEGIN CONVERTED ARTIFACT BINDINGS
+from dataclasses import replace as _with_converted_bindings
+CONVERTED_VARIANTS = ('timm-femto-d1-in1k', 'timm-pico-d1-in1k', 'timm-nano-d1h-in1k')
+SUPPORTED_VARIANTS = SUPPORTED_VARIANTS + CONVERTED_VARIANTS
+BINDING_TABLE = _with_converted_bindings(
+    BINDING_TABLE,
+    filename_variants={**BINDING_TABLE.filename_variants, **{'convnext_femto_d1_in1k_bayese_224x224_nv12.bin': 'timm-femto-d1-in1k', 'convnext_pico_d1_in1k_bayese_224x224_nv12.bin': 'timm-pico-d1-in1k', 'convnext_nano_d1h_in1k_bayese_224x224_nv12.bin': 'timm-nano-d1h-in1k'}},
+    facts={**BINDING_TABLE.facts,
+        ('timm-femto-d1-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-pico-d1-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-nano-d1h-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+    },
+)
+# END CONVERTED ARTIFACT BINDINGS
+
 def list_available_assets(target: Optional[str] = None) -> tuple[AssetRecord, ...]:
     """Return the finite sample assets read from the existing manifests.
 

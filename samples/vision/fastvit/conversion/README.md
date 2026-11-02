@@ -182,3 +182,19 @@ SHA-256 digests are:
 ## Additional preparation
 
 The YAML ONNX inputs reference `../../../01_common/model_zoo/mapper/classification/FastViT/...`. Prepare the corresponding ONNX graph for the selected S12/SA12/T12/T8 variant at that path, or update `onnx_model` to the local graph. Prepare RGB float32 calibration data at `./calibration_data_rgb_f32` using the YAML normalization. All four YAMLs share `output_model_file_prefix: 'FastViT_224x224_nv12'`; build each variant in an isolated working directory and use its manifest filename for deployment. Run the matching checker/compiler commands above.
+
+<!-- converted-batch-20261102 -->
+## Pinned converted recipes
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model fastvit_t8.apple_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/fastvit/conversion/recipes/timm-t8-apple-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+Use the model/tag, pinned checkpoint and matching YAML from `converted.json`; use a fresh attempt directory. The calibration producer uses raw RGB float32 binary tensors. Do not apply normalization twice or inherit historical board metrics.
+<!-- /converted-batch-20261102 -->

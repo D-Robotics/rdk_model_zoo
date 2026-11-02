@@ -17,6 +17,14 @@ The new Atto D2 exporter, producer and recipe are maintained separately.
 
 from __future__ import annotations
 
+# Converted artifact fixtures extend, rather than replace, historical assertions.
+import json as _converted_json
+from pathlib import Path as _ConvertedPath
+_CONVERTED_MODELS = _converted_json.loads((_ConvertedPath(__file__).resolve().parents[1] / 'conversion/converted.json').read_text())['models']
+_CONVERTED_FILES = [row['job']['filename'] for row in _CONVERTED_MODELS]
+_CONVERTED_VARIANTS = [row['job']['variant'] for row in _CONVERTED_MODELS]
+
+
 import hashlib
 from pathlib import Path
 import re
@@ -124,18 +132,18 @@ class RecipeConsistencyTests(unittest.TestCase):
         records = list_available_assets("auto")
         self.assertEqual(
             sorted(r.filename for r in records),
-            [
+            sorted([
                 "ConvNeXt_atto_224x224_nv12.bin",
                 "ConvNeXt_femto_224x224_nv12.bin",
                 "ConvNeXt_nano_224x224_nv12.bin",
                 "ConvNeXt_pico_224x224_nv12.bin",
                 "convnext_atto_d2_bayese_224x224_nv12.bin",
-            ],
+            ] + _CONVERTED_FILES),
         )
         self.assertEqual(BINDING_TABLE.default_variant, "atto")
         self.assertEqual(
             set(BINDING_TABLE.filename_variants.values()),
-            {"atto", "femto", "nano", "pico", "atto-d2"},
+            {"atto", "femto", "nano", "pico", "atto-d2"} | set(_CONVERTED_VARIANTS),
         )
         self.assertTrue((CONVERSION / "ConvNeXt_femto.yaml").is_file())
         self.assertTrue((CONVERSION / "ConvNeXt_nano.yaml").is_file())

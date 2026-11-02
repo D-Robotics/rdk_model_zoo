@@ -178,3 +178,19 @@ ImageNet-1k 分类 logits。
 ## 补充准备
 
 YAML 的 ONNX 输入引用 `../../../01_common/model_zoo/mapper/classification/FastViT/...`。为所选 S12/SA12/T12/T8 变体在该路径准备对应 ONNX 图，或将 `onnx_model` 改为本地图路径。按 YAML 归一化准备 `./calibration_data_rgb_f32` RGB float32 校准数据。四份 YAML 共用 `output_model_file_prefix: 'FastViT_224x224_nv12'`；各变体在独立工作目录构建，部署时使用对应 Manifest 文件名。运行上文匹配的 checker/编译命令。
+
+<!-- converted-batch-20261102 -->
+## 固定版本转换配方
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model fastvit_t8.apple_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/fastvit/conversion/recipes/timm-t8-apple-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+各规格使用 converted.json 中对应的模型、固定权重及 recipes 配方，输出到全新目录。校准为原始 RGB float32 二进制张量，不重复归一化，不套用历史板端数据。
+<!-- /converted-batch-20261102 -->

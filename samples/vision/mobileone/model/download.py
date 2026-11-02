@@ -47,6 +47,14 @@ ASSET_REFERENCES = {
 TARGETS = ("x5",)
 
 
+
+
+
+# BEGIN CONVERTED ARTIFACT BINDINGS
+VARIANTS = VARIANTS + ('timm-s0-apple-in1k', 'timm-s1-apple-in1k', 'timm-s2-apple-in1k', 'timm-s3-apple-in1k')
+ASSET_REFERENCES.update({('x5', 'timm-s0-apple-in1k'): 'x5:mobileone:mobileone_s0_apple_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-s1-apple-in1k'): 'x5:mobileone:mobileone_s1_apple_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-s2-apple-in1k'): 'x5:mobileone:mobileone_s2_apple_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-s3-apple-in1k'): 'x5:mobileone:mobileone_s3_apple_in1k_bayese_224x224_nv12.bin'})
+# END CONVERTED ARTIFACT BINDINGS
+
 def asset_reference(target: str, variant: str = 's0') -> str:
     """Return the exact manifest reference for a supported target/variant."""
 
