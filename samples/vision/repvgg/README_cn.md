@@ -148,6 +148,8 @@ C++ 1/2 流均为 **not-run**，历史指标和截图不适用于这些产物。
 | `timm-a0-rvgg-in1k` | `repvgg_a0_rvgg_in1k_bayese_224x224_nv12.bin` | [`e292d220aa8b`](https://huggingface.co/timm/repvgg_a0.rvgg_in1k/blob/e292d220aa8b811232037f8aa6d6c8c552dbd0c0/README.md) | not-run |
 | `timm-a1-rvgg-in1k` | `repvgg_a1_rvgg_in1k_bayese_224x224_nv12.bin` | [`a08d66137071`](https://huggingface.co/timm/repvgg_a1.rvgg_in1k/blob/a08d661370717300608086640790e6a4f54ac802/README.md) | not-run |
 | `timm-a2-rvgg-in1k` | `repvgg_a2_rvgg_in1k_bayese_224x224_nv12.bin` | [`87d4d383cb45`](https://huggingface.co/timm/repvgg_a2.rvgg_in1k/blob/87d4d383cb45031cb9fa2fc8ddca73fd6649240f/README.md) | not-run |
+| `timm-b0-rvgg-in1k` | `repvgg_b0_rvgg_in1k_bayese_224x224_nv12.bin` | [`cad20ccf7d40`](https://huggingface.co/timm/repvgg_b0.rvgg_in1k/blob/cad20ccf7d400643ebb88cc9403ec97d101e6531/README.md) | not-run |
+| `timm-b1g4-rvgg-in1k` | `repvgg_b1g4_rvgg_in1k_bayese_224x224_nv12.bin` | [`54ad9d95acf3`](https://huggingface.co/timm/repvgg_b1g4.rvgg_in1k/blob/54ad9d95acf3a556fa8c9a38a58c4ff0a352666a/README.md) | not-run |
 
 ```bash
 python3 samples/vision/repvgg/model/download.py --target x5 --variant timm-a0-rvgg-in1k

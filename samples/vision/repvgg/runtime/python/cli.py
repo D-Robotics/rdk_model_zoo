@@ -77,15 +77,17 @@ BINDING_TABLE = SampleBindingTable(
 
 # BEGIN CONVERTED ARTIFACT BINDINGS
 from dataclasses import replace as _with_converted_bindings
-CONVERTED_VARIANTS = ('timm-a0-rvgg-in1k', 'timm-a1-rvgg-in1k', 'timm-a2-rvgg-in1k')
+CONVERTED_VARIANTS = ('timm-a0-rvgg-in1k', 'timm-a1-rvgg-in1k', 'timm-a2-rvgg-in1k', 'timm-b0-rvgg-in1k', 'timm-b1g4-rvgg-in1k')
 SUPPORTED_VARIANTS = SUPPORTED_VARIANTS + CONVERTED_VARIANTS
 BINDING_TABLE = _with_converted_bindings(
     BINDING_TABLE,
-    filename_variants={**BINDING_TABLE.filename_variants, **{'repvgg_a0_rvgg_in1k_bayese_224x224_nv12.bin': 'timm-a0-rvgg-in1k', 'repvgg_a1_rvgg_in1k_bayese_224x224_nv12.bin': 'timm-a1-rvgg-in1k', 'repvgg_a2_rvgg_in1k_bayese_224x224_nv12.bin': 'timm-a2-rvgg-in1k'}},
+    filename_variants={**BINDING_TABLE.filename_variants, **{'repvgg_a0_rvgg_in1k_bayese_224x224_nv12.bin': 'timm-a0-rvgg-in1k', 'repvgg_a1_rvgg_in1k_bayese_224x224_nv12.bin': 'timm-a1-rvgg-in1k', 'repvgg_a2_rvgg_in1k_bayese_224x224_nv12.bin': 'timm-a2-rvgg-in1k', 'repvgg_b0_rvgg_in1k_bayese_224x224_nv12.bin': 'timm-b0-rvgg-in1k', 'repvgg_b1g4_rvgg_in1k_bayese_224x224_nv12.bin': 'timm-b1g4-rvgg-in1k'}},
     facts={**BINDING_TABLE.facts,
         ('timm-a0-rvgg-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
         ('timm-a1-rvgg-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
         ('timm-a2-rvgg-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-b0-rvgg-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-b1g4-rvgg-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
     },
 )
 # END CONVERTED ARTIFACT BINDINGS

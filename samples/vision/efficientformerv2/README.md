@@ -179,6 +179,7 @@ output is float32 1,000-class logits followed by native softmax.
 |---|---|---|---|
 | `timm-s0-snap-dist-in1k` | `efficientformerv2_s0_snap_dist_in1k_bayese_224x224_nv12.bin` | [`aa226e91a076`](https://huggingface.co/timm/efficientformerv2_s0.snap_dist_in1k/blob/aa226e91a076e760bc7957e5990f19f6ae322c5f/README.md) | not-run |
 | `timm-s1-snap-dist-in1k` | `efficientformerv2_s1_snap_dist_in1k_bayese_224x224_nv12.bin` | [`0c1fc60a0e89`](https://huggingface.co/timm/efficientformerv2_s1.snap_dist_in1k/blob/0c1fc60a0e89b6309d9de451cdacc11ac0a8b987/README.md) | not-run |
+| `timm-s2-snap-dist-in1k` | `efficientformerv2_s2_snap_dist_in1k_bayese_224x224_nv12.bin` | [`1c56a7635500`](https://huggingface.co/timm/efficientformerv2_s2.snap_dist_in1k/blob/1c56a76355000c79568559d34ba3fa24416b5107/README.md) | not-run |
 
 ```bash
 python3 samples/vision/efficientformerv2/model/download.py --target x5 --variant timm-s0-snap-dist-in1k

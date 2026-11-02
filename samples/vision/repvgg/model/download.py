@@ -48,8 +48,8 @@ ASSET_REFERENCES = {
 TARGETS = ("x5",)
 
 # BEGIN CONVERTED ARTIFACT BINDINGS
-VARIANTS = VARIANTS + ('timm-a0-rvgg-in1k', 'timm-a1-rvgg-in1k', 'timm-a2-rvgg-in1k')
-ASSET_REFERENCES.update({('x5', 'timm-a0-rvgg-in1k'): 'x5:repvgg:repvgg_a0_rvgg_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-a1-rvgg-in1k'): 'x5:repvgg:repvgg_a1_rvgg_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-a2-rvgg-in1k'): 'x5:repvgg:repvgg_a2_rvgg_in1k_bayese_224x224_nv12.bin'})
+VARIANTS = VARIANTS + ('timm-a0-rvgg-in1k', 'timm-a1-rvgg-in1k', 'timm-a2-rvgg-in1k', 'timm-b0-rvgg-in1k', 'timm-b1g4-rvgg-in1k')
+ASSET_REFERENCES.update({('x5', 'timm-a0-rvgg-in1k'): 'x5:repvgg:repvgg_a0_rvgg_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-a1-rvgg-in1k'): 'x5:repvgg:repvgg_a1_rvgg_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-a2-rvgg-in1k'): 'x5:repvgg:repvgg_a2_rvgg_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-b0-rvgg-in1k'): 'x5:repvgg:repvgg_b0_rvgg_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-b1g4-rvgg-in1k'): 'x5:repvgg:repvgg_b1g4_rvgg_in1k_bayese_224x224_nv12.bin'})
 # END CONVERTED ARTIFACT BINDINGS
 
 def asset_reference(target: str, variant: str = 'a0') -> str:

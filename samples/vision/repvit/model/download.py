@@ -44,6 +44,10 @@ ASSET_REFERENCES = {
 }
 TARGETS = ("x5",)
 
+# BEGIN CONVERTED ARTIFACT BINDINGS
+VARIANTS = VARIANTS + ('timm-m0-9-dist-450e-in1k', 'timm-m1-0-dist-450e-in1k', 'timm-m1-1-dist-450e-in1k')
+ASSET_REFERENCES.update({('x5', 'timm-m0-9-dist-450e-in1k'): 'x5:repvit:repvit_m0_9_dist_450e_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-m1-0-dist-450e-in1k'): 'x5:repvit:repvit_m1_0_dist_450e_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-m1-1-dist-450e-in1k'): 'x5:repvit:repvit_m1_1_dist_450e_in1k_bayese_224x224_nv12.bin'})
+# END CONVERTED ARTIFACT BINDINGS
 
 def asset_reference(target: str, variant: str = 'm0_9') -> str:
     """Return the exact manifest reference for a supported target/variant."""

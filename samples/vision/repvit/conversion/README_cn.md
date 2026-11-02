@@ -162,3 +162,19 @@ python3 samples/vision/repvit/runtime/python/main.py --target x5 \
 ## 补充准备
 
 使用 `timm.models.create_model` 构造所选 `repvit_m0_9`、`repvit_m1_0` 或 `repvit_m1_1` 权重，通过 PyTorch 导出并使用 `onnxsim` 简化。将匹配的 RGB/NCHW 1×3×224×224 模型图放到 YAML 路径。按 `calibration: default`、mean `123.675/116.28/103.53` 与 scale `0.01712475/0.017507/0.01742919` 准备 `./calibration_data_rgb_f32` float32 RGB 数据。各 YAML 共用工作目录与输出前缀；分别构建变体并保留其身份。
+
+<!-- converted-batch-20261102 -->
+## 固定版本转换配方
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model repvit_m0_9.dist_450e_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/repvit/conversion/recipes/timm-m0-9-dist-450e-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+各规格使用 converted.json 中对应的模型、固定权重及 recipes 配方，输出到全新目录。校准为原始 RGB float32 二进制张量，不重复归一化，不套用历史板端数据。
+<!-- /converted-batch-20261102 -->

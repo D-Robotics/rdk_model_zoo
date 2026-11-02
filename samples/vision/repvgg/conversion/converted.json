@@ -489,6 +489,330 @@
         "oe_report": "a1af43802812d3ac1c41b38df996a0d644b779dc06a8858c00488e4553d73146",
         "oe_data": "2ba20eb953dd166e29fa022a734abb5e900eabc52899a6bbc011d554f40dc3cd"
       }
+    },
+    {
+      "job": {
+        "family": "repvgg",
+        "model": "repvgg_b0.rvgg_in1k",
+        "repo_id": "timm/repvgg_b0.rvgg_in1k",
+        "platform": "x5",
+        "size": "b0-rvgg-in1k-224",
+        "variant": "timm-b0-rvgg-in1k",
+        "filename": "repvgg_b0_rvgg_in1k_bayese_224x224_nv12.bin",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "run_id": "repvgg_b0_rvgg_in1k-x5-20261102-r03",
+        "status": "converted",
+        "updated_at": "2026-11-02T14:00:10.069024+00:00",
+        "sha256": "dff1ebcb268f9a9293340b0919f0347dd368cd8a5973c0025c06dc509435c577",
+        "size_bytes": 11671496
+      },
+      "source": {
+        "repo_id": "timm/repvgg_b0.rvgg_in1k",
+        "revision": "cad20ccf7d400643ebb88cc9403ec97d101e6531",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "e671de393378347fd40311b2a3e56fa1ed6785f6b5d61a7577e3379b0bca7db2",
+        "size_bytes": 63457764,
+        "url": "https://huggingface.co/timm/repvgg_b0.rvgg_in1k/resolve/cad20ccf7d400643ebb88cc9403ec97d101e6531/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_b0.rvgg_in1k/blob/cad20ccf7d400643ebb88cc9403ec97d101e6531/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "repvgg_b0.rvgg_in1k",
+        "checkpoint_sha256": "e671de393378347fd40311b2a3e56fa1ed6785f6b5d61a7577e3379b0bca7db2",
+        "onnx_sha256": "8b423674fdd7568547b4061b083d64982d96877be097b882f2933994c7544601",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "2d0e91fa1680b46a60835a8984d3d89c42c9559970bd55ee761cd75e8bfe9718",
+        "parameter_count": 15817960,
+        "deployment_parameter_count": 14339048,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.875,
+          "crop_mode": "center",
+          "interpolation": "bilinear"
+        },
+        "torch_onnx_max_absolute_errors": [
+          7.62939453125e-06,
+          1.239776611328125e-05
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "repvgg",
+          "family": "repvgg",
+          "task": "cls",
+          "size": "b0-rvgg-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "dff1ebcb268f9a9293340b0919f0347dd368cd8a5973c0025c06dc509435c577",
+            "name": "repvgg_b0_rvgg_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 11671496
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "be7793b71545915ba37d5d7f6e7d578e0554bfa71f746ffec0c4bd6fd65e6f7e",
+        "controller_sha256": "89537afa42205e91b58214a83fa89af4e19fc1fcb2a18b7f97caa49e3bbdf6f3",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "be7793b71545915ba37d5d7f6e7d578e0554bfa71f746ffec0c4bd6fd65e6f7e",
+        "compile_log": "12abdcc3077ae95919953ad4d46a8b7509f4e74ddfad51a26b5b6439e752a439",
+        "model_info": "b3f208fee9a9aa5744b635c15be2bf01bab9fb645e4d189ec18ae2123a1c3bf5",
+        "oe_report": "10bc43d6a47bb4fbb443b99f2201f9be5a55a05cf3586477ae00756192f6af3b",
+        "oe_data": "5cf4c978a3517fc9c94ebeb4798b01983ee2e914e6274a61c6cd948bca7b7fd3"
+      }
+    },
+    {
+      "job": {
+        "family": "repvgg",
+        "model": "repvgg_b1g4.rvgg_in1k",
+        "repo_id": "timm/repvgg_b1g4.rvgg_in1k",
+        "platform": "x5",
+        "size": "b1g4-rvgg-in1k-224",
+        "variant": "timm-b1g4-rvgg-in1k",
+        "filename": "repvgg_b1g4_rvgg_in1k_bayese_224x224_nv12.bin",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "run_id": "repvgg_b1g4_rvgg_in1k-x5-20261102-r03",
+        "status": "converted",
+        "updated_at": "2026-11-02T14:03:48.249634+00:00",
+        "sha256": "fecec65d7a920c1842e92e547f3628a6607c5d0467d5b57c562acdd0092c1f99",
+        "size_bytes": 27727824
+      },
+      "source": {
+        "repo_id": "timm/repvgg_b1g4.rvgg_in1k",
+        "revision": "54ad9d95acf3a556fa8c9a38a58c4ff0a352666a",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "d03c1ac75cfb344bc52f119abb7b1f79ec8bddcf36acf01db3c41fa912ec5896",
+        "size_bytes": 160182074,
+        "url": "https://huggingface.co/timm/repvgg_b1g4.rvgg_in1k/resolve/54ad9d95acf3a556fa8c9a38a58c4ff0a352666a/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_b1g4.rvgg_in1k/blob/54ad9d95acf3a556fa8c9a38a58c4ff0a352666a/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "repvgg_b1g4.rvgg_in1k",
+        "checkpoint_sha256": "d03c1ac75cfb344bc52f119abb7b1f79ec8bddcf36acf01db3c41fa912ec5896",
+        "onnx_sha256": "979684c0a7471a2d4280b471c89f05a3d21a743186f32452921e77cde757aae3",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "2d0e91fa1680b46a60835a8984d3d89c42c9559970bd55ee761cd75e8bfe9718",
+        "parameter_count": 39966056,
+        "deployment_parameter_count": 36125416,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.875,
+          "crop_mode": "center",
+          "interpolation": "bilinear"
+        },
+        "torch_onnx_max_absolute_errors": [
+          9.5367431640625e-06,
+          1.9073486328125e-05
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "repvgg",
+          "family": "repvgg",
+          "task": "cls",
+          "size": "b1g4-rvgg-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "fecec65d7a920c1842e92e547f3628a6607c5d0467d5b57c562acdd0092c1f99",
+            "name": "repvgg_b1g4_rvgg_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 27727824
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "4cdd2b15614a194aabfa530abccbdb1678d49aeb29213ea438f8fe3c2b23c496",
+        "controller_sha256": "89537afa42205e91b58214a83fa89af4e19fc1fcb2a18b7f97caa49e3bbdf6f3",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "4cdd2b15614a194aabfa530abccbdb1678d49aeb29213ea438f8fe3c2b23c496",
+        "compile_log": "caaec6331169427bd636c0e16cdb288fc1eb85846d4085513c68e3d310019822",
+        "model_info": "3e0f3fe245cadfe3bd6304717287bbd049cadfa1d636a8bab8b04602821b9584",
+        "oe_report": "a6b2519d2048c456a2ef7e8ba6863f9fb5783ba4b3670dbd1de89a1ff9b10595",
+        "oe_data": "583ef2a9706ba2a2ff1304f2ce1b36b302e72b1ce7c5e7de79adef707b28b2b5"
+      }
     }
   ]
 }
