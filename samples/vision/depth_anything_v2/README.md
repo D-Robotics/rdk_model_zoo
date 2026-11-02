@@ -29,6 +29,7 @@ depth_anything_v2/
 | Target | Published artifact | Implementation |
 | --- | --- | --- |
 | S100 | `s100/depth_any.hbm`; publisher digest unknown | Python |
+| S100 Small O1 | `s100/depth_anything_v2_small_518x686_nashe_20261102_o1.hbm`; host ABI checked; board `not-run` | Python |
 | S100P | no separate manifest asset | explicitly refused |
 | S600 / X5 | no manifest asset | explicitly refused |
 
@@ -41,7 +42,7 @@ output `[1,518,686]`; tensor metadata is checked at load.
 
 Use an S100 Linux image with compatible vendor `hbm_runtime`, Python, NumPy,
 OpenCV and PyYAML. Host inspection needs no SDK. Runtime does not install
-packages or download a model; prepare these explicitly. Resizing uses OpenCV
+packages or download a model; prepare these explicitly. Legacy restoration uses OpenCV
 linear interpolation (the source used Torch for this step) and matches the
 Torch result up to floating-point rounding — see [runtime contracts](runtime/python/README.md).
 
@@ -66,7 +67,7 @@ bash samples/vision/depth_anything_v2/runtime/python/run.sh --target s100 \
 The helper resolves relative user paths from repository root. The output
 directory must not exist. Default input is the bundled `furseal.jpg`. Optional
 `--img-save-path result.jpg` adds a source-style color image; it must also be new.
-`auto` selects the sole S100 asset, but execution still verifies the local board.
+`auto` selects the legacy S100 asset, but execution still verifies the local board.
 Assigning an S100 filename does not make S100P compatible.
 
 <a id="expected-results"></a>
@@ -82,7 +83,7 @@ Unknown publisher hash/runtime version remain unknown.
 Color normalization is per image; similar colors across images do not imply
 equal depth. A constant map yields zero grayscale instead of division by zero.
 
-Preprocessing is pixelwise RGB z-score (not the ImageNet constants mentioned in
+Default legacy preprocessing is pixelwise RGB z-score (not the ImageNet constants mentioned in
 the original docstring). Default resize is nearest-neighbor stretch. Optional
 letterbox uses linear resize/fill-127 and crops the padding before restoring
 the result. The task returns float depth; the uint8 display API is a separate
@@ -105,3 +106,14 @@ recipe prerequisites; the evaluator page records the source performance record.
 Sample code uses the repository [Apache 2.0 license](../../../LICENSE).
 Upstream weights, training data and compiled artifacts retain their own applicable
 terms; this page does not grant additional rights to them.
+
+
+The independent public Small workflow and its fixed ImageNet-normalized input are documented in [conversion](conversion/README.md#public-small-518x686-conversion-2026-11-02). Its optional `--variant small-518x686-o1` binding requires a matching manifest entry; the historical model remains the default. All board validation for this new workflow is `not-run`.
+
+Explicitly select the converted public Small O1 once its manifest asset is present:
+
+```bash
+bash samples/vision/depth_anything_v2/model/download.sh --target s100 --variant small-518x686-o1
+bash samples/vision/depth_anything_v2/runtime/python/run.sh --target s100 \
+  --variant small-518x686-o1 --output outputs/depth_anything_v2_small_o1
+```

@@ -8,10 +8,11 @@
 | 目标 | 精确 asset ID | 本目录下路径 | 发布者 SHA-256 |
 | --- | --- | --- | --- |
 | S100 | `s:depth_anything_v2:s100/depth_any.hbm` | `s100/depth_any.hbm` | 未知（`null`） |
+| S100 Small O1 | `s:depth_anything_v2:s100/depth_anything_v2_small_518x686_nashe_20261102_o1.hbm` | `s100/depth_anything_v2_small_518x686_nashe_20261102_o1.hbm` | `8b012b7eab63358a4f9fc8f70035134723c0135c09cc51a2d194ef243018af4b` |
 
 已发布文件名和 URL 以 S 清单为准。
 源文档也提到 S100P，但清单没有独立的 S100P 制品。S100P、S600、X5 均
-显式拒绝，传入外部路径也不例外。`auto` 选择唯一 S100 契约，真实执行仍在加载
+显式拒绝，传入外部路径也不例外。`auto` 选择历史 S100 契约，真实执行仍在加载
 SDK 前检查本机身份。
 
 <a id="directory"></a>
@@ -43,8 +44,8 @@ bash samples/vision/depth_anything_v2/model/download.sh --target s100
 ## 配套文件
 
 本模型不需要分类标签。内置 `../test_data/furseal.jpg` 与六张示意图用于展示效果，
-不是校准数据或真值。HBM、源权重、ONNX 不随仓库附带。复现所缺前提见
-[转换说明](../conversion/README_cn.md)。上游同名权重文件与本制品以各自摘要区分。
+不是校准数据或真值。HBM、源权重、ONNX 不随仓库附带。历史模型所缺前提与独立
+公开 Small 的可复现配方见[转换说明](../conversion/README_cn.md)。上游同名权重文件不能据此认作历史制品的来源。
 
 <a id="local-paths"></a>
 ## 路径与外部副本
@@ -75,5 +76,16 @@ HBM 是源异构模型格式。预期公开 IO 为 float32 RGB NCHW `[1,3,518,68
 float32 深度 `[1,518,686]`。图内 int16 量化不改变公开输出的浮点契约。加载时
 校验张量元数据；绑定失败应调查原因，不能把不兼容张量 reshape 后绕过检查。
 
-发布者 SHA-256 未知。下载器/运行时计算本地摘要来绑定后续证据，不能独立认证
+历史 `depth_any.hbm` 的发布者 SHA-256 未知。下载器/运行时计算本地摘要来绑定后续证据，不能独立认证
 发布者身份。板测结果应与 URL、实测摘要、运行时版本一并保留。
+
+
+## 独立 Small 选择
+
+可选 `--variant small-518x686-o1` 只选择清单中的 `s100/depth_anything_v2_small_518x686_nashe_20261102_o1.hbm`。下载器与运行时均要求该精确条目已存在；有导出器或配方不代表模型已发布。默认仍为 `s100/depth_any.hbm`。公开 Small 权重适用 Apache-2.0，转换文档独立固定其源码和权重身份；旧制品未知 encoder/摘要及历史指标保持原记录。
+
+Small O1 文件大小为 126,860,200 字节。主机 HBM 检查已确认 nash-e、float32 `[1,3,518,686]` → `[1,518,686]`。源码权重、图、校准、工具链和报告摘要见[转换取证](../conversion/small_518x686_o1.provenance.json)。板端验证仍为 `not-run`。
+
+```bash
+bash samples/vision/depth_anything_v2/model/download.sh --target s100 --variant small-518x686-o1
+```

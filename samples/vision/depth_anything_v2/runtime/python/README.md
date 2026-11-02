@@ -66,19 +66,20 @@ original dimensions. Use the same mode for reference/candidate comparisons.
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `--target` | `auto` | auto selects sole S100 asset; x5/s100p/s600 have no asset and fail |
-| `--asset-id` | `null` | exact `s:depth_anything_v2:s100/depth_any.hbm` |
+| `--target` | `auto` | auto selects legacy S100 asset; x5/s100p/s600 have no asset and fail |
+| `--asset-id` | `null` | exact manifest asset ID; omitted selects the legacy asset |
+| `--variant` | `null` | explicit `legacy` or `small-518x686-o1`; omitted keeps the legacy default |
 | `--model-path` | `null` | external copy; requires exact asset ID |
 | `--test-img` | `samples/vision/depth_anything_v2/test_data/furseal.jpg` | image decoded as BGR uint8 |
 | `--output` | `outputs/depth_anything_v2` | new output directory |
 | `--img-save-path` | `null` | optional additional source-style color image; new path |
-| `--resize-type` | `0` | 0 nearest stretch; 1 linear letterbox with gray127 |
+| `--resize-type` | `0` | legacy: 0 nearest stretch / 1 linear letterbox; Small: 0 cubic stretch only |
 | `--priority` | `0` | integer 0–255; passed to SDK scheduling |
 | `--bpu-cores` | `[0]` | nonnegative core IDs; availability depends on SDK |
 | `--list-models` | `false` | print matching manifest entries without SDK |
 | `--dry-run` | `false` | resolve selection without download or inference |
 
-A `null` path resolves to `model/s100/depth_any.hbm`. List and dry-run modes are mutually exclusive. Run inference on the matching S100 board; scheduling defaults to priority 0 and BPU cores `[0]`, without warmup or timing. External models must match the selected input/output contract; no publisher digest is supplied.
+With no explicit variant, a `null` path resolves to the historical `model/s100/depth_any.hbm`; O1 resolves to its own manifest path. List and dry-run modes are mutually exclusive. Run inference on the matching S100 board; scheduling defaults to priority 0 and BPU cores `[0]`, without warmup or timing. External models must match the selected input/output contract. The historical asset has no publisher digest; O1 uses its manifest digest.
 
 <a id="results"></a>
 ## Results
@@ -168,3 +169,8 @@ an incompatible output to make validation pass.
 - **Constant map:** zero-gray rendering is defined behavior; a constant
   prediction itself indicates an input/model problem to investigate.
 - **Existing output:** choose fresh paths; do not mix partial/stale results.
+
+
+## Independent public Small binding
+
+`--variant small-518x686-o1` (or its exact asset ID `s:depth_anything_v2:s100/depth_anything_v2_small_518x686_nashe_20261102_o1.hbm`) selects the independent public Small contract only when its manifest asset exists. The legacy asset remains the default. This selection uses RGB/255, float cubic stretch and ImageNet channel normalization, matching the conversion producer exactly; `--resize-type 1` is refused. The actual O1 HBM exposes float32 `[1,3,518,686]` and `[1,518,686]`, with relative depth and the existing OpenCV linear original-size restoration. It is not a reproduction of upstream's aspect-preserving `infer_image`. Reports identify the selected normalization. Host tests do not establish board compatibility or performance.

@@ -27,6 +27,7 @@ from samples.vision.depth_anything_v2.runtime.python.cli import (
 )
 from samples.vision.depth_anything_v2.runtime.python.cli import (
     resolve_selection,
+    SMALL_ASSET_ID,
 )
 
 
@@ -39,10 +40,12 @@ def main(argv=None):
         if args.list_models:
             return run_list_models(args.target)
         selection = resolve_selection(
-            args.target, asset_id=args.asset_id, model_path=args.model_path
+            args.target, asset_id=args.asset_id, variant=args.variant, model_path=args.model_path
         )
         if not 0 <= args.priority <= 255 or any(core < 0 for core in args.bpu_cores):
             raise ValueError("Priority must be 0..255 and BPU cores nonnegative")
+        if selection.asset.reference == SMALL_ASSET_ID and args.resize_type != 0:
+            raise ValueError("The Small 518x686 binding requires --resize-type 0")
         if args.dry_run:
             return run_dry_run(selection, args)
         output = args.output.expanduser()

@@ -1,0 +1,267 @@
+{
+  "schema_version": "1.0",
+  "status": "converted",
+  "variant": "small-518x686-o1",
+  "artifact": {
+    "asset_id": "s:depth_anything_v2:s100/depth_anything_v2_small_518x686_nashe_20261102_o1.hbm",
+    "filename": "s100/depth_anything_v2_small_518x686_nashe_20261102_o1.hbm",
+    "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/depth_anything_v2/depth_anything_v2_small_518x686_nashe_20261102_o1.hbm",
+    "sha256": "8b012b7eab63358a4f9fc8f70035134723c0135c09cc51a2d194ef243018af4b",
+    "size_bytes": 126860200
+  },
+  "target": {
+    "platform": "s100",
+    "march": "nash-e"
+  },
+  "license": {
+    "name": "Apache-2.0",
+    "scope": "model",
+    "url": "https://github.com/DepthAnything/Depth-Anything-V2/blob/a561b849ebae10a6f5ef49e26c83cbbcd36c71bf/LICENSE",
+    "description": "official Depth Anything V2 Small code and weights"
+  },
+  "source": {
+    "repository": "https://github.com/DepthAnything/Depth-Anything-V2",
+    "commit": "a561b849ebae10a6f5ef49e26c83cbbcd36c71bf",
+    "checkpoint_repository": "depth-anything/Depth-Anything-V2-Small",
+    "checkpoint_revision": "03876f8651c73a60fe4c2c48294e09fcb6838fcf",
+    "checkpoint_filename": "depth_anything_v2_vits.pth",
+    "checkpoint_url": "https://huggingface.co/depth-anything/Depth-Anything-V2-Small/resolve/03876f8651c73a60fe4c2c48294e09fcb6838fcf/depth_anything_v2_vits.pth",
+    "checkpoint_sha256": "715fade13be8f229f8a70cc02066f656f2423a59effd0579197bbf57860e1378"
+  },
+  "float_export": {
+    "model": "DepthAnythingV2(encoder=vits,features=64,out_channels=[48,96,192,384])",
+    "parameter_count": 24785089,
+    "onnx_sha256": "e6e6b19d5167ed414d12989ec7b0636633399e18ef9ab42a3bb5a62d7bb5392d",
+    "onnx_size_bytes": 98940281,
+    "exporter_sha256": "1f5f30d7af4605a77554030f05b5a6b69e2d736bab39c4797be20b3e898b5d11",
+    "opset": 17,
+    "input": {
+      "name": "images",
+      "shape": [
+        1,
+        3,
+        518,
+        686
+      ],
+      "dtype": "float32"
+    },
+    "output": {
+      "name": "depth",
+      "shape": [
+        1,
+        518,
+        686
+      ],
+      "dtype": "float32"
+    },
+    "preprocess": "BGR->RGB float64/255; cubic stretch to 518x686; ImageNet mean/std; F32 NCHW",
+    "versions": {
+      "torch": "2.8.0+cu128",
+      "onnx": "1.17.0",
+      "onnxruntime": "1.19.2",
+      "numpy": "2.2.6",
+      "opencv": "4.11.0"
+    },
+    "comparisons": [
+      {
+        "input": "real",
+        "max_abs_error": 0.0003204047679901123,
+        "mean_abs_error": 4.976361370833117e-07,
+        "rtol": 0.001,
+        "atol": 0.001,
+        "finite": true,
+        "passed": true
+      },
+      {
+        "input": "random_seed42",
+        "max_abs_error": 5.0067901611328125e-06,
+        "mean_abs_error": 1.336825562614124e-06,
+        "rtol": 0.001,
+        "atol": 0.001,
+        "finite": true,
+        "passed": true
+      }
+    ],
+    "source_modifications": [],
+    "graph_refinements": []
+  },
+  "toolchain": {
+    "image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92",
+    "environment": {
+      "HBTL_THREAD_NUM": "2",
+      "OMP_WAIT_POLICY": "PASSIVE",
+      "GOMP_SPINCOUNT": "0",
+      "OMP_NUM_THREADS": "2",
+      "MKL_NUM_THREADS": "2",
+      "OPENBLAS_NUM_THREADS": "2",
+      "NVIDIA_TF32_OVERRIDE": "0",
+      "PYTHONFAULTHANDLER": "1",
+      "HORIZON_TC_UI_DEBUG": "1"
+    },
+    "versions": {
+      "hbdk": "4.7.5",
+      "hmct": "2.6.5",
+      "hb_compile": "3.5.3"
+    },
+    "internal_precision": "int16",
+    "compiler_parameters": {
+      "jobs": 2,
+      "balance": 100,
+      "advice": 1.0,
+      "progress_bar": true,
+      "opt": 1,
+      "core_num": 1,
+      "max_l2m_size": 0,
+      "max_time_per_fc": 0,
+      "debug": true,
+      "cache_mode": "disable"
+    }
+  },
+  "calibration": {
+    "dataset": "COCO 2017 train2017",
+    "count": 200,
+    "seed": 42,
+    "actual_batch": 1,
+    "manifest_sha256": "0f45b88e5a6fb57877933f16d3befd3d16ff52877d84f1ad653790791ffaaab2",
+    "producer_sha256": "00d87e9e0c86cbba7acc2515400eb3ee46825d355f8969ad560a5111d7972d70",
+    "source_image_manifest_sha256": "1d50d53df79c85c9129db9b90570b0f67ef1347c5285a68f4397a4ce1a2c0921",
+    "preprocessing": "RGB float64 /255; cubic stretch 686x518; ImageNet mean/std; float32 NCHW",
+    "source_run": "depth-v2-small-s100-20261102-r03",
+    "quant_config": {
+      "model_config": {
+        "all_node_type": "int16",
+        "model_output_type": "int16"
+      }
+    }
+  },
+  "same_target_recovery": {
+    "source_run": "depth-v2-small-s100-20261102-r04",
+    "quantized_bc_sha256": "72f86dbee956fb187494e9e63d43439fa88d991fe2ae58da11a5225b80d8e239",
+    "ptq_files": {
+      "depth_anything_v2_small_518x686_nashe_20261102_ptq_model.onnx": {
+        "sha256": "7c87dce84aa67d77667b8c7cbb244d5bc85f56ffc220fa57ea30136bcf865bd3",
+        "size_bytes": 100607504
+      },
+      "depth_anything_v2_small_518x686_nashe_20261102_optimized_float_model.onnx": {
+        "sha256": "815c83558d944fd1dc4aae65ad59a967bebf2c55c69248fb16f83fd0bfff72b8",
+        "size_bytes": 99629187
+      },
+      "depth_anything_v2_small_518x686_nashe_20261102_quant_info.json": {
+        "sha256": "bf372db861979b641b711053ac83d5da81018d25f5dec11ef0e5f46552ec903a",
+        "size_bytes": 396828
+      }
+    },
+    "final_run": "depth-v2-small-s100-20261102-r05-o1",
+    "entrypoint": "hb_compile -c input/compile.yaml -m same-target-quantized_model.bc",
+    "backend_optimization": "O1",
+    "new_ptq_executed": false,
+    "source_O2_attempt": "superseded-unfinished; not a published artifact"
+  },
+  "host_similarity": {
+    "source_run": "depth-v2-small-s100-20261102-r04",
+    "comparison_input_count": 1,
+    "input_value_sha256": "658217d7c6df5c4cefb5e7cc59287cb154dc22a07e82a9b22f1d0d6c928eecf2",
+    "node_info_sha256": "9113da29f11990ad9b1cce7eb4ddc3dcaba623349bda12e6f99a3c19eb4ef397",
+    "method": "original native NodeInfo optimized ONNX vs quantized BC simulation",
+    "executed_again_for_O1": false,
+    "dataset_accuracy": "not-run"
+  },
+  "public_abi": {
+    "inputs": [
+      {
+        "name": "images",
+        "dtype": "float32",
+        "shape": [
+          1,
+          3,
+          518,
+          686
+        ],
+        "layout": "NCHW"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "depth",
+        "dtype": "float32",
+        "shape": [
+          1,
+          518,
+          686
+        ],
+        "layout": "NHW"
+      }
+    ],
+    "inspection": "hb_model_info on the actual O1 HBM",
+    "verification_receipt_sha256": "22a3266c1ab533ba6e63c962f5676a275026a4c5df3699e24ecfd65a5842559a"
+  },
+  "reports": {
+    "raw_perf_html": {
+      "sha256": "1d2dc8662c24d0ad4996980136b195bc130fc33860f2a867b1dd6cb595b6754a",
+      "size_bytes": 7758041,
+      "filename": "depth_anything_v2_small_518x686_nashe_20261102.html"
+    },
+    "raw_perf_json": {
+      "sha256": "ac9321a0c90ba1f9c02393e989c2543e72369755a769df7435ad741716eb441f",
+      "size_bytes": 10370549,
+      "filename": "depth_anything_v2_small_518x686_nashe_20261102.json"
+    },
+    "oe_report": {
+      "sha256": "49172f3bec36c3b867eba628973c2271318875ee3135842e36e407fe0d5194d7",
+      "size_bytes": 175610,
+      "filename": "oe_report_data.json"
+    },
+    "official_full_template": {
+      "sha256": "edae81a5e573fdec3f87c7d17d3b302972c1e080a127721fbd05427a159a5028",
+      "size_bytes": 767,
+      "filename": "full_compile_config.yaml"
+    },
+    "effective_config": {
+      "sha256": "cb4a18002bc44dc2fdfa0dea5e81e3efd4e657526e3020cc7ad4b60e14a29a6b",
+      "size_bytes": 908,
+      "filename": "compile.yaml"
+    }
+  },
+  "validation": {
+    "conversion": "passed",
+    "host_graph_parity": "passed",
+    "board_smoke": "not-run",
+    "accuracy": "not-run",
+    "runtime_1": "not-run",
+    "runtime_2": "not-run",
+    "cpp_1": "not-run",
+    "cpp_2": "not-run",
+    "artifact_abi": "passed",
+    "oe_report": "passed",
+    "native_host_tests": {
+      "passed": 27,
+      "failed": 0,
+      "command": "python3 -m unittest discover -s samples/vision/depth_anything_v2/tests"
+    },
+    "readme_delivery_contract": {
+      "violations": 0,
+      "expected_skips": 1
+    },
+    "real_manifest_host_dry_run": {
+      "status": "passed",
+      "legacy_default_preserved": true,
+      "sdk_loaded": false,
+      "downloaded": false
+    }
+  },
+  "notes": [
+    "PTQ used 200 real images; native NodeInfo compared one image. They are distinct measurements.",
+    "Compiler static estimates and host cosine are not board performance or depth dataset accuracy.",
+    "The normal O1 source/export/calibration recipe does not require the private recovery cache.",
+    "The historical depth_any.hbm remains the default with its original provenance and measurements."
+  ],
+  "normal_rebuild_recipe": {
+    "path": "recipes/small_518x686_nashe_o1.yaml",
+    "sha256": "cc3eedfebe03f9241151c0dbf6e50af50c114f1f2ac0d562d63c294fefba7bc2"
+  },
+  "resource_window": {
+    "paused": false,
+    "pause_seconds": 0,
+    "guard_snapshot_sha256": "c970bec574b1e44decb511846af2a82104f78a5ecd117449d01ddcd11888d1eb"
+  }
+}

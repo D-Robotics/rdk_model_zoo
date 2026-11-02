@@ -29,6 +29,7 @@ depth_anything_v2/
 | 目标 | 已发布制品 | 实现 |
 | --- | --- | --- |
 | S100 | `s100/depth_any.hbm`；发布者摘要未知 | Python |
+| S100 Small O1 | `s100/depth_anything_v2_small_518x686_nashe_20261102_o1.hbm`; 主机 ABI 已验收，板测 `not-run` | Python |
 | S100P | 无独立清单制品 | 显式拒绝 |
 | S600 / X5 | 无清单制品 | 显式拒绝 |
 
@@ -39,7 +40,7 @@ depth_anything_v2/
 ## 前提
 
 使用具有兼容厂商 `hbm_runtime` 的 S100 Linux 镜像，以及 Python、NumPy、OpenCV、
-PyYAML。主机检查无需 SDK。推理不会安装依赖或下载模型，需显式准备。尺寸恢复
+PyYAML。主机检查无需 SDK。推理不会安装依赖或下载模型，需显式准备。历史绑定的尺寸恢复
 使用 OpenCV 线性插值（源实现依赖 Torch 完成该步骤），与 Torch 结果在浮点舍入内一致；
 参见[运行时契约](runtime/python/README_cn.md)。
 
@@ -63,7 +64,7 @@ bash samples/vision/depth_anything_v2/runtime/python/run.sh --target s100 \
 
 脚本以仓库根目录解析用户相对路径。输出目录必须不存在。默认输入为内置
 `furseal.jpg`。可用 `--img-save-path result.jpg` 额外保存源风格彩色图片，该路径也
-必须不存在。`auto` 选择唯一 S100 制品，但执行仍验证本机身份；改成 S100 文件名
+必须不存在。`auto` 选择历史 S100 制品，但执行仍验证本机身份；改成 S100 文件名
 不能让 S100P 获得兼容性。
 
 <a id="expected-results"></a>
@@ -78,7 +79,7 @@ bash samples/vision/depth_anything_v2/runtime/python/run.sh --target s100 \
 颜色按每张图独立归一化，跨图比较深度请使用数组数值。恒定深度得到全零灰度，
 避免除零。
 
-前处理为**逐像素 RGB z-score**（不是原始注释中提到的 ImageNet 常量）。默认使用
+历史默认制品的前处理为**逐像素 RGB z-score**（不是原始注释中提到的 ImageNet 常量）。默认使用
 最近邻拉伸。可选 letterbox 使用线性插值/127 填充，并在恢复尺寸前先裁去填充。
 task 返回浮点深度；uint8 显示 API 属于单独的可视化步骤。
 
@@ -97,3 +98,14 @@ task 返回浮点深度；uint8 显示 API 属于单独的可视化步骤。
 
 样例代码使用仓库 [Apache 2.0 许可](../../../LICENSE)。上游权重、训练数据和编译
 制品仍适用各自条款；此页不额外授予相关权利。
+
+
+独立公开 Small 的转换流程与固定 ImageNet 归一化输入见[转换文档](conversion/README_cn.md#公开-small-518x686-转换2026-11-02)。可选 `--variant small-518x686-o1` 绑定要求清单存在对应条目；默认仍使用历史模型。新流程的板端验收全部为 `not-run`。
+
+显式选择已转换的公开 Small O1（清单中须有对应资产）：
+
+```bash
+bash samples/vision/depth_anything_v2/model/download.sh --target s100 --variant small-518x686-o1
+bash samples/vision/depth_anything_v2/runtime/python/run.sh --target s100 \
+  --variant small-518x686-o1 --output outputs/depth_anything_v2_small_o1
+```

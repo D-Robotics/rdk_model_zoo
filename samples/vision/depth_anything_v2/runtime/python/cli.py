@@ -26,6 +26,8 @@ class BindingError(ValueError):
 SUPPORTED_TARGETS = ("x5", "s100", "s100p", "s600")
 SAMPLE_DIR = Path(__file__).resolve().parents[2]
 ASSET_ID = "s:depth_anything_v2:s100/depth_any.hbm"
+SMALL_ASSET_ID = "s:depth_anything_v2:s100/depth_anything_v2_small_518x686_nashe_20261102_o1.hbm"
+VARIANT_ASSETS = {"legacy": ASSET_ID, "small-518x686-o1": SMALL_ASSET_ID}
 
 
 @dataclass(frozen=True)
@@ -45,15 +47,15 @@ class ModelSelection:
     explicit_model_path: bool = False
 
 
-def _asset() -> Asset:
-    rows = list_assets("s", "depth_anything_v2")
-    if len(rows) != 1 or rows[0].reference != ASSET_ID:
-        raise BindingError(f"Expected one manifest asset {ASSET_ID!r}.")
+def _asset(reference=ASSET_ID) -> Asset:
+    rows = [row for row in list_assets("s", "depth_anything_v2") if row.reference == reference]
+    if len(rows) != 1:
+        raise BindingError(f"No unique manifest asset {reference!r}; this variant is not published.")
     return rows[0]
 
 
 def list_available_assets(target: Optional[str] = None) -> tuple:
-    """List the published S100 asset without board or SDK access.
+    """List recognized published S100 assets without board or SDK access.
 
     Args:
         target: Concrete target filter; other targets publish nothing.
@@ -65,7 +67,8 @@ def list_available_assets(target: Optional[str] = None) -> tuple:
         BindingError: The target is unknown.
     """
     if target in (None, "auto", "s100"):
-        return (_asset(),)
+        return tuple(row for row in list_assets("s", "depth_anything_v2")
+                     if row.reference in VARIANT_ASSETS.values())
     if target in SUPPORTED_TARGETS:
         return ()
     raise BindingError(f"Unknown target {target!r}.")
@@ -75,12 +78,14 @@ def resolve_selection(
     target: str = "auto",
     *,
     asset_id: Optional[str] = None,
+    variant: Optional[str] = None,
     model_path: "str | Path | None" = None,
 ) -> ModelSelection:
     """Resolve Depth Anything V2's exact published asset identity without loading it.
 
     Args:
         target: ``auto``/``s100``; other targets publish nothing.
+        variant: Explicit legacy or public Small binding; omitted keeps legacy.
         asset_id: Qualified manifest reference; a ``model_path`` override
             requires the exact reference.
         model_path: Optional explicit local path for the selected asset.
@@ -96,12 +101,17 @@ def resolve_selection(
         key = "s100"
     if key != "s100":
         raise BindingError("Depth Anything V2 is published only for target s100.")
-    asset = _asset()
-    if asset_id is not None and asset_id != asset.reference:
-        raise BindingError(f"Expected asset-id {asset.reference}, got {asset_id!r}.")
+    if variant is not None and variant not in VARIANT_ASSETS:
+        raise BindingError(f"Unknown variant {variant!r}.")
+    reference = VARIANT_ASSETS[variant] if variant is not None else (asset_id or ASSET_ID)
+    if reference not in VARIANT_ASSETS.values():
+        raise BindingError(f"Unknown asset-id {reference!r}.")
+    if asset_id is not None and asset_id != reference:
+        raise BindingError("The asset-id and variant select different models.")
+    asset = _asset(reference)
     if model_path is not None and asset_id is None:
         raise BindingError(
-            "An external model path requires --asset-id s:depth_anything_v2:s100/depth_any.hbm."
+            "An external model path requires its exact --asset-id."
         )
     return ModelSelection(
         target=key,
@@ -134,6 +144,8 @@ def build_parser():
         "--target", choices=("auto", "x5", "s100", "s100p", "s600"), default="auto"
     )
     p.add_argument("--asset-id")
+    p.add_argument("--variant", choices=tuple(VARIANT_ASSETS),
+                   help="Explicit artifact/preprocessing binding; default keeps legacy depth_any.hbm")
     p.add_argument("--model-path", type=Path)
     p.add_argument(
         "--test-img", type=Path, default=SAMPLE_DIR / "test_data/furseal.jpg"
@@ -269,7 +281,11 @@ def save_depth_evidence(
         "runtime_version": str(getattr(runner.runtime, "version", "unknown")),
         "runtime_metadata": metadata_evidence(binding.metadata),
         "resize_type": args.resize_type,
-        "input_normalization": "pixelwise RGB z-score, epsilon=1e-5",
+        "input_normalization": ("RGB/255 then ImageNet mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225]"
+                                if selection.asset.reference == SMALL_ASSET_ID
+                                else "pixelwise RGB z-score, epsilon=1e-5"),
+        "resize_interpolation": ("INTER_CUBIC float64 stretch" if selection.asset.reference == SMALL_ASSET_ID
+                                 else "INTER_NEAREST stretch / INTER_LINEAR letterbox"),
         "output_units": "relative, not meters",
         "depth_native_shape": list(result.depth_native.shape),
         "priority": args.priority,
