@@ -50,9 +50,12 @@ def _selection(args):
     variant = args.variant
     if args.target == "x5" and variant is None and args.asset_id is None:
         variant = X5_CPP_SOURCE_DEFAULT_VARIANT
-    return binding.resolve_selection(
+    selected = binding.resolve_selection(
         args.target, variant=variant, asset_id=args.asset_id, model_path=args.model_path
     )
+    if selected.target != "x5" and selected.variant in binding.CONVERTED_VARIANTS:
+        raise ValueError("Converted S YOLOv5 F32/640 profiles use the Python runtime; the historical C++ S32/672 adapter is incompatible.")
+    return selected
 
 
 def _validate_runtime_args(args) -> None:
@@ -75,6 +78,11 @@ def main(argv=None) -> int:
     try:
         if args.list_models:
             for asset in binding.list_available_assets(args.target):
+                if asset.group == "s" and any(
+                    binding.converted_filename(target, variant) == asset.filename
+                    for target in ("s100", "s600") for variant in binding.CONVERTED_VARIANTS
+                ):
+                    continue
                 print(asset.reference)
             return 0
         if args.dry_run and args.target == "auto":

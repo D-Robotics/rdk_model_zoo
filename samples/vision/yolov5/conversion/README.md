@@ -2,6 +2,53 @@ English | [简体中文](README_cn.md)
 
 # YOLOv5 conversion
 
+## Pinned native public preparation (2026-11-02)
+
+`prepare_native.py` supports official `s-v2.0` and `n-v7.0` checkpoints. It validates the source commit and observed checkpoint SHA-256, captures the original model's three raw heads, applies the documented NHWC export-only head, and asserts exact raw-head equality before ONNX export. Three real calibration inputs and one deterministic random input must pass finite checks and native/ORT comparison (`atol=1e-4`, `rtol=1e-3`). ONNX is static opset 11 with `images` `[1,3,640,640]` and `small/medium/big` `[1,80,80,255]`, `[1,40,40,255]`, `[1,20,20,255]`. No sigmoid, decode or NMS is added to those raw outputs.
+
+| profile | official commit | observed checkpoint SHA-256 |
+|---|---|---|
+| s-v2.0 | `2a149a48d65bf4d358d4289058ef6066cda8c7c9` | `9713ecb6fb0ff7af408e280599232bc18bbed32a2cdce956eac003b11a123eb3` |
+| n-v7.0 | `915bbf294bb74c859f0b41f1c23bc395014ea679` | `4f180cf23ba0717ada0badd6c685026d73d48f184d00fc159c2641284b2ac0a3` |
+
+Use the official release URLs in the historical steps below, with the matching pinned source checkout. Neither release provides a publisher SHA-256; these observed hashes fix the downloaded snapshots. Both pinned source trees contain GPL-3.0; retain their LICENSE and source provenance with the associated release checkpoints and converted artifacts. The sample helper's Apache-2.0 license does not replace upstream terms.
+
+Run preparation from this repository root in an isolated environment with PyTorch 2.8.0, torchvision 0.23.0, ONNX 1.17.0, ORT 1.19.2 and the required upstream imports. The observed missing imports were resolved with pandas 2.2.3, IPython 8.37.0, seaborn 0.13.2 and tqdm 4.70.1 in a separate venv; no Torch/CUDA reinstall is needed.
+
+```bash
+python3 samples/vision/yolov5/conversion/prepare_native.py calibrate \
+  --images /work/coco-train2017-seed42-200 --output /work/v5-calibration
+python3 samples/vision/yolov5/conversion/prepare_native.py export \
+  --source /work/yolov5-v2 --checkpoint /work/yolov5s-v2.0.pt \
+  --variant s-v2.0 --calibration /work/v5-calibration --output /work/export-v2s
+python3 samples/vision/yolov5/conversion/prepare_native.py export \
+  --source /work/yolov5-v7 --checkpoint /work/yolov5n-v7.0.pt \
+  --variant n-v7.0 --calibration /work/v5-calibration --output /work/export-v7n
+```
+
+Each output directory must be new. Calibration requires a 200-image seed-42 `manifest.json` with `images[].name/sha256`; it validates every image. It reuses Runtime's actual X5 `resized_image(..., resize_type=0)` (INTER_NEAREST), then stores RGB float32 NCHW 0–255 tensors; YAML applies `/255` once. The NV12 config declares BT.601 video range to match Runtime's OpenCV I420/NV12 conversion. Export and calibration run as separate processes to keep upstream and repository `utils` packages distinct.
+
+Preparation writes ONNX, `export-report.json` and a new X5 `config.yaml`; it does not compile, register or publish. New output prefixes include `native` and `20261102` and cannot overwrite historical artifacts. Existing historical examples and measurements below keep their original identity.
+
+## S100 / S600 calibration and full configuration
+
+The new native 640×640 profiles keep the same raw heads on S. Calibration differs by toolchain: S consumes RGB float32 NCHW `.npy` already divided by 255, matching the original ONNX input. The S YAML scale factor applies to the separate NV12 Runtime path; calibration must not be divided twice.
+
+```bash
+python3 samples/vision/yolov5/conversion/prepare_s.py calibrate \
+  --source-manifest /work/v5-calibration/calibration-manifest.json \
+  --output /work/v5-calibration-s
+# Inside the cached S OpenExplorer 3.7.0 environment, in a fresh input directory:
+hb_config_generator -f -m /work/export-v7n/model.onnx --march nash-e
+python3 samples/vision/yolov5/conversion/prepare_s.py configure \
+  --template full_compile_config.yaml --onnx /work/export-v7n/model.onnx \
+  --calibration /work/v5-calibration-s --working /work/v5-s100/output \
+  --output /work/v5-s100/compile.yaml --target s100 --variant n-v7.0
+hb_compile -c /work/v5-s100/compile.yaml
+```
+
+For S600 generate a separate full template with `--march nash-p` and configure `--target s600`; use the matching v2s source for `--variant s-v2.0`. Keep every original template and specialized config. Defaults remain standard PTQ with no precision overrides, O2, one BPU core and two compiler jobs. Final HBM inputs must be split uint8 NV12 Y `[1,640,640,1]` and UV `[1,320,320,2]`; the three NHWC raw heads must remain float32. `hb_model_info` must prove each target and IO. New F32 heads use `raw_f32` and are never multiplied by quantization descriptors. The old S `x-672` binding and its historical C++ S32 adapter remain unchanged; new S profiles use the Python runtime.
+
 <a id="source-model"></a>
 
 ## Source model
@@ -11,7 +58,7 @@ The X5 source converts Ultralytics YOLOv5 `v2.0` and `v7.0` branch models with m
 - v2.0: [branch](https://github.com/ultralytics/yolov5/tree/v2.0), weights `yolov5s_tag2.0.pt`
 - v7.0: [branch](https://github.com/ultralytics/yolov5/tree/v7.0), weights `yolov5n.pt`
 
-No upstream commit is pinned and no exporter script or checkpoint ships with this sample; the branch/weight pairing and the detection-head edit below are the source procedure.
+The historical procedure below did not pin an upstream commit or ship a checkpoint; the pinned helper above now provides an executable exporter, while the branch/weight pairing and the detection-head edit below are the source procedure.
 
 <a id="directory"></a>
 ## Directory structure

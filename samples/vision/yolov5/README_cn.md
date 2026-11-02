@@ -7,6 +7,8 @@
 
 YOLOv5 是单阶段 anchor 检测器：CSPDarknet backbone 加 FPN+PAN 特征融合，三个特征尺度（stride 8/16/32）的检测头输出 COCO 风格的框、置信度和类别。`n/s/m/l/x` 规格在速度与精度间取舍。源工程为 [ultralytics/yolov5](https://github.com/ultralytics/yolov5)；本示例保留 X5 与 S 两套不同的输入协议。
 
+新增转换规格 `s-v2.0-native-20261102`、`n-v7.0-native-20261102` 使用独立文件名与精确清单身份。X5 默认 `n-v7.0`、S 默认 `x-672` 均不变。新模型为 640×640，几何为最近邻直接拉伸，三个 NHWC float32 raw head；S 的新 F32 输出不执行旧制品的反量化。新 S 规格仅绑定 Python，历史 C++ S32/672 实现不适用。板端性能、精度和执行状态继续待实测。
+
 <a id="directory"></a>
 ## 目录结构
 

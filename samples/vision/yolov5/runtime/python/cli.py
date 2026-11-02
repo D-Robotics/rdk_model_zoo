@@ -37,6 +37,18 @@ SAMPLE_DIR = Path(__file__).resolve().parents[2]
 
 
 X5_VARIANTS = ('n-v7.0','s-v2.0','m-v2.0','l-v2.0','x-v2.0','s-v7.0','m-v7.0','l-v7.0','x-v7.0')
+CONVERTED_VARIANTS = ('s-v2.0-native-20261102', 'n-v7.0-native-20261102')
+
+
+def converted_filename(target, variant):
+    """Return the distinct filename for a reviewed native raw-F32 profile."""
+    if variant not in CONVERTED_VARIANTS or target not in ('x5', 's100', 's600'):
+        raise ValueError('Unsupported converted YOLOv5 target/variant.')
+    size, tag = variant.split('-v', 1)
+    tag = tag.split('-native-', 1)[0]
+    march = {'x5': 'bayese', 's100': 'nashe', 's600': 'nashp'}[target]
+    stem = f'yolov5{size}_tag_v{tag}_native_640x640_{march}_nv12_20261102'
+    return stem + '.bin' if target == 'x5' else f'{target}/{stem}.hbm'
 
 
 def _x5_filename(variant):
@@ -62,7 +74,10 @@ def list_available_assets(target=None, *, consumer='yolov5'):
         rows=list_assets(group,consumer)
         expected=({_x5_filename(v) for v in X5_VARIANTS} if group=='x5' else
                   {f'{t}/yolov5x_672x672_nv12.hbm' for t in (('s100','s600') if consumer=='yolov5' else ('s100','s100p','s600'))})
-        if {a.filename for a in rows}!=expected or any(a.format!=('bin' if group=='x5' else 'hbm') for a in rows):
+        optional = ({converted_filename(t, v) for t in (('x5',) if group == 'x5' else ('s100', 's600'))
+                     for v in CONVERTED_VARIANTS} if consumer == 'yolov5' else set())
+        actual = {a.filename for a in rows}
+        if not expected <= actual <= expected | optional or any(a.format!=('bin' if group=='x5' else 'hbm') for a in rows):
             raise ValueError(f'{consumer} publication changed; review its finite contracts.')
         assets.extend(a for a in rows if target in (None,'auto') or (group=='x5' and target=='x5') or (group=='s' and a.filename.startswith(target+'/')))
     return tuple(assets)
@@ -78,15 +93,20 @@ def resolve_selection(target='auto', *, variant=None, asset_id=None, model_path=
         matches=[a for a in assets if a.reference==asset_id]
         if len(matches)!=1:raise ValueError(f'Unknown or mismatched {consumer} asset-id: {asset_id}.')
         asset=matches[0]
-        inferred=next((v for v in X5_VARIANTS if _x5_filename(v)==asset.filename),'x-672')
+        inferred=next((v for v in CONVERTED_VARIANTS if target in ('x5','s100','s600') and converted_filename(target,v)==asset.filename),None)
+        if inferred is None:
+            inferred=next((v for v in X5_VARIANTS if _x5_filename(v)==asset.filename),'x-672')
         if variant is not None and variant!=inferred:raise ValueError('variant and asset-id mismatch.')
         variant=inferred
     else:
         variant=variant or ('n-v7.0' if target=='x5' else 'x-672')
-        if target=='x5' and variant in X5_VARIANTS:filename=_x5_filename(variant)
+        if consumer=='yolov5' and variant in CONVERTED_VARIANTS:filename=converted_filename(target,variant)
+        elif target=='x5' and variant in X5_VARIANTS:filename=_x5_filename(variant)
         elif target!='x5' and variant=='x-672':filename=f'{target}/yolov5x_672x672_nv12.hbm'
         else:raise ValueError(f'Unsupported {target} variant: {variant}.')
-        asset=next(a for a in assets if a.filename==filename)
+        matches=[a for a in assets if a.filename==filename]
+        if len(matches)!=1:raise ValueError(f'No published {target} artifact for variant {variant}.')
+        asset=matches[0]
     root=SAMPLE_DIR if consumer=='yolov5' else SAMPLE_DIR.parent/'bytetrack'
     return ModelSelection(asset,target,Path(model_path).expanduser() if model_path is not None else root/'model'/asset.filename,variant,consumer)
 
@@ -101,7 +121,7 @@ def build_parser() -> argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(description="YOLOv5 customer CLI: explicit model preparation, inference and rendering.")
     parser.add_argument('--target', choices=('auto', 'x5', 's100', 's100p', 's600'), default='auto')
-    parser.add_argument('--variant', help='X5: n/s/m/l/x-v7.0 or s/m/l/x-v2.0; S: x-672. Omitted uses n-v7.0 / x-672.')
+    parser.add_argument('--variant', help='Historical X5 n/s/m/l/x-v7.0 or s/m/l/x-v2.0; S x-672. Converted: s-v2.0-native-20261102 / n-v7.0-native-20261102. Defaults stay n-v7.0 / x-672.')
     parser.add_argument('--asset-id')
     parser.add_argument('--model-path')
     parser.add_argument('--test-img', help='Default X5 bus.jpg; S kite.jpg from sample test_data.')
@@ -171,7 +191,7 @@ def dry_run(selection, image_path: Path) -> int:
     print(json.dumps(dict(target=selection.target, variant=selection.variant,
                           asset_id=selection.asset.reference, model_path=str(selection.model_path),
                           test_img=str(image_path),
-                          input_protocol='packed_nv12_640' if selection.target == 'x5' else 'split_nv12_672',
+                          input_protocol='packed_nv12_640' if selection.target == 'x5' else ('split_nv12_640' if selection.variant in CONVERTED_VARIANTS else 'split_nv12_672'),
                           metadata_status='requires runtime metadata', board_status='not-run'), indent=2))
     return 0
 

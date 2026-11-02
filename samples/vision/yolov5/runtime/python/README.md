@@ -7,6 +7,8 @@ English | [简体中文](README_cn.md)
 
 Run YOLOv5 object detection with the X5 or S model protocol. `YOLOv5Task` loads the selected runtime and provides the complete preprocessing, inference and postprocessing chain.
 
+Converted profiles `s-v2.0-native-20261102` and `n-v7.0-native-20261102` have independent filenames and exact manifest identities. Defaults remain X5 `n-v7.0` and S `x-672`. New models use 640×640 nearest-neighbor stretch and three NHWC float32 raw heads; new S F32 outputs bypass legacy dequantization. New S profiles bind the Python runtime; the historical C++ S32/672 adapter is incompatible. Board performance, accuracy and execution remain pending.
+
 <a id="directory"></a>
 ## Directory structure
 

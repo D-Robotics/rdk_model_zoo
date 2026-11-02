@@ -7,6 +7,8 @@ English | [简体中文](README_cn.md)
 
 YOLOv5 is a one-stage, anchor-based object detector: a CSPDarknet backbone with FPN+PAN feature fusion feeds detection heads on three feature-map scales (strides 8/16/32), which return COCO-style boxes, scores, and class IDs. The `n/s/m/l/x` scale variants trade speed against accuracy. The source resource is [ultralytics/yolov5](https://github.com/ultralytics/yolov5). X5 and S models use different input tensors and output quantization metadata.
 
+Converted profiles `s-v2.0-native-20261102` and `n-v7.0-native-20261102` have independent filenames and exact manifest identities. Defaults remain X5 `n-v7.0` and S `x-672`. New models use 640×640 nearest-neighbor stretch and three NHWC float32 raw heads; new S F32 outputs bypass legacy dequantization. New S profiles bind the Python runtime; the historical C++ S32/672 adapter is incompatible. Board performance, accuracy and execution remain pending.
+
 <a id="directory"></a>
 ## Directory structure
 

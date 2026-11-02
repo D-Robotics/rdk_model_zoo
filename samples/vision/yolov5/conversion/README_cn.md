@@ -2,6 +2,53 @@
 
 # YOLOv5 转换
 
+## 固定版本的原生公开模型准备（2026-11-02）
+
+`prepare_native.py` 支持官方 `s-v2.0`、`n-v7.0`，验证源码提交和观察到的 checkpoint SHA-256。先捕获原模型三个 raw head，再仅为导出替换为 NHWC head，并断言二者逐元素相同。三张真实校准图和一份固定随机输入需通过有限值及原模型/ORT 对照（`atol=1e-4`，`rtol=1e-3`）。ONNX 固定 opset 11，输入 `images` `[1,3,640,640]`，输出 `small/medium/big` 为 `[1,80,80,255]`、`[1,40,40,255]`、`[1,20,20,255]`；不包含 sigmoid、decode 或 NMS。
+
+| profile | official commit | observed checkpoint SHA-256 |
+|---|---|---|
+| s-v2.0 | `2a149a48d65bf4d358d4289058ef6066cda8c7c9` | `9713ecb6fb0ff7af408e280599232bc18bbed32a2cdce956eac003b11a123eb3` |
+| n-v7.0 | `915bbf294bb74c859f0b41f1c23bc395014ea679` | `4f180cf23ba0717ada0badd6c685026d73d48f184d00fc159c2641284b2ac0a3` |
+
+使用下方历史步骤中的官方 release 下载 URL 与匹配源码提交。发布方未提供 SHA-256，上述观察摘要固定本次下载字节。两个固定提交的源码均包含 GPL-3.0；保留该 LICENSE 和源码身份，并随相关 release 权重与转换制品提供来源。本仓库辅助代码的 Apache-2.0 不替代上游条款。
+
+在独立导出环境运行：PyTorch 2.8.0、torchvision 0.23.0、ONNX 1.17.0、ORT 1.19.2，以及上游需要的导入。实际缺少的依赖已在单独 venv 中补为 pandas 2.2.3、IPython 8.37.0、seaborn 0.13.2、tqdm 4.70.1；不需要重装 Torch/CUDA。
+
+```bash
+python3 samples/vision/yolov5/conversion/prepare_native.py calibrate \
+  --images /work/coco-train2017-seed42-200 --output /work/v5-calibration
+python3 samples/vision/yolov5/conversion/prepare_native.py export \
+  --source /work/yolov5-v2 --checkpoint /work/yolov5s-v2.0.pt \
+  --variant s-v2.0 --calibration /work/v5-calibration --output /work/export-v2s
+python3 samples/vision/yolov5/conversion/prepare_native.py export \
+  --source /work/yolov5-v7 --checkpoint /work/yolov5n-v7.0.pt \
+  --variant n-v7.0 --calibration /work/v5-calibration --output /work/export-v7n
+```
+
+每个输出目录必须全新。校准图的 `manifest.json` 包含 200 张、seed42 和 `images[].name/sha256`，每张摘要均核验。直接复用 Runtime 的 X5 `resized_image(..., resize_type=0)`（INTER_NEAREST），生成 RGB float32 NCHW 0–255；YAML 中仅执行一次 `/255`。NV12 配置使用 BT.601 video range，与 Runtime 的 OpenCV I420/NV12 转换一致。校准和导出分开执行，避免上游和仓库各自的 `utils` 包冲突。
+
+准备阶段生成 ONNX、`export-report.json` 和新的 X5 `config.yaml`，不编译、登记或发布。新输出前缀含 `native`、`20261102`，不覆盖历史制品。下方历史示例和指标保留原身份。
+
+## S100 / S600 校准和完整配置
+
+新原生规格在 S 上保持 640×640 和三个 raw head。S 校准使用已除以 255 的 RGB float32 NCHW `.npy`，与原始 ONNX 输入一致；YAML scale 用于另一条 NV12 Runtime 输入路径，不能对校准数据重复归一化。
+
+```bash
+python3 samples/vision/yolov5/conversion/prepare_s.py calibrate \
+  --source-manifest /work/v5-calibration/calibration-manifest.json \
+  --output /work/v5-calibration-s
+# 在已准备的 S OpenExplorer 3.7.0 环境和全新 input 目录中：
+hb_config_generator -f -m /work/export-v7n/model.onnx --march nash-e
+python3 samples/vision/yolov5/conversion/prepare_s.py configure \
+  --template full_compile_config.yaml --onnx /work/export-v7n/model.onnx \
+  --calibration /work/v5-calibration-s --working /work/v5-s100/output \
+  --output /work/v5-s100/compile.yaml --target s100 --variant n-v7.0
+hb_compile -c /work/v5-s100/compile.yaml
+```
+
+S600 单独用 `--march nash-p` 生成完整模板，再配置 `--target s600`；v2s 使用对应 ONNX 和 `--variant s-v2.0`。每项保存生成器原始模板与最终配置。使用标准 PTQ 默认精度、O2、单 BPU 核、两个编译进程。最终 HBM 必须为分离 uint8 NV12 Y `[1,640,640,1]`、UV `[1,320,320,2]`，输出为三个 NHWC float32 raw head。逐目标以 `hb_model_info` 核实架构和 IO。新 F32 输出使用 `raw_f32`，不再乘量化参数。旧 S `x-672` 和历史 C++ S32 适配保留；新 S 规格走 Python Runtime。
+
 <a id="source-model"></a>
 
 ## 源模型

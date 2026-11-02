@@ -25,6 +25,7 @@ from utils.py_utils.quantization import apply_output_transform
 from utils.py_utils.runtime_meta import RuntimeMetadata, MetadataMismatchError
 from samples.vision.yolov5.runtime.python.cli import (
     ANCHORS,
+    CONVERTED_VARIANTS,
     STRIDES,
     ModelSelection,
     resolve_selection,
@@ -84,7 +85,9 @@ def bind_model(selection, metadata):
     if check.asset!=selection.asset:raise ValueError('Manifest publication facts changed.')
     m=metadata if isinstance(metadata,RuntimeMetadata) else RuntimeMetadata.from_mapping(metadata)
     if m.model_names!=(m.model_name,):raise MetadataMismatchError('YOLOv5 artifact must contain exactly one model.')
-    size=640 if selection.target=='x5' else 672
+    converted=selection.variant in CONVERTED_VARIANTS
+    raw_float=selection.target=='x5' or converted
+    size=640 if raw_float else 672
     expected=((1,3,size,size),) if selection.target=='x5' else ((1,size,size,1),(1,size//2,size//2,2))
     if len(m.input_names)!=len(expected) or tuple(m.input_shapes.get(n) for n in m.input_names)!=expected:raise MetadataMismatchError('YOLOv5 logical input shapes/order mismatch.')
     if any(m.input_dtypes.get(n) not in ('uint8','nv12') for n in m.input_names):raise MetadataMismatchError('YOLOv5 inputs require uint8/NV12 metadata.')
@@ -95,12 +98,12 @@ def bind_model(selection, metadata):
         matches=[n for n in m.output_names if m.output_shapes.get(n) in ((1,h,h,255),(1,h,h,3,85))]
         if len(matches)!=1:raise MetadataMismatchError(f'No unique stride-{stride} 3-anchor/80-class head.')
         name=matches[0];ordered.append(name);dtype=m.output_dtypes.get(name)
-        allowed=('float32',) if selection.target=='x5' else ('float32','int8','uint8','int16','int32')
+        allowed=('float32',) if raw_float else ('float32','int8','uint8','int16','int32')
         if dtype not in allowed:raise MetadataMismatchError(f'Unsupported native output dtype {dtype!r}.')
         dtypes[name]=dtype
-        if selection.target!='x5':quants[name]=_quant_snapshot(m.output_quants.get(name),m.output_shapes[name],dtype)
+        if not raw_float:quants[name]=_quant_snapshot(m.output_quants.get(name),m.output_shapes[name],dtype)
     freeze=lambda x:MappingProxyType(dict(x))
-    return ModelBinding(selection,m.model_name,m.input_names,freeze(m.input_shapes),tuple(ordered),freeze(m.output_shapes),freeze(dtypes),freeze(quants),size,'raw_f32' if selection.target=='x5' else 'dequant',0 if selection.target=='x5' else 1)
+    return ModelBinding(selection,m.model_name,m.input_names,freeze(m.input_shapes),tuple(ordered),freeze(m.output_shapes),freeze(dtypes),freeze(quants),size,'raw_f32' if raw_float else 'dequant',0 if raw_float else 1)
 
 
 def validate_tensors(binding,tensors,*,outputs=False):
