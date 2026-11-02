@@ -373,6 +373,7 @@ const taskMetadata = {
   segment: { id: 'instance-segmentation', label: '实例分割', description: '实例分割模型' },
   seg: { id: 'instance-segmentation', label: '实例分割', description: '实例分割模型' },
   pose: { id: 'pose-estimation', label: '姿态估计', description: '人体姿态估计模型' },
+  matting: { id: 'portrait-matting', label: '人像抠图', description: '人像 alpha 遮罩预测模型' },
   obb: { id: 'object-detection', label: '旋转框检测', description: '旋转框目标检测模型' },
 };
 

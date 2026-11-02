@@ -708,6 +708,180 @@ variants:
       s100 --asset-id s:yolov5:s100/yolov5n_tag_v7.0_native_640x640_nashe_nv12_20261102.hbm
       --model-path /path/to/yolov5n_tag_v7.0_native_640x640_nashe_nv12_20261102.hbm
       --test-img /path/to/image.jpg
+  - platform: s600
+    license:
+      name: GPL-3.0
+      url: https://github.com/ultralytics/yolov5/blob/915bbf294bb74c859f0b41f1c23bc395014ea679/LICENSE
+      scope: model
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 1
+    artifact:
+      filename: yolov5n_tag_v7.0_native_640x640_nashp_nv12_20261102.hbm
+      format: hbm
+      march: nash-p
+      runtime_input: nv12
+      runtime_dtype: uint8
+      runtime_layout: split_y_uv
+      sha256: 441c096372f87cc44af8baf1e7d394d705a1fc6c9b19e992865157b4cc4342c5
+      size_bytes: 3378008
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/yolov5/yolov5n_tag_v7.0_native_640x640_nashp_nv12_20261102.hbm
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/yolov5/yolov5n_tag_v7.0_native_640x640_nashp_nv12_20261102/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/yolov5/yolov5n_tag_v7.0_native_640x640_nashp_nv12_20261102/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/yolov5/yolov5n_tag_v7.0_native_640x640_nashp_nv12_20261102/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/yolov5/yolov5n_tag_v7.0_native_640x640_nashp_nv12_20261102/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: small
+        kind: output
+        shape:
+        - 1
+        - 80
+        - 80
+        - 255
+        dtype: float32
+        layout: NHWC
+        semantics: raw logits, sigmoid once in runtime
+      - name: medium
+        kind: output
+        shape:
+        - 1
+        - 40
+        - 40
+        - 255
+        dtype: float32
+        layout: NHWC
+        semantics: raw logits, sigmoid once in runtime
+      - name: big
+        kind: output
+        shape:
+        - 1
+        - 20
+        - 20
+        - 255
+        dtype: float32
+        layout: NHWC
+        semantics: raw logits, sigmoid once in runtime
+      class_count: 80
+      strides:
+      - 8
+      - 16
+      - 32
+      runtime_input:
+        type: nv12
+        color_space: bt601_video
+        logical_shape:
+        - 1
+        - 3
+        - 640
+        - 640
+        payload_layout: split_y_uv
+        tensors:
+        - name: images_y
+          kind: input
+          shape:
+          - 1
+          - 640
+          - 640
+          - 1
+          dtype: uint8
+          layout: NHWC
+        - name: images_uv
+          kind: input
+          shape:
+          - 1
+          - 320
+          - 320
+          - 2
+          dtype: uint8
+          layout: NHWC
+      preprocessing: Native INTER_NEAREST stretch 640x640; BGR to NV12 BT.601 video
+        split Y/UV; compiler RGB /255 once; calibration npy is normalized at original
+        ONNX boundary
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 200
+      host_check:
+        method: official eval decoded+raw outputs; raw heads permuted to NHWC before
+          export-only patch; raw-head patch bit-exact; three real inputs plus deterministic
+          random input; ORT CPU, not board inference or dataset accuracy
+        rtol: 0.001
+        atol: 0.0001
+        maximum_absolute_errors:
+        - - 3.0517578125e-05
+          - 2.384185791015625e-05
+          - 2.008676528930664e-05
+        - - 2.288818359375e-05
+          - 2.956390380859375e-05
+          - 1.811981201171875e-05
+        - - 3.0517578125e-05
+          - 4.673004150390625e-05
+          - 4.291534423828125e-05
+        - - 1.33514404296875e-05
+          - 1.33514404296875e-05
+          - 1.049041748046875e-05
+        versions:
+          torch: 2.8.0+cu128
+          onnxruntime: 1.19.2
+      host_resources:
+        cpu_quota: 2
+        memory_bytes: 8589934592
+        quantization_device: cpu
+      compile_receipt:
+        started_at: '2026-11-02T13:41:59.279678+00:00'
+        completed_at: '2026-11-02T15:01:51.454873+00:00'
+        returncode: 0
+      quantization_policy: Compiler default PTQ with actual per-node precision counts
+        from OE data; FLOAT32 runtime heads
+      quantization_dtype_counts:
+        si8: 139
+        --: 3
+        f32: 3
+    validation:
+      artifact_sha256: 441c096372f87cc44af8baf1e7d394d705a1fc6c9b19e992865157b4cc4342c5
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: ed950b2c1d5e173df9d9dd5dab5dbc653f852645
+      build_id: yolov5n-v7-native-s600-20261102-r01
+      runtime_variant: n-v7.0-native-20261102
+      source_repository: https://github.com/ultralytics/yolov5
+      source_repository_commit: 915bbf294bb74c859f0b41f1c23bc395014ea679
+      checkpoint_revision: sha256:4f180cf23ba0717ada0badd6c685026d73d48f184d00fc159c2641284b2ac0a3
+      source_weight_url: https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5n.pt
+      source_checkpoint_sha256: 4f180cf23ba0717ada0badd6c685026d73d48f184d00fc159c2641284b2ac0a3
+      publisher_checkpoint_sha256: null
+      source_license_sha256: 7fa7e56c0db71105f4b59a6a0ac40225eb059876f85cd380383f7d7a066e68be
+      onnx_sha256: 87e74e9db4eee072b8697e63fbbcc02b954cd6fd73ffe1bd55746e247f2576db
+      config_sha256: 5d9f426106a7be46442060651f7cf72a60176229242817bada428956461ec399
+      recipe_sha256: 76b714ed92f51e6a6549f97b6dd0e63f766e385e4a848b5959730afffa9878a9
+      exporter_sha256: 33ab11f3f54eba76da944f8d7e5e250631820490c47239bec6cc9e64b60f411e
+      canonical_exporter_sha256: 76b714ed92f51e6a6549f97b6dd0e63f766e385e4a848b5959730afffa9878a9
+      calibration_manifest_sha256: 1e09f3d980861afb2771a19cc920d06b75a904b9f1cb9ab4872d1690579ae865
+      calibration_producer_sha256: a21e7531514ff7fe915ac71e179730447427160302e83a364258a8f9dfb7143b
+      preprocess_sha256: d0cc538f4b2d5195a86f7958bf68aafaf66f6ba63e196fec863fe287ffbf5d9a
+      precision_policy: int8
+      toolchain_image: ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      compile_log_sha256: 895905b57dd0baabf1fcb4d6539c8f830c373c63e9edca1525578e743746e20d
+      model_info_log_sha256: 1aec473dc37c221cad086ae3bc4ef2e4ee8068893114e28b1f9a236d11100f3a
+      full_template_sha256: 6b88c25652a339d1c9632e1d2c7ebdfeadc9f1453bda7bf9c12c7ce2abd01572
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: d4c02282ea89f59a3f26818f22cd7760b1b67056c407de241b281efbcbc49cc9
+    runtime_command: python3 samples/vision/yolov5/runtime/python/main.py --target
+      s600 --asset-id s:yolov5:s600/yolov5n_tag_v7.0_native_640x640_nashp_nv12_20261102.hbm
+      --model-path /path/to/yolov5n_tag_v7.0_native_640x640_nashp_nv12_20261102.hbm
+      --test-img /path/to/image.jpg
 - size: s-v2.0-native-20261102
   model: {}
   input:
@@ -868,4 +1042,386 @@ variants:
     runtime_command: python3 samples/vision/yolov5/runtime/python/main.py --target
       x5 --asset-id x5:yolov5:yolov5s_tag_v2.0_native_640x640_bayese_nv12_20261102.bin
       --model-path /path/to/yolov5s_tag_v2.0_native_640x640_bayese_nv12_20261102.bin
+      --test-img /path/to/image.jpg
+  - platform: s100
+    license:
+      name: GPL-3.0
+      url: https://github.com/ultralytics/yolov5/blob/2a149a48d65bf4d358d4289058ef6066cda8c7c9/LICENSE
+      scope: model
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 1
+    artifact:
+      filename: yolov5s_tag_v2.0_native_640x640_nashe_nv12_20261102.hbm
+      format: hbm
+      march: nash-e
+      runtime_input: nv12
+      runtime_dtype: uint8
+      runtime_layout: split_y_uv
+      sha256: 6823f9eb2666928d79356868e30ac72ed4035317f30032e8505a483b8bee8d48
+      size_bytes: 17982024
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/yolov5/yolov5s_tag_v2.0_native_640x640_nashe_nv12_20261102.hbm
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/yolov5/yolov5s_tag_v2.0_native_640x640_nashe_nv12_20261102/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/yolov5/yolov5s_tag_v2.0_native_640x640_nashe_nv12_20261102/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/yolov5/yolov5s_tag_v2.0_native_640x640_nashe_nv12_20261102/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/yolov5/yolov5s_tag_v2.0_native_640x640_nashe_nv12_20261102/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: small
+        kind: output
+        shape:
+        - 1
+        - 80
+        - 80
+        - 255
+        dtype: float32
+        layout: NHWC
+        semantics: raw logits, sigmoid once in runtime
+      - name: medium
+        kind: output
+        shape:
+        - 1
+        - 40
+        - 40
+        - 255
+        dtype: float32
+        layout: NHWC
+        semantics: raw logits, sigmoid once in runtime
+      - name: big
+        kind: output
+        shape:
+        - 1
+        - 20
+        - 20
+        - 255
+        dtype: float32
+        layout: NHWC
+        semantics: raw logits, sigmoid once in runtime
+      class_count: 80
+      strides:
+      - 8
+      - 16
+      - 32
+      runtime_input:
+        type: nv12
+        color_space: bt601_video
+        logical_shape:
+        - 1
+        - 3
+        - 640
+        - 640
+        payload_layout: split_y_uv
+        tensors:
+        - name: images_y
+          kind: input
+          shape:
+          - 1
+          - 640
+          - 640
+          - 1
+          dtype: uint8
+          layout: NHWC
+        - name: images_uv
+          kind: input
+          shape:
+          - 1
+          - 320
+          - 320
+          - 2
+          dtype: uint8
+          layout: NHWC
+      preprocessing: Native INTER_NEAREST stretch 640x640; BGR to NV12 BT.601 video
+        split Y/UV; compiler RGB /255 once; calibration npy is normalized at original
+        ONNX boundary
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 200
+      host_check:
+        method: official eval decoded+raw outputs; raw heads permuted to NHWC before
+          export-only patch; raw-head patch bit-exact; three real inputs plus deterministic
+          random input; ORT CPU, not board inference or dataset accuracy
+        rtol: 0.001
+        atol: 0.0001
+        maximum_absolute_errors:
+        - - 8.058547973632812e-05
+          - 7.62939453125e-05
+          - 6.580352783203125e-05
+        - - 3.4928321838378906e-05
+          - 2.6464462280273438e-05
+          - 2.2411346435546875e-05
+        - - 6.818771362304688e-05
+          - 6.866455078125e-05
+          - 7.194280624389648e-05
+        - - 2.193450927734375e-05
+          - 2.1457672119140625e-05
+          - 1.6450881958007812e-05
+        versions:
+          torch: 2.8.0+cu128
+          onnxruntime: 1.19.2
+      host_resources:
+        cpu_quota: 2
+        memory_bytes: 12884901888
+        quantization_device: cuda
+      cuda_host_check:
+        passed: true
+        atol: 0.0001
+        rtol: 0.001
+        cases: 4
+        max_abs_error: 7.2479248046875e-05
+        cuda_conv_events: 280
+      execution_environment:
+        cpus: 2
+        host_memory_gib: 12
+        tf32_override: 0
+        omp_threads: 2
+        mkl_threads: 2
+        openblas_threads: 2
+        omp_wait_policy: PASSIVE
+        gomp_spincount: 0
+      compile_receipt:
+        started_at: '2026-11-02T13:54:18.000087+00:00'
+        completed_at: '2026-11-02T14:45:22.022591+00:00'
+        returncode: 0
+      quantization_policy: Compiler default PTQ with actual per-node precision counts
+        from OE data; FLOAT32 runtime heads
+      quantization_dtype_counts:
+        si8: 158
+        si32: 3
+        f32: 3
+    validation:
+      artifact_sha256: 6823f9eb2666928d79356868e30ac72ed4035317f30032e8505a483b8bee8d48
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: 5d13f51e61094afc3cd9d5daa7672dd261618478
+      build_id: yolov5s-v2-native-s100-20261102-r01
+      runtime_variant: s-v2.0-native-20261102
+      source_repository: https://github.com/ultralytics/yolov5
+      source_repository_commit: 2a149a48d65bf4d358d4289058ef6066cda8c7c9
+      checkpoint_revision: sha256:9713ecb6fb0ff7af408e280599232bc18bbed32a2cdce956eac003b11a123eb3
+      source_weight_url: https://github.com/ultralytics/yolov5/releases/download/v2.0/yolov5s.pt
+      source_checkpoint_sha256: 9713ecb6fb0ff7af408e280599232bc18bbed32a2cdce956eac003b11a123eb3
+      publisher_checkpoint_sha256: null
+      source_license_sha256: c3bc1fd94148c28485e8bab1d5a28edbc8e3870f2bd9be7127c68c8b7a0ea5df
+      onnx_sha256: 3cda298cd1e1ff79fa0d8e8c31114d320597e8b80e64bd2065324a934f303ec3
+      config_sha256: f8160aac4513ad988a4900557f761fbe2ec8569540370d2fcc65667d74b4c37e
+      recipe_sha256: 76b714ed92f51e6a6549f97b6dd0e63f766e385e4a848b5959730afffa9878a9
+      exporter_sha256: 33ab11f3f54eba76da944f8d7e5e250631820490c47239bec6cc9e64b60f411e
+      canonical_exporter_sha256: 76b714ed92f51e6a6549f97b6dd0e63f766e385e4a848b5959730afffa9878a9
+      calibration_manifest_sha256: 1e09f3d980861afb2771a19cc920d06b75a904b9f1cb9ab4872d1690579ae865
+      calibration_producer_sha256: a21e7531514ff7fe915ac71e179730447427160302e83a364258a8f9dfb7143b
+      preprocess_sha256: d0cc538f4b2d5195a86f7958bf68aafaf66f6ba63e196fec863fe287ffbf5d9a
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      toolchain_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      compile_log_sha256: e3b303ca20cdaf74c31ccc3b5c63b327b3a9fec1cd5cbabdd502eef1f2c609d9
+      model_info_log_sha256: 6be717c866f1b204e6d56cd92cf6aee99e797db5b2068717987a26db4d652d17
+      full_template_sha256: cd8a6fcd7dd7dab82cfea51713e23bb291537e1109257221c03c1ac1e54ee9bd
+      gpu_parity_sha256: 88e5815a550fbc186d4b117d95a013e224b5056e4e7eb0e563c902a30d8e51e6
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 956e85e33073e9a687707aca0e5f0c4bacaa70ee76970c440f877596bcd61658
+    runtime_command: python3 samples/vision/yolov5/runtime/python/main.py --target
+      s100 --asset-id s:yolov5:s100/yolov5s_tag_v2.0_native_640x640_nashe_nv12_20261102.hbm
+      --model-path /path/to/yolov5s_tag_v2.0_native_640x640_nashe_nv12_20261102.hbm
+      --test-img /path/to/image.jpg
+  - platform: s600
+    license:
+      name: GPL-3.0
+      url: https://github.com/ultralytics/yolov5/blob/2a149a48d65bf4d358d4289058ef6066cda8c7c9/LICENSE
+      scope: model
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 1
+    artifact:
+      filename: yolov5s_tag_v2.0_native_640x640_nashp_nv12_20261102.hbm
+      format: hbm
+      march: nash-p
+      runtime_input: nv12
+      runtime_dtype: uint8
+      runtime_layout: split_y_uv
+      sha256: 59837af69bddf1ea97249946bbc00cf86ccc820b6596b84a8fffbb29e17e024a
+      size_bytes: 9321720
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/yolov5/yolov5s_tag_v2.0_native_640x640_nashp_nv12_20261102.hbm
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/yolov5/yolov5s_tag_v2.0_native_640x640_nashp_nv12_20261102/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/yolov5/yolov5s_tag_v2.0_native_640x640_nashp_nv12_20261102/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/yolov5/yolov5s_tag_v2.0_native_640x640_nashp_nv12_20261102/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/yolov5/yolov5s_tag_v2.0_native_640x640_nashp_nv12_20261102/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: small
+        kind: output
+        shape:
+        - 1
+        - 80
+        - 80
+        - 255
+        dtype: float32
+        layout: NHWC
+        semantics: raw logits, sigmoid once in runtime
+      - name: medium
+        kind: output
+        shape:
+        - 1
+        - 40
+        - 40
+        - 255
+        dtype: float32
+        layout: NHWC
+        semantics: raw logits, sigmoid once in runtime
+      - name: big
+        kind: output
+        shape:
+        - 1
+        - 20
+        - 20
+        - 255
+        dtype: float32
+        layout: NHWC
+        semantics: raw logits, sigmoid once in runtime
+      class_count: 80
+      strides:
+      - 8
+      - 16
+      - 32
+      runtime_input:
+        type: nv12
+        color_space: bt601_video
+        logical_shape:
+        - 1
+        - 3
+        - 640
+        - 640
+        payload_layout: split_y_uv
+        tensors:
+        - name: images_y
+          kind: input
+          shape:
+          - 1
+          - 640
+          - 640
+          - 1
+          dtype: uint8
+          layout: NHWC
+        - name: images_uv
+          kind: input
+          shape:
+          - 1
+          - 320
+          - 320
+          - 2
+          dtype: uint8
+          layout: NHWC
+      preprocessing: Native INTER_NEAREST stretch 640x640; BGR to NV12 BT.601 video
+        split Y/UV; compiler RGB /255 once; calibration npy is normalized at original
+        ONNX boundary
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 200
+      host_check:
+        method: official eval decoded+raw outputs; raw heads permuted to NHWC before
+          export-only patch; raw-head patch bit-exact; three real inputs plus deterministic
+          random input; ORT CPU, not board inference or dataset accuracy
+        rtol: 0.001
+        atol: 0.0001
+        maximum_absolute_errors:
+        - - 8.058547973632812e-05
+          - 7.62939453125e-05
+          - 6.580352783203125e-05
+        - - 3.4928321838378906e-05
+          - 2.6464462280273438e-05
+          - 2.2411346435546875e-05
+        - - 6.818771362304688e-05
+          - 6.866455078125e-05
+          - 7.194280624389648e-05
+        - - 2.193450927734375e-05
+          - 2.1457672119140625e-05
+          - 1.6450881958007812e-05
+        versions:
+          torch: 2.8.0+cu128
+          onnxruntime: 1.19.2
+      host_resources:
+        cpu_quota: 2
+        memory_bytes: 12884901888
+        quantization_device: cuda
+      cuda_host_check:
+        passed: true
+        atol: 0.0001
+        rtol: 0.001
+        cases: 4
+        max_abs_error: 7.581710815429688e-05
+        cuda_conv_events: 280
+      execution_environment:
+        cpus: 2
+        host_memory_gib: 12
+        tf32_override: 0
+        omp_threads: 2
+        mkl_threads: 2
+        openblas_threads: 2
+        omp_wait_policy: PASSIVE
+        gomp_spincount: 0
+      compile_receipt:
+        started_at: '2026-11-02T14:14:46.189027+00:00'
+        completed_at: '2026-11-02T15:15:02.335352+00:00'
+        returncode: 0
+      quantization_policy: Compiler default PTQ with actual per-node precision counts
+        from OE data; FLOAT32 runtime heads
+      quantization_dtype_counts:
+        si8: 158
+        --: 3
+        f32: 3
+    validation:
+      artifact_sha256: 59837af69bddf1ea97249946bbc00cf86ccc820b6596b84a8fffbb29e17e024a
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: ed950b2c1d5e173df9d9dd5dab5dbc653f852645
+      build_id: yolov5s-v2-native-s600-20261102-r01
+      runtime_variant: s-v2.0-native-20261102
+      source_repository: https://github.com/ultralytics/yolov5
+      source_repository_commit: 2a149a48d65bf4d358d4289058ef6066cda8c7c9
+      checkpoint_revision: sha256:9713ecb6fb0ff7af408e280599232bc18bbed32a2cdce956eac003b11a123eb3
+      source_weight_url: https://github.com/ultralytics/yolov5/releases/download/v2.0/yolov5s.pt
+      source_checkpoint_sha256: 9713ecb6fb0ff7af408e280599232bc18bbed32a2cdce956eac003b11a123eb3
+      publisher_checkpoint_sha256: null
+      source_license_sha256: c3bc1fd94148c28485e8bab1d5a28edbc8e3870f2bd9be7127c68c8b7a0ea5df
+      onnx_sha256: 3cda298cd1e1ff79fa0d8e8c31114d320597e8b80e64bd2065324a934f303ec3
+      config_sha256: 45ddb3942462aaa776db7028279dd87ce742c0d2a6f22d8225d50f9c27f97bea
+      recipe_sha256: 76b714ed92f51e6a6549f97b6dd0e63f766e385e4a848b5959730afffa9878a9
+      exporter_sha256: 33ab11f3f54eba76da944f8d7e5e250631820490c47239bec6cc9e64b60f411e
+      canonical_exporter_sha256: 76b714ed92f51e6a6549f97b6dd0e63f766e385e4a848b5959730afffa9878a9
+      calibration_manifest_sha256: 1e09f3d980861afb2771a19cc920d06b75a904b9f1cb9ab4872d1690579ae865
+      calibration_producer_sha256: a21e7531514ff7fe915ac71e179730447427160302e83a364258a8f9dfb7143b
+      preprocess_sha256: d0cc538f4b2d5195a86f7958bf68aafaf66f6ba63e196fec863fe287ffbf5d9a
+      precision_policy: int8
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0
+      toolchain_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      compile_log_sha256: 8eb24d0be54009bd90b99e99322a621f58c268b35508b47cb6d2e5eafc34440f
+      model_info_log_sha256: 76c38a0032d386d943d2e406b709c276238640bf3b5fdf1f7e53fbd77a8b2373
+      full_template_sha256: f71fc79a42dc4cbe59c51eb18d6b9f022b17bef8752c02b04551d64f395179a8
+      gpu_parity_sha256: f11570b59bfc7b24e158903d0efdb83c61055dc5fab2f60ea67db223653c71f7
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: a0dab9d8f067a57c27f084e4688f135a9a3cc93a736bcfacb87a330574d95366
+    runtime_command: python3 samples/vision/yolov5/runtime/python/main.py --target
+      s600 --asset-id s:yolov5:s600/yolov5s_tag_v2.0_native_640x640_nashp_nv12_20261102.hbm
+      --model-path /path/to/yolov5s_tag_v2.0_native_640x640_nashp_nv12_20261102.hbm
       --test-img /path/to/image.jpg

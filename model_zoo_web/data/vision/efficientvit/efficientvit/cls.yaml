@@ -8,7 +8,9 @@ family: efficientvit
 task: cls
 description:
   zh: EfficientViT 是采用高效注意力模块的图像分类网络。它用级联组注意力降低标准自注意力的访存开销，并使用批归一化以便推理侧融合。
-  en: EfficientViT is an image classifier with efficient attention blocks. It uses cascaded group attention to reduce the memory-bound cost of standard self-attention, and batch normalization for inference-friendly fusion.
+  en: EfficientViT is an image classifier with efficient attention blocks. It uses
+    cascaded group attention to reduce the memory-bound cost of standard self-attention,
+    and batch normalization for inference-friendly fusion.
 sample_path: samples/vision/efficientvit
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
 license:
@@ -134,7 +136,200 @@ hero_visual:
     score: 0.002843
   - label: seashore
     score: 0.002723
-
 example_image:
   path: samples/vision/efficientvit/test_data/inference.png
   source: samples/vision/efficientvit/test_data/inference.png
+provider: Ross Wightman / timm
+model_license: &id001
+  name: MIT
+  url: https://huggingface.co/timm/efficientvit_m5.r224_in1k/blob/e45d80f65cd8ef0964ab526dd4f8025abbff4e19/README.md
+  scope: model
+variants:
+- size: m5-r224-in1k-224
+  model:
+    parameter_count: 12473772
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: x5
+    license: *id001
+    status: converted
+    converted_at: '2026-11-02'
+    metadata_revision: 1
+    artifact:
+      filename: efficientvit_m5_r224_in1k_bayese_224x224_nv12.bin
+      format: bin
+      march: bayes-e
+      runtime_input: nv12
+      runtime_dtype: uint8
+      runtime_layout: packed
+      sha256: 68a3eee6456a1a57d35ce49c8c32bc97535314c051e3fb482180df78b6cc8f32
+      size_bytes: 13968712
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/efficientvit/efficientvit_m5_r224_in1k_bayese_224x224_nv12.bin
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientvit/efficientvit_m5_r224_in1k_bayese_224x224_nv12/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientvit/efficientvit_m5_r224_in1k_bayese_224x224_nv12/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientvit/efficientvit_m5_r224_in1k_bayese_224x224_nv12/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/efficientvit/efficientvit_m5_r224_in1k_bayese_224x224_nv12/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: output
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        type: nv12
+        color_space: bt601_video
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      preprocessing: Pillow bicubic shorter edge 256, rounded center crop 224; OpenCV
+        NV12 BT.601 video; mapper-fused checkpoint normalization
+      compiler_versions:
+        hbdk: 3.49.15
+        hb_mapper: 1.24.3
+        horizon_nn: 1.1.0
+        runtime: 3.15.55.0
+      calibration_samples: 200
+      host_check:
+        method: Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity;
+          not dataset accuracy or board inference
+        max_absolute_errors:
+        - 4.32133674621582e-06
+        - 7.748603820800781e-06
+        inputs:
+        - deterministic-random
+        - frozen-calibration-image
+        versions:
+          torch: 2.8.0+cu128
+          timm: 1.0.20
+          onnx: 1.17.0
+          onnxruntime: 1.19.2
+      upstream_data_config:
+        input_size:
+        - 3
+        - 224
+        - 224
+        crop_pct: 0.875
+        crop_mode: center
+        interpolation: bicubic
+      quantization_policy: Compiler default INT8 PTQ with its actual per-node precision
+        policy; float32 output logits
+      original_oe_reports:
+      - name: main_graph_subgraph_0.html
+        sha256: 59c77577623d4921a9ad4b9f986f28d8c158d8118f27dac433af227168c9e0da
+      - name: main_graph_subgraph_1.html
+        sha256: 343db98df7ac2603c7c1ce85b5c75ed87d44faa1a11beb8f4d33b42773c2b595
+      - name: main_graph_subgraph_10.html
+        sha256: 51cb1ad66a404f8f5bd246c4dc4ba92f771807ebee8b95892c1c942998006334
+      - name: main_graph_subgraph_11.html
+        sha256: 56461e5438b644043576f5d3cccc4400d08b7ac0a29853a70514c7a2c2010bf5
+      - name: main_graph_subgraph_12.html
+        sha256: eeabb80734a8228b7f390a29a63f594907126bea0015125e6bd64c923ff9205e
+      - name: main_graph_subgraph_13.html
+        sha256: d4f9ce20d107dd7342d82d3200df989b908d248773c796f35931c99bde76cb36
+      - name: main_graph_subgraph_14.html
+        sha256: 3bdbb89e92bacf470241c2dd65e7c32938edd5ab946c3c8d1d87953ad12df63f
+      - name: main_graph_subgraph_15.html
+        sha256: 2679abde4626720e777731fa39c9f03051706a95c8320c497bb26f1b474558b4
+      - name: main_graph_subgraph_16.html
+        sha256: cdccd3a8176a27cc3a6aedbc746f5be668662b4fbd1c35c9abbbc871fb91ea14
+      - name: main_graph_subgraph_17.html
+        sha256: 164488f1a01cf8370301bbfa35aa61474ac0d93f1421899f0ad243cd1057e312
+      - name: main_graph_subgraph_18.html
+        sha256: 7045cb740f2fde67f685744842875b193db97fe01ebcb0bb0cc2d4bdff3af886
+      - name: main_graph_subgraph_19.html
+        sha256: 79cc7538236fbd37fe4aaa9187f2514d74f51f8492ab95fe5dd34e9364f252af
+      - name: main_graph_subgraph_2.html
+        sha256: 0c0835a9b99533e5433d00ba9c70e42cd47ee606243ec9111be9ee4cf182e763
+      - name: main_graph_subgraph_20.html
+        sha256: f1ce97e65df70612857bddacc2828900dd5540cbd17e9cf64c9b261004b3c4b5
+      - name: main_graph_subgraph_21.html
+        sha256: d84b0548a8c0859c7a3f7b1e665aa01a3cc7ecf9078799a4bda94627fc432704
+      - name: main_graph_subgraph_22.html
+        sha256: 94deb0e5a0fac83417caeb8de22d02ea84b4ffebd2e377bfa9999a8f750382a4
+      - name: main_graph_subgraph_23.html
+        sha256: 06e4ba53ccaf6b1b211072ee48d3d3f4b1b19882ab589f955ea6cfe92951d616
+      - name: main_graph_subgraph_24.html
+        sha256: 48a82ce1bd629c0ec6a5f1d3b3be20b1467f40f512fdda3b27bda374eaa41fba
+      - name: main_graph_subgraph_25.html
+        sha256: b150cfde5bdbd8b56b88277efd6a1a50dca1d5fc33be4e7d74488200a4325d5e
+      - name: main_graph_subgraph_26.html
+        sha256: 8ecf663c10409a4ddbfdaac6e8fab4f25316d28790c9606084059ad30d914d9b
+      - name: main_graph_subgraph_27.html
+        sha256: a0007613be8a40121f5ddc69f1fcf9bac5b37f8890db2c1a7740dec5f4eaf138
+      - name: main_graph_subgraph_28.html
+        sha256: 25dfea472d69cbb9027307f5db97e0ba8fbe5a7069212d37763cf6124e2a2647
+      - name: main_graph_subgraph_3.html
+        sha256: 49082b8e67040ae2f22fcae8bb623acc8e2f0d7d86eee322d13db098e3251918
+      - name: main_graph_subgraph_4.html
+        sha256: 15f63968ebf95c5623353c8c5b3b8383e791fa7f28ae0fa292f7cf6856c5f46b
+      - name: main_graph_subgraph_5.html
+        sha256: 0486419f5973f29794062e6e57c76acede82793fb772d6c3f2fe6f83b5e2c63b
+      - name: main_graph_subgraph_6.html
+        sha256: 8b99d1c699e7d277e77f76538946e67b5586102e2afa5269306250fe9d0cb533
+      - name: main_graph_subgraph_7.html
+        sha256: 64d72fc02bbbddfb6991048b8410f5da20c1d2a93211f788418755e9bd981786
+      - name: main_graph_subgraph_8.html
+        sha256: e94f5da125387ecfb8a200b9cc9bb6b5554fb9162b6f1d73642b097d53d9b157
+      - name: main_graph_subgraph_9.html
+        sha256: 4d5dde7d59b303ea250ed5761c06685906315659b9fffb1e437167c19ddc43e1
+    validation:
+      artifact_sha256: 68a3eee6456a1a57d35ce49c8c32bc97535314c051e3fb482180df78b6cc8f32
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: 214a78c0c4dda7891726740da6fb30db286aecfc
+      build_id: efficientvit_m5_r224_in1k-x5-20261102-r01
+      runtime_variant: timm-m5-r224-in1k
+      onnx_sha256: 8fc5045f87b6738a4366d056d91f0b1e7a0d317221a0e13b114574661783f832
+      config_sha256: dc32634842be7f655d7615d9a1edc6d21a456f4a69196ba8b0327eeda703753d
+      recipe_sha256: bf95b286ba527adc91174e4a899e5840a09016072c26d656ef957dd5555110c6
+      source_checkpoint_sha256: 93fe829b6eac0660aaf48703746112ff648d2d740bc6260874a61bf9b3a7f452
+      source_weight_url: https://huggingface.co/timm/efficientvit_m5.r224_in1k/resolve/e45d80f65cd8ef0964ab526dd4f8025abbff4e19/model.safetensors
+      checkpoint_revision: e45d80f65cd8ef0964ab526dd4f8025abbff4e19
+      toolchain_image: registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8
+      toolchain_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      exporter_sha256: 24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b
+      exporter_repository_commit: 954b2c71b774513819ae5715da4f5beb9cea88fc
+      implementation_sha256: 91ec1da4398ca613e2c8cb806311648ce2c0829910d7b05cffc483106cd76dcf
+      calibration_manifest_sha256: e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9
+      calibration_producer_sha256: 425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84
+      precision_policy: int8
+      compile_log_sha256: 671c11f3f72127ab6e84a680f718a2c09eed9f3054ebf2b8b591ae5b89eb10e3
+      model_info_log_sha256: bb60f43c02b7f993d45afb9fae587c3e2dcbec0e9bf432819fb26f8fecba26f3
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 02e743f4ef94467c49aa1cbdab4849cd0401abff0dc01cff09c986101133dc06
+    runtime_command: python3 samples/vision/efficientvit/runtime/python/main.py --target
+      x5 --asset-id x5:efficientvit:efficientvit_m5_r224_in1k_bayese_224x224_nv12.bin
+      --model-path /path/to/efficientvit_m5_r224_in1k_bayese_224x224_nv12.bin --test-img
+      /path/to/image.jpg

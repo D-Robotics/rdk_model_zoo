@@ -49,7 +49,7 @@ For later measurements, upload a new metadata revision and register with
 revision. Promotion to released requires all board checks and full metrics.
 
 The canonical Workbench procedure is
-`/home/zhengyi/work/rdk_model_zoo_workbench/GUIDELINE.md` v2.11, section 11.
+`/home/zhengyi/work/rdk_model_zoo_workbench/GUIDELINE.md` v2.12, sections 11.5–11.6.
 Its embedded helper sources match these scripts. Generic website builds use the
 same committed inputs and require no Workbench connection.
 

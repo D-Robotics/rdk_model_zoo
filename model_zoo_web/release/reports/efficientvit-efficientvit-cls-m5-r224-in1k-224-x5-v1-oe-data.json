@@ -1,0 +1,1721 @@
+{
+  "schema_version": 1,
+  "generated_from_run": "efficientvit_m5_r224_in1k-x5-20261102-r01",
+  "generated_at": "2026-11-02T15:31:31.897393+00:00",
+  "model": {
+    "source": "efficientvit",
+    "family": "efficientvit",
+    "task": "cls",
+    "size": "m5-r224-in1k-224"
+  },
+  "target": {
+    "platform": "x5",
+    "march": "bayes-e"
+  },
+  "toolchain": {
+    "hbdk": "3.49.15",
+    "hb_mapper": "1.24.3",
+    "horizon_nn": "1.1.0",
+    "runtime": "3.15.55.0"
+  },
+  "io": {
+    "inputs": [
+      {
+        "name": "data",
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "dtype": "float32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output",
+        "shape": [
+          1,
+          1000
+        ],
+        "dtype": "float32"
+      }
+    ]
+  },
+  "quantization": {
+    "summary": {
+      "total_nodes": 26,
+      "unit_counts": {
+        "BPU": 26
+      },
+      "dtype_counts": {
+        "int8": 26
+      },
+      "measured_nodes": 23,
+      "weakest_node": {
+        "name": "...ges/stages.0/blocks/blocks.0/mixer/m/attn/Split",
+        "cosine": 0.990679
+      },
+      "weakest_nodes": [
+        {
+          "name": "...ges/stages.0/blocks/blocks.0/mixer/m/attn/Split",
+          "cosine": 0.990679
+        },
+        {
+          "name": "...es/stages.0/blocks/blocks.0/mixer/m/attn/MatMul",
+          "cosine": 0.99123
+        },
+        {
+          "name": "/stages/stages.0/blocks/blocks.0/ffn0/m/pw2/Conv",
+          "cosine": 0.991423
+        },
+        {
+          "name": "...stages.0/blocks/blocks.0/mixer/m/attn/Reshape_2",
+          "cosine": 0.993515
+        },
+        {
+          "name": "...s/stages.0/blocks/blocks.0/mixer/m/attn/Slice_1",
+          "cosine": 0.994199
+        }
+      ],
+      "cosine_percentiles": {
+        "p10": 0.991423,
+        "median": 0.995619
+      }
+    },
+    "nodes": [
+      {
+        "name": "HZ_PREPROCESS_FOR_data",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedPreprocess",
+        "cosine": 0.999941,
+        "threshold": 127.0,
+        "dtype": "int8"
+      },
+      {
+        "name": "/patch_embed/conv1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999508,
+        "threshold": 2.63945,
+        "dtype": "int8"
+      },
+      {
+        "name": "variable_1817_pad",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzPad",
+        "cosine": null,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/patch_embed/conv2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.99917,
+        "threshold": 28.5687,
+        "dtype": "int8"
+      },
+      {
+        "name": "variable_1818_pad",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzPad",
+        "cosine": null,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/patch_embed/conv3/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.99915,
+        "threshold": 19.0,
+        "dtype": "int8"
+      },
+      {
+        "name": "variable_1819_pad",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzPad",
+        "cosine": null,
+        "threshold": null,
+        "dtype": "int8"
+      },
+      {
+        "name": "/patch_embed/conv4/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.997954,
+        "threshold": 15.4207,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.0/dw0/m/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.998878,
+        "threshold": 8.96405,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.0/ffn0/m/pw1/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999041,
+        "threshold": 10.7629,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.0/ffn0/m/pw2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.991423,
+        "threshold": 6.16986,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.0/mixer/m/Reshape_2",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Reshape",
+        "cosine": 0.994395,
+        "threshold": 18.1002,
+        "dtype": "int8"
+      },
+      {
+        "name": "...es/stages.0/blocks/blocks.0/mixer/m/Transpose_2",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Transpose",
+        "cosine": 0.994395,
+        "threshold": 18.1002,
+        "dtype": "int8"
+      },
+      {
+        "name": "/stages/stages.0/blocks/blocks.0/mixer/m/Reshape_3",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Reshape",
+        "cosine": 0.994395,
+        "threshold": 18.1002,
+        "dtype": "int8"
+      },
+      {
+        "name": "...ges/stages.0/blocks/blocks.0/mixer/m/attn/Slice",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Slice",
+        "cosine": 0.994517,
+        "threshold": 18.1002,
+        "dtype": "int8"
+      },
+      {
+        "name": "...s/stages.0/blocks/blocks.0/mixer/m/attn/Slice_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Slice",
+        "cosine": 0.994199,
+        "threshold": 18.1002,
+        "dtype": "int8"
+      },
+      {
+        "name": "...s/stages.0/blocks/blocks.0/mixer/m/attn/Slice_2",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Slice",
+        "cosine": 0.994523,
+        "threshold": 18.1002,
+        "dtype": "int8"
+      },
+      {
+        "name": "...ages.0/blocks/blocks.0/mixer/m/attn/qkvs.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.994705,
+        "threshold": 18.1002,
+        "dtype": "int8"
+      },
+      {
+        "name": "...ges/stages.0/blocks/blocks.0/mixer/m/attn/Split",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Split",
+        "cosine": 0.990679,
+        "threshold": 20.9403,
+        "dtype": "int8"
+      },
+      {
+        "name": "...tages.0/blocks/blocks.0/mixer/m/attn/dws.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.995619,
+        "threshold": 20.9403,
+        "dtype": "int8"
+      },
+      {
+        "name": "...stages.0/blocks/blocks.0/mixer/m/attn/Reshape_2",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Reshape",
+        "cosine": 0.993515,
+        "threshold": 20.9403,
+        "dtype": "int8"
+      },
+      {
+        "name": "...stages.0/blocks/blocks.0/mixer/m/attn/Reshape_3",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Reshape",
+        "cosine": 0.996893,
+        "threshold": 20.9403,
+        "dtype": "int8"
+      },
+      {
+        "name": ".../blocks.0/mixer/m/attn/Mul_3_output_0_Reshape_0",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Reshape",
+        "cosine": 0.995619,
+        "threshold": 1.55157,
+        "dtype": "int8"
+      },
+      {
+        "name": "...stages.0/blocks/blocks.0/mixer/m/attn/Transpose",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Transpose",
+        "cosine": 0.995619,
+        "threshold": 1.55157,
+        "dtype": "int8"
+      },
+      {
+        "name": "...es/stages.0/blocks/blocks.0/mixer/m/attn/MatMul",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedMatmul",
+        "cosine": 0.99123,
+        "threshold": 1.55157,
+        "dtype": "int8"
+      },
+      {
+        "name": "...ges/stages.0/blocks/blocks.0/mixer/m/attn/Add_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSElementwiseAdd",
+        "cosine": 0.998189,
+        "threshold": 12.9061,
+        "dtype": "int8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output",
+        "cosine": 0.970685,
+        "l1_distance": 0.102991,
+        "l2_distance": 0.004086,
+        "chebyshev_distance": 0.457409
+      }
+    ]
+  },
+  "subgraphs": [
+    {
+      "name": "main_graph_subgraph_0",
+      "perf": {
+        "fps": 2236.26,
+        "latency_ms": 0.45,
+        "ddr_mb_per_frame": 0.522,
+        "bpu_ops_per_frame": 273747712,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 9,
+        "interval_ms": 0.05,
+        "utilization": [
+          0.831,
+          0.971,
+          0.987,
+          0.986,
+          0.991,
+          0.99,
+          0.991,
+          0.972,
+          0.795
+        ],
+        "load_bandwidth_mbs": [
+          2527,
+          4012,
+          2749,
+          0,
+          0,
+          0,
+          7,
+          213,
+          211
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          358,
+          358,
+          0,
+          0,
+          0,
+          239,
+          634
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_1",
+      "perf": {
+        "fps": 10435.58,
+        "latency_ms": 0.38,
+        "ddr_mb_per_frame": 0.062,
+        "bpu_ops_per_frame": 1025472,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 8,
+        "interval_ms": 0.05,
+        "utilization": [
+          0.659,
+          0.973,
+          0.973,
+          0.999,
+          1.0,
+          0.993,
+          0.978,
+          0.419
+        ],
+        "load_bandwidth_mbs": [
+          1103,
+          688,
+          278,
+          323,
+          181,
+          7,
+          156,
+          334
+        ],
+        "store_bandwidth_mbs": [
+          937,
+          468,
+          0,
+          0,
+          0,
+          0,
+          156,
+          671
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_2",
+      "perf": {
+        "fps": 10434.06,
+        "latency_ms": 0.38,
+        "ddr_mb_per_frame": 0.062,
+        "bpu_ops_per_frame": 1000384,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 8,
+        "interval_ms": 0.05,
+        "utilization": [
+          0.659,
+          0.973,
+          0.973,
+          0.999,
+          1.0,
+          0.993,
+          0.976,
+          0.421
+        ],
+        "load_bandwidth_mbs": [
+          1103,
+          688,
+          278,
+          323,
+          181,
+          7,
+          153,
+          332
+        ],
+        "store_bandwidth_mbs": [
+          937,
+          468,
+          0,
+          0,
+          0,
+          0,
+          156,
+          671
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_3",
+      "perf": {
+        "fps": 5465.39,
+        "latency_ms": 0.73,
+        "ddr_mb_per_frame": 0.512,
+        "bpu_ops_per_frame": 70070456,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 8,
+        "interval_ms": 0.1,
+        "utilization": [
+          0.72,
+          0.977,
+          0.999,
+          0.977,
+          0.79,
+          0.463,
+          0.331,
+          0.261
+        ],
+        "load_bandwidth_mbs": [
+          1118,
+          783,
+          335,
+          189,
+          2358,
+          5495,
+          6028,
+          2886
+        ],
+        "store_bandwidth_mbs": [
+          1035,
+          517,
+          0,
+          0,
+          0,
+          0,
+          175,
+          362
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_4",
+      "perf": {
+        "fps": 7306.42,
+        "latency_ms": 0.14,
+        "ddr_mb_per_frame": 0.087,
+        "bpu_ops_per_frame": 1782816,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 7,
+        "interval_ms": 0.02,
+        "utilization": [
+          0.788,
+          0.993,
+          0.995,
+          0.998,
+          0.995,
+          0.953,
+          0.601
+        ],
+        "load_bandwidth_mbs": [
+          1083,
+          566,
+          317,
+          442,
+          302,
+          419,
+          416
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          592
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_5",
+      "perf": {
+        "fps": 7311.54,
+        "latency_ms": 0.14,
+        "ddr_mb_per_frame": 0.087,
+        "bpu_ops_per_frame": 1757728,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 7,
+        "interval_ms": 0.02,
+        "utilization": [
+          0.788,
+          0.993,
+          0.995,
+          0.998,
+          0.995,
+          0.953,
+          0.599
+        ],
+        "load_bandwidth_mbs": [
+          1083,
+          566,
+          317,
+          442,
+          302,
+          413,
+          410
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          592
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_6",
+      "perf": {
+        "fps": 4485.19,
+        "latency_ms": 0.22,
+        "ddr_mb_per_frame": 0.892,
+        "bpu_ops_per_frame": 75485088,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 5,
+        "interval_ms": 0.05,
+        "utilization": [
+          0.904,
+          0.976,
+          0.325,
+          0.585,
+          0.374
+        ],
+        "load_bandwidth_mbs": [
+          2262,
+          4509,
+          5819,
+          3863,
+          1422
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          371,
+          548
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_7",
+      "perf": {
+        "fps": 7306.42,
+        "latency_ms": 0.14,
+        "ddr_mb_per_frame": 0.087,
+        "bpu_ops_per_frame": 1782816,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 7,
+        "interval_ms": 0.02,
+        "utilization": [
+          0.788,
+          0.993,
+          0.995,
+          0.998,
+          0.995,
+          0.953,
+          0.601
+        ],
+        "load_bandwidth_mbs": [
+          1083,
+          566,
+          317,
+          442,
+          302,
+          419,
+          416
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          592
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_8",
+      "perf": {
+        "fps": 7311.54,
+        "latency_ms": 0.14,
+        "ddr_mb_per_frame": 0.087,
+        "bpu_ops_per_frame": 1757728,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 7,
+        "interval_ms": 0.02,
+        "utilization": [
+          0.788,
+          0.993,
+          0.995,
+          0.998,
+          0.995,
+          0.953,
+          0.599
+        ],
+        "load_bandwidth_mbs": [
+          1083,
+          566,
+          317,
+          442,
+          302,
+          413,
+          410
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          592
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_9",
+      "perf": {
+        "fps": 4485.19,
+        "latency_ms": 0.22,
+        "ddr_mb_per_frame": 0.892,
+        "bpu_ops_per_frame": 75485088,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 5,
+        "interval_ms": 0.05,
+        "utilization": [
+          0.904,
+          0.976,
+          0.325,
+          0.585,
+          0.374
+        ],
+        "load_bandwidth_mbs": [
+          2262,
+          4509,
+          5819,
+          3863,
+          1422
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          371,
+          548
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_10",
+      "perf": {
+        "fps": 7306.42,
+        "latency_ms": 0.14,
+        "ddr_mb_per_frame": 0.087,
+        "bpu_ops_per_frame": 1782816,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 7,
+        "interval_ms": 0.02,
+        "utilization": [
+          0.788,
+          0.993,
+          0.995,
+          0.998,
+          0.995,
+          0.953,
+          0.601
+        ],
+        "load_bandwidth_mbs": [
+          1083,
+          566,
+          317,
+          442,
+          302,
+          419,
+          416
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          592
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_11",
+      "perf": {
+        "fps": 7311.54,
+        "latency_ms": 0.14,
+        "ddr_mb_per_frame": 0.087,
+        "bpu_ops_per_frame": 1757728,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 7,
+        "interval_ms": 0.02,
+        "utilization": [
+          0.788,
+          0.993,
+          0.995,
+          0.998,
+          0.995,
+          0.953,
+          0.599
+        ],
+        "load_bandwidth_mbs": [
+          1083,
+          566,
+          317,
+          442,
+          302,
+          413,
+          410
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          592
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_12",
+      "perf": {
+        "fps": 1770.9,
+        "latency_ms": 0.56,
+        "ddr_mb_per_frame": 3.437,
+        "bpu_ops_per_frame": 160851264,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 6,
+        "interval_ms": 0.1,
+        "utilization": [
+          0.942,
+          0.206,
+          0.439,
+          0.136,
+          0.15,
+          0.249
+        ],
+        "load_bandwidth_mbs": [
+          4429,
+          5571,
+          6581,
+          6582,
+          6752,
+          4876
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          87,
+          87,
+          0,
+          0,
+          68
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_13",
+      "perf": {
+        "fps": 13612.85,
+        "latency_ms": 0.07,
+        "ddr_mb_per_frame": 0.037,
+        "bpu_ops_per_frame": 463872,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 8,
+        "interval_ms": 0.01,
+        "utilization": [
+          0.724,
+          0.986,
+          0.995,
+          0.995,
+          0.995,
+          0.925,
+          0.869,
+          0.183
+        ],
+        "load_bandwidth_mbs": [
+          2216,
+          1126,
+          17,
+          48,
+          48,
+          118,
+          335,
+          226
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          146,
+          195
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_14",
+      "perf": {
+        "fps": 13612.85,
+        "latency_ms": 0.07,
+        "ddr_mb_per_frame": 0.037,
+        "bpu_ops_per_frame": 455680,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 8,
+        "interval_ms": 0.01,
+        "utilization": [
+          0.724,
+          0.986,
+          0.995,
+          0.995,
+          0.995,
+          0.925,
+          0.866,
+          0.183
+        ],
+        "load_bandwidth_mbs": [
+          2216,
+          1126,
+          17,
+          48,
+          48,
+          106,
+          323,
+          226
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          146,
+          195
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_15",
+      "perf": {
+        "fps": 13612.85,
+        "latency_ms": 0.07,
+        "ddr_mb_per_frame": 0.037,
+        "bpu_ops_per_frame": 455680,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 8,
+        "interval_ms": 0.01,
+        "utilization": [
+          0.724,
+          0.986,
+          0.995,
+          0.995,
+          0.995,
+          0.925,
+          0.866,
+          0.183
+        ],
+        "load_bandwidth_mbs": [
+          2216,
+          1126,
+          17,
+          48,
+          48,
+          106,
+          323,
+          226
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          146,
+          195
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_16",
+      "perf": {
+        "fps": 4179.55,
+        "latency_ms": 0.24,
+        "ddr_mb_per_frame": 1.384,
+        "bpu_ops_per_frame": 43164672,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 5,
+        "interval_ms": 0.05,
+        "utilization": [
+          0.929,
+          0.228,
+          0.0,
+          0.118,
+          0.615
+        ],
+        "load_bandwidth_mbs": [
+          6120,
+          6586,
+          7048,
+          6718,
+          3472
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          117,
+          253
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_17",
+      "perf": {
+        "fps": 13612.85,
+        "latency_ms": 0.07,
+        "ddr_mb_per_frame": 0.037,
+        "bpu_ops_per_frame": 463872,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 8,
+        "interval_ms": 0.01,
+        "utilization": [
+          0.724,
+          0.986,
+          0.995,
+          0.995,
+          0.995,
+          0.925,
+          0.869,
+          0.183
+        ],
+        "load_bandwidth_mbs": [
+          2216,
+          1126,
+          17,
+          48,
+          48,
+          118,
+          335,
+          226
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          146,
+          195
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_18",
+      "perf": {
+        "fps": 13612.85,
+        "latency_ms": 0.07,
+        "ddr_mb_per_frame": 0.037,
+        "bpu_ops_per_frame": 455680,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 8,
+        "interval_ms": 0.01,
+        "utilization": [
+          0.724,
+          0.986,
+          0.995,
+          0.995,
+          0.995,
+          0.925,
+          0.866,
+          0.183
+        ],
+        "load_bandwidth_mbs": [
+          2216,
+          1126,
+          17,
+          48,
+          48,
+          106,
+          323,
+          226
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          146,
+          195
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_19",
+      "perf": {
+        "fps": 13612.85,
+        "latency_ms": 0.07,
+        "ddr_mb_per_frame": 0.037,
+        "bpu_ops_per_frame": 455680,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 8,
+        "interval_ms": 0.01,
+        "utilization": [
+          0.724,
+          0.986,
+          0.995,
+          0.995,
+          0.995,
+          0.925,
+          0.866,
+          0.183
+        ],
+        "load_bandwidth_mbs": [
+          2216,
+          1126,
+          17,
+          48,
+          48,
+          106,
+          323,
+          226
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          146,
+          195
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_20",
+      "perf": {
+        "fps": 4179.55,
+        "latency_ms": 0.24,
+        "ddr_mb_per_frame": 1.384,
+        "bpu_ops_per_frame": 43164672,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 5,
+        "interval_ms": 0.05,
+        "utilization": [
+          0.929,
+          0.228,
+          0.0,
+          0.118,
+          0.615
+        ],
+        "load_bandwidth_mbs": [
+          6120,
+          6586,
+          7048,
+          6718,
+          3472
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          117,
+          253
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_21",
+      "perf": {
+        "fps": 13612.85,
+        "latency_ms": 0.07,
+        "ddr_mb_per_frame": 0.037,
+        "bpu_ops_per_frame": 463872,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 8,
+        "interval_ms": 0.01,
+        "utilization": [
+          0.724,
+          0.986,
+          0.995,
+          0.995,
+          0.995,
+          0.925,
+          0.869,
+          0.183
+        ],
+        "load_bandwidth_mbs": [
+          2216,
+          1126,
+          17,
+          48,
+          48,
+          118,
+          335,
+          226
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          146,
+          195
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_22",
+      "perf": {
+        "fps": 13612.85,
+        "latency_ms": 0.07,
+        "ddr_mb_per_frame": 0.037,
+        "bpu_ops_per_frame": 455680,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 8,
+        "interval_ms": 0.01,
+        "utilization": [
+          0.724,
+          0.986,
+          0.995,
+          0.995,
+          0.995,
+          0.925,
+          0.866,
+          0.183
+        ],
+        "load_bandwidth_mbs": [
+          2216,
+          1126,
+          17,
+          48,
+          48,
+          106,
+          323,
+          226
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          146,
+          195
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_23",
+      "perf": {
+        "fps": 13612.85,
+        "latency_ms": 0.07,
+        "ddr_mb_per_frame": 0.037,
+        "bpu_ops_per_frame": 455680,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 8,
+        "interval_ms": 0.01,
+        "utilization": [
+          0.724,
+          0.986,
+          0.995,
+          0.995,
+          0.995,
+          0.925,
+          0.866,
+          0.183
+        ],
+        "load_bandwidth_mbs": [
+          2216,
+          1126,
+          17,
+          48,
+          48,
+          106,
+          323,
+          226
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          146,
+          195
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_24",
+      "perf": {
+        "fps": 4179.55,
+        "latency_ms": 0.24,
+        "ddr_mb_per_frame": 1.384,
+        "bpu_ops_per_frame": 43164672,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 5,
+        "interval_ms": 0.05,
+        "utilization": [
+          0.929,
+          0.228,
+          0.0,
+          0.118,
+          0.615
+        ],
+        "load_bandwidth_mbs": [
+          6120,
+          6586,
+          7048,
+          6718,
+          3472
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          117,
+          253
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_25",
+      "perf": {
+        "fps": 13612.85,
+        "latency_ms": 0.07,
+        "ddr_mb_per_frame": 0.037,
+        "bpu_ops_per_frame": 463872,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 8,
+        "interval_ms": 0.01,
+        "utilization": [
+          0.724,
+          0.986,
+          0.995,
+          0.995,
+          0.995,
+          0.925,
+          0.869,
+          0.183
+        ],
+        "load_bandwidth_mbs": [
+          2216,
+          1126,
+          17,
+          48,
+          48,
+          118,
+          335,
+          226
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          146,
+          195
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_26",
+      "perf": {
+        "fps": 13612.85,
+        "latency_ms": 0.07,
+        "ddr_mb_per_frame": 0.037,
+        "bpu_ops_per_frame": 455680,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 8,
+        "interval_ms": 0.01,
+        "utilization": [
+          0.724,
+          0.986,
+          0.995,
+          0.995,
+          0.995,
+          0.925,
+          0.866,
+          0.183
+        ],
+        "load_bandwidth_mbs": [
+          2216,
+          1126,
+          17,
+          48,
+          48,
+          106,
+          323,
+          226
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          146,
+          195
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_27",
+      "perf": {
+        "fps": 13612.85,
+        "latency_ms": 0.07,
+        "ddr_mb_per_frame": 0.037,
+        "bpu_ops_per_frame": 455680,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 8,
+        "interval_ms": 0.01,
+        "utilization": [
+          0.724,
+          0.986,
+          0.995,
+          0.995,
+          0.995,
+          0.925,
+          0.866,
+          0.183
+        ],
+        "load_bandwidth_mbs": [
+          2216,
+          1126,
+          17,
+          48,
+          48,
+          106,
+          323,
+          226
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          146,
+          146,
+          195
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_28",
+      "perf": {
+        "fps": 5154.69,
+        "latency_ms": 0.19,
+        "ddr_mb_per_frame": 1.167,
+        "bpu_ops_per_frame": 24520704,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 10,
+        "interval_ms": 0.02,
+        "utilization": [
+          0.831,
+          0.995,
+          0.949,
+          0.119,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.522,
+          0.554
+        ],
+        "load_bandwidth_mbs": [
+          5746,
+          5891,
+          6559,
+          7082,
+          7063,
+          7052,
+          7050,
+          7050,
+          4961,
+          1431
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          292,
+          674
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "latency_ms": 5.53,
+    "fps_derived": 180.83,
+    "ddr_mb_per_frame": 12.664,
+    "bpu_ops_per_frame": 827802744,
+    "derivation": "latency = sum of subgraph latency; fps_derived = 1000 / latency (sequential subgraph execution assumption); values from hbdk static estimation, not board measurement"
+  },
+  "similarity_provenance": {
+    "stage": "ptq-simulation",
+    "method": "x86 quantized simulation vs float ONNX (hb_mapper makertbin)",
+    "calibration_samples": 200,
+    "source_log": "output/hb_mapper_makertbin.log"
+  },
+  "performance_provenance": {
+    "stage": "compiler-static-estimate",
+    "source": "makertbin-workdir",
+    "method": "hbdk-cc static latency estimate of the compiled release artifact",
+    "note": "Estimates describe the compiled artifact; on-board measurements live in the model benchmark."
+  },
+  "board_measurement": null,
+  "provenance": {
+    "artifact_sha256": "68a3eee6456a1a57d35ce49c8c32bc97535314c051e3fb482180df78b6cc8f32",
+    "makertbin_log_sha256": "671c11f3f72127ab6e84a680f718a2c09eed9f3054ebf2b8b591ae5b89eb10e3",
+    "perf_reports": [
+      {
+        "name": "main_graph_subgraph_0",
+        "sha256": "59c77577623d4921a9ad4b9f986f28d8c158d8118f27dac433af227168c9e0da"
+      },
+      {
+        "name": "main_graph_subgraph_1",
+        "sha256": "343db98df7ac2603c7c1ce85b5c75ed87d44faa1a11beb8f4d33b42773c2b595"
+      },
+      {
+        "name": "main_graph_subgraph_2",
+        "sha256": "0c0835a9b99533e5433d00ba9c70e42cd47ee606243ec9111be9ee4cf182e763"
+      },
+      {
+        "name": "main_graph_subgraph_3",
+        "sha256": "49082b8e67040ae2f22fcae8bb623acc8e2f0d7d86eee322d13db098e3251918"
+      },
+      {
+        "name": "main_graph_subgraph_4",
+        "sha256": "15f63968ebf95c5623353c8c5b3b8383e791fa7f28ae0fa292f7cf6856c5f46b"
+      },
+      {
+        "name": "main_graph_subgraph_5",
+        "sha256": "0486419f5973f29794062e6e57c76acede82793fb772d6c3f2fe6f83b5e2c63b"
+      },
+      {
+        "name": "main_graph_subgraph_6",
+        "sha256": "8b99d1c699e7d277e77f76538946e67b5586102e2afa5269306250fe9d0cb533"
+      },
+      {
+        "name": "main_graph_subgraph_7",
+        "sha256": "64d72fc02bbbddfb6991048b8410f5da20c1d2a93211f788418755e9bd981786"
+      },
+      {
+        "name": "main_graph_subgraph_8",
+        "sha256": "e94f5da125387ecfb8a200b9cc9bb6b5554fb9162b6f1d73642b097d53d9b157"
+      },
+      {
+        "name": "main_graph_subgraph_9",
+        "sha256": "4d5dde7d59b303ea250ed5761c06685906315659b9fffb1e437167c19ddc43e1"
+      },
+      {
+        "name": "main_graph_subgraph_10",
+        "sha256": "51cb1ad66a404f8f5bd246c4dc4ba92f771807ebee8b95892c1c942998006334"
+      },
+      {
+        "name": "main_graph_subgraph_11",
+        "sha256": "56461e5438b644043576f5d3cccc4400d08b7ac0a29853a70514c7a2c2010bf5"
+      },
+      {
+        "name": "main_graph_subgraph_12",
+        "sha256": "eeabb80734a8228b7f390a29a63f594907126bea0015125e6bd64c923ff9205e"
+      },
+      {
+        "name": "main_graph_subgraph_13",
+        "sha256": "d4f9ce20d107dd7342d82d3200df989b908d248773c796f35931c99bde76cb36"
+      },
+      {
+        "name": "main_graph_subgraph_14",
+        "sha256": "3bdbb89e92bacf470241c2dd65e7c32938edd5ab946c3c8d1d87953ad12df63f"
+      },
+      {
+        "name": "main_graph_subgraph_15",
+        "sha256": "2679abde4626720e777731fa39c9f03051706a95c8320c497bb26f1b474558b4"
+      },
+      {
+        "name": "main_graph_subgraph_16",
+        "sha256": "cdccd3a8176a27cc3a6aedbc746f5be668662b4fbd1c35c9abbbc871fb91ea14"
+      },
+      {
+        "name": "main_graph_subgraph_17",
+        "sha256": "164488f1a01cf8370301bbfa35aa61474ac0d93f1421899f0ad243cd1057e312"
+      },
+      {
+        "name": "main_graph_subgraph_18",
+        "sha256": "7045cb740f2fde67f685744842875b193db97fe01ebcb0bb0cc2d4bdff3af886"
+      },
+      {
+        "name": "main_graph_subgraph_19",
+        "sha256": "79cc7538236fbd37fe4aaa9187f2514d74f51f8492ab95fe5dd34e9364f252af"
+      },
+      {
+        "name": "main_graph_subgraph_20",
+        "sha256": "f1ce97e65df70612857bddacc2828900dd5540cbd17e9cf64c9b261004b3c4b5"
+      },
+      {
+        "name": "main_graph_subgraph_21",
+        "sha256": "d84b0548a8c0859c7a3f7b1e665aa01a3cc7ecf9078799a4bda94627fc432704"
+      },
+      {
+        "name": "main_graph_subgraph_22",
+        "sha256": "94deb0e5a0fac83417caeb8de22d02ea84b4ffebd2e377bfa9999a8f750382a4"
+      },
+      {
+        "name": "main_graph_subgraph_23",
+        "sha256": "06e4ba53ccaf6b1b211072ee48d3d3f4b1b19882ab589f955ea6cfe92951d616"
+      },
+      {
+        "name": "main_graph_subgraph_24",
+        "sha256": "48a82ce1bd629c0ec6a5f1d3b3be20b1467f40f512fdda3b27bda374eaa41fba"
+      },
+      {
+        "name": "main_graph_subgraph_25",
+        "sha256": "b150cfde5bdbd8b56b88277efd6a1a50dca1d5fc33be4e7d74488200a4325d5e"
+      },
+      {
+        "name": "main_graph_subgraph_26",
+        "sha256": "8ecf663c10409a4ddbfdaac6e8fab4f25316d28790c9606084059ad30d914d9b"
+      },
+      {
+        "name": "main_graph_subgraph_27",
+        "sha256": "a0007613be8a40121f5ddc69f1fcf9bac5b37f8890db2c1a7740dec5f4eaf138"
+      },
+      {
+        "name": "main_graph_subgraph_28",
+        "sha256": "25dfea472d69cbb9027307f5db97e0ba8fbe5a7069212d37763cf6124e2a2647"
+      }
+    ]
+  }
+}
