@@ -129,11 +129,15 @@ describe("multi-platform variant catalog", () => {
     // Neither publication added a benchmark row: 61 families, 646 variants, 760 benchmark rows.
     // The later 2026-11-02 converted batch added 60 download-only variants and no benchmark
     // rows: 52 X5 bins on existing families, plus 8 S HBMs (Depth Anything V2 Small on S100,
-    // DINOv2 ViT-S/14 on S100/S100P/S600, and native YOLOv5n/s on S100 and S600).
-    // 61 families, 706 variants, 760 benchmark rows.
+    // DINOv2 ViT-S/14 on S100/S100P/S600, and native YOLOv5n/s on S100 and S600):
+    // 706 variants.
+    // The 2026-11-03 S profiles added nine more download-only variants and no benchmark
+    // rows: Faster R-CNN native pairs on S100/S100P/S600, EfficientSAM pairs on S100 and
+    // S100P, MobileSAM on S100, ConvNeXt Femto on S100, YOLO26n-Depth on S100, and
+    // YOLOE-26n seg on S100. 61 families, 715 variants, 760 benchmark rows.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(61);
-    expect(variants).toHaveLength(706);
+    expect(variants).toHaveLength(715);
     expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(760);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
