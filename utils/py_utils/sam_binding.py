@@ -8,6 +8,7 @@ native dtype must still be known and every runtime array must match it. These
 compatibility checks do not certify unobserved published HBM tensor metadata.
 """
 from dataclasses import dataclass, replace
+import json
 from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping
@@ -45,6 +46,7 @@ class ModelSelection:
     decoder_asset: Asset
     encoder_model_path: Path
     decoder_model_path: Path
+    variant: str = 'published'
 
 
 @dataclass(frozen=True)
@@ -76,11 +78,28 @@ class ModelBinding:
     decoder: StageBinding
 
 
-def _filenames(sample, target):
+def converted_pairs(sample):
+    if sample not in SAMPLES:
+        raise ValueError(f'Unknown SAM sample: {sample!r}.')
+    path = _ROOT/'samples'/'vision'/sample/'model'/'converted_pairs.json'
+    if not path.exists():
+        return {}
+    data = json.loads(path.read_text())
+    if data.get('sample') != sample or not isinstance(data.get('variants'), dict):
+        raise ValueError(f'Invalid converted pair registry: {path}')
+    return data['variants']
+
+
+def _filenames(sample, target, variant='published'):
     if sample not in SAMPLES:
         raise ValueError(f'Unknown SAM sample: {sample!r}.')
     if target not in TARGETS:
         raise ValueError(f'Unknown SAM target: {target!r}.')
+    if variant != 'published':
+        row = converted_pairs(sample).get(variant, {}).get(target)
+        if not isinstance(row, dict) or set(row) != {'encoder','decoder'}:
+            raise ValueError(f'No complete {sample}/{target}/{variant} pair.')
+        return tuple(row[role]['filename'] for role in ('encoder','decoder'))
     if target == 'x5':
         if sample == 'efficient_sam':
             return ('efficient_sam_vitt_encoder_512x512_default_none.bin',
@@ -93,25 +112,32 @@ def _filenames(sample, target):
     return (f'{march}/{encoder}_512x512_{suffix}.hbm', f'{march}/{decoder}_512_{suffix}.hbm')
 
 
-def list_available_assets(sample, target='auto'):
+def list_available_assets(sample, target='auto', variant='published'):
     """List exact pairs; auto means all published targets without board reads."""
     if target in (None, 'auto'):
-        return tuple(asset for item in TARGETS for asset in list_available_assets(sample, item))
-    names = _filenames(sample, target)
+        targets = TARGETS if variant == 'published' else tuple(converted_pairs(sample).get(variant, {}))
+        if not targets:
+            raise ValueError(f'Unknown SAM variant: {variant!r}.')
+        return tuple(asset for item in targets for asset in list_available_assets(sample, item, variant))
+    names = _filenames(sample, target, variant)
     group, fmt = ('x5', 'bin') if target == 'x5' else ('s', 'hbm')
     rows = list_assets(group, sample)
     result = []
-    for name in names:
+    for stage,name in zip(('encoder','decoder'),names):
         matches = [a for a in rows if a.filename == name and a.format == fmt]
         if len(matches) != 1:
             raise ValueError(f'Manifest has no unique {sample}/{target} asset {name!r}.')
+        if variant != 'published':
+            expected = converted_pairs(sample)[variant][target][stage]['sha256']
+            if matches[0].sha256 != expected or expected is None:
+                raise ValueError(f'Converted {sample}/{stage} identity differs from the pair registry.')
         result.append(matches[0])
     return tuple(result)
 
 
 def resolve_selection(sample, target='auto', *, encoder_model_path=None,
                       decoder_model_path=None, encoder_asset_id=None,
-                      decoder_asset_id=None, sample_dir=None):
+                      decoder_asset_id=None, sample_dir=None, variant='published'):
     """Resolve exact manifest stage identities without loading or downloading.
 
     External paths require the corresponding qualified asset ID. A supplied ID
@@ -119,7 +145,7 @@ def resolve_selection(sample, target='auto', *, encoder_model_path=None,
     this selection does not authenticate an externally supplied file's bytes.
     """
     target = resolve_target(target)
-    assets = list_available_assets(sample, target)
+    assets = list_available_assets(sample, target, variant)
     directory = Path(sample_dir) if sample_dir is not None else _ROOT/'samples'/'vision'/sample
     paths = []
     for stage, asset, explicit, identity in zip(
@@ -131,7 +157,7 @@ def resolve_selection(sample, target='auto', *, encoder_model_path=None,
         if identity is not None and identity != asset.reference:
             raise ValueError(f'{stage} expected asset-id {asset.reference}, got {identity!r}.')
         paths.append(Path(explicit).expanduser() if explicit is not None else directory/'model'/asset.filename)
-    return ModelSelection(sample, target, *assets, *paths)
+    return ModelSelection(sample, target, *assets, *paths, variant)
 
 
 def bind_stage(sample, target, stage, metadata):
@@ -195,12 +221,15 @@ def bind_model(selection, encoder_metadata, decoder_metadata):
         encoder_model_path=selection.encoder_model_path,
         decoder_model_path=selection.decoder_model_path,
         encoder_asset_id=selection.encoder_asset.reference,
-        decoder_asset_id=selection.decoder_asset.reference)
+        decoder_asset_id=selection.decoder_asset.reference, variant=selection.variant)
     if expected != selection:
         raise MetadataMismatchError('SAM selection differs from exact manifest publication facts.')
-    return ModelBinding(selection,
-        bind_stage(selection.sample, selection.target, 'encoder', encoder_metadata),
-        bind_stage(selection.sample, selection.target, 'decoder', decoder_metadata))
+    encoder = bind_stage(selection.sample, selection.target, 'encoder', encoder_metadata)
+    decoder = bind_stage(selection.sample, selection.target, 'decoder', decoder_metadata)
+    if selection.variant != 'published':
+        if any(dtype != 'float32' for stage in (encoder,decoder) for dtype in stage.metadata.output_dtypes.values()):
+            raise MetadataMismatchError('Converted SAM pairs require their observed float32 output ABI.')
+    return ModelBinding(selection,encoder,decoder)
 
 
 def validate_tensors(binding, tensors, *, outputs=False):

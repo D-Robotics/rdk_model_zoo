@@ -111,3 +111,13 @@ Paths are relative to `conversion/`; place the pair under `model/<target>/` for 
 
 Place JPEG/PNG/BMP images in a directory mounted into the container. Pass that directory with `--images`; choose `--hflip repo`, `all` or `none`. Generate all four calibration directories before running `make_configs.py` and the selected family compiler.
 
+## S100 reproduction profile (2026-11-03)
+
+This independent variant targets S100/nash-e with O1. Existing recipes remain available. Portable recipes use paths relative to the working directory; the effective execution YAML has its own digest in `converted.json`.
+
+- `parta`: [mbv3_320_native_20261103_o1_s100_parta.yaml](recipes/mbv3_320_native_20261103_o1_s100_parta.yaml)
+- `partb`: [mbv3_320_native_20261103_o1_s100_partb.yaml](recipes/mbv3_320_native_20261103_o1_s100_partb.yaml)
+
+After `export_split.py --out /work/export --threads 2`, run `validate_export.py --onnx /work/export --image IMAGE1 --image IMAGE2 --image IMAGE3 --output /work/host-smoke.json`. It connects PartA → RPN/ROIAlign → packed PartB. Run `prepare_calibration.py --images /path/to/train-images --hflip none --onnx /work/export --out /work/calibration --threads 2` for real per-image ROI features; this run used 200 photographs.
+
+From the working directory in the matching OE 3.7.0 container, run `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml` for each component. Board checks remain `not-run`.

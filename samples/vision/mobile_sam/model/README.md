@@ -52,4 +52,22 @@ The runtime resolves the exact selected pair below `samples/vision/mobile_sam/mo
 <a id="formats-checksums"></a>
 ## Formats and Checksums
 
-The x5 rows use `bin`; S rows use `hbm`. Every active manifest row records `sha256: null (unknown)`.
+The x5 rows use `bin`; S rows use `hbm`. The historical published rows record `sha256: null (unknown)`; the dated converted profile below records verified SHA-256 values.
+
+## Converted S100 profile (2026-11-03)
+
+`tinyvit-512-int16-20261103-o1` · S100 / nash-e · OE 3.7.0 (hb_compile 3.5.3, HMCT 2.6.5, HBDK 4.7.5) · O1.
+
+Select this independent build explicitly. Historical defaults and measurements are retained. Actual HBM outputs are float32.
+
+| Role | Exact asset ID | SHA-256 | Bytes |
+| --- | --- | --- | ---: |
+| encoder | `s:mobile_sam:nash-e/mobile_sam_image_encoder_norm_512x512_nashe_int16_20261103_o1.hbm` | `19f6f39b85c276bbd5f608bbfa3829a03a9507fe0b70a27963c01a03aa9bb8d6` | 49086032 |
+| decoder | `s:mobile_sam:nash-e/mobile_sam_decoder_512_nashe_int16_20261103_o1.hbm` | `ea123331de46a21f92a022ba6c6730305ba75ba744efa405f33d08120397e6ad` | 14175872 |
+
+```bash
+python3 samples/vision/mobile_sam/model/download.py --target s100 --variant tinyvit-512-int16-20261103-o1
+python3 samples/vision/mobile_sam/runtime/python/main.py --target s100 --variant tinyvit-512-int16-20261103-o1 --test-img samples/vision/mobile_sam/test_data/dogs.jpg
+```
+
+Calibration uses 198 independent COCO training photographs. Board smoke, accuracy, Runtime 1/2 and C++ 1/2 are `not-run`. Source, checkpoint, ONNX, effective configuration, native recipe and complete OE identities are recorded in [converted.json](../conversion/converted.json).

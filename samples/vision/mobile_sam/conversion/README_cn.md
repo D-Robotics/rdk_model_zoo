@@ -50,7 +50,7 @@ sudo docker run -it --rm --network host --shm-size=15g \
   <docker-image-name> /bin/bash
 ```
 
-也可以在线拉取镜像：`docker pull registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`。下载链接失效时，请在 OE 在线文档查看最新地址。发布资产名称及 SHA 以 `docs/release/x5/models.yaml`、`docs/release/s/models.yaml` 为准；源清单中 SHA 为未知（`null`）。
+也可以在线拉取镜像：`docker pull registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`。下载链接失效时，请在 OE 在线文档查看最新地址。发布资产名称及 SHA 以 `docs/release/x5/models.yaml`、`docs/release/s/models.yaml` 为准；历史发布行中的 SHA 为未知（`null`）；下方带日期的转换配置记录了核验后的摘要。
 
 导出与浮点嵌入特征生成依赖主机 PyTorch、ONNX、ONNX Runtime、NumPy、OpenCV。随导出模型记录所选框架版本和上游仓库版本。在导出环境检查导入：
 
@@ -222,3 +222,22 @@ python3 scripts/quantize.py --target s600
 - S 没有源 `download_assets.py`，获取 checkout 和权重文件是手工前置条件。
 - X5 与 S 使用不同校准文件格式和目标配置布局；统一 producer 按目标板卡分支并保留源配方。
 - 解码器输出 rank 及所有编译制品原生数据类型需读取真实 SDK 元数据确认。
+
+## 本轮 S100 复现（2026-11-03）
+
+本轮新增配方采用上面的独立 variant、S100/nash-e 和 O1；旧配方保留。配方使用相对工作目录，实际执行的绝对路径 YAML 摘要另存于 `converted.json`。
+
+- `encoder`: [tinyvit_512_int16_20261103_o1_s100_encoder.yaml](recipes/tinyvit_512_int16_20261103_o1_s100_encoder.yaml)
+- `decoder`: [tinyvit_512_int16_20261103_o1_s100_decoder.yaml](recipes/tinyvit_512_int16_20261103_o1_s100_decoder.yaml)
+
+先用本目录两个 exporter 输出 `export/encoder.onnx` 和 `export/decoder.onnx`。再从仓库根目录运行真实串联对照及逐图校准：
+
+```bash
+python3 samples/_shared/sam_conversion.py --sample mobile_sam --repo /path/to/upstream --checkpoint /path/to/checkpoint.pt \
+  --encoder /work/export/encoder.onnx --decoder /work/export/decoder.onnx \
+  --images /path/to/calibration-images --count 198 --annotations /path/to/instances_train2017.json --output /work/calibration
+```
+
+每张图生成独立的 encoder 输入及真实 embedding；解码器校准读取这些 embedding。 MobileSAM 输入目录需要真实非 crowd COCO 框。本轮从200张冻结训练图排除 `000000090026.jpg`、`000000440484.jpg`，保留198张；不要将未筛选的200图目录配合 `--count 198` 使用。
+
+在匹配 OE 3.7.0 容器中从工作目录运行 `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml`，每件模型分别编译。板端各项数据仍为 `not-run`。

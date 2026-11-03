@@ -53,3 +53,21 @@ The runtime resolves the selected pair below `samples/vision/efficient_sam/model
 ## Formats and Checksums
 
 All published rows are `bin` for x5 and `hbm` for S targets. The active manifests record `sha256: null (unknown)` for every asset; no digest is guessed or copied.
+
+## Converted S100 profile (2026-11-03)
+
+`vitt-512-int16-20261103-o1` · S100 / nash-e · OE 3.7.0 (hb_compile 3.5.3, HMCT 2.6.5, HBDK 4.7.5) · O1.
+
+Select this independent build explicitly. Historical defaults and measurements are retained. Actual HBM outputs are float32.
+
+| Role | Exact asset ID | SHA-256 | Bytes |
+| --- | --- | --- | ---: |
+| encoder | `s:efficient_sam:nash-e/efficient_sam_vitt_encoder_512x512_nashe_int16_20261103_o1.hbm` | `5fa5d84783124b653a211272574fe71fd4b3e5b42bc3bb8e84ec7ec7f0e4e238` | 24795880 |
+| decoder | `s:efficient_sam:nash-e/efficient_sam_vitt_decoder_512_nashe_int16_20261103_o1.hbm` | `d106a8c9ba8c2a038961e5c34ac18b62b352fc708be6299009c763eb40ef1836` | 22544128 |
+
+```bash
+python3 samples/vision/efficient_sam/model/download.py --target s100 --variant vitt-512-int16-20261103-o1
+python3 samples/vision/efficient_sam/runtime/python/main.py --target s100 --variant vitt-512-int16-20261103-o1 --test-img samples/vision/efficient_sam/test_data/dogs.jpg
+```
+
+Calibration uses 200 independent COCO training photographs. Board smoke, accuracy, Runtime 1/2 and C++ 1/2 are `not-run`. Source, checkpoint, ONNX, effective configuration, native recipe and complete OE identities are recorded in [converted.json](../conversion/converted.json).

@@ -54,7 +54,7 @@ sudo docker run -it --rm --network host --shm-size=15g \
 
 Alternatively, pull the image online: `docker pull registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`. If the download URL expires, check the latest link on the OE online documentation.
 
-The active published model manifest is `docs/release/x5/models.yaml` or `docs/release/s/models.yaml`; all published model SHA fields are `null` (unknown). S has separate encoder and decoder YAML files for all three marches. X5 has two bayes-e YAML files.
+The active published model manifest is `docs/release/x5/models.yaml` or `docs/release/s/models.yaml`; historical published model SHA fields are `null` (unknown), while the dated converted profile below records verified digests. S has separate encoder and decoder YAML files for all three marches. X5 has two bayes-e YAML files.
 
 Export and float embedding generation require host PyTorch, ONNX, ONNX Runtime, NumPy and OpenCV. Record the selected framework and upstream repository versions with the exported model. Check these imports in the export environment:
 
@@ -240,3 +240,20 @@ Generated ONNX, calibration tensors, quantization metadata, and compiled models 
 ## Provenance
 
 Upstream code retains its Apache-2.0 notices; the repository license applies to the conversion scripts.
+
+## S100 reproduction profile (2026-11-03)
+
+This independent variant targets S100/nash-e with O1. Existing recipes remain available. Portable recipes use paths relative to the working directory; the effective execution YAML has its own digest in `converted.json`.
+
+- `encoder`: [vitt_512_int16_20261103_o1_s100_encoder.yaml](recipes/vitt_512_int16_20261103_o1_s100_encoder.yaml)
+- `decoder`: [vitt_512_int16_20261103_o1_s100_decoder.yaml](recipes/vitt_512_int16_20261103_o1_s100_decoder.yaml)
+
+Export both native graphs to `export/encoder.onnx` and `export/decoder.onnx`, then run connected float validation and per-image calibration from the repository root:
+
+```bash
+python3 samples/_shared/sam_conversion.py --sample efficient_sam --repo /path/to/upstream --checkpoint /path/to/checkpoint.pt \
+  --encoder /work/export/encoder.onnx --decoder /work/export/decoder.onnx \
+  --images /path/to/calibration-images --count 200 --output /work/calibration
+```
+
+Each photograph produces its own encoder input and real embedding; decoder calibration consumes these embeddings. From the working directory in the matching OE 3.7.0 container, run `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml` for each component. Board checks remain `not-run`.

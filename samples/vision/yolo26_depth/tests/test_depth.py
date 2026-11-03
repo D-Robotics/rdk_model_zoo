@@ -65,10 +65,10 @@ class DepthTests(unittest.TestCase):
         binding = bind_model(selection, metadata(selection.profile == "lite"))
         return Yolo26DepthTask(runner=runner or (lambda tensors: self.raw.copy()), binding=binding)
 
-    def test_twenty_assets_default_and_profile_identity(self):
-        self.assertEqual(len(list_available_assets()), 20)
+    def test_historical_defaults_and_new_converted_inventory(self):
+        self.assertEqual(len(list_available_assets()), 21)
         for target in ("x5", "s100", "s100p", "s600"):
-            self.assertEqual(len(list_available_assets(target)), 5)
+            self.assertEqual(len(list_available_assets(target)), 6 if target == "s100" else 5)
             self.assertEqual(resolve_selection(target).variant, "n")
             for variant in ("n", "s", "m", "l", "x"):
                 s = resolve_selection(target, variant=variant)

@@ -215,3 +215,13 @@ max/0.9999 校准将 lite n 提高到 0.9975，未达到参考记录门槛。
 
 代码遵循仓库根许可证；Ultralytics 权重和 SUNRGBD 数据保留各自上游条款。
 本样例不额外授予权重导出或数据使用许可。
+
+## 本轮 S100 复现（2026-11-03）
+
+本轮新增配方采用上面的独立 variant、S100/nash-e 和 O1；旧配方保留。配方使用相对工作目录，实际执行的绝对路径 YAML 摘要另存于 `converted.json`。
+
+- `model`: [n_int16_20261103_o1_s100_model.yaml](recipes/n_int16_20261103_o1_s100_model.yaml)
+
+使用固定 Ultralytics 8.4.105 导出 n/log；`validate_export.py --weights WEIGHT --onnx ONNX --image IMAGE1 --image IMAGE2 --image IMAGE3 --output /work/host-smoke.json` 比较原模型、原生 log 边界与 ONNX，另含 seed-0 输入。本轮采用200张训练图、INT16 和 O1，保留首轮 INT8 尝试记录。
+
+在匹配 OE 3.7.0 容器中从工作目录运行 `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml`，每件模型分别编译。板端各项数据仍为 `not-run`。

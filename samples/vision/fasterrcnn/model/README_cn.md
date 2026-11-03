@@ -99,3 +99,20 @@ Runtime 默认读取 `model/<target>/frcnn_mbv3_320_parta.{bin,hbm}` 与 `frcnn_
 
 参考哈希记录在 `frcnn_mbv3_320.json` 与发布清单中，即已发布产物的哈希；`download.py` 下载时逐一校验。可通过 `sha256sum` 查看本地文件哈希。默认选择校验记录的模型组合；显式路径使用所提供文件，并检查其实际张量信息。
 
+## 本轮 S100 转换规格（2026-11-03）
+
+`mbv3-320-native-20261103-o1` · S100 / nash-e · OE 3.7.0 (hb_compile 3.5.3, HMCT 2.6.5, HBDK 4.7.5) · O1.
+
+显式选择本轮独立规格。原默认规格及其历史数据保留。实际 HBM 输出为 float32。
+
+| Role | Exact asset ID | SHA-256 | Bytes |
+| --- | --- | --- | ---: |
+| parta | `s:fasterrcnn:s100/frcnn_mbv3_320_parta_nashe_native_20261103_o1.hbm` | `fc51cea2ca786bcf565da82e4929316e480d8b98d868515feb224530042ef9a6` | 6637728 |
+| partb | `s:fasterrcnn:s100/frcnn_mbv3_320_partb_nashe_native_20261103_o1.hbm` | `63e1ab7b4b6b64ca897f20fc50e651fc4565e2ba34fea7acd01cec89768fd93e` | 15341384 |
+
+```bash
+python3 samples/vision/fasterrcnn/model/download.py --target s100 --variant mbv3-320-native-20261103-o1
+python3 samples/vision/fasterrcnn/runtime/python/main.py --target s100 --variant mbv3-320-native-20261103-o1 --input /path/to/image.jpg
+```
+
+校准图片数量：200；输入来自独立的 COCO 训练图片。板端 smoke、精度、Runtime 1/2 并发和 C++ 1/2 流均为 `not-run`。源码、checkpoint、ONNX、实际配置、原生配方与完整 OE 的摘要见 [converted.json](../conversion/converted.json)。

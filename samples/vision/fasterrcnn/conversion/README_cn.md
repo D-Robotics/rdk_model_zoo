@@ -111,3 +111,13 @@ python3 samples/vision/fasterrcnn/runtime/python/main.py --target x5 \
 
 将 JPEG/PNG/BMP 图片放入容器挂载目录，通过 `--images` 指定，`--hflip` 可选择 `repo`、`all` 或 `none`。先生成四份校准数据目录，再执行 `make_configs.py` 和所选系列的编译命令。
 
+## 本轮 S100 复现（2026-11-03）
+
+本轮新增配方采用上面的独立 variant、S100/nash-e 和 O1；旧配方保留。配方使用相对工作目录，实际执行的绝对路径 YAML 摘要另存于 `converted.json`。
+
+- `parta`: [mbv3_320_native_20261103_o1_s100_parta.yaml](recipes/mbv3_320_native_20261103_o1_s100_parta.yaml)
+- `partb`: [mbv3_320_native_20261103_o1_s100_partb.yaml](recipes/mbv3_320_native_20261103_o1_s100_partb.yaml)
+
+原生 `export_split.py --out /work/export --threads 2` 后，运行 `validate_export.py --onnx /work/export --image IMAGE1 --image IMAGE2 --image IMAGE3 --output /work/host-smoke.json`；它实际串联 PartA → RPN/ROIAlign → packed PartB。`prepare_calibration.py --images /path/to/train-images --hflip none --onnx /work/export --out /work/calibration --threads 2` 为每张图生成真实 ROI 特征。本轮共200张图。
+
+在匹配 OE 3.7.0 容器中从工作目录运行 `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml`，每件模型分别编译。板端各项数据仍为 `not-run`。

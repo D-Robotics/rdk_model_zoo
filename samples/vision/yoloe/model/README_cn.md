@@ -108,3 +108,20 @@ X5 为 BIN，S 为 HBM。已知值取自活跃发布清单；S11 发布哈希未
 | `s:yoloe26_seg:nash-m/yoloe_26m_seg_pf_nashm_640x640_nv12.hbm` | `8621baa458a94d3d1946665609633f1ecdd930efeeebe91d975f822ffd273af4` | `docs/release/s/models.yaml` |
 | `s:yoloe26_seg:nash-m/yoloe_26l_seg_pf_nashm_640x640_nv12.hbm` | `314df1d0d60c839f9ff4248ab0d4ff2adc3cc8e514a8e9cf9acca62527696738` | `docs/release/s/models.yaml` |
 | `s:yoloe26_seg:nash-m/yoloe_26x_seg_pf_nashm_640x640_nv12.hbm` | `2abf9d30dd487f2d5eb53444b7272a71d7be18265a39bd463cfd5b0cd6c14539` | `docs/release/s/models.yaml` |
+
+## 本轮 S100 转换规格（2026-11-03）
+
+`26n-native-cal32-20261103-o1` · S100 / nash-e · OE 3.7.0 (hb_compile 3.5.3, HMCT 2.6.5, HBDK 4.7.5) · O1.
+
+显式选择本轮独立规格。原默认规格及其历史数据保留。实际 HBM 输出为 float32。
+
+| Role | Exact asset ID | SHA-256 | Bytes |
+| --- | --- | --- | ---: |
+| model | `s:yoloe26_seg:nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12_float_cal32_20261103_o1.hbm` | `00340e52995a559be99fce15909babc7cad09e66785f8a596ab71f67bdeb61c4` | 167770984 |
+
+```bash
+bash samples/vision/yoloe/model/download.sh --target s100 --variant 26n-native-cal32-20261103-o1
+python3 samples/vision/yoloe/runtime/python/main.py --target s100 --variant 26n-native-cal32-20261103-o1 --test-img /path/to/image.jpg
+```
+
+校准图片数量：32；输入来自独立的 COCO 训练图片。板端 smoke、精度、Runtime 1/2 并发和 C++ 1/2 流均为 `not-run`。源码、checkpoint、ONNX、实际配置、原生配方与完整 OE 的摘要见 [converted.json](../conversion/converted.json)。

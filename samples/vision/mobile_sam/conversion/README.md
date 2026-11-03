@@ -50,7 +50,7 @@ sudo docker run -it --rm --network host --shm-size=15g \
   <docker-image-name> /bin/bash
 ```
 
-Alternatively, pull the image online: `docker pull registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`. If the download URL expires, check the latest link on the OE online documentation. Published asset names and SHA fields are authoritative in `docs/release/x5/models.yaml` and `docs/release/s/models.yaml`; the source manifests mark SHA values as unknown (`null`).
+Alternatively, pull the image online: `docker pull registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`. If the download URL expires, check the latest link on the OE online documentation. Published asset names and SHA fields are authoritative in `docs/release/x5/models.yaml` and `docs/release/s/models.yaml`; the historical published rows mark SHA values as unknown (`null`), while the dated converted profile below records verified digests.
 
 Export and float embedding generation require host PyTorch, ONNX, ONNX Runtime, NumPy and OpenCV. Record the selected framework and upstream repository versions with the exported model. Check these imports in the export environment:
 
@@ -222,3 +222,22 @@ Generated ONNX, calibration tensors, quantizer metadata, and compiled models rem
 - S has no source `download_assets.py`; acquiring its upstream checkout and checkpoint is a manual prerequisite.
 - X5 and S use different calibration file formats and target config layouts, so the unified producer branches on target while retaining the source recipes.
 - Decoder output rank and all compiled native dtypes require real SDK metadata inspection.
+
+## S100 reproduction profile (2026-11-03)
+
+This independent variant targets S100/nash-e with O1. Existing recipes remain available. Portable recipes use paths relative to the working directory; the effective execution YAML has its own digest in `converted.json`.
+
+- `encoder`: [tinyvit_512_int16_20261103_o1_s100_encoder.yaml](recipes/tinyvit_512_int16_20261103_o1_s100_encoder.yaml)
+- `decoder`: [tinyvit_512_int16_20261103_o1_s100_decoder.yaml](recipes/tinyvit_512_int16_20261103_o1_s100_decoder.yaml)
+
+Export both native graphs to `export/encoder.onnx` and `export/decoder.onnx`, then run connected float validation and per-image calibration from the repository root:
+
+```bash
+python3 samples/_shared/sam_conversion.py --sample mobile_sam --repo /path/to/upstream --checkpoint /path/to/checkpoint.pt \
+  --encoder /work/export/encoder.onnx --decoder /work/export/decoder.onnx \
+  --images /path/to/calibration-images --count 198 --annotations /path/to/instances_train2017.json --output /work/calibration
+```
+
+Each photograph produces its own encoder input and real embedding; decoder calibration consumes these embeddings. MobileSAM requires real non-crowd COCO boxes. This run selected 198 images from the frozen 200, excluding `000000090026.jpg` and `000000440484.jpg`; supply that selected image directory, not the unfiltered 200-image directory.
+
+From the working directory in the matching OE 3.7.0 container, run `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml` for each component. Board checks remain `not-run`.

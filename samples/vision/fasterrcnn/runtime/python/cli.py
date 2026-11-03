@@ -61,20 +61,27 @@ class TargetPair:
         return f"{self.target}:{SAMPLE}:{self.parta_file}+{self.partb_file}"
 
 
-def load_descriptor() -> dict:
+def load_descriptor(variant='published') -> dict:
     """Read the paired-model descriptor; malformed files raise BindingError."""
+    path = DESCRIPTOR_PATH
     try:
-        data = json.loads(DESCRIPTOR_PATH.read_text())
+        if variant != 'published':
+            registry = json.loads((MODEL_DIR/'converted_variants.json').read_text())
+            filename = registry.get('variants', {}).get(variant)
+            if registry.get('sample') != SAMPLE or not isinstance(filename,str) or Path(filename).name != filename:
+                raise BindingError(f'Unknown paired deployment variant: {variant!r}.')
+            path = MODEL_DIR/filename
+        data = json.loads(path.read_text())
     except (OSError, ValueError) as exc:
-        raise BindingError(f"paired-model descriptor unreadable: {DESCRIPTOR_PATH} ({exc})") from exc
+        raise BindingError(f"paired-model descriptor unreadable: {path} ({exc})") from exc
     if data.get("sample") != SAMPLE or "targets" not in data:
         raise BindingError("paired-model descriptor is missing its sample/targets tables.")
     return data
 
 
-def descriptor_pairs() -> dict[str, TargetPair]:
+def descriptor_pairs(variant='published') -> dict[str, TargetPair]:
     """Map every supported target to its descriptor row."""
-    data = load_descriptor()
+    data = load_descriptor(variant)
     pairs: dict[str, TargetPair] = {}
     for target, row in data["targets"].items():
         partb = row["partb"]
@@ -89,13 +96,15 @@ def descriptor_pairs() -> dict[str, TargetPair]:
             compiler_latency_us=dict(row.get("compiler_latency_us", {})),
         )
     missing = set(SUPPORTED_TARGETS) - set(pairs)
-    if missing:
+    if missing and variant == 'published':
         raise BindingError(f"descriptor lacks targets: {sorted(missing)}.")
+    if not pairs or not set(pairs).issubset(SUPPORTED_TARGETS):
+        raise BindingError('descriptor has no supported complete target pairs.')
     return pairs
 
 
 def resolve_selection(target: str = "auto", *, parta_path=None, partb_path=None,
-                       soc_name=None, board_type=None):
+                       soc_name=None, board_type=None, variant='published'):
     """Resolve the PartA/PartB pair for one target.
 
     Args:
@@ -120,10 +129,13 @@ def resolve_selection(target: str = "auto", *, parta_path=None, partb_path=None,
     if resolved not in SUPPORTED_TARGETS:
         raise BindingError(
             f"Faster R-CNN publishes {list(SUPPORTED_TARGETS)}, not {resolved!r}.")
-    pair = descriptor_pairs()[resolved]
+    pairs = descriptor_pairs(variant)
+    if resolved not in pairs:
+        raise BindingError(f'Variant {variant!r} has no published {resolved} pair.')
+    pair = pairs[resolved]
     if (parta_path is None) != (partb_path is None):
         raise BindingError("--parta-path and --partb-path must be given together.")
-    custom = parta_path is not None
+    custom = parta_path is not None and variant == 'published'
     return PairedSelection(
         target=resolved,
         parta_path=Path(parta_path) if parta_path else pair.parta_path,
@@ -137,13 +149,15 @@ def resolve_selection(target: str = "auto", *, parta_path=None, partb_path=None,
     )
 
 
-def list_available_assets(target: str | None = None) -> tuple[TargetPair, ...]:
+def list_available_assets(target: str | None = None, variant='published') -> tuple[TargetPair, ...]:
     """List descriptor pairs; ``target`` filters (auto lists everything)."""
-    pairs = descriptor_pairs()
+    pairs = descriptor_pairs(variant)
     if target in (None, "auto"):
-        return tuple(pairs[t] for t in SUPPORTED_TARGETS)
+        return tuple(pairs[t] for t in SUPPORTED_TARGETS if t in pairs)
     if target not in SUPPORTED_TARGETS:
         raise BindingError(f"Faster R-CNN publishes {list(SUPPORTED_TARGETS)}, not {target!r}.")
+    if target not in pairs:
+        raise BindingError(f'Variant {variant!r} has no published {target} pair.')
     return (pairs[target],)
 
 
@@ -157,6 +171,7 @@ def build_parser() -> argparse.ArgumentParser:
                         help="board target; auto resolves the running board")
     parser.add_argument("--parta-path", default=None, type=Path,
                         help="explicit PartA artifact (.bin on X5, .hbm on S)")
+    parser.add_argument('--variant', default='published', help='Exact paired deployment variant; default keeps the historical pairs')
     parser.add_argument("--partb-path", default=None, type=Path,
                         help="explicit PartB artifact; pair with --parta-path")
     parser.add_argument("--input", "-i", default=str(DEFAULT_IMAGE), type=Path,
@@ -187,10 +202,10 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def list_models(target: str | None = None) -> int:
+def list_models(target: str | None = None, variant='published') -> int:
     """Print descriptor pairs with local file presence; return shell status."""
     rows = []
-    for pair in list_available_assets(target):
+    for pair in list_available_assets(target,variant):
         rows.append({
             "target": pair.target,
             "march": pair.march,

@@ -237,3 +237,13 @@ and restored-depth comparisons separately.
 Repository code follows the root license; Ultralytics weights and SUNRGBD retain
 their respective upstream terms. No export or dataset license is granted by this
 sample's presence.
+
+## S100 reproduction profile (2026-11-03)
+
+This independent variant targets S100/nash-e with O1. Existing recipes remain available. Portable recipes use paths relative to the working directory; the effective execution YAML has its own digest in `converted.json`.
+
+- `model`: [n_int16_20261103_o1_s100_model.yaml](recipes/n_int16_20261103_o1_s100_model.yaml)
+
+Export n/log with fixed Ultralytics 8.4.105. `validate_export.py --weights WEIGHT --onnx ONNX --image IMAGE1 --image IMAGE2 --image IMAGE3 --output /work/host-smoke.json` compares source, native log boundary and ONNX, plus seed-0 input. This run uses 200 photographs, INT16 and O1; the earlier INT8 attempt is retained.
+
+From the working directory in the matching OE 3.7.0 container, run `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml` for each component. Board checks remain `not-run`.

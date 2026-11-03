@@ -17,12 +17,13 @@ binding = importlib.import_module("samples.vision.efficient_sam.runtime.python.c
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Prepare EfficientSAM encoder and decoder assets.")
     parser.add_argument("--target", choices=("x5", "s100", "s100p", "s600"), required=True)
+    parser.add_argument("--variant", default="published", help="Exact paired deployment variant")
     parser.add_argument("--output-dir", type=Path, default=Path(__file__).resolve().parent)
     return parser
 
 
-def download_target(target: str, output_dir: str | Path) -> tuple[str, ...]:
-    assets = binding.list_available_assets(target)
+def download_target(target: str, output_dir: str | Path, variant="published") -> tuple[str, ...]:
+    assets = binding.list_available_assets(target) if variant == "published" else binding.list_available_assets(target, variant)
     if len(assets) != 2:
         raise ValueError(f"Expected an encoder/decoder pair for {target}, found {len(assets)}.")
     output = Path(output_dir).expanduser()
@@ -39,7 +40,7 @@ def download_target(target: str, output_dir: str | Path) -> tuple[str, ...]:
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        download_target(args.target, args.output_dir)
+        download_target(args.target, args.output_dir, args.variant)
     except (OSError, RuntimeError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

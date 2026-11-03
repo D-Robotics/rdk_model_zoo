@@ -108,3 +108,20 @@ X5 uses BIN and S uses HBM. Known digests come from active manifests. S11 publis
 | `s:yoloe26_seg:nash-m/yoloe_26m_seg_pf_nashm_640x640_nv12.hbm` | `8621baa458a94d3d1946665609633f1ecdd930efeeebe91d975f822ffd273af4` | `docs/release/s/models.yaml` |
 | `s:yoloe26_seg:nash-m/yoloe_26l_seg_pf_nashm_640x640_nv12.hbm` | `314df1d0d60c839f9ff4248ab0d4ff2adc3cc8e514a8e9cf9acca62527696738` | `docs/release/s/models.yaml` |
 | `s:yoloe26_seg:nash-m/yoloe_26x_seg_pf_nashm_640x640_nv12.hbm` | `2abf9d30dd487f2d5eb53444b7272a71d7be18265a39bd463cfd5b0cd6c14539` | `docs/release/s/models.yaml` |
+
+## Converted S100 profile (2026-11-03)
+
+`26n-native-cal32-20261103-o1` · S100 / nash-e · OE 3.7.0 (hb_compile 3.5.3, HMCT 2.6.5, HBDK 4.7.5) · O1.
+
+Select this independent build explicitly. Historical defaults and measurements are retained. Actual HBM outputs are float32.
+
+| Role | Exact asset ID | SHA-256 | Bytes |
+| --- | --- | --- | ---: |
+| model | `s:yoloe26_seg:nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12_float_cal32_20261103_o1.hbm` | `00340e52995a559be99fce15909babc7cad09e66785f8a596ab71f67bdeb61c4` | 167770984 |
+
+```bash
+bash samples/vision/yoloe/model/download.sh --target s100 --variant 26n-native-cal32-20261103-o1
+python3 samples/vision/yoloe/runtime/python/main.py --target s100 --variant 26n-native-cal32-20261103-o1 --test-img /path/to/image.jpg
+```
+
+Calibration uses 32 independent COCO training photographs. Board smoke, accuracy, Runtime 1/2 and C++ 1/2 are `not-run`. Source, checkpoint, ONNX, effective configuration, native recipe and complete OE identities are recorded in [converted.json](../conversion/converted.json).

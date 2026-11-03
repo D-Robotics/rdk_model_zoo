@@ -35,6 +35,7 @@ CONVERTED_X5 = {
         "352e8b8e4b445a8223c2a76a7fdad5594b3317a6ea04e47cd70bdc2066fdc7df",
     ),
 }
+CONVERTED_S = {'nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12_float_cal32_20261103_o1.hbm': ('26n-native-cal32-20261103-o1', '00340e52995a559be99fce15909babc7cad09e66785f8a596ab71f67bdeb61c4')}
 
 
 @dataclass(frozen=True)
@@ -51,7 +52,7 @@ class Selection:
 
     @property
     def published_float(self):
-        return self.target == "x5"
+        return self.target == "x5" or self.asset.filename in CONVERTED_S
 
 
 def list_models(target=None):
@@ -61,13 +62,16 @@ def list_models(target=None):
     rows = []
     for group, sample in [("x5", "yoloe"), ("s", "yoloe11_seg"), ("s", "yoloe26_seg")]:
         for asset in list_assets(group, sample):
-            converted = CONVERTED_X5.get(asset.filename) if group == "x5" else None
+            converted = (CONVERTED_X5 if group == "x5" else CONVERTED_S).get(asset.filename)
             if converted is not None:
                 variant, digest = converted
-                if asset.sha256 != digest or asset.format != "bin":
+                if asset.sha256 != digest or asset.format != ("bin" if group == "x5" else "hbm"):
                     raise ValueError(f"Converted YOLOE identity mismatch: {asset.reference}.")
-                if target in (None, "auto", "x5"):
-                    rows.append(("x5", variant, asset))
+                concrete = "x5" if group == "x5" else {
+                    "nash-e":"s100", "nash-m":"s100p"
+                }[asset.filename.split('/')[0]]
+                if target in (None, "auto", concrete):
+                    rows.append((concrete, variant, asset))
                 continue
             match = re.fullmatch(
                 r"(?:nash-[em]/)?yoloe_(11[sml]|26[nslmx])_seg_pf_(bayese|nashe|nashm)_640x640_nv12\.(bin|hbm)",
@@ -191,7 +195,7 @@ def run_list_models(target) -> int:
                     "target": t,
                     "variant": v,
                     "asset_id": a.reference,
-                    "published_float": t == "x5",
+                    "published_float": t == "x5" or a.filename in CONVERTED_S,
                 }
                 for t, v, a in list_models(target)
             ],

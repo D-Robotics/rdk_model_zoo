@@ -1,0 +1,79 @@
+{
+  "sample": "fasterrcnn",
+  "profile": "fixed 320x320 letterbox canvas",
+  "source": {
+    "weights_enum": "torchvision 0.21.0 FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.COCO_V1",
+    "checkpoint": "fasterrcnn_mobilenet_v3_large_320_fpn-907ea3f9.pth",
+    "checkpoint_sha256": "907ea3f91ff92242bc1baea8049276a3e76bca48ce7560bd268cc029f37977b5",
+    "checkpoint_bytes": 77844807
+  },
+  "onnx": {
+    "parta_f0only_op16_sha256": "8ab21cf106ff9d3009879a7f0775a912b78ae2e132c589ce505c40f43c7217a4",
+    "partb_packed_op16_sha256": "95751d28b7597605a56820c5d84031e94dbc2ac98ef9decd37901496852e92bc",
+    "provenance": "Actual 2026-11-03 export; source/native/connected ONNX checks passed"
+  },
+  "targets": {
+    "s100": {
+      "march": "nash-e",
+      "toolchain": "OE S 3.7.0; hb_compile 3.5.3; HMCT 2.6.5; HBDK 4.7.5; O1 latency",
+      "parta": {
+        "file": "frcnn_mbv3_320_parta_nashe_native_20261103_o1.hbm",
+        "sha256": "fc51cea2ca786bcf565da82e4929316e480d8b98d868515feb224530042ef9a6",
+        "input": {
+          "names": [
+            "images_y",
+            "images_uv"
+          ],
+          "format": "split nv12 uint8 (bt.601 limited)"
+        }
+      },
+      "partb": {
+        "file": "frcnn_mbv3_320_partb_nashe_native_20261103_o1.hbm",
+        "sha256": "63e1ab7b4b6b64ca897f20fc50e651fc4565e2ba34fea7acd01cec89768fd93e",
+        "layout": "packed",
+        "input": {
+          "name": "bank",
+          "shape": [
+            1,
+            256,
+            1050,
+            7
+          ],
+          "dtype": "float32"
+        },
+        "outputs": {
+          "cls_packed": [
+            1,
+            91,
+            150,
+            1
+          ],
+          "reg_packed": [
+            1,
+            364,
+            150,
+            1
+          ],
+          "dtype": "float32"
+        }
+      }
+    }
+  },
+  "artifacts_provenance": "Compiled 2026-11-03 for S100/nash-e with 200 real COCO training images and their model-induced ROI features; explicit O1 build. Board accuracy and performance not-run.",
+  "variant": "mbv3-320-native-20261103-o1",
+  "source_version": {
+    "repository": "https://github.com/pytorch/vision",
+    "version": "v0.21.0",
+    "checkpoint": {
+      "url": "https://download.pytorch.org/models/fasterrcnn_mobilenet_v3_large_320_fpn-907ea3f9.pth",
+      "sha256": "907ea3f91ff92242bc1baea8049276a3e76bca48ce7560bd268cc029f37977b5",
+      "bytes": 77844807,
+      "publisher_sha256_verified": true
+    },
+    "commit": "7af698794eded568735f9519593603c1ec889eba"
+  },
+  "validation": {
+    "conversion": "passed",
+    "board": "not-run"
+  }
+}

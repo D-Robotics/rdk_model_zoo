@@ -190,3 +190,13 @@ python3 samples/vision/yoloe/runtime/python/main.py \
 浮点 S HBM 通过上述本地路线生成；当前没有发布浮点 S HBM，已发布的量化 S 制品属于不同输入。导出对照在未优化的 ONNX Runtime CPU 上执行；优化引擎行为、更多输入与 X5 11m/11l 编译需自行运行验证。图接口校验不识别错误标注的权重尺寸或标签语义，这部分由导出器检查和评估器覆盖。[C++ 运行时](../runtime/cpp/README_cn.md)的 SDK 构建与板端执行见其指南。[统一评估器](../evaluator/README_cn.md)提供显式数据集映射与计分。
 
 每次转换保存本地权重、导出 ONNX 和生成 HBM 的 SHA-256。原始量化输出路线与浮点输出路线分别保存制品记录。
+
+## 本轮 S100 复现（2026-11-03）
+
+本轮新增配方采用上面的独立 variant、S100/nash-e 和 O1；旧配方保留。配方使用相对工作目录，实际执行的绝对路径 YAML 摘要另存于 `converted.json`。
+
+- `model`: [26n_native_cal32_20261103_o1_s100_model.yaml](recipes/26n_native_cal32_20261103_o1_s100_model.yaml)
+
+沿用固定8.4.127 exporter 的全部十输出与词表一致性门禁。原生 `prepare.py --target s100 --variant 26n --sample-count 32` 读取单独冻结的32图目录。200图 KL 尝试因40 GiB内存上限终止，修改校准集后另建本轮尝试，使用独立 O1 文件名。
+
+在匹配 OE 3.7.0 容器中从工作目录运行 `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml`，每件模型分别编译。板端各项数据仍为 `not-run`。

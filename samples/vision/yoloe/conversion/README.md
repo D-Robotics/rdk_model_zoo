@@ -193,3 +193,13 @@ Expected output is `compiler_output/yoloe_<variant>_seg_pf_<march-without-hyphen
 Float S HBMs come from the local route above; no float S HBM is published, and the published quantized S artifacts are distinct inputs. Export comparisons run on unoptimized ONNX Runtime CPU; validate optimized-engine behavior, broader inputs and X5 11m/11l compilation with your own runs. Graph/interface validation does not detect an incorrectly labelled checkpoint size or changed label semantics; the exporter checks and evaluator cover those. SDK build and board execution for the [C++ runtime](../runtime/cpp/README.md) follow its guide. The [evaluator](../evaluator/README.md) provides explicit dataset mapping and scoring.
 
 Record the local checkpoint SHA-256, exported ONNX SHA-256 and resulting HBM SHA-256 with each conversion. Keep original quantized-output and float-output routes as distinct artifact records.
+
+## S100 reproduction profile (2026-11-03)
+
+This independent variant targets S100/nash-e with O1. Existing recipes remain available. Portable recipes use paths relative to the working directory; the effective execution YAML has its own digest in `converted.json`.
+
+- `model`: [26n_native_cal32_20261103_o1_s100_model.yaml](recipes/26n_native_cal32_20261103_o1_s100_model.yaml)
+
+Keep all ten output and vocabulary gates in the fixed 8.4.127 exporter. Native `prepare.py --target s100 --variant 26n --sample-count 32` consumes the separately frozen 32-image directory. The 200-image KL attempt hit its 40 GiB memory cap; the new calibration subset is a separate attempt with an explicit O1 filename.
+
+From the working directory in the matching OE 3.7.0 container, run `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml` for each component. Board checks remain `not-run`.

@@ -173,7 +173,11 @@ def main() -> None:
                         help="export_split.py output directory")
     parser.add_argument("--out", default=str(Path(__file__).parent / "calib"),
                         help="calibration output root")
+    parser.add_argument("--threads", type=int, default=2, help="Host Torch/ORT worker count")
     args = parser.parse_args()
+    if args.threads < 1:
+        raise ValueError('threads must be positive')
+    torch.set_num_threads(args.threads)
 
     if not args.images and args.coco_urls is None:
         raise SystemExit("no calibration source: pass --images and/or --coco-urls")
@@ -185,7 +189,10 @@ def main() -> None:
     if not parta_onnx.is_file():
         raise SystemExit(f"missing {parta_onnx}; run export_split.py first")
 
-    session = ort.InferenceSession(str(parta_onnx), providers=["CPUExecutionProvider"])
+    options = ort.SessionOptions()
+    options.intra_op_num_threads = args.threads
+    options.inter_op_num_threads = 1
+    session = ort.InferenceSession(str(parta_onnx), sess_options=options, providers=["CPUExecutionProvider"])
 
     # Anchors are input-shape dependent only; generate them from the model.
     with torch.no_grad():
