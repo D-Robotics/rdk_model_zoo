@@ -138,11 +138,14 @@ describe("multi-platform variant catalog", () => {
     // Later the same day added eleven more download-only variants and no benchmark
     // rows: ConvNeXt Femto on S100P, EfficientSAM S600, GoogLeNet int16 on
     // S100/S100P/S600, MODNet on S100/S100P/S600, native YOLOv5n/s on S100P,
-    // ConvNeXt Nano on S100, ConvNeXt Femto on S600, and the MobileSAM S100P pair.
-    // 61 families, 726 variants, 760 benchmark rows.
+    // ConvNeXt Nano on S100, ConvNeXt Femto on S600, and the MobileSAM S100P pair:
+    // 726 variants.
+    // The next S profiles added six more download-only variants and no benchmark rows:
+    // ConvNeXt Pico on S100/S100P/S600, ConvNeXt Nano on S100P and S600, the MobileSAM
+    // S600 pair, and YOLO26n-Depth on S100P. 61 families, 732 variants, 760 benchmark rows.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(61);
-    expect(variants).toHaveLength(726);
+    expect(variants).toHaveLength(732);
     expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(760);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
