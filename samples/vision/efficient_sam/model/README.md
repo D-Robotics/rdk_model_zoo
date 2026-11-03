@@ -81,10 +81,11 @@ These independent profiles passed conversion, complete OE collection and actual 
 | Target | Native variant | Components | Calibration photographs |
 | --- | --- | --- | ---: |
 | s100p | `vitt-512-int16-20261103-o1` | encoder, decoder | 200 |
+| s600 | `vitt-512-int16-20261103-o1` | encoder, decoder | 200 |
 
 ```bash
 python3 samples/vision/efficient_sam/model/download.py --target s100p --variant vitt-512-int16-20261103-o1
-python3 samples/vision/efficient_sam/runtime/python/main.py --target s100p --variant vitt-512-int16-20261103-o1 --encoder-model-path /path/to/efficient_sam_vitt_encoder_512x512_nashm_int16_20261103_o1.hbm --encoder-asset-id s:efficient_sam:nash-m/efficient_sam_vitt_encoder_512x512_nashm_int16_20261103_o1.hbm --decoder-model-path /path/to/efficient_sam_vitt_decoder_512_nashm_int16_20261103_o1.hbm --decoder-asset-id s:efficient_sam:nash-m/efficient_sam_vitt_decoder_512_nashm_int16_20261103_o1.hbm --test-img /path/to/image.jpg
+python3 samples/vision/efficient_sam/runtime/python/main.py --target s100p --variant vitt-512-int16-20261103-o1 --encoder-model-path /path/to/efficient_sam_vitt_encoder_512x512_nashm_int16_20261103_o1.hbm --encoder-asset-id s:efficient_sam:nash-m/efficient_sam_vitt_encoder_512x512_nashm_int16_20261103_o1.hbm --decoder-model-path /path/to/efficient_sam_vitt_decoder_512_nashm_int16_20261103_o1.hbm --decoder-asset-id s:efficient_sam:nash-m/efficient_sam_vitt_decoder_512_nashm_int16_20261103_o1.hbm --test-img samples/vision/efficient_sam/test_data/dogs.jpg
 ```
 
 Substitute the actual file paths. Multi-component tasks require every component together. Historical defaults and measurements retain their original identities. Board smoke, dataset accuracy, Runtime 1/2 and C++ 1/2 are `not-run` for these profiles.

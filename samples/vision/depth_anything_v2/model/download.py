@@ -4,6 +4,11 @@
 
 import argparse
 from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[4]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 from utils.py_utils.assets import download_asset
 from samples.vision.depth_anything_v2.runtime.python.cli import (
     VARIANT_ASSETS,

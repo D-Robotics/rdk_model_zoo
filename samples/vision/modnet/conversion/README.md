@@ -17,7 +17,7 @@ The upstream [license statement](https://github.com/ZHKKKe/MODNet/blob/28165a451
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
-X5 only: OpenExplorer image `registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8`, observed image ID `sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f`, Mapper 1.24.3. The export run used PyTorch 2.8.0, ONNX 1.17.0 and ONNX Runtime 1.19.2. This is PTQ conversion, with board performance and matting accuracy measured separately later.
+Historical X5 recipe: OpenExplorer image `registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8`, observed image ID `sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f`, Mapper 1.24.3. The export run used PyTorch 2.8.0, ONNX 1.17.0 and ONNX Runtime 1.19.2. This is PTQ conversion, with board performance and matting accuracy measured separately later.
 
 <a id="export"></a>
 ## Export and calibration preparation
@@ -70,3 +70,15 @@ The new profile is `modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin
 ## Historical model and remaining measurements
 
 The checkpoint/exporter/PTQ settings behind the historical manual `modnet_512x512_rgb.bin` remain unknown. Its historical performance table is preserved and does not describe the new photographic artifact. New board performance, board Runtime execution and labeled matting accuracy remain pending.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100 / photographic-portrait-512-s-o1-20261103 / model`: [photographic_portrait_512_s_o1_20261103_s100_model.yaml](recipes/photographic_portrait_512_s_o1_20261103_s100_model.yaml)
+- `s100p / photographic-portrait-512-s-o1-20261103 / model`: [photographic_portrait_512_s_o1_20261103_s100p_model.yaml](recipes/photographic_portrait_512_s_o1_20261103_s100p_model.yaml)
+- `s600 / photographic-portrait-512-s-o1-20261103 / model`: [photographic_portrait_512_s_o1_20261103_s600_model.yaml](recipes/photographic_portrait_512_s_o1_20261103_s600_model.yaml)
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

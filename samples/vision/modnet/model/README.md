@@ -9,7 +9,7 @@ English | [简体中文](README_cn.md)
 |---|---|---|---|---|
 | X5 | matting | `x5:modnet:modnet_512x512_rgb.bin` | `modnet_512x512_rgb.bin` | manual external asset |
 
-No S100/S100P/S600 MODNet asset is published.
+The photographic checkpoint also has independent S100/S100P/S600 HBM assets with exact URLs and hashes; see the converted profiles below. Board acceptance is `not-run`.
 
 <a id="directory"></a>
 ## Directory structure
@@ -63,3 +63,22 @@ The default runtime path is `samples/vision/modnet/model/modnet_512x512_rgb.bin`
 ## Format and checksums
 
 The expected artifact is an X5 `bin` deployment model. The legacy manifest row records `url: null` and `sha256: null (unknown)`. No local observation is treated as publisher authentication.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+These independent profiles passed conversion, complete OE collection and actual HBM metadata binding. Source weights, graphs, per-target recipes, calibration counts and digests are in [converted_targets_20261103.json](../conversion/converted_targets_20261103.json).
+
+| Target | Native variant | Components | Calibration photographs |
+| --- | --- | --- | ---: |
+| s100 | `photographic-portrait-512-s-o1-20261103` | model | 200 |
+| s100p | `photographic-portrait-512-s-o1-20261103` | model | 200 |
+| s600 | `photographic-portrait-512-s-o1-20261103` | model | 200 |
+
+```bash
+python3 samples/vision/modnet/model/download.py --target s100 --asset-id s:modnet:s100/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm
+python3 samples/vision/modnet/runtime/python/main.py --target s100 --asset-id s:modnet:s100/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm --model-path /path/to/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm --test-img /path/to/image.jpg
+```
+
+Substitute the actual file paths. Multi-component tasks require every component together. Historical defaults and measurements retain their original identities. Board smoke, dataset accuracy, Runtime 1/2 and C++ 1/2 are `not-run` for these profiles.

@@ -7,6 +7,11 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[4]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 
 ASSET_ID = "x5:modnet:modnet_512x512_rgb.bin"

@@ -17,7 +17,7 @@
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-仅 X5：OpenExplorer 镜像 `registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8`，观察镜像 ID `sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f`，Mapper 1.24.3。导出使用 PyTorch 2.8.0、ONNX 1.17.0、ONNX Runtime 1.19.2。本流程为 PTQ 转换，板端性能与抠像精度另行补测。
+既有 X5 配方：OpenExplorer 镜像 `registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8`，观察镜像 ID `sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f`，Mapper 1.24.3。导出使用 PyTorch 2.8.0、ONNX 1.17.0、ONNX Runtime 1.19.2。本流程为 PTQ 转换，板端性能与抠像精度另行补测。
 
 <a id="export"></a>
 ## 导出与校准准备
@@ -70,3 +70,15 @@ hb_model_info /work/modnet-run/output/modnet_photographic_portrait_512x512_rgb_b
 ## 历史模型与待测项
 
 旧手动制品 `modnet_512x512_rgb.bin` 的权重/导出/PTQ 身份仍未知，其历史性能表继续保留，不用于新摄影人像模型。新制品的板端性能、板端 Runtime 执行和标注集抠像精度待补测。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
+
+- `s100 / photographic-portrait-512-s-o1-20261103 / model`: [photographic_portrait_512_s_o1_20261103_s100_model.yaml](recipes/photographic_portrait_512_s_o1_20261103_s100_model.yaml)
+- `s100p / photographic-portrait-512-s-o1-20261103 / model`: [photographic_portrait_512_s_o1_20261103_s100p_model.yaml](recipes/photographic_portrait_512_s_o1_20261103_s100p_model.yaml)
+- `s600 / photographic-portrait-512-s-o1-20261103 / model`: [photographic_portrait_512_s_o1_20261103_s600_model.yaml](recipes/photographic_portrait_512_s_o1_20261103_s600_model.yaml)
+
+原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。

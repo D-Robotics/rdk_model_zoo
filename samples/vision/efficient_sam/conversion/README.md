@@ -266,5 +266,7 @@ Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 set
 
 - `s100p / vitt-512-int16-20261103-o1 / encoder`: [vitt_512_int16_20261103_o1_s100p_encoder.yaml](recipes/vitt_512_int16_20261103_o1_s100p_encoder.yaml)
 - `s100p / vitt-512-int16-20261103-o1 / decoder`: [vitt_512_int16_20261103_o1_s100p_decoder.yaml](recipes/vitt_512_int16_20261103_o1_s100p_decoder.yaml)
+- `s600 / vitt-512-int16-20261103-o1 / encoder`: [vitt_512_int16_20261103_o1_s600_encoder.yaml](recipes/vitt_512_int16_20261103_o1_s600_encoder.yaml)
+- `s600 / vitt-512-int16-20261103-o1 / decoder`: [vitt_512_int16_20261103_o1_s600_decoder.yaml](recipes/vitt_512_int16_20261103_o1_s600_decoder.yaml)
 
 The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

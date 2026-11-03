@@ -144,7 +144,7 @@ class ConversionLayoutTest(unittest.TestCase):
     def test_no_generated_conversion_artifacts_are_checked_in(self):
         forbidden_suffixes = {".onnx", ".bin", ".hbm", ".npy", ".rgbchw", ".json"}
         for path in CONVERSION.rglob("*"):
-            if path == CONVERSION / "converted.json":
+            if path in (CONVERSION / "converted.json", CONVERSION / "converted_targets_20261103.json"):
                 continue  # Versioned provenance metadata, not a generated model or tensor.
             self.assertNotIn(path.suffix, forbidden_suffixes, path)
         for name in ("workspace", "calibration_data_rgbchw_512", "decoder_calibration", "bpu_model_output_512_default_none"):

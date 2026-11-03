@@ -81,10 +81,11 @@ python3 samples/vision/efficient_sam/runtime/python/main.py --target s100 --vari
 | 目标 | Native variant | 组件 | 校准图片 |
 | --- | --- | --- | ---: |
 | s100p | `vitt-512-int16-20261103-o1` | encoder, decoder | 200 |
+| s600 | `vitt-512-int16-20261103-o1` | encoder, decoder | 200 |
 
 ```bash
 python3 samples/vision/efficient_sam/model/download.py --target s100p --variant vitt-512-int16-20261103-o1
-python3 samples/vision/efficient_sam/runtime/python/main.py --target s100p --variant vitt-512-int16-20261103-o1 --encoder-model-path /path/to/efficient_sam_vitt_encoder_512x512_nashm_int16_20261103_o1.hbm --encoder-asset-id s:efficient_sam:nash-m/efficient_sam_vitt_encoder_512x512_nashm_int16_20261103_o1.hbm --decoder-model-path /path/to/efficient_sam_vitt_decoder_512_nashm_int16_20261103_o1.hbm --decoder-asset-id s:efficient_sam:nash-m/efficient_sam_vitt_decoder_512_nashm_int16_20261103_o1.hbm --test-img /path/to/image.jpg
+python3 samples/vision/efficient_sam/runtime/python/main.py --target s100p --variant vitt-512-int16-20261103-o1 --encoder-model-path /path/to/efficient_sam_vitt_encoder_512x512_nashm_int16_20261103_o1.hbm --encoder-asset-id s:efficient_sam:nash-m/efficient_sam_vitt_encoder_512x512_nashm_int16_20261103_o1.hbm --decoder-model-path /path/to/efficient_sam_vitt_decoder_512_nashm_int16_20261103_o1.hbm --decoder-asset-id s:efficient_sam:nash-m/efficient_sam_vitt_decoder_512_nashm_int16_20261103_o1.hbm --test-img samples/vision/efficient_sam/test_data/dogs.jpg
 ```
 
 命令中的路径需要替换为实际文件。每套多组件模型须同时准备全部组件。旧默认与既有指标保留原身份；本轮规格的板端 smoke、数据集精度、Runtime 1/2 并发和 C++ 1/2 流均为 `not-run`。

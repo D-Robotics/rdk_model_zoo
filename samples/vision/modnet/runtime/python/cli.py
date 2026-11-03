@@ -191,7 +191,9 @@ def run_list_models(target: str) -> int:
     rows = list_available_assets(target)
     print(json.dumps([
         {"asset_id": row.reference, "filename": row.filename, "format": row.format,
-         "url": row.url, "sha256": row.sha256, "target": "x5", "availability": "download" if row.url else "manual"}
+         "url": row.url, "sha256": row.sha256,
+         "target": "x5" if row.group == "x5" else row.filename.split("/", 1)[0],
+         "availability": "download" if row.url else "manual"}
         for row in rows
     ], ensure_ascii=False, indent=2))
     return 0
