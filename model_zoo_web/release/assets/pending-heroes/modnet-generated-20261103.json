@@ -1,0 +1,118 @@
+{
+  "schema_version": 2,
+  "kind": "host-float-model-inference-banner",
+  "status": "passed",
+  "source": "modnet",
+  "model_url": "https://drive.usercontent.google.com/download?id=1mcr7ALciuAsHCpLnrtG_eop5-EYhbCmz&export=download&confirm=t",
+  "model_file": "modnet_photographic_portrait_matting.ckpt",
+  "checkpoint_sha256": "7c22235f0925deba15d4d63e53afcb654c47055bbcd98f56e393ab2584007ed8",
+  "commit": "c5e3d097a9e44b8512cc71b66459ac3ed0016b64",
+  "input": "samples/vision/modnet/test_data/banner_input_portrait_20261103.png",
+  "input_sha256": "99a434b1cde12ee5124403e766adbd93840ed07683fed438bf769febc20e5e43",
+  "native_helpers": {
+    "samples/vision/modnet/runtime/python/modnet.py": "cfa59cb4735fd9b0c9d01b9f770fb206fdddc4bffb7fcf0bde5354557693dbc6"
+  },
+  "graphs": {
+    "model": {
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/modnet-x5-20261102-r01/prepared/modnet_photographic_portrait_512x512_rgb_bayese_20261102.onnx",
+      "sha256": "1f8cd24cebf823044b738548969461452c938899964ee05af2f8f5c945798a92"
+    }
+  },
+  "framework": "ONNX Runtime 1.19.2",
+  "graph_io": {
+    "model": {
+      "inputs": [
+        {
+          "name": "input",
+          "shape": [
+            1,
+            3,
+            512,
+            512
+          ],
+          "dtype": "tensor(float)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "matte",
+          "shape": [
+            1,
+            1,
+            512,
+            512
+          ],
+          "dtype": "tensor(float)"
+        }
+      ]
+    }
+  },
+  "provider": "CPUExecutionProvider",
+  "runtime": "host-float-reference",
+  "versions": {
+    "onnxruntime": "1.19.2",
+    "numpy": "2.2.6",
+    "opencv": "4.11.0",
+    "pillow": "12.3.0"
+  },
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "feeds": [
+    {
+      "role": "model",
+      "name": "input",
+      "shape": [
+        1,
+        3,
+        512,
+        512
+      ],
+      "dtype": "float32",
+      "sha256": "6fb875abe0bebb183636c1446ff935a28d1d8e583f0425f670a102580a21c307"
+    }
+  ],
+  "forward_outputs": [
+    {
+      "role": "model",
+      "name": "matte",
+      "shape": [
+        1,
+        1,
+        512,
+        512
+      ],
+      "dtype": "float32",
+      "sha256": "30d0f6231302318c3176b7acf218e8e0f5b9b36a4d6effc2af423040f25c1de3"
+    }
+  ],
+  "files": {
+    "source.png": {
+      "file": "source.png",
+      "sha256": "99a434b1cde12ee5124403e766adbd93840ed07683fed438bf769febc20e5e43",
+      "size_bytes": 2314324
+    },
+    "outputs.npz": {
+      "file": "outputs.npz",
+      "sha256": "81281735526842fad7b7d8fc5086a6f081d5b7a5e6ab4bc276e834c571d37c09",
+      "size_bytes": 606826
+    },
+    "banner.webp": {
+      "file": "banner.webp",
+      "sha256": "d313a9abb6811004420b9e29e86fd684a24b94987b9c4a1559e4d9faf17ad39e",
+      "size_bytes": 182978
+    },
+    "result.png": {
+      "file": "result.png",
+      "sha256": "4be820e1882aa1341eac87aacaf7659a778eed728ae8cb9b420660a24258aba4",
+      "size_bytes": 1390595
+    }
+  },
+  "renderer_sha256": "a275bf6dcb8f635353d6cbc12211a653bd3da7917d16eb7f5072c893e41ddf50",
+  "visualization": {
+    "method": "Native MODNet restored alpha, composite onto light blue",
+    "alpha_range": [
+      0,
+      255
+    ]
+  }
+}

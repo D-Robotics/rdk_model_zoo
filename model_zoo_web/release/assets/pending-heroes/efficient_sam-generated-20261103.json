@@ -1,0 +1,210 @@
+{
+  "schema_version": 2,
+  "kind": "host-float-model-inference-banner",
+  "status": "passed",
+  "source": "efficient_sam",
+  "model_url": "https://github.com/yformer/EfficientSAM/blob/d525f622e6f640acf5a0fc37c7ca1f243da5bde0/weights/efficient_sam_vitt.pt",
+  "model_file": "efficient_sam_vitt.pt",
+  "checkpoint_sha256": "dff858b19600a46461cbb7de98f796b23a7a888d9f5e34c0b033f7d6eb9e4e6a",
+  "commit": "c5e3d097a9e44b8512cc71b66459ac3ed0016b64",
+  "input": "samples/vision/efficient_sam/test_data/banner_input_dog_20261103.png",
+  "input_sha256": "6b30f75e815d0e3804bb11c53523647ef27eaff99c1274ccf34d5e738f32be8f",
+  "native_helpers": {
+    "utils/py_utils/sam_tensor_io.py": "bb135cf1c3806ed6783d991e02f6dd2131368ba2cf926b5e8717d0513626a61f",
+    "utils/py_utils/sam_binding.py": "3d0ddc2bb502d98a29823be932e6e01a7f74945de82b02b0af672e86be6240d8",
+    "utils/py_utils/sam_stages.py": "09e0fd98772af54d1192c637d1c6df7ad0c7f9a55203e3e189b4aaa153520bb2"
+  },
+  "graphs": {
+    "encoder": {
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/efficient-sam-s100-r01/encoder.onnx",
+      "sha256": "320e46b085bb34e3f5d00f32cb1d2b88c7b6c7085488c01c8e1f0fe960622222",
+      "size_bytes": 24856482
+    },
+    "decoder": {
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/efficient-sam-s100-r01/decoder.onnx",
+      "sha256": "0e7eb480d93ed8db471a4b423db52802f2190e4a168893932d6c1317658c12a6",
+      "size_bytes": 17390518
+    }
+  },
+  "framework": "ONNX Runtime 1.19.2",
+  "graph_io": {
+    "encoder": {
+      "inputs": [
+        {
+          "name": "batched_images",
+          "shape": [
+            1,
+            3,
+            512,
+            512
+          ],
+          "dtype": "tensor(float)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image_embeddings",
+          "shape": [
+            1,
+            256,
+            32,
+            32
+          ],
+          "dtype": "tensor(float)"
+        }
+      ]
+    },
+    "decoder": {
+      "inputs": [
+        {
+          "name": "image_embeddings",
+          "shape": [
+            1,
+            256,
+            32,
+            32
+          ],
+          "dtype": "tensor(float)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "low_res_masks",
+          "shape": [
+            1,
+            3,
+            128,
+            128
+          ],
+          "dtype": "tensor(float)"
+        },
+        {
+          "name": "iou_predictions",
+          "shape": [
+            1,
+            3
+          ],
+          "dtype": "tensor(float)"
+        }
+      ]
+    }
+  },
+  "provider": "CPUExecutionProvider",
+  "runtime": "host-float-reference",
+  "versions": {
+    "onnxruntime": "1.19.2",
+    "numpy": "2.2.6",
+    "opencv": "4.11.0",
+    "pillow": "12.3.0"
+  },
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "feeds": [
+    {
+      "role": "encoder",
+      "name": "batched_images",
+      "shape": [
+        1,
+        3,
+        512,
+        512
+      ],
+      "dtype": "float32",
+      "sha256": "164073fa7cdefac77204f9dde67305fac7db0ed92e24d8c35002b66789fa41e4"
+    },
+    {
+      "role": "decoder",
+      "name": "image_embeddings",
+      "shape": [
+        1,
+        256,
+        32,
+        32
+      ],
+      "dtype": "float32",
+      "sha256": "488e2eca8243caf0b608d0837bea8ff6fd8fde1a888d92e4a2eb26ebdf672098"
+    }
+  ],
+  "forward_outputs": [
+    {
+      "role": "encoder",
+      "name": "image_embeddings",
+      "shape": [
+        1,
+        256,
+        32,
+        32
+      ],
+      "dtype": "float32",
+      "sha256": "488e2eca8243caf0b608d0837bea8ff6fd8fde1a888d92e4a2eb26ebdf672098"
+    },
+    {
+      "role": "decoder",
+      "name": "low_res_masks",
+      "shape": [
+        1,
+        3,
+        128,
+        128
+      ],
+      "dtype": "float32",
+      "sha256": "4116a718320865a39163d016226c87c0f7e477c4faec190be5ef378a54ff1671"
+    },
+    {
+      "role": "decoder",
+      "name": "iou_predictions",
+      "shape": [
+        1,
+        3
+      ],
+      "dtype": "float32",
+      "sha256": "31f20075b68000953516d81f61333ad10a4dae3bf851e59b7a49a3ec1be5ab6b"
+    }
+  ],
+  "files": {
+    "source.png": {
+      "file": "source.png",
+      "sha256": "6b30f75e815d0e3804bb11c53523647ef27eaff99c1274ccf34d5e738f32be8f",
+      "size_bytes": 2416727
+    },
+    "outputs.npz": {
+      "file": "outputs.npz",
+      "sha256": "f67df43c8ce6c6565eab73392a604e7b684f48ad02304272d52c288562f055f2",
+      "size_bytes": 1158824
+    },
+    "banner.webp": {
+      "file": "banner.webp",
+      "sha256": "b579526f69238157fe54b7ef8c94c094142b89b8e765a68f896e575d818cc6a8",
+      "size_bytes": 289032
+    },
+    "result.png": {
+      "file": "result.png",
+      "sha256": "ec2c83b119bb01c596e9c11211320290a7d4986e564523d1ca6626669062fa24",
+      "size_bytes": 2148013
+    }
+  },
+  "renderer_sha256": "a275bf6dcb8f635353d6cbc12211a653bd3da7917d16eb7f5072c893e41ddf50",
+  "prompts": {
+    "positive_points": [
+      [
+        248,
+        210
+      ],
+      [
+        302,
+        315
+      ]
+    ],
+    "fixed_in_decoder": true
+  },
+  "mask_index": 0,
+  "predicted_iou": 0.8786652684211731,
+  "visualization": {
+    "method": "Native highest-IoU decoder candidate; actual mask overlay",
+    "selected_mask_shape": [
+      1254,
+      1254
+    ],
+    "foreground_pixels": 441059
+  }
+}

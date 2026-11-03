@@ -1,0 +1,183 @@
+{
+  "schema_version": 2,
+  "kind": "host-float-model-inference-banner",
+  "status": "passed",
+  "source": "clip",
+  "model_url": "https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt",
+  "model_file": "ViT-B-32.pt",
+  "checkpoint_sha256": "40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af",
+  "commit": "c5e3d097a9e44b8512cc71b66459ac3ed0016b64",
+  "input": "samples/vision/clip/test_data/banner_input_dog_20261103.png",
+  "input_sha256": "6b30f75e815d0e3804bb11c53523647ef27eaff99c1274ccf34d5e738f32be8f",
+  "native_helpers": {
+    "samples/vision/clip/runtime/python/matching.py": "07097190731f08945567a0412af29104f5d2af2615a2747ff01721179bd6ce13",
+    "samples/vision/clip/runtime/python/simple_tokenizer.py": "c89562f27ea4847e664437345164a97ce4515e2bdc074817b1df4302dcc369c6"
+  },
+  "graphs": {
+    "image": {
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/host/clip-r03/image_encoder.onnx",
+      "sha256": "36a0b2c3790acb7b25a3e6088cef637938291cd7a8b18c5f176f510d48aeb3a7",
+      "size_bytes": 351633391
+    },
+    "text": {
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/host/clip-r03/text_encoder.onnx",
+      "sha256": "3e2fe0dfccd41d7253d78a644a5fcdda97e0cdaf3abf4ac9c35ccdd29f9887dc",
+      "size_bytes": 254389730
+    }
+  },
+  "framework": "ONNX Runtime 1.19.2",
+  "graph_io": {
+    "image": {
+      "inputs": [
+        {
+          "name": "image",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "tensor(float)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image_features",
+          "shape": [
+            1,
+            512
+          ],
+          "dtype": "tensor(float)"
+        }
+      ]
+    },
+    "text": {
+      "inputs": [
+        {
+          "name": "tokens",
+          "shape": [
+            "prompts",
+            77
+          ],
+          "dtype": "tensor(int32)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text_features",
+          "shape": [
+            "prompts",
+            512
+          ],
+          "dtype": "tensor(float)"
+        }
+      ]
+    }
+  },
+  "provider": "CPUExecutionProvider",
+  "runtime": "host-float-reference",
+  "versions": {
+    "onnxruntime": "1.19.2",
+    "numpy": "2.2.6",
+    "opencv": "4.11.0",
+    "pillow": "12.3.0"
+  },
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "feeds": [
+    {
+      "role": "image",
+      "name": "image",
+      "shape": [
+        1,
+        3,
+        224,
+        224
+      ],
+      "dtype": "float32",
+      "sha256": "833b5a34a07ce4e3adf910feb8fb43c4139967fe376e3358edd8187650fac68f"
+    },
+    {
+      "role": "text",
+      "name": "tokens",
+      "shape": [
+        5,
+        77
+      ],
+      "dtype": "int32",
+      "sha256": "410addc20e74b6376c84cbae714ce88343c4067a5abdc00ada7adcddd6830d7e"
+    }
+  ],
+  "forward_outputs": [
+    {
+      "role": "image",
+      "name": "image_features",
+      "shape": [
+        1,
+        512
+      ],
+      "dtype": "float32",
+      "sha256": "7fbaab911dd17ed80cec57e415f97e1162aea4fdc56ad2a31c6fe4fce8b500c4"
+    },
+    {
+      "role": "text",
+      "name": "text_features",
+      "shape": [
+        5,
+        512
+      ],
+      "dtype": "float32",
+      "sha256": "054a49fe6e67a5c2d4bc0836c2e4db7e311edae02e92b03cf78697b3bfbba76e"
+    }
+  ],
+  "files": {
+    "source.png": {
+      "file": "source.png",
+      "sha256": "6b30f75e815d0e3804bb11c53523647ef27eaff99c1274ccf34d5e738f32be8f",
+      "size_bytes": 2416727
+    },
+    "outputs.npz": {
+      "file": "outputs.npz",
+      "sha256": "0ea015792212ac80c417b696afea6c92b6dd537f51121a28558f82200f9580df",
+      "size_bytes": 11898
+    },
+    "banner.webp": {
+      "file": "banner.webp",
+      "sha256": "8a9f4315ebc3d3e067efb5d98c3510b01aef358c5c9cca27e7dd4b6065220ec7",
+      "size_bytes": 189590
+    }
+  },
+  "renderer_sha256": "a275bf6dcb8f635353d6cbc12211a653bd3da7917d16eb7f5072c893e41ddf50",
+  "similarities": [
+    {
+      "label": "a photo of a golden retriever",
+      "score": 0.3428480327129364
+    },
+    {
+      "label": "a photo of a wolf",
+      "score": 0.23142656683921814
+    },
+    {
+      "label": "a photo of a rabbit",
+      "score": 0.2207878828048706
+    },
+    {
+      "label": "a photo of a red fox",
+      "score": 0.21049422025680542
+    },
+    {
+      "label": "a photo of a tabby cat",
+      "score": 0.19623622298240662
+    }
+  ],
+  "prompts": [
+    "a photo of a golden retriever",
+    "a photo of a tabby cat",
+    "a photo of a wolf",
+    "a photo of a red fox",
+    "a photo of a rabbit"
+  ],
+  "visualization": {
+    "method": "Native L2 feature cosine; raw decimal scores, not probabilities"
+  }
+}

@@ -691,6 +691,73 @@ def _hero_asset_path(value: Any, label: str, suffix: str) -> str:
     return hero_file
 
 
+def _validate_inference_banner_receipt(payload: dict[str, Any], entry: dict[str, Any], label: str) -> None:
+    """Bind a new model-output visualization to its input, all heads and image bytes."""
+    if payload.get("schema_version") != 2 or payload.get("status") != "passed":
+        raise CatalogError(f"{label} needs a passed version-2 inference receipt")
+    if (payload.get("provider") != "CPUExecutionProvider" or payload.get("board_execution") != "not-run"
+            or payload.get("dataset_accuracy") != "not-run"):
+        raise CatalogError(f"{label} must retain its host-only inference scope")
+    def source_digest(path):
+        result = subprocess.run(["git", "show", f"{entry['commit']}:{path}"], cwd=ROOT, capture_output=True)
+        if result.returncode:
+            raise CatalogError(f"{label} source is absent from its inference revision: {path}")
+        return hashlib.sha256(result.stdout).hexdigest()
+    if payload.get("input_sha256") != source_digest(entry["input"]):
+        raise CatalogError(f"{label} input hash differs from its inference revision")
+    helpers = require_mapping(payload.get("native_helpers"), f"{label}.native_helpers")
+    if not helpers:
+        raise CatalogError(f"{label} must record native inference helpers")
+    for path, digest in helpers.items():
+        pure = PurePosixPath(path)
+        if (pure.is_absolute() or ".." in pure.parts or pure.suffix != ".py"
+                or not path.startswith(("samples/", "utils/py_utils/"))):
+            raise CatalogError(f"{label} helper must be a native sample or shared Python source")
+        if digest != source_digest(path):
+            raise CatalogError(f"{label} helper hash differs from its inference revision")
+    graphs = require_mapping(payload.get("graphs"), f"{label}.graphs")
+    metadata = require_mapping(payload.get("graph_io"), f"{label}.graph_io")
+    if not graphs or set(graphs) != set(metadata):
+        raise CatalogError(f"{label} must record every graph's output metadata")
+    expected = {}
+    for role, graph in graphs.items():
+        if not SHA256_RE.fullmatch(str(graph.get("sha256", ""))):
+            raise CatalogError(f"{label} needs each exact source graph hash")
+        outputs = metadata[role].get("outputs")
+        if not isinstance(outputs, list) or not outputs:
+            raise CatalogError(f"{label} needs every source output")
+        for output in outputs:
+            key = (role, output.get("name"))
+            if key in expected:
+                raise CatalogError(f"{label} repeats an output")
+            expected[key] = output
+    outputs = payload.get("forward_outputs")
+    if not isinstance(outputs, list) or not outputs:
+        raise CatalogError(f"{label} needs actual forward outputs")
+    actual = [(v.get("role"), v.get("name")) for v in outputs]
+    if len(actual) != len(expected) or set(actual) != set(expected):
+        raise CatalogError(f"{label} forward outputs omit or repeat a source head")
+    for output in outputs:
+        declared = expected[(output["role"], output["name"])]["shape"]
+        if (output.get("dtype") != "float32" or not SHA256_RE.fullmatch(str(output.get("sha256", "")))
+                or not isinstance(output.get("shape"), list) or not output["shape"]
+                or len(output["shape"]) != len(declared)
+                or any(isinstance(wanted, int) and observed != wanted
+                       for observed, wanted in zip(output["shape"], declared))):
+            raise CatalogError(f"{label} needs typed, shaped and hashed forward outputs")
+    files = require_mapping(payload.get("files"), f"{label}.files")
+    def verify_asset(relative, identity):
+        path = ROOT / _hero_asset_path(relative, f"{label}.visualization_asset", Path(relative).suffix)
+        data = path.read_bytes()
+        if hashlib.sha256(data).hexdigest() != identity.get("sha256") or len(data) != identity.get("size_bytes"):
+            raise CatalogError(f"{label} rendered asset differs from its actual inference receipt")
+    verify_asset(entry["file"], require_mapping(files.get("banner.webp"), f"{label}.banner"))
+    if "result.png" in files:
+        verify_asset(entry["file"].removesuffix(".webp")+"-result.png", files["result.png"])
+    visualization = require_mapping(payload.get("visualization"), f"{label}.visualization")
+    require_string(visualization.get("method"), f"{label}.visualization.method")
+
+
 def _validate_host_float_hero(entry: dict[str, Any], label: str, revision: str) -> None:
     """Predictions come from a host run of the documented float checkpoint, stored beside the hero."""
     note = require_string(entry.get("note"), f"{label}.note")
@@ -718,6 +785,23 @@ def _validate_host_float_hero(entry: dict[str, Any], label: str, revision: str) 
     if payload.get("runtime") != "host-float-reference":
         raise CatalogError(f"{label} inference record must be host-float-reference")
     kind = entry["kind"]
+    new_kinds = {"depth-panel", "feature-panel", "matting-panel", "prompt-mask-panel", "similarity-panel"}
+    if kind in new_kinds or payload.get("schema_version") == 2:
+        _validate_inference_banner_receipt(payload, entry, label)
+    if kind == "similarity-panel":
+        rows, prompts = payload.get("similarities"), payload.get("prompts")
+        if (not isinstance(rows, list) or not rows or not isinstance(prompts, list)
+                or len(rows) != len(prompts) or {r.get("label") for r in rows} != set(prompts)):
+            raise CatalogError(f"{label} needs every actual prompt similarity")
+        for row in rows:
+            score = row.get("score")
+            if isinstance(score, bool) or not isinstance(score, (int, float)) or not -1 <= score <= 1:
+                raise CatalogError(f"{label} cosine score must be in [-1,1]")
+        return
+    if kind in new_kinds:
+        if "result.png" not in payload["files"]:
+            raise CatalogError(f"{label} needs its computed result image")
+        return
     if kind == "classification-panel":
         recorded = payload.get("topk")
         declared = entry.get("topk")
