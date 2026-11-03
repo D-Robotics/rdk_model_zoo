@@ -15,7 +15,7 @@ def main(argv=None):
     p = argparse.ArgumentParser(
         description="Download the published S100 Depth Anything V2 HBM"
     )
-    p.add_argument("--target", choices=("s100",), default="s100")
+    p.add_argument("--target", choices=("s100","s100p","s600"), default="s100")
     p.add_argument("--asset-id")
     p.add_argument("--variant", choices=tuple(VARIANT_ASSETS))
     p.add_argument("--output-dir", type=Path, default=Path(__file__).resolve().parent)

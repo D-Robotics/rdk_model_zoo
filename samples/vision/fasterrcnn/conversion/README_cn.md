@@ -121,3 +121,16 @@ python3 samples/vision/fasterrcnn/runtime/python/main.py --target x5 \
 原生 `export_split.py --out /work/export --threads 2` 后，运行 `validate_export.py --onnx /work/export --image IMAGE1 --image IMAGE2 --image IMAGE3 --output /work/host-smoke.json`；它实际串联 PartA → RPN/ROIAlign → packed PartB。`prepare_calibration.py --images /path/to/train-images --hflip none --onnx /work/export --out /work/calibration --threads 2` 为每张图生成真实 ROI 特征。本轮共200张图。
 
 在匹配 OE 3.7.0 容器中从工作目录运行 `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml`，每件模型分别编译。板端各项数据仍为 `not-run`。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
+
+- `s100p / mbv3-320-native-20261103-o1 / parta`: [mbv3_320_native_20261103_o1_s100p_parta.yaml](recipes/mbv3_320_native_20261103_o1_s100p_parta.yaml)
+- `s100p / mbv3-320-native-20261103-o1 / partb`: [mbv3_320_native_20261103_o1_s100p_partb.yaml](recipes/mbv3_320_native_20261103_o1_s100p_partb.yaml)
+- `s600 / mbv3-320-native-20261103-o1 / parta`: [mbv3_320_native_20261103_o1_s600_parta.yaml](recipes/mbv3_320_native_20261103_o1_s600_parta.yaml)
+- `s600 / mbv3-320-native-20261103-o1 / partb`: [mbv3_320_native_20261103_o1_s600_partb.yaml](recipes/mbv3_320_native_20261103_o1_s600_partb.yaml)
+
+原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。

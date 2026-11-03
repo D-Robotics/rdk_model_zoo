@@ -8,18 +8,19 @@ ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from utils.py_utils.assets import download_asset
-from samples.vision.clip.runtime.python.cli import list_available_assets
+from samples.vision.clip.runtime.python.cli import converted_pairs, list_available_assets
 
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent
 
 
-def download_target(target='x5', output_dir=None):
+def download_target(target='x5', output_dir=None, *, variant='published'):
     """Prepare both required encoders and report each observed SHA-256."""
-    if target != 'x5':
-        raise ValueError(f'No published CLIP pair for {target}.')
+    assets = list_available_assets(target, variant)
+    if len(assets) != 2:
+        raise ValueError(f'No complete CLIP pair for {target}/{variant}.')
     directory = Path(output_dir).expanduser() if output_dir is not None else DEFAULT_OUTPUT_DIR
     digests = {}
-    for asset in list_available_assets(target):
+    for asset in assets:
         destination = directory / asset.filename
         digest = download_asset(asset, destination)
         digests[asset.reference] = digest
@@ -31,7 +32,8 @@ def download_target(target='x5', output_dir=None):
 
 def build_parser():
     parser = argparse.ArgumentParser(description='Download both CLIP X5 encoders.')
-    parser.add_argument('--target', choices=('x5',), default='x5')
+    parser.add_argument('--target', choices=('x5','s100','s100p','s600'), default='x5')
+    parser.add_argument('--variant', choices=('published', *converted_pairs()), default='published')
     parser.add_argument('--output-dir', type=Path, default=DEFAULT_OUTPUT_DIR)
     return parser
 
@@ -39,7 +41,7 @@ def build_parser():
 def main(argv=None):
     args = build_parser().parse_args(argv)
     try:
-        download_target(args.target, args.output_dir)
+        download_target(args.target, args.output_dir, variant=args.variant)
     except (OSError, ValueError) as exc:
         print(f'error: {exc}', file=sys.stderr)
         return 2

@@ -84,3 +84,9 @@ The decoder fixes positive points `(248,210)` and `(302,315)` on the resized 512
 ## License
 
 Runtime code follows the repository Apache-2.0 license. EfficientSAM checkpoints and ONNX/model assets retain the upstream project terms; verify those terms before redistribution.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Independent converted profiles and explicit commands are listed in [model preparation](model/README.md). Board accuracy and performance are not measured yet.

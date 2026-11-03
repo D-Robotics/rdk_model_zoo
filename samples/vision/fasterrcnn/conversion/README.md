@@ -121,3 +121,16 @@ This independent variant targets S100/nash-e with O1. Existing recipes remain av
 After `export_split.py --out /work/export --threads 2`, run `validate_export.py --onnx /work/export --image IMAGE1 --image IMAGE2 --image IMAGE3 --output /work/host-smoke.json`. It connects PartA → RPN/ROIAlign → packed PartB. Run `prepare_calibration.py --images /path/to/train-images --hflip none --onnx /work/export --out /work/calibration --threads 2` for real per-image ROI features; this run used 200 photographs.
 
 From the working directory in the matching OE 3.7.0 container, run `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml` for each component. Board checks remain `not-run`.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100p / mbv3-320-native-20261103-o1 / parta`: [mbv3_320_native_20261103_o1_s100p_parta.yaml](recipes/mbv3_320_native_20261103_o1_s100p_parta.yaml)
+- `s100p / mbv3-320-native-20261103-o1 / partb`: [mbv3_320_native_20261103_o1_s100p_partb.yaml](recipes/mbv3_320_native_20261103_o1_s100p_partb.yaml)
+- `s600 / mbv3-320-native-20261103-o1 / parta`: [mbv3_320_native_20261103_o1_s600_parta.yaml](recipes/mbv3_320_native_20261103_o1_s600_parta.yaml)
+- `s600 / mbv3-320-native-20261103-o1 / partb`: [mbv3_320_native_20261103_o1_s600_partb.yaml](recipes/mbv3_320_native_20261103_o1_s600_partb.yaml)
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

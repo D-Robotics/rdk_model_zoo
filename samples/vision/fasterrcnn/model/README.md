@@ -115,3 +115,21 @@ python3 samples/vision/fasterrcnn/runtime/python/main.py --target s100 --variant
 ```
 
 Calibration uses 200 independent COCO training photographs. Board smoke, accuracy, Runtime 1/2 and C++ 1/2 are `not-run`. Source, checkpoint, ONNX, effective configuration, native recipe and complete OE identities are recorded in [converted.json](../conversion/converted.json).
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+These independent profiles passed conversion, complete OE collection and actual HBM metadata binding. Source weights, graphs, per-target recipes, calibration counts and digests are in [converted_targets_20261103.json](../conversion/converted_targets_20261103.json).
+
+| Target | Native variant | Components | Calibration photographs |
+| --- | --- | --- | ---: |
+| s100p | `mbv3-320-native-20261103-o1` | parta, partb | 200 |
+| s600 | `mbv3-320-native-20261103-o1` | parta, partb | 200 |
+
+```bash
+python3 samples/vision/fasterrcnn/model/download.py --target s100p --variant mbv3-320-native-20261103-o1
+python3 samples/vision/fasterrcnn/runtime/python/main.py --target s100p --variant mbv3-320-native-20261103-o1 --parta-path /path/to/frcnn_mbv3_320_parta_nashm_native_20261103_o1.hbm --partb-path /path/to/frcnn_mbv3_320_partb_nashm_native_20261103_o1.hbm --input /path/to/image.jpg
+```
+
+Substitute the actual file paths. Multi-component tasks require every component together. Historical defaults and measurements retain their original identities. Board smoke, dataset accuracy, Runtime 1/2 and C++ 1/2 are `not-run` for these profiles.

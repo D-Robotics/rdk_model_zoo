@@ -17,7 +17,7 @@ import numpy as np
 from utils.py_utils.platforms import require_execution_target
 from utils.py_utils.runtime_meta import MetadataMismatchError, RuntimeMetadata
 from utils.py_utils.single_array_runner import SingleArrayRunner
-from samples.vision.depth_anything_v2.runtime.python.cli import ModelSelection, SMALL_ASSET_ID
+from samples.vision.depth_anything_v2.runtime.python.cli import ModelSelection, SMALL_ASSET_ID, SMALL_ASSET_IDS
 
 INPUT_HEIGHT = 518
 INPUT_WIDTH = 686
@@ -226,7 +226,7 @@ class DepthEstimator:
             RuntimeError: Board identity or SDK loading fails.
         """
         make_context(1, 1, resize_type)
-        if selection.asset.reference == SMALL_ASSET_ID and resize_type != 0:
+        if selection.asset.reference in SMALL_ASSET_IDS and resize_type != 0:
             raise ValueError("The Small 518x686 binding uses fixed cubic stretch; resize-type must be 0")
         self.runner = runner if runner is not None else create_runner(selection)
         self.binding = self.runner.load()
@@ -252,7 +252,7 @@ class DepthEstimator:
         ):
             raise ValueError("Expected nonempty BGR uint8 HWC image")
         ctx = make_context(*image.shape[:2], self.resize_type)
-        if self.binding.selection.asset.reference == SMALL_ASSET_ID:
+        if self.binding.selection.asset.reference in SMALL_ASSET_IDS:
             rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) / 255.0
             resized = cv2.resize(rgb, (INPUT_WIDTH, INPUT_HEIGHT), interpolation=cv2.INTER_CUBIC)
             normalized = (resized - np.array([0.485, 0.456, 0.406])) / np.array([0.229, 0.224, 0.225])

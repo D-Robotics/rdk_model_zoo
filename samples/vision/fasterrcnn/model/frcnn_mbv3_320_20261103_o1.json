@@ -57,6 +57,96 @@
           "dtype": "float32"
         }
       }
+    },
+    "s100p": {
+      "march": "nash-e",
+      "toolchain": "OE S 3.7.0; hb_compile 3.5.3; HMCT 2.6.5; HBDK 4.7.5; O1 latency",
+      "parta": {
+        "file": "frcnn_mbv3_320_parta_nashm_native_20261103_o1.hbm",
+        "sha256": "7162ea42ce3bed94f8ad28ee9c548082e68959ed5f5de42596434a62749cfdcf",
+        "input": {
+          "names": [
+            "images_y",
+            "images_uv"
+          ],
+          "format": "split nv12 uint8 (bt.601 limited)"
+        }
+      },
+      "partb": {
+        "file": "frcnn_mbv3_320_partb_nashm_native_20261103_o1.hbm",
+        "sha256": "ae519423bb05d1773649ceae0ba170a65da02f7f53b2afacfb0670f5f5578e20",
+        "layout": "packed",
+        "input": {
+          "name": "bank",
+          "shape": [
+            1,
+            256,
+            1050,
+            7
+          ],
+          "dtype": "float32"
+        },
+        "outputs": {
+          "cls_packed": [
+            1,
+            91,
+            150,
+            1
+          ],
+          "reg_packed": [
+            1,
+            364,
+            150,
+            1
+          ],
+          "dtype": "float32"
+        }
+      }
+    },
+    "s600": {
+      "march": "nash-e",
+      "toolchain": "OE S 3.7.0; hb_compile 3.5.3; HMCT 2.6.5; HBDK 4.7.5; O1 latency",
+      "parta": {
+        "file": "frcnn_mbv3_320_parta_nashp_native_20261103_o1.hbm",
+        "sha256": "e6622075a629aba8f02656ecdbf033e4de613991bb953d107f2b39913e55f783",
+        "input": {
+          "names": [
+            "images_y",
+            "images_uv"
+          ],
+          "format": "split nv12 uint8 (bt.601 limited)"
+        }
+      },
+      "partb": {
+        "file": "frcnn_mbv3_320_partb_nashp_native_20261103_o1.hbm",
+        "sha256": "46681c759aba7d9b9fb6eab0ff4e90f37710f98bcfc5c6e1402da34d433a4981",
+        "layout": "packed",
+        "input": {
+          "name": "bank",
+          "shape": [
+            1,
+            256,
+            1050,
+            7
+          ],
+          "dtype": "float32"
+        },
+        "outputs": {
+          "cls_packed": [
+            1,
+            91,
+            150,
+            1
+          ],
+          "reg_packed": [
+            1,
+            364,
+            150,
+            1
+          ],
+          "dtype": "float32"
+        }
+      }
     }
   },
   "artifacts_provenance": "Compiled 2026-11-03 for S100/nash-e with 200 real COCO training images and their model-induced ROI features; explicit O1 build. Board accuracy and performance not-run.",

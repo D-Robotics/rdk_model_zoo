@@ -70,3 +70,27 @@ conversion/
 ## 许可
 
 转换文档遵循仓库 [LICENSE](../../../../LICENSE) 的 Apache-2.0。发布制品沿用其发布来源。
+
+## 独立 ViT-B/32 导出流程
+
+[上游声明](UPSTREAM_NOTICE.md) 固定官方源码 commit、完整 checkpoint SHA-256、
+BPE 字典和 MIT 许可。旧 X5 默认模型保留原身份。
+
+```bash
+# 仓库根目录；使用现有 Torch 2.8.0、ONNX 1.17.0、ORT 1.19.2 导出环境。
+python3 samples/vision/clip/conversion/export_pair.py \
+  --source-dir /path/to/CLIP-d05afc436d78f1c48dc0dbf8e5980a9d471f35f6 \
+  --checkpoint /path/to/ViT-B-32.pt --images /path/to/frozen/images \
+  --opset 17 --output /path/to/new-run/export
+```
+
+严格加载权重，保留图像塔、文本塔和学习到的投影；三个真实图片及 seed-0 输入的
+上游模型、原生 wrapper、两张 ONNX 和余弦匹配均需通过原阈值对照。原生 BPE token
+也与官方实现逐项一致。图像输入为 RGB/NCHW float32 [0,1]，图内仅做一次官方
+mean/std；生成 200 张真实图片的独立 `.npy` 校准张量，随机输入仅用于数值验证。
+文本 ONNX 使用动态 int32 [prompts,77] 输入和 float32 [prompts,512] 输出，在 CPU 运行。
+
+S SDK 仅编译图像编码器。登记前逐目标读取完整 HBM ABI、NodeInfo 和原始 OE；
+模型包同时包含 BPU 图像模型、CPU 文本 ONNX、BPE/分词文件、许可、原始串联报告和
+各自的 BPU 转换报告或 CPU 主机报告。原生 `--variant` 在任一 Runtime 加载前校验
+两份模型摘要。板端精度、速度和完整流水线延迟尚未实测。

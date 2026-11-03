@@ -28,6 +28,20 @@ SAMPLE_DIR = Path(__file__).resolve().parents[2]
 ASSET_ID = "s:depth_anything_v2:s100/depth_any.hbm"
 SMALL_ASSET_ID = "s:depth_anything_v2:s100/depth_anything_v2_small_518x686_nashe_20261102_o1.hbm"
 VARIANT_ASSETS = {"legacy": ASSET_ID, "small-518x686-o1": SMALL_ASSET_ID}
+VARIANT_TARGET_ASSETS = {name:{'s100':reference} for name,reference in VARIANT_ASSETS.items()}
+_CONVERTED_EXPECTED = {}
+_converted_path = SAMPLE_DIR / 'model/converted_assets.json'
+if _converted_path.exists():
+    _converted = json.loads(_converted_path.read_text())
+    if _converted.get('sample') != 'depth_anything_v2':
+        raise BindingError('Invalid converted Depth Anything V2 registry.')
+    for _variant, _targets in _converted['profiles'].items():
+        VARIANT_TARGET_ASSETS[_variant] = {
+            t:'s:depth_anything_v2:'+entry['filename'] for t,entry in _targets.items()}
+        _CONVERTED_EXPECTED.update({'s:depth_anything_v2:'+entry['filename']:entry['sha256'] for entry in _targets.values()})
+        VARIANT_ASSETS[_variant] = next(iter(VARIANT_TARGET_ASSETS[_variant].values()))
+SMALL_ASSET_IDS = frozenset([SMALL_ASSET_ID] + [reference for name,targets in VARIANT_TARGET_ASSETS.items()
+                                             if name != 'legacy' for reference in targets.values()])
 
 
 @dataclass(frozen=True)
@@ -51,6 +65,8 @@ def _asset(reference=ASSET_ID) -> Asset:
     rows = [row for row in list_assets("s", "depth_anything_v2") if row.reference == reference]
     if len(rows) != 1:
         raise BindingError(f"No unique manifest asset {reference!r}; this variant is not published.")
+    if reference in _CONVERTED_EXPECTED and rows[0].sha256 != _CONVERTED_EXPECTED[reference]:
+        raise BindingError('Depth Anything V2 manifest differs from its converted identity.')
     return rows[0]
 
 
@@ -66,12 +82,11 @@ def list_available_assets(target: Optional[str] = None) -> tuple:
     Raises:
         BindingError: The target is unknown.
     """
-    if target in (None, "auto", "s100"):
-        return tuple(row for row in list_assets("s", "depth_anything_v2")
-                     if row.reference in VARIANT_ASSETS.values())
-    if target in SUPPORTED_TARGETS:
-        return ()
-    raise BindingError(f"Unknown target {target!r}.")
+    if target not in (None,'auto',*SUPPORTED_TARGETS):
+        raise BindingError(f"Unknown target {target!r}.")
+    references = {r for targets in VARIANT_TARGET_ASSETS.values() for t,r in targets.items()
+                  if target in (None,'auto',t)}
+    return tuple(row for row in list_assets('s','depth_anything_v2') if row.reference in references)
 
 
 def resolve_selection(
@@ -99,12 +114,12 @@ def resolve_selection(
     key = (target or "auto").lower()
     if key == "auto":
         key = "s100"
-    if key != "s100":
-        raise BindingError("Depth Anything V2 is published only for target s100.")
-    if variant is not None and variant not in VARIANT_ASSETS:
+    if key not in SUPPORTED_TARGETS:
+        raise BindingError(f'Unknown target {key!r}.')
+    if variant is not None and variant not in VARIANT_TARGET_ASSETS:
         raise BindingError(f"Unknown variant {variant!r}.")
-    reference = VARIANT_ASSETS[variant] if variant is not None else (asset_id or ASSET_ID)
-    if reference not in VARIANT_ASSETS.values():
+    reference = VARIANT_TARGET_ASSETS[variant].get(key) if variant is not None else (asset_id or ASSET_ID)
+    if reference not in {r for targets in VARIANT_TARGET_ASSETS.values() for t,r in targets.items() if t == key}:
         raise BindingError(f"Unknown asset-id {reference!r}.")
     if asset_id is not None and asset_id != reference:
         raise BindingError("The asset-id and variant select different models.")
@@ -282,9 +297,9 @@ def save_depth_evidence(
         "runtime_metadata": metadata_evidence(binding.metadata),
         "resize_type": args.resize_type,
         "input_normalization": ("RGB/255 then ImageNet mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225]"
-                                if selection.asset.reference == SMALL_ASSET_ID
+                                if selection.asset.reference in SMALL_ASSET_IDS
                                 else "pixelwise RGB z-score, epsilon=1e-5"),
-        "resize_interpolation": ("INTER_CUBIC float64 stretch" if selection.asset.reference == SMALL_ASSET_ID
+        "resize_interpolation": ("INTER_CUBIC float64 stretch" if selection.asset.reference in SMALL_ASSET_IDS
                                  else "INTER_NEAREST stretch / INTER_LINEAR letterbox"),
         "output_units": "relative, not meters",
         "depth_native_shape": list(result.depth_native.shape),

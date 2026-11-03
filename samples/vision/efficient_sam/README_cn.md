@@ -82,3 +82,9 @@ python3 samples/vision/efficient_sam/runtime/python/main.py --target s100
 ## 许可
 
 运行时代码遵循仓库 Apache-2.0 许可。EfficientSAM 权重文件、ONNX 和模型制品遵循上游项目条款，再分发前应确认其许可。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+本轮新增的独立规格和显式命令见 [模型准备](model/README_cn.md)。板端精度与性能尚未实测。

@@ -14,19 +14,20 @@ ASSET_ID = "x5:modnet:modnet_512x512_rgb.bin"
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Describe manual MODNet model preparation.")
-    parser.add_argument("--target", choices=("x5",), default="x5")
-    parser.add_argument("--asset-id", default=ASSET_ID)
+    parser.add_argument("--target", choices=("x5","s100","s100p","s600"), default="x5")
+    parser.add_argument("--asset-id")
     parser.add_argument("--output-dir", type=Path, default=Path(__file__).resolve().parent)
     return parser
 
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
-    if args.asset_id != ASSET_ID:
+    reference = args.asset_id or (ASSET_ID if args.target == 'x5' else None)
+    if reference != ASSET_ID:
         from samples.vision.modnet.runtime.python.cli import resolve_selection
         from utils.py_utils.assets import download_asset
         try:
-            selection = resolve_selection(args.target, asset_id=args.asset_id)
+            selection = resolve_selection(args.target, asset_id=reference)
             digest = download_asset(selection.asset, args.output_dir / selection.asset.filename)
             print(f"Downloaded {selection.asset.reference}; SHA-256: {digest}")
             return 0

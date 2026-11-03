@@ -1,3 +1,4 @@
+# New S profiles have separate actual-ABI coverage in test_s_classification_profiles.
 """HGNetV2 host acceptance tests; no inference on hardware."""
 
 # Converted artifact fixtures extend, rather than replace, historical assertions.
@@ -38,7 +39,7 @@ class EntryTests(unittest.TestCase):
     def test_default_and_all_published_variants(self):
         from samples.vision.hgnetv2.runtime.python.cli import resolve_selection, list_available_assets
         self.assertEqual(resolve_selection('x5').variant, 'b0')
-        self.assertEqual({r.filename for r in list_available_assets()}, set(FILENAMES.values()))
+        self.assertEqual({r.filename for r in list_available_assets() if not r.variant.endswith("-20261103")}, set(FILENAMES.values()))
         for v in VARIANTS:
             selected = resolve_selection('x5', variant=v)
             self.assertEqual(selected.asset_id, f'x5:hgnetv2:{FILENAMES[v]}')

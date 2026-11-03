@@ -12,6 +12,9 @@ configs share the **variant-less** output prefix ``FasterNet_224x224_nv12``
 
 from __future__ import annotations
 
+# Historical assertions exclude the new S profiles; test_s_classification_profiles
+# validates every new profile against its actual compiler ABI and source record.
+
 # Converted artifact fixtures extend, rather than replace, historical assertions.
 import json as _converted_json
 from pathlib import Path as _ConvertedPath
@@ -124,7 +127,7 @@ class RecipeConsistencyTests(unittest.TestCase):
         # recipe keys keep the source's capital S/T spelling; the binding
         # table's variant ids are lowercase (unified-family convention)
         self.assertEqual(
-            set(BINDING_TABLE.filename_variants.values()),
+            {v for v in BINDING_TABLE.filename_variants.values() if not v.endswith("-20261103")},
             {v.lower() for v in VARIANTS} | set(_CONVERTED_VARIANTS),
         )
         self.assertEqual(len(list_available_assets("auto")), 4 + len(_CONVERTED_MODELS))

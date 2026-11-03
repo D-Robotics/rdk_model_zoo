@@ -34,10 +34,11 @@ def main(argv=None):
     args = build_parser().parse_args(argv)
     try:
         if args.list_models:
-            return run_list_models(args.target)
+            return run_list_models(args.target, args.variant)
         if args.dry_run and args.target == 'auto':
             raise ValueError('Host dry-run requires --target x5; no board detection performed.')
         selection = resolve_selection(args.target, image_asset_id=args.image_asset_id,
+                                      variant=args.variant,
                                       text_asset_id=args.text_asset_id,
                                       image_model_path=args.image_model_path,
                                       text_model_path=args.text_model_path)

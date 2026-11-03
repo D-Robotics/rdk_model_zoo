@@ -40,10 +40,22 @@ class ModelSelection:
     text_asset: Asset
     image_model_path: Path
     text_model_path: Path
+    variant: str = 'published'
 
 
-def list_available_assets(target=None):
-    """List the exact pair; other known boards have no published CLIP pair.
+def converted_pairs():
+    """Read exact converted pairs; target identity alone never creates a pair."""
+    path = SAMPLE_DIR / 'model/converted_pairs.json'
+    if not path.exists():
+        return {}
+    data = json.loads(path.read_text())
+    if data.get('sample') != 'clip' or not isinstance(data.get('variants'), dict):
+        raise ValueError('Invalid converted CLIP pair registry.')
+    return data['variants']
+
+
+def list_available_assets(target=None, variant=None):
+    """List complete manifest-backed image/text pairs without runtime loading.
 
     Args:
         target: Concrete target filter; S targets publish nothing.
@@ -54,20 +66,38 @@ def list_available_assets(target=None):
     Raises:
         ValueError: The target is unknown or the publication changed.
     """
-    if target in ('s100', 's100p', 's600'):
-        return ()
-    if target not in (None, 'auto', 'x5'):
+    if target not in (None, 'auto', 'x5', 's100', 's100p', 's600'):
         raise ValueError(f'Unknown target: {target}')
-    assets = tuple(list_assets('x5', 'clip'))
-    if len(assets) != 2 or {(a.filename, a.format) for a in assets} != {
-        ('img_encoder.bin', 'bin'), ('text_encoder.onnx', 'onnx')
-    }:
-        raise ValueError('CLIP publication changed; review the encoder pair first.')
-    return assets
+    pairs = {'published': {'x5': {
+        'image': {'filename': 'img_encoder.bin'},
+        'text': {'filename': 'text_encoder.onnx'},
+    }}, **converted_pairs()}
+    if variant is not None and variant not in pairs:
+        raise ValueError(f'Unknown CLIP variant: {variant!r}')
+    result = []
+    for name, targets in pairs.items():
+        if variant is not None and name != variant:
+            continue
+        for concrete, pair in targets.items():
+            if target not in (None, 'auto', concrete):
+                continue
+            if concrete not in ('x5', 's100', 's100p', 's600') or set(pair) != {'image', 'text'}:
+                raise ValueError('Incomplete converted CLIP pair.')
+            rows = list_assets('x5' if concrete == 'x5' else 's', 'clip')
+            for role in ('image', 'text'):
+                expected = pair[role]
+                fmt = ('bin' if concrete == 'x5' else 'hbm') if role == 'image' else 'onnx'
+                matches = [a for a in rows if a.filename == expected['filename'] and a.format == fmt]
+                if len(matches) != 1:
+                    raise ValueError(f'No unique CLIP {name}/{concrete}/{role} asset.')
+                if name != 'published' and (not expected.get('sha256') or matches[0].sha256 != expected['sha256']):
+                    raise ValueError('CLIP manifest differs from its frozen pair identity.')
+                result.append(matches[0])
+    return tuple(result)
 
 
 def resolve_selection(target='auto', *, image_asset_id=None, text_asset_id=None,
-                      image_model_path=None, text_model_path=None):
+                      image_model_path=None, text_model_path=None, variant='published'):
     """Select both encoders; external paths require the corresponding exact ID.
 
     Args:
@@ -84,30 +114,32 @@ def resolve_selection(target='auto', *, image_asset_id=None, text_asset_id=None,
         ValueError: The target or asset/path combination is invalid.
     """
     target = resolve_target(target)
-    if target != 'x5':
-        raise ValueError(f'No published CLIP encoder pair for {target}.')
-    assets = {a.filename: a for a in list_available_assets(target)}
+    variant = variant or 'published'
+    assets = list_available_assets(target, variant)
+    if len(assets) != 2:
+        raise ValueError(f'No complete CLIP encoder pair for {target}/{variant}.')
     selected = []
     paths = []
-    for filename, asset_id, path in (
-        ('img_encoder.bin', image_asset_id, image_model_path),
-        ('text_encoder.onnx', text_asset_id, text_model_path),
+    for asset, asset_id, path in (
+        (assets[0], image_asset_id, image_model_path),
+        (assets[1], text_asset_id, text_model_path),
     ):
-        asset = assets[filename]
+        filename = asset.filename
         if path is not None and asset_id is None:
             raise ValueError(f'External {filename} path requires its exact asset-id.')
         if asset_id is not None and asset_id != asset.reference:
             raise ValueError(f'Expected exact asset-id {asset.reference}, got {asset_id!r}.')
         selected.append(asset)
         paths.append(Path(path).expanduser() if path is not None else SAMPLE_DIR / 'model' / filename)
-    return ModelSelection(target, *selected, *paths)
+    return ModelSelection(target, *selected, *paths, variant)
 
 
 def build_parser():
     """Build parser without importing BPU/ONNX runtimes or initializing BPE."""
     parser = argparse.ArgumentParser(description='CLIP X5 BPU image + CPU ONNX text matching.')
     parser.add_argument('--target', choices=('auto', 'x5', 's100', 's100p', 's600'), default='auto',
-                        help='Actual execution target; only X5 has a published pair.')
+                        help='Actual execution target; converted pairs require their explicit variant.')
+    parser.add_argument('--variant', choices=('published', *converted_pairs()), help='Omitted preserves the historical X5 pair.')
     parser.add_argument('--image-asset-id', default=None, help='Exact image asset ID; required with image-model-path.')
     parser.add_argument('--text-asset-id', default=None, help='Exact text asset ID; required with text-model-path.')
     parser.add_argument('--image-model-path', default=None, help='Explicit local .bin; default published img_encoder.bin.')
@@ -129,16 +161,16 @@ def build_parser():
     return parser
 
 
-def run_list_models(target: str) -> int:
+def run_list_models(target: str, variant=None) -> int:
     """Print the published pair references for ``target`` (model-free)."""
-    for asset in list_available_assets(target):
+    for asset in list_available_assets(target, variant):
         print(asset.reference)
     return 0
 
 
 def run_dry_run(selection) -> int:
     """Print the resolved static contract without board, SDK or BPE loading."""
-    print(json.dumps({'target': selection.target,
+    print(json.dumps({'target': selection.target, 'variant': selection.variant,
                       'image_asset_id': selection.image_asset.reference,
                       'text_asset_id': selection.text_asset.reference,
                       'image_model_path': str(selection.image_model_path),

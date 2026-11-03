@@ -218,3 +218,9 @@ Exact model URLs/SHA-256/size are in `docs/release/x5/models.yaml`; source and h
 receipts are in `conversion/converted.json`. Each weight retains its own model
 license in its public release manifest. No board result is implied by download.
 <!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Independent converted profiles and explicit commands are listed in [model preparation](model/README.md). Board accuracy and performance are not measured yet.

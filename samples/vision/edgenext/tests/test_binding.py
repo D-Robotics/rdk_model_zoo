@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+# Historical assertions exclude the new S profiles; test_s_classification_profiles
+# validates every new profile against its actual compiler ABI and source record.
+
 # Converted artifact fixtures extend, rather than replace, historical assertions.
 import json as _converted_json
 from pathlib import Path as _ConvertedPath
@@ -37,7 +40,7 @@ class BindingTableTests(unittest.TestCase):
             list_available_assets,
         )
 
-        records = list_available_assets("auto")
+        records = tuple(r for r in list_available_assets("auto") if not r.variant.endswith("-20261103"))
         self.assertEqual(len(records), 4 + len(_CONVERTED_MODELS))
         table = self._table()
         for record in records:
@@ -68,7 +71,7 @@ class BindingTableTests(unittest.TestCase):
             ] + _CONVERTED_FILES),
         )
 
-    def test_s_targets_publish_nothing_and_reject_selection(self):
+    def test_s_legacy_defaults_remain_unpublished(self):
         from samples.vision.edgenext.runtime.python.cli import (
             BindingError,
             list_available_assets,
@@ -77,7 +80,7 @@ class BindingTableTests(unittest.TestCase):
 
         for target in ("s100", "s100p", "s600"):
             with self.subTest(target=target):
-                self.assertEqual(list_available_assets(target), ())
+                self.assertEqual(tuple(a for a in list_available_assets(target) if not a.variant.endswith("-20261103")), ())
                 with self.assertRaises(BindingError):
                     resolve_selection(target)
 
@@ -97,7 +100,7 @@ class BindingTableTests(unittest.TestCase):
             ('xx_small', 'x5'): (224, 224, 'softmax', 'source_declared_logits', 1, 'linear'),
         }
         expected.update({(row['job']['variant'], 'x5'): (224, 224, 'softmax', 'source_declared_logits', 2, 'linear') for row in _CONVERTED_MODELS})
-        self.assertEqual(set(expected), set(self._table().facts))
+        self.assertEqual(set(expected), {k for k in self._table().facts if not k[0].endswith("-20261103")})
         for (variant, target), (height, width, policy, semantics, resize, interp) in expected.items():
             selection = resolve_selection(target, variant=variant)
             contract = selection.contract
@@ -123,6 +126,8 @@ class BindingTableTests(unittest.TestCase):
         from testsupport import runtime_metadata
 
         for (variant, target) in self._table().facts:
+            if variant.endswith("-20261103"):
+                continue  # New S profiles use their actual metadata in the shared acceptance test.
             selection = resolve_selection(target, variant=variant)
             binding = bind_model(selection, runtime_metadata())
             self.assertEqual(len(binding.input_names), 1)
@@ -151,6 +156,8 @@ class BindingTableTests(unittest.TestCase):
         from testsupport import runtime_metadata
 
         for (variant, target) in self._table().facts:
+            if variant.endswith("-20261103"):
+                continue  # New S profiles use their actual metadata in the shared acceptance test.
             selection = resolve_selection(target, variant=variant)
             binding = bind_model(selection, runtime_metadata(quant_descriptor=True))
             self.assertEqual(binding.output_dtype, "float32")

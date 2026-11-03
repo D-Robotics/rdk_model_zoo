@@ -1,3 +1,4 @@
+# New S profiles have separate actual-ABI coverage in test_s_classification_profiles.
 """RepGhost host acceptance tests; no inference on hardware."""
 from pathlib import Path
 from utils.py_utils.tests.legacy_platforms import legacy_path  # noqa: E402
@@ -37,7 +38,7 @@ class EntryTests(unittest.TestCase):
     def test_default_and_all_published_variants(self):
         from samples.vision.repghost.runtime.python.cli import resolve_selection, list_available_assets
         self.assertEqual(resolve_selection('x5').variant, '100')
-        self.assertEqual({r.filename for r in list_available_assets()}, set(FILES.values()))
+        self.assertEqual({r.filename for r in list_available_assets() if not r.variant.endswith("-20261103")}, set(FILES.values()))
         for v in VARIANTS:
             selected = resolve_selection('x5', variant=v)
             self.assertEqual(selected.asset_id, f'x5:repghost:{FILES[v]}')

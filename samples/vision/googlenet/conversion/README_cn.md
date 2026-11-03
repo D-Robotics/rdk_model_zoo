@@ -67,3 +67,22 @@ python3 samples/vision/googlenet/runtime/python/main.py --target x5 --variant go
 ## 补充准备
 
 推理时按 [model/download.sh](../model/README_cn.md) 准备已发布的 X5 模型。构建替代制品时，先准备符合[源模型](#source-model)运行时输入输出要求的 ONNX 图、匹配的校准数据与归一化配置，并为 X5 OE 工具链配置 PTQ YAML。编译后使用样例运行时运行该制品。
+
+## 独立 TorchVision 0.21 crop224 规格
+
+[上游声明](UPSTREAM_NOTICE.md) 固定 TorchVision commit、官方权重完整摘要和原始
+BSD-3-Clause 文件。它使用新的独立文件与 variant，旧 X5 默认及其数据保留。
+
+```bash
+# 仓库根目录；Torch 2.6.0 CPU / TorchVision 0.21.0 / ORT 1.19.2。
+python3 samples/vision/googlenet/conversion/export.py \
+  --checkpoint /path/to/googlenet-1378be20.pth \
+  --calibration /path/to/frozen/raw-rgb-calibration --output /path/to/new-run/export
+```
+
+先严格加载全部权重，保留 transform_input=True，再去掉不参与 eval 的辅助头。
+三个真实图片和 seed-0 输入必须在 atol 1e-4 / rtol 1e-3 下通过原模型与 ORT 对照，
+并保留 Top-5 排名。部署几何为 Pillow bicubic short256、rounded crop224 和
+ImageNet mean/std；不引用上游其他预处理条件下的精度。S 校准采用归一化后的 ONNX
+输入域张量；按[公共分类流程](../../../../utils/tools/classification_conversion/README.md)
+逐芯片生成 PTQ、BC、完整 NodeInfo 和最终 HBM/OE。板端数据保持 `not-run`。

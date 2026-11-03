@@ -58,6 +58,20 @@ def _assets() -> tuple[Asset, ...]:
         raise BindingError("Unknown MODNet manifest contract; review its native binding.")
     if any(row.format != "bin" for row in rows):
         raise BindingError("MODNet X5 artifacts must be bin models.")
+    path = SAMPLE_DIR / 'model/converted_assets.json'
+    if path.exists():
+        data = json.loads(path.read_text())
+        if data.get('sample') != 'modnet':
+            raise BindingError('Invalid converted MODNet registry.')
+        published = list_assets('s','modnet')
+        for profile in data['profiles'].values():
+            for target, expected in profile.items():
+                matches = [a for a in published if a.filename == expected['filename']
+                           and a.filename.startswith(target+'/') and a.format == 'hbm'
+                           and a.sha256 == expected['sha256'] and a.sha256 is not None]
+                if len(matches) != 1:
+                    raise BindingError('MODNet converted asset differs from its frozen target identity.')
+                rows = (*rows, matches[0])
     return tuple(rows)
 
 
@@ -73,10 +87,11 @@ def list_available_assets(target: Optional[str] = None) -> tuple[Asset, ...]:
     Raises:
         BindingError: The target is unknown.
     """
-    if target in (None, "auto", "x5"):
+    if target in (None, "auto"):
         return _assets()
     if target in SUPPORTED_TARGETS:
-        return ()
+        return tuple(a for a in _assets() if (a.group == 'x5' if target == 'x5' else
+                     a.group == 's' and a.filename.startswith(target+'/')))
     raise BindingError(f"Unknown target {target!r}.")
 
 
@@ -103,15 +118,17 @@ def resolve_selection(
     key = (target or "auto").lower()
     if key == "auto":
         key = "x5"
-    if key != "x5":
-        raise BindingError("MODNet is published only for target x5.")
-    reference = asset_id or ASSET_ID
-    matches = [row for row in _assets() if row.reference == reference]
+    if key not in SUPPORTED_TARGETS:
+        raise BindingError(f'Unknown target {key!r}.')
+    available = list_available_assets(key)
+    reference = asset_id or (ASSET_ID if key == 'x5' else
+                            available[0].reference if len(available) == 1 else None)
+    matches = [row for row in available if row.reference == reference]
     if len(matches) != 1:
         raise BindingError(f"Unknown MODNet asset-id {reference!r}.")
     asset = matches[0]
     if model_path is not None and asset_id is None:
-        raise BindingError("An external model path requires --asset-id x5:modnet:modnet_512x512_rgb.bin.")
+        raise BindingError("An external model path requires its exact --asset-id.")
     return ModelSelection(
         target=key,
         asset=asset,

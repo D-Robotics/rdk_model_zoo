@@ -36,6 +36,14 @@ CONVERTED_X5 = {
     ),
 }
 CONVERTED_S = {'nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12_float_cal32_20261103_o1.hbm': ('26n-native-cal32-20261103-o1', '00340e52995a559be99fce15909babc7cad09e66785f8a596ab71f67bdeb61c4')}
+_converted_path = SAMPLE_DIR / 'model/converted_assets.json'
+if _converted_path.exists():
+    _converted = json.loads(_converted_path.read_text())
+    if _converted.get('sample') != 'yoloe':
+        raise ValueError('Invalid converted YOLOE registry.')
+    for _variant, _targets in _converted['profiles'].items():
+        for _entry in _targets.values():
+            CONVERTED_S[_entry['filename']] = (_variant,_entry['sha256'])
 
 
 @dataclass(frozen=True)
@@ -68,7 +76,7 @@ def list_models(target=None):
                 if asset.sha256 != digest or asset.format != ("bin" if group == "x5" else "hbm"):
                     raise ValueError(f"Converted YOLOE identity mismatch: {asset.reference}.")
                 concrete = "x5" if group == "x5" else {
-                    "nash-e":"s100", "nash-m":"s100p"
+                    "nash-e":"s100", "nash-m":"s100p", "nash-p":"s600"
                 }[asset.filename.split('/')[0]]
                 if target in (None, "auto", concrete):
                     rows.append((concrete, variant, asset))

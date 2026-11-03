@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+# Historical assertions exclude the new S profiles; test_s_classification_profiles
+# validates every new profile against its actual compiler ABI and source record.
+
 # Converted artifact fixtures extend, rather than replace, historical assertions.
 import json as _converted_json
 from pathlib import Path as _ConvertedPath
@@ -103,7 +106,7 @@ class BindingTableTests(unittest.TestCase):
             list_available_assets,
         )
 
-        records = list_available_assets("auto")
+        records = tuple(r for r in list_available_assets("auto") if not r.variant.endswith("-20261103"))
         self.assertEqual(len(records), 13 + len(_CONVERTED_MODELS))
         table = self._table()
         for record in records:
@@ -128,14 +131,14 @@ class BindingTableTests(unittest.TestCase):
                 f"unexpected manifest source: {record.source_manifest}",
             )
 
-    def test_s100p_publishes_nothing_and_rejects_selection(self):
+    def test_s100p_legacy_default_remains_unpublished(self):
         from samples.vision.efficientnet.runtime.python.cli import (
             BindingError,
             list_available_assets,
             resolve_selection,
         )
 
-        self.assertEqual(list_available_assets("s100p"), ())
+        self.assertEqual(tuple(a for a in list_available_assets("s100p") if not a.variant.endswith("-20261103")), ())
         with self.assertRaises(BindingError):
             resolve_selection("s100p")
 
@@ -162,7 +165,7 @@ class BindingTableTests(unittest.TestCase):
             ('lite4', 's600'): (380, 380, 'softmax', 'source_declared_logits', 1, 'nearest'),
         }
         expected.update({(row['job']['variant'], 'x5'): (224, 224, 'softmax', 'source_declared_logits', 2, 'linear') for row in _CONVERTED_MODELS})
-        self.assertEqual(set(expected), set(self._table().facts))
+        self.assertEqual(set(expected), {k for k in self._table().facts if not k[0].endswith("-20261103")})
         for (variant, target), (height, width, policy, semantics, resize, interp) in expected.items():
             selection = resolve_selection(target, variant=variant)
             contract = selection.contract
@@ -195,6 +198,8 @@ class BindingTableTests(unittest.TestCase):
         }
         sizes.update(dict.fromkeys(_CONVERTED_VARIANTS, 224))
         for (variant, target) in self._table().facts:
+            if variant.endswith("-20261103"):
+                continue  # New S profiles use their actual metadata in the shared acceptance test.
             protocol = "x5" if target == "x5" else "s"
             selection = resolve_selection(target, variant=variant)
             binding = bind_model(
@@ -240,6 +245,8 @@ class BindingTableTests(unittest.TestCase):
         }
         sizes.update(dict.fromkeys(_CONVERTED_VARIANTS, 224))
         for (variant, target) in self._table().facts:
+            if variant.endswith("-20261103"):
+                continue  # New S profiles use their actual metadata in the shared acceptance test.
             protocol = "x5" if target == "x5" else "s"
             selection = resolve_selection(target, variant=variant)
             binding = bind_model(

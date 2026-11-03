@@ -72,3 +72,25 @@ Published artifacts and landing paths: [model preparation](../model/README.md#ar
 ## Additional preparation
 
 For inference, prepare the published X5 model with [model/download.sh](../model/README.md). To build a replacement, prepare an ONNX graph that meets the runtime contract in [Source model](#source-model), prepare matching calibration data and normalization, and configure its PTQ YAML for the X5 OE toolchain. Run the sample runtime on the resulting artifact after compiling it.
+
+## Independent TorchVision 0.21 crop224 profile
+
+The [upstream notice](UPSTREAM_NOTICE.md) freezes the TorchVision commit,
+official weight digest and original BSD-3-Clause notice. This profile uses
+independent filenames and variants; historical X5 defaults retain their identity.
+
+```bash
+# Repository root; Torch 2.6.0 CPU / TorchVision 0.21.0 / ORT 1.19.2.
+python3 samples/vision/googlenet/conversion/export.py \
+  --checkpoint /path/to/googlenet-1378be20.pth \
+  --calibration /path/to/frozen/raw-rgb-calibration --output /path/to/new-run/export
+```
+
+Strictly load all weights with transform_input=True before dropping unused
+auxiliary heads. PyTorch/ORT logits and Top-5 order must agree on three real
+photographs and seed-0 data at atol 1e-4 / rtol 1e-3. The explicit deployment
+geometry is Pillow bicubic short256, rounded crop224 and ImageNet normalization.
+No upstream accuracy is claimed for this geometry. Use normalized ONNX-domain
+S tensors and the [shared classification workflow](../../../../utils/tools/classification_conversion/README.md)
+for independent per-march PTQ, BC, full NodeInfo and final HBM/OE. Board
+validation remains `not-run`.

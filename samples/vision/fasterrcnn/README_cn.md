@@ -120,3 +120,8 @@ S100/S100P/S600 的 OE 容器、编译与安装命令见[转换指南](conversio
 
 示例代码遵循仓库 [LICENSE](../../../LICENSE)。TorchVision 源码采用 [BSD-3-Clause](https://github.com/pytorch/vision/blob/v0.21.0/LICENSE)，权重来自官方 COCO_V1 发布。ByteTrack 与 LAP 的来源见 [ByteTrack 示例许可说明](../bytetrack/README_cn.md#license)及 [C++ 第三方许可](../bytetrack/runtime/cpp/THIRD_PARTY_LICENSES.md)。数据使用条件见 [COCO](https://cocodataset.org/#termsofuse)。
 
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+本轮新增的独立规格和显式命令见 [模型准备](model/README_cn.md)。板端精度与性能尚未实测。

@@ -47,6 +47,14 @@ VARIANTS = VARIANTS + ('timm-femto-d1-in1k', 'timm-pico-d1-in1k', 'timm-nano-d1h
 ASSET_REFERENCES.update({('x5', 'timm-femto-d1-in1k'): 'x5:convnext:convnext_femto_d1_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-pico-d1-in1k'): 'x5:convnext:convnext_pico_d1_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-nano-d1h-in1k'): 'x5:convnext:convnext_nano_d1h_in1k_bayese_224x224_nv12.bin'})
 # END CONVERTED ARTIFACT BINDINGS
 
+
+
+# BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
+VARIANTS = tuple(dict.fromkeys((*VARIANTS, *('timm-femto-d1-in1k-s-int16-o1-20261103',))))
+TARGETS = tuple(dict.fromkeys((*TARGETS, *('s100',))))
+ASSET_REFERENCES.update({('s100', 'timm-femto-d1-in1k-s-int16-o1-20261103'): 's:convnext:s100/convnext_femto_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm'})
+# END S CONVERTED ARTIFACT BINDINGS 20261103
+
 def asset_reference(target: str, variant: str = 'atto') -> str:
     """Return the exact manifest reference for a supported target/variant."""
 
