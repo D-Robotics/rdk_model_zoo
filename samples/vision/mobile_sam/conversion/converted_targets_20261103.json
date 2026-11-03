@@ -1,0 +1,506 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "variant": "tinyvit-512-int16-20261103-o1",
+      "web_size": "tinyvit-512-int16-20261103-o1",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "encoder": {
+          "filename": "nash-m/mobile_sam_image_encoder_norm_512x512_nashm_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/mobile_sam/mobile_sam_image_encoder_norm_512x512_nashm_int16_20261103_o1.hbm",
+          "sha256": "5340a6860cde3a532170a30ab27cdb6b26afc2dfeb7ac9175555f2cfef6312df",
+          "size_bytes": 51314880,
+          "inputs": [
+            {
+              "name": "normalized_images",
+              "shape": [
+                1,
+                3,
+                512,
+                512
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "image_embeddings",
+              "shape": [
+                1,
+                256,
+                32,
+                32
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "d37b75853d7ea2cbbc86f44d067fc3fb1937c86bde6de19e892352a6fe3fad0a",
+          "effective_config_sha256": "3aea41ac93499173342fa660663fe32a753ae8dbafc0452fd4d1c1f066d88051",
+          "recipe": "samples/vision/mobile_sam/conversion/recipes/tinyvit_512_int16_20261103_o1_s100p_encoder.yaml",
+          "recipe_sha256": "e0ea43599c2910446189765a1b34b46204d1d260a7965ee94dba3c564d6c1976",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92",
+          "calibration_count": 198,
+          "calibration_manifest_sha256": "8053db17a387974c0a2523b5c5976d6cfc3cc42ca298edd801e8c1f7875fc417",
+          "oe_report_sha256": "0335188700e04ea069ed24297753f95b6f44a77eaa599112ccbb0a9af4fb2b2a",
+          "oe_data_sha256": "61f1757480c34a70207c2bf60bca4d7a0c61c99fd7dd1af0ad290f456202ca63",
+          "node_info_csv_sha256": "58d9a182d8272e1c9973a556663e6e52135cf6b29838f4623aac25808fb08a34",
+          "precision_outputs": [
+            {
+              "name": "image_embeddings",
+              "calibrated_cosine": 0.99671,
+              "cosine": 0.996183
+            }
+          ],
+          "cpu_cuda_float_gate": {
+            "report_sha256": "cdec12ca0a626483b8a2127bb750e097d1c4998c2edbd2492cc6823dffea4f88",
+            "receipt_sha256": "dab48790e9f59e991f3ec24ce57764b3068e5643e782ca5056fdc3ec1050acc3",
+            "onnx": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/mobile-sam-s100-r02/encoder.onnx",
+              "sha256": "d37b75853d7ea2cbbc86f44d067fc3fb1937c86bde6de19e892352a6fe3fad0a",
+              "size_bytes": 27996317
+            },
+            "calibration_manifest": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/mobile-sam-s100-r02/calibration/calibration.json",
+              "sha256": "8053db17a387974c0a2523b5c5976d6cfc3cc42ca298edd801e8c1f7875fc417"
+            },
+            "real_inputs": [
+              {
+                "normalized_images": {
+                  "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/mobile-sam-s100-r02/calibration/encoder/0000.npy",
+                  "sha256": "560bde7d8ec3cd4dd584e7a17aa3ad32e5827db91e45409d23aa038bd465e028",
+                  "size_bytes": 3145856
+                }
+              },
+              {
+                "normalized_images": {
+                  "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/mobile-sam-s100-r02/calibration/encoder/0052.npy",
+                  "sha256": "5cede55f49eabb8556ba1a95cc5a91923f3e9b7bb6cb8e631d0002ef5f80240f",
+                  "size_bytes": 3145856
+                }
+              },
+              {
+                "normalized_images": {
+                  "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/mobile-sam-s100-r02/calibration/encoder/0132.npy",
+                  "sha256": "851bacd07f68894e4d0984bb25865ddc738fa3d232b0b5fc08778fc2d6a39852",
+                  "size_bytes": 3145856
+                }
+              }
+            ],
+            "atol": 0.0001,
+            "rtol": 0.001,
+            "TF32": false,
+            "onnxruntime": "1.19.0",
+            "providers": {
+              "cpu": [
+                "CPUExecutionProvider"
+              ],
+              "cuda": [
+                "CUDAExecutionProvider",
+                "CPUExecutionProvider"
+              ]
+            },
+            "toolchain_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92",
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/host_cuda_parity.py",
+              "sha256": "c9436f8ee04a48e34eb97e9da8ee8a4421990ac3308610a6fc496a14dcddb908",
+              "size_bytes": 3809
+            },
+            "cases": [
+              {
+                "case": "0000.npy",
+                "outputs": [
+                  {
+                    "output": "image_embeddings",
+                    "shape": [
+                      1,
+                      256,
+                      32,
+                      32
+                    ],
+                    "dtype": "float32",
+                    "finite": true,
+                    "max_abs": 2.4139881134033203e-06,
+                    "violations": 0,
+                    "status": "passed"
+                  }
+                ],
+                "status": "passed"
+              },
+              {
+                "case": "0052.npy",
+                "outputs": [
+                  {
+                    "output": "image_embeddings",
+                    "shape": [
+                      1,
+                      256,
+                      32,
+                      32
+                    ],
+                    "dtype": "float32",
+                    "finite": true,
+                    "max_abs": 1.1920928955078125e-06,
+                    "violations": 0,
+                    "status": "passed"
+                  }
+                ],
+                "status": "passed"
+              },
+              {
+                "case": "0132.npy",
+                "outputs": [
+                  {
+                    "output": "image_embeddings",
+                    "shape": [
+                      1,
+                      256,
+                      32,
+                      32
+                    ],
+                    "dtype": "float32",
+                    "finite": true,
+                    "max_abs": 1.1920928955078125e-06,
+                    "violations": 0,
+                    "status": "passed"
+                  }
+                ],
+                "status": "passed"
+              },
+              {
+                "case": "random-seed0",
+                "outputs": [
+                  {
+                    "output": "image_embeddings",
+                    "shape": [
+                      1,
+                      256,
+                      32,
+                      32
+                    ],
+                    "dtype": "float32",
+                    "finite": true,
+                    "max_abs": 1.0728836059570312e-06,
+                    "violations": 0,
+                    "status": "passed"
+                  }
+                ],
+                "status": "passed"
+              }
+            ],
+            "scope": "Supplementary CPU/CUDA source ONNX check. See original compile/check receipts for execution order; no HBM or board execution."
+          }
+        },
+        "decoder": {
+          "filename": "nash-m/mobile_sam_decoder_512_nashm_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/mobile_sam/mobile_sam_decoder_512_nashm_int16_20261103_o1.hbm",
+          "sha256": "b426ec1961e4f3a60a3db4495b93b3082f61afb5e978648f68fad69a1a966b63",
+          "size_bytes": 14289872,
+          "inputs": [
+            {
+              "name": "image_embeddings",
+              "shape": [
+                1,
+                256,
+                32,
+                32
+              ],
+              "dtype": "float32"
+            },
+            {
+              "name": "boxes",
+              "shape": [
+                1,
+                4
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "low_res_masks",
+              "shape": [
+                1,
+                3,
+                128,
+                128
+              ],
+              "dtype": "float32"
+            },
+            {
+              "name": "iou_predictions",
+              "shape": [
+                1,
+                3
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "5de5e99343d00e42941093cf3d3136ed28a6c24809c37039d8bf613ce4784253",
+          "effective_config_sha256": "d1385ce9c058dcb2d1da918008d32298d45be52748ce69d713475545d674f914",
+          "recipe": "samples/vision/mobile_sam/conversion/recipes/tinyvit_512_int16_20261103_o1_s100p_decoder.yaml",
+          "recipe_sha256": "d849dd84581c1f871a013e50c0356265e634fec7abcc751235b5ac89591a7bda",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92",
+          "calibration_count": 198,
+          "calibration_manifest_sha256": "8053db17a387974c0a2523b5c5976d6cfc3cc42ca298edd801e8c1f7875fc417",
+          "oe_report_sha256": "3fa40d62c5b226068389d1377b575a7e34d09a8d6e13d30d7a2e16afd02e0df6",
+          "oe_data_sha256": "ba6b5a90c377f33ce50888920386cdf18ad0f9280ed6b05f3904420b857c32f3",
+          "node_info_csv_sha256": "c6a7588c906e7cd745c96a994ba55aa61a5c0ede32e62f98f8cd803c65547f87",
+          "precision_outputs": [
+            {
+              "name": "iou_predictions",
+              "calibrated_cosine": 0.999999,
+              "cosine": 0.999992
+            },
+            {
+              "name": "low_res_masks",
+              "calibrated_cosine": 0.998036,
+              "cosine": 0.999362
+            }
+          ],
+          "cpu_cuda_float_gate": {
+            "report_sha256": "bb358fc720a769aaa7a41b5dff066ba4934f3fe2e4e842d9477cd09dd77d5be7",
+            "receipt_sha256": "0a1a6ed5bb60ee7abc4fa1b58ff7231f656d0a11023866a0d5a5d0209ab27b55",
+            "onnx": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/mobile-sam-s100-r02/decoder.onnx",
+              "sha256": "5de5e99343d00e42941093cf3d3136ed28a6c24809c37039d8bf613ce4784253",
+              "size_bytes": 16395858
+            },
+            "calibration_manifest": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/mobile-sam-s100-r02/calibration/calibration.json",
+              "sha256": "8053db17a387974c0a2523b5c5976d6cfc3cc42ca298edd801e8c1f7875fc417"
+            },
+            "real_inputs": [
+              {
+                "image_embeddings": {
+                  "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/mobile-sam-s100-r02/calibration/image_embeddings/0000.npy",
+                  "sha256": "61b3c1b017dec6e4d77ce2fbb060b25c64d7091a525e256034cb56f2c9778429",
+                  "size_bytes": 1048704
+                },
+                "boxes": {
+                  "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/mobile-sam-s100-r02/calibration/boxes/0000.npy",
+                  "sha256": "5d0d62b43c514e579e2319c69e8af9859004d21ec6e1aae634eb0293aa7b37d9",
+                  "size_bytes": 144
+                }
+              },
+              {
+                "image_embeddings": {
+                  "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/mobile-sam-s100-r02/calibration/image_embeddings/0052.npy",
+                  "sha256": "8ee72d1d1c63f5e473afb061cdef4907350712942afa45ddda7bc51af61ec231",
+                  "size_bytes": 1048704
+                },
+                "boxes": {
+                  "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/mobile-sam-s100-r02/calibration/boxes/0052.npy",
+                  "sha256": "ff6ba169a33b0a92c149891f22c6924e50b149ab2678b9fd45cecd95f3942545",
+                  "size_bytes": 144
+                }
+              },
+              {
+                "image_embeddings": {
+                  "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/mobile-sam-s100-r02/calibration/image_embeddings/0132.npy",
+                  "sha256": "1fe5d78561fb728eb8cf315e1d0e47baa62310b21f8c49e8fe1171ae2ccc9269",
+                  "size_bytes": 1048704
+                },
+                "boxes": {
+                  "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/mobile-sam-s100-r02/calibration/boxes/0132.npy",
+                  "sha256": "399a4bca091f2cad3973e1c46d2cf396542243252671a92a66af0fcfbd1bdc1f",
+                  "size_bytes": 144
+                }
+              }
+            ],
+            "atol": 0.0001,
+            "rtol": 0.001,
+            "TF32": false,
+            "onnxruntime": "1.19.0",
+            "providers": {
+              "cpu": [
+                "CPUExecutionProvider"
+              ],
+              "cuda": [
+                "CUDAExecutionProvider",
+                "CPUExecutionProvider"
+              ]
+            },
+            "toolchain_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92",
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/host_cuda_parity.py",
+              "sha256": "c9436f8ee04a48e34eb97e9da8ee8a4421990ac3308610a6fc496a14dcddb908",
+              "size_bytes": 3809
+            },
+            "cases": [
+              {
+                "case": "0000.npy",
+                "outputs": [
+                  {
+                    "output": "low_res_masks",
+                    "shape": [
+                      1,
+                      3,
+                      128,
+                      128
+                    ],
+                    "dtype": "float32",
+                    "finite": true,
+                    "max_abs": 4.38690185546875e-05,
+                    "violations": 0,
+                    "status": "passed"
+                  },
+                  {
+                    "output": "iou_predictions",
+                    "shape": [
+                      1,
+                      3
+                    ],
+                    "dtype": "float32",
+                    "finite": true,
+                    "max_abs": 1.1920928955078125e-07,
+                    "violations": 0,
+                    "status": "passed"
+                  }
+                ],
+                "status": "passed"
+              },
+              {
+                "case": "0052.npy",
+                "outputs": [
+                  {
+                    "output": "low_res_masks",
+                    "shape": [
+                      1,
+                      3,
+                      128,
+                      128
+                    ],
+                    "dtype": "float32",
+                    "finite": true,
+                    "max_abs": 2.47955322265625e-05,
+                    "violations": 0,
+                    "status": "passed"
+                  },
+                  {
+                    "output": "iou_predictions",
+                    "shape": [
+                      1,
+                      3
+                    ],
+                    "dtype": "float32",
+                    "finite": true,
+                    "max_abs": 1.1920928955078125e-07,
+                    "violations": 0,
+                    "status": "passed"
+                  }
+                ],
+                "status": "passed"
+              },
+              {
+                "case": "0132.npy",
+                "outputs": [
+                  {
+                    "output": "low_res_masks",
+                    "shape": [
+                      1,
+                      3,
+                      128,
+                      128
+                    ],
+                    "dtype": "float32",
+                    "finite": true,
+                    "max_abs": 4.1961669921875e-05,
+                    "violations": 0,
+                    "status": "passed"
+                  },
+                  {
+                    "output": "iou_predictions",
+                    "shape": [
+                      1,
+                      3
+                    ],
+                    "dtype": "float32",
+                    "finite": true,
+                    "max_abs": 2.384185791015625e-07,
+                    "violations": 0,
+                    "status": "passed"
+                  }
+                ],
+                "status": "passed"
+              },
+              {
+                "case": "random-seed0",
+                "outputs": [
+                  {
+                    "output": "low_res_masks",
+                    "shape": [
+                      1,
+                      3,
+                      128,
+                      128
+                    ],
+                    "dtype": "float32",
+                    "finite": true,
+                    "max_abs": 2.47955322265625e-05,
+                    "violations": 0,
+                    "status": "passed"
+                  },
+                  {
+                    "output": "iou_predictions",
+                    "shape": [
+                      1,
+                      3
+                    ],
+                    "dtype": "float32",
+                    "finite": true,
+                    "max_abs": 2.980232238769531e-07,
+                    "violations": 0,
+                    "status": "passed"
+                  }
+                ],
+                "status": "passed"
+              }
+            ],
+            "scope": "Supplementary CPU/CUDA source ONNX check. See original compile/check receipts for execution order; no HBM or board execution."
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "6b9e27e2449b7f5df7b616e9e877aea06a33f76a04452ff5c4770609fbd400a9",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repository": "https://github.com/ChaoningZhang/MobileSAM",
+        "commit": "f706ad9c4eb7f219c00d9050e46328518ffb65d2",
+        "checkpoint": {
+          "url": "https://github.com/ChaoningZhang/MobileSAM/blob/f706ad9c4eb7f219c00d9050e46328518ffb65d2/weights/mobile_sam.pt",
+          "sha256": "6dbb90523a35330fedd7f1d3dfc66f995213d81b29a5ca8108dbcdd4e37d6c2f",
+          "bytes": 40728226,
+          "publisher_sha256_verified": false
+        }
+      }
+    }
+  ]
+}

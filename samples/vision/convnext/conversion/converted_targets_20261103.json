@@ -247,6 +247,306 @@
         "url": "https://huggingface.co/timm/convnext_femto.d1_in1k/resolve/1e0c02df687c47abf0819e1a4f858293e17e0c50/model.safetensors",
         "model_card_url": "https://huggingface.co/timm/convnext_femto.d1_in1k/blob/1e0c02df687c47abf0819e1a4f858293e17e0c50/README.md"
       }
+    },
+    {
+      "variant": "timm-femto-d1-in1k-s-int16-o1-20261103",
+      "web_size": "femto-d1-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/convnext_femto_d1_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/convnext/convnext_femto_d1_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "09e48d946d6b6ebcf6f182cafc80eff5f45251c1c2cc47defd3cf4ccecd251f5",
+          "size_bytes": 11062976,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "33e8e20122d89cd7c7acf17685b3ea94c07513dc29db4e991f2b4b202a2375b6",
+          "effective_config_sha256": "8420d95a24560a749908b88854e40ba558aa06a9d948a287ba9863677ce9eac9",
+          "recipe": "samples/vision/convnext/conversion/recipes/timm_femto_d1_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "f004408446da6402a102746fb778072c031cb909ed6ab0700fe55b90ecb0a3e9",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "dd41da9be74790c2c789050806b4dd54500460caeb67fc428eaa44e1fe3714a0",
+          "oe_data_sha256": "d9979a859db65015b7a61d80610c10c02a61c63814db1adee6fc22726baba443",
+          "node_info_csv_sha256": "5f55ab78abad3cd8c00256e71d8c71d2d260574299db0756a954e72e9c1f521a",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.99297,
+              "cosine": 0.991016
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/convnext_femto_d1_in1k-s600-int16-20261103-r04/ptq_output/convnext_femto_d1_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "9400db7539895f6dc7b3ad52a9afe79657b241e0f5676ed071dadd87319c25e8",
+              "size_bytes": 6048279
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/convnext_femto_d1_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "512cd49298d2c4d642c68c15a86af512026fb6b15fa60da875916c34baf3c5f7",
+              "size_bytes": 1198
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.3560056686401367e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 2.384185791015625e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 4.5299530029296875e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 2.562999725341797e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "6d5a36279d78a3c450b0f5f11165572dce12a56cd47c9ac06b5affc7284c83b0",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/convnext_femto.d1_in1k",
+        "revision": "1e0c02df687c47abf0819e1a4f858293e17e0c50",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "b6a71d3e93892518be64acf2728f28ad978e8efe0a0d12b1120332046c9047e2",
+        "size_bytes": 20883504,
+        "url": "https://huggingface.co/timm/convnext_femto.d1_in1k/resolve/1e0c02df687c47abf0819e1a4f858293e17e0c50/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/convnext_femto.d1_in1k/blob/1e0c02df687c47abf0819e1a4f858293e17e0c50/README.md"
+      }
+    },
+    {
+      "variant": "timm-nano-d1h-in1k-s-int16-o1-20261103",
+      "web_size": "nano-d1h-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/convnext_nano_d1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/convnext/convnext_nano_d1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "f9f42942208a2eb3344baf021c7fb600cf5904ec09c760e1d8c1619d1c2e43cc",
+          "size_bytes": 23384264,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "751b3037d96cc1a2c714a09a7e8796e5d2b90fb9d2e1229d392c5b883f44c8b3",
+          "effective_config_sha256": "37cc99f44e905651cfc3b358ef1c0ecb8910b197db4aafbb974533632b97624d",
+          "recipe": "samples/vision/convnext/conversion/recipes/timm_nano_d1h_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "f9882569c11b0eb0c2687a6f34981b1bbe1dbf2e194532c59ae7eeace277c8fd",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "33a77721e365162e9e4b013dd7a2a293de5f7b1faa7ed9abf896918ed39d3a73",
+          "oe_data_sha256": "ba300a6ea34f89054ac5022bb272646bbe0a8f1cb82e23ab7d568b05f85a5fbe",
+          "node_info_csv_sha256": "70ae76a55243bec58c9e1e3f23273e4778b7bfecb80ac0a56d87245f011c8958",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.988234,
+              "cosine": 0.985286
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/convnext_nano_d1h_in1k-s100-int16-20261103-r04/ptq_output/convnext_nano_d1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "6756fe1cdd98447bfd13af255fd2912380893023104942a806fef65f9ae5fe94",
+              "size_bytes": 19114887
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/convnext_nano_d1h_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "5ee795f91bb238052db422b624791720878e3dbedd3c5a1cf668506f3934f134",
+              "size_bytes": 1198
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 3.814697265625e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.049041748046875e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 2.592802047729492e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "5f257dc8e5308b2105465c2cef0d3b1d94abc932e94b634655273f2738f0b387",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/convnext_nano.d1h_in1k",
+        "revision": "fe9cba6df2f17352639e23ca89e1aa6b37f51462",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "9dfdcca04dfe3a335d11639ccda0904a875e92b6b152a986fc6740eb42d6d5c8",
+        "size_bytes": 62388542,
+        "url": "https://huggingface.co/timm/convnext_nano.d1h_in1k/resolve/fe9cba6df2f17352639e23ca89e1aa6b37f51462/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/convnext_nano.d1h_in1k/blob/fe9cba6df2f17352639e23ca89e1aa6b37f51462/README.md"
+      }
     }
   ]
 }

@@ -71,3 +71,20 @@ python3 samples/vision/mobile_sam/runtime/python/main.py --target s100 --variant
 ```
 
 Calibration uses 198 independent COCO training photographs. Board smoke, accuracy, Runtime 1/2 and C++ 1/2 are `not-run`. Source, checkpoint, ONNX, effective configuration, native recipe and complete OE identities are recorded in [converted.json](../conversion/converted.json).
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+These independent profiles passed conversion, complete OE collection and actual HBM metadata binding. Source weights, graphs, per-target recipes, calibration counts and digests are in [converted_targets_20261103.json](../conversion/converted_targets_20261103.json).
+
+| Target | Native variant | Components | Calibration photographs |
+| --- | --- | --- | ---: |
+| s100p | `tinyvit-512-int16-20261103-o1` | encoder, decoder | 198 |
+
+```bash
+python3 samples/vision/mobile_sam/model/download.py --target s100p --variant tinyvit-512-int16-20261103-o1
+python3 samples/vision/mobile_sam/runtime/python/main.py --target s100p --variant tinyvit-512-int16-20261103-o1 --encoder-model-path /path/to/mobile_sam_image_encoder_norm_512x512_nashm_int16_20261103_o1.hbm --encoder-asset-id s:mobile_sam:nash-m/mobile_sam_image_encoder_norm_512x512_nashm_int16_20261103_o1.hbm --decoder-model-path /path/to/mobile_sam_decoder_512_nashm_int16_20261103_o1.hbm --decoder-asset-id s:mobile_sam:nash-m/mobile_sam_decoder_512_nashm_int16_20261103_o1.hbm --test-img samples/vision/mobile_sam/test_data/dogs.jpg
+```
+
+Substitute the actual file paths. Multi-component tasks require every component together. Historical defaults and measurements retain their original identities. Board smoke, dataset accuracy, Runtime 1/2 and C++ 1/2 are `not-run` for these profiles.
