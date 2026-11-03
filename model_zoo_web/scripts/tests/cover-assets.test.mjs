@@ -56,4 +56,13 @@ test('a source example image uses the shared placeholder until a local hero is s
   const [model] = buildPendingModels([record], options);
   assert.equal(model.coverImage, 'assets/pending-cover.svg');
   assert.equal(model.coverLabel, '封面待补充');
+  const inferenceCommit = 'a'.repeat(40);
+  record.hero_visual = {
+    file: 'model_zoo_web/release/assets/pending-heroes/fixture.webp',
+    kind: 'similarity-panel', input: 'samples/vision/fixture/input.png',
+    commit: inferenceCommit, runtime: 'host-float-reference',
+  };
+  const [withHero] = buildPendingModels([record], options);
+  assert.equal(withHero.coverImage, 'assets/models/pending-heroes/fixture.webp');
+  assert.equal(withHero.heroProvenance.revision, inferenceCommit);
 });

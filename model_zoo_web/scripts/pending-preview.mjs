@@ -591,7 +591,8 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
             kind: record.hero_visual.kind,
             input: record.hero_visual.input,
             predictionsSource: record.hero_visual.predictions_source || record.hero_visual.input,
-            revision,
+            revision: record.hero_visual.runtime === 'host-float-reference'
+              ? record.hero_visual.commit : revision,
             runtime: record.hero_visual.runtime,
             note: record.hero_visual.note || '',
             modelUrl: record.hero_visual.model_url || '',
