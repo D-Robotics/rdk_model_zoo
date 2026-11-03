@@ -134,10 +134,15 @@ describe("multi-platform variant catalog", () => {
     // The 2026-11-03 S profiles added nine more download-only variants and no benchmark
     // rows: Faster R-CNN native pairs on S100/S100P/S600, EfficientSAM pairs on S100 and
     // S100P, MobileSAM on S100, ConvNeXt Femto on S100, YOLO26n-Depth on S100, and
-    // YOLOE-26n seg on S100. 61 families, 715 variants, 760 benchmark rows.
+    // YOLOE-26n seg on S100: 715 variants.
+    // Later the same day added eleven more download-only variants and no benchmark
+    // rows: ConvNeXt Femto on S100P, EfficientSAM S600, GoogLeNet int16 on
+    // S100/S100P/S600, MODNet on S100/S100P/S600, native YOLOv5n/s on S100P,
+    // ConvNeXt Nano on S100, ConvNeXt Femto on S600, and the MobileSAM S100P pair.
+    // 61 families, 726 variants, 760 benchmark rows.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(61);
-    expect(variants).toHaveLength(715);
+    expect(variants).toHaveLength(726);
     expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(760);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
@@ -218,7 +223,8 @@ describe("multi-platform variant catalog", () => {
     // (36 before the recovery + the 8 asset-only rows) and no benchmark moved.
     // The 2026-11-02 native conversions added six more download-only variants
     // (X5 n-v7 and s-v2, and the same two sizes on S100 and S600): 50 variants.
-    expect(yolov5.variants).toHaveLength(50);
+    // S100P native n-v7 and s-v2 add two more: 52 variants.
+    expect(yolov5.variants).toHaveLength(52);
     expect((yolov5.variants ?? []).reduce((count, variant) => count + variant.benchmarks.length, 0)).toBe(49);
 
     // An asset listed twice in the X5 manifest is silently collapsed by the
