@@ -10,7 +10,7 @@ description:
   zh: MODNet 是单阶段人像抠图网络，从一张图像直接预测 alpha 遮罩，不需要 trimap。
   en: MODNet is a one-stage portrait matting network.
 sample_path: samples/vision/modnet
-sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+sample_revision: 3b3cb8ba3c3d451ec6abde0ae0f27e3dfe99f4f2
 license:
   name: Apache-2.0
   url: https://www.apache.org/licenses/LICENSE-2.0
@@ -28,6 +28,12 @@ upstream:
 supported_platforms:
 - platform: x5
   evidence: docs/release/x5/models.yaml
+- platform: s100
+  evidence: docs/release/s/models.yaml
+- platform: s100p
+  evidence: docs/release/s/models.yaml
+- platform: s600
+  evidence: docs/release/s/models.yaml
 published_variants:
 - name: X5
   source: samples/vision/modnet/README.md
@@ -237,3 +243,279 @@ variants:
       x5 --asset-id x5:modnet:modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin
       --model-path /path/to/modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin
       --test-img /path/to/portrait.jpg
+- size: photographic-portrait-512-s-o1-20261103
+  model: {}
+  input:
+    width: 512
+    height: 512
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 512
+      - 512
+      scale: 0.00392156862745098
+      mean:
+      - 0.5
+      - 0.5
+      - 0.5
+      std:
+      - 0.5
+      - 0.5
+      - 0.5
+  platforms:
+  - platform: s100
+    license:
+      name: Apache-2.0
+      url: https://github.com/ZHKKKe/MODNet/blob/28165a451e4610c9d77cfdf925a94610bb2810fb/README.md#license
+      scope: model
+    status: converted
+    converted_at: '2026-11-03'
+    metadata_revision: 1
+    artifact:
+      filename: modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm
+      format: HBM
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/modnet/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm
+      sha256: 3f1c178b50d3f7dc63d7246a0b36e7f3ac30a6871a156ac3e6f47c54522cd3c4
+      size_bytes: 42409616
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/modnet/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/modnet/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/modnet/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/modnet/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: matte
+        shape:
+        - 1
+        - 1
+        - 512
+        - 512
+        dtype: float32
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 512
+        - 512
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 200
+      calibration_manifest_sha256: e479be0ee83000e1f58110dab21c015f77ad91e25c96e94d6c538ab987ce33a0
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+      artifact_sha256: 3f1c178b50d3f7dc63d7246a0b36e7f3ac30a6871a156ac3e6f47c54522cd3c4
+    provenance:
+      repository_commit: 3b3cb8ba3c3d451ec6abde0ae0f27e3dfe99f4f2
+      source_repository_commit: 28165a451e4610c9d77cfdf925a94610bb2810fb
+      source_checkpoint_sha256: 7c22235f0925deba15d4d63e53afcb654c47055bbcd98f56e393ab2584007ed8
+      source_weight_url: https://drive.usercontent.google.com/download?id=1mcr7ALciuAsHCpLnrtG_eop5-EYhbCmz&export=download&confirm=t
+      checkpoint_revision: sha256:7c22235f0925deba15d4d63e53afcb654c47055bbcd98f56e393ab2584007ed8
+      source_version_pair:
+        repository: https://github.com/ZHKKKe/MODNet
+        commit: 28165a451e4610c9d77cfdf925a94610bb2810fb
+        checkpoint:
+          url: https://drive.usercontent.google.com/download?id=1mcr7ALciuAsHCpLnrtG_eop5-EYhbCmz&export=download&confirm=t
+          sha256: 7c22235f0925deba15d4d63e53afcb654c47055bbcd98f56e393ab2584007ed8
+          size_bytes: 26255603
+          publisher_sha256_verified: false
+      toolchain_image: S SDK 3.7.0 / CPU or GPU image identified by its exact digest
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      build_id: modnet-photographic-portrait-512-s-o1-20261103-s100
+      precision_policy: SDK native automatic precision; O1
+      native_variant: photographic-portrait-512-s-o1-20261103
+      host_smoke_report_sha256: 77ea92889427c377750f174abdaddefba202e3c1a2a12de9a228e2d01840b50f
+      onnx_sha256: 1f8cd24cebf823044b738548969461452c938899964ee05af2f8f5c945798a92
+      config_sha256: 84ac2e4b58d7907bcc9b5f3cf7393081951c61f65c5649aba6c66f22252bacf8
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 1958a09aead1dd8ad80dba22c2f2c741ee0ea67ae2b9a8e4ce3cd2fb935f926e
+    runtime_command: python3 samples/vision/modnet/runtime/python/main.py --target
+      s100 --asset-id s:modnet:s100/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm
+      --model-path /path/to/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm
+      --test-img /path/to/image.jpg
+  - platform: s100p
+    license:
+      name: Apache-2.0
+      url: https://github.com/ZHKKKe/MODNet/blob/28165a451e4610c9d77cfdf925a94610bb2810fb/README.md#license
+      scope: model
+    status: converted
+    converted_at: '2026-11-03'
+    metadata_revision: 1
+    artifact:
+      filename: modnet_photographic_portrait_512x512_rgb_nashm_20261103_o1.hbm
+      format: HBM
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/modnet/modnet_photographic_portrait_512x512_rgb_nashm_20261103_o1.hbm
+      sha256: 4adf974411bc966753a7ca3546fdc75d5a072e5b00813890ce48f8d7b8efa802
+      size_bytes: 46762816
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/modnet/modnet_photographic_portrait_512x512_rgb_nashm_20261103_o1/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/modnet/modnet_photographic_portrait_512x512_rgb_nashm_20261103_o1/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/modnet/modnet_photographic_portrait_512x512_rgb_nashm_20261103_o1/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/modnet/modnet_photographic_portrait_512x512_rgb_nashm_20261103_o1/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: matte
+        shape:
+        - 1
+        - 1
+        - 512
+        - 512
+        dtype: float32
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 512
+        - 512
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 200
+      calibration_manifest_sha256: e479be0ee83000e1f58110dab21c015f77ad91e25c96e94d6c538ab987ce33a0
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+      artifact_sha256: 4adf974411bc966753a7ca3546fdc75d5a072e5b00813890ce48f8d7b8efa802
+    provenance:
+      repository_commit: 3b3cb8ba3c3d451ec6abde0ae0f27e3dfe99f4f2
+      source_repository_commit: 28165a451e4610c9d77cfdf925a94610bb2810fb
+      source_checkpoint_sha256: 7c22235f0925deba15d4d63e53afcb654c47055bbcd98f56e393ab2584007ed8
+      source_weight_url: https://drive.usercontent.google.com/download?id=1mcr7ALciuAsHCpLnrtG_eop5-EYhbCmz&export=download&confirm=t
+      checkpoint_revision: sha256:7c22235f0925deba15d4d63e53afcb654c47055bbcd98f56e393ab2584007ed8
+      source_version_pair:
+        repository: https://github.com/ZHKKKe/MODNet
+        commit: 28165a451e4610c9d77cfdf925a94610bb2810fb
+        checkpoint:
+          url: https://drive.usercontent.google.com/download?id=1mcr7ALciuAsHCpLnrtG_eop5-EYhbCmz&export=download&confirm=t
+          sha256: 7c22235f0925deba15d4d63e53afcb654c47055bbcd98f56e393ab2584007ed8
+          size_bytes: 26255603
+          publisher_sha256_verified: false
+      toolchain_image: S SDK 3.7.0 / CPU or GPU image identified by its exact digest
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      build_id: modnet-photographic-portrait-512-s-o1-20261103-s100p
+      precision_policy: SDK native automatic precision; O1
+      native_variant: photographic-portrait-512-s-o1-20261103
+      host_smoke_report_sha256: 77ea92889427c377750f174abdaddefba202e3c1a2a12de9a228e2d01840b50f
+      onnx_sha256: 1f8cd24cebf823044b738548969461452c938899964ee05af2f8f5c945798a92
+      config_sha256: 9e49796d4dd76189e56a81cd5e75fee25163290baeb2cc98a47a5b533f79cb8b
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 6f8b24773e3fddb20ef0fd378c66f94e34312604394d0e290627847af7cb781f
+    runtime_command: python3 samples/vision/modnet/runtime/python/main.py --target
+      s100p --asset-id s:modnet:s100p/modnet_photographic_portrait_512x512_rgb_nashm_20261103_o1.hbm
+      --model-path /path/to/modnet_photographic_portrait_512x512_rgb_nashm_20261103_o1.hbm
+      --test-img /path/to/image.jpg
+  - platform: s600
+    license:
+      name: Apache-2.0
+      url: https://github.com/ZHKKKe/MODNet/blob/28165a451e4610c9d77cfdf925a94610bb2810fb/README.md#license
+      scope: model
+    status: converted
+    converted_at: '2026-11-03'
+    metadata_revision: 1
+    artifact:
+      filename: modnet_photographic_portrait_512x512_rgb_nashp_20261103_o1.hbm
+      format: HBM
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/modnet/modnet_photographic_portrait_512x512_rgb_nashp_20261103_o1.hbm
+      sha256: 6eeec7e12e2d8c5377d3ee48397622818e8eb01a1e03c2a9e91119a8daf6546e
+      size_bytes: 48254880
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/modnet/modnet_photographic_portrait_512x512_rgb_nashp_20261103_o1/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/modnet/modnet_photographic_portrait_512x512_rgb_nashp_20261103_o1/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/modnet/modnet_photographic_portrait_512x512_rgb_nashp_20261103_o1/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/modnet/modnet_photographic_portrait_512x512_rgb_nashp_20261103_o1/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: matte
+        shape:
+        - 1
+        - 1
+        - 512
+        - 512
+        dtype: float32
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 512
+        - 512
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 200
+      calibration_manifest_sha256: e479be0ee83000e1f58110dab21c015f77ad91e25c96e94d6c538ab987ce33a0
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+      artifact_sha256: 6eeec7e12e2d8c5377d3ee48397622818e8eb01a1e03c2a9e91119a8daf6546e
+    provenance:
+      repository_commit: 3b3cb8ba3c3d451ec6abde0ae0f27e3dfe99f4f2
+      source_repository_commit: 28165a451e4610c9d77cfdf925a94610bb2810fb
+      source_checkpoint_sha256: 7c22235f0925deba15d4d63e53afcb654c47055bbcd98f56e393ab2584007ed8
+      source_weight_url: https://drive.usercontent.google.com/download?id=1mcr7ALciuAsHCpLnrtG_eop5-EYhbCmz&export=download&confirm=t
+      checkpoint_revision: sha256:7c22235f0925deba15d4d63e53afcb654c47055bbcd98f56e393ab2584007ed8
+      source_version_pair:
+        repository: https://github.com/ZHKKKe/MODNet
+        commit: 28165a451e4610c9d77cfdf925a94610bb2810fb
+        checkpoint:
+          url: https://drive.usercontent.google.com/download?id=1mcr7ALciuAsHCpLnrtG_eop5-EYhbCmz&export=download&confirm=t
+          sha256: 7c22235f0925deba15d4d63e53afcb654c47055bbcd98f56e393ab2584007ed8
+          size_bytes: 26255603
+          publisher_sha256_verified: false
+      toolchain_image: S SDK 3.7.0 / CPU or GPU image identified by its exact digest
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      build_id: modnet-photographic-portrait-512-s-o1-20261103-s600
+      precision_policy: SDK native automatic precision; O1
+      native_variant: photographic-portrait-512-s-o1-20261103
+      host_smoke_report_sha256: 77ea92889427c377750f174abdaddefba202e3c1a2a12de9a228e2d01840b50f
+      onnx_sha256: 1f8cd24cebf823044b738548969461452c938899964ee05af2f8f5c945798a92
+      config_sha256: 97c92da2595ac0a1a38d5873ae420801765b38649fbe5c37093fe6288cf77ea7
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: e8f7fa281cb67b9fae3d842be715e5b4b360f38c3c2b92dc90dff7a70c4753a1
+    runtime_command: python3 samples/vision/modnet/runtime/python/main.py --target
+      s600 --asset-id s:modnet:s600/modnet_photographic_portrait_512x512_rgb_nashp_20261103_o1.hbm
+      --model-path /path/to/modnet_photographic_portrait_512x512_rgb_nashp_20261103_o1.hbm
+      --test-img /path/to/image.jpg

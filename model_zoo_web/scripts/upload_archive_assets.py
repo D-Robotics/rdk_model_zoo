@@ -38,14 +38,15 @@ def install(root, prefix, files):
                 raise ValueError('Refusing to overwrite different published content: ' + str(dest/name))
         status = 'identical-existing'
     else:
-        stage = pathlib.Path(tempfile.mkdtemp(prefix='.web-assets-upload-', dir=pathlib.Path.home()))
+        # Keep incomplete files behind mode 0700 on the destination filesystem.
+        # Archive's private home may live on another mounted disk.
+        stage = pathlib.Path(tempfile.mkdtemp(prefix='.web-assets-upload-', dir=dest.parent))
         try:
             if stage.stat().st_dev != dest.parent.stat().st_dev:
                 raise ValueError('Private staging and public destination must share a filesystem')
             for name, data in files.items():
                 (stage/name).write_bytes(data)
                 (stage/name).chmod(0o644)
-            stage.chmod(0o755)
             # A populated existing directory cannot be replaced by rename on POSIX.
             os.rename(stage, dest)
             status = 'created'
@@ -58,6 +59,7 @@ def install(root, prefix, files):
         if actual != data:
             raise ValueError('Published read-back differs: ' + name)
         result['files'][name] = {'sha256': hashlib.sha256(actual).hexdigest(), 'size_bytes': len(actual)}
+    dest.chmod(0o755)
     return result
 
 if __name__ == '__main__':

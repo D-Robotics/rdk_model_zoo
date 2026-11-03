@@ -12,7 +12,7 @@ description:
     This sample deploys the ViT-Tiny encoder with a mask decoder whose two positive
     point prompts are fixed in the model.
 sample_path: samples/vision/efficient_sam
-sample_revision: a7dd7fbf2bc2fc13ea62443cca8e77d7f089075c
+sample_revision: 3b3cb8ba3c3d451ec6abde0ae0f27e3dfe99f4f2
 license:
   name: Apache-2.0
   url: https://www.apache.org/licenses/LICENSE-2.0
@@ -917,4 +917,209 @@ variants:
       --encoder-asset-id s:efficient_sam:nash-m/efficient_sam_vitt_encoder_512x512_nashm_int16_20261103_o1.hbm
       --decoder-model-path /path/to/efficient_sam_vitt_decoder_512_nashm_int16_20261103_o1.hbm
       --decoder-asset-id s:efficient_sam:nash-m/efficient_sam_vitt_decoder_512_nashm_int16_20261103_o1.hbm
+      --test-img /path/to/image.jpg
+  - platform: s600
+    license:
+      name: Apache-2.0
+      url: https://github.com/yformer/EfficientSAM/blob/d525f622e6f640acf5a0fc37c7ca1f243da5bde0/LICENSE
+      scope: model
+    status: converted
+    converted_at: '2026-11-03'
+    metadata_revision: 1
+    artifact:
+      filename: efficient_sam_vitt_512_int16_20261103_o1_s600_bundle.tar.gz
+      format: TAR.GZ
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/efficient_sam/efficient_sam_vitt_512_int16_20261103_o1_s600_bundle.tar.gz
+      sha256: 4af6eaa962b879266360c3bf95681e7ac29f1e78775e1c3909758f4622f729b7
+      size_bytes: 15259530
+      components:
+      - role: encoder
+        filename: efficient_sam_vitt_encoder_512x512_nashp_int16_20261103_o1.hbm
+        format: HBM
+        platform: s600
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/efficient_sam/efficient_sam_vitt_encoder_512x512_nashp_int16_20261103_o1.hbm
+        sha256: cb61cb4dcb5bdd344c881ceaf2df6f25e503940cf328f2b2a1c885fc59ea81ea
+        size_bytes: 34802312
+      - role: decoder
+        filename: efficient_sam_vitt_decoder_512_nashp_int16_20261103_o1.hbm
+        format: HBM
+        platform: s600
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/efficient_sam/efficient_sam_vitt_decoder_512_nashp_int16_20261103_o1.hbm
+        sha256: 1cc783d24aec678ff5b0968892403f0c37b5517b68d717c913c5fd267c6ccb4d
+        size_bytes: 23419840
+      bundle:
+        kind: encoder-decoder
+        descriptor: deployment.json
+        members:
+        - filename: LICENSE.upstream-Apache-2.0.txt
+          sha256: c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4
+          size_bytes: 11357
+        - filename: README.txt
+          sha256: 4098caafa4c31d48a6b2f1334af838fc9c1c0a8d8386bfcd5c6941d05cba8a0e
+          size_bytes: 775
+        - filename: UPSTREAM_NOTICE.md
+          sha256: 2866f3fd40ec26a4083ef595659e30fc5a0d0ef9139ca3009da1b7d1b02d6dc9
+          size_bytes: 486
+        - filename: decoder.oe_report.html
+          sha256: f55c1bf9c7f39567eec0f5ae459bd0c21ad8140cd721d406b8504fa6120324f5
+          size_bytes: 2417721
+        - filename: decoder.oe_report_data.json
+          sha256: 89e862466913aee2f6c7621406749fabc54492d111a8fd3bfdb5874614b88a02
+          size_bytes: 84561
+        - filename: deployment.json
+          sha256: 0ad03c56339f5c26767c580c29d875cd8b81292592b4ac69f1da83426fc06b48
+          size_bytes: 977
+        - filename: encoder.oe_report.html
+          sha256: 055ba50b56bc7d0a96d1ee73edf71eac6fca2198fa70941d1279dabe74b7bb00
+          size_bytes: 3561911
+        - filename: encoder.oe_report_data.json
+          sha256: 4c1721ab2bebae46bf553ea4f567002ae0d70914d17cb91a3a1ad7b214c22199
+          size_bytes: 166380
+        - filename: host-smoke.json
+          sha256: c735fa2271258d1ba53da82b3b8a095f7b939f02240272613fd024237ffea961
+          size_bytes: 9319
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/efficient_sam/efficient_sam_vitt_512_int16_20261103_o1_s600_bundle.tar/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/efficient_sam/efficient_sam_vitt_512_int16_20261103_o1_s600_bundle.tar/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/efficient_sam/efficient_sam_vitt_512_int16_20261103_o1_s600_bundle.tar/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/efficient_sam/efficient_sam_vitt_512_int16_20261103_o1_s600_bundle.tar/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: low_res_masks
+        shape:
+        - 1
+        - 3
+        - 128
+        - 128
+        dtype: float32
+      - name: iou_predictions
+        shape:
+        - 1
+        - 3
+        dtype: float32
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 512
+        - 512
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 200
+      calibration_manifest_sha256: e6439512c051fd796d9de2a8731828307893eb273c7c96f23e574c2ffb1882a8
+      optimization_level: O1
+      board_validation: not-run
+      components:
+        encoder:
+          status: passed
+          artifact_sha256: cb61cb4dcb5bdd344c881ceaf2df6f25e503940cf328f2b2a1c885fc59ea81ea
+          inputs:
+          - name: batched_images
+            shape:
+            - 1
+            - 3
+            - 512
+            - 512
+            dtype: float32
+          outputs:
+          - name: image_embeddings
+            shape:
+            - 1
+            - 256
+            - 32
+            - 32
+            dtype: float32
+          oe_report_filename: encoder.oe_report.html
+          oe_report_sha256: 055ba50b56bc7d0a96d1ee73edf71eac6fca2198fa70941d1279dabe74b7bb00
+          oe_data_filename: encoder.oe_report_data.json
+          oe_data_sha256: 4c1721ab2bebae46bf553ea4f567002ae0d70914d17cb91a3a1ad7b214c22199
+        decoder:
+          status: passed
+          artifact_sha256: 1cc783d24aec678ff5b0968892403f0c37b5517b68d717c913c5fd267c6ccb4d
+          inputs:
+          - name: image_embeddings
+            shape:
+            - 1
+            - 256
+            - 32
+            - 32
+            dtype: float32
+          outputs:
+          - name: low_res_masks
+            shape:
+            - 1
+            - 3
+            - 128
+            - 128
+            dtype: float32
+          - name: iou_predictions
+            shape:
+            - 1
+            - 3
+            dtype: float32
+          oe_report_filename: decoder.oe_report.html
+          oe_report_sha256: f55c1bf9c7f39567eec0f5ae459bd0c21ad8140cd721d406b8504fa6120324f5
+          oe_data_filename: decoder.oe_report_data.json
+          oe_data_sha256: 89e862466913aee2f6c7621406749fabc54492d111a8fd3bfdb5874614b88a02
+    validation:
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+      host_pipeline:
+        status: passed
+        stages:
+        - encoder
+        - decoder
+        evidence_file: host-smoke.json
+        evidence_sha256: c735fa2271258d1ba53da82b3b8a095f7b939f02240272613fd024237ffea961
+        component_sha256:
+          encoder: cb61cb4dcb5bdd344c881ceaf2df6f25e503940cf328f2b2a1c885fc59ea81ea
+          decoder: 1cc783d24aec678ff5b0968892403f0c37b5517b68d717c913c5fd267c6ccb4d
+        scope: Connected source/native/ONNX host inference; board execution not-run
+      artifact_sha256: 4af6eaa962b879266360c3bf95681e7ac29f1e78775e1c3909758f4622f729b7
+    provenance:
+      repository_commit: 3b3cb8ba3c3d451ec6abde0ae0f27e3dfe99f4f2
+      source_repository_commit: d525f622e6f640acf5a0fc37c7ca1f243da5bde0
+      source_checkpoint_sha256: dff858b19600a46461cbb7de98f796b23a7a888d9f5e34c0b033f7d6eb9e4e6a
+      source_weight_url: https://github.com/yformer/EfficientSAM/blob/d525f622e6f640acf5a0fc37c7ca1f243da5bde0/weights/efficient_sam_vitt.pt
+      checkpoint_revision: sha256:dff858b19600a46461cbb7de98f796b23a7a888d9f5e34c0b033f7d6eb9e4e6a
+      source_version_pair:
+        repository: https://github.com/yformer/EfficientSAM
+        commit: d525f622e6f640acf5a0fc37c7ca1f243da5bde0
+        checkpoint:
+          url: https://github.com/yformer/EfficientSAM/blob/d525f622e6f640acf5a0fc37c7ca1f243da5bde0/weights/efficient_sam_vitt.pt
+          sha256: dff858b19600a46461cbb7de98f796b23a7a888d9f5e34c0b033f7d6eb9e4e6a
+          bytes: 40982470
+          publisher_sha256_verified: false
+      toolchain_image: S SDK 3.7.0 / CPU or GPU image identified by its exact digest
+      toolchain_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      build_id: efficient_sam-vitt-512-int16-20261103-o1-s600
+      precision_policy: INT16 activations; O1
+      native_variant: vitt-512-int16-20261103-o1
+      host_smoke_report_sha256: c735fa2271258d1ba53da82b3b8a095f7b939f02240272613fd024237ffea961
+      components:
+        encoder:
+          onnx_sha256: 320e46b085bb34e3f5d00f32cb1d2b88c7b6c7085488c01c8e1f0fe960622222
+          config_sha256: 8d99e564f1852c51354b890d63eb07cf891d8cf61055054e36b5247e09319bf5
+        decoder:
+          onnx_sha256: 0e7eb480d93ed8db471a4b423db52802f2190e4a168893932d6c1317658c12a6
+          config_sha256: 9cf7e6bdf179b4ff2a2ec265ba2c07e9f2cbd62fdf087ad7ac3cd804cb13e48f
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: c2591064feeb6fa77cfe14cd1389c45b67cddbe2474ead354468fb9d8593b289
+    runtime_command: python3 samples/vision/efficient_sam/runtime/python/main.py --target
+      s600 --variant vitt-512-int16-20261103-o1 --encoder-model-path /path/to/efficient_sam_vitt_encoder_512x512_nashp_int16_20261103_o1.hbm
+      --encoder-asset-id s:efficient_sam:nash-p/efficient_sam_vitt_encoder_512x512_nashp_int16_20261103_o1.hbm
+      --decoder-model-path /path/to/efficient_sam_vitt_decoder_512_nashp_int16_20261103_o1.hbm
+      --decoder-asset-id s:efficient_sam:nash-p/efficient_sam_vitt_decoder_512_nashp_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg

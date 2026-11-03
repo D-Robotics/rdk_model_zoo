@@ -12,7 +12,7 @@ from archive_assets import ARCHIVE_HTTPS, asset_prefix
 from upload_archive_assets import REMOTE_ROOT
 
 INSTALL_MODEL = r'''
-import fcntl, hashlib, json, os, pathlib, sys, tempfile
+import fcntl, hashlib, json, os, pathlib, shutil, sys, tempfile
 root,prefix,filename,expected,size,staged=sys.argv[1:]
 root=pathlib.Path(root).resolve(strict=True);source=pathlib.Path(staged)
 parts=pathlib.PurePosixPath(prefix).parts
@@ -29,22 +29,31 @@ if directory.resolve()!=directory:raise ValueError('Model directory traverses a 
 locks=pathlib.Path.home()/'.archive-model-locks';locks.mkdir(mode=0o700,exist_ok=True)
 with (locks/hashlib.sha256(prefix.encode()).hexdigest()).open('w') as lock:
  fcntl.flock(lock,fcntl.LOCK_EX)
- dest=directory/filename
- if dest.exists() or dest.is_symlink():
-  if dest.is_symlink() or identity(dest)!=(expected,int(size)):raise ValueError('Refusing to overwrite a different model')
- else:
-  source.chmod(0o644);os.link(source,dest)
- checksums=directory/'SHA256SUMS';entries={}
- if checksums.exists():
-  for line in checksums.read_text().splitlines():
-   digest,name=line.split(maxsplit=1);entries[name.lstrip('*')]=digest
- if filename in entries and entries[filename]!=expected:raise ValueError('Existing checksum entry identifies another artifact')
- entries[filename]=expected
- fd,temp=tempfile.mkstemp(prefix='.archive-model-checksums-',dir=pathlib.Path.home())
- with os.fdopen(fd,'w') as stream:
-  stream.write(''.join(f'{entries[name]}  {name}\n' for name in sorted(entries)))
- os.chmod(temp,0o644);os.replace(temp,checksums)
- if identity(dest)!=(expected,int(size)):raise ValueError('Published model read-back differs')
+ # The upload home and public data may be separate mounted filesystems.
+ # Copy into an owner-only directory on the destination filesystem before
+ # publishing complete bytes with a no-replacement hard link.
+ private=pathlib.Path(tempfile.mkdtemp(prefix='.archive-model-upload-',dir=directory))
+ try:
+  dest=directory/filename
+  if dest.exists() or dest.is_symlink():
+   if dest.is_symlink() or identity(dest)!=(expected,int(size)):raise ValueError('Refusing to overwrite a different model')
+  else:
+   ready=private/'model'
+   shutil.copyfile(source,ready)
+   if identity(ready)!=(expected,int(size)):raise ValueError('Destination staging differs from the reviewed artifact')
+   ready.chmod(0o644);os.link(ready,dest)
+  checksums=directory/'SHA256SUMS';entries={}
+  if checksums.exists():
+   for line in checksums.read_text().splitlines():
+    digest,name=line.split(maxsplit=1);entries[name.lstrip('*')]=digest
+  if filename in entries and entries[filename]!=expected:raise ValueError('Existing checksum entry identifies another artifact')
+  entries[filename]=expected
+  temp=private/'SHA256SUMS'
+  temp.write_text(''.join(f'{entries[name]}  {name}\n' for name in sorted(entries)))
+  temp.chmod(0o644);os.replace(temp,checksums)
+  if identity(dest)!=(expected,int(size)):raise ValueError('Published model read-back differs')
+ finally:
+  shutil.rmtree(private)
 source.unlink()
 print(json.dumps({'status':'server-verified','prefix':prefix,'filename':filename,'sha256':expected,'size_bytes':int(size)}))
 '''
