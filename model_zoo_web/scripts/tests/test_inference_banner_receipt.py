@@ -68,6 +68,27 @@ class InferenceBannerReceiptTest(unittest.TestCase):
         with self.assertRaises(catalog.CatalogError):
             self.check()
 
+    def test_dynamic_axes_still_require_actual_positive_integer_dimensions(self):
+        self.payload['graph_io']['model']['outputs'][0]['shape'] = ['dynamic', 2]
+        for dim in (0, -1, 'not-a-dimension', True):
+            self.payload['forward_outputs'][0]['shape'] = [dim, 2]
+            with self.subTest(dim=dim), self.assertRaises(catalog.CatalogError):
+                self.check()
+
+    def test_clip_features_cover_the_complete_prompt_batch(self):
+        self.entry['kind'] = 'similarity-panel'
+        self.payload['graphs'] = {role: {'sha256': 'b'*64} for role in ('image', 'text')}
+        self.payload['graph_io'] = {role: {'outputs': [{'name': 'feature', 'shape': ['batch', 512]}]}
+                                    for role in ('image', 'text')}
+        self.payload['prompts'] = ['a dog', 'a cat']
+        self.payload['forward_outputs'] = [{'role': role, 'name': 'feature', 'shape': shape,
+                                            'dtype': 'float32', 'sha256': 'c'*64}
+                                           for role, shape in [('image', [1, 512]), ('text', [2, 512])]]
+        self.check()
+        self.payload['forward_outputs'][1]['shape'] = [1, 512]
+        with self.assertRaisesRegex(catalog.CatalogError, 'supplied prompt'):
+            self.check()
+
     def test_changed_render_is_rejected(self):
         (self.root/self.asset).write_bytes(b'another render')
         with self.assertRaises(catalog.CatalogError):

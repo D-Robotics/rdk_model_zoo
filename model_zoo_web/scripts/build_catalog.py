@@ -719,6 +719,10 @@ def _validate_inference_banner_receipt(payload: dict[str, Any], entry: dict[str,
     metadata = require_mapping(payload.get("graph_io"), f"{label}.graph_io")
     if not graphs or set(graphs) != set(metadata):
         raise CatalogError(f"{label} must record every graph's output metadata")
+    roles = ({"image", "text"} if entry.get("kind") == "similarity-panel" else
+             {"encoder", "decoder"} if entry.get("kind") == "prompt-mask-panel" else {"model"})
+    if set(graphs) != roles:
+        raise CatalogError(f"{label} must record every component of this task")
     expected = {}
     for role, graph in graphs.items():
         if not SHA256_RE.fullmatch(str(graph.get("sha256", ""))):
@@ -741,10 +745,17 @@ def _validate_inference_banner_receipt(payload: dict[str, Any], entry: dict[str,
         declared = expected[(output["role"], output["name"])]["shape"]
         if (output.get("dtype") != "float32" or not SHA256_RE.fullmatch(str(output.get("sha256", "")))
                 or not isinstance(output.get("shape"), list) or not output["shape"]
+                or any(type(dim) is not int or dim <= 0 for dim in output["shape"])
                 or len(output["shape"]) != len(declared)
                 or any(isinstance(wanted, int) and observed != wanted
                        for observed, wanted in zip(output["shape"], declared))):
             raise CatalogError(f"{label} needs typed, shaped and hashed forward outputs")
+    if entry.get("kind") == "similarity-panel":
+        text_outputs = [v for v in outputs if v["role"] == "text"]
+        prompts = payload.get("prompts")
+        if (not isinstance(prompts, list) or not prompts or len(text_outputs) != 1
+                or text_outputs[0]["shape"] != [len(prompts), 512]):
+            raise CatalogError(f"{label} text features must match every supplied prompt")
     files = require_mapping(payload.get("files"), f"{label}.files")
     def verify_asset(relative, identity):
         path = ROOT / _hero_asset_path(relative, f"{label}.visualization_asset", Path(relative).suffix)
