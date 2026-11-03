@@ -1,0 +1,295 @@
+{
+  "schema_version": 2,
+  "kind": "host-float-model-inference-banner",
+  "status": "passed",
+  "source": "fasterrcnn",
+  "model_url": "https://download.pytorch.org/models/fasterrcnn_mobilenet_v3_large_320_fpn-907ea3f9.pth",
+  "model_file": "fasterrcnn_mobilenet_v3_large_320_fpn-907ea3f9.pth",
+  "checkpoint_sha256": "907ea3f91ff92242bc1baea8049276a3e76bca48ce7560bd268cc029f37977b5",
+  "commit": "9e2da039e431f32aad98d1b762cfed5d4835b1b3",
+  "input": "samples/vision/fasterrcnn/test_data/banner_input_wide_20261104.png",
+  "input_sha256": "ee17042586d6e58bf4fef9568de65601fa212f01acacdac9ef58de8f41b659ed",
+  "native_helpers": {
+    "samples/vision/fasterrcnn/runtime/python/detect.py": "3515d91d72abb0c3f6e9e894207d92fe18f91609cbec4d3a35b3e468709eddc7"
+  },
+  "graphs": {
+    "parta": {
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/fasterrcnn-s100-r02/export/part_a_f0only.op16.onnx",
+      "sha256": "8ab21cf106ff9d3009879a7f0775a912b78ae2e132c589ce505c40f43c7217a4",
+      "size_bytes": 20267987
+    },
+    "partb": {
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/fasterrcnn-s100-r02/export/part_b_packed.op16.onnx",
+      "sha256": "95751d28b7597605a56820c5d84031e94dbc2ac98ef9decd37901496852e92bc",
+      "size_bytes": 57449454
+    }
+  },
+  "framework": "ONNX Runtime 1.19.2",
+  "graph_io": {
+    "parta": {
+      "inputs": [
+        {
+          "name": "images",
+          "shape": [
+            1,
+            3,
+            320,
+            320
+          ],
+          "dtype": "tensor(float)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "rpn_obj",
+          "shape": [
+            3375,
+            1
+          ],
+          "dtype": "tensor(float)"
+        },
+        {
+          "name": "rpn_deltas",
+          "shape": [
+            3375,
+            4
+          ],
+          "dtype": "tensor(float)"
+        },
+        {
+          "name": "feat0",
+          "shape": [
+            1,
+            256,
+            10,
+            10
+          ],
+          "dtype": "tensor(float)"
+        }
+      ]
+    },
+    "partb": {
+      "inputs": [
+        {
+          "name": "bank",
+          "shape": [
+            1,
+            256,
+            1050,
+            7
+          ],
+          "dtype": "tensor(float)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "cls_packed",
+          "shape": [
+            1,
+            91,
+            150,
+            1
+          ],
+          "dtype": "tensor(float)"
+        },
+        {
+          "name": "reg_packed",
+          "shape": [
+            1,
+            364,
+            150,
+            1
+          ],
+          "dtype": "tensor(float)"
+        }
+      ]
+    }
+  },
+  "provider": "CPUExecutionProvider",
+  "runtime": "host-float-reference",
+  "versions": {
+    "onnxruntime": "1.19.2",
+    "numpy": "2.2.6",
+    "opencv": "4.11.0",
+    "pillow": "12.3.0"
+  },
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "feeds": [
+    {
+      "role": "parta",
+      "name": "images",
+      "shape": [
+        1,
+        3,
+        320,
+        320
+      ],
+      "dtype": "float32",
+      "sha256": "e823b13f20dbfbbefb078c27deed445b1d04eae1f314439bcb9e87577fc9444e"
+    },
+    {
+      "role": "partb",
+      "name": "bank",
+      "shape": [
+        1,
+        256,
+        1050,
+        7
+      ],
+      "dtype": "float32",
+      "sha256": "3c683c7e620b593acf9ca99ef6300be985e2fdcd9e027603fb348577ae4d444c"
+    }
+  ],
+  "forward_outputs": [
+    {
+      "role": "parta",
+      "name": "rpn_obj",
+      "shape": [
+        3375,
+        1
+      ],
+      "dtype": "float32",
+      "sha256": "56ca7deb21bfccd26c911be80d3ac19b22c611b48f52f18dee50981e6946518c"
+    },
+    {
+      "role": "parta",
+      "name": "rpn_deltas",
+      "shape": [
+        3375,
+        4
+      ],
+      "dtype": "float32",
+      "sha256": "435748d9913ce400213981eb23a0209b2deed8feee50aa2a5c18c3612e0b3253"
+    },
+    {
+      "role": "parta",
+      "name": "feat0",
+      "shape": [
+        1,
+        256,
+        10,
+        10
+      ],
+      "dtype": "float32",
+      "sha256": "d85d12c5a593afedc18f163716527c6bb05f3b9d7aab8eafaf6582347038ab42"
+    },
+    {
+      "role": "partb",
+      "name": "cls_packed",
+      "shape": [
+        1,
+        91,
+        150,
+        1
+      ],
+      "dtype": "float32",
+      "sha256": "b1f180a3e1acfe73ce24f6d5304a00c45e1c42999ec26e937aac70f5c10d26b4"
+    },
+    {
+      "role": "partb",
+      "name": "reg_packed",
+      "shape": [
+        1,
+        364,
+        150,
+        1
+      ],
+      "dtype": "float32",
+      "sha256": "61ba977bcd9492d9679b7eba0e04192b5a6597de2a3d850c2b7a70bd15ca80cb"
+    }
+  ],
+  "files": {
+    "source.png": {
+      "file": "source.png",
+      "sha256": "ee17042586d6e58bf4fef9568de65601fa212f01acacdac9ef58de8f41b659ed",
+      "size_bytes": 3203945
+    },
+    "outputs.npz": {
+      "file": "outputs.npz",
+      "sha256": "37c21a89fcd119ebe04f8c4fd84daf663b5ca89012067221f912ae3afbc3427b",
+      "size_bytes": 396875
+    },
+    "banner.webp": {
+      "file": "banner.webp",
+      "sha256": "06742abdc64ad12c5c748ff348cded409f6e808d007d2d9a6e52371899220360",
+      "size_bytes": 480298
+    },
+    "result.png": {
+      "file": "result.png",
+      "sha256": "f8eecc9a35c87d4cc184f6db54fb4b4b3ffff93f6528d041aa66f7dfa8663728",
+      "size_bytes": 2911806
+    }
+  },
+  "renderer_sha256": "b649a9e29aefd660bd7feae748c3a7cfd9f40ebf3100906abd314245382d30e8",
+  "detections": [
+    {
+      "class_id": 1,
+      "label": "person",
+      "score": 0.9988152980804443,
+      "box": [
+        1074.352294921875,
+        213.06222534179688,
+        1279.090576171875,
+        818.7030639648438
+      ]
+    },
+    {
+      "class_id": 1,
+      "label": "person",
+      "score": 0.9972031116485596,
+      "box": [
+        368.97039794921875,
+        241.9919891357422,
+        572.3649291992188,
+        828.827392578125
+      ]
+    },
+    {
+      "class_id": 3,
+      "label": "car",
+      "score": 0.9538922905921936,
+      "box": [
+        671.0408935546875,
+        345.67767333984375,
+        923.0474853515625,
+        477.1051940917969
+      ]
+    }
+  ],
+  "confidence_threshold": 0.5,
+  "visualization": {
+    "method": "Exact conversion ONNX PartA, native RPN/RoIAlign, packed ONNX PartB and native tail",
+    "proposals": 136,
+    "rendered_predictions": [
+      {
+        "prediction_index": 0,
+        "class_id": 1,
+        "label": "person",
+        "score": 0.9988152980804443
+      },
+      {
+        "prediction_index": 1,
+        "class_id": 1,
+        "label": "person",
+        "score": 0.9972031116485596
+      },
+      {
+        "prediction_index": 2,
+        "class_id": 3,
+        "label": "car",
+        "score": 0.9538922905921936
+      }
+    ],
+    "source_crop_xyxy": [
+      0.0,
+      18.366834170854247,
+      1672.0,
+      922.6331658291458
+    ],
+    "rendered_size": [
+      1592,
+      861
+    ]
+  }
+}

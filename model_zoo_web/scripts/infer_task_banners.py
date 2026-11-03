@@ -230,7 +230,15 @@ def run(row, native, output, threads):
         if len(labels) != 91 or labels != row['labels']:
             raise ValueError('Faster R-CNN COCO vocabulary differs from its native labels')
         result_image, selected = overlay(photo, boxes, scores, ids, labels)
-        rendered = ImageOps.contain(result_image, (1592, 861), Image.Resampling.LANCZOS)
+        scale = max(1592/photo.width, 861/photo.height)
+        crop_width, crop_height = 1592/scale, 861/scale
+        crop = [(photo.width-crop_width)/2, (photo.height-crop_height)/2,
+                (photo.width+crop_width)/2, (photo.height+crop_height)/2]
+        for prediction in selected:
+            box = boxes[prediction['prediction_index']]
+            if box[0] < crop[0] or box[1] < crop[1] or box[2] > crop[2] or box[3] > crop[3]:
+                raise ValueError('Use a wider source photograph to keep every displayed detection inside the banner')
+        rendered = ImageOps.fit(result_image, (1592, 861), Image.Resampling.LANCZOS)
         banner = Image.new('RGB', (1672, 941), (236, 236, 238))
         mask = Image.new('L', rendered.size)
         ImageDraw.Draw(mask).rounded_rectangle((0, 0, rendered.width-1, rendered.height-1), radius=40, fill=255)
@@ -240,7 +248,8 @@ def run(row, native, output, threads):
         raw.update(proposals=proposals, decoded_boxes=boxes, decoded_scores=scores, decoded_class_ids=ids)
         extra = {'detections': detections, 'confidence_threshold': .5,
                  'visualization': {'method': 'Exact conversion ONNX PartA, native RPN/RoIAlign, packed ONNX PartB and native tail',
-                                   'proposals': count, 'rendered_predictions': selected}}
+                                   'proposals': count, 'rendered_predictions': selected,
+                                   'source_crop_xyxy': crop, 'rendered_size': [1592, 861]}}
     elif kind == 'segmentation-overlay':
         from utils.py_utils.yoloe26_geometry import letterbox
         from utils.py_utils.yoloe26_decode import decode_candidates, restore_masks
