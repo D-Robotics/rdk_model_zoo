@@ -83,3 +83,16 @@ test('S-series overview retains the compiler and HMCT versions', async () => {
     assert.ok(reportHtml.includes(value), `Missing toolchain value: ${value}`);
   }
 });
+
+test('a CLIP image estimate does not become the complete matching pipeline FPS', async () => {
+  const { reportHtml } = await renderReport({
+    components: { image: {}, text: {} },
+    aggregate: { latency_ms: 999, fps_derived: 9999 },
+    subgraphs: [{ name: 'image / BPU', perf: { latency_ms: 2, fps: 500 } }],
+    board_measurement: null,
+  });
+  assert.match(reportHtml, /rd-card-label">估算 FPS<\/span><strong>—<\/strong>/);
+  assert.match(reportHtml, /rd-card-label">估算延迟<\/span><strong>— ms<\/strong>/);
+  assert.match(reportHtml, /image \/ BPU/);
+  assert.match(reportHtml, /500 FPS/);
+});

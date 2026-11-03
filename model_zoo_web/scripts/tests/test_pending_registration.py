@@ -16,6 +16,19 @@ CLIP = catalog.DATA_ROOT / "vision/clip/clip/similarity.yaml"
 
 
 class PendingRegistrationTest(unittest.TestCase):
+    def test_host_cover_retains_its_actual_inference_revision(self):
+        path = catalog.DATA_ROOT / "vision/convnext/convnext/cls.yaml"
+        record = yaml.safe_load(path.read_text())
+        self.assertNotEqual(record["sample_revision"], record["hero_visual"]["commit"])
+        catalog._validate_hero_visual(record, str(path), record["sample_revision"], None)
+
+    def test_host_cover_rejects_relabeling_saved_predictions(self):
+        path = catalog.DATA_ROOT / "vision/convnext/convnext/cls.yaml"
+        record = yaml.safe_load(path.read_text())
+        record["hero_visual"]["commit"] = record["sample_revision"]
+        with self.assertRaisesRegex(catalog.CatalogError, "commit does not match the inference record"):
+            catalog._validate_hero_visual(record, str(path), record["sample_revision"], None)
+
     def test_pending_record_uses_its_revision_without_a_live_sample_ref(self):
         record = yaml.safe_load(CLIP.read_text(encoding="utf-8"))
         with mock.patch.dict(os.environ, {catalog.SAMPLE_REF_ENV: "missing-live-branch"}):

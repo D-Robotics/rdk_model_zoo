@@ -1,0 +1,4495 @@
+{
+  "schema_version": 1,
+  "generated_from_run": "fasterrcnn-mbv3-320-native-20261103-o1",
+  "generated_at": "2026-11-03T07:18:02.886856+00:00",
+  "model": {
+    "source": "fasterrcnn",
+    "family": "fasterrcnn",
+    "task": "detect",
+    "size": "mbv3-320-native-20261103-o1",
+    "domain": "vision",
+    "provider": "PyTorch TorchVision"
+  },
+  "target": {
+    "platform": "s600",
+    "march": "nash-p"
+  },
+  "toolchain": {
+    "hbdk": "4.7.5",
+    "hmct": "2.6.5",
+    "hb_compile": "3.5.3"
+  },
+  "io": {
+    "inputs": [
+      {
+        "name": "images_y",
+        "shape": [
+          1,
+          320,
+          320,
+          1
+        ],
+        "dtype": "uint8"
+      },
+      {
+        "name": "images_uv",
+        "shape": [
+          1,
+          160,
+          160,
+          2
+        ],
+        "dtype": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "cls_packed",
+        "shape": [
+          1,
+          91,
+          150,
+          1
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "reg_packed",
+        "shape": [
+          1,
+          364,
+          150,
+          1
+        ],
+        "dtype": "float32"
+      }
+    ]
+  },
+  "quantization": {
+    "nodes": [
+      {
+        "name": "parta::/backbone/body/body.0/body.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.987633,
+        "calibrated_cosine": 0.989795,
+        "threshold": 2.628399,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.0/body.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.0/body.0.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.987847,
+        "calibrated_cosine": 0.989782,
+        "threshold": 9.660333,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.0/body.0.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.1/block/block.0/block.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": null,
+        "calibrated_cosine": 0.987915,
+        "threshold": 15.32854,
+        "dtype": "si8",
+        "original_name": "...y/body.1/block/block.0/block.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.1/block/block.0/block.0.2/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": null,
+        "calibrated_cosine": 0.992434,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "...y/body.1/block/block.0/block.0.2/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.1/block/block.1/block.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": null,
+        "calibrated_cosine": 0.922127,
+        "threshold": 4.286242,
+        "dtype": "si8",
+        "original_name": "...y/body.1/block/block.1/block.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.996002,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.1/Add",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.2/block/block.0/block.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": null,
+        "calibrated_cosine": 0.992486,
+        "threshold": 15.141721,
+        "dtype": "si8",
+        "original_name": "...y/body.2/block/block.0/block.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.2/block/block.0/block.0.2/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": null,
+        "calibrated_cosine": 0.99892,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "...y/body.2/block/block.0/block.0.2/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.2/block/block.1/block.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.970989,
+        "calibrated_cosine": 0.996274,
+        "threshold": 1.665121,
+        "dtype": "si8",
+        "original_name": "...y/body.2/block/block.1/block.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.2/block/block.1/block.1.2/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.970989,
+        "calibrated_cosine": 0.996988,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "...y/body.2/block/block.1/block.1.2/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.2/block/block.2/block.2.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.926471,
+        "calibrated_cosine": 0.975423,
+        "threshold": 4.158052,
+        "dtype": "si8",
+        "original_name": "...y/body.2/block/block.2/block.2.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.3/block/block.0/block.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.966042,
+        "calibrated_cosine": 0.986187,
+        "threshold": 2.569963,
+        "dtype": "si8",
+        "original_name": "...y/body.3/block/block.0/block.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.3/block/block.0/block.0.2/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.966042,
+        "calibrated_cosine": 0.988489,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "...y/body.3/block/block.0/block.0.2/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.3/block/block.1/block.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.984907,
+        "calibrated_cosine": 0.986446,
+        "threshold": 1.873716,
+        "dtype": "si8",
+        "original_name": "...y/body.3/block/block.1/block.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.3/block/block.1/block.1.2/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.984907,
+        "calibrated_cosine": 0.991578,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "...y/body.3/block/block.1/block.1.2/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.3/block/block.2/block.2.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.931178,
+        "calibrated_cosine": 0.964201,
+        "threshold": 3.375448,
+        "dtype": "si8",
+        "original_name": "...y/body.3/block/block.2/block.2.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.3/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.931178,
+        "calibrated_cosine": 0.964921,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.3/Add",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.4/block/block.0/block.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.96918,
+        "calibrated_cosine": 0.980247,
+        "threshold": 4.306546,
+        "dtype": "si8",
+        "original_name": "...y/body.4/block/block.0/block.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.4/block/block.0/block.0.2/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.96918,
+        "calibrated_cosine": 0.986836,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "...y/body.4/block/block.0/block.0.2/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.4/block/block.1/block.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.992504,
+        "calibrated_cosine": 0.996673,
+        "threshold": 2.868817,
+        "dtype": "si8",
+        "original_name": "...y/body.4/block/block.1/block.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.4/block/block.1/block.1.2/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.992504,
+        "calibrated_cosine": 0.997223,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "...y/body.4/block/block.1/block.1.2/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...ock/block.2/avgpool/GlobalAveragePool",
+        "on": "BPU",
+        "type": "GlobalAveragePool",
+        "cosine": 0.996835,
+        "calibrated_cosine": 0.998875,
+        "threshold": 3.793521,
+        "dtype": "si8",
+        "original_name": "...ock/block.2/avgpool/GlobalAveragePool",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...ne/body/body.4/block/block.2/fc1/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.999992,
+        "calibrated_cosine": 1.0,
+        "threshold": 2.508898,
+        "dtype": "si8",
+        "original_name": "...ne/body/body.4/block/block.2/fc1/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.4/block/block.2/activation/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.999992,
+        "calibrated_cosine": 0.999995,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": ".../body.4/block/block.2/activation/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...ne/body/body.4/block/block.2/fc2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.99942,
+        "calibrated_cosine": 0.999572,
+        "threshold": 5.636312,
+        "dtype": "si8",
+        "original_name": "...ne/body/body.4/block/block.2/fc2/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../block.2/scale_activation/HardSigmoid",
+        "on": "BPU",
+        "type": "HardSigmoid",
+        "cosine": 0.999994,
+        "calibrated_cosine": 0.999995,
+        "threshold": 3.0,
+        "dtype": "si8",
+        "original_name": ".../block.2/scale_activation/HardSigmoid",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.4/block/block.2/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.992523,
+        "calibrated_cosine": 0.997254,
+        "threshold": 3.793521,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.4/block/block.2/Mul",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.4/block/block.3/block.3.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.883842,
+        "calibrated_cosine": 0.961055,
+        "threshold": 3.793521,
+        "dtype": "si8",
+        "original_name": "...y/body.4/block/block.3/block.3.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.5/block/block.0/block.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.972567,
+        "calibrated_cosine": 0.99159,
+        "threshold": 3.244671,
+        "dtype": "si8",
+        "original_name": "...y/body.5/block/block.0/block.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.5/block/block.0/block.0.2/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.972567,
+        "calibrated_cosine": 0.994607,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "...y/body.5/block/block.0/block.0.2/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.5/block/block.1/block.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.933035,
+        "calibrated_cosine": 0.984569,
+        "threshold": 1.473872,
+        "dtype": "si8",
+        "original_name": "...y/body.5/block/block.1/block.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.5/block/block.1/block.1.2/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.933035,
+        "calibrated_cosine": 0.98042,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "...y/body.5/block/block.1/block.1.2/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...ock/block.2/avgpool/GlobalAveragePool",
+        "on": "BPU",
+        "type": "GlobalAveragePool",
+        "cosine": 0.965209,
+        "calibrated_cosine": 0.994712,
+        "threshold": 4.855184,
+        "dtype": "si8",
+        "original_name": "...ock/block.2/avgpool/GlobalAveragePool",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...ne/body/body.5/block/block.2/fc1/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.956903,
+        "calibrated_cosine": 0.989939,
+        "threshold": 1.72193,
+        "dtype": "si8",
+        "original_name": "...ne/body/body.5/block/block.2/fc1/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.5/block/block.2/activation/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.956903,
+        "calibrated_cosine": 0.990399,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": ".../body.5/block/block.2/activation/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...ne/body/body.5/block/block.2/fc2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.986717,
+        "calibrated_cosine": 0.995845,
+        "threshold": 3.613203,
+        "dtype": "si8",
+        "original_name": "...ne/body/body.5/block/block.2/fc2/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../block.2/scale_activation/HardSigmoid",
+        "on": "BPU",
+        "type": "HardSigmoid",
+        "cosine": 0.997407,
+        "calibrated_cosine": 0.999217,
+        "threshold": 3.0,
+        "dtype": "si8",
+        "original_name": ".../block.2/scale_activation/HardSigmoid",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.5/block/block.2/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.966732,
+        "calibrated_cosine": 0.986457,
+        "threshold": 4.855184,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.5/block/block.2/Mul",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.5/block/block.3/block.3.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.903141,
+        "calibrated_cosine": 0.967749,
+        "threshold": 1.766192,
+        "dtype": "si8",
+        "original_name": "...y/body.5/block/block.3/block.3.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.5/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.903141,
+        "calibrated_cosine": 0.962282,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.5/Add",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.6/block/block.0/block.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.959488,
+        "calibrated_cosine": 0.982246,
+        "threshold": 6.709032,
+        "dtype": "si8",
+        "original_name": "...y/body.6/block/block.0/block.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.6/block/block.0/block.0.2/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.959488,
+        "calibrated_cosine": 0.983183,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "...y/body.6/block/block.0/block.0.2/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.6/block/block.1/block.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.934157,
+        "calibrated_cosine": 0.953711,
+        "threshold": 2.116535,
+        "dtype": "si8",
+        "original_name": "...y/body.6/block/block.1/block.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.6/block/block.1/block.1.2/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.934157,
+        "calibrated_cosine": 0.972642,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "...y/body.6/block/block.1/block.1.2/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...ock/block.2/avgpool/GlobalAveragePool",
+        "on": "BPU",
+        "type": "GlobalAveragePool",
+        "cosine": 0.976894,
+        "calibrated_cosine": 0.991409,
+        "threshold": 3.862269,
+        "dtype": "si8",
+        "original_name": "...ock/block.2/avgpool/GlobalAveragePool",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...ne/body/body.6/block/block.2/fc1/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.962968,
+        "calibrated_cosine": 0.985974,
+        "threshold": 1.312248,
+        "dtype": "si8",
+        "original_name": "...ne/body/body.6/block/block.2/fc1/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.6/block/block.2/activation/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.962968,
+        "calibrated_cosine": 0.98613,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": ".../body.6/block/block.2/activation/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...ne/body/body.6/block/block.2/fc2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.980042,
+        "calibrated_cosine": 0.993757,
+        "threshold": 2.677512,
+        "dtype": "si8",
+        "original_name": "...ne/body/body.6/block/block.2/fc2/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../block.2/scale_activation/HardSigmoid",
+        "on": "BPU",
+        "type": "HardSigmoid",
+        "cosine": 0.997142,
+        "calibrated_cosine": 0.999152,
+        "threshold": 3.0,
+        "dtype": "si8",
+        "original_name": ".../block.2/scale_activation/HardSigmoid",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.6/block/block.2/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.965736,
+        "calibrated_cosine": 0.986416,
+        "threshold": 3.862269,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.6/block/block.2/Mul",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.6/block/block.3/block.3.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.886831,
+        "calibrated_cosine": 0.94444,
+        "threshold": 2.104027,
+        "dtype": "si8",
+        "original_name": "...y/body.6/block/block.3/block.3.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.6/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.886831,
+        "calibrated_cosine": 0.946255,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.6/Add",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.7/block/block.0/block.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.970432,
+        "calibrated_cosine": 0.985522,
+        "threshold": 10.464409,
+        "dtype": "si8",
+        "original_name": "...y/body.7/block/block.0/block.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y.7/block/block.0/block.0.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.950169,
+        "calibrated_cosine": 0.976917,
+        "threshold": 6.2208,
+        "dtype": "si8",
+        "original_name": "...y.7/block/block.0/block.0.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.7/block/block.1/block.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.96518,
+        "calibrated_cosine": 0.986598,
+        "threshold": 1.754943,
+        "dtype": "si8",
+        "original_name": "...y/body.7/block/block.1/block.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y.7/block/block.1/block.1.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.957284,
+        "calibrated_cosine": 0.984804,
+        "threshold": 8.87146,
+        "dtype": "si8",
+        "original_name": "...y.7/block/block.1/block.1.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.7/block/block.2/block.2.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.947371,
+        "calibrated_cosine": 0.9814,
+        "threshold": 5.600619,
+        "dtype": "si8",
+        "original_name": "...y/body.7/block/block.2/block.2.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.8/block/block.0/block.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.980218,
+        "calibrated_cosine": 0.992449,
+        "threshold": 8.022055,
+        "dtype": "si8",
+        "original_name": "...y/body.8/block/block.0/block.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y.8/block/block.0/block.0.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.975058,
+        "calibrated_cosine": 0.990792,
+        "threshold": 5.089521,
+        "dtype": "si8",
+        "original_name": "...y.8/block/block.0/block.0.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.8/block/block.1/block.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.972851,
+        "calibrated_cosine": 0.988548,
+        "threshold": 3.848524,
+        "dtype": "si8",
+        "original_name": "...y/body.8/block/block.1/block.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y.8/block/block.1/block.1.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.944332,
+        "calibrated_cosine": 0.974052,
+        "threshold": 6.585114,
+        "dtype": "si8",
+        "original_name": "...y.8/block/block.1/block.1.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.8/block/block.2/block.2.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.944773,
+        "calibrated_cosine": 0.986569,
+        "threshold": 3.357944,
+        "dtype": "si8",
+        "original_name": "...y/body.8/block/block.2/block.2.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.8/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.944773,
+        "calibrated_cosine": 0.978878,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.8/Add",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.9/block/block.0/block.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.971465,
+        "calibrated_cosine": 0.988571,
+        "threshold": 11.371037,
+        "dtype": "si8",
+        "original_name": "...y/body.9/block/block.0/block.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y.9/block/block.0/block.0.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.970983,
+        "calibrated_cosine": 0.988739,
+        "threshold": 7.097028,
+        "dtype": "si8",
+        "original_name": "...y.9/block/block.0/block.0.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.9/block/block.1/block.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.968353,
+        "calibrated_cosine": 0.98553,
+        "threshold": 5.600566,
+        "dtype": "si8",
+        "original_name": "...y/body.9/block/block.1/block.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y.9/block/block.1/block.1.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.897315,
+        "calibrated_cosine": 0.956973,
+        "threshold": 7.209803,
+        "dtype": "si8",
+        "original_name": "...y.9/block/block.1/block.1.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...y/body.9/block/block.2/block.2.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.948708,
+        "calibrated_cosine": 0.97907,
+        "threshold": 3.222953,
+        "dtype": "si8",
+        "original_name": "...y/body.9/block/block.2/block.2.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.9/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.948708,
+        "calibrated_cosine": 0.976799,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.9/Add",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.10/block/block.0/block.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.977238,
+        "calibrated_cosine": 0.986389,
+        "threshold": 16.562042,
+        "dtype": "si8",
+        "original_name": ".../body.10/block/block.0/block.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::....10/block/block.0/block.0.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.977403,
+        "calibrated_cosine": 0.985493,
+        "threshold": 10.024859,
+        "dtype": "si8",
+        "original_name": "....10/block/block.0/block.0.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.10/block/block.1/block.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.973644,
+        "calibrated_cosine": 0.982076,
+        "threshold": 8.585507,
+        "dtype": "si8",
+        "original_name": ".../body.10/block/block.1/block.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::....10/block/block.1/block.1.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.954961,
+        "calibrated_cosine": 0.970042,
+        "threshold": 9.223884,
+        "dtype": "si8",
+        "original_name": "....10/block/block.1/block.1.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.10/block/block.2/block.2.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": null,
+        "calibrated_cosine": 0.981642,
+        "threshold": 5.522111,
+        "dtype": "si8",
+        "original_name": ".../body.10/block/block.2/block.2.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.10/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.970487,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.10/Add",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.11/block/block.0/block.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.966916,
+        "calibrated_cosine": 0.983334,
+        "threshold": 17.714834,
+        "dtype": "si8",
+        "original_name": ".../body.11/block/block.0/block.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::....11/block/block.0/block.0.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.963318,
+        "calibrated_cosine": 0.982151,
+        "threshold": 8.086217,
+        "dtype": "si8",
+        "original_name": "....11/block/block.0/block.0.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.11/block/block.1/block.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.951578,
+        "calibrated_cosine": 0.96778,
+        "threshold": 6.730571,
+        "dtype": "si8",
+        "original_name": ".../body.11/block/block.1/block.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::....11/block/block.1/block.1.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.956569,
+        "calibrated_cosine": 0.968655,
+        "threshold": 52.787163,
+        "dtype": "si8",
+        "original_name": "....11/block/block.1/block.1.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...ock/block.2/avgpool/GlobalAveragePool",
+        "on": "BPU",
+        "type": "GlobalAveragePool",
+        "cosine": 0.980013,
+        "calibrated_cosine": 0.986878,
+        "threshold": 52.787163,
+        "dtype": "si8",
+        "original_name": "...ock/block.2/avgpool/GlobalAveragePool",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...e/body/body.11/block/block.2/fc1/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.998175,
+        "calibrated_cosine": 0.998103,
+        "threshold": 25.468428,
+        "dtype": "si8",
+        "original_name": "...e/body/body.11/block/block.2/fc1/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...body.11/block/block.2/activation/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.998175,
+        "calibrated_cosine": 0.99835,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "...body.11/block/block.2/activation/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...e/body/body.11/block/block.2/fc2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.998535,
+        "calibrated_cosine": 0.9986,
+        "threshold": 12.513671,
+        "dtype": "si8",
+        "original_name": "...e/body/body.11/block/block.2/fc2/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../block.2/scale_activation/HardSigmoid",
+        "on": "BPU",
+        "type": "HardSigmoid",
+        "cosine": 0.999981,
+        "calibrated_cosine": 0.999979,
+        "threshold": 3.0,
+        "dtype": "si8",
+        "original_name": ".../block.2/scale_activation/HardSigmoid",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.11/block/block.2/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.887383,
+        "calibrated_cosine": 0.945061,
+        "threshold": 52.787163,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.11/block/block.2/Mul",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.11/block/block.3/block.3.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.904456,
+        "calibrated_cosine": 0.957813,
+        "threshold": 11.666181,
+        "dtype": "si8",
+        "original_name": ".../body.11/block/block.3/block.3.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.12/block/block.0/block.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.960074,
+        "calibrated_cosine": 0.978311,
+        "threshold": 8.321088,
+        "dtype": "si8",
+        "original_name": ".../body.12/block/block.0/block.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::....12/block/block.0/block.0.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.940163,
+        "calibrated_cosine": 0.964691,
+        "threshold": 9.092475,
+        "dtype": "si8",
+        "original_name": "....12/block/block.0/block.0.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.12/block/block.1/block.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.934877,
+        "calibrated_cosine": 0.965362,
+        "threshold": 4.519443,
+        "dtype": "si8",
+        "original_name": ".../body.12/block/block.1/block.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::....12/block/block.1/block.1.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.936213,
+        "calibrated_cosine": 0.964572,
+        "threshold": 48.637218,
+        "dtype": "si8",
+        "original_name": "....12/block/block.1/block.1.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...ock/block.2/avgpool/GlobalAveragePool",
+        "on": "BPU",
+        "type": "GlobalAveragePool",
+        "cosine": 0.964232,
+        "calibrated_cosine": 0.982031,
+        "threshold": 65.041862,
+        "dtype": "si8",
+        "original_name": "...ock/block.2/avgpool/GlobalAveragePool",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...e/body/body.12/block/block.2/fc1/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.968502,
+        "calibrated_cosine": 0.983994,
+        "threshold": 14.373562,
+        "dtype": "si8",
+        "original_name": "...e/body/body.12/block/block.2/fc1/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...body.12/block/block.2/activation/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.968502,
+        "calibrated_cosine": 0.985806,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "...body.12/block/block.2/activation/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...e/body/body.12/block/block.2/fc2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.977244,
+        "calibrated_cosine": 0.986416,
+        "threshold": 12.400169,
+        "dtype": "si8",
+        "original_name": "...e/body/body.12/block/block.2/fc2/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../block.2/scale_activation/HardSigmoid",
+        "on": "BPU",
+        "type": "HardSigmoid",
+        "cosine": 0.995452,
+        "calibrated_cosine": 0.998681,
+        "threshold": 3.0,
+        "dtype": "si8",
+        "original_name": ".../block.2/scale_activation/HardSigmoid",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.12/block/block.2/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.847586,
+        "calibrated_cosine": 0.905664,
+        "threshold": 65.041862,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.12/block/block.2/Mul",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.12/block/block.3/block.3.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": null,
+        "calibrated_cosine": 0.912834,
+        "threshold": 5.602695,
+        "dtype": "si8",
+        "original_name": ".../body.12/block/block.3/block.3.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.12/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.942507,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.12/Add",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.13/block/block.0/block.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.964731,
+        "calibrated_cosine": 0.978381,
+        "threshold": 17.704252,
+        "dtype": "si8",
+        "original_name": ".../body.13/block/block.0/block.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::....13/block/block.0/block.0.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.924864,
+        "calibrated_cosine": 0.948766,
+        "threshold": 9.086403,
+        "dtype": "si8",
+        "original_name": "....13/block/block.0/block.0.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.13/block/block.1/block.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.958708,
+        "calibrated_cosine": 0.975413,
+        "threshold": 4.516424,
+        "dtype": "si8",
+        "original_name": ".../body.13/block/block.1/block.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::....13/block/block.1/block.1.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.877635,
+        "calibrated_cosine": 0.898469,
+        "threshold": 28.832197,
+        "dtype": "si8",
+        "original_name": "....13/block/block.1/block.1.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...ock/block.2/avgpool/GlobalAveragePool",
+        "on": "BPU",
+        "type": "GlobalAveragePool",
+        "cosine": 0.93254,
+        "calibrated_cosine": 0.945914,
+        "threshold": 14.288271,
+        "dtype": "si8",
+        "original_name": "...ock/block.2/avgpool/GlobalAveragePool",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...e/body/body.13/block/block.2/fc1/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.992628,
+        "calibrated_cosine": 0.995026,
+        "threshold": 15.624415,
+        "dtype": "si8",
+        "original_name": "...e/body/body.13/block/block.2/fc1/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...body.13/block/block.2/activation/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.992628,
+        "calibrated_cosine": 0.995573,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "...body.13/block/block.2/activation/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...e/body/body.13/block/block.2/fc2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.994168,
+        "calibrated_cosine": 0.995854,
+        "threshold": 20.627056,
+        "dtype": "si8",
+        "original_name": "...e/body/body.13/block/block.2/fc2/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../block.2/scale_activation/HardSigmoid",
+        "on": "BPU",
+        "type": "HardSigmoid",
+        "cosine": 0.997621,
+        "calibrated_cosine": 0.997051,
+        "threshold": 3.0,
+        "dtype": "si8",
+        "original_name": ".../block.2/scale_activation/HardSigmoid",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.13/block/block.2/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.899077,
+        "calibrated_cosine": 0.940767,
+        "threshold": 14.288271,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.13/block/block.2/Mul",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.13/block/block.3/block.3.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.926461,
+        "calibrated_cosine": 0.954605,
+        "threshold": 5.174906,
+        "dtype": "si8",
+        "original_name": ".../body.13/block/block.3/block.3.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.14/block/block.0/block.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.959527,
+        "calibrated_cosine": 0.974641,
+        "threshold": 11.1274,
+        "dtype": "si8",
+        "original_name": ".../body.14/block/block.0/block.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::....14/block/block.0/block.0.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.945323,
+        "calibrated_cosine": 0.962287,
+        "threshold": 9.569764,
+        "dtype": "si8",
+        "original_name": "....14/block/block.0/block.0.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.14/block/block.1/block.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.932861,
+        "calibrated_cosine": 0.949273,
+        "threshold": 5.812465,
+        "dtype": "si8",
+        "original_name": ".../body.14/block/block.1/block.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::....14/block/block.1/block.1.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.928469,
+        "calibrated_cosine": 0.945266,
+        "threshold": 34.616814,
+        "dtype": "si8",
+        "original_name": "....14/block/block.1/block.1.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...ock/block.2/avgpool/GlobalAveragePool",
+        "on": "BPU",
+        "type": "GlobalAveragePool",
+        "cosine": 0.921144,
+        "calibrated_cosine": 0.937519,
+        "threshold": 34.616814,
+        "dtype": "si8",
+        "original_name": "...ock/block.2/avgpool/GlobalAveragePool",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...e/body/body.14/block/block.2/fc1/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.962193,
+        "calibrated_cosine": 0.957023,
+        "threshold": 11.649748,
+        "dtype": "si8",
+        "original_name": "...e/body/body.14/block/block.2/fc1/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...body.14/block/block.2/activation/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.962193,
+        "calibrated_cosine": 0.971583,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "...body.14/block/block.2/activation/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...e/body/body.14/block/block.2/fc2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.983158,
+        "calibrated_cosine": 0.987857,
+        "threshold": 19.359921,
+        "dtype": "si8",
+        "original_name": "...e/body/body.14/block/block.2/fc2/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../block.2/scale_activation/HardSigmoid",
+        "on": "BPU",
+        "type": "HardSigmoid",
+        "cosine": 0.996092,
+        "calibrated_cosine": 0.996593,
+        "threshold": 3.0,
+        "dtype": "si8",
+        "original_name": ".../block.2/scale_activation/HardSigmoid",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.14/block/block.2/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.917488,
+        "calibrated_cosine": 0.934783,
+        "threshold": 34.616814,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.14/block/block.2/Mul",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.14/block/block.3/block.3.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.934657,
+        "calibrated_cosine": 0.950281,
+        "threshold": 6.665308,
+        "dtype": "si8",
+        "original_name": ".../body.14/block/block.3/block.3.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.14/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.934657,
+        "calibrated_cosine": 0.954665,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.14/Add",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.15/block/block.0/block.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.97319,
+        "calibrated_cosine": 0.980309,
+        "threshold": 15.257032,
+        "dtype": "si8",
+        "original_name": ".../body.15/block/block.0/block.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::....15/block/block.0/block.0.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.913862,
+        "calibrated_cosine": 0.933646,
+        "threshold": 13.170504,
+        "dtype": "si8",
+        "original_name": "....15/block/block.0/block.0.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.15/block/block.1/block.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.921993,
+        "calibrated_cosine": 0.93297,
+        "threshold": 3.090383,
+        "dtype": "si8",
+        "original_name": ".../body.15/block/block.1/block.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::....15/block/block.1/block.1.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.925633,
+        "calibrated_cosine": 0.937062,
+        "threshold": 31.265339,
+        "dtype": "si8",
+        "original_name": "....15/block/block.1/block.1.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...ock/block.2/avgpool/GlobalAveragePool",
+        "on": "BPU",
+        "type": "GlobalAveragePool",
+        "cosine": 0.947998,
+        "calibrated_cosine": 0.950284,
+        "threshold": 31.265339,
+        "dtype": "si8",
+        "original_name": "...ock/block.2/avgpool/GlobalAveragePool",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...e/body/body.15/block/block.2/fc1/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.955597,
+        "calibrated_cosine": 0.937816,
+        "threshold": 17.352386,
+        "dtype": "si8",
+        "original_name": "...e/body/body.15/block/block.2/fc1/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...body.15/block/block.2/activation/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.955597,
+        "calibrated_cosine": 0.952024,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "...body.15/block/block.2/activation/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...e/body/body.15/block/block.2/fc2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.98782,
+        "calibrated_cosine": 0.986111,
+        "threshold": 21.965372,
+        "dtype": "si8",
+        "original_name": "...e/body/body.15/block/block.2/fc2/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../block.2/scale_activation/HardSigmoid",
+        "on": "BPU",
+        "type": "HardSigmoid",
+        "cosine": 0.987765,
+        "calibrated_cosine": 0.988505,
+        "threshold": 3.0,
+        "dtype": "si8",
+        "original_name": ".../block.2/scale_activation/HardSigmoid",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.15/block/block.2/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.900487,
+        "calibrated_cosine": 0.912542,
+        "threshold": 31.265339,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.15/block/block.2/Mul",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../body.15/block/block.3/block.3.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": null,
+        "calibrated_cosine": 0.919461,
+        "threshold": 7.948692,
+        "dtype": "si8",
+        "original_name": ".../body.15/block/block.3/block.3.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.15/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.937261,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.15/Add",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/body/body.16/body.16.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.952079,
+        "calibrated_cosine": 0.961406,
+        "threshold": 18.954433,
+        "dtype": "si8",
+        "original_name": "/backbone/body/body.16/body.16.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::...bone/body/body.16/body.16.2/HardSwish",
+        "on": "BPU",
+        "type": "HardSwish",
+        "cosine": 0.864306,
+        "calibrated_cosine": 0.891385,
+        "threshold": 20.962872,
+        "dtype": "si8",
+        "original_name": "...bone/body/body.16/body.16.2/HardSwish",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../inner_blocks.1/inner_blocks.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.909891,
+        "calibrated_cosine": 0.92977,
+        "threshold": 3.925025,
+        "dtype": "si8",
+        "original_name": ".../inner_blocks.1/inner_blocks.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../layer_blocks.1/layer_blocks.1.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.947329,
+        "calibrated_cosine": 0.959647,
+        "threshold": 6.667381,
+        "dtype": "si8",
+        "original_name": ".../layer_blocks.1/layer_blocks.1.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../inner_blocks.0/inner_blocks.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.91578,
+        "calibrated_cosine": 0.972044,
+        "threshold": 11.1274,
+        "dtype": "si8",
+        "original_name": ".../inner_blocks.0/inner_blocks.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/fpn/Resize",
+        "on": "--",
+        "type": "Resize",
+        "cosine": null,
+        "calibrated_cosine": 0.92977,
+        "threshold": 6.667381,
+        "dtype": "--",
+        "original_name": "/backbone/fpn/Resize",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/fpn/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.91578,
+        "calibrated_cosine": 0.936177,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "/backbone/fpn/Add",
+        "component": "parta"
+      },
+      {
+        "name": "parta::.../layer_blocks.0/layer_blocks.0.0/Conv",
+        "on": "--",
+        "type": "Conv",
+        "cosine": null,
+        "calibrated_cosine": 0.943744,
+        "threshold": 6.213333,
+        "dtype": "--",
+        "original_name": ".../layer_blocks.0/layer_blocks.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/backbone/fpn/extra_blocks/MaxPool",
+        "on": "BPU",
+        "type": "MaxPool",
+        "cosine": 0.948012,
+        "calibrated_cosine": 0.958598,
+        "threshold": 4.799078,
+        "dtype": "si8",
+        "original_name": "/backbone/fpn/extra_blocks/MaxPool",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/rpn_head/conv/conv.0/conv.0.0/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.967979,
+        "calibrated_cosine": 0.966472,
+        "threshold": 9.080808,
+        "dtype": "si8",
+        "original_name": "/rpn_head/conv/conv.0/conv.0.0/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/rpn_head/conv/conv.0/conv.0.1/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.967979,
+        "calibrated_cosine": 0.976622,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "/rpn_head/conv/conv.0/conv.0.1/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/rpn_head/cls_logits/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.99604,
+        "calibrated_cosine": 0.997145,
+        "threshold": 8.590291,
+        "dtype": "f32",
+        "original_name": "/rpn_head/cls_logits/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/rpn_head/bbox_pred/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.986402,
+        "calibrated_cosine": 0.994396,
+        "threshold": 8.590291,
+        "dtype": "f32",
+        "original_name": "/rpn_head/bbox_pred/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/rpn_head/conv/conv.0/conv.0.0_1/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.97285,
+        "calibrated_cosine": 0.973467,
+        "threshold": 4.799078,
+        "dtype": "si8",
+        "original_name": "/rpn_head/conv/conv.0/conv.0.0_1/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/rpn_head/conv/conv.0/conv.0.1_1/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.97285,
+        "calibrated_cosine": 0.979769,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "/rpn_head/conv/conv.0/conv.0.1_1/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/rpn_head/cls_logits_1/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.993909,
+        "calibrated_cosine": 0.994816,
+        "threshold": 7.686852,
+        "dtype": "f32",
+        "original_name": "/rpn_head/cls_logits_1/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/rpn_head/bbox_pred_1/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.987629,
+        "calibrated_cosine": 0.993707,
+        "threshold": 7.686852,
+        "dtype": "f32",
+        "original_name": "/rpn_head/bbox_pred_1/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/rpn_head/conv/conv.0/conv.0.0_2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.976646,
+        "calibrated_cosine": 0.975128,
+        "threshold": 4.799078,
+        "dtype": "si8",
+        "original_name": "/rpn_head/conv/conv.0/conv.0.0_2/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/rpn_head/conv/conv.0/conv.0.1_2/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.976646,
+        "calibrated_cosine": 0.981006,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "/rpn_head/conv/conv.0/conv.0.1_2/Relu",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/rpn_head/cls_logits_2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.995072,
+        "calibrated_cosine": 0.995684,
+        "threshold": 5.949623,
+        "dtype": "f32",
+        "original_name": "/rpn_head/cls_logits_2/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/rpn_head/bbox_pred_2/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.989285,
+        "calibrated_cosine": 0.994103,
+        "threshold": 5.949623,
+        "dtype": "f32",
+        "original_name": "/rpn_head/bbox_pred_2/Conv",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Reshape",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.997145,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Reshape",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Transpose",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.997145,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Transpose",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Reshape_1",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.997145,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Reshape_1",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Reshape_2",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.994396,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Reshape_2",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Transpose_1",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.994396,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Transpose_1",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Reshape_3",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.994396,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Reshape_3",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Reshape_4",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.994816,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Reshape_4",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Transpose_2",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.994816,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Transpose_2",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Reshape_5",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.994816,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Reshape_5",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Reshape_6",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.993707,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Reshape_6",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Transpose_3",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.993707,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Transpose_3",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Reshape_7",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.993707,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Reshape_7",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Reshape_8",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.995684,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Reshape_8",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Transpose_4",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.995684,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Transpose_4",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Reshape_9",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.995684,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Reshape_9",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Reshape_10",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.994103,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Reshape_10",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Transpose_5",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.994104,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Transpose_5",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Reshape_11",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.994104,
+        "threshold": null,
+        "dtype": "--",
+        "original_name": "/Reshape_11",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Concat_4",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.994926,
+        "calibrated_cosine": 0.995911,
+        "threshold": null,
+        "dtype": "f32",
+        "original_name": "/Concat_4",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Flatten",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.994926,
+        "calibrated_cosine": 0.995911,
+        "threshold": null,
+        "dtype": "f32",
+        "original_name": "/Flatten",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Concat_5",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.987166,
+        "calibrated_cosine": 0.993981,
+        "threshold": null,
+        "dtype": "f32",
+        "original_name": "/Concat_5",
+        "component": "parta"
+      },
+      {
+        "name": "parta::/Reshape_12",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.987166,
+        "calibrated_cosine": 0.993981,
+        "threshold": null,
+        "dtype": "f32",
+        "original_name": "/Reshape_12",
+        "component": "parta"
+      },
+      {
+        "name": "partb::/fc6conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.999848,
+        "calibrated_cosine": 0.999994,
+        "threshold": 6.809462,
+        "dtype": "si8",
+        "original_name": "/fc6conv/Conv",
+        "component": "partb"
+      },
+      {
+        "name": "partb::/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.999848,
+        "calibrated_cosine": 0.999847,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "/Relu",
+        "component": "partb"
+      },
+      {
+        "name": "partb::/fc7conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.999706,
+        "calibrated_cosine": 0.999934,
+        "threshold": 21.583805,
+        "dtype": "si8",
+        "original_name": "/fc7conv/Conv",
+        "component": "partb"
+      },
+      {
+        "name": "partb::/Relu_1",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.999706,
+        "calibrated_cosine": 0.999706,
+        "threshold": null,
+        "dtype": "si8",
+        "original_name": "/Relu_1",
+        "component": "partb"
+      },
+      {
+        "name": "partb::/clsconv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.999908,
+        "calibrated_cosine": 0.999908,
+        "threshold": 6.015753,
+        "dtype": "f32",
+        "original_name": "/clsconv/Conv",
+        "component": "partb"
+      },
+      {
+        "name": "partb::/regconv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.999824,
+        "calibrated_cosine": 0.999824,
+        "threshold": 6.015753,
+        "dtype": "f32",
+        "original_name": "/regconv/Conv",
+        "component": "partb"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "parta::feat0",
+        "calibrated_cosine": 0.943744,
+        "cosine": 0.926377,
+        "component": "parta"
+      },
+      {
+        "name": "parta::rpn_deltas",
+        "calibrated_cosine": 0.993981,
+        "cosine": 0.987166,
+        "component": "parta"
+      },
+      {
+        "name": "parta::rpn_obj",
+        "calibrated_cosine": 0.995911,
+        "cosine": 0.994926,
+        "component": "parta"
+      },
+      {
+        "name": "partb::cls_packed",
+        "calibrated_cosine": 0.999908,
+        "cosine": 0.999908,
+        "component": "partb"
+      },
+      {
+        "name": "partb::reg_packed",
+        "calibrated_cosine": 0.999824,
+        "cosine": 0.999824,
+        "component": "partb"
+      }
+    ],
+    "summary": {
+      "total_nodes": 182,
+      "measured_nodes": 150,
+      "unit_counts": {
+        "BPU": 162,
+        "--": 20
+      },
+      "dtype_counts": {
+        "si8": 150,
+        "--": 20,
+        "f32": 12
+      },
+      "weakest_node": {
+        "name": "parta::/backbone/body/body.12/block/block.2/Mul",
+        "cosine": 0.847586
+      },
+      "weakest_nodes": [
+        {
+          "name": "parta::/backbone/body/body.12/block/block.2/Mul",
+          "cosine": 0.847586
+        },
+        {
+          "name": "parta::...bone/body/body.16/body.16.2/HardSwish",
+          "cosine": 0.864306
+        },
+        {
+          "name": "parta::....13/block/block.1/block.1.2/HardSwish",
+          "cosine": 0.877635
+        },
+        {
+          "name": "parta::...y/body.4/block/block.3/block.3.0/Conv",
+          "cosine": 0.883842
+        },
+        {
+          "name": "parta::...y/body.6/block/block.3/block.3.0/Conv",
+          "cosine": 0.886831
+        }
+      ],
+      "cosine_percentiles": {
+        "p10": 0.91578,
+        "median": 0.966732
+      }
+    }
+  },
+  "subgraphs": [
+    {
+      "name": "parta / subgraph_0",
+      "perf": {
+        "fps": 3555.93,
+        "latency_ms": 0.28,
+        "latency_us": 281.2,
+        "ddr_mb_per_frame": 6.964,
+        "bpu_ops_per_frame": 1437996800.0,
+        "core_number": 1,
+        "march": "nash-p"
+      },
+      "intervals": {
+        "count": 6,
+        "interval_ms": 0.05,
+        "utilization": [
+          0.912,
+          0.921,
+          0.642,
+          0.356,
+          0.334,
+          0.301
+        ],
+        "load_bandwidth_mbs": [
+          5795,
+          16813,
+          29321,
+          34091,
+          25651,
+          16572
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          3906,
+          781,
+          1928,
+          4414
+        ]
+      },
+      "component": "parta"
+    },
+    {
+      "name": "partb / subgraph_0",
+      "perf": {
+        "fps": 606.71,
+        "latency_ms": 1.65,
+        "latency_us": 1648.2,
+        "ddr_mb_per_frame": 21.57,
+        "bpu_ops_per_frame": 4307865600.0,
+        "core_number": 1,
+        "march": "nash-p"
+      },
+      "intervals": {
+        "count": 17,
+        "interval_ms": 0.1,
+        "utilization": [
+          0.164,
+          0.269,
+          0.346,
+          0.281,
+          0.229,
+          0.947,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0.887,
+          0.245
+        ],
+        "load_bandwidth_mbs": [
+          18963,
+          17198,
+          16058,
+          15965,
+          32891,
+          1989,
+          7666,
+          15332,
+          7666,
+          15332,
+          7666,
+          14564,
+          8433,
+          13711,
+          1620,
+          4834,
+          11643
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          97,
+          97,
+          195,
+          97,
+          195,
+          97,
+          195,
+          97,
+          195,
+          97,
+          195,
+          2604
+        ]
+      },
+      "component": "partb"
+    }
+  ],
+  "aggregate": {
+    "latency_ms": null,
+    "fps_derived": null,
+    "ddr_mb_per_frame": null,
+    "bpu_ops_per_frame": null,
+    "derivation": "Component compiler estimates are listed separately; no complete pipeline latency is asserted."
+  },
+  "similarity_provenance": {
+    "stage": "ptq-simulation",
+    "method": "Native full NodeInfo for each actual component",
+    "scope": "Per-component quantization diagnostics; not dataset accuracy or board execution",
+    "calibration_samples_per_component": {
+      "parta": 200,
+      "partb": 200
+    },
+    "comparison_input_count_per_component": {
+      "parta": 1,
+      "partb": 1
+    }
+  },
+  "performance_provenance": {
+    "stage": "compiler-static-estimate",
+    "source": "hb_compile-json",
+    "method": "hbdk-cc static latency estimate of the compiled release artifact",
+    "note": "Estimates describe the compiled artifact; on-board measurements live in the model benchmark."
+  },
+  "board_measurement": null,
+  "provenance": {
+    "artifact_sha256": "6009b40168de19f4ae4a8e35231343cdd8067b869adba767e08fc234bb3316aa",
+    "kind": "native-complete-deployment-pair",
+    "component_oe_json_sha256": {
+      "parta": "1ad9c68c45f481912ca7f67fdd03759d92bd91fa82479e2504b90ac9ea4685d7",
+      "partb": "593d27b2ec9e11a8174d4e733203d9cdb97696ad9dcdfe17c510326b2845f71f"
+    }
+  },
+  "components": {
+    "parta": {
+      "onnx_sha256": "8ab21cf106ff9d3009879a7f0775a912b78ae2e132c589ce505c40f43c7217a4",
+      "config_sha256": "6ac54f8c96a072ce2afb4b9f8a5d6d4d3e4ca0581f49d632812b2ad31c9a302a",
+      "artifact_sha256": "e6622075a629aba8f02656ecdbf033e4de613991bb953d107f2b39913e55f783",
+      "oe_report_sha256": "52d143a762829f93f6c56ddcaec86bb341568ebd2af7e8994220817c983c1d51",
+      "oe_data_sha256": "1ad9c68c45f481912ca7f67fdd03759d92bd91fa82479e2504b90ac9ea4685d7",
+      "native_data": {
+        "schema_version": 1,
+        "generated_from_run": "fasterrcnn-s600-parta-20261103-r01-parta",
+        "generated_at": "'2026-11-03T06:33:21.211063+00:00'",
+        "model": {
+          "source": "fasterrcnn",
+          "family": "fasterrcnn",
+          "task": "detect",
+          "size": "mbv3-320-native-20261103-o1",
+          "component": "parta"
+        },
+        "target": {
+          "platform": "s600",
+          "march": "nash-p"
+        },
+        "toolchain": {
+          "hbdk": "4.7.5",
+          "hmct": "2.6.5",
+          "hb_compile": "3.5.3"
+        },
+        "io": {
+          "inputs": [
+            {
+              "name": "images_y",
+              "shape": [
+                1,
+                320,
+                320,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "images_uv",
+              "shape": [
+                1,
+                160,
+                160,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "rpn_obj",
+              "shape": [
+                3375,
+                1
+              ],
+              "dtype": "float32"
+            },
+            {
+              "name": "rpn_deltas",
+              "shape": [
+                3375,
+                4
+              ],
+              "dtype": "float32"
+            },
+            {
+              "name": "feat0",
+              "shape": [
+                1,
+                256,
+                10,
+                10
+              ],
+              "dtype": "float32"
+            }
+          ]
+        },
+        "quantization": {
+          "summary": {
+            "total_nodes": 176,
+            "unit_counts": {
+              "BPU": 156,
+              "--": 20
+            },
+            "dtype_counts": {
+              "si8": 146,
+              "--": 20,
+              "f32": 10
+            },
+            "measured_nodes": 144,
+            "weakest_node": {
+              "name": "/backbone/body/body.12/block/block.2/Mul",
+              "cosine": 0.847586
+            },
+            "weakest_nodes": [
+              {
+                "name": "/backbone/body/body.12/block/block.2/Mul",
+                "cosine": 0.847586
+              },
+              {
+                "name": "...bone/body/body.16/body.16.2/HardSwish",
+                "cosine": 0.864306
+              },
+              {
+                "name": "....13/block/block.1/block.1.2/HardSwish",
+                "cosine": 0.877635
+              },
+              {
+                "name": "...y/body.4/block/block.3/block.3.0/Conv",
+                "cosine": 0.883842
+              },
+              {
+                "name": "...y/body.6/block/block.3/block.3.0/Conv",
+                "cosine": 0.886831
+              }
+            ],
+            "cosine_percentiles": {
+              "p10": 0.913862,
+              "median": 0.965736
+            }
+          },
+          "nodes": [
+            {
+              "name": "/backbone/body/body.0/body.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.987633,
+              "calibrated_cosine": 0.989795,
+              "threshold": 2.628399,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.0/body.0.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.987847,
+              "calibrated_cosine": 0.989782,
+              "threshold": 9.660333,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.1/block/block.0/block.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": null,
+              "calibrated_cosine": 0.987915,
+              "threshold": 15.32854,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.1/block/block.0/block.0.2/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": null,
+              "calibrated_cosine": 0.992434,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.1/block/block.1/block.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": null,
+              "calibrated_cosine": 0.922127,
+              "threshold": 4.286242,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.1/Add",
+              "on": "BPU",
+              "type": "Add",
+              "cosine": null,
+              "calibrated_cosine": 0.996002,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.2/block/block.0/block.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": null,
+              "calibrated_cosine": 0.992486,
+              "threshold": 15.141721,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.2/block/block.0/block.0.2/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": null,
+              "calibrated_cosine": 0.99892,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.2/block/block.1/block.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.970989,
+              "calibrated_cosine": 0.996274,
+              "threshold": 1.665121,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.2/block/block.1/block.1.2/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.970989,
+              "calibrated_cosine": 0.996988,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.2/block/block.2/block.2.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.926471,
+              "calibrated_cosine": 0.975423,
+              "threshold": 4.158052,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.3/block/block.0/block.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.966042,
+              "calibrated_cosine": 0.986187,
+              "threshold": 2.569963,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.3/block/block.0/block.0.2/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.966042,
+              "calibrated_cosine": 0.988489,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.3/block/block.1/block.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.984907,
+              "calibrated_cosine": 0.986446,
+              "threshold": 1.873716,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.3/block/block.1/block.1.2/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.984907,
+              "calibrated_cosine": 0.991578,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.3/block/block.2/block.2.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.931178,
+              "calibrated_cosine": 0.964201,
+              "threshold": 3.375448,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.3/Add",
+              "on": "BPU",
+              "type": "Add",
+              "cosine": 0.931178,
+              "calibrated_cosine": 0.964921,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.4/block/block.0/block.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.96918,
+              "calibrated_cosine": 0.980247,
+              "threshold": 4.306546,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.4/block/block.0/block.0.2/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.96918,
+              "calibrated_cosine": 0.986836,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.4/block/block.1/block.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.992504,
+              "calibrated_cosine": 0.996673,
+              "threshold": 2.868817,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.4/block/block.1/block.1.2/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.992504,
+              "calibrated_cosine": 0.997223,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...ock/block.2/avgpool/GlobalAveragePool",
+              "on": "BPU",
+              "type": "GlobalAveragePool",
+              "cosine": 0.996835,
+              "calibrated_cosine": 0.998875,
+              "threshold": 3.793521,
+              "dtype": "si8"
+            },
+            {
+              "name": "...ne/body/body.4/block/block.2/fc1/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.999992,
+              "calibrated_cosine": 1.0,
+              "threshold": 2.508898,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.4/block/block.2/activation/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.999992,
+              "calibrated_cosine": 0.999995,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...ne/body/body.4/block/block.2/fc2/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.99942,
+              "calibrated_cosine": 0.999572,
+              "threshold": 5.636312,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../block.2/scale_activation/HardSigmoid",
+              "on": "BPU",
+              "type": "HardSigmoid",
+              "cosine": 0.999994,
+              "calibrated_cosine": 0.999995,
+              "threshold": 3.0,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.4/block/block.2/Mul",
+              "on": "BPU",
+              "type": "Mul",
+              "cosine": 0.992523,
+              "calibrated_cosine": 0.997254,
+              "threshold": 3.793521,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.4/block/block.3/block.3.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.883842,
+              "calibrated_cosine": 0.961055,
+              "threshold": 3.793521,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.5/block/block.0/block.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.972567,
+              "calibrated_cosine": 0.99159,
+              "threshold": 3.244671,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.5/block/block.0/block.0.2/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.972567,
+              "calibrated_cosine": 0.994607,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.5/block/block.1/block.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.933035,
+              "calibrated_cosine": 0.984569,
+              "threshold": 1.473872,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.5/block/block.1/block.1.2/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.933035,
+              "calibrated_cosine": 0.98042,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...ock/block.2/avgpool/GlobalAveragePool",
+              "on": "BPU",
+              "type": "GlobalAveragePool",
+              "cosine": 0.965209,
+              "calibrated_cosine": 0.994712,
+              "threshold": 4.855184,
+              "dtype": "si8"
+            },
+            {
+              "name": "...ne/body/body.5/block/block.2/fc1/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.956903,
+              "calibrated_cosine": 0.989939,
+              "threshold": 1.72193,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.5/block/block.2/activation/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.956903,
+              "calibrated_cosine": 0.990399,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...ne/body/body.5/block/block.2/fc2/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.986717,
+              "calibrated_cosine": 0.995845,
+              "threshold": 3.613203,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../block.2/scale_activation/HardSigmoid",
+              "on": "BPU",
+              "type": "HardSigmoid",
+              "cosine": 0.997407,
+              "calibrated_cosine": 0.999217,
+              "threshold": 3.0,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.5/block/block.2/Mul",
+              "on": "BPU",
+              "type": "Mul",
+              "cosine": 0.966732,
+              "calibrated_cosine": 0.986457,
+              "threshold": 4.855184,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.5/block/block.3/block.3.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.903141,
+              "calibrated_cosine": 0.967749,
+              "threshold": 1.766192,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.5/Add",
+              "on": "BPU",
+              "type": "Add",
+              "cosine": 0.903141,
+              "calibrated_cosine": 0.962282,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.6/block/block.0/block.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.959488,
+              "calibrated_cosine": 0.982246,
+              "threshold": 6.709032,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.6/block/block.0/block.0.2/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.959488,
+              "calibrated_cosine": 0.983183,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.6/block/block.1/block.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.934157,
+              "calibrated_cosine": 0.953711,
+              "threshold": 2.116535,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.6/block/block.1/block.1.2/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.934157,
+              "calibrated_cosine": 0.972642,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...ock/block.2/avgpool/GlobalAveragePool",
+              "on": "BPU",
+              "type": "GlobalAveragePool",
+              "cosine": 0.976894,
+              "calibrated_cosine": 0.991409,
+              "threshold": 3.862269,
+              "dtype": "si8"
+            },
+            {
+              "name": "...ne/body/body.6/block/block.2/fc1/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.962968,
+              "calibrated_cosine": 0.985974,
+              "threshold": 1.312248,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.6/block/block.2/activation/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.962968,
+              "calibrated_cosine": 0.98613,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...ne/body/body.6/block/block.2/fc2/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.980042,
+              "calibrated_cosine": 0.993757,
+              "threshold": 2.677512,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../block.2/scale_activation/HardSigmoid",
+              "on": "BPU",
+              "type": "HardSigmoid",
+              "cosine": 0.997142,
+              "calibrated_cosine": 0.999152,
+              "threshold": 3.0,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.6/block/block.2/Mul",
+              "on": "BPU",
+              "type": "Mul",
+              "cosine": 0.965736,
+              "calibrated_cosine": 0.986416,
+              "threshold": 3.862269,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.6/block/block.3/block.3.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.886831,
+              "calibrated_cosine": 0.94444,
+              "threshold": 2.104027,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.6/Add",
+              "on": "BPU",
+              "type": "Add",
+              "cosine": 0.886831,
+              "calibrated_cosine": 0.946255,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.7/block/block.0/block.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.970432,
+              "calibrated_cosine": 0.985522,
+              "threshold": 10.464409,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y.7/block/block.0/block.0.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.950169,
+              "calibrated_cosine": 0.976917,
+              "threshold": 6.2208,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.7/block/block.1/block.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.96518,
+              "calibrated_cosine": 0.986598,
+              "threshold": 1.754943,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y.7/block/block.1/block.1.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.957284,
+              "calibrated_cosine": 0.984804,
+              "threshold": 8.87146,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.7/block/block.2/block.2.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.947371,
+              "calibrated_cosine": 0.9814,
+              "threshold": 5.600619,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.8/block/block.0/block.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.980218,
+              "calibrated_cosine": 0.992449,
+              "threshold": 8.022055,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y.8/block/block.0/block.0.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.975058,
+              "calibrated_cosine": 0.990792,
+              "threshold": 5.089521,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.8/block/block.1/block.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.972851,
+              "calibrated_cosine": 0.988548,
+              "threshold": 3.848524,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y.8/block/block.1/block.1.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.944332,
+              "calibrated_cosine": 0.974052,
+              "threshold": 6.585114,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.8/block/block.2/block.2.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.944773,
+              "calibrated_cosine": 0.986569,
+              "threshold": 3.357944,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.8/Add",
+              "on": "BPU",
+              "type": "Add",
+              "cosine": 0.944773,
+              "calibrated_cosine": 0.978878,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.9/block/block.0/block.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.971465,
+              "calibrated_cosine": 0.988571,
+              "threshold": 11.371037,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y.9/block/block.0/block.0.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.970983,
+              "calibrated_cosine": 0.988739,
+              "threshold": 7.097028,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.9/block/block.1/block.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.968353,
+              "calibrated_cosine": 0.98553,
+              "threshold": 5.600566,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y.9/block/block.1/block.1.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.897315,
+              "calibrated_cosine": 0.956973,
+              "threshold": 7.209803,
+              "dtype": "si8"
+            },
+            {
+              "name": "...y/body.9/block/block.2/block.2.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.948708,
+              "calibrated_cosine": 0.97907,
+              "threshold": 3.222953,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.9/Add",
+              "on": "BPU",
+              "type": "Add",
+              "cosine": 0.948708,
+              "calibrated_cosine": 0.976799,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.10/block/block.0/block.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.977238,
+              "calibrated_cosine": 0.986389,
+              "threshold": 16.562042,
+              "dtype": "si8"
+            },
+            {
+              "name": "....10/block/block.0/block.0.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.977403,
+              "calibrated_cosine": 0.985493,
+              "threshold": 10.024859,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.10/block/block.1/block.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.973644,
+              "calibrated_cosine": 0.982076,
+              "threshold": 8.585507,
+              "dtype": "si8"
+            },
+            {
+              "name": "....10/block/block.1/block.1.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.954961,
+              "calibrated_cosine": 0.970042,
+              "threshold": 9.223884,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.10/block/block.2/block.2.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": null,
+              "calibrated_cosine": 0.981642,
+              "threshold": 5.522111,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.10/Add",
+              "on": "BPU",
+              "type": "Add",
+              "cosine": null,
+              "calibrated_cosine": 0.970487,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.11/block/block.0/block.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.966916,
+              "calibrated_cosine": 0.983334,
+              "threshold": 17.714834,
+              "dtype": "si8"
+            },
+            {
+              "name": "....11/block/block.0/block.0.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.963318,
+              "calibrated_cosine": 0.982151,
+              "threshold": 8.086217,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.11/block/block.1/block.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.951578,
+              "calibrated_cosine": 0.96778,
+              "threshold": 6.730571,
+              "dtype": "si8"
+            },
+            {
+              "name": "....11/block/block.1/block.1.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.956569,
+              "calibrated_cosine": 0.968655,
+              "threshold": 52.787163,
+              "dtype": "si8"
+            },
+            {
+              "name": "...ock/block.2/avgpool/GlobalAveragePool",
+              "on": "BPU",
+              "type": "GlobalAveragePool",
+              "cosine": 0.980013,
+              "calibrated_cosine": 0.986878,
+              "threshold": 52.787163,
+              "dtype": "si8"
+            },
+            {
+              "name": "...e/body/body.11/block/block.2/fc1/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.998175,
+              "calibrated_cosine": 0.998103,
+              "threshold": 25.468428,
+              "dtype": "si8"
+            },
+            {
+              "name": "...body.11/block/block.2/activation/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.998175,
+              "calibrated_cosine": 0.99835,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...e/body/body.11/block/block.2/fc2/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.998535,
+              "calibrated_cosine": 0.9986,
+              "threshold": 12.513671,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../block.2/scale_activation/HardSigmoid",
+              "on": "BPU",
+              "type": "HardSigmoid",
+              "cosine": 0.999981,
+              "calibrated_cosine": 0.999979,
+              "threshold": 3.0,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.11/block/block.2/Mul",
+              "on": "BPU",
+              "type": "Mul",
+              "cosine": 0.887383,
+              "calibrated_cosine": 0.945061,
+              "threshold": 52.787163,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.11/block/block.3/block.3.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.904456,
+              "calibrated_cosine": 0.957813,
+              "threshold": 11.666181,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.12/block/block.0/block.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.960074,
+              "calibrated_cosine": 0.978311,
+              "threshold": 8.321088,
+              "dtype": "si8"
+            },
+            {
+              "name": "....12/block/block.0/block.0.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.940163,
+              "calibrated_cosine": 0.964691,
+              "threshold": 9.092475,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.12/block/block.1/block.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.934877,
+              "calibrated_cosine": 0.965362,
+              "threshold": 4.519443,
+              "dtype": "si8"
+            },
+            {
+              "name": "....12/block/block.1/block.1.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.936213,
+              "calibrated_cosine": 0.964572,
+              "threshold": 48.637218,
+              "dtype": "si8"
+            },
+            {
+              "name": "...ock/block.2/avgpool/GlobalAveragePool",
+              "on": "BPU",
+              "type": "GlobalAveragePool",
+              "cosine": 0.964232,
+              "calibrated_cosine": 0.982031,
+              "threshold": 65.041862,
+              "dtype": "si8"
+            },
+            {
+              "name": "...e/body/body.12/block/block.2/fc1/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.968502,
+              "calibrated_cosine": 0.983994,
+              "threshold": 14.373562,
+              "dtype": "si8"
+            },
+            {
+              "name": "...body.12/block/block.2/activation/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.968502,
+              "calibrated_cosine": 0.985806,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...e/body/body.12/block/block.2/fc2/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.977244,
+              "calibrated_cosine": 0.986416,
+              "threshold": 12.400169,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../block.2/scale_activation/HardSigmoid",
+              "on": "BPU",
+              "type": "HardSigmoid",
+              "cosine": 0.995452,
+              "calibrated_cosine": 0.998681,
+              "threshold": 3.0,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.12/block/block.2/Mul",
+              "on": "BPU",
+              "type": "Mul",
+              "cosine": 0.847586,
+              "calibrated_cosine": 0.905664,
+              "threshold": 65.041862,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.12/block/block.3/block.3.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": null,
+              "calibrated_cosine": 0.912834,
+              "threshold": 5.602695,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.12/Add",
+              "on": "BPU",
+              "type": "Add",
+              "cosine": null,
+              "calibrated_cosine": 0.942507,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.13/block/block.0/block.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.964731,
+              "calibrated_cosine": 0.978381,
+              "threshold": 17.704252,
+              "dtype": "si8"
+            },
+            {
+              "name": "....13/block/block.0/block.0.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.924864,
+              "calibrated_cosine": 0.948766,
+              "threshold": 9.086403,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.13/block/block.1/block.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.958708,
+              "calibrated_cosine": 0.975413,
+              "threshold": 4.516424,
+              "dtype": "si8"
+            },
+            {
+              "name": "....13/block/block.1/block.1.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.877635,
+              "calibrated_cosine": 0.898469,
+              "threshold": 28.832197,
+              "dtype": "si8"
+            },
+            {
+              "name": "...ock/block.2/avgpool/GlobalAveragePool",
+              "on": "BPU",
+              "type": "GlobalAveragePool",
+              "cosine": 0.93254,
+              "calibrated_cosine": 0.945914,
+              "threshold": 14.288271,
+              "dtype": "si8"
+            },
+            {
+              "name": "...e/body/body.13/block/block.2/fc1/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.992628,
+              "calibrated_cosine": 0.995026,
+              "threshold": 15.624415,
+              "dtype": "si8"
+            },
+            {
+              "name": "...body.13/block/block.2/activation/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.992628,
+              "calibrated_cosine": 0.995573,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...e/body/body.13/block/block.2/fc2/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.994168,
+              "calibrated_cosine": 0.995854,
+              "threshold": 20.627056,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../block.2/scale_activation/HardSigmoid",
+              "on": "BPU",
+              "type": "HardSigmoid",
+              "cosine": 0.997621,
+              "calibrated_cosine": 0.997051,
+              "threshold": 3.0,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.13/block/block.2/Mul",
+              "on": "BPU",
+              "type": "Mul",
+              "cosine": 0.899077,
+              "calibrated_cosine": 0.940767,
+              "threshold": 14.288271,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.13/block/block.3/block.3.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.926461,
+              "calibrated_cosine": 0.954605,
+              "threshold": 5.174906,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.14/block/block.0/block.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.959527,
+              "calibrated_cosine": 0.974641,
+              "threshold": 11.1274,
+              "dtype": "si8"
+            },
+            {
+              "name": "....14/block/block.0/block.0.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.945323,
+              "calibrated_cosine": 0.962287,
+              "threshold": 9.569764,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.14/block/block.1/block.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.932861,
+              "calibrated_cosine": 0.949273,
+              "threshold": 5.812465,
+              "dtype": "si8"
+            },
+            {
+              "name": "....14/block/block.1/block.1.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.928469,
+              "calibrated_cosine": 0.945266,
+              "threshold": 34.616814,
+              "dtype": "si8"
+            },
+            {
+              "name": "...ock/block.2/avgpool/GlobalAveragePool",
+              "on": "BPU",
+              "type": "GlobalAveragePool",
+              "cosine": 0.921144,
+              "calibrated_cosine": 0.937519,
+              "threshold": 34.616814,
+              "dtype": "si8"
+            },
+            {
+              "name": "...e/body/body.14/block/block.2/fc1/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.962193,
+              "calibrated_cosine": 0.957023,
+              "threshold": 11.649748,
+              "dtype": "si8"
+            },
+            {
+              "name": "...body.14/block/block.2/activation/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.962193,
+              "calibrated_cosine": 0.971583,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...e/body/body.14/block/block.2/fc2/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.983158,
+              "calibrated_cosine": 0.987857,
+              "threshold": 19.359921,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../block.2/scale_activation/HardSigmoid",
+              "on": "BPU",
+              "type": "HardSigmoid",
+              "cosine": 0.996092,
+              "calibrated_cosine": 0.996593,
+              "threshold": 3.0,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.14/block/block.2/Mul",
+              "on": "BPU",
+              "type": "Mul",
+              "cosine": 0.917488,
+              "calibrated_cosine": 0.934783,
+              "threshold": 34.616814,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.14/block/block.3/block.3.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.934657,
+              "calibrated_cosine": 0.950281,
+              "threshold": 6.665308,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.14/Add",
+              "on": "BPU",
+              "type": "Add",
+              "cosine": 0.934657,
+              "calibrated_cosine": 0.954665,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.15/block/block.0/block.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.97319,
+              "calibrated_cosine": 0.980309,
+              "threshold": 15.257032,
+              "dtype": "si8"
+            },
+            {
+              "name": "....15/block/block.0/block.0.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.913862,
+              "calibrated_cosine": 0.933646,
+              "threshold": 13.170504,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.15/block/block.1/block.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.921993,
+              "calibrated_cosine": 0.93297,
+              "threshold": 3.090383,
+              "dtype": "si8"
+            },
+            {
+              "name": "....15/block/block.1/block.1.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.925633,
+              "calibrated_cosine": 0.937062,
+              "threshold": 31.265339,
+              "dtype": "si8"
+            },
+            {
+              "name": "...ock/block.2/avgpool/GlobalAveragePool",
+              "on": "BPU",
+              "type": "GlobalAveragePool",
+              "cosine": 0.947998,
+              "calibrated_cosine": 0.950284,
+              "threshold": 31.265339,
+              "dtype": "si8"
+            },
+            {
+              "name": "...e/body/body.15/block/block.2/fc1/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.955597,
+              "calibrated_cosine": 0.937816,
+              "threshold": 17.352386,
+              "dtype": "si8"
+            },
+            {
+              "name": "...body.15/block/block.2/activation/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.955597,
+              "calibrated_cosine": 0.952024,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "...e/body/body.15/block/block.2/fc2/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.98782,
+              "calibrated_cosine": 0.986111,
+              "threshold": 21.965372,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../block.2/scale_activation/HardSigmoid",
+              "on": "BPU",
+              "type": "HardSigmoid",
+              "cosine": 0.987765,
+              "calibrated_cosine": 0.988505,
+              "threshold": 3.0,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.15/block/block.2/Mul",
+              "on": "BPU",
+              "type": "Mul",
+              "cosine": 0.900487,
+              "calibrated_cosine": 0.912542,
+              "threshold": 31.265339,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../body.15/block/block.3/block.3.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": null,
+              "calibrated_cosine": 0.919461,
+              "threshold": 7.948692,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.15/Add",
+              "on": "BPU",
+              "type": "Add",
+              "cosine": null,
+              "calibrated_cosine": 0.937261,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/body/body.16/body.16.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.952079,
+              "calibrated_cosine": 0.961406,
+              "threshold": 18.954433,
+              "dtype": "si8"
+            },
+            {
+              "name": "...bone/body/body.16/body.16.2/HardSwish",
+              "on": "BPU",
+              "type": "HardSwish",
+              "cosine": 0.864306,
+              "calibrated_cosine": 0.891385,
+              "threshold": 20.962872,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../inner_blocks.1/inner_blocks.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.909891,
+              "calibrated_cosine": 0.92977,
+              "threshold": 3.925025,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../layer_blocks.1/layer_blocks.1.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.947329,
+              "calibrated_cosine": 0.959647,
+              "threshold": 6.667381,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../inner_blocks.0/inner_blocks.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.91578,
+              "calibrated_cosine": 0.972044,
+              "threshold": 11.1274,
+              "dtype": "si8"
+            },
+            {
+              "name": "/backbone/fpn/Resize",
+              "on": "--",
+              "type": "Resize",
+              "cosine": null,
+              "calibrated_cosine": 0.92977,
+              "threshold": 6.667381,
+              "dtype": "--"
+            },
+            {
+              "name": "/backbone/fpn/Add",
+              "on": "BPU",
+              "type": "Add",
+              "cosine": 0.91578,
+              "calibrated_cosine": 0.936177,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": ".../layer_blocks.0/layer_blocks.0.0/Conv",
+              "on": "--",
+              "type": "Conv",
+              "cosine": null,
+              "calibrated_cosine": 0.943744,
+              "threshold": 6.213333,
+              "dtype": "--"
+            },
+            {
+              "name": "/backbone/fpn/extra_blocks/MaxPool",
+              "on": "BPU",
+              "type": "MaxPool",
+              "cosine": 0.948012,
+              "calibrated_cosine": 0.958598,
+              "threshold": 4.799078,
+              "dtype": "si8"
+            },
+            {
+              "name": "/rpn_head/conv/conv.0/conv.0.0/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.967979,
+              "calibrated_cosine": 0.966472,
+              "threshold": 9.080808,
+              "dtype": "si8"
+            },
+            {
+              "name": "/rpn_head/conv/conv.0/conv.0.1/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.967979,
+              "calibrated_cosine": 0.976622,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "/rpn_head/cls_logits/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.99604,
+              "calibrated_cosine": 0.997145,
+              "threshold": 8.590291,
+              "dtype": "f32"
+            },
+            {
+              "name": "/rpn_head/bbox_pred/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.986402,
+              "calibrated_cosine": 0.994396,
+              "threshold": 8.590291,
+              "dtype": "f32"
+            },
+            {
+              "name": "/rpn_head/conv/conv.0/conv.0.0_1/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.97285,
+              "calibrated_cosine": 0.973467,
+              "threshold": 4.799078,
+              "dtype": "si8"
+            },
+            {
+              "name": "/rpn_head/conv/conv.0/conv.0.1_1/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.97285,
+              "calibrated_cosine": 0.979769,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "/rpn_head/cls_logits_1/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.993909,
+              "calibrated_cosine": 0.994816,
+              "threshold": 7.686852,
+              "dtype": "f32"
+            },
+            {
+              "name": "/rpn_head/bbox_pred_1/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.987629,
+              "calibrated_cosine": 0.993707,
+              "threshold": 7.686852,
+              "dtype": "f32"
+            },
+            {
+              "name": "/rpn_head/conv/conv.0/conv.0.0_2/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.976646,
+              "calibrated_cosine": 0.975128,
+              "threshold": 4.799078,
+              "dtype": "si8"
+            },
+            {
+              "name": "/rpn_head/conv/conv.0/conv.0.1_2/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.976646,
+              "calibrated_cosine": 0.981006,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "/rpn_head/cls_logits_2/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.995072,
+              "calibrated_cosine": 0.995684,
+              "threshold": 5.949623,
+              "dtype": "f32"
+            },
+            {
+              "name": "/rpn_head/bbox_pred_2/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.989285,
+              "calibrated_cosine": 0.994103,
+              "threshold": 5.949623,
+              "dtype": "f32"
+            },
+            {
+              "name": "/Reshape",
+              "on": "--",
+              "type": "Reshape",
+              "cosine": null,
+              "calibrated_cosine": 0.997145,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Transpose",
+              "on": "--",
+              "type": "Transpose",
+              "cosine": null,
+              "calibrated_cosine": 0.997145,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Reshape_1",
+              "on": "--",
+              "type": "Reshape",
+              "cosine": null,
+              "calibrated_cosine": 0.997145,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Reshape_2",
+              "on": "--",
+              "type": "Reshape",
+              "cosine": null,
+              "calibrated_cosine": 0.994396,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Transpose_1",
+              "on": "--",
+              "type": "Transpose",
+              "cosine": null,
+              "calibrated_cosine": 0.994396,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Reshape_3",
+              "on": "--",
+              "type": "Reshape",
+              "cosine": null,
+              "calibrated_cosine": 0.994396,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Reshape_4",
+              "on": "--",
+              "type": "Reshape",
+              "cosine": null,
+              "calibrated_cosine": 0.994816,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Transpose_2",
+              "on": "--",
+              "type": "Transpose",
+              "cosine": null,
+              "calibrated_cosine": 0.994816,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Reshape_5",
+              "on": "--",
+              "type": "Reshape",
+              "cosine": null,
+              "calibrated_cosine": 0.994816,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Reshape_6",
+              "on": "--",
+              "type": "Reshape",
+              "cosine": null,
+              "calibrated_cosine": 0.993707,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Transpose_3",
+              "on": "--",
+              "type": "Transpose",
+              "cosine": null,
+              "calibrated_cosine": 0.993707,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Reshape_7",
+              "on": "--",
+              "type": "Reshape",
+              "cosine": null,
+              "calibrated_cosine": 0.993707,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Reshape_8",
+              "on": "--",
+              "type": "Reshape",
+              "cosine": null,
+              "calibrated_cosine": 0.995684,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Transpose_4",
+              "on": "--",
+              "type": "Transpose",
+              "cosine": null,
+              "calibrated_cosine": 0.995684,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Reshape_9",
+              "on": "--",
+              "type": "Reshape",
+              "cosine": null,
+              "calibrated_cosine": 0.995684,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Reshape_10",
+              "on": "--",
+              "type": "Reshape",
+              "cosine": null,
+              "calibrated_cosine": 0.994103,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Transpose_5",
+              "on": "--",
+              "type": "Transpose",
+              "cosine": null,
+              "calibrated_cosine": 0.994104,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Reshape_11",
+              "on": "--",
+              "type": "Reshape",
+              "cosine": null,
+              "calibrated_cosine": 0.994104,
+              "threshold": null,
+              "dtype": "--"
+            },
+            {
+              "name": "/Concat_4",
+              "on": "BPU",
+              "type": "Concat",
+              "cosine": 0.994926,
+              "calibrated_cosine": 0.995911,
+              "threshold": null,
+              "dtype": "f32"
+            },
+            {
+              "name": "/Flatten",
+              "on": "BPU",
+              "type": "Reshape",
+              "cosine": 0.994926,
+              "calibrated_cosine": 0.995911,
+              "threshold": null,
+              "dtype": "f32"
+            },
+            {
+              "name": "/Concat_5",
+              "on": "BPU",
+              "type": "Concat",
+              "cosine": 0.987166,
+              "calibrated_cosine": 0.993981,
+              "threshold": null,
+              "dtype": "f32"
+            },
+            {
+              "name": "/Reshape_12",
+              "on": "BPU",
+              "type": "Reshape",
+              "cosine": 0.987166,
+              "calibrated_cosine": 0.993981,
+              "threshold": null,
+              "dtype": "f32"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "feat0",
+              "calibrated_cosine": 0.943744,
+              "cosine": 0.926377
+            },
+            {
+              "name": "rpn_deltas",
+              "calibrated_cosine": 0.993981,
+              "cosine": 0.987166
+            },
+            {
+              "name": "rpn_obj",
+              "calibrated_cosine": 0.995911,
+              "cosine": 0.994926
+            }
+          ]
+        },
+        "subgraphs": [
+          {
+            "name": "subgraph_0",
+            "perf": {
+              "fps": 3555.93,
+              "latency_ms": 0.28,
+              "latency_us": 281.2,
+              "ddr_mb_per_frame": 6.964,
+              "bpu_ops_per_frame": 1437996800.0,
+              "core_number": 1,
+              "march": "nash-p"
+            },
+            "intervals": {
+              "count": 6,
+              "interval_ms": 0.05,
+              "utilization": [
+                0.912,
+                0.921,
+                0.642,
+                0.356,
+                0.334,
+                0.301
+              ],
+              "load_bandwidth_mbs": [
+                5795,
+                16813,
+                29321,
+                34091,
+                25651,
+                16572
+              ],
+              "store_bandwidth_mbs": [
+                0,
+                0,
+                3906,
+                781,
+                1928,
+                4414
+              ]
+            }
+          }
+        ],
+        "aggregate": {
+          "latency_ms": 0.28,
+          "fps_derived": 3571.43,
+          "ddr_mb_per_frame": 6.964,
+          "bpu_ops_per_frame": 1437996800.0,
+          "derivation": "latency = sum of subgraph latency; fps_derived = 1000 / latency (sequential subgraph execution assumption); values from hbdk static estimation, not board measurement"
+        },
+        "similarity_provenance": {
+          "stage": "ptq-simulation",
+          "method": "hb_compile node_info.csv calibrated/quantized cosine (x86 PTQ simulation)",
+          "calibration_samples": 200,
+          "source_log": "output/hb_compile.log",
+          "comparison_input_count": 1,
+          "comparison_scope": "Native full NodeInfo uses one first_cali_data mapping as one verifier input_files entry",
+          "calibration_count_source": "Actual native dataset-count log and frozen tensor manifest",
+          "note": "Native NodeInfo hook diagnostics; not a held-out dataset accuracy measurement"
+        },
+        "performance_provenance": {
+          "stage": "compiler-static-estimate",
+          "source": "hb_compile-json",
+          "method": "hbdk-cc static latency estimate of the compiled release artifact",
+          "note": "Estimates describe the compiled artifact; on-board measurements live in the model benchmark."
+        },
+        "board_measurement": null,
+        "provenance": {
+          "artifact_sha256": "e6622075a629aba8f02656ecdbf033e4de613991bb953d107f2b39913e55f783",
+          "hb_compile_log_sha256": "5589e29fc092e2aa1849e64164dd68e8401eec04c5fce74dc1a082cb50f5eb35",
+          "oe_report_json_sha256": "686dd0b2beb5f0edcd4de6899c7d0dcab996466d4b6450a699fe51235e3473c5",
+          "derived_metadata": {
+            "extracted_json": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-parta-20261103-r01/collected/parta/output/oe_report_data.extracted.json",
+              "sha256": "fa7aede48e51a6e741b4de243f4ebd0e7735abe76009674e59860061fe2ef055",
+              "size_bytes": 46034
+            },
+            "supplements": "Actual public HBM IO, native per-output cosine table and observed PTQ dataset count",
+            "source_evidence": {
+              "native_compile_stdout": {
+                "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-parta-20261103-r01/compile.log",
+                "sha256": "0d7c9a92860986bbc53eaf76451c116aa3cce3ee0418f43331be199b2d407469",
+                "size_bytes": 81082
+              },
+              "actual_hbm_info": {
+                "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-parta-20261103-r01/compile-info.log",
+                "sha256": "03a4f3f43c024d39af38be5ef0d7c2bdebbe9ade7cb54a2e5507e9dddd5c8a37",
+                "size_bytes": 9334
+              },
+              "derived_extraction_log": {
+                "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-parta-20261103-r01/collected/parta/output/hb_compile.log",
+                "sha256": "5589e29fc092e2aa1849e64164dd68e8401eec04c5fce74dc1a082cb50f5eb35",
+                "size_bytes": 90474
+              },
+              "native_node_csv": {
+                "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-parta-20261103-r01/output/frcnn_mbv3_320_parta_nashp_native_20261103_o1_node_info.csv",
+                "sha256": "9b04a15ad2be748858cf03132ee4a1bc4b0f4248ef0ca0019628034930d2fbc4",
+                "size_bytes": 13108
+              },
+              "native_perf_json": {
+                "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-parta-20261103-r01/output/frcnn_mbv3_320_parta_nashp_native_20261103_o1.json",
+                "sha256": "686dd0b2beb5f0edcd4de6899c7d0dcab996466d4b6450a699fe51235e3473c5",
+                "size_bytes": 265444
+              },
+              "native_htmls": [
+                {
+                  "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-parta-20261103-r01/output/frcnn_mbv3_320_parta_nashp_native_20261103_o1.html",
+                  "sha256": "52d143a762829f93f6c56ddcaec86bb341568ebd2af7e8994220817c983c1d51",
+                  "size_bytes": 1785585
+                }
+              ],
+              "config": {
+                "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-parta-20261103-r01/config.yaml",
+                "sha256": "6ac54f8c96a072ce2afb4b9f8a5d6d4d3e4ca0581f49d632812b2ad31c9a302a",
+                "size_bytes": 1261
+              },
+              "onnx": {
+                "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/fasterrcnn-s100-r02/export/part_a_f0only.op16.onnx",
+                "sha256": "8ab21cf106ff9d3009879a7f0775a912b78ae2e132c589ce505c40f43c7217a4",
+                "size_bytes": 20267987
+              },
+              "native_debug_log": {
+                "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-parta-20261103-r01/hb_compile.log",
+                "sha256": "35bf1ce925df3dd93997efaae55c06dbdfedf203b1599601cdcc7baf9be2bb59",
+                "size_bytes": 165704
+              }
+            }
+          }
+        }
+      }
+    },
+    "partb": {
+      "onnx_sha256": "95751d28b7597605a56820c5d84031e94dbc2ac98ef9decd37901496852e92bc",
+      "config_sha256": "414ad661fdff494eb6b05feeb903cefd0a74cf4f1dfc81a9de75963345f0e47a",
+      "artifact_sha256": "46681c759aba7d9b9fb6eab0ff4e90f37710f98bcfc5c6e1402da34d433a4981",
+      "oe_report_sha256": "1e9fa9483f9c380b939825a6516b9893be713483262346cdc57dbb76ecf37cf5",
+      "oe_data_sha256": "593d27b2ec9e11a8174d4e733203d9cdb97696ad9dcdfe17c510326b2845f71f",
+      "native_data": {
+        "schema_version": 1,
+        "generated_from_run": "fasterrcnn-s600-partb-20261103-r01-partb",
+        "generated_at": "'2026-11-03T06:21:39.936443+00:00'",
+        "model": {
+          "source": "fasterrcnn",
+          "family": "fasterrcnn",
+          "task": "detect",
+          "size": "mbv3-320-native-20261103-o1",
+          "component": "partb"
+        },
+        "target": {
+          "platform": "s600",
+          "march": "nash-p"
+        },
+        "toolchain": {
+          "hbdk": "4.7.5",
+          "hmct": "2.6.5",
+          "hb_compile": "3.5.3"
+        },
+        "io": {
+          "inputs": [
+            {
+              "name": "bank",
+              "shape": [
+                1,
+                256,
+                1050,
+                7
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "cls_packed",
+              "shape": [
+                1,
+                91,
+                150,
+                1
+              ],
+              "dtype": "float32"
+            },
+            {
+              "name": "reg_packed",
+              "shape": [
+                1,
+                364,
+                150,
+                1
+              ],
+              "dtype": "float32"
+            }
+          ]
+        },
+        "quantization": {
+          "summary": {
+            "total_nodes": 6,
+            "unit_counts": {
+              "BPU": 6
+            },
+            "dtype_counts": {
+              "si8": 4,
+              "f32": 2
+            },
+            "measured_nodes": 6,
+            "weakest_node": {
+              "name": "/fc7conv/Conv",
+              "cosine": 0.999706
+            },
+            "weakest_nodes": [
+              {
+                "name": "/fc7conv/Conv",
+                "cosine": 0.999706
+              },
+              {
+                "name": "/Relu_1",
+                "cosine": 0.999706
+              },
+              {
+                "name": "/regconv/Conv",
+                "cosine": 0.999824
+              },
+              {
+                "name": "/fc6conv/Conv",
+                "cosine": 0.999848
+              },
+              {
+                "name": "/Relu",
+                "cosine": 0.999848
+              }
+            ],
+            "cosine_percentiles": {
+              "p10": 0.999706,
+              "median": 0.999848
+            }
+          },
+          "nodes": [
+            {
+              "name": "/fc6conv/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.999848,
+              "calibrated_cosine": 0.999994,
+              "threshold": 6.809462,
+              "dtype": "si8"
+            },
+            {
+              "name": "/Relu",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.999848,
+              "calibrated_cosine": 0.999847,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "/fc7conv/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.999706,
+              "calibrated_cosine": 0.999934,
+              "threshold": 21.583805,
+              "dtype": "si8"
+            },
+            {
+              "name": "/Relu_1",
+              "on": "BPU",
+              "type": "Relu",
+              "cosine": 0.999706,
+              "calibrated_cosine": 0.999706,
+              "threshold": null,
+              "dtype": "si8"
+            },
+            {
+              "name": "/clsconv/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.999908,
+              "calibrated_cosine": 0.999908,
+              "threshold": 6.015753,
+              "dtype": "f32"
+            },
+            {
+              "name": "/regconv/Conv",
+              "on": "BPU",
+              "type": "Conv",
+              "cosine": 0.999824,
+              "calibrated_cosine": 0.999824,
+              "threshold": 6.015753,
+              "dtype": "f32"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "cls_packed",
+              "calibrated_cosine": 0.999908,
+              "cosine": 0.999908
+            },
+            {
+              "name": "reg_packed",
+              "calibrated_cosine": 0.999824,
+              "cosine": 0.999824
+            }
+          ]
+        },
+        "subgraphs": [
+          {
+            "name": "subgraph_0",
+            "perf": {
+              "fps": 606.71,
+              "latency_ms": 1.65,
+              "latency_us": 1648.2,
+              "ddr_mb_per_frame": 21.57,
+              "bpu_ops_per_frame": 4307865600.0,
+              "core_number": 1,
+              "march": "nash-p"
+            },
+            "intervals": {
+              "count": 17,
+              "interval_ms": 0.1,
+              "utilization": [
+                0.164,
+                0.269,
+                0.346,
+                0.281,
+                0.229,
+                0.947,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                0.887,
+                0.245
+              ],
+              "load_bandwidth_mbs": [
+                18963,
+                17198,
+                16058,
+                15965,
+                32891,
+                1989,
+                7666,
+                15332,
+                7666,
+                15332,
+                7666,
+                14564,
+                8433,
+                13711,
+                1620,
+                4834,
+                11643
+              ],
+              "store_bandwidth_mbs": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                97,
+                97,
+                195,
+                97,
+                195,
+                97,
+                195,
+                97,
+                195,
+                97,
+                195,
+                2604
+              ]
+            }
+          }
+        ],
+        "aggregate": {
+          "latency_ms": 1.65,
+          "fps_derived": 606.06,
+          "ddr_mb_per_frame": 21.57,
+          "bpu_ops_per_frame": 4307865600.0,
+          "derivation": "latency = sum of subgraph latency; fps_derived = 1000 / latency (sequential subgraph execution assumption); values from hbdk static estimation, not board measurement"
+        },
+        "similarity_provenance": {
+          "stage": "ptq-simulation",
+          "method": "hb_compile node_info.csv calibrated/quantized cosine (x86 PTQ simulation)",
+          "calibration_samples": 200,
+          "source_log": "output/hb_compile.log",
+          "comparison_input_count": 1,
+          "comparison_scope": "Native full NodeInfo uses one first_cali_data mapping as one verifier input_files entry",
+          "calibration_count_source": "Actual native dataset-count log and frozen tensor manifest",
+          "note": "Native NodeInfo hook diagnostics; not a held-out dataset accuracy measurement"
+        },
+        "performance_provenance": {
+          "stage": "compiler-static-estimate",
+          "source": "hb_compile-json",
+          "method": "hbdk-cc static latency estimate of the compiled release artifact",
+          "note": "Estimates describe the compiled artifact; on-board measurements live in the model benchmark."
+        },
+        "board_measurement": null,
+        "provenance": {
+          "artifact_sha256": "46681c759aba7d9b9fb6eab0ff4e90f37710f98bcfc5c6e1402da34d433a4981",
+          "hb_compile_log_sha256": "6554c5862fd2dd2c8839899884ff2f8aec03f1f1cb101d5fd522fc44efa3ccbd",
+          "oe_report_json_sha256": "86b26dc548cb8b5802a917acb33b54a96727c60be6e577437dd9a6f6ec990325",
+          "derived_metadata": {
+            "extracted_json": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-partb-20261103-r01/collected/partb/output/oe_report_data.extracted.json",
+              "sha256": "fc36d72b607476e673ffddfff64b1581236102e2e118f23c9557123356f6be66",
+              "size_bytes": 5621
+            },
+            "supplements": "Actual public HBM IO, native per-output cosine table and observed PTQ dataset count",
+            "source_evidence": {
+              "native_compile_stdout": {
+                "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-partb-20261103-r01/compile.log",
+                "sha256": "c3b43144ede403899f5f5cf7881875f980641286c4d7e206d4f73f6bd77dd70a",
+                "size_bytes": 22773
+              },
+              "actual_hbm_info": {
+                "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-partb-20261103-r01/compile-info.log",
+                "sha256": "9c2eee8faec2f5f22b84849220209f0b33662b8bd0b0587667274d9dea47650e",
+                "size_bytes": 9215
+              },
+              "derived_extraction_log": {
+                "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-partb-20261103-r01/collected/partb/output/hb_compile.log",
+                "sha256": "6554c5862fd2dd2c8839899884ff2f8aec03f1f1cb101d5fd522fc44efa3ccbd",
+                "size_bytes": 32046
+              },
+              "native_node_csv": {
+                "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-partb-20261103-r01/output/frcnn_mbv3_320_partb_nashp_native_20261103_o1_node_info.csv",
+                "sha256": "9b4b4cf2949c962538494e2aaa7ff196782984c8d7877869782562fc72beff23",
+                "size_bytes": 378
+              },
+              "native_perf_json": {
+                "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-partb-20261103-r01/output/frcnn_mbv3_320_partb_nashp_native_20261103_o1.json",
+                "sha256": "86b26dc548cb8b5802a917acb33b54a96727c60be6e577437dd9a6f6ec990325",
+                "size_bytes": 117308
+              },
+              "native_htmls": [
+                {
+                  "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-partb-20261103-r01/output/frcnn_mbv3_320_partb_nashp_native_20261103_o1.html",
+                  "sha256": "1e9fa9483f9c380b939825a6516b9893be713483262346cdc57dbb76ecf37cf5",
+                  "size_bytes": 1705928
+                }
+              ],
+              "config": {
+                "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-partb-20261103-r01/config.yaml",
+                "sha256": "414ad661fdff494eb6b05feeb903cefd0a74cf4f1dfc81a9de75963345f0e47a",
+                "size_bytes": 1209
+              },
+              "onnx": {
+                "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/fasterrcnn-s100-r02/export/part_b_packed.op16.onnx",
+                "sha256": "95751d28b7597605a56820c5d84031e94dbc2ac98ef9decd37901496852e92bc",
+                "size_bytes": 57449454
+              },
+              "native_debug_log": {
+                "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasterrcnn-s600-partb-20261103-r01/hb_compile.log",
+                "sha256": "24a23a053f17e97da677f1cbf67af5da421e8ccaf3b6888899904e999d2a4778",
+                "size_bytes": 81285
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

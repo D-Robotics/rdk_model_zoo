@@ -10,7 +10,7 @@ import tarfile
 
 KINDS = {'encoder-decoder': ('encoder', 'decoder'), 'fasterrcnn-split': ('parta', 'partb')}
 SOURCES = {'efficient_sam': 'encoder-decoder', 'mobile_sam': 'encoder-decoder',
-           'fasterrcnn': 'fasterrcnn-split'}
+           'fasterrcnn': 'fasterrcnn-split', 'clip': 'clip-image-text'}
 SHA = re.compile(r'^[0-9a-f]{64}$')
 ARCHIVE = 'https://archive.d-robotics.cc/downloads/rdk_model_zoo_web'
 
@@ -46,6 +46,9 @@ def tensors(items):
 def validate_components(row, *, platform, source, oe=None):
     artifact = row['artifact']
     bundle = artifact.get('bundle')
+    if isinstance(bundle, dict) and bundle.get('kind') == 'clip-image-text':
+        from clip_package import validate_components as validate_clip
+        return validate_clip(row, platform=platform, source=source, oe=oe)
     if bundle is None:
         require(source not in SOURCES and 'components' not in artifact
                 and 'components' not in row.get('provenance', {})
@@ -141,6 +144,9 @@ class ReportInventory(HTMLParser):
 
 
 def validate_bundle_files(row, model_bytes, html_bytes, oe):
+    if row['artifact'].get('bundle', {}).get('kind') == 'clip-image-text':
+        from clip_package import validate_bundle_files as validate_clip
+        return validate_clip(row, model_bytes, html_bytes, oe)
     platform, source = row['target']['platform'], row['model']['source']
     components = validate_components(row, platform=platform, source=source, oe=oe)
     if components is None:

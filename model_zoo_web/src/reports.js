@@ -27,6 +27,7 @@
 
   function overviewPanel(data, report) {
     const aggregate = data.aggregate || {};
+    const hasMultipleComponents = Object.keys(data.components || {}).length > 1;
     const quantization = data.quantization || {};
     const summary = quantization.summary || {};
     const weakest = summary.weakest_node;
@@ -47,12 +48,13 @@
       ? 1000 / (profiler.average_latency_ms - boardCpu.avg_time)
       : profiler?.fps ?? catalogThroughput?.value;
     const fpsBoard = bpuScopedFps ?? catalogThroughput?.value;
-    const fpsEstimate = aggregate.fps_derived ?? (data.subgraphs?.length === 1 ? data.subgraphs[0].perf?.fps : null);
+    const latencyEstimate = hasMultipleComponents ? null : aggregate.latency_ms;
+    const fpsEstimate = hasMultipleComponents ? null : (aggregate.fps_derived ?? (data.subgraphs?.length === 1 ? data.subgraphs[0].perf?.fps : null));
     const pairCard = (pairedLabel, fallbackLabel, estimateText, boardText, suffix = '') => boardText != null
       ? `<div class="rd-card"><span class="rd-card-label">${pairedLabel}</span><strong>${estimateText} / ${boardText}${suffix}</strong></div>`
       : `<div class="rd-card"><span class="rd-card-label">${fallbackLabel}</span><strong>${estimateText}${suffix}</strong></div>`;
     const cards = [
-      pairCard('估算 / 实测延迟', '估算延迟', aggregate.latency_ms != null ? fmt(aggregate.latency_ms) : '—', latencyBoard != null ? fmt(latencyBoard) : null, ' ms'),
+      pairCard('估算 / 实测延迟', '估算延迟', latencyEstimate != null ? fmt(latencyEstimate) : '—', latencyBoard != null ? fmt(latencyBoard) : null, ' ms'),
       pairCard('估算 / 实测 FPS', '估算 FPS', fmt(fpsEstimate), fpsBoard != null ? fmt(fpsBoard) : null),
       `<div class="rd-card"><span>估算 DDR</span><strong>${aggregate.ddr_mb_per_frame != null ? `${fmt(aggregate.ddr_mb_per_frame, 1)} MB` : '—'}</strong></div>`,
       `<div class="rd-card"><span>BPU OPs</span><strong>${giga(aggregate.bpu_ops_per_frame)}</strong></div>`,

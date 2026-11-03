@@ -96,6 +96,11 @@ reviewed `hero_visual` use the shared SVG placeholder, even when an
 displayed separately from model licenses; `scope: sample-code` does not
 declare the model's license.
 
+A host-inference cover keeps its own `hero_visual.commit`, matching the saved
+prediction record. Its input and source documentation are validated at that
+exact commit. Adding a new converted profile may advance `sample_revision`
+without relabeling an existing cover or its predictions.
+
 The model-detail view links an OE conversion report only when the imported
 release record supplies a reviewed public Archive URL. Missing reports keep the
 non-interactive placeholder; do not add an empty `href`, a fake `#` target, or

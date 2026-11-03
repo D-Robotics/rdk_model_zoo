@@ -696,8 +696,9 @@ def _validate_host_float_hero(entry: dict[str, Any], label: str, revision: str) 
     note = require_string(entry.get("note"), f"{label}.note")
     if "not board output" not in note or "Host float reference" not in note:
         raise CatalogError(f"{label}.note must say this is a host float reference, not board output")
-    if require_string(entry.get("commit"), f"{label}.commit") != revision:
-        raise CatalogError(f"{label}.commit must be the pinned sample revision")
+    # A family cover keeps its actual inference revision when a later model
+    # profile advances sample_revision. Never relabel the saved predictions.
+    revision = validate_commit(entry.get("commit"), f"{label}.commit")
     model_url = require_string(entry.get("model_url"), f"{label}.model_url")
     if not model_url.startswith("https://"):
         raise CatalogError(f"{label}.model_url must be an https checkpoint URL")
@@ -778,6 +779,8 @@ def _validate_hero_visual(record: dict[str, Any], relative_source: str, revision
     if unknown:
         raise CatalogError(f"{label} has unknown fields: {', '.join(unknown)}")
     kind = require_string(entry.get("kind"), f"{label}.kind")
+    if entry.get("runtime") == "host-float-reference":
+        revision = validate_commit(entry.get("commit"), f"{label}.commit")
     image = validate_evidence_path(entry.get("input"), f"{label}.input", revision)
     suffix = PurePosixPath(image).suffix.lower()
     if suffix not in {".jpg", ".jpeg", ".png", ".webp"}:
@@ -1075,7 +1078,10 @@ def validate_converted_platform(platform: dict[str, Any], license_info: dict[str
     for index, output in enumerate(outputs):
         require_string(output.get("name"), f"{label}.conversion.outputs[{index}].name")
         require_string(output.get("dtype"), f"{label}.conversion.outputs[{index}].dtype")
-        for dimension in require_list(output.get("shape"), f"{label}.conversion.outputs[{index}].shape"):
+        for axis, dimension in enumerate(require_list(output.get("shape"), f"{label}.conversion.outputs[{index}].shape")):
+            if (source == 'clip' and artifact.get('bundle',{}).get('kind') == 'clip-image-text'
+                    and output.get('name') == 'text_features' and axis == 0 and dimension == 'prompts'):
+                continue
             require_positive_int(dimension, f"{label}.conversion.outputs[{index}].shape")
     validation = require_mapping(platform.get("validation"), f"{label}.validation")
     if validation.get("artifact_sha256") != artifact["sha256"]:
