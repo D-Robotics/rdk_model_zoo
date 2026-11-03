@@ -14,6 +14,7 @@ import { stampAssetVersions } from './asset-versions.mjs';
 import { loadVerifiedPreviewDownloads, previewDownloadAssets } from './preview-downloads.mjs';
 import { readFileSync } from 'node:fs';
 import { loadInferenceTaskBanners } from './task-banner-assets.mjs';
+import { loadFamilyInferenceBanners } from './family-banner-assets.mjs';
 import { buildPendingModels } from './pending-preview.mjs';
 
 const scriptRoot = dirname(fileURLToPath(import.meta.url));
@@ -296,6 +297,8 @@ const releasedTaskBanners = !candidatePreview && presentationOverrideIds.every(i
   fullCatalog.models.some(model => model.id === id));
 const inferenceTaskBanners = technicalPassedPreview || releasedTaskBanners
   ? await loadInferenceTaskBanners({ webRoot, catalog: fullCatalog }) : null;
+const familyInferenceBanners = !candidatePreview && !technicalPassedPreview
+  ? await loadFamilyInferenceBanners({ webRoot, catalog: fullCatalog }) : { items: new Map() };
 if (inferenceTaskBanners && technicalSelection) {
   technicalSelection.inference_task_banners = inferenceTaskBanners.selection;
 }
@@ -419,7 +422,8 @@ for (const record of catalog.models || []) {
     throw new Error(`MODEL_ZOO_INPUTS.models is missing ${record.id}`);
   }
   if (suppliedModelInput) usedModelInputs.add(record.id);
-  const inferenceCover = inferenceTaskBanners?.items.get(record.id);
+  const inferenceCover = familyInferenceBanners.items.get(record.id)
+    || inferenceTaskBanners?.items.get(record.id);
   const coverPath = inferenceCover?.path
     || (modelInput.cover ? await resolveInputFile(modelInput.cover, `MODEL_ZOO_INPUTS.models.${record.id}.cover`)
       : resolve(outputRoot, 'assets', 'pending-cover.svg'));
@@ -772,11 +776,25 @@ for (const record of catalog.models || []) {
 }
 
 if (!candidatePreview) {
-  models.push(...buildPendingModels(fullCatalog.models || [], {
+  const pendingModels = buildPendingModels(fullCatalog.models || [], {
     officialRepositoryUrl,
     taskRegistry,
     safeId,
-  }));
+  });
+  for (const model of pendingModels) {
+    const cover = familyInferenceBanners.items.get(model.catalogId);
+    if (!cover) continue;
+    model.coverImage = `assets/models/${safeId(...model.catalogId.split('/'))}${extname(cover.path)}`;
+    model.coverLabel = cover.cover_label;
+    model.heroProvenance = {
+      kind: cover.kind, input: `model_zoo_web/release/assets/${cover.source_image.file}`,
+      predictionsSource: `model_zoo_web/release/assets/${cover.predictions.file}`,
+      revision: cover.model.conversion_source_commit, runtime: 'host-float-reference',
+      note: 'Family reference from the recorded source variant; not a legacy artifact or board result.',
+      modelUrl: cover.model.source_weight_url, framework: 'ONNX Runtime CPU',
+    };
+  }
+  models.push(...pendingModels);
 }
 
 if (!models.length) throw new Error('The samples-only catalog contains no released models');

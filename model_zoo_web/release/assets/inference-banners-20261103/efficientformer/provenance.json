@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "kind": "host-float-model-inference-banner",
+  "status": "passed",
+  "model": {
+    "catalog_id": "efficientformer/efficientformer/cls",
+    "name": "efficientformer_l1.snap_dist_in1k",
+    "variant": "l1-snap-dist-in1k-224",
+    "source_checkpoint_sha256": "dab9ad0e328fe94a9c155497dc3f46cb456ae0223e19184d377e03adc3e3e08e",
+    "onnx_sha256": "cdd6c660753aaa27fdf84f7978441a91f6b74b7fbf476abb3e27055f0ab6a266",
+    "source_weight_url": "https://huggingface.co/timm/efficientformer_l1.snap_dist_in1k/resolve/8738a58190800aaf5995f453b05f643df453a565/model.safetensors",
+    "checkpoint_revision": "8738a58190800aaf5995f453b05f643df453a565",
+    "native_source_commit": "af9fdbe1b47dcb88ada02aea24abdd6391bf6c66"
+  },
+  "runtime": {
+    "framework": "ONNX Runtime",
+    "version": "1.30.0",
+    "provider": "CPUExecutionProvider",
+    "threads": 2,
+    "single_inference_wall_seconds": 0.016853927168995142,
+    "timing_scope": "host reference only; not a benchmark"
+  },
+  "input": {
+    "name": "data",
+    "shape": [
+      1,
+      3,
+      224,
+      224
+    ],
+    "dtype": "float32",
+    "tensor_sha256": "c8619562782b47373773748b6ab4eea46c2d332020f043caa392cd5a242fd236",
+    "contract": {
+      "size": 224,
+      "crop_pct": 0.875,
+      "mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "std": [
+        0.229,
+        0.224,
+        0.225
+      ],
+      "geometry": "resize_shorter_center_crop",
+      "interpolation": "pil_bicubic",
+      "color": "RGB",
+      "layout": "NCHW",
+      "dtype": "float32",
+      "class_count": 1000,
+      "output": "logits",
+      "batch": 1
+    }
+  },
+  "native_helpers": {
+    "utils/py_utils/classification.py": "4c27df0660be6961e67cc605fb9d211a0e08f7827ef4037e0e64702f54bc7dcf",
+    "utils/py_utils/classification_host.py": "5bca734a2fbc208c51e7fd0b418d968461f04d2d7ab0ff8a8b55176a24ee7a03",
+    "utils/py_utils/tensor_io.py": "b735ecb97cc42d28084fb374408ea51eb23a3d902cfd4875fae5bd4fb005f61f"
+  },
+  "postprocessing": "native topk_from_scores, softmax=True; stable descending class IDs",
+  "render": {
+    "style": "Existing MobileNet/ResNet light-gray, rounded photo and white Top-5 panel with blue bars",
+    "dimensions": [
+      1672,
+      941
+    ],
+    "rendered_predictions": [
+      {
+        "class_id": 130,
+        "label": "flamingo",
+        "score": 0.9962204098701477
+      },
+      {
+        "class_id": 134,
+        "label": "crane",
+        "score": 0.00027317178319208324
+      },
+      {
+        "class_id": 129,
+        "label": "spoonbill",
+        "score": 0.00016639559180475771
+      },
+      {
+        "class_id": 100,
+        "label": "black swan, Cygnus atratus",
+        "score": 0.00012386273010633886
+      },
+      {
+        "class_id": 144,
+        "label": "pelican",
+        "score": 6.249926809687167e-05
+      }
+    ]
+  },
+  "files": {
+    "source.webp": {
+      "file": "source.webp",
+      "sha256": "48aca5080a68d1f317df7226ee9f38734af196cb98048c557f1e216ed3008080",
+      "size_bytes": 341470
+    },
+    "outputs.npz": {
+      "file": "outputs.npz",
+      "sha256": "5dd6ec1610c1f19f110bb0312015fddde6944600b101088685cfdb7703d62b2b",
+      "size_bytes": 7780
+    },
+    "predictions.json": {
+      "file": "predictions.json",
+      "sha256": "e2ca911204cdf15012b3871527858731d8ad6719fd71dec4caac88a9b96af5bd",
+      "size_bytes": 1084
+    },
+    "banner.webp": {
+      "file": "banner.webp",
+      "sha256": "24543f9c8cbe3be346ae054eaba31c6586dd5d5fbdee04ce4082663d38f7f5de",
+      "size_bytes": 144440
+    }
+  },
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "note": "Host float reference from the exact conversion ONNX; not a BIN/HBM board result.",
+  "renderer_sha256": "6d4aa2a848ca785ae11391b8fba4f84501fda5483ee4467c12801096932fdaf5"
+}

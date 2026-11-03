@@ -10,6 +10,31 @@ the published static site in a clean checkout.
   view. This committed JSON remains the reproducible build input; the public
   Archive copy has identical bytes.
 
+`assets/model-inference-banners.json` selects reviewed family/task covers.
+The 2026-11-03 set contains 19 references: 14 classifiers plus depth, DINOv2
+patch features, MODNet alpha matting, YOLOv5 detection and YOLOE11 segmentation.
+ImageGen produces only the clean input photographs. The pinned conversion
+ONNX runs on the host; native sample preparation and decoding produce the
+Top-5 values, boxes, masks and visualizations. The existing photographic,
+light-gray/white/blue website style is retained.
+
+`assets/inference-banners-20261103/` keeps the exact inference inputs, compact
+outputs, predictions, receipts, generation prompts and inference plan. Large
+YOLO forward tensors remain in the recorded Workbench run. The rendering
+commands are `scripts/infer_classification_banners.py` and
+`scripts/infer_vision_banners.py`; use the plan, the recorded native source
+checkout and existing ONNX files. Neither command downloads or converts models.
+The execution source commit is separate from each model's frozen conversion
+source commit. The build verifies asset bytes and checkpoint/ONNX identities
+against the catalog before selecting a cover.
+
+These covers display `主机浮点推理参考` (host float inference reference).
+One recorded source variant represents its family/task across variants and
+platforms. This does not establish BIN/HBM board behavior, dataset accuracy
+or performance; those checks remain `not-run`. DINOv2 colors are a PCA
+projection of actual patch features, not semantic segmentation. Existing
+compatible covers are retained; unavailable models keep their placeholders.
+
 Deployment model URLs remain on their registered OSS or Archive paths.
 Public release/OE companions use
 `https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_<platform>/<source>/<model-stem>/`.

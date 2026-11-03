@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "kind": "host-float-model-inference-banner",
+  "status": "passed",
+  "model": {
+    "catalog_id": "efficientvit/efficientvit/cls",
+    "name": "efficientvit_m5.r224_in1k",
+    "variant": "m5-r224-in1k-224",
+    "source_checkpoint_sha256": "93fe829b6eac0660aaf48703746112ff648d2d740bc6260874a61bf9b3a7f452",
+    "onnx_sha256": "8fc5045f87b6738a4366d056d91f0b1e7a0d317221a0e13b114574661783f832",
+    "source_weight_url": "https://huggingface.co/timm/efficientvit_m5.r224_in1k/resolve/e45d80f65cd8ef0964ab526dd4f8025abbff4e19/model.safetensors",
+    "checkpoint_revision": "e45d80f65cd8ef0964ab526dd4f8025abbff4e19",
+    "native_source_commit": "214a78c0c4dda7891726740da6fb30db286aecfc"
+  },
+  "runtime": {
+    "framework": "ONNX Runtime",
+    "version": "1.30.0",
+    "provider": "CPUExecutionProvider",
+    "threads": 2,
+    "single_inference_wall_seconds": 0.010257706977427006,
+    "timing_scope": "host reference only; not a benchmark"
+  },
+  "input": {
+    "name": "data",
+    "shape": [
+      1,
+      3,
+      224,
+      224
+    ],
+    "dtype": "float32",
+    "tensor_sha256": "2ad742c98caa9c26994ae00fc0aa572f515eff7149272be08b7b984e54bc75c3",
+    "contract": {
+      "size": 224,
+      "crop_pct": 0.875,
+      "mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "std": [
+        0.229,
+        0.224,
+        0.225
+      ],
+      "geometry": "resize_shorter_center_crop",
+      "interpolation": "pil_bicubic",
+      "color": "RGB",
+      "layout": "NCHW",
+      "dtype": "float32",
+      "class_count": 1000,
+      "output": "logits",
+      "batch": 1
+    }
+  },
+  "native_helpers": {
+    "utils/py_utils/classification.py": "4c27df0660be6961e67cc605fb9d211a0e08f7827ef4037e0e64702f54bc7dcf",
+    "utils/py_utils/classification_host.py": "5bca734a2fbc208c51e7fd0b418d968461f04d2d7ab0ff8a8b55176a24ee7a03",
+    "utils/py_utils/tensor_io.py": "b735ecb97cc42d28084fb374408ea51eb23a3d902cfd4875fae5bd4fb005f61f"
+  },
+  "postprocessing": "native topk_from_scores, softmax=True; stable descending class IDs",
+  "render": {
+    "style": "Existing MobileNet/ResNet light-gray, rounded photo and white Top-5 panel with blue bars",
+    "dimensions": [
+      1672,
+      941
+    ],
+    "rendered_predictions": [
+      {
+        "class_id": 96,
+        "label": "toucan",
+        "score": 0.7308725714683533
+      },
+      {
+        "class_id": 93,
+        "label": "hornbill",
+        "score": 0.0025272530037909746
+      },
+      {
+        "class_id": 91,
+        "label": "coucal",
+        "score": 0.001711019896902144
+      },
+      {
+        "class_id": 809,
+        "label": "soup bowl",
+        "score": 0.0013605189742520452
+      },
+      {
+        "class_id": 379,
+        "label": "howler monkey, howler",
+        "score": 0.0011993125081062317
+      }
+    ]
+  },
+  "files": {
+    "source.webp": {
+      "file": "source.webp",
+      "sha256": "aa30f8b43092b470cdda7b5d31b6773ca9ed359a734ead82cebaed95b13bb9e1",
+      "size_bytes": 308978
+    },
+    "outputs.npz": {
+      "file": "outputs.npz",
+      "sha256": "b3890e15b890c824b14f220e26ff60fdc3caccb5b1c364c7520ce4b87ee969ee",
+      "size_bytes": 7666
+    },
+    "predictions.json": {
+      "file": "predictions.json",
+      "sha256": "9dffdc82921c72aad7cd11ff8b2c87af208e96eaab94ed7ade6b4c43907c14ac",
+      "size_bytes": 1053
+    },
+    "banner.webp": {
+      "file": "banner.webp",
+      "sha256": "66537aedbf9e7e33cde180aa6c8e1c8569efc5bbe6dde1ea8286f90912019d94",
+      "size_bytes": 131570
+    }
+  },
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "note": "Host float reference from the exact conversion ONNX; not a BIN/HBM board result.",
+  "renderer_sha256": "6d4aa2a848ca785ae11391b8fba4f84501fda5483ee4467c12801096932fdaf5"
+}

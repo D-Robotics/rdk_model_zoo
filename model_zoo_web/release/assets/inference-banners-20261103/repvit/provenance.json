@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "kind": "host-float-model-inference-banner",
+  "status": "passed",
+  "model": {
+    "catalog_id": "repvit/repvit/cls",
+    "name": "repvit_m0_9.dist_450e_in1k",
+    "variant": "m0-9-dist-450e-in1k-224",
+    "source_checkpoint_sha256": "c2dd32622df856ea7a68d6b241c1623f0e6fbec8acde381a3519cb5a5463e9cf",
+    "onnx_sha256": "67b84bbd4639928601b44a44f063ab6d9a455f2f374080b41053dd3cb51d9e87",
+    "source_weight_url": "https://huggingface.co/timm/repvit_m0_9.dist_450e_in1k/resolve/c073717dd84b5af671dd51b187b99ac55b2af4f0/model.safetensors",
+    "checkpoint_revision": "c073717dd84b5af671dd51b187b99ac55b2af4f0",
+    "native_source_commit": "88b1cc252809382b675a8c448534590db882abec"
+  },
+  "runtime": {
+    "framework": "ONNX Runtime",
+    "version": "1.30.0",
+    "provider": "CPUExecutionProvider",
+    "threads": 2,
+    "single_inference_wall_seconds": 0.011073987931013107,
+    "timing_scope": "host reference only; not a benchmark"
+  },
+  "input": {
+    "name": "data",
+    "shape": [
+      1,
+      3,
+      224,
+      224
+    ],
+    "dtype": "float32",
+    "tensor_sha256": "cfa6860373db00360b9c70d5f3e169c00a8c3bff0b94c0561a46184871ca42e0",
+    "contract": {
+      "size": 224,
+      "crop_pct": 0.875,
+      "mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "std": [
+        0.229,
+        0.224,
+        0.225
+      ],
+      "geometry": "resize_shorter_center_crop",
+      "interpolation": "pil_bicubic",
+      "color": "RGB",
+      "layout": "NCHW",
+      "dtype": "float32",
+      "class_count": 1000,
+      "output": "logits",
+      "batch": 1
+    }
+  },
+  "native_helpers": {
+    "utils/py_utils/classification.py": "4c27df0660be6961e67cc605fb9d211a0e08f7827ef4037e0e64702f54bc7dcf",
+    "utils/py_utils/classification_host.py": "5bca734a2fbc208c51e7fd0b418d968461f04d2d7ab0ff8a8b55176a24ee7a03",
+    "utils/py_utils/tensor_io.py": "b735ecb97cc42d28084fb374408ea51eb23a3d902cfd4875fae5bd4fb005f61f"
+  },
+  "postprocessing": "native topk_from_scores, softmax=True; stable descending class IDs",
+  "render": {
+    "style": "Existing MobileNet/ResNet light-gray, rounded photo and white Top-5 panel with blue bars",
+    "dimensions": [
+      1672,
+      941
+    ],
+    "rendered_predictions": [
+      {
+        "class_id": 915,
+        "label": "yurt",
+        "score": 0.9946730732917786
+      },
+      {
+        "class_id": 672,
+        "label": "mountain tent",
+        "score": 0.0004037981852889061
+      },
+      {
+        "class_id": 580,
+        "label": "greenhouse, nursery, glasshouse",
+        "score": 0.0003824369632638991
+      },
+      {
+        "class_id": 853,
+        "label": "thatch, thatched roof",
+        "score": 0.00024194433353841305
+      },
+      {
+        "class_id": 425,
+        "label": "barn",
+        "score": 0.00017682972247712314
+      }
+    ]
+  },
+  "files": {
+    "source.webp": {
+      "file": "source.webp",
+      "sha256": "ffa817404271a4e118932d2d0280c5209c2021e296511512cee0c0d76aca5815",
+      "size_bytes": 639202
+    },
+    "outputs.npz": {
+      "file": "outputs.npz",
+      "sha256": "be7480479ef4a0981e095f873487281e6edf65fe2ba58d4cfd5266047d312b24",
+      "size_bytes": 7771
+    },
+    "predictions.json": {
+      "file": "predictions.json",
+      "sha256": "105a82e2a50bc00b715e1e67d38bddb20a6cc989bd5e627b455dd87a586820de",
+      "size_bytes": 1078
+    },
+    "banner.webp": {
+      "file": "banner.webp",
+      "sha256": "73a7de510d3eadc81245bf91ea65dc8fd8b64c7697234b6910d928ef42bc81e8",
+      "size_bytes": 236062
+    }
+  },
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "note": "Host float reference from the exact conversion ONNX; not a BIN/HBM board result.",
+  "renderer_sha256": "6d4aa2a848ca785ae11391b8fba4f84501fda5483ee4467c12801096932fdaf5"
+}

@@ -70,6 +70,7 @@
     '待实测': 'Not measured',
     '运行模型': 'Run model',
     '模型系列参考效果图': 'Model family reference image',
+    '主机浮点推理参考': 'Host float inference reference',
     '任务示意图': 'Task illustration',
     '尚未收录': 'Not catalogued',
     '模型列表': 'Model list',

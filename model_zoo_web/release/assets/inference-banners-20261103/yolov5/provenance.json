@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "kind": "host-float-model-inference-banner",
+  "status": "passed",
+  "model": {
+    "catalog_id": "yolov5/yolov5/detect",
+    "name": "YOLOv5n v7.0",
+    "variant": "n-v7.0-native-20261102",
+    "source_checkpoint_sha256": "4f180cf23ba0717ada0badd6c685026d73d48f184d00fc159c2641284b2ac0a3",
+    "onnx_sha256": "87e74e9db4eee072b8697e63fbbcc02b954cd6fd73ffe1bd55746e247f2576db",
+    "source_weight_url": "https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5n.pt",
+    "checkpoint_revision": "sha256:4f180cf23ba0717ada0badd6c685026d73d48f184d00fc159c2641284b2ac0a3",
+    "native_source_commit": "d6a6fdc825deea92117c3ab4c76a8dd5564917b6"
+  },
+  "runtime": {
+    "framework": "ONNX Runtime",
+    "version": "1.19.2",
+    "provider": "CPUExecutionProvider",
+    "threads": 2,
+    "single_inference_wall_seconds": 0.03709903173148632,
+    "timing_scope": "host reference only; not a benchmark"
+  },
+  "input": {
+    "name": "images",
+    "shape": [
+      1,
+      3,
+      640,
+      640
+    ],
+    "dtype": "float32",
+    "tensor_sha256": "8425f22e28cd24378c70337c79944f12028808a4c9e27bfacd4ad3263a1a5eab",
+    "geometry": {
+      "original_size": [
+        941,
+        1672
+      ],
+      "model_size": [
+        640,
+        640
+      ],
+      "resized_size": [
+        640,
+        640
+      ],
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale_x": 0.3827751196172249,
+      "scale_y": 0.6801275239107333,
+      "crop_offset": [
+        0.0,
+        0.0
+      ],
+      "resize_type": 0
+    }
+  },
+  "native_forward_outputs": [
+    {
+      "name": "small",
+      "shape": [
+        1,
+        80,
+        80,
+        255
+      ],
+      "dtype": "float32"
+    },
+    {
+      "name": "medium",
+      "shape": [
+        1,
+        40,
+        40,
+        255
+      ],
+      "dtype": "float32"
+    },
+    {
+      "name": "big",
+      "shape": [
+        1,
+        20,
+        20,
+        255
+      ],
+      "dtype": "float32"
+    }
+  ],
+  "raw_forward_retained": {
+    "run_relative_file": "raw/yolov5-forward.npz",
+    "sha256": "fec4aa878073d22e55e777d5f832644119869f7ae063aafced9c6b7b2e5d4458",
+    "size_bytes": 7437369
+  },
+  "render": {
+    "style": "Existing RDK Model Zoo photographic banners",
+    "dimensions": [
+      1672,
+      941
+    ],
+    "rendered_predictions": [
+      {
+        "prediction_index": 0,
+        "class_id": 0,
+        "label": "person",
+        "score": 0.7387410402297974
+      },
+      {
+        "prediction_index": 1,
+        "class_id": 1,
+        "label": "bicycle",
+        "score": 0.69356769323349
+      }
+    ],
+    "confidence_threshold": 0.5,
+    "policy": "Up to six actual foreground results; omit source-edge boxes and boxes smaller than 1% of the image"
+  },
+  "files": {
+    "source.webp": {
+      "file": "source.webp",
+      "sha256": "5ca0acbb1839473cc0bd843d0610e6fe64305de77b590df4884e46688e4edcd3",
+      "size_bytes": 745100
+    },
+    "outputs.npz": {
+      "file": "outputs.npz",
+      "sha256": "ebc765446bad5d9b738816d05accdbc25da7c7365fb0231ea0fe29e578c2bf1c",
+      "size_bytes": 627
+    },
+    "predictions.json": {
+      "file": "predictions.json",
+      "sha256": "2e3fed0082b1e5494b3ef09fc03c18d2d2e10576d281dad1b4150e3095379ce9",
+      "size_bytes": 1093
+    },
+    "banner.webp": {
+      "file": "banner.webp",
+      "sha256": "43c46a7f2052751c9c3cb50bbd68de2f4965d1967a5ac008f9582f1e2839fc1d",
+      "size_bytes": 523190
+    }
+  },
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "note": "Host float reference from the pinned conversion ONNX; visualizations are computed from actual outputs.",
+  "renderer_sha256": "f1427eef8fbc48138e0ea7f79e48d6a700b5841f21849d29de4135aade1bb265"
+}

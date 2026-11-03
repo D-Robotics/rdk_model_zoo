@@ -136,6 +136,9 @@ vm.runInContext(fs.readFileSync(path.join(root, 'model-properties.js'), 'utf8'),
 
 const data = context.window.MODEL_DATA;
 const reportEntries = Array.from(context.window.OE_REPORTS);
+const familyBannerManifestPath = path.join(webRoot, 'release/assets/model-inference-banners.json');
+const familyBannerItems = fs.existsSync(familyBannerManifestPath)
+  ? JSON.parse(fs.readFileSync(familyBannerManifestPath, 'utf8')).items : {};
 
 if (preview) {
   assert(data.models.length >= 1, 'The preview site must contain at least one released model');
@@ -151,6 +154,14 @@ if (preview) {
       assertCoverResolves(model.coverImage, root, `${model.id} catalog cover and detail hero`);
       checkedCovers.add(model.coverImage);
     }
+    const familyBanner = model.coverLabel === '主机浮点推理参考'
+      ? familyBannerItems[model.catalogId] : null;
+    if (model.coverLabel === '主机浮点推理参考') {
+      assert.ok(familyBanner, `${model.id}: host inference cover needs a reviewed manifest entry`);
+      const bytes = fs.readFileSync(path.join(root, model.coverImage));
+      assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), familyBanner.banner.sha256,
+        `${model.id}: built cover must match its reviewed inference banner`);
+    }
     if (model.releaseStatus === 'data-pending') {
       assert.equal(model.dataPending, true, `${model.id}: pending models must set dataPending`);
       assert.deepEqual(Array.from(model.assets), [], `${model.id}: pending models must not publish artifacts`);
@@ -161,7 +172,13 @@ if (preview) {
         if (row.model_stage !== undefined) assert.ok(['float', 'quantized', 'board'].includes(row.model_stage), `${model.id}: unknown model stage`);
         if (row.concurrency !== undefined) assert.ok(Number.isInteger(row.concurrency) && row.concurrency > 0, `${model.id}: concurrency must be a positive integer from the source`);
       }
-      if (model.coverImage.startsWith('assets/models/pending-heroes/')) {
+      if (familyBanner) {
+        assert.equal(model.heroProvenance?.runtime, 'host-float-reference');
+        assert.equal(model.heroProvenance?.revision, familyBanner.model.conversion_source_commit);
+        assert.equal(model.heroProvenance?.input, `model_zoo_web/release/assets/${familyBanner.source_image.file}`);
+        assert.equal(model.heroProvenance?.predictionsSource, `model_zoo_web/release/assets/${familyBanner.predictions.file}`);
+        assert.match(model.heroProvenance?.note || '', /not a legacy artifact or board result/);
+      } else if (model.coverImage.startsWith('assets/models/pending-heroes/')) {
         const runtime = model.heroProvenance?.runtime;
         assert.ok(
           runtime === 'display-composition' || runtime === 'host-float-reference',

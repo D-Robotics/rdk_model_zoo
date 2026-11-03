@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "kind": "host-float-model-inference-banner",
+  "status": "passed",
+  "model": {
+    "catalog_id": "mobileone/mobileone/cls",
+    "name": "mobileone_s1.apple_in1k",
+    "variant": "s1-apple-in1k-224",
+    "source_checkpoint_sha256": "5d6c420683128b11cc5ea28fa9b7ce7857eaf579af9bf0dd38d6295af24c703a",
+    "onnx_sha256": "922339845fc559f1c2f0968cc586989b6db1e77ad846610629f1398a2674c6cf",
+    "source_weight_url": "https://huggingface.co/timm/mobileone_s1.apple_in1k/resolve/c4a13fe645a42cbb683439dfb1934c815155f2a0/model.safetensors",
+    "checkpoint_revision": "c4a13fe645a42cbb683439dfb1934c815155f2a0",
+    "native_source_commit": "6e8e913e772996c1a1f4fac7e25a8c7c1fe2e79c"
+  },
+  "runtime": {
+    "framework": "ONNX Runtime",
+    "version": "1.30.0",
+    "provider": "CPUExecutionProvider",
+    "threads": 2,
+    "single_inference_wall_seconds": 0.008512444794178009,
+    "timing_scope": "host reference only; not a benchmark"
+  },
+  "input": {
+    "name": "data",
+    "shape": [
+      1,
+      3,
+      224,
+      224
+    ],
+    "dtype": "float32",
+    "tensor_sha256": "cd3939b28850fc5fa117d79c68a534b546f8ff171c23e02f8eaa604c6715bdb9",
+    "contract": {
+      "size": 224,
+      "crop_pct": 0.875,
+      "mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "std": [
+        0.229,
+        0.224,
+        0.225
+      ],
+      "geometry": "resize_shorter_center_crop",
+      "interpolation": "pil_bicubic",
+      "color": "RGB",
+      "layout": "NCHW",
+      "dtype": "float32",
+      "class_count": 1000,
+      "output": "logits",
+      "batch": 1
+    }
+  },
+  "native_helpers": {
+    "utils/py_utils/classification.py": "4c27df0660be6961e67cc605fb9d211a0e08f7827ef4037e0e64702f54bc7dcf",
+    "utils/py_utils/classification_host.py": "5bca734a2fbc208c51e7fd0b418d968461f04d2d7ab0ff8a8b55176a24ee7a03",
+    "utils/py_utils/tensor_io.py": "b735ecb97cc42d28084fb374408ea51eb23a3d902cfd4875fae5bd4fb005f61f"
+  },
+  "postprocessing": "native topk_from_scores, softmax=True; stable descending class IDs",
+  "render": {
+    "style": "Existing MobileNet/ResNet light-gray, rounded photo and white Top-5 panel with blue bars",
+    "dimensions": [
+      1672,
+      941
+    ],
+    "rendered_predictions": [
+      {
+        "class_id": 323,
+        "label": "monarch, monarch butterfly, milkweed butterfly, Danaus plexippus",
+        "score": 0.951734721660614
+      },
+      {
+        "class_id": 321,
+        "label": "admiral",
+        "score": 0.002008159877732396
+      },
+      {
+        "class_id": 325,
+        "label": "sulphur butterfly, sulfur butterfly",
+        "score": 0.0006675184704363346
+      },
+      {
+        "class_id": 779,
+        "label": "school bus",
+        "score": 0.0005424339906312525
+      },
+      {
+        "class_id": 322,
+        "label": "ringlet, ringlet butterfly",
+        "score": 0.0005332067958079278
+      }
+    ]
+  },
+  "files": {
+    "source.webp": {
+      "file": "source.webp",
+      "sha256": "cc815e83eda3582ff4eb53088005bea03b66651fc3662dfacca90939414e700f",
+      "size_bytes": 435066
+    },
+    "outputs.npz": {
+      "file": "outputs.npz",
+      "sha256": "01c8e6e6082b4dd07867411d5a4d21866ca9d166124212684e0c6622d75c20eb",
+      "size_bytes": 7670
+    },
+    "predictions.json": {
+      "file": "predictions.json",
+      "sha256": "ab96edbb8979a4d41658451388882cdf2461d7fbd9c7881bbfa0c3dd10ec59d8",
+      "size_bytes": 1140
+    },
+    "banner.webp": {
+      "file": "banner.webp",
+      "sha256": "3111468ddab35468171c1e38f67c2fa4e69c2261f86db1a596e107496ce1c941",
+      "size_bytes": 190654
+    }
+  },
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "note": "Host float reference from the exact conversion ONNX; not a BIN/HBM board result.",
+  "renderer_sha256": "6d4aa2a848ca785ae11391b8fba4f84501fda5483ee4467c12801096932fdaf5"
+}
