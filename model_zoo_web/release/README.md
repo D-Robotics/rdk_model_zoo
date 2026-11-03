@@ -28,7 +28,7 @@ The execution source commit is separate from each model's frozen conversion
 source commit. The build verifies asset bytes and checkpoint/ONNX identities
 against the catalog before selecting a cover.
 
-These covers display `主机浮点推理参考` (host float inference reference).
+The retained cover metadata identifies these as host float inference references.
 One recorded source variant represents its family/task across variants and
 platforms. This does not establish BIN/HBM board behavior, dataset accuracy
 or performance; those checks remain `not-run`. DINOv2 colors are a PCA

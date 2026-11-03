@@ -32,7 +32,7 @@ test('a converted artifact has downloads and task-labelled unmeasured tiles with
     benchmark:{precision:'int8',performance:[],accuracy:[],endToEnd:[]},runtimeCommand:'python3 example.py --model-path new.bin'};
   const data={release:{compatibility:{hardware:'RDK X5'}}};
   const html=context.window.ModelDetail.render({model,models:[model],data});
-  assert.match(html,/模型可下载 · 板端待测/);
+  assert.doesNotMatch(html,/模型可下载 · 板端待测/);
   assert.match(html,/data-open-download/);
   assert.match(html,/python3 example.py --model-path new.bin/);
   assert.doesNotMatch(html,/data-ask-model/);

@@ -401,7 +401,7 @@
     const description = window.HubI18n?.locale === 'en' ? (m.descriptionEn || m.description) : m.description;
     const coverSrc = m.coverImage || (m.dataPending ? 'assets/pending-cover.svg' : '');
     const cover = coverSrc
-      ? `<figure class="mz-demo"><img src="${esc(coverSrc)}" alt="${esc(m.name)}">${m.releaseStatus === 'converted' ? `<figcaption>${esc(m.coverLabel || '任务示意图')}</figcaption>` : ''}</figure>`
+      ? `<figure class="mz-demo"><img src="${esc(coverSrc)}" alt="${esc(m.name)}"></figure>`
       : '';
     const benchmarkEmpty = `<div class="mz-benchmark-empty"><div><h3>暂无性能汇总</h3></div>${m.source ? external(m.source + '/evaluator', '查看评测说明') : ''}</div>`;
     const benchmarkBody = b
@@ -429,9 +429,7 @@
           : (m.dataPending
             ? `<span title="模型产物待发布"><button class="button" type="button" disabled>${icon('download')}获取模型</button></span>`
             : '')));
-    const kicker = m.releaseStatus === 'converted'
-      ? `<div class="mz-kicker"><span class="mz-task">${m.task}</span><span class="pending-badge converted-badge">模型可下载 · 板端待测</span></div>`
-      : m.dataPending
+    const kicker = m.dataPending
       ? `<div class="mz-kicker"><span class="mz-task">${m.task}</span><span class="pending-badge">数据待补充</span></div>`
       : `<span class="mz-task">${m.task}</span>`;
     const reportAction = m.reportDataUrl
