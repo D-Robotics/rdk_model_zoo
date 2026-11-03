@@ -230,26 +230,23 @@ def run(row, native, output, threads):
         if len(labels) != 91 or labels != row['labels']:
             raise ValueError('Faster R-CNN COCO vocabulary differs from its native labels')
         result_image, selected = overlay(photo, boxes, scores, ids, labels)
-        scale = max(1592/photo.width, 861/photo.height)
-        crop_width, crop_height = 1592/scale, 861/scale
+        scale = max(1672/photo.width, 941/photo.height)
+        crop_width, crop_height = 1672/scale, 941/scale
         crop = [(photo.width-crop_width)/2, (photo.height-crop_height)/2,
                 (photo.width+crop_width)/2, (photo.height+crop_height)/2]
         for prediction in selected:
             box = boxes[prediction['prediction_index']]
             if box[0] < crop[0] or box[1] < crop[1] or box[2] > crop[2] or box[3] > crop[3]:
                 raise ValueError('Use a wider source photograph to keep every displayed detection inside the banner')
-        rendered = ImageOps.fit(result_image, (1592, 861), Image.Resampling.LANCZOS)
-        banner = Image.new('RGB', (1672, 941), (236, 236, 238))
-        mask = Image.new('L', rendered.size)
-        ImageDraw.Draw(mask).rounded_rectangle((0, 0, rendered.width-1, rendered.height-1), radius=40, fill=255)
-        banner.paste(rendered, ((1672-rendered.width)//2, (941-rendered.height)//2), mask)
+        banner = ImageOps.fit(result_image, (1672, 941), Image.Resampling.LANCZOS)
         detections = [{'class_id': r['class_id'], 'label': r['label'], 'score': r['score'],
                        'box': boxes[r['prediction_index']].tolist()} for r in selected]
         raw.update(proposals=proposals, decoded_boxes=boxes, decoded_scores=scores, decoded_class_ids=ids)
         extra = {'detections': detections, 'confidence_threshold': .5,
                  'visualization': {'method': 'Exact conversion ONNX PartA, native RPN/RoIAlign, packed ONNX PartB and native tail',
                                    'proposals': count, 'rendered_predictions': selected,
-                                   'source_crop_xyxy': crop, 'rendered_size': [1592, 861]}}
+                                   'source_crop_xyxy': crop, 'rendered_size': [1672, 941],
+                                   'layout': 'full-bleed; corner radius is applied by site CSS'}}
     elif kind == 'segmentation-overlay':
         from utils.py_utils.yoloe26_geometry import letterbox
         from utils.py_utils.yoloe26_decode import decode_candidates, restore_masks
