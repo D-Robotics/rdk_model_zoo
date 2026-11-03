@@ -90,8 +90,7 @@
     const platformOrder = [...group.platforms].sort((a, b) => openRank(a) - openRank(b));
     const pending = group.members.every(member => member.dataPending);
     const thumb = `<img src="${esc(model.coverImage || 'assets/pending-cover.svg')}" alt="${esc(model.name)}" loading="lazy">`;
-    const converted = group.members.some(member => member.releaseStatus === 'converted') && !group.members.some(facets.isVerified);
-    const badge = pending ? '<span class="pending-badge">数据待补充</span>' : converted ? '<span class="pending-badge converted-badge">已转换</span>' : '';
+    const badge = pending ? '<span class="pending-badge">数据待补充</span>' : '';
     return `<article class="model-card${arriving ? ' is-arriving' : ''}${pending ? ' is-pending' : ''}" style="--i:${Math.min(index, 11)}"><a class="gallery-link" href="#model/${esc(openModel.id)}" aria-label="查看 ${esc(model.name)}，${esc(model.task)}" title="${esc(description)}"><div class="thumbnail" data-image="${esc(model.id)}">${thumb}</div><div class="reference-card-body"><h3>${esc(model.name)}</h3><p class="card-task">${esc(model.task)}${badge}</p><div class="card-platforms">${platformOrder.map(platform => `<span>${esc(platform)}</span>`).join('')}</div></div></a></article>`;
   }
 
