@@ -65,7 +65,11 @@ class ReleaseCatalogContractTests(unittest.TestCase):
     def test_rebuild_url_must_match_the_recorded_build_id(self):
         artifact = copy.deepcopy(self.platform["artifact"])
         self.validate_artifact(artifact)
-        base, filename = artifact["url"].rsplit("/", 1)
+        filename = artifact["url"].rsplit("/", 1)[-1]
+        base = (
+            f"https://{catalog.OSS_HOST}/models/ultralytics_yolo/yolo26/detect/"
+            f"{self.variant['size']}/{self.platform['platform']}"
+        )
         build_id = "20261001T0000Z-regression-r01"
         artifact["url"] = f"{base}/rebuilds/{build_id}/{filename}"
         artifact["release_manifest_url"] = f"{base}/rebuilds/{build_id}/release.json"

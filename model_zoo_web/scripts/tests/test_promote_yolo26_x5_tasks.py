@@ -55,10 +55,12 @@ class X5PromotionTests(unittest.TestCase):
         artifact = entry["artifact"]
         artifact.update(format="bin", march="bayes-e")
         # This fixture models the historical OSS publication, independently of
-        # the current Catalog's relocated companion URLs.
-        artifact["url"] = artifact["url"].replace("/s600/", "/x5/").replace(".hbm", ".bin")
-        base = artifact["url"].rsplit("/", 1)[0]
-        artifact.update(release_manifest_url=base + "/release.json", checksums_url=base + "/SHA256SUMS")
+        # the current Catalog's relocated model and companion URLs.
+        filename = artifact["url"].rsplit("/", 1)[-1].replace(".hbm", ".bin")
+        base = ("https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/"
+                f"ultralytics_yolo/yolo26/{task}/{size}/x5")
+        artifact.update(url=base + "/" + filename,
+                        release_manifest_url=base + "/release.json", checksums_url=base + "/SHA256SUMS")
         entry["reports"] = {"oe_conversion_url": base + "/oe_report.html"}
         report = {"target": {"platform": "x5"}, "provenance": {"artifact_sha256": artifact["sha256"]}}
         return entry, json.dumps(report).encode()

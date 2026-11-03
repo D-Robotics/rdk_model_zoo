@@ -35,7 +35,7 @@ or performance; those checks remain `not-run`. DINOv2 colors are a PCA
 projection of actual patch features, not semantic segmentation. Existing
 compatible covers are retained; unavailable models keep their placeholders.
 
-Deployment model URLs remain on their registered OSS or Archive paths.
+Public deployment model URLs use the verified Archive platform/sample paths.
 Public release/OE companions use
 `https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_<platform>/<source>/<model-stem>/`.
 Each directory contains `release.json`, the byte-preserved `release.source.json`,

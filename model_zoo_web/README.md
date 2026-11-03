@@ -18,7 +18,7 @@ New model submissions must follow [CONTRIBUTING.md](CONTRIBUTING.md).
 
 - `samples/` owns conversion, evaluation, and runtime code.
 - `model_zoo_web/data/` owns website metadata for released sample models.
-- OSS owns binaries, release manifests, checksums, and complete OE reports.
+- Archive serves deployment models, release manifests, checksums, and complete OE reports.
 
 Catalog records use this layout:
 
@@ -31,11 +31,17 @@ authored in Chinese and English at the task level and describe model
 architecture only. Deployment formats, model statistics, accuracy, and
 performance remain in their dedicated release fields.
 
-Public artifacts use stable OSS paths:
+Public deployment models use the verified Archive platform and sample directory:
 
 ```text
-models/<source>/<series>/<task>/<size>/<platform>/<artifact>
+https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_<platform>/<source>/<artifact>
 ```
+
+Release manifests and OE reports use the model-specific Archive `assets/`
+directory described in [CONTRIBUTING.md](CONTRIBUTING.md). Preserve the model's
+SHA-256, size, source versions, and original publication receipts when changing
+its download location. Public catalog and website validation reject OSS model
+downloads; historical OSS packages remain readable for receipt validation.
 
 Build dates, repository commits, and toolchain versions belong in release
 metadata rather than the object path.
@@ -91,7 +97,7 @@ displayed separately from model licenses; `scope: sample-code` does not
 declare the model's license.
 
 The model-detail view links an OE conversion report only when the imported
-release record supplies a reviewed public OSS URL. Missing reports keep the
+release record supplies a reviewed public Archive URL. Missing reports keep the
 non-interactive placeholder; do not add an empty `href`, a fake `#` target, or
 a link to local report payloads.
 
@@ -129,7 +135,7 @@ stage breakdown. Maximum-performance end-to-end records use every online CPU
 thread and must state the CPU governor and CPU/BPU frequencies explicitly.
 
 Compiled models, conversion outputs, and complete OE reports must not be
-committed here. Their stable OSS URLs and checksums are supplied through the
+committed here. Their stable Archive URLs and checksums are supplied through the
 reviewed catalog-generation step.
 
 ## Ask AI local preview

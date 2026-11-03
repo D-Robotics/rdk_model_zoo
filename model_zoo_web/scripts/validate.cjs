@@ -224,6 +224,9 @@ if (preview) {
     }
     for (const asset of model.assets || []) {
       assert(asset.url && asset.sha256 && asset.sizeBytes, `${model.id}: assets need url, sha256 and size_bytes`);
+      assert.match(asset.url,
+        /^https:\/\/archive\.d-robotics\.cc\/downloads\/rdk_model_zoo_web\//,
+        `${model.id}: published model downloads must use archive`);
     }
     if (model.reportDataUrl) {
       const dataPath = path.join(root, model.reportDataUrl);

@@ -74,7 +74,9 @@ model_zoo_web/data/vision/ultralytics_yolo/yolo26/detect.yaml
 - `node_modules/`、`__pycache__/` 和本地 workbench 文件。
 - AccessKey、Secret、临时签名 URL 或其他凭据。
 
-模型文件保留已登记的 OSS 或 Archive 下载地址。发布清单和 OE 报告统一放在
+公开模型下载统一使用已核验的 Archive 地址；`released` 和 `converted` 条目都遵守
+这一要求。迁移时先核对 Archive 文件大小与已登记 SHA-256，再修改下载地址。
+构建器和网站发布校验会拒绝 OSS 模型下载地址。发布清单和 OE 报告统一放在
 Archive 的 Web 资产区，按平台、Sample 和模型文件名区分：
 
 ```text
@@ -93,7 +95,7 @@ rdk_model_zoo_web/
 对象路径中不加入日期、Git 提交或 OE 版本层级。构建日期、提交和工具链版本记录在
 发布元数据中。
 
-Workbench 的原始冻结发布包及既有 OSS 模型仍使用 `models/` 层级：
+Workbench 的原始冻结发布包及历史 OSS 上传回执仍使用 `models/` 层级：
 `https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/...`。
 Archive 按服务器已有的板卡 / Sample 目录存放：
 `https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_<platform>/<source>/<filename>`，

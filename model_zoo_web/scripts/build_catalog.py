@@ -29,6 +29,7 @@ BUILD_ROOT = WEB_ROOT / "build"
 CATALOG_PATH = BUILD_ROOT / "catalog.json"
 META_PATH = BUILD_ROOT / "catalog.meta.json"
 OSS_HOST = "rdk-model-zoo.oss-cn-beijing.aliyuncs.com"
+ARCHIVE_BASE = "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web"
 ARTIFACT_ROOTS = {
     OSS_HOST: "/models",
     "archive.d-robotics.cc": "/downloads/rdk_model_zoo_web",
@@ -1264,6 +1265,15 @@ def build_catalog() -> tuple[bytes, bytes]:
         with source_path.open(encoding="utf-8") as handle:
             record = require_mapping(yaml.safe_load(handle), source_path.relative_to(ROOT).as_posix())
         normalized = validate_record(record, source_path)
+        # Legacy OSS packages remain readable for historical receipt validation.
+        # Every model offered by the public catalog must be served by Archive.
+        for variant in normalized["variants"]:
+            for platform in variant["platforms"]:
+                if not platform["artifact"]["url"].startswith(f"{ARCHIVE_BASE}/"):
+                    raise CatalogError(
+                        f"{normalized['id']}/{variant['size']}/{platform['platform']}: "
+                        "public model downloads must use archive; verify the mirrored file before publication"
+                    )
         if normalized["id"] in seen_ids:
             raise CatalogError(f"duplicate model id: {normalized['id']}")
         seen_ids.add(normalized["id"])
