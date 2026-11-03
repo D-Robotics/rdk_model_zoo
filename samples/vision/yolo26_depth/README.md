@@ -132,3 +132,9 @@ Use the model, runtime, conversion and evaluator guides above for artifact prepa
 
 Code follows the repository [license](../../../LICENSE). Upstream Ultralytics
 weights and SUN RGB-D data retain their own terms; neither is bundled here.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Independent converted profiles and explicit commands are listed in [model preparation](model/README.md). Board accuracy and performance are not measured yet.

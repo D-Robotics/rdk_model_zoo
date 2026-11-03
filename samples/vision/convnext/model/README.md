@@ -130,6 +130,9 @@ These independent profiles passed conversion, complete OE collection and actual 
 | s100 | `timm-nano-d1h-in1k-s-int16-o1-20261103` | model | 200 |
 | s100p | `timm-nano-d1h-in1k-s-int16-o1-20261103` | model | 200 |
 | s600 | `timm-nano-d1h-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-pico-d1-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-pico-d1-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-pico-d1-in1k-s-int16-o1-20261103` | model | 200 |
 
 ```bash
 python3 samples/vision/convnext/model/download.py --target s100 --variant timm-femto-d1-in1k-s-int16-o1-20261103

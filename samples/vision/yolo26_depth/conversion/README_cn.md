@@ -225,3 +225,13 @@ max/0.9999 校准将 lite n 提高到 0.9975，未达到参考记录门槛。
 使用固定 Ultralytics 8.4.105 导出 n/log；`validate_export.py --weights WEIGHT --onnx ONNX --image IMAGE1 --image IMAGE2 --image IMAGE3 --output /work/host-smoke.json` 比较原模型、原生 log 边界与 ONNX，另含 seed-0 输入。本轮采用200张训练图、INT16 和 O1，保留首轮 INT8 尝试记录。
 
 在匹配 OE 3.7.0 容器中从工作目录运行 `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml`，每件模型分别编译。板端各项数据仍为 `not-run`。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
+
+- `s100p / n-int16-20261103-o1 / model`: [n_int16_20261103_o1_s100p_model.yaml](recipes/n_int16_20261103_o1_s100p_model.yaml)
+
+原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。

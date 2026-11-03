@@ -120,12 +120,12 @@ BINDING_TABLE = _with_converted_bindings(
 
 # BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
 from dataclasses import replace as _with_s_converted_bindings
-SUPPORTED_VARIANTS = tuple(dict.fromkeys((*SUPPORTED_VARIANTS, *('timm-femto-d1-in1k-s-int16-o1-20261103', 'timm-nano-d1h-in1k-s-int16-o1-20261103'))))
+SUPPORTED_VARIANTS = tuple(dict.fromkeys((*SUPPORTED_VARIANTS, *('timm-femto-d1-in1k-s-int16-o1-20261103', 'timm-nano-d1h-in1k-s-int16-o1-20261103', 'timm-pico-d1-in1k-s-int16-o1-20261103'))))
 BINDING_TABLE = _with_s_converted_bindings(
     BINDING_TABLE,
     manifest_rows=tuple(dict.fromkeys((*BINDING_TABLE.manifest_rows, ('s', 'convnext')))),
     s_filename_targets=('s100', 's100p', 's600'),
-    filename_variants={**BINDING_TABLE.filename_variants, **{'s100/convnext_femto_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-femto-d1-in1k-s-int16-o1-20261103', 's100p/convnext_femto_d1_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-femto-d1-in1k-s-int16-o1-20261103', 's600/convnext_femto_d1_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-femto-d1-in1k-s-int16-o1-20261103', 's100/convnext_nano_d1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-nano-d1h-in1k-s-int16-o1-20261103', 's100p/convnext_nano_d1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-nano-d1h-in1k-s-int16-o1-20261103', 's600/convnext_nano_d1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-nano-d1h-in1k-s-int16-o1-20261103'}},
+    filename_variants={**BINDING_TABLE.filename_variants, **{'s100/convnext_femto_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-femto-d1-in1k-s-int16-o1-20261103', 's100p/convnext_femto_d1_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-femto-d1-in1k-s-int16-o1-20261103', 's600/convnext_femto_d1_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-femto-d1-in1k-s-int16-o1-20261103', 's100/convnext_nano_d1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-nano-d1h-in1k-s-int16-o1-20261103', 's100p/convnext_nano_d1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-nano-d1h-in1k-s-int16-o1-20261103', 's600/convnext_nano_d1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-nano-d1h-in1k-s-int16-o1-20261103', 's100/convnext_pico_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-pico-d1-in1k-s-int16-o1-20261103', 's100p/convnext_pico_d1_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-pico-d1-in1k-s-int16-o1-20261103', 's600/convnext_pico_d1_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-pico-d1-in1k-s-int16-o1-20261103'}},
     facts={**BINDING_TABLE.facts,
         ('timm-femto-d1-in1k-s-int16-o1-20261103', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
         ('timm-femto-d1-in1k-s-int16-o1-20261103', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
@@ -133,6 +133,9 @@ BINDING_TABLE = _with_s_converted_bindings(
         ('timm-nano-d1h-in1k-s-int16-o1-20261103', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
         ('timm-nano-d1h-in1k-s-int16-o1-20261103', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
         ('timm-nano-d1h-in1k-s-int16-o1-20261103', 's600'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-pico-d1-in1k-s-int16-o1-20261103', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-pico-d1-in1k-s-int16-o1-20261103', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-pico-d1-in1k-s-int16-o1-20261103', 's600'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
     },
 )
 # END S CONVERTED ARTIFACT BINDINGS 20261103

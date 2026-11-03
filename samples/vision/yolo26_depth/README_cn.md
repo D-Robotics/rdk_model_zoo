@@ -123,3 +123,9 @@ pre_process → 前向推理 → post_process，不另写一套处理。
 ## 许可证
 
 代码遵循仓库[许可证](../../../LICENSE)。Ultralytics 权重和 SUN RGB-D 数据保留各自条款，本目录不附带二者。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+本轮新增的独立规格和显式命令见 [模型准备](model/README_cn.md)。板端精度与性能尚未实测。

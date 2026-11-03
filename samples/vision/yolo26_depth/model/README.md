@@ -140,3 +140,20 @@ python3 samples/vision/yolo26_depth/runtime/python/main.py --target s100 --asset
 ```
 
 Calibration uses 200 independent COCO training photographs. Board smoke, accuracy, Runtime 1/2 and C++ 1/2 are `not-run`. Source, checkpoint, ONNX, effective configuration, native recipe and complete OE identities are recorded in [converted.json](../conversion/converted.json).
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+These independent profiles passed conversion, complete OE collection and actual HBM metadata binding. Source weights, graphs, per-target recipes, calibration counts and digests are in [converted_targets_20261103.json](../conversion/converted_targets_20261103.json).
+
+| Target | Native variant | Components | Calibration photographs |
+| --- | --- | --- | ---: |
+| s100p | `n-int16-20261103-o1` | model | 200 |
+
+```bash
+python3 samples/vision/yolo26_depth/model/download.py --target s100p --asset-id s:yolo26_depth:nash-m/yolo26n_depth_nashm_768x768_nv12_int16_20261103_o1.hbm
+python3 samples/vision/yolo26_depth/runtime/python/main.py --target s100p --asset-id s:yolo26_depth:nash-m/yolo26n_depth_nashm_768x768_nv12_int16_20261103_o1.hbm --model-path /path/to/yolo26n_depth_nashm_768x768_nv12_int16_20261103_o1.hbm --test-img samples/vision/yolo26_depth/test_data/bus.jpg
+```
+
+Substitute the actual file paths. Multi-component tasks require every component together. Historical defaults and measurements retain their original identities. Board smoke, dataset accuracy, Runtime 1/2 and C++ 1/2 are `not-run` for these profiles.

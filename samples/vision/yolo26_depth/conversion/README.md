@@ -247,3 +247,13 @@ This independent variant targets S100/nash-e with O1. Existing recipes remain av
 Export n/log with fixed Ultralytics 8.4.105. `validate_export.py --weights WEIGHT --onnx ONNX --image IMAGE1 --image IMAGE2 --image IMAGE3 --output /work/host-smoke.json` compares source, native log boundary and ONNX, plus seed-0 input. This run uses 200 photographs, INT16 and O1; the earlier INT8 attempt is retained.
 
 From the working directory in the matching OE 3.7.0 container, run `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml` for each component. Board checks remain `not-run`.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100p / n-int16-20261103-o1 / model`: [n_int16_20261103_o1_s100p_model.yaml](recipes/n_int16_20261103_o1_s100p_model.yaml)
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.
