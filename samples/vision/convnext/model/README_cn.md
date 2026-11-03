@@ -125,10 +125,11 @@ python3 samples/vision/convnext/runtime/python/main.py --target x5 --variant tim
 | 目标 | Native variant | 组件 | 校准图片 |
 | --- | --- | --- | ---: |
 | s100 | `timm-femto-d1-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-femto-d1-in1k-s-int16-o1-20261103` | model | 200 |
 
 ```bash
 python3 samples/vision/convnext/model/download.py --target s100 --variant timm-femto-d1-in1k-s-int16-o1-20261103
-python3 samples/vision/convnext/runtime/python/main.py --target s100 --variant timm-femto-d1-in1k-s-int16-o1-20261103 --asset-id s:convnext:s100/convnext_femto_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --model-path /path/to/convnext_femto_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --test-img /path/to/image.jpg
+python3 samples/vision/convnext/runtime/python/main.py --target s100 --variant timm-femto-d1-in1k-s-int16-o1-20261103 --asset-id s:convnext:s100/convnext_femto_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --model-path /path/to/convnext_femto_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --test-img samples/vision/convnext/test_data/cheetah.JPEG
 ```
 
 命令中的路径需要替换为实际文件。每套多组件模型须同时准备全部组件。旧默认与既有指标保留原身份；本轮规格的板端 smoke、数据集精度、Runtime 1/2 并发和 C++ 1/2 流均为 `not-run`。

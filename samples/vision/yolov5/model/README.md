@@ -89,3 +89,21 @@ python3 -m samples.vision.yolov5.runtime.python.main --target s100 --variant n-v
 
 These 640×640 profiles use split UINT8 Y/UV inputs and three NHWC float32 raw heads. Python bindings and host parity are checked; board inference, accuracy and performance are not-run. Historical 672×672 C++ bindings are incompatible. Exact URLs, SHA-256 and model license are in `docs/release/s/models.yaml` and the public release manifest.
 <!-- /completed-s-converted-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+These independent profiles passed conversion, complete OE collection and actual HBM metadata binding. Source weights, graphs, per-target recipes, calibration counts and digests are in [converted_targets_20261103.json](../conversion/converted_targets_20261103.json).
+
+| Target | Native variant | Components | Calibration photographs |
+| --- | --- | --- | ---: |
+| s100p | `n-v7.0-native-20261102-s100p-o1-20261103` | model | 200 |
+| s100p | `s-v2.0-native-20261102-s100p-o1-20261103` | model | 200 |
+
+```bash
+python3 samples/vision/yolov5/model/download.py --target s100p --asset-id s:yolov5:s100p/yolov5n_tag_v7.0_native_640x640_nashm_nv12_20261103_o1.hbm
+python3 samples/vision/yolov5/runtime/python/main.py --target s100p --variant n-v7.0-native-20261102-s100p-o1-20261103 --asset-id s:yolov5:s100p/yolov5n_tag_v7.0_native_640x640_nashm_nv12_20261103_o1.hbm --model-path /path/to/yolov5n_tag_v7.0_native_640x640_nashm_nv12_20261103_o1.hbm --test-img samples/vision/yolov5/test_data/kite.jpg
+```
+
+Substitute the actual file paths. Multi-component tasks require every component together. Historical defaults and measurements retain their original identities. Board smoke, dataset accuracy, Runtime 1/2 and C++ 1/2 are `not-run` for these profiles.

@@ -86,3 +86,19 @@ python3 samples/vision/googlenet/conversion/export.py \
 ImageNet mean/std；不引用上游其他预处理条件下的精度。S 校准采用归一化后的 ONNX
 输入域张量；按[公共分类流程](../../../../utils/tools/classification_conversion/README.md)
 逐芯片生成 PTQ、BC、完整 NodeInfo 和最终 HBM/OE。板端数据保持 `not-run`。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
+
+- `s100 / torchvision-021-crop224-int16-o1-20261103 / model`: [torchvision_021_crop224_int16_o1_20261103_s100_model.yaml](recipes/torchvision_021_crop224_int16_o1_20261103_s100_model.yaml)
+- `s100p / torchvision-021-crop224-int16-o1-20261103 / model`: [torchvision_021_crop224_int16_o1_20261103_s100p_model.yaml](recipes/torchvision_021_crop224_int16_o1_20261103_s100p_model.yaml)
+- `s600 / torchvision-021-crop224-int16-o1-20261103 / model`: [torchvision_021_crop224_int16_o1_20261103_s600_model.yaml](recipes/torchvision_021_crop224_int16_o1_20261103_s600_model.yaml)
+
+S 校准必须使用 ONNX 输入域的归一化 `.npy`；NV12 Runtime 的 mean/scale 仍写在配方中。公共工具的 `--target` 和 `--normalization-json` 从同一 checkpoint 导出记录读取实际归一化。
+
+[Shared classification workflow](../../../../utils/tools/classification_conversion/README.md).
+
+原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。

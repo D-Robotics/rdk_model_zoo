@@ -43,6 +43,12 @@ ASSET_REFERENCES = {
 TARGETS = ("x5",)
 
 
+# BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
+VARIANTS = tuple(dict.fromkeys((*VARIANTS, *('torchvision-021-crop224-int16-o1-20261103',))))
+TARGETS = tuple(dict.fromkeys((*TARGETS, *('s100', 's100p', 's600'))))
+ASSET_REFERENCES.update({('s100', 'torchvision-021-crop224-int16-o1-20261103'): 's:googlenet:s100/googlenet_tv021_crop224_nashe_int16_20261103_o1.hbm', ('s100p', 'torchvision-021-crop224-int16-o1-20261103'): 's:googlenet:s100p/googlenet_tv021_crop224_nashm_int16_20261103_o1.hbm', ('s600', 'torchvision-021-crop224-int16-o1-20261103'): 's:googlenet:s600/googlenet_tv021_crop224_nashp_int16_20261103_o1.hbm'})
+# END S CONVERTED ARTIFACT BINDINGS 20261103
+
 def asset_reference(target: str, variant: str = 'googlenet') -> str:
     """Return the exact manifest reference for a supported target/variant."""
 

@@ -94,3 +94,19 @@ No upstream accuracy is claimed for this geometry. Use normalized ONNX-domain
 S tensors and the [shared classification workflow](../../../../utils/tools/classification_conversion/README.md)
 for independent per-march PTQ, BC, full NodeInfo and final HBM/OE. Board
 validation remains `not-run`.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100 / torchvision-021-crop224-int16-o1-20261103 / model`: [torchvision_021_crop224_int16_o1_20261103_s100_model.yaml](recipes/torchvision_021_crop224_int16_o1_20261103_s100_model.yaml)
+- `s100p / torchvision-021-crop224-int16-o1-20261103 / model`: [torchvision_021_crop224_int16_o1_20261103_s100p_model.yaml](recipes/torchvision_021_crop224_int16_o1_20261103_s100p_model.yaml)
+- `s600 / torchvision-021-crop224-int16-o1-20261103 / model`: [torchvision_021_crop224_int16_o1_20261103_s600_model.yaml](recipes/torchvision_021_crop224_int16_o1_20261103_s600_model.yaml)
+
+S PTQ consumes normalized ONNX-domain `.npy` tensors. NV12 runtime mean/scale remain in the recipe. The shared producer reads checkpoint normalization through `--target` and `--normalization-json`.
+
+[Shared classification workflow](../../../../utils/tools/classification_conversion/README.md).
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

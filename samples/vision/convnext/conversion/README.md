@@ -96,6 +96,7 @@ Use the model/tag, pinned checkpoint and matching YAML from `converted.json`; us
 Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
 
 - `s100 / timm-femto-d1-in1k-s-int16-o1-20261103 / model`: [timm_femto_d1_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_femto_d1_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-femto-d1-in1k-s-int16-o1-20261103 / model`: [timm_femto_d1_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_femto_d1_in1k_s_int16_o1_20261103_s100p_model.yaml)
 
 S PTQ consumes normalized ONNX-domain `.npy` tensors. NV12 runtime mean/scale remain in the recipe. The shared producer reads checkpoint normalization through `--target` and `--normalization-json`.
 

@@ -51,8 +51,8 @@ ASSET_REFERENCES.update({('x5', 'timm-femto-d1-in1k'): 'x5:convnext:convnext_fem
 
 # BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
 VARIANTS = tuple(dict.fromkeys((*VARIANTS, *('timm-femto-d1-in1k-s-int16-o1-20261103',))))
-TARGETS = tuple(dict.fromkeys((*TARGETS, *('s100',))))
-ASSET_REFERENCES.update({('s100', 'timm-femto-d1-in1k-s-int16-o1-20261103'): 's:convnext:s100/convnext_femto_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm'})
+TARGETS = tuple(dict.fromkeys((*TARGETS, *('s100', 's100p'))))
+ASSET_REFERENCES.update({('s100', 'timm-femto-d1-in1k-s-int16-o1-20261103'): 's:convnext:s100/convnext_femto_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-femto-d1-in1k-s-int16-o1-20261103'): 's:convnext:s100p/convnext_femto_d1_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm'})
 # END S CONVERTED ARTIFACT BINDINGS 20261103
 
 def asset_reference(target: str, variant: str = 'atto') -> str:

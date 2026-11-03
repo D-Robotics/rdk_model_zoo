@@ -90,6 +90,7 @@ hb_mapper makertbin --model-type onnx --config compile.yaml
 每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
 
 - `s100 / timm-femto-d1-in1k-s-int16-o1-20261103 / model`: [timm_femto_d1_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_femto_d1_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-femto-d1-in1k-s-int16-o1-20261103 / model`: [timm_femto_d1_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_femto_d1_in1k_s_int16_o1_20261103_s100p_model.yaml)
 
 S 校准必须使用 ONNX 输入域的归一化 `.npy`；NV12 Runtime 的 mean/scale 仍写在配方中。公共工具的 `--target` 和 `--normalization-json` 从同一 checkpoint 导出记录读取实际归一化。
 

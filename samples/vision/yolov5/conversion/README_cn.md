@@ -543,3 +543,14 @@ UNIT_CONV_FOR_/model.8/m/m.0/Add                    BPU  id(0)     Conv         
 - 没有锁定上游 commit、权重文件、exporter、校准生成器或 S 转换配方。
 - X5 Python 与 S 的物理张量协议、NMS 和反量化不同，不能用一段共享转换说明替代 target-specific 元数据。
 - 清单发布 SHA-256 未知。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
+
+- `s100p / n-v7.0-native-20261102-s100p-o1-20261103 / model`: [n_v7.0_native_20261102_s100p_o1_20261103_s100p_model.yaml](recipes/n_v7.0_native_20261102_s100p_o1_20261103_s100p_model.yaml)
+- `s100p / s-v2.0-native-20261102-s100p-o1-20261103 / model`: [s_v2.0_native_20261102_s100p_o1_20261103_s100p_model.yaml](recipes/s_v2.0_native_20261102_s100p_o1_20261103_s100p_model.yaml)
+
+原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。

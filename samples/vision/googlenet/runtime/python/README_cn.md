@@ -26,7 +26,7 @@ python/
 <a id="environment"></a>
 ## 环境
 
-X5 需要匹配的 `hbm_runtime`、NumPy、OpenCV 与 PyYAML。主机导入/help/list/dry-run 无需板端 SDK。主机 Python 依赖见 `samples/vision/googlenet/requirements-host.txt`。
+所选 X5/S100/S100P/S600 需要各自匹配的 `hbm_runtime`、NumPy、OpenCV 与 PyYAML。主机导入/help/list/dry-run 无需板端 SDK。主机 Python 依赖见 `samples/vision/googlenet/requirements-host.txt`。
 
 [环境要求](../../README_cn.md#prerequisites)。使用包含匹配 `hbm_runtime` 的板端镜像。
 
@@ -129,4 +129,4 @@ print(result.class_ids, result.scores, result.labels)
 <a id="troubleshooting"></a>
 ## 排障
 
-缺模型：先显式准备。`model_path requires --asset-id`：补全精确引用。未知板卡或目标不匹配：主机用 `--dry-run --target x5`，真实推理只在匹配 X5 上执行。S 选择失败：没有发布制品。张量不匹配：核对制品引用、目标与张量 元数据 是否符合样例契约。
+缺模型：先显式准备。`model_path requires --asset-id`：补全精确引用。未知板卡或目标不匹配：主机用 `--dry-run --target x5`，真实推理只在匹配目标上执行。S 选择失败时核对独立 variant 和清单中的精确制品身份。张量不匹配：核对制品引用、目标与张量 元数据 是否符合样例契约。

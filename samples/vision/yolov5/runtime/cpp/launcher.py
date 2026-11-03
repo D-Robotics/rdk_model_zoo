@@ -79,8 +79,9 @@ def main(argv=None) -> int:
         if args.list_models:
             for asset in binding.list_available_assets(args.target):
                 if asset.group == "s" and any(
-                    binding.converted_filename(target, variant) == asset.filename
-                    for target in ("s100", "s600") for variant in binding.CONVERTED_VARIANTS
+                    filename == asset.filename
+                    for target in ("s100", "s100p", "s600")
+                    for variant, filename in binding._converted_candidates(target)
                 ):
                     continue
                 print(asset.reference)

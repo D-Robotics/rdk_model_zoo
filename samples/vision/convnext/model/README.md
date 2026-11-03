@@ -125,10 +125,11 @@ These independent profiles passed conversion, complete OE collection and actual 
 | Target | Native variant | Components | Calibration photographs |
 | --- | --- | --- | ---: |
 | s100 | `timm-femto-d1-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-femto-d1-in1k-s-int16-o1-20261103` | model | 200 |
 
 ```bash
 python3 samples/vision/convnext/model/download.py --target s100 --variant timm-femto-d1-in1k-s-int16-o1-20261103
-python3 samples/vision/convnext/runtime/python/main.py --target s100 --variant timm-femto-d1-in1k-s-int16-o1-20261103 --asset-id s:convnext:s100/convnext_femto_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --model-path /path/to/convnext_femto_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --test-img /path/to/image.jpg
+python3 samples/vision/convnext/runtime/python/main.py --target s100 --variant timm-femto-d1-in1k-s-int16-o1-20261103 --asset-id s:convnext:s100/convnext_femto_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --model-path /path/to/convnext_femto_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --test-img samples/vision/convnext/test_data/cheetah.JPEG
 ```
 
 Substitute the actual file paths. Multi-component tasks require every component together. Historical defaults and measurements retain their original identities. Board smoke, dataset accuracy, Runtime 1/2 and C++ 1/2 are `not-run` for these profiles.

@@ -114,3 +114,9 @@ python3 -m samples.vision.yolov5.runtime.python.main --target s100 --variant n-v
 
 These 640×640 profiles use split UINT8 Y/UV inputs and three NHWC float32 raw heads. Python bindings and host parity are checked; board inference, accuracy and performance are not-run. Historical 672×672 C++ bindings are incompatible. Exact URLs, SHA-256 and model license are in `docs/release/s/models.yaml` and the public release manifest.
 <!-- /completed-s-converted-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Independent converted profiles and explicit commands are listed in [model preparation](model/README.md). Board accuracy and performance are not measured yet.

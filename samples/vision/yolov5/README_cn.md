@@ -114,3 +114,9 @@ python3 -m samples.vision.yolov5.runtime.python.main --target s100 --variant n-v
 
 这些 640×640 规格使用拆分 UINT8 Y/UV 输入和三个 NHWC float32 raw head。已核对 Python 绑定和主机对照；板端推理、精度和性能均为 not-run。历史 672×672 C++ 绑定不适用。精确 URL、SHA-256 和模型许可见 `docs/release/s/models.yaml` 及公开 release 清单。
 <!-- /completed-s-converted-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+本轮新增的独立规格和显式命令见 [模型准备](model/README_cn.md)。板端精度与性能尚未实测。

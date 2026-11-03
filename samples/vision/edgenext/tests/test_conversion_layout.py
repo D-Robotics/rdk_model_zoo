@@ -121,7 +121,7 @@ class RecipeConsistencyTests(unittest.TestCase):
         self.assertEqual(
             {v for v in BINDING_TABLE.filename_variants.values() if not v.endswith("-20261103")}, set(VARIANTS) | set(_CONVERTED_VARIANTS)
         )
-        self.assertEqual(len(list_available_assets("auto")), 4 + len(_CONVERTED_MODELS))
+        self.assertEqual(len([r for r in list_available_assets("auto") if not r.variant.endswith("-20261103")]), 4 + len(_CONVERTED_MODELS))
 
     def test_int16_placement_counts_are_pinned(self):
         """EdgeNeXt places its cross-covariance-attention (xca) Softmax

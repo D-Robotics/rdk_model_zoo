@@ -78,7 +78,7 @@ python3 -m samples.vision.modnet.model.download --target x5 \
 
 ```bash
 python3 samples/vision/modnet/model/download.py --target s100 --asset-id s:modnet:s100/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm
-python3 samples/vision/modnet/runtime/python/main.py --target s100 --asset-id s:modnet:s100/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm --model-path /path/to/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm --test-img /path/to/image.jpg
+python3 samples/vision/modnet/runtime/python/main.py --target s100 --asset-id s:modnet:s100/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm --model-path /path/to/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm --test-img samples/vision/modnet/test_data/person.jpg
 ```
 
 命令中的路径需要替换为实际文件。每套多组件模型须同时准备全部组件。旧默认与既有指标保留原身份；本轮规格的板端 smoke、数据集精度、Runtime 1/2 并发和 C++ 1/2 流均为 `not-run`。

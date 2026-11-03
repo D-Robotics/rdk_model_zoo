@@ -89,3 +89,21 @@ python3 -m samples.vision.yolov5.runtime.python.main --target s100 --variant n-v
 
 这些 640×640 规格使用拆分 UINT8 Y/UV 输入和三个 NHWC float32 raw head。已核对 Python 绑定和主机对照；板端推理、精度和性能均为 not-run。历史 672×672 C++ 绑定不适用。精确 URL、SHA-256 和模型许可见 `docs/release/s/models.yaml` 及公开 release 清单。
 <!-- /completed-s-converted-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+这些独立规格已完成转换、完整 OE 和实际 HBM 接口核验。源权重、ONNX、每目标配置、校准数量和摘要见 [converted_targets_20261103.json](../conversion/converted_targets_20261103.json)。
+
+| 目标 | Native variant | 组件 | 校准图片 |
+| --- | --- | --- | ---: |
+| s100p | `n-v7.0-native-20261102-s100p-o1-20261103` | model | 200 |
+| s100p | `s-v2.0-native-20261102-s100p-o1-20261103` | model | 200 |
+
+```bash
+python3 samples/vision/yolov5/model/download.py --target s100p --asset-id s:yolov5:s100p/yolov5n_tag_v7.0_native_640x640_nashm_nv12_20261103_o1.hbm
+python3 samples/vision/yolov5/runtime/python/main.py --target s100p --variant n-v7.0-native-20261102-s100p-o1-20261103 --asset-id s:yolov5:s100p/yolov5n_tag_v7.0_native_640x640_nashm_nv12_20261103_o1.hbm --model-path /path/to/yolov5n_tag_v7.0_native_640x640_nashm_nv12_20261103_o1.hbm --test-img samples/vision/yolov5/test_data/kite.jpg
+```
+
+命令中的路径需要替换为实际文件。每套多组件模型须同时准备全部组件。旧默认与既有指标保留原身份；本轮规格的板端 smoke、数据集精度、Runtime 1/2 并发和 C++ 1/2 流均为 `not-run`。

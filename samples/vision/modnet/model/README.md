@@ -78,7 +78,7 @@ These independent profiles passed conversion, complete OE collection and actual 
 
 ```bash
 python3 samples/vision/modnet/model/download.py --target s100 --asset-id s:modnet:s100/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm
-python3 samples/vision/modnet/runtime/python/main.py --target s100 --asset-id s:modnet:s100/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm --model-path /path/to/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm --test-img /path/to/image.jpg
+python3 samples/vision/modnet/runtime/python/main.py --target s100 --asset-id s:modnet:s100/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm --model-path /path/to/modnet_photographic_portrait_512x512_rgb_nashe_20261103_o1.hbm --test-img samples/vision/modnet/test_data/person.jpg
 ```
 
 Substitute the actual file paths. Multi-component tasks require every component together. Historical defaults and measurements retain their original identities. Board smoke, dataset accuracy, Runtime 1/2 and C++ 1/2 are `not-run` for these profiles.

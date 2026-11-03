@@ -54,7 +54,7 @@ googlenet/
 <a id="support-matrix"></a>
 ## 支持矩阵
 
-下表列出本 Sample 已发布的模型；`—` 表示该组合未发布。
+下表说明历史 X5 默认规格；`—` 表示该历史规格未发布。独立转换的 S 规格见[模型准备](model/README_cn.md)。
 
 | 模型 | 输入 | X5 | S100 | S100P | S600 |
 | --- | --- | --- | --- | --- | --- |
@@ -62,8 +62,7 @@ googlenet/
 
 运行时覆盖：Python CLI 通过 `--target auto|x5` 和 `--variant googlenet` 运行
 已发布的组合；CLI 小写 ID 映射到准确的发布文件名
-`googlenet_224x224_nv12.bin`（文件名大小写保留）。`--target s100`、`s100p`、
-`s600` 不会解析出任何资产。本 Sample 不提供 C++ 运行时。
+`googlenet_224x224_nv12.bin`（文件名大小写保留）。历史 `googlenet` variant 没有 S 制品；新 S 规格使用各自显式 variant 与 target。本 Sample 不提供 C++ 运行时。
 
 <a id="prerequisites"></a>
 ## 前提
@@ -123,3 +122,9 @@ rank 1 为 class 14（indigo bunting）](./test_data/inference.png)
 ## 许可
 
 Python 代码遵循 Apache-2.0。再分发前请遵循转换材料中的原始声明，并核对上游模型与权重许可。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+本轮新增的独立规格和显式命令见 [模型准备](model/README_cn.md)。板端精度与性能尚未实测。

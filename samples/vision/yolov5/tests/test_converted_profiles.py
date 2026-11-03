@@ -21,7 +21,7 @@ class ConvertedProfileTests(unittest.TestCase):
         rows = list(self.original(group, consumer))
         if consumer == 'yolov5':
             for target in (('x5',) if group == 'x5' else ('s100', 's600')):
-                for variant in cli.CONVERTED_VARIANTS:
+                for variant in cli._HISTORICAL_CONVERTED_VARIANTS:
                     filename = cli.converted_filename(target, variant)
                     if filename not in {a.filename for a in rows}:
                         rows.append(Asset(group, consumer, filename, 'bin' if group == 'x5' else 'hbm',
@@ -43,10 +43,21 @@ class ConvertedProfileTests(unittest.TestCase):
             for t in ('s100','s600'):
                 self.assertEqual(cli.resolve_selection(t).variant,'x-672')
             for target in ('x5','s100','s600'):
-                for v in cli.CONVERTED_VARIANTS:
+                for v in cli._HISTORICAL_CONVERTED_VARIANTS:
                     selected = cli.resolve_selection(target,variant=v)
                     self.assertEqual(selected.asset.filename,cli.converted_filename(target,v))
                     self.assertEqual(cli.resolve_selection(target,asset_id=selected.asset.reference).variant,v)
+
+    def test_target_specific_profiles_resolve_only_their_recorded_target(self):
+        for (target, variant), filename in cli.CONVERTED_PROFILE_FILES.items():
+            selected = cli.resolve_selection(target, variant=variant)
+            self.assertEqual(selected.asset.filename, filename)
+            self.assertEqual(cli.resolve_selection(target, asset_id=selected.asset.reference), selected)
+            detection.bind_model(selected, self.metadata(target))
+            for other in ('x5', 's100', 's100p', 's600'):
+                if other != target and (other, variant) not in cli.CONVERTED_PROFILE_FILES:
+                    with self.assertRaises(ValueError):
+                        cli.resolve_selection(other, variant=variant)
 
     def test_float_heads_ignore_quant_descriptors_and_reject_integer_storage(self):
         with patch.object(cli,'list_assets',side_effect=self.rows):

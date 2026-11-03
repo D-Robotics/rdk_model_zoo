@@ -543,3 +543,14 @@ UNIT_CONV_FOR_/model.8/m/m.0/Add                    BPU  id(0)     Conv         
 - No pinned upstream commit, checkpoint files, export script, calibration producer, or S conversion recipe is included.
 - The source X5 Python path and S path have different physical tensor protocols and NMS/dequant behavior; a shared conversion paragraph cannot replace target-specific metadata.
 - Manifest publisher SHA-256 values are unknown.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100p / n-v7.0-native-20261102-s100p-o1-20261103 / model`: [n_v7.0_native_20261102_s100p_o1_20261103_s100p_model.yaml](recipes/n_v7.0_native_20261102_s100p_o1_20261103_s100p_model.yaml)
+- `s100p / s-v2.0-native-20261102-s100p-o1-20261103 / model`: [s_v2.0_native_20261102_s100p_o1_20261103_s100p_model.yaml](recipes/s_v2.0_native_20261102_s100p_o1_20261103_s100p_model.yaml)
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

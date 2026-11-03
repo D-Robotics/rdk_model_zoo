@@ -62,8 +62,7 @@ googlenet/
 <a id="support-matrix"></a>
 ## Support matrix
 
-The table lists the models published for this sample; `—` marks an
-unpublished combination.
+The table describes the historical X5 default; `—` marks its unpublished combinations. Independent converted S profiles are listed under [model preparation](model/README.md).
 
 | Model | Input | X5 | S100 | S100P | S600 |
 | --- | --- | --- | --- | --- | --- |
@@ -72,8 +71,7 @@ unpublished combination.
 Runtime coverage: the Python CLI serves the published combination with
 `--target auto|x5` and `--variant googlenet`; the lowercase CLI ID maps to
 the exact published filename `googlenet_224x224_nv12.bin` (letter casing in
-filenames is preserved). `--target s100`, `s100p` and `s600` resolve no
-asset. The sample ships no C++ runtime.
+filenames is preserved). This historical variant has no S asset. Converted S profiles require their own explicit variant and target. The sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -136,3 +134,9 @@ the same thread count, concurrent submission mode and BPU utilization.
 ## License
 
 Python code follows Apache-2.0. Follow the original conversion notices and applicable upstream model and weight license terms. Review the upstream model and weight license terms before redistribution.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Independent converted profiles and explicit commands are listed in [model preparation](model/README.md). Board accuracy and performance are not measured yet.
