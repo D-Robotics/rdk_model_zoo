@@ -81,6 +81,7 @@ These independent profiles passed conversion, complete OE collection and actual 
 | Target | Native variant | Components | Calibration photographs |
 | --- | --- | --- | ---: |
 | s100p | `tinyvit-512-int16-20261103-o1` | encoder, decoder | 198 |
+| s600 | `tinyvit-512-int16-20261103-o1` | encoder, decoder | 198 |
 
 ```bash
 python3 samples/vision/mobile_sam/model/download.py --target s100p --variant tinyvit-512-int16-20261103-o1

@@ -99,6 +99,8 @@ Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 set
 - `s100p / timm-femto-d1-in1k-s-int16-o1-20261103 / model`: [timm_femto_d1_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_femto_d1_in1k_s_int16_o1_20261103_s100p_model.yaml)
 - `s600 / timm-femto-d1-in1k-s-int16-o1-20261103 / model`: [timm_femto_d1_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_femto_d1_in1k_s_int16_o1_20261103_s600_model.yaml)
 - `s100 / timm-nano-d1h-in1k-s-int16-o1-20261103 / model`: [timm_nano_d1h_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_nano_d1h_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-nano-d1h-in1k-s-int16-o1-20261103 / model`: [timm_nano_d1h_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_nano_d1h_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-nano-d1h-in1k-s-int16-o1-20261103 / model`: [timm_nano_d1h_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_nano_d1h_in1k_s_int16_o1_20261103_s600_model.yaml)
 
 S PTQ consumes normalized ONNX-domain `.npy` tensors. NV12 runtime mean/scale remain in the recipe. The shared producer reads checkpoint normalization through `--target` and `--normalization-json`.
 

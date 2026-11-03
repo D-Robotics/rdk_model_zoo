@@ -250,5 +250,7 @@ python3 samples/_shared/sam_conversion.py --sample mobile_sam --repo /path/to/up
 
 - `s100p / tinyvit-512-int16-20261103-o1 / encoder`: [tinyvit_512_int16_20261103_o1_s100p_encoder.yaml](recipes/tinyvit_512_int16_20261103_o1_s100p_encoder.yaml)
 - `s100p / tinyvit-512-int16-20261103-o1 / decoder`: [tinyvit_512_int16_20261103_o1_s100p_decoder.yaml](recipes/tinyvit_512_int16_20261103_o1_s100p_decoder.yaml)
+- `s600 / tinyvit-512-int16-20261103-o1 / encoder`: [tinyvit_512_int16_20261103_o1_s600_encoder.yaml](recipes/tinyvit_512_int16_20261103_o1_s600_encoder.yaml)
+- `s600 / tinyvit-512-int16-20261103-o1 / decoder`: [tinyvit_512_int16_20261103_o1_s600_decoder.yaml](recipes/tinyvit_512_int16_20261103_o1_s600_decoder.yaml)
 
 原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。
