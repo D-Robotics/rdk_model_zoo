@@ -1,7 +1,7 @@
 # RDK Model Zoo Web 提交指南
 
-本文说明如何把 `samples/` 中已经完成转换、精度验证和板端测试的模型发布到
-RDK Model Zoo Web。
+本文说明如何把 `samples/` 中的模型接入 RDK Model Zoo Web，包括未板测的文本
+Demo 和完成正式验收的发布模型。
 
 ## 1. 适用范围
 
@@ -35,6 +35,16 @@ model_zoo_web/data/vision/ultralytics_yolo/yolo26/detect.yaml
 ```
 
 ## 2. 发布门槛
+
+Gemma4-E2B 的 SDK 2.0 S600 纯文本入口使用 `status: demo`，表示已编译、未板测。
+它可以进入正常目录展示，但不计入正式发布统计。`artifact`、`accuracy`、
+`performance`、`reports` 必须为 null；板端记录须为 `not-run`，测量值为 null。
+模型来源、revision、编译规格、文件大小及 SHA256 从 Sample 的
+`model/artifacts.json` 核对，板端状态从 `evaluator/board_result.json` 核对。
+本地构建提供示例源码和说明文档，不制造尚未发布的模型 URL、源码提交链接或 OE 报告。
+经完整匿名 HTTPS 下载校验的 Archive 模型包，可在 Sample `availability` 中登记
+URL、大小、SHA256、校验和索引及验证时间，并独立提供下载；板端数据和 demo 状态不变。
+Demo 以外的 LLM 正式发布需要另行补齐其评测与发布合同，不能把 `demo` 改名后跳过验证。
 
 模型必须满足以下条件后，才能将平台状态标记为 `released`：
 

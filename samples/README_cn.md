@@ -2,13 +2,14 @@
 
 [English](README.md)
 
-以下三个样例使用仓库根目录的统一实现。请先进入相应 README，按所用板卡准备模型；完整检出仓库即可使用，无需 Agent。
+以下样例使用仓库根目录的统一实现。请先进入相应 README，按所用板卡准备模型；完整检出仓库即可使用，无需 Agent。
 
 | 你要做什么 | 使用说明 | 转换自己的模型 | 验证输出 |
 | --- | --- | --- | --- |
 | 找出图片中的物体并取得框、类别、分数 | [YOLO 目标检测](vision/ultralytics_yolo/README_cn.md) | [导出与编译](vision/ultralytics_yolo/conversion/README_cn.md) | [检测评估](vision/ultralytics_yolo/evaluator/README_cn.md) |
 | 给图片分类，取得 Top-K 类别和分数 | [ResNet 图像分类](vision/resnet/README_cn.md) | [转换流程](vision/resnet/conversion/README_cn.md) | [分类验证](vision/resnet/evaluator/README_cn.md) |
 | 找出文字区域并识别文字 | [PaddleOCR](vision/paddle_ocr/README_cn.md) | [检测与识别模型转换](vision/paddle_ocr/conversion/README_cn.md) | [OCR 验证](vision/paddle_ocr/evaluator/README_cn.md) |
+| 在 S600 上使用 SDK 2.0 生成文本 | [Gemma4-E2B 纯文本](llm/gemma4/README_cn.md) | [SDK 转换](llm/gemma4/conversion/README_cn.md) | [主机参考与板端状态](llm/gemma4/evaluator/README_cn.md) |
 
 ## 板卡与制品
 

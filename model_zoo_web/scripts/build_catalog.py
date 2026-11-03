@@ -1212,6 +1212,87 @@ def validate_converted_platform(platform: dict[str, Any], license_info: dict[str
         raise CatalogError(f"{label}: converted board conditions must be explicitly tracked as 1 or 2")
 
 
+def validate_text_demo(record: dict[str, Any], variant: dict[str, Any],
+                       platform: dict[str, Any], sample_path: str, label: str) -> None:
+    """A compiled text demo may publish verified files while board measurements stay empty."""
+    if record['domain'] != 'llm' or record['task'] != 'text-generation':
+        raise CatalogError(f'{label}: demo status is reserved for text-generation samples')
+    if platform.get('platform') != 's600':
+        raise CatalogError(f'{label}: this text demo profile is S600 only')
+    for field in ('artifact', 'accuracy', 'performance', 'reports'):
+        if field not in platform or platform[field] is not None:
+            raise CatalogError(f'{label}.{field} must be null for an untested demo')
+    paths = {'model_manifest': f'{sample_path}/model/artifacts.json',
+             'board_result': f'{sample_path}/evaluator/board_result.json'}
+    documents = {}
+    for field, expected in paths.items():
+        if platform.get(field) != expected:
+            raise CatalogError(f'{label}.{field} must be {expected}')
+        try:
+            documents[field] = json.loads((ROOT / expected).read_text(encoding='utf-8'))
+        except (OSError, ValueError) as error:
+            raise CatalogError(f'{label}.{field}: cannot read the sample record') from error
+    manifest = require_mapping(documents['model_manifest'], label + '.model_manifest')
+    if (manifest.get('schema_version'), manifest.get('target'), manifest.get('scope')) != (1, 's600', 'text-generation'):
+        raise CatalogError(f'{label}: invalid text artifact identity')
+    source = require_mapping(manifest.get('source'), label + '.source')
+    require_string(source.get('model_id'), label + '.source.model_id')
+    if not COMMIT_RE.fullmatch(str(source.get('revision', ''))):
+        raise CatalogError(f'{label}: source revision must be a full commit')
+    if source.get('license') != record.get('license'):
+        raise CatalogError(f'{label}: license must match the source model binding')
+    conversion = require_mapping(manifest.get('conversion'), label + '.conversion')
+    if (conversion.get('sdk'), conversion.get('status'), conversion.get('march'), conversion.get('cores')) != (
+            'OELLM 2.0.0', 'passed', 'nash-p', 4):
+        raise CatalogError(f'{label}: expected the compiled SDK 2.0 S600 profile')
+    if (conversion.get('prefill_chunk_size'), conversion.get('context_length')) != (512, 4096):
+        raise CatalogError(f'{label}: expected chunk 512 and context 4096')
+    runtime = require_mapping(manifest.get('runtime'), label + '.runtime')
+    if (runtime.get('type'), runtime.get('version'), runtime.get('vision_companion_required')) != ('GEMMA4', '2.0.0', True):
+        raise CatalogError(f'{label}: expected the official SDK 2.0 GEMMA4 runtime')
+    names, roles = set(), set()
+    for asset in require_list(manifest.get('files'), label + '.files'):
+        name = require_string(asset.get('name'), label + '.file.name')
+        if PurePosixPath(name).name != name or name in ('.', '..') or name in names:
+            raise CatalogError(f'{label}: duplicate or unsafe artifact filename')
+        names.add(name)
+        roles.add(asset.get('role'))
+        require_positive_int(asset.get('bytes'), label + '.file.bytes')
+        if not SHA256_RE.fullmatch(str(asset.get('sha256', ''))):
+            raise CatalogError(f'{label}: each artifact needs its full SHA256')
+    if not {'language-hbm', 'embedding', 'ple-embedding', 'runtime-vision-companion',
+            'tokenizer', 'chat-template', 'source-model-card'} <= roles:
+        raise CatalogError(f'{label}: incomplete language or SDK companion artifacts')
+    availability = require_mapping(manifest.get('availability'), label + '.availability')
+    if availability.get('package_url') is not None:
+        filename = require_string(availability.get('name'), label + '.availability.name')
+        if (not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*\.tar\.gz', filename)
+                or availability.get('kind') != 'archive'):
+            raise CatalogError(f'{label}: expected an Archive deployment package')
+        base = f"{ARCHIVE_BASE}/rdk_s600/{record['source']}"
+        if (availability['package_url'] != f'{base}/{filename}'
+                or availability.get('checksums_url') != f'{base}/SHA256SUMS'):
+            raise CatalogError(f'{label}: deployment package must use its Archive directory')
+        require_positive_int(availability.get('size_bytes'), label + '.availability.size_bytes')
+        if not SHA256_RE.fullmatch(str(availability.get('sha256', ''))):
+            raise CatalogError(f'{label}: deployment package needs its full SHA256')
+        verification = require_mapping(availability.get('verification'), label + '.availability.verification')
+        if (verification.get('status'), verification.get('method')) != ('verified', 'anonymous-https-full-sha256'):
+            raise CatalogError(f'{label}: deployment package needs full anonymous HTTPS verification')
+        require_string(verification.get('checked_at'), label + '.availability.verification.checked_at')
+    board = require_mapping(documents['board_result'], label + '.board_result')
+    if board.get('model') != manifest.get('id') or board.get('target') != 's600':
+        raise CatalogError(f'{label}: board record identity mismatch')
+    if board.get('status') != 'not-run' or manifest.get('board_tests') != 'not-run':
+        raise CatalogError(f'{label}: demo board status must be not-run')
+    for field in ('ppl', 'ttft_ms', 'decode_tokens_per_second', 'peak_memory_bytes', 'generation_checks', 'environment'):
+        if field not in board or board[field] is not None:
+            raise CatalogError(f'{label}: untested board {field} must be null')
+    text_input = variant.get('input')
+    if text_input != {'kind': 'text', 'context_length': 4096, 'prefill_chunk_size': 512}:
+        raise CatalogError(f'{label}: text input must match the compiled chunk/context profile')
+
+
 def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]:
     relative_source = source_path.relative_to(ROOT).as_posix()
     if record.get("schema_version") != 1:
@@ -1258,6 +1339,12 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
         seen_sizes.add(size)
 
         input_config = require_mapping(variant.get("input"), f"{variant_label}.input")
+        demo_profiles = require_list(variant.get("platforms"), f"{variant_label}.platforms")
+        if any(isinstance(profile, dict) and profile.get("status") == "demo" for profile in demo_profiles):
+            if len(demo_profiles) != 1 or demo_profiles[0].get("status") != "demo":
+                raise CatalogError(f"{variant_label}: a text demo has one S600 profile")
+            validate_text_demo(record, variant, demo_profiles[0], record['sample_path'], variant_label)
+            continue
         for dimension in ("width", "height"):
             require_positive_int(input_config.get(dimension), f"{variant_label}.input.{dimension}")
 
@@ -1382,6 +1469,7 @@ def build_catalog() -> tuple[bytes, bytes]:
     release_count = 0
     converted_count = 0
     pending_count = 0
+    demo_count = 0
     for source_path in source_paths:
         with source_path.open(encoding="utf-8") as handle:
             record = require_mapping(yaml.safe_load(handle), source_path.relative_to(ROOT).as_posix())
@@ -1390,6 +1478,8 @@ def build_catalog() -> tuple[bytes, bytes]:
         # Every model offered by the public catalog must be served by Archive.
         for variant in normalized["variants"]:
             for platform in variant["platforms"]:
+                if platform["status"] == "demo":
+                    continue
                 if not platform["artifact"]["url"].startswith(f"{ARCHIVE_BASE}/"):
                     raise CatalogError(
                         f"{normalized['id']}/{variant['size']}/{platform['platform']}: "
@@ -1403,6 +1493,7 @@ def build_catalog() -> tuple[bytes, bytes]:
         states = [platform["status"] for variant in normalized["variants"] for platform in variant["platforms"]]
         release_count += states.count("released")
         converted_count += states.count("converted")
+        demo_count += states.count("demo")
         records.append(normalized)
 
     validate_unique_hero_inputs(records)
@@ -1414,6 +1505,7 @@ def build_catalog() -> tuple[bytes, bytes]:
         "release_count": release_count,
         "converted_count": converted_count,
         "pending_count": pending_count,
+        "demo_count": demo_count,
         "models": records,
     }
     catalog_bytes = (json.dumps(catalog, ensure_ascii=False, indent=2) + "\n").encode()
@@ -1427,6 +1519,7 @@ def build_catalog() -> tuple[bytes, bytes]:
         "release_count": release_count,
         "converted_count": converted_count,
         "pending_count": pending_count,
+        "demo_count": demo_count,
         "generator": "model_zoo_web/scripts/build_catalog.py",
     }
     metadata_bytes = (json.dumps(metadata, ensure_ascii=False, indent=2) + "\n").encode()

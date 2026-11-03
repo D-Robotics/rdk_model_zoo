@@ -1,3 +1,4 @@
+import { textDemoEntry } from './llm-demo.mjs';
 import { cp, mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -184,7 +185,7 @@ const expectedReleaseStatus = record =>
   candidatePreview || localCandidateIds.has(record.id) ? 'candidate' : 'released';
 const candidateReleaseIds = new Set((fullCatalog.models || []).flatMap(record =>
   (record.variants || []).flatMap(variant => (variant.platforms || [])
-    .filter(release => release.status === expectedReleaseStatus(record) || (!candidatePreview && release.status === 'converted'))
+    .filter(release => release.status === expectedReleaseStatus(record) || (!candidatePreview && ['converted', 'demo'].includes(release.status)))
     .map(release => `${record.id}/${variant.size}/${release.platform}`))));
 let catalog = fullCatalog;
 let technicalSelection = null;
@@ -417,8 +418,9 @@ await mkdir(reportsRoot, { recursive: true });
 for (const record of catalog.models || []) {
   if (record.registration === 'pending' && !record.variants?.length) continue;
   const conversionOnly = record.variants.every(variant => variant.platforms.every(platform => platform.status === 'converted'));
+  const textOnlyDemo = record.variants.every(variant => variant.platforms.every(platform => platform.status === 'demo'));
   const suppliedModelInput = inputs.models[record.id];
-  const modelInput = suppliedModelInput || (conversionOnly ? { cover_label: '任务示意图' } : null);
+  const modelInput = suppliedModelInput || ((conversionOnly || textOnlyDemo) ? { cover_label: textOnlyDemo ? '文本对话示意' : '任务示意图' } : null);
   if (!modelInput || typeof modelInput !== 'object' || Array.isArray(modelInput)) {
     throw new Error(`MODEL_ZOO_INPUTS.models is missing ${record.id}`);
   }
@@ -427,7 +429,7 @@ for (const record of catalog.models || []) {
     ? record.hero_visual : null;
   const inferenceCover = explicitHero ? null : familyInferenceBanners.items.get(record.id)
     || inferenceTaskBanners?.items.get(record.id);
-  const coverPath = explicitHero ? resolve(webRoot, '..', explicitHero.file) : inferenceCover?.path
+  const coverPath = textOnlyDemo ? resolve(webRoot, 'release/assets/gemma4-text.png') : explicitHero ? resolve(webRoot, '..', explicitHero.file) : inferenceCover?.path
     || (modelInput.cover ? await resolveInputFile(modelInput.cover, `MODEL_ZOO_INPUTS.models.${record.id}.cover`)
       : resolve(outputRoot, 'assets', 'pending-cover.svg'));
   const coverExtension = extname(coverPath).toLowerCase();
@@ -447,9 +449,16 @@ for (const record of catalog.models || []) {
   for (const variant of record.variants || []) {
     for (const release of variant.platforms || []) {
       const converted = !candidatePreview && release.status === 'converted';
-      if (!converted && release.status !== expectedReleaseStatus(record)) continue;
+      const textDemo = !candidatePreview && release.status === 'demo' && record.task === 'text-generation';
+      if (!converted && !textDemo && release.status !== expectedReleaseStatus(record)) continue;
       const platform = String(release.platform).toUpperCase();
       const id = safeId(record.source, record.family, record.task, variant.size, release.platform);
+      if (textDemo) {
+        const entry = await textDemoEntry({ record, variant, release, webRoot, outputRoot, id, coverFilename });
+        models.push(entry.model);
+        properties[id] = entry.properties;
+        continue;
+      }
       const releaseId = `${record.id}/${variant.size}/${release.platform}`;
       const names = displayNames(record, variant.size);
 
@@ -849,6 +858,7 @@ const data = {
       downloadable_asset_count: models.reduce((count, model) => count + model.assets.length, 0),
       benchmark_count: models.filter(model => model.benchmark && !model.benchmark.documentation && model.releaseStatus !== 'converted').length,
       converted_count: models.filter(model => model.releaseStatus === 'converted').length,
+      demo_count: models.filter(model => model.releaseStatus === 'demo').length,
       verified_count: models.filter(model => model.releaseStatus === 'released').length,
     },
   },
@@ -902,4 +912,4 @@ const pendingEntryCount = models.filter(model => model.dataPending).length;
 const convertedEntryCount = models.filter(model => model.releaseStatus === 'converted').length;
 console.log(localCandidate
   ? `Built local candidate preview with ${models.length - localEntryCount} released and ${localEntryCount} local candidate model entries.`
-  : `Built local Model Zoo ${candidatePreview ? 'candidate preview' : 'preview'} with ${models.length - pendingEntryCount - convertedEntryCount} ${candidatePreview ? 'candidate' : 'released'}, ${convertedEntryCount} converted and ${pendingEntryCount} pending entries.`);
+  : `Built local Model Zoo ${candidatePreview ? 'candidate preview' : 'preview'} with ${models.length - pendingEntryCount - convertedEntryCount - models.filter(model => model.releaseStatus === 'demo').length} ${candidatePreview ? 'candidate' : 'released'}, ${convertedEntryCount} converted, ${models.filter(model => model.releaseStatus === 'demo').length} text demos and ${pendingEntryCount} pending entries.`);

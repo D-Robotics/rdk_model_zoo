@@ -233,6 +233,31 @@
     '端到端': 'End-to-end',
     '未测': 'Not measured',
     '未测量': 'Not measured',
+    '文本生成流程示意': 'Text generation workflow illustration',
+    '文本对话示意': 'Text conversation illustration',
+    '未板测': 'Board testing pending',
+    '已编译 · 未板测': 'Compiled · Board testing pending',
+    '板端测试尚未执行': 'Board testing has not been run',
+    '首 token 延迟': 'Time to first token',
+    '生成速度': 'Generation speed',
+    '板端 PPL': 'On-device PPL',
+    '峰值内存': 'Peak memory',
+    '使用说明': 'Usage guide',
+    '准备模型文件': 'Prepare model files',
+    '运行文本生成': 'Run text generation',
+    '转换说明': 'Conversion guide',
+    '评测说明': 'Evaluation guide',
+    '原始模型': 'Source model',
+    '输入类型': 'Input type',
+    '文本': 'Text',
+    '上下文容量': 'Context capacity',
+    '预填充块': 'Prefill chunk',
+    '部署文件大小': 'Deployment file size',
+    '视觉配套文件': 'Vision companion',
+    'SDK 初始化依赖': 'Required by SDK initialization',
+    '权重版本': 'Weight revision',
+    '准备模型文件和 SDK 2.0 部署包后，在 S600 上运行。官方 runtime 初始化需要配套视觉 HBM，本入口只接受文本。': 'Prepare the model files and SDK 2.0 deployment package, then run on S600. The official runtime requires its vision companion during initialization; this entry accepts text only.',
+    '准备模型文件和官方 Runtime 后，在 S600 上运行文本生成。': 'Prepare the model files and official runtime, then run text generation on S600.',
     '推理延迟': 'Inference latency',
     '吞吐量': 'Throughput',
     '后处理延迟': 'Post-process latency',
@@ -333,6 +358,9 @@
 
   function apply() {
     document.documentElement.lang = locale === 'en' ? 'en' : 'zh-CN';
+    document.querySelectorAll('[data-href-zh][data-href-en]').forEach(element => {
+      element.setAttribute('href', element.getAttribute(locale === 'en' ? 'data-href-en' : 'data-href-zh'));
+    });
     document.querySelectorAll('[data-i18n-zh][data-i18n-en]').forEach(element => {
       const value = element.getAttribute(locale === 'en' ? 'data-i18n-en' : 'data-i18n-zh');
       if (element.textContent !== value) element.textContent = value;

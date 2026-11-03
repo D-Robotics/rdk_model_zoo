@@ -26,10 +26,18 @@ class CandidateReleaseGuardTest(unittest.TestCase):
         self.assertFalse(any("candidate-staging" in model["source_file"] for model in parsed["models"]))
         self.assertTrue(all(model["source_file"].startswith("model_zoo_web/data/")
                             for model in parsed["models"]))
-        self.assertTrue(all(platform["status"] in {"released", "converted"}
+        self.assertTrue(all(platform["status"] in {"released", "converted", "demo"}
                             for model in parsed["models"]
                             for variant in model["variants"]
                             for platform in variant["platforms"]))
+        for model in parsed["models"]:
+            for variant in model["variants"]:
+                for platform in variant["platforms"]:
+                    if platform["status"] == "demo":
+                        self.assertEqual((model["domain"], model["task"], platform["platform"]),
+                                         ("llm", "text-generation", "s600"))
+                        for field in ("artifact", "accuracy", "performance", "reports"):
+                            self.assertIsNone(platform[field])
 
     def test_candidate_status_is_rejected_by_the_active_release_validator(self):
         source_path = WEB_ROOT / "data" / "vision" / "ultralytics_yolo" / "yolo26" / "detect.yaml"

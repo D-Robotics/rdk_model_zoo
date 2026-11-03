@@ -179,6 +179,39 @@ if (preview) {
       assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), familyBanner.banner.sha256,
         `${model.id}: built cover must match its reviewed inference banner`);
     }
+    if (model.releaseStatus === 'demo') {
+      assert.equal(model.taskId, 'text-generation');
+      assert.equal(model.releasePlatform, 'S600');
+      assert.equal(model.deployment.compileStatus, 'passed');
+      assert.equal(model.deployment.boardStatus, 'not-run');
+      assert.equal(model.boardMeasurements.status, 'not-run');
+      for (const field of ['ppl', 'ttft_ms', 'decode_tokens_per_second', 'peak_memory_bytes', 'generation_checks', 'environment']) {
+        assert.equal(model.boardMeasurements[field], null, `${model.id}: untested ${field} must stay null`);
+      }
+      const availability = model.deployment.artifactManifest.availability;
+      assert.equal(model.assets.length, availability.package_url ? 1 : 0,
+        `${model.id}: downloads must match the published deployment package`);
+      for (const asset of model.assets) {
+        assert.equal(availability.kind, 'archive');
+        assert.equal(availability.verification.status, 'verified');
+        assert.equal(availability.verification.method, 'anonymous-https-full-sha256');
+        assert.match(asset.url, /^https:\/\/archive\.d-robotics\.cc\/downloads\/rdk_model_zoo_web\/rdk_s600\/gemma\//);
+        assert.equal(asset.url, availability.package_url);
+        assert.equal(asset.sha256, availability.sha256);
+        assert.equal(asset.sizeBytes, availability.size_bytes);
+        assert.equal(asset.checksumsUrl, availability.checksums_url);
+      }
+      assert.equal(model.benchmark, null, `${model.id}: host results cannot become board benchmarks`);
+      assert(!model.reportUrl && !model.reportDataUrl && !model.reportSourceUrl);
+      assert.equal(model.source, null, `${model.id}: source snapshot has no invented GitHub commit`);
+      for (const filename of [model.sourceArchive, ...Object.values(model.documents)]) {
+        assert(fs.statSync(path.join(root, filename)).size > 0, `${model.id}: missing sample resource`);
+      }
+      const properties = context.window.MODEL_PROPERTIES[model.id];
+      assert.equal(properties.contextLength, 4096);
+      assert.equal(properties.prefillChunkSize, 512);
+      continue;
+    }
     if (model.releaseStatus === 'data-pending') {
       assert.equal(model.dataPending, true, `${model.id}: pending models must set dataPending`);
       assert.deepEqual(Array.from(model.assets), [], `${model.id}: pending models must not publish artifacts`);

@@ -14,6 +14,16 @@ dist/       generated website artifact; ignored by Git
 
 New model submissions must follow [CONTRIBUTING.md](CONTRIBUTING.md).
 
+Gemma4-E2B is included as an S600 SDK 2.0 text `demo`: compilation is recorded,
+board tests are `not-run`, and board measurements remain null. Its page supplies
+native preparation/run commands, sample-source download and documentation.
+A demo can offer a verified Archive deployment package independently of board measurements.
+Its package URL, size, SHA256 and full HTTPS verification are bound in the Sample manifest.
+The demo has no OE report and is
+excluded from released-model statistics and the released-only Ask AI scope.
+The catalog validates its model binding and board-status JSON in
+`samples/llm/gemma4/`; it does not import a host fake-quant score as board accuracy.
+
 ## Ownership
 
 - `samples/` owns conversion, evaluation, and runtime code.

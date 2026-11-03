@@ -40,7 +40,8 @@
   function quantizations(model) {
     // Precision is independent of file format, I/O dtype and accuracy.model_stage.
     const records = [model.benchmark, ...(model.benchmarks || [])].filter(Boolean);
-    const values = records.map(record => record.precision).filter(value => typeof value === 'string' && value.trim());
+    const values = [model.precisionPolicy, ...records.map(record => record.precision)]
+      .filter(value => typeof value === 'string' && value.trim());
     return values.length ? [...new Set(values.map(normalizePrecision))] : ['unspecified'];
   }
   function searchTerms(model) {

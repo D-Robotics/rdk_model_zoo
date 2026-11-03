@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "id": "gemma4-e2b-sdk2-s600-text",
+  "target": "s600",
+  "scope": "text-generation",
+  "source": {
+    "model_id": "google/gemma-4-E2B-it-qat-q4_0-unquantized",
+    "revision": "6befbaca7398925921802abd1f277b495b78b738",
+    "license": {
+      "name": "Apache-2.0",
+      "url": "https://ai.google.dev/gemma/docs/gemma_4_license"
+    }
+  },
+  "conversion": {
+    "sdk": "OELLM 2.0.0",
+    "recipe": "llm_compression/lightcompress/configs/released_models/gemma4_e2b/lm_w4_kv_w8",
+    "precision_policy": "w4-kv-w8-a8",
+    "compiler": "4.14.1a2.dev202610090350+05dd1f0.develop",
+    "status": "passed",
+    "march": "nash-p",
+    "cores": 4,
+    "prefill_chunk_size": 512,
+    "context_length": 4096,
+    "sliding_window": 512
+  },
+  "runtime": {
+    "implementation": "SDK official OellmRuntime basic API",
+    "version": "2.0.0",
+    "type": "GEMMA4",
+    "directory": "oellm_runtime_s600",
+    "vision_companion_required": true,
+    "source": "SDK 2.0.0 Gemma4_config/gemma4_e2b_w4_config.json"
+  },
+  "availability": {
+    "kind": "archive",
+    "package_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/gemma/gemma4-e2b-w4w8-s600-chunk512-ctx4096.tar.gz",
+    "name": "gemma4-e2b-w4w8-s600-chunk512-ctx4096.tar.gz",
+    "size_bytes": 4764575933,
+    "sha256": "619696547bb487c11d27a81e3bbdcf5358a93fbffefda239d6329900a57bd2d9",
+    "checksums_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/gemma/SHA256SUMS",
+    "verification": {
+      "status": "verified",
+      "method": "anonymous-https-full-sha256",
+      "checked_at": "2026-11-03T16:57:55.915996+00:00"
+    }
+  },
+  "files": [
+    {
+      "name": "model_language_chunk_512_cache_4096_w8_nash-p_corenum_4_4.hbm",
+      "bytes": 1567789888,
+      "sha256": "611de81e4acfa687b5b1509f2b001f20218358919c1f54a618fe357e436e95f6",
+      "role": "language-hbm"
+    },
+    {
+      "name": "fake_quant_model_embed_tokens.bin",
+      "bytes": 805306368,
+      "sha256": "be9f1c44dd3558c56c946ef1254e67c41718d8f8a1fdcbb5d81b17c83d2a1d3d",
+      "role": "embedding"
+    },
+    {
+      "name": "fake_quant_model_embed_tokens_per_layer.bin",
+      "bytes": 4697620480,
+      "sha256": "721438d4576778785bc2d934b37b637217ead49cfb42caba1e3d5730cca1f4d3",
+      "role": "ple-embedding"
+    },
+    {
+      "name": "tokenizer.json",
+      "bytes": 32170070,
+      "sha256": "12bac982b793c44b03d52a250a9f0d0b666813da566b910c24a6da0695fd11e6",
+      "role": "tokenizer"
+    },
+    {
+      "name": "tokenizer_config.json",
+      "bytes": 22742,
+      "sha256": "096e030ef637b39cdfb617a910e3a46ae34c607f8e1e5708fec11d13ec3534d4",
+      "role": "tokenizer"
+    },
+    {
+      "name": "chat_template.jinja",
+      "bytes": 18569,
+      "sha256": "0a2c8073c878ab1da004bee933a998606537bbb62016310352c7285c3f01c5b5",
+      "role": "chat-template"
+    },
+    {
+      "name": "SOURCE_MODEL_README.md",
+      "bytes": 29351,
+      "sha256": "aaab87052837925e0fb400bb20700553b11088fa5b3ae21fa0c1ec5da53637a4",
+      "role": "source-model-card"
+    },
+    {
+      "name": "gemma-4-E2B-it_vision_384x384_w8_nash-p_corenum_4.hbm",
+      "bytes": 195702808,
+      "sha256": "93c282819083ad9e61c5063e3bfc06c74ab8b62ffab5811c564ee21dedd41213",
+      "role": "runtime-vision-companion",
+      "origin": "SDK 2.0.0 official vision companion; required by GEMMA4 runtime initialization; this demo accepts text only",
+      "source_url": "https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm/2.0.0/s600_models/Gemma4-E2B_w4.zip",
+      "package_etag": "\"26F2D07C72B5C3630D634A852C10910F-350\"",
+      "zip_entry": "Gemma4-E2B_w4/gemma-4-E2B-it_vision_384x384_w8_nash-p_corenum_4.hbm",
+      "graphs": [
+        {
+          "name": "visual",
+          "march": "nash-p",
+          "cores": 4
+        }
+      ],
+      "board_tests": "not-run"
+    }
+  ],
+  "board_tests": "not-run"
+}

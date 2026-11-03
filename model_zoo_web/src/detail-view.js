@@ -22,6 +22,9 @@
   const threadLabel = threads => threads === 1 ? 'Runtime 单路' : `Runtime ${threads} 路并发`;
   const formats = m => [...new Set(m.assets.map(asset => asset.format.toUpperCase()))].join(' + ');
   const hardwareOf = (model, data) => model.hardware || model.benchmark?.environment?.hardware || data.release.compatibility.hardware;
+  const isTextDemo = model => model.releaseStatus === 'demo' && model.taskId === 'text-generation';
+  const demoDocuments = model => window.HubI18n?.locale === 'en' && model.documentsEn ? model.documentsEn : model.documents;
+  const documentationLink = (model, key, label, cls = '') => `<a class="${cls}" href="${esc(demoDocuments(model)[key])}" data-href-zh="${esc(model.documents[key])}" data-href-en="${esc(model.documentsEn[key])}" target="_blank" rel="noopener">${label}${icon('external-link')}</a>`;
   // Preferred hardware display order: strongest S-series first, X5 last.
   const platformDisplayOrder = hardware => ({
     'RDK S600': 0, 'RDK S100P': 1, 'RDK S100': 2, 'RDK X5': 3,
@@ -209,6 +212,10 @@
     return `<section class="mz-section mz-quickstart"><div class="mz-section-heading"><h2>快速上手</h2>${link}</div><ol class="mz-quickstart-steps">${steps.map((item, index) => step(index + 1, item.title, item.command)).join('')}</ol></section>`;
   }
   function quickStart(model) {
+    if (isTextDemo(model)) {
+      const steps = model.quickStart || [];
+      return `<section class="mz-section mz-quickstart"><div class="mz-section-heading"><h2>快速上手</h2></div><ol class="mz-quickstart-steps">${steps.map((step, index) => `<li class="mz-quickstart-step"><div class="mz-quickstart-label"><span>${index + 1}</span>${esc(step.title)}</div><div class="mz-code"><pre><code data-no-i18n>${esc(step.command)}</code></pre><button type="button" class="mz-copy" data-copy-code aria-label="复制命令" title="复制命令">${icon('copy')}</button></div></li>`).join('')}</ol></section>`;
+    }
     if (model.runtimeCommand) {
       return quickstartSection(model.source, [{ title: '运行模型', command: model.runtimeCommand }]);
     }
@@ -245,10 +252,14 @@
     || /^https?:\/\/github\.com\/D-Robotics\/rdk_model_zoo\/tree\/[^/]+\/samples\/vision\/ultralytics_yolo(?:\/|$)/i.test(model.source)
   ));
   const repositoryLinks = (model, cls = '') => {
+    if (isTextDemo(model)) return documentationLink(model, 'sample', '使用说明', cls);
     if (!model.source || (model.releaseStatus === 'candidate' && !isRdkSampleSource(model))) return '';
     return external(model.source, '模型仓库', cls);
   };
   const developerResourceLinks = model => {
+    if (isTextDemo(model)) {
+      return `${external(model.sourceArchive, '示例源码')}${documentationLink(model, 'runtime', '运行文档')}${documentationLink(model, 'conversion', '模型转换')}${documentationLink(model, 'evaluation', '评测说明')}${external(model.upstreamModelUrl, '原始模型')}`;
+    }
     if (model.sourceArchive) return external(model.sourceArchive, '示例源码');
     if (!model.source || (model.releaseStatus === 'candidate' && !isRdkSampleSource(model))) return '';
     if (model.dataPending) {
@@ -292,6 +303,11 @@
     const shape = formatShape;
     const row = (label, value, title = '') => `<dt>${label}</dt><dd${title ? ` title="${esc(title)}"` : ''}>${esc(value)}</dd>`;
     const rows = [];
+    if (isTextDemo(model)) {
+      return [row('输入类型', '文本'), row('Runtime', p.sdkRuntime || 'OELLM 2.0.0 · GEMMA4'),
+        row('上下文容量', `${p.contextLength} tokens`), row('预填充块', `${p.prefillChunkSize} tokens`),
+        row('量化精度', 'W4 / K,V W8 · A8'), row('部署文件大小', byteSize(p.deploymentBytes) || '—')].join('');
+    }
     if (p.parameterCount) rows.push(row('参数量', `${Number((p.parameterCount / 1e6).toFixed(3))} M`, String(p.parameterCount)));
     if (model.releaseStatus === 'converted' && !p.parameterCount && !p.parameterCountMillions) rows.push(row('参数量', '—'));
     if (model.releaseStatus === 'converted' && !p.gflops) rows.push(row('浮点计算量', '—'));
@@ -364,13 +380,14 @@
   }
 
   function render({ model: m, models, data }) {
+    const textDemo = isTextDemo(m);
     const b = m.benchmark;
     const hardware = hardwareOf(m, data);
     const groupId = m.catalogId || `${m.name}/${m.taskId || m.task}`;
     const variants = models.filter(other => (other.catalogId || `${other.name}/${other.taskId || other.task}`) === groupId);
     const hardwareOptions = [...new Set(variants.map(other => hardwareOf(other, data)))].sort(byPlatformOrder);
     const performance = b?.performance || [];
-    const conditionChoices = m.dataPending
+    const conditionChoices = textDemo ? [1, 2].map(value => ({ value: String(value), label: threadLabel(value) })) : m.dataPending
       ? (b?.conditionOptions?.length ? b.conditionOptions.map(option => ({
           value: option.key,
           label: Number.isInteger(option.concurrency) ? threadLabel(option.concurrency) : (option.label || 'Runtime 单路'),
@@ -404,7 +421,10 @@
       ? `<figure class="mz-demo"><img src="${esc(coverSrc)}" alt="${esc(m.name)}"></figure>`
       : '';
     const benchmarkEmpty = `<div class="mz-benchmark-empty"><div><h3>暂无性能汇总</h3></div>${m.source ? external(m.source + '/evaluator', '查看评测说明') : ''}</div>`;
-    const benchmarkBody = b
+    const dash = label => `<div><span>${label}</span><strong>—</strong></div>`;
+    const benchmarkBody = textDemo
+      ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid">${dash('首 token 延迟')}${dash('生成速度')}${dash('板端 PPL')}${dash('峰值内存')}</div></div></div>`
+      : b
       ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid" id="detail-performance" aria-live="polite"></div></div></div>`
       : benchmarkEmpty;
     const upstreamLine = !m.dataPending && (m.upstream || []).length
@@ -432,7 +452,7 @@
     const kicker = m.dataPending
       ? `<div class="mz-kicker"><span class="mz-task">${m.task}</span><span class="pending-badge">数据待补充</span></div>`
       : `<span class="mz-task">${m.task}</span>`;
-    const reportAction = m.reportDataUrl
+    const reportAction = textDemo ? documentationLink(m, 'conversion', '转换说明') : m.reportDataUrl
       ? `<a class="mz-report-link" href="reports.html?report=${encodeURIComponent(m.id)}&from=${encodeURIComponent(m.id)}">${icon('scan-eye')}查看转换详情</a>`
       : (m.dataPending
         ? ((m.reportUrl || m.reportSourceUrl)
@@ -441,7 +461,7 @@
         : ((m.reportUrl || m.reportSourceUrl)
           ? external(m.reportUrl || m.reportSourceUrl, 'OE 转换报告')
           : '<span class="mz-report-placeholder" aria-disabled="true">OE 转换报告</span>'));
-    const askAction = m.releaseStatus === 'converted' ? '' : `<button class="button secondary mz-ask-model" type="button" data-ask-model><span class="mz-icon" style="--icon:url('assets/icons/sparkles.svg')" aria-hidden="true"></span>询问此模型</button>`;
+    const askAction = (textDemo || m.releaseStatus === 'converted') ? '' : `<button class="button secondary mz-ask-model" type="button" data-ask-model><span class="mz-icon" style="--icon:url('assets/icons/sparkles.svg')" aria-hidden="true"></span>询问此模型</button>`;
     const platformSizes = platform => downloadModels.filter(other => hardwareOf(other, data) === platform).length;
     const selectedAsset = selectedDownloadModel?.assets[0];
     const documentedDialog = !selectedDownloadModel && documentedDownloads.length > 1
