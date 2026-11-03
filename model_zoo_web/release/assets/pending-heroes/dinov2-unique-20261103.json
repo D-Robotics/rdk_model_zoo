@@ -1,0 +1,131 @@
+{
+  "schema_version": 2,
+  "kind": "host-float-model-inference-banner",
+  "status": "passed",
+  "source": "dinov2",
+  "model_url": "https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth",
+  "model_file": "dinov2_vits14_pretrain.pth",
+  "checkpoint_sha256": "b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9",
+  "commit": "7a9f2d0596b80376697ca98a20ff0d81e14f41b7",
+  "input": "samples/vision/dinov2/test_data/banner_input_unique_20261103.png",
+  "input_sha256": "b722194b1b9771babf509107d3b2b31354841a93433c85bc7cdb50b5456e5776",
+  "native_helpers": {
+    "samples/vision/dinov2/runtime/python/embedding.py": "c08abd12c8b8050f154cb3c0984d3fec0cfcf11c1b8e298928fe2cbc3664e5ac"
+  },
+  "graphs": {
+    "model": {
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/dinov2-batch-20261102-r05/shared/dinov2_vits14_224.onnx",
+      "sha256": "93a2ec95730d985f78be03b98284b4d4bd6ea979a5ea0a9d2122bee57a712758"
+    }
+  },
+  "framework": "ONNX Runtime 1.19.2",
+  "graph_io": {
+    "model": {
+      "inputs": [
+        {
+          "name": "input",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "tensor(float)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "cls_feat",
+          "shape": [
+            1,
+            384
+          ],
+          "dtype": "tensor(float)"
+        },
+        {
+          "name": "patch_feat",
+          "shape": [
+            1,
+            256,
+            384
+          ],
+          "dtype": "tensor(float)"
+        }
+      ]
+    }
+  },
+  "provider": "CPUExecutionProvider",
+  "runtime": "host-float-reference",
+  "versions": {
+    "onnxruntime": "1.19.2",
+    "numpy": "2.2.6",
+    "opencv": "4.11.0",
+    "pillow": "12.3.0"
+  },
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "feeds": [
+    {
+      "role": "model",
+      "name": "input",
+      "shape": [
+        1,
+        3,
+        224,
+        224
+      ],
+      "dtype": "float32",
+      "sha256": "5e43a27fd8df8f36d27fcd0e2bb53eee79c43be738baec50e2687430371a022a"
+    }
+  ],
+  "forward_outputs": [
+    {
+      "role": "model",
+      "name": "cls_feat",
+      "shape": [
+        1,
+        384
+      ],
+      "dtype": "float32",
+      "sha256": "f6c9bdbe877f4fbeb7b3038303081db16d5c7c3e35e8ca73f6ea97d481f20cd3"
+    },
+    {
+      "role": "model",
+      "name": "patch_feat",
+      "shape": [
+        1,
+        256,
+        384
+      ],
+      "dtype": "float32",
+      "sha256": "83fd411026d1dfd5f06efc13ae472b733e23bbe30b56dd5d49ceefb7f38cefb7"
+    }
+  ],
+  "files": {
+    "source.png": {
+      "file": "source.png",
+      "sha256": "b722194b1b9771babf509107d3b2b31354841a93433c85bc7cdb50b5456e5776",
+      "size_bytes": 2224786
+    },
+    "outputs.npz": {
+      "file": "outputs.npz",
+      "sha256": "e15729cfdef07f78594e2e234e05c5f6a1c3ed88a2e3ea5923f6040cd4bc2fbc",
+      "size_bytes": 375781
+    },
+    "banner.webp": {
+      "file": "banner.webp",
+      "sha256": "89fbb8c894cbf4a0dc35ea6e8fa49f1e7422999439a51f64ad43fc0acdb27142",
+      "size_bytes": 97446
+    },
+    "result.png": {
+      "file": "result.png",
+      "sha256": "629a07156c9a162962f27df5eca7b92acf7e9305f94306aefab93d85d3befe05",
+      "size_bytes": 9249
+    }
+  },
+  "renderer_sha256": "c5d38352a8cf7810d4525fe0c04767e96dd5eeede370dc608ab5a726668a5789",
+  "visualization": {
+    "method": "Per-image 3-component PCA, canonicalized signs, 2nd–98th percentile scaling",
+    "semantics": "False-color patch features, not semantic labels or segmentation"
+  }
+}

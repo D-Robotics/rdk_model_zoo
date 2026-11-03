@@ -423,9 +423,11 @@ for (const record of catalog.models || []) {
     throw new Error(`MODEL_ZOO_INPUTS.models is missing ${record.id}`);
   }
   if (suppliedModelInput) usedModelInputs.add(record.id);
-  const inferenceCover = familyInferenceBanners.items.get(record.id)
+  const explicitHero = !candidatePreview && record.hero_visual?.inference_receipt_version === 2
+    ? record.hero_visual : null;
+  const inferenceCover = explicitHero ? null : familyInferenceBanners.items.get(record.id)
     || inferenceTaskBanners?.items.get(record.id);
-  const coverPath = inferenceCover?.path
+  const coverPath = explicitHero ? resolve(webRoot, '..', explicitHero.file) : inferenceCover?.path
     || (modelInput.cover ? await resolveInputFile(modelInput.cover, `MODEL_ZOO_INPUTS.models.${record.id}.cover`)
       : resolve(outputRoot, 'assets', 'pending-cover.svg'));
   const coverExtension = extname(coverPath).toLowerCase();
@@ -654,7 +656,18 @@ for (const record of catalog.models || []) {
         platforms: [platform],
         hardware: `RDK ${platform}`,
         coverImage: `assets/models/${coverFilename}`,
-        coverLabel: inferenceCover?.cover_label || modelInput.cover_label || (converted ? '任务示意图' : '模型参考推理结果'),
+        coverLabel: explicitHero ? '浮点参考' : inferenceCover?.cover_label || modelInput.cover_label || (converted ? '任务示意图' : '模型参考推理结果'),
+        ...(explicitHero ? {
+          heroProvenance: {
+            kind: explicitHero.kind, receiptVersion: 2, input: explicitHero.input,
+            predictionsSource: explicitHero.predictions_source,
+            revision: explicitHero.commit, runtime: explicitHero.runtime,
+            note: explicitHero.note, modelUrl: explicitHero.model_url, framework: explicitHero.framework,
+            ...(explicitHero.confidence_threshold === undefined ? {} : {
+              confidenceThreshold: explicitHero.confidence_threshold,
+            }),
+          },
+        } : {}),
         sample: `${record.source}/${record.family}/${record.task}/${variant.size}`,
         source: sourceUrl,
         ...(localRecord && release.source_archive ? { sourceArchive: localAssets[1].url } : {}),
@@ -783,6 +796,7 @@ if (!candidatePreview) {
     safeId,
   });
   for (const model of pendingModels) {
+    if (model.heroProvenance?.receiptVersion === 2) continue;
     const cover = familyInferenceBanners.items.get(model.catalogId);
     if (!cover) continue;
     model.coverImage = `assets/models/${safeId(...model.catalogId.split('/'))}${extname(cover.path)}`;

@@ -55,13 +55,14 @@ def panel(photo, rows, *, cosine=False):
     return canvas
 
 
-def pair(left, right):
+def pair(left, right, *, preserve_source=False):
     canvas = Image.new('RGB', (1672, 941), (236, 236, 238))
     for x, photo in ((40, left), (856, right)):
-        image = ImageOps.fit(photo.convert('RGB'), (776, 861), Image.Resampling.LANCZOS)
+        image = (ImageOps.contain if preserve_source else ImageOps.fit)(
+            photo.convert('RGB'), (776, 861), Image.Resampling.LANCZOS)
         mask = Image.new('L', image.size)
-        ImageDraw.Draw(mask).rounded_rectangle((0, 0, 775, 860), radius=40, fill=255)
-        canvas.paste(image, (x, 40), mask)
+        ImageDraw.Draw(mask).rounded_rectangle((0, 0, image.width-1, image.height-1), radius=40, fill=255)
+        canvas.paste(image, (x+(776-image.width)//2, 40+(861-image.height)//2), mask)
     return canvas
 
 
@@ -164,8 +165,8 @@ def run(row, native, output, threads):
     elif kind == 'similarity-panel':
         from samples.vision.clip.runtime.python.matching import prepare_inputs, CLIPMatcher
         from samples.vision.clip.runtime.python.simple_tokenizer import PromptTokenizer
-        prompts = ['a photo of a golden retriever', 'a photo of a tabby cat', 'a photo of a wolf',
-                   'a photo of a red fox', 'a photo of a rabbit']
+        prompts = row.get('prompts', ['a photo of a golden retriever', 'a photo of a tabby cat', 'a photo of a wolf',
+                                    'a photo of a red fox', 'a photo of a rabbit'])
         prepared = prepare_inputs(bgr, prompts, PromptTokenizer())
         images = forward('image', {sessions['image'].get_inputs()[0].name: prepared.tensors['image']})
         texts = forward('text', {sessions['text'].get_inputs()[0].name: prepared.tensors['texts']})
@@ -182,7 +183,7 @@ def run(row, native, output, threads):
         decoder = stage_binding(row['source'], 'decoder', sessions['decoder'])
         prepared = prepare_encoder_input(bgr, encoder)
         embedding = forward('encoder', prepared.tensors)['image_embeddings']
-        box = [95, 55, 420, 480] if row['source'] == 'mobile_sam' else None
+        box = row.get('box', [95, 55, 420, 480]) if row['source'] == 'mobile_sam' else None
         prepared = prepare_decoder_input(embedding, decoder, box)
         values = forward('decoder', prepared.tensors)
         decoded = DecoderStage(None, decoder).post_process(values)
@@ -198,11 +199,48 @@ def run(row, native, output, threads):
             for x, y in prompts['positive_points']:
                 x, y = x*sx, y*sy
                 draw.ellipse((x-10, y-10, x+10, y+10), fill=(46, 100, 234), outline='white', width=3)
-        banner = pair(left, result_image)
+        banner = pair(left, result_image, preserve_source=True)
         raw['selected_mask'] = mask
         extra = {'prompts': prompts, 'mask_index': decoded['mask_index'], 'predicted_iou': decoded['iou'],
                  'visualization': {'method': 'Native highest-IoU decoder candidate; actual mask overlay',
                                    'selected_mask_shape': list(mask.shape), 'foreground_pixels': int(mask.sum())}}
+    elif kind == 'detection-overlay':
+        from samples.vision.fasterrcnn.runtime.python.detect import (
+            letterbox_geometry, generate_anchors, FasterRCNNTask, pack_bank, unpack_bank_outputs, tail)
+        from infer_vision_banners import overlay
+        context = letterbox_geometry(photo.height, photo.width)
+        height, width = context.net_size
+        canvas = np.zeros((320, 320, 3), np.uint8)
+        canvas[:height, :width] = cv2.resize(bgr, (width, height), interpolation=cv2.INTER_LINEAR)
+        value = canvas[:, :, ::-1].astype(np.float32)/np.float32(255)
+        value = (value-np.asarray([.485, .456, .406], np.float32))/np.asarray([.229, .224, .225], np.float32)
+        value = np.ascontiguousarray(value.transpose(2, 0, 1)[None])
+        first = forward('parta', {sessions['parta'].get_inputs()[0].name: value})
+        task = object.__new__(FasterRCNNTask)
+        task.anchors = generate_anchors()
+        proposals, count, features = task.middle(first)
+        if not count:
+            raise ValueError('No model proposals for the new detector input')
+        bank = pack_bank(task.pool(proposals, features, count))
+        second = forward('partb', {sessions['partb'].get_inputs()[0].name: bank})
+        logits, regressions = unpack_bank_outputs(second['cls_packed'], second['reg_packed'])
+        boxes, scores, ids = tail(logits, regressions, proposals, count)
+        boxes = context.to_original(boxes)
+        labels = (native/'samples/vision/fasterrcnn/model/coco91_labels.txt').read_text().splitlines()
+        if len(labels) != 91 or labels != row['labels']:
+            raise ValueError('Faster R-CNN COCO vocabulary differs from its native labels')
+        result_image, selected = overlay(photo, boxes, scores, ids, labels)
+        rendered = ImageOps.contain(result_image, (1592, 861), Image.Resampling.LANCZOS)
+        banner = Image.new('RGB', (1672, 941), (236, 236, 238))
+        mask = Image.new('L', rendered.size)
+        ImageDraw.Draw(mask).rounded_rectangle((0, 0, rendered.width-1, rendered.height-1), radius=40, fill=255)
+        banner.paste(rendered, ((1672-rendered.width)//2, (941-rendered.height)//2), mask)
+        detections = [{'class_id': r['class_id'], 'label': r['label'], 'score': r['score'],
+                       'box': boxes[r['prediction_index']].tolist()} for r in selected]
+        raw.update(proposals=proposals, decoded_boxes=boxes, decoded_scores=scores, decoded_class_ids=ids)
+        extra = {'detections': detections, 'confidence_threshold': .5,
+                 'visualization': {'method': 'Exact conversion ONNX PartA, native RPN/RoIAlign, packed ONNX PartB and native tail',
+                                   'proposals': count, 'rendered_predictions': selected}}
     elif kind == 'segmentation-overlay':
         from utils.py_utils.yoloe26_geometry import letterbox
         from utils.py_utils.yoloe26_decode import decode_candidates, restore_masks

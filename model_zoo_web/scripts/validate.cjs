@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-const { assertCoverResolves, assertLocalImageFile } = require('./cover-assets.cjs');
+const { assertCoverResolves, assertDistinctModelCovers, assertLocalImageFile } = require('./cover-assets.cjs');
 
 const HERO_WIDTH = 1672;
 const HERO_HEIGHT = 941;
@@ -145,6 +145,12 @@ if (preview) {
   assert.equal(data.catalog.status, 'published', 'The preview catalog must be published');
   const modelIds = new Set(data.models.map(model => model.id));
   assert.equal(modelIds.size, data.models.length, 'Model ids must be unique');
+  assertDistinctModelCovers(data.models, root);
+
+  const catalogPath = process.env.MODEL_ZOO_CATALOG || path.join(webRoot, 'build/catalog.json');
+  const explicitHeroes = new Map(JSON.parse(fs.readFileSync(catalogPath, 'utf8')).models
+    .filter(record => record.hero_visual?.inference_receipt_version === 2)
+    .map(record => [record.id, record.hero_visual]));
 
   const checkedCovers = new Set();
   for (const model of data.models) {
@@ -153,6 +159,17 @@ if (preview) {
     if (!checkedCovers.has(model.coverImage)) {
       assertCoverResolves(model.coverImage, root, `${model.id} catalog cover and detail hero`);
       checkedCovers.add(model.coverImage);
+    }
+    const explicitHero = explicitHeroes.get(model.catalogId);
+    if (explicitHero) {
+      const receiptPath = path.resolve(webRoot, '..', explicitHero.predictions_source);
+      const receipt = JSON.parse(fs.readFileSync(receiptPath, 'utf8'));
+      const bytes = fs.readFileSync(path.join(root, model.coverImage));
+      assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), receipt.files['banner.webp'].sha256,
+        `${model.id}: explicit inference cover must take precedence over a legacy family banner`);
+      assert.equal(model.heroProvenance?.receiptVersion, 2);
+      assert.equal(model.heroProvenance?.revision, explicitHero.commit);
+      assert.equal(model.heroProvenance?.input, explicitHero.input);
     }
     const familyBanner = model.coverLabel === '主机浮点推理参考'
       ? familyBannerItems[model.catalogId] : null;

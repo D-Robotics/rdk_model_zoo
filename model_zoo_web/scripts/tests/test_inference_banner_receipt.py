@@ -1,6 +1,7 @@
 """New visualizations retain their source input, every output head and render."""
 import copy
 import hashlib
+import json
 import importlib.util
 from pathlib import Path
 import tempfile
@@ -93,6 +94,19 @@ class InferenceBannerReceiptTest(unittest.TestCase):
         (self.root/self.asset).write_bytes(b'another render')
         with self.assertRaises(catalog.CatalogError):
             self.check()
+
+    def test_different_models_cannot_reuse_the_same_input_photo(self):
+        records = []
+        for model in ('first', 'second'):
+            source = f'model_zoo_web/release/assets/pending-heroes/{model}.json'
+            (self.root/source).write_text(json.dumps({'schema_version': 2, 'input_sha256': 'a'*64}))
+            records.append({'id': model, 'hero_visual': {'runtime': 'host-float-reference',
+                                                        'predictions_source': source}})
+        with self.assertRaisesRegex(catalog.CatalogError, 'already used by first'):
+            catalog.validate_unique_hero_inputs(records)
+        (self.root/records[1]['hero_visual']['predictions_source']).write_text(
+            json.dumps({'schema_version': 2, 'input_sha256': 'b'*64}))
+        catalog.validate_unique_hero_inputs(records)
 
 
 if __name__ == '__main__':

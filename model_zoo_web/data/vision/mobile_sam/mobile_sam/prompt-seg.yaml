@@ -934,16 +934,230 @@ variants:
       --decoder-model-path /path/to/mobile_sam_decoder_512_nashm_int16_20261103_o1.hbm
       --decoder-asset-id s:mobile_sam:nash-m/mobile_sam_decoder_512_nashm_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+  - platform: s600
+    license:
+      name: AGPL-3.0
+      url: https://github.com/ultralytics/ultralytics/blob/8e1eb77948c6c4aa110ad0b4aaacb93fd9855967/LICENSE
+      scope: model
+    status: converted
+    converted_at: '2026-11-03'
+    metadata_revision: 1
+    artifact:
+      filename: mobile_sam_tinyvit_512_int16_20261103_o1_s600_bundle.tar.gz
+      format: TAR.GZ
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/mobile_sam/mobile_sam_tinyvit_512_int16_20261103_o1_s600_bundle.tar.gz
+      sha256: 7dc072d65490eec661b81d5baf8e43420859c7c6a9bc42877d14f50aee97ea56
+      size_bytes: 15281998
+      components:
+      - role: encoder
+        filename: mobile_sam_image_encoder_norm_512x512_nashp_int16_20261103_o1.hbm
+        format: HBM
+        platform: s600
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/mobile_sam/mobile_sam_image_encoder_norm_512x512_nashp_int16_20261103_o1.hbm
+        sha256: dade5f3f8d59fb4de9ef02434158e3e9e23b46d12b186dfe6abf358fd72c584f
+        size_bytes: 51650256
+      - role: decoder
+        filename: mobile_sam_decoder_512_nashp_int16_20261103_o1.hbm
+        format: HBM
+        platform: s600
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/mobile_sam/mobile_sam_decoder_512_nashp_int16_20261103_o1.hbm
+        sha256: cb66c7c7bd80b0eeadfa5c5dd7f19947be0dabbee55ce51f16b5537b5d4ca1aa
+        size_bytes: 14572160
+      bundle:
+        kind: encoder-decoder
+        descriptor: deployment.json
+        members:
+        - filename: LICENSE.ultralytics-AGPL-3.0.txt
+          sha256: 0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0
+          size_bytes: 34523
+        - filename: LICENSE.upstream-Apache-2.0.txt
+          sha256: c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4
+          size_bytes: 11357
+        - filename: README.txt
+          sha256: 856ae3e731cc96b75afb3b20e440c84168aa3c49fd99a79ff01be91735726a69
+          size_bytes: 759
+        - filename: UPSTREAM_NOTICE.md
+          sha256: 7fd2fdae7bbf5e295a724f7885613348312fc84ff6ea30db69db68362387078c
+          size_bytes: 663
+        - filename: decoder.oe_report.html
+          sha256: 02389757aa74ee721c393f3bf2219edbacf07fe2673b365dca069ea5364e149a
+          size_bytes: 2281612
+        - filename: decoder.oe_report_data.json
+          sha256: 2bb138a90da168a7b005054b2ca085d096d8b94e521c7e5496dc8119defb718f
+          size_bytes: 107051
+        - filename: deployment.json
+          sha256: c7131e8f2a9b849103b69805f5b5a2ed2a762f4a39d93a74154be40a667ee89b
+          size_bytes: 961
+        - filename: encoder.oe_report.html
+          sha256: a5ce9552a1c56b61a2ecdf704ef251e1edbfe6ea4e27255742d16f64b7132547
+          size_bytes: 3368385
+        - filename: encoder.oe_report_data.json
+          sha256: fc0edf7566f78898e1e9d7f06289e6aa06d42eb2eedde3146063bf908effa0d2
+          size_bytes: 164074
+        - filename: host-smoke.json
+          sha256: 6b9e27e2449b7f5df7b616e9e877aea06a33f76a04452ff5c4770609fbd400a9
+          size_bytes: 9439
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/mobile_sam/mobile_sam_tinyvit_512_int16_20261103_o1_s600_bundle.tar/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/mobile_sam/mobile_sam_tinyvit_512_int16_20261103_o1_s600_bundle.tar/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/mobile_sam/mobile_sam_tinyvit_512_int16_20261103_o1_s600_bundle.tar/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/mobile_sam/mobile_sam_tinyvit_512_int16_20261103_o1_s600_bundle.tar/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: low_res_masks
+        shape:
+        - 1
+        - 3
+        - 128
+        - 128
+        dtype: float32
+      - name: iou_predictions
+        shape:
+        - 1
+        - 3
+        dtype: float32
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 512
+        - 512
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 198
+      calibration_manifest_sha256: 8053db17a387974c0a2523b5c5976d6cfc3cc42ca298edd801e8c1f7875fc417
+      optimization_level: O1
+      board_validation: not-run
+      components:
+        encoder:
+          status: passed
+          artifact_sha256: dade5f3f8d59fb4de9ef02434158e3e9e23b46d12b186dfe6abf358fd72c584f
+          inputs:
+          - name: normalized_images
+            shape:
+            - 1
+            - 3
+            - 512
+            - 512
+            dtype: float32
+          outputs:
+          - name: image_embeddings
+            shape:
+            - 1
+            - 256
+            - 32
+            - 32
+            dtype: float32
+          oe_report_filename: encoder.oe_report.html
+          oe_report_sha256: a5ce9552a1c56b61a2ecdf704ef251e1edbfe6ea4e27255742d16f64b7132547
+          oe_data_filename: encoder.oe_report_data.json
+          oe_data_sha256: fc0edf7566f78898e1e9d7f06289e6aa06d42eb2eedde3146063bf908effa0d2
+        decoder:
+          status: passed
+          artifact_sha256: cb66c7c7bd80b0eeadfa5c5dd7f19947be0dabbee55ce51f16b5537b5d4ca1aa
+          inputs:
+          - name: image_embeddings
+            shape:
+            - 1
+            - 256
+            - 32
+            - 32
+            dtype: float32
+          - name: boxes
+            shape:
+            - 1
+            - 4
+            dtype: float32
+          outputs:
+          - name: low_res_masks
+            shape:
+            - 1
+            - 3
+            - 128
+            - 128
+            dtype: float32
+          - name: iou_predictions
+            shape:
+            - 1
+            - 3
+            dtype: float32
+          oe_report_filename: decoder.oe_report.html
+          oe_report_sha256: 02389757aa74ee721c393f3bf2219edbacf07fe2673b365dca069ea5364e149a
+          oe_data_filename: decoder.oe_report_data.json
+          oe_data_sha256: 2bb138a90da168a7b005054b2ca085d096d8b94e521c7e5496dc8119defb718f
+    validation:
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+      host_pipeline:
+        status: passed
+        stages:
+        - encoder
+        - decoder
+        evidence_file: host-smoke.json
+        evidence_sha256: 6b9e27e2449b7f5df7b616e9e877aea06a33f76a04452ff5c4770609fbd400a9
+        component_sha256:
+          encoder: dade5f3f8d59fb4de9ef02434158e3e9e23b46d12b186dfe6abf358fd72c584f
+          decoder: cb66c7c7bd80b0eeadfa5c5dd7f19947be0dabbee55ce51f16b5537b5d4ca1aa
+        scope: Connected source/native/ONNX host inference; board execution not-run
+      artifact_sha256: 7dc072d65490eec661b81d5baf8e43420859c7c6a9bc42877d14f50aee97ea56
+    provenance:
+      repository_commit: b00eabdeae1841d35672b9d5d392e59163cb3980
+      source_repository_commit: f706ad9c4eb7f219c00d9050e46328518ffb65d2
+      source_checkpoint_sha256: 6dbb90523a35330fedd7f1d3dfc66f995213d81b29a5ca8108dbcdd4e37d6c2f
+      source_weight_url: https://github.com/ChaoningZhang/MobileSAM/blob/f706ad9c4eb7f219c00d9050e46328518ffb65d2/weights/mobile_sam.pt
+      checkpoint_revision: sha256:6dbb90523a35330fedd7f1d3dfc66f995213d81b29a5ca8108dbcdd4e37d6c2f
+      source_version_pair:
+        repository: https://github.com/ChaoningZhang/MobileSAM
+        commit: f706ad9c4eb7f219c00d9050e46328518ffb65d2
+        checkpoint:
+          url: https://github.com/ChaoningZhang/MobileSAM/blob/f706ad9c4eb7f219c00d9050e46328518ffb65d2/weights/mobile_sam.pt
+          sha256: 6dbb90523a35330fedd7f1d3dfc66f995213d81b29a5ca8108dbcdd4e37d6c2f
+          bytes: 40728226
+          publisher_sha256_verified: false
+      toolchain_image: S SDK 3.7.0 / CPU or GPU image identified by its exact digest
+      toolchain_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      build_id: mobile_sam-tinyvit-512-int16-20261103-o1-s600
+      precision_policy: INT16 activations; O1
+      native_variant: tinyvit-512-int16-20261103-o1
+      host_smoke_report_sha256: 6b9e27e2449b7f5df7b616e9e877aea06a33f76a04452ff5c4770609fbd400a9
+      components:
+        encoder:
+          onnx_sha256: d37b75853d7ea2cbbc86f44d067fc3fb1937c86bde6de19e892352a6fe3fad0a
+          config_sha256: 5d84e921fa9b553ac38de53ddc5252bc0ec65b023bd919205422e951f39084c2
+        decoder:
+          onnx_sha256: 5de5e99343d00e42941093cf3d3136ed28a6c24809c37039d8bf613ce4784253
+          config_sha256: 21383a1b0ed9f2be65ae1bd6568681d3743a50834c009220aeed450b937065b2
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: e6ddaa398f2edb2972b338389f386e90d79ed431fd12eacbdc371e6164f6203a
+    runtime_command: python3 samples/vision/mobile_sam/runtime/python/main.py --target
+      s600 --variant tinyvit-512-int16-20261103-o1 --encoder-model-path /path/to/mobile_sam_image_encoder_norm_512x512_nashp_int16_20261103_o1.hbm
+      --encoder-asset-id s:mobile_sam:nash-p/mobile_sam_image_encoder_norm_512x512_nashp_int16_20261103_o1.hbm
+      --decoder-model-path /path/to/mobile_sam_decoder_512_nashp_int16_20261103_o1.hbm
+      --decoder-asset-id s:mobile_sam:nash-p/mobile_sam_decoder_512_nashp_int16_20261103_o1.hbm
+      --test-img /path/to/image.jpg
 hero_visual:
-  file: model_zoo_web/release/assets/pending-heroes/mobile_sam-generated-20261103.webp
+  file: model_zoo_web/release/assets/pending-heroes/mobile_sam-unique-20261103.webp
   kind: prompt-mask-panel
-  input: samples/vision/mobile_sam/test_data/banner_input_dog_20261103.png
-  predictions_source: model_zoo_web/release/assets/pending-heroes/mobile_sam-generated-20261103.json
+  input: samples/vision/mobile_sam/test_data/banner_input_unique_20261103.png
+  predictions_source: model_zoo_web/release/assets/pending-heroes/mobile_sam-unique-20261103.json
   runtime: host-float-reference
-  note: Host float reference, not board output. Generated input photograph; every
-    model output is computed from the pinned source graph.
+  inference_receipt_version: 2
+  note: Host float reference, not board output. Generated input photograph; every model output is computed
+    from the pinned source graph.
   model_file: mobile_sam.pt
   model_url: https://github.com/ChaoningZhang/MobileSAM/blob/f706ad9c4eb7f219c00d9050e46328518ffb65d2/weights/mobile_sam.pt
   framework: ONNX Runtime 1.19.2
-  commit: c5e3d097a9e44b8512cc71b66459ac3ed0016b64
+  commit: 7a9f2d0596b80376697ca98a20ff0d81e14f41b7
   documented_in: samples/vision/mobile_sam/conversion/README.md

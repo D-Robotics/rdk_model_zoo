@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -55,4 +56,21 @@ function assertCoverResolves(coverImage, distRoot, label) {
   assertLocalImageFile(path.join(distRoot, coverImage), `${label}: ${coverImage}`);
 }
 
-module.exports = { assertCoverResolves, assertLocalImageFile, assertWellFormedSvg };
+function assertDistinctModelCovers(models, distRoot) {
+  const digests = new Map();
+  const owners = new Map();
+  for (const model of models) {
+    if (model.coverImage === 'assets/pending-cover.svg') continue;
+    if (!digests.has(model.coverImage)) {
+      const bytes = fs.readFileSync(path.join(distRoot, model.coverImage));
+      digests.set(model.coverImage, crypto.createHash('sha256').update(bytes).digest('hex'));
+    }
+    const digest = digests.get(model.coverImage);
+    const owner = owners.get(digest);
+    assert(!owner || owner === model.catalogId,
+      `${model.catalogId} and ${owner} use the same cover; each model needs a distinct banner`);
+    owners.set(digest, model.catalogId);
+  }
+}
+
+module.exports = { assertCoverResolves, assertDistinctModelCovers, assertLocalImageFile, assertWellFormedSvg };

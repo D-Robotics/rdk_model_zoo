@@ -589,6 +589,7 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
         ...(heroCover ? {
           heroProvenance: {
             kind: record.hero_visual.kind,
+            receiptVersion: record.hero_visual.inference_receipt_version || 1,
             input: record.hero_visual.input,
             predictionsSource: record.hero_visual.predictions_source || record.hero_visual.input,
             revision: record.hero_visual.runtime === 'host-float-reference'

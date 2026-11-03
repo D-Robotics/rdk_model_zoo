@@ -719,7 +719,8 @@ def _validate_inference_banner_receipt(payload: dict[str, Any], entry: dict[str,
     metadata = require_mapping(payload.get("graph_io"), f"{label}.graph_io")
     if not graphs or set(graphs) != set(metadata):
         raise CatalogError(f"{label} must record every graph's output metadata")
-    roles = ({"image", "text"} if entry.get("kind") == "similarity-panel" else
+    roles = ({"parta", "partb"} if payload.get("source") == "fasterrcnn" else
+             {"image", "text"} if entry.get("kind") == "similarity-panel" else
              {"encoder", "decoder"} if entry.get("kind") == "prompt-mask-panel" else {"model"})
     if set(graphs) != roles:
         raise CatalogError(f"{label} must record every component of this task")
@@ -795,6 +796,8 @@ def _validate_host_float_hero(entry: dict[str, Any], label: str, revision: str) 
             raise CatalogError(f"{label}.{key} does not match the inference record")
     if payload.get("runtime") != "host-float-reference":
         raise CatalogError(f"{label} inference record must be host-float-reference")
+    if entry.get("inference_receipt_version", payload.get("schema_version")) != payload.get("schema_version"):
+        raise CatalogError(f"{label} receipt version differs from its actual inference record")
     kind = entry["kind"]
     new_kinds = {"depth-panel", "feature-panel", "matting-panel", "prompt-mask-panel", "similarity-panel"}
     if kind in new_kinds or payload.get("schema_version") == 2:
@@ -868,7 +871,7 @@ def _validate_hero_visual(record: dict[str, Any], relative_source: str, revision
     allowed = {
         "file", "kind", "input", "predictions_source", "runtime", "quote", "labels", "scores",
         "crop", "note", "model_file", "model_url", "framework", "commit", "documented_in",
-        "topk", "detections", "confidence_threshold",
+        "topk", "detections", "confidence_threshold", "inference_receipt_version",
     }
     unknown = sorted(set(entry) - allowed)
     if unknown:
@@ -1349,6 +1352,23 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
     return normalized
 
 
+def validate_unique_hero_inputs(records: list[dict[str, Any]]) -> None:
+    """A new inference cover has one input photograph per catalog model."""
+    owners: dict[str, str] = {}
+    for record in records:
+        hero = record.get("hero_visual", {})
+        if hero.get("runtime") != "host-float-reference":
+            continue
+        source = _hero_asset_path(hero["predictions_source"], record["id"], ".json")
+        payload = json.loads((ROOT / source).read_text())
+        if payload.get("schema_version") != 2:
+            continue
+        digest = payload["input_sha256"]
+        previous = owners.setdefault(digest, record["id"])
+        if previous != record["id"]:
+            raise CatalogError(f"{record['id']}: banner input photograph is already used by {previous}")
+
+
 def build_catalog() -> tuple[bytes, bytes]:
     source_paths = sorted(
         path for path in DATA_ROOT.rglob("*.yaml")
@@ -1385,6 +1405,7 @@ def build_catalog() -> tuple[bytes, bytes]:
         converted_count += states.count("converted")
         records.append(normalized)
 
+    validate_unique_hero_inputs(records)
     records.sort(key=lambda item: item["id"])
     catalog = {
         "schema_version": 1,
