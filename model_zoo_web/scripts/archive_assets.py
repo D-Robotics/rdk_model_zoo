@@ -87,7 +87,9 @@ def prepare(release_bytes, html_bytes, oe_bytes, *, platform, source, filename,
     files = {'release.source.json': release_bytes,
              'release.json': (json.dumps(relocated, ensure_ascii=False, indent=2) + '\n').encode(),
              'oe_report.html': html_bytes, 'oe_report_data.json': oe_bytes}
-    records = [(filename, expected_model_sha256)] + [(name, sha(files[name])) for name in PACKAGE_FILES[:-1]]
+    records = ([(filename, expected_model_sha256)]
+               + [(item['filename'], item['sha256']) for item in artifact.get('components', [])]
+               + [(name, sha(files[name])) for name in PACKAGE_FILES[:-1]])
     files['SHA256SUMS'] = ''.join(f'{digest}  {name}\n' for name, digest in records).encode()
     return prefix, files
 

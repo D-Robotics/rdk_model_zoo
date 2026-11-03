@@ -375,6 +375,7 @@ const taskMetadata = {
   cls: { id: 'image-classification', label: '图像分类', description: '图像分类模型' },
   segment: { id: 'instance-segmentation', label: '实例分割', description: '实例分割模型' },
   seg: { id: 'instance-segmentation', label: '实例分割', description: '实例分割模型' },
+  'prompt-seg': { id: taskRegistry.tasks['prompt-seg'].facet_id, label: taskRegistry.tasks['prompt-seg'].label_zh, description: '点或框提示的图像分割模型' },
   pose: { id: 'pose-estimation', label: '姿态估计', description: '人体姿态估计模型' },
   matting: { id: 'portrait-matting', label: '人像抠图', description: '人像 alpha 遮罩预测模型' },
   embed: { id: 'image-embedding', label: '视觉特征提取', description: '图像向量与局部特征提取模型' },

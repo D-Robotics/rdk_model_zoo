@@ -74,7 +74,7 @@ For later measurements, upload a new metadata revision and register with
 revision. Promotion to released requires all board checks and full metrics.
 
 The canonical Workbench procedure is
-`/home/zhengyi/work/rdk_model_zoo_workbench/GUIDELINE.md` v2.13, sections 11.5–11.7.
+`/home/zhengyi/work/rdk_model_zoo_workbench/GUIDELINE.md` v2.14, sections 11.5–11.8.
 Its embedded helper sources match these scripts. Generic website builds use the
 same committed inputs and require no Workbench connection.
 
@@ -85,3 +85,12 @@ artifacts. Pin a 40-character checkpoint revision, or use
 Preserve the publisher's actual license and source notices. Multiple compiler
 subgraphs use `scripts/bundle_oe_html.py` to retain every original HTML byte in
 one companion report; static estimates remain separate from board measurements.
+
+SAM and Faster R-CNN publish complete `.tar.gz` deployment pairs. The bundle
+contains every HBM, a deployment descriptor, each original component OE report
+and JSON, the original connected host check, licenses and native sample commands.
+Each component retains its own ONNX/config/model identity and public HBM URL.
+`component_package.py` verifies all member bytes and the connected report before
+staging; the five companion files retain their existing Archive directory layout.
+Upload and verify both component HBMs and the complete bundle before registration.
+Combined compiler reports leave whole-pipeline latency and FPS empty until measured.

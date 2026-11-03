@@ -60,6 +60,8 @@ def main():
     normalized=build_catalog.validate_record(record,path)
     oe=json.loads(args.oe_data.read_text())
     if oe['provenance']['artifact_sha256']!=row['artifact']['sha256']:raise ValueError('OE data describes another model')
+    from component_package import validate_components
+    validate_components(row,platform=platform,source=model['source'],oe=oe)
     report_name=f"{model['source']}-{model['family']}-{model['task']}-{size}-{platform}-v{row['metadata_revision']}-oe-data.json"
     report_path=args.web/'release/reports'/report_name
     if report_path.exists() and report_path.read_bytes()!=args.oe_data.read_bytes():raise ValueError('Existing report differs')

@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from archive_assets import PACKAGE_FILES, prepare, sha
+from component_package import validate_bundle_files
 
 
 def stage(manifest, model, report, oe_data, output):
@@ -25,6 +26,7 @@ def stage(manifest, model, report, oe_data, output):
     filename = artifact.get('name') or artifact.get('filename')
     if model.name != filename:
         raise ValueError('Model filename differs from the manifest')
+    validate_bundle_files(manifest, data, report.read_bytes(), json.loads(oe_data.read_text()))
     prefix, files = prepare((json.dumps(manifest,ensure_ascii=False,indent=2)+'\n').encode(),
         report.read_bytes(),oe_data.read_bytes(),platform=manifest['target']['platform'],
         source=manifest['model']['source'],filename=filename,model_url=artifact['url'],expected_model_sha256=digest)

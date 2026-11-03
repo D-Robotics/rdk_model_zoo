@@ -89,12 +89,15 @@ def validate_package(package):
     if release['reports'].get('oe_conversion_url') != base+'/oe_report.html' or release['reports'].get('oe_data_url') != base+'/oe_report_data.json':
         raise ValueError('OE URLs do not match the assets namespace')
     expected = {filename: artifact['sha256'], **{name: sha(files[name]) for name in PACKAGE_FILES[:-1]}}
+    expected.update({item['filename']:item['sha256'] for item in artifact.get('components', [])})
     if checksum_entries(files['SHA256SUMS']) != expected:
         raise ValueError('Prepared checksum inventory does not match the package')
     if release['provenance']['asset_publication']['source_manifest_sha256'] != sha(files['release.source.json']):
         raise ValueError('Original release identity was not preserved')
     if json.loads(files['oe_report_data.json'])['provenance']['artifact_sha256'] != artifact['sha256']:
         raise ValueError('OE data belongs to another model')
+    from component_package import validate_components
+    validate_components(release, platform=platform, source=source, oe=json.loads(files['oe_report_data.json']))
     return prefix, files
 
 

@@ -11,11 +11,15 @@ import math
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path, PurePosixPath
 from typing import Any
 from urllib.parse import unquote, urlparse
 
 import yaml
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from component_package import validate_components
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -1034,7 +1038,7 @@ def validate_performance(performance_value: Any, platform_label: str, *, complet
         seen_pipeline_streams.add(pipeline_streams)
 
 
-def validate_converted_platform(platform: dict[str, Any], license_info: dict[str, Any], label: str) -> None:
+def validate_converted_platform(platform: dict[str, Any], license_info: dict[str, Any], label: str, source: str = "") -> None:
     """Validate a downloadable artifact without claiming unmeasured board results."""
     if "license" in platform:
         license_info = require_mapping(platform["license"], f"{label}.license")
@@ -1049,7 +1053,12 @@ def validate_converted_platform(platform: dict[str, Any], license_info: dict[str
     require_positive_int(platform.get("metadata_revision"), f"{label}.metadata_revision")
     artifact = platform["artifact"]
     provenance = require_mapping(platform.get("provenance"), f"{label}.provenance")
-    for key in ("onnx_sha256", "config_sha256", "source_checkpoint_sha256"):
+    try:
+        components = validate_components(platform, platform=platform['platform'], source=source)
+    except ValueError as error:
+        raise CatalogError(f'{label}: {error}') from error
+    identity_fields = ("source_checkpoint_sha256",) if components else ("onnx_sha256", "config_sha256", "source_checkpoint_sha256")
+    for key in identity_fields:
         if not SHA256_RE.fullmatch(str(provenance.get(key, ""))):
             raise CatalogError(f"{label}.provenance.{key} must identify the actual conversion input")
     validate_commit(provenance.get("repository_commit"), f"{label}.provenance.repository_commit")
@@ -1210,7 +1219,7 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
                 )
 
             if status == "converted" or "validation" in platform_record and platform_record.get("metadata_revision"):
-                validate_converted_platform(platform_record, license_info, platform_label)
+                validate_converted_platform(platform_record, license_info, platform_label, source)
             if status == "converted":
                 if "accuracy" not in platform_record and "performance" not in platform_record:
                     continue

@@ -519,3 +519,11 @@ SHA256 与大小后，将制品复制到 `dist-local-candidate/downloads/<id>/`�
 用 `scripts/bundle_oe_html.py` 逐份保留并嵌入报告；全部子图的 JSON 与模型
 SHA 必须一致。上传和匿名回读完成后，使用 `register_converted.py` 登记
 独立规格；普通推理继续使用 Sample 原生下载和 Runtime 命令。
+
+SAM 的 encoder/decoder、Faster R-CNN 的 PartA/PartB 必须作为完整
+`.tar.gz` 部署包登记。包内保留全部 HBM、部署描述、每组件原始 OE HTML/JSON、
+原始串联主机对照报告、许可和原生命令；每件 HBM 仍有独立的公开下载地址。
+`component_package.py` 在 staging 前检查成员字节、完整角色集、各自
+ONNX/config/ABI 与报告身份，以及实际串联对照的权重和全部 ONNX。
+上传并匿名回读整包和所有组件后才登记。组合流水线未测的延迟、FPS 保持空值，
+不累加各组件编译估算填入板端性能。详细步骤见 Workbench Guide v2.14 第 11.8 节。
