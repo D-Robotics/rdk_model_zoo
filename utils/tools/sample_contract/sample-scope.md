@@ -13,6 +13,7 @@ scope.
 | llm | gemma4 |
 | llm | gemma4-e2b |
 | llm | minicpm5-2b |
+| llm | oellm |
 | robotics | himloco |
 | speech | asr |
 | speech | kws |

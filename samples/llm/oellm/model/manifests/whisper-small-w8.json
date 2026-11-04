@@ -1,0 +1,852 @@
+{
+  "schema_version": 1,
+  "id": "oellm-whisper-small-w8-s600",
+  "profile": "whisper-small-w8",
+  "family": "whisper",
+  "source_id": "openai",
+  "display_name": "whisper-small W8",
+  "family_name": "Whisper",
+  "model_size": "Small",
+  "scope": "asr",
+  "target": "s600",
+  "source": {
+    "kind": "sdk-official",
+    "publisher": "D-Robotics",
+    "sdk_version": "2.0.0",
+    "model_id": "openai/whisper-small",
+    "revision": null,
+    "license": {
+      "name": "Apache-2.0",
+      "url": "https://huggingface.co/openai/whisper-small/blob/main/LICENSE"
+    },
+    "download_index": "oellm_runtime_s600/model/resolve_model_s600.md"
+  },
+  "conversion": {
+    "sdk": "OELLM 2.0.0",
+    "status": "official-precompiled",
+    "march": "nash-p",
+    "cores": 4,
+    "compiler": "4.14.1a2.dev202610090350+05dd1f0.develop",
+    "prefill_chunk_size": 8,
+    "context_length": 448,
+    "precision_policy": "w8",
+    "acceleration": "standard"
+  },
+  "input": {
+    "kind": "audio",
+    "context_length": 448,
+    "prefill_chunk_size": 8,
+    "sample_rate": 16000,
+    "language": "en"
+  },
+  "runtime": {
+    "type": "ASR_WHISPER",
+    "version": "2.0.0",
+    "config_template": "runtime/cpp/configs/whisper-small-w8.json",
+    "config_source": "configs/Whisper_config/whisper_small_w8_config.json",
+    "config_source_sha256": "dd31c9b89831015acf5a14048faba88accbdf50c8854fc1f5dacc305d2ac169d",
+    "entrypoint": "examples/asr_demo/asr_demo"
+  },
+  "availability": {
+    "kind": "official-oss",
+    "name": "whisper-small_w8.zip",
+    "archive_root": "whisper-small_w8",
+    "package_url": "https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm/2.0.0/s600_models/whisper-small_w8.zip",
+    "sha256": "42aee8de1c3d6e2ef703b2a813abc394514ad2091525abade34f2d60d7679c7f",
+    "size_bytes": 272543762,
+    "etag": "\"0A38B6CE675392E198198BC1F8157E07-65\"",
+    "verification": {
+      "status": "verified",
+      "method": "anonymous-https-full-sha256",
+      "checked_at": "2026-11-04T05:23:49.789540+00:00",
+      "zip_crc": "passed"
+    }
+  },
+  "files": [
+    {
+      "name": "whisper-small_audio_encoder_mel80x1500_w8_nash-p_corenum_4.hbm",
+      "bytes": 131189608,
+      "sha256": "32e5dd6211daeb2d7104d6e5b727723e95ef174cf9bf9e61ce3a9e286f469dd9",
+      "crc32": "38d68cbc",
+      "crc_verified": true,
+      "role": "audio-hbm"
+    },
+    {
+      "name": "whisper-small_embed_tokens.bin",
+      "bytes": 79664640,
+      "sha256": "cccaa782680f3d53286ceaa427611a00cd756e88286249589996d454879c08a2",
+      "crc32": "baacddad",
+      "crc_verified": true,
+      "role": "embedding"
+    },
+    {
+      "name": "whisper-small_language_chunk_8_cache_448_w8_nash-p_corenum_4_4.hbm",
+      "bytes": 196679104,
+      "sha256": "677a22873bb07965e6fe0052bc8ce5543ad5156340472760a0686bea9f85c7a0",
+      "crc32": "ec57d355",
+      "crc_verified": true,
+      "role": "language-hbm"
+    }
+  ],
+  "hbm_metadata": [
+    {
+      "file": "whisper-small_audio_encoder_mel80x1500_w8_nash-p_corenum_4.hbm",
+      "march": "nash-p",
+      "toolkit": "4.14.1a2.dev202610090350+05dd1f0.develop",
+      "graphs": [
+        {
+          "name": "encoder",
+          "cores": 4,
+          "inputs": [
+            {
+              "name": "input_features",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894754e0>"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "encoder_hidden_states",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889477640>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "whisper-small_language_chunk_8_cache_448_w8_nash-p_corenum_4_4.hbm",
+      "march": "nash-p",
+      "toolkit": "4.14.1a2.dev202610090350+05dd1f0.develop",
+      "graphs": [
+        {
+          "name": "prefill",
+          "cores": 4,
+          "inputs": [
+            {
+              "name": "input_embeddings",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "encoder_hidden_states",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "position_ids",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "attention_mask",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_key_0",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_key_1",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_key_2",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_key_3",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_key_4",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_key_5",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_key_6",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_key_7",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_key_8",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_key_9",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_key_10",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_key_11",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_value_0",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_value_1",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_value_2",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_value_3",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_value_4",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_value_5",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_value_6",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_value_7",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_value_8",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_value_9",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_value_10",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            },
+            {
+              "name": "in_self_value_11",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476620>"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output_logits",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_key_0",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_key_1",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_key_2",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_key_3",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_key_4",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_key_5",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_key_6",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_key_7",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_key_8",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_key_9",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_key_10",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_key_11",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_value_0",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_value_1",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_value_2",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_value_3",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_value_4",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_value_5",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_value_6",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_value_7",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_value_8",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_value_9",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_value_10",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_self_value_11",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_key_0",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_key_1",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_key_2",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_key_3",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_key_4",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_key_5",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_key_6",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_key_7",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_key_8",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_key_9",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_key_10",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_key_11",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_value_0",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_value_1",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_value_2",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_value_3",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_value_4",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_value_5",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_value_6",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_value_7",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_value_8",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_value_9",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_value_10",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            },
+            {
+              "name": "out_cross_value_11",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f4889476830>"
+            }
+          ]
+        },
+        {
+          "name": "decode",
+          "cores": 4,
+          "inputs": [
+            {
+              "name": "input_embeddings",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "encoder_hidden_states",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "position_ids",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "attention_mask",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_key_0",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_key_1",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_key_2",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_key_3",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_key_4",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_key_5",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_key_6",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_key_7",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_key_8",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_key_9",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_key_10",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_key_11",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_value_0",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_value_1",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_value_2",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_value_3",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_value_4",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_value_5",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_value_6",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_value_7",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_value_8",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_value_9",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_value_10",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_self_value_11",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_key_0",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_key_1",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_key_2",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_key_3",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_key_4",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_key_5",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_key_6",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_key_7",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_key_8",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_key_9",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_key_10",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_key_11",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_value_0",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_value_1",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_value_2",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_value_3",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_value_4",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_value_5",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_value_6",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_value_7",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_value_8",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_value_9",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_value_10",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            },
+            {
+              "name": "in_cross_value_11",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894a8910>"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output_logits",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_key_0",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_key_1",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_key_2",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_key_3",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_key_4",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_key_5",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_key_6",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_key_7",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_key_8",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_key_9",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_key_10",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_key_11",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_value_0",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_value_1",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_value_2",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_value_3",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_value_4",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_value_5",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_value_6",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_value_7",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_value_8",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_value_9",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_value_10",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_self_value_11",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_key_0",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_key_1",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_key_2",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_key_3",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_key_4",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_key_5",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_key_6",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_key_7",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_key_8",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_key_9",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_key_10",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_key_11",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_value_0",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_value_1",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_value_2",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_value_3",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_value_4",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_value_5",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_value_6",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_value_7",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_value_8",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_value_9",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_value_10",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            },
+            {
+              "name": "out_cross_value_11",
+              "type": "<hbdk4.compiler.hbm.Type object at 0x7f48894aa5c0>"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "board_tests": "not-run"
+}
