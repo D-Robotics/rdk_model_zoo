@@ -3,6 +3,7 @@
 from pathlib import Path
 from types import SimpleNamespace
 import json
+import re
 import subprocess
 import sys
 import unittest
@@ -114,7 +115,7 @@ class RuntimeTests(unittest.TestCase):
                 resolve_selection("x5", variant=variant)
 
     def test_published_matrix_and_defaults(self):
-        self.assertEqual(len([r for r in list_models() if "-native-" not in r[1]]), 16)
+        self.assertEqual(len([r for r in list_models() if re.fullmatch(r'11[sml]|26[nslmx]',r[1])]), 16)
         for target, variant in [("x5", "11s"), ("s100", "11s"), ("s100p", "26n")]:
             selection = resolve_selection(target)
             self.assertEqual(selection.variant, variant)
@@ -131,6 +132,27 @@ class RuntimeTests(unittest.TestCase):
         ]:
             with self.assertRaises(ValueError):
                 resolve_selection(target, variant=variant)
+
+    def test_converted_s_profiles_bind_all_actual_float_heads(self):
+        from samples.vision.yoloe.runtime.python.yoloe import RuntimeMetadata,runtime_selection,bind_yoloe_outputs
+        path=ROOT/'samples/vision/yoloe/conversion/converted_targets_20261103.json'
+        for profile in json.loads(path.read_text())['profiles']:
+            with self.subTest(variant=profile['variant'],target=profile['target']['platform']):
+                component=profile['components']['model']
+                sample='yoloe26_seg'if profile['variant'].startswith('26')else 'yoloe11_seg'
+                selected=resolve_selection(profile['target']['platform'],variant=profile['variant'],asset_id='s:'+sample+':'+component['filename'])
+                self.assertTrue(selected.published_float)
+                self.assertEqual(selected.asset.sha256,component['sha256'])
+                values={'model_name':'actual_static_abi'}
+                for side in ['input','output']:
+                    values[side+'_names']=[v['name']for v in component[side+'s']]
+                    values[side+'_shapes']={v['name']:v['shape']for v in component[side+'s']}
+                    values[side+'_dtypes']={v['name']:v['dtype']for v in component[side+'s']}
+                binding=bind_yoloe_outputs(runtime_selection(selected),RuntimeMetadata(**values),allow_integer=False)
+                self.assertEqual(len(binding.output_roles),10)
+                self.assertEqual(len(component['precision_outputs']),10)
+                for check in ['board_smoke','accuracy','runtime_1','runtime_2','cpp_1','cpp_2']:
+                    self.assertEqual(profile['validation'][check],'not-run')
 
     def test_exact_asset_and_custom_float_identity(self):
         s = resolve_selection("x5", variant="11m")
