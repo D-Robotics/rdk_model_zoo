@@ -111,3 +111,28 @@ hrt_model_exec perf --model_file model/pp_liteseg_stdc1_cityscapes_1024x512_nv12
 ## 补充准备
 
 缺少钉住的 checkpoint/PaddleSeg/导出包组合；未随附导出图或编译产物；输出元数据、数值精度和性能未在本仓库验证。源文档预期的约 95 FPS／10.5 ms 不是本仓库的实测值。不支持算子需要检查，不能盲目删除 argmax，因为运行时边界已经是类别图。把 calibration_type 改为 mix 或补充代表性数据属于需要重新验证的实验，不是保证有效的修复。
+
+## Reproduce the S float-logits export
+
+Keep the checkpoint, calibration tensors, ONNX and HBM on dev-server. Use an isolated environment from `requirements-export.txt` and PaddleSeg commit `3c4db66de1d9d59d0628ed87590b6308a2f4aa2a`. The official checkpoint URL is recorded in `source_export_20261104.json`; its observed SHA-256 is `86543ad69437495f8e7688d497a52d2472ee098efa918dcfa551803570f5edf3` (not a separately verified publisher digest).
+
+```bash
+python onnx_export/export_logits.py --source /server/PaddleSeg --checkpoint /server/model.pdparams --output /server/new-export --samples /server/a.jpg /server/b.jpg /server/c.jpg
+python prepare_calibration.py --src /server/representative-road-images --out /server/calibration/normalized --num 33 --seed 42 --source-logits
+```
+
+The exporter strictly loads every trained tensor. Three non-trainable attention scales introduced by the pinned upstream source are explicitly reconstructed as its `Constant(1)`, preserving the original `(1 - attention)` formula. Four full-logit source/ONNX checks passed, and the portable exporter reproduced the compiled ONNX byte-for-byte. Do not use the legacy raw 0..255 calibration tensors or ImageNet normalization for this S variant. The recorded run used 33 existing COCO train2017 images with traffic-category annotations, its own normalized-input manifest and a full-output source CPU/SDK CPU parity gate at atol=1e-4, rtol=1e-3 before independent target PTQ. Runtime preprocessing uses the same RGB [-1,1] tensor domain.
+
+<!-- BEGIN CPU S CONVERSIONS 20261104 -->
+
+## Additional CPU PTQ S profiles (2026-11-04)
+
+These exact trained-checkpoint exports passed the source host gate and the full-output CPU source/CPU SDK gate (three frozen images plus deterministic random input, atol=1e-4, rtol=1e-3). Each target has its own INT16 PTQ, compiler metadata, OE report and checksum in `converted_targets_20261103.json`. Compiler estimates describe conversion; board accuracy, Runtime 1/2 concurrency and C++ 1/2 streams remain not run.
+
+Models and intermediate outputs stay on dev-server. The Mac holds code and metadata only; Archive uploads stream from server files without a local model copy.
+
+| Target | Native variant | Manifest filename | SHA-256 | Bytes |
+|---|---|---|---|---:|
+| s100 | `stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104` | `s100/pp_liteseg_stdc1_cityscapes_nashe_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1.hbm` | `6cee553d56e66ab2008aac8a7cf982f48a5ef75f4ddcada1b9dae547a1212491` | 227956272 |
+
+<!-- END CPU S CONVERSIONS 20261104 -->

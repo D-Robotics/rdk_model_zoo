@@ -45,7 +45,7 @@ def main(argv=None) -> int:
     if args.list_models:
         return run_list_models(args.target)
     try:
-        selection = resolve_selection(args.target, asset_id=args.asset_id, model_path=args.model_path)
+        selection = resolve_selection(args.target, asset_id=args.asset_id, model_path=args.model_path, variant=args.variant)
         if (args.input_width, args.input_height) != (1024, 512):
             raise ValueError('The published model requires input-width=1024 and input-height=512')
         if not 0 <= args.alpha <= 1:

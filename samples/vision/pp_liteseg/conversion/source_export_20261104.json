@@ -1,0 +1,314 @@
+{
+  "original_conversion_export": {
+    "schema_version": 1,
+    "status": "passed",
+    "source_repository": "https://github.com/PaddlePaddle/PaddleSeg",
+    "source_commit": "3c4db66de1d9d59d0628ed87590b6308a2f4aa2a",
+    "checkpoint": {
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/model.pdparams",
+      "sha256": "86543ad69437495f8e7688d497a52d2472ee098efa918dcfa551803570f5edf3",
+      "size_bytes": 32639554
+    },
+    "exporter": {
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/export_ppliteseg_r02.py",
+      "sha256": "00a50b80faa9920bfb4ae148c4d492632f432058a15818c89603097aca491109",
+      "size_bytes": 5830
+    },
+    "source_config": {
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/export-r02/source-config.yml",
+      "sha256": "7d8cf404bbf37d9913c77ca2ccde7e9ccd3fe9f38ac0f8124ccfb6e619d21f2c",
+      "size_bytes": 1165
+    },
+    "onnx": {
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/export-r02/pp_liteseg_stdc1_cityscapes_1024x512_logits.onnx",
+      "sha256": "ea10c0f1b85b41680fe3c9366606d695189ebe9f12959cbd176caa6069741dfc",
+      "size_bytes": 32218235
+    },
+    "strict_checkpoint_load": true,
+    "checkpoint_compatibility": {
+      "trained_tensors": "all loaded; no missing or unexpected trained keys",
+      "upstream_non_trainable_constants": {
+        "keys": [
+          "ppseg_head.arm_list.0._scale",
+          "ppseg_head.arm_list.1._scale",
+          "ppseg_head.arm_list.2._scale"
+        ],
+        "value": 1.0,
+        "source": {
+          "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/PaddleSeg-3c4db66de1d9d59d0628ed87590b6308a2f4aa2a/paddleseg/models/layers/tensor_fusion.py",
+          "sha256": "08d44e15c9655c68c1857126f8537a3d5854e2369d9cd4725add18cb155794f8",
+          "size_bytes": 11336
+        }
+      }
+    },
+    "parameter_count": 8153205,
+    "input": {
+      "name": "x",
+      "shape": [
+        1,
+        3,
+        512,
+        1024
+      ],
+      "dtype": "float32"
+    },
+    "outputs": [
+      {
+        "name": "fetch_name_0",
+        "shape": [
+          1,
+          19,
+          512,
+          1024
+        ],
+        "dtype": "float32"
+      }
+    ],
+    "normalization": {
+      "mean": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "std": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "scale": 0.00392156862745098,
+      "format": "RGB",
+      "layout": "NCHW"
+    },
+    "source_host_gate": {
+      "metric": "matching pre-argmax logits cosine",
+      "threshold": 0.95,
+      "cases": [
+        {
+          "case": "0",
+          "source_image": {
+            "path": "/home/zhengyi/work/rdk_model_zoo_workbench/inputs/calibration/coco-train2017-seed42-200/000000004478.jpg",
+            "sha256": "3ade3b006e8e3f5662cf80ba915b298981c5ad0f8713e419ad0ffb3b2501eeb2",
+            "size_bytes": 148221
+          },
+          "logits_cosine": 0.9999999999997317,
+          "max_abs": 1.049041748046875e-05,
+          "argmax_agreement": 1.0,
+          "status": "passed"
+        },
+        {
+          "case": "52",
+          "source_image": {
+            "path": "/home/zhengyi/work/rdk_model_zoo_workbench/inputs/calibration/coco-train2017-seed42-200/000000146469.jpg",
+            "sha256": "c0d0e557ed6e419ee99b4eded2a868db555d3ed2274bc0c4133d97187170afe0",
+            "size_bytes": 164765
+          },
+          "logits_cosine": 0.9999999999996019,
+          "max_abs": 1.0013580322265625e-05,
+          "argmax_agreement": 1.0,
+          "status": "passed"
+        },
+        {
+          "case": "143",
+          "source_image": {
+            "path": "/home/zhengyi/work/rdk_model_zoo_workbench/inputs/calibration/coco-train2017-seed42-200/000000413927.jpg",
+            "sha256": "02c07bfc2bfdc78cf0b9e94def1de111584460c5498f7379c3a199292dd54c9d",
+            "size_bytes": 47973
+          },
+          "logits_cosine": 0.9999999999996173,
+          "max_abs": 1.6927719116210938e-05,
+          "argmax_agreement": 1.0,
+          "status": "passed"
+        },
+        {
+          "case": "random-seed42",
+          "source_image": null,
+          "logits_cosine": 0.9999999999995551,
+          "max_abs": 1.621246337890625e-05,
+          "argmax_agreement": 1.0,
+          "status": "passed"
+        }
+      ]
+    },
+    "versions": {
+      "paddle": "3.0.0",
+      "paddle2onnx": "2.0.1",
+      "onnx": "1.17.0",
+      "onnxruntime": "1.19.2"
+    },
+    "board": "not-run"
+  },
+  "portable_native_export_reproduction": {
+    "schema_version": 1,
+    "status": "passed",
+    "source_commit": "3c4db66de1d9d59d0628ed87590b6308a2f4aa2a",
+    "source_files": {
+      "configs/pp_liteseg/pp_liteseg_stdc1_cityscapes_1024x512_scale0.5_160k.yml": {
+        "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/PaddleSeg-3c4db66de1d9d59d0628ed87590b6308a2f4aa2a/configs/pp_liteseg/pp_liteseg_stdc1_cityscapes_1024x512_scale0.5_160k.yml",
+        "sha256": "c9af47f1dbd1132ee5f8cd90b74ba62a5549d09d0c5891ea5bcf6b239ff4f231",
+        "size_bytes": 1055
+      },
+      "configs/_base_/cityscapes.yml": {
+        "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/PaddleSeg-3c4db66de1d9d59d0628ed87590b6308a2f4aa2a/configs/_base_/cityscapes.yml",
+        "sha256": "da81bb04b9b0a0765360bb79c4ac532e0c4fb8fca285aee2ebe94e6accc0c5c8",
+        "size_bytes": 778
+      },
+      "paddleseg/models/pp_liteseg.py": {
+        "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/PaddleSeg-3c4db66de1d9d59d0628ed87590b6308a2f4aa2a/paddleseg/models/pp_liteseg.py",
+        "sha256": "1d2c3c43b478fa1c5dc83dccff237fb69d948966c73c3af9a268f85229385f53",
+        "size_bytes": 10964
+      },
+      "paddleseg/models/backbones/stdcnet.py": {
+        "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/PaddleSeg-3c4db66de1d9d59d0628ed87590b6308a2f4aa2a/paddleseg/models/backbones/stdcnet.py",
+        "sha256": "e7918f9fcee53a5e7eaa294836ba986efefd69ec52261421588a38defe6f3068",
+        "size_bytes": 12282
+      },
+      "paddleseg/models/layers/tensor_fusion.py": {
+        "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/PaddleSeg-3c4db66de1d9d59d0628ed87590b6308a2f4aa2a/paddleseg/models/layers/tensor_fusion.py",
+        "sha256": "08d44e15c9655c68c1857126f8537a3d5854e2369d9cd4725add18cb155794f8",
+        "size_bytes": 11336
+      },
+      "paddleseg/transforms/transforms.py": {
+        "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/PaddleSeg-3c4db66de1d9d59d0628ed87590b6308a2f4aa2a/paddleseg/transforms/transforms.py",
+        "sha256": "23024c104f8d82d2b0a212506c5e29fb0a91ed698b098d64164213030c7f6774",
+        "size_bytes": 49718
+      }
+    },
+    "checkpoint": {
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/model.pdparams",
+      "sha256": "86543ad69437495f8e7688d497a52d2472ee098efa918dcfa551803570f5edf3",
+      "size_bytes": 32639554
+    },
+    "exporter": {
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/native_export_logits.py",
+      "sha256": "6fe89a4bb42e78eee15bd22a27bf18fd8321860592b217263c28ffcf5fba9a6b",
+      "size_bytes": 7654
+    },
+    "onnx": {
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/native-export-r01/pp_liteseg_stdc1_cityscapes_1024x512_logits.onnx",
+      "sha256": "ea10c0f1b85b41680fe3c9366606d695189ebe9f12959cbd176caa6069741dfc",
+      "size_bytes": 32218235
+    },
+    "strict_trained_checkpoint_load": true,
+    "upstream_non_trainable_constants": {
+      "keys": [
+        "ppseg_head.arm_list.0._scale",
+        "ppseg_head.arm_list.1._scale",
+        "ppseg_head.arm_list.2._scale"
+      ],
+      "value": 1.0
+    },
+    "input": {
+      "name": "x",
+      "shape": [
+        1,
+        3,
+        512,
+        1024
+      ],
+      "dtype": "float32"
+    },
+    "outputs": [
+      {
+        "name": "fetch_name_0",
+        "shape": [
+          1,
+          19,
+          512,
+          1024
+        ],
+        "dtype": "float32"
+      }
+    ],
+    "normalization": {
+      "format": "RGB",
+      "scale": 0.00392156862745098,
+      "mean": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "std": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "source_host_gate": {
+      "metric": "matching pre-argmax logits cosine",
+      "threshold": 0.95,
+      "cases": [
+        {
+          "input": {
+            "path": "/home/zhengyi/work/rdk_model_zoo_workbench/inputs/calibration/coco-train2017-seed42-200/000000004478.jpg",
+            "sha256": "3ade3b006e8e3f5662cf80ba915b298981c5ad0f8713e419ad0ffb3b2501eeb2",
+            "size_bytes": 148221
+          },
+          "status": "passed",
+          "logits_cosine": 0.9999999999997317,
+          "max_abs": 1.049041748046875e-05,
+          "argmax_agreement": 1.0
+        },
+        {
+          "input": {
+            "path": "/home/zhengyi/work/rdk_model_zoo_workbench/inputs/calibration/coco-train2017-seed42-200/000000146469.jpg",
+            "sha256": "c0d0e557ed6e419ee99b4eded2a868db555d3ed2274bc0c4133d97187170afe0",
+            "size_bytes": 164765
+          },
+          "status": "passed",
+          "logits_cosine": 0.9999999999996019,
+          "max_abs": 1.0013580322265625e-05,
+          "argmax_agreement": 1.0
+        },
+        {
+          "input": {
+            "path": "/home/zhengyi/work/rdk_model_zoo_workbench/inputs/calibration/coco-train2017-seed42-200/000000413927.jpg",
+            "sha256": "02c07bfc2bfdc78cf0b9e94def1de111584460c5498f7379c3a199292dd54c9d",
+            "size_bytes": 47973
+          },
+          "status": "passed",
+          "logits_cosine": 0.9999999999996173,
+          "max_abs": 1.6927719116210938e-05,
+          "argmax_agreement": 1.0
+        },
+        {
+          "input": "random-seed42",
+          "status": "passed",
+          "logits_cosine": 0.9999999999995551,
+          "max_abs": 1.621246337890625e-05,
+          "argmax_agreement": 1.0
+        }
+      ]
+    },
+    "versions": {
+      "paddle": "3.0.0",
+      "paddle2onnx": "2.0.1",
+      "onnx": "1.17.0",
+      "onnxruntime": "1.19.2"
+    },
+    "board": "not-run"
+  },
+  "exact_onnx_bytes_reproduced": true,
+  "source": {
+    "repository": "https://github.com/PaddlePaddle/PaddleSeg",
+    "commit": "3c4db66de1d9d59d0628ed87590b6308a2f4aa2a",
+    "version": "release/2.10",
+    "source_archive": {
+      "url": "https://codeload.github.com/PaddlePaddle/PaddleSeg/tar.gz/3c4db66de1d9d59d0628ed87590b6308a2f4aa2a",
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/source.tar.gz",
+      "sha256": "f5843824c0853ab79cecb2399b865bcec174464328be697a4a3e3f6c0a68bf4e",
+      "size_bytes": 54552778
+    },
+    "checkpoint": {
+      "url": "https://paddleseg.bj.bcebos.com/dygraph/cityscapes/pp_liteseg_stdc1_cityscapes_1024x512_scale0.5_160k/model.pdparams",
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/model.pdparams",
+      "sha256": "86543ad69437495f8e7688d497a52d2472ee098efa918dcfa551803570f5edf3",
+      "size_bytes": 32639554,
+      "publisher_sha256_verified": false
+    },
+    "license": {
+      "name": "Apache-2.0",
+      "url": "https://github.com/PaddlePaddle/PaddleSeg/blob/3c4db66de1d9d59d0628ed87590b6308a2f4aa2a/LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    }
+  }
+}

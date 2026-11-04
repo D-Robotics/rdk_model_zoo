@@ -104,3 +104,14 @@ preprocess 接收非空 HWC BGR uint8，以 INTER_LINEAR 拉伸到 1024×512，�
 ## 故障排查
 
 缺少 BIN：先显式准备。缺少 SDK：使用 X5 板端镜像，在匹配板卡上运行推理。S 系列无制品，不能回退至 X5。输出元数据不匹配：检查实际部署图，不要给已经解码的类别图再加 argmax。保持 1024×512 几何。图片缺失：使用随附的 street.png，不是 street.jpg。外部文件须提供精确 asset-id，并独立保留文件来参考记录。
+
+## S100 / S100P / S600 logits 版本
+
+新增 `stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104` 使用 PaddleSeg 官方训练的 STDC1 Cityscapes 权重。S 系列输入为归一化 RGB float32 NCHW `(1,3,512,1024)`，处理为 RGB/255、均值 .5、标准差 .5。HBM 输出 19 类浮点 logits，Python 运行时执行一次 CPU argmax。须选择对应转换版本或精确资产 ID。现有 X5 NV12 输入、int32 类别图输出的默认行为保持不变。
+
+```bash
+python3 samples/vision/pp_liteseg/model/download.py --target s100 --variant stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104
+python3 samples/vision/pp_liteseg/runtime/python/main.py --target s100 --variant stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104 --test-img /path/to/street.png
+```
+
+指定外部 `--model-path` 前，先通过 `--list-models` 获取精确资产 ID。S100P、S600 使用各自 target 和 HBM。板端功能、Cityscapes 精度、Runtime 1/2 并发、C++ 1/2 流仍未实测；编译器估算和源模型主机校验属于转换证据。详见 `conversion/converted_targets_20261103.json` 与 `conversion/source_export_20261104.json`。
