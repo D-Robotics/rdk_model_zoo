@@ -43,9 +43,10 @@ def calibrate(args):
         assert x.shape == (1, 3, 672, 672) and np.isfinite(x).all()
         dest = out / 'rgb_f32' / (p.stem + '.bin')
         x.tofile(dest)
-        np.save(out/'normalized'/(p.stem+'.npy'), x/np.float32(255))
-        rows.append({'source': str(p), 'source_sha256': row['sha256'], 'tensor': str(dest), 'sha256': sha(dest), 'shape': list(x.shape), 'dtype': 'float32', 'min': float(x.min()), 'max': float(x.max())})
-    report = {'count': 200, 'seed': 42, 'source_manifest_sha256': sha(source / 'manifest.json'), 'runtime_preprocess_sha256': sha(Path(__file__).resolve().parents[4] / 'samples/vision/yolov5/runtime/python/detection.py'), 'geometry': 'S stretch INTER_NEAREST', 'color': 'RGB', 'normalization': 'raw 0..255; compiler /255 once', 'images': rows}
+        normalized = out/'normalized'/(p.stem+'.npy')
+        np.save(normalized, x/np.float32(255))
+        rows.append({'source': str(p), 'source_sha256': row['sha256'], 'tensor': str(dest), 'sha256': sha(dest), 'shape': list(x.shape), 'dtype': 'float32', 'min': float(x.min()), 'max': float(x.max()), 'normalized_tensor': {'path':str(normalized), 'sha256':sha(normalized), 'shape':list(x.shape), 'dtype':'float32'}})
+    report = {'count': 200, 'seed': 42, 'source_manifest_sha256': sha(source / 'manifest.json'), 'runtime_preprocess_sha256': sha(Path(__file__).resolve().parents[4] / 'samples/vision/yolov5/runtime/python/detection.py'), 'geometry': 'S stretch INTER_NEAREST', 'color': 'RGB', 'normalization': 'raw0..255 files are export references only; S PTQ uses normalized0..1 NPY', 'ptq_calibration_directory':str(out/'normalized'), 'ptq_normalization':'RGB float32 NCHW /255; runtime NV12 mean/scale is separate', 'images': rows}
     (out / 'calibration-manifest.json').write_text(json.dumps(report, indent=2) + '\n')
 
 def export(args):
