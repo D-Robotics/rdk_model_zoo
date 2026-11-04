@@ -1,0 +1,298 @@
+{
+  "schema_version": 1,
+  "id": "gemma4-e4b-w8-official-s600-text",
+  "profile": "e4b-w8",
+  "model_size": "e4b",
+  "display_name": "Gemma4 E4B W8",
+  "target": "s600",
+  "scope": "text-generation",
+  "source": {
+    "kind": "sdk-official",
+    "publisher": "D-Robotics",
+    "sdk_version": "2.0.0",
+    "model_id": "google/gemma-4-E4B-it",
+    "revision": null,
+    "license": {
+      "name": "Apache-2.0",
+      "url": "https://ai.google.dev/gemma/docs/gemma_4_license"
+    },
+    "release_url": "https://d-robotics.github.io/rdk_s_doc/en/Advanced_development/toolchain_development/LLM_Toolchain/rdk_s100/LLM_Toolchain_v2_0_0/"
+  },
+  "conversion": {
+    "sdk": "OELLM 2.0.0",
+    "status": "official-precompiled",
+    "compiler": "4.14.1a2.dev202609170351+0d2b4f2.develop",
+    "march": "nash-p",
+    "cores": 4,
+    "precision_policy": "w8",
+    "prefill_chunk_size": 512,
+    "context_length": 4096,
+    "sliding_window": 512
+  },
+  "runtime": {
+    "implementation": "SDK official OellmRuntime basic API",
+    "version": "2.0.0",
+    "type": "GEMMA4",
+    "config_template": "runtime/cpp/configs/e4b-w8.json",
+    "source": "oellm_runtime_s600/configs/Gemma4_config/gemma4_e4b_w8_config.json",
+    "vision_companion_required": true,
+    "audio_companion_included": true
+  },
+  "availability": {
+    "kind": "official-oss",
+    "package_url": "https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm/2.0.0/s600_models/Gemma4-E4B_w8.zip",
+    "name": "Gemma4-E4B_w8.zip",
+    "size_bytes": 9762116686,
+    "sha256": "8ac2fcc86c67d9fdacce9c947c5edfb270dc73a0bd92d6c91170506589ffc37c",
+    "etag": "\"74F59073A2D8EC0456458680DC835A8A-388\"",
+    "last_modified": "Thu, 15 Oct 2026 03:21:20 GMT",
+    "verification": {
+      "status": "verified",
+      "method": "anonymous-https-full-sha256",
+      "checked_at": "2026-11-04T03:20:23.579172+00:00",
+      "zip_crc": "passed"
+    }
+  },
+  "files": [
+    {
+      "name": "chat_template.jinja",
+      "bytes": 18569,
+      "sha256": "0a2c8073c878ab1da004bee933a998606537bbb62016310352c7285c3f01c5b5",
+      "role": "chat-template"
+    },
+    {
+      "name": "gemma-4-E4B-it_audio_30s_w8_nash-p_corenum_4.hbm",
+      "bytes": 346618112,
+      "sha256": "348f249385060947203901afb0af917b1d85a4612295051316e54eb9419f265f",
+      "role": "runtime-audio-companion"
+    },
+    {
+      "name": "gemma-4-E4B-it_embed_tokens.bin",
+      "bytes": 1342177280,
+      "sha256": "8455575e881e35b91a12f70ed22e59f925548af722e6e4be8aefe3a55a099d78",
+      "role": "embedding"
+    },
+    {
+      "name": "gemma-4-E4B-it_embed_tokens_per_layer.bin",
+      "bytes": 5637144576,
+      "sha256": "8abc9b2300b5d132392ec248c38ee52e784c5a53606fc5d5c9c6ebc9e5df9975",
+      "role": "ple-embedding"
+    },
+    {
+      "name": "gemma-4-E4B-it_language_chunk_512_cache_4096_w8_nash-p_corenum_4_4.hbm",
+      "bytes": 4967800392,
+      "sha256": "cc6624bfe6c1f68b136555d2dc2c6c2da8856b648706a5676e3134e9be9c40f4",
+      "role": "language-hbm"
+    },
+    {
+      "name": "gemma-4-E4B-it_vision_384x384_w8_nash-p_corenum_4.hbm",
+      "bytes": 196526104,
+      "sha256": "9ff19531777cc0630dd479ec9a2ba9e5a519eb69279246879f04def246c74266",
+      "role": "runtime-vision-companion"
+    },
+    {
+      "name": "tokenizer.json",
+      "bytes": 32169626,
+      "sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f",
+      "role": "tokenizer"
+    },
+    {
+      "name": "tokenizer_config.json",
+      "bytes": 22097,
+      "sha256": "c0e5b4cae68fee7781d7f4af86e67bcb980b6f54a030f6379df1a13018e9818b",
+      "role": "tokenizer"
+    }
+  ],
+  "hbm_metadata": [
+    {
+      "file": "gemma-4-E4B-it_audio_30s_w8_nash-p_corenum_4.hbm",
+      "march": "nash-p",
+      "compiler": "4.14.1a2.dev202609170351+0d2b4f2.develop",
+      "graphs": [
+        {
+          "name": "audio",
+          "cores": 4,
+          "inputs": [
+            {
+              "name": "input_features",
+              "shape": [
+                1,
+                1,
+                3000,
+                128
+              ],
+              "dtype": "float32"
+            },
+            {
+              "name": "conv_layer_mask_0",
+              "shape": [
+                1,
+                1,
+                3000,
+                1
+              ],
+              "dtype": "float32"
+            },
+            {
+              "name": "conv_layer_mask_1",
+              "shape": [
+                1,
+                1,
+                1500,
+                1
+              ],
+              "dtype": "float32"
+            },
+            {
+              "name": "attention_mask",
+              "shape": [
+                1,
+                1,
+                63,
+                12,
+                24
+              ],
+              "dtype": "bool"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "gemma-4-E4B-it_language_chunk_512_cache_4096_w8_nash-p_corenum_4_4.hbm",
+      "march": "nash-p",
+      "compiler": "4.14.1a2.dev202609170351+0d2b4f2.develop",
+      "graphs": [
+        {
+          "name": "prefill",
+          "cores": 4,
+          "inputs": [
+            {
+              "name": "input_embeddings",
+              "shape": [
+                1,
+                512,
+                2560
+              ],
+              "dtype": "float16"
+            },
+            {
+              "name": "position_ids",
+              "shape": [
+                1,
+                512
+              ],
+              "dtype": "int32"
+            },
+            {
+              "name": "attention_mask",
+              "shape": [
+                1,
+                1,
+                512,
+                4096
+              ],
+              "dtype": "float16"
+            },
+            {
+              "name": "slide_attention_mask",
+              "shape": [
+                1,
+                1,
+                512,
+                1024
+              ],
+              "dtype": "float16"
+            },
+            {
+              "name": "per_layer_input_embeds",
+              "shape": [
+                1,
+                512,
+                42,
+                256
+              ],
+              "dtype": "float16"
+            }
+          ]
+        },
+        {
+          "name": "decode",
+          "cores": 4,
+          "inputs": [
+            {
+              "name": "input_embeddings",
+              "shape": [
+                1,
+                1,
+                2560
+              ],
+              "dtype": "float16"
+            },
+            {
+              "name": "position_ids",
+              "shape": [
+                1,
+                1
+              ],
+              "dtype": "int32"
+            },
+            {
+              "name": "attention_mask",
+              "shape": [
+                1,
+                1,
+                1,
+                4096
+              ],
+              "dtype": "float16"
+            },
+            {
+              "name": "slide_attention_mask",
+              "shape": [
+                1,
+                1,
+                1,
+                1024
+              ],
+              "dtype": "float16"
+            },
+            {
+              "name": "per_layer_input_embeds",
+              "shape": [
+                1,
+                1,
+                42,
+                256
+              ],
+              "dtype": "float16"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "gemma-4-E4B-it_vision_384x384_w8_nash-p_corenum_4.hbm",
+      "march": "nash-p",
+      "compiler": "4.14.1a2.dev202609170351+0d2b4f2.develop",
+      "graphs": [
+        {
+          "name": "visual",
+          "cores": 4,
+          "inputs": [
+            {
+              "name": "pixel_values",
+              "shape": [
+                1,
+                576,
+                768
+              ],
+              "dtype": "float16"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "board_tests": "not-run"
+}

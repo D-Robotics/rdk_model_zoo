@@ -85,7 +85,8 @@ class PendingRegistrationTest(unittest.TestCase):
         released = [model for model in built["models"] if model.get("registration") != "pending"
                     and any(platform["status"] == "released"
                             for variant in model["variants"] for platform in variant["platforms"])]
-        self.assertGreaterEqual(len(pending), 53)
+        # The retired native Gemma registration is replaced by official profiles.
+        self.assertGreaterEqual(len(pending), 52)
         self.assertGreaterEqual(len(released), 18)
         self.assertEqual(built["pending_count"], len(pending))
         self.assertEqual(built["demo_count"], sum(platform["status"] == "demo"

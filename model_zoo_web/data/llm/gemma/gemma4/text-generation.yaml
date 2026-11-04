@@ -1,30 +1,78 @@
 schema_version: 1
 id: gemma/gemma4/text-generation
-name: Gemma4
+name: Gemma 4
 domain: llm
 source: gemma
 provider: Google DeepMind
 family: gemma4
 task: text-generation
 description:
-  zh: Gemma4-E2B 采用局部与全局注意力、跨层 KV 共享和逐层输入 embedding，支持自回归文本生成。
-  en: Gemma4-E2B combines local and global attention, cross-layer KV sharing and per-layer input embeddings for autoregressive text generation.
+  zh: Gemma 4 E2B/E4B 的语言分支结合局部与全局注意力、跨层 KV 共享和逐层输入 embedding，支持自回归文本生成。
+  en: Gemma 4 E2B/E4B combines local and global attention, shared KV states and per-layer
+    embeddings for autoregressive text generation.
 license:
   name: Apache-2.0
   url: https://ai.google.dev/gemma/docs/gemma_4_license
 sample_path: samples/llm/gemma4
+sample_revision: 198ba0cbb0f296f1e63d39169125ca5e2c90acaa
 variants:
-  - size: e2b
-    input:
-      kind: text
-      context_length: 4096
-      prefill_chunk_size: 512
-    platforms:
-      - platform: s600
-        status: demo
-        model_manifest: samples/llm/gemma4/model/artifacts.json
-        board_result: samples/llm/gemma4/evaluator/board_result.json
-        artifact: null
-        accuracy: null
-        performance: null
-        reports: null
+- size: e2b-w4
+  input:
+    kind: text
+    context_length: 4096
+    prefill_chunk_size: 512
+  platforms:
+  - platform: s600
+    status: official
+    model_manifest: samples/llm/gemma4/model/manifests/e2b-w4.json
+    board_result: samples/llm/gemma4/evaluator/board_results/e2b-w4.json
+    official_benchmark: samples/llm/gemma4/evaluator/official_benchmarks.json
+    artifact: null
+    accuracy: null
+    performance: null
+    reports: null
+- size: e2b-w8
+  input:
+    kind: text
+    context_length: 4096
+    prefill_chunk_size: 512
+  platforms:
+  - platform: s600
+    status: official
+    model_manifest: samples/llm/gemma4/model/manifests/e2b-w8.json
+    board_result: samples/llm/gemma4/evaluator/board_results/e2b-w8.json
+    official_benchmark: samples/llm/gemma4/evaluator/official_benchmarks.json
+    artifact: null
+    accuracy: null
+    performance: null
+    reports: null
+- size: e4b-w4
+  input:
+    kind: text
+    context_length: 4096
+    prefill_chunk_size: 512
+  platforms:
+  - platform: s600
+    status: official
+    model_manifest: samples/llm/gemma4/model/manifests/e4b-w4.json
+    board_result: samples/llm/gemma4/evaluator/board_results/e4b-w4.json
+    official_benchmark: samples/llm/gemma4/evaluator/official_benchmarks.json
+    artifact: null
+    accuracy: null
+    performance: null
+    reports: null
+- size: e4b-w8
+  input:
+    kind: text
+    context_length: 4096
+    prefill_chunk_size: 512
+  platforms:
+  - platform: s600
+    status: official
+    model_manifest: samples/llm/gemma4/model/manifests/e4b-w8.json
+    board_result: samples/llm/gemma4/evaluator/board_results/e4b-w8.json
+    official_benchmark: samples/llm/gemma4/evaluator/official_benchmarks.json
+    artifact: null
+    accuracy: null
+    performance: null
+    reports: null

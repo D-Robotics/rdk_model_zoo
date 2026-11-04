@@ -1,73 +1,112 @@
-# Gemma4-E2B 纯文本生成
+[English](README.md) | 简体中文
 
-[English](README.md) · [模型准备](model/README_cn.md) · [转换](conversion/README_cn.md) · [运行](runtime/cpp/README_cn.md) · [评测](evaluator/README_cn.md)
+# Gemma4 E2B / E4B 文本生成
 
-本 Sample 使用 **OELLM SDK 2.0.0 官方 `OellmRuntime`**，在 S600 上接入
-Gemma4-E2B 文本生成。支持单次提问、完整历史的多轮对话和终端交互。
-分词、Gemma4 PLE embedding、prefill/decode、KV cache 和采样均由 SDK 实现。
+[English](README.md) · [模型准备](model/README_cn.md) · [模型来源](conversion/README_cn.md) · [运行](runtime/cpp/README_cn.md) · [性能来源](evaluator/README_cn.md)
 
-| 项目 | 当前记录 |
-| --- | --- |
-| 原始权重 | `google/gemma-4-E2B-it-qat-q4_0-unquantized` |
-| revision | `6befbaca7398925921802abd1f277b495b78b738` |
-| 转换 | SDK AutoClip → GPTQ → HPP → HBDK；已生成 S600 HBM |
-| 精度 | W4/W8 混合：Q/O/MLP 等 W4，K/V 投影 W8；SDK A8 策略 |
-| 编译规格 | `nash-p`，4 核，prefill chunk 512，总上下文 4096 |
-| 板端精度 / 性能 / 内存 | `not-run`；数值为空 |
-| 制品 | 完整 Archive 权重包，文件大小与 SHA256 已登记 |
-| 公共模型下载 | [S600 权重，4.76 GB](https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/gemma/gemma4-e2b-w4w8-s600-chunk512-ctx4096.tar.gz) |
+<a id="overview"></a>
+## 模型与来源
 
-当前只提供 S600 配置。X5、S100、S100P 没有本版本的对应制品。
-旧版 `platforms/s/samples/llm/gemma4-e2b` 的 OE-LLM 1.0 模型和 runtime
-保留独立版本；本 Sample 使用自己的 SDK 2.0 模型绑定。
+本 Sample 使用 OELLM SDK 2.0.0 官方 S600 模型包及 `OellmRuntime` basic API。
+提供 E2B/E4B 的 W4、W8 四个配置，支持单次提问、完整历史的多轮对话和终端交互。
+分词、普通/PLE embedding、prefill/decode、KV cache 和采样均由官方 Runtime 实现。
 
-## 快速使用
+<a id="directory"></a>
+## 目录
 
-先按 [模型准备](model/README_cn.md) 下载并解压完整 Archive 权重包，再从仓库根目录执行：
+```text
+gemma4/
+├── model/          # 四个官方配置、校验及准备
+├── runtime/cpp/    # OellmRuntime basic API
+├── conversion/     # 官方制品来源
+├── evaluator/      # 官方基准及独立板端记录
+├── test_data/      # 文本提示
+└── tests/          # 主机文件校验测试
+```
+
+<a id="support-matrix"></a>
+## 支持的模型与板卡
+
+下列配置均使用 S600/Linux 的 C++ 入口。
+
+| Profile | ZIP | Bytes |
+| --- | --- | ---: |
+| `e2b-w4` | [Gemma4-E2B_w4.zip](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm/2.0.0/s600_models/Gemma4-E2B_w4.zip) | 4,402,995,725 |
+| `e2b-w8` | [Gemma4-E2B_w8.zip](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm/2.0.0/s600_models/Gemma4-E2B_w8.zip) | 6,547,749,326 |
+| `e4b-w4` | [Gemma4-E4B_w4.zip](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm/2.0.0/s600_models/Gemma4-E4B_w4.zip) | 6,320,670,645 |
+| `e4b-w8` | [Gemma4-E4B_w8.zip](https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm/2.0.0/s600_models/Gemma4-E4B_w8.zip) | 9,762,116,686 |
+
+四个配置均为 S600 `nash-p`、4 核、chunk 512、上下文 4096；其他板卡不使用这些包。
+W4/W8 是官方语言主干的精度标注，视觉和音频 HBM 为 W8，外挂 embedding 为 FP16。
+
+<a id="prerequisites"></a>
+## 环境准备
+
+在 S600 上准备配套 `oellm_runtime_s600`、CMake/C++17 及 Python 3 标准库。
+需保留 ZIP 与解压后文件的空间；各包尺寸见上表。
+
+<a id="quickstart"></a>
+## 快速体验
+
+从仓库根目录运行，下面以 E2B W4 为例：
 
 ```bash
+mkdir -p /data/gemma4-official
+curl -fL --retry 3 -o Gemma4-E2B_w4.zip https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm/2.0.0/s600_models/Gemma4-E2B_w4.zip
+printf '%s  %s\n' 'bd9b1406e2cf4a6cde7cda769fbcbbf43d1fa9a797f59936def6f7d6dbf793d2' 'Gemma4-E2B_w4.zip' | sha256sum -c -
+python3 -m zipfile -e Gemma4-E2B_w4.zip /data/gemma4-official
 python3 samples/llm/gemma4/model/prepare.py \
-  --source-dir /data/gemma4-e2b-sdk2 \
-  --output-dir /data/gemma4-e2b-sdk2
+  --profile e2b-w4 \
+  --source-dir /data/gemma4-official/Gemma4-E2B_w4 \
+  --output-dir /data/gemma4-official/Gemma4-E2B_w4
 
-# 以下命令在 S600 上执行，需要配套 SDK 2.0 部署包及 CMake/C++17 工具。
 export OELLM_RUNTIME_ROOT=/opt/oellm_runtime_s600
 bash samples/llm/gemma4/runtime/cpp/run.sh \
-  --config_path /data/gemma4-e2b-sdk2/oellm_config.json \
+  --config_path /data/gemma4-official/Gemma4-E2B_w4/oellm_config.json \
   --prompt "请把 hello 翻译成中文，只回答译文。" --max_new_tokens 64
 ```
 
-SDK 2.0.0 的 `GEMMA4` runtime 初始化时要求视觉 HBM，因此准备步骤还会校验
-官方视觉配套文件。本入口只接受文本，不提供图像、音频或视频参数。
-模型包约 7.30 GB；这是文件大小，不是板端运行内存测量。
+其他配置使用表中的 ZIP，并将 `--profile` 改为 `e2b-w8`、`e4b-w4` 或 `e4b-w8`。
+各包 SHA256 和文件校验值在 `model/manifests/<profile>.json`。
+终端对话使用 `--interactive`，`/reset` 清空历史，`/quit` 退出。
 
-终端对话：
+<a id="expected-results"></a>
+## 输出与性能参考
 
-```bash
-bash samples/llm/gemma4/runtime/cpp/run.sh \
-  --config_path /data/gemma4-e2b-sdk2/oellm_config.json --interactive
-```
+成功时输出 `RESULT {JSON}`，含生成文本、token IDs、结束状态与可用 Runtime 指标。
 
-`/reset` 清空客户端历史，`/quit` 退出。每轮将完整历史交给 SDK；总上下文包含
-模板、历史、当前问题和生成结果，受 4096 token 容量限制。
 
-## 源码与检查
 
-`model/artifacts.json` 绑定权重来源、编译器、目标规格及全部文件校验值；
-`model/prepare.py` 只做显式文件准备；`runtime/cpp/s600.json` 从 SDK 官方
-Gemma4 配置裁出文本入口所需配置；`gemma4.cc` 调用 SDK basic API。
-推理不依赖 Skill、Node 或网页生成目录。运行脚本不安装依赖或下载模型。
+以下数字来自 [SDK 官方 S600 基准](https://developer.d-robotics.cc/oe_llm_doc/guide/benchmark/s600/gemma_benchmark.html)，使用纯文本 TTFT 列：
+
+| Profile | TTFT (ms) | Decode (token/s) | Memory (GB) |
+| --- | ---: | ---: | ---: |
+| e2b-w4 | 74 | 61.2 | 9.9 |
+| e2b-w8 | 79 | 47.8 | 13.5 |
+| e4b-w4 | 137 | 38.3 | 15.4 |
+| e4b-w8 | 139 | 27.9 | 15.5 |
+
+条件为 S600/Linux、4 核、chunk 512、上下文 4096、标准单请求模式。
+内存为官方完整模型的 Linux+ION 总占用，不是纯文本峰值内存。
+原始页面未公布对应包的二进制 SHA256 绑定、PPL 或两路并发数据。
+本地板端测试保持 `not-run`，数值保存在独立的 `evaluator/board_results/` 空记录中。
+
+<a id="entry-points"></a>
+## 入口与主机检查
+
+[模型准备](model/README_cn.md)、[推理入口](runtime/cpp/README_cn.md)、[制品来源](conversion/README_cn.md)、[性能与评估](evaluator/README_cn.md)。
 
 ```bash
 python3 -m unittest discover -s samples/llm/gemma4/tests
 ```
 
-主机量化参考结果单列在 [评测说明](evaluator/README_cn.md)。板端结果模板为
-`evaluator/board_result.json`，保持 `not-run` 与 `null`。
+模型准备和推理不依赖 Skill、Node 或网页生成目录，也不自动安装依赖。
+现有 `develop` 的 `samples/llm/gemma4-e2b` 是另一套原生 C++ Sample；本目录复用 SDK 官方 Runtime。
 
-## 许可证
+<a id="license"></a>
+## 来源与许可
 
-模型采用 [Apache-2.0](https://ai.google.dev/gemma/docs/gemma_4_license)，上游模型卡
-随部署制品保留。Sample 代码采用 [Apache-2.0](LICENSE)，与 S 系列示例许可一致。
-SDK 运行库、头文件使用其各自条款，需单独获取；本仓库不打包这些库。
-权重包中的官方配套模型保留独立的 SDK 来源与条款。
+官方 ZIP 的完整 SHA256、文件校验值、真实编译器和 Runtime 配置来源已登记。
+SDK 未在 ZIP 中提供上游 HF 完整 revision，因此记录为 null，未借用其他转换的 revision。
+模型采用 [Apache-2.0](https://ai.google.dev/gemma/docs/gemma_4_license)，Sample 代码采用 [Apache-2.0](LICENSE)。
+SDK 运行库和头文件遵循其随附条款，需单独准备。

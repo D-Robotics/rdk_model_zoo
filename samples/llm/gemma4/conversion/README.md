@@ -1,38 +1,50 @@
-# SDK 2.0 conversion
+English | [简体中文](README_cn.md)
 
-[简体中文](README_cn.md) · [Sample](../README.md)
+# Official precompiled models
 
-Use the existing SDK container. The reference source is
-`google/gemma-4-E2B-it-qat-q4_0-unquantized` at
-`6befbaca7398925921802abd1f277b495b78b738`.
-`main.py` reads SDK `released_models/gemma4_e2b/lm_w4_kv_w8` and `configs/gemma4.yml`,
-binding local paths, the language branch and S600 settings. Quantization and
-compilation remain native SDK operations.
+[Sample](../README.md)
 
-```bash
-python3 samples/llm/gemma4/conversion/main.py prepare \
-  --sdk-root /opt/D-Robotics_LLM_2.0.0_S600_S100_SDK \
-  --model-path /data/gemma-4-E2B-it-qat-q4_0-unquantized \
-  --wikitext-dir /data/wikitext-2-raw-v1 --mmstar /data/MMStar.tsv \
-  --output /data/gemma4-conversion
-```
+<a id="source-model"></a>
+## Source models
 
-Run stages in this order: `autoclip`, `gptq`, `float`, `calib`, `eval`, `compile`:
+The precompiled packages come from the OELLM SDK 2.0.0 S600 release. Upstream models are Google Gemma4 E2B/E4B; the ZIP supplies no full HF revision, so the manifests retain null.
 
-```bash
-python3 samples/llm/gemma4/conversion/main.py run \
-  --work-dir /data/gemma4-conversion --stage autoclip
-```
+<a id="directory"></a>
+## Directory
 
-Repeat with the next stage name. Each call invokes only that native SDK stage
-and preserves its exit code. Preparation requires a fresh output directory.
-LightCompress calibrates with 128×512 WikiText2 train samples; HPP uses the
-Gemma4 recipe's 30 MMStar samples. Evaluation uses the full WikiText2 test split
-at sequence length 2048. Only the language branch is compiled.
+This directory documents precompiled provenance. Four complete manifests are in `../model/manifests/`; matching SDK configurations are in `../runtime/cpp/configs/`.
 
-Output is under `artifacts/hpp/hbm/`. Rebuilt artifacts require their own metadata,
-size and SHA256 review before updating a model binding.
+<a id="toolchain-targets"></a>
+## Toolchain and targets
 
-Reference environment: Python 3.10, PyTorch 2.8.0+cu128, HPP
-3.3.5+cu128.torch280.qwen35, HBDK 4.14.1a2.dev202610090350+05dd1f0.develop.
-Target: nash-p, four cores, chunk 512, cache 4096, external FP16 embeddings.
+S600/nash-p, four cores, chunk 512 and context 4096. Each manifest records its actual HBDK compiler and HBM metadata; execution uses the matching SDK 2.0.0 Runtime.
+
+<a id="export"></a>
+## Export
+
+The active entry uses exported vendor HBMs directly. Custom export requires a separate experiment based on the SDK Gemma recipe.
+
+<a id="calibration"></a>
+## Calibration and quantization
+
+The SDK Gemma route is AutoClip/GPTQ → HPP → HBDK. These ZIPs do not provide calibration corpora or full reproduction records; calibration and accuracy from the retired self-converted package are not assigned to them.
+
+<a id="compile"></a>
+## Compile
+
+The vendor HBMs need no recompilation. Changing core count, context or chunk size requires a new SDK conversion and matching configuration.
+
+<a id="validation"></a>
+## Artifact validation
+
+Follow [model preparation](../model/README.md#preparation) to verify the ZIP and every member SHA256. This step does not execute board inference.
+
+<a id="artifacts"></a>
+## Artifacts
+
+Vendor ZIP bytes remain unchanged. Preparation adds absolute-path `oellm_config.json`, `model-manifest.json` and `SAMPLE_LICENSE`. The self-converted W4/W8 package is retired from the active binding.
+
+<a id="known-gaps"></a>
+## Preparing custom conversions
+
+For re-quantization, separately pin the upstream revision, SDK recipe, calibration set, accuracy results and new artifact digests. This sample delivers the vendor precompiled route.

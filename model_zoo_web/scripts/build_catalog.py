@@ -1293,6 +1293,107 @@ def validate_text_demo(record: dict[str, Any], variant: dict[str, Any],
         raise CatalogError(f'{label}: text input must match the compiled chunk/context profile')
 
 
+def validate_official_llm(record: dict[str, Any], variant: dict[str, Any],
+                          platform: dict[str, Any], sample_path: str, label: str) -> None:
+    """Vendor packages have published metrics, with local board results kept separate."""
+    profile = variant['size']
+    if (record['domain'], record['task'], platform.get('platform')) != ('llm', 'text-generation', 's600'):
+        raise CatalogError(f'{label}: official LLM packages are S600 text-generation profiles')
+    if (record['id'], record['source'], record['family']) != ('gemma/gemma4/text-generation', 'gemma', 'gemma4'):
+        raise CatalogError(f'{label}: the official OSS contract is limited to the Gemma4 sample')
+    if profile not in {'e2b-w4', 'e2b-w8', 'e4b-w4', 'e4b-w8'}:
+        raise CatalogError(f'{label}: unknown official Gemma profile')
+    for field in ('artifact', 'accuracy', 'performance', 'reports'):
+        if field not in platform or platform[field] is not None:
+            raise CatalogError(f'{label}.{field} must be null; vendor benchmarks are recorded separately')
+    paths = {'model_manifest': f'{sample_path}/model/manifests/{profile}.json',
+             'board_result': f'{sample_path}/evaluator/board_results/{profile}.json',
+             'official_benchmark': f'{sample_path}/evaluator/official_benchmarks.json'}
+    documents = {}
+    for key, expected in paths.items():
+        if platform.get(key) != expected:
+            raise CatalogError(f'{label}.{key} must be {expected}')
+        try:
+            documents[key] = json.loads((ROOT / expected).read_text(encoding='utf-8'))
+        except (OSError, ValueError) as error:
+            raise CatalogError(f'{label}.{key}: cannot read the official model record') from error
+    manifest = require_mapping(documents['model_manifest'], label + '.model_manifest')
+    if (manifest.get('schema_version'), manifest.get('profile'), manifest.get('target'), manifest.get('scope')) != (
+            1, profile, 's600', 'text-generation'):
+        raise CatalogError(f'{label}: official artifact identity mismatch')
+    scale, precision = profile.split('-')
+    if (manifest.get('id'), manifest.get('model_size'), manifest.get('display_name')) != (
+            f'gemma4-{profile}-official-s600-text', scale, f'Gemma4 {scale.upper()} {precision.upper()}'):
+        raise CatalogError(f'{label}: official model name and profile identity mismatch')
+    source = require_mapping(manifest.get('source'), label + '.source')
+    if (source.get('kind'), source.get('publisher'), source.get('sdk_version')) != ('sdk-official', 'D-Robotics', '2.0.0'):
+        raise CatalogError(f'{label}: expected SDK official release provenance')
+    if source.get('model_id') != f'google/gemma-4-{scale.upper()}-it' or source.get('revision') is not None:
+        raise CatalogError(f'{label}: preserve the vendor model identity and unknown upstream revision')
+    if source.get('license') != record.get('license'):
+        raise CatalogError(f'{label}: official model license mismatch')
+    conversion = require_mapping(manifest.get('conversion'), label + '.conversion')
+    if (conversion.get('sdk'), conversion.get('status'), conversion.get('march'), conversion.get('cores')) != (
+            'OELLM 2.0.0', 'official-precompiled', 'nash-p', 4):
+        raise CatalogError(f'{label}: expected the official SDK 2.0 S600 profile')
+    require_string(conversion.get('compiler'), label + '.conversion.compiler')
+    if (conversion.get('prefill_chunk_size'), conversion.get('context_length'), conversion.get('precision_policy')) != (512, 4096, precision):
+        raise CatalogError(f'{label}: compiled precision/chunk/context mismatch')
+    if variant.get('input') != {'kind': 'text', 'context_length': 4096, 'prefill_chunk_size': 512}:
+        raise CatalogError(f'{label}: input must match the compiled chunk/context')
+    runtime = require_mapping(manifest.get('runtime'), label + '.runtime')
+    if (runtime.get('type'), runtime.get('version'), runtime.get('config_template')) != (
+            'GEMMA4', '2.0.0', f'runtime/cpp/configs/{profile}.json'):
+        raise CatalogError(f'{label}: expected the official SDK 2.0 GEMMA4 runtime')
+    names, roles = set(), set()
+    for asset in require_list(manifest.get('files'), label + '.files'):
+        name = require_string(asset.get('name'), label + '.file.name')
+        if PurePosixPath(name).name != name or name in ('.', '..') or name in names:
+            raise CatalogError(f'{label}: duplicate or unsafe artifact filename')
+        names.add(name)
+        roles.add(asset.get('role'))
+        require_positive_int(asset.get('bytes'), label + '.file.bytes')
+        if not SHA256_RE.fullmatch(str(asset.get('sha256', ''))):
+            raise CatalogError(f'{label}: each artifact needs its full SHA256')
+    if not {'language-hbm', 'embedding', 'ple-embedding', 'runtime-vision-companion',
+            'runtime-audio-companion', 'tokenizer', 'chat-template'} <= roles:
+        raise CatalogError(f'{label}: incomplete official Gemma package')
+    availability = require_mapping(manifest.get('availability'), label + '.availability')
+    filename = f'Gemma4-{scale.upper()}_{precision}.zip'
+    expected_url = 'https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm/2.0.0/s600_models/' + filename
+    if (availability.get('kind'), availability.get('name'), availability.get('package_url')) != ('official-oss', filename, expected_url):
+        raise CatalogError(f'{label}: expected the canonical official S600 OSS ZIP')
+    require_positive_int(availability.get('size_bytes'), label + '.availability.size_bytes')
+    if not SHA256_RE.fullmatch(str(availability.get('sha256', ''))):
+        raise CatalogError(f'{label}: official ZIP needs its full SHA256')
+    verification = require_mapping(availability.get('verification'), label + '.availability.verification')
+    if (verification.get('status'), verification.get('method')) != ('verified', 'anonymous-https-full-sha256'):
+        raise CatalogError(f'{label}: official ZIP needs full anonymous HTTPS verification')
+    require_string(verification.get('checked_at'), label + '.availability.verification.checked_at')
+    board = require_mapping(documents['board_result'], label + '.board_result')
+    if (board.get('model'), board.get('target'), board.get('status'), manifest.get('board_tests')) != (
+            manifest.get('id'), 's600', 'not-run', 'not-run'):
+        raise CatalogError(f'{label}: local board status must remain not-run')
+    for field in ('ppl', 'ttft_ms', 'decode_tokens_per_second', 'peak_memory_bytes', 'generation_checks', 'environment'):
+        if field not in board or board[field] is not None:
+            raise CatalogError(f'{label}: untested board {field} must be null')
+    benchmarks = require_mapping(documents['official_benchmark'], label + '.official_benchmark')
+    conditions = require_mapping(benchmarks.get('source'), label + '.benchmark.source')
+    if (conditions.get('publisher'), conditions.get('sdk_version'), conditions.get('hardware'),
+        conditions.get('runtime_concurrency'), conditions.get('prefill_chunk_size'),
+        conditions.get('context_length'), conditions.get('bpu_cores'), conditions.get('memory_scope')) != (
+            'D-Robotics', '2.0.0', 'S600', 1, 512, 4096, 4, 'linux-plus-ion'):
+        raise CatalogError(f'{label}: official benchmark conditions must match the single-request S600 profile')
+    if conditions.get('url') != 'https://developer.d-robotics.cc/oe_llm_doc/guide/benchmark/s600/gemma_benchmark.html':
+        raise CatalogError(f'{label}: official benchmark must retain its S600 source')
+    metrics = require_mapping(benchmarks.get('profiles', {}).get(profile), label + '.benchmark.profile')
+    for field in ('ttft_ms', 'decode_tokens_per_second', 'memory_gb'):
+        if require_number(metrics.get(field), label + '.benchmark.' + field) <= 0:
+            raise CatalogError(f'{label}: official benchmark {field} must be positive')
+    if metrics.get('ppl') is not None:
+        raise CatalogError(f'{label}: the official reference has no published PPL')
+
+
 def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]:
     relative_source = source_path.relative_to(ROOT).as_posix()
     if record.get("schema_version") != 1:
@@ -1340,6 +1441,11 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
 
         input_config = require_mapping(variant.get("input"), f"{variant_label}.input")
         demo_profiles = require_list(variant.get("platforms"), f"{variant_label}.platforms")
+        if any(isinstance(profile, dict) and profile.get("status") == "official" for profile in demo_profiles):
+            if len(demo_profiles) != 1 or demo_profiles[0].get("status") != "official":
+                raise CatalogError(f"{variant_label}: an official text model has one S600 profile")
+            validate_official_llm(record, variant, demo_profiles[0], record['sample_path'], variant_label)
+            continue
         if any(isinstance(profile, dict) and profile.get("status") == "demo" for profile in demo_profiles):
             if len(demo_profiles) != 1 or demo_profiles[0].get("status") != "demo":
                 raise CatalogError(f"{variant_label}: a text demo has one S600 profile")
@@ -1470,6 +1576,7 @@ def build_catalog() -> tuple[bytes, bytes]:
     converted_count = 0
     pending_count = 0
     demo_count = 0
+    official_count = 0
     for source_path in source_paths:
         with source_path.open(encoding="utf-8") as handle:
             record = require_mapping(yaml.safe_load(handle), source_path.relative_to(ROOT).as_posix())
@@ -1478,7 +1585,7 @@ def build_catalog() -> tuple[bytes, bytes]:
         # Every model offered by the public catalog must be served by Archive.
         for variant in normalized["variants"]:
             for platform in variant["platforms"]:
-                if platform["status"] == "demo":
+                if platform["status"] in {"demo", "official"}:
                     continue
                 if not platform["artifact"]["url"].startswith(f"{ARCHIVE_BASE}/"):
                     raise CatalogError(
@@ -1494,6 +1601,7 @@ def build_catalog() -> tuple[bytes, bytes]:
         release_count += states.count("released")
         converted_count += states.count("converted")
         demo_count += states.count("demo")
+        official_count += states.count("official")
         records.append(normalized)
 
     validate_unique_hero_inputs(records)
@@ -1506,6 +1614,7 @@ def build_catalog() -> tuple[bytes, bytes]:
         "converted_count": converted_count,
         "pending_count": pending_count,
         "demo_count": demo_count,
+        "official_count": official_count,
         "models": records,
     }
     catalog_bytes = (json.dumps(catalog, ensure_ascii=False, indent=2) + "\n").encode()
@@ -1520,6 +1629,7 @@ def build_catalog() -> tuple[bytes, bytes]:
         "converted_count": converted_count,
         "pending_count": pending_count,
         "demo_count": demo_count,
+        "official_count": official_count,
         "generator": "model_zoo_web/scripts/build_catalog.py",
     }
     metadata_bytes = (json.dumps(metadata, ensure_ascii=False, indent=2) + "\n").encode()

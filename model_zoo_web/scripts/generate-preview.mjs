@@ -185,7 +185,7 @@ const expectedReleaseStatus = record =>
   candidatePreview || localCandidateIds.has(record.id) ? 'candidate' : 'released';
 const candidateReleaseIds = new Set((fullCatalog.models || []).flatMap(record =>
   (record.variants || []).flatMap(variant => (variant.platforms || [])
-    .filter(release => release.status === expectedReleaseStatus(record) || (!candidatePreview && ['converted', 'demo'].includes(release.status)))
+    .filter(release => release.status === expectedReleaseStatus(record) || (!candidatePreview && ['converted', 'demo', 'official'].includes(release.status)))
     .map(release => `${record.id}/${variant.size}/${release.platform}`))));
 let catalog = fullCatalog;
 let technicalSelection = null;
@@ -418,7 +418,7 @@ await mkdir(reportsRoot, { recursive: true });
 for (const record of catalog.models || []) {
   if (record.registration === 'pending' && !record.variants?.length) continue;
   const conversionOnly = record.variants.every(variant => variant.platforms.every(platform => platform.status === 'converted'));
-  const textOnlyDemo = record.variants.every(variant => variant.platforms.every(platform => platform.status === 'demo'));
+  const textOnlyDemo = record.variants.every(variant => variant.platforms.every(platform => ['demo', 'official'].includes(platform.status)));
   const suppliedModelInput = inputs.models[record.id];
   const modelInput = suppliedModelInput || ((conversionOnly || textOnlyDemo) ? { cover_label: textOnlyDemo ? '文本对话示意' : '任务示意图' } : null);
   if (!modelInput || typeof modelInput !== 'object' || Array.isArray(modelInput)) {
@@ -449,7 +449,7 @@ for (const record of catalog.models || []) {
   for (const variant of record.variants || []) {
     for (const release of variant.platforms || []) {
       const converted = !candidatePreview && release.status === 'converted';
-      const textDemo = !candidatePreview && release.status === 'demo' && record.task === 'text-generation';
+      const textDemo = !candidatePreview && ['demo', 'official'].includes(release.status) && record.task === 'text-generation';
       if (!converted && !textDemo && release.status !== expectedReleaseStatus(record)) continue;
       const platform = String(release.platform).toUpperCase();
       const id = safeId(record.source, record.family, record.task, variant.size, release.platform);
@@ -859,6 +859,7 @@ const data = {
       benchmark_count: models.filter(model => model.benchmark && !model.benchmark.documentation && model.releaseStatus !== 'converted').length,
       converted_count: models.filter(model => model.releaseStatus === 'converted').length,
       demo_count: models.filter(model => model.releaseStatus === 'demo').length,
+      official_count: models.filter(model => model.releaseStatus === 'official').length,
       verified_count: models.filter(model => model.releaseStatus === 'released').length,
     },
   },
@@ -910,6 +911,7 @@ await stampAssetVersions(outputRoot);
 const localEntryCount = models.filter(model => localCandidateIds.has(model.catalogId)).length;
 const pendingEntryCount = models.filter(model => model.dataPending).length;
 const convertedEntryCount = models.filter(model => model.releaseStatus === 'converted').length;
+const officialEntryCount = models.filter(model => model.releaseStatus === 'official').length;
 console.log(localCandidate
   ? `Built local candidate preview with ${models.length - localEntryCount} released and ${localEntryCount} local candidate model entries.`
-  : `Built local Model Zoo ${candidatePreview ? 'candidate preview' : 'preview'} with ${models.length - pendingEntryCount - convertedEntryCount - models.filter(model => model.releaseStatus === 'demo').length} ${candidatePreview ? 'candidate' : 'released'}, ${convertedEntryCount} converted, ${models.filter(model => model.releaseStatus === 'demo').length} text demos and ${pendingEntryCount} pending entries.`);
+  : `Built local Model Zoo ${candidatePreview ? 'candidate preview' : 'preview'} with ${models.length - pendingEntryCount - convertedEntryCount - officialEntryCount - models.filter(model => model.releaseStatus === 'demo').length} ${candidatePreview ? 'candidate' : 'released'}, ${convertedEntryCount} converted, ${officialEntryCount} official, ${models.filter(model => model.releaseStatus === 'demo').length} text demos and ${pendingEntryCount} pending entries.`);

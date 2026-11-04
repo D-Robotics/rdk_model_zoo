@@ -37,11 +37,10 @@ class PreparationTest(unittest.TestCase):
         self.assertEqual(config['work_dir'], str(self.output.resolve()))
         self.assertEqual(config['runtime_type'], 'GEMMA4')
         self.assertEqual(config['model_runner']['prefill'], 'gemma4_prefill')
-        for field in ('lm_model_file', 'embed_weight_name', 'ple_embed_weight_name', 'vit_model_file'):
+        for field in ('lm_model_file', 'embed_weight_name', 'ple_embed_weight_name', 'vit_model_file', 'audio_model_file'):
             self.assertTrue((self.output / config[field]).is_file())
         self.assertEqual(config['embed_table_scale'], 1.0)
         self.assertEqual(config['ple_embed_table_scale'], 1.0)
-        self.assertFalse(config['prefix_cache']['enable'])
         self.assertEqual(json.loads((self.output / 'model-manifest.json').read_text()), self.manifest)
 
     def test_corrupted_source_is_rejected_without_installing_a_partial_model(self):
@@ -71,10 +70,27 @@ class PreparationTest(unittest.TestCase):
         self.assertEqual(path.read_bytes(), b'existing user data')
 
     def test_recorded_board_results_remain_unmeasured(self):
-        board = json.loads((ROOT / 'evaluator/board_result.json').read_text())
-        self.assertEqual(board['status'], 'not-run')
-        for field in ('ppl', 'ttft_ms', 'decode_tokens_per_second', 'peak_memory_bytes', 'generation_checks', 'environment'):
-            self.assertIsNone(board[field])
+        for profile in ('e2b-w4', 'e2b-w8', 'e4b-w4', 'e4b-w8'):
+            with self.subTest(profile=profile):
+                board = json.loads((ROOT / f'evaluator/board_results/{profile}.json').read_text())
+                self.assertEqual(board['status'], 'not-run')
+                for field in ('ppl', 'ttft_ms', 'decode_tokens_per_second', 'peak_memory_bytes', 'generation_checks', 'environment'):
+                    self.assertIsNone(board[field])
+
+    def test_profiles_keep_their_own_package_and_runtime_bindings(self):
+        hashes = set()
+        for profile in ('e2b-w4', 'e2b-w8', 'e4b-w4', 'e4b-w8'):
+            manifest = prepare.load_manifest(profile=profile)
+            config = json.loads((ROOT / manifest['runtime']['config_template']).read_text())
+            files = {asset['name'] for asset in manifest['files']}
+            for field in ('lm_model_file', 'vit_model_file', 'audio_model_file', 'embed_weight_name', 'ple_embed_weight_name'):
+                self.assertIn(config[field], files)
+            self.assertEqual(manifest['profile'], profile)
+            self.assertIsNone(manifest['source']['revision'])
+            hashes.add(manifest['availability']['sha256'])
+        self.assertEqual(len(hashes), 4)
+        with self.assertRaisesRegex(ValueError, 'Unknown official Gemma profile'):
+            prepare.load_manifest(profile='e2b-w4w8')
 
 
 if __name__ == '__main__':

@@ -22,7 +22,7 @@
   const threadLabel = threads => threads === 1 ? 'Runtime 单路' : `Runtime ${threads} 路并发`;
   const formats = m => [...new Set(m.assets.map(asset => asset.format.toUpperCase()))].join(' + ');
   const hardwareOf = (model, data) => model.hardware || model.benchmark?.environment?.hardware || data.release.compatibility.hardware;
-  const isTextDemo = model => model.releaseStatus === 'demo' && model.taskId === 'text-generation';
+  const isTextDemo = model => ['demo', 'official'].includes(model.releaseStatus) && model.taskId === 'text-generation';
   const demoDocuments = model => window.HubI18n?.locale === 'en' && model.documentsEn ? model.documentsEn : model.documents;
   const documentationLink = (model, key, label, cls = '') => `<a class="${cls}" href="${esc(demoDocuments(model)[key])}" data-href-zh="${esc(model.documents[key])}" data-href-en="${esc(model.documentsEn[key])}" target="_blank" rel="noopener">${label}${icon('external-link')}</a>`;
   // Preferred hardware display order: strongest S-series first, X5 last.
@@ -258,7 +258,7 @@
   };
   const developerResourceLinks = model => {
     if (isTextDemo(model)) {
-      return `${external(model.sourceArchive, '示例源码')}${documentationLink(model, 'runtime', '运行文档')}${documentationLink(model, 'conversion', '模型转换')}${documentationLink(model, 'evaluation', '评测说明')}${external(model.upstreamModelUrl, '原始模型')}`;
+      return `${external(model.source || model.sourceArchive, '示例源码')}${documentationLink(model, 'runtime', '运行文档')}${documentationLink(model, 'conversion', '模型转换')}${documentationLink(model, 'evaluation', '评测说明')}${external(model.upstreamModelUrl, '原始模型')}`;
     }
     if (model.sourceArchive) return external(model.sourceArchive, '示例源码');
     if (!model.source || (model.releaseStatus === 'candidate' && !isRdkSampleSource(model))) return '';
@@ -306,7 +306,7 @@
     if (isTextDemo(model)) {
       return [row('输入类型', '文本'), row('Runtime', p.sdkRuntime || 'OELLM 2.0.0 · GEMMA4'),
         row('上下文容量', `${p.contextLength} tokens`), row('预填充块', `${p.prefillChunkSize} tokens`),
-        row('量化精度', 'W4 / K,V W8 · A8'), row('部署文件大小', byteSize(p.deploymentBytes) || '—')].join('');
+        row('量化精度', model.releaseStatus === 'official' ? String(p.precisionPolicy).toUpperCase() : 'W4 / K,V W8 · A8'), row('部署文件大小', byteSize(p.deploymentBytes) || '—')].join('');
     }
     if (p.parameterCount) rows.push(row('参数量', `${Number((p.parameterCount / 1e6).toFixed(3))} M`, String(p.parameterCount)));
     if (model.releaseStatus === 'converted' && !p.parameterCount && !p.parameterCountMillions) rows.push(row('参数量', '—'));
@@ -387,7 +387,7 @@
     const variants = models.filter(other => (other.catalogId || `${other.name}/${other.taskId || other.task}`) === groupId);
     const hardwareOptions = [...new Set(variants.map(other => hardwareOf(other, data)))].sort(byPlatformOrder);
     const performance = b?.performance || [];
-    const conditionChoices = textDemo ? [1, 2].map(value => ({ value: String(value), label: threadLabel(value) })) : m.dataPending
+    const conditionChoices = textDemo ? (m.releaseStatus === 'official' ? [1] : [1, 2]).map(value => ({ value: String(value), label: threadLabel(value) })) : m.dataPending
       ? (b?.conditionOptions?.length ? b.conditionOptions.map(option => ({
           value: option.key,
           label: Number.isInteger(option.concurrency) ? threadLabel(option.concurrency) : (option.label || 'Runtime 单路'),
@@ -422,7 +422,11 @@
       : '';
     const benchmarkEmpty = `<div class="mz-benchmark-empty"><div><h3>暂无性能汇总</h3></div>${m.source ? external(m.source + '/evaluator', '查看评测说明') : ''}</div>`;
     const dash = label => `<div><span>${label}</span><strong>—</strong></div>`;
-    const benchmarkBody = textDemo
+    const reference = m.officialBenchmark;
+    const officialTile = (label, value, unit) => `<div><span>${label}</span><strong>${esc(value)} <small>${unit}</small></strong></div>`;
+    const benchmarkBody = reference
+      ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid">${officialTile('首 token 延迟', reference.metrics.ttft_ms, 'ms')}${officialTile('生成速度', reference.metrics.decode_tokens_per_second, 'token/s')}${officialTile('运行内存', reference.metrics.memory_gb, 'GB')}</div></div></div>`
+      : textDemo
       ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid">${dash('首 token 延迟')}${dash('生成速度')}${dash('板端 PPL')}${dash('峰值内存')}</div></div></div>`
       : b
       ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid" id="detail-performance" aria-live="polite"></div></div></div>`
@@ -452,7 +456,7 @@
     const kicker = m.dataPending
       ? `<div class="mz-kicker"><span class="mz-task">${m.task}</span><span class="pending-badge">数据待补充</span></div>`
       : `<span class="mz-task">${m.task}</span>`;
-    const reportAction = textDemo ? documentationLink(m, 'conversion', '转换说明') : m.reportDataUrl
+    const reportAction = m.releaseStatus === 'official' ? '' : textDemo ? documentationLink(m, 'conversion', '转换说明') : m.reportDataUrl
       ? `<a class="mz-report-link" href="reports.html?report=${encodeURIComponent(m.id)}&from=${encodeURIComponent(m.id)}">${icon('scan-eye')}查看转换详情</a>`
       : (m.dataPending
         ? ((m.reportUrl || m.reportSourceUrl)

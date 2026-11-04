@@ -14,15 +14,12 @@ dist/       generated website artifact; ignored by Git
 
 New model submissions must follow [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Gemma4-E2B is included as an S600 SDK 2.0 text `demo`: compilation is recorded,
-board tests are `not-run`, and board measurements remain null. Its page supplies
-native preparation/run commands, sample-source download and documentation.
-A demo can offer a verified Archive deployment package independently of board measurements.
-Its package URL, size, SHA256 and full HTTPS verification are bound in the Sample manifest.
-The demo has no OE report and is
-excluded from released-model statistics and the released-only Ask AI scope.
-The catalog validates its model binding and board-status JSON in
-`samples/llm/gemma4/`; it does not import a host fake-quant score as board accuracy.
+Gemma4 E2B/E4B is published with four `official` S600 profiles: W4 and W8 for each size.
+The full vendor ZIPs and member digests are verified, and downloads point directly to the SDK's canonical OSS URLs.
+Published vendor TTFT, decode speed and Linux+ION memory are displayed with their source; the concurrency selector retains one stream.
+Local board records stay `not-run` and null, independently of the official references.
+These entries have native preparation/run commands and source archives, without synthetic OE reports or upstream revisions.
+They are counted separately from locally verified `released` models and remain outside the released-only Ask AI scope.
 
 ## Ownership
 
@@ -41,7 +38,8 @@ authored in Chinese and English at the task level and describe model
 architecture only. Deployment formats, model statistics, accuracy, and
 performance remain in their dedicated release fields.
 
-Public deployment models use the verified Archive platform and sample directory:
+Official Gemma profiles use the verified SDK OSS ZIP URLs recorded in their Sample manifests.
+Other public deployment models use the verified Archive platform and sample directory:
 
 ```text
 https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_<platform>/<source>/<artifact>
@@ -50,8 +48,8 @@ https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_<platform>/<source
 Release manifests and OE reports use the model-specific Archive `assets/`
 directory described in [CONTRIBUTING.md](CONTRIBUTING.md). Preserve the model's
 SHA-256, size, source versions, and original publication receipts when changing
-its download location. Public catalog and website validation reject OSS model
-downloads; historical OSS packages remain readable for receipt validation.
+its download location. Public catalog and website validation accept the fixed official Gemma OSS contract;
+other OSS model downloads remain rejected, while historical packages stay readable for receipt validation.
 
 Build dates, repository commits, and toolchain versions belong in release
 metadata rather than the object path.

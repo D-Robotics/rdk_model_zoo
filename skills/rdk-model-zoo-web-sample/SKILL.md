@@ -24,9 +24,9 @@ metadata:
 
 不适用：改示例推理代码、做量化编译、重新测量板端性能。那些工作仍走仓库里对应示例的 README，以及 `main` 上的开发、校验和发布技能。
 
-## Two states
+## Standard registration states
 
-一条记录只有两种状态。细节和禁止项见 [registration-states.md](references/registration-states.md)，按任务的字段见 [field-matrix.md](references/field-matrix.md)。
+标准登记使用以下两种状态；官方 Gemma 的独立合同见下文。细节和禁止项见 [registration-states.md](references/registration-states.md)，按任务的字段见 [field-matrix.md](references/field-matrix.md)。
 
 | 状态 | YAML | 网页上是什么 | 何时使用 |
 | --- | --- | --- | --- |
@@ -34,6 +34,16 @@ metadata:
 | 完整（省略 `registration`） | 现有发布记录的全部字段 | 可筛选、可下载、可看精度和性能、可打开转换报告 | 转换、精度、Runtime、端到端、制品、许可证和封面都已核对 |
 
 已有的完整记录不要降级，也不要为了“统一格式”改写它们的数字。
+
+## Official SDK Gemma profiles
+
+S600 Gemma4 E2B/E4B vendor packages use the scoped `status: official` contract in
+`model_zoo_web/CONTRIBUTING.md`. Full package/member hashes and target metadata are
+verified before publication. Canonical SDK OSS ZIP links are allowed for these profiles.
+Vendor reference metrics retain their source and conditions; local board results stay
+`not-run` and null. Unknown upstream revisions remain null. Only the supported single-request
+condition is shown. This state is counted separately from locally verified `released`
+models and does not weaken ordinary CV release requirements.
 
 ## What a pending record must contain
 
