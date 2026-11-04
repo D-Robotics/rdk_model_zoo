@@ -100,3 +100,31 @@ python3 samples/vision/edgenext/runtime/python/main.py --target x5 --variant tim
 精确 URL、SHA-256 和大小登记在 `docs/release/x5/models.yaml`；来源及主机对照
 记录见 `conversion/converted.json`。模型许可逐项保留在公开 release 清单中。
 <!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+这些独立规格已完成转换、完整 OE 和实际 HBM 接口核验。源权重、ONNX、每目标配置、校准数量和摘要见 [converted_targets_20261103.json](../conversion/converted_targets_20261103.json)。
+
+| 目标 | Native variant | 组件 | 校准图片 |
+| --- | --- | --- | ---: |
+| s100 | `timm-base-usi-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-base-usi-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-base-usi-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-small-usi-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-small-usi-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-small-usi-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-x-small-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-x-small-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-x-small-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-xx-small-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-xx-small-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-xx-small-in1k-s-int16-o1-20261103` | model | 200 |
+
+```bash
+python3 samples/vision/edgenext/model/download.py --target s100 --variant timm-base-usi-in1k-s-int16-o1-20261103
+python3 samples/vision/edgenext/runtime/python/main.py --target s100 --variant timm-base-usi-in1k-s-int16-o1-20261103 --asset-id s:edgenext:s100/edgenext_base_usi_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --model-path /path/to/edgenext_base_usi_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --test-img samples/vision/edgenext/test_data/Zebra.jpg
+```
+
+命令中的路径需要替换为实际文件。每套多组件模型须同时准备全部组件。旧默认与既有指标保留原身份；本轮规格的板端 smoke、数据集精度、Runtime 1/2 并发和 C++ 1/2 流均为 `not-run`。

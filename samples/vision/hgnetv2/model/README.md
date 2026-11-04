@@ -96,3 +96,34 @@ Exact model URLs/SHA-256/size are in `docs/release/x5/models.yaml`; source and h
 receipts are in `conversion/converted.json`. Each weight retains its own model
 license in its public release manifest. No board result is implied by download.
 <!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+These independent profiles passed conversion, complete OE collection and actual HBM metadata binding. Source weights, graphs, per-target recipes, calibration counts and digests are in [converted_targets_20261103.json](../conversion/converted_targets_20261103.json).
+
+| Target | Native variant | Components | Calibration photographs |
+| --- | --- | --- | ---: |
+| s100 | `timm-b0-ssld-stage2-ft-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-b0-ssld-stage2-ft-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-b0-ssld-stage2-ft-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-b1-ssld-stage2-ft-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-b1-ssld-stage2-ft-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-b1-ssld-stage2-ft-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-b2-ssld-stage2-ft-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-b2-ssld-stage2-ft-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-b2-ssld-stage2-ft-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-b3-ssld-stage2-ft-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-b3-ssld-stage2-ft-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-b3-ssld-stage2-ft-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-b4-ssld-stage2-ft-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-b4-ssld-stage2-ft-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-b4-ssld-stage2-ft-in1k-s-int16-o1-20261103` | model | 200 |
+
+```bash
+python3 samples/vision/hgnetv2/model/download.py --target s100 --variant timm-b0-ssld-stage2-ft-in1k-s-int16-o1-20261103
+python3 samples/vision/hgnetv2/runtime/python/main.py --target s100 --variant timm-b0-ssld-stage2-ft-in1k-s-int16-o1-20261103 --asset-id s:hgnetv2:s100/hgnetv2_b0_ssld_stage2_ft_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --model-path /path/to/hgnetv2_b0_ssld_stage2_ft_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --test-img samples/vision/hgnetv2/test_data/sandbar.JPEG
+```
+
+Substitute the actual file paths. Multi-component tasks require every component together. Historical defaults and measurements retain their original identities. Board smoke, dataset accuracy, Runtime 1/2 and C++ 1/2 are `not-run` for these profiles.

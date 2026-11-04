@@ -233,5 +233,6 @@ max/0.9999 校准将 lite n 提高到 0.9975，未达到参考记录门槛。
 每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
 
 - `s100p / n-int16-20261103-o1 / model`: [n_int16_20261103_o1_s100p_model.yaml](recipes/n_int16_20261103_o1_s100p_model.yaml)
+- `s600 / n-int16-20261103-o1 / model`: [n_int16_20261103_o1_s600_model.yaml](recipes/n_int16_20261103_o1_s600_model.yaml)
 
 原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。

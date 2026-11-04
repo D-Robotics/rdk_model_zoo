@@ -94,3 +94,18 @@ S SDK 仅编译图像编码器。登记前逐目标读取完整 HBM ABI、NodeIn
 模型包同时包含 BPU 图像模型、CPU 文本 ONNX、BPE/分词文件、许可、原始串联报告和
 各自的 BPU 转换报告或 CPU 主机报告。原生 `--variant` 在任一 Runtime 加载前校验
 两份模型摘要。板端精度、速度和完整流水线延迟尚未实测。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
+
+- `s100 / vit-b32-native-int16-o1-20261103 / image`: [vit_b32_native_int16_o1_20261103_s100_image.yaml](recipes/vit_b32_native_int16_o1_20261103_s100_image.yaml)
+- `s100 / vit-b32-native-int16-o1-20261103 / text`: [clip_vitb32_text_runtime_20261103.json](recipes/clip_vitb32_text_runtime_20261103.json)
+- `s100p / vit-b32-native-int16-o1-20261103 / image`: [vit_b32_native_int16_o1_20261103_s100p_image.yaml](recipes/vit_b32_native_int16_o1_20261103_s100p_image.yaml)
+- `s100p / vit-b32-native-int16-o1-20261103 / text`: [clip_vitb32_text_runtime_20261103.json](recipes/clip_vitb32_text_runtime_20261103.json)
+- `s600 / vit-b32-native-int16-o1-20261103 / image`: [vit_b32_native_int16_o1_20261103_s600_image.yaml](recipes/vit_b32_native_int16_o1_20261103_s600_image.yaml)
+- `s600 / vit-b32-native-int16-o1-20261103 / text`: [clip_vitb32_text_runtime_20261103.json](recipes/clip_vitb32_text_runtime_20261103.json)
+
+原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。

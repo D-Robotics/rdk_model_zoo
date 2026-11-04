@@ -150,6 +150,7 @@ These independent profiles passed conversion, complete OE collection and actual 
 | Target | Native variant | Components | Calibration photographs |
 | --- | --- | --- | ---: |
 | s100p | `n-int16-20261103-o1` | model | 200 |
+| s600 | `n-int16-20261103-o1` | model | 200 |
 
 ```bash
 python3 samples/vision/yolo26_depth/model/download.py --target s100p --asset-id s:yolo26_depth:nash-m/yolo26n_depth_nashm_768x768_nv12_int16_20261103_o1.hbm

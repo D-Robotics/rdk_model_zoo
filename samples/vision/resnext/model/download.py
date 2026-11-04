@@ -47,6 +47,12 @@ VARIANTS = VARIANTS + ('timm-50-32x4d-a1h-in1k',)
 ASSET_REFERENCES.update({('x5', 'timm-50-32x4d-a1h-in1k'): 'x5:resnext:resnext50_32x4d_a1h_in1k_bayese_224x224_nv12.bin'})
 # END CONVERTED ARTIFACT BINDINGS
 
+# BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
+VARIANTS = tuple(dict.fromkeys((*VARIANTS, *('timm-50-32x4d-a1h-in1k-s-int16-o1-20261103',))))
+TARGETS = tuple(dict.fromkeys((*TARGETS, *('s100', 's100p', 's600'))))
+ASSET_REFERENCES.update({('s100', 'timm-50-32x4d-a1h-in1k-s-int16-o1-20261103'): 's:resnext:s100/resnext50_32x4d_a1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-50-32x4d-a1h-in1k-s-int16-o1-20261103'): 's:resnext:s100p/resnext50_32x4d_a1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-50-32x4d-a1h-in1k-s-int16-o1-20261103'): 's:resnext:s600/resnext50_32x4d_a1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm'})
+# END S CONVERTED ARTIFACT BINDINGS 20261103
+
 def asset_reference(target: str, variant: str = '50_32x4d') -> str:
     """Return the exact manifest reference for a supported target/variant."""
 

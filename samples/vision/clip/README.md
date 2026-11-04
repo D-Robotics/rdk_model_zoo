@@ -76,3 +76,9 @@ The encoders produce 512-dimensional features. The bundled BPE vocabulary is `ru
 ## License
 
 Sample code follows the repository [LICENSE](../../../LICENSE), Apache-2.0. The CLIP model assets retain the licenses and provenance recorded by the X5 publication; refer to the accompanying model license. Contributor attribution from the X5 source delivery is preserved.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Independent converted profiles and explicit commands are listed in [model preparation](model/README.md). Board accuracy and performance are not measured yet.

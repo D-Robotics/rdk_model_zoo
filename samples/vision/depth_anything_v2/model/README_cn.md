@@ -89,3 +89,21 @@ Small O1 文件大小为 126,860,200 字节。主机 HBM 检查已确认 nash-e�
 ```bash
 bash samples/vision/depth_anything_v2/model/download.sh --target s100 --variant small-518x686-o1
 ```
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+这些独立规格已完成转换、完整 OE 和实际 HBM 接口核验。源权重、ONNX、每目标配置、校准数量和摘要见 [converted_targets_20261103.json](../conversion/converted_targets_20261103.json)。
+
+| 目标 | Native variant | 组件 | 校准图片 |
+| --- | --- | --- | ---: |
+| s100p | `small-518x686-int16-20261103-o1` | model | 200 |
+| s600 | `small-518x686-int16-20261103-o1` | model | 200 |
+
+```bash
+python3 samples/vision/depth_anything_v2/model/download.py --target s100p --asset-id s:depth_anything_v2:s100p/depth_anything_v2_small_518x686_nashm_20261103_o1.hbm
+python3 samples/vision/depth_anything_v2/runtime/python/main.py --target s100p --variant small-518x686-int16-20261103-o1 --asset-id s:depth_anything_v2:s100p/depth_anything_v2_small_518x686_nashm_20261103_o1.hbm --model-path /path/to/depth_anything_v2_small_518x686_nashm_20261103_o1.hbm --test-img samples/vision/depth_anything_v2/test_data/furseal.jpg
+```
+
+命令中的路径需要替换为实际文件。每套多组件模型须同时准备全部组件。旧默认与既有指标保留原身份；本轮规格的板端 smoke、数据集精度、Runtime 1/2 并发和 C++ 1/2 流均为 `not-run`。

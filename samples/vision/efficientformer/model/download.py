@@ -36,6 +36,12 @@ VARIANTS = VARIANTS + ('timm-l1-snap-dist-in1k', 'timm-l3-snap-dist-in1k')
 ASSET_REFERENCES.update({('x5', 'timm-l1-snap-dist-in1k'): 'x5:efficientformer:efficientformer_l1_snap_dist_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-l3-snap-dist-in1k'): 'x5:efficientformer:efficientformer_l3_snap_dist_in1k_bayese_224x224_nv12.bin'})
 # END CONVERTED ARTIFACT BINDINGS
 
+# BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
+VARIANTS = tuple(dict.fromkeys((*VARIANTS, *('timm-l1-snap-dist-in1k-s-int16-o1-20261103', 'timm-l3-snap-dist-in1k-s-int16-o1-20261103'))))
+TARGETS = tuple(dict.fromkeys((*TARGETS, *('s100', 's100p', 's600'))))
+ASSET_REFERENCES.update({('s100', 'timm-l1-snap-dist-in1k-s-int16-o1-20261103'): 's:efficientformer:s100/efficientformer_l1_snap_dist_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-l1-snap-dist-in1k-s-int16-o1-20261103'): 's:efficientformer:s100p/efficientformer_l1_snap_dist_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-l1-snap-dist-in1k-s-int16-o1-20261103'): 's:efficientformer:s600/efficientformer_l1_snap_dist_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm', ('s100', 'timm-l3-snap-dist-in1k-s-int16-o1-20261103'): 's:efficientformer:s100/efficientformer_l3_snap_dist_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-l3-snap-dist-in1k-s-int16-o1-20261103'): 's:efficientformer:s100p/efficientformer_l3_snap_dist_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-l3-snap-dist-in1k-s-int16-o1-20261103'): 's:efficientformer:s600/efficientformer_l3_snap_dist_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm'})
+# END S CONVERTED ARTIFACT BINDINGS 20261103
+
 def asset_reference(target: str, variant: str = 'l3') -> str:
     """Return the exact manifest reference for a supported target/variant."""
 

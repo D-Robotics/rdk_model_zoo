@@ -247,7 +247,7 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual(facts["variant"], variant)
             self.assertEqual(facts["published_float"], target == "x5")
         result = subprocess.run(
-            [sys.executable, str(main), "--target", "s600", "--dry-run"],
+            [sys.executable, str(main), "--target", "s600", "--variant", "26x", "--dry-run"],
             capture_output=True,
             text=True,
         )

@@ -24,7 +24,7 @@ class CliTests(unittest.TestCase):
     def test_sdk_free_list_dry_run_and_validation(self):
         path = ROOT / "samples/vision/yolo26_depth/runtime/python/main.py"
         for argv, count in (
-            (["--list-models"], 22),
+            (["--list-models"], 23),
             (["--target", "s100p", "--variant", "l", "--dry-run"], None),
         ):
             run = subprocess.run(

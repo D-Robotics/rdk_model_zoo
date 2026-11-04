@@ -71,10 +71,10 @@ def _asset(reference=ASSET_ID) -> Asset:
 
 
 def list_available_assets(target: Optional[str] = None) -> tuple:
-    """List recognized published S100 assets without board or SDK access.
+    """List recognized published S-series assets without board or SDK access.
 
     Args:
-        target: Concrete target filter; other targets publish nothing.
+        target: Concrete target filter for registered S-series profiles.
 
     Returns:
         tuple[Asset, ...]: Published assets in manifest order.
@@ -99,7 +99,7 @@ def resolve_selection(
     """Resolve Depth Anything V2's exact published asset identity without loading it.
 
     Args:
-        target: ``auto``/``s100``; other targets publish nothing.
+        target: ``auto`` or a registered S-series target; auto keeps S100.
         variant: Explicit legacy or public Small binding; omitted keeps legacy.
         asset_id: Qualified manifest reference; a ``model_path`` override
             requires the exact reference.
@@ -153,7 +153,7 @@ def build_parser():
     """Build the CLI parser with target, asset and input options."""
 
     p = argparse.ArgumentParser(
-        description="Depth Anything V2 relative depth; published S100 artifact only"
+        description="Depth Anything V2 relative depth; registered S-series profiles"
     )
     p.add_argument(
         "--target", choices=("auto", "x5", "s100", "s100p", "s600"), default="auto"

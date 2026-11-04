@@ -257,3 +257,25 @@ hb_mapper makertbin --model-type onnx --config compile.yaml
 
 Use the model/tag, pinned checkpoint and matching YAML from `converted.json`; use a fresh attempt directory. The calibration producer uses raw RGB float32 binary tensors. Do not apply normalization twice or inherit historical board metrics.
 <!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100 / timm-b2-ra-in1k-s-int16-o1-20261103 / model`: [timm_b2_ra_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_b2_ra_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-b2-ra-in1k-s-int16-o1-20261103 / model`: [timm_b2_ra_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_b2_ra_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-b2-ra-in1k-s-int16-o1-20261103 / model`: [timm_b2_ra_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_b2_ra_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-b3-ra2-in1k-s-int16-o1-20261103 / model`: [timm_b3_ra2_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_b3_ra2_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-b3-ra2-in1k-s-int16-o1-20261103 / model`: [timm_b3_ra2_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_b3_ra2_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-b3-ra2-in1k-s-int16-o1-20261103 / model`: [timm_b3_ra2_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_b3_ra2_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-b4-ra2-in1k-s-int16-o1-20261103 / model`: [timm_b4_ra2_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_b4_ra2_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-b4-ra2-in1k-s-int16-o1-20261103 / model`: [timm_b4_ra2_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_b4_ra2_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-b4-ra2-in1k-s-int16-o1-20261103 / model`: [timm_b4_ra2_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_b4_ra2_in1k_s_int16_o1_20261103_s600_model.yaml)
+
+S PTQ consumes normalized ONNX-domain `.npy` tensors. NV12 runtime mean/scale remain in the recipe. The shared producer reads checkpoint normalization through `--target` and `--normalization-json`.
+
+[Shared classification workflow](../../../../utils/tools/classification_conversion/README.md).
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

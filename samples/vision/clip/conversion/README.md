@@ -102,3 +102,18 @@ files before either runtime loads. A complete download contains the BPU image
 model, CPU text ONNX, BPE/tokenizer, MIT notice, host matching evidence and
 separate BPU conversion / CPU host reports. There is no measured pipeline
 latency or board accuracy until independent board acceptance.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100 / vit-b32-native-int16-o1-20261103 / image`: [vit_b32_native_int16_o1_20261103_s100_image.yaml](recipes/vit_b32_native_int16_o1_20261103_s100_image.yaml)
+- `s100 / vit-b32-native-int16-o1-20261103 / text`: [clip_vitb32_text_runtime_20261103.json](recipes/clip_vitb32_text_runtime_20261103.json)
+- `s100p / vit-b32-native-int16-o1-20261103 / image`: [vit_b32_native_int16_o1_20261103_s100p_image.yaml](recipes/vit_b32_native_int16_o1_20261103_s100p_image.yaml)
+- `s100p / vit-b32-native-int16-o1-20261103 / text`: [clip_vitb32_text_runtime_20261103.json](recipes/clip_vitb32_text_runtime_20261103.json)
+- `s600 / vit-b32-native-int16-o1-20261103 / image`: [vit_b32_native_int16_o1_20261103_s600_image.yaml](recipes/vit_b32_native_int16_o1_20261103_s600_image.yaml)
+- `s600 / vit-b32-native-int16-o1-20261103 / text`: [clip_vitb32_text_runtime_20261103.json](recipes/clip_vitb32_text_runtime_20261103.json)
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

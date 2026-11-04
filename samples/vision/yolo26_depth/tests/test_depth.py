@@ -68,7 +68,7 @@ class DepthTests(unittest.TestCase):
     def test_historical_defaults_and_new_converted_inventory(self):
         historical = set()
         for target in ("x5", "s100", "s100p", "s600"):
-            self.assertEqual(len(list_available_assets(target)), 6 if target in ("s100", "s100p") else 5)
+            self.assertEqual(len(list_available_assets(target)), 5 if target == "x5" else 6)
             self.assertEqual(resolve_selection(target).variant, "n")
             for variant in ("n", "s", "m", "l", "x"):
                 s = resolve_selection(target, variant=variant)
@@ -83,6 +83,7 @@ class DepthTests(unittest.TestCase):
         self.assertEqual({a.filename for a in list_available_assets()}, historical | {
             "nash-e/yolo26n_depth_nashe_768x768_nv12_int16_20261103_o1.hbm",
             "nash-m/yolo26n_depth_nashm_768x768_nv12_int16_20261103_o1.hbm",
+            "nash-p/yolo26n_depth_nashp_768x768_nv12_int16_20261103_o1.hbm",
         })
 
     def test_selection_rejects_conflicts_and_forgery(self):

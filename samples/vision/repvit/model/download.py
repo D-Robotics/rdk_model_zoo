@@ -49,6 +49,12 @@ VARIANTS = VARIANTS + ('timm-m0-9-dist-450e-in1k', 'timm-m1-0-dist-450e-in1k', '
 ASSET_REFERENCES.update({('x5', 'timm-m0-9-dist-450e-in1k'): 'x5:repvit:repvit_m0_9_dist_450e_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-m1-0-dist-450e-in1k'): 'x5:repvit:repvit_m1_0_dist_450e_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-m1-1-dist-450e-in1k'): 'x5:repvit:repvit_m1_1_dist_450e_in1k_bayese_224x224_nv12.bin'})
 # END CONVERTED ARTIFACT BINDINGS
 
+# BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
+VARIANTS = tuple(dict.fromkeys((*VARIANTS, *('timm-m0-9-dist-450e-in1k-s-int16-o1-20261103', 'timm-m1-0-dist-450e-in1k-s-int16-o1-20261103', 'timm-m1-1-dist-450e-in1k-s-int16-o1-20261103'))))
+TARGETS = tuple(dict.fromkeys((*TARGETS, *('s100', 's100p', 's600'))))
+ASSET_REFERENCES.update({('s100', 'timm-m0-9-dist-450e-in1k-s-int16-o1-20261103'): 's:repvit:s100/repvit_m0_9_dist_450e_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-m0-9-dist-450e-in1k-s-int16-o1-20261103'): 's:repvit:s100p/repvit_m0_9_dist_450e_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-m0-9-dist-450e-in1k-s-int16-o1-20261103'): 's:repvit:s600/repvit_m0_9_dist_450e_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm', ('s100', 'timm-m1-0-dist-450e-in1k-s-int16-o1-20261103'): 's:repvit:s100/repvit_m1_0_dist_450e_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-m1-0-dist-450e-in1k-s-int16-o1-20261103'): 's:repvit:s100p/repvit_m1_0_dist_450e_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-m1-0-dist-450e-in1k-s-int16-o1-20261103'): 's:repvit:s600/repvit_m1_0_dist_450e_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm', ('s100', 'timm-m1-1-dist-450e-in1k-s-int16-o1-20261103'): 's:repvit:s100/repvit_m1_1_dist_450e_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-m1-1-dist-450e-in1k-s-int16-o1-20261103'): 's:repvit:s100p/repvit_m1_1_dist_450e_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-m1-1-dist-450e-in1k-s-int16-o1-20261103'): 's:repvit:s600/repvit_m1_1_dist_450e_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm'})
+# END S CONVERTED ARTIFACT BINDINGS 20261103
+
 def asset_reference(target: str, variant: str = 'm0_9') -> str:
     """Return the exact manifest reference for a supported target/variant."""
 

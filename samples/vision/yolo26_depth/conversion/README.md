@@ -255,5 +255,6 @@ From the working directory in the matching OE 3.7.0 container, run `HBTL_THREAD_
 Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
 
 - `s100p / n-int16-20261103-o1 / model`: [n_int16_20261103_o1_s100p_model.yaml](recipes/n_int16_20261103_o1_s100p_model.yaml)
+- `s600 / n-int16-20261103-o1 / model`: [n_int16_20261103_o1_s600_model.yaml](recipes/n_int16_20261103_o1_s600_model.yaml)
 
 The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

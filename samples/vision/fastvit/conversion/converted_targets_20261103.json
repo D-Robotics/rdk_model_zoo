@@ -1,0 +1,1829 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "variant": "timm-s12-apple-in1k-s-int16-o1-20261103",
+      "web_size": "s12-apple-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/fastvit_s12_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/fastvit/fastvit_s12_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "5bc2edce42485a02977d50c38772b223c082bd07bbc492d79e802d354c4cb846",
+          "size_bytes": 17694920,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "92175acb4d78d61b374c969938b756d947f63547ac663347ed705bdd0e33f14c",
+          "effective_config_sha256": "09d3a950a7eb27caa75e424bb5c93dff38ffb625e6855a549767b0a57b51e562",
+          "recipe": "samples/vision/fastvit/conversion/recipes/timm_s12_apple_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "1a376c5e5c7d9ae84150d3a1df898a624c1866cea0bdcc96b6a33dae0bbc64b9",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "3002ece538307faca3713ae596c40e2eb6dfcfc4ce8f0ec6c83e4925326c4170",
+          "oe_data_sha256": "afb053f80fe5b43675edd2dd71317dea38f5243bc494fc7ae6e975d270486b28",
+          "node_info_csv_sha256": "69acb2a5c59bf76e640eaf8598d5d2a5b165cc951b219ebf0575fa342fff5723",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.997622,
+              "cosine": 0.998114
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_s12_apple_in1k-s100-int16-20261103-r04/ptq_output/fastvit_s12_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "bb018ff42b3de2885e89203d631fd7e68b6508cd1ce618f9513dabacb86e6422",
+              "size_bytes": 12599425
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_s12_apple_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "495819cd40fa392a169aa9801499bed5115637e591078673069dcbdfaa60b6bf",
+              "size_bytes": 1204
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 7.152557373046875e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.239776611328125e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 2.9802322387695312e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "03f091bae8804045b0845364a042c2c1c96924a30b2d72d6b1aa01d5e566e674",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fastvit_s12.apple_in1k",
+        "revision": "662e9e2677774a03870672a03974c6a3cfe575ac",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "bd52a9434413a18b69fa0a308813507d2614612afd7eec6cdf33e5ad4f684abe",
+        "size_bytes": 38121584,
+        "url": "https://huggingface.co/timm/fastvit_s12.apple_in1k/resolve/662e9e2677774a03870672a03974c6a3cfe575ac/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fastvit_s12.apple_in1k/blob/662e9e2677774a03870672a03974c6a3cfe575ac/README.md",
+        "license_url": "https://github.com/apple/ml-fastvit/blob/8af5928238cab99c45f64fc3e4e7b1516b8224ba/LICENSE",
+        "license_sha256": "b621c8500147987044c1ce3f7c524f09e804e3ec4dbdb3d06db16cfbd4c60697"
+      }
+    },
+    {
+      "variant": "timm-s12-apple-in1k-s-int16-o1-20261103",
+      "web_size": "s12-apple-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/fastvit_s12_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/fastvit/fastvit_s12_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "45e01b2d17866727ae097ffad70f6465564f823bd2427d3d922730d188123414",
+          "size_bytes": 17687496,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "92175acb4d78d61b374c969938b756d947f63547ac663347ed705bdd0e33f14c",
+          "effective_config_sha256": "3149938941b7843c3b6fe91788eeccab66cf0602295447373cd6ebd2e5080cfe",
+          "recipe": "samples/vision/fastvit/conversion/recipes/timm_s12_apple_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "d4113d69fc10fd7874cb3b38865b9bb805ff81e8a27938a943bb1d91d11b5202",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "585db183488b24609c72bb562e79248d1252aae5ea4febd552bdc06882bb81a6",
+          "oe_data_sha256": "1ca427b39f9ce9c2fb8361878025bd5d917382bd9926fbe418dfe44931717145",
+          "node_info_csv_sha256": "69acb2a5c59bf76e640eaf8598d5d2a5b165cc951b219ebf0575fa342fff5723",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.997622,
+              "cosine": 0.998114
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_s12_apple_in1k-s100p-int16-20261103-r04/ptq_output/fastvit_s12_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "a590297b0b5e6c9e940030fe520f378c93956ebf3909d713304551c7c28b5b00",
+              "size_bytes": 12599426
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_s12_apple_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "84600080c2d87aa97eba68544630eead28012dafc04823163739f28081d36043",
+              "size_bytes": 1205
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 7.152557373046875e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.239776611328125e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 2.9802322387695312e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "03f091bae8804045b0845364a042c2c1c96924a30b2d72d6b1aa01d5e566e674",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fastvit_s12.apple_in1k",
+        "revision": "662e9e2677774a03870672a03974c6a3cfe575ac",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "bd52a9434413a18b69fa0a308813507d2614612afd7eec6cdf33e5ad4f684abe",
+        "size_bytes": 38121584,
+        "url": "https://huggingface.co/timm/fastvit_s12.apple_in1k/resolve/662e9e2677774a03870672a03974c6a3cfe575ac/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fastvit_s12.apple_in1k/blob/662e9e2677774a03870672a03974c6a3cfe575ac/README.md",
+        "license_url": "https://github.com/apple/ml-fastvit/blob/8af5928238cab99c45f64fc3e4e7b1516b8224ba/LICENSE",
+        "license_sha256": "b621c8500147987044c1ce3f7c524f09e804e3ec4dbdb3d06db16cfbd4c60697"
+      }
+    },
+    {
+      "variant": "timm-s12-apple-in1k-s-int16-o1-20261103",
+      "web_size": "s12-apple-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/fastvit_s12_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/fastvit/fastvit_s12_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "83196bd13bf22933dfcb51a19a441c0b707e6e2345977d8d51cce5f3a33410c1",
+          "size_bytes": 18915024,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "92175acb4d78d61b374c969938b756d947f63547ac663347ed705bdd0e33f14c",
+          "effective_config_sha256": "3789ed8b85f2cfdef018538e931ec05aef936d68d07bfed04ee59062aa6db14d",
+          "recipe": "samples/vision/fastvit/conversion/recipes/timm_s12_apple_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "1023fe1b9acb7f1e24bd6355081202230c92f362ac11f6ba1211a3e4895368f2",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "bcda26e89c0f61c8d84780ddf444140d4464933c3d04aa16185f280a092c56b7",
+          "oe_data_sha256": "daa383c79495be4516bcfc8af0388eb8c98a20d612fffcd453478fa62b33125b",
+          "node_info_csv_sha256": "734cb7d9fbc6b9cfdf94c5a71109f9a18f62058208bfe24eeb76db9744334938",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.997622,
+              "cosine": 0.99812
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_s12_apple_in1k-s600-int16-20261103-r04/ptq_output/fastvit_s12_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "765bdfcc3183425b52676131a65084aa7abd8fd98aeac79a13ea5a29d8cf89c1",
+              "size_bytes": 10689528
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_s12_apple_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "697a6acec3c516b2bcb936c31fe01090d9f2afdcd501870e29c5abb76bca1eac",
+              "size_bytes": 1204
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 7.152557373046875e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.239776611328125e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 2.9802322387695312e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "03f091bae8804045b0845364a042c2c1c96924a30b2d72d6b1aa01d5e566e674",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fastvit_s12.apple_in1k",
+        "revision": "662e9e2677774a03870672a03974c6a3cfe575ac",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "bd52a9434413a18b69fa0a308813507d2614612afd7eec6cdf33e5ad4f684abe",
+        "size_bytes": 38121584,
+        "url": "https://huggingface.co/timm/fastvit_s12.apple_in1k/resolve/662e9e2677774a03870672a03974c6a3cfe575ac/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fastvit_s12.apple_in1k/blob/662e9e2677774a03870672a03974c6a3cfe575ac/README.md",
+        "license_url": "https://github.com/apple/ml-fastvit/blob/8af5928238cab99c45f64fc3e4e7b1516b8224ba/LICENSE",
+        "license_sha256": "b621c8500147987044c1ce3f7c524f09e804e3ec4dbdb3d06db16cfbd4c60697"
+      }
+    },
+    {
+      "variant": "timm-sa12-apple-in1k-s-int16-o1-20261103",
+      "web_size": "sa12-apple-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/fastvit_sa12_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/fastvit/fastvit_sa12_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "d8033c43e19fb0aefe9975feb0ec7934e3d2b31c1dff59e56fb45ac7edddd483",
+          "size_bytes": 20624080,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "801c91b452ce721739782d2469d51c090b1aca7bf6326e789f41b3a846d34650",
+          "effective_config_sha256": "fcb7bd408813ed533d4e91e922803e3a58eb1c1e2efad1fe67dff0ae8f3e5372",
+          "recipe": "samples/vision/fastvit/conversion/recipes/timm_sa12_apple_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "0738509bbdd768aeac6ba69c4f2b2a20a0069f63d7c7e1c55fe427e6a15c35ac",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "d8152a5686fa4dd632d32aa2d710eb1d9f6ab5aef2f5d33a4af4da1213997e00",
+          "oe_data_sha256": "8c96a1a7ebe4ce0190dd43e3711c7803e1608a78ebb09287828362d56ed4fc38",
+          "node_info_csv_sha256": "8936c6be00ed0f2304c1ed75e1d6086b7af5f9c566e1bbaf47e277d3330c35ab",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.998361,
+              "cosine": 0.998406
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_sa12_apple_in1k-s100-int16-20261103-r04/ptq_output/fastvit_sa12_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "12d113f0f2e7f2f6463b6b412fcf7a0d0474adc721fa303d5800c2e1d1270800",
+              "size_bytes": 15470698
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_sa12_apple_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "3784ba9782f1c6a2df2fda07ec422962348915477b377cae333e56e2b2d41410",
+              "size_bytes": 1207
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.814697265625e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 5.7220458984375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 7.62939453125e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.5497207641601562e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "be894626df6abae61096e14fd2ee88fc46727460d35394e06033a98cf2685682",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fastvit_sa12.apple_in1k",
+        "revision": "4f87441b01b509bc759497692b7d342c2999923b",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "4c41bc351018c691167b661e3bb03bcd713a2915ef7128e118877ca0ca5b5afa",
+        "size_bytes": 46522920,
+        "url": "https://huggingface.co/timm/fastvit_sa12.apple_in1k/resolve/4f87441b01b509bc759497692b7d342c2999923b/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fastvit_sa12.apple_in1k/blob/4f87441b01b509bc759497692b7d342c2999923b/README.md",
+        "license_url": "https://github.com/apple/ml-fastvit/blob/8af5928238cab99c45f64fc3e4e7b1516b8224ba/LICENSE",
+        "license_sha256": "b621c8500147987044c1ce3f7c524f09e804e3ec4dbdb3d06db16cfbd4c60697"
+      }
+    },
+    {
+      "variant": "timm-sa12-apple-in1k-s-int16-o1-20261103",
+      "web_size": "sa12-apple-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/fastvit_sa12_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/fastvit/fastvit_sa12_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "cc8d6ad252f43385001ef17fb3f959833b3563a5e28c6643c06fc4ab9aaf7fa6",
+          "size_bytes": 20613584,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "801c91b452ce721739782d2469d51c090b1aca7bf6326e789f41b3a846d34650",
+          "effective_config_sha256": "81732b85386dc4a4e935d62a8e82a3ad6e916d5a4a1097d5ff554a213b5804ef",
+          "recipe": "samples/vision/fastvit/conversion/recipes/timm_sa12_apple_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "1c4828eba6557fc213f8c1cb71c26bacf085918a8885ab47a857db4aa8db59ea",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "bd5b3fee147ccf121847a16778509c4bc2f39c8dd84be4186ccafff2f938d2aa",
+          "oe_data_sha256": "161ac71eff3f9de074aa40f5269f1e881771f25a655ce1e61337f328c4b518cb",
+          "node_info_csv_sha256": "45216b7bb0ad48d02b6740330bd93a9270edddd9e94cde11850abecd1f8f146e",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.998361,
+              "cosine": 0.998406
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_sa12_apple_in1k-s100p-int16-20261103-r04/ptq_output/fastvit_sa12_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "53c4f31832af4e6dc0a0e9239e6dc29cc8edb39a395e08be971112df24e407ea",
+              "size_bytes": 15470699
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_sa12_apple_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "ccd131f25ca6b521c7c6edbf737b3b30d432c67b76ddf1df8c51978f8d311095",
+              "size_bytes": 1208
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.814697265625e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 5.7220458984375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 7.62939453125e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.5497207641601562e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "be894626df6abae61096e14fd2ee88fc46727460d35394e06033a98cf2685682",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fastvit_sa12.apple_in1k",
+        "revision": "4f87441b01b509bc759497692b7d342c2999923b",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "4c41bc351018c691167b661e3bb03bcd713a2915ef7128e118877ca0ca5b5afa",
+        "size_bytes": 46522920,
+        "url": "https://huggingface.co/timm/fastvit_sa12.apple_in1k/resolve/4f87441b01b509bc759497692b7d342c2999923b/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fastvit_sa12.apple_in1k/blob/4f87441b01b509bc759497692b7d342c2999923b/README.md",
+        "license_url": "https://github.com/apple/ml-fastvit/blob/8af5928238cab99c45f64fc3e4e7b1516b8224ba/LICENSE",
+        "license_sha256": "b621c8500147987044c1ce3f7c524f09e804e3ec4dbdb3d06db16cfbd4c60697"
+      }
+    },
+    {
+      "variant": "timm-sa12-apple-in1k-s-int16-o1-20261103",
+      "web_size": "sa12-apple-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/fastvit_sa12_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/fastvit/fastvit_sa12_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "fd1a2a15c67da7867c99794339a8e1bbd43b9feab85610de1fd34b31e177563b",
+          "size_bytes": 22158720,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "801c91b452ce721739782d2469d51c090b1aca7bf6326e789f41b3a846d34650",
+          "effective_config_sha256": "4812483cba163c0c3d1ed4e892c5198e348a1f294c2a9084c61bfe81c30417d1",
+          "recipe": "samples/vision/fastvit/conversion/recipes/timm_sa12_apple_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "6c4aac8416bfeedd550a9b96f80bcc08f56c62858df60b9917d25d21d9c4b72f",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "30765c80324224837313283a40a68691d362f07d9e09bac0ebc1fa6214241aa6",
+          "oe_data_sha256": "f43a1f0e79a61e6c32f2dc2b8a26ea407c03dc92364dbab00c62e637e2339803",
+          "node_info_csv_sha256": "2e373280362c89adef645a186aef8fa932fadc683e4bafcbf799fda53d9491f9",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.998361,
+              "cosine": 0.998425
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_sa12_apple_in1k-s600-int16-20261103-r04/ptq_output/fastvit_sa12_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "f80b77c5c2cccd1fd4861a8103d32dbab9e98a62c82e0f582fbf6e450a176966",
+              "size_bytes": 13147260
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_sa12_apple_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "e5fe8ad2749592aaa68728b371405c377450fa1457861e7e495cc9161029d994",
+              "size_bytes": 1207
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.814697265625e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 5.7220458984375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 7.62939453125e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.5497207641601562e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "be894626df6abae61096e14fd2ee88fc46727460d35394e06033a98cf2685682",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fastvit_sa12.apple_in1k",
+        "revision": "4f87441b01b509bc759497692b7d342c2999923b",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "4c41bc351018c691167b661e3bb03bcd713a2915ef7128e118877ca0ca5b5afa",
+        "size_bytes": 46522920,
+        "url": "https://huggingface.co/timm/fastvit_sa12.apple_in1k/resolve/4f87441b01b509bc759497692b7d342c2999923b/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fastvit_sa12.apple_in1k/blob/4f87441b01b509bc759497692b7d342c2999923b/README.md",
+        "license_url": "https://github.com/apple/ml-fastvit/blob/8af5928238cab99c45f64fc3e4e7b1516b8224ba/LICENSE",
+        "license_sha256": "b621c8500147987044c1ce3f7c524f09e804e3ec4dbdb3d06db16cfbd4c60697"
+      }
+    },
+    {
+      "variant": "timm-t12-apple-in1k-s-int16-o1-20261103",
+      "web_size": "t12-apple-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/fastvit_t12_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/fastvit/fastvit_t12_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "2bddad009e6c5e31b99173cab57b524e9d2678213d7b3ac4378c1397ac80c3e1",
+          "size_bytes": 15657160,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "9729ab533720471ed7acfe5d63df04312d671c728ca9bebd1b74304e94e4549b",
+          "effective_config_sha256": "cee3f99517b655b855c4a9ec3f48a32f9bb98ee19b259501bdb4be21d5552b48",
+          "recipe": "samples/vision/fastvit/conversion/recipes/timm_t12_apple_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "545cb9a07c4dbfdd8f6d9bf9ba5ab7941cd5a726b86133121a07ce51a926c995",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "e61686566f3a8b374bc26d7a25ed82c21aa94d652191fbeefeb4e3a9bf62db57",
+          "oe_data_sha256": "038a620a6bf6bab970b438ff76e7b89942bf536e4ad4b5653814a1d04faa3cbd",
+          "node_info_csv_sha256": "bda5bf1edf14b8055998bdda5464d718114e4fdb554ded46a47244cdee528465",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.999124,
+              "cosine": 0.998357
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_t12_apple_in1k-s100-int16-20261103-r04/ptq_output/fastvit_t12_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "e45f22d94366a6213c02aba5b3404486a616015e868e7567620a10502d349aeb",
+              "size_bytes": 10333562
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_t12_apple_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "732629ef508b037a7048511079ebcbeda71a2a95ce5e905093eac6232822e289",
+              "size_bytes": 1204
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.86102294921875e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 7.62939453125e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.1920928955078125e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.6689300537109375e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "c91b67858455c558f94176610e9318e964bc7e085fa302f3740ec106742c4ee4",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fastvit_t12.apple_in1k",
+        "revision": "7630f7ea7919657fcfcf7f84808793b8c3b39e1d",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "ec5022429778ac28f0abc778568143ce56b2ac028c4c1939cc61c86f9c63ae73",
+        "size_bytes": 30442024,
+        "url": "https://huggingface.co/timm/fastvit_t12.apple_in1k/resolve/7630f7ea7919657fcfcf7f84808793b8c3b39e1d/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fastvit_t12.apple_in1k/blob/7630f7ea7919657fcfcf7f84808793b8c3b39e1d/README.md",
+        "license_url": "https://github.com/apple/ml-fastvit/blob/8af5928238cab99c45f64fc3e4e7b1516b8224ba/LICENSE",
+        "license_sha256": "b621c8500147987044c1ce3f7c524f09e804e3ec4dbdb3d06db16cfbd4c60697"
+      }
+    },
+    {
+      "variant": "timm-t12-apple-in1k-s-int16-o1-20261103",
+      "web_size": "t12-apple-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/fastvit_t12_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/fastvit/fastvit_t12_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "ca760713a8710805dc26c5cad127aecd05c6dbbb764154c5760550ba170c100a",
+          "size_bytes": 15659976,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "9729ab533720471ed7acfe5d63df04312d671c728ca9bebd1b74304e94e4549b",
+          "effective_config_sha256": "f4798b28df8e7a6317c7f60f9e32c1bdf1410052e23e1ea0067b6dc5e9a68b95",
+          "recipe": "samples/vision/fastvit/conversion/recipes/timm_t12_apple_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "633ea6e11c9c9da75eef788971298deb094967bb884a6ee1886fc472fb578253",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "88ac35990832dc16b31d36714590585c3e22ee150d19913b8edb932db9ae2adb",
+          "oe_data_sha256": "72e2ac68c540770f303bae0dfe18dbab2b05de02d76a7e900d5ef453dcda00a6",
+          "node_info_csv_sha256": "e2a884586d7a76f3318d32358b26464c054d07fb7d9899f727a586dc5c27399e",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.999124,
+              "cosine": 0.998357
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_t12_apple_in1k-s100p-int16-20261103-r04/ptq_output/fastvit_t12_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "9c628fe31ac9e18f7c3cafee8aa20e593101d4232e54342689eb167766fe3c05",
+              "size_bytes": 10333563
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_t12_apple_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "23661ab6b73cca44381681af2ac9f5cfd9540e3562464a08cb6c44f81a7572a3",
+              "size_bytes": 1205
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.86102294921875e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 7.62939453125e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.1920928955078125e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.6689300537109375e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "c91b67858455c558f94176610e9318e964bc7e085fa302f3740ec106742c4ee4",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fastvit_t12.apple_in1k",
+        "revision": "7630f7ea7919657fcfcf7f84808793b8c3b39e1d",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "ec5022429778ac28f0abc778568143ce56b2ac028c4c1939cc61c86f9c63ae73",
+        "size_bytes": 30442024,
+        "url": "https://huggingface.co/timm/fastvit_t12.apple_in1k/resolve/7630f7ea7919657fcfcf7f84808793b8c3b39e1d/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fastvit_t12.apple_in1k/blob/7630f7ea7919657fcfcf7f84808793b8c3b39e1d/README.md",
+        "license_url": "https://github.com/apple/ml-fastvit/blob/8af5928238cab99c45f64fc3e4e7b1516b8224ba/LICENSE",
+        "license_sha256": "b621c8500147987044c1ce3f7c524f09e804e3ec4dbdb3d06db16cfbd4c60697"
+      }
+    },
+    {
+      "variant": "timm-t12-apple-in1k-s-int16-o1-20261103",
+      "web_size": "t12-apple-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/fastvit_t12_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/fastvit/fastvit_t12_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "725cf9f7d4b908d81867e37813da16af3c2b2548c08fe971931dec4cfc470cd9",
+          "size_bytes": 16793392,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "9729ab533720471ed7acfe5d63df04312d671c728ca9bebd1b74304e94e4549b",
+          "effective_config_sha256": "deb449828549fd4de7408f4ee6b4cd8366b1e3f1f83982f37794b15341622a6c",
+          "recipe": "samples/vision/fastvit/conversion/recipes/timm_t12_apple_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "711e5d266c084276c726d868547f46eaaffecd37a5b5920ae619c1cd3c53e313",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "372d2c1161468e4eb41ab66a19c42f1afb180cdcfd28d531f57a1ae0fa6ce14e",
+          "oe_data_sha256": "db41522b0f8a0b5d309fbd6e2bb197e5246c69c8ca84b9558606446de89a5c30",
+          "node_info_csv_sha256": "5c06a5a214b25819f6dcfa21752f7d81b9042b0687abbca1f52cfca5bfd1ec0f",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.999124,
+              "cosine": 0.998353
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_t12_apple_in1k-s600-int16-20261103-r04/ptq_output/fastvit_t12_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "5199bdf23a59268e2ad4943511490b331183d84dfce76eec34e48a3f35b0a9bf",
+              "size_bytes": 8637301
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_t12_apple_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "2df8dda3544efde27083fef6ad0af4e3c1722f54b8fa01b017abde02da499fd4",
+              "size_bytes": 1204
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.86102294921875e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 7.62939453125e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.1920928955078125e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.6689300537109375e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "c91b67858455c558f94176610e9318e964bc7e085fa302f3740ec106742c4ee4",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fastvit_t12.apple_in1k",
+        "revision": "7630f7ea7919657fcfcf7f84808793b8c3b39e1d",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "ec5022429778ac28f0abc778568143ce56b2ac028c4c1939cc61c86f9c63ae73",
+        "size_bytes": 30442024,
+        "url": "https://huggingface.co/timm/fastvit_t12.apple_in1k/resolve/7630f7ea7919657fcfcf7f84808793b8c3b39e1d/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fastvit_t12.apple_in1k/blob/7630f7ea7919657fcfcf7f84808793b8c3b39e1d/README.md",
+        "license_url": "https://github.com/apple/ml-fastvit/blob/8af5928238cab99c45f64fc3e4e7b1516b8224ba/LICENSE",
+        "license_sha256": "b621c8500147987044c1ce3f7c524f09e804e3ec4dbdb3d06db16cfbd4c60697"
+      }
+    },
+    {
+      "variant": "timm-t8-apple-in1k-s-int16-o1-20261103",
+      "web_size": "t8-apple-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/fastvit_t8_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/fastvit/fastvit_t8_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "a3d79b0ed67efd778b8d1bef33f3dda30b0b9b895729a5c9a02860e4dba0c89f",
+          "size_bytes": 9596608,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "207dd495b979c3f45fca744d678bcd8b31145b1a49707e0995a423944f440834",
+          "effective_config_sha256": "e3e10853c45d15ed6292fe83b1edcb6a5543106c8e80227a74b43c54cab10b41",
+          "recipe": "samples/vision/fastvit/conversion/recipes/timm_t8_apple_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "b96e00bed2b17f106e47486a76e3ab8f7376875c85252b2b7ff789554dceda3a",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "58665dd808a0f628f78fea954137b5f9b0fd6a145711b1427c78b0707558fc62",
+          "oe_data_sha256": "74268fb91390d3d0151d8b035622faeb0bd92e24d97ac33ad128be3c7748ccd5",
+          "node_info_csv_sha256": "17deac9acc45bb3d848cf504759413926b8a845f704b131b3dd8ede298bafcaf",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.998641,
+              "cosine": 0.998474
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_t8_apple_in1k-s100-int16-20261103-r04/ptq_output/fastvit_t8_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "bf53168f373652ccfe02a595e32bdf09780f16adf0c3eb03bed53df5a3e6ba0c",
+              "size_bytes": 5907411
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_t8_apple_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "458de7971decb1620a2ddd6c66f52b73cb0cd42985c72cdc9880e5f8c403da42",
+              "size_bytes": 1201
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 6.4373016357421875e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 9.059906005859375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 8.58306884765625e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.5497207641601562e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "cedcf3eb50d16fe61b3bd60c571ed313cc114cd98106f2895ceee0f4e2a92ea2",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fastvit_t8.apple_in1k",
+        "revision": "cbc6c66a249060c66b8236284c7c3998e900e944",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "345af83ed1a7eee2ed322eb327895efd2a2a06c604272dbac92432adc61af889",
+        "size_bytes": 16266976,
+        "url": "https://huggingface.co/timm/fastvit_t8.apple_in1k/resolve/cbc6c66a249060c66b8236284c7c3998e900e944/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fastvit_t8.apple_in1k/blob/cbc6c66a249060c66b8236284c7c3998e900e944/README.md",
+        "license_url": "https://github.com/apple/ml-fastvit/blob/8af5928238cab99c45f64fc3e4e7b1516b8224ba/LICENSE",
+        "license_sha256": "b621c8500147987044c1ce3f7c524f09e804e3ec4dbdb3d06db16cfbd4c60697"
+      }
+    },
+    {
+      "variant": "timm-t8-apple-in1k-s-int16-o1-20261103",
+      "web_size": "t8-apple-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/fastvit_t8_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/fastvit/fastvit_t8_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "db9e83535c004f528fcb144138e814fe3943b8039d58942a046d75beb70d9d65",
+          "size_bytes": 9618368,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "207dd495b979c3f45fca744d678bcd8b31145b1a49707e0995a423944f440834",
+          "effective_config_sha256": "e870d065b033bcbbe3edea7ab3173ede2ec0136b7d36cf738c8f7c85c562ca42",
+          "recipe": "samples/vision/fastvit/conversion/recipes/timm_t8_apple_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "79ed90f8350e89e3d85d28545873369f696a78d58a9d2370b5e8b7c811fc9ab9",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "3c7904ed1617504268a6145dcf22310c1ae86b5e5072ed08fe08159b44a52a0e",
+          "oe_data_sha256": "a557ca14e6f67e87cb303502d59887e983d104eb96ef96627306a2e47160a0ba",
+          "node_info_csv_sha256": "10c6edd4fbd8242de4c9f86ddd6aa4ef2071474fa24cd19da2e77200dce80c68",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.998641,
+              "cosine": 0.998474
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_t8_apple_in1k-s100p-int16-20261103-r04/ptq_output/fastvit_t8_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "bedac30f0c0cbecc22ebeb55580c2dd0998628ce397e9833fd09893db8f71c73",
+              "size_bytes": 5907412
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_t8_apple_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "0aac53629094dba0a32936d88ae7eddca8bc3afdac6c77e31ffcaeb8bee7304d",
+              "size_bytes": 1202
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 6.4373016357421875e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 9.059906005859375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 8.58306884765625e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.5497207641601562e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "cedcf3eb50d16fe61b3bd60c571ed313cc114cd98106f2895ceee0f4e2a92ea2",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fastvit_t8.apple_in1k",
+        "revision": "cbc6c66a249060c66b8236284c7c3998e900e944",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "345af83ed1a7eee2ed322eb327895efd2a2a06c604272dbac92432adc61af889",
+        "size_bytes": 16266976,
+        "url": "https://huggingface.co/timm/fastvit_t8.apple_in1k/resolve/cbc6c66a249060c66b8236284c7c3998e900e944/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fastvit_t8.apple_in1k/blob/cbc6c66a249060c66b8236284c7c3998e900e944/README.md",
+        "license_url": "https://github.com/apple/ml-fastvit/blob/8af5928238cab99c45f64fc3e4e7b1516b8224ba/LICENSE",
+        "license_sha256": "b621c8500147987044c1ce3f7c524f09e804e3ec4dbdb3d06db16cfbd4c60697"
+      }
+    },
+    {
+      "variant": "timm-t8-apple-in1k-s-int16-o1-20261103",
+      "web_size": "t8-apple-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/fastvit_t8_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/fastvit/fastvit_t8_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "848087549717131ad01eb5b58c0bf3b72ecae8ddd7f240b31c2da912897b8158",
+          "size_bytes": 10383352,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "207dd495b979c3f45fca744d678bcd8b31145b1a49707e0995a423944f440834",
+          "effective_config_sha256": "f1f0f81ceb782e5d00bc40b40cd74b1edb6267032b252fc1aee1512e73b74366",
+          "recipe": "samples/vision/fastvit/conversion/recipes/timm_t8_apple_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "8076f96dfa4101161de09128c00d2bb2015c6c42b2234d0787badfb7f7414e9a",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "b4fd4af36c8548d4d9d4a1cf6c7427e698168b0ac1d6a9f0d94ce56d375c727c",
+          "oe_data_sha256": "759d7e8359e452c24cb4ed78058dea0f4de18dce8820cc29068678ff30781d21",
+          "node_info_csv_sha256": "e10211abfcc93636aa890b2619c8a1c6a96ffb011c16f56b383c9ae0cabaca36",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.998641,
+              "cosine": 0.998463
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_t8_apple_in1k-s600-int16-20261103-r04/ptq_output/fastvit_t8_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "310f52fd44e4018285e1701d72de3056428c250beb321d5c4ec35b454d2fb09d",
+              "size_bytes": 4767028
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fastvit_t8_apple_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "4c5b329b8bf97ce37b6bb27772f9e3737e6caad8f5d2e6e858c430e4131cfbab",
+              "size_bytes": 1201
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 6.4373016357421875e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 9.059906005859375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 8.58306884765625e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.5497207641601562e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "cedcf3eb50d16fe61b3bd60c571ed313cc114cd98106f2895ceee0f4e2a92ea2",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fastvit_t8.apple_in1k",
+        "revision": "cbc6c66a249060c66b8236284c7c3998e900e944",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "345af83ed1a7eee2ed322eb327895efd2a2a06c604272dbac92432adc61af889",
+        "size_bytes": 16266976,
+        "url": "https://huggingface.co/timm/fastvit_t8.apple_in1k/resolve/cbc6c66a249060c66b8236284c7c3998e900e944/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fastvit_t8.apple_in1k/blob/cbc6c66a249060c66b8236284c7c3998e900e944/README.md",
+        "license_url": "https://github.com/apple/ml-fastvit/blob/8af5928238cab99c45f64fc3e4e7b1516b8224ba/LICENSE",
+        "license_sha256": "b621c8500147987044c1ce3f7c524f09e804e3ec4dbdb3d06db16cfbd4c60697"
+      }
+    }
+  ]
+}

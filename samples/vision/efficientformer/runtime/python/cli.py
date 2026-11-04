@@ -96,6 +96,25 @@ BINDING_TABLE = _with_converted_bindings(
 )
 # END CONVERTED ARTIFACT BINDINGS
 
+# BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
+from dataclasses import replace as _with_s_converted_bindings
+SUPPORTED_VARIANTS = tuple(dict.fromkeys((*SUPPORTED_VARIANTS, *('timm-l1-snap-dist-in1k-s-int16-o1-20261103', 'timm-l3-snap-dist-in1k-s-int16-o1-20261103'))))
+BINDING_TABLE = _with_s_converted_bindings(
+    BINDING_TABLE,
+    manifest_rows=tuple(dict.fromkeys((*BINDING_TABLE.manifest_rows, ('s', 'efficientformer')))),
+    s_filename_targets=('s100', 's100p', 's600'),
+    filename_variants={**BINDING_TABLE.filename_variants, **{'s100/efficientformer_l1_snap_dist_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-l1-snap-dist-in1k-s-int16-o1-20261103', 's100p/efficientformer_l1_snap_dist_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-l1-snap-dist-in1k-s-int16-o1-20261103', 's600/efficientformer_l1_snap_dist_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-l1-snap-dist-in1k-s-int16-o1-20261103', 's100/efficientformer_l3_snap_dist_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-l3-snap-dist-in1k-s-int16-o1-20261103', 's100p/efficientformer_l3_snap_dist_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-l3-snap-dist-in1k-s-int16-o1-20261103', 's600/efficientformer_l3_snap_dist_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-l3-snap-dist-in1k-s-int16-o1-20261103'}},
+    facts={**BINDING_TABLE.facts,
+        ('timm-l1-snap-dist-in1k-s-int16-o1-20261103', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-l1-snap-dist-in1k-s-int16-o1-20261103', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-l1-snap-dist-in1k-s-int16-o1-20261103', 's600'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-l3-snap-dist-in1k-s-int16-o1-20261103', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-l3-snap-dist-in1k-s-int16-o1-20261103', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-l3-snap-dist-in1k-s-int16-o1-20261103', 's600'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+    },
+)
+# END S CONVERTED ARTIFACT BINDINGS 20261103
+
 def list_available_assets(target: Optional[str] = None) -> tuple[AssetRecord, ...]:
     """Return the finite sample assets read from the existing manifests.
 

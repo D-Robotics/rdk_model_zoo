@@ -57,6 +57,12 @@ VARIANTS = VARIANTS + ('timm-b2-ra-in1k', 'timm-b3-ra2-in1k', 'timm-b4-ra2-in1k'
 ASSET_REFERENCES.update({('x5', 'timm-b2-ra-in1k'): 'x5:efficientnet:efficientnet_b2_ra_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-b3-ra2-in1k'): 'x5:efficientnet:efficientnet_b3_ra2_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-b4-ra2-in1k'): 'x5:efficientnet:efficientnet_b4_ra2_in1k_bayese_224x224_nv12.bin'})
 # END CONVERTED ARTIFACT BINDINGS
 
+# BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
+VARIANTS = tuple(dict.fromkeys((*VARIANTS, *('timm-b2-ra-in1k-s-int16-o1-20261103', 'timm-b3-ra2-in1k-s-int16-o1-20261103', 'timm-b4-ra2-in1k-s-int16-o1-20261103'))))
+TARGETS = tuple(dict.fromkeys((*TARGETS, *('s100', 's100p', 's600'))))
+ASSET_REFERENCES.update({('s100', 'timm-b2-ra-in1k-s-int16-o1-20261103'): 's:efficientnet:s100/efficientnet_b2_ra_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-b2-ra-in1k-s-int16-o1-20261103'): 's:efficientnet:s100p/efficientnet_b2_ra_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-b2-ra-in1k-s-int16-o1-20261103'): 's:efficientnet:s600/efficientnet_b2_ra_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm', ('s100', 'timm-b3-ra2-in1k-s-int16-o1-20261103'): 's:efficientnet:s100/efficientnet_b3_ra2_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-b3-ra2-in1k-s-int16-o1-20261103'): 's:efficientnet:s100p/efficientnet_b3_ra2_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-b3-ra2-in1k-s-int16-o1-20261103'): 's:efficientnet:s600/efficientnet_b3_ra2_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm', ('s100', 'timm-b4-ra2-in1k-s-int16-o1-20261103'): 's:efficientnet:s100/efficientnet_b4_ra2_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-b4-ra2-in1k-s-int16-o1-20261103'): 's:efficientnet:s100p/efficientnet_b4_ra2_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-b4-ra2-in1k-s-int16-o1-20261103'): 's:efficientnet:s600/efficientnet_b4_ra2_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm'})
+# END S CONVERTED ARTIFACT BINDINGS 20261103
+
 def asset_reference(target: str, variant: Optional[str] = None) -> str:
     """Return the exact manifest reference for a supported target/variant.
 

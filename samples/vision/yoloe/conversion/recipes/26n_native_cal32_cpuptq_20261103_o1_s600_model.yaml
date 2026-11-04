@@ -1,0 +1,28 @@
+model_parameters:
+  onnx_model: ./export/model.onnx
+  march: nash-p
+  working_dir: ./compiled/model
+  output_model_file_prefix: yoloe_26n_seg_pf_nashp_640x640_nv12_float_cal32_20261103_o1_cpuptq
+input_parameters:
+  input_name: images
+  input_shape: 1x3x640x640
+  input_type_rt: nv12
+  input_type_train: rgb
+  input_layout_train: NCHW
+  scale_value: '0.00392156862745098'
+calibration_parameters:
+  cal_data_dir: ./calibration/calibration
+  cal_data_type: float32
+  calibration_type: kl
+  quant_config:
+    model_config:
+      all_node_type: int8
+compiler_parameters:
+  jobs: 2
+  compile_mode: latency
+  core_num: 1
+  extra_params:
+    input_no_padding: true
+    output_no_padding: false
+  debug: true
+  optimize_level: O1

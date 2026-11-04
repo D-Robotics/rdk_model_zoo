@@ -98,3 +98,31 @@ Exact model URLs/SHA-256/size are in `docs/release/x5/models.yaml`; source and h
 receipts are in `conversion/converted.json`. Each weight retains its own model
 license in its public release manifest. No board result is implied by download.
 <!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+These independent profiles passed conversion, complete OE collection and actual HBM metadata binding. Source weights, graphs, per-target recipes, calibration counts and digests are in [converted_targets_20261103.json](../conversion/converted_targets_20261103.json).
+
+| Target | Native variant | Components | Calibration photographs |
+| --- | --- | --- | ---: |
+| s100 | `timm-s12-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-s12-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-s12-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-sa12-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-sa12-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-sa12-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-t12-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-t12-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-t12-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-t8-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-t8-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-t8-apple-in1k-s-int16-o1-20261103` | model | 200 |
+
+```bash
+python3 samples/vision/fastvit/model/download.py --target s100 --variant timm-s12-apple-in1k-s-int16-o1-20261103
+python3 samples/vision/fastvit/runtime/python/main.py --target s100 --variant timm-s12-apple-in1k-s-int16-o1-20261103 --asset-id s:fastvit:s100/fastvit_s12_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --model-path /path/to/fastvit_s12_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --test-img samples/vision/fastvit/test_data/bucket.JPEG
+```
+
+Substitute the actual file paths. Multi-component tasks require every component together. Historical defaults and measurements retain their original identities. Board smoke, dataset accuracy, Runtime 1/2 and C++ 1/2 are `not-run` for these profiles.

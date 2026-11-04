@@ -140,3 +140,14 @@ The exporter runs the independent ONNX checker; full `hb_compile -c` also valida
 For this host conversion, allocate 24 GiB memory and four CPU cores to the GPU toolchain container, with `--gpus all`. Set the environment above before starting the tools. The installed HBTL context was measured to use 16 threads by default even with `OMP_NUM_THREADS=2`; `HBTL_THREAD_NUM=2` was verified to set its actual thread count to 2. The tested `PASSIVE`/zero-spin settings and disabled TF32 are retained. In the preserved run, 8 GiB caused a host-memory OOM after calibration; the 24 GiB run completed that stage. Cached PTQ recovery belongs to conversion evidence; normal model download and native inference use the regular sample commands.
 
 The commands above rebuild from source export and real image calibration; no private BC cache is required. In the preserved development run, the O2 backend attempt was explicitly superseded after its PTQ and native NodeInfo completed. The independent O1 attempt loads the byte-identical converted BC through the official BC compile entry. Only backend `opt: 2 -> 1` and the output prefix changed; the 200-image quantization and one-image host comparison remain attributed to their original runs. O1 HBM compilation, actual public ABI and OE report acceptance passed; board accuracy and performance remain `not-run`. Source identities and hashes are recorded in [small_518x686_o1.provenance.json](small_518x686_o1.provenance.json).
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100p / small-518x686-int16-20261103-o1 / model`: [small_518x686_int16_20261103_o1_s100p_model.yaml](recipes/small_518x686_int16_20261103_o1_s100p_model.yaml)
+- `s600 / small-518x686-int16-20261103-o1 / model`: [small_518x686_int16_20261103_o1_s600_model.yaml](recipes/small_518x686_int16_20261103_o1_s600_model.yaml)
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

@@ -1,0 +1,30 @@
+model_parameters:
+  onnx_model: ./export/model.onnx
+  march: nash-e
+  working_dir: ./compiled/model
+  output_model_file_prefix: efficientnet_b2_ra_in1k_nashe_224x224_nv12_float_int16_20261103_o1
+  layer_out_dump: false
+input_parameters:
+  input_name: data
+  input_type_rt: nv12
+  input_type_train: rgb
+  input_space_and_range: bt601_video
+  input_layout_train: NCHW
+  input_shape: 1x3x224x224
+  mean_value: 123.675 116.28 103.53
+  scale_value: 0.017124753831663668 0.01750700280112045 0.017429193899782137
+calibration_parameters:
+  cal_data_dir: ./calibration/normalized
+  cal_data_type: float32
+  calibration_type: max
+  max_percentile: 0.9999
+  optimization: set_all_nodes_int16
+compiler_parameters:
+  compile_mode: latency
+  core_num: 1
+  extra_params:
+    input_no_padding: true
+    output_no_padding: true
+  optimize_level: O1
+  jobs: 2
+  debug: true

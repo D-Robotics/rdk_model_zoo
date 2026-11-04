@@ -1,0 +1,1805 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "variant": "timm-s-in1k-s-int16-o1-20261103",
+      "web_size": "s-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/fasternet_s_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/fasternet/fasternet_s_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "3088c660ddd44b769afd209b7ba8a1cdebe081e6b70b929a10b25c01439b33b8",
+          "size_bytes": 34000024,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "a6d708f65a579ba5480a1e73e72b6dffc038e581d2e49dd7e89ac1a099100261",
+          "effective_config_sha256": "34d6e4af0e8d4fe76af2ef15e951a2458ea836d024618991914aa94346a67178",
+          "recipe": "samples/vision/fasternet/conversion/recipes/timm_s_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "8b0799e3d38f1c156c2ca59570352315efe6051779ab06c3ee9faca2db494266",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "52c16b60c7e3ea93bf7777b30f58157127995adba09ef6f713c6b42a46a064a6",
+          "oe_data_sha256": "ad81edfb02035f872232f16893298af63ea9d7efc6e89b39e1f886b358d78484",
+          "node_info_csv_sha256": "7d8f7b7b720bbd4a6e09a248230ab4234c05fb58bcd5fc7188ebb91eab239c64",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.999719,
+              "cosine": 0.999468
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_s_in1k-s100-int16-20261103-r04/ptq_output/fasternet_s_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "b618513c12c7361673f0d601e4241f759bcd40d41e4d5dfef448820364110cc5",
+              "size_bytes": 34799284
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_s_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "46de7cc8198f061257f0eba14380174728dc833bb0571482620dd5872913b1ba",
+              "size_bytes": 1188
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 4.291534423828125e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 5.7220458984375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 7.62939453125e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.814697265625e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "e698197be17cf444714d2ff4fc08c608cc5c165ecde5d3c3dd0782bcb9023926",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fasternet_s.in1k",
+        "revision": "8c427163d414879c948337c43795c7fd60aec2c4",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "f0c036af07be8e179c0507ab09306357c64d2a4fd66c37e540032c3740c81dff",
+        "size_bytes": 124907072,
+        "url": "https://huggingface.co/timm/fasternet_s.in1k/resolve/8c427163d414879c948337c43795c7fd60aec2c4/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fasternet_s.in1k/blob/8c427163d414879c948337c43795c7fd60aec2c4/README.md"
+      }
+    },
+    {
+      "variant": "timm-s-in1k-s-int16-o1-20261103",
+      "web_size": "s-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/fasternet_s_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/fasternet/fasternet_s_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "0aa92e46f250f6332ac68d7fb97fe17576db70631c9d219043677b75a265b3ad",
+          "size_bytes": 34034072,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "a6d708f65a579ba5480a1e73e72b6dffc038e581d2e49dd7e89ac1a099100261",
+          "effective_config_sha256": "f348017032eabeecffd0b2f5ca19614e7baa9eaaa3a9351aaa36b89ea7ed3112",
+          "recipe": "samples/vision/fasternet/conversion/recipes/timm_s_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "e6275ee7a129fee579975787d422aaa8895fd99ea96ffc187bde10918c97129e",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "604fe642b87dfe4c012b05b45a5407511130e6858c1d577e14dbeaa96e252b8e",
+          "oe_data_sha256": "ece12f087f3415162d8f7589919a0fdc20592359f9382db379e9fb3a19756a93",
+          "node_info_csv_sha256": "7d8f7b7b720bbd4a6e09a248230ab4234c05fb58bcd5fc7188ebb91eab239c64",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.999719,
+              "cosine": 0.999468
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_s_in1k-s100p-int16-20261103-r04/ptq_output/fasternet_s_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "7b7638444dbfb8f005e4c309041e0dbc5339f2162aaae5b8f240538555a07217",
+              "size_bytes": 34799285
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_s_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "344974f897e9dfdaf662446ba3bcf3507e9e2c1bc38cb85f1638161893622de9",
+              "size_bytes": 1189
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 5.245208740234375e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 4.291534423828125e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 7.62939453125e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 4.291534423828125e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "e698197be17cf444714d2ff4fc08c608cc5c165ecde5d3c3dd0782bcb9023926",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fasternet_s.in1k",
+        "revision": "8c427163d414879c948337c43795c7fd60aec2c4",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "f0c036af07be8e179c0507ab09306357c64d2a4fd66c37e540032c3740c81dff",
+        "size_bytes": 124907072,
+        "url": "https://huggingface.co/timm/fasternet_s.in1k/resolve/8c427163d414879c948337c43795c7fd60aec2c4/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fasternet_s.in1k/blob/8c427163d414879c948337c43795c7fd60aec2c4/README.md"
+      }
+    },
+    {
+      "variant": "timm-s-in1k-s-int16-o1-20261103",
+      "web_size": "s-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/fasternet_s_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/fasternet/fasternet_s_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "c198edf52a2a4b64b75d74d804dda07cc02744cb9dfc2427be7cf3a02d0531d0",
+          "size_bytes": 35171712,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "a6d708f65a579ba5480a1e73e72b6dffc038e581d2e49dd7e89ac1a099100261",
+          "effective_config_sha256": "913955a9d6fe57046b247c6ea4e4be81d6ea85fdc6e0ce04231a76107caa86e0",
+          "recipe": "samples/vision/fasternet/conversion/recipes/timm_s_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "e8449edc92da3eebca91bcc764c1fa2f18bbf8811c2dc6f3ddc48cf1a98cff86",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "81c79249811abd616371ff6e1e6974566d470a7aca92436385d08feb99752236",
+          "oe_data_sha256": "9cfd67456b6aac4cd6b83558d9ca46538a49334ecd0be25a87ba4211a8fe33bf",
+          "node_info_csv_sha256": "ae729c511678849cf4ae59742dc874aa922146dfa4170ff7da68a7100ffecd0f",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.999719,
+              "cosine": 0.999468
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_s_in1k-s600-int16-20261103-r04/ptq_output/fasternet_s_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "6e1dab26e83aafe1adfc61bb975fa041c63ee4811f554d1c30a061730f2d3d63",
+              "size_bytes": 32873567
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_s_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "dcbe08b25018d20fed11afd69497011bf25d80c27e59d3f873e05d7a5dd0bcbd",
+              "size_bytes": 1188
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.814697265625e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 5.245208740234375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 7.62939453125e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.814697265625e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "e698197be17cf444714d2ff4fc08c608cc5c165ecde5d3c3dd0782bcb9023926",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fasternet_s.in1k",
+        "revision": "8c427163d414879c948337c43795c7fd60aec2c4",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "f0c036af07be8e179c0507ab09306357c64d2a4fd66c37e540032c3740c81dff",
+        "size_bytes": 124907072,
+        "url": "https://huggingface.co/timm/fasternet_s.in1k/resolve/8c427163d414879c948337c43795c7fd60aec2c4/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fasternet_s.in1k/blob/8c427163d414879c948337c43795c7fd60aec2c4/README.md"
+      }
+    },
+    {
+      "variant": "timm-t0-in1k-s-int16-o1-20261103",
+      "web_size": "t0-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/fasternet_t0_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/fasternet/fasternet_t0_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "13f473701fadb5b2163766c499d4c55664d6188a704e6fde5af2971c06cd8f34",
+          "size_bytes": 5689248,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "c28ce04d1e6a2ef9a32d2593cd43d0b9988c04fb08678e197f13cfc77666132e",
+          "effective_config_sha256": "a9708615f3a344ebf89e001f3469afaf2a86b9f037050f03362710adb1c59674",
+          "recipe": "samples/vision/fasternet/conversion/recipes/timm_t0_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "22bb035338338d35dc3c6f20d081dd84baa27a374534a8af453acd9db20c9a1c",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "89acb4cb20d070928f75ffe81272806759799c1c082797d7ae58f7a44bcae094",
+          "oe_data_sha256": "3df3ecc19c0372e8441ecfbc05ccabdbef140e34973e3457daf82eddbb6bb78d",
+          "node_info_csv_sha256": "93ad3929bf045f8cf4ce176875bff9b7f6c8e192fde08e920a051cc6a81f60e2",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.948379,
+              "cosine": 0.939624
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t0_in1k-s100-int16-20261103-r04/ptq_output/fasternet_t0_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "e696f47a9edc08a1c0e3acec9e104a20070ff6161ef89055aac906331d80a50d",
+              "size_bytes": 5132825
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t0_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "3d540119e047814e729789c36f0a0954f243c23c4e02f6f2f59a435a587ce738",
+              "size_bytes": 1191
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.2636184692382812e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.6689300537109375e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.4662742614746094e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.9550323486328125e-05
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "fc6a91b9f4d8beb8aec4b78631b039e37f30be8d744ac869afb240bebaaef87d",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fasternet_t0.in1k",
+        "revision": "a8c465730c7896ba51d860a6e384fad94e7cfb44",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "976c37b7aa986e91d80d011f6c4004c245da0bc55631bb448321cd64921f2234",
+        "size_bytes": 15674224,
+        "url": "https://huggingface.co/timm/fasternet_t0.in1k/resolve/a8c465730c7896ba51d860a6e384fad94e7cfb44/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fasternet_t0.in1k/blob/a8c465730c7896ba51d860a6e384fad94e7cfb44/README.md"
+      }
+    },
+    {
+      "variant": "timm-t0-in1k-s-int16-o1-20261103",
+      "web_size": "t0-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/fasternet_t0_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/fasternet/fasternet_t0_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "5bceb1136dd47b2487f72da34ff0839214e750debe66f5fd19593ad85a91e2ac",
+          "size_bytes": 5690528,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "c28ce04d1e6a2ef9a32d2593cd43d0b9988c04fb08678e197f13cfc77666132e",
+          "effective_config_sha256": "d05aebcd2d096810bacff3d137ce90a1bf6a4a03dc05f75a9d65e276c383b17a",
+          "recipe": "samples/vision/fasternet/conversion/recipes/timm_t0_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "95dd1ba54cc041a3d9283c4e4485bd4701a2ebe5cdd9fcf75d0e52ece0686dda",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "a5ec6dfec3b7342554026ac134d9d6b6971620a5ffa9c79102fe53b3b6f41b91",
+          "oe_data_sha256": "c9d5025d4c588524971cd626aa95932bb9d2bb9e913a3092dbe1962de1f9f59e",
+          "node_info_csv_sha256": "93ad3929bf045f8cf4ce176875bff9b7f6c8e192fde08e920a051cc6a81f60e2",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.948379,
+              "cosine": 0.939624
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t0_in1k-s100p-int16-20261103-r04/ptq_output/fasternet_t0_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "97afdede79ac633702780cf9fa5b4432f8aa57ffa4695d41a4382365719aa333",
+              "size_bytes": 5132826
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t0_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "6158fa2563c6cf1bf58e8ecf3597a1d930ede10b537a75e91a17565fd35689d6",
+              "size_bytes": 1192
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.2636184692382812e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.6689300537109375e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.4662742614746094e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.9550323486328125e-05
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "fc6a91b9f4d8beb8aec4b78631b039e37f30be8d744ac869afb240bebaaef87d",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fasternet_t0.in1k",
+        "revision": "a8c465730c7896ba51d860a6e384fad94e7cfb44",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "976c37b7aa986e91d80d011f6c4004c245da0bc55631bb448321cd64921f2234",
+        "size_bytes": 15674224,
+        "url": "https://huggingface.co/timm/fasternet_t0.in1k/resolve/a8c465730c7896ba51d860a6e384fad94e7cfb44/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fasternet_t0.in1k/blob/a8c465730c7896ba51d860a6e384fad94e7cfb44/README.md"
+      }
+    },
+    {
+      "variant": "timm-t0-in1k-s-int16-o1-20261103",
+      "web_size": "t0-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/fasternet_t0_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/fasternet/fasternet_t0_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "0a5edae36c991047aadfc3daf80729a349afa4bad2acd979c82ec628a3e76a63",
+          "size_bytes": 5833296,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "c28ce04d1e6a2ef9a32d2593cd43d0b9988c04fb08678e197f13cfc77666132e",
+          "effective_config_sha256": "aad6ffc140948b4d15addbb9d0b8486db1b8f7d51e7ef1efa0d79a18c7368af9",
+          "recipe": "samples/vision/fasternet/conversion/recipes/timm_t0_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "7fe357475a8fddf194f41782637c4655eae85c98b2cd6984e9411e6d03177452",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "15ed27a730844cda6eb7dc092d13f7d128d8125e736b21f5608b601d4787b094",
+          "oe_data_sha256": "beda3b68c8ccfe5a456e35df19a737251c4fe909827c15b88e2f8382b47c5fb2",
+          "node_info_csv_sha256": "b672e9ee4dcf9387952f82cfd6525a97596e4299233d215e508491258273e4d8",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.948379,
+              "cosine": 0.939638
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t0_in1k-s600-int16-20261103-r04/ptq_output/fasternet_t0_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "b48ea1553beffcf009cb789f97e4a343005bfb563bfd059bf611f59e69ea7b6e",
+              "size_bytes": 4467464
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t0_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "a2328dd9e2d2ba3d2734ed49598c83c6d30d7f4807de9a8fc89e46c6c25b359d",
+              "size_bytes": 1191
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.3470649719238281e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.633167266845703e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.558661460876465e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.6689300537109375e-05
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "fc6a91b9f4d8beb8aec4b78631b039e37f30be8d744ac869afb240bebaaef87d",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fasternet_t0.in1k",
+        "revision": "a8c465730c7896ba51d860a6e384fad94e7cfb44",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "976c37b7aa986e91d80d011f6c4004c245da0bc55631bb448321cd64921f2234",
+        "size_bytes": 15674224,
+        "url": "https://huggingface.co/timm/fasternet_t0.in1k/resolve/a8c465730c7896ba51d860a6e384fad94e7cfb44/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fasternet_t0.in1k/blob/a8c465730c7896ba51d860a6e384fad94e7cfb44/README.md"
+      }
+    },
+    {
+      "variant": "timm-t1-in1k-s-int16-o1-20261103",
+      "web_size": "t1-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/fasternet_t1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/fasternet/fasternet_t1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "9fb2f11f259f7a6effd23ede49e41dc6c7ccd674f95e90a16024010ef1350aa1",
+          "size_bytes": 9573280,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "6dc25cc4ba94ff9fb53462c1ea7f47ee21fb40d0a1456bcbc4b4da0f5222d47f",
+          "effective_config_sha256": "5a801171088d12a45fc970637361201b3f4189f30018d735c27bf17094fc6d75",
+          "recipe": "samples/vision/fasternet/conversion/recipes/timm_t1_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "fec066e58a393bfb6dabc3a3f2ab71ffa01f2a37379592ef57e20b767493524e",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "f75d25565aa664acb37152577d35c47e2eeb8588f1915e04a6fff229df4910b3",
+          "oe_data_sha256": "573bfb3e74e886c9d11ab347f871172bb1a0663ac262ae9d81024b993fbb0884",
+          "node_info_csv_sha256": "a94bc7a0ae9c8dd8acf3c4efc48639d7e1590f1f9cceead9b802e0a61a489d6a",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.975046,
+              "cosine": 0.967539
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t1_in1k-s100-int16-20261103-r04/ptq_output/fasternet_t1_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "b7f5bc8a7cd7ab3c7792f68576d3b9f77035aff57267417671af307985d8b950",
+              "size_bytes": 9289719
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t1_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "0079d2c37bc141f11e4849b956feee41e441911bad5fb8afdec7078801eee07e",
+              "size_bytes": 1191
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.1742115020751953e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.1324882507324219e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.430511474609375e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.1920928955078125e-05
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "9e8c6dd68ffa771c1be2838e6b8626378d2aaf187a98e43a64dbe6b195d2c7c4",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fasternet_t1.in1k",
+        "revision": "2c27a878042ecd9de0c2f045fbf8169704f9aae6",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "223419d5d6164b2f985162b14ec6666394f80b40aa0349e5fb99909fb3a27fdb",
+        "size_bytes": 30457032,
+        "url": "https://huggingface.co/timm/fasternet_t1.in1k/resolve/2c27a878042ecd9de0c2f045fbf8169704f9aae6/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fasternet_t1.in1k/blob/2c27a878042ecd9de0c2f045fbf8169704f9aae6/README.md"
+      }
+    },
+    {
+      "variant": "timm-t1-in1k-s-int16-o1-20261103",
+      "web_size": "t1-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/fasternet_t1_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/fasternet/fasternet_t1_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "5e934d517d13b9e540adc08f8a69c75ed7a9f0aaca5f6c0b983877fab124baee",
+          "size_bytes": 9503904,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "6dc25cc4ba94ff9fb53462c1ea7f47ee21fb40d0a1456bcbc4b4da0f5222d47f",
+          "effective_config_sha256": "66c3ea3846be7a020a0fd14ff5eedd42ba4c3b4a59c3c4609267f6507ea19963",
+          "recipe": "samples/vision/fasternet/conversion/recipes/timm_t1_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "a3ace74b9086550abedb591d5233ca3ff3722275a49bf1a7d88d71a93a047fb3",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "4f0909d3d1ac98375f26c03acdf5b3261e30b200791473bcb6da7b64713ad3cd",
+          "oe_data_sha256": "a4dc0c052428665077aac90158aaf11a1f3d2312604f0e37c59160e7b8de8e7d",
+          "node_info_csv_sha256": "0a4c2434b7dbe7cca21af2ae4eea4bc41a261bc94b1e4608fd163ec75d45c909",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.975046,
+              "cosine": 0.967539
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t1_in1k-s100p-int16-20261103-r04/ptq_output/fasternet_t1_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "243045328647061dfff2f313eee5098e62900c48603d5e3fcf7d4d8105e15631",
+              "size_bytes": 9289720
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t1_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "0406f1de6c66a77bd42411a10a7c438fddd42743dec9b7f861939fd3464f1065",
+              "size_bytes": 1192
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.0371208190917969e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.0132789611816406e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.5735626220703125e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.1086463928222656e-05
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "9e8c6dd68ffa771c1be2838e6b8626378d2aaf187a98e43a64dbe6b195d2c7c4",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fasternet_t1.in1k",
+        "revision": "2c27a878042ecd9de0c2f045fbf8169704f9aae6",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "223419d5d6164b2f985162b14ec6666394f80b40aa0349e5fb99909fb3a27fdb",
+        "size_bytes": 30457032,
+        "url": "https://huggingface.co/timm/fasternet_t1.in1k/resolve/2c27a878042ecd9de0c2f045fbf8169704f9aae6/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fasternet_t1.in1k/blob/2c27a878042ecd9de0c2f045fbf8169704f9aae6/README.md"
+      }
+    },
+    {
+      "variant": "timm-t1-in1k-s-int16-o1-20261103",
+      "web_size": "t1-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/fasternet_t1_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/fasternet/fasternet_t1_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "d8a4305fd30064afca44566a9948b4eb8ac23c67b5b08154f20a052f71efcfff",
+          "size_bytes": 9817720,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "6dc25cc4ba94ff9fb53462c1ea7f47ee21fb40d0a1456bcbc4b4da0f5222d47f",
+          "effective_config_sha256": "63c7dacffe2deb53427bc8e540e728bd2eff0c4f8129f73b0a4a81e06dff7078",
+          "recipe": "samples/vision/fasternet/conversion/recipes/timm_t1_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "d3b7c383b5c5f49645c6db546ce58cd775909d9d290d89a7f57d21ac48a4ba06",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "63f828e77ec75bc3c9447c82ca1b716469309d6314c986694fdf24ba7ea8bd5c",
+          "oe_data_sha256": "ac1014d034157af22691b99b6f5ac736811cc1f2356dc7d8cec06e0f2428379d",
+          "node_info_csv_sha256": "378565d12d875f36012be5f06a2ed623ff2d7183ec54f9873ea39d441cf597cf",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.975046,
+              "cosine": 0.967521
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t1_in1k-s600-int16-20261103-r04/ptq_output/fasternet_t1_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "6ad479efeff98f1d5ba22118d3c3fb59a1ff9ee2e80d4c0d7b79565e9600d947",
+              "size_bytes": 8358846
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t1_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "5cc3f77d0ae819c9e5d17098a3d2659eb2beba11a529537679538489b8804828",
+              "size_bytes": 1191
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.3828277587890625e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.5497207641601562e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.4424324035644531e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.2636184692382812e-05
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "9e8c6dd68ffa771c1be2838e6b8626378d2aaf187a98e43a64dbe6b195d2c7c4",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fasternet_t1.in1k",
+        "revision": "2c27a878042ecd9de0c2f045fbf8169704f9aae6",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "223419d5d6164b2f985162b14ec6666394f80b40aa0349e5fb99909fb3a27fdb",
+        "size_bytes": 30457032,
+        "url": "https://huggingface.co/timm/fasternet_t1.in1k/resolve/2c27a878042ecd9de0c2f045fbf8169704f9aae6/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fasternet_t1.in1k/blob/2c27a878042ecd9de0c2f045fbf8169704f9aae6/README.md"
+      }
+    },
+    {
+      "variant": "timm-t2-in1k-s-int16-o1-20261103",
+      "web_size": "t2-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/fasternet_t2_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/fasternet/fasternet_t2_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "87492dc32abe163eb034f07c7b89af2435558b83df30c7a198e1c12b407604e5",
+          "size_bytes": 17054880,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "4d1c5d8eca1b9bcc2946cf5d283e65041b09e5a1b4c7220db6a844d5904939e6",
+          "effective_config_sha256": "26c3f4f692c72da217b257fd833bf1a8982af717686a6bb0e6f8b642b0188082",
+          "recipe": "samples/vision/fasternet/conversion/recipes/timm_t2_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "61d0c707e4906a74ff3c13f8f8feb06f98b5570c993e558d730bc9dcd5db5971",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "c8bced245f4671424b9134e0b4eb99c004146f0f8d873b8646f94e37a1442118",
+          "oe_data_sha256": "41fc86a87c275a36116acf2e54b9d469a13dbc386e396c3214799e89dc3055f0",
+          "node_info_csv_sha256": "bbdad07e2f362f6130fcba8d59b0ce2daca32e2c7e2a517cba892b4e3fcadf78",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.999124,
+              "cosine": 0.998509
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t2_in1k-s100-int16-20261103-r04/ptq_output/fasternet_t2_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "ba74924c3edf617541db8d5e9848b0cf9a3ae862af608fbecf387815af4fc350",
+              "size_bytes": 17283029
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t2_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "199852ef312bd8a539257cada00420f152b1bc130fa55a0f75650355eb5ede6b",
+              "size_bytes": 1191
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 7.152557373046875e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 6.67572021484375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 9.5367431640625e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 5.7220458984375e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "0d501a56ef21b536a4df152f217d4cf5061b2d0e2b665e23916ab4598750f084",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fasternet_t2.in1k",
+        "revision": "945917af83878941c27f52a011f4340824fc4f41",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "5df709f4a671d15847e0398331c62180eaee6b40c8862c85c619389ed40bf84f",
+        "size_bytes": 60038128,
+        "url": "https://huggingface.co/timm/fasternet_t2.in1k/resolve/945917af83878941c27f52a011f4340824fc4f41/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fasternet_t2.in1k/blob/945917af83878941c27f52a011f4340824fc4f41/README.md"
+      }
+    },
+    {
+      "variant": "timm-t2-in1k-s-int16-o1-20261103",
+      "web_size": "t2-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/fasternet_t2_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/fasternet/fasternet_t2_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "9f2287dbec50ee5de4ffe1e6ef74f370e0e64e3276c625eec2cea9b4a40e2410",
+          "size_bytes": 16842400,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "4d1c5d8eca1b9bcc2946cf5d283e65041b09e5a1b4c7220db6a844d5904939e6",
+          "effective_config_sha256": "27215aca5be798e08b6d26689b2345c6af70d5bd94fa92ebeee0db6df55e2dd4",
+          "recipe": "samples/vision/fasternet/conversion/recipes/timm_t2_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "7bf1aeebf7b06316c88bdc2d07765a46ac9b02153e948403ebdb8d313111b263",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "d30dad7f230d5e09713859d6b3668524aa0c0e60151f3ff01aab11335978b3de",
+          "oe_data_sha256": "5db9cdfbdde2b54bbb1b0db50ee28a4217c6e11cc411fd681277e0cb3e69b68d",
+          "node_info_csv_sha256": "bbdad07e2f362f6130fcba8d59b0ce2daca32e2c7e2a517cba892b4e3fcadf78",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.999124,
+              "cosine": 0.998509
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t2_in1k-s100p-int16-20261103-r04/ptq_output/fasternet_t2_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "badce0b8ab61ae475c802198162d1ffac8993e7c65abbbb6e11d4eeeecc90d3d",
+              "size_bytes": 17283030
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t2_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "afc0ab04a9d4f68e73119a8a08dade79b72e3b8903d5161db522217bf63a389b",
+              "size_bytes": 1192
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 7.152557373046875e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 6.198883056640625e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.049041748046875e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 4.76837158203125e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "0d501a56ef21b536a4df152f217d4cf5061b2d0e2b665e23916ab4598750f084",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fasternet_t2.in1k",
+        "revision": "945917af83878941c27f52a011f4340824fc4f41",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "5df709f4a671d15847e0398331c62180eaee6b40c8862c85c619389ed40bf84f",
+        "size_bytes": 60038128,
+        "url": "https://huggingface.co/timm/fasternet_t2.in1k/resolve/945917af83878941c27f52a011f4340824fc4f41/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fasternet_t2.in1k/blob/945917af83878941c27f52a011f4340824fc4f41/README.md"
+      }
+    },
+    {
+      "variant": "timm-t2-in1k-s-int16-o1-20261103",
+      "web_size": "t2-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/fasternet_t2_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/fasternet/fasternet_t2_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "ed1512bb90b8ca2091b61ff77d91e3451f12e2dc182704162bf4500939970db2",
+          "size_bytes": 17639888,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "4d1c5d8eca1b9bcc2946cf5d283e65041b09e5a1b4c7220db6a844d5904939e6",
+          "effective_config_sha256": "7357d4f8cd40c5690866b6445d00d161c48eb105018ac7faf1539312456abf42",
+          "recipe": "samples/vision/fasternet/conversion/recipes/timm_t2_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "86874e13db050d2e17662c57fe3dd11fd104f426d18c5d04bb4701a4505c98aa",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "fc47653bab49f4c445b97b89a54422ec5280c839c01195a4db2faec6cbec221c",
+          "oe_data_sha256": "042665df737f72fb3dbe869ad549378c6d64035fc438794efcac0cacbd6bbe78",
+          "node_info_csv_sha256": "d401fddd5bccbe603230f8cefb4fa9656fde574cd5b07692d11a090805c0c410",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.999124,
+              "cosine": 0.998509
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t2_in1k-s600-int16-20261103-r04/ptq_output/fasternet_t2_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "59888d9618c5816ff89fdf71f977b9d69e35da16d8e508677bf9ac07c3c684dc",
+              "size_bytes": 15998343
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/fasternet_t2_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "776dd0611507620f6b9131691214355c1451ae1a290440825c54cedfbc498386",
+              "size_bytes": 1191
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 4.76837158203125e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 5.7220458984375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 9.5367431640625e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 4.76837158203125e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "0d501a56ef21b536a4df152f217d4cf5061b2d0e2b665e23916ab4598750f084",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/fasternet_t2.in1k",
+        "revision": "945917af83878941c27f52a011f4340824fc4f41",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "5df709f4a671d15847e0398331c62180eaee6b40c8862c85c619389ed40bf84f",
+        "size_bytes": 60038128,
+        "url": "https://huggingface.co/timm/fasternet_t2.in1k/resolve/945917af83878941c27f52a011f4340824fc4f41/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/fasternet_t2.in1k/blob/945917af83878941c27f52a011f4340824fc4f41/README.md"
+      }
+    }
+  ]
+}

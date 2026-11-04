@@ -134,3 +134,14 @@ hb_model_info output/compiled/depth_anything_v2_small_518x686_nashe_20261102_o1.
 本模型主机转换的 GPU 工具链容器使用 24 GiB 内存、4 CPU，并显式设置 `--gpus all`。在工具进程启动前设置上述环境。实测即使 `OMP_NUM_THREADS=2`，HBTL context 默认仍是 16 线程；设置 `HBTL_THREAD_NUM=2` 后实际 getter 确认为 2。保留已验证的 `PASSIVE`、零自旋及禁用 TF32 设置。历史 run 在 8 GiB 主机内存限制下于校准后 OOM，24 GiB run 已完成该阶段。PTQ 缓存恢复属于转换取证，模型下载和原生推理继续使用常规样例命令。
 
 以上命令从源码导出和真实图像校准开始重建，不依赖私有 BC 缓存。独立的 `small_518x686_nashe_o1.yaml` 使用 O1，输出前缀明确带 `_o1`；原 `small_518x686_nashe.yaml` 保留为 O2 未完成尝试的配方，不能当作已发布产物。本轮保存的 O2 任务已完成 PTQ 和原生 NodeInfo 后被明确替代；独立 O1 任务通过官方 BC 编译入口读取逐字节相同的已转换 BC，仅修改后端 `opt: 2 -> 1` 和输出前缀。200 张图的量化与 1 张图的主机比较分别归属原始运行。O1 HBM 编译、实际公开 ABI 和 OE 报告验收均已通过；板端精度与性能均为 `not-run`。完整来源与摘要见 [small_518x686_o1.provenance.json](small_518x686_o1.provenance.json)。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
+
+- `s100p / small-518x686-int16-20261103-o1 / model`: [small_518x686_int16_20261103_o1_s100p_model.yaml](recipes/small_518x686_int16_20261103_o1_s100p_model.yaml)
+- `s600 / small-518x686-int16-20261103-o1 / model`: [small_518x686_int16_20261103_o1_s600_model.yaml](recipes/small_518x686_int16_20261103_o1_s600_model.yaml)
+
+原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。

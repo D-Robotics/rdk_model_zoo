@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Generate target-specific PTQ configurations retaining floating output nodes."""
 
-MARCHES = {"x5": "bayes-e", "s100": "nash-e", "s100p": "nash-m"}
+MARCHES = {"x5": "bayes-e", "s100": "nash-e", "s100p": "nash-m", "s600": "nash-p"}
 ATTENTION_NODE = "/model.10/m/m.0/attn/Softmax"
 
 

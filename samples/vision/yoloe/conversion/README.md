@@ -203,3 +203,15 @@ This independent variant targets S100/nash-e with O1. Existing recipes remain av
 Keep all ten output and vocabulary gates in the fixed 8.4.127 exporter. Native `prepare.py --target s100 --variant 26n --sample-count 32` consumes the separately frozen 32-image directory. The 200-image KL attempt hit its 40 GiB memory cap; the new calibration subset is a separate attempt with an explicit O1 filename.
 
 From the working directory in the matching OE 3.7.0 container, run `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml` for each component. Board checks remain `not-run`.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100 / 26n-native-cal32-cpuptq-20261103-o1 / model`: [26n_native_cal32_cpuptq_20261103_o1_s100_model.yaml](recipes/26n_native_cal32_cpuptq_20261103_o1_s100_model.yaml)
+- `s100p / 26n-native-cal32-cpuptq-20261103-o1 / model`: [26n_native_cal32_cpuptq_20261103_o1_s100p_model.yaml](recipes/26n_native_cal32_cpuptq_20261103_o1_s100p_model.yaml)
+- `s600 / 26n-native-cal32-cpuptq-20261103-o1 / model`: [26n_native_cal32_cpuptq_20261103_o1_s600_model.yaml](recipes/26n_native_cal32_cpuptq_20261103_o1_s600_model.yaml)
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

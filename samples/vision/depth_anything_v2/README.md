@@ -117,3 +117,9 @@ bash samples/vision/depth_anything_v2/model/download.sh --target s100 --variant 
 bash samples/vision/depth_anything_v2/runtime/python/run.sh --target s100 \
   --variant small-518x686-o1 --output outputs/depth_anything_v2_small_o1
 ```
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Independent converted profiles and explicit commands are listed in [model preparation](model/README.md). Board accuracy and performance are not measured yet.

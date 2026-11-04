@@ -1,0 +1,27 @@
+model_parameters:
+  onnx_model: ./export/image_encoder.onnx
+  output_model_file_prefix: clip_vitb32_image_nashe_int16_20261103_o1
+  march: nash-e
+  working_dir: ./compiled/image
+input_parameters:
+  input_name: image
+  input_type_rt: featuremap
+  input_type_train: featuremap
+  input_layout_rt: NCHW
+  input_layout_train: NCHW
+  input_shape: 1x3x224x224
+calibration_parameters:
+  cal_data_dir: ./calibration/image
+  cal_data_type: float32
+  calibration_type: max
+  max_percentile: 0.9999
+  optimization: set_all_nodes_int16
+compiler_parameters:
+  compile_mode: latency
+  core_num: 1
+  extra_params:
+    input_no_padding: true
+    output_no_padding: true
+  optimize_level: O1
+  jobs: 2
+  debug: true

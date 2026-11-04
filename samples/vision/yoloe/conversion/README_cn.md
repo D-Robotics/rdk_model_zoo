@@ -200,3 +200,15 @@ python3 samples/vision/yoloe/runtime/python/main.py \
 沿用固定8.4.127 exporter 的全部十输出与词表一致性门禁。原生 `prepare.py --target s100 --variant 26n --sample-count 32` 读取单独冻结的32图目录。200图 KL 尝试因40 GiB内存上限终止，修改校准集后另建本轮尝试，使用独立 O1 文件名。
 
 在匹配 OE 3.7.0 容器中从工作目录运行 `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml`，每件模型分别编译。板端各项数据仍为 `not-run`。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
+
+- `s100 / 26n-native-cal32-cpuptq-20261103-o1 / model`: [26n_native_cal32_cpuptq_20261103_o1_s100_model.yaml](recipes/26n_native_cal32_cpuptq_20261103_o1_s100_model.yaml)
+- `s100p / 26n-native-cal32-cpuptq-20261103-o1 / model`: [26n_native_cal32_cpuptq_20261103_o1_s100p_model.yaml](recipes/26n_native_cal32_cpuptq_20261103_o1_s100p_model.yaml)
+- `s600 / 26n-native-cal32-cpuptq-20261103-o1 / model`: [26n_native_cal32_cpuptq_20261103_o1_s600_model.yaml](recipes/26n_native_cal32_cpuptq_20261103_o1_s600_model.yaml)
+
+原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。

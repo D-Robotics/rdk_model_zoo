@@ -68,8 +68,15 @@ class DepthTests(unittest.TestCase):
         self.assertIn(ASSET_ID, [asset.reference for asset in list_available_assets()])
         s = resolve_selection("s100")
         self.assertTrue(str(s.model_path).endswith("model/s100/depth_any.hbm"))
-        for target in ("x5", "s100p", "s600"):
+        for target in ("x5",):
             self.assertEqual(list_available_assets(target), ())
+            with self.assertRaises(ValueError):
+                resolve_selection(target)
+        for target in ("s100p", "s600"):
+            self.assertTrue(list_available_assets(target))
+            selected = resolve_selection(target, variant="small-518x686-int16-20261103-o1")
+            self.assertEqual(selected.target, target)
+            self.assertRegex(selected.asset.sha256, r"^[0-9a-f]{64}$")
             with self.assertRaises(ValueError):
                 resolve_selection(target)
         with self.assertRaises(ValueError):

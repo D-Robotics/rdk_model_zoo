@@ -175,3 +175,9 @@ python3 samples/vision/edgenext/runtime/python/main.py --target x5 --variant tim
 精确 URL、SHA-256 和大小登记在 `docs/release/x5/models.yaml`；来源及主机对照
 记录见 `conversion/converted.json`。模型许可逐项保留在公开 release 清单中。
 <!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+本轮新增的独立规格和显式命令见 [模型准备](model/README_cn.md)。板端精度与性能尚未实测。

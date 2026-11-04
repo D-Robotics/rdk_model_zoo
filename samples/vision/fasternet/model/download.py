@@ -40,6 +40,12 @@ VARIANTS = VARIANTS + ('timm-t0-in1k', 'timm-t1-in1k', 'timm-t2-in1k', 'timm-s-i
 ASSET_REFERENCES.update({('x5', 'timm-t0-in1k'): 'x5:fasternet:fasternet_t0_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-t1-in1k'): 'x5:fasternet:fasternet_t1_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-t2-in1k'): 'x5:fasternet:fasternet_t2_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-s-in1k'): 'x5:fasternet:fasternet_s_in1k_bayese_224x224_nv12.bin'})
 # END CONVERTED ARTIFACT BINDINGS
 
+# BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
+VARIANTS = tuple(dict.fromkeys((*VARIANTS, *('timm-s-in1k-s-int16-o1-20261103', 'timm-t0-in1k-s-int16-o1-20261103', 'timm-t1-in1k-s-int16-o1-20261103', 'timm-t2-in1k-s-int16-o1-20261103'))))
+TARGETS = tuple(dict.fromkeys((*TARGETS, *('s100', 's100p', 's600'))))
+ASSET_REFERENCES.update({('s100', 'timm-s-in1k-s-int16-o1-20261103'): 's:fasternet:s100/fasternet_s_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-s-in1k-s-int16-o1-20261103'): 's:fasternet:s100p/fasternet_s_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-s-in1k-s-int16-o1-20261103'): 's:fasternet:s600/fasternet_s_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm', ('s100', 'timm-t0-in1k-s-int16-o1-20261103'): 's:fasternet:s100/fasternet_t0_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-t0-in1k-s-int16-o1-20261103'): 's:fasternet:s100p/fasternet_t0_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-t0-in1k-s-int16-o1-20261103'): 's:fasternet:s600/fasternet_t0_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm', ('s100', 'timm-t1-in1k-s-int16-o1-20261103'): 's:fasternet:s100/fasternet_t1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-t1-in1k-s-int16-o1-20261103'): 's:fasternet:s100p/fasternet_t1_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-t1-in1k-s-int16-o1-20261103'): 's:fasternet:s600/fasternet_t1_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm', ('s100', 'timm-t2-in1k-s-int16-o1-20261103'): 's:fasternet:s100/fasternet_t2_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-t2-in1k-s-int16-o1-20261103'): 's:fasternet:s100p/fasternet_t2_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-t2-in1k-s-int16-o1-20261103'): 's:fasternet:s600/fasternet_t2_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm'})
+# END S CONVERTED ARTIFACT BINDINGS 20261103
+
 def asset_reference(target: str, variant: str = 's') -> str:
     """Return the exact manifest reference for a supported target/variant."""
 

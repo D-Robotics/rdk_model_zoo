@@ -109,3 +109,9 @@ bash samples/vision/depth_anything_v2/model/download.sh --target s100 --variant 
 bash samples/vision/depth_anything_v2/runtime/python/run.sh --target s100 \
   --variant small-518x686-o1 --output outputs/depth_anything_v2_small_o1
 ```
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+本轮新增的独立规格和显式命令见 [模型准备](model/README_cn.md)。板端精度与性能尚未实测。
