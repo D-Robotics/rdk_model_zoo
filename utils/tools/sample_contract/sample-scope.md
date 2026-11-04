@@ -10,6 +10,7 @@ scope.
 
 | Domain | Sample |
 | --- | --- |
+| llm | gemma4 |
 | llm | gemma4-e2b |
 | llm | minicpm5-2b |
 | robotics | himloco |
