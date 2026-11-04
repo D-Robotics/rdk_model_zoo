@@ -2,6 +2,23 @@
 
 # LPRNet 转换
 
+## Rebuilt X5 default PTQ / X5 独立重转
+
+The new X5 profile `sirius-68class-bgr-defaultptq-o2-20261104` uses the same pinned trained Sirius checkpoint, 68-class order, full `[1,68,18,1]` output and BGR `(pixel-127.5)/128` input as the S profiles described below. It is independent of the old `lpr.bin`. Select its exact `x5:lprnet:lprnet_sirius_68class_24x94_bgr_featuremap_defaultptq_o2_20261104_bayese.bin` asset ID. The old X5 default remains unchanged.
+
+```bash
+# Run the source export above into a fresh dev-server directory, then convert its 200 NPY tensors.
+python3 -m samples.vision.lprnet.conversion.prepare_x5_calibration --calibration /path/to/export/calibration --output /path/to/export/calibration-bin
+cp samples/vision/lprnet/conversion/recipes/sirius-68class-x5.yaml /path/to/export/compile-x5.yaml
+# In the cached X5 v1.2.8 toolchain, cwd /path/to/export:
+hb_mapper checker --model-type onnx --march bayes-e --model model.onnx --input-shape images 1x3x24x94
+hb_mapper makertbin --model-type onnx --config compile-x5.yaml
+hb_model_info output/lprnet_sirius_68class_24x94_bgr_featuremap_defaultptq_o2_20261104_bayese.bin
+```
+
+Observed hb_mapper1.24.3 / HBDK3.49.15 / HBRT3.15.55.0; CPU execution inside the exact cached image recorded by digest. SDK **default PTQ**, O2, one core, DDR FEATUREMAP F32 NCHW, no fused preprocessing. The raw calibration files are binary F32 with no NPY header and pass byte-exact round trips. Actual graph is mixed INT8/INT16 BPU plus float CPU, with39 quantized/CPU table rows and two original BPU subgraph reports retained. This is not a pure INT16 conversion. All new board measurements remain `not-run`; native simulation cosines and compiler estimates are diagnostics.
+
+
 ## Reproducible Sirius S conversion / 可复现的 S 转换
 
 The 2026-11-04 S profiles use source commit `7c976664b3f3879efabeaff59c7a117e49d5f29e` from [sirius-ai/LPRNet_Pytorch](https://github.com/sirius-ai/LPRNet_Pytorch) (Apache-2.0), trained checkpoint `weights/Final_LPRNet_model.pth` SHA-256 `d1ca22ca7a251a90702a166c8ad8ce7f05acb39f5ef8055139a33d462716d1ad`. Keep all weights, ONNX and tensors on dev-server.

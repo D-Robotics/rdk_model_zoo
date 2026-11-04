@@ -65,7 +65,8 @@ def resolve_selection(
     if key == "auto":
         key = "x5"
     rows = list_available_assets(key)
-    matches = [row for row in rows if asset_id is None or row.reference == asset_id]
+    selected_id = ASSET_ID if key == "x5" and asset_id is None else asset_id
+    matches = [row for row in rows if selected_id is None or row.reference == selected_id]
     if len(matches) != 1:
         raise BindingError(f"Select one published {key} LPRNet asset with --asset-id.")
     asset = matches[0]

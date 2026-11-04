@@ -175,12 +175,47 @@ def list_available_pairs(target: Optional[str] = None) -> tuple[OCRPair, ...]:
     real runner.
     """
 
+    legacy = tuple(_pair_for_target(value) for value in _SUPPORTED_PUBLISHED_TARGETS)
+    rows = legacy + _converted_pairs()
     if target is None or str(target).strip().lower() == "auto":
-        return tuple(_pair_for_target(value) for value in _SUPPORTED_PUBLISHED_TARGETS)
+        return rows
     key = _normalise_target(target)
-    if key not in _SUPPORTED_PUBLISHED_TARGETS:
+    return tuple(pair for pair in rows if pair.target == key)
+
+
+def _converted_pairs() -> tuple[OCRPair, ...]:
+    path = _MODEL_DIR / 'converted_pairs.json'
+    if not path.exists():
         return ()
-    return (_pair_for_target(key),)
+    registry = json.loads(path.read_text())
+    records = _manifest_records()
+    result = []
+    for target, entry in registry['pairs'].items():
+        if target not in ('s100', 's100p', 's600'):
+            raise BindingError('Invalid converted OCR target.')
+        stages = {}
+        assets = {}
+        for role in ('detector', 'recognizer'):
+            item = entry[role]
+            assets[role] = _find_record(records, item['asset_id'])
+            if not assets[role][1].startswith(target + '/'):
+                raise BindingError('Converted OCR asset belongs to another target.')
+            stages[role] = StageContract(
+                stage=role, target=target, variant=entry['variant'],
+                asset_id=item['asset_id'], model_name=item['model_name'],
+                input_names=tuple(item['input_names']),
+                input_shapes={k: tuple(v) for k,v in item['input_shapes'].items()},
+                input_dtypes=item['input_dtypes'],
+                runtime_input_shapes={k: tuple(v) for k,v in item['input_shapes'].items()},
+                runtime_input_dtypes=item['input_dtypes'],
+                output_name=item['output_name'], output_shape=tuple(item['output_shape']),
+                output_dtype='float32', input_protocol=item['input_protocol'],
+                output_semantics=item.get('output_semantics', 'unverified_score_vector'))
+        result.append(_build_pair(target=target, variant=entry['variant'],
+            det=assets['detector'], rec=assets['recognizer'],
+            detector=stages['detector'], recognizer=stages['recognizer'],
+            vocabulary=VocabularySpec(kind='fixed', class_count=97)))
+    return tuple(result)
 
 
 def resolve_pair(
@@ -225,11 +260,13 @@ def resolve_pair(
             and pair.recognizer_asset == rec_asset_id
         ]
     else:
-        if requested not in _SUPPORTED_PUBLISHED_TARGETS:
+        if not list_available_pairs(requested):
             raise UnsupportedAssetError(
                 f"No audited PaddleOCR pair is published for target {requested!r}."
             )
-        candidates = [pair for pair in list_available_pairs(requested)]
+        candidates = list(list_available_pairs(requested))
+        if det_asset_id is None and requested in _SUPPORTED_PUBLISHED_TARGETS:
+            candidates = [_pair_for_target(requested)]
         if det_asset_id is not None:
             candidates = [
                 pair

@@ -51,3 +51,15 @@ The default runtime path is `samples/vision/lprnet/model/lpr.bin`. An external p
 ## Format and checksums
 
 `lpr.bin` is an X5 `bin` deployment artifact. The active manifest URL is `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/LPRNet/lpr.bin`; the manifest records the publisher field as `sha256: null (unknown)`. The SHA-256 observed for the published file is `f480391507b6d15274bfff90900acc3271f4e46ac9afd4bf7d0fee4aa50f91bc`: it identifies the exact bytes of that copy, so separate hosts can confirm they hold the same file.
+
+## Rebuilt X5 FEATUREMAP model
+
+The explicit asset below is independently converted from the pinned trained Sirius source. It takes BGR float32 NCHW `(pixel-127.5)/128`; prepare a cropped plate with `prepare_input.py`. It is distinct from the historical X5 default.
+
+```bash
+python3 -m samples.vision.lprnet.model.download --target x5 --asset-id x5:lprnet:lprnet_sirius_68class_24x94_bgr_featuremap_defaultptq_o2_20261104_bayese.bin
+python3 -m samples.vision.lprnet.model.prepare_input --image /path/to/plate.jpg --output /path/to/plate.dat
+python3 -m samples.vision.lprnet.runtime.python.main --target x5 --asset-id x5:lprnet:lprnet_sirius_68class_24x94_bgr_featuremap_defaultptq_o2_20261104_bayese.bin --test-bin /path/to/plate.dat
+```
+
+This model's board smoke, accuracy, Runtime1/2 and C++1/2 results are `not-run`.

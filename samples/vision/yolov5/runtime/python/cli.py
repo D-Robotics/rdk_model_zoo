@@ -53,8 +53,27 @@ if _converted_path.exists():
     CONVERTED_VARIANTS += tuple(_converted['profiles'])
 
 
-def converted_filename(target, variant):
+BYTETRACK_PROFILE_FILES = {}
+_BYTETRACK_PROFILE_SHA = {}
+_bytetrack_path = SAMPLE_DIR.parent / 'bytetrack/model/converted_assets.json'
+if _bytetrack_path.exists():
+    _bytetrack = json.loads(_bytetrack_path.read_text())
+    if _bytetrack.get('sample') != 'bytetrack':
+        raise ValueError('Invalid converted ByteTrack registry.')
+    for _variant, _targets in _bytetrack['profiles'].items():
+        for _target, _entry in _targets.items():
+            BYTETRACK_PROFILE_FILES[(_target, _variant)] = _entry['filename']
+            _BYTETRACK_PROFILE_SHA[_entry['filename']] = _entry['sha256']
+BYTETRACK_CONVERTED_VARIANTS = tuple(dict.fromkeys(v for t, v in BYTETRACK_PROFILE_FILES))
+
+
+def converted_filename(target, variant, *, consumer="yolov5"):
     """Return the distinct filename for a reviewed native raw-F32 profile."""
+    if consumer == 'bytetrack':
+        try:
+            return BYTETRACK_PROFILE_FILES[(target, variant)]
+        except KeyError as error:
+            raise ValueError('Unsupported converted ByteTrack target/variant.') from error
     if (target,variant) in CONVERTED_PROFILE_FILES:
         return CONVERTED_PROFILE_FILES[(target,variant)]
     if variant not in _HISTORICAL_CONVERTED_VARIANTS or target not in ('x5', 's100', 's600'):
@@ -66,7 +85,9 @@ def converted_filename(target, variant):
     return stem + '.bin' if target == 'x5' else f'{target}/{stem}.hbm'
 
 
-def _converted_candidates(target):
+def _converted_candidates(target, consumer='yolov5'):
+    if consumer == 'bytetrack':
+        return [(v, f) for (t, v), f in BYTETRACK_PROFILE_FILES.items() if t == target]
     rows = [(v,converted_filename(target,v)) for v in _HISTORICAL_CONVERTED_VARIANTS
             if target in ('x5','s100','s600')]
     return rows + [(v,f) for (t,v),f in CONVERTED_PROFILE_FILES.items() if t == target]
@@ -96,12 +117,14 @@ def list_available_assets(target=None, *, consumer='yolov5'):
         expected=({_x5_filename(v) for v in X5_VARIANTS} if group=='x5' else
                   {f'{t}/yolov5x_672x672_nv12.hbm' for t in (('s100','s600') if consumer=='yolov5' else ('s100','s100p','s600'))})
         optional = ({f for t in (('x5',) if group == 'x5' else ('s100','s100p','s600'))
-                     for v,f in _converted_candidates(t)} if consumer == 'yolov5' else set())
+                     for v,f in _converted_candidates(t)} if consumer == 'yolov5' else
+                    {f for t in ('s100', 's100p', 's600') for v, f in _converted_candidates(t, consumer)})
         actual = {a.filename for a in rows}
         if not expected <= actual <= expected | optional or any(a.format!=('bin' if group=='x5' else 'hbm') for a in rows):
             raise ValueError(f'{consumer} publication changed; review its finite contracts.')
         for a in rows:
-            if a.filename in _CONVERTED_PROFILE_SHA and a.sha256 != _CONVERTED_PROFILE_SHA[a.filename]:
+            expected_sha = (_CONVERTED_PROFILE_SHA if consumer == 'yolov5' else _BYTETRACK_PROFILE_SHA)
+            if a.filename in expected_sha and a.sha256 != expected_sha[a.filename]:
                 raise ValueError('YOLOv5 manifest differs from its converted identity.')
         assets.extend(a for a in rows if target in (None,'auto') or (group=='x5' and target=='x5') or (group=='s' and a.filename.startswith(target+'/')))
     return tuple(assets)
@@ -117,14 +140,14 @@ def resolve_selection(target='auto', *, variant=None, asset_id=None, model_path=
         matches=[a for a in assets if a.reference==asset_id]
         if len(matches)!=1:raise ValueError(f'Unknown or mismatched {consumer} asset-id: {asset_id}.')
         asset=matches[0]
-        inferred=next((v for v,f in _converted_candidates(target) if f==asset.filename),None)
+        inferred=next((v for v,f in _converted_candidates(target,consumer) if f==asset.filename),None)
         if inferred is None:
             inferred=next((v for v in X5_VARIANTS if _x5_filename(v)==asset.filename),'x-672')
         if variant is not None and variant!=inferred:raise ValueError('variant and asset-id mismatch.')
         variant=inferred
     else:
         variant=variant or ('n-v7.0' if target=='x5' else 'x-672')
-        if consumer=='yolov5' and variant in CONVERTED_VARIANTS:filename=converted_filename(target,variant)
+        if (consumer=='yolov5' and variant in CONVERTED_VARIANTS) or (consumer=='bytetrack' and variant in BYTETRACK_CONVERTED_VARIANTS):filename=converted_filename(target,variant,consumer=consumer)
         elif target=='x5' and variant in X5_VARIANTS:filename=_x5_filename(variant)
         elif target!='x5' and variant=='x-672':filename=f'{target}/yolov5x_672x672_nv12.hbm'
         else:raise ValueError(f'Unsupported {target} variant: {variant}.')

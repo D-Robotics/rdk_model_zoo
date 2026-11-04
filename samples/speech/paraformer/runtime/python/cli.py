@@ -64,7 +64,7 @@ class Selection:
     explicit_model_path: bool = False
 
 
-def resolve_selections(target="auto", *, model_paths=None, asset_ids=None):
+def resolve_selections(target="auto", *, model_paths=None, asset_ids=None, variant=None):
     """Select all three models; alternate paths require all three asset IDs."""
     if target == "auto":
         from utils.py_utils.platforms import detect_target
@@ -79,10 +79,22 @@ def resolve_selections(target="auto", *, model_paths=None, asset_ids=None):
             raise ValueError(f"{name} requires exactly encoder, predictor and decoder")
     if model_paths is not None and asset_ids is None:
         raise ValueError("External model paths require explicit matching asset IDs")
+    profiles = converted_profiles(target)
+    filenames = FILENAMES
+    if variant is not None:
+        if variant not in profiles:
+            raise ValueError('Unknown converted Paraformer target/variant')
+        filenames = profiles[variant]['stages']
+    elif asset_ids is not None and asset_ids != {stage: 's:paraformer:' + name for stage, name in FILENAMES.items()}:
+        matches = [entry['stages'] for entry in profiles.values()
+                   if asset_ids == {stage: 's:paraformer:' + name for stage, name in entry['stages'].items()}]
+        if len(matches) != 1:
+            raise ValueError('Select one complete audited Paraformer three-stage profile')
+        filenames = matches[0]
     assets = {asset.filename: asset for asset in list_assets("s", "paraformer")}
     selected = []
     for stage in STAGES:
-        asset = assets.get(FILENAMES[stage])
+        asset = assets.get(filenames[stage])
         if asset is None or asset.format != "hbm" or not asset.url:
             raise ValueError(f"Missing published {stage} HBM asset")
         if asset_ids is not None and asset_ids[stage] != asset.reference:
@@ -94,6 +106,26 @@ def resolve_selections(target="auto", *, model_paths=None, asset_ids=None):
         )
         selected.append(Selection(target, stage, asset, path, model_paths is not None))
     return tuple(selected)
+
+def converted_profiles(target):
+    path = SAMPLE_DIR / 'model/converted_assets.json'
+    if not path.exists():
+        return {}
+    document = json.loads(path.read_text())
+    if document.get('sample') != 'paraformer':
+        raise ValueError('Invalid Paraformer converted registry')
+    return {variant: targets[target] for variant, targets in document['profiles'].items() if target in targets}
+
+
+def variant_for_asset(target, stage, reference):
+    if reference == 's:paraformer:' + FILENAMES.get(stage, ''):
+        return None
+    matches = [variant for variant, entry in converted_profiles(target).items()
+               if reference == 's:paraformer:' + entry['stages'].get(stage, '')]
+    if len(matches) != 1:
+        raise ValueError('Unknown converted Paraformer stage publication')
+    return matches[0]
+
 
 # ======================================================================
 # Audio/manifest file handling, kept outside feature and inference math.
@@ -172,6 +204,7 @@ def build_parser():
     parser.add_argument(
         "--target", choices=("auto", "x5", "s100", "s100p", "s600"), default="auto"
     )
+    parser.add_argument("--variant", help="Exact converted three-stage profile; omitted keeps the historical package")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--list-models", action="store_true")
     mode.add_argument("--dry-run", action="store_true")
@@ -247,6 +280,7 @@ def resolve_selections_for(args):
     ids = {stage: getattr(args, f"{stage}_asset_id") for stage in STAGES}
     return resolve_selections(
         target,
+        **({"variant": args.variant} if getattr(args, "variant", None) else {}),
         model_paths=paths if paths["encoder"] else None,
         asset_ids=ids if ids["encoder"] else None,
     )

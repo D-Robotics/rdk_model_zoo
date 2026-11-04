@@ -26,6 +26,7 @@ from utils.py_utils.runtime_meta import RuntimeMetadata, MetadataMismatchError
 from samples.vision.yolov5.runtime.python.cli import (
     ANCHORS,
     CONVERTED_VARIANTS,
+    BYTETRACK_CONVERTED_VARIANTS,
     STRIDES,
     ModelSelection,
     resolve_selection,
@@ -86,8 +87,9 @@ def bind_model(selection, metadata):
     m=metadata if isinstance(metadata,RuntimeMetadata) else RuntimeMetadata.from_mapping(metadata)
     if m.model_names!=(m.model_name,):raise MetadataMismatchError('YOLOv5 artifact must contain exactly one model.')
     converted=selection.variant in CONVERTED_VARIANTS
-    raw_float=selection.target=='x5' or converted
-    size=640 if raw_float else 672
+    rebuilt_track = selection.consumer == 'bytetrack' and selection.variant in BYTETRACK_CONVERTED_VARIANTS
+    raw_float=selection.target=='x5' or converted or rebuilt_track
+    size=672 if rebuilt_track else (640 if raw_float else 672)
     expected=((1,3,size,size),) if selection.target=='x5' else ((1,size,size,1),(1,size//2,size//2,2))
     if len(m.input_names)!=len(expected) or tuple(m.input_shapes.get(n) for n in m.input_names)!=expected:raise MetadataMismatchError('YOLOv5 logical input shapes/order mismatch.')
     if any(m.input_dtypes.get(n) not in ('uint8','nv12') for n in m.input_names):raise MetadataMismatchError('YOLOv5 inputs require uint8/NV12 metadata.')

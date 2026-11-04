@@ -1423,6 +1423,142 @@
       },
       "board_validation": "not-run",
       "native_recipe": "samples/vision/lprnet/conversion/recipes/sirius-68class-s600.yaml"
+    },
+    {
+      "variant": "sirius-68class-bgr-defaultptq-o2-20261104",
+      "target": {
+        "platform": "x5",
+        "march": "bayes-e"
+      },
+      "source": {
+        "model": "lprnet",
+        "repository": "https://github.com/sirius-ai/LPRNet_Pytorch",
+        "commit": "7c976664b3f3879efabeaff59c7a117e49d5f29e",
+        "source_archive": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/upstream-lprnet/source.zip",
+          "sha256": "239527ee129b71210ea187026e2a5147b320335d2875791a4cc73e2f0c0fc2f7",
+          "size_bytes": 18894290
+        },
+        "checkout": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/upstream-lprnet/LPRNet_Pytorch-7c976664b3f3879efabeaff59c7a117e49d5f29e",
+        "checkpoint": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/upstream-lprnet/LPRNet_Pytorch-7c976664b3f3879efabeaff59c7a117e49d5f29e/weights/Final_LPRNet_model.pth",
+          "sha256": "d1ca22ca7a251a90702a166c8ad8ce7f05acb39f5ef8055139a33d462716d1ad",
+          "size_bytes": 1806995,
+          "url": "https://github.com/sirius-ai/LPRNet_Pytorch/blob/7c976664b3f3879efabeaff59c7a117e49d5f29e/weights/Final_LPRNet_model.pth"
+        }
+      },
+      "components": {
+        "model": {
+          "filename": "lprnet_sirius_68class_24x94_bgr_featuremap_defaultptq_o2_20261104_bayese.bin",
+          "format": "bin",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/lprnet/lprnet_sirius_68class_24x94_bgr_featuremap_defaultptq_o2_20261104_bayese.bin",
+          "sha256": "b41f6d908cc20def49caf0272fb828411a6215337208350e08adeea3aecea38d",
+          "size_bytes": 466655,
+          "onnx_sha256": "50dfc80a3eb71f7f12310ddca665ad3df953cdf01473c2b9f44621dd4af79fea",
+          "effective_config_sha256": "28c5c1ce25bcef8995c9c796e340ec406183b69fbd5a600301d90431cae78b6a",
+          "recipe_sha256": "d287f9303d74d24fbf973bc72d4ad47ccf6ac435a6d6fce29d5ab120b388c068",
+          "calibration_manifest_sha256": "af4e7488bbc19ed219419fb065275b15b2e378d487c2de8f0eb53af1677c8acf",
+          "cpu_reference_float_gate": {
+            "status": "passed",
+            "report": {
+              "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-x5-defaultptq-20261104-r02/cpu-sdk-parity.json",
+              "sha256": "7a5a1b3a223326f95c4dda8b12f14fea4a8561cd75c0e249f943626d7ddba755",
+              "size_bytes": 3613
+            }
+          }
+        }
+      },
+      "io": {
+        "inputs": [
+          {
+            "name": "images",
+            "shape": [
+              1,
+              3,
+              24,
+              94
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "logits",
+            "shape": [
+              1,
+              68,
+              18,
+              1
+            ],
+            "dtype": "float32"
+          }
+        ]
+      },
+      "compiler_versions": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "compiler_image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+      "precision_policy": "SDK default PTQ; actual mixed INT8/INT16 BPU and float CPU nodes",
+      "optimization_level": "O2",
+      "calibration_count": 200,
+      "calibration_partition": "seed42 200/1000 source test images, remaining 800 held out",
+      "host_export_report": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/reports/lprnet-export.json",
+        "sha256": "2442a1b24d979d16126a09512242f56fc123095b835767be016bd86d9ed0cb58",
+        "size_bytes": 4257
+      },
+      "compile_receipt": {
+        "argv": [
+          "docker",
+          "run",
+          "--rm",
+          "--network",
+          "none",
+          "--cpus",
+          "2",
+          "--memory",
+          "4g",
+          "--shm-size",
+          "1g",
+          "--name",
+          "modelzoo-legacy-lprnet-x5-final-r03",
+          "-v",
+          "/home/zhengyi/work/.drobotics-x5:/home/zhengyi/work/.drobotics-x5:ro",
+          "-v",
+          "/home/zhengyi/work/rdk_model_zoo_workbench:/home/zhengyi/work/rdk_model_zoo_workbench:ro",
+          "-v",
+          "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01:/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01",
+          "-w",
+          "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-x5-defaultptq-20261104-r02",
+          "-e",
+          "OMP_NUM_THREADS=2",
+          "-e",
+          "OPENBLAS_NUM_THREADS=2",
+          "-e",
+          "MKL_NUM_THREADS=2",
+          "-e",
+          "HBTL_THREAD_NUM=2",
+          "--entrypoint",
+          "/bin/bash",
+          "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "-lc",
+          "python3 /home/zhengyi/work/.drobotics-x5/platforms/x5/scripts/run_ptq.py full --config /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-x5-defaultptq-20261104-r02/config.yaml --report /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-x5-defaultptq-20261104-r02/ptq-report.json"
+        ],
+        "cwd": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-x5-defaultptq-20261104-r02",
+        "env": {},
+        "config_sha256": "28c5c1ce25bcef8995c9c796e340ec406183b69fbd5a600301d90431cae78b6a",
+        "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+        "resource_admission": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/reports/followup-capacity-admission-r01.json",
+        "started_utc": "2026-11-04T12:47:35.457813+00:00",
+        "returncode": 0,
+        "wall_seconds": 134.74782258085907,
+        "finished_utc": "2026-11-04T12:49:50.205674+00:00"
+      },
+      "board_validation": "not-run",
+      "native_recipe": "samples/vision/lprnet/conversion/recipes/sirius-68class-x5.yaml"
     }
   ]
 }
