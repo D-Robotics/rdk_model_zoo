@@ -145,11 +145,12 @@ describe("multi-platform variant catalog", () => {
     // S600 pair, and YOLO26n-Depth on S100P: 732 variants.
     // The 2026-11-04 develop publications added 151 download-only variants and no
     // benchmark rows from 154 S assets: S-series classifier profiles, CLIP pairs,
-    // Depth Anything V2, PP-LiteSeg, YOLO26-Depth, and YOLOE-11/26 seg.
-    // 61 families, 883 variants, 760 benchmark rows.
+    // Depth Anything V2, PP-LiteSeg, YOLO26-Depth, and YOLOE-11/26 seg: 883 variants.
+    // LPRNet then added three download-only S variants (S100, S100P, S600) and no
+    // benchmark rows. 61 families, 886 variants, 760 benchmark rows.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(61);
-    expect(variants).toHaveLength(883);
+    expect(variants).toHaveLength(886);
     expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(760);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
