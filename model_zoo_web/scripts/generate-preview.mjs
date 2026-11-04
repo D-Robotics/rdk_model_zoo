@@ -388,6 +388,18 @@ const taskMetadata = {
 const safeId = (...parts) => parts.join('-').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-');
 const displayNames = (record, size) => {
   const { family, task } = record;
+  if (family === 'bytetrack' && size.startsWith('yolov5x-v7-672-')) {
+    return { model: record.name, variant: 'YOLOv5x · 672 × 672' };
+  }
+  if (family === 'paraformer' && size.startsWith('large-contextual-8404-')) {
+    return { model: record.name, variant: 'Paraformer Large · 16 kHz' };
+  }
+  if (family === 'paddle_ocr' && size.startsWith('v3-en-')) {
+    return { model: record.name, variant: task === 'ocr-det' ? 'PP-OCRv3 English · 640 × 640' : 'PP-OCRv3 English · 48 × 320' };
+  }
+  if (family === 'lprnet' && size.startsWith('sirius-68class-')) {
+    return { model: record.name, variant: 'LPRNet Sirius · 68 classes' };
+  }
   if (!/^yolo/i.test(family) || family === 'yolo26_depth') {
     // Other families keep their catalog name; the size id is spelled out
     // ("conv-small-224" -> "Conv Small 224").

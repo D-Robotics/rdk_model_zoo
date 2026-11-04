@@ -721,7 +721,8 @@ def _validate_inference_banner_receipt(payload: dict[str, Any], entry: dict[str,
         raise CatalogError(f"{label} must record every graph's output metadata")
     roles = ({"parta", "partb"} if payload.get("source") == "fasterrcnn" else
              {"image", "text"} if entry.get("kind") == "similarity-panel" else
-             {"encoder", "decoder"} if entry.get("kind") == "prompt-mask-panel" else {"model"})
+             {"encoder", "decoder"} if entry.get("kind") == "prompt-mask-panel" else
+             {"encoder", "predictor", "decoder"} if entry.get("kind") == "speech-transcript" else {"model"})
     if set(graphs) != roles:
         raise CatalogError(f"{label} must record every component of this task")
     expected = {}
@@ -799,7 +800,7 @@ def _validate_host_float_hero(entry: dict[str, Any], label: str, revision: str) 
     if entry.get("inference_receipt_version", payload.get("schema_version")) != payload.get("schema_version"):
         raise CatalogError(f"{label} receipt version differs from its actual inference record")
     kind = entry["kind"]
-    new_kinds = {"depth-panel", "feature-panel", "matting-panel", "prompt-mask-panel", "similarity-panel", "semantic-wipe", "plate-readout"}
+    new_kinds = {"depth-panel", "feature-panel", "matting-panel", "prompt-mask-panel", "similarity-panel", "semantic-wipe", "plate-readout", "tracking-overlay", "ocr-detection", "ocr-recognition", "speech-transcript"}
     if kind in new_kinds or payload.get("schema_version") == 2:
         _validate_inference_banner_receipt(payload, entry, label)
     if kind == "similarity-panel":
@@ -820,6 +821,30 @@ def _validate_host_float_hero(entry: dict[str, Any], label: str, revision: str) 
             plate = require_string(recognition.get("plate"), f"{label}.recognition.plate")
             if payload["visualization"].get("rendered_text") != plate:
                 raise CatalogError(f"{label} rendered plate must match the actual CTC readout")
+        if kind in {"ocr-recognition", "speech-transcript"}:
+            text = require_string(require_mapping(payload.get("recognition"), label+".recognition").get("text"), label+".recognition.text")
+            if payload["visualization"].get("rendered_text") != text:
+                raise CatalogError(f"{label} displayed text differs from the actual model readout")
+        if kind == "tracking-overlay":
+            tracks = require_list(payload.get("tracks"), label+".tracks")
+            ids = [t.get("id") for t in tracks]
+            rendered = payload["visualization"].get("rendered_track_ids")
+            if (not ids or len(set(ids)) != len(ids) or any(type(v) is not int or v <= 0 for v in ids)
+                    or not isinstance(rendered, list) or not rendered or len(set(rendered)) != len(rendered)
+                    or not set(rendered) <= set(ids)):
+                raise CatalogError(f"{label} rendered IDs must come from its actual tracker update")
+        if kind == "speech-transcript":
+            audio = require_mapping(payload.get("audio"), label+".audio")
+            path = validate_evidence_path(audio.get("input"), label+".audio.input", entry['commit'])
+            pure = PurePosixPath(path)
+            if (pure.suffix.lower() != '.wav' or not path.startswith('samples/speech/')
+                    or pure.is_absolute() or '..' in pure.parts):
+                raise CatalogError(f"{label} needs its pinned native speech WAV")
+            result = subprocess.run(['git','show',f"{entry['commit']}:{path}"],cwd=ROOT,capture_output=True)
+            if result.returncode or hashlib.sha256(result.stdout).hexdigest() != audio.get('sha256'):
+                raise CatalogError(f"{label} audio bytes differ from the inference revision")
+            if audio.get('sample_rate') != 16000 or type(audio.get('sample_count')) is not int or audio['sample_count'] <= 0:
+                raise CatalogError(f"{label} must record the actual 16 kHz audio input")
         return
     if kind == "classification-panel":
         recorded = payload.get("topk")
@@ -1612,8 +1637,11 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
         require_string(source_input.get("dtype"), f"{variant_label}.input.source.dtype")
         require_string(source_input.get("layout"), f"{variant_label}.input.source.layout")
         source_shape = require_list(source_input.get("shape"), f"{variant_label}.input.source.shape")
-        if len(source_shape) != 4:
-            raise CatalogError(f"{variant_label}.input.source.shape must contain four dimensions")
+        speech_features = (domain == "speech" and source_input["format"].upper() == "FEATUREMAP"
+                           and source_input["layout"] == "NTC")
+        if len(source_shape) != (3 if speech_features else 4):
+            expected = "three NTC feature dimensions" if speech_features else "four dimensions"
+            raise CatalogError(f"{variant_label}.input.source.shape must contain {expected}")
         for dimension_index, dimension in enumerate(source_shape):
             require_positive_int(dimension, f"{variant_label}.input.source.shape[{dimension_index}]")
         if source_shape[-2:] != [input_config["height"], input_config["width"]]:

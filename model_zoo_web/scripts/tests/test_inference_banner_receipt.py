@@ -153,6 +153,46 @@ class InferenceBannerReceiptTest(unittest.TestCase):
             with self.assertRaisesRegex(catalog.CatalogError, 'actual CTC readout'):
                 catalog._validate_host_float_hero(self.entry, 'hero', 'a'*40)
 
+    def check_new_hero(self, kind):
+        self.entry.update(kind=kind, runtime='host-float-reference', note='Host float reference, not board output.',
+                          model_url='https://example.com/source.pt', model_file='source.pt',
+                          framework='ONNX Runtime', documented_in='samples/vision/example/conversion/README.md')
+        for key in ('model_url','model_file','framework','commit','runtime','input'):
+            self.payload[key]=self.entry[key]
+        source=self.asset.replace('.webp','.json');self.entry['predictions_source']=source
+        result=self.root/self.asset.replace('.webp','-result.png');result.write_bytes(b'actual computed result')
+        self.payload['files']['result.png']={'sha256':hashlib.sha256(result.read_bytes()).hexdigest(),'size_bytes':result.stat().st_size}
+        (self.root/source).write_text(json.dumps(self.payload))
+        with patch.object(catalog,'_ls_tree',return_value=('100644','blob','a'*40)), \
+             patch.object(catalog,'validate_commit',side_effect=lambda revision,label:revision):
+            catalog._validate_host_float_hero(self.entry,'hero','a'*40)
+
+    def test_track_labels_must_use_actual_cpu_tracker_ids(self):
+        self.payload.update(tracks=[{'id':1},{'id':3}])
+        self.payload['visualization']['rendered_track_ids']=[1,3]
+        self.check_new_hero('tracking-overlay')
+        self.payload['visualization']['rendered_track_ids']=[999]
+        with self.assertRaisesRegex(catalog.CatalogError,'actual tracker'):
+            self.check_new_hero('tracking-overlay')
+
+    def test_transcript_requires_every_asr_stage_and_exact_native_audio(self):
+        roles=('encoder','predictor','decoder')
+        self.payload['graphs']={r:{'sha256':'b'*64}for r in roles}
+        self.payload['graph_io']={r:{'outputs':[{'name':n,'shape':[1,2]}for n in (['alphas','hidden']if r=='predictor'else['value'])]}for r in roles}
+        self.payload['forward_outputs']=[{'role':r,'name':v['name'],'shape':[1,2],'dtype':'float32','sha256':'c'*64}for r in roles for v in self.payload['graph_io'][r]['outputs']]
+        self.payload['recognition']={'text':'actual speech'}
+        self.payload['visualization']['rendered_text']='actual speech'
+        self.payload['audio']={'input':'samples/speech/paraformer/test_data/audio/example.wav',
+            'sha256':hashlib.sha256(b'committed source').hexdigest(),'sample_rate':16000,'sample_count':16000}
+        self.check_new_hero('speech-transcript')
+        self.payload['audio']['sha256']='0'*64
+        with self.assertRaisesRegex(catalog.CatalogError,'audio bytes'):
+            self.check_new_hero('speech-transcript')
+        self.payload['audio']['sha256']=hashlib.sha256(b'committed source').hexdigest()
+        self.payload['forward_outputs']=[v for v in self.payload['forward_outputs']if v['role']!='predictor']
+        with self.assertRaisesRegex(catalog.CatalogError,'omit or repeat'):
+            self.check_new_hero('speech-transcript')
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -7,10 +7,11 @@ source: paddle_ocr
 family: paddle_ocr
 task: ocr-det
 description:
-  zh: "PaddleOCR Detection 使用 DB 检测器定位图像中的文字区域，输出文本边界。"
-  en: "PaddleOCR Detection uses a DB detector to locate text regions in images and predict their boundaries."
+  zh: PaddleOCR Detection 使用 DB 检测器定位图像中的文字区域，输出文本边界。
+  en: PaddleOCR Detection uses a DB detector to locate text regions in images and
+    predict their boundaries.
 sample_path: samples/vision/paddle_ocr
-sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+sample_revision: 54b34a454f51a95b83c5f1a9bc31f1f06017f8f1
 license:
   name: Apache-2.0
   url: https://www.apache.org/licenses/LICENSE-2.0
@@ -25,6 +26,10 @@ supported_platforms:
 - platform: x5
   evidence: docs/release/x5/models.yaml
 - platform: s100
+  evidence: docs/release/s/models.yaml
+- platform: s100p
+  evidence: docs/release/s/models.yaml
+- platform: s600
   evidence: docs/release/s/models.yaml
 published_variants:
 - name: S100
@@ -76,3 +81,5132 @@ documented_downloads:
 example_image:
   path: samples/vision/paddle_ocr/test_data/x5/paddleocr_test.jpg
   source: samples/vision/paddle_ocr/test_data/x5/paddleocr_test.jpg
+hero_visual:
+  file: model_zoo_web/release/assets/pending-heroes/paddleocr-bakery-det-20261104.webp
+  kind: ocr-detection
+  runtime: host-float-reference
+  input: samples/vision/paddle_ocr/test_data/banner_input_bakery_det_20261104.png
+  predictions_source: model_zoo_web/release/assets/pending-heroes/paddleocr-bakery-det-20261104.json
+  note: Host float reference, not board output. Actual Native preprocessing and model
+    outputs; board checks are recorded separately.
+  model_file: en_PP-OCRv3_det_infer/inference.pdiparams
+  model_url: https://paddleocr.bj.bcebos.com/PP-OCRv3/english/en_PP-OCRv3_det_infer.tar
+  framework: ONNX Runtime 1.19.2
+  commit: 54b34a454f51a95b83c5f1a9bc31f1f06017f8f1
+  documented_in: samples/vision/paddle_ocr/conversion/README.md
+  inference_receipt_version: 2
+provider: PaddlePaddle / PaddleOCR
+model_license: &id001
+  name: Apache-2.0
+  url: https://github.com/PaddlePaddle/PaddleOCR/blob/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/LICENSE
+  scope: model
+variants:
+- size: v3-en-640x640-bgrnorm-int16-cpuptq-o1-20261104-r02
+  model: {}
+  input:
+    width: 640
+    height: 640
+    source:
+      format: bgr
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 640
+      - 640
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: s100
+    license: *id001
+    status: converted
+    converted_at: '2026-11-04'
+    metadata_revision: 1
+    artifact:
+      filename: ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      format: HBM
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/paddle_ocr/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      sha256: 9f4cc58a625e5425e6592fbb5f5a1093b05cf6e871d74f128d6218ee41dae50a
+      size_bytes: 6861528
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/paddle_ocr/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/paddle_ocr/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/paddle_ocr/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/paddle_ocr/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: fetch_name_0
+        shape:
+        - 1
+        - 1
+        - 640
+        - 640
+        dtype: float32
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 640
+        - 640
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 100
+      calibration_manifest_sha256: 4140b3371dbcba10d9af502b5b671866c2db88cba0b6c2f2817b95ed3914f218
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: 9f4cc58a625e5425e6592fbb5f5a1093b05cf6e871d74f128d6218ee41dae50a
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: 54b34a454f51a95b83c5f1a9bc31f1f06017f8f1
+      source_repository_commit: c833dfc9ff04a4bce5749b808c200688b4f7bd3a
+      source_checkpoint_sha256: 83676ec730627ab4502f401410a4b6a3ce1c0bb98fa249b71db055b6bddae051
+      source_weight_url: https://paddleocr.bj.bcebos.com/PP-OCRv3/english/en_PP-OCRv3_det_infer.tar
+      checkpoint_revision: sha256:83676ec730627ab4502f401410a4b6a3ce1c0bb98fa249b71db055b6bddae051
+      source_version_pair:
+        repository: https://github.com/PaddlePaddle/PaddleOCR
+        commit: c833dfc9ff04a4bce5749b808c200688b4f7bd3a
+        inference_model: en_PP-OCRv3_det_infer
+        source_program_sha256: c4bfb1b05d9d1d5a760801eaf6d20180ef7e47bcc675fb17d1f3a89da5fef427
+        checkpoint:
+          url: https://paddleocr.bj.bcebos.com/PP-OCRv3/english/en_PP-OCRv3_det_infer.tar
+          sha256: 83676ec730627ab4502f401410a4b6a3ce1c0bb98fa249b71db055b6bddae051
+          archive_sha256: e740eb522521827cc83da3ba33e1c70ccfd9b3cf7d9a24a420ce4ca5ebb8794f
+          archive_size_bytes: 4003840
+          member: en_PP-OCRv3_det_infer/inference.pdiparams
+        preprocessing_source:
+          source: https://github.com/PaddlePaddle/PaddleOCR
+          commit: c833dfc9ff04a4bce5749b808c200688b4f7bd3a
+          files:
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml
+            sha256: e1d41b910b7d3709c49844ada87e6a959da8a00c63a6d75a28af8ff66a53c2f8
+            size_bytes: 2612
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/ppocr/utils/en_dict.txt
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/ppocr/utils/en_dict.txt
+            sha256: 5662df9d2d03f0e8ca0d3b0649d6acbab904b6a14b3d3521463c71c37c668ce3
+            size_bytes: 190
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/tools/infer/predict_rec.py
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/tools/infer/predict_rec.py
+            sha256: af43cb2fe9dc57ade95ef052a7508ef2f5df9feb434c6b0a9aa966d9d4b08428
+            size_bytes: 29025
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/tools/infer/predict_det.py
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/tools/infer/predict_det.py
+            sha256: ad663a36d84119f35ba017230c70619c926b5c27d82f975160544ccbbb38e0bd
+            size_bytes: 13944
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/ppocr/data/imaug/rec_img_aug.py
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/ppocr/data/imaug/rec_img_aug.py
+            sha256: 1039083dcddbe1f3a99d9838decd00746047958871f2573c596ff586c5382609
+            size_bytes: 27147
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/ppocr/data/imaug/operators.py
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/ppocr/data/imaug/operators.py
+            sha256: 7fa79bdf1feecd52cfb3d9dccc073d35cfea9796c40db981da03386158e9de26
+            size_bytes: 17494
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/LICENSE
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/LICENSE
+            sha256: ff6311c56c1b22c9209c96cc8afc16da91c24ee55a15e14ebc46fe1960dbd856
+            size_bytes: 11438
+        license: Apache-2.0
+      toolchain_image: S SDK 3.7.0 / exact cached image identified by digest
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      build_id: paddleocr-v3-en-det-s100-cpuptq-20261104-r02
+      precision_policy: INT16 activations; O1
+      native_variant: v3-en-640x640-bgrnorm-int16-cpuptq-o1-20261104-r02
+      onnx_sha256: dcd42658bc113ef89cf380becfd1ec88f621caa07d36a70ca388c31570073cb2
+      config_sha256: 8810c1a8930432718509836e23f8903524fb71e4e1ff734c4979916d5140502f
+      recipe_sha256: b70a2b30b56b14aac11d7aedcb27f2added385b924a59a774a48703826d5248d
+      calibration_manifest_sha256: 4140b3371dbcba10d9af502b5b671866c2db88cba0b6c2f2817b95ed3914f218
+      host_smoke_report_sha256: aa9656b93cbe8498bfcea4ff336d1064d58756923798a28d7a646f6d017c4167
+      compile_log_sha256: 3121815eacfe620b86299cdc77e3c5b5e19cb46e25fa2218952ac16dcb1bef1b
+      cpu_reference_float_gate:
+        status: passed
+        report:
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paddleocr-det-s-prepare-r02/cpu-sdk-parity.json
+          sha256: 7e7a30e77467222f06cd77018e0fb78dc6719c2490d45c6eb701b7b1dd1c3226
+          size_bytes: 3614
+      connected_host_reference:
+        sha256: 87cf5c1b9a257ea6fc97e0496c8bd91b2264bee8003c5625f8aef9e0a23f8da6
+        report:
+          schema_version: 1
+          status: passed
+          stages:
+          - detector
+          - recognizer
+          source:
+            det:
+              program:
+                path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/paddleocr/en_PP-OCRv3_det_infer/en_PP-OCRv3_det_infer/inference.pdmodel
+                sha256: c4bfb1b05d9d1d5a760801eaf6d20180ef7e47bcc675fb17d1f3a89da5fef427
+                size_bytes: 1590133
+              parameters:
+                path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/paddleocr/en_PP-OCRv3_det_infer/en_PP-OCRv3_det_infer/inference.pdiparams
+                sha256: 83676ec730627ab4502f401410a4b6a3ce1c0bb98fa249b71db055b6bddae051
+                size_bytes: 2377917
+            rec:
+              program:
+                path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/paddleocr/en_PP-OCRv3_rec_infer/en_PP-OCRv3_rec_infer/inference.pdmodel
+                sha256: f0288362f754e815030929477f7b1f96fe2e913e197537288a01bd43f768d0ab
+                size_bytes: 1020915
+              parameters:
+                path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/paddleocr/en_PP-OCRv3_rec_infer/en_PP-OCRv3_rec_infer/inference.pdiparams
+                sha256: 2cea2de604d8a75fd9151b54ea2dd027659fb8cb777cde377224581110dbff13
+                size_bytes: 8916816
+          onnx_sha256:
+            det: dcd42658bc113ef89cf380becfd1ec88f621caa07d36a70ca388c31570073cb2
+            rec: 69a498caf3266bffa52402d2071a3a17631db3f0c2c3580a23cdaaea253260c2
+          scope: Exact source Paddle CPU / ONNX CPU through Native BGR preparation,
+            DB polygons/crops and97-class CTC; no HBM/board inference or OCR dataset
+            accuracy
+          atol: 0.0001
+          rtol: 0.001
+          cases:
+          - input: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/calibration/ctw1500-train-seed42-100-r02/images/0007.jpg
+            input_sha256: 2a98dd9bce07e3070b4933f195d3363b6361562280de9085461760253cd5bce3
+            comparisons:
+              det-0:fetch_name_0:
+                passed: true
+                max_abs: 2.7358531951904297e-05
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+              rec-0:fetch_name_0:
+                passed: true
+                max_abs: 1.996755599975586e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-1:fetch_name_0:
+                passed: true
+                max_abs: 7.748603820800781e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-2:fetch_name_0:
+                passed: true
+                max_abs: 1.1920928955078125e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-3:fetch_name_0:
+                passed: true
+                max_abs: 4.172325134277344e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-4:fetch_name_0:
+                passed: true
+                max_abs: 1.1920928955078125e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-5:fetch_name_0:
+                passed: true
+                max_abs: 2.637505531311035e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-6:fetch_name_0:
+                passed: true
+                max_abs: 2.4586915969848633e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-7:fetch_name_0:
+                passed: true
+                max_abs: 2.980232238769531e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-8:fetch_name_0:
+                passed: true
+                max_abs: 1.0728836059570312e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-9:fetch_name_0:
+                passed: true
+                max_abs: 1.8477439880371094e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-10:fetch_name_0:
+                passed: true
+                max_abs: 1.7881393432617188e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-11:fetch_name_0:
+                passed: true
+                max_abs: 3.1888484954833984e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-12:fetch_name_0:
+                passed: true
+                max_abs: 2.384185791015625e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-13:fetch_name_0:
+                passed: true
+                max_abs: 1.6689300537109375e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-14:fetch_name_0:
+                passed: true
+                max_abs: 5.662441253662109e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-15:fetch_name_0:
+                passed: true
+                max_abs: 2.384185791015625e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-16:fetch_name_0:
+                passed: true
+                max_abs: 5.960464477539062e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              complete_source_boxes_and_text:
+                passed: true
+            calls:
+            - role: det
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 640
+                - 640
+                dtype: float32
+                sha256: f4301ad785470b081b15ec0d1aa2f1d4a0f92aa15db60736a9b47320a852c7e3
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+                dtype: float32
+                sha256: 903a719e4b989acab846a52f6f88a9f4e5b6093477fac1f88ba5ffb33a2b5562
+            - role: rec
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 6962c99e232c4153a95a51912057cd0a8f9f3db0b8b02738789184853a88963a
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 1d71145696beaa7288b192680f25752799817182a30132928a292d9211789c86
+            - role: rec
+              call: 1
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 1181f52e345b5be0e085e9e456695645b573b57eab28af926a7632e5c9f315fa
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: cd325baa202f5f505806650c4c580acc505b4d5b2777a059219a70bfc2784477
+            - role: rec
+              call: 2
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 5824c58e82c9b25ccf5f2d242d5240100ced7fe12ba6fe2cd9134bec9bdbeca4
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 62358f84150c60a4dd3d8bc889fb54fe20d502f6fc123109a424e2b92f406650
+            - role: rec
+              call: 3
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 031b73f0db094f343f263314b74480cf366b53d487130c1a0163b8fdfb9ee4c5
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: dde47a1f0585fcd48f37db7d99ebf78bafee84275535059fbe1793853dfbc9b2
+            - role: rec
+              call: 4
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: e682a379ff83b43f086e08ffed638e43f7426ced42e16e557c5c286f908b4f0f
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: b452f285cfbdde3408a2e60376a9d084213b71b0726d6920c52fcefad5242455
+            - role: rec
+              call: 5
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 8c458339958efc4bddeedcf8d68ee8fee147933dbe10f7a77c67479fc18b97f9
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: c528392a988955b6bad94b622c4cd83c1abddc72b760c662e3abf69879a24b40
+            - role: rec
+              call: 6
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 5b861076a9acbd340139a6a628cec81fcdb0dccae178b2f51f4a90f8371b4a25
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 8cdcff1fcc6f2b9bf1367001fbd08363b49eb05e32de927f37912269608b5d5a
+            - role: rec
+              call: 7
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: b9029af827f97c538d6f18a868792105669429be96f5095eb8346248610f30d3
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 61a81802d0c5dcc9a59fe848209f8183bf2f9db53af8c59b424da166d5c423f7
+            - role: rec
+              call: 8
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: ddd27b16e5a1e2c228eb7b0ee520758e2a5d01fed472ad048d432317de736810
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 85c85b528cf67db18f429087078884ba3569fbd0a404a4b6ab5074c04edbdef8
+            - role: rec
+              call: 9
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 30964a60328e5ace2d1cb602f330fb174d3f50bab599422ea8b50ec3e183352f
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 06bff0336eba82c8e3aac922bee23ba0d3405c6e7294867ed9dd0e118cfbacf4
+            - role: rec
+              call: 10
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 7b4fceeac5edc03202769d97a46da91c7215991cd21510347b2650aca0637904
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 6b220ceb4a353563586c7a82392c011590df96ea2be98a621cecb4b24d3813fe
+            - role: rec
+              call: 11
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: ec55c32db186bfadbf2483686cf32d92802ebaed045b7057968026b5e2279714
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 4d912dc7088f4f29d81aaabc0803667d06edb18ba4a75e2ff21912b8dce04e5a
+            - role: rec
+              call: 12
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 452542d7d81624627587de121d28c302364587199c6c3c188301417368928836
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: b75a7c4982829983da92c431022d18d490898c5f447b1dc596fdc1857b6c1576
+            - role: rec
+              call: 13
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: d544642973e653e867a596731528a8ea8f151f40af2790f5a02c8fe94fa6ea5a
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 11914b1d1caa1b18c34eef57bd6919114e564dc47483403c7dde68e789e526fe
+            - role: rec
+              call: 14
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: ee136b1672aa5fb259eca2ad8340071a55fc6035d4494a4eb572aa4647e045a4
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: b6c33f86fbf638bfb0347c6e72c3fb991be2c091c5f27b3c2a125f26d2e1c5ad
+            - role: rec
+              call: 15
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 76f80fbc4646d117fcf60d2f1fdb85132ec409c0d49bc0ecf7f9c0bf93cf1603
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: f2472d02aa557b1907c2d8293d16e1054fb70210777b4e2af7f33390f8ac89e6
+            - role: rec
+              call: 16
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: c71a4a2e881739ae0ce6243f469613e492f5acc2c7c707eea3ad08b6228754a5
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 56a57ae425e10d75c52caba2900d9df69fb767a9eadfa9a5097316f599179e9c
+            result:
+              target: s100
+              detector_asset: s:paddle_ocr:s100/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              recognizer_asset: s:paddle_ocr:s100/ppocrv3_en_rec_48x320_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              boxes:
+              - - - 79
+                  - 1188
+                - - 82
+                  - 1151
+                - - 200
+                  - 1161
+                - - 197
+                  - 1198
+              - - - 392
+                  - 1164
+                - - 392
+                  - 1123
+                - - 530
+                  - 1123
+                - - 530
+                  - 1164
+              - - - 102
+                  - 1162
+                - - 102
+                  - 1103
+                - - 210
+                  - 1103
+                - - 210
+                  - 1162
+              - - - 372
+                  - 1134
+                - - 372
+                  - 1087
+                - - 515
+                  - 1087
+                - - 515
+                  - 1134
+              - - - 127
+                  - 1116
+                - - 127
+                  - 1079
+                - - 186
+                  - 1079
+                - - 186
+                  - 1116
+              - - - 264
+                  - 976
+                - - 596
+                  - 967
+                - - 599
+                  - 1076
+                - - 267
+                  - 1085
+              - - - 708
+                  - 836
+                - - 744
+                  - 836
+                - - 744
+                  - 853
+                - - 708
+                  - 853
+              - - - 758
+                  - 824
+                - - 814
+                  - 799
+                - - 825
+                  - 823
+                - - 768
+                  - 848
+              - - - 617
+                  - 747
+                - - 617
+                  - 728
+                - - 649
+                  - 728
+                - - 649
+                  - 747
+              - - - 633
+                  - 715
+                - - 764
+                  - 709
+                - - 767
+                  - 762
+                - - 636
+                  - 769
+              - - - 633
+                  - 591
+                - - 635
+                  - 537
+                - - 786
+                  - 542
+                - - 784
+                  - 596
+              - - - 727
+                  - 321
+                - - 727
+                  - 282
+                - - 858
+                  - 282
+                - - 858
+                  - 321
+              - - - 716
+                  - 306
+                - - 716
+                  - 197
+                - - 855
+                  - 197
+                - - 855
+                  - 306
+              - - - 299
+                  - 136
+                - - 686
+                  - 133
+                - - 687
+                  - 191
+                - - 300
+                  - 194
+              - - - 740
+                  - 91
+                - - 774
+                  - 58
+                - - 870
+                  - 159
+                - - 836
+                  - 191
+              - - - 38
+                  - 143
+                - - 41
+                  - 35
+                - - 572
+                  - 47
+                - - 569
+                  - 154
+              - - - 772
+                  - 59
+                - - 805
+                  - 27
+                - - 904
+                  - 130
+                - - 871
+                  - 161
+              texts:
+              - Collector mo
+              - CENTRE
+              - 14+
+              - MARINE
+              - AGE
+              - Tropical
+              - '19'
+              - ieces
+              - ''
+              - C
+              - Lionfish
+              - ExtraLarge
+              - XL
+              - model series by TMC
+              - ':'
+              - ReefScape
+              - E
+            all_outputs:
+              path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paddleocr-connected-host-r01/0-full-outputs.npz
+              sha256: 496d37cd3784a3fd6c13bee684698c486f364726eb296be685569b3c02eaa845
+              size_bytes: 217378
+          - input: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/calibration/ctw1500-train-seed42-100-r02/images/0026.jpg
+            input_sha256: 7fe19880b97fc1c82d2f0bd6b2b2a8a2dddae4a6f337a51d08e1a411d75a9f30
+            comparisons:
+              det-0:fetch_name_0:
+                passed: true
+                max_abs: 3.5703182220458984e-05
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+              rec-0:fetch_name_0:
+                passed: true
+                max_abs: 2.4437904357910156e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-1:fetch_name_0:
+                passed: true
+                max_abs: 9.119510650634766e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-2:fetch_name_0:
+                passed: true
+                max_abs: 4.157423973083496e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-3:fetch_name_0:
+                passed: true
+                max_abs: 1.3113021850585938e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-4:fetch_name_0:
+                passed: true
+                max_abs: 3.814697265625e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-5:fetch_name_0:
+                passed: true
+                max_abs: 1.5497207641601562e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-6:fetch_name_0:
+                passed: true
+                max_abs: 1.7285346984863281e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-7:fetch_name_0:
+                passed: true
+                max_abs: 2.562999725341797e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-8:fetch_name_0:
+                passed: true
+                max_abs: 1.2814998626708984e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-9:fetch_name_0:
+                passed: true
+                max_abs: 1.0132789611816406e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-10:fetch_name_0:
+                passed: true
+                max_abs: 2.0265579223632812e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-11:fetch_name_0:
+                passed: true
+                max_abs: 8.344650268554688e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-12:fetch_name_0:
+                passed: true
+                max_abs: 1.2516975402832031e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-13:fetch_name_0:
+                passed: true
+                max_abs: 1.6689300537109375e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-14:fetch_name_0:
+                passed: true
+                max_abs: 3.039836883544922e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-15:fetch_name_0:
+                passed: true
+                max_abs: 3.5762786865234375e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-16:fetch_name_0:
+                passed: true
+                max_abs: 1.1920928955078125e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              complete_source_boxes_and_text:
+                passed: true
+            calls:
+            - role: det
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 640
+                - 640
+                dtype: float32
+                sha256: b962b0a081a8f2d04d2c81b0041a3cdee1741232980fe723a54465943f09e805
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+                dtype: float32
+                sha256: 6f6ca761203a13ceae56c9cc8134371aa0cccfcc3c9021780e5d3423a92fd2e2
+            - role: rec
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: f9481ce3edc3d8f813c759d93e8bb31f435233f3a88b3481785755284f5ee05c
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 3b933e0f411325fc050f0d841118f180086983a0ecf278a1c12862e5061294a5
+            - role: rec
+              call: 1
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 146ca6be21ffd16f7547df3e1a9a96e92c71f20377164decae0e8d77f032cc40
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: f135cd691b4bd13b26ef8f80228d8a29aadc2b9ba111ba3c432e90b218c290fa
+            - role: rec
+              call: 2
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: a180e762d9f54dc9ba39d48aad2c847a496c7294c31fbaa3d8490e5e72019d62
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: b66924c6c349368c811a4328598b086a61e332340cd53704a91c5f6cc01f624b
+            - role: rec
+              call: 3
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: d1deaa570bb808a4cd00f07e05ca50ec20c842f3353869ce7c8a63b49511e984
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 5a00ce19497177ea085cf33621d2edc7196cd3837571c8d521b0393bcce024a4
+            - role: rec
+              call: 4
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 6264bffd887190e7c3687e6be432b0c37faa7176400e7ae955492283c640be86
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: b0bb66fe5e98c8b0b6c4f513ac8c1536c789497bebc758f1e0581212703783a8
+            - role: rec
+              call: 5
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: b6fcef59f0d233ff571875add0b67c4fb454d4139ea7e00c6e17536130ed90ad
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: c87ea3ec24aaf3392e84ec7a70bf5b45925ba9a47dd7c6141a02ef8b6224a4b8
+            - role: rec
+              call: 6
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 4c25cd277bf736d3b1640fd8fcc335699a90fa8e14d82d6cefe4064f5917976d
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: aac2a0d865cee383a555dbffa910c65728f0a8409b39747859f01c8e4dc43555
+            - role: rec
+              call: 7
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 9505d7ea414973e2cba7e84fb208e92174343c16055e25632a933039a326a63b
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 1d8938b70bfa1f14742120030ba240f397adaa9b00e77705a53fc8c1332665f0
+            - role: rec
+              call: 8
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: f60cff565e129fe657302a3ac9103d893df0dcb8372af7ce369b164458420969
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 57f4f6c9fd3ce44ece655261d9ebc38cbd02e6c49c798aa3d55e011b0e5d8834
+            - role: rec
+              call: 9
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: d17ef424fac24d0a43065877479770a4432309705ec563bef647f1f68b0d883d
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 6eb994f148d42966ee5579b665970a2dc4759de0707129c35b68810b1bd143f4
+            - role: rec
+              call: 10
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 6812ba97fc0752086f48fa8c323850eb9e5bd489717375879997227187f2ac72
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: e81983ca16253c1fee5a22e2156c5bbcdebd024c83f1a870229b96a144f49ccb
+            - role: rec
+              call: 11
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: d59a7dfc8f26ea861c79d085ac0711ec5a40f21bab2c35786ebf8df44991c2aa
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: a17b9ab6c8e3a30982e4d8fbd50da08f1840fde6eff053beed467b12a54ecb36
+            - role: rec
+              call: 12
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: a9fc8e84470cc480dab9b9f5e013b4403f7069180da79a06af3bf4cebf3fe7a9
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 423a8f7b9456d996a01bbf1c46ba7ffe118c6f9113cb7f77ad499a784404d438
+            - role: rec
+              call: 13
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 0e0aa852d7c92ea25ea9f2c01a796db8b50d488291f5abfdaa060adfec508a16
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 4d1e15f756a93ddc72be4edbce35f53012dfa4844af90fdc03f765b02208da82
+            - role: rec
+              call: 14
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 6c4b86aebd93c0e59e45a60ebfa1ec57451255b7a87c413a62d165b74c24d9e1
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 67b34f8a37b00640eb9b15ae1951d15e01abad8da0aa05d4852337d24370531b
+            - role: rec
+              call: 15
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 7422a233f3232c10a3cab30bd1316dffa6c78b9b019f73a93fc9d7f2ae06cb41
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: a140b10695cd44982aeb879e97361121cd6e5f232e2585eb4479e05b59dc5988
+            - role: rec
+              call: 16
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: cd0133001464c66376d8d349fd7dee656f5ee053034f009523e87490360d5116
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 568bcc3d0d1c4daaf0c93c1637459d73d18fbe3120b567177907aa58aa130220
+            result:
+              target: s100
+              detector_asset: s:paddle_ocr:s100/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              recognizer_asset: s:paddle_ocr:s100/ppocrv3_en_rec_48x320_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              boxes:
+              - - - 492
+                  - 524
+                - - 575
+                  - 524
+                - - 575
+                  - 541
+                - - 492
+                  - 541
+              - - - 455
+                  - 528
+                - - 455
+                  - 513
+                - - 539
+                  - 513
+                - - 539
+                  - 528
+              - - - 152
+                  - 432
+                - - 152
+                  - 412
+                - - 219
+                  - 412
+                - - 219
+                  - 432
+              - - - 154
+                  - 414
+                - - 154
+                  - 397
+                - - 840
+                  - 397
+                - - 840
+                  - 414
+              - - - 153
+                  - 383
+                - - 153
+                  - 366
+                - - 215
+                  - 366
+                - - 215
+                  - 383
+              - - - 154
+                  - 349
+                - - 793
+                  - 349
+                - - 793
+                  - 366
+                - - 154
+                  - 366
+              - - - 155
+                  - 319
+                - - 605
+                  - 319
+                - - 605
+                  - 333
+                - - 155
+                  - 333
+              - - - 155
+                  - 317
+                - - 156
+                  - 300
+                - - 804
+                  - 301
+                - - 803
+                  - 319
+              - - - 284
+                  - 286
+                - - 284
+                  - 269
+                - - 646
+                  - 269
+                - - 646
+                  - 286
+              - - - 156
+                  - 237
+                - - 704
+                  - 237
+                - - 704
+                  - 255
+                - - 156
+                  - 255
+              - - - 609
+                  - 221
+                - - 837
+                  - 221
+                - - 837
+                  - 239
+                - - 609
+                  - 239
+              - - - 385
+                  - 238
+                - - 385
+                  - 221
+                - - 535
+                  - 221
+                - - 535
+                  - 238
+              - - - 156
+                  - 221
+                - - 323
+                  - 221
+                - - 323
+                  - 238
+                - - 156
+                  - 238
+              - - - 277
+                  - 197
+                - - 278
+                  - 171
+                - - 626
+                  - 172
+                - - 625
+                  - 199
+              - - - 741
+                  - 170
+                - - 843
+                  - 170
+                - - 843
+                  - 200
+                - - 741
+                  - 200
+              - - - 67
+                  - 50
+                - - 655
+                  - 29
+                - - 658
+                  - 109
+                - - 70
+                  - 130
+              - - - 652
+                  - 105
+                - - 659
+                  - 36
+                - - 939
+                  - 66
+                - - 931
+                  - 136
+              texts:
+              - Gagelearit
+              - GaxkixOxgos
+              - long term.
+              - ''
+              - accounts.
+              - H
+              - m msh tsaei
+              - He
+              - NILOPSEALFORTS O RNATESCALSCSIY
+              - wr
+              - and ote Americn people hat I il!
+              - Congressional District of.
+              - I pledge to the people of the .
+              - ' Pledge o Protet SocilSecurity for'
+              - '''s Seniors -'
+              - SOCIAL SECURITY
+              - PLEDGE
+            all_outputs:
+              path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paddleocr-connected-host-r01/1-full-outputs.npz
+              sha256: 24463ce0fb5541a1a47d06c23a8f4725248972ccdeaa7e2bc2487b67379a5022
+              size_bytes: 279075
+          - input: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/calibration/ctw1500-train-seed42-100-r02/images/0028.jpg
+            input_sha256: 8149a2971c1166c70236e6cf2a93061ae2188d8ffcb4ed01c83292c41499623f
+            comparisons:
+              det-0:fetch_name_0:
+                passed: true
+                max_abs: 3.170967102050781e-05
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+              rec-0:fetch_name_0:
+                passed: true
+                max_abs: 1.1920928955078125e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-1:fetch_name_0:
+                passed: true
+                max_abs: 1.385807991027832e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-2:fetch_name_0:
+                passed: true
+                max_abs: 1.4603137969970703e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-3:fetch_name_0:
+                passed: true
+                max_abs: 9.936094284057617e-05
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-4:fetch_name_0:
+                passed: true
+                max_abs: 1.1920928955078125e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              complete_source_boxes_and_text:
+                passed: true
+            calls:
+            - role: det
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 640
+                - 640
+                dtype: float32
+                sha256: 0c0b303dc873733106ead829d610245284fc2798e920f87e5fe0ae44d8c16a3c
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+                dtype: float32
+                sha256: 44fa82d60855050f6e8c00c6889797be57e1072464685c3657be6de0c1979bda
+            - role: rec
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: e921c7e960ab5bd47bcc1faf6fa6e099d2e3ca3fe73094fa91f2bb69b0781804
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: cf32abc62b2f4b26a125f417ca7517004e508d2c53b4d50081cf6d8425557a93
+            - role: rec
+              call: 1
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 05073cd51927d63210531a47e094c5c65747adb15a2767aa1c8a61836b19cecd
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 9ed70121835bed6a06bb48aded579993db4d3ac17025696e865a810f5b231ff3
+            - role: rec
+              call: 2
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 5364f8587c4f1530b81c307289d55190c93af31973c3bbbaf46d00d5a3a8c67c
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 623044ddcaa94ad0b2a76d1f05fb96cfdd703740e2c26d32fd314d89a2d68d11
+            - role: rec
+              call: 3
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 09f652b738b0a117614ec05988639fb31711c66753cbc340cf2fff3a0095097e
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 2aeef222911b4845d4fdebdf0271e44693f70858db6cd0d71d468426a97291e8
+            - role: rec
+              call: 4
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: a39361a45c7a6b082454c86928a67c855af8b4e4d7999fa26a354544a936b503
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: e5284fef1f85ece3862760db2ece278f16ca1b81e47d7b4f38e5927b271a1c56
+            result:
+              target: s100
+              detector_asset: s:paddle_ocr:s100/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              recognizer_asset: s:paddle_ocr:s100/ppocrv3_en_rec_48x320_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              boxes:
+              - - - 213
+                  - 447
+                - - 260
+                  - 435
+                - - 266
+                  - 458
+                - - 219
+                  - 469
+              - - - 248
+                  - 435
+                - - 466
+                  - 362
+                - - 476
+                  - 392
+                - - 257
+                  - 464
+              - - - 143
+                  - 439
+                - - 553
+                  - 296
+                - - 563
+                  - 324
+                - - 153
+                  - 466
+              - - - 152
+                  - 336
+                - - 496
+                  - 212
+                - - 528
+                  - 303
+                - - 184
+                  - 426
+              - - - 157
+                  - 268
+                - - 511
+                  - 125
+                - - 538
+                  - 192
+                - - 185
+                  - 336
+              texts:
+              - TO
+              - POSTLAND
+              - WILLAMETTE SHORE TROLLEY
+              - STOP
+              - TROLLEY
+            all_outputs:
+              path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paddleocr-connected-host-r01/2-full-outputs.npz
+              sha256: 77e84deaa6dd6483e089311f882f19bec8c7d2e1dc90d0260ab1bdea4993c6ca
+              size_bytes: 93172
+          - input: random-image-seed42
+            input_sha256: 680dd8a8bcdb82b1989c007118dcd92626cdf7d5420ae6aed5af8d8ce78f2b6d
+            comparisons:
+              det-0:fetch_name_0:
+                passed: true
+                max_abs: 1.8777399635183656e-09
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+              complete_source_boxes_and_text:
+                passed: true
+              rec-0:fetch_name_0:
+                passed: true
+                max_abs: 6.556510925292969e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              direct_recognition_readout:
+                passed: true
+            calls:
+            - role: det
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 640
+                - 640
+                dtype: float32
+                sha256: d3836887637dd3ef46968bc583dfd52f3b09c82140a59366bf28457cbb1c2f50
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+                dtype: float32
+                sha256: 0655c923944257942252e3484efa09d83329b93522af84c653f8b36b3453eaee
+            - role: rec
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 641cbfe492adf80fcaa8ae1e7ca61bcecccaa9c815b02e0f9670ee4361956fa5
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 72e3081f1fb169c77b1e6e82b807ee3e09f7b444959c7cf98be735b6da71ff99
+            result:
+              target: s100
+              detector_asset: s:paddle_ocr:s100/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              recognizer_asset: s:paddle_ocr:s100/ppocrv3_en_rec_48x320_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              boxes: []
+              texts: []
+            all_outputs:
+              path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paddleocr-connected-host-r01/3-full-outputs.npz
+              sha256: c27c055a2f54ea48855375cf77a658b3f23e9523927441f6011d8d611e980a76
+              size_bytes: 12263
+      source_archive_sha256: e740eb522521827cc83da3ba33e1c70ccfd9b3cf7d9a24a420ce4ca5ebb8794f
+      source_checkpoint_member: en_PP-OCRv3_det_infer/inference.pdiparams
+      ocr_host_smoke: Complete source Paddle/ONNX detector, Native DB polygons/crops,
+        recognizer and 97-class CTC; three real scenes plus random; not board accuracy
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: e0ebf3912908314be982e1c1fdfaa92ff3a41eb4e25ee51c3ed0cba0e1b495f5
+    runtime_command: python3 -m samples.vision.paddle_ocr.runtime.python.main --target
+      s100 --det-asset-id s:paddle_ocr:s100/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      --det-model-path /path/to/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      --rec-asset-id s:paddle_ocr:s100/ppocrv3_en_rec_48x320_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      --rec-model-path /path/to/ppocrv3_en_rec_48x320_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      --test-img /path/to/image.jpg --output-format json
+  - platform: s100p
+    license:
+      name: Apache-2.0
+      url: https://github.com/PaddlePaddle/PaddleOCR/blob/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/LICENSE
+      scope: model
+    status: converted
+    converted_at: '2026-11-04'
+    metadata_revision: 1
+    artifact:
+      filename: ppocrv3_en_det_640x640_nashm_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      format: HBM
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/paddle_ocr/ppocrv3_en_det_640x640_nashm_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      sha256: 33972984dbe5d93d70399e5021c9daffed20391df9b237b748021c46e9329b63
+      size_bytes: 7171544
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/paddle_ocr/ppocrv3_en_det_640x640_nashm_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/paddle_ocr/ppocrv3_en_det_640x640_nashm_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/paddle_ocr/ppocrv3_en_det_640x640_nashm_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/paddle_ocr/ppocrv3_en_det_640x640_nashm_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: fetch_name_0
+        shape:
+        - 1
+        - 1
+        - 640
+        - 640
+        dtype: float32
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 640
+        - 640
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 100
+      calibration_manifest_sha256: 4140b3371dbcba10d9af502b5b671866c2db88cba0b6c2f2817b95ed3914f218
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: 33972984dbe5d93d70399e5021c9daffed20391df9b237b748021c46e9329b63
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: 54b34a454f51a95b83c5f1a9bc31f1f06017f8f1
+      source_repository_commit: c833dfc9ff04a4bce5749b808c200688b4f7bd3a
+      source_checkpoint_sha256: 83676ec730627ab4502f401410a4b6a3ce1c0bb98fa249b71db055b6bddae051
+      source_weight_url: https://paddleocr.bj.bcebos.com/PP-OCRv3/english/en_PP-OCRv3_det_infer.tar
+      checkpoint_revision: sha256:83676ec730627ab4502f401410a4b6a3ce1c0bb98fa249b71db055b6bddae051
+      source_version_pair:
+        repository: https://github.com/PaddlePaddle/PaddleOCR
+        commit: c833dfc9ff04a4bce5749b808c200688b4f7bd3a
+        inference_model: en_PP-OCRv3_det_infer
+        source_program_sha256: c4bfb1b05d9d1d5a760801eaf6d20180ef7e47bcc675fb17d1f3a89da5fef427
+        checkpoint:
+          url: https://paddleocr.bj.bcebos.com/PP-OCRv3/english/en_PP-OCRv3_det_infer.tar
+          sha256: 83676ec730627ab4502f401410a4b6a3ce1c0bb98fa249b71db055b6bddae051
+          archive_sha256: e740eb522521827cc83da3ba33e1c70ccfd9b3cf7d9a24a420ce4ca5ebb8794f
+          archive_size_bytes: 4003840
+          member: en_PP-OCRv3_det_infer/inference.pdiparams
+        preprocessing_source:
+          source: https://github.com/PaddlePaddle/PaddleOCR
+          commit: c833dfc9ff04a4bce5749b808c200688b4f7bd3a
+          files:
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml
+            sha256: e1d41b910b7d3709c49844ada87e6a959da8a00c63a6d75a28af8ff66a53c2f8
+            size_bytes: 2612
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/ppocr/utils/en_dict.txt
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/ppocr/utils/en_dict.txt
+            sha256: 5662df9d2d03f0e8ca0d3b0649d6acbab904b6a14b3d3521463c71c37c668ce3
+            size_bytes: 190
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/tools/infer/predict_rec.py
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/tools/infer/predict_rec.py
+            sha256: af43cb2fe9dc57ade95ef052a7508ef2f5df9feb434c6b0a9aa966d9d4b08428
+            size_bytes: 29025
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/tools/infer/predict_det.py
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/tools/infer/predict_det.py
+            sha256: ad663a36d84119f35ba017230c70619c926b5c27d82f975160544ccbbb38e0bd
+            size_bytes: 13944
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/ppocr/data/imaug/rec_img_aug.py
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/ppocr/data/imaug/rec_img_aug.py
+            sha256: 1039083dcddbe1f3a99d9838decd00746047958871f2573c596ff586c5382609
+            size_bytes: 27147
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/ppocr/data/imaug/operators.py
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/ppocr/data/imaug/operators.py
+            sha256: 7fa79bdf1feecd52cfb3d9dccc073d35cfea9796c40db981da03386158e9de26
+            size_bytes: 17494
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/LICENSE
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/LICENSE
+            sha256: ff6311c56c1b22c9209c96cc8afc16da91c24ee55a15e14ebc46fe1960dbd856
+            size_bytes: 11438
+        license: Apache-2.0
+      toolchain_image: S SDK 3.7.0 / exact cached image identified by digest
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      build_id: paddleocr-v3-en-det-s100p-cpuptq-20261104-r02
+      precision_policy: INT16 activations; O1
+      native_variant: v3-en-640x640-bgrnorm-int16-cpuptq-o1-20261104-r02
+      onnx_sha256: dcd42658bc113ef89cf380becfd1ec88f621caa07d36a70ca388c31570073cb2
+      config_sha256: 94485725fccdf183a14112ad160a6420c2e7247aa25ba1e67159e425897b86a7
+      recipe_sha256: 5592f37e2b30400ef82cec129ea4ed1bfa221d6b8093b20afd040baf30d13abc
+      calibration_manifest_sha256: 4140b3371dbcba10d9af502b5b671866c2db88cba0b6c2f2817b95ed3914f218
+      host_smoke_report_sha256: aa9656b93cbe8498bfcea4ff336d1064d58756923798a28d7a646f6d017c4167
+      compile_log_sha256: 3b4771f9036a0f3ab2a849e36bfb585eaabbd8c441c2ce49c8e0b930833de9fb
+      cpu_reference_float_gate:
+        status: passed
+        report:
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paddleocr-det-s-prepare-r02/cpu-sdk-parity.json
+          sha256: 7e7a30e77467222f06cd77018e0fb78dc6719c2490d45c6eb701b7b1dd1c3226
+          size_bytes: 3614
+      connected_host_reference:
+        sha256: 87cf5c1b9a257ea6fc97e0496c8bd91b2264bee8003c5625f8aef9e0a23f8da6
+        report:
+          schema_version: 1
+          status: passed
+          stages:
+          - detector
+          - recognizer
+          source:
+            det:
+              program:
+                path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/paddleocr/en_PP-OCRv3_det_infer/en_PP-OCRv3_det_infer/inference.pdmodel
+                sha256: c4bfb1b05d9d1d5a760801eaf6d20180ef7e47bcc675fb17d1f3a89da5fef427
+                size_bytes: 1590133
+              parameters:
+                path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/paddleocr/en_PP-OCRv3_det_infer/en_PP-OCRv3_det_infer/inference.pdiparams
+                sha256: 83676ec730627ab4502f401410a4b6a3ce1c0bb98fa249b71db055b6bddae051
+                size_bytes: 2377917
+            rec:
+              program:
+                path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/paddleocr/en_PP-OCRv3_rec_infer/en_PP-OCRv3_rec_infer/inference.pdmodel
+                sha256: f0288362f754e815030929477f7b1f96fe2e913e197537288a01bd43f768d0ab
+                size_bytes: 1020915
+              parameters:
+                path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/paddleocr/en_PP-OCRv3_rec_infer/en_PP-OCRv3_rec_infer/inference.pdiparams
+                sha256: 2cea2de604d8a75fd9151b54ea2dd027659fb8cb777cde377224581110dbff13
+                size_bytes: 8916816
+          onnx_sha256:
+            det: dcd42658bc113ef89cf380becfd1ec88f621caa07d36a70ca388c31570073cb2
+            rec: 69a498caf3266bffa52402d2071a3a17631db3f0c2c3580a23cdaaea253260c2
+          scope: Exact source Paddle CPU / ONNX CPU through Native BGR preparation,
+            DB polygons/crops and97-class CTC; no HBM/board inference or OCR dataset
+            accuracy
+          atol: 0.0001
+          rtol: 0.001
+          cases:
+          - input: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/calibration/ctw1500-train-seed42-100-r02/images/0007.jpg
+            input_sha256: 2a98dd9bce07e3070b4933f195d3363b6361562280de9085461760253cd5bce3
+            comparisons:
+              det-0:fetch_name_0:
+                passed: true
+                max_abs: 2.7358531951904297e-05
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+              rec-0:fetch_name_0:
+                passed: true
+                max_abs: 1.996755599975586e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-1:fetch_name_0:
+                passed: true
+                max_abs: 7.748603820800781e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-2:fetch_name_0:
+                passed: true
+                max_abs: 1.1920928955078125e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-3:fetch_name_0:
+                passed: true
+                max_abs: 4.172325134277344e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-4:fetch_name_0:
+                passed: true
+                max_abs: 1.1920928955078125e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-5:fetch_name_0:
+                passed: true
+                max_abs: 2.637505531311035e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-6:fetch_name_0:
+                passed: true
+                max_abs: 2.4586915969848633e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-7:fetch_name_0:
+                passed: true
+                max_abs: 2.980232238769531e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-8:fetch_name_0:
+                passed: true
+                max_abs: 1.0728836059570312e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-9:fetch_name_0:
+                passed: true
+                max_abs: 1.8477439880371094e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-10:fetch_name_0:
+                passed: true
+                max_abs: 1.7881393432617188e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-11:fetch_name_0:
+                passed: true
+                max_abs: 3.1888484954833984e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-12:fetch_name_0:
+                passed: true
+                max_abs: 2.384185791015625e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-13:fetch_name_0:
+                passed: true
+                max_abs: 1.6689300537109375e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-14:fetch_name_0:
+                passed: true
+                max_abs: 5.662441253662109e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-15:fetch_name_0:
+                passed: true
+                max_abs: 2.384185791015625e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-16:fetch_name_0:
+                passed: true
+                max_abs: 5.960464477539062e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              complete_source_boxes_and_text:
+                passed: true
+            calls:
+            - role: det
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 640
+                - 640
+                dtype: float32
+                sha256: f4301ad785470b081b15ec0d1aa2f1d4a0f92aa15db60736a9b47320a852c7e3
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+                dtype: float32
+                sha256: 903a719e4b989acab846a52f6f88a9f4e5b6093477fac1f88ba5ffb33a2b5562
+            - role: rec
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 6962c99e232c4153a95a51912057cd0a8f9f3db0b8b02738789184853a88963a
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 1d71145696beaa7288b192680f25752799817182a30132928a292d9211789c86
+            - role: rec
+              call: 1
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 1181f52e345b5be0e085e9e456695645b573b57eab28af926a7632e5c9f315fa
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: cd325baa202f5f505806650c4c580acc505b4d5b2777a059219a70bfc2784477
+            - role: rec
+              call: 2
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 5824c58e82c9b25ccf5f2d242d5240100ced7fe12ba6fe2cd9134bec9bdbeca4
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 62358f84150c60a4dd3d8bc889fb54fe20d502f6fc123109a424e2b92f406650
+            - role: rec
+              call: 3
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 031b73f0db094f343f263314b74480cf366b53d487130c1a0163b8fdfb9ee4c5
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: dde47a1f0585fcd48f37db7d99ebf78bafee84275535059fbe1793853dfbc9b2
+            - role: rec
+              call: 4
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: e682a379ff83b43f086e08ffed638e43f7426ced42e16e557c5c286f908b4f0f
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: b452f285cfbdde3408a2e60376a9d084213b71b0726d6920c52fcefad5242455
+            - role: rec
+              call: 5
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 8c458339958efc4bddeedcf8d68ee8fee147933dbe10f7a77c67479fc18b97f9
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: c528392a988955b6bad94b622c4cd83c1abddc72b760c662e3abf69879a24b40
+            - role: rec
+              call: 6
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 5b861076a9acbd340139a6a628cec81fcdb0dccae178b2f51f4a90f8371b4a25
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 8cdcff1fcc6f2b9bf1367001fbd08363b49eb05e32de927f37912269608b5d5a
+            - role: rec
+              call: 7
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: b9029af827f97c538d6f18a868792105669429be96f5095eb8346248610f30d3
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 61a81802d0c5dcc9a59fe848209f8183bf2f9db53af8c59b424da166d5c423f7
+            - role: rec
+              call: 8
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: ddd27b16e5a1e2c228eb7b0ee520758e2a5d01fed472ad048d432317de736810
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 85c85b528cf67db18f429087078884ba3569fbd0a404a4b6ab5074c04edbdef8
+            - role: rec
+              call: 9
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 30964a60328e5ace2d1cb602f330fb174d3f50bab599422ea8b50ec3e183352f
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 06bff0336eba82c8e3aac922bee23ba0d3405c6e7294867ed9dd0e118cfbacf4
+            - role: rec
+              call: 10
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 7b4fceeac5edc03202769d97a46da91c7215991cd21510347b2650aca0637904
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 6b220ceb4a353563586c7a82392c011590df96ea2be98a621cecb4b24d3813fe
+            - role: rec
+              call: 11
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: ec55c32db186bfadbf2483686cf32d92802ebaed045b7057968026b5e2279714
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 4d912dc7088f4f29d81aaabc0803667d06edb18ba4a75e2ff21912b8dce04e5a
+            - role: rec
+              call: 12
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 452542d7d81624627587de121d28c302364587199c6c3c188301417368928836
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: b75a7c4982829983da92c431022d18d490898c5f447b1dc596fdc1857b6c1576
+            - role: rec
+              call: 13
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: d544642973e653e867a596731528a8ea8f151f40af2790f5a02c8fe94fa6ea5a
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 11914b1d1caa1b18c34eef57bd6919114e564dc47483403c7dde68e789e526fe
+            - role: rec
+              call: 14
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: ee136b1672aa5fb259eca2ad8340071a55fc6035d4494a4eb572aa4647e045a4
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: b6c33f86fbf638bfb0347c6e72c3fb991be2c091c5f27b3c2a125f26d2e1c5ad
+            - role: rec
+              call: 15
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 76f80fbc4646d117fcf60d2f1fdb85132ec409c0d49bc0ecf7f9c0bf93cf1603
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: f2472d02aa557b1907c2d8293d16e1054fb70210777b4e2af7f33390f8ac89e6
+            - role: rec
+              call: 16
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: c71a4a2e881739ae0ce6243f469613e492f5acc2c7c707eea3ad08b6228754a5
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 56a57ae425e10d75c52caba2900d9df69fb767a9eadfa9a5097316f599179e9c
+            result:
+              target: s100
+              detector_asset: s:paddle_ocr:s100/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              recognizer_asset: s:paddle_ocr:s100/ppocrv3_en_rec_48x320_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              boxes:
+              - - - 79
+                  - 1188
+                - - 82
+                  - 1151
+                - - 200
+                  - 1161
+                - - 197
+                  - 1198
+              - - - 392
+                  - 1164
+                - - 392
+                  - 1123
+                - - 530
+                  - 1123
+                - - 530
+                  - 1164
+              - - - 102
+                  - 1162
+                - - 102
+                  - 1103
+                - - 210
+                  - 1103
+                - - 210
+                  - 1162
+              - - - 372
+                  - 1134
+                - - 372
+                  - 1087
+                - - 515
+                  - 1087
+                - - 515
+                  - 1134
+              - - - 127
+                  - 1116
+                - - 127
+                  - 1079
+                - - 186
+                  - 1079
+                - - 186
+                  - 1116
+              - - - 264
+                  - 976
+                - - 596
+                  - 967
+                - - 599
+                  - 1076
+                - - 267
+                  - 1085
+              - - - 708
+                  - 836
+                - - 744
+                  - 836
+                - - 744
+                  - 853
+                - - 708
+                  - 853
+              - - - 758
+                  - 824
+                - - 814
+                  - 799
+                - - 825
+                  - 823
+                - - 768
+                  - 848
+              - - - 617
+                  - 747
+                - - 617
+                  - 728
+                - - 649
+                  - 728
+                - - 649
+                  - 747
+              - - - 633
+                  - 715
+                - - 764
+                  - 709
+                - - 767
+                  - 762
+                - - 636
+                  - 769
+              - - - 633
+                  - 591
+                - - 635
+                  - 537
+                - - 786
+                  - 542
+                - - 784
+                  - 596
+              - - - 727
+                  - 321
+                - - 727
+                  - 282
+                - - 858
+                  - 282
+                - - 858
+                  - 321
+              - - - 716
+                  - 306
+                - - 716
+                  - 197
+                - - 855
+                  - 197
+                - - 855
+                  - 306
+              - - - 299
+                  - 136
+                - - 686
+                  - 133
+                - - 687
+                  - 191
+                - - 300
+                  - 194
+              - - - 740
+                  - 91
+                - - 774
+                  - 58
+                - - 870
+                  - 159
+                - - 836
+                  - 191
+              - - - 38
+                  - 143
+                - - 41
+                  - 35
+                - - 572
+                  - 47
+                - - 569
+                  - 154
+              - - - 772
+                  - 59
+                - - 805
+                  - 27
+                - - 904
+                  - 130
+                - - 871
+                  - 161
+              texts:
+              - Collector mo
+              - CENTRE
+              - 14+
+              - MARINE
+              - AGE
+              - Tropical
+              - '19'
+              - ieces
+              - ''
+              - C
+              - Lionfish
+              - ExtraLarge
+              - XL
+              - model series by TMC
+              - ':'
+              - ReefScape
+              - E
+            all_outputs:
+              path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paddleocr-connected-host-r01/0-full-outputs.npz
+              sha256: 496d37cd3784a3fd6c13bee684698c486f364726eb296be685569b3c02eaa845
+              size_bytes: 217378
+          - input: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/calibration/ctw1500-train-seed42-100-r02/images/0026.jpg
+            input_sha256: 7fe19880b97fc1c82d2f0bd6b2b2a8a2dddae4a6f337a51d08e1a411d75a9f30
+            comparisons:
+              det-0:fetch_name_0:
+                passed: true
+                max_abs: 3.5703182220458984e-05
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+              rec-0:fetch_name_0:
+                passed: true
+                max_abs: 2.4437904357910156e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-1:fetch_name_0:
+                passed: true
+                max_abs: 9.119510650634766e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-2:fetch_name_0:
+                passed: true
+                max_abs: 4.157423973083496e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-3:fetch_name_0:
+                passed: true
+                max_abs: 1.3113021850585938e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-4:fetch_name_0:
+                passed: true
+                max_abs: 3.814697265625e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-5:fetch_name_0:
+                passed: true
+                max_abs: 1.5497207641601562e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-6:fetch_name_0:
+                passed: true
+                max_abs: 1.7285346984863281e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-7:fetch_name_0:
+                passed: true
+                max_abs: 2.562999725341797e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-8:fetch_name_0:
+                passed: true
+                max_abs: 1.2814998626708984e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-9:fetch_name_0:
+                passed: true
+                max_abs: 1.0132789611816406e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-10:fetch_name_0:
+                passed: true
+                max_abs: 2.0265579223632812e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-11:fetch_name_0:
+                passed: true
+                max_abs: 8.344650268554688e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-12:fetch_name_0:
+                passed: true
+                max_abs: 1.2516975402832031e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-13:fetch_name_0:
+                passed: true
+                max_abs: 1.6689300537109375e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-14:fetch_name_0:
+                passed: true
+                max_abs: 3.039836883544922e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-15:fetch_name_0:
+                passed: true
+                max_abs: 3.5762786865234375e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-16:fetch_name_0:
+                passed: true
+                max_abs: 1.1920928955078125e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              complete_source_boxes_and_text:
+                passed: true
+            calls:
+            - role: det
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 640
+                - 640
+                dtype: float32
+                sha256: b962b0a081a8f2d04d2c81b0041a3cdee1741232980fe723a54465943f09e805
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+                dtype: float32
+                sha256: 6f6ca761203a13ceae56c9cc8134371aa0cccfcc3c9021780e5d3423a92fd2e2
+            - role: rec
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: f9481ce3edc3d8f813c759d93e8bb31f435233f3a88b3481785755284f5ee05c
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 3b933e0f411325fc050f0d841118f180086983a0ecf278a1c12862e5061294a5
+            - role: rec
+              call: 1
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 146ca6be21ffd16f7547df3e1a9a96e92c71f20377164decae0e8d77f032cc40
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: f135cd691b4bd13b26ef8f80228d8a29aadc2b9ba111ba3c432e90b218c290fa
+            - role: rec
+              call: 2
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: a180e762d9f54dc9ba39d48aad2c847a496c7294c31fbaa3d8490e5e72019d62
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: b66924c6c349368c811a4328598b086a61e332340cd53704a91c5f6cc01f624b
+            - role: rec
+              call: 3
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: d1deaa570bb808a4cd00f07e05ca50ec20c842f3353869ce7c8a63b49511e984
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 5a00ce19497177ea085cf33621d2edc7196cd3837571c8d521b0393bcce024a4
+            - role: rec
+              call: 4
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 6264bffd887190e7c3687e6be432b0c37faa7176400e7ae955492283c640be86
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: b0bb66fe5e98c8b0b6c4f513ac8c1536c789497bebc758f1e0581212703783a8
+            - role: rec
+              call: 5
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: b6fcef59f0d233ff571875add0b67c4fb454d4139ea7e00c6e17536130ed90ad
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: c87ea3ec24aaf3392e84ec7a70bf5b45925ba9a47dd7c6141a02ef8b6224a4b8
+            - role: rec
+              call: 6
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 4c25cd277bf736d3b1640fd8fcc335699a90fa8e14d82d6cefe4064f5917976d
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: aac2a0d865cee383a555dbffa910c65728f0a8409b39747859f01c8e4dc43555
+            - role: rec
+              call: 7
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 9505d7ea414973e2cba7e84fb208e92174343c16055e25632a933039a326a63b
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 1d8938b70bfa1f14742120030ba240f397adaa9b00e77705a53fc8c1332665f0
+            - role: rec
+              call: 8
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: f60cff565e129fe657302a3ac9103d893df0dcb8372af7ce369b164458420969
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 57f4f6c9fd3ce44ece655261d9ebc38cbd02e6c49c798aa3d55e011b0e5d8834
+            - role: rec
+              call: 9
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: d17ef424fac24d0a43065877479770a4432309705ec563bef647f1f68b0d883d
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 6eb994f148d42966ee5579b665970a2dc4759de0707129c35b68810b1bd143f4
+            - role: rec
+              call: 10
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 6812ba97fc0752086f48fa8c323850eb9e5bd489717375879997227187f2ac72
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: e81983ca16253c1fee5a22e2156c5bbcdebd024c83f1a870229b96a144f49ccb
+            - role: rec
+              call: 11
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: d59a7dfc8f26ea861c79d085ac0711ec5a40f21bab2c35786ebf8df44991c2aa
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: a17b9ab6c8e3a30982e4d8fbd50da08f1840fde6eff053beed467b12a54ecb36
+            - role: rec
+              call: 12
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: a9fc8e84470cc480dab9b9f5e013b4403f7069180da79a06af3bf4cebf3fe7a9
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 423a8f7b9456d996a01bbf1c46ba7ffe118c6f9113cb7f77ad499a784404d438
+            - role: rec
+              call: 13
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 0e0aa852d7c92ea25ea9f2c01a796db8b50d488291f5abfdaa060adfec508a16
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 4d1e15f756a93ddc72be4edbce35f53012dfa4844af90fdc03f765b02208da82
+            - role: rec
+              call: 14
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 6c4b86aebd93c0e59e45a60ebfa1ec57451255b7a87c413a62d165b74c24d9e1
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 67b34f8a37b00640eb9b15ae1951d15e01abad8da0aa05d4852337d24370531b
+            - role: rec
+              call: 15
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 7422a233f3232c10a3cab30bd1316dffa6c78b9b019f73a93fc9d7f2ae06cb41
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: a140b10695cd44982aeb879e97361121cd6e5f232e2585eb4479e05b59dc5988
+            - role: rec
+              call: 16
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: cd0133001464c66376d8d349fd7dee656f5ee053034f009523e87490360d5116
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 568bcc3d0d1c4daaf0c93c1637459d73d18fbe3120b567177907aa58aa130220
+            result:
+              target: s100
+              detector_asset: s:paddle_ocr:s100/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              recognizer_asset: s:paddle_ocr:s100/ppocrv3_en_rec_48x320_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              boxes:
+              - - - 492
+                  - 524
+                - - 575
+                  - 524
+                - - 575
+                  - 541
+                - - 492
+                  - 541
+              - - - 455
+                  - 528
+                - - 455
+                  - 513
+                - - 539
+                  - 513
+                - - 539
+                  - 528
+              - - - 152
+                  - 432
+                - - 152
+                  - 412
+                - - 219
+                  - 412
+                - - 219
+                  - 432
+              - - - 154
+                  - 414
+                - - 154
+                  - 397
+                - - 840
+                  - 397
+                - - 840
+                  - 414
+              - - - 153
+                  - 383
+                - - 153
+                  - 366
+                - - 215
+                  - 366
+                - - 215
+                  - 383
+              - - - 154
+                  - 349
+                - - 793
+                  - 349
+                - - 793
+                  - 366
+                - - 154
+                  - 366
+              - - - 155
+                  - 319
+                - - 605
+                  - 319
+                - - 605
+                  - 333
+                - - 155
+                  - 333
+              - - - 155
+                  - 317
+                - - 156
+                  - 300
+                - - 804
+                  - 301
+                - - 803
+                  - 319
+              - - - 284
+                  - 286
+                - - 284
+                  - 269
+                - - 646
+                  - 269
+                - - 646
+                  - 286
+              - - - 156
+                  - 237
+                - - 704
+                  - 237
+                - - 704
+                  - 255
+                - - 156
+                  - 255
+              - - - 609
+                  - 221
+                - - 837
+                  - 221
+                - - 837
+                  - 239
+                - - 609
+                  - 239
+              - - - 385
+                  - 238
+                - - 385
+                  - 221
+                - - 535
+                  - 221
+                - - 535
+                  - 238
+              - - - 156
+                  - 221
+                - - 323
+                  - 221
+                - - 323
+                  - 238
+                - - 156
+                  - 238
+              - - - 277
+                  - 197
+                - - 278
+                  - 171
+                - - 626
+                  - 172
+                - - 625
+                  - 199
+              - - - 741
+                  - 170
+                - - 843
+                  - 170
+                - - 843
+                  - 200
+                - - 741
+                  - 200
+              - - - 67
+                  - 50
+                - - 655
+                  - 29
+                - - 658
+                  - 109
+                - - 70
+                  - 130
+              - - - 652
+                  - 105
+                - - 659
+                  - 36
+                - - 939
+                  - 66
+                - - 931
+                  - 136
+              texts:
+              - Gagelearit
+              - GaxkixOxgos
+              - long term.
+              - ''
+              - accounts.
+              - H
+              - m msh tsaei
+              - He
+              - NILOPSEALFORTS O RNATESCALSCSIY
+              - wr
+              - and ote Americn people hat I il!
+              - Congressional District of.
+              - I pledge to the people of the .
+              - ' Pledge o Protet SocilSecurity for'
+              - '''s Seniors -'
+              - SOCIAL SECURITY
+              - PLEDGE
+            all_outputs:
+              path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paddleocr-connected-host-r01/1-full-outputs.npz
+              sha256: 24463ce0fb5541a1a47d06c23a8f4725248972ccdeaa7e2bc2487b67379a5022
+              size_bytes: 279075
+          - input: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/calibration/ctw1500-train-seed42-100-r02/images/0028.jpg
+            input_sha256: 8149a2971c1166c70236e6cf2a93061ae2188d8ffcb4ed01c83292c41499623f
+            comparisons:
+              det-0:fetch_name_0:
+                passed: true
+                max_abs: 3.170967102050781e-05
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+              rec-0:fetch_name_0:
+                passed: true
+                max_abs: 1.1920928955078125e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-1:fetch_name_0:
+                passed: true
+                max_abs: 1.385807991027832e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-2:fetch_name_0:
+                passed: true
+                max_abs: 1.4603137969970703e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-3:fetch_name_0:
+                passed: true
+                max_abs: 9.936094284057617e-05
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-4:fetch_name_0:
+                passed: true
+                max_abs: 1.1920928955078125e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              complete_source_boxes_and_text:
+                passed: true
+            calls:
+            - role: det
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 640
+                - 640
+                dtype: float32
+                sha256: 0c0b303dc873733106ead829d610245284fc2798e920f87e5fe0ae44d8c16a3c
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+                dtype: float32
+                sha256: 44fa82d60855050f6e8c00c6889797be57e1072464685c3657be6de0c1979bda
+            - role: rec
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: e921c7e960ab5bd47bcc1faf6fa6e099d2e3ca3fe73094fa91f2bb69b0781804
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: cf32abc62b2f4b26a125f417ca7517004e508d2c53b4d50081cf6d8425557a93
+            - role: rec
+              call: 1
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 05073cd51927d63210531a47e094c5c65747adb15a2767aa1c8a61836b19cecd
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 9ed70121835bed6a06bb48aded579993db4d3ac17025696e865a810f5b231ff3
+            - role: rec
+              call: 2
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 5364f8587c4f1530b81c307289d55190c93af31973c3bbbaf46d00d5a3a8c67c
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 623044ddcaa94ad0b2a76d1f05fb96cfdd703740e2c26d32fd314d89a2d68d11
+            - role: rec
+              call: 3
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 09f652b738b0a117614ec05988639fb31711c66753cbc340cf2fff3a0095097e
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 2aeef222911b4845d4fdebdf0271e44693f70858db6cd0d71d468426a97291e8
+            - role: rec
+              call: 4
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: a39361a45c7a6b082454c86928a67c855af8b4e4d7999fa26a354544a936b503
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: e5284fef1f85ece3862760db2ece278f16ca1b81e47d7b4f38e5927b271a1c56
+            result:
+              target: s100
+              detector_asset: s:paddle_ocr:s100/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              recognizer_asset: s:paddle_ocr:s100/ppocrv3_en_rec_48x320_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              boxes:
+              - - - 213
+                  - 447
+                - - 260
+                  - 435
+                - - 266
+                  - 458
+                - - 219
+                  - 469
+              - - - 248
+                  - 435
+                - - 466
+                  - 362
+                - - 476
+                  - 392
+                - - 257
+                  - 464
+              - - - 143
+                  - 439
+                - - 553
+                  - 296
+                - - 563
+                  - 324
+                - - 153
+                  - 466
+              - - - 152
+                  - 336
+                - - 496
+                  - 212
+                - - 528
+                  - 303
+                - - 184
+                  - 426
+              - - - 157
+                  - 268
+                - - 511
+                  - 125
+                - - 538
+                  - 192
+                - - 185
+                  - 336
+              texts:
+              - TO
+              - POSTLAND
+              - WILLAMETTE SHORE TROLLEY
+              - STOP
+              - TROLLEY
+            all_outputs:
+              path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paddleocr-connected-host-r01/2-full-outputs.npz
+              sha256: 77e84deaa6dd6483e089311f882f19bec8c7d2e1dc90d0260ab1bdea4993c6ca
+              size_bytes: 93172
+          - input: random-image-seed42
+            input_sha256: 680dd8a8bcdb82b1989c007118dcd92626cdf7d5420ae6aed5af8d8ce78f2b6d
+            comparisons:
+              det-0:fetch_name_0:
+                passed: true
+                max_abs: 1.8777399635183656e-09
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+              complete_source_boxes_and_text:
+                passed: true
+              rec-0:fetch_name_0:
+                passed: true
+                max_abs: 6.556510925292969e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              direct_recognition_readout:
+                passed: true
+            calls:
+            - role: det
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 640
+                - 640
+                dtype: float32
+                sha256: d3836887637dd3ef46968bc583dfd52f3b09c82140a59366bf28457cbb1c2f50
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+                dtype: float32
+                sha256: 0655c923944257942252e3484efa09d83329b93522af84c653f8b36b3453eaee
+            - role: rec
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 641cbfe492adf80fcaa8ae1e7ca61bcecccaa9c815b02e0f9670ee4361956fa5
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 72e3081f1fb169c77b1e6e82b807ee3e09f7b444959c7cf98be735b6da71ff99
+            result:
+              target: s100
+              detector_asset: s:paddle_ocr:s100/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              recognizer_asset: s:paddle_ocr:s100/ppocrv3_en_rec_48x320_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              boxes: []
+              texts: []
+            all_outputs:
+              path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paddleocr-connected-host-r01/3-full-outputs.npz
+              sha256: c27c055a2f54ea48855375cf77a658b3f23e9523927441f6011d8d611e980a76
+              size_bytes: 12263
+      source_archive_sha256: e740eb522521827cc83da3ba33e1c70ccfd9b3cf7d9a24a420ce4ca5ebb8794f
+      source_checkpoint_member: en_PP-OCRv3_det_infer/inference.pdiparams
+      ocr_host_smoke: Complete source Paddle/ONNX detector, Native DB polygons/crops,
+        recognizer and 97-class CTC; three real scenes plus random; not board accuracy
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 8c1ffdccea13158569f45429171ceb94be2de5f4c8f0274c553a5254adabdd8a
+    runtime_command: python3 -m samples.vision.paddle_ocr.runtime.python.main --target
+      s100p --det-asset-id s:paddle_ocr:s100p/ppocrv3_en_det_640x640_nashm_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      --det-model-path /path/to/ppocrv3_en_det_640x640_nashm_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      --rec-asset-id s:paddle_ocr:s100p/ppocrv3_en_rec_48x320_nashm_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      --rec-model-path /path/to/ppocrv3_en_rec_48x320_nashm_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      --test-img /path/to/image.jpg --output-format json
+  - platform: s600
+    license:
+      name: Apache-2.0
+      url: https://github.com/PaddlePaddle/PaddleOCR/blob/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/LICENSE
+      scope: model
+    status: converted
+    converted_at: '2026-11-04'
+    metadata_revision: 1
+    artifact:
+      filename: ppocrv3_en_det_640x640_nashp_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      format: HBM
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/paddle_ocr/ppocrv3_en_det_640x640_nashp_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      sha256: 835623fb3cd7775553a1864b0641203fcc9e6970d17261cf97d12eed81831c2e
+      size_bytes: 8269656
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/paddle_ocr/ppocrv3_en_det_640x640_nashp_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/paddle_ocr/ppocrv3_en_det_640x640_nashp_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/paddle_ocr/ppocrv3_en_det_640x640_nashp_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/paddle_ocr/ppocrv3_en_det_640x640_nashp_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: fetch_name_0
+        shape:
+        - 1
+        - 1
+        - 640
+        - 640
+        dtype: float32
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 640
+        - 640
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 100
+      calibration_manifest_sha256: 4140b3371dbcba10d9af502b5b671866c2db88cba0b6c2f2817b95ed3914f218
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: 835623fb3cd7775553a1864b0641203fcc9e6970d17261cf97d12eed81831c2e
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: 54b34a454f51a95b83c5f1a9bc31f1f06017f8f1
+      source_repository_commit: c833dfc9ff04a4bce5749b808c200688b4f7bd3a
+      source_checkpoint_sha256: 83676ec730627ab4502f401410a4b6a3ce1c0bb98fa249b71db055b6bddae051
+      source_weight_url: https://paddleocr.bj.bcebos.com/PP-OCRv3/english/en_PP-OCRv3_det_infer.tar
+      checkpoint_revision: sha256:83676ec730627ab4502f401410a4b6a3ce1c0bb98fa249b71db055b6bddae051
+      source_version_pair:
+        repository: https://github.com/PaddlePaddle/PaddleOCR
+        commit: c833dfc9ff04a4bce5749b808c200688b4f7bd3a
+        inference_model: en_PP-OCRv3_det_infer
+        source_program_sha256: c4bfb1b05d9d1d5a760801eaf6d20180ef7e47bcc675fb17d1f3a89da5fef427
+        checkpoint:
+          url: https://paddleocr.bj.bcebos.com/PP-OCRv3/english/en_PP-OCRv3_det_infer.tar
+          sha256: 83676ec730627ab4502f401410a4b6a3ce1c0bb98fa249b71db055b6bddae051
+          archive_sha256: e740eb522521827cc83da3ba33e1c70ccfd9b3cf7d9a24a420ce4ca5ebb8794f
+          archive_size_bytes: 4003840
+          member: en_PP-OCRv3_det_infer/inference.pdiparams
+        preprocessing_source:
+          source: https://github.com/PaddlePaddle/PaddleOCR
+          commit: c833dfc9ff04a4bce5749b808c200688b4f7bd3a
+          files:
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/configs/rec/PP-OCRv3/en_PP-OCRv3_rec.yml
+            sha256: e1d41b910b7d3709c49844ada87e6a959da8a00c63a6d75a28af8ff66a53c2f8
+            size_bytes: 2612
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/ppocr/utils/en_dict.txt
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/ppocr/utils/en_dict.txt
+            sha256: 5662df9d2d03f0e8ca0d3b0649d6acbab904b6a14b3d3521463c71c37c668ce3
+            size_bytes: 190
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/tools/infer/predict_rec.py
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/tools/infer/predict_rec.py
+            sha256: af43cb2fe9dc57ade95ef052a7508ef2f5df9feb434c6b0a9aa966d9d4b08428
+            size_bytes: 29025
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/tools/infer/predict_det.py
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/tools/infer/predict_det.py
+            sha256: ad663a36d84119f35ba017230c70619c926b5c27d82f975160544ccbbb38e0bd
+            size_bytes: 13944
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/ppocr/data/imaug/rec_img_aug.py
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/ppocr/data/imaug/rec_img_aug.py
+            sha256: 1039083dcddbe1f3a99d9838decd00746047958871f2573c596ff586c5382609
+            size_bytes: 27147
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/ppocr/data/imaug/operators.py
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/ppocr/data/imaug/operators.py
+            sha256: 7fa79bdf1feecd52cfb3d9dccc073d35cfea9796c40db981da03386158e9de26
+            size_bytes: 17494
+          - url: https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/c833dfc9ff04a4bce5749b808c200688b4f7bd3a/LICENSE
+            path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/paddleocr-preprocessing/LICENSE
+            sha256: ff6311c56c1b22c9209c96cc8afc16da91c24ee55a15e14ebc46fe1960dbd856
+            size_bytes: 11438
+        license: Apache-2.0
+      toolchain_image: S SDK 3.7.0 / exact cached image identified by digest
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      build_id: paddleocr-v3-en-det-s600-cpuptq-20261104-r02
+      precision_policy: INT16 activations; O1
+      native_variant: v3-en-640x640-bgrnorm-int16-cpuptq-o1-20261104-r02
+      onnx_sha256: dcd42658bc113ef89cf380becfd1ec88f621caa07d36a70ca388c31570073cb2
+      config_sha256: 48be950a913612cff44ebe0da61e012e41cc20dfb118150235866a20ae7d8514
+      recipe_sha256: 256369c853d8aa31bea30e88511ca5da3d31120dbeadd187dac4e71b241045d6
+      calibration_manifest_sha256: 4140b3371dbcba10d9af502b5b671866c2db88cba0b6c2f2817b95ed3914f218
+      host_smoke_report_sha256: aa9656b93cbe8498bfcea4ff336d1064d58756923798a28d7a646f6d017c4167
+      compile_log_sha256: f00c1ce110e0bf8e43cadffbb54b7924cffb022744879cf4248b87ddc66e4959
+      cpu_reference_float_gate:
+        status: passed
+        report:
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paddleocr-det-s-prepare-r02/cpu-sdk-parity.json
+          sha256: 7e7a30e77467222f06cd77018e0fb78dc6719c2490d45c6eb701b7b1dd1c3226
+          size_bytes: 3614
+      connected_host_reference:
+        sha256: 87cf5c1b9a257ea6fc97e0496c8bd91b2264bee8003c5625f8aef9e0a23f8da6
+        report:
+          schema_version: 1
+          status: passed
+          stages:
+          - detector
+          - recognizer
+          source:
+            det:
+              program:
+                path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/paddleocr/en_PP-OCRv3_det_infer/en_PP-OCRv3_det_infer/inference.pdmodel
+                sha256: c4bfb1b05d9d1d5a760801eaf6d20180ef7e47bcc675fb17d1f3a89da5fef427
+                size_bytes: 1590133
+              parameters:
+                path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/paddleocr/en_PP-OCRv3_det_infer/en_PP-OCRv3_det_infer/inference.pdiparams
+                sha256: 83676ec730627ab4502f401410a4b6a3ce1c0bb98fa249b71db055b6bddae051
+                size_bytes: 2377917
+            rec:
+              program:
+                path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/paddleocr/en_PP-OCRv3_rec_infer/en_PP-OCRv3_rec_infer/inference.pdmodel
+                sha256: f0288362f754e815030929477f7b1f96fe2e913e197537288a01bd43f768d0ab
+                size_bytes: 1020915
+              parameters:
+                path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/paddleocr/en_PP-OCRv3_rec_infer/en_PP-OCRv3_rec_infer/inference.pdiparams
+                sha256: 2cea2de604d8a75fd9151b54ea2dd027659fb8cb777cde377224581110dbff13
+                size_bytes: 8916816
+          onnx_sha256:
+            det: dcd42658bc113ef89cf380becfd1ec88f621caa07d36a70ca388c31570073cb2
+            rec: 69a498caf3266bffa52402d2071a3a17631db3f0c2c3580a23cdaaea253260c2
+          scope: Exact source Paddle CPU / ONNX CPU through Native BGR preparation,
+            DB polygons/crops and97-class CTC; no HBM/board inference or OCR dataset
+            accuracy
+          atol: 0.0001
+          rtol: 0.001
+          cases:
+          - input: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/calibration/ctw1500-train-seed42-100-r02/images/0007.jpg
+            input_sha256: 2a98dd9bce07e3070b4933f195d3363b6361562280de9085461760253cd5bce3
+            comparisons:
+              det-0:fetch_name_0:
+                passed: true
+                max_abs: 2.7358531951904297e-05
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+              rec-0:fetch_name_0:
+                passed: true
+                max_abs: 1.996755599975586e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-1:fetch_name_0:
+                passed: true
+                max_abs: 7.748603820800781e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-2:fetch_name_0:
+                passed: true
+                max_abs: 1.1920928955078125e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-3:fetch_name_0:
+                passed: true
+                max_abs: 4.172325134277344e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-4:fetch_name_0:
+                passed: true
+                max_abs: 1.1920928955078125e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-5:fetch_name_0:
+                passed: true
+                max_abs: 2.637505531311035e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-6:fetch_name_0:
+                passed: true
+                max_abs: 2.4586915969848633e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-7:fetch_name_0:
+                passed: true
+                max_abs: 2.980232238769531e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-8:fetch_name_0:
+                passed: true
+                max_abs: 1.0728836059570312e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-9:fetch_name_0:
+                passed: true
+                max_abs: 1.8477439880371094e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-10:fetch_name_0:
+                passed: true
+                max_abs: 1.7881393432617188e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-11:fetch_name_0:
+                passed: true
+                max_abs: 3.1888484954833984e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-12:fetch_name_0:
+                passed: true
+                max_abs: 2.384185791015625e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-13:fetch_name_0:
+                passed: true
+                max_abs: 1.6689300537109375e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-14:fetch_name_0:
+                passed: true
+                max_abs: 5.662441253662109e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-15:fetch_name_0:
+                passed: true
+                max_abs: 2.384185791015625e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-16:fetch_name_0:
+                passed: true
+                max_abs: 5.960464477539062e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              complete_source_boxes_and_text:
+                passed: true
+            calls:
+            - role: det
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 640
+                - 640
+                dtype: float32
+                sha256: f4301ad785470b081b15ec0d1aa2f1d4a0f92aa15db60736a9b47320a852c7e3
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+                dtype: float32
+                sha256: 903a719e4b989acab846a52f6f88a9f4e5b6093477fac1f88ba5ffb33a2b5562
+            - role: rec
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 6962c99e232c4153a95a51912057cd0a8f9f3db0b8b02738789184853a88963a
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 1d71145696beaa7288b192680f25752799817182a30132928a292d9211789c86
+            - role: rec
+              call: 1
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 1181f52e345b5be0e085e9e456695645b573b57eab28af926a7632e5c9f315fa
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: cd325baa202f5f505806650c4c580acc505b4d5b2777a059219a70bfc2784477
+            - role: rec
+              call: 2
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 5824c58e82c9b25ccf5f2d242d5240100ced7fe12ba6fe2cd9134bec9bdbeca4
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 62358f84150c60a4dd3d8bc889fb54fe20d502f6fc123109a424e2b92f406650
+            - role: rec
+              call: 3
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 031b73f0db094f343f263314b74480cf366b53d487130c1a0163b8fdfb9ee4c5
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: dde47a1f0585fcd48f37db7d99ebf78bafee84275535059fbe1793853dfbc9b2
+            - role: rec
+              call: 4
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: e682a379ff83b43f086e08ffed638e43f7426ced42e16e557c5c286f908b4f0f
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: b452f285cfbdde3408a2e60376a9d084213b71b0726d6920c52fcefad5242455
+            - role: rec
+              call: 5
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 8c458339958efc4bddeedcf8d68ee8fee147933dbe10f7a77c67479fc18b97f9
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: c528392a988955b6bad94b622c4cd83c1abddc72b760c662e3abf69879a24b40
+            - role: rec
+              call: 6
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 5b861076a9acbd340139a6a628cec81fcdb0dccae178b2f51f4a90f8371b4a25
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 8cdcff1fcc6f2b9bf1367001fbd08363b49eb05e32de927f37912269608b5d5a
+            - role: rec
+              call: 7
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: b9029af827f97c538d6f18a868792105669429be96f5095eb8346248610f30d3
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 61a81802d0c5dcc9a59fe848209f8183bf2f9db53af8c59b424da166d5c423f7
+            - role: rec
+              call: 8
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: ddd27b16e5a1e2c228eb7b0ee520758e2a5d01fed472ad048d432317de736810
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 85c85b528cf67db18f429087078884ba3569fbd0a404a4b6ab5074c04edbdef8
+            - role: rec
+              call: 9
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 30964a60328e5ace2d1cb602f330fb174d3f50bab599422ea8b50ec3e183352f
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 06bff0336eba82c8e3aac922bee23ba0d3405c6e7294867ed9dd0e118cfbacf4
+            - role: rec
+              call: 10
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 7b4fceeac5edc03202769d97a46da91c7215991cd21510347b2650aca0637904
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 6b220ceb4a353563586c7a82392c011590df96ea2be98a621cecb4b24d3813fe
+            - role: rec
+              call: 11
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: ec55c32db186bfadbf2483686cf32d92802ebaed045b7057968026b5e2279714
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 4d912dc7088f4f29d81aaabc0803667d06edb18ba4a75e2ff21912b8dce04e5a
+            - role: rec
+              call: 12
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 452542d7d81624627587de121d28c302364587199c6c3c188301417368928836
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: b75a7c4982829983da92c431022d18d490898c5f447b1dc596fdc1857b6c1576
+            - role: rec
+              call: 13
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: d544642973e653e867a596731528a8ea8f151f40af2790f5a02c8fe94fa6ea5a
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 11914b1d1caa1b18c34eef57bd6919114e564dc47483403c7dde68e789e526fe
+            - role: rec
+              call: 14
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: ee136b1672aa5fb259eca2ad8340071a55fc6035d4494a4eb572aa4647e045a4
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: b6c33f86fbf638bfb0347c6e72c3fb991be2c091c5f27b3c2a125f26d2e1c5ad
+            - role: rec
+              call: 15
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 76f80fbc4646d117fcf60d2f1fdb85132ec409c0d49bc0ecf7f9c0bf93cf1603
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: f2472d02aa557b1907c2d8293d16e1054fb70210777b4e2af7f33390f8ac89e6
+            - role: rec
+              call: 16
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: c71a4a2e881739ae0ce6243f469613e492f5acc2c7c707eea3ad08b6228754a5
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 56a57ae425e10d75c52caba2900d9df69fb767a9eadfa9a5097316f599179e9c
+            result:
+              target: s100
+              detector_asset: s:paddle_ocr:s100/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              recognizer_asset: s:paddle_ocr:s100/ppocrv3_en_rec_48x320_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              boxes:
+              - - - 79
+                  - 1188
+                - - 82
+                  - 1151
+                - - 200
+                  - 1161
+                - - 197
+                  - 1198
+              - - - 392
+                  - 1164
+                - - 392
+                  - 1123
+                - - 530
+                  - 1123
+                - - 530
+                  - 1164
+              - - - 102
+                  - 1162
+                - - 102
+                  - 1103
+                - - 210
+                  - 1103
+                - - 210
+                  - 1162
+              - - - 372
+                  - 1134
+                - - 372
+                  - 1087
+                - - 515
+                  - 1087
+                - - 515
+                  - 1134
+              - - - 127
+                  - 1116
+                - - 127
+                  - 1079
+                - - 186
+                  - 1079
+                - - 186
+                  - 1116
+              - - - 264
+                  - 976
+                - - 596
+                  - 967
+                - - 599
+                  - 1076
+                - - 267
+                  - 1085
+              - - - 708
+                  - 836
+                - - 744
+                  - 836
+                - - 744
+                  - 853
+                - - 708
+                  - 853
+              - - - 758
+                  - 824
+                - - 814
+                  - 799
+                - - 825
+                  - 823
+                - - 768
+                  - 848
+              - - - 617
+                  - 747
+                - - 617
+                  - 728
+                - - 649
+                  - 728
+                - - 649
+                  - 747
+              - - - 633
+                  - 715
+                - - 764
+                  - 709
+                - - 767
+                  - 762
+                - - 636
+                  - 769
+              - - - 633
+                  - 591
+                - - 635
+                  - 537
+                - - 786
+                  - 542
+                - - 784
+                  - 596
+              - - - 727
+                  - 321
+                - - 727
+                  - 282
+                - - 858
+                  - 282
+                - - 858
+                  - 321
+              - - - 716
+                  - 306
+                - - 716
+                  - 197
+                - - 855
+                  - 197
+                - - 855
+                  - 306
+              - - - 299
+                  - 136
+                - - 686
+                  - 133
+                - - 687
+                  - 191
+                - - 300
+                  - 194
+              - - - 740
+                  - 91
+                - - 774
+                  - 58
+                - - 870
+                  - 159
+                - - 836
+                  - 191
+              - - - 38
+                  - 143
+                - - 41
+                  - 35
+                - - 572
+                  - 47
+                - - 569
+                  - 154
+              - - - 772
+                  - 59
+                - - 805
+                  - 27
+                - - 904
+                  - 130
+                - - 871
+                  - 161
+              texts:
+              - Collector mo
+              - CENTRE
+              - 14+
+              - MARINE
+              - AGE
+              - Tropical
+              - '19'
+              - ieces
+              - ''
+              - C
+              - Lionfish
+              - ExtraLarge
+              - XL
+              - model series by TMC
+              - ':'
+              - ReefScape
+              - E
+            all_outputs:
+              path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paddleocr-connected-host-r01/0-full-outputs.npz
+              sha256: 496d37cd3784a3fd6c13bee684698c486f364726eb296be685569b3c02eaa845
+              size_bytes: 217378
+          - input: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/calibration/ctw1500-train-seed42-100-r02/images/0026.jpg
+            input_sha256: 7fe19880b97fc1c82d2f0bd6b2b2a8a2dddae4a6f337a51d08e1a411d75a9f30
+            comparisons:
+              det-0:fetch_name_0:
+                passed: true
+                max_abs: 3.5703182220458984e-05
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+              rec-0:fetch_name_0:
+                passed: true
+                max_abs: 2.4437904357910156e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-1:fetch_name_0:
+                passed: true
+                max_abs: 9.119510650634766e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-2:fetch_name_0:
+                passed: true
+                max_abs: 4.157423973083496e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-3:fetch_name_0:
+                passed: true
+                max_abs: 1.3113021850585938e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-4:fetch_name_0:
+                passed: true
+                max_abs: 3.814697265625e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-5:fetch_name_0:
+                passed: true
+                max_abs: 1.5497207641601562e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-6:fetch_name_0:
+                passed: true
+                max_abs: 1.7285346984863281e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-7:fetch_name_0:
+                passed: true
+                max_abs: 2.562999725341797e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-8:fetch_name_0:
+                passed: true
+                max_abs: 1.2814998626708984e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-9:fetch_name_0:
+                passed: true
+                max_abs: 1.0132789611816406e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-10:fetch_name_0:
+                passed: true
+                max_abs: 2.0265579223632812e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-11:fetch_name_0:
+                passed: true
+                max_abs: 8.344650268554688e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-12:fetch_name_0:
+                passed: true
+                max_abs: 1.2516975402832031e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-13:fetch_name_0:
+                passed: true
+                max_abs: 1.6689300537109375e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-14:fetch_name_0:
+                passed: true
+                max_abs: 3.039836883544922e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-15:fetch_name_0:
+                passed: true
+                max_abs: 3.5762786865234375e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-16:fetch_name_0:
+                passed: true
+                max_abs: 1.1920928955078125e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              complete_source_boxes_and_text:
+                passed: true
+            calls:
+            - role: det
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 640
+                - 640
+                dtype: float32
+                sha256: b962b0a081a8f2d04d2c81b0041a3cdee1741232980fe723a54465943f09e805
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+                dtype: float32
+                sha256: 6f6ca761203a13ceae56c9cc8134371aa0cccfcc3c9021780e5d3423a92fd2e2
+            - role: rec
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: f9481ce3edc3d8f813c759d93e8bb31f435233f3a88b3481785755284f5ee05c
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 3b933e0f411325fc050f0d841118f180086983a0ecf278a1c12862e5061294a5
+            - role: rec
+              call: 1
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 146ca6be21ffd16f7547df3e1a9a96e92c71f20377164decae0e8d77f032cc40
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: f135cd691b4bd13b26ef8f80228d8a29aadc2b9ba111ba3c432e90b218c290fa
+            - role: rec
+              call: 2
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: a180e762d9f54dc9ba39d48aad2c847a496c7294c31fbaa3d8490e5e72019d62
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: b66924c6c349368c811a4328598b086a61e332340cd53704a91c5f6cc01f624b
+            - role: rec
+              call: 3
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: d1deaa570bb808a4cd00f07e05ca50ec20c842f3353869ce7c8a63b49511e984
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 5a00ce19497177ea085cf33621d2edc7196cd3837571c8d521b0393bcce024a4
+            - role: rec
+              call: 4
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 6264bffd887190e7c3687e6be432b0c37faa7176400e7ae955492283c640be86
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: b0bb66fe5e98c8b0b6c4f513ac8c1536c789497bebc758f1e0581212703783a8
+            - role: rec
+              call: 5
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: b6fcef59f0d233ff571875add0b67c4fb454d4139ea7e00c6e17536130ed90ad
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: c87ea3ec24aaf3392e84ec7a70bf5b45925ba9a47dd7c6141a02ef8b6224a4b8
+            - role: rec
+              call: 6
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 4c25cd277bf736d3b1640fd8fcc335699a90fa8e14d82d6cefe4064f5917976d
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: aac2a0d865cee383a555dbffa910c65728f0a8409b39747859f01c8e4dc43555
+            - role: rec
+              call: 7
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 9505d7ea414973e2cba7e84fb208e92174343c16055e25632a933039a326a63b
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 1d8938b70bfa1f14742120030ba240f397adaa9b00e77705a53fc8c1332665f0
+            - role: rec
+              call: 8
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: f60cff565e129fe657302a3ac9103d893df0dcb8372af7ce369b164458420969
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 57f4f6c9fd3ce44ece655261d9ebc38cbd02e6c49c798aa3d55e011b0e5d8834
+            - role: rec
+              call: 9
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: d17ef424fac24d0a43065877479770a4432309705ec563bef647f1f68b0d883d
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 6eb994f148d42966ee5579b665970a2dc4759de0707129c35b68810b1bd143f4
+            - role: rec
+              call: 10
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 6812ba97fc0752086f48fa8c323850eb9e5bd489717375879997227187f2ac72
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: e81983ca16253c1fee5a22e2156c5bbcdebd024c83f1a870229b96a144f49ccb
+            - role: rec
+              call: 11
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: d59a7dfc8f26ea861c79d085ac0711ec5a40f21bab2c35786ebf8df44991c2aa
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: a17b9ab6c8e3a30982e4d8fbd50da08f1840fde6eff053beed467b12a54ecb36
+            - role: rec
+              call: 12
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: a9fc8e84470cc480dab9b9f5e013b4403f7069180da79a06af3bf4cebf3fe7a9
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 423a8f7b9456d996a01bbf1c46ba7ffe118c6f9113cb7f77ad499a784404d438
+            - role: rec
+              call: 13
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 0e0aa852d7c92ea25ea9f2c01a796db8b50d488291f5abfdaa060adfec508a16
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 4d1e15f756a93ddc72be4edbce35f53012dfa4844af90fdc03f765b02208da82
+            - role: rec
+              call: 14
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 6c4b86aebd93c0e59e45a60ebfa1ec57451255b7a87c413a62d165b74c24d9e1
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 67b34f8a37b00640eb9b15ae1951d15e01abad8da0aa05d4852337d24370531b
+            - role: rec
+              call: 15
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 7422a233f3232c10a3cab30bd1316dffa6c78b9b019f73a93fc9d7f2ae06cb41
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: a140b10695cd44982aeb879e97361121cd6e5f232e2585eb4479e05b59dc5988
+            - role: rec
+              call: 16
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: cd0133001464c66376d8d349fd7dee656f5ee053034f009523e87490360d5116
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 568bcc3d0d1c4daaf0c93c1637459d73d18fbe3120b567177907aa58aa130220
+            result:
+              target: s100
+              detector_asset: s:paddle_ocr:s100/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              recognizer_asset: s:paddle_ocr:s100/ppocrv3_en_rec_48x320_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              boxes:
+              - - - 492
+                  - 524
+                - - 575
+                  - 524
+                - - 575
+                  - 541
+                - - 492
+                  - 541
+              - - - 455
+                  - 528
+                - - 455
+                  - 513
+                - - 539
+                  - 513
+                - - 539
+                  - 528
+              - - - 152
+                  - 432
+                - - 152
+                  - 412
+                - - 219
+                  - 412
+                - - 219
+                  - 432
+              - - - 154
+                  - 414
+                - - 154
+                  - 397
+                - - 840
+                  - 397
+                - - 840
+                  - 414
+              - - - 153
+                  - 383
+                - - 153
+                  - 366
+                - - 215
+                  - 366
+                - - 215
+                  - 383
+              - - - 154
+                  - 349
+                - - 793
+                  - 349
+                - - 793
+                  - 366
+                - - 154
+                  - 366
+              - - - 155
+                  - 319
+                - - 605
+                  - 319
+                - - 605
+                  - 333
+                - - 155
+                  - 333
+              - - - 155
+                  - 317
+                - - 156
+                  - 300
+                - - 804
+                  - 301
+                - - 803
+                  - 319
+              - - - 284
+                  - 286
+                - - 284
+                  - 269
+                - - 646
+                  - 269
+                - - 646
+                  - 286
+              - - - 156
+                  - 237
+                - - 704
+                  - 237
+                - - 704
+                  - 255
+                - - 156
+                  - 255
+              - - - 609
+                  - 221
+                - - 837
+                  - 221
+                - - 837
+                  - 239
+                - - 609
+                  - 239
+              - - - 385
+                  - 238
+                - - 385
+                  - 221
+                - - 535
+                  - 221
+                - - 535
+                  - 238
+              - - - 156
+                  - 221
+                - - 323
+                  - 221
+                - - 323
+                  - 238
+                - - 156
+                  - 238
+              - - - 277
+                  - 197
+                - - 278
+                  - 171
+                - - 626
+                  - 172
+                - - 625
+                  - 199
+              - - - 741
+                  - 170
+                - - 843
+                  - 170
+                - - 843
+                  - 200
+                - - 741
+                  - 200
+              - - - 67
+                  - 50
+                - - 655
+                  - 29
+                - - 658
+                  - 109
+                - - 70
+                  - 130
+              - - - 652
+                  - 105
+                - - 659
+                  - 36
+                - - 939
+                  - 66
+                - - 931
+                  - 136
+              texts:
+              - Gagelearit
+              - GaxkixOxgos
+              - long term.
+              - ''
+              - accounts.
+              - H
+              - m msh tsaei
+              - He
+              - NILOPSEALFORTS O RNATESCALSCSIY
+              - wr
+              - and ote Americn people hat I il!
+              - Congressional District of.
+              - I pledge to the people of the .
+              - ' Pledge o Protet SocilSecurity for'
+              - '''s Seniors -'
+              - SOCIAL SECURITY
+              - PLEDGE
+            all_outputs:
+              path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paddleocr-connected-host-r01/1-full-outputs.npz
+              sha256: 24463ce0fb5541a1a47d06c23a8f4725248972ccdeaa7e2bc2487b67379a5022
+              size_bytes: 279075
+          - input: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/calibration/ctw1500-train-seed42-100-r02/images/0028.jpg
+            input_sha256: 8149a2971c1166c70236e6cf2a93061ae2188d8ffcb4ed01c83292c41499623f
+            comparisons:
+              det-0:fetch_name_0:
+                passed: true
+                max_abs: 3.170967102050781e-05
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+              rec-0:fetch_name_0:
+                passed: true
+                max_abs: 1.1920928955078125e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-1:fetch_name_0:
+                passed: true
+                max_abs: 1.385807991027832e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-2:fetch_name_0:
+                passed: true
+                max_abs: 1.4603137969970703e-06
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-3:fetch_name_0:
+                passed: true
+                max_abs: 9.936094284057617e-05
+                shape:
+                - 1
+                - 40
+                - 97
+              rec-4:fetch_name_0:
+                passed: true
+                max_abs: 1.1920928955078125e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              complete_source_boxes_and_text:
+                passed: true
+            calls:
+            - role: det
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 640
+                - 640
+                dtype: float32
+                sha256: 0c0b303dc873733106ead829d610245284fc2798e920f87e5fe0ae44d8c16a3c
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+                dtype: float32
+                sha256: 44fa82d60855050f6e8c00c6889797be57e1072464685c3657be6de0c1979bda
+            - role: rec
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: e921c7e960ab5bd47bcc1faf6fa6e099d2e3ca3fe73094fa91f2bb69b0781804
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: cf32abc62b2f4b26a125f417ca7517004e508d2c53b4d50081cf6d8425557a93
+            - role: rec
+              call: 1
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 05073cd51927d63210531a47e094c5c65747adb15a2767aa1c8a61836b19cecd
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 9ed70121835bed6a06bb48aded579993db4d3ac17025696e865a810f5b231ff3
+            - role: rec
+              call: 2
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 5364f8587c4f1530b81c307289d55190c93af31973c3bbbaf46d00d5a3a8c67c
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 623044ddcaa94ad0b2a76d1f05fb96cfdd703740e2c26d32fd314d89a2d68d11
+            - role: rec
+              call: 3
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 09f652b738b0a117614ec05988639fb31711c66753cbc340cf2fff3a0095097e
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 2aeef222911b4845d4fdebdf0271e44693f70858db6cd0d71d468426a97291e8
+            - role: rec
+              call: 4
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: a39361a45c7a6b082454c86928a67c855af8b4e4d7999fa26a354544a936b503
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: e5284fef1f85ece3862760db2ece278f16ca1b81e47d7b4f38e5927b271a1c56
+            result:
+              target: s100
+              detector_asset: s:paddle_ocr:s100/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              recognizer_asset: s:paddle_ocr:s100/ppocrv3_en_rec_48x320_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              boxes:
+              - - - 213
+                  - 447
+                - - 260
+                  - 435
+                - - 266
+                  - 458
+                - - 219
+                  - 469
+              - - - 248
+                  - 435
+                - - 466
+                  - 362
+                - - 476
+                  - 392
+                - - 257
+                  - 464
+              - - - 143
+                  - 439
+                - - 553
+                  - 296
+                - - 563
+                  - 324
+                - - 153
+                  - 466
+              - - - 152
+                  - 336
+                - - 496
+                  - 212
+                - - 528
+                  - 303
+                - - 184
+                  - 426
+              - - - 157
+                  - 268
+                - - 511
+                  - 125
+                - - 538
+                  - 192
+                - - 185
+                  - 336
+              texts:
+              - TO
+              - POSTLAND
+              - WILLAMETTE SHORE TROLLEY
+              - STOP
+              - TROLLEY
+            all_outputs:
+              path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paddleocr-connected-host-r01/2-full-outputs.npz
+              sha256: 77e84deaa6dd6483e089311f882f19bec8c7d2e1dc90d0260ab1bdea4993c6ca
+              size_bytes: 93172
+          - input: random-image-seed42
+            input_sha256: 680dd8a8bcdb82b1989c007118dcd92626cdf7d5420ae6aed5af8d8ce78f2b6d
+            comparisons:
+              det-0:fetch_name_0:
+                passed: true
+                max_abs: 1.8777399635183656e-09
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+              complete_source_boxes_and_text:
+                passed: true
+              rec-0:fetch_name_0:
+                passed: true
+                max_abs: 6.556510925292969e-07
+                shape:
+                - 1
+                - 40
+                - 97
+              direct_recognition_readout:
+                passed: true
+            calls:
+            - role: det
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 640
+                - 640
+                dtype: float32
+                sha256: d3836887637dd3ef46968bc583dfd52f3b09c82140a59366bf28457cbb1c2f50
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 1
+                - 640
+                - 640
+                dtype: float32
+                sha256: 0655c923944257942252e3484efa09d83329b93522af84c653f8b36b3453eaee
+            - role: rec
+              call: 0
+              input:
+                shape:
+                - 1
+                - 3
+                - 48
+                - 320
+                dtype: float32
+                sha256: 641cbfe492adf80fcaa8ae1e7ca61bcecccaa9c815b02e0f9670ee4361956fa5
+              outputs:
+              - name: fetch_name_0
+                shape:
+                - 1
+                - 40
+                - 97
+                dtype: float32
+                sha256: 72e3081f1fb169c77b1e6e82b807ee3e09f7b444959c7cf98be735b6da71ff99
+            result:
+              target: s100
+              detector_asset: s:paddle_ocr:s100/ppocrv3_en_det_640x640_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              recognizer_asset: s:paddle_ocr:s100/ppocrv3_en_rec_48x320_nashe_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+              boxes: []
+              texts: []
+            all_outputs:
+              path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paddleocr-connected-host-r01/3-full-outputs.npz
+              sha256: c27c055a2f54ea48855375cf77a658b3f23e9523927441f6011d8d611e980a76
+              size_bytes: 12263
+      source_archive_sha256: e740eb522521827cc83da3ba33e1c70ccfd9b3cf7d9a24a420ce4ca5ebb8794f
+      source_checkpoint_member: en_PP-OCRv3_det_infer/inference.pdiparams
+      ocr_host_smoke: Complete source Paddle/ONNX detector, Native DB polygons/crops,
+        recognizer and 97-class CTC; three real scenes plus random; not board accuracy
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 2790cb6049b56b4f92acda05023cc42281a98449d957851f23e8e41188e3b75d
+    runtime_command: python3 -m samples.vision.paddle_ocr.runtime.python.main --target
+      s600 --det-asset-id s:paddle_ocr:s600/ppocrv3_en_det_640x640_nashp_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      --det-model-path /path/to/ppocrv3_en_det_640x640_nashp_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      --rec-asset-id s:paddle_ocr:s600/ppocrv3_en_rec_48x320_nashp_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      --rec-model-path /path/to/ppocrv3_en_rec_48x320_nashp_featuremap_int16_cpuptq_o1_bgrnorm_20261104_r02.hbm
+      --test-img /path/to/image.jpg --output-format json

@@ -166,6 +166,31 @@ class ComponentPackageTests(unittest.TestCase):
             with self.subTest(field=field),self.assertRaises(ValueError):
                 validate_bundle_files(row,self.archive(files),self.html,self.oe)
 
+    def test_three_stage_asr_requires_encoder_predictor_decoder_and_all_reports(self):
+        row, oe = copy.deepcopy(self.row), copy.deepcopy(self.oe)
+        row['model']['source'] = 'paraformer'
+        row['artifact']['bundle']['kind'] = 'paraformer-staged'
+        predictor = copy.deepcopy(row['artifact']['components'][0])
+        predictor.update(role='predictor', filename='predictor.hbm')
+        row['artifact']['components'].insert(1, predictor)
+        for component in row['artifact']['components']:
+            component['url'] = ('https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/'
+                                'rdk_s100/paraformer/' + component['filename'])
+        for section in ('provenance', 'conversion'):
+            row[section]['components']['predictor'] = copy.deepcopy(row[section]['components']['encoder'])
+        oe['components']['predictor'] = copy.deepcopy(oe['components']['encoder'])
+        pipeline = row['validation']['host_pipeline']
+        pipeline.update(stages=['encoder','predictor','decoder'],
+                        component_sha256={c['role']:c['sha256'] for c in row['artifact']['components']})
+        validate_components(row, platform='s100', source='paraformer', oe=oe)
+        for missing in ('encoder', 'predictor', 'decoder'):
+            incomplete = copy.deepcopy(row)
+            incomplete['artifact']['components'] = [c for c in incomplete['artifact']['components'] if c['role'] != missing]
+            with self.subTest(missing=missing), self.assertRaises(ValueError):
+                validate_components(incomplete, platform='s100', source='paraformer', oe=oe)
+        with self.assertRaises(ValueError):
+            validate_components(self.row, platform='s100', source='paraformer', oe=self.oe)
+
     def test_native_pair_task_cannot_be_registered_as_one_hbm(self):
         row = {'artifact':{},'provenance':{},'conversion':{}}
         with self.assertRaises(ValueError):

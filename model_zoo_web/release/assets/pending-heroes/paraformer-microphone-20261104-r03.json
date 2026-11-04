@@ -1,0 +1,317 @@
+{
+  "schema_version": 2,
+  "kind": "host-float-model-inference-banner",
+  "status": "passed",
+  "source": "paraformer",
+  "model_url": "https://www.modelscope.cn/models/iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404/resolve/master/model.pt",
+  "model_file": "model.pt",
+  "checkpoint_sha256": "2d448b72b2b5e5fdf9ba865ff54c8c207f5cf8fced742b0160ef505b026c44a7",
+  "commit": "dafe64db5a5b0a25b4700f1c23cb93094aa07222",
+  "input": "samples/speech/paraformer/test_data/banner_input_microphone_20261104.png",
+  "input_sha256": "0d631e8bb07365b3d679a2d9c5165e4e24ffcafe98c2532d44696396031f4f57",
+  "native_helpers": {
+    "samples/speech/paraformer/runtime/python/frontend.py": "a438234d4f6eaa28da6ff9ca15d4c6a8d67c8d40c5607f81c6da8797f7e21608",
+    "samples/speech/paraformer/runtime/python/pipeline.py": "35a0aa856aeeb4dd9e1c0419bbeb06d9f6f468a6a399e61e4c283f673f866982",
+    "samples/speech/paraformer/conversion/export.py": "c17c23186d1818eeff066284714b8bdf60eb85ae51da9c57874c503ebb6f5a09"
+  },
+  "graphs": {
+    "encoder": {
+      "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paraformer-export-r01/encoder.onnx",
+      "sha256": "29c8ba3fd9ce611ca6926bccd243ef56925dc0f857d1e138df81983171a42d0f"
+    },
+    "predictor": {
+      "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paraformer-export-r01/predictor.onnx",
+      "sha256": "a873a87d5a45b578ffd644b137f8ebcc04260fd864d788fd10852f88ae26e76e"
+    },
+    "decoder": {
+      "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paraformer-export-r01/decoder.onnx",
+      "sha256": "ec07435eb097bd4536ea7573a357402f122996ed0bca3e7ce6d917c4921fa34c"
+    }
+  },
+  "framework": "ONNX Runtime 1.20.1",
+  "graph_io": {
+    "encoder": {
+      "inputs": [
+        {
+          "name": "speech",
+          "shape": [
+            1,
+            400,
+            560
+          ],
+          "dtype": "tensor(float)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "/encoder/after_norm/Add_1_output_0",
+          "shape": [
+            1,
+            400,
+            512
+          ],
+          "dtype": "tensor(float)"
+        }
+      ]
+    },
+    "predictor": {
+      "inputs": [
+        {
+          "name": "/encoder/after_norm/Add_1_output_0",
+          "shape": [
+            1,
+            400,
+            512
+          ],
+          "dtype": "tensor(float)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "/predictor/Add_output_0",
+          "shape": [
+            1,
+            401
+          ],
+          "dtype": "tensor(float)"
+        },
+        {
+          "name": "/predictor/Concat_5_output_0",
+          "shape": [
+            1,
+            401,
+            512
+          ],
+          "dtype": "tensor(float)"
+        }
+      ]
+    },
+    "decoder": {
+      "inputs": [
+        {
+          "name": "/encoder/after_norm/Add_1_output_0",
+          "shape": [
+            1,
+            400,
+            512
+          ],
+          "dtype": "tensor(float)"
+        },
+        {
+          "name": "token_num",
+          "shape": [
+            1
+          ],
+          "dtype": "tensor(int32)"
+        },
+        {
+          "name": "bias_embed",
+          "shape": [
+            1,
+            1,
+            512
+          ],
+          "dtype": "tensor(float)"
+        },
+        {
+          "name": "onnx::Shape_8609",
+          "shape": [
+            1,
+            100,
+            512
+          ],
+          "dtype": "tensor(float)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "logits",
+          "shape": [
+            1,
+            100,
+            8404
+          ],
+          "dtype": "tensor(float)"
+        }
+      ]
+    }
+  },
+  "provider": "CPUExecutionProvider",
+  "runtime": "host-float-reference",
+  "versions": {
+    "onnxruntime": "1.20.1",
+    "numpy": "1.26.4",
+    "opencv": "4.11.0",
+    "pillow": "12.3.0"
+  },
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "feeds": [
+    {
+      "role": "encoder",
+      "name": "speech",
+      "shape": [
+        1,
+        400,
+        560
+      ],
+      "dtype": "float32",
+      "sha256": "fb271fe394328f0d67fb60127a55c9de57cd131bbe392d312e655f1d4eb60ba9"
+    },
+    {
+      "role": "predictor",
+      "name": "/encoder/after_norm/Add_1_output_0",
+      "shape": [
+        1,
+        400,
+        512
+      ],
+      "dtype": "float32",
+      "sha256": "45c75041235df63abcb12e9ffb1525df87190eb83fe9a1934ca80eb91290c336"
+    },
+    {
+      "role": "decoder",
+      "name": "/encoder/after_norm/Add_1_output_0",
+      "shape": [
+        1,
+        400,
+        512
+      ],
+      "dtype": "float32",
+      "sha256": "45c75041235df63abcb12e9ffb1525df87190eb83fe9a1934ca80eb91290c336"
+    },
+    {
+      "role": "decoder",
+      "name": "token_num",
+      "shape": [
+        1
+      ],
+      "dtype": "int32",
+      "sha256": "42f4aeb81c1ef81f771f3de8abca9dcf66901c575530e7672e4b1146474ae650"
+    },
+    {
+      "role": "decoder",
+      "name": "bias_embed",
+      "shape": [
+        1,
+        1,
+        512
+      ],
+      "dtype": "float32",
+      "sha256": "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad"
+    },
+    {
+      "role": "decoder",
+      "name": "onnx::Shape_8609",
+      "shape": [
+        1,
+        100,
+        512
+      ],
+      "dtype": "float32",
+      "sha256": "f0431250ff2ff9694c79b350367138064d5f0469531e5ec224f1812a2a33c11d"
+    }
+  ],
+  "forward_outputs": [
+    {
+      "role": "encoder",
+      "name": "/encoder/after_norm/Add_1_output_0",
+      "shape": [
+        1,
+        400,
+        512
+      ],
+      "dtype": "float32",
+      "sha256": "45c75041235df63abcb12e9ffb1525df87190eb83fe9a1934ca80eb91290c336"
+    },
+    {
+      "role": "predictor",
+      "name": "/predictor/Add_output_0",
+      "shape": [
+        1,
+        401
+      ],
+      "dtype": "float32",
+      "sha256": "0868a3d79fa6653c78ee11e9c58d532255118df8fc97d810d095f0631ec3d681"
+    },
+    {
+      "role": "predictor",
+      "name": "/predictor/Concat_5_output_0",
+      "shape": [
+        1,
+        401,
+        512
+      ],
+      "dtype": "float32",
+      "sha256": "a0387d723de1e3c4baea69d9f36f3234699501f9d35a5691e6908678f16055f0"
+    },
+    {
+      "role": "decoder",
+      "name": "logits",
+      "shape": [
+        1,
+        100,
+        8404
+      ],
+      "dtype": "float32",
+      "sha256": "b93c291bd87349fc7eb4e75ee6309718ebecf9b8012c2a91ae23d3f5385a5385"
+    }
+  ],
+  "files": {
+    "source.png": {
+      "file": "source.png",
+      "sha256": "0d631e8bb07365b3d679a2d9c5165e4e24ffcafe98c2532d44696396031f4f57",
+      "size_bytes": 1941078
+    },
+    "outputs.npz": {
+      "file": "outputs.npz",
+      "sha256": "63642438e01a335b5da60f46f1f3d1db4f61f1f24a1684222ebb8b55c34d5c8d",
+      "size_bytes": 4272803
+    },
+    "banner.webp": {
+      "file": "banner.webp",
+      "sha256": "cb42d52f5054eeb467559f5a7b61312512260bfed53430d07f921391e1101687",
+      "size_bytes": 152658
+    },
+    "result.png": {
+      "file": "result.png",
+      "sha256": "6bcf03ccd47ee8ac1607815e3688b76218031c0893d9b72861d6283c35879232",
+      "size_bytes": 1394310
+    }
+  },
+  "renderer_sha256": "5a89fed8aecb584fa6cdbb77b9543dc574a3833490502a838da8b74a3a4f6fee",
+  "native_support_files": {
+    "samples/speech/paraformer/model/am.mvn": "29b3c740a2c0cfc6b308126d31d7f265fa2be74f3bb095cd2f143ea970896ae5",
+    "samples/speech/paraformer/tests/fixtures/published-tokens.json": "2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127"
+  },
+  "audio": {
+    "input": "samples/speech/paraformer/test_data/audio/BAC009S0724W0121.wav",
+    "sha256": "2f9fc9c912bb71c85fb286cb88b599c81efb8f727c727a5ea8f6d1c89c55ac13",
+    "sample_rate": 16000,
+    "sample_count": 68496
+  },
+  "recognition": {
+    "text": "广州市房地产中介协会析",
+    "token_ids": [
+      2428,
+      7769,
+      7729,
+      4357,
+      4634,
+      4963,
+      5317,
+      7951,
+      1756,
+      7959,
+      8368,
+      2
+    ],
+    "token_count": 12
+  },
+  "visualization": {
+    "method": "Actual Native WAV frontend, all three source ONNX stages, CPU CIF and greedy transcription; generated microphone photo is a visual backdrop",
+    "rendered_text": "广州市房地产中介协会析",
+    "waveform": "actual audio amplitude, not generated waveform",
+    "photo_role": "illustration backdrop; not the ASR inference input"
+  }
+}

@@ -1,4 +1,4 @@
-"""Validate complete native deployment pairs without changing single-file releases."""
+"""Validate complete native deployment pipelines and single-file releases."""
 import base64
 import hashlib
 from html.parser import HTMLParser
@@ -8,9 +8,11 @@ from pathlib import PurePosixPath
 import re
 import tarfile
 
-KINDS = {'encoder-decoder': ('encoder', 'decoder'), 'fasterrcnn-split': ('parta', 'partb')}
+KINDS = {'encoder-decoder': ('encoder', 'decoder'), 'fasterrcnn-split': ('parta', 'partb'),
+         'paraformer-staged': ('encoder', 'predictor', 'decoder')}
 SOURCES = {'efficient_sam': 'encoder-decoder', 'mobile_sam': 'encoder-decoder',
-           'fasterrcnn': 'fasterrcnn-split', 'clip': 'clip-image-text'}
+           'fasterrcnn': 'fasterrcnn-split', 'clip': 'clip-image-text',
+           'paraformer': 'paraformer-staged'}
 SHA = re.compile(r'^[0-9a-f]{64}$')
 ARCHIVE = 'https://archive.d-robotics.cc/downloads/rdk_model_zoo_web'
 
@@ -53,13 +55,13 @@ def validate_components(row, *, platform, source, oe=None):
         require(source not in SOURCES and 'components' not in artifact
                 and 'components' not in row.get('provenance', {})
                 and 'components' not in row.get('conversion', {}),
-                'This task requires a complete paired deployment bundle')
+                'This task requires a complete deployment bundle')
         return None
     require(isinstance(bundle, dict) and bundle.get('kind') in KINDS, 'Unknown deployment bundle kind')
     kind = bundle['kind']
     require(source not in SOURCES or SOURCES[source] == kind, 'Bundle kind differs from its native task')
     require((artifact.get('filename') or artifact.get('name') or artifact['url'].rsplit('/',1)[-1]).endswith('.tar.gz'),
-            'Paired deployment must download as tar.gz')
+            'Pipeline deployment must download as tar.gz')
     roles = KINDS[kind]
     components = artifact.get('components')
     require(isinstance(components, list) and len(components) == len(roles), 'Incomplete component set')
@@ -73,7 +75,7 @@ def validate_components(row, *, platform, source, oe=None):
     require(any(m['filename'].startswith('LICENSE') for m in members), 'Missing model license in bundle')
     provenance = row.get('provenance', {})
     require('onnx_sha256' not in provenance and 'config_sha256' not in provenance,
-            'A pair cannot use one component as its entire conversion provenance')
+            'A pipeline cannot use one component as its entire conversion provenance')
     prov = provenance.get('components', {})
     conv = row.get('conversion', {}).get('components', {})
     require(set(prov) == set(conv) == set(roles), 'Missing per-component conversion evidence')
@@ -104,7 +106,7 @@ def validate_components(row, *, platform, source, oe=None):
     require(pipeline.get('status') == 'passed' and pipeline.get('stages') == list(roles)
             and SHA.fullmatch(str(pipeline.get('evidence_sha256','')))
             and pipeline.get('component_sha256') == {c['role']:c['sha256'] for c in components},
-            'Paired release requires actual connected host inference evidence')
+            'Pipeline release requires actual connected host inference evidence')
     host_member = by_name.get(pipeline.get('evidence_file'))
     require(host_member is not None and host_member['filename'].endswith('.json')
             and host_member['sha256'] == pipeline['evidence_sha256'],

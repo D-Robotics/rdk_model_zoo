@@ -7,10 +7,11 @@ source: paraformer
 family: paraformer
 task: asr
 description:
-  zh: "Paraformer 结合声学编码、时序对齐与文本解码，将 16 kHz 语音转换为文字。"
-  en: "Paraformer combines acoustic encoding, temporal alignment and text decoding to transcribe 16 kHz speech."
+  zh: Paraformer 结合声学编码、时序对齐与文本解码，将 16 kHz 语音转换为文字。
+  en: Paraformer combines acoustic encoding, temporal alignment and text decoding
+    to transcribe 16 kHz speech.
 sample_path: samples/speech/paraformer
-sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+sample_revision: b6b9db8915db466086d638bdd3a696b958cb5c29
 license:
   name: Apache-2.0
   url: https://www.apache.org/licenses/LICENSE-2.0
@@ -34,9 +35,11 @@ usage:
   lines:
   - bash samples/speech/paraformer/model/download_model.sh --target s100 --dry-run
   - python samples/speech/paraformer/runtime/python/main.py --target s100 --dry-run
-  - python samples/speech/paraformer/runtime/python/main.py --preprocess-only --output-dir outputs/paraformer-prepared
+  - python samples/speech/paraformer/runtime/python/main.py --preprocess-only --output-dir
+    outputs/paraformer-prepared
   - bash samples/speech/paraformer/model/download_model.sh --target s100
-  - python samples/speech/paraformer/runtime/python/main.py --target s100 --output-dir outputs/paraformer-inference
+  - python samples/speech/paraformer/runtime/python/main.py --target s100 --output-dir
+    outputs/paraformer-inference
 sourced_benchmarks:
 - id: paraformer-s100
   platform: s100
@@ -122,3 +125,310 @@ documented_downloads:
   url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/paraformer/nash-e/tokens.json
   source: docs/release/s/models.yaml
   format: json
+hero_visual:
+  file: model_zoo_web/release/assets/pending-heroes/paraformer-microphone-20261104-r03.webp
+  kind: speech-transcript
+  runtime: host-float-reference
+  input: samples/speech/paraformer/test_data/banner_input_microphone_20261104.png
+  predictions_source: model_zoo_web/release/assets/pending-heroes/paraformer-microphone-20261104-r03.json
+  note: Host float reference, not board output. Actual Native preprocessing and model
+    outputs; board checks are recorded separately.
+  model_file: model.pt
+  model_url: https://www.modelscope.cn/models/iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404/resolve/master/model.pt
+  framework: ONNX Runtime 1.20.1
+  commit: dafe64db5a5b0a25b4700f1c23cb93094aa07222
+  documented_in: samples/speech/paraformer/conversion/README.md
+  inference_receipt_version: 2
+provider: ModelScope / FunASR
+model_license: &id001
+  name: Apache-2.0
+  url: https://www.apache.org/licenses/LICENSE-2.0
+  scope: model
+variants:
+- size: large-contextual-8404-int16-cpuptq-o1-20261104-r02
+  model: {}
+  input:
+    width: 560
+    height: 400
+    source:
+      format: FEATUREMAP
+      dtype: float32
+      layout: NTC
+      shape:
+      - 1
+      - 400
+      - 560
+      scale: 1
+  platforms:
+  - platform: s100
+    license: *id001
+    status: converted
+    converted_at: '2026-11-04'
+    metadata_revision: 1
+    artifact:
+      filename: paraformer_large_contextual_8404_int16_cpuptq_o1_20261104_r02_s100_bundle.tar.gz
+      format: TAR.GZ
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/paraformer/paraformer_large_contextual_8404_int16_cpuptq_o1_20261104_r02_s100_bundle.tar.gz
+      sha256: 98c47dc1f120fa259170b1f9edf82ef4c2a3b40c45b89afb8c5da9dc71c786e4
+      size_bytes: 202354272
+      components:
+      - role: encoder
+        filename: paraformer_encoder_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm
+        platform: s100
+        format: HBM
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/paraformer/paraformer_encoder_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm
+        sha256: 89ee33f3ce9b08a46e7265c704b07c56f8372bd5da6f95464ad315cba125860a
+        size_bytes: 221853920
+      - role: predictor
+        filename: paraformer_predictor_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm
+        platform: s100
+        format: HBM
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/paraformer/paraformer_predictor_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm
+        sha256: ae9033774dfb06816cca6f71481a696c70c3d0f4804f1bc49b167343c2422deb
+        size_bytes: 4104088
+      - role: decoder
+        filename: paraformer_decoder_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm
+        platform: s100
+        format: HBM
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/paraformer/paraformer_decoder_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm
+        sha256: 5b2446a86429fd6ed43d61431cd5c8fa6a90d84984b645153657bd9809fe22e1
+        size_bytes: 74036960
+      bundle:
+        kind: paraformer-staged
+        descriptor: deployment.json
+        members:
+        - filename: LICENSE-FunASR
+          sha256: f382b62dcc61fc566b9215b1e3b604b539bfd96ed52ae1eeff5090f6dc176057
+          size_bytes: 1061
+        - filename: README.txt
+          sha256: 4bd47ba950c3ecddb5932d53c841ca84c3b2c8af0af81bb754e446040c56ca6f
+          size_bytes: 1490
+        - filename: am.mvn
+          sha256: 29b3c740a2c0cfc6b308126d31d7f265fa2be74f3bb095cd2f143ea970896ae5
+          size_bytes: 11203
+        - filename: decoder.oe_report.html
+          sha256: 5a5457e289f427f4c7dfb61ecbc730fd911f372146b25cb3804911151dca55a6
+          size_bytes: 3253035
+        - filename: decoder.oe_report_data.json
+          sha256: b886ef42f019cfe0cfcf49d04653327c04c6a173b18ba5151b5a89c98fc0e20d
+          size_bytes: 310186
+        - filename: deployment.json
+          sha256: 7ad928cbc804d382225b7573be709dc9d3b6b614f6ff4b6c3ec4a51a71b2c8fd
+          size_bytes: 1530
+        - filename: encoder.oe_report.html
+          sha256: a4d389284f9af639fa9feb2e0c927d31a6528c360d0f373e443b0f59a0ef7bdf
+          size_bytes: 9508751
+        - filename: encoder.oe_report_data.json
+          sha256: b8037fe85747cf05d7ae5cdeceec21a5f25799c8bcad70a96599285b0e88867b
+          size_bytes: 698076
+        - filename: host-pipeline.json
+          sha256: 552d500b0448473f414a3603750bbb7f1b2207bd5b61cc2e0bd001920cd23fc2
+          size_bytes: 25984
+        - filename: paraformer_config.yaml
+          sha256: 1d9057edeaba9e131cb98f26011606497cf3af187d8943525ddb5ee36c836b1b
+          size_bytes: 2532
+        - filename: predictor.oe_report.html
+          sha256: 547b2a469f8c5fb931e3f239af223f57b3246e7db0cf88a788dd91d010c6eb93
+          size_bytes: 1683660
+        - filename: predictor.oe_report_data.json
+          sha256: f8b306dd537fd9b8e6cea12241a8f8feddb76f144cd7cd29a451f4e22cda0ab1
+          size_bytes: 17579
+        - filename: tokens.json
+          sha256: 2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127
+          size_bytes: 93676
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/paraformer/paraformer_large_contextual_8404_int16_cpuptq_o1_20261104_r02_s100_bundle.tar/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/paraformer/paraformer_large_contextual_8404_int16_cpuptq_o1_20261104_r02_s100_bundle.tar/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/paraformer/paraformer_large_contextual_8404_int16_cpuptq_o1_20261104_r02_s100_bundle.tar/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/paraformer/paraformer_large_contextual_8404_int16_cpuptq_o1_20261104_r02_s100_bundle.tar/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: logits
+        shape:
+        - 1
+        - 100
+        - 8404
+        dtype: float32
+      components:
+        encoder:
+          status: passed
+          artifact_sha256: 89ee33f3ce9b08a46e7265c704b07c56f8372bd5da6f95464ad315cba125860a
+          inputs:
+          - name: speech
+            shape:
+            - 1
+            - 400
+            - 560
+            dtype: float32
+          outputs:
+          - name: /encoder/after_norm/Add_1_output_0
+            shape:
+            - 1
+            - 400
+            - 512
+            dtype: float32
+          oe_report_filename: encoder.oe_report.html
+          oe_report_sha256: a4d389284f9af639fa9feb2e0c927d31a6528c360d0f373e443b0f59a0ef7bdf
+          oe_data_filename: encoder.oe_report_data.json
+          oe_data_sha256: b8037fe85747cf05d7ae5cdeceec21a5f25799c8bcad70a96599285b0e88867b
+        predictor:
+          status: passed
+          artifact_sha256: ae9033774dfb06816cca6f71481a696c70c3d0f4804f1bc49b167343c2422deb
+          inputs:
+          - name: /encoder/after_norm/Add_1_output_0
+            shape:
+            - 1
+            - 400
+            - 512
+            dtype: float32
+          outputs:
+          - name: /predictor/Add_output_0
+            shape:
+            - 1
+            - 401
+            dtype: float32
+          - name: /predictor/Concat_5_output_0
+            shape:
+            - 1
+            - 401
+            - 512
+            dtype: float32
+          oe_report_filename: predictor.oe_report.html
+          oe_report_sha256: 547b2a469f8c5fb931e3f239af223f57b3246e7db0cf88a788dd91d010c6eb93
+          oe_data_filename: predictor.oe_report_data.json
+          oe_data_sha256: f8b306dd537fd9b8e6cea12241a8f8feddb76f144cd7cd29a451f4e22cda0ab1
+        decoder:
+          status: passed
+          artifact_sha256: 5b2446a86429fd6ed43d61431cd5c8fa6a90d84984b645153657bd9809fe22e1
+          inputs:
+          - name: /encoder/after_norm/Add_1_output_0
+            shape:
+            - 1
+            - 400
+            - 512
+            dtype: float32
+          - name: token_num
+            shape:
+            - 1
+            dtype: int32
+          - name: bias_embed
+            shape:
+            - 1
+            - 1
+            - 512
+            dtype: float32
+          - name: onnx::Shape_8609
+            shape:
+            - 1
+            - 100
+            - 512
+            dtype: float32
+          outputs:
+          - name: logits
+            shape:
+            - 1
+            - 100
+            - 8404
+            dtype: float32
+          oe_report_filename: decoder.oe_report.html
+          oe_report_sha256: 5a5457e289f427f4c7dfb61ecbc730fd911f372146b25cb3804911151dca55a6
+          oe_data_filename: decoder.oe_report_data.json
+          oe_data_sha256: b886ef42f019cfe0cfcf49d04653327c04c6a173b18ba5151b5a89c98fc0e20d
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NTC
+        shape:
+        - 1
+        - 400
+        - 560
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 50
+      calibration_manifest_sha256: 2355b552ea676386e06ac834466068c0020a5288d406c3796183e5b754754aad
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: 98c47dc1f120fa259170b1f9edf82ef4c2a3b40c45b89afb8c5da9dc71c786e4
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+      host_pipeline:
+        status: passed
+        stages:
+        - encoder
+        - predictor
+        - decoder
+        evidence_file: host-pipeline.json
+        evidence_sha256: 552d500b0448473f414a3603750bbb7f1b2207bd5b61cc2e0bd001920cd23fc2
+        component_sha256:
+          encoder: 89ee33f3ce9b08a46e7265c704b07c56f8372bd5da6f95464ad315cba125860a
+          predictor: ae9033774dfb06816cca6f71481a696c70c3d0f4804f1bc49b167343c2422deb
+          decoder: 5b2446a86429fd6ed43d61431cd5c8fa6a90d84984b645153657bd9809fe22e1
+        scope: Complete source float ASR pipeline; HBM and board execution not-run
+    provenance:
+      repository_commit: b6b9db8915db466086d638bdd3a696b958cb5c29
+      source_checkpoint_sha256: 2d448b72b2b5e5fdf9ba865ff54c8c207f5cf8fced742b0160ef505b026c44a7
+      source_weight_url: https://www.modelscope.cn/models/iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404/resolve/master/model.pt
+      checkpoint_revision: sha256:2d448b72b2b5e5fdf9ba865ff54c8c207f5cf8fced742b0160ef505b026c44a7
+      source_version_pair:
+        implementation: FunASR1.3.14
+        model_id: iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404
+        checkpoint:
+          name: paraformer/model.pt
+          status: downloaded
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/paraformer/model.pt
+          url: https://www.modelscope.cn/models/iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404/resolve/master/model.pt
+          bytes: 912662894
+          sha256: 2d448b72b2b5e5fdf9ba865ff54c8c207f5cf8fced742b0160ef505b026c44a7
+          acquired_utc: '2026-11-04T09:43:52.606728+00:00'
+        native_export_base: c86f27115cdef08546bbafd28124adffb73a238d
+        source_support:
+          tokens.json:
+            sha256: 2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127
+          am.mvn:
+            sha256: 29b3c740a2c0cfc6b308126d31d7f265fa2be74f3bb095cd2f143ea970896ae5
+          paraformer_config.yaml:
+            sha256: 1d9057edeaba9e131cb98f26011606497cf3af187d8943525ddb5ee36c836b1b
+      toolchain_image: S SDK3.7.0 / exact cached CPU image
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      build_id: paraformer-large-contextual-8404-int16-cpuptq-o1-20261104-r02-s100
+      precision_policy: INT16 activations; O1
+      native_variant: large-contextual-8404-int16-cpuptq-o1-20261104-r02
+      components:
+        encoder:
+          onnx_sha256: 29c8ba3fd9ce611ca6926bccd243ef56925dc0f857d1e138df81983171a42d0f
+          config_sha256: e3ddca6d4a3c3a31a08e9853d15ac5d4e445ec2004365370260ad4ae7330da71
+        predictor:
+          onnx_sha256: a873a87d5a45b578ffd644b137f8ebcc04260fd864d788fd10852f88ae26e76e
+          config_sha256: 11934581d3ce533eba9dbe3a4b149087ba0a590a7724d4f1f05dbdcd33282c41
+        decoder:
+          onnx_sha256: ec07435eb097bd4536ea7573a357402f122996ed0bca3e7ce6d917c4921fa34c
+          config_sha256: f726d652816ec966b1813724aef3a317490d92f9668a55203115e647b728b730
+      host_smoke_report_sha256: 552d500b0448473f414a3603750bbb7f1b2207bd5b61cc2e0bd001920cd23fc2
+      original_o2_superseded:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/reports/paraformer-o2-superseded-by-o1-r02.json
+        sha256: b15dcde72bf150c682281b11fc2f4307f803831605d98ff1dcce50432c5b85e5
+        size_bytes: 1997
+      compiler_policy: Fresh INT16 CPU PTQ / O1, one core, jobs4; no cross-target
+        or O2 BC reuse
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: e4fc50e86fa932ae93150fa8052ca9982978849cc294daa0c18b789bb2b87ef6
+    runtime_command: python3 -m samples.speech.paraformer.runtime.python.main --target
+      s100 --variant large-contextual-8404-int16-cpuptq-o1-20261104-r02 --encoder-asset-id
+      s:paraformer:s100/paraformer_encoder_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm
+      --encoder-model-path /path/to/paraformer_encoder_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm
+      --predictor-asset-id s:paraformer:s100/paraformer_predictor_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm
+      --predictor-model-path /path/to/paraformer_predictor_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm
+      --decoder-asset-id s:paraformer:s100/paraformer_decoder_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm
+      --decoder-model-path /path/to/paraformer_decoder_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm
+      --tokens-path /path/to/tokens.json --cmvn-path /path/to/am.mvn --audio-file
+      /path/to/audio.wav --output-dir /path/to/new/result

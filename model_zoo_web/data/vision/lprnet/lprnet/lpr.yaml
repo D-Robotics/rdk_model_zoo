@@ -11,7 +11,7 @@ description:
   en: LPRNet extracts character sequences directly from license plate images and recognizes
     plate text with CTC decoding.
 sample_path: samples/vision/lprnet
-sample_revision: 31e420bed110fcf017dbb669ed1e4c599907cad3
+sample_revision: 48a3ade640dd53e3dc9c780a36b10ee466f1ddf8
 license:
   name: Apache-2.0
   url: https://www.apache.org/licenses/LICENSE-2.0
@@ -678,4 +678,134 @@ variants:
     runtime_command: python3 -m samples.vision.lprnet.runtime.python.main --target
       s600 --asset-id s:lprnet:s600/lprnet_sirius_68class_24x94_bgr_featuremap_int16_cpuptq_o1_20261104_nashp.hbm
       --model-path /path/to/lprnet_sirius_68class_24x94_bgr_featuremap_int16_cpuptq_o1_20261104_nashp.hbm
+      --test-bin /path/to/plate.dat
+- size: sirius-68class-bgr-defaultptq-o2-20261104
+  model:
+    parameter_count: 446976
+  input:
+    width: 94
+    height: 24
+    source:
+      format: bgr
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 24
+      - 94
+      scale: 0.00392156862745098
+      mean:
+      - 0.5
+      - 0.5
+      - 0.5
+      std:
+      - 0.5019607843137255
+      - 0.5019607843137255
+      - 0.5019607843137255
+  platforms:
+  - platform: x5
+    license:
+      name: Apache-2.0
+      url: https://github.com/sirius-ai/LPRNet_Pytorch/blob/7c976664b3f3879efabeaff59c7a117e49d5f29e/LICENSE
+      scope: model
+    status: converted
+    converted_at: '2026-11-04'
+    metadata_revision: 1
+    artifact:
+      filename: lprnet_sirius_68class_24x94_bgr_featuremap_defaultptq_o2_20261104_bayese.bin
+      format: BIN
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/lprnet/lprnet_sirius_68class_24x94_bgr_featuremap_defaultptq_o2_20261104_bayese.bin
+      sha256: b41f6d908cc20def49caf0272fb828411a6215337208350e08adeea3aecea38d
+      size_bytes: 466655
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/lprnet/lprnet_sirius_68class_24x94_bgr_featuremap_defaultptq_o2_20261104_bayese/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/lprnet/lprnet_sirius_68class_24x94_bgr_featuremap_defaultptq_o2_20261104_bayese/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/lprnet/lprnet_sirius_68class_24x94_bgr_featuremap_defaultptq_o2_20261104_bayese/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/lprnet/lprnet_sirius_68class_24x94_bgr_featuremap_defaultptq_o2_20261104_bayese/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: logits
+        shape:
+        - 1
+        - 68
+        - 18
+        - 1
+        dtype: float32
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 24
+        - 94
+      compiler_versions:
+        hbdk: 3.49.15
+        hb_mapper: 1.24.3
+        horizon_nn: 1.1.0
+        runtime: 3.15.55.0
+      calibration_samples: 200
+      calibration_manifest_sha256: af4e7488bbc19ed219419fb065275b15b2e378d487c2de8f0eb53af1677c8acf
+      optimization_level: O2
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: b41f6d908cc20def49caf0272fb828411a6215337208350e08adeea3aecea38d
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: 48a3ade640dd53e3dc9c780a36b10ee466f1ddf8
+      source_repository_commit: 7c976664b3f3879efabeaff59c7a117e49d5f29e
+      source_checkpoint_sha256: d1ca22ca7a251a90702a166c8ad8ce7f05acb39f5ef8055139a33d462716d1ad
+      source_weight_url: https://github.com/sirius-ai/LPRNet_Pytorch/blob/7c976664b3f3879efabeaff59c7a117e49d5f29e/weights/Final_LPRNet_model.pth
+      checkpoint_revision: sha256:d1ca22ca7a251a90702a166c8ad8ce7f05acb39f5ef8055139a33d462716d1ad
+      source_version_pair:
+        model: lprnet
+        repository: https://github.com/sirius-ai/LPRNet_Pytorch
+        commit: 7c976664b3f3879efabeaff59c7a117e49d5f29e
+        source_archive:
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/upstream-lprnet/source.zip
+          sha256: 239527ee129b71210ea187026e2a5147b320335d2875791a4cc73e2f0c0fc2f7
+          size_bytes: 18894290
+        checkout: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/upstream-lprnet/LPRNet_Pytorch-7c976664b3f3879efabeaff59c7a117e49d5f29e
+        checkpoint:
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/upstream-lprnet/LPRNet_Pytorch-7c976664b3f3879efabeaff59c7a117e49d5f29e/weights/Final_LPRNet_model.pth
+          sha256: d1ca22ca7a251a90702a166c8ad8ce7f05acb39f5ef8055139a33d462716d1ad
+          size_bytes: 1806995
+          url: https://github.com/sirius-ai/LPRNet_Pytorch/blob/7c976664b3f3879efabeaff59c7a117e49d5f29e/weights/Final_LPRNet_model.pth
+      toolchain_image: X5 SDK1.2.8 / CPU execution, exact cached image by digest
+      toolchain_image_id: sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f
+      build_id: lprnet-sirius-68class-x5-defaultptq-20261104-r02
+      precision_policy: SDK default PTQ; actual mixed INT8/INT16 BPU and float CPU
+        nodes
+      native_variant: sirius-68class-bgr-defaultptq-o2-20261104
+      onnx_sha256: 50dfc80a3eb71f7f12310ddca665ad3df953cdf01473c2b9f44621dd4af79fea
+      config_sha256: 28c5c1ce25bcef8995c9c796e340ec406183b69fbd5a600301d90431cae78b6a
+      recipe_sha256: d287f9303d74d24fbf973bc72d4ad47ccf6ac435a6d6fce29d5ab120b388c068
+      calibration_manifest_sha256: af4e7488bbc19ed219419fb065275b15b2e378d487c2de8f0eb53af1677c8acf
+      host_smoke_report_sha256: 2442a1b24d979d16126a09512242f56fc123095b835767be016bd86d9ed0cb58
+      compile_log_sha256: 97e2d21f48c72ddc92e5f68b61cc7a5418704b5f090294157f1edf2ab43d2251
+      cpu_reference_float_gate:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-x5-defaultptq-20261104-r02/cpu-sdk-parity.json
+        sha256: 7a5a1b3a223326f95c4dda8b12f14fea4a8561cd75c0e249f943626d7ddba755
+        size_bytes: 3613
+      source_export_gate:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/reports/lprnet-export.json
+        sha256: 2442a1b24d979d16126a09512242f56fc123095b835767be016bd86d9ed0cb58
+        size_bytes: 4257
+      actual_mixed_node_count: 39
+      actual_bpu_subgraphs: 2
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 6859d86cb52869427ee7d71de52694e899770e4e104bfcd1948e6a5ded00f0fa
+    runtime_command: python3 -m samples.vision.lprnet.runtime.python.main --target
+      x5 --asset-id x5:lprnet:lprnet_sirius_68class_24x94_bgr_featuremap_defaultptq_o2_20261104_bayese.bin
+      --model-path /path/to/lprnet_sirius_68class_24x94_bgr_featuremap_defaultptq_o2_20261104_bayese.bin
       --test-bin /path/to/plate.dat

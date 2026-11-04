@@ -87,6 +87,22 @@ class ConvertedCatalogTest(unittest.TestCase):
         self.row['provenance']['checkpoint_revision']='sha256:'+'f'*64
         with self.assertRaises(catalog.CatalogError):self.validate()
 
+    def test_speech_features_keep_three_ntc_dimensions_and_vision_keeps_nchw(self):
+        self.record['domain'] = 'speech'
+        self.path = catalog.DATA_ROOT/'speech/ultralytics_yolo/yolo26/detect.yaml'
+        source = self.record['variants'][0]['input']['source']
+        source.update(format='FEATUREMAP', layout='NTC', shape=[1,400,560])
+        self.record['variants'][0]['input'].update(width=560,height=400)
+        self.validate()
+        source['shape'] = [1,1,400,560]
+        with self.assertRaisesRegex(catalog.CatalogError, 'three NTC'):
+            self.validate()
+        source['shape'] = [1,400,560]
+        self.record['domain'] = 'vision'
+        self.path = catalog.DATA_ROOT/'vision/ultralytics_yolo/yolo26/detect.yaml'
+        with self.assertRaisesRegex(catalog.CatalogError, 'four dimensions'):
+            self.validate()
+
     def test_metadata_version_and_model_license_cannot_be_bypassed(self):
         self.row['metadata_revision']=2
         with self.assertRaises(catalog.CatalogError): self.validate()

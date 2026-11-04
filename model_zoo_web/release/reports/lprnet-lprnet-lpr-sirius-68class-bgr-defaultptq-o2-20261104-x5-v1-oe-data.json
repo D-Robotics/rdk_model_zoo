@@ -1,0 +1,628 @@
+{
+  "schema_version": 1,
+  "generated_from_run": "lprnet-x5-defaultptq-20261104-r02",
+  "generated_at": "2026-11-04T12:49:50.205674+00:00",
+  "model": {
+    "source": "lprnet",
+    "family": "lprnet",
+    "task": "lpr",
+    "size": "sirius-68class-bgr-defaultptq-o2-20261104",
+    "component": "model"
+  },
+  "target": {
+    "platform": "x5",
+    "march": "bayes-e"
+  },
+  "toolchain": {
+    "hbdk": "3.49.15",
+    "hb_mapper": "1.24.3",
+    "horizon_nn": "1.1.0",
+    "runtime": "3.15.55.0"
+  },
+  "io": {
+    "inputs": [
+      {
+        "name": "images",
+        "shape": [
+          1,
+          3,
+          24,
+          94
+        ],
+        "dtype": "float32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "logits",
+        "shape": [
+          1,
+          68,
+          18,
+          1
+        ],
+        "dtype": "float32"
+      }
+    ]
+  },
+  "quantization": {
+    "summary": {
+      "total_nodes": 39,
+      "unit_counts": {
+        "BPU": 27,
+        "CPU": 12
+      },
+      "dtype_counts": {
+        "float": 12,
+        "int16": 1,
+        "int8": 26
+      },
+      "measured_nodes": 35,
+      "weakest_node": {
+        "name": "/source/backbone.14/Slice",
+        "cosine": 0.919446
+      },
+      "weakest_nodes": [
+        {
+          "name": "/source/backbone.14/Slice",
+          "cosine": 0.919446
+        },
+        {
+          "name": "/source/backbone.14/MaxPool",
+          "cosine": 0.951916
+        },
+        {
+          "name": "/source/backbone.16/Conv",
+          "cosine": 0.967093
+        },
+        {
+          "name": "/source/Div_3",
+          "cosine": 0.96818
+        },
+        {
+          "name": "/source/backbone.20/Conv",
+          "cosine": 0.969101
+        }
+      ],
+      "cosine_percentiles": {
+        "p10": 0.96818,
+        "median": 0.998647
+      }
+    },
+    "nodes": [
+      {
+        "name": "/source/backbone.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.99999,
+        "threshold": 0.996094,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.3/MaxPool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedMaxPool",
+        "cosine": 0.999854,
+        "threshold": 17.5901,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.4/block/block.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999795,
+        "threshold": 17.5901,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.4/block/block.2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999601,
+        "threshold": 23.6511,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.4/block/block.4/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999698,
+        "threshold": 47.0153,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.4/block/block.6/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999685,
+        "threshold": 206.671,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.7/Slice",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Slice",
+        "cosine": 0.996677,
+        "threshold": 45.0201,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.7/MaxPool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedMaxPool",
+        "cosine": 0.997442,
+        "threshold": 45.0201,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.8/block/block.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.998256,
+        "threshold": 45.0201,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.8/block/block.2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.998625,
+        "threshold": 50.9336,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.8/block/block.4/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999006,
+        "threshold": 94.4029,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.8/block/block.6/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.998881,
+        "threshold": 140.071,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.11/block/block.0/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.998682,
+        "threshold": 11.5839,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.11/block/block.2/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.99881,
+        "threshold": 16.5308,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.11/block/block.4/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999079,
+        "threshold": 19.2563,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.11/block/block.6/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999575,
+        "threshold": 28.8627,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.14/Slice",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "Slice",
+        "cosine": 0.919446,
+        "threshold": 155.568,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.14/MaxPool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedMaxPool",
+        "cosine": 0.951916,
+        "threshold": 155.568,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.16/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.967093,
+        "threshold": 155.568,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/backbone.20/Conv",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.969101,
+        "threshold": 4.11518,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/AveragePool",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.999496,
+        "threshold": 17.5901,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/Pow",
+        "on": "CPU",
+        "subgraph": null,
+        "type": "Pow",
+        "cosine": 0.999991,
+        "threshold": null,
+        "dtype": "float"
+      },
+      {
+        "name": "/source/ReduceMean",
+        "on": "CPU",
+        "subgraph": null,
+        "type": "ReduceMean",
+        "cosine": null,
+        "threshold": null,
+        "dtype": "float"
+      },
+      {
+        "name": "/source/Div",
+        "on": "CPU",
+        "subgraph": null,
+        "type": "Div",
+        "cosine": 0.998647,
+        "threshold": 15.7153,
+        "dtype": "float"
+      },
+      {
+        "name": "/source/AveragePool_1",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.998547,
+        "threshold": 45.0201,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/Pow_1",
+        "on": "CPU",
+        "subgraph": null,
+        "type": "Pow",
+        "cosine": 0.998552,
+        "threshold": null,
+        "dtype": "float"
+      },
+      {
+        "name": "/source/ReduceMean_1",
+        "on": "CPU",
+        "subgraph": null,
+        "type": "ReduceMean",
+        "cosine": null,
+        "threshold": null,
+        "dtype": "float"
+      },
+      {
+        "name": "/source/Div_1",
+        "on": "CPU",
+        "subgraph": null,
+        "type": "Div",
+        "cosine": 0.99833,
+        "threshold": 10.8314,
+        "dtype": "float"
+      },
+      {
+        "name": "/source/AveragePool_2",
+        "on": "BPU",
+        "subgraph": 0,
+        "type": "HzQuantizedAveragePool",
+        "cosine": 0.999692,
+        "threshold": 155.568,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/Pow_2",
+        "on": "CPU",
+        "subgraph": null,
+        "type": "Pow",
+        "cosine": 0.999117,
+        "threshold": null,
+        "dtype": "float"
+      },
+      {
+        "name": "/source/ReduceMean_2",
+        "on": "CPU",
+        "subgraph": null,
+        "type": "ReduceMean",
+        "cosine": null,
+        "threshold": null,
+        "dtype": "float"
+      },
+      {
+        "name": "/source/Div_2",
+        "on": "CPU",
+        "subgraph": null,
+        "type": "Div",
+        "cosine": 0.999202,
+        "threshold": null,
+        "dtype": "float"
+      },
+      {
+        "name": "/source/Pow_3",
+        "on": "CPU",
+        "subgraph": null,
+        "type": "Pow",
+        "cosine": 0.989151,
+        "threshold": null,
+        "dtype": "float"
+      },
+      {
+        "name": "/source/ReduceMean_3",
+        "on": "CPU",
+        "subgraph": null,
+        "type": "ReduceMean",
+        "cosine": null,
+        "threshold": null,
+        "dtype": "float"
+      },
+      {
+        "name": "/source/Div_3",
+        "on": "CPU",
+        "subgraph": null,
+        "type": "Div",
+        "cosine": 0.96818,
+        "threshold": 8.99185,
+        "dtype": "float"
+      },
+      {
+        "name": "/source/Concat",
+        "on": "BPU",
+        "subgraph": 1,
+        "type": "Concat",
+        "cosine": 0.987592,
+        "threshold": 38.9645,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/container/container.0/Conv",
+        "on": "BPU",
+        "subgraph": 1,
+        "type": "HzSQuantizedConv",
+        "cosine": 0.998164,
+        "threshold": 38.9645,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/ReduceMean_4",
+        "on": "BPU",
+        "subgraph": 1,
+        "type": "HzSQuantizedReduceMean",
+        "cosine": 0.998595,
+        "threshold": 180.097,
+        "dtype": "int8"
+      },
+      {
+        "name": "/source/ReduceMean_4_reshape",
+        "on": "BPU",
+        "subgraph": 1,
+        "type": "Reshape",
+        "cosine": 0.998595,
+        "threshold": 111.088,
+        "dtype": "int16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "logits",
+        "cosine": 0.998595,
+        "l1_distance": 1.09442,
+        "l2_distance": 0.042614,
+        "chebyshev_distance": 6.074377
+      }
+    ]
+  },
+  "subgraphs": [
+    {
+      "name": "main_graph_subgraph_0",
+      "perf": {
+        "fps": 4775.96,
+        "latency_ms": 0.21,
+        "ddr_mb_per_frame": 0.282,
+        "bpu_ops_per_frame": 284461056,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 5,
+        "interval_ms": 0.05,
+        "utilization": [
+          0.945,
+          0.975,
+          0.98,
+          0.872,
+          0.111
+        ],
+        "load_bandwidth_mbs": [
+          1002,
+          709,
+          948,
+          1478,
+          738
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          510,
+          629
+        ]
+      }
+    },
+    {
+      "name": "main_graph_subgraph_1",
+      "perf": {
+        "fps": 9009.66,
+        "latency_ms": 0.11,
+        "ddr_mb_per_frame": 0.1,
+        "bpu_ops_per_frame": 5052672,
+        "core_number": 1,
+        "march": "B25E"
+      },
+      "intervals": {
+        "count": 6,
+        "interval_ms": 0.02,
+        "utilization": [
+          0.748,
+          0.974,
+          1.0,
+          0.98,
+          0.96,
+          0.3
+        ],
+        "load_bandwidth_mbs": [
+          3897,
+          2034,
+          85,
+          3,
+          3,
+          0
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          466
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "latency_ms": 0.32,
+    "fps_derived": 3125.0,
+    "ddr_mb_per_frame": 0.382,
+    "bpu_ops_per_frame": 289513728,
+    "derivation": "latency = sum of subgraph latency; fps_derived = 1000 / latency (sequential subgraph execution assumption); values from hbdk static estimation, not board measurement"
+  },
+  "similarity_provenance": {
+    "stage": "ptq-simulation",
+    "method": "x86 quantized simulation vs float ONNX (hb_mapper makertbin)",
+    "calibration_samples": 200,
+    "source_log": "output/hb_mapper_makertbin.log",
+    "note": "Native quantized simulation diagnostic; not held-out plate accuracy or board execution"
+  },
+  "performance_provenance": {
+    "stage": "compiler-static-estimate",
+    "source": "makertbin-workdir",
+    "method": "hbdk-cc static latency estimate of the compiled release artifact",
+    "note": "Estimates describe the compiled artifact; on-board measurements live in the model benchmark."
+  },
+  "board_measurement": null,
+  "provenance": {
+    "artifact_sha256": "b41f6d908cc20def49caf0272fb828411a6215337208350e08adeea3aecea38d",
+    "makertbin_log_sha256": "f6cf1a2023047c338c4378c4c10729cf14aa054557178cbee9a9b09abc9ed76e",
+    "perf_reports": [
+      {
+        "name": "main_graph_subgraph_0",
+        "sha256": "9c9e3fcd445699591359b0ea2750b3b9de48991517cb0478b3ab35b46216bf38"
+      },
+      {
+        "name": "main_graph_subgraph_1",
+        "sha256": "55471a04fa034660cae6bfe77c56b80c266f5f8629535e3aa40d655b3c268e70"
+      }
+    ],
+    "onnx_sha256": "50dfc80a3eb71f7f12310ddca665ad3df953cdf01473c2b9f44621dd4af79fea",
+    "config_sha256": "28c5c1ce25bcef8995c9c796e340ec406183b69fbd5a600301d90431cae78b6a",
+    "derived_metadata": {
+      "extracted_json": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-x5-defaultptq-20261104-r02/collected/model/output/oe_report_data.extracted.json",
+        "sha256": "a72923776c0421c56eb37beab8ae0404b02e356062217dcd7705f27f23bee5e7",
+        "size_bytes": 9639
+      },
+      "source_evidence": {
+        "onnx": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-source-export-r01/model.onnx",
+          "sha256": "50dfc80a3eb71f7f12310ddca665ad3df953cdf01473c2b9f44621dd4af79fea",
+          "size_bytes": 1792174
+        },
+        "config": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-x5-defaultptq-20261104-r02/config.yaml",
+          "sha256": "28c5c1ce25bcef8995c9c796e340ec406183b69fbd5a600301d90431cae78b6a",
+          "size_bytes": 1038
+        },
+        "actual_bin_info": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-x5-defaultptq-20261104-r02/output/hb_model_info.log",
+          "sha256": "59f4f127b1202a17811fa1a1b03a845b71a648e9c1db469d33575a574fbc4b7d",
+          "size_bytes": 24871
+        },
+        "native_compile_stdout": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-x5-defaultptq-20261104-r02/compile-r03.log",
+          "sha256": "97e2d21f48c72ddc92e5f68b61cc7a5418704b5f090294157f1edf2ab43d2251",
+          "size_bytes": 7604
+        },
+        "native_debug_log": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-x5-defaultptq-20261104-r02/output/hb_mapper_makertbin.log",
+          "sha256": "f6cf1a2023047c338c4378c4c10729cf14aa054557178cbee9a9b09abc9ed76e",
+          "size_bytes": 38029
+        },
+        "native_htmls": [
+          {
+            "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-x5-defaultptq-20261104-r02/output/main_graph_subgraph_0.html",
+            "sha256": "9c9e3fcd445699591359b0ea2750b3b9de48991517cb0478b3ab35b46216bf38",
+            "size_bytes": 2261252
+          },
+          {
+            "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-x5-defaultptq-20261104-r02/output/main_graph_subgraph_1.html",
+            "sha256": "55471a04fa034660cae6bfe77c56b80c266f5f8629535e3aa40d655b3c268e70",
+            "size_bytes": 2258844
+          }
+        ],
+        "native_perf_json": [
+          {
+            "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-x5-defaultptq-20261104-r02/output/main_graph_subgraph_0.json",
+            "sha256": "3c1bbb653d17d5e8c4308ad0a41da213e20078711bc397ad04e6b9663f0f63fa",
+            "size_bytes": 9261
+          },
+          {
+            "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-x5-defaultptq-20261104-r02/output/main_graph_subgraph_1.json",
+            "sha256": "2d3bf9030ba1dd605b7607a77f1e40e2cd497378caaff43385d4fcfad50bdedb",
+            "size_bytes": 4475
+          }
+        ]
+      },
+      "supplements": "Public ABI from completed BIN; complete original mixed CPU/BPU NodeInfo reparsed because the legacy extractor stops at CPU -- subgraph rows; both original BPU reports preserved"
+    }
+  }
+}

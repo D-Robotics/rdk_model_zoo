@@ -277,6 +277,95 @@ def run(row, native, output, threads):
         extra = {'detections': detections, 'confidence_threshold': .5, 'masks': True,
                  'visualization': {'method': 'Native PF26 Top-K and ROI mask restoration; no NMS',
                                    'rendered_instances': selected, 'foreground_pixels': int(full.sum())}}
+    elif kind == 'tracking-overlay':
+        from samples.vision.bytetrack.conversion.reference import SourceFloatDetector
+        from samples.vision.bytetrack.runtime.python.cli import resolve_selection
+        from samples.vision.bytetrack.runtime.python.tracking import ByteTrackTask
+        detector = SourceFloatDetector(resolve_selection(row['target'],variant=row['variant']),row['graphs']['model']['path'],threads)
+        # Share the checked forward function so every source output is retained.
+        detector.infer = lambda feed: forward('model',feed)
+        tracks = ByteTrackTask(detector).predict(bgr)
+        records = [{'id':t.track_id,'box':list(t.tlbr),'score':t.score} for t in tracks]
+        selected = [t for t in records if (t['box'][2]-t['box'][0])*(t['box'][3]-t['box'][1]) >= photo.width*photo.height*.005]
+        if not selected:
+            raise ValueError('The actual model and tracker yielded no visible tracks')
+        result_image = photo.copy()
+        draw=ImageDraw.Draw(result_image);face=font(24,True)
+        for track in selected:
+            box=track['box'];label=f"ID {track['id']}  {track['score']:.2f}"
+            color=(0,108,238);draw.rectangle(tuple(box),outline=color,width=3)
+            x=max(0,min(photo.width-200,box[0]));y=max(0,box[1]-32)
+            draw.rectangle((x,y,x+draw.textlength(label,font=face)+18,y+32),fill=color)
+            draw.text((x+9,y+2),label,font=face,fill='white')
+        banner=ImageOps.fit(result_image,(1672,941),Image.Resampling.LANCZOS)
+        extra={'tracks':records,'visualization':{'method':'Source YOLOv5x ONNX, Native raw-F32 person decoding and first actual CPU ByteTrack update',
+            'frame_index':1,'rendered_track_ids':[t['id']for t in selected],'rendered_size':[1672,941],
+            'layout':'full-bleed; actual first-frame IDs, not a MOT accuracy evaluation'}}
+    elif kind in ('ocr-detection','ocr-recognition'):
+        from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
+        from samples.vision.paddle_ocr.runtime.python.ocr import OCRPipeline
+        pair = resolve_pair(row['target'],det_asset_id=row['detector_asset_id'],rec_asset_id=row['recognizer_asset_id'])
+        pipeline=OCRPipeline(pair,lambda _: {},lambda _: {})
+        if kind=='ocr-detection':
+            values=forward('model',pipeline.prepare_detection(bgr))
+            result=pipeline.postprocess_detection(values,bgr)
+            if not result.boxes:raise ValueError('No actual OCR text boxes for this input')
+            result_image=photo.copy();draw=ImageDraw.Draw(result_image)
+            for box in result.boxes:
+                points=[tuple(v) for v in box.tolist()];draw.line(points+[points[0]],fill=(0,108,238),width=4)
+            extra={'detection':{'boxes':[b.tolist()for b in result.boxes]},
+                'visualization':{'method':'Official BGR normalization, exact source detector probability map and Native DB polygons/crops',
+                                 'rendered_boxes':[b.tolist()for b in result.boxes]}}
+        else:
+            roi=row['word_roi'];x0,y0,x1,y1=roi
+            if not (0<=x0<x1<=photo.width and 0<=y0<y1<=photo.height):raise ValueError('Word crop outside input photograph')
+            values=forward('model',pipeline.prepare_recognition(bgr[y0:y1,x0:x1]))
+            text=pipeline.decode_recognition(values)
+            if not text:raise ValueError('Actual recognizer returned an empty word')
+            result_image=photo.copy();draw=ImageDraw.Draw(result_image);face=font(46,True)
+            width=draw.textlength(text,font=face);draw.rectangle((54,806,94+width,890),fill=(0,108,238))
+            draw.text((74,817),text,font=face,fill='white')
+            extra={'recognition':{'text':text,'ctc_indices':next(iter(values.values()))[0].argmax(axis=-1).tolist()},
+                'visualization':{'method':'Official BGR aspect resize and right padding, full source logits, Native 97-class CTC decode',
+                                 'word_roi':roi,'roi_source':'manual inference-input crop, not a detector output','rendered_text':text}}
+        banner=ImageOps.fit(result_image,(1672,941),Image.Resampling.LANCZOS)
+    elif kind == 'speech-transcript':
+        import soundfile as sf
+        from samples.speech.paraformer.runtime.python.frontend import ParaformerFrontend
+        from samples.speech.paraformer.runtime.python.pipeline import ParaformerPipeline,TensorNames
+        from samples.speech.paraformer.conversion.export import signature
+        audio_path=native/row['audio_input']
+        committed=subprocess.check_output(['git','-C',str(native),'show',row['native_commit']+':'+row['audio_input']])
+        if hashlib.sha256(committed).hexdigest()!=digest(audio_path):raise ValueError('Audio differs from pinned source input')
+        support={}
+        for name in ('samples/speech/paraformer/model/am.mvn','samples/speech/paraformer/tests/fixtures/published-tokens.json'):
+            committed=subprocess.check_output(['git','-C',str(native),'show',row['native_commit']+':'+name])
+            if hashlib.sha256(committed).hexdigest()!=digest(native/name):raise ValueError('Speech support file differs from pinned source')
+            support[name]=digest(native/name)
+        wave,rate=sf.read(audio_path,dtype='float32')
+        features=ParaformerFrontend(native/'samples/speech/paraformer/model/am.mvn').pre_process(wave,rate)
+        vocabulary=json.loads((native/'samples/speech/paraformer/tests/fixtures/published-tokens.json').read_text())
+        names=TensorNames(signature('encoder','input')[0][0],signature('encoder','output')[0][0],
+            signature('predictor','input')[0][0],signature('predictor','output')[0][0],signature('predictor','output')[1][0],
+            *[v[0]for v in signature('decoder','input')],signature('decoder','output')[0][0])
+        pipeline=ParaformerPipeline(*[(lambda feed,role=role:forward(role,feed))for role in ('encoder','predictor','decoder')],names,vocabulary)
+        result=pipeline.predict(features.tensor,features.valid_frames)
+        if not result.decoder_executed or not result.text:raise ValueError('No actual speech decoder readout')
+        result_image=ImageOps.fit(photo,(1672,941),Image.Resampling.LANCZOS);draw=ImageDraw.Draw(result_image)
+        draw.rectangle((0,680,1672,941),fill=(245,248,252))
+        mono=wave.mean(axis=1)if wave.ndim==2 else wave
+        edges=np.linspace(0,len(mono),701,dtype=int)
+        for i in range(700):
+            chunk=mono[edges[i]:edges[i+1]];amplitude=float(np.max(np.abs(chunk)))if len(chunk)else 0
+            y=min(60,round(amplitude/max(float(np.max(np.abs(mono))),1e-8)*60))
+            x=65+round(i*1542/700);draw.line((x,758-y,x,758+y),fill=(0,108,238),width=2)
+        face=ImageFont.truetype('/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc',46)
+        draw.text((65,842),result.text,font=face,fill=(25,31,41))
+        banner=result_image
+        extra={'native_support_files':support,'audio':{'input':row['audio_input'],'sha256':digest(audio_path),'sample_rate':int(rate),'sample_count':len(wave)},
+               'recognition':{'text':result.text,'token_ids':list(result.token_ids),'token_count':result.token_count},
+               'visualization':{'method':'Actual Native WAV frontend, all three source ONNX stages, CPU CIF and greedy transcription; generated microphone photo is a visual backdrop',
+                                'rendered_text':result.text,'waveform':'actual audio amplitude, not generated waveform','photo_role':'illustration backdrop; not the ASR inference input'}}
     elif kind == 'plate-readout':
         from samples.vision.lprnet.model.prepare_input import prepare_bgr
         from samples.vision.lprnet.runtime.python.lprnet import decode_plate
