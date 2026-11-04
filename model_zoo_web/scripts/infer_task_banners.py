@@ -21,7 +21,7 @@ from types import SimpleNamespace
 import cv2
 import numpy as np
 import onnxruntime as ort
-from PIL import Image, ImageDraw, ImageOps
+from PIL import Image, ImageDraw, ImageOps, ImageFont
 from PIL import __version__ as pillow_version
 
 from infer_classification_banners import digest, file_record, font, write_json
@@ -277,6 +277,32 @@ def run(row, native, output, threads):
         extra = {'detections': detections, 'confidence_threshold': .5, 'masks': True,
                  'visualization': {'method': 'Native PF26 Top-K and ROI mask restoration; no NMS',
                                    'rendered_instances': selected, 'foreground_pixels': int(full.sum())}}
+    elif kind == 'plate-readout':
+        from samples.vision.lprnet.model.prepare_input import prepare_bgr
+        from samples.vision.lprnet.runtime.python.lprnet import decode_plate
+        x0, y0, x1, y1 = row['plate_roi']
+        if not (0 <= x0 < x1 <= photo.width and 0 <= y0 < y1 <= photo.height):
+            raise ValueError('Plate crop is outside the input photograph')
+        value = prepare_bgr(bgr[y0:y1, x0:x1])
+        values = forward('model', {session.get_inputs()[0].name: value})
+        logits, = values.values()
+        if logits.shape != (1, 68, 18, 1):
+            raise ValueError('Expected complete LPRNet logits')
+        plate = decode_plate(logits.reshape(68, 18))
+        if not plate:
+            raise ValueError('The model produced an empty plate readout')
+        result_image = ImageOps.fit(photo, (1672, 941), Image.Resampling.LANCZOS)
+        draw = ImageDraw.Draw(result_image)
+        face = ImageFont.truetype('/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc', 48)
+        width = round(draw.textlength(plate, font=face))
+        draw.rectangle((68, 806, 108 + width, 890), fill=(0, 95, 205))
+        draw.text((88, 810), plate, font=face, fill='white')
+        banner = result_image
+        extra = {'recognition': {'plate': plate, 'ctc_indices': logits[0, :, :, 0].argmax(axis=0).tolist()},
+                 'visualization': {'method': 'Native CTC readout of the complete source logits on a generated plate crop',
+                                   'plate_roi': row['plate_roi'],
+                                   'roi_source': 'manual input crop; no detector prediction',
+                                   'rendered_text': plate}}
     elif kind == 'feature-panel':
         from samples.vision.dinov2.runtime.python.embedding import prepare_image
         prepared = prepare_image(bgr, SimpleNamespace(input_name='input', input_shape=(1, 3, 224, 224)))

@@ -799,7 +799,7 @@ def _validate_host_float_hero(entry: dict[str, Any], label: str, revision: str) 
     if entry.get("inference_receipt_version", payload.get("schema_version")) != payload.get("schema_version"):
         raise CatalogError(f"{label} receipt version differs from its actual inference record")
     kind = entry["kind"]
-    new_kinds = {"depth-panel", "feature-panel", "matting-panel", "prompt-mask-panel", "similarity-panel", "semantic-wipe"}
+    new_kinds = {"depth-panel", "feature-panel", "matting-panel", "prompt-mask-panel", "similarity-panel", "semantic-wipe", "plate-readout"}
     if kind in new_kinds or payload.get("schema_version") == 2:
         _validate_inference_banner_receipt(payload, entry, label)
     if kind == "similarity-panel":
@@ -815,6 +815,11 @@ def _validate_host_float_hero(entry: dict[str, Any], label: str, revision: str) 
     if kind in new_kinds:
         if "result.png" not in payload["files"]:
             raise CatalogError(f"{label} needs its computed result image")
+        if kind == "plate-readout":
+            recognition = require_mapping(payload.get("recognition"), f"{label}.recognition")
+            plate = require_string(recognition.get("plate"), f"{label}.recognition.plate")
+            if payload["visualization"].get("rendered_text") != plate:
+                raise CatalogError(f"{label} rendered plate must match the actual CTC readout")
         return
     if kind == "classification-panel":
         recorded = payload.get("topk")

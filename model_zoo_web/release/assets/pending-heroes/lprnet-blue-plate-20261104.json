@@ -1,0 +1,147 @@
+{
+  "schema_version": 2,
+  "kind": "host-float-model-inference-banner",
+  "status": "passed",
+  "source": "lprnet",
+  "model_url": "https://github.com/sirius-ai/LPRNet_Pytorch/blob/7c976664b3f3879efabeaff59c7a117e49d5f29e/weights/Final_LPRNet_model.pth",
+  "model_file": "Final_LPRNet_model.pth",
+  "checkpoint_sha256": "d1ca22ca7a251a90702a166c8ad8ce7f05acb39f5ef8055139a33d462716d1ad",
+  "commit": "31e420bed110fcf017dbb669ed1e4c599907cad3",
+  "input": "samples/vision/lprnet/test_data/banner_input_blue_plate_20261104.png",
+  "input_sha256": "87f4094d2340a11c5188069a38feefa83c27e547bbf1640970ba464a79566777",
+  "native_helpers": {
+    "samples/vision/lprnet/model/prepare_input.py": "25726b8be91a82f88017cf21942577be062130f8313cbff9537f4d1c059d0817",
+    "samples/vision/lprnet/runtime/python/lprnet.py": "a88410713313b7d3813d079723972011ac932fa80a987de5ae995e737cea393e"
+  },
+  "graphs": {
+    "model": {
+      "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/lprnet-source-export-r01/model.onnx",
+      "sha256": "50dfc80a3eb71f7f12310ddca665ad3df953cdf01473c2b9f44621dd4af79fea",
+      "size_bytes": 1792174
+    }
+  },
+  "framework": "ONNX Runtime 1.20.1",
+  "graph_io": {
+    "model": {
+      "inputs": [
+        {
+          "name": "images",
+          "shape": [
+            1,
+            3,
+            24,
+            94
+          ],
+          "dtype": "tensor(float)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "logits",
+          "shape": [
+            1,
+            68,
+            18,
+            1
+          ],
+          "dtype": "tensor(float)"
+        }
+      ]
+    }
+  },
+  "provider": "CPUExecutionProvider",
+  "runtime": "host-float-reference",
+  "versions": {
+    "onnxruntime": "1.20.1",
+    "numpy": "1.26.4",
+    "opencv": "4.11.0",
+    "pillow": "12.3.0"
+  },
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "feeds": [
+    {
+      "role": "model",
+      "name": "images",
+      "shape": [
+        1,
+        3,
+        24,
+        94
+      ],
+      "dtype": "float32",
+      "sha256": "0684ac5bdca944ba6f9594c0b255b01e472acc5f76fd8622cd2e8bcea5a992f8"
+    }
+  ],
+  "forward_outputs": [
+    {
+      "role": "model",
+      "name": "logits",
+      "shape": [
+        1,
+        68,
+        18,
+        1
+      ],
+      "dtype": "float32",
+      "sha256": "c0b7e8658b320fd374507bf8e9ba5d73a0dc1135e8fc0d87cfea154c171c0443"
+    }
+  ],
+  "files": {
+    "source.png": {
+      "file": "source.png",
+      "sha256": "87f4094d2340a11c5188069a38feefa83c27e547bbf1640970ba464a79566777",
+      "size_bytes": 2425933
+    },
+    "outputs.npz": {
+      "file": "outputs.npz",
+      "sha256": "d660a3dc0dc71fb5b2c5e2d99bcfe233eda0e1a867b1649b1b1cc77253f2eb14",
+      "size_bytes": 4561
+    },
+    "banner.webp": {
+      "file": "banner.webp",
+      "sha256": "01c4e988da6df646e2f8197148e36b5da41676eb035e2e7e84c06358dfac1098",
+      "size_bytes": 281510
+    },
+    "result.png": {
+      "file": "result.png",
+      "sha256": "2a42d0ae870d19de6ae42f696f73a69b94d26115ab3a421e8d2d0f36bf0d071b",
+      "size_bytes": 2233785
+    }
+  },
+  "renderer_sha256": "8e2cc49ea74229d9f1f347a91a81febc69c1c513d7014a61bb6c67e0bb9edf4c",
+  "recognition": {
+    "plate": "皖831289",
+    "ctc_indices": [
+      67,
+      12,
+      67,
+      67,
+      67,
+      67,
+      39,
+      34,
+      32,
+      32,
+      67,
+      33,
+      67,
+      67,
+      39,
+      67,
+      40,
+      67
+    ]
+  },
+  "visualization": {
+    "method": "Native CTC readout of the complete source logits on a generated plate crop",
+    "plate_roi": [
+      110,
+      274,
+      1558,
+      721
+    ],
+    "roi_source": "manual input crop; no detector prediction",
+    "rendered_text": "皖831289"
+  }
+}

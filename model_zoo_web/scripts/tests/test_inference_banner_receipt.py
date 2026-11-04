@@ -128,6 +128,31 @@ class InferenceBannerReceiptTest(unittest.TestCase):
             json.dumps({'schema_version': 2, 'input_sha256': 'b'*64}))
         catalog.validate_unique_hero_inputs(records)
 
+    def test_plate_hero_cannot_replace_the_actual_readout(self):
+        self.entry.update(kind='plate-readout', runtime='host-float-reference',
+                          note='Host float reference, not board output.',
+                          model_url='https://example.com/official.pth', model_file='official.pth',
+                          framework='ONNX Runtime', documented_in='samples/vision/example/conversion/README.md')
+        for key in ('model_url', 'model_file', 'framework', 'commit', 'runtime', 'input'):
+            self.payload[key] = self.entry[key]
+        source = self.asset.replace('.webp', '.json')
+        record = self.root/source
+        self.entry['predictions_source'] = source
+        result = self.root/self.asset.replace('.webp', '-result.png')
+        result.write_bytes(b'actual plate result')
+        self.payload['files']['result.png'] = {
+            'sha256': hashlib.sha256(result.read_bytes()).hexdigest(), 'size_bytes': result.stat().st_size}
+        self.payload['recognition'] = {'plate': '皖831289'}
+        self.payload['visualization']['rendered_text'] = '皖831289'
+        with patch.object(catalog, '_ls_tree', return_value=('100644', 'blob', 'a'*40)), \
+             patch.object(catalog, 'validate_commit', side_effect=lambda revision, label: revision):
+            record.write_text(json.dumps(self.payload))
+            catalog._validate_host_float_hero(self.entry, 'hero', 'a'*40)
+            self.payload['visualization']['rendered_text'] = '皖A31289'
+            record.write_text(json.dumps(self.payload))
+            with self.assertRaisesRegex(catalog.CatalogError, 'actual CTC readout'):
+                catalog._validate_host_float_hero(self.entry, 'hero', 'a'*40)
+
 
 if __name__ == '__main__':
     unittest.main()
