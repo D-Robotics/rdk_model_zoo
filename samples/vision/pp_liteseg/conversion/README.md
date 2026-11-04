@@ -135,5 +135,6 @@ Models and intermediate outputs stay on dev-server. The Mac holds code and metad
 |---|---|---|---|---:|
 | s100 | `stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104` | `s100/pp_liteseg_stdc1_cityscapes_nashe_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1.hbm` | `6cee553d56e66ab2008aac8a7cf982f48a5ef75f4ddcada1b9dae547a1212491` | 227956272 |
 | s100p | `stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104` | `s100p/pp_liteseg_stdc1_cityscapes_nashm_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1.hbm` | `b704d7922bfbd9a5903ae00376875b123fb27118c238dc5964b565387290dff1` | 227767152 |
+| s600 | `stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104` | `s600/pp_liteseg_stdc1_cityscapes_nashp_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1.hbm` | `f443ec10a16a71bbae53062d0a992e4fcd656dae7fe01764d4c1d5b96909f611` | 13808424 |
 
 <!-- END CPU S CONVERSIONS 20261104 -->
