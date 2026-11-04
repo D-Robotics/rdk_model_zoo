@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isPublishedDownloadSource } from './model-download-policy.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const blobCache = new Map();
@@ -533,7 +534,8 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
     const platformDownloads = new Map();
     const platformConfigs = new Map();
     const groups = variantGroups(record).map(group => {
-      const downloads = (record.documented_downloads || []).filter(item => !item.platform || String(item.platform).toUpperCase() === group.platform);
+      const downloads = (record.documented_downloads || []).filter(item => isPublishedDownloadSource(item.url)
+        && (!item.platform || String(item.platform).toUpperCase() === group.platform));
       const configs = record.conversion_configs || [];
       if (!platformDownloads.has(group.platform)) platformDownloads.set(group.platform, downloads);
       if (!platformConfigs.has(group.platform)) platformConfigs.set(group.platform, configs);
@@ -640,7 +642,7 @@ function buildPendingModels(records, { officialRepositoryUrl, taskRegistry, safe
           quickstartForRecord(record, group.platform),
           group.label,
           selectedDownloads.length > 0,
-          Boolean(downloadIsSpecific.get(group.platform)),
+          !selectedDownloads.length || Boolean(downloadIsSpecific.get(group.platform)),
         ),
         documentedDownloads: selectedDownloads.map(item => ({
           filename: item.filename,

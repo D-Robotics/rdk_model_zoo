@@ -17,6 +17,7 @@ import { readFileSync } from 'node:fs';
 import { loadInferenceTaskBanners } from './task-banner-assets.mjs';
 import { loadFamilyInferenceBanners } from './family-banner-assets.mjs';
 import { buildPendingModels } from './pending-preview.mjs';
+import { isPublishedDownloadSource } from './model-download-policy.mjs';
 
 const scriptRoot = dirname(fileURLToPath(import.meta.url));
 const webRoot = resolve(scriptRoot, '..');
@@ -822,6 +823,15 @@ if (!candidatePreview) {
 }
 
 if (!models.length) throw new Error('The samples-only catalog contains no released models');
+if (!candidatePreview && !localCandidate) {
+  for (const model of models) {
+    for (const asset of model.assets || []) {
+      if (!isPublishedDownloadSource(asset.url)) {
+        throw new Error(`${model.id}: model downloads must use the Web Archive or official LLM OSS`);
+      }
+    }
+  }
+}
 const knownInputModelIds = new Set((fullCatalog.models || []).map(record => record.id));
 for (const modelId of Object.keys(inputs.models)) {
   if (pendingIds.has(modelId)) {

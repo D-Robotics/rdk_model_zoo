@@ -36,6 +36,12 @@ projection of actual patch features, not semantic segmentation. Existing
 compatible covers are retained; unavailable models keep their placeholders.
 
 Public deployment model URLs use the verified Archive platform/sample paths.
+The published website accepts model downloads only from
+`https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_<platform>/<source>/`
+or the official `d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm/` namespace.
+Historical `rdk_model_zoo` links remain source records, but do not enable a model
+download or its preparation command. Legacy models must be converted again,
+accepted and uploaded under a distinct identity before they can be registered.
 Public release/OE companions use
 `https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_<platform>/<source>/<model-stem>/`.
 Each directory contains `release.json`, the byte-preserved `release.source.json`,

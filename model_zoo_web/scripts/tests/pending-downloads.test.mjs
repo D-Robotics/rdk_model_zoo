@@ -26,7 +26,19 @@ function page(record) {
 const file = (platform, filename) => ({
   platform,
   filename,
-  url: `https://archive.d-robotics.cc/downloads/rdk_model_zoo/${filename}`,
+  url: `https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_${platform}/fixture/${filename.split('/').at(-1)}`,
+});
+
+test('legacy downloads stay out of the model dialog and preparation command', () => {
+  const [model] = page({
+    id: 'vit/vit/cls', name: 'ViT', source: 'vit', family: 'vit', task: 'cls',
+    supported_platforms: [{ platform: 's100' }],
+    documented_downloads: [{ platform: 's100', filename: 'vit.hbm',
+      url: 'https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ViT/vit.hbm' }],
+    usage: [{ source: 'samples/vision/vit/README.md', lines: ['python3 model/download.py --target s100'] }],
+  });
+  assert.deepEqual(model.documentedDownloads, []);
+  assert.equal(model.quickstart.download, '');
 });
 
 test('resolution and size tokens keep each published file on its own variant', () => {
