@@ -142,10 +142,14 @@ describe("multi-platform variant catalog", () => {
     // 726 variants.
     // The next S profiles added six more download-only variants and no benchmark rows:
     // ConvNeXt Pico on S100/S100P/S600, ConvNeXt Nano on S100P and S600, the MobileSAM
-    // S600 pair, and YOLO26n-Depth on S100P. 61 families, 732 variants, 760 benchmark rows.
+    // S600 pair, and YOLO26n-Depth on S100P: 732 variants.
+    // The 2026-11-04 develop publications added 151 download-only variants and no
+    // benchmark rows from 154 S assets: S-series classifier profiles, CLIP pairs,
+    // Depth Anything V2, PP-LiteSeg, YOLO26-Depth, and YOLOE-11/26 seg.
+    // 61 families, 883 variants, 760 benchmark rows.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(61);
-    expect(variants).toHaveLength(732);
+    expect(variants).toHaveLength(883);
     expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(760);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
