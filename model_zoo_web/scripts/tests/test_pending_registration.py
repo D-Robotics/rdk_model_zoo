@@ -15,6 +15,14 @@ SPEC.loader.exec_module(catalog)
 CLIP = catalog.DATA_ROOT / "vision/clip/clip/similarity.yaml"
 
 
+def document_only_clip():
+    """Freeze the document-only state independently of later CLIP conversions."""
+    record=yaml.safe_load(CLIP.read_text(encoding='utf-8'))
+    record.pop('variants',None)
+    record.pop('model_license',None)
+    return record
+
+
 class PendingRegistrationTest(unittest.TestCase):
     def test_host_cover_retains_its_actual_inference_revision(self):
         path = catalog.DATA_ROOT / "vision/convnext/convnext/cls.yaml"
@@ -50,7 +58,7 @@ class PendingRegistrationTest(unittest.TestCase):
             catalog.validate_record(record, CLIP)
 
     def test_verified_identity_record_has_no_measurements(self):
-        record = yaml.safe_load(CLIP.read_text(encoding="utf-8"))
+        record = document_only_clip()
         self.assertEqual(record["registration"], "pending")
         self.assertNotIn("variants", record)
         normalized = catalog.validate_record(record, CLIP)
@@ -72,10 +80,21 @@ class PendingRegistrationTest(unittest.TestCase):
             catalog.validate_record(record, CLIP)
 
     def test_pending_record_rejects_variants(self):
-        record = yaml.safe_load(CLIP.read_text(encoding="utf-8"))
+        record = document_only_clip()
         record["variants"] = [{"size": "base"}]
         with self.assertRaisesRegex(catalog.CatalogError, "must not include variants"):
             catalog.validate_record(record, CLIP)
+
+    def test_clip_identity_keeps_its_verified_converted_components(self):
+        record=yaml.safe_load(CLIP.read_text(encoding='utf-8'))
+        self.assertEqual(record['model_license']['scope'],'model')
+        normalized=catalog.validate_record(record,CLIP)
+        converted=[platform for variant in normalized['variants']for platform in variant['platforms']if platform['status']=='converted']
+        self.assertEqual({platform['platform']for platform in converted},{'s100','s100p','s600'})
+        for platform in converted:
+            self.assertEqual({component['role']for component in platform['artifact']['components']},{'image','text'})
+            self.assertNotIn('accuracy',platform)
+            self.assertNotIn('performance',platform)
 
     def test_catalog_keeps_released_rows_and_counts_pending_rows(self):
         with mock.patch.dict(os.environ, {catalog.SAMPLE_REF_ENV: "7a97c1780b0cfa131ff0007d662e255e5e41c12e"}):
