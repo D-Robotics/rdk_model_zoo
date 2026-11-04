@@ -429,7 +429,7 @@ for (const record of catalog.models || []) {
     ? record.hero_visual : null;
   const inferenceCover = explicitHero ? null : familyInferenceBanners.items.get(record.id)
     || inferenceTaskBanners?.items.get(record.id);
-  const coverPath = textOnlyDemo ? resolve(webRoot, 'release/assets/gemma4-text.png') : explicitHero ? resolve(webRoot, '..', explicitHero.file) : inferenceCover?.path
+  const coverPath = record.official_cover ? resolve(webRoot, '..', record.official_cover.file) : textOnlyDemo ? resolve(webRoot, 'release/assets/gemma4-text.png') : explicitHero ? resolve(webRoot, '..', explicitHero.file) : inferenceCover?.path
     || (modelInput.cover ? await resolveInputFile(modelInput.cover, `MODEL_ZOO_INPUTS.models.${record.id}.cover`)
       : resolve(outputRoot, 'assets', 'pending-cover.svg'));
   const coverExtension = extname(coverPath).toLowerCase();
@@ -449,7 +449,7 @@ for (const record of catalog.models || []) {
   for (const variant of record.variants || []) {
     for (const release of variant.platforms || []) {
       const converted = !candidatePreview && release.status === 'converted';
-      const textDemo = !candidatePreview && ['demo', 'official'].includes(release.status) && record.task === 'text-generation';
+      const textDemo = !candidatePreview && (release.status === 'official' || (release.status === 'demo' && record.task === 'text-generation'));
       if (!converted && !textDemo && release.status !== expectedReleaseStatus(record)) continue;
       const platform = String(release.platform).toUpperCase();
       const id = safeId(record.source, record.family, record.task, variant.size, release.platform);

@@ -1293,9 +1293,148 @@ def validate_text_demo(record: dict[str, Any], variant: dict[str, Any],
         raise CatalogError(f'{label}: text input must match the compiled chunk/context profile')
 
 
+def _sdk_config_files(value):
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if isinstance(item, str) and item and (key.endswith('_file') or key.endswith('_weight_name')):
+                yield item
+            else:
+                yield from _sdk_config_files(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from _sdk_config_files(item)
+
+
+def validate_sdk_official(record, variant, platform, sample_path, label):
+    """SDK model references retain their artifacts, conditions and empty local results."""
+    profile = variant['size']
+    if sample_path != 'samples/llm/oellm' or platform.get('platform') != 's600':
+        raise CatalogError(f'{label}: SDK official profiles use the native S600 sample')
+    index = json.loads((ROOT / sample_path / 'model/artifacts.json').read_text())
+    if index.get('sdk_version') != '2.0.0' or index.get('target') != 's600' or index.get('profiles', {}).get(profile) != f'manifests/{profile}.json':
+        raise CatalogError(f'{label}: unknown official SDK profile')
+    for field in ('artifact', 'accuracy', 'performance', 'reports'):
+        if platform.get(field) is not None or field not in platform:
+            raise CatalogError(f'{label}.{field}: vendor references are separate from local results')
+    expected = {'model_manifest': f'{sample_path}/model/manifests/{profile}.json',
+                'board_result': f'{sample_path}/evaluator/board_results/{profile}.json',
+                'official_benchmark': f'{sample_path}/evaluator/official_benchmarks.json'}
+    docs = {}
+    for field, name in expected.items():
+        if platform.get(field) != name:
+            raise CatalogError(f'{label}.{field}: incorrect SDK profile path')
+        docs[field] = json.loads((ROOT / name).read_text())
+    manifest = docs['model_manifest']
+    task = record['task']
+    if task not in {'text-gen', 'vlm', 'asr'} or record['domain'] != ('speech' if task == 'asr' else 'llm'):
+        raise CatalogError(f'{label}: official SDK tasks are text, vision-language or ASR')
+    if (manifest.get('schema_version'), manifest.get('id'), manifest.get('profile'), manifest.get('target'), manifest.get('scope'), manifest.get('family'), manifest.get('source_id')) != (
+            1, f'oellm-{profile}-s600', profile, 's600', task, record['family'], record['source']):
+        raise CatalogError(f'{label}: official SDK artifact identity mismatch')
+    source = manifest['source']
+    if (source.get('kind'), source.get('publisher'), source.get('sdk_version'), source.get('revision')) != ('sdk-official', 'D-Robotics', '2.0.0', None):
+        raise CatalogError(f'{label}: preserve SDK provenance and unknown upstream revision')
+    require_string(source.get('model_id'), label + '.model_id')
+    if source.get('license') != variant.get('license', record['license']):
+        raise CatalogError(f'{label}: model-variant license mismatch')
+    if variant['input'] != manifest['input']:
+        raise CatalogError(f'{label}: input must match the compiled SDK profile')
+    conversion = manifest['conversion']
+    if (conversion.get('sdk'), conversion.get('status'), conversion.get('march')) != ('OELLM 2.0.0', 'official-precompiled', 'nash-p'):
+        raise CatalogError(f'{label}: expected official-precompiled nash-p artifact')
+    for field in ('cores', 'prefill_chunk_size', 'context_length'):
+        require_positive_int(conversion.get(field), label + '.' + field)
+    runtime = manifest['runtime']
+    expected_type = {'text-gen': {'LLM'}, 'vlm': {'VLM'}, 'asr': {'ASR_QWEN3', 'ASR_WHISPER'}}[task]
+    entry = 'examples/asr_demo/asr_demo' if task == 'asr' else 'samples/basic/basic_sample'
+    if runtime.get('type') not in expected_type or runtime.get('version') != '2.0.0' or runtime.get('entrypoint') != entry or runtime.get('config_template') != f'runtime/cpp/configs/{profile}.json':
+        raise CatalogError(f'{label}: official Runtime binding mismatch')
+    config_path = ROOT / sample_path / runtime['config_template']
+    config_bytes = config_path.read_bytes()
+    if hashlib.sha256(config_bytes).hexdigest() != runtime.get('config_source_sha256'):
+        raise CatalogError(f'{label}: SDK configuration changed without its source identity')
+    config = json.loads(config_bytes)
+    names, roles = set(), set()
+    for asset in require_list(manifest.get('files'), label + '.files'):
+        name = require_string(asset.get('name'), label + '.file.name')
+        path = PurePosixPath(name)
+        if path.is_absolute() or '..' in path.parts or '\\' in name or name in names:
+            raise CatalogError(f'{label}: unsafe or duplicate official member')
+        names.add(name); roles.add(asset.get('role'))
+        require_positive_int(asset.get('bytes'), label + '.file.bytes')
+        if not SHA256_RE.fullmatch(str(asset.get('sha256', ''))) or asset.get('crc_verified') is not True:
+            raise CatalogError(f'{label}: official members need complete hashes and ZIP CRC checks')
+    required = {'language-hbm', 'embedding'} | ({'vision-hbm'} if task == 'vlm' else {'audio-hbm'} if task == 'asr' else set())
+    mode = conversion.get('acceleration')
+    if mode not in {'standard', 'eagle3', 'dflash'}:
+        raise CatalogError(f'{label}: unknown acceleration mode')
+    if mode != 'standard': required |= {'draft-hbm', 'draft-embedding'}
+    if mode == 'eagle3': required.add('draft-token-map')
+    if not required <= roles or not set(_sdk_config_files(config)) <= names or config['runtime_type'] != runtime['type']:
+        raise CatalogError(f'{label}: incomplete official SDK model/configuration binding')
+    hbms = manifest.get('hbm_metadata', [])
+    if {h.get('file') for h in hbms} != {a['name'] for a in manifest['files'] if a['name'].endswith('.hbm')}:
+        raise CatalogError(f'{label}: HBM metadata must cover every model graph')
+    for hbm in hbms:
+        if hbm.get('march') != 'nash-p' or not hbm.get('graphs'):
+            raise CatalogError(f'{label}: HBM target metadata mismatch')
+        require_string(hbm.get('toolkit'), label + '.compiler')
+        for graph in hbm['graphs']:
+            require_positive_int(graph.get('cores'), label + '.graph.cores')
+    lm = next(h for h in hbms if h['file'] == config['lm_model_file'])
+    if any(g['cores'] != conversion['cores'] for g in lm['graphs']) or conversion['compiler'] != lm['toolkit']:
+        raise CatalogError(f'{label}: language graph/compiler identity mismatch')
+    availability = manifest['availability']
+    filename = availability.get('name', '')
+    canonical = 'https://d-robotics-aitoolchain.oss-cn-beijing.aliyuncs.com/llm/2.0.0/s600_models/' + filename
+    if not filename.endswith('.zip') or PurePosixPath(filename).name != filename or availability.get('kind') != 'official-oss' or availability.get('package_url') != canonical:
+        raise CatalogError(f'{label}: expected canonical SDK S600 OSS ZIP')
+    require_positive_int(availability.get('size_bytes'), label + '.package.bytes')
+    verification = availability.get('verification', {})
+    if not SHA256_RE.fullmatch(str(availability.get('sha256', ''))) or (verification.get('status'), verification.get('method'), verification.get('zip_crc')) != ('verified', 'anonymous-https-full-sha256', 'passed'):
+        raise CatalogError(f'{label}: publish only fully reviewed official ZIPs')
+    require_string(verification.get('checked_at'), label + '.package.checked_at')
+    board = docs['board_result']
+    if (board.get('model'), board.get('target'), board.get('status'), manifest.get('board_tests')) != (manifest['id'], 's600', 'not-run', 'not-run'):
+        raise CatalogError(f'{label}: local board status must remain not-run')
+    for field in ('ppl', 'ttft_ms', 'decode_tokens_per_second', 'peak_memory_bytes', 'rtf', 'generation_checks', 'environment'):
+        if field not in board or board[field] is not None:
+            raise CatalogError(f'{label}: untested board {field} must be null')
+    reference = docs['official_benchmark']['profiles'][profile]
+    conditions, metrics = reference['source'], reference['metrics']
+    kind = 'asr' if task == 'asr' else 'vlm' if task == 'vlm' else 'llm'
+    if (conditions.get('publisher'), conditions.get('sdk_version'), conditions.get('hardware'), conditions.get('runtime_concurrency'), conditions.get('memory_scope'), conditions.get('mode')) != ('D-Robotics', '2.0.0', 'S600', 1, 'linux-plus-ion', mode):
+        raise CatalogError(f'{label}: preserve official single-request reference conditions')
+    if conditions.get('url') != f'https://developer.d-robotics.cc/oe_llm_doc/guide/benchmark/s600/{kind}_benchmark' or conditions.get('binary_sha256_binding') is not None:
+        raise CatalogError(f'{label}: official reference must retain its source and unknown binary binding')
+    for field in ('ttft_ms', 'memory_gb'):
+        if require_number(metrics.get(field), label + '.reference.' + field) <= 0:
+            raise CatalogError(f'{label}: official reference values must be positive')
+    if mode == 'standard':
+        if require_number(metrics.get('decode_tokens_per_second'), label + '.reference.decode') <= 0 or metrics.get('decode_tokens_per_second_range') is not None:
+            raise CatalogError(f'{label}: standard decoding needs its published scalar speed')
+    else:
+        interval = require_list(metrics.get('decode_tokens_per_second_range'), label + '.reference.decode_range')
+        if len(interval) != 2 or any(require_number(v, label + '.reference.decode_range') <= 0 for v in interval) or interval[0] > interval[1] or metrics.get('decode_tokens_per_second') is not None:
+            raise CatalogError(f'{label}: speculative decoding must preserve its published range')
+    if task == 'asr' and require_number(metrics.get('rtf'), label + '.reference.rtf') <= 0:
+        raise CatalogError(f'{label}: ASR reference requires its published RTF')
+    if metrics.get('ppl') is not None:
+        raise CatalogError(f'{label}: no published PPL for these SDK references')
+    cover = require_mapping(record.get('official_cover'), label + '.official_cover')
+    expected_cover = f'model_zoo_web/release/assets/official-oellm/{record["family"]}.png'
+    if cover.get('file') != expected_cover or cover.get('provenance') != expected_cover.removesuffix('.png') + '.json':
+        raise CatalogError(f'{label}: each SDK series needs its own reviewed banner')
+    provenance = json.loads((ROOT / cover['provenance']).read_text())
+    if provenance.get('family') != record['family'] or provenance.get('sha256') != hashlib.sha256((ROOT / expected_cover).read_bytes()).hexdigest():
+        raise CatalogError(f'{label}: SDK series banner provenance mismatch')
+
+
 def validate_official_llm(record: dict[str, Any], variant: dict[str, Any],
                           platform: dict[str, Any], sample_path: str, label: str) -> None:
     """Vendor packages have published metrics, with local board results kept separate."""
+    if sample_path == 'samples/llm/oellm':
+        return validate_sdk_official(record, variant, platform, sample_path, label)
     profile = variant['size']
     if (record['domain'], record['task'], platform.get('platform')) != ('llm', 'text-generation', 's600'):
         raise CatalogError(f'{label}: official LLM packages are S600 text-generation profiles')

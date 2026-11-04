@@ -181,7 +181,7 @@ if (preview) {
     }
     if (['demo', 'official'].includes(model.releaseStatus)) {
       const official = model.releaseStatus === 'official';
-      assert.equal(model.taskId, 'text-generation');
+      assert.ok(['text-generation', 'vision-language-model', 'speech-recognition'].includes(model.taskId));
       assert.equal(model.releasePlatform, 'S600');
       assert.equal(model.deployment.compileStatus, official ? 'official-precompiled' : 'passed');
       assert.equal(model.deployment.boardStatus, 'not-run');
@@ -197,7 +197,7 @@ if (preview) {
         assert.equal(availability.verification.status, 'verified');
         assert.equal(availability.verification.method, 'anonymous-https-full-sha256');
         assert.match(asset.url, official
-          ? /^https:\/\/d-robotics-aitoolchain\.oss-cn-beijing\.aliyuncs\.com\/llm\/2\.0\.0\/s600_models\/Gemma4-E[24]B_w[48]\.zip$/
+          ? /^https:\/\/d-robotics-aitoolchain\.oss-cn-beijing\.aliyuncs\.com\/llm\/2\.0\.0\/s600_models\/[A-Za-z0-9][A-Za-z0-9._-]+\.zip$/
           : /^https:\/\/archive\.d-robotics\.cc\/downloads\/rdk_model_zoo_web\/rdk_s600\/gemma\//);
         assert.equal(asset.url, availability.package_url);
         assert.equal(asset.sha256, availability.sha256);
@@ -210,9 +210,16 @@ if (preview) {
         assert.equal(model.deployment.artifactManifest.source.revision, null);
         assert.equal(model.officialBenchmark.source.runtime_concurrency, 1);
         assert.equal(model.officialBenchmark.source.memory_scope, 'linux-plus-ion');
-        for (const field of ['ttft_ms', 'decode_tokens_per_second', 'memory_gb']) {
+        for (const field of ['ttft_ms', 'memory_gb']) {
           assert(model.officialBenchmark.metrics[field] > 0);
         }
+        const metrics = model.officialBenchmark.metrics;
+        if (metrics.decode_tokens_per_second_range) {
+          assert.equal(metrics.decode_tokens_per_second, null);
+          assert.equal(metrics.decode_tokens_per_second_range.length, 2);
+          assert(metrics.decode_tokens_per_second_range[0] > 0 && metrics.decode_tokens_per_second_range[1] >= metrics.decode_tokens_per_second_range[0]);
+        } else assert(metrics.decode_tokens_per_second > 0);
+        if (model.taskId === 'speech-recognition') assert(metrics.rtf > 0);
         assert.equal(model.officialBenchmark.metrics.ppl, null);
         assert.equal(model.assets[0].format, 'zip');
       }
@@ -225,8 +232,8 @@ if (preview) {
         assert(fs.statSync(path.join(root, filename)).size > 0, `${model.id}: missing sample resource`);
       }
       const properties = context.window.MODEL_PROPERTIES[model.id];
-      assert.equal(properties.contextLength, 4096);
-      assert.equal(properties.prefillChunkSize, 512);
+      assert.equal(properties.contextLength, model.deployment.contextLength);
+      assert.equal(properties.prefillChunkSize, model.deployment.prefillChunkSize);
       continue;
     }
     if (model.releaseStatus === 'data-pending') {

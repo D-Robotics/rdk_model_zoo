@@ -34,8 +34,14 @@ class CandidateReleaseGuardTest(unittest.TestCase):
             for variant in model["variants"]:
                 for platform in variant["platforms"]:
                     if platform["status"] in {"demo", "official"}:
-                        self.assertEqual((model["domain"], model["task"], platform["platform"]),
-                                         ("llm", "text-generation", "s600"))
+                        if model["sample_path"] == "samples/llm/oellm":
+                            self.assertEqual(platform["status"], "official")
+                            self.assertIn((model["domain"], model["task"]),
+                                          {("llm", "text-gen"), ("llm", "vlm"), ("speech", "asr")})
+                            self.assertEqual(platform["platform"], "s600")
+                        else:
+                            self.assertEqual((model["domain"], model["task"], platform["platform"]),
+                                             ("llm", "text-generation", "s600"))
                         for field in ("artifact", "accuracy", "performance", "reports"):
                             self.assertIsNone(platform[field])
 

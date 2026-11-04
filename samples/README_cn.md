@@ -10,6 +10,7 @@
 | 给图片分类，取得 Top-K 类别和分数 | [ResNet 图像分类](vision/resnet/README_cn.md) | [转换流程](vision/resnet/conversion/README_cn.md) | [分类验证](vision/resnet/evaluator/README_cn.md) |
 | 找出文字区域并识别文字 | [PaddleOCR](vision/paddle_ocr/README_cn.md) | [检测与识别模型转换](vision/paddle_ocr/conversion/README_cn.md) | [OCR 验证](vision/paddle_ocr/evaluator/README_cn.md) |
 | 在 S600 上使用 SDK 2.0 生成文本 | [Gemma4 E2B/E4B 官方文本](llm/gemma4/README_cn.md) | [官方模型来源](llm/gemma4/conversion/README_cn.md) | [官方性能与板端状态](llm/gemma4/evaluator/README_cn.md) |
+| 在 S600 上运行官方文本、图文和语音模型 | [OELLM 官方模型](llm/oellm/README_cn.md) | [官方包来源](llm/oellm/conversion/README_cn.md) | [官方性能与板端状态](llm/oellm/evaluator/README_cn.md) |
 
 ## 板卡与制品
 

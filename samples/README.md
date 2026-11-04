@@ -12,6 +12,7 @@ an Agent is not required.
 | Obtain Top-K image classes and scores | [ResNet classification](vision/resnet/README.md) | [Conversion](vision/resnet/conversion/README.md) | [Classification validation](vision/resnet/evaluator/README.md) |
 | Locate text regions and recognize text | [PaddleOCR](vision/paddle_ocr/README.md) | [Detector and recognizer conversion](vision/paddle_ocr/conversion/README.md) | [OCR validation](vision/paddle_ocr/evaluator/README.md) |
 | Generate text on S600 with SDK 2.0 | [Gemma4 E2B/E4B official text](llm/gemma4/README.md) | [Official model provenance](llm/gemma4/conversion/README.md) | [Official references and board status](llm/gemma4/evaluator/README.md) |
+| Run official text, image-language and speech models on S600 | [OELLM official models](llm/oellm/README.md) | [Official package provenance](llm/oellm/conversion/README.md) | [Official references and board status](llm/oellm/evaluator/README.md) |
 
 ## Boards and artifacts
 

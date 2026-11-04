@@ -14,11 +14,17 @@ dist/       generated website artifact; ignored by Git
 
 New model submissions must follow [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Gemma4 E2B/E4B is published with four `official` S600 profiles: W4 and W8 for each size.
+The S600 `official` catalog contains four Gemma4 E2B/E4B profiles and 32 profiles from
+12 additional series: Qwen2.5, Qwen3, Qwen3.5, Qwen2.5-VL, Qwen3-VL, Qwen3-ASR,
+InternVL2, InternVL2.5, InternVL3.5, MiniCPM5, Phi-4 Mini and Whisper. VLA is excluded.
 The full vendor ZIPs and member digests are verified, and downloads point directly to the SDK's canonical OSS URLs.
 Published vendor TTFT, decode speed and Linux+ION memory are displayed with their source; the concurrency selector retains one stream.
+Eagle3/DFlash speed ranges remain ranges, and ASR entries include RTF. Each series has its own
+illustrative banner shared across its sizes and acceleration profiles, with saved generation provenance.
 Local board records stay `not-run` and null, independently of the official references.
 These entries have native preparation/run commands and source archives, without synthetic OE reports or upstream revisions.
+The native [OELLM Sample](../samples/llm/oellm/README.md) uses the supplied SDK `basic_sample`
+and `asr_demo`; vendor code, headers, libraries and binaries are obtained separately.
 They are counted separately from locally verified `released` models and remain outside the released-only Ask AI scope.
 
 ## Ownership
@@ -38,7 +44,7 @@ authored in Chinese and English at the task level and describe model
 architecture only. Deployment formats, model statistics, accuracy, and
 performance remain in their dedicated release fields.
 
-Official Gemma profiles use the verified SDK OSS ZIP URLs recorded in their Sample manifests.
+Official Gemma and registered OELLM profiles use the verified SDK OSS ZIP URLs recorded in their Sample manifests.
 Other public deployment models use the verified Archive platform and sample directory:
 
 ```text
@@ -48,7 +54,7 @@ https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_<platform>/<source
 Release manifests and OE reports use the model-specific Archive `assets/`
 directory described in [CONTRIBUTING.md](CONTRIBUTING.md). Preserve the model's
 SHA-256, size, source versions, and original publication receipts when changing
-its download location. Public catalog and website validation accept the fixed official Gemma OSS contract;
+its download location. Public catalog and website validation accept the scoped official SDK OSS contract;
 other OSS model downloads remain rejected, while historical packages stay readable for receipt validation.
 
 Build dates, repository commits, and toolchain versions belong in release

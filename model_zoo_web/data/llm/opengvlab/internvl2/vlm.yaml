@@ -1,0 +1,39 @@
+schema_version: 1
+id: opengvlab/internvl2/vlm
+name: InternVL2
+domain: llm
+source: opengvlab
+provider: OpenGVLab
+family: internvl2
+task: vlm
+description:
+  zh: InternVL2 接收图像与文本输入，生成文字回答，用于图片问答和场景描述。各配置复用官方视觉语言 Runtime。
+  en: InternVL2 accepts images and text and generates text for visual question answering
+    and scene description using the official vision-language Runtime.
+license:
+  name: MIT
+  url: https://huggingface.co/OpenGVLab/InternVL2-2B/blob/main/LICENSE
+sample_path: samples/llm/oellm
+sample_revision: 38f798cb31a5c7f7c582a0f8d67f133eb354ed74
+official_cover:
+  file: model_zoo_web/release/assets/official-oellm/internvl2.png
+  provenance: model_zoo_web/release/assets/official-oellm/internvl2.json
+variants:
+- size: internvl2-2b-w4
+  input:
+    kind: image-text
+    context_length: 2048
+    prefill_chunk_size: 512
+    image_resolution:
+    - 448
+    - 448
+  platforms:
+  - platform: s600
+    status: official
+    model_manifest: samples/llm/oellm/model/manifests/internvl2-2b-w4.json
+    board_result: samples/llm/oellm/evaluator/board_results/internvl2-2b-w4.json
+    official_benchmark: samples/llm/oellm/evaluator/official_benchmarks.json
+    artifact: null
+    accuracy: null
+    performance: null
+    reports: null

@@ -1,6 +1,6 @@
 # RDK Model Zoo Web 提交指南
 
-本文说明如何把 `samples/` 中的模型接入 RDK Model Zoo Web，包括未板测的文本
+本文说明如何把 `samples/` 中的模型接入 RDK Model Zoo Web，包括 SDK 官方预编译模型、文本
 Demo 和完成正式验收的发布模型。
 
 ## 1. 适用范围
@@ -36,14 +36,20 @@ model_zoo_web/data/vision/ultralytics_yolo/yolo26/detect.yaml
 
 ## 2. 发布门槛
 
-Gemma4 E2B/E4B 的 SDK 官方 S600 预编译包使用 `status: official`。
+Gemma4 E2B/E4B 和 `samples/llm/oellm/model/artifacts.json` 登记的 32 个 SDK 官方
+S600 文本、视觉语言、语音识别配置使用 `status: official`，不包含 VLA。
 官方包必须完成匿名 HTTPS 全量下载、SHA256、ZIP CRC、文件清单与 HBM 目标规格核对。
-清单在 `samples/llm/gemma4/model/manifests/<profile>.json`，Runtime 配置来自同版本 SDK。
+清单分别在 `samples/llm/{gemma4,oellm}/model/manifests/<profile>.json`，Runtime 配置来自同版本 SDK。
+原生 Sample 固定到已推送的完整提交；运行复用官方 `basic_sample` 或 `asr_demo`，SDK 源码、
+头文件、库和可执行文件不随 Sample 分发。加速配置保留草稿模型、embedding 和 token 映射绑定。
 上游 HF revision 未由官方包提供时保留 null，以 SDK 发布版本和完整包 SHA256 固定来源。
 仅允许该合同指定的官方 S600 OSS ZIP 地址，不放宽其他模型的 Archive 下载约束。
 
 官方性能从 `evaluator/official_benchmarks.json` 读取，保留来源、条件及内存统计口径。
 网页可以展示官方单请求 TTFT、Decode 和运行内存；并发选择器仅列出已记录的单路。
+Eagle3/DFlash 的生成速度保留官方区间，不能取上限作为单值；ASR 同时保留 RTF。
+同一系列的各尺寸和加速配置共用该系列独立生成的示意封面，保存原图 SHA256 和生成记录，
+不把示意图当作推理结果。模型许可逐配置核对，不从同系列其他尺寸继承不适用的许可。
 本地 `board_results/<profile>.json` 保持 `not-run` 与 null；`artifact`、`accuracy`、
 `performance`、`reports` 不承载本地发布证据。官方模型不计入本项目板测通过的 released 统计，
 不制造 OE 报告、PPL、峰值内存或两路并发结果。
@@ -88,10 +94,10 @@ Gemma4 E2B/E4B 的 SDK 官方 S600 预编译包使用 `status: official`。
 - `node_modules/`、`__pycache__/` 和本地 workbench 文件。
 - AccessKey、Secret、临时签名 URL 或其他凭据。
 
-`status: official` 的 Gemma 使用合同中固定的官方 OSS ZIP。
+`status: official` 的 Gemma 和上述 OELLM 配置使用合同中固定的官方 OSS ZIP。
 其他公开模型下载统一使用已核验的 Archive 地址；`released` 和 `converted` 条目都遵守
 这一要求。迁移时先核对 Archive 文件大小与已登记 SHA-256，再修改下载地址。
-构建器和网站发布校验只为已核验的官方 Gemma 合同接受指定 OSS 地址。发布清单和 OE 报告统一放在
+构建器和网站发布校验只为上述已核验的官方合同接受指定 OSS 地址。发布清单和 OE 报告统一放在
 Archive 的 Web 资产区，按平台、Sample 和模型文件名区分：
 
 ```text

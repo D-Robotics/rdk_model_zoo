@@ -26,7 +26,7 @@ metadata:
 
 ## Standard registration states
 
-标准登记使用以下两种状态；官方 Gemma 的独立合同见下文。细节和禁止项见 [registration-states.md](references/registration-states.md)，按任务的字段见 [field-matrix.md](references/field-matrix.md)。
+标准登记使用以下两种状态；官方 SDK 模型的独立合同见下文。细节和禁止项见 [registration-states.md](references/registration-states.md)，按任务的字段见 [field-matrix.md](references/field-matrix.md)。
 
 | 状态 | YAML | 网页上是什么 | 何时使用 |
 | --- | --- | --- | --- |
@@ -35,15 +35,20 @@ metadata:
 
 已有的完整记录不要降级，也不要为了“统一格式”改写它们的数字。
 
-## Official SDK Gemma profiles
+## Official SDK S600 profiles
 
-S600 Gemma4 E2B/E4B vendor packages use the scoped `status: official` contract in
-`model_zoo_web/CONTRIBUTING.md`. Full package/member hashes and target metadata are
+S600 Gemma4 E2B/E4B packages and the 32 text, VLM and ASR profiles registered in
+`samples/llm/oellm/model/artifacts.json` use the scoped `status: official` contract in
+`model_zoo_web/CONTRIBUTING.md`. VLA is excluded. Full package/member hashes and target metadata are
 verified before publication. Canonical SDK OSS ZIP links are allowed for these profiles.
 Vendor reference metrics retain their source and conditions; local board results stay
 `not-run` and null. Unknown upstream revisions remain null. Only the supported single-request
-condition is shown. This state is counted separately from locally verified `released`
-models and does not weaken ordinary CV release requirements.
+condition is shown. Speculative decoding retains the published speed range, and ASR retains RTF.
+Each series shares its own illustrative banner across sizes and acceleration profiles; save its
+generation provenance and SHA256. Check the weight license per profile. The pinned native Sample
+launches the separately supplied official Runtime programs without distributing SDK code or binaries.
+This state is counted separately from locally verified `released` models and does not weaken
+ordinary CV release requirements.
 
 ## What a pending record must contain
 

@@ -1,0 +1,68 @@
+{
+  "work_dir": "../../model/Qwen3-VL-2B_w4_eagle3",
+  "vit_model_file": "Qwen3-VL-2B_vision_448x448_w8_nash-p_corenum_4.hbm",
+  "lm_model_file": "Qwen3-VL-2B_language_chunk_512_cache_2048_w4_nash-p_corenum_4_4.hbm",
+  "embed_weight_name": "Qwen3-VL-2B_embed_tokens.bin",
+  "runtime_type": "VLM",
+  "use_left_padding": 0,
+  "max_batch_size": 1,
+  "max_image_cnt": 4,
+  "max_conv_cache_num": 0,
+  "prefix_cache": {
+    "enable": false
+  },
+  "backends": {
+    "vit": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "prefill": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "decode": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "infer_acceleration": [
+    {
+      "speculative": {
+        "enable": true,
+        "type": "eagle",
+        "draft_model_file": "Qwen3-VL-2B_eagle3_cache_2048_w8_nash-p_corenum_4.hbm",
+        "draft_embed_weight_name": "Qwen3-VL-2B_eagle3_embed_tokens.bin",
+        "d2t_file": "d2t.bin",
+        "backends": {
+          "prefill": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "decode": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "extend": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        "draft_top_k": 8,
+        "draft_step": 8,
+        "draft_token_num": 32
+      }
+    }
+  ]
+}

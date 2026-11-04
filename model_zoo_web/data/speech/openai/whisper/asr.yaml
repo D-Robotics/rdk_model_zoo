@@ -1,0 +1,58 @@
+schema_version: 1
+id: openai/whisper/asr
+name: Whisper
+domain: speech
+source: openai
+provider: OpenAI
+family: whisper
+task: asr
+description:
+  zh: Whisper 将音频转换为文本，提供官方模型配置和原生语音转写入口。
+  en: Whisper transcribes audio into text using the official model profiles and native
+    speech-recognition entrypoint.
+license:
+  name: Apache-2.0
+  url: https://huggingface.co/openai/whisper-medium/blob/main/LICENSE
+sample_path: samples/llm/oellm
+sample_revision: 38f798cb31a5c7f7c582a0f8d67f133eb354ed74
+official_cover:
+  file: model_zoo_web/release/assets/official-oellm/whisper.png
+  provenance: model_zoo_web/release/assets/official-oellm/whisper.json
+variants:
+- size: whisper-medium-w8
+  input:
+    kind: audio
+    context_length: 448
+    prefill_chunk_size: 8
+    sample_rate: 16000
+    language: en
+  platforms:
+  - platform: s600
+    status: official
+    model_manifest: samples/llm/oellm/model/manifests/whisper-medium-w8.json
+    board_result: samples/llm/oellm/evaluator/board_results/whisper-medium-w8.json
+    official_benchmark: samples/llm/oellm/evaluator/official_benchmarks.json
+    artifact: null
+    accuracy: null
+    performance: null
+    reports: null
+- size: whisper-small-w8
+  input:
+    kind: audio
+    context_length: 448
+    prefill_chunk_size: 8
+    sample_rate: 16000
+    language: en
+  platforms:
+  - platform: s600
+    status: official
+    model_manifest: samples/llm/oellm/model/manifests/whisper-small-w8.json
+    board_result: samples/llm/oellm/evaluator/board_results/whisper-small-w8.json
+    official_benchmark: samples/llm/oellm/evaluator/official_benchmarks.json
+    artifact: null
+    accuracy: null
+    performance: null
+    reports: null
+  license:
+    name: Apache-2.0
+    url: https://huggingface.co/openai/whisper-small/blob/main/LICENSE

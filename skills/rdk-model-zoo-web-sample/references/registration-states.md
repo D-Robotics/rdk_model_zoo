@@ -64,10 +64,13 @@ model_zoo_web/data/<domain>/<source>/<family>/<task>.yaml
 3. 把真实封面和 OE 数据登记进 `release/inputs.json`。
 4. 重新构建目录和发布预览。原来的待补卡片会被这条完整记录替换，而不是并列两条。
 
-## SDK 官方 Gemma
+## SDK 官方 S600 模型
 
-`status: official` 是 S600 官方 Gemma 预编译模型的独立合同：完整 ZIP 与成员 SHA256、CRC、
+`status: official` 适用于 Gemma4 E2B/E4B 和 `samples/llm/oellm/model/artifacts.json`
+登记的 32 个文本、视觉语言、ASR 配置，不包括 VLA。完整 ZIP 与成员 SHA256、CRC、
 HBM 目标规格和 SDK 配置均须核对，下载仅使用该合同固定的 SDK OSS ZIP。
 官方 TTFT、Decode 和 Linux+ION 内存保留来源与单请求条件；本地板测状态与结果不变。
+Eagle3/DFlash 速度保留区间，ASR 保留 RTF；同系列各尺寸共用独立的示意封面和生成记录。
+模型许可逐配置核对，原生 Sample 固定完整提交并调用单独提供的 SDK Runtime 程序。
 源码未知的 HF revision 保持 null，不计入本地 released 统计，不补造 OE、PPL 或并发数据。
 其他模型继续遵守以上 pending/released/converted 证据要求。

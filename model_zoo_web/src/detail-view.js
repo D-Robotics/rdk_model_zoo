@@ -22,7 +22,7 @@
   const threadLabel = threads => threads === 1 ? 'Runtime 单路' : `Runtime ${threads} 路并发`;
   const formats = m => [...new Set(m.assets.map(asset => asset.format.toUpperCase()))].join(' + ');
   const hardwareOf = (model, data) => model.hardware || model.benchmark?.environment?.hardware || data.release.compatibility.hardware;
-  const isTextDemo = model => ['demo', 'official'].includes(model.releaseStatus) && model.taskId === 'text-generation';
+  const isSdkModel = model => model.releaseStatus === 'official' || (model.releaseStatus === 'demo' && model.taskId === 'text-generation');
   const demoDocuments = model => window.HubI18n?.locale === 'en' && model.documentsEn ? model.documentsEn : model.documents;
   const documentationLink = (model, key, label, cls = '') => `<a class="${cls}" href="${esc(demoDocuments(model)[key])}" data-href-zh="${esc(model.documents[key])}" data-href-en="${esc(model.documentsEn[key])}" target="_blank" rel="noopener">${label}${icon('external-link')}</a>`;
   // Preferred hardware display order: strongest S-series first, X5 last.
@@ -212,7 +212,7 @@
     return `<section class="mz-section mz-quickstart"><div class="mz-section-heading"><h2>快速上手</h2>${link}</div><ol class="mz-quickstart-steps">${steps.map((item, index) => step(index + 1, item.title, item.command)).join('')}</ol></section>`;
   }
   function quickStart(model) {
-    if (isTextDemo(model)) {
+    if (isSdkModel(model)) {
       const steps = model.quickStart || [];
       return `<section class="mz-section mz-quickstart"><div class="mz-section-heading"><h2>快速上手</h2></div><ol class="mz-quickstart-steps">${steps.map((step, index) => `<li class="mz-quickstart-step"><div class="mz-quickstart-label"><span>${index + 1}</span>${esc(step.title)}</div><div class="mz-code"><pre><code data-no-i18n>${esc(step.command)}</code></pre><button type="button" class="mz-copy" data-copy-code aria-label="复制命令" title="复制命令">${icon('copy')}</button></div></li>`).join('')}</ol></section>`;
     }
@@ -252,12 +252,12 @@
     || /^https?:\/\/github\.com\/D-Robotics\/rdk_model_zoo\/tree\/[^/]+\/samples\/vision\/ultralytics_yolo(?:\/|$)/i.test(model.source)
   ));
   const repositoryLinks = (model, cls = '') => {
-    if (isTextDemo(model)) return documentationLink(model, 'sample', '使用说明', cls);
+    if (isSdkModel(model)) return documentationLink(model, 'sample', '使用说明', cls);
     if (!model.source || (model.releaseStatus === 'candidate' && !isRdkSampleSource(model))) return '';
     return external(model.source, '模型仓库', cls);
   };
   const developerResourceLinks = model => {
-    if (isTextDemo(model)) {
+    if (isSdkModel(model)) {
       return `${external(model.source || model.sourceArchive, '示例源码')}${documentationLink(model, 'runtime', '运行文档')}${documentationLink(model, 'conversion', '模型转换')}${documentationLink(model, 'evaluation', '评测说明')}${external(model.upstreamModelUrl, '原始模型')}`;
     }
     if (model.sourceArchive) return external(model.sourceArchive, '示例源码');
@@ -303,9 +303,10 @@
     const shape = formatShape;
     const row = (label, value, title = '') => `<dt>${label}</dt><dd${title ? ` title="${esc(title)}"` : ''}>${esc(value)}</dd>`;
     const rows = [];
-    if (isTextDemo(model)) {
-      return [row('输入类型', '文本'), row('Runtime', p.sdkRuntime || 'OELLM 2.0.0 · GEMMA4'),
-        row('上下文容量', `${p.contextLength} tokens`), row('预填充块', `${p.prefillChunkSize} tokens`),
+    if (isSdkModel(model)) {
+      const audio = p.inputKind === 'audio';
+      return [row('输入类型', audio ? '音频' : p.inputKind === 'image-text' ? '图像与文本' : '文本'), row('Runtime', p.sdkRuntime || 'OellmRuntime'),
+        ...(audio ? [row('音频采样率', `${p.sampleRate / 1000} kHz`)] : [row('上下文容量', `${p.contextLength} tokens`), row('预填充块', `${p.prefillChunkSize} tokens`)]),
         row('量化精度', model.releaseStatus === 'official' ? String(p.precisionPolicy).toUpperCase() : 'W4 / K,V W8 · A8'), row('部署文件大小', byteSize(p.deploymentBytes) || '—')].join('');
     }
     if (p.parameterCount) rows.push(row('参数量', `${Number((p.parameterCount / 1e6).toFixed(3))} M`, String(p.parameterCount)));
@@ -380,7 +381,7 @@
   }
 
   function render({ model: m, models, data }) {
-    const textDemo = isTextDemo(m);
+    const textDemo = isSdkModel(m);
     const b = m.benchmark;
     const hardware = hardwareOf(m, data);
     const groupId = m.catalogId || `${m.name}/${m.taskId || m.task}`;
@@ -423,9 +424,11 @@
     const benchmarkEmpty = `<div class="mz-benchmark-empty"><div><h3>暂无性能汇总</h3></div>${m.source ? external(m.source + '/evaluator', '查看评测说明') : ''}</div>`;
     const dash = label => `<div><span>${label}</span><strong>—</strong></div>`;
     const reference = m.officialBenchmark;
+    const decodeReference = reference?.metrics.decode_tokens_per_second_range
+      ? reference.metrics.decode_tokens_per_second_range.join('–') : reference?.metrics.decode_tokens_per_second;
     const officialTile = (label, value, unit) => `<div><span>${label}</span><strong>${esc(value)} <small>${unit}</small></strong></div>`;
     const benchmarkBody = reference
-      ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid">${officialTile('首 token 延迟', reference.metrics.ttft_ms, 'ms')}${officialTile('生成速度', reference.metrics.decode_tokens_per_second, 'token/s')}${officialTile('运行内存', reference.metrics.memory_gb, 'GB')}</div></div></div>`
+      ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid">${officialTile('首 token 延迟', reference.metrics.ttft_ms, 'ms')}${officialTile('生成速度', decodeReference, 'token/s')}${officialTile('运行内存', reference.metrics.memory_gb, 'GB')}${reference.metrics.rtf != null ? officialTile('实时率 RTF', reference.metrics.rtf, '') : ''}</div></div></div>`
       : textDemo
       ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid">${dash('首 token 延迟')}${dash('生成速度')}${dash('板端 PPL')}${dash('峰值内存')}</div></div></div>`
       : b
