@@ -104,8 +104,9 @@ class PendingRegistrationTest(unittest.TestCase):
         released = [model for model in built["models"] if model.get("registration") != "pending"
                     and any(platform["status"] == "released"
                             for variant in model["variants"] for platform in variant["platforms"])]
-        # The retired native Gemma registration is replaced by official profiles.
-        self.assertGreaterEqual(len(pending), 52)
+        # Native Gemma and legacy MiniCPM5 registrations have been retired;
+        # their official profiles are counted separately from pending records.
+        self.assertGreaterEqual(len(pending), 51)
         self.assertGreaterEqual(len(released), 18)
         self.assertEqual(built["pending_count"], len(pending))
         self.assertEqual(built["demo_count"], sum(platform["status"] == "demo"
