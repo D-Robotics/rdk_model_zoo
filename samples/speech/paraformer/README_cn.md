@@ -88,8 +88,10 @@ bash samples/speech/paraformer/model/download_model.sh --target s100
 python samples/speech/paraformer/runtime/python/main.py --target s100 --output-dir outputs/paraformer-inference
 ```
 
-下载器打印路径与实测摘要，不覆盖已有文件。清单没有 HBM 发布方哈希，
-本地摘要仅标识文件内容，不能独立认证来源。推理核对本机板型、声明制品和物理
+下载器打印路径与实测摘要，不覆盖已有文件。历史 HBM 没有发布方哈希；新 O1
+组合已登记并核对 SHA-256。准备和推理时传入
+`--variant large-contextual-8404-int16-cpuptq-o1-20261104-r02` 选择新组合，详见
+[模型包](model/README_cn.md#preparation)。推理核对本机板型、声明制品和物理
 张量契约，不自动下载。可选 `runtime/python/run.sh` 转发相同参数，接受 `PYTHON`
 环境变量指定解释器，不安装依赖。
 

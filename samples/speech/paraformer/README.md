@@ -100,8 +100,10 @@ python samples/speech/paraformer/runtime/python/main.py --target s100 --output-d
 ```
 
 The downloader prints paths and observed hashes and never overwrites existing
-files. HBM publisher hashes are absent from the manifest; local hashes bind bytes
-without independently authenticating origin. Inference validates local board
+files. Historical HBMs have no publisher hashes; the rebuilt O1 package records
+and checks SHA-256 values. Select it with `--variant large-contextual-8404-int16-cpuptq-o1-20261104-r02`
+in both preparation and inference; see the [model package](model/README.md#preparation).
+Inference validates local board
 identity, declared assets and physical tensor contracts. It never auto-downloads.
 The optional `runtime/python/run.sh` helper forwards the same flags and uses
 `PYTHON` if set; it does not install dependencies.

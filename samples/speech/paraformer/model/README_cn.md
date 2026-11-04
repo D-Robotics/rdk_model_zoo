@@ -35,6 +35,19 @@ model/
 <a id="preparation"></a>
 ## 预览与准备
 
+重新转换的 `large-contextual-8404-int16-cpuptq-o1-20261104-r02` 使用新版 Archive
+目录及已登记的 SHA-256，需显式选择：
+
+```bash
+python3 -m samples.speech.paraformer.model.download --target s100 --variant large-contextual-8404-int16-cpuptq-o1-20261104-r02 --dry-run
+python3 -m samples.speech.paraformer.model.download --target s100 --variant large-contextual-8404-int16-cpuptq-o1-20261104-r02
+python3 -m samples.speech.paraformer.runtime.python.main --target s100 --variant large-contextual-8404-int16-cpuptq-o1-20261104-r02 --output-dir outputs/paraformer-o1
+```
+
+准备入口只选择三份新 HBM、匹配词表（安装为 `s100/tokens.json`）及两份固定前端
+文件。Web 另提供包含上述文件和三阶段原始转换报告的完整压缩包。新模型的板端
+精度与性能检查仍为 `not-run`。不传 `--variant` 时保留下文历史模型包的选择。
+
 需要 Python、NumPy 和 PyYAML。在主机准备文件不需要 SDK、板卡或 publisher 构建。
 从仓库根目录预览全部来源与目标，不访问网络也不写文件：
 
@@ -59,8 +72,8 @@ bash samples/speech/paraformer/model/download_model.sh --target s100
 退出码为 2，保留原文件。后续步骤失败可能留下前面已完整准备的文件；应先检查
 错误并保留用户数据，纠正失败项后再执行。不能把部分准备结果视为可用模型包。
 
-脚本逐项输出实测摘要，六项均完成后才输出最终成功行。活动清单没有 HBM 的
-发布方哈希，实测摘要用于绑定所下载字节。词表与核定固定包不同会被拒绝。
+脚本逐项输出实测摘要，六项均完成后才输出最终成功行。历史 HBM 没有发布方
+哈希；重新转换的组合已登记哈希，下载时核对。词表与核定固定包不同会被拒绝。
 
 <a id="accompanying-files"></a>
 ## 附属文件

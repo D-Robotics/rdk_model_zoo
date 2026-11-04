@@ -63,12 +63,12 @@ def _metadata_s100(stage: str = "det", **overrides):
 
 
 class BindingTests(unittest.TestCase):
-    def test_list_contains_only_the_two_audited_pairs(self):
+    def test_list_preserves_historical_pairs_and_adds_three_converted_pairs(self):
         from samples.vision.paddle_ocr.runtime.python.cli import list_available_pairs
 
         pairs = list_available_pairs()
-        self.assertEqual({pair.target for pair in pairs}, {"x5", "s100"})
-        self.assertEqual(len(pairs), 2)
+        self.assertEqual({pair.target for pair in pairs}, {"x5", "s100", "s100p", "s600"})
+        self.assertEqual(len(pairs), 5)
         self.assertEqual(
             pairs[0].detector_asset,
             "x5:paddleocr:en_PP-OCRv3_det_640x640_nv12.bin",
@@ -191,9 +191,9 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(outputs["sigmoid_0.tmp_0"].dtype, np.float32)
 
     def test_vocabulary_policies_keep_fixed_x5_and_hashed_s100_table(self):
-        from samples.vision.paddle_ocr.runtime.python.cli import X5_ALPHABET, list_available_pairs
+        from samples.vision.paddle_ocr.runtime.python.cli import X5_ALPHABET, resolve_pair
 
-        pairs = {pair.target: pair for pair in list_available_pairs()}
+        pairs = {target: resolve_pair(target) for target in ("x5", "s100")}
         x5_tokens = pairs["x5"].vocabulary.load_tokens()
         self.assertEqual(len(X5_ALPHABET), 96)
         self.assertEqual(len(x5_tokens), 97)

@@ -168,9 +168,9 @@ class OCRPair:
 
 
 def list_available_pairs(target: Optional[str] = None) -> tuple[OCRPair, ...]:
-    """List only the X5 PP-OCRv3 and S100 PP-OCRv6 manifest-backed pairs.
+    """List the historical pairs and separately audited converted PP-OCRv3 pairs.
 
-    ``auto`` is deliberately host-independent.  It lists both known pairs and
+    ``auto`` is deliberately host-independent. It lists the published pairs and
     does not inspect hardware; execution target authorization belongs to the
     real runner.
     """

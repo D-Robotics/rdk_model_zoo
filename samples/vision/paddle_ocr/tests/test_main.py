@@ -49,10 +49,12 @@ class MainTests(unittest.TestCase):
         self.assertIn("No model is downloaded", dry.stdout)
         self.assertIn("en_PP-OCRv3_det_infer-deploy_640x640_nv12", dry.stdout)
 
-    def test_unknown_published_target_fails_without_fallback(self):
-        result = self._run("--dry-run", "--target", "s100p")
-        self.assertEqual(result.returncode, 2)
-        self.assertIn("No audited PaddleOCR pair", result.stderr)
+    def test_new_s_target_default_is_the_audited_v3_pair(self):
+        for target in ("s100p", "s600"):
+            result = self._run("--dry-run", "--target", target)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("ppocrv3_en_det_640x640_", result.stdout)
+            self.assertIn("ppocrv3_en_rec_48x320_", result.stdout)
 
     def test_execution_auto_resolves_detected_target_before_default_pair(self):
         from unittest.mock import patch
