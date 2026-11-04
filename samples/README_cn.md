@@ -3,7 +3,7 @@
 # 按任务选择 Sample
 
 
-按任务查找模型、转换方法和评估程序。共 53 个 Sample：46 个视觉、3 个语音、1 个机器人策略和 3 个大模型示例。
+按任务查找模型、转换方法和评估程序。共 54 个 Sample：46 个视觉、3 个语音、1 个机器人策略和 4 个大模型示例。
 
 ## 图像分类
 
@@ -91,6 +91,7 @@ HIMLoco 读取准备好的六帧观测数据，保存预测的动作。
 
 | Sample | 转换 | 评测 |
 | --- | --- | --- |
+| [oellm](llm/oellm/README_cn.md) | [conversion](llm/oellm/conversion/README_cn.md) | [evaluator](llm/oellm/evaluator/README_cn.md) |
 | [gemma4](llm/gemma4/README_cn.md) | [conversion](llm/gemma4/conversion/README_cn.md) | [evaluator](llm/gemma4/evaluator/README_cn.md) |
 | [gemma4-e2b](llm/gemma4-e2b/README_cn.md) | [conversion](llm/gemma4-e2b/conversion/README_cn.md) | [evaluator](llm/gemma4-e2b/evaluator/README_cn.md) |
 | [minicpm5-2b](llm/minicpm5-2b/README_cn.md) | [conversion](llm/minicpm5-2b/conversion/README_cn.md) | [evaluator](llm/minicpm5-2b/evaluator/README_cn.md) |
