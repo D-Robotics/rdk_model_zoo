@@ -43,7 +43,7 @@ conversion/
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-源文档指向带有 `hb_mapper` 和 `hrt_model_exec` 的 RDK X5 OpenExplorer 环境。历史交付仅支持 X5；LPRNet 没有 S march 或 S 制品。
+源文档指向带有 `hb_mapper` 和 `hrt_model_exec` 的 RDK X5 OpenExplorer 环境。该历史交付仅对应 X5；新的 S 平台独立转换使用上文说明的训练权重。
 
 <a id="export"></a>
 ## 导出
@@ -77,7 +77,7 @@ hb_mapper makertbin --model-type onnx --config ./your_lprnet_config.yaml
 <a id="artifacts"></a>
 ## 产物
 
-唯一的清单制品是 `x5:lprnet:lpr.bin`；运行时期望路径为 `../model/lpr.bin`。ONNX、权重文件、校准数据和编译日志属于外部输入，不纳入仓库。
+历史 X5 清单制品是 `x5:lprnet:lpr.bin`；运行时期望路径为 `../model/lpr.bin`。ONNX、权重文件、校准数据和编译日志属于外部输入，不纳入仓库。
 
 <a id="known-gaps"></a>
 ## 补充准备
