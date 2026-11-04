@@ -1,0 +1,304 @@
+{
+  "schema_version": 1,
+  "status": "converted",
+  "variant": "large-contextual-8404-int16-cpuptq-o1-20261104-r02",
+  "target": {
+    "platform": "s100",
+    "march": "nash-e"
+  },
+  "source": {
+    "implementation": "FunASR1.3.14",
+    "model_id": "iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404",
+    "checkpoint": {
+      "name": "paraformer/model.pt",
+      "status": "downloaded",
+      "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/paraformer/model.pt",
+      "url": "https://www.modelscope.cn/models/iic/speech_paraformer-large-contextual_asr_nat-zh-cn-16k-common-vocab8404/resolve/master/model.pt",
+      "bytes": 912662894,
+      "sha256": "2d448b72b2b5e5fdf9ba865ff54c8c207f5cf8fced742b0160ef505b026c44a7",
+      "acquired_utc": "2026-11-04T09:43:52.606728+00:00"
+    },
+    "native_export_base": "c86f27115cdef08546bbafd28124adffb73a238d",
+    "source_support": {
+      "tokens.json": {
+        "sha256": "2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127"
+      },
+      "am.mvn": {
+        "sha256": "29b3c740a2c0cfc6b308126d31d7f265fa2be74f3bb095cd2f143ea970896ae5"
+      },
+      "paraformer_config.yaml": {
+        "sha256": "1d9057edeaba9e131cb98f26011606497cf3af187d8943525ddb5ee36c836b1b"
+      }
+    }
+  },
+  "components": {
+    "encoder": {
+      "filename": "s100/paraformer_encoder_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm",
+      "format": "hbm",
+      "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/paraformer/paraformer_encoder_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm",
+      "sha256": "89ee33f3ce9b08a46e7265c704b07c56f8372bd5da6f95464ad315cba125860a",
+      "size_bytes": 221853920,
+      "actual_model_name": "paraformer_encoder_int16",
+      "inputs": [
+        {
+          "name": "speech",
+          "shape": [
+            1,
+            400,
+            560
+          ],
+          "dtype": "float32"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "/encoder/after_norm/Add_1_output_0",
+          "shape": [
+            1,
+            400,
+            512
+          ],
+          "dtype": "float32"
+        }
+      ],
+      "onnx_sha256": "29c8ba3fd9ce611ca6926bccd243ef56925dc0f857d1e138df81983171a42d0f",
+      "effective_config_sha256": "e3ddca6d4a3c3a31a08e9853d15ac5d4e445ec2004365370260ad4ae7330da71",
+      "calibration_manifest_sha256": "2355b552ea676386e06ac834466068c0020a5288d406c3796183e5b754754aad",
+      "source_artifact": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paraformer-s100-compiled-o1-r02/encoder/paraformer_encoder_int16.hbm",
+        "sha256": "89ee33f3ce9b08a46e7265c704b07c56f8372bd5da6f95464ad315cba125860a",
+        "size_bytes": 221853920
+      },
+      "compile_receipt": {
+        "argv": [
+          "/usr/local/bin/hb_compile",
+          "-c",
+          "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paraformer-s100-compiled-o1-r02/encoder.yaml"
+        ],
+        "cwd": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paraformer-s100-compiled-o1-r02",
+        "started_utc": "2026-11-04T13:46:06.453659+00:00",
+        "config_sha256": "e3ddca6d4a3c3a31a08e9853d15ac5d4e445ec2004365370260ad4ae7330da71",
+        "stdout": "encoder.stdout.log",
+        "stderr": "encoder.stderr.log",
+        "status": "compiled_unverified",
+        "returncode": 0,
+        "finished_utc": "2026-11-04T15:27:45.695803+00:00",
+        "artifact": {
+          "path": "encoder/paraformer_encoder_int16.hbm",
+          "bytes": 221853920,
+          "sha256": "89ee33f3ce9b08a46e7265c704b07c56f8372bd5da6f95464ad315cba125860a"
+        },
+        "ptq_model": {
+          "path": "encoder/paraformer_encoder_int16_ptq_model.onnx",
+          "sha256": "b6f9d7d50a590973bb31d17c2f2df8152b1eb19f101cf6634dcb1a0df1837641"
+        }
+      },
+      "native_recipe": "samples/speech/paraformer/conversion/recipes/large-contextual-s100-encoder-o1-r02.yaml",
+      "recipe_sha256": "1c51b0e7e4200508a9688c628e8a40c5822df86ef89ce0d39e23cd8c1be346fb"
+    },
+    "predictor": {
+      "filename": "s100/paraformer_predictor_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm",
+      "format": "hbm",
+      "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/paraformer/paraformer_predictor_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm",
+      "sha256": "ae9033774dfb06816cca6f71481a696c70c3d0f4804f1bc49b167343c2422deb",
+      "size_bytes": 4104088,
+      "actual_model_name": "predictor_int16",
+      "inputs": [
+        {
+          "name": "/encoder/after_norm/Add_1_output_0",
+          "shape": [
+            1,
+            400,
+            512
+          ],
+          "dtype": "float32"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "/predictor/Add_output_0",
+          "shape": [
+            1,
+            401
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "/predictor/Concat_5_output_0",
+          "shape": [
+            1,
+            401,
+            512
+          ],
+          "dtype": "float32"
+        }
+      ],
+      "onnx_sha256": "a873a87d5a45b578ffd644b137f8ebcc04260fd864d788fd10852f88ae26e76e",
+      "effective_config_sha256": "11934581d3ce533eba9dbe3a4b149087ba0a590a7724d4f1f05dbdcd33282c41",
+      "calibration_manifest_sha256": "2355b552ea676386e06ac834466068c0020a5288d406c3796183e5b754754aad",
+      "source_artifact": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paraformer-s100-compiled-o1-r02/predictor/predictor_int16.hbm",
+        "sha256": "ae9033774dfb06816cca6f71481a696c70c3d0f4804f1bc49b167343c2422deb",
+        "size_bytes": 4104088
+      },
+      "compile_receipt": {
+        "argv": [
+          "/usr/local/bin/hb_compile",
+          "-c",
+          "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paraformer-s100-compiled-o1-r02/predictor.yaml"
+        ],
+        "cwd": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paraformer-s100-compiled-o1-r02",
+        "started_utc": "2026-11-04T15:27:51.643400+00:00",
+        "config_sha256": "11934581d3ce533eba9dbe3a4b149087ba0a590a7724d4f1f05dbdcd33282c41",
+        "stdout": "predictor.stdout.log",
+        "stderr": "predictor.stderr.log",
+        "status": "compiled_unverified",
+        "returncode": 0,
+        "finished_utc": "2026-11-04T15:28:35.661384+00:00",
+        "artifact": {
+          "path": "predictor/predictor_int16.hbm",
+          "bytes": 4104088,
+          "sha256": "ae9033774dfb06816cca6f71481a696c70c3d0f4804f1bc49b167343c2422deb"
+        },
+        "ptq_model": {
+          "path": "predictor/predictor_int16_ptq_model.onnx",
+          "sha256": "14837c146c4ca6f1cdf5896a578ad6f9eadf1813441cb9433dae75af5bc251fe"
+        }
+      },
+      "native_recipe": "samples/speech/paraformer/conversion/recipes/large-contextual-s100-predictor-o1-r02.yaml",
+      "recipe_sha256": "7d9ba8ed4ba280779956b4cbd6f8097bcbdd10fee74e852692a70196962918ab"
+    },
+    "decoder": {
+      "filename": "s100/paraformer_decoder_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm",
+      "format": "hbm",
+      "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/paraformer/paraformer_decoder_large_contextual_8404_int16_cpuptq_o1_20261104_r02_nashe.hbm",
+      "sha256": "5b2446a86429fd6ed43d61431cd5c8fa6a90d84984b645153657bd9809fe22e1",
+      "size_bytes": 74036960,
+      "actual_model_name": "decoder_int16",
+      "inputs": [
+        {
+          "name": "/encoder/after_norm/Add_1_output_0",
+          "shape": [
+            1,
+            400,
+            512
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "token_num",
+          "shape": [
+            1
+          ],
+          "dtype": "int32"
+        },
+        {
+          "name": "bias_embed",
+          "shape": [
+            1,
+            1,
+            512
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "onnx::Shape_8609",
+          "shape": [
+            1,
+            100,
+            512
+          ],
+          "dtype": "float32"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "logits",
+          "shape": [
+            1,
+            100,
+            8404
+          ],
+          "dtype": "float32"
+        }
+      ],
+      "onnx_sha256": "ec07435eb097bd4536ea7573a357402f122996ed0bca3e7ce6d917c4921fa34c",
+      "effective_config_sha256": "f726d652816ec966b1813724aef3a317490d92f9668a55203115e647b728b730",
+      "calibration_manifest_sha256": "2355b552ea676386e06ac834466068c0020a5288d406c3796183e5b754754aad",
+      "source_artifact": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paraformer-s100-compiled-o1-r02/decoder/decoder_int16.hbm",
+        "sha256": "5b2446a86429fd6ed43d61431cd5c8fa6a90d84984b645153657bd9809fe22e1",
+        "size_bytes": 74036960
+      },
+      "compile_receipt": {
+        "argv": [
+          "/usr/local/bin/hb_compile",
+          "-c",
+          "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paraformer-s100-compiled-o1-r02/decoder.yaml"
+        ],
+        "cwd": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/jobs/paraformer-s100-compiled-o1-r02",
+        "started_utc": "2026-11-04T15:28:35.687106+00:00",
+        "config_sha256": "f726d652816ec966b1813724aef3a317490d92f9668a55203115e647b728b730",
+        "stdout": "decoder.stdout.log",
+        "stderr": "decoder.stderr.log",
+        "status": "compiled_unverified",
+        "returncode": 0,
+        "finished_utc": "2026-11-04T16:01:37.912552+00:00",
+        "artifact": {
+          "path": "decoder/decoder_int16.hbm",
+          "bytes": 74036960,
+          "sha256": "5b2446a86429fd6ed43d61431cd5c8fa6a90d84984b645153657bd9809fe22e1"
+        },
+        "ptq_model": {
+          "path": "decoder/decoder_int16_ptq_model.onnx",
+          "sha256": "f76f42ae3f20e9718f0981beb7cb675ef9f7de2ec238a5435f4265b99dd02ade"
+        }
+      },
+      "native_recipe": "samples/speech/paraformer/conversion/recipes/large-contextual-s100-decoder-o1-r02.yaml",
+      "recipe_sha256": "a228de1932755a6f174585e06bfc3745973473dcfe3ab77655523d732de26968"
+    }
+  },
+  "bundle": {
+    "filename": "s100/paraformer_large_contextual_8404_int16_cpuptq_o1_20261104_r02_s100_bundle.tar.gz",
+    "format": "tar.gz",
+    "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/paraformer/paraformer_large_contextual_8404_int16_cpuptq_o1_20261104_r02_s100_bundle.tar.gz",
+    "sha256": "98c47dc1f120fa259170b1f9edf82ef4c2a3b40c45b89afb8c5da9dc71c786e4"
+  },
+  "tokens": {
+    "filename": "s100/paraformer_tokens8404_source_20261104.json",
+    "format": "json",
+    "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/paraformer/paraformer_tokens8404_source_20261104.json",
+    "sha256": "2b20c2b12572d682afff84ce1c8d560f67b8b32a4c1f21567411d141ed352127"
+  },
+  "calibration_count": 50,
+  "precision_policy": "Fresh INT16 CPU PTQ / O1, one core, jobs4; no cross-target or O2 BC reuse",
+  "compiler_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+  "compiler_versions": {
+    "hbdk": "4.7.5",
+    "hmct": "2.6.5",
+    "hb_compile": "3.5.3"
+  },
+  "calibration_manifest_sha256": "2355b552ea676386e06ac834466068c0020a5288d406c3796183e5b754754aad",
+  "host_pipeline": {
+    "status": "passed",
+    "stages": [
+      "encoder",
+      "predictor",
+      "decoder"
+    ],
+    "evidence_file": "host-pipeline.json",
+    "evidence_sha256": "552d500b0448473f414a3603750bbb7f1b2207bd5b61cc2e0bd001920cd23fc2",
+    "component_sha256": {
+      "encoder": "89ee33f3ce9b08a46e7265c704b07c56f8372bd5da6f95464ad315cba125860a",
+      "predictor": "ae9033774dfb06816cca6f71481a696c70c3d0f4804f1bc49b167343c2422deb",
+      "decoder": "5b2446a86429fd6ed43d61431cd5c8fa6a90d84984b645153657bd9809fe22e1"
+    },
+    "scope": "Complete source float ASR pipeline; HBM and board execution not-run"
+  },
+  "board_validation": "not-run",
+  "native_recipes": {
+    "encoder": "samples/speech/paraformer/conversion/recipes/large-contextual-s100-encoder-o1-r02.yaml",
+    "predictor": "samples/speech/paraformer/conversion/recipes/large-contextual-s100-predictor-o1-r02.yaml",
+    "decoder": "samples/speech/paraformer/conversion/recipes/large-contextual-s100-decoder-o1-r02.yaml"
+  }
+}
