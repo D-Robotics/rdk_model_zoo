@@ -37,8 +37,6 @@ const sourceFiles = [
   'gallery.css',
   'reference.css',
   'detail.css',
-  'ask-ai.css',
-  'ask-ai.js',
   'product-ui.css',
   'refresh.css',
   'i18n.js',

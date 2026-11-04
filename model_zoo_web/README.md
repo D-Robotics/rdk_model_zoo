@@ -157,31 +157,12 @@ Compiled models, conversion outputs, and complete OE reports must not be
 committed here. Their stable Archive URLs and checksums are supplied through the
 reviewed catalog-generation step.
 
-## Ask AI local preview
+## Ask AI
 
-Ask AI calls the separate `rdk_model_zoo_service` Pi Agent API. To test it
-locally, start that service with its server-side `.env` in one terminal:
-
-```bash
-cd ../../rdk_model_zoo_service
-npm run dev
-```
-
-From `model_zoo_web/`, build and serve the release preview with the same-origin
-Ask AI proxy on port 4173 in another terminal:
-
-```bash
-npm run build:release
-npm run preview:ai
-```
-
-Open `http://127.0.0.1:4173/` and use the header Ask AI button or the model
-detail action. The browser calls `/api` on the preview origin; the preview
-server forwards those requests to `http://127.0.0.1:8787` by default. Set
-`PREVIEW_HOST` to the host's Tailscale IP to preview from another device, or
-`ASK_AI_BACKEND_URL` if the service uses another local address. Keep provider
-keys and the service's shared bearer token out of this static site. The
-model-request dialog is still a preview; no model request is submitted by it yet.
+Ask AI is temporarily disabled. The catalog, model details, empty-search view
+and report pages have no AI entry points, and release builds exclude the Ask AI
+client script and stylesheet. The shared model-request preview is also hidden.
+The source module and local service tooling are retained for future restoration.
 
 ## GitHub Pages release
 
