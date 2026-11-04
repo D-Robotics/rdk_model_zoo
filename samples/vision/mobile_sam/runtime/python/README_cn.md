@@ -70,6 +70,7 @@ python3 samples/vision/mobile_sam/runtime/python/main.py \
 | 参数 | 类型 | 默认值 | 含义 |
 |---|---|---|---|
 | `--target` | choice | `auto` | `x5`、`s100`、`s100p` 或 `s600` |
+| `--variant` | str | `published` | 原有模型使用 published；转换模型选择精确规格。 |
 | `--encoder-asset-id` | string | `null` | 精确编码器清单 reference |
 | `--decoder-asset-id` | string | `null` | 精确解码器清单 reference |
 | `--encoder-model-path` | path | `null` | 外部编码器路径，必须有编码器 ID |

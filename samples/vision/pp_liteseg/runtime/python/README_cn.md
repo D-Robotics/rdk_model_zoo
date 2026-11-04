@@ -53,8 +53,9 @@ python3 samples/vision/pp_liteseg/runtime/python/main.py --target x5 --test-img 
 | 参数 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
 | `--target` | choice | `auto` | auto 解析为 x5，实际执行检查板身份 |
+| `--variant` | str | `null` | 选择精确转换规格；省略时保留原有默认模型。 |
 | `--asset-id` | str | `None` | 精确发布身份 |
-| `--model-path` | Path | `None` | 默认 model/ 下 BIN，外部路径须提供 asset-id |
+| `--model-path` | Path | `None` | 默认使用所选清单的 BIN/HBM，外部路径须提供 asset-id |
 | `--test-img` | Path | `samples/vision/pp_liteseg/test_data/street.png` | 按示例位置解析的绝对默认路径 |
 | `--output` | Path | `outputs/pp_liteseg/result.jpg` | 三面板图像 |
 | `--mask-save-path` | Path | `outputs/pp_liteseg/labels.npy` | int32 类别数组，必须使用.npy 扩展名 |

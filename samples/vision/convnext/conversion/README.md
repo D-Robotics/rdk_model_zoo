@@ -2,6 +2,7 @@ English | [简体中文](README_cn.md)
 
 # ConvNeXt conversion
 
+<a id="source-model"></a>
 ## Reproducible Atto D2 X5 recipe
 
 The maintained recipe `convnext_atto_d2_x5.yaml` builds a **new** artifact from
@@ -10,6 +11,22 @@ The maintained recipe `convnext_atto_d2_x5.yaml` builds a **new** artifact from
 The weight SHA-256 is `0f70bc49f1896c8c15af857d2d1d418abfaf097a62b4e29a35e6e65b752f5953`.
 The small Atto/Femto/Pico/Nano variants are timm extensions to the ConvNeXt
 architecture from [A ConvNet for the 2020s](https://arxiv.org/abs/2201.03545).
+
+<a id="directory"></a>
+## Directory
+
+```text
+conversion/
+├── export.py
+├── prepare_calibration.py
+├── convnext_atto_d2_x5.yaml
+├── recipes/                         # target-specific YAMLs
+├── converted.json                   # frozen X5 source records
+└── converted_targets_20261103.json   # exact S artifacts, recipes and evidence
+```
+
+<a id="export"></a>
+## Export
 
 `export.py` loads local safetensors strictly without downloading a changing
 `pretrained=True` checkpoint. It exports fixed 1×3×224×224 RGB float32 ONNX
@@ -35,11 +52,26 @@ hb_model_info compiled/convnext_atto_d2_bayese_224x224_nv12.bin
 hb_perf compiled/convnext_atto_d2_bayese_224x224_nv12.bin
 ```
 
+<a id="toolchain-targets"></a>
+## Toolchains and targets
+
+S100/S100P/S600 use nash-e/nash-m/nash-p respectively. Independent S conversions use the existing SDK 3.7.0: hb_compile 3.5.3, HMCT 2.6.5 and HBDK 4.7.5. Each profile records its actual image ID and configuration hash. Keep models, ONNX and calibration tensors on dev-server.
+
 Use the already provisioned X5 image
 `registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8` on x86 Linux.
 The observed tools are hb_mapper 1.24.3, hbdk 3.49.15 and HBRT 3.15.55.0.
-The target is `bayes-e` (X5); no S100/S100P/S600 conversion is claimed.
+These X5 tools apply to `bayes-e`; the independently accepted S profiles below use the S toolchain.
 
+<a id="compile"></a>
+## Compile
+
+X5 uses the Mapper commands above. For S, select the YAML matching the exact target and variant, resolve its ONNX, normalized calibration and output paths in a fresh dev-server work directory, then run:
+
+```bash
+hb_compile -c compile.yaml
+```
+
+<a id="calibration"></a>
 ## Calibration and runtime contract
 
 `prepare_calibration.py` freezes a sorted image set and writes raw float32
@@ -55,6 +87,8 @@ latency/O3 and the unique output prefix `convnext_atto_d2_bayese_224x224_nv12`.
 The emitted file is registered separately as native variant `atto-d2`.
 See [model artifacts](../model/README.md) and [runtime](../runtime/python/README.md).
 
+<a id="validation"></a>
+<a id="artifacts"></a>
 ## Acceptance and publication
 
 The 2026-11-02 conversion passed checker/compiler and host graph comparison.
@@ -64,6 +98,7 @@ estimates only; they must not populate board benchmarks. Publish the BIN and
 SHA256SUMS under `rdk_model_zoo_web/rdk_x5/convnext/`; store versioned companions
 under `rdk_model_zoo_web/assets/rdk_x5/convnext/<model-stem>/v1/`.
 
+<a id="known-gaps"></a>
 ## Historical reference recipes
 
 `ConvNeXt_atto.yaml`, `ConvNeXt_femto.yaml` and `ConvNeXt_nano.yaml` remain

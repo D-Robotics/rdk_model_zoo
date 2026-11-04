@@ -70,6 +70,7 @@ python3 samples/vision/efficient_sam/runtime/python/main.py \
 | Argument | Type | Default | Meaning |
 |---|---|---|---|
 | `--target` | choice | `auto` | `x5`, `s100`, `s100p`, or `s600` target |
+| `--variant` | str | `published` | Use published for the original model, or select an exact converted variant. |
 | `--encoder-asset-id` | string | `null` | Exact encoder manifest reference |
 | `--decoder-asset-id` | string | `null` | Exact decoder manifest reference |
 | `--encoder-model-path` | path | `null` | External encoder path; requires encoder ID |

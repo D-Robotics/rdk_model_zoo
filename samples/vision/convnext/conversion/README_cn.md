@@ -2,6 +2,7 @@
 
 # ConvNeXt 模型转换
 
+<a id="source-model"></a>
 ## 可复现的 Atto D2 X5 流程
 
 维护中的 `convnext_atto_d2_x5.yaml` 从
@@ -11,6 +12,22 @@
 `0f70bc49f1896c8c15af857d2d1d418abfaf097a62b4e29a35e6e65b752f5953`。
 Atto/Femto/Pico/Nano 是 timm 对 [ConvNeXt](https://arxiv.org/abs/2201.03545)
 架构扩展的小规格。
+
+<a id="directory"></a>
+## 目录
+
+```text
+conversion/
+├── export.py
+├── prepare_calibration.py
+├── convnext_atto_d2_x5.yaml
+├── recipes/                         # 各目标独立 YAML
+├── converted.json                   # 冻结的 X5 来源记录
+└── converted_targets_20261103.json   # S 制品、配置与验收证据
+```
+
+<a id="export"></a>
+## 模型导出
 
 `export.py` 严格加载本地 safetensors，不通过 `pretrained=True` 动态下载权重。
 导出固定 1×3×224×224 RGB float32 ONNX（opset 11），简化并检查图，使用固定随机输入
@@ -34,11 +51,26 @@ hb_model_info compiled/convnext_atto_d2_bayese_224x224_nv12.bin
 hb_perf compiled/convnext_atto_d2_bayese_224x224_nv12.bin
 ```
 
+<a id="toolchain-targets"></a>
+## 工具链与目标
+
+S100/S100P/S600 分别使用 nash-e/nash-m/nash-p。独立 S 转换使用已有 SDK 3.7.0，实测 hb_compile 3.5.3、HMCT 2.6.5、HBDK 4.7.5；每个规格的真实镜像 ID 和配置摘要见转换清单。模型、ONNX 和校准张量保存在 dev-server。
+
 在 x86 Linux 的既有 X5 工具链镜像
 `registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8` 中转换。
 实测工具版本为 hb_mapper 1.24.3、hbdk 3.49.15、HBRT 3.15.55.0。
-目标为 `bayes-e`（X5），本次没有声明 S100/S100P/S600 适配。
+以上 X5 工具对应 `bayes-e`；下方独立验收的 S 系列规格使用 S 工具链。
 
+<a id="compile"></a>
+## 编译
+
+X5 使用上方 Mapper 命令。S 使用清单中与 target、规格匹配的独立 YAML，在 dev-server 的新工作目录解析 ONNX、归一化校准数据和输出路径后执行：
+
+```bash
+hb_compile -c compile.yaml
+```
+
+<a id="calibration"></a>
 ## 校准与 Runtime 契约
 
 `prepare_calibration.py` 按排序冻结图片，使用 `numpy.tofile` 写原始 float32
@@ -52,6 +84,8 @@ ImageNet mean/scale 由 Mapper 融合，避免重复归一化。相邻 manifest 
 `convnext_atto_d2_bayese_224x224_nv12`。生成的 BIN 对应原生 `atto-d2` 规格。
 见[模型目录](../model/README_cn.md)和[Runtime](../runtime/python/README_cn.md)。
 
+<a id="validation"></a>
+<a id="artifacts"></a>
 ## 验收与发布
 
 2026-11-02 的 checker/compiler、主机图对照已通过。当前为 **converted**：
@@ -60,6 +94,7 @@ ImageNet mean/scale 由 Mapper 融合，避免重复归一化。相邻 manifest 
 BIN 与 SHA256SUMS 放在 `rdk_model_zoo_web/rdk_x5/convnext/`；版本化附属材料放在
 `rdk_model_zoo_web/assets/rdk_x5/convnext/<model-stem>/v1/`。
 
+<a id="known-gaps"></a>
 ## 历史参考配置
 
 `ConvNeXt_atto.yaml`、`ConvNeXt_femto.yaml`、`ConvNeXt_nano.yaml` 保持

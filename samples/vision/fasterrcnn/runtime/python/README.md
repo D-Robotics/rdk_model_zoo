@@ -55,6 +55,7 @@ python3 main.py --target x5 \
 | Option | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--target` | `str` | `auto` | `auto`, `x5`, `s100`, `s100p`, `s600` |
+| `--variant` | str | `published` | Use published for the original model, or select an exact converted variant. |
 | `--parta-path` | `Path` | `None` | PartA file |
 | `--partb-path` | `Path` | `None` | PartB file, together with PartA |
 | `--input` | `Path` | `samples/vision/fasterrcnn/test_data/bus.jpg` | Image, or video with `--track` |

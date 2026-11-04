@@ -53,8 +53,9 @@ Success returns 0, validation/load errors return 2. run.sh forwards these same a
 | Parameter | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `--target` | choice | `auto` | auto resolves x5; actual execution checks board identity |
+| `--variant` | str | `null` | Exact converted variant; omitted keeps the original default model. |
 | `--asset-id` | str | `None` | exact published identity |
-| `--model-path` | Path | `None` | default model/ BIN; external path requires asset-id |
+| `--model-path` | Path | `None` | defaults to the selected manifest's BIN/HBM; external path requires asset-id |
 | `--test-img` | Path | `samples/vision/pp_liteseg/test_data/street.png` | sample-relative absolute default |
 | `--output` | Path | `outputs/pp_liteseg/result.jpg` | three-panel image |
 | `--mask-save-path` | Path | `outputs/pp_liteseg/labels.npy` | int32 class-ID array;.npy required |
