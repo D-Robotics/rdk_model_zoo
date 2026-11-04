@@ -45,14 +45,9 @@ export async function textDemoEntry({ record, variant, release, webRoot, outputR
     filename: published.name, url: published.package_url, sha256: published.sha256,
     sizeBytes: published.size_bytes, checksumsUrl: published.checksums_url }] : [];
   const preparation = official ? [
-    'mkdir -p /data/gemma4-official',
-    `curl -fL --retry 3 -o ${published.name} ${published.package_url}`,
-    `printf '%s  %s\\n' '${published.sha256}' '${published.name}' | sha256sum -c -`,
-    `python3 -m zipfile -e ${published.name} /data/gemma4-official`,
-    `python3 ${record.sample_path}/model/prepare.py \\`,
-    `  --profile ${manifest.profile} \\`,
-    `  --source-dir /data/gemma4-official/${published.name.slice(0, -4)} \\`,
-    `  --output-dir /data/gemma4-official/${published.name.slice(0, -4)}`,
+    `MODEL_DIR=/data/${published.name.slice(0, -4)}`,
+    `python3 ${record.sample_path}/model/prepare.py --profile ${manifest.profile} \\`,
+    '  --source-dir "$MODEL_DIR" --output-dir "$MODEL_DIR"',
   ].join('\n') : published ? [
     'mkdir -p /data/gemma4-e2b-sdk2',
     `curl -fL --retry 3 -o ${published.name} ${published.package_url}`,
@@ -64,8 +59,8 @@ export async function textDemoEntry({ record, variant, release, webRoot, outputR
   ].join('\n') : null;
   return {
     model: {
-      id, catalogId: record.id, name: `${record.name} ${(manifest.model_size || variant.size).toUpperCase()}`,
-      variantName: official ? manifest.display_name : `${record.name} ${variant.size.toUpperCase()} W4/W8`,
+      id, catalogId: record.id, name: official ? record.name : `${record.name} ${(manifest.model_size || variant.size).toUpperCase()}`,
+      variantName: official ? `${record.name} ${manifest.model_size.toUpperCase()} ${policy.precision_policy.toUpperCase()}` : `${record.name} ${variant.size.toUpperCase()} W4/W8`,
       family: record.family, modelSize: manifest.model_size || variant.size, releaseStatus: official ? 'official' : 'demo', releasePlatform: 'S600', hardware: 'RDK S600',
       task: '文本生成', taskId: 'text-generation', tasks: ['text-generation'], platforms: ['S600'],
       description: record.description.zh, descriptionEn: record.description.en,
@@ -88,8 +83,10 @@ export async function textDemoEntry({ record, variant, release, webRoot, outputR
         artifactManifest: manifest,
       },
       quickStart: [
-        { title: '准备模型文件', command: preparation || `python3 ${record.sample_path}/model/prepare.py \\\n  --source-dir /data/gemma4-language \\\n  --companion-dir /data/Gemma4-E2B_w4 \\\n  --output-dir /data/gemma4-e2b-sdk2` },
-        { title: '运行文本生成', command: `export OELLM_RUNTIME_ROOT=/opt/oellm_runtime_s600\nbash ${record.sample_path}/runtime/cpp/run.sh \\\n  --config_path ${official ? '/data/gemma4-official/' + published.name.slice(0, -4) : '/data/gemma4-e2b-sdk2'}/oellm_config.json \\\n  --prompt "请把 hello 翻译成中文，只回答译文。" --max_new_tokens 64` },
+        { title: official ? '下载解压后准备模型' : '准备模型文件', command: preparation || `python3 ${record.sample_path}/model/prepare.py \\\n  --source-dir /data/gemma4-language \\\n  --companion-dir /data/Gemma4-E2B_w4 \\\n  --output-dir /data/gemma4-e2b-sdk2` },
+        { title: '运行文本生成', command: official
+          ? `export OELLM_RUNTIME_ROOT=/opt/oellm_runtime_s600\nbash ${record.sample_path}/runtime/cpp/run.sh \\\n  --config_path "$MODEL_DIR/oellm_config.json" --prompt "你好" --max_new_tokens 64`
+          : `export OELLM_RUNTIME_ROOT=/opt/oellm_runtime_s600\nbash ${record.sample_path}/runtime/cpp/run.sh \\\n  --config_path /data/gemma4-e2b-sdk2/oellm_config.json \\\n  --prompt "请把 hello 翻译成中文，只回答译文。" --max_new_tokens 64` },
       ],
     },
     properties: {

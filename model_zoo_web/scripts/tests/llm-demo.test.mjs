@@ -22,7 +22,8 @@ for (const variant of record.variants) test(`official ${variant.size} renders it
   assert.equal(model.releaseStatus, 'official');
   assert.equal(model.sampleRevision, record.sample_revision);
   assert.equal(model.source, `https://github.com/D-Robotics/rdk_model_zoo/tree/${record.sample_revision}/${record.sample_path}`);
-  assert.equal(model.variantName, `Gemma4 ${variant.size.split('-').map(s => s.toUpperCase()).join(' ')}`);
+  assert.equal(model.name, 'Gemma 4');
+  assert.equal(model.variantName, `Gemma 4 ${variant.size.split('-').map(s => s.toUpperCase()).join(' ')}`);
   assert.equal(model.assets.length, 1);
   assert.equal(model.assets[0].format, 'zip');
   assert.match(model.assets[0].url, /^https:\/\/d-robotics-aitoolchain\.oss-cn-beijing\.aliyuncs\.com\/llm\/2\.0\.0\/s600_models\/Gemma4-E[24]B_w[48]\.zip$/);
@@ -32,9 +33,9 @@ for (const variant of record.variants) test(`official ${variant.size} renders it
   assert.equal(model.officialBenchmark.source.runtime_concurrency, 1);
   assert.equal(model.officialBenchmark.source.memory_scope, 'linux-plus-ion');
   assert.equal(model.deployment.artifactManifest.source.revision, null);
-  assert.match(model.quickStart[0].command, /python3 -m zipfile -e/);
+  assert(model.quickStart[0].command.split('\n').length <= 3);
   assert.match(model.quickStart[0].command, new RegExp(`--profile ${variant.size}`));
-  assert.doesNotMatch(model.quickStart[0].command, /archive\.d-robotics|tar -xzf|w4w8/);
+  assert.doesNotMatch(model.quickStart[0].command, /curl|sha256sum|zipfile|archive\.d-robotics|tar -xzf|w4w8/);
   for (const filename of [...Object.values(model.documents), ...Object.values(model.documentsEn), model.sourceArchive]) {
     assert((await stat(resolve(outputRoot, filename))).size > 0);
   }
@@ -47,9 +48,8 @@ for (const variant of record.variants) test(`official ${variant.size} renders it
     assert.match(html, /Runtime 并发/);
     assert.match(html, /Runtime 单路/);
     assert.match(html, /id="benchmark-condition"[^>]*aria-label="Runtime 并发"(?![^>]*disabled)/);
-    assert.doesNotMatch(html, /Runtime 2 路并发|未板测|SDK 2\.0|峰值内存|视觉配套文件|权重版本|data-ask-model/);
+    assert.doesNotMatch(html, /Runtime 2 路并发|未板测|SDK 2\.0|峰值内存|视觉配套文件|权重版本|data-ask-model|官方性能基准|转换说明|板端 PPL/);
     assert.match(html, /运行内存/);
-    assert.match(html, /官方性能基准/);
     assert.match(html, new RegExp(String(model.officialBenchmark.metrics.decode_tokens_per_second).replace('.', '\\.')));
     assert.match(html, /data-open-download/);
     assert(html.includes(model.source), 'Sample source links to the published native commit');

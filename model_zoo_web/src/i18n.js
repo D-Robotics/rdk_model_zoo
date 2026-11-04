@@ -246,6 +246,7 @@
     '官方性能基准': 'Official performance benchmark',
     '使用说明': 'Usage guide',
     '准备模型文件': 'Prepare model files',
+    '下载解压后准备模型': 'Prepare the downloaded and extracted model',
     '运行文本生成': 'Run text generation',
     '转换说明': 'Conversion guide',
     '评测说明': 'Evaluation guide',

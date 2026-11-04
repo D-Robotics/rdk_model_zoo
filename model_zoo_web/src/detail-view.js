@@ -425,7 +425,7 @@
     const reference = m.officialBenchmark;
     const officialTile = (label, value, unit) => `<div><span>${label}</span><strong>${esc(value)} <small>${unit}</small></strong></div>`;
     const benchmarkBody = reference
-      ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid">${officialTile('首 token 延迟', reference.metrics.ttft_ms, 'ms')}${officialTile('生成速度', reference.metrics.decode_tokens_per_second, 'token/s')}${dash('板端 PPL')}${officialTile('运行内存', reference.metrics.memory_gb, 'GB')}</div></div><div class="mz-report-actions">${external(reference.source.url, '官方性能基准')}</div></div>`
+      ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid">${officialTile('首 token 延迟', reference.metrics.ttft_ms, 'ms')}${officialTile('生成速度', reference.metrics.decode_tokens_per_second, 'token/s')}${officialTile('运行内存', reference.metrics.memory_gb, 'GB')}</div></div></div>`
       : textDemo
       ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid">${dash('首 token 延迟')}${dash('生成速度')}${dash('板端 PPL')}${dash('峰值内存')}</div></div></div>`
       : b
@@ -456,7 +456,7 @@
     const kicker = m.dataPending
       ? `<div class="mz-kicker"><span class="mz-task">${m.task}</span><span class="pending-badge">数据待补充</span></div>`
       : `<span class="mz-task">${m.task}</span>`;
-    const reportAction = textDemo ? documentationLink(m, 'conversion', '转换说明') : m.reportDataUrl
+    const reportAction = m.releaseStatus === 'official' ? '' : textDemo ? documentationLink(m, 'conversion', '转换说明') : m.reportDataUrl
       ? `<a class="mz-report-link" href="reports.html?report=${encodeURIComponent(m.id)}&from=${encodeURIComponent(m.id)}">${icon('scan-eye')}查看转换详情</a>`
       : (m.dataPending
         ? ((m.reportUrl || m.reportSourceUrl)
