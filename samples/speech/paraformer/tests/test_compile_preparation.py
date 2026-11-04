@@ -116,6 +116,26 @@ out.mkdir()
                 source["model_parameters"]["output_model_file_prefix"],
             )
 
+    def test_explicit_o1_choice_is_bound_by_preparation_and_cannot_be_changed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            report = self.make_workspace(root)
+            report['optimize_level'] = 'O1'
+            for stage in STAGES:
+                path = root / f'configs/{stage}.yaml'
+                path.write_text(yaml.safe_dump(make_config(stage, optimize_level='O1'), sort_keys=False))
+                report['configs'][stage] = sha256_file(path)
+            (root/'preparation.json').write_text(json.dumps(report))
+            self.assertEqual(verify_prepared(root)[0]['optimize_level'], 'O1')
+            path = root/'configs/encoder.yaml'
+            path.write_text(yaml.safe_dump(make_config('encoder'), sort_keys=False))
+            report['configs']['encoder'] = sha256_file(path)
+            (root/'preparation.json').write_text(json.dumps(report))
+            with self.assertRaisesRegex(ValueError, 'source contract'):
+                verify_prepared(root)
+        with self.assertRaises(ValueError):
+            make_config('encoder', optimize_level='unknown')
+
     def test_success_stays_compiled_unverified_and_preserves_both_logs(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "prepared"

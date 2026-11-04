@@ -84,11 +84,13 @@ Download scripts use Apache-2.0. Model weights and ByteTrack source retain their
 
 ## Independently rebuilt 2026-11-04 profile
 
-Select the new `yolov5x-v7-672-nv12-int16-cpuptq-o1-20261104` variant explicitly. Exact accepted targets and hashes are in `converted_assets.json`; historical defaults keep their source contracts.
+Select the new `yolov5x-v7-672-nv12-int16-cpuptq-o1-20261104-r02` variant explicitly. Exact accepted targets and hashes are in `converted_assets.json`; historical defaults keep their source contracts.
 
 ```bash
-python3 -m samples.vision.bytetrack.model.download --target s100 --variant yolov5x-v7-672-nv12-int16-cpuptq-o1-20261104
-python3 -m samples.vision.bytetrack.runtime.python.main --target s100 --variant yolov5x-v7-672-nv12-int16-cpuptq-o1-20261104 --input /path/to/video.mp4 --output /path/to/result.mp4
+python3 -m samples.vision.bytetrack.model.download --target s100 --variant yolov5x-v7-672-nv12-int16-cpuptq-o1-20261104-r02
+python3 -m samples.vision.bytetrack.runtime.python.main --target s100 --variant yolov5x-v7-672-nv12-int16-cpuptq-o1-20261104-r02 --input /path/to/video.mp4 --output /path/to/result.mp4
 ```
 
 The host check runs all three source float ONNX heads, Native person decoding and the real CPU tracker on30 ordered video frames. It does not execute HBM or measure MOT accuracy. See [conversion](../conversion/README.md) for pinned source, real calibration, ABI and compiler evidence.
+
+The R01 artifacts were retired before Archive upload after an actual SDK-loader check found an unnormalized calibration boundary. Their models/configs/logs remain in Workbench; only independently calibrated R02 artifacts may be registered for download.

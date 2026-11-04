@@ -33,6 +33,7 @@ def calibrate(args):
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     (out / 'rgb_f32').mkdir()
+    (out / 'normalized').mkdir()
     rows = []
     for row in manifest['images']:
         p = source / row['name']
@@ -42,6 +43,7 @@ def calibrate(args):
         assert x.shape == (1, 3, 672, 672) and np.isfinite(x).all()
         dest = out / 'rgb_f32' / (p.stem + '.bin')
         x.tofile(dest)
+        np.save(out/'normalized'/(p.stem+'.npy'), x/np.float32(255))
         rows.append({'source': str(p), 'source_sha256': row['sha256'], 'tensor': str(dest), 'sha256': sha(dest), 'shape': list(x.shape), 'dtype': 'float32', 'min': float(x.min()), 'max': float(x.max())})
     report = {'count': 200, 'seed': 42, 'source_manifest_sha256': sha(source / 'manifest.json'), 'runtime_preprocess_sha256': sha(Path(__file__).resolve().parents[4] / 'samples/vision/yolov5/runtime/python/detection.py'), 'geometry': 'S stretch INTER_NEAREST', 'color': 'RGB', 'normalization': 'raw 0..255; compiler /255 once', 'images': rows}
     (out / 'calibration-manifest.json').write_text(json.dumps(report, indent=2) + '\n')
@@ -117,15 +119,15 @@ def export(args):
             errors.append(float(np.max(np.abs(a - b))))
         checks.append({'input': name, 'finite': True, 'head_max_abs_error': errors})
     march = {'s100':'nash-e', 's100p':'nash-m', 's600':'nash-p'}[args.target]
-    prefix = 'bytetrack_yolov5x_v7_672_nv12_int16_cpuptq_o1_20261104_' + march.replace('-', '')
+    prefix = 'bytetrack_yolov5x_v7_672_nv12_int16_cpuptq_o1_20261104_r02_' + march.replace('-', '')
     config = {'model_parameters': {'onnx_model':str(graph), 'march':march,
         'working_dir':str(out/'compiled'), 'output_model_file_prefix':prefix},
         'input_parameters': {'input_name':'images', 'input_type_rt':'nv12',
         'input_type_train':'rgb', 'input_space_and_range':'bt601_video',
         'input_shape':'1x3x672x672', 'input_layout_train':'NCHW',
         'norm_type':'data_scale', 'scale_value':str(1/255)},
-        'calibration_parameters': {'cal_data_dir':str(args.calibration.resolve()/'rgb_f32'),
-        'cal_data_type':'float32', 'calibration_type':'max', 'max_percentile':.9999,
+        'calibration_parameters': {'cal_data_dir':str(args.calibration.resolve()/'normalized'),
+         'calibration_type':'max', 'max_percentile':.9999,
         'optimization':'set_all_nodes_int16'},
         'compiler_parameters': {'compile_mode':'latency', 'core_num':1,
         'optimize_level':'O1', 'jobs':2, 'debug':True,

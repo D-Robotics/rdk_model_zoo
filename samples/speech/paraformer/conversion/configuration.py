@@ -20,9 +20,11 @@ PREFIXES = {
 }
 
 
-def make_config(stage, jobs=32):
+def make_config(stage, jobs=32, optimize_level="O2"):
     if stage not in STAGES or type(jobs) is not int or jobs < 1:
         raise ValueError("Expected a known stage and positive compiler jobs")
+    if optimize_level not in ("O1", "O2"):
+        raise ValueError("Expected explicit O1 or O2 compiler optimization")
     tensors = signature(stage, "input")
     return {
         "model_parameters": {
@@ -54,7 +56,7 @@ def make_config(stage, jobs=32):
             },
         },
         "compiler_parameters": {
-            "optimize_level": "O2",
+            "optimize_level": optimize_level,
             "compile_mode": "latency",
             "core_num": 1,
             "jobs": jobs,

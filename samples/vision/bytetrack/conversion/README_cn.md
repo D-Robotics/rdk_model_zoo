@@ -4,7 +4,7 @@
 
 ## Rebuilt YOLOv5x v7 S profiles
 
-The 2026-11-04 profile `yolov5x-v7-672-nv12-int16-cpuptq-o1-20261104` uses the official YOLOv5 v7 source commit `915bbf294bb74c859f0b41f1c23bc395014ea679` and trained `yolov5x.pt` SHA-256 `9f27a794fa0308e2606f90565164571d6f0a0ba18a3ce2e5e5d323b71c157859` (GPL-3.0). Each accepted target is listed in `converted_targets_20261104.json`; only these exact manifest IDs select the new raw-F32 ABI. The historical `x-672` defaults retain their old contracts.
+The 2026-11-04 profile `yolov5x-v7-672-nv12-int16-cpuptq-o1-20261104-r02` uses the official YOLOv5 v7 source commit `915bbf294bb74c859f0b41f1c23bc395014ea679` and trained `yolov5x.pt` SHA-256 `9f27a794fa0308e2606f90565164571d6f0a0ba18a3ce2e5e5d323b71c157859` (GPL-3.0). Each accepted target is listed in `converted_targets_20261104.json`; only these exact manifest IDs select the new raw-F32 ABI. The historical `x-672` defaults retain their old contracts.
 
 ```bash
 # x86 Linux/dev-server only; source tree, weights and a pinned real 200-image manifest already present.
@@ -14,7 +14,7 @@ python3 -m samples.vision.bytetrack.conversion.prepare export --source /path/to/
 hb_compile -c /path/to/new/export/config.yaml
 ```
 
-S100 / S100P / S600 require independent `nash-e` / `nash-m` / `nash-p` builds. Exact observed tools: hb_compile3.5.3, HMCT2.6.5, HBDK4.7.5; cached S SDK3.7.0 CPU image. INT16 max percentile0.9999, O1, one core, two jobs. Source input: RGB float32 `[1,3,672,672]`, stretch `INTER_NEAREST`, divide by255 once. Calibration stores raw0..255 RGB; compiler performs the normalization. Source eval raw heads are bit-exact before export, then all three NHWC80-class heads pass source/ORT checks on three real images and seed42 random input at atol1e-4/rtol1e-3. CPU SDK full-output gates passed separately. Actual HBM has split U8 Y/UV inputs and raw F32 heads at84/42/21; no second dequantization or legacy letterboxing.
+S100 / S100P / S600 require independent `nash-e` / `nash-m` / `nash-p` builds. Exact observed tools: hb_compile3.5.3, HMCT2.6.5, HBDK4.7.5; cached S SDK3.7.0 CPU image. INT16 max percentile0.9999, O1, one core, two jobs. Source input: RGB float32 `[1,3,672,672]`, stretch `INTER_NEAREST`, divide by255 once. PTQ calibration uses source-normalized0..1 RGB NPY files; compiler mean/scale is inserted only for the later NV12 runtime boundary. Raw0..255 files remain export-reference inputs and must not be used as S PTQ calibration. Source eval raw heads are bit-exact before export, then all three NHWC80-class heads pass source/ORT checks on three real images and seed42 random input at atol1e-4/rtol1e-3. CPU SDK full-output gates passed separately. Actual HBM has split U8 Y/UV inputs and raw F32 heads at84/42/21; no second dequantization or legacy letterboxing.
 
 The effective original recipe, trained source pair, calibration manifest, CPU gates, compiler receipt, actual HBM interface and complete original NodeInfo/OE reports are frozen per target. Board smoke, accuracy, Runtime1/2 and C++1/2 remain `not-run`. The exporter here is the subsequent portable entry; original Workbench producer hashes remain in the acceptance evidence. The sections below preserve historical artifact instructions.
 
@@ -69,3 +69,5 @@ X5 BIN 和 S 系列 HBM 的文件名与路径见 [模型说明](../model/README_
 ## 补充准备
 
 X5、S100、S600 检测模型按[准备命令](../model/README_cn.md#preparation)下载。S100P 需准备匹配的本地 nash-m 检测模型。S 系列转换需要外部 YOLOv5x 672×672 ONNX 导出器、目标板卡 YAML 和校准数据；本目录未提供完整的 S 系列转换脚本及 YAML。输入视频使用 `--input` 指定。
+
+The R01 artifacts were retired before Archive upload after an actual SDK-loader check found an unnormalized calibration boundary. Their models/configs/logs remain in Workbench; only independently calibrated R02 artifacts may be registered for download.

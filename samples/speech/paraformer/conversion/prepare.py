@@ -49,6 +49,8 @@ def build_parser():
     parser.add_argument(
         "--jobs", type=int, default=32, help="Recorded OE compiler jobs (default: 32)"
     )
+    parser.add_argument("--optimize-level", choices=("O1", "O2"), default="O2",
+                        help="Recorded backend optimization; historical default O2")
     return parser
 
 
@@ -122,6 +124,7 @@ def prepare(args):
         },
         "threads": args.threads,
         "jobs": args.jobs,
+        "optimize_level": getattr(args, "optimize_level", "O2"),
         "cif_valid_frame_mask": False,
         "cmvn_sha256": sha256_file(args.cmvn_file),
         "export_report_sha256": hashlib.sha256(export_bytes).hexdigest(),
@@ -189,7 +192,7 @@ def prepare(args):
         for stage in STAGES:
             path = output / "configs" / f"{stage}.yaml"
             path.write_text(
-                yaml.safe_dump(make_config(stage, args.jobs), sort_keys=False),
+                yaml.safe_dump(make_config(stage, args.jobs, report["optimize_level"]), sort_keys=False),
                 encoding="utf-8",
             )
             report["configs"][stage] = sha256_file(path)
