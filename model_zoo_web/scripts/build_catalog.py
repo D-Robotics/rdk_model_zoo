@@ -799,7 +799,7 @@ def _validate_host_float_hero(entry: dict[str, Any], label: str, revision: str) 
     if entry.get("inference_receipt_version", payload.get("schema_version")) != payload.get("schema_version"):
         raise CatalogError(f"{label} receipt version differs from its actual inference record")
     kind = entry["kind"]
-    new_kinds = {"depth-panel", "feature-panel", "matting-panel", "prompt-mask-panel", "similarity-panel"}
+    new_kinds = {"depth-panel", "feature-panel", "matting-panel", "prompt-mask-panel", "similarity-panel", "semantic-wipe"}
     if kind in new_kinds or payload.get("schema_version") == 2:
         _validate_inference_banner_receipt(payload, entry, label)
     if kind == "similarity-panel":

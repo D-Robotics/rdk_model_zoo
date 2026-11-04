@@ -7,8 +7,9 @@ source: pp_liteseg
 family: pp_liteseg
 task: semseg
 description:
-  zh: PP-LiteSeg 是轻量语义分割网络。本示例使用 STDC1 主干，对道路场景预测 Cityscapes 的 19 类语义，运行于 RDK X5。
-  en: PP-LiteSeg is a lightweight semantic segmentation network. The STDC1 variant in this sample labels road scenes with the 19 Cityscapes classes and runs on RDK X5.
+  zh: PP-LiteSeg 是轻量语义分割网络，使用 STDC1 主干预测道路场景的 19 类 Cityscapes 语义。
+  en: PP-LiteSeg is a lightweight semantic segmentation network. Its STDC1 backbone
+    predicts 19 Cityscapes classes in road scenes.
 sample_path: samples/vision/pp_liteseg
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
 upstream:
@@ -55,7 +56,8 @@ sourced_benchmarks:
   unit: fps
   source: docs/release/x5/benchmarks.yaml
   variant: PP-LiteSeg-STDC1 1024x512 OpenExplorer
-  condition: Expected OpenExplorer Docker hb_perf reference;1024×512;single core;not an on-board measurement
+  condition: Expected OpenExplorer Docker hb_perf reference;1024×512;single core;not
+    an on-board measurement
   origin: samples/vision/pp_liteseg/evaluator/README.md
 - id: pp-liteseg-stdc1-openexplorer-x5
   platform: x5
@@ -64,7 +66,8 @@ sourced_benchmarks:
   unit: ms
   source: docs/release/x5/benchmarks.yaml
   variant: PP-LiteSeg-STDC1 1024x512 OpenExplorer
-  condition: Expected OpenExplorer Docker hb_perf reference;1024×512;single core;not an on-board measurement
+  condition: Expected OpenExplorer Docker hb_perf reference;1024×512;single core;not
+    an on-board measurement
   origin: samples/vision/pp_liteseg/evaluator/README.md
 documented_downloads:
 - platform: x5
@@ -75,3 +78,396 @@ documented_downloads:
 example_image:
   path: samples/vision/pp_liteseg/test_data/street.png
   source: samples/vision/pp_liteseg/test_data/street.png
+hero_visual:
+  file: model_zoo_web/release/assets/pending-heroes/pp_liteseg-street-20261104.webp
+  kind: semantic-wipe
+  input: samples/vision/pp_liteseg/test_data/banner_input_street_20261104.png
+  predictions_source: model_zoo_web/release/assets/pending-heroes/pp_liteseg-street-20261104.json
+  runtime: host-float-reference
+  inference_receipt_version: 2
+  note: Host float reference, not board output. Generated input photograph; every
+    source logits output is computed with the pinned Native preprocessing and argmax.
+  model_file: model.pdparams
+  model_url: https://paddleseg.bj.bcebos.com/dygraph/cityscapes/pp_liteseg_stdc1_cityscapes_1024x512_scale0.5_160k/model.pdparams
+  framework: ONNX Runtime 1.19.2
+  commit: 3a8c933706d604bc6ee67c9da4d34eb7914404ac
+  documented_in: samples/vision/pp_liteseg/conversion/README.md
+provider: PaddlePaddle PaddleSeg
+model_license: &id001
+  name: Apache-2.0
+  url: https://github.com/PaddlePaddle/PaddleSeg/blob/3c4db66de1d9d59d0628ed87590b6308a2f4aa2a/LICENSE
+  scope: model
+variants:
+- size: stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104
+  model:
+    parameter_count: 8153205
+    measurement_method: Count of loaded PaddleSeg STDC1 parameters, including three
+      frozen attention constants
+  input:
+    width: 1024
+    height: 512
+    source:
+      name: x
+      format: RGB
+      dtype: FLOAT32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 512
+      - 1024
+      scale: 0.00392156862745098
+      mean:
+      - 0.5
+      - 0.5
+      - 0.5
+      std:
+      - 0.5
+      - 0.5
+      - 0.5
+  platforms:
+  - platform: s100
+    license: *id001
+    status: converted
+    converted_at: '2026-11-04'
+    metadata_revision: 1
+    artifact:
+      filename: pp_liteseg_stdc1_cityscapes_nashe_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1.hbm
+      format: HBM
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/pp_liteseg/pp_liteseg_stdc1_cityscapes_nashe_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1.hbm
+      sha256: 6cee553d56e66ab2008aac8a7cf982f48a5ef75f4ddcada1b9dae547a1212491
+      size_bytes: 227956272
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/pp_liteseg/pp_liteseg_stdc1_cityscapes_nashe_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/pp_liteseg/pp_liteseg_stdc1_cityscapes_nashe_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/pp_liteseg/pp_liteseg_stdc1_cityscapes_nashe_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/pp_liteseg/pp_liteseg_stdc1_cityscapes_nashe_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: fetch_name_0
+        shape:
+        - 1
+        - 19
+        - 512
+        - 1024
+        dtype: float32
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 512
+        - 1024
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 33
+      calibration_manifest_sha256: 9243c2ef87fa5b70f49d0f6831b14ed60678520daf9cd5405010ab1483433fe9
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: 6cee553d56e66ab2008aac8a7cf982f48a5ef75f4ddcada1b9dae547a1212491
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: 3a8c933706d604bc6ee67c9da4d34eb7914404ac
+      source_repository_commit: 3c4db66de1d9d59d0628ed87590b6308a2f4aa2a
+      source_checkpoint_sha256: 86543ad69437495f8e7688d497a52d2472ee098efa918dcfa551803570f5edf3
+      source_weight_url: https://paddleseg.bj.bcebos.com/dygraph/cityscapes/pp_liteseg_stdc1_cityscapes_1024x512_scale0.5_160k/model.pdparams
+      checkpoint_revision: sha256:86543ad69437495f8e7688d497a52d2472ee098efa918dcfa551803570f5edf3
+      source_version_pair:
+        repository: https://github.com/PaddlePaddle/PaddleSeg
+        commit: 3c4db66de1d9d59d0628ed87590b6308a2f4aa2a
+        checkpoint:
+          url: https://paddleseg.bj.bcebos.com/dygraph/cityscapes/pp_liteseg_stdc1_cityscapes_1024x512_scale0.5_160k/model.pdparams
+          sha256: 86543ad69437495f8e7688d497a52d2472ee098efa918dcfa551803570f5edf3
+          size_bytes: 32639554
+          publisher_sha256_verified: false
+        license:
+          name: Apache-2.0
+          url: https://github.com/PaddlePaddle/PaddleSeg/blob/3c4db66de1d9d59d0628ed87590b6308a2f4aa2a/LICENSE
+      toolchain_image: S SDK 3.7.0 / exact cached image identified by digest
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      build_id: pp_liteseg-stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104-s100
+      precision_policy: INT16 activations; O1
+      native_variant: stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104
+      onnx_sha256: ea10c0f1b85b41680fe3c9366606d695189ebe9f12959cbd176caa6069741dfc
+      config_sha256: 26e05674c4723285f4ce1cad3e89a6d7623204fd7b846ea9687632a0e605d0b6
+      recipe_sha256: 2d700e453e90ce6658a73f0dfe5ececf90d67c1b853ed80dbd35adc31ab1685d
+      calibration_manifest_sha256: 9243c2ef87fa5b70f49d0f6831b14ed60678520daf9cd5405010ab1483433fe9
+      host_smoke_report_sha256: b471942bafbb6b8e8f470cdcfef9fb8a5103c15761170f01b8c253b1470aa0c9
+      compile_log_sha256: dc47027b070662e43047aca83962ea84875279e3ccd6939b20ecf37122be132b
+      cpu_reference_float_gate:
+        report:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/cpu-r01/cpu-reference.json
+          sha256: c21b9856d60adf2fcbd1c04ad285553dd61c4171d3e4aecb3c9bf6ec1ed910aa
+          size_bytes: 3648
+        schema_version: 1
+        kind: cpu-onnx-reference-parity
+        status: passed
+        onnx:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/export-r02/pp_liteseg_stdc1_cityscapes_1024x512_logits.onnx
+          sha256: ea10c0f1b85b41680fe3c9366606d695189ebe9f12959cbd176caa6069741dfc
+          size_bytes: 32218235
+        calibration_manifest:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/cpu-r01/calibration.manifest.json
+          sha256: 9243c2ef87fa5b70f49d0f6831b14ed60678520daf9cd5405010ab1483433fe9
+          size_bytes: 20643
+        real_inputs:
+        - x:
+            path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/cpu-r01/calibration/0000.npy
+            sha256: 24391bc11fd59feb4037269a17e50bd8d38f8c93ab696d130c33ea746cfeed57
+            size_bytes: 6291584
+        - x:
+            path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/cpu-r01/calibration/0016.npy
+            sha256: 307bff8c2452579dffc065015558c99928ca7994377fe5e0c2bc5eccf25d6c6c
+            size_bytes: 6291584
+        - x:
+            path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/cpu-r01/calibration/0032.npy
+            sha256: bca2428a0bcdf9c839ba92bfadf214a063c01a7ed6ef70b327347c5c590a4182
+            size_bytes: 6291584
+        reference:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/cpu-r01/reference/reference.json
+          sha256: 999c7ba394d2fe13a626d3662817e29397ef58f336ccec3a2bc0bfe140a00af1
+          size_bytes: 2944
+        reference_onnxruntime: 1.19.2
+        onnxruntime: 1.19.0
+        providers:
+          reference:
+          - CPUExecutionProvider
+          sdk:
+          - CPUExecutionProvider
+        atol: 0.0001
+        rtol: 0.001
+        toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+        producer:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/host_cpu_reference.py
+          sha256: 07f362bfcea05967f99c5544a530a1803d7b45f0b046fc23d6dce8648c8c3beb
+          size_bytes: 4822
+        cases:
+        - case: 0000.npy
+          outputs:
+          - output: fetch_name_0
+            finite: true
+            max_abs: 0.0
+            violations: 0
+            status: passed
+          status: passed
+        - case: 0016.npy
+          outputs:
+          - output: fetch_name_0
+            finite: true
+            max_abs: 0.0
+            violations: 0
+            status: passed
+          status: passed
+        - case: 0032.npy
+          outputs:
+          - output: fetch_name_0
+            finite: true
+            max_abs: 0.0
+            violations: 0
+            status: passed
+          status: passed
+        - case: random-seed0
+          outputs:
+          - output: fetch_name_0
+            finite: true
+            max_abs: 0.0
+            violations: 0
+            status: passed
+          status: passed
+        scope: Frozen source-export host CPU ONNX versus cached CPU SDK; no CUDA PTQ
+          or board execution
+        board: not-run
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 31d1d999b17e9feab8a1cf91fb887a12cd152b37a629ca5d0e4ad42edc03be0c
+    runtime_command: python3 samples/vision/pp_liteseg/runtime/python/main.py --target
+      s100 --variant stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104 --asset-id
+      s:pp_liteseg:s100/pp_liteseg_stdc1_cityscapes_nashe_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1.hbm
+      --model-path /path/to/pp_liteseg_stdc1_cityscapes_nashe_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1.hbm
+      --test-img /path/to/image.jpg
+  - platform: s100p
+    license:
+      name: Apache-2.0
+      url: https://github.com/PaddlePaddle/PaddleSeg/blob/3c4db66de1d9d59d0628ed87590b6308a2f4aa2a/LICENSE
+      scope: model
+    status: converted
+    converted_at: '2026-11-04'
+    metadata_revision: 1
+    artifact:
+      filename: pp_liteseg_stdc1_cityscapes_nashm_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1.hbm
+      format: HBM
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/pp_liteseg/pp_liteseg_stdc1_cityscapes_nashm_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1.hbm
+      sha256: b704d7922bfbd9a5903ae00376875b123fb27118c238dc5964b565387290dff1
+      size_bytes: 227767152
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/pp_liteseg/pp_liteseg_stdc1_cityscapes_nashm_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/pp_liteseg/pp_liteseg_stdc1_cityscapes_nashm_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/pp_liteseg/pp_liteseg_stdc1_cityscapes_nashm_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/pp_liteseg/pp_liteseg_stdc1_cityscapes_nashm_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: fetch_name_0
+        shape:
+        - 1
+        - 19
+        - 512
+        - 1024
+        dtype: float32
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 512
+        - 1024
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 33
+      calibration_manifest_sha256: 9243c2ef87fa5b70f49d0f6831b14ed60678520daf9cd5405010ab1483433fe9
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: b704d7922bfbd9a5903ae00376875b123fb27118c238dc5964b565387290dff1
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: 4e19f59de6ee7f249622fd9ec164fe293dbd1361
+      source_repository_commit: 3c4db66de1d9d59d0628ed87590b6308a2f4aa2a
+      source_checkpoint_sha256: 86543ad69437495f8e7688d497a52d2472ee098efa918dcfa551803570f5edf3
+      source_weight_url: https://paddleseg.bj.bcebos.com/dygraph/cityscapes/pp_liteseg_stdc1_cityscapes_1024x512_scale0.5_160k/model.pdparams
+      checkpoint_revision: sha256:86543ad69437495f8e7688d497a52d2472ee098efa918dcfa551803570f5edf3
+      source_version_pair:
+        repository: https://github.com/PaddlePaddle/PaddleSeg
+        commit: 3c4db66de1d9d59d0628ed87590b6308a2f4aa2a
+        checkpoint:
+          url: https://paddleseg.bj.bcebos.com/dygraph/cityscapes/pp_liteseg_stdc1_cityscapes_1024x512_scale0.5_160k/model.pdparams
+          sha256: 86543ad69437495f8e7688d497a52d2472ee098efa918dcfa551803570f5edf3
+          size_bytes: 32639554
+          publisher_sha256_verified: false
+        license:
+          name: Apache-2.0
+          url: https://github.com/PaddlePaddle/PaddleSeg/blob/3c4db66de1d9d59d0628ed87590b6308a2f4aa2a/LICENSE
+      toolchain_image: S SDK 3.7.0 / exact cached image identified by digest
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      build_id: pp_liteseg-stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104-s100p
+      precision_policy: INT16 activations; O1
+      native_variant: stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104
+      onnx_sha256: ea10c0f1b85b41680fe3c9366606d695189ebe9f12959cbd176caa6069741dfc
+      config_sha256: 09e02c7e716169284f076d6c6bdf1d01ff35ccce5bb70b4c56430d00c7787722
+      recipe_sha256: 5cd1eb3459e4bd59a38e4556f2c618add2964016fc125cc9ed85ed6ab3b0aa26
+      calibration_manifest_sha256: 9243c2ef87fa5b70f49d0f6831b14ed60678520daf9cd5405010ab1483433fe9
+      host_smoke_report_sha256: b471942bafbb6b8e8f470cdcfef9fb8a5103c15761170f01b8c253b1470aa0c9
+      compile_log_sha256: 4aa6567e28821d5f8d740b2bf4749d303fd3fca452e85914dab00a70a1c2e88a
+      cpu_reference_float_gate:
+        report:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/cpu-r01/cpu-reference.json
+          sha256: c21b9856d60adf2fcbd1c04ad285553dd61c4171d3e4aecb3c9bf6ec1ed910aa
+          size_bytes: 3648
+        schema_version: 1
+        kind: cpu-onnx-reference-parity
+        status: passed
+        onnx:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/export-r02/pp_liteseg_stdc1_cityscapes_1024x512_logits.onnx
+          sha256: ea10c0f1b85b41680fe3c9366606d695189ebe9f12959cbd176caa6069741dfc
+          size_bytes: 32218235
+        calibration_manifest:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/cpu-r01/calibration.manifest.json
+          sha256: 9243c2ef87fa5b70f49d0f6831b14ed60678520daf9cd5405010ab1483433fe9
+          size_bytes: 20643
+        real_inputs:
+        - x:
+            path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/cpu-r01/calibration/0000.npy
+            sha256: 24391bc11fd59feb4037269a17e50bd8d38f8c93ab696d130c33ea746cfeed57
+            size_bytes: 6291584
+        - x:
+            path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/cpu-r01/calibration/0016.npy
+            sha256: 307bff8c2452579dffc065015558c99928ca7994377fe5e0c2bc5eccf25d6c6c
+            size_bytes: 6291584
+        - x:
+            path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/cpu-r01/calibration/0032.npy
+            sha256: bca2428a0bcdf9c839ba92bfadf214a063c01a7ed6ef70b327347c5c590a4182
+            size_bytes: 6291584
+        reference:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/new-s-20261104/ppliteseg/cpu-r01/reference/reference.json
+          sha256: 999c7ba394d2fe13a626d3662817e29397ef58f336ccec3a2bc0bfe140a00af1
+          size_bytes: 2944
+        reference_onnxruntime: 1.19.2
+        onnxruntime: 1.19.0
+        providers:
+          reference:
+          - CPUExecutionProvider
+          sdk:
+          - CPUExecutionProvider
+        atol: 0.0001
+        rtol: 0.001
+        toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+        producer:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/host_cpu_reference.py
+          sha256: 07f362bfcea05967f99c5544a530a1803d7b45f0b046fc23d6dce8648c8c3beb
+          size_bytes: 4822
+        cases:
+        - case: 0000.npy
+          outputs:
+          - output: fetch_name_0
+            finite: true
+            max_abs: 0.0
+            violations: 0
+            status: passed
+          status: passed
+        - case: 0016.npy
+          outputs:
+          - output: fetch_name_0
+            finite: true
+            max_abs: 0.0
+            violations: 0
+            status: passed
+          status: passed
+        - case: 0032.npy
+          outputs:
+          - output: fetch_name_0
+            finite: true
+            max_abs: 0.0
+            violations: 0
+            status: passed
+          status: passed
+        - case: random-seed0
+          outputs:
+          - output: fetch_name_0
+            finite: true
+            max_abs: 0.0
+            violations: 0
+            status: passed
+          status: passed
+        scope: Frozen source-export host CPU ONNX versus cached CPU SDK; no CUDA PTQ
+          or board execution
+        board: not-run
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: daf92ccd2479fb7ba679d77ca337b3ba3bf19aba3c341304bc74b5d8711d4c1e
+    runtime_command: python3 samples/vision/pp_liteseg/runtime/python/main.py --target
+      s100p --variant stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104 --asset-id
+      s:pp_liteseg:s100p/pp_liteseg_stdc1_cityscapes_nashm_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1.hbm
+      --model-path /path/to/pp_liteseg_stdc1_cityscapes_nashm_1024x512_featuremap_int16_cpuptq_20261104_20261103_o1.hbm
+      --test-img /path/to/image.jpg

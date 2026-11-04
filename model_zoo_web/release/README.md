@@ -63,9 +63,23 @@ never populate board performance. `released` retains the complete acceptance
 contract. Pending document records may retain their historical facts while adding
 formal `variants` under a separate `model_license` with `scope: model`.
 
-From a frozen manifest and real files, use `scripts/stage_converted.py`, then
-`upload_archive_model.py` and `upload_archive_assets.py` from the local Mac
-through the existing Tailscale jump. After verified upload,
+Stage frozen models and their five metadata companions on dev-server with
+`scripts/stage_converted.py`. Keep checkpoints, ONNX, BIN/HBM and model bundles
+on that server; copy only the five metadata companions to the Mac. Initiate
+uploads from the Mac with a direct SSH connection:
+
+```bash
+python3 scripts/upload_archive_model.py --manifest metadata/release.json \
+  --model /server/frozen/model.hbm --source-host dev-server \
+  --ssh-host robot@139.129.17.229 --receipt receipts/model.json
+python3 scripts/upload_archive_assets.py metadata \
+  --ssh-host robot@139.129.17.229 --receipt receipts/assets.json
+```
+
+The model uploader relays SSH stdout/stdin without a local model file and runs
+the complete anonymous HTTPS verification on dev-server. A jump is optional
+and must be selected explicitly with `--source-jump-host` / `--jump-host`.
+After verified upload,
 `register_converted.py --web model_zoo_web --manifest <release.json> --oe-data
 <oe_report_data.json>` registers only that variant/platform and keeps legacy
 references. Native download and runtime support must land on develop first.
@@ -74,7 +88,7 @@ For later measurements, upload a new metadata revision and register with
 revision. Promotion to released requires all board checks and full metrics.
 
 The canonical Workbench procedure is
-`/home/zhengyi/work/rdk_model_zoo_workbench/GUIDELINE.md` v2.14, sections 11.5–11.8.
+`/home/zhengyi/work/rdk_model_zoo_workbench/GUIDELINE.md` v2.16, sections 11.1–11.9.
 Its embedded helper sources match these scripts. Generic website builds use the
 same committed inputs and require no Workbench connection.
 

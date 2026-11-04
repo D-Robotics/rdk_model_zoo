@@ -1,0 +1,834 @@
+{
+  "schema_version": 1,
+  "generated_from_run": "repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04-model",
+  "generated_at": "'2026-11-04T01:59:39.657399+00:00'",
+  "model": {
+    "source": "repvgg",
+    "family": "repvgg",
+    "task": "cls",
+    "size": "b0-rvgg-in1k-224-s-int16-o1-20261103",
+    "component": "model"
+  },
+  "target": {
+    "platform": "s100p",
+    "march": "nash-m"
+  },
+  "toolchain": {
+    "hbdk": "4.7.5",
+    "hmct": "2.6.5",
+    "hb_compile": "3.5.3"
+  },
+  "io": {
+    "inputs": [
+      {
+        "name": "data_y",
+        "shape": [
+          1,
+          224,
+          224,
+          1
+        ],
+        "dtype": "uint8"
+      },
+      {
+        "name": "data_uv",
+        "shape": [
+          1,
+          112,
+          112,
+          2
+        ],
+        "dtype": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output",
+        "shape": [
+          1,
+          1000
+        ],
+        "dtype": "float32"
+      }
+    ]
+  },
+  "quantization": {
+    "summary": {
+      "total_nodes": 59,
+      "unit_counts": {
+        "BPU": 59
+      },
+      "dtype_counts": {
+        "si16": 57,
+        "si32": 1,
+        "si32,f32": 1
+      },
+      "measured_nodes": 59,
+      "weakest_node": {
+        "name": "...stages.3/stages.3.0/reparam_conv/Conv",
+        "cosine": 0.778952
+      },
+      "weakest_nodes": [
+        {
+          "name": "...stages.3/stages.3.0/reparam_conv/Conv",
+          "cosine": 0.778952
+        },
+        {
+          "name": "/stages/stages.3/stages.3.0/act/Relu",
+          "cosine": 0.778952
+        },
+        {
+          "name": "...tages.2/stages.2.15/reparam_conv/Conv",
+          "cosine": 0.815307
+        },
+        {
+          "name": "/stages/stages.2/stages.2.15/act/Relu",
+          "cosine": 0.815307
+        },
+        {
+          "name": "/head/global_pool/pool/GlobalAveragePool",
+          "cosine": 0.838308
+        }
+      ],
+      "cosine_percentiles": {
+        "p10": 0.864148,
+        "median": 0.958317
+      }
+    },
+    "nodes": [
+      {
+        "name": "/stem/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.99465,
+        "calibrated_cosine": 0.999995,
+        "threshold": 2.64,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stem/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.99465,
+        "calibrated_cosine": 0.999972,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.0/stages.0.0/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.996215,
+        "calibrated_cosine": 0.999824,
+        "threshold": 21.344292,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.0/stages.0.0/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.996215,
+        "calibrated_cosine": 0.99985,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.0/stages.0.1/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.994838,
+        "calibrated_cosine": 0.999245,
+        "threshold": 31.629683,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.0/stages.0.1/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.994838,
+        "calibrated_cosine": 0.999333,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.0/stages.0.2/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.988542,
+        "calibrated_cosine": 0.999105,
+        "threshold": 17.07122,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.0/stages.0.2/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.988542,
+        "calibrated_cosine": 0.998835,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.0/stages.0.3/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.982884,
+        "calibrated_cosine": 0.998329,
+        "threshold": 21.847519,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.0/stages.0.3/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.982884,
+        "calibrated_cosine": 0.997591,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.1/stages.1.0/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.990296,
+        "calibrated_cosine": 0.998256,
+        "threshold": 17.252138,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.0/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.990296,
+        "calibrated_cosine": 0.997604,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.1/stages.1.1/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.986469,
+        "calibrated_cosine": 0.999085,
+        "threshold": 14.900814,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.1/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.986469,
+        "calibrated_cosine": 0.992141,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.1/stages.1.2/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.98987,
+        "calibrated_cosine": 0.996105,
+        "threshold": 11.092129,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.2/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.98987,
+        "calibrated_cosine": 0.994242,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.1/stages.1.3/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.988651,
+        "calibrated_cosine": 0.996773,
+        "threshold": 8.168997,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.3/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.988651,
+        "calibrated_cosine": 0.993847,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.1/stages.1.4/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.981661,
+        "calibrated_cosine": 0.994178,
+        "threshold": 8.313116,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.4/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.981661,
+        "calibrated_cosine": 0.989621,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.1/stages.1.5/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.977929,
+        "calibrated_cosine": 0.99141,
+        "threshold": 9.633,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.1/stages.1.5/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.977929,
+        "calibrated_cosine": 0.984682,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.2/stages.2.0/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.959052,
+        "calibrated_cosine": 0.973593,
+        "threshold": 7.827213,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.0/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.959052,
+        "calibrated_cosine": 0.966009,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.2/stages.2.1/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.958317,
+        "calibrated_cosine": 0.976684,
+        "threshold": 12.316956,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.1/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.958317,
+        "calibrated_cosine": 0.963202,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.2/stages.2.2/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.954619,
+        "calibrated_cosine": 0.977485,
+        "threshold": 7.157561,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.2/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.954619,
+        "calibrated_cosine": 0.962168,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.2/stages.2.3/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.953233,
+        "calibrated_cosine": 0.977155,
+        "threshold": 6.205171,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.3/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.953233,
+        "calibrated_cosine": 0.956165,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.2/stages.2.4/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.953835,
+        "calibrated_cosine": 0.980047,
+        "threshold": 5.747151,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.4/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.953835,
+        "calibrated_cosine": 0.956626,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.2/stages.2.5/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.955676,
+        "calibrated_cosine": 0.979303,
+        "threshold": 5.832638,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.5/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.955676,
+        "calibrated_cosine": 0.959014,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.2/stages.2.6/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.956512,
+        "calibrated_cosine": 0.980852,
+        "threshold": 6.663519,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.6/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.956512,
+        "calibrated_cosine": 0.960574,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.2/stages.2.7/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.959252,
+        "calibrated_cosine": 0.980449,
+        "threshold": 7.469842,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.7/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.959252,
+        "calibrated_cosine": 0.962026,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.2/stages.2.8/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.959038,
+        "calibrated_cosine": 0.984107,
+        "threshold": 7.044394,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.8/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.959038,
+        "calibrated_cosine": 0.961994,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.2/stages.2.9/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.950222,
+        "calibrated_cosine": 0.978828,
+        "threshold": 6.709606,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.9/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.950222,
+        "calibrated_cosine": 0.954108,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...tages.2/stages.2.10/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.932397,
+        "calibrated_cosine": 0.972794,
+        "threshold": 7.116872,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.10/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.932397,
+        "calibrated_cosine": 0.934958,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...tages.2/stages.2.11/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.899429,
+        "calibrated_cosine": 0.954904,
+        "threshold": 8.652091,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.11/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.899429,
+        "calibrated_cosine": 0.90759,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...tages.2/stages.2.12/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.888909,
+        "calibrated_cosine": 0.934557,
+        "threshold": 10.018611,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.12/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.888909,
+        "calibrated_cosine": 0.895681,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...tages.2/stages.2.13/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.888048,
+        "calibrated_cosine": 0.944081,
+        "threshold": 9.383978,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.13/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.888048,
+        "calibrated_cosine": 0.897933,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...tages.2/stages.2.14/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.864148,
+        "calibrated_cosine": 0.941712,
+        "threshold": 8.787849,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.14/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.864148,
+        "calibrated_cosine": 0.87754,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...tages.2/stages.2.15/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.815307,
+        "calibrated_cosine": 0.926955,
+        "threshold": 8.801002,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.2/stages.2.15/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.815307,
+        "calibrated_cosine": 0.835687,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "...stages.3/stages.3.0/reparam_conv/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.778952,
+        "calibrated_cosine": 0.901039,
+        "threshold": 11.974991,
+        "dtype": "si16"
+      },
+      {
+        "name": "/stages/stages.3/stages.3.0/act/Relu",
+        "on": "BPU",
+        "type": "Relu",
+        "cosine": 0.778952,
+        "calibrated_cosine": 0.808797,
+        "threshold": null,
+        "dtype": "si16"
+      },
+      {
+        "name": "/head/global_pool/pool/GlobalAveragePool",
+        "on": "BPU",
+        "type": "GlobalAveragePool",
+        "cosine": 0.838308,
+        "calibrated_cosine": 0.857105,
+        "threshold": 59.607883,
+        "dtype": "si16"
+      },
+      {
+        "name": "/head/fc/Gemm",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.894141,
+        "calibrated_cosine": 0.904869,
+        "threshold": 14.859255,
+        "dtype": "si32"
+      },
+      {
+        "name": "/head/fc/Gemm_reshape_output",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.894141,
+        "calibrated_cosine": 0.904869,
+        "threshold": null,
+        "dtype": "si32,f32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "output",
+        "calibrated_cosine": 0.904869,
+        "cosine": 0.894141
+      }
+    ]
+  },
+  "subgraphs": [
+    {
+      "name": "subgraph_0",
+      "perf": {
+        "fps": 1303.52,
+        "latency_ms": 0.77,
+        "latency_us": 767.2,
+        "ddr_mb_per_frame": 14.46,
+        "bpu_ops_per_frame": 6115201024.0,
+        "core_number": 1,
+        "march": "nash-m"
+      },
+      "intervals": {
+        "count": 8,
+        "interval_ms": 0.1,
+        "utilization": [
+          0.969,
+          0.972,
+          0.853,
+          0.731,
+          0.731,
+          0.731,
+          0.616,
+          0.302
+        ],
+        "load_bandwidth_mbs": [
+          3078,
+          9362,
+          20074,
+          22841,
+          21194,
+          19625,
+          28137,
+          20248
+        ],
+        "store_bandwidth_mbs": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          39
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "latency_ms": 0.77,
+    "fps_derived": 1298.7,
+    "ddr_mb_per_frame": 14.46,
+    "bpu_ops_per_frame": 6115201024.0,
+    "derivation": "latency = sum of subgraph latency; fps_derived = 1000 / latency (sequential subgraph execution assumption); values from hbdk static estimation, not board measurement"
+  },
+  "similarity_provenance": {
+    "stage": "ptq-simulation",
+    "method": "Original SDK NodeInfo on this exact target BC; CPU backend CLI resumed from the frozen BC",
+    "calibration_samples": 200,
+    "source_log": "output/hb_compile.log",
+    "comparison_input_count": 1,
+    "comparison_scope": "Native full NodeInfo uses one first_cali_data mapping as one verifier input_files entry",
+    "calibration_count_source": "Actual native dataset-count log and frozen tensor manifest",
+    "note": "The backend CLI does not repeat PTQ/NodeInfo; the preserved same-BC original CSV is used. Not dataset accuracy or board inference.",
+    "preparation": {
+      "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/prepared.json",
+      "sha256": "6b39620287c0e8e6c3c3dd8ed0fdb19429ed1ad48f34962951db89461bbbd7f7",
+      "size_bytes": 3957
+    },
+    "cpu_cuda_float_gate": {
+      "atol": 0.0001,
+      "rtol": 0.001,
+      "cases": [
+        {
+          "case": "0",
+          "status": "passed",
+          "max_abs": 1.4543533325195312e-05
+        },
+        {
+          "case": "52",
+          "status": "passed",
+          "max_abs": 1.52587890625e-05
+        },
+        {
+          "case": "143",
+          "status": "passed",
+          "max_abs": 1.2874603271484375e-05
+        },
+        {
+          "case": "random-seed0",
+          "status": "passed",
+          "max_abs": 8.314847946166992e-06
+        }
+      ],
+      "providers": [
+        "CPUExecutionProvider",
+        "CUDAExecutionProvider"
+      ],
+      "TF32": false
+    }
+  },
+  "performance_provenance": {
+    "stage": "compiler-static-estimate",
+    "source": "hb_compile-json",
+    "method": "hbdk-cc static latency estimate of the compiled release artifact",
+    "note": "Estimates describe the compiled artifact; on-board measurements live in the model benchmark."
+  },
+  "board_measurement": null,
+  "provenance": {
+    "artifact_sha256": "375eba30ff4e7161a5a2050524e7a8350dfca2f1ecb2d38a39b1e10a42c8ad17",
+    "hb_compile_log_sha256": "08eb1b07b4091fe4f997edfb10e161da579225277cca0d93f0ec1d8cdcc08953",
+    "oe_report_json_sha256": "f3fd0372a55048297690c4b72f0e57f99f47a76df96e58192799073ffb78c7cc",
+    "derived_metadata": {
+      "extracted_json": {
+        "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/collected/model/output/oe_report_data.extracted.json",
+        "sha256": "72918c2cedc43ad4603573fe994d849dfb3f1b813651e8d4a399a52b63b745c0",
+        "size_bytes": 18228
+      },
+      "supplements": "Actual public HBM IO, native per-output cosine table and observed PTQ dataset count",
+      "source_evidence": {
+        "native_compile_stdout": {
+          "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/compile.log",
+          "sha256": "7aa6a9defc518a3eee8c21d370ea654e84a3f3ff3d69ea2b0dfa8acfc1c4ddd3",
+          "size_bytes": 10534
+        },
+        "actual_hbm_info": {
+          "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/compile-info.log",
+          "sha256": "f24e1fa204a1acaeaacb348960e3b2aeb72e752dad2d65438cf22b6a34d874d5",
+          "size_bytes": 9579
+        },
+        "derived_extraction_log": {
+          "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/collected/model/output/hb_compile.log",
+          "sha256": "08eb1b07b4091fe4f997edfb10e161da579225277cca0d93f0ec1d8cdcc08953",
+          "size_bytes": 40404
+        },
+        "native_node_csv": {
+          "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/ptq_output/repvgg_b0_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1_node_info.csv",
+          "sha256": "bd10df2548390c73ec086daa0d04c7530cac148614f15556c7570053d3cab100",
+          "size_bytes": 4579
+        },
+        "native_perf_json": {
+          "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/output/repvgg_b0_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1.json",
+          "sha256": "f3fd0372a55048297690c4b72f0e57f99f47a76df96e58192799073ffb78c7cc",
+          "size_bytes": 172552
+        },
+        "native_htmls": [
+          {
+            "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/output/repvgg_b0_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1.html",
+            "sha256": "8cfa22a2cd6613b55fd4cfb9e2a682fd98281fd35c259628920bc29ab8d4d59b",
+            "size_bytes": 1741953
+          }
+        ],
+        "config": {
+          "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/config.yaml",
+          "sha256": "e9570d144c1c8446fc289053b3797aea24b7aa1b529a529db8a24fe5a798a835",
+          "size_bytes": 1200
+        },
+        "onnx": {
+          "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261102-network-retry/jobs/repvgg_b0_rvgg_in1k-x5-20261102-r03/input/model.onnx",
+          "sha256": "8b423674fdd7568547b4061b083d64982d96877be097b882f2933994c7544601",
+          "size_bytes": 57376819
+        },
+        "native_debug_log": {
+          "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/hb_compile.log",
+          "sha256": "b52860c31a1f466da28cc5c5cadd138f45eb291612f0e468fd7500c1f107c4c3",
+          "size_bytes": 4039
+        },
+        "native_ptq_stdout": {
+          "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/ptq.log",
+          "sha256": "a59d8c044ec46e8ea98638ee4be935f532a8224743fdac7abbb6b363166f7770",
+          "size_bytes": 20192
+        },
+        "same_target_bc": {
+          "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/ptq_output/repvgg_b0_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+          "sha256": "4e65f73b82ffd897d1bce59e9f391e61b762d8fb5bf7efdab92a3b613df224d3",
+          "size_bytes": 15295074
+        },
+        "ptq_preparation": {
+          "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/prepared.json",
+          "sha256": "6b39620287c0e8e6c3c3dd8ed0fdb19429ed1ad48f34962951db89461bbbd7f7",
+          "size_bytes": 3957
+        },
+        "ptq_config": {
+          "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/ptq.yaml",
+          "sha256": "f02d4d160f961e467b534d716159ba15cc651b01a2efe179a482215646934caa",
+          "size_bytes": 1204
+        },
+        "ptq_receipt": {
+          "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/ptq.result.json",
+          "sha256": "53068f4422f8a0c93394e602d7f6d5282c3e0d9d92718d03a25da279be9cef84",
+          "size_bytes": 13803
+        }
+      }
+    }
+  }
+}

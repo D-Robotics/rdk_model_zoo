@@ -272,3 +272,400 @@ variants:
     runtime_command: python3 samples/vision/resnext/runtime/python/main.py --target
       x5 --asset-id x5:resnext:resnext50_32x4d_a1h_in1k_bayese_224x224_nv12.bin --model-path
       /path/to/resnext50_32x4d_a1h_in1k_bayese_224x224_nv12.bin --test-img /path/to/image.jpg
+- size: 50-32x4d-a1h-in1k-224-s-int16-o1-20261103
+  model:
+    parameter_count: 25028904
+  input:
+    width: 224
+    height: 224
+    source:
+      format: rgb
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: s100
+    license:
+      name: Apache-2.0
+      url: https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/blob/cc736cb0940158d05966023116d90fca4c38dae3/README.md
+      scope: model
+    status: converted
+    converted_at: '2026-11-04'
+    metadata_revision: 1
+    artifact:
+      filename: resnext50_32x4d_a1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
+      format: HBM
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/resnext/resnext50_32x4d_a1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
+      sha256: 4e4a8b408898bff6dfb9b946cba50e66d3a93297aac10c7f2ed0647b1f0a24c8
+      size_bytes: 29178840
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/resnext/resnext50_32x4d_a1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/resnext/resnext50_32x4d_a1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/resnext/resnext50_32x4d_a1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/resnext/resnext50_32x4d_a1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: output
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        format: NV12
+        dtype: uint8
+        layout: NHWC
+        shape:
+        - 1
+        - 224
+        - 224
+        - 1
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 200
+      calibration_manifest_sha256: 94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: 4e4a8b408898bff6dfb9b946cba50e66d3a93297aac10c7f2ed0647b1f0a24c8
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
+      source_repository_commit: cc736cb0940158d05966023116d90fca4c38dae3
+      source_checkpoint_sha256: b952952a7b3e856b16ebf82fb44d2aa8c502e73ec678976c9e3b970fcd530bd5
+      source_weight_url: https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/resolve/cc736cb0940158d05966023116d90fca4c38dae3/model.safetensors
+      checkpoint_revision: cc736cb0940158d05966023116d90fca4c38dae3
+      source_version_pair:
+        repo_id: timm/resnext50_32x4d.a1h_in1k
+        revision: cc736cb0940158d05966023116d90fca4c38dae3
+        license: apache-2.0
+        license_name: null
+        filename: model.safetensors
+        sha256: b952952a7b3e856b16ebf82fb44d2aa8c502e73ec678976c9e3b970fcd530bd5
+        size_bytes: 100417784
+        url: https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/resolve/cc736cb0940158d05966023116d90fca4c38dae3/model.safetensors
+        model_card_url: https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/blob/cc736cb0940158d05966023116d90fca4c38dae3/README.md
+      toolchain_image: S SDK 3.7.0 / exact cached image identified by digest
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      build_id: resnext-50-32x4d-a1h-in1k-224-s-int16-o1-20261103-s100
+      precision_policy: INT16 activations; O1
+      native_variant: timm-50-32x4d-a1h-in1k-s-int16-o1-20261103
+      onnx_sha256: 6017a888ee2b37606a00a51c794ce59fa92f72497684a8c00b4905ea243a1801
+      config_sha256: 6e873036fddda8722a5d19dc32bb952e92df0744b82e44420d13dfe8634451ca
+      recipe_sha256: 92ec7e139c50965333bb43fc0e8241e7be2ec5fed1b1dc013d07d594443c1abf
+      calibration_manifest_sha256: 94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb
+      host_smoke_report_sha256: a6aac7918c9086c0ecc0cdd9aec36b45c5ae6c6aa2210349be932d8743938302
+      compile_log_sha256: ef89bc4a3be63d491c5a3e5cf14fd1c85a7e68499cca4945b91d67ad783ce2db
+      same_target_bc:
+        bc:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/resnext50_32x4d_a1h_in1k-s100-int16-20261103-r04/ptq_output/resnext50_32x4d_a1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc
+          sha256: 16fb2011eeef515ac7bd488f246ef5dcb76e090ab155bd5520414223c5b77a1e
+          size_bytes: 29046038
+        ptq_config:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/resnext50_32x4d_a1h_in1k-s100-int16-20261103-r04/ptq.yaml
+          sha256: fc2df6bfab9b0912d78dbb404a75ecb9e95e300ae980d21ff5a9169f84e8e2a2
+          size_bytes: 1218
+        producer:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py
+          sha256: f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141
+          size_bytes: 4634
+        cpu_cuda_gate:
+          atol: 0.0001
+          rtol: 0.001
+          cases:
+          - case: '0'
+            status: passed
+            max_abs: 2.384185791015625e-06
+          - case: '52'
+            status: passed
+            max_abs: 3.337860107421875e-06
+          - case: '143'
+            status: passed
+            max_abs: 5.7220458984375e-06
+          - case: random-seed0
+            status: passed
+            max_abs: 1.6689300537109375e-06
+          providers:
+          - CPUExecutionProvider
+          - CUDAExecutionProvider
+          TF32: false
+        versions:
+          torch: 2.6.0+cu126
+          onnxruntime: 1.19.0
+        gpu_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 9a0b0658707b837f2a76e4331e160ddfa9227209eb13f6633853b832edd4521a
+    runtime_command: python3 samples/vision/resnext/runtime/python/main.py --target
+      s100 --variant timm-50-32x4d-a1h-in1k-s-int16-o1-20261103 --asset-id s:resnext:s100/resnext50_32x4d_a1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
+      --model-path /path/to/resnext50_32x4d_a1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
+      --test-img /path/to/image.jpg
+  - platform: s100p
+    license:
+      name: Apache-2.0
+      url: https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/blob/cc736cb0940158d05966023116d90fca4c38dae3/README.md
+      scope: model
+    status: converted
+    converted_at: '2026-11-04'
+    metadata_revision: 1
+    artifact:
+      filename: resnext50_32x4d_a1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
+      format: HBM
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/resnext/resnext50_32x4d_a1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
+      sha256: 2c26f836e4a805ca89d23f89a8b5f134c519d7cff6d5fd1ccefea4bf24a57ed8
+      size_bytes: 29419480
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/resnext/resnext50_32x4d_a1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/resnext/resnext50_32x4d_a1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/resnext/resnext50_32x4d_a1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/resnext/resnext50_32x4d_a1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: output
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        format: NV12
+        dtype: uint8
+        layout: NHWC
+        shape:
+        - 1
+        - 224
+        - 224
+        - 1
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 200
+      calibration_manifest_sha256: 94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: 2c26f836e4a805ca89d23f89a8b5f134c519d7cff6d5fd1ccefea4bf24a57ed8
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
+      source_repository_commit: cc736cb0940158d05966023116d90fca4c38dae3
+      source_checkpoint_sha256: b952952a7b3e856b16ebf82fb44d2aa8c502e73ec678976c9e3b970fcd530bd5
+      source_weight_url: https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/resolve/cc736cb0940158d05966023116d90fca4c38dae3/model.safetensors
+      checkpoint_revision: cc736cb0940158d05966023116d90fca4c38dae3
+      source_version_pair:
+        repo_id: timm/resnext50_32x4d.a1h_in1k
+        revision: cc736cb0940158d05966023116d90fca4c38dae3
+        license: apache-2.0
+        license_name: null
+        filename: model.safetensors
+        sha256: b952952a7b3e856b16ebf82fb44d2aa8c502e73ec678976c9e3b970fcd530bd5
+        size_bytes: 100417784
+        url: https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/resolve/cc736cb0940158d05966023116d90fca4c38dae3/model.safetensors
+        model_card_url: https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/blob/cc736cb0940158d05966023116d90fca4c38dae3/README.md
+      toolchain_image: S SDK 3.7.0 / exact cached image identified by digest
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      build_id: resnext-50-32x4d-a1h-in1k-224-s-int16-o1-20261103-s100p
+      precision_policy: INT16 activations; O1
+      native_variant: timm-50-32x4d-a1h-in1k-s-int16-o1-20261103
+      onnx_sha256: 6017a888ee2b37606a00a51c794ce59fa92f72497684a8c00b4905ea243a1801
+      config_sha256: 063e5623b6ab9daac49b135ba735299853313bc38eec5454ae1ce24a6d54b788
+      recipe_sha256: 5a5825397d8a04c3c736fb254694f95b663883b0dddcd23e43cb9b89894a2e01
+      calibration_manifest_sha256: 94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb
+      host_smoke_report_sha256: a6aac7918c9086c0ecc0cdd9aec36b45c5ae6c6aa2210349be932d8743938302
+      compile_log_sha256: c2445879da31827840133535166744eeaab5df39f0c19d8285f8cd72c249c7b8
+      same_target_bc:
+        bc:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/resnext50_32x4d_a1h_in1k-s100p-int16-20261103-r04/ptq_output/resnext50_32x4d_a1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc
+          sha256: 3bc0f967dda4ee436568814e43f64af9d502b90711ce03ece4a96f037964acdf
+          size_bytes: 29046039
+        ptq_config:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/resnext50_32x4d_a1h_in1k-s100p-int16-20261103-r04/ptq.yaml
+          sha256: dc226f1dac4362dd5967a3ab20ab6bf0282859991db95f2c1b71168df46b15eb
+          size_bytes: 1219
+        producer:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py
+          sha256: f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141
+          size_bytes: 4634
+        cpu_cuda_gate:
+          atol: 0.0001
+          rtol: 0.001
+          cases:
+          - case: '0'
+            status: passed
+            max_abs: 2.384185791015625e-06
+          - case: '52'
+            status: passed
+            max_abs: 3.337860107421875e-06
+          - case: '143'
+            status: passed
+            max_abs: 5.7220458984375e-06
+          - case: random-seed0
+            status: passed
+            max_abs: 1.6689300537109375e-06
+          providers:
+          - CPUExecutionProvider
+          - CUDAExecutionProvider
+          TF32: false
+        versions:
+          torch: 2.6.0+cu126
+          onnxruntime: 1.19.0
+        gpu_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 56d491e3c1842498e974a51ecbee8995dfef5a7fd367d6f965f60e32a7898b6a
+    runtime_command: python3 samples/vision/resnext/runtime/python/main.py --target
+      s100p --variant timm-50-32x4d-a1h-in1k-s-int16-o1-20261103 --asset-id s:resnext:s100p/resnext50_32x4d_a1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
+      --model-path /path/to/resnext50_32x4d_a1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
+      --test-img /path/to/image.jpg
+  - platform: s600
+    license:
+      name: Apache-2.0
+      url: https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/blob/cc736cb0940158d05966023116d90fca4c38dae3/README.md
+      scope: model
+    status: converted
+    converted_at: '2026-11-04'
+    metadata_revision: 1
+    artifact:
+      filename: resnext50_32x4d_a1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
+      format: HBM
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/resnext/resnext50_32x4d_a1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
+      sha256: aa5525d5fdd88d2b918531ee56c48668e439000d2b6330d814363fc46e4016c6
+      size_bytes: 30320944
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/resnext/resnext50_32x4d_a1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/resnext/resnext50_32x4d_a1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/resnext/resnext50_32x4d_a1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/resnext/resnext50_32x4d_a1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: output
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        format: NV12
+        dtype: uint8
+        layout: NHWC
+        shape:
+        - 1
+        - 224
+        - 224
+        - 1
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 200
+      calibration_manifest_sha256: 94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: aa5525d5fdd88d2b918531ee56c48668e439000d2b6330d814363fc46e4016c6
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
+      source_repository_commit: cc736cb0940158d05966023116d90fca4c38dae3
+      source_checkpoint_sha256: b952952a7b3e856b16ebf82fb44d2aa8c502e73ec678976c9e3b970fcd530bd5
+      source_weight_url: https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/resolve/cc736cb0940158d05966023116d90fca4c38dae3/model.safetensors
+      checkpoint_revision: cc736cb0940158d05966023116d90fca4c38dae3
+      source_version_pair:
+        repo_id: timm/resnext50_32x4d.a1h_in1k
+        revision: cc736cb0940158d05966023116d90fca4c38dae3
+        license: apache-2.0
+        license_name: null
+        filename: model.safetensors
+        sha256: b952952a7b3e856b16ebf82fb44d2aa8c502e73ec678976c9e3b970fcd530bd5
+        size_bytes: 100417784
+        url: https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/resolve/cc736cb0940158d05966023116d90fca4c38dae3/model.safetensors
+        model_card_url: https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/blob/cc736cb0940158d05966023116d90fca4c38dae3/README.md
+      toolchain_image: S SDK 3.7.0 / exact cached image identified by digest
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      build_id: resnext-50-32x4d-a1h-in1k-224-s-int16-o1-20261103-s600
+      precision_policy: INT16 activations; O1
+      native_variant: timm-50-32x4d-a1h-in1k-s-int16-o1-20261103
+      onnx_sha256: 6017a888ee2b37606a00a51c794ce59fa92f72497684a8c00b4905ea243a1801
+      config_sha256: b29e5d67a241dcf6f3702313b5665883bf7bf96980c4715db5c0b11c5b6c1a50
+      recipe_sha256: 71f4eb739d6dba171f066b406057bebde2124cfaa2165110f62e61298fdd749f
+      calibration_manifest_sha256: 94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb
+      host_smoke_report_sha256: a6aac7918c9086c0ecc0cdd9aec36b45c5ae6c6aa2210349be932d8743938302
+      compile_log_sha256: 51eb1156becc05f4e36eb41537f9a0116f40ee8b4f33eb8cf71c573ee76f01c0
+      same_target_bc:
+        bc:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/resnext50_32x4d_a1h_in1k-s600-int16-20261103-r04/ptq_output/resnext50_32x4d_a1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc
+          sha256: c8893aae6514b0ffa81b672d8b10c75f4f1072a8616db25945ed13644165ab57
+          size_bytes: 26677461
+        ptq_config:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/resnext50_32x4d_a1h_in1k-s600-int16-20261103-r04/ptq.yaml
+          sha256: 5c89b115cec717770a2f17ef94871386b4a71d5794ffbdc344deebe8dabdf250
+          size_bytes: 1218
+        producer:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py
+          sha256: f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141
+          size_bytes: 4634
+        cpu_cuda_gate:
+          atol: 0.0001
+          rtol: 0.001
+          cases:
+          - case: '0'
+            status: passed
+            max_abs: 2.384185791015625e-06
+          - case: '52'
+            status: passed
+            max_abs: 3.337860107421875e-06
+          - case: '143'
+            status: passed
+            max_abs: 5.7220458984375e-06
+          - case: random-seed0
+            status: passed
+            max_abs: 1.6689300537109375e-06
+          providers:
+          - CPUExecutionProvider
+          - CUDAExecutionProvider
+          TF32: false
+        versions:
+          torch: 2.6.0+cu126
+          onnxruntime: 1.19.0
+        gpu_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: bd636d67b3da9f76c6e98e44adc05c82d6db03bb24d5643616eef7afd818ddf5
+    runtime_command: python3 samples/vision/resnext/runtime/python/main.py --target
+      s600 --variant timm-50-32x4d-a1h-in1k-s-int16-o1-20261103 --asset-id s:resnext:s600/resnext50_32x4d_a1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
+      --model-path /path/to/resnext50_32x4d_a1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
+      --test-img /path/to/image.jpg

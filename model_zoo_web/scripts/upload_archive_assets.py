@@ -1,4 +1,4 @@
-"""Publish a prepared metadata package from the local Tailscale-connected Mac."""
+"""Publish a prepared metadata package from the local Mac."""
 import argparse
 import io
 import json
@@ -11,6 +11,17 @@ from urllib.request import urlopen
 from archive_assets import ARCHIVE_HTTPS, PACKAGE_FILES, asset_prefix, checksum_entries, sha
 
 REMOTE_ROOT = '/home/hobot/www/html/downloads/rdk_model_zoo_web'
+
+
+def transport_options(jump_host=None):
+    route = ['-J', jump_host] if jump_host and jump_host != 'none' else [
+        '-o', 'ProxyJump=none', '-o', 'ProxyCommand=none']
+    return route + ['-o', 'BatchMode=yes', '-o', 'ControlMaster=auto',
+        '-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/rdk-modelzoo-upload-%C',
+        '-o', 'ServerAliveInterval=15', '-o', 'ServerAliveCountMax=2',
+        '-o', 'ConnectTimeout=15']
+
+
 REMOTE_INSTALL = r'''
 import hashlib, io, json, os, pathlib, shutil, sys, tarfile, tempfile
 
@@ -107,7 +118,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('package', type=Path)
     parser.add_argument('--ssh-host', required=True)
-    parser.add_argument('--jump-host', required=True)
+    parser.add_argument('--jump-host', help='Optional SSH jump host; omitted for a direct connection')
     parser.add_argument('--receipt', type=Path, required=True)
     args = parser.parse_args()
     prefix, files = validate_package(args.package)
@@ -118,8 +129,8 @@ def main():
             member.size = len(data)
             archive.addfile(member, io.BytesIO(data))
     command = shlex.join(['python3', '-c', REMOTE_INSTALL, REMOTE_ROOT, prefix])
-    result = subprocess.run(['ssh', '-J', args.jump_host, '-o', 'BatchMode=yes', '-o', 'ControlMaster=auto', '-o', 'ControlPersist=600', '-o', 'ControlPath=/tmp/rdk-modelzoo-bulk-%r-%h-%p', '-o', 'ServerAliveInterval=15', '-o', 'ServerAliveCountMax=2', '-o',
-        'ConnectTimeout=15', args.ssh_host, command], input=payload.getvalue(), capture_output=True, check=True)
+    result = subprocess.run(['ssh', *transport_options(args.jump_host), args.ssh_host, command],
+        input=payload.getvalue(), capture_output=True, check=True)
     receipt = json.loads(result.stdout)
     receipt['anonymous_https'] = {}
     for name, data in files.items():

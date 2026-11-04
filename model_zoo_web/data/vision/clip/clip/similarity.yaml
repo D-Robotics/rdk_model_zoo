@@ -8,7 +8,9 @@ family: clip
 task: similarity
 description:
   zh: CLIP 学习图像与文本的共同表示。本示例使用 BPU 图像编码器和 CPU ONNX 文本编码器，比较图片与候选描述，并按余弦相似度对描述排序。
-  en: CLIP learns a shared representation of images and text. This sample compares an image with candidate descriptions and ranks the descriptions by cosine similarity, using a BPU image encoder and a CPU ONNX text encoder.
+  en: CLIP learns a shared representation of images and text. This sample compares
+    an image with candidate descriptions and ranks the descriptions by cosine similarity,
+    using a BPU image encoder and a CPU ONNX text encoder.
 sample_path: samples/vision/clip
 sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
 license:
@@ -47,7 +49,7 @@ source_input:
   format: RGB
   dtype: float32
   layout: NCHW
-  shape: '(1,3,224,224)'
+  shape: (1,3,224,224)
   source: samples/vision/clip/conversion/README.md
 hero_visual:
   file: model_zoo_web/release/assets/pending-heroes/clip-unique-20261103.webp
@@ -56,10 +58,677 @@ hero_visual:
   predictions_source: model_zoo_web/release/assets/pending-heroes/clip-unique-20261103.json
   runtime: host-float-reference
   inference_receipt_version: 2
-  note: Host float reference, not board output. Generated input photograph; every model output is computed
-    from the pinned source graph.
+  note: Host float reference, not board output. Generated input photograph; every
+    model output is computed from the pinned source graph.
   model_file: ViT-B-32.pt
   model_url: https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt
   framework: ONNX Runtime 1.19.2
   commit: 7a9f2d0596b80376697ca98a20ff0d81e14f41b7
   documented_in: samples/vision/clip/conversion/README.md
+provider: OpenAI CLIP
+model_license: &id001
+  name: MIT
+  scope: model
+  url: https://github.com/openai/CLIP/blob/d05afc436d78f1c48dc0dbf8e5980a9d471f35f6/LICENSE
+variants:
+- size: vit-b32-native-int16-o1-20261103
+  model: {}
+  input:
+    width: 224
+    height: 224
+    source:
+      name: image
+      format: RGB
+      dtype: FLOAT32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0
+      - 0
+      - 0
+      std:
+      - 1
+      - 1
+      - 1
+  platforms:
+  - platform: s100
+    license: *id001
+    status: converted
+    converted_at: '2026-11-03'
+    metadata_revision: 1
+    artifact:
+      filename: clip_vit_b32_native_int16_o1_20261103_s100_bundle.tar.gz
+      format: TAR.GZ
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/clip/clip_vit_b32_native_int16_o1_20261103_s100_bundle.tar.gz
+      sha256: c83f362087b5783038ef7470cc4c45cb1221779678a4c0a066b65bf08cfd1151
+      size_bytes: 265315541
+      components:
+      - role: image
+        filename: clip_vitb32_image_nashe_int16_20261103_o1.hbm
+        format: HBM
+        execution: BPU
+        platform: s100
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/clip/clip_vitb32_image_nashe_int16_20261103_o1.hbm
+        sha256: 8e49c4b7a5a26b84e34b784b244b53668f7475f92a218d54613fad5480eb86e6
+        size_bytes: 97642616
+      - role: text
+        filename: clip_vitb32_text_20261103.onnx
+        format: ONNX
+        execution: CPU
+        platform: s100
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/clip/clip_vitb32_text_20261103.onnx
+        sha256: 3e2fe0dfccd41d7253d78a644a5fcdda97e0cdaf3abf4ac9c35ccdd29f9887dc
+        size_bytes: 254389730
+      bundle:
+        kind: clip-image-text
+        descriptor: deployment.json
+        bpe_filename: bpe_simple_vocab_16e6.txt.gz
+        tokenizer_filename: simple_tokenizer.py
+        text_config_filename: clip_vitb32_text_runtime_20261103.json
+        members:
+        - filename: LICENSE.clip
+          sha256: 987e63b32f6c89ff5160e429458a872ff048e6860b590a3912e938f9da8f14db
+          size_bytes: 1064
+        - filename: README.txt
+          sha256: 73f8a6c048f35506e20e3c3c43e6a8b1d8d221d5286250e0bf35d6b7a7c49d63
+          size_bytes: 764
+        - filename: UPSTREAM_NOTICE.md
+          sha256: 264ee75665f708af5d8d75cb1cb2d1da69f54a11b1cbe57c5517b0821dc6ab8e
+          size_bytes: 1261
+        - filename: bpe_simple_vocab_16e6.txt.gz
+          sha256: 924691ac288e54409236115652ad4aa250f48203de50a9e4722a6ecd48d6804a
+          size_bytes: 1356917
+        - filename: clip_vitb32_text_runtime_20261103.json
+          sha256: 2cb1cbfdd31e60d20f4a7fac28e9e0dc68091219798002cfd20b5c53e86ef13c
+          size_bytes: 1047
+        - filename: deployment.json
+          sha256: cc067d0b301212c1a0ce0a19fdecd3b7bea8373d3cf44d082ea02d2a812a357e
+          size_bytes: 918
+        - filename: host-smoke.json
+          sha256: d59927489c7df8033fafb0861a9261eeae2353657fa4d23150cf87d5818269af
+          size_bytes: 2933
+        - filename: image.oe_report.html
+          sha256: 88527aed1419046276c4af13a9322b32a0227c51224cf3a8e40dc5e3ca288298
+          size_bytes: 2648704
+        - filename: image.oe_report_data.json
+          sha256: 97766f505286c3edd3d2e09b1ee883969801c244d3c794c48b2abe37ca8aeeb9
+          size_bytes: 193902
+        - filename: simple_tokenizer.py
+          sha256: c89562f27ea4847e664437345164a97ce4515e2bdc074817b1df4302dcc369c6
+          size_bytes: 6283
+        - filename: text.host_report.html
+          sha256: 4c7753cb9add9ce89c3e0c083ed3393885bc379ba8ab82939d94f4424479b9f9
+          size_bytes: 5586
+        - filename: text.host_report_data.json
+          sha256: c157d32494eea064928387faa7d196dd8455cf720aa20e1fdb5356d54462c800
+          size_bytes: 4139
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/clip/clip_vit_b32_native_int16_o1_20261103_s100_bundle.tar/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/clip/clip_vit_b32_native_int16_o1_20261103_s100_bundle.tar/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/clip/clip_vit_b32_native_int16_o1_20261103_s100_bundle.tar/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/clip/clip_vit_b32_native_int16_o1_20261103_s100_bundle.tar/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: image_features
+        shape:
+        - 1
+        - 512
+        dtype: float32
+      - name: text_features
+        shape:
+        - prompts
+        - 512
+        dtype: float32
+      components:
+        image:
+          kind: native-bpu-compile
+          status: passed
+          artifact_sha256: 8e49c4b7a5a26b84e34b784b244b53668f7475f92a218d54613fad5480eb86e6
+          inputs:
+          - name: image
+            shape:
+            - 1
+            - 3
+            - 224
+            - 224
+            dtype: float32
+          outputs:
+          - name: image_features
+            shape:
+            - 1
+            - 512
+            dtype: float32
+          oe_report_filename: image.oe_report.html
+          oe_report_sha256: 88527aed1419046276c4af13a9322b32a0227c51224cf3a8e40dc5e3ca288298
+          oe_data_filename: image.oe_report_data.json
+          oe_data_sha256: 97766f505286c3edd3d2e09b1ee883969801c244d3c794c48b2abe37ca8aeeb9
+        text:
+          kind: cpu-onnx-host-check
+          status: passed
+          artifact_sha256: 3e2fe0dfccd41d7253d78a644a5fcdda97e0cdaf3abf4ac9c35ccdd29f9887dc
+          inputs:
+          - name: tokens
+            shape:
+            - prompts
+            - 77
+            dtype: int32
+          outputs:
+          - name: text_features
+            shape:
+            - prompts
+            - 512
+            dtype: float32
+          host_report_filename: text.host_report.html
+          host_report_sha256: 4c7753cb9add9ce89c3e0c083ed3393885bc379ba8ab82939d94f4424479b9f9
+          host_data_filename: text.host_report_data.json
+          host_data_sha256: c157d32494eea064928387faa7d196dd8455cf720aa20e1fdb5356d54462c800
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 200
+      calibration_manifest_sha256: 5306ed05914fffc80ec5ee291fd8180b4d52d88455e1743ed73cc46e4f04b3bc
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: c83f362087b5783038ef7470cc4c45cb1221779678a4c0a066b65bf08cfd1151
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+      host_pipeline:
+        status: passed
+        stages:
+        - image
+        - text
+        evidence_file: host-smoke.json
+        evidence_sha256: d59927489c7df8033fafb0861a9261eeae2353657fa4d23150cf87d5818269af
+        component_sha256:
+          image: 8e49c4b7a5a26b84e34b784b244b53668f7475f92a218d54613fad5480eb86e6
+          text: 3e2fe0dfccd41d7253d78a644a5fcdda97e0cdaf3abf4ac9c35ccdd29f9887dc
+        scope: Complete source/native/ONNX image, CPU text and cosine matching; board
+          execution not-run
+    provenance:
+      repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
+      source_repository_commit: d05afc436d78f1c48dc0dbf8e5980a9d471f35f6
+      source_checkpoint_sha256: 40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af
+      source_weight_url: https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt
+      checkpoint_revision: sha256:40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af
+      source_version_pair:
+        repository: https://github.com/openai/CLIP
+        commit: d05afc436d78f1c48dc0dbf8e5980a9d471f35f6
+        checkpoint:
+          url: https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/upstream/clip/ViT-B-32.pt
+          sha256: 40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af
+          size_bytes: 353976522
+          publisher_sha256_verified: true
+        license:
+          name: MIT
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/upstream/clip/CLIP-d05afc436d78f1c48dc0dbf8e5980a9d471f35f6/LICENSE
+          sha256: 987e63b32f6c89ff5160e429458a872ff048e6860b590a3912e938f9da8f14db
+      toolchain_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      toolchain_image: S SDK 3.7.0; image BPU only
+      build_id: clip-vit-b32-native-int16-o1-20261103-s100
+      precision_policy: Image INT16/O1; unchanged float32 CPU text ONNX
+      native_variant: vit-b32-native-int16-o1-20261103
+      host_smoke_report_sha256: d59927489c7df8033fafb0861a9261eeae2353657fa4d23150cf87d5818269af
+      components:
+        image:
+          onnx_sha256: 36a0b2c3790acb7b25a3e6088cef637938291cd7a8b18c5f176f510d48aeb3a7
+          config_sha256: 4530dd434b8d39894f959dabf070222486ca734c19d487e245a4c4a0b743b151
+        text:
+          onnx_sha256: 3e2fe0dfccd41d7253d78a644a5fcdda97e0cdaf3abf4ac9c35ccdd29f9887dc
+          config_sha256: 2cb1cbfdd31e60d20f4a7fac28e9e0dc68091219798002cfd20b5c53e86ef13c
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 62aac869fae032ef854fa139cab6dad7833579c6a8a8386944bbd233f0e4272e
+    runtime_command: python3 samples/vision/clip/runtime/python/main.py --target s100
+      --variant vit-b32-native-int16-o1-20261103 --image-model-path /path/to/clip_vitb32_image_nashe_int16_20261103_o1.hbm
+      --image-asset-id s:clip:s100/clip_vitb32_image_nashe_int16_20261103_o1.hbm --text-model-path
+      /path/to/clip_vitb32_text_20261103.onnx --text-asset-id s:clip:s100/clip_vitb32_text_20261103.onnx
+      --test-img /path/to/image.jpg --texts 'a diagram,a dog'
+  - platform: s100p
+    license:
+      name: MIT
+      scope: model
+      url: https://github.com/openai/CLIP/blob/d05afc436d78f1c48dc0dbf8e5980a9d471f35f6/LICENSE
+    status: converted
+    converted_at: '2026-11-03'
+    metadata_revision: 1
+    artifact:
+      filename: clip_vit_b32_native_int16_o1_20261103_s100p_bundle.tar.gz
+      format: TAR.GZ
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/clip/clip_vit_b32_native_int16_o1_20261103_s100p_bundle.tar.gz
+      sha256: 0d2e8a5450e873a3c5353a65b41a1b81c45513929b5efbae70e51937e645f5ec
+      size_bytes: 265383208
+      components:
+      - role: image
+        filename: clip_vitb32_image_nashm_int16_20261103_o1.hbm
+        format: HBM
+        execution: BPU
+        platform: s100p
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/clip/clip_vitb32_image_nashm_int16_20261103_o1.hbm
+        sha256: 0d3d97d74399ec261e9dbdb43dc6ffc7d041ca1e1db8687a92a4a245f2844ef7
+        size_bytes: 98151032
+      - role: text
+        filename: clip_vitb32_text_20261103.onnx
+        format: ONNX
+        execution: CPU
+        platform: s100p
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/clip/clip_vitb32_text_20261103.onnx
+        sha256: 3e2fe0dfccd41d7253d78a644a5fcdda97e0cdaf3abf4ac9c35ccdd29f9887dc
+        size_bytes: 254389730
+      bundle:
+        kind: clip-image-text
+        descriptor: deployment.json
+        bpe_filename: bpe_simple_vocab_16e6.txt.gz
+        tokenizer_filename: simple_tokenizer.py
+        text_config_filename: clip_vitb32_text_runtime_20261103.json
+        members:
+        - filename: LICENSE.clip
+          sha256: 987e63b32f6c89ff5160e429458a872ff048e6860b590a3912e938f9da8f14db
+          size_bytes: 1064
+        - filename: README.txt
+          sha256: 746152be8f91e417987fd8801dd55be69e8b03a6c642f2314c67a05b831719df
+          size_bytes: 768
+        - filename: UPSTREAM_NOTICE.md
+          sha256: 264ee75665f708af5d8d75cb1cb2d1da69f54a11b1cbe57c5517b0821dc6ab8e
+          size_bytes: 1261
+        - filename: bpe_simple_vocab_16e6.txt.gz
+          sha256: 924691ac288e54409236115652ad4aa250f48203de50a9e4722a6ecd48d6804a
+          size_bytes: 1356917
+        - filename: clip_vitb32_text_runtime_20261103.json
+          sha256: 2cb1cbfdd31e60d20f4a7fac28e9e0dc68091219798002cfd20b5c53e86ef13c
+          size_bytes: 1047
+        - filename: deployment.json
+          sha256: f1194cf9b24ce626cb9dfde2781b62c0aab114a14e1d8083274b83114179b0c1
+          size_bytes: 923
+        - filename: host-smoke.json
+          sha256: d59927489c7df8033fafb0861a9261eeae2353657fa4d23150cf87d5818269af
+          size_bytes: 2933
+        - filename: image.oe_report.html
+          sha256: 11ab769839784e339d1fceb06e52e5bb9c2265753dedfd5a4c6f375923e51356
+          size_bytes: 2722503
+        - filename: image.oe_report_data.json
+          sha256: e7b62eed7ff3011d5e6eba9c73a02475c87f8891e637f42cf75d61f84fb38e05
+          size_bytes: 193763
+        - filename: simple_tokenizer.py
+          sha256: c89562f27ea4847e664437345164a97ce4515e2bdc074817b1df4302dcc369c6
+          size_bytes: 6283
+        - filename: text.host_report.html
+          sha256: 2b45411fce19b44f4e19066fdd90a8d2ecc1a224862da7e26f13c44a7ba3df44
+          size_bytes: 5587
+        - filename: text.host_report_data.json
+          sha256: 7276a36096bccb92ca045f8d8c7e138f5344a3573ffb4b3843cb3c3551df3cec
+          size_bytes: 4140
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/clip/clip_vit_b32_native_int16_o1_20261103_s100p_bundle.tar/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/clip/clip_vit_b32_native_int16_o1_20261103_s100p_bundle.tar/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/clip/clip_vit_b32_native_int16_o1_20261103_s100p_bundle.tar/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100p/clip/clip_vit_b32_native_int16_o1_20261103_s100p_bundle.tar/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: image_features
+        shape:
+        - 1
+        - 512
+        dtype: float32
+      - name: text_features
+        shape:
+        - prompts
+        - 512
+        dtype: float32
+      components:
+        image:
+          kind: native-bpu-compile
+          status: passed
+          artifact_sha256: 0d3d97d74399ec261e9dbdb43dc6ffc7d041ca1e1db8687a92a4a245f2844ef7
+          inputs:
+          - name: image
+            shape:
+            - 1
+            - 3
+            - 224
+            - 224
+            dtype: float32
+          outputs:
+          - name: image_features
+            shape:
+            - 1
+            - 512
+            dtype: float32
+          oe_report_filename: image.oe_report.html
+          oe_report_sha256: 11ab769839784e339d1fceb06e52e5bb9c2265753dedfd5a4c6f375923e51356
+          oe_data_filename: image.oe_report_data.json
+          oe_data_sha256: e7b62eed7ff3011d5e6eba9c73a02475c87f8891e637f42cf75d61f84fb38e05
+        text:
+          kind: cpu-onnx-host-check
+          status: passed
+          artifact_sha256: 3e2fe0dfccd41d7253d78a644a5fcdda97e0cdaf3abf4ac9c35ccdd29f9887dc
+          inputs:
+          - name: tokens
+            shape:
+            - prompts
+            - 77
+            dtype: int32
+          outputs:
+          - name: text_features
+            shape:
+            - prompts
+            - 512
+            dtype: float32
+          host_report_filename: text.host_report.html
+          host_report_sha256: 2b45411fce19b44f4e19066fdd90a8d2ecc1a224862da7e26f13c44a7ba3df44
+          host_data_filename: text.host_report_data.json
+          host_data_sha256: 7276a36096bccb92ca045f8d8c7e138f5344a3573ffb4b3843cb3c3551df3cec
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 200
+      calibration_manifest_sha256: 5306ed05914fffc80ec5ee291fd8180b4d52d88455e1743ed73cc46e4f04b3bc
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: 0d2e8a5450e873a3c5353a65b41a1b81c45513929b5efbae70e51937e645f5ec
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+      host_pipeline:
+        status: passed
+        stages:
+        - image
+        - text
+        evidence_file: host-smoke.json
+        evidence_sha256: d59927489c7df8033fafb0861a9261eeae2353657fa4d23150cf87d5818269af
+        component_sha256:
+          image: 0d3d97d74399ec261e9dbdb43dc6ffc7d041ca1e1db8687a92a4a245f2844ef7
+          text: 3e2fe0dfccd41d7253d78a644a5fcdda97e0cdaf3abf4ac9c35ccdd29f9887dc
+        scope: Complete source/native/ONNX image, CPU text and cosine matching; board
+          execution not-run
+    provenance:
+      repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
+      source_repository_commit: d05afc436d78f1c48dc0dbf8e5980a9d471f35f6
+      source_checkpoint_sha256: 40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af
+      source_weight_url: https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt
+      checkpoint_revision: sha256:40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af
+      source_version_pair:
+        repository: https://github.com/openai/CLIP
+        commit: d05afc436d78f1c48dc0dbf8e5980a9d471f35f6
+        checkpoint:
+          url: https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/upstream/clip/ViT-B-32.pt
+          sha256: 40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af
+          size_bytes: 353976522
+          publisher_sha256_verified: true
+        license:
+          name: MIT
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/upstream/clip/CLIP-d05afc436d78f1c48dc0dbf8e5980a9d471f35f6/LICENSE
+          sha256: 987e63b32f6c89ff5160e429458a872ff048e6860b590a3912e938f9da8f14db
+      toolchain_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      toolchain_image: S SDK 3.7.0; image BPU only
+      build_id: clip-vit-b32-native-int16-o1-20261103-s100p
+      precision_policy: Image INT16/O1; unchanged float32 CPU text ONNX
+      native_variant: vit-b32-native-int16-o1-20261103
+      host_smoke_report_sha256: d59927489c7df8033fafb0861a9261eeae2353657fa4d23150cf87d5818269af
+      components:
+        image:
+          onnx_sha256: 36a0b2c3790acb7b25a3e6088cef637938291cd7a8b18c5f176f510d48aeb3a7
+          config_sha256: 3ba5c3e5b1f7ae3b0c5136fc112661ebdddc0478fde98b4546544ac9cc7f4e0a
+        text:
+          onnx_sha256: 3e2fe0dfccd41d7253d78a644a5fcdda97e0cdaf3abf4ac9c35ccdd29f9887dc
+          config_sha256: 2cb1cbfdd31e60d20f4a7fac28e9e0dc68091219798002cfd20b5c53e86ef13c
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: c51e735a3acff4628b3dc5fe02779b54a24cd91c194aef68588868554e58856c
+    runtime_command: python3 samples/vision/clip/runtime/python/main.py --target s100p
+      --variant vit-b32-native-int16-o1-20261103 --image-model-path /path/to/clip_vitb32_image_nashm_int16_20261103_o1.hbm
+      --image-asset-id s:clip:s100p/clip_vitb32_image_nashm_int16_20261103_o1.hbm
+      --text-model-path /path/to/clip_vitb32_text_20261103.onnx --text-asset-id s:clip:s100p/clip_vitb32_text_20261103.onnx
+      --test-img /path/to/image.jpg --texts 'a diagram,a dog'
+  - platform: s600
+    license:
+      name: MIT
+      scope: model
+      url: https://github.com/openai/CLIP/blob/d05afc436d78f1c48dc0dbf8e5980a9d471f35f6/LICENSE
+    status: converted
+    converted_at: '2026-11-03'
+    metadata_revision: 1
+    artifact:
+      filename: clip_vit_b32_native_int16_o1_20261103_s600_bundle.tar.gz
+      format: TAR.GZ
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/clip/clip_vit_b32_native_int16_o1_20261103_s600_bundle.tar.gz
+      sha256: bd67b0b8efc8f79519f3e9fb6000f821582c0fd8f90509aaf72b8e4ca7a6c60f
+      size_bytes: 266202039
+      components:
+      - role: image
+        filename: clip_vitb32_image_nashp_int16_20261103_o1.hbm
+        format: HBM
+        execution: BPU
+        platform: s600
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/clip/clip_vitb32_image_nashp_int16_20261103_o1.hbm
+        sha256: 81bb42b83a6476e54ef1fcd30e6a6b3567f4ed0700feb533bfd13ad9a4eaeec1
+        size_bytes: 103204112
+      - role: text
+        filename: clip_vitb32_text_20261103.onnx
+        format: ONNX
+        execution: CPU
+        platform: s600
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/clip/clip_vitb32_text_20261103.onnx
+        sha256: 3e2fe0dfccd41d7253d78a644a5fcdda97e0cdaf3abf4ac9c35ccdd29f9887dc
+        size_bytes: 254389730
+      bundle:
+        kind: clip-image-text
+        descriptor: deployment.json
+        bpe_filename: bpe_simple_vocab_16e6.txt.gz
+        tokenizer_filename: simple_tokenizer.py
+        text_config_filename: clip_vitb32_text_runtime_20261103.json
+        members:
+        - filename: LICENSE.clip
+          sha256: 987e63b32f6c89ff5160e429458a872ff048e6860b590a3912e938f9da8f14db
+          size_bytes: 1064
+        - filename: README.txt
+          sha256: 0efcdce24679a8bb61d46ebad53d417a155a6b71c98d45e9c7c3f17dfa5dbc8a
+          size_bytes: 764
+        - filename: UPSTREAM_NOTICE.md
+          sha256: 264ee75665f708af5d8d75cb1cb2d1da69f54a11b1cbe57c5517b0821dc6ab8e
+          size_bytes: 1261
+        - filename: bpe_simple_vocab_16e6.txt.gz
+          sha256: 924691ac288e54409236115652ad4aa250f48203de50a9e4722a6ecd48d6804a
+          size_bytes: 1356917
+        - filename: clip_vitb32_text_runtime_20261103.json
+          sha256: 2cb1cbfdd31e60d20f4a7fac28e9e0dc68091219798002cfd20b5c53e86ef13c
+          size_bytes: 1047
+        - filename: deployment.json
+          sha256: e2b40974f69c064d6719892b07925cf66d1aed795f2d015c8ad313c6c444d500
+          size_bytes: 919
+        - filename: host-smoke.json
+          sha256: d59927489c7df8033fafb0861a9261eeae2353657fa4d23150cf87d5818269af
+          size_bytes: 2933
+        - filename: image.oe_report.html
+          sha256: 46a615cf819347cd65698cfaa9d1396e2b156b3977f43ea05296538d926bde2d
+          size_bytes: 2964356
+        - filename: image.oe_report_data.json
+          sha256: 2dbc5a54ef78f5926a5ae153c50633b4ae378b75e19a9baca3e6d86d956d8118
+          size_bytes: 193594
+        - filename: simple_tokenizer.py
+          sha256: c89562f27ea4847e664437345164a97ce4515e2bdc074817b1df4302dcc369c6
+          size_bytes: 6283
+        - filename: text.host_report.html
+          sha256: 5068cbe09520e0c79acab20b0d0df6859f4b2475a5564e34acac0af83d9e5a4e
+          size_bytes: 5586
+        - filename: text.host_report_data.json
+          sha256: 1182f33ac8e81df4b8dac8cfeac574595161285be73e70e63e2a0730c5793008
+          size_bytes: 4139
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/clip/clip_vit_b32_native_int16_o1_20261103_s600_bundle.tar/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/clip/clip_vit_b32_native_int16_o1_20261103_s600_bundle.tar/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/clip/clip_vit_b32_native_int16_o1_20261103_s600_bundle.tar/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s600/clip/clip_vit_b32_native_int16_o1_20261103_s600_bundle.tar/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: image_features
+        shape:
+        - 1
+        - 512
+        dtype: float32
+      - name: text_features
+        shape:
+        - prompts
+        - 512
+        dtype: float32
+      components:
+        image:
+          kind: native-bpu-compile
+          status: passed
+          artifact_sha256: 81bb42b83a6476e54ef1fcd30e6a6b3567f4ed0700feb533bfd13ad9a4eaeec1
+          inputs:
+          - name: image
+            shape:
+            - 1
+            - 3
+            - 224
+            - 224
+            dtype: float32
+          outputs:
+          - name: image_features
+            shape:
+            - 1
+            - 512
+            dtype: float32
+          oe_report_filename: image.oe_report.html
+          oe_report_sha256: 46a615cf819347cd65698cfaa9d1396e2b156b3977f43ea05296538d926bde2d
+          oe_data_filename: image.oe_report_data.json
+          oe_data_sha256: 2dbc5a54ef78f5926a5ae153c50633b4ae378b75e19a9baca3e6d86d956d8118
+        text:
+          kind: cpu-onnx-host-check
+          status: passed
+          artifact_sha256: 3e2fe0dfccd41d7253d78a644a5fcdda97e0cdaf3abf4ac9c35ccdd29f9887dc
+          inputs:
+          - name: tokens
+            shape:
+            - prompts
+            - 77
+            dtype: int32
+          outputs:
+          - name: text_features
+            shape:
+            - prompts
+            - 512
+            dtype: float32
+          host_report_filename: text.host_report.html
+          host_report_sha256: 5068cbe09520e0c79acab20b0d0df6859f4b2475a5564e34acac0af83d9e5a4e
+          host_data_filename: text.host_report_data.json
+          host_data_sha256: 1182f33ac8e81df4b8dac8cfeac574595161285be73e70e63e2a0730c5793008
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 200
+      calibration_manifest_sha256: 5306ed05914fffc80ec5ee291fd8180b4d52d88455e1743ed73cc46e4f04b3bc
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: bd67b0b8efc8f79519f3e9fb6000f821582c0fd8f90509aaf72b8e4ca7a6c60f
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+      host_pipeline:
+        status: passed
+        stages:
+        - image
+        - text
+        evidence_file: host-smoke.json
+        evidence_sha256: d59927489c7df8033fafb0861a9261eeae2353657fa4d23150cf87d5818269af
+        component_sha256:
+          image: 81bb42b83a6476e54ef1fcd30e6a6b3567f4ed0700feb533bfd13ad9a4eaeec1
+          text: 3e2fe0dfccd41d7253d78a644a5fcdda97e0cdaf3abf4ac9c35ccdd29f9887dc
+        scope: Complete source/native/ONNX image, CPU text and cosine matching; board
+          execution not-run
+    provenance:
+      repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
+      source_repository_commit: d05afc436d78f1c48dc0dbf8e5980a9d471f35f6
+      source_checkpoint_sha256: 40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af
+      source_weight_url: https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt
+      checkpoint_revision: sha256:40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af
+      source_version_pair:
+        repository: https://github.com/openai/CLIP
+        commit: d05afc436d78f1c48dc0dbf8e5980a9d471f35f6
+        checkpoint:
+          url: https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/upstream/clip/ViT-B-32.pt
+          sha256: 40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af
+          size_bytes: 353976522
+          publisher_sha256_verified: true
+        license:
+          name: MIT
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/upstream/clip/CLIP-d05afc436d78f1c48dc0dbf8e5980a9d471f35f6/LICENSE
+          sha256: 987e63b32f6c89ff5160e429458a872ff048e6860b590a3912e938f9da8f14db
+      toolchain_image_id: sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92
+      toolchain_image: S SDK 3.7.0; image BPU only
+      build_id: clip-vit-b32-native-int16-o1-20261103-s600
+      precision_policy: Image INT16/O1; unchanged float32 CPU text ONNX
+      native_variant: vit-b32-native-int16-o1-20261103
+      host_smoke_report_sha256: d59927489c7df8033fafb0861a9261eeae2353657fa4d23150cf87d5818269af
+      components:
+        image:
+          onnx_sha256: 36a0b2c3790acb7b25a3e6088cef637938291cd7a8b18c5f176f510d48aeb3a7
+          config_sha256: c7722af00e4fe995a77798e9fc6cb8ac1f0a4133de1ee762d745c33b0c42b931
+        text:
+          onnx_sha256: 3e2fe0dfccd41d7253d78a644a5fcdda97e0cdaf3abf4ac9c35ccdd29f9887dc
+          config_sha256: 2cb1cbfdd31e60d20f4a7fac28e9e0dc68091219798002cfd20b5c53e86ef13c
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 3d6b98d3f75fa1bf8ce43b35e52d39963a36c41c352c7035721e8f51f93a6ded
+    runtime_command: python3 samples/vision/clip/runtime/python/main.py --target s600
+      --variant vit-b32-native-int16-o1-20261103 --image-model-path /path/to/clip_vitb32_image_nashp_int16_20261103_o1.hbm
+      --image-asset-id s:clip:s600/clip_vitb32_image_nashp_int16_20261103_o1.hbm --text-model-path
+      /path/to/clip_vitb32_text_20261103.onnx --text-asset-id s:clip:s600/clip_vitb32_text_20261103.onnx
+      --test-img /path/to/image.jpg --texts 'a diagram,a dog'

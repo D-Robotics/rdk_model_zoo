@@ -310,6 +310,36 @@ def run(row, native, output, threads):
         banner = pair(photo, result_image)
         extra = {'visualization': {'method': 'Native MODNet restored alpha, composite onto light blue',
                                    'alpha_range': [int(matte.min()), int(matte.max())]}}
+    elif kind == 'semantic-wipe':
+        from samples.vision.pp_liteseg.runtime.python.pp_liteseg import PPLiteSegSegmenter
+        from samples.vision.pp_liteseg.runtime.python.cli import colorize, CITYSCAPES_CLASS_NAMES
+        from utils.py_utils.runtime_meta import RuntimeMetadata
+        inp, out = session.get_inputs()[0], session.get_outputs()[0]
+        metadata = RuntimeMetadata.from_mapping({
+            'input_names': [inp.name], 'input_shapes': {inp.name: inp.shape},
+            'input_dtypes': {inp.name: 'float32'},
+            'output_names': [out.name], 'output_shapes': {out.name: out.shape},
+            'output_dtypes': {out.name: 'float32'},
+        })
+        task = PPLiteSegSegmenter.__new__(PPLiteSegSegmenter)
+        task.binding = SimpleNamespace(selection=SimpleNamespace(float_logits=True),
+                                       input_name=inp.name, output_name=out.name, metadata=metadata)
+        prepared = task.preprocess(bgr)
+        values = forward('model', prepared.tensors)
+        labels = task.postprocess(values[out.name])
+        raw['class_ids'] = labels
+        colors = Image.fromarray(colorize(labels)[:, :, ::-1]).resize(photo.size, Image.Resampling.NEAREST)
+        result_image = Image.blend(photo, colors, .52)
+        base = ImageOps.fit(photo, (1672, 941), Image.Resampling.LANCZOS)
+        overlay = ImageOps.fit(result_image, base.size, Image.Resampling.LANCZOS)
+        banner = base.copy()
+        cut = round(base.width*.45)
+        banner.paste(overlay.crop((cut, 0, base.width, base.height)), (cut, 0))
+        ImageDraw.Draw(banner).line((cut, 0, cut, base.height), fill='white', width=2)
+        classes, counts = np.unique(labels, return_counts=True)
+        extra = {'visualization': {'method': 'Native normalized RGB preprocessing and CPU logits argmax; Cityscapes palette overlay; aligned full-scene wipe',
+                                   'class_pixels': {CITYSCAPES_CLASS_NAMES[int(i)]: int(n) for i, n in zip(classes, counts)},
+                                   'alpha': .52, 'original_fraction': .45}}
     elif kind == 'depth-panel':
         if row['source'] == 'depth_anything_v2':
             from samples.vision.depth_anything_v2.conversion.export_small import preprocess

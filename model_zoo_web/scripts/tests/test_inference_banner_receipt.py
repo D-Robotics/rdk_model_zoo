@@ -95,6 +95,26 @@ class InferenceBannerReceiptTest(unittest.TestCase):
         with self.assertRaises(catalog.CatalogError):
             self.check()
 
+    def test_semantic_hero_requires_the_computed_result_image(self):
+        self.entry.update(kind='semantic-wipe', runtime='host-float-reference',
+                          note='Host float reference, not board output.',
+                          model_url='https://example.com/official.pdparams', model_file='official.pdparams',
+                          framework='ONNX Runtime', documented_in='samples/vision/example/conversion/README.md')
+        for key in ('model_url','model_file','framework','commit','runtime','input'):
+            self.payload[key]=self.entry[key]
+        source=self.asset.replace('.webp','.json')
+        record=self.root/source;self.entry['predictions_source']=source
+        result=self.root/self.asset.replace('.webp','-result.png')
+        result.write_bytes(b'computed semantic labels')
+        self.payload['files']['result.png']={'sha256':hashlib.sha256(result.read_bytes()).hexdigest(),'size_bytes':result.stat().st_size}
+        with patch.object(catalog,'_ls_tree',return_value=('100644','blob','a'*40)), \
+             patch.object(catalog,'validate_commit',side_effect=lambda revision,label:revision):
+            record.write_text(json.dumps(self.payload))
+            catalog._validate_host_float_hero(self.entry,'hero','a'*40)
+            del self.payload['files']['result.png'];record.write_text(json.dumps(self.payload))
+            with self.assertRaisesRegex(catalog.CatalogError,'computed result image'):
+                catalog._validate_host_float_hero(self.entry,'hero','a'*40)
+
     def test_different_models_cannot_reuse_the_same_input_photo(self):
         records = []
         for model in ('first', 'second'):
