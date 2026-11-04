@@ -387,7 +387,7 @@ const taskMetadata = {
 const safeId = (...parts) => parts.join('-').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-');
 const displayNames = (record, size) => {
   const { family, task } = record;
-  if (!/^yolo/i.test(family)) {
+  if (!/^yolo/i.test(family) || family === 'yolo26_depth') {
     // Other families keep their catalog name; the size id is spelled out
     // ("conv-small-224" -> "Conv Small 224").
     const sizeName = size.split('-')
