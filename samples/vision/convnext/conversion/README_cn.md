@@ -104,3 +104,19 @@ S 校准必须使用 ONNX 输入域的归一化 `.npy`；NV12 Runtime 的 mean/s
 [Shared classification workflow](../../../../utils/tools/classification_conversion/README.md).
 
 原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。
+
+<!-- BEGIN CPU S CONVERSIONS 20261104 -->
+
+## Additional CPU PTQ S profiles (2026-11-04)
+
+These exact trained-checkpoint exports passed the source host gate and the full-output CPU source/CPU SDK gate (three frozen images plus deterministic random input, atol=1e-4, rtol=1e-3). Each target has its own INT16 PTQ, compiler metadata, OE report and checksum in `converted_targets_20261103.json`. Compiler estimates describe conversion; board accuracy, Runtime 1/2 concurrency and C++ 1/2 streams remain not run.
+
+Models and intermediate outputs stay on dev-server. The Mac holds code and metadata only; Archive uploads stream from server files without a local model copy.
+
+| Target | Native variant | Manifest filename | SHA-256 | Bytes |
+|---|---|---|---|---:|
+| s100 | `timm-atto-d2-s-int16-cpuptq-o1-20261104` | `s100/convnext_atto_d2_nashe_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm` | `f7eb82c0c0254226b1bde5b25eb5c8ad94e68ca29925d38ae07ffb977755cfc6` | 7766808 |
+| s100p | `timm-atto-d2-s-int16-cpuptq-o1-20261104` | `s100p/convnext_atto_d2_nashm_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm` | `24ee0ede15c7354b0a9f6379299e38d852eaf94e7679c24ff018c91b872759ea` | 7655960 |
+| s600 | `timm-atto-d2-s-int16-cpuptq-o1-20261104` | `s600/convnext_atto_d2_nashp_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm` | `d8a4c3663d916f951c9257e52ef0c42fe8355633182772b1fd972f1300f8f65d` | 9055384 |
+
+<!-- END CPU S CONVERSIONS 20261104 -->

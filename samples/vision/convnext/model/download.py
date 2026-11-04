@@ -55,6 +55,11 @@ TARGETS = tuple(dict.fromkeys((*TARGETS, *('s100', 's100p', 's600'))))
 ASSET_REFERENCES.update({('s100', 'timm-femto-d1-in1k-s-int16-o1-20261103'): 's:convnext:s100/convnext_femto_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-femto-d1-in1k-s-int16-o1-20261103'): 's:convnext:s100p/convnext_femto_d1_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-femto-d1-in1k-s-int16-o1-20261103'): 's:convnext:s600/convnext_femto_d1_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm', ('s100', 'timm-nano-d1h-in1k-s-int16-o1-20261103'): 's:convnext:s100/convnext_nano_d1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-nano-d1h-in1k-s-int16-o1-20261103'): 's:convnext:s100p/convnext_nano_d1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-nano-d1h-in1k-s-int16-o1-20261103'): 's:convnext:s600/convnext_nano_d1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm', ('s100', 'timm-pico-d1-in1k-s-int16-o1-20261103'): 's:convnext:s100/convnext_pico_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-pico-d1-in1k-s-int16-o1-20261103'): 's:convnext:s100p/convnext_pico_d1_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-pico-d1-in1k-s-int16-o1-20261103'): 's:convnext:s600/convnext_pico_d1_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm'})
 # END S CONVERTED ARTIFACT BINDINGS 20261103
 
+# BEGIN CPU S CONVERTED ARTIFACT BINDINGS 20261104
+VARIANTS = tuple(dict.fromkeys((*VARIANTS, *('timm-atto-d2-s-int16-cpuptq-o1-20261104',))))
+ASSET_REFERENCES.update({('s100', 'timm-atto-d2-s-int16-cpuptq-o1-20261104'): 's:convnext:s100/convnext_atto_d2_nashe_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm', ('s100p', 'timm-atto-d2-s-int16-cpuptq-o1-20261104'): 's:convnext:s100p/convnext_atto_d2_nashm_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm', ('s600', 'timm-atto-d2-s-int16-cpuptq-o1-20261104'): 's:convnext:s600/convnext_atto_d2_nashp_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm'})
+# END CPU S CONVERTED ARTIFACT BINDINGS 20261104
+
 def asset_reference(target: str, variant: str = 'atto') -> str:
     """Return the exact manifest reference for a supported target/variant."""
 

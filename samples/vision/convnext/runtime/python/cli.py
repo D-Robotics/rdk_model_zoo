@@ -40,12 +40,8 @@ SUPPORTED_TARGETS = _SHARED_TARGETS
 SUPPORTED_VARIANTS = ('atto', 'nano', 'pico', 'femto', 'atto-d2')
 _SAMPLE_DIR = Path(__file__).resolve().parents[2]
 
-#: Platform deployment profiles for this sample.  X5 publishes flat
-#: ``.bin`` artifacts; the S manifests carry no ConvNeXt row, so S
-#: selection errors with zero published assets.  ``url_prefix_s`` is
-#: structurally required by the shared four-profile builder but is never
-#: consulted for this sample: no S manifest row exists, so no S URL can ever
-#: resolve.  No C++ runtime exists on any target for this sample.
+#: X5 artifacts use packed NV12; registered S variants use split NV12.
+#: C++ runtime is not provided by this sample.
 PLATFORMS = classification_profiles(url_prefix_s="rdk_s100/ConvNeXt")
 
 
@@ -140,13 +136,25 @@ BINDING_TABLE = _with_s_converted_bindings(
 )
 # END S CONVERTED ARTIFACT BINDINGS 20261103
 
+# BEGIN CPU S CONVERTED ARTIFACT BINDINGS 20261104
+SUPPORTED_VARIANTS = tuple(dict.fromkeys((*SUPPORTED_VARIANTS, *('timm-atto-d2-s-int16-cpuptq-o1-20261104',))))
+BINDING_TABLE = _with_s_converted_bindings(
+    BINDING_TABLE,
+    filename_variants={**BINDING_TABLE.filename_variants, **{'s100/convnext_atto_d2_nashe_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm': 'timm-atto-d2-s-int16-cpuptq-o1-20261104', 's100p/convnext_atto_d2_nashm_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm': 'timm-atto-d2-s-int16-cpuptq-o1-20261104', 's600/convnext_atto_d2_nashp_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm': 'timm-atto-d2-s-int16-cpuptq-o1-20261104'}},
+    facts={**BINDING_TABLE.facts,
+        ('timm-atto-d2-s-int16-cpuptq-o1-20261104', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics="source_declared_logits", output_score_policy="softmax"),
+        ('timm-atto-d2-s-int16-cpuptq-o1-20261104', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics="source_declared_logits", output_score_policy="softmax"),
+        ('timm-atto-d2-s-int16-cpuptq-o1-20261104', 's600'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics="source_declared_logits", output_score_policy="softmax"),
+    },
+)
+# END CPU S CONVERTED ARTIFACT BINDINGS 20261104
+
 def list_available_assets(target: Optional[str] = None) -> tuple[AssetRecord, ...]:
     """Return the finite sample assets read from the existing manifests.
 
     ``target=None`` or ``target="auto"`` is intentionally host-independent so
-    the listing command can run on a workstation.  Every S target (S100,
-    S100P, S600) returns no rows: no ConvNeXt asset for those targets
-    is present in the source manifest.
+    the listing command can run on a workstation. Registered S profiles
+    are selected by their exact converted variant and manifest reference.
     """
 
     return cls_binding.list_assets(BINDING_TABLE, target)

@@ -132,7 +132,7 @@ class RecipeConsistencyTests(unittest.TestCase):
             list_available_assets,
         )
 
-        records = tuple(r for r in list_available_assets("auto") if not r.variant.endswith("-20261103"))
+        records = tuple(r for r in list_available_assets("auto") if r.target == "x5")
         self.assertEqual(
             sorted(r.filename for r in records),
             sorted([
@@ -145,7 +145,7 @@ class RecipeConsistencyTests(unittest.TestCase):
         )
         self.assertEqual(BINDING_TABLE.default_variant, "atto")
         self.assertEqual(
-            {v for v in BINDING_TABLE.filename_variants.values() if not v.endswith("-20261103")},
+            {v for filename, v in BINDING_TABLE.filename_variants.items() if filename.endswith(".bin")},
             {"atto", "femto", "nano", "pico", "atto-d2"} | set(_CONVERTED_VARIANTS),
         )
         self.assertTrue((CONVERSION / "ConvNeXt_femto.yaml").is_file())
