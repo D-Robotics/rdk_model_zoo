@@ -179,10 +179,11 @@ if (preview) {
       assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), familyBanner.banner.sha256,
         `${model.id}: built cover must match its reviewed inference banner`);
     }
-    if (model.releaseStatus === 'demo') {
+    if (['demo', 'official'].includes(model.releaseStatus)) {
+      const official = model.releaseStatus === 'official';
       assert.equal(model.taskId, 'text-generation');
       assert.equal(model.releasePlatform, 'S600');
-      assert.equal(model.deployment.compileStatus, 'passed');
+      assert.equal(model.deployment.compileStatus, official ? 'official-precompiled' : 'passed');
       assert.equal(model.deployment.boardStatus, 'not-run');
       assert.equal(model.boardMeasurements.status, 'not-run');
       for (const field of ['ppl', 'ttft_ms', 'decode_tokens_per_second', 'peak_memory_bytes', 'generation_checks', 'environment']) {
@@ -192,18 +193,34 @@ if (preview) {
       assert.equal(model.assets.length, availability.package_url ? 1 : 0,
         `${model.id}: downloads must match the published deployment package`);
       for (const asset of model.assets) {
-        assert.equal(availability.kind, 'archive');
+        assert.equal(availability.kind, official ? 'official-oss' : 'archive');
         assert.equal(availability.verification.status, 'verified');
         assert.equal(availability.verification.method, 'anonymous-https-full-sha256');
-        assert.match(asset.url, /^https:\/\/archive\.d-robotics\.cc\/downloads\/rdk_model_zoo_web\/rdk_s600\/gemma\//);
+        assert.match(asset.url, official
+          ? /^https:\/\/d-robotics-aitoolchain\.oss-cn-beijing\.aliyuncs\.com\/llm\/2\.0\.0\/s600_models\/Gemma4-E[24]B_w[48]\.zip$/
+          : /^https:\/\/archive\.d-robotics\.cc\/downloads\/rdk_model_zoo_web\/rdk_s600\/gemma\//);
         assert.equal(asset.url, availability.package_url);
         assert.equal(asset.sha256, availability.sha256);
         assert.equal(asset.sizeBytes, availability.size_bytes);
         assert.equal(asset.checksumsUrl, availability.checksums_url);
       }
       assert.equal(model.benchmark, null, `${model.id}: host results cannot become board benchmarks`);
+      if (official) {
+        assert.equal(model.deployment.artifactManifest.source.kind, 'sdk-official');
+        assert.equal(model.deployment.artifactManifest.source.revision, null);
+        assert.equal(model.officialBenchmark.source.runtime_concurrency, 1);
+        assert.equal(model.officialBenchmark.source.memory_scope, 'linux-plus-ion');
+        for (const field of ['ttft_ms', 'decode_tokens_per_second', 'memory_gb']) {
+          assert(model.officialBenchmark.metrics[field] > 0);
+        }
+        assert.equal(model.officialBenchmark.metrics.ppl, null);
+        assert.equal(model.assets[0].format, 'zip');
+      }
       assert(!model.reportUrl && !model.reportDataUrl && !model.reportSourceUrl);
-      assert.equal(model.source, null, `${model.id}: source snapshot has no invented GitHub commit`);
+      if (official) {
+        assert.match(model.sampleRevision, /^[0-9a-f]{40}$/, `${model.id}: official sample revision must be pinned`);
+        assert.equal(model.source, `https://github.com/D-Robotics/rdk_model_zoo/tree/${model.sampleRevision}/${model.samplePath}`);
+      } else assert.equal(model.source, null, `${model.id}: source snapshot has no invented GitHub commit`);
       for (const filename of [model.sourceArchive, ...Object.values(model.documents)]) {
         assert(fs.statSync(path.join(root, filename)).size > 0, `${model.id}: missing sample resource`);
       }

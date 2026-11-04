@@ -11,7 +11,7 @@ an Agent is not required.
 | Locate objects and obtain boxes, classes and scores | [YOLO detection](vision/ultralytics_yolo/README.md) | [Export and compile](vision/ultralytics_yolo/conversion/README.md) | [Detection evaluation](vision/ultralytics_yolo/evaluator/README.md) |
 | Obtain Top-K image classes and scores | [ResNet classification](vision/resnet/README.md) | [Conversion](vision/resnet/conversion/README.md) | [Classification validation](vision/resnet/evaluator/README.md) |
 | Locate text regions and recognize text | [PaddleOCR](vision/paddle_ocr/README.md) | [Detector and recognizer conversion](vision/paddle_ocr/conversion/README.md) | [OCR validation](vision/paddle_ocr/evaluator/README.md) |
-| Generate text on S600 with SDK 2.0 | [Gemma4-E2B text](llm/gemma4/README.md) | [SDK conversion](llm/gemma4/conversion/README.md) | [Host references and board status](llm/gemma4/evaluator/README.md) |
+| Generate text on S600 with SDK 2.0 | [Gemma4 E2B/E4B official text](llm/gemma4/README.md) | [Official model provenance](llm/gemma4/conversion/README.md) | [Official references and board status](llm/gemma4/evaluator/README.md) |
 
 ## Boards and artifacts
 

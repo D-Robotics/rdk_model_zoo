@@ -1,0 +1,65 @@
+{
+  "work_dir": "@MODEL_DIR@",
+  "tokenizer_path": "@MODEL_DIR@",
+  "vit_model_file": "gemma-4-E2B-it_vision_384x384_w8_nash-p_corenum_4.hbm",
+  "audio_model_file": "gemma-4-E2B-it_audio_30s_w8_nash-p_corenum_4.hbm",
+  "lm_model_file": "gemma-4-E2B-it_language_chunk_512_cache_4096_w8_nash-p_corenum_4_4.hbm",
+  "embed_weight_name": "gemma-4-E2B-it_embed_tokens.bin",
+  "ple_embed_weight_name": "gemma-4-E2B-it_embed_tokens_per_layer.bin",
+  "chat_template_file": "chat_template.jinja",
+  "runtime_type": "GEMMA4",
+  "model_runner": {
+    "prefill": "gemma4_prefill",
+    "decode": "gemma4_decode",
+    "vit": "gemma4_vision",
+    "audio": "gemma4_audio"
+  },
+  "backends": {
+    "vit": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "audio": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "prefill": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "decode": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "image_min_num": 1,
+  "image_max_num": 16,
+  "max_image_cnt": 16,
+  "max_image_height": 384,
+  "max_image_width": 384,
+  "max_soft_tokens": 70,
+  "max_audio_count": 1,
+  "sliding_window": 512,
+  "max_prefill_chunk_num": 8,
+  "encoder_cache": {
+    "capacity_mb": 0,
+    "max_entries": 0
+  },
+  "embed_table_scale": 1.0,
+  "ple_embed_table_scale": 1.0,
+  "max_conv_cache_num": 4,
+  "prefix_cache": {
+    "enable": true,
+    "block_size": 64,
+    "min_match_tokens": 64
+  },
+  "soc": "s600"
+}

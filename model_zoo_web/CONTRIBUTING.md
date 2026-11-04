@@ -36,15 +36,19 @@ model_zoo_web/data/vision/ultralytics_yolo/yolo26/detect.yaml
 
 ## 2. 发布门槛
 
-Gemma4-E2B 的 SDK 2.0 S600 纯文本入口使用 `status: demo`，表示已编译、未板测。
-它可以进入正常目录展示，但不计入正式发布统计。`artifact`、`accuracy`、
-`performance`、`reports` 必须为 null；板端记录须为 `not-run`，测量值为 null。
-模型来源、revision、编译规格、文件大小及 SHA256 从 Sample 的
-`model/artifacts.json` 核对，板端状态从 `evaluator/board_result.json` 核对。
-本地构建提供示例源码和说明文档，不制造尚未发布的模型 URL、源码提交链接或 OE 报告。
-经完整匿名 HTTPS 下载校验的 Archive 模型包，可在 Sample `availability` 中登记
-URL、大小、SHA256、校验和索引及验证时间，并独立提供下载；板端数据和 demo 状态不变。
-Demo 以外的 LLM 正式发布需要另行补齐其评测与发布合同，不能把 `demo` 改名后跳过验证。
+Gemma4 E2B/E4B 的 SDK 官方 S600 预编译包使用 `status: official`。
+官方包必须完成匿名 HTTPS 全量下载、SHA256、ZIP CRC、文件清单与 HBM 目标规格核对。
+清单在 `samples/llm/gemma4/model/manifests/<profile>.json`，Runtime 配置来自同版本 SDK。
+上游 HF revision 未由官方包提供时保留 null，以 SDK 发布版本和完整包 SHA256 固定来源。
+仅允许该合同指定的官方 S600 OSS ZIP 地址，不放宽其他模型的 Archive 下载约束。
+
+官方性能从 `evaluator/official_benchmarks.json` 读取，保留来源、条件及内存统计口径。
+网页可以展示官方单请求 TTFT、Decode 和运行内存；并发选择器仅列出已记录的单路。
+本地 `board_results/<profile>.json` 保持 `not-run` 与 null；`artifact`、`accuracy`、
+`performance`、`reports` 不承载本地发布证据。官方模型不计入本项目板测通过的 released 统计，
+不制造 OE 报告、PPL、峰值内存或两路并发结果。
+
+原 `status: demo` 合同仍供独立自转换文本 Sample 使用；demo 的板端数据保持为空。
 
 模型必须满足以下条件后，才能将平台状态标记为 `released`：
 
@@ -84,9 +88,10 @@ Demo 以外的 LLM 正式发布需要另行补齐其评测与发布合同，不�
 - `node_modules/`、`__pycache__/` 和本地 workbench 文件。
 - AccessKey、Secret、临时签名 URL 或其他凭据。
 
-公开模型下载统一使用已核验的 Archive 地址；`released` 和 `converted` 条目都遵守
+`status: official` 的 Gemma 使用合同中固定的官方 OSS ZIP。
+其他公开模型下载统一使用已核验的 Archive 地址；`released` 和 `converted` 条目都遵守
 这一要求。迁移时先核对 Archive 文件大小与已登记 SHA-256，再修改下载地址。
-构建器和网站发布校验会拒绝 OSS 模型下载地址。发布清单和 OE 报告统一放在
+构建器和网站发布校验只为已核验的官方 Gemma 合同接受指定 OSS 地址。发布清单和 OE 报告统一放在
 Archive 的 Web 资产区，按平台、Sample 和模型文件名区分：
 
 ```text

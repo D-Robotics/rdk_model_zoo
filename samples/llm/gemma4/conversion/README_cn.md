@@ -1,40 +1,50 @@
-# SDK 2.0 转换
+[English](README.md) | 简体中文
 
-[English](README.md) · [Sample](../README_cn.md)
+# 官方预编译模型
 
-使用已有 SDK 容器环境。原始模型固定为
-`google/gemma-4-E2B-it-qat-q4_0-unquantized`，revision
-`6befbaca7398925921802abd1f277b495b78b738`。本入口读取 SDK 已发布的
-`gemma4_e2b/lm_w4_kv_w8` AutoClip/GPTQ recipe 和 `configs/gemma4.yml`，
-只绑定本地路径、语言分支与 S600 编译规格，不复制或修改 SDK 量化实现。
+[Sample](../README_cn.md)
 
-```bash
-python3 samples/llm/gemma4/conversion/main.py prepare \
-  --sdk-root /opt/D-Robotics_LLM_2.0.0_S600_S100_SDK \
-  --model-path /data/gemma-4-E2B-it-qat-q4_0-unquantized \
-  --wikitext-dir /data/wikitext-2-raw-v1 --mmstar /data/MMStar.tsv \
-  --output /data/gemma4-conversion
-```
+<a id="source-model"></a>
+## 模型来源
 
-生成独立 `configs/` 与 `plan.json`。随后按顺序执行 SDK 原生命令；每条只运行
-指定阶段，已有实验目录不会被准备入口覆盖：
+官方预编译包来自 OELLM SDK 2.0.0 S600 发布线。上游模型为 Google Gemma4 E2B/E4B；官方未提供 ZIP 对应的 HF 完整 revision，清单中保持 null。
 
-```bash
-python3 samples/llm/gemma4/conversion/main.py run --work-dir /data/gemma4-conversion --stage autoclip
-python3 samples/llm/gemma4/conversion/main.py run --work-dir /data/gemma4-conversion --stage gptq
-python3 samples/llm/gemma4/conversion/main.py run --work-dir /data/gemma4-conversion --stage float
-python3 samples/llm/gemma4/conversion/main.py run --work-dir /data/gemma4-conversion --stage calib
-python3 samples/llm/gemma4/conversion/main.py run --work-dir /data/gemma4-conversion --stage eval
-python3 samples/llm/gemma4/conversion/main.py run --work-dir /data/gemma4-conversion --stage compile
-```
+<a id="directory"></a>
+## 目录
 
-LC 使用 WikiText2 train 的 128×512 校准，HPP 使用 SDK Gemma4 的 MMStar 30
-样本校准；精度评估使用完整 WikiText2 test、序列长度 2048。MMStar 参与 SDK
-原生校准流程，不改变本次只编译语言分支的范围。
+本目录说明预编译制品来源；四个完整清单在 `../model/manifests/`，配套 SDK 配置在 `../runtime/cpp/configs/`。
 
-编译输出位于 `artifacts/hpp/hbm/`。一次新的转换产生新制品后，需独立核对元数据、
-文件大小和完整 SHA256，再更新模型绑定；不能用旧清单替换新字节。
+<a id="toolchain-targets"></a>
+## 工具链与目标
 
-本次参考工具：Python 3.10、PyTorch 2.8.0+cu128、HPP 3.3.5+cu128.torch280.qwen35、
-HBDK `4.14.1a2.dev202610090350+05dd1f0.develop`。编译为 `nash-p` 4 核、
-chunk 512、cache 4096、FP16 外挂 embedding。
+S600/nash-p、4 核、chunk 512、context 4096。各包实际 HBDK 编译器和 HBM 元数据保存在对应清单；运行使用配套 SDK 2.0.0 Runtime。
+
+<a id="export"></a>
+## 导出
+
+当前入口直接使用已导出的官方 HBM，无需重新导出。定制模型应从 SDK Gemma 发布配方建立独立实验。
+
+<a id="calibration"></a>
+## 校准与量化
+
+SDK Gemma 路线为 AutoClip/GPTQ → HPP → HBDK。官方 ZIP 没有提供这四个制品的校准语料或完整复现记录；不沿用旧自转换包的校准或精度结果。
+
+<a id="compile"></a>
+## 编译
+
+使用官方包不需要重新编译 HBM。调整核数、上下文或分块时，须使用 SDK 的相应配方生成新的制品和配置。
+
+<a id="validation"></a>
+## 文件验证
+
+按 [模型准备](../model/README_cn.md#preparation) 校验完整 ZIP SHA256 与各文件 SHA256；本步骤不执行板端推理。
+
+<a id="artifacts"></a>
+## 产物
+
+官方 ZIP 保持原始字节。准备脚本额外生成绝对路径 `oellm_config.json`、`model-manifest.json` 和 `SAMPLE_LICENSE`。旧自转换 W4/W8 包已退出当前绑定。
+
+<a id="known-gaps"></a>
+## 定制转换准备
+
+如需重新量化，请另行固定上游 revision、SDK 配方、校准集、精度结果和新制品校验值。当前 Sample 交付官方预编译方案。

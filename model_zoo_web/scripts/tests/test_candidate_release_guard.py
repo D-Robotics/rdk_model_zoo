@@ -26,14 +26,14 @@ class CandidateReleaseGuardTest(unittest.TestCase):
         self.assertFalse(any("candidate-staging" in model["source_file"] for model in parsed["models"]))
         self.assertTrue(all(model["source_file"].startswith("model_zoo_web/data/")
                             for model in parsed["models"]))
-        self.assertTrue(all(platform["status"] in {"released", "converted", "demo"}
+        self.assertTrue(all(platform["status"] in {"released", "converted", "demo", "official"}
                             for model in parsed["models"]
                             for variant in model["variants"]
                             for platform in variant["platforms"]))
         for model in parsed["models"]:
             for variant in model["variants"]:
                 for platform in variant["platforms"]:
-                    if platform["status"] == "demo":
+                    if platform["status"] in {"demo", "official"}:
                         self.assertEqual((model["domain"], model["task"], platform["platform"]),
                                          ("llm", "text-generation", "s600"))
                         for field in ("artifact", "accuracy", "performance", "reports"):

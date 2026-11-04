@@ -1,22 +1,62 @@
-# 精度与性能记录
+[English](README.md) | 简体中文
 
-[English](README.md) · [Sample](../README_cn.md)
+# 官方性能参考与本地验证
 
-`host_reference.json` 保存此次 SDK 主机量化参考。WikiText2 test 全量 142×2048：
+[Sample](../README_cn.md)
 
-| 路径 | 浮点 PPL | fakequant PPL | 相对变化 |
+<a id="dataset"></a>
+## 评估输入与来源
+
+`../test_data/prompts.json` 提供手动文本检查提示；官方未发布性能测试的完整输入语料。
+
+数字保存于 `official_benchmarks.json`，来源为 [SDK 官方 S600 基准](https://developer.d-robotics.cc/oe_llm_doc/guide/benchmark/s600/gemma_benchmark.html)。
+
+<a id="directory"></a>
+## 目录
+
+`official_benchmarks.json` 保存官方参考；`board_results/<profile>.json` 单独保存本地板端记录。
+
+<a id="environment"></a>
+## 环境
+
+官方条件为 S600/Linux、SDK 2.0.0、4 核、chunk 512、context 4096。主机文件检查仅依赖 Python 3 标准库。
+
+<a id="command"></a>
+## 检查命令
+
+```bash
+python3 -m unittest discover -s samples/llm/gemma4/tests
+```
+
+从仓库根目录运行。生成检查提示见 [Runtime](../runtime/cpp/README_cn.md#run)。
+
+<a id="metrics"></a>
+## 指标与官方参考
+
+| Profile | TTFT (ms) | Decode (token/s) | Memory (GB) |
 | --- | ---: | ---: | ---: |
-| LightCompress | 41.21096802 | 43.29276657 | +5.05% |
-| HPP 部署路径 | 41.2612 | 43.0350 | +4.30% |
+| e2b-w4 | 74 | 61.2 | 9.9 |
+| e2b-w8 | 79 | 47.8 | 13.5 |
+| e4b-w4 | 137 | 38.3 | 15.4 |
+| e4b-w8 | 139 | 27.9 | 15.5 |
 
-两条路径分别配对比较。HPP 达到本次 ≤5% 门槛，未达到 ≤3% 目标。
-主机 SDK 生成算术结果 `4` 和翻译结果 `你好`。以上均不是编译后 HBM 的板端结果。
+TTFT 采用纯文本列。条件为 S600/Linux、4 核 BPU、chunk 512、context 4096、标准单请求模式。
+内存为官方完整模型的 Linux+ION 总占用，不是峰值统计；不要写入 `peak_memory_bytes`。
+CPU 线程数量未公布，网页的单路指请求并发。
 
-`board_result.json` 的板端 PPL、TTFT、decode token/s、峰值内存、生成验证和环境
-全部为空，状态为 `not-run`。此次接入不执行板端测试。
+<a id="outputs"></a>
+## 本地输出
 
-未来板测可使用 SDK 的 `examples/ppl_demo`，将模型配置指向准备好的
-`oellm_config.json`，并按该 SDK 的 README 准备语料和评测参数。正式比较前需对齐
-tokenizer、chat template、前缀、分段与标签掩码；保留全部有效 token 的 NLL 和计数。
-文本生成可按 `test_data/prompts.json` 检查。性能记录需包含输入/输出 token 数、
-并发、缓存状态、runtime、系统和硬件频率，不从主机 CUDA 时间换算板端性能。
+`board_results/<profile>.json` 是本项目的板端记录，目前全部为 `not-run` 与 null。
+官方参考与本项目实测分开保存；没有公开 PPL、两路并发或端到端 C++ 分段数据的项目保持为空。
+不沿用旧自转换模型的主机 PPL，也不把官方数据改写为本地测量。
+
+<a id="reference-results"></a>
+## 参考结果
+
+上述表格为官方公开数据，未提供对应二进制 SHA256 绑定。主机校验结果与板端测量分开记录。
+
+<a id="boundaries"></a>
+## 适用范围
+
+单请求参考用于选择官方配置；本项目未运行板端编译、加载、生成和性能测试。

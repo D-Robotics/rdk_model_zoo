@@ -242,6 +242,8 @@
     '生成速度': 'Generation speed',
     '板端 PPL': 'On-device PPL',
     '峰值内存': 'Peak memory',
+    '运行内存': 'Runtime memory',
+    '官方性能基准': 'Official performance benchmark',
     '使用说明': 'Usage guide',
     '准备模型文件': 'Prepare model files',
     '运行文本生成': 'Run text generation',
