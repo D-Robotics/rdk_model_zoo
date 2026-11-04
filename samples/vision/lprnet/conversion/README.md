@@ -2,8 +2,32 @@ English | [简体中文](README_cn.md)
 
 # LPRNet conversion
 
+## Reproducible Sirius S conversion / 可复现的 S 转换
+
+The 2026-11-04 S profiles use source commit `7c976664b3f3879efabeaff59c7a117e49d5f29e` from [sirius-ai/LPRNet_Pytorch](https://github.com/sirius-ai/LPRNet_Pytorch) (Apache-2.0), trained checkpoint `weights/Final_LPRNet_model.pth` SHA-256 `d1ca22ca7a251a90702a166c8ad8ce7f05acb39f5ef8055139a33d462716d1ad`. Keep all weights, ONNX and tensors on dev-server.
+
+```bash
+# Repository root, pinned source already present on dev-server; fresh output only.
+# torch 2.6.0+cpu, numpy 1.26.4, onnx 1.17.0, onnxruntime 1.20.1, opencv 4.11
+python3 -m samples.vision.lprnet.conversion.export --source /path/to/pinned/LPRNet_Pytorch --output /path/to/fresh/export
+cp samples/vision/lprnet/conversion/recipes/sirius-68class-s100.yaml /path/to/fresh/export/compile.yaml
+# Cached S SDK 3.7.0 container, cwd the fresh export directory:
+hb_compile -c compile.yaml
+hb_model_info output/lprnet_sirius_68class_24x94_bgr_featuremap_int16_cpuptq_o1_20261104_nashe.hbm
+```
+
+Use the target's own YAML: S100 nash-e, S100P nash-m, S600 nash-p. Actual tools: hb_compile 3.5.3 / HMCT 2.6.5 / HBDK 4.7.5. CPU-only PTQ, FEATUREMAP float32 NCHW, no fused preprocessing, INT16 max percentile 0.9999, O1, one core, two compiler jobs. Each march has an independent calibration/quantization run. Do not relabel an old BIN/HBM or share another march's BC.
+
+The exporter verifies the trained checkpoint, source definition and 68-class order; exactly rewrites 4D-unbatched MaxPool3d to channel slicing plus spatial pooling, retaining bit-exact source outputs. It exports all `(1,68,18,1)` logits and checks three real inputs plus random against source PyTorch at atol=1e-4/rtol=1e-3. The cached CPU SDK's full-output parity gate also passed, with zero observed difference.
+
+Calibration uses 200 distinct real plate images, seed42, selected from the pinned source's 1,000-image test directory. This is explicitly a PTQ partition; the other 800 are held out for future accuracy evaluation. BGR linear resize94×24, `(pixel-127.5)/128`, float32 NCHW `.npy`; no duplicated or random calibration. Dataset accuracy is not measured.
+
+`converted_targets_20261104.json` freezes actual source/checkpoint/ONNX/effective-config/recipe hashes, CPU reference gates and compiler receipts. The original Workbench producer and effective configuration remain in the run evidence; this portable exporter is a subsequent repository entry. Compiler ABI and complete originalNodeInfo/OE reports are collected for every artifact. Board smoke, accuracy, Runtime1/2 and C++1/2 are all `not-run`.
+
+The following sections preserve the historical X5 delivery; they do not describe the new S checkpoints.
+
 <a id="source-model"></a>
-## Source model
+## Historical X5 source model
 
 The source delivery provides the X5 deployment artifact and protocol notes, but no in-repository ONNX export script, checkpoint, calibration set, or PTQ YAML. The source conversion README uses an external OE package and a user-supplied `your_lprnet_config.yaml`; that placeholder is not a reproducible file in this repository.
 
@@ -19,7 +43,7 @@ conversion/
 <a id="toolchain-targets"></a>
 ## Toolchain and targets
 
-The source names an RDK X5 OpenExplorer environment with `hb_mapper` and `hrt_model_exec`. Only X5 is supported. No S march or S artifact exists for LPRNet.
+The source names an RDK X5 OpenExplorer environment with `hb_mapper` and `hrt_model_exec`. That historical delivery supports X5 only; the S conversions above use independent source weights.
 
 <a id="export"></a>
 ## Export
@@ -53,7 +77,7 @@ Inspect the generated model with `hrt_model_exec model_info --model_file ./lpr.b
 <a id="artifacts"></a>
 ## Artifacts
 
-The only manifest-backed deployment artifact is `x5:lprnet:lpr.bin`; the runtime expects it at `../model/lpr.bin`. ONNX, checkpoint, calibration, and compiler logs are external and are not checked in.
+The historical X5 deployment artifact is `x5:lprnet:lpr.bin`; the runtime expects it at `../model/lpr.bin`. ONNX, checkpoint, calibration, and compiler logs are external and are not checked in.
 
 <a id="known-gaps"></a>
 ## Additional preparation

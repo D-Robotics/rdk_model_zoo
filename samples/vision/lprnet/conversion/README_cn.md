@@ -2,8 +2,32 @@
 
 # LPRNet 转换
 
+## Reproducible Sirius S conversion / 可复现的 S 转换
+
+The 2026-11-04 S profiles use source commit `7c976664b3f3879efabeaff59c7a117e49d5f29e` from [sirius-ai/LPRNet_Pytorch](https://github.com/sirius-ai/LPRNet_Pytorch) (Apache-2.0), trained checkpoint `weights/Final_LPRNet_model.pth` SHA-256 `d1ca22ca7a251a90702a166c8ad8ce7f05acb39f5ef8055139a33d462716d1ad`. Keep all weights, ONNX and tensors on dev-server.
+
+```bash
+# Repository root, pinned source already present on dev-server; fresh output only.
+# torch 2.6.0+cpu, numpy 1.26.4, onnx 1.17.0, onnxruntime 1.20.1, opencv 4.11
+python3 -m samples.vision.lprnet.conversion.export --source /path/to/pinned/LPRNet_Pytorch --output /path/to/fresh/export
+cp samples/vision/lprnet/conversion/recipes/sirius-68class-s100.yaml /path/to/fresh/export/compile.yaml
+# Cached S SDK 3.7.0 container, cwd the fresh export directory:
+hb_compile -c compile.yaml
+hb_model_info output/lprnet_sirius_68class_24x94_bgr_featuremap_int16_cpuptq_o1_20261104_nashe.hbm
+```
+
+Use the target's own YAML: S100 nash-e, S100P nash-m, S600 nash-p. Actual tools: hb_compile 3.5.3 / HMCT 2.6.5 / HBDK 4.7.5. CPU-only PTQ, FEATUREMAP float32 NCHW, no fused preprocessing, INT16 max percentile 0.9999, O1, one core, two compiler jobs. Each march has an independent calibration/quantization run. Do not relabel an old BIN/HBM or share another march's BC.
+
+The exporter verifies the trained checkpoint, source definition and 68-class order; exactly rewrites 4D-unbatched MaxPool3d to channel slicing plus spatial pooling, retaining bit-exact source outputs. It exports all `(1,68,18,1)` logits and checks three real inputs plus random against source PyTorch at atol=1e-4/rtol=1e-3. The cached CPU SDK's full-output parity gate also passed, with zero observed difference.
+
+Calibration uses 200 distinct real plate images, seed42, selected from the pinned source's 1,000-image test directory. This is explicitly a PTQ partition; the other 800 are held out for future accuracy evaluation. BGR linear resize94×24, `(pixel-127.5)/128`, float32 NCHW `.npy`; no duplicated or random calibration. Dataset accuracy is not measured.
+
+`converted_targets_20261104.json` freezes actual source/checkpoint/ONNX/effective-config/recipe hashes, CPU reference gates and compiler receipts. The original Workbench producer and effective configuration remain in the run evidence; this portable exporter is a subsequent repository entry. Compiler ABI and complete originalNodeInfo/OE reports are collected for every artifact. Board smoke, accuracy, Runtime1/2 and C++1/2 are all `not-run`.
+
+The following sections preserve the historical X5 delivery; they do not describe the new S checkpoints.
+
 <a id="source-model"></a>
-## 源模型
+## 历史 X5 源模型
 
 源交付提供 X5 部署制品和协议说明，但没有仓库内 ONNX 导出脚本、权重文件、校准集或 PTQ YAML。源 conversion README 使用外部 OE 包和用户提供的 `your_lprnet_config.yaml`；该占位文件不在本仓库，不能视为可复现配方。
 
@@ -19,7 +43,7 @@ conversion/
 <a id="toolchain-targets"></a>
 ## 工具链与目标
 
-源文档指向带有 `hb_mapper` 和 `hrt_model_exec` 的 RDK X5 OpenExplorer 环境。仅支持 X5；LPRNet 没有 S march 或 S 制品。
+源文档指向带有 `hb_mapper` 和 `hrt_model_exec` 的 RDK X5 OpenExplorer 环境。历史交付仅支持 X5；LPRNet 没有 S march 或 S 制品。
 
 <a id="export"></a>
 ## 导出

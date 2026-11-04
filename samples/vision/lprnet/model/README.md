@@ -9,7 +9,7 @@ English | [简体中文](README_cn.md)
 |---|---|---|---|---|
 | X5 | recognition | `x5:lprnet:lpr.bin` | `lpr.bin` | published download |
 
-The S100/S100P/S600 manifests contain no LPRNet asset. The bundled `test_data/test_input.dat` is an input artifact, not a model.
+The S manifest now contains three independently converted Sirius LPRNet HBM assets (2026-11-04), one per S100/S100P/S600. Exact IDs and SHA-256 are in `docs/release/s/models.yaml`. The bundled `test_data/test_input.dat` is an input artifact, not a model.
 
 <a id="directory"></a>
 ## Directory structure
