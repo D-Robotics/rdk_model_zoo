@@ -2,10 +2,14 @@
 
 # 模型转换 — SigLIP
 
+独立的已训练 base224 导出与原生 bicubic 预处理见
+[2026-11-05 转换说明](public-20261105.md)。它完整保留两个输出头，
+与下文历史 packed 文件分别记录来源和验收。
+
 <a id="source-model"></a>
 ## 源模型
 
-已发布制品是基于 Google 来源 HuggingFace 权重的 SigLIP 视觉编码器。源 README 和发布清单没有记录精确上游权重版本、commit、导出版本或制品级许可证。模型家族论文见 [Sigmoid Loss for Language Image Pre-Training](https://arxiv.org/abs/2303.15343)。本示例提供可部署 HBM 引用，不提供源权重文件或可复现导出器。
+历史制品基于 Google 来源的 HuggingFace SigLIP 视觉编码器，其源 README 和发布清单没有记录精确上游权重版本、commit、导出版本或制品级许可证。模型家族论文见 [Sigmoid Loss for Language Image Pre-Training](https://arxiv.org/abs/2303.15343)。上文独立导出器另行记录固定源权重和完整数值合同。
 
 <a id="directory"></a>
 ## 目录结构

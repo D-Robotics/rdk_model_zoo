@@ -2,10 +2,14 @@ English | [简体中文](README_cn.md)
 
 # Conversion — SigLIP
 
+The independent trained-source base224 exporter and native bicubic preprocessing
+are documented in [the 2026-11-05 conversion](public-20261105.md). It retains both
+complete heads and is separate from the historical packed files described below.
+
 <a id="source-model"></a>
 ## Source Model
 
-The published artifacts are SigLIP vision encoders derived from Google-origin HuggingFace weights. The source README and release manifest do not identify an exact upstream weight version, commit, export version, or per-artifact license. The official model-family context is [Sigmoid Loss for Language Image Pre-Training](https://arxiv.org/abs/2303.15343). This sample contains deployable HBM references, not a source checkpoint or a reproducible exporter.
+The historical artifacts are SigLIP vision encoders derived from Google-origin HuggingFace weights. Their source README and release manifest do not identify an exact upstream weight version, commit, export version, or per-artifact license. The official model-family context is [Sigmoid Loss for Language Image Pre-Training](https://arxiv.org/abs/2303.15343). The independent exporter linked above records its own source identity and contract.
 
 <a id="directory"></a>
 ## Directory structure
