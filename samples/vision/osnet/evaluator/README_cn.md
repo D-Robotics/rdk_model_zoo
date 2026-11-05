@@ -80,7 +80,7 @@ python3 samples/vision/osnet/evaluator/main.py \
 
 ReID 固定 3,368 query + 15,913 有效 gallery，L2 归一化、平方欧氏距离，排除同身份同相机，不重排序。本地技术验收要求 Rank-1 和 mAP 相对同口径 FP32 ONNX 均下降不超过 0.01；发布授权另行确认，不能在看到结果后修改预算。
 
-原生 evaluator 同时支持空间头 ONNX 与 X5 BIN。`--onnx-threads` 默认 4。`--capture-only` 保存完整特征和图像字节清单，不计算精度；之后在主机使用 `--capture-dir` 评分。保留 capture.json 和 accuracy.json，只有完成评分才算精度通过。
+原生 evaluator 同时支持空间头 ONNX 与 X5 BIN。`--onnx-threads` 默认 4。`--capture-only` 保存完整特征和图像字节清单，不计算精度；之后在主机使用 `--capture-dir` 评分，并对照当前 Market1501 图像字节检查 `dataset-sha256.json`。保留 capture.json 和 accuracy.json，只有完成评分才算精度通过。
 
 ```bash
 python3 samples/vision/osnet/evaluator/main.py --backend onnx --model-path /absolute/spatial.onnx --dataset /absolute/Market1501 --output-dir /absolute/new/float

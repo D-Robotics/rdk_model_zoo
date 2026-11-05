@@ -13,11 +13,27 @@ from samples.vision.osnet.evaluator.metrics import records, retrieval
 from samples.vision.osnet.model.artifacts import load_manifest, sha256
 
 
+def dataset_sha256_manifest(dataset, ordered):
+    return [{"path": str(path.relative_to(dataset)), "sha256": sha256(path)} for path, _, _ in ordered]
+
+
+def require_matching_capture(capture_dir, manifest, dataset_manifest):
+    """Accept cached features only when names and image bytes still match."""
+    saved = json.loads((Path(capture_dir) / "manifest.json").read_text())
+    if saved != manifest:
+        raise ValueError("Capture manifest differs from the sorted evaluation images")
+    dataset_path = Path(capture_dir) / "dataset-sha256.json"
+    if not dataset_path.is_file():
+        raise ValueError("Capture is missing dataset-sha256.json")
+    if json.loads(dataset_path.read_text()) != dataset_manifest:
+        raise ValueError("Capture dataset-sha256 differs from the current Market1501 image hashes")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", type=Path, required=True, help="Market1501 root")
     parser.add_argument("--output-dir", type=Path, required=True, help="New output directory")
-    parser.add_argument("--capture-dir", type=Path, default=None, help="Previously saved features.npy and manifest.json; skips inference")
+    parser.add_argument("--capture-dir", type=Path, default=None, help="Previously saved features.npy, manifest.json and dataset-sha256.json; skips inference")
     parser.add_argument("--backend", choices=("x5", "s100", "s100p", "s600", "onnx"), default="x5", help="Feature capture backend")
     parser.add_argument("--model-path", type=Path, default=None, help="Exact BIN/HBM or spatial FP32 ONNX")
     parser.add_argument("--variant", choices=tuple(load_manifest()["artifacts"]), default="spatial-rgb-late8")
@@ -39,10 +55,10 @@ def main(argv=None):
     ordered = query + gallery
     manifest = [{"name": path.name, "pid": pid, "camera": camera} for path, pid, camera in ordered]
     provenance = {"board_test": "not-run", "python": platform.python_version(), "numpy": np.__version__}
+    dataset_manifest = None
     if args.capture_dir:
-        saved = json.loads((args.capture_dir / "manifest.json").read_text())
-        if saved != manifest:
-            raise ValueError("Capture manifest differs from the sorted evaluation images")
+        dataset_manifest = dataset_sha256_manifest(args.dataset, ordered)
+        require_matching_capture(args.capture_dir, manifest, dataset_manifest)
         features = np.load(args.capture_dir / "features.npy", allow_pickle=False)
         provenance.update(capture_dir=str(args.capture_dir), features_sha256=sha256(args.capture_dir / "features.npy"))
     else:
@@ -86,7 +102,8 @@ def main(argv=None):
     (args.output_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     provenance["elapsed_seconds"] = time.time() - started
     provenance["features_sha256"] = sha256(args.output_dir / "features.npy")
-    dataset_manifest = [{"path": str(path.relative_to(args.dataset)), "sha256": sha256(path)} for path, _, _ in ordered]
+    if dataset_manifest is None:
+        dataset_manifest = dataset_sha256_manifest(args.dataset, ordered)
     (args.output_dir / "dataset-sha256.json").write_text(json.dumps(dataset_manifest, indent=2) + "\n")
     provenance["dataset_manifest_sha256"] = sha256(args.output_dir / "dataset-sha256.json")
     (args.output_dir / ("capture.json" if args.capture_only else "accuracy.json")).write_text(json.dumps(result, indent=2) + "\n")

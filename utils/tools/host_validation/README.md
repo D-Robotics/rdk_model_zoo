@@ -20,7 +20,7 @@ interpreter running `run.py`. Exit status 0 means all selected sections passed.
 | Section | Scope |
 | --- | --- |
 | Catalog | `npm run check` in `utils/tools/catalog-publisher`, run first so the generated `dist/` artifact exists during the run (the sample suites read the `docs/release` manifests directly). |
-| Python | First-party `unittest` directories under all 54 inventory-listed samples, `utils/py_utils/tests`, `utils/tools/board_validation/tests`, `utils/tools/sample_contract/tests`, `skills/tests`, and this runner's tests. |
+| Python | First-party `unittest` directories under all 57 inventory-listed samples, `utils/py_utils/tests`, `utils/tools/board_validation/tests`, `utils/tools/sample_contract/tests`, `skills/tests`, and this runner's tests. |
 | Sample inventory | Cross-checks discovered sample tests with the required `utils/tools/host_validation/sample-inventory.json`. |
 | Static contract | Runs `utils/tools/sample_contract/check.py --scope maintained --parser-mode import` (strict rule set). |
 | Native CTest | Runs the six host C++ projects listed below. |
