@@ -6,6 +6,7 @@ Profiles belong to the sample, including exact compiled ABI and source graph
 hash. Source-ONNX execution is a separate host reference, never an HBM result.
 """
 from dataclasses import dataclass
+from collections.abc import Mapping
 from pathlib import Path
 import json
 import numpy as np
@@ -71,6 +72,8 @@ class Runner:
             if source_onnx is None or sha256_file(Path(source_onnx))!=selection.profile['source_onnx_sha256']:
                 raise ValueError('Source ONNX differs from the accepted conversion')
             options=ort.SessionOptions();options.intra_op_num_threads=2;options.inter_op_num_threads=1
+            if selection.profile.get('ort_optimization_level') == 'basic':
+                options.graph_optimization_level=ort.GraphOptimizationLevel.ORT_ENABLE_BASIC
             self.session=ort.InferenceSession(str(source_onnx),options,providers=['CPUExecutionProvider'])
             inputs=selection.profile['io']['inputs'];outputs=selection.profile['io']['outputs']
             dtype={'float32':'tensor(float)','int64':'tensor(int64)'}
@@ -86,9 +89,19 @@ class Runner:
 
     def __call__(self, tensor):
         inputs=self.selection.profile['io']['inputs']
-        if len(inputs)!=1 or tensor.shape!=tuple(inputs[0]['shape'])or tensor.dtype!=np.float32 or not np.isfinite(tensor).all():
-            raise ValueError('Expected the registered normalized F32 source input')
-        feed={inputs[0]['name']:tensor}
+        if isinstance(tensor, Mapping):
+            feed=dict(tensor)
+        elif len(inputs)==1:
+            feed={inputs[0]['name']:tensor}
+        else:
+            raise ValueError('Multiple inputs require their exact registered names')
+        if set(feed)!={row['name']for row in inputs}:
+            raise ValueError('Input names differ from the registered source ABI')
+        for row in inputs:
+            value=feed[row['name']]
+            if (not isinstance(value,np.ndarray) or value.shape!=tuple(row['shape'])
+                    or value.dtype!=np.dtype(row['dtype']) or not np.isfinite(value).all()):
+                raise ValueError('Expected the registered source input shape and dtype')
         if self.backend=='board':return self.runner(feed)
         return {t.name:np.array(value,copy=True)for t,value in zip(self.session.get_outputs(),self.session.run(None,feed),strict=True)}
 
@@ -98,11 +111,13 @@ def main(argv=None):
     import argparse
     from utils.py_utils.assets import download_asset
     p=argparse.ArgumentParser(description=main.__doc__)
-    p.add_argument('--sample',choices=['vit','fcos','lanenet','unet','3dresnet'],required=True)
+    p.add_argument('--sample',choices=['vit','fcos','lanenet','unet','3dresnet','siglip','asr'],required=True)
     p.add_argument('--target',choices=['s100'],default='s100')
     p.add_argument('--variant',required=True);p.add_argument('--asset-id')
     p.add_argument('--output-dir',type=Path);p.add_argument('--dry-run',action='store_true')
-    a=p.parse_args(argv);sample=Path(__file__).resolve().parents[2]/'samples/vision'/a.sample
+    a=p.parse_args(argv)
+    domain='speech'if a.sample=='asr'else'vision'
+    sample=Path(__file__).resolve().parents[2]/'samples'/domain/a.sample
     selection=select(sample,a.target,a.variant,asset_id=a.asset_id)
     destination=a.output_dir/selection.asset.filename if a.output_dir else selection.model_path
     if not a.dry_run:download_asset(selection.asset,destination)

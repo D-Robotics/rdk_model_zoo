@@ -1,7 +1,9 @@
 """New featuremap specs must retain their exact artifact, rank and output ABI."""
 from pathlib import Path
 import copy, json, unittest
-from utils.py_utils.converted_featuremap import select, bind
+from types import SimpleNamespace
+import numpy as np
+from utils.py_utils.converted_featuremap import Runner, select, bind
 from utils.py_utils.runtime_meta import MetadataMismatchError
 
 ROOT=Path(__file__).resolve().parents[3]
@@ -10,8 +12,8 @@ ROOT=Path(__file__).resolve().parents[3]
 class ConvertedFeaturemapTest(unittest.TestCase):
     def profiles(self):
         rows=[]
-        for sample in ['vit','fcos','lanenet','unet','3dresnet']:
-            folder=ROOT/'samples/vision'/sample;path=folder/'model/converted_featuremap.json'
+        for domain,sample in [('vision',s)for s in ['vit','fcos','lanenet','unet','3dresnet','siglip']]+[('speech','asr')]:
+            folder=ROOT/'samples'/domain/sample;path=folder/'model/converted_featuremap.json'
             if path.exists():
                 rows.extend((folder,p)for p in json.loads(path.read_text())['profiles'])
         self.assertTrue(rows)
@@ -43,6 +45,21 @@ class ConvertedFeaturemapTest(unittest.TestCase):
                 with self.assertRaises(ValueError):select(folder,p['target'],p['variant'],model_path='arbitrary.hbm')
                 with self.assertRaises(ValueError):select(folder,p['target'],p['variant'],asset_id='s:vit:s100/another.hbm')
                 with self.assertRaises(ValueError):select(folder,'s600',p['variant'])
+
+    def test_multi_input_masks_cannot_be_omitted_or_silently_cast(self):
+        runner=Runner.__new__(Runner)
+        runner.selection=SimpleNamespace(profile={'io':{'inputs':[
+            {'name':'waveform','shape':[1,4],'dtype':'float32'},
+            {'name':'attention_mask','shape':[1,4],'dtype':'float32'}]}})
+        runner.backend='board';runner.runner=lambda feed:feed
+        feed={'waveform':np.zeros((1,4),np.float32),'attention_mask':np.ones((1,4),np.float32)}
+        self.assertIs(runner(feed)['waveform'],feed['waveform'])
+        wrong_cases=[feed['waveform'],{'waveform':feed['waveform']},
+                     {**feed,'attention_mask':feed['attention_mask'].astype(np.int64)},
+                     {**feed,'attention_mask':np.ones((4,),np.float32)},
+                     {**feed,'waveform':np.full((1,4),np.nan,np.float32)}]
+        for wrong in wrong_cases:
+            with self.assertRaises(ValueError):runner(wrong)
 
 
 if __name__=='__main__':unittest.main()

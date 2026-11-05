@@ -73,8 +73,9 @@ def list_available_assets(target: Optional[str] = None) -> tuple[Asset, ...]:
         if target not in ('x5', 's600'):
             raise ValueError(f'Unknown target: {target}')
         return ()
-    assets = list_assets('s', 'siglip')
     expected = {f's100/bpu-siglip-{v}.hbm' for v in VARIANTS}
+    # Preserve the legacy packed ABI independently of new single-graph exports.
+    assets = tuple(a for a in list_assets('s', 'siglip') if a.filename in expected)
     if {a.filename for a in assets} != expected or any(a.format != 'hbm' for a in assets):
         raise ValueError('SigLIP publication changed; review its finite contracts first.')
     return assets

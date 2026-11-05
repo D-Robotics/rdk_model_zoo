@@ -30,3 +30,13 @@ class PublicSourceTests(unittest.TestCase):
         actual['last_hidden_state'] = actual['last_hidden_state'].astype(np.float64)
         with self.assertRaises(ValueError):
             compare(actual, reference, facts)
+
+    def test_runtime_retains_both_heads_before_patch_visualization(self):
+        from samples.vision.siglip.runtime.python.public import validate_outputs, patch_projection
+        values={'pooler_output':np.ones((1,768),np.float32),
+                'last_hidden_state':np.zeros((1,196,768),np.float32)}
+        self.assertIs(validate_outputs(values),values)
+        rgb,details=patch_projection(values)
+        self.assertEqual(rgb.shape,(14,14,3))
+        self.assertFalse(details['semantic_labels'])
+        with self.assertRaises(ValueError):validate_outputs({'pooler_output':values['pooler_output']})

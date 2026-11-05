@@ -52,7 +52,10 @@ class Selection:
 def list_available_assets(target="auto"):
     if target not in ("auto", "s100", "s100p", "s600", "x5"):
         raise ValueError(f"Unknown target {target!r}")
-    assets = tuple(list_assets("s", "asr"))
+    # This archived CLI retains its original unmasked ABI. New public masked
+    # variants have a separate entrypoint and must not inherit this binding.
+    assets = tuple(a for a in list_assets("s", "asr")
+                   if a.filename in {f"{t}/asr.hbm" for t in TARGETS})
     if {a.reference for a in assets} != {f"s:asr:{t}/asr.hbm" for t in TARGETS}:
         raise ValueError("Expected exact S100/S600 ASR publications")
     return tuple(
