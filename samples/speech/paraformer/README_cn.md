@@ -125,6 +125,4 @@ CIF 无 token 时返回空文本并标明跳过 decoder。输出目录创建后�
 ## 许可证
 
 Sample 代码遵循仓库 [Apache-2.0 许可证](../../../LICENSE)，FunASR 派生导出编排另遵循其
-[MIT 许可](conversion/LICENSE-FunASR)。上游模型和数据有各自条款，
-代码许可证不能代替权重／数据许可证。活动二进制清单没有逐制品许可字段，
-此处不新增权利声明。
+[MIT 许可](conversion/LICENSE-FunASR)。上游模型和数据遵循各自条款。活动二进制清单没有逐制品许可字段。

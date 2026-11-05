@@ -4,7 +4,7 @@ English | [简体中文](README_cn.md)
 
 <a id="dataset"></a>
 ## Dataset
-This evaluator computes character error rate from saved reference/hypothesis pairs. Use unique utterance IDs and preserve the dataset version, split, license, model and decoder metadata. For chunked runtime output, assemble each full transcript and pair it with its independent reference before adding the record.
+This evaluator computes character error rate from saved reference/hypothesis pairs. Utterance IDs are unique; dataset version, split, license, model and decoder metadata stay with the record. For chunked runtime output, assemble each full transcript and pair it with its independent reference before adding the record.
 
 <a id="directory"></a>
 ## Directory structure

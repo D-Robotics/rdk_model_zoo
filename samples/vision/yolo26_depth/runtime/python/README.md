@@ -90,7 +90,7 @@ The report records model/input hashes, selection, runtime metadata and measured
 forward duration. That duration includes runner validation and copying; it is
 not isolated BPU latency and excludes preprocessing/postprocessing. Unknown
 runtime versions remain `unknown`.
-Source-recorded measurements are in the [evaluator guide](../../evaluator/README.md).
+Reference measurements are in the [evaluator guide](../../evaluator/README.md).
 
 <a id="integration-example"></a>
 ## Integration example

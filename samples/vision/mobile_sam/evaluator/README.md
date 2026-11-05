@@ -63,7 +63,7 @@ The new directory contains `comparison.json` and NumPy arrays for both sides: en
 <a id="reference-results"></a>
 ## Reference Results
 
-The following values are source-recorded measurements from the fixed source evaluator READMEs; the measurement conditions are defined below, and current board support is defined by the support matrix:
+The following reference measurements come from the source evaluator READMEs. Measurement conditions are defined below; board support is in the support matrix.
 
 | Source target | Stage | Threads | Source-record latency (ms) | Source-record FPS |
 |---|---|---:|---:|---:|

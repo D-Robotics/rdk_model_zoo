@@ -86,7 +86,7 @@ CLI 打印包含 `output`、`shape`、`dtype`、`mean`、`std`、`min`、`max`�
 - Python 运行：[`runtime/python/README_cn.md`](runtime/python/README_cn.md) —— 预处理、双输出 task API 和 CLI。
 - C++ 运行：未提供；C++ 为 `not-supported`。
 - 模型转换：[`conversion/README_cn.md`](conversion/README_cn.md) —— 固定源、ONNX 导出、校准和编译命令。
-- 模型评估：[`evaluator/README_cn.md`](evaluator/README_cn.md) —— 板端源记录表格和 cosine 复现条件。
+- 模型评估：[`evaluator/README_cn.md`](evaluator/README_cn.md) —— 板端参考表格和 cosine 复现条件。
 
 ## 新转换制品（2026-11-02）
 

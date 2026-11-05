@@ -86,4 +86,4 @@ CLI 为所选原始特征张量打印一个 JSON 统计对象。`shape` 来自 H
 <a id="license"></a>
 ## 许可说明
 
-示例代码遵循仓库 [LICENSE](../../../LICENSE) 的 Apache-2.0。清单指向 Google 来源的预编译 SigLIP 制品，但源发布记录没有记录每个权重/导出制品的具体许可证和版本，因此这里不额外断言模型许可证。保留源贡献者署名：Cauchy @吴超。
+示例代码遵循仓库 [LICENSE](../../../LICENSE) 的 Apache-2.0。清单指向 Google 来源的预编译 SigLIP 制品；权重与导出条款以随附模型许可为准。贡献者：Cauchy @吴超。

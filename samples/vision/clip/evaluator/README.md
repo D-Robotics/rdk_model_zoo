@@ -63,7 +63,7 @@ The runtime writes the annotated image exactly at `--img-save-path` and prints J
 <a id="reference-results"></a>
 ## Reference Results
 
-There is no published numeric benchmark table. The validation expectation is qualitative: for `dog.jpg`, the score for `a dog` should exceed the score for `a diagram`.
+CLIP validation is qualitative; for `dog.jpg`, the score for `a dog` should exceed the score for `a diagram`.
 
 | Reference | Value | Conditions | Source |
 | --- | --- | --- | --- |

@@ -53,7 +53,7 @@ Set `HBTL_THREAD_NUM` explicitly: the installed HBTL Context has its own thread 
 
 ### Prepare the pinned source and checkpoint
 
-Run inside the OE container from `samples/vision/dinov2/conversion`. These commands fetch upstream materials and need network access. `dinov2/` is a new upstream checkout. Preserve the OE Torch installation and install only the pinned ONNX additions:
+Run inside the OE container from `samples/vision/dinov2/conversion`. These commands fetch upstream materials and need network access. `dinov2/` is a new upstream checkout. The OE Torch installation is kept; add only the pinned ONNX packages:
 
 ```bash
 # cwd: samples/vision/dinov2/conversion, inside OE 3.7.0
@@ -106,7 +106,7 @@ python3 mapper.py --cal-images ./cal_images --march nash-e --output-dir ./output
 ```
 
 
-### Fixed-source quantization matrix (source-recorded, Nash-E)
+### Fixed-source quantization matrix (Nash-E)
 
 The table compares five historical quantization configurations. `(sim)` denotes toolchain simulation. In these measurements, int8 activations reached a cosine similarity of at most 0.91 and max+percentile calibration fell to about 0.18. Attention logits after subtracting the maximum reached -345. These historical KL results do not establish accuracy for newly converted artifacts.
 
@@ -116,7 +116,7 @@ The table compares five historical quantization configurations. `(sim)` denotes 
 | int8 + softmax-int32, featuremap, KL | 0.892 | 0.894 | FAIL |
 | int16, featuremap, max + 0.9999 | 0.184 | 0.840 | FAIL |
 | int16, nv12, KL | 0.999 (sim) | 0.999 (sim) | FAIL (executed 0.01 / 0.12) |
-| int16, featuremap, KL (source-recorded) | **0.9989** | **0.9983** | **PASS** |
+| int16, featuremap, KL  | **0.9989** | **0.9983** | **PASS** |
 
 The `_reg4` register-token variant measured about 0.80 cosine similarity with per-tensor quantization, compared with about 0.999 for the plain variant. Use the plain ViT-S/14 checkpoint for this recipe.
 
@@ -158,7 +158,7 @@ python3 mapper.py \
   --output-dir ./output-o1 --save-cache
 ```
 
-For S100P use `--march nash-m` with prefix `dinov2_vits14_224_int16_nashm_20261102_o1`; for S600 use `--march nash-p` with prefix `dinov2_vits14_224_int16_nashp_20261102_o1`. Keep HBTL threads at 2 and the full environment shown above. O1 is an independent compiler optimization choice; no bit identity with O2 or board performance improvement is claimed. Preserve the generated YAML, calibration manifest, float comparison and complete toolchain logs when reproducing it.
+For S100P use `--march nash-m` with prefix `dinov2_vits14_224_int16_nashm_20261102_o1`; for S600 use `--march nash-p` with prefix `dinov2_vits14_224_int16_nashp_20261102_o1`. Keep HBTL threads at 2 and the full environment shown above. O1 is an independent compiler optimization choice; no bit identity with O2 or board performance improvement is claimed. The generated YAML, calibration manifest, float comparison and complete toolchain logs belong with the reproduction.
 
 <a id="validation"></a>
 ## Post-Conversion Validation

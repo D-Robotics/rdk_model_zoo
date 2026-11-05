@@ -64,10 +64,10 @@ conversion/
 <a id="toolchain-targets"></a>
 ## 环境
 
-ONNX 导出在能够加载 `policy.pt` 的训练/导出环境中执行。源记录的版本为 PyTorch 2.7.0、
+ONNX 导出在能够加载 `policy.pt` 的训练/导出环境中执行。记录的版本为 PyTorch 2.7.0、
 ONNX 1.22.0 和 NumPy 1.26.0。
 
-PTQ 在 x86 Linux 主机的 RDK X5 OpenExplorer 环境中执行。源记录的工具链为
+PTQ 在 x86 Linux 主机的 RDK X5 OpenExplorer 环境中执行。工具链为
 OpenExplorer v1.2.8 / Mapper 1.24.3。开始前检查依赖和工具：
 
 ```bash

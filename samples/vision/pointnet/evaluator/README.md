@@ -1,6 +1,6 @@
 English | [简体中文](README_cn.md)
 
-# PointNet validation and source-recorded results
+# PointNet validation and reference results
 
 <a id="dataset"></a>
 ## Input data
@@ -76,7 +76,7 @@ see the [quantization results](../conversion/README.md#calibration).
 ## Scope
 
 No labeled dataset evaluator or BPU benchmark helper is bundled; reproducing
-the source-recorded performance requires the artifact, environment and command
+reference performance requires the artifact, environment and command
 identity listed above. S100P/S600 have no published
 PointNet asset and are unsupported. Code follows
 [Apache-2.0](../../../../LICENSE).

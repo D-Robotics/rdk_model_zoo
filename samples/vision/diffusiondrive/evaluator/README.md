@@ -7,7 +7,7 @@ This evaluator compares float-model references with decoded runtime predictions 
 <a id="dataset"></a>
 ## Reference data
 
-The sample retains six deterministic input/reference pairs: the default `reference_inputs.npz` / `reference_outputs.npz`, plus five `case_*` directories. See [test data](../test_data/README.md) for shapes, scene descriptions and source-recorded figures. Each reference contains float32 `trajectory`, `agent_states`, `agent_labels` (logits) and `bev_semantic_map` (logits). These are model outputs, not dataset labels.
+The sample retains six deterministic input/reference pairs: the default `reference_inputs.npz` / `reference_outputs.npz`, plus five `case_*` directories. See [test data](../test_data/README.md) for shapes, scene descriptions and source figures. Each reference contains float32 `trajectory`, `agent_states`, `agent_labels` (logits) and `bev_semantic_map` (logits). These are model outputs, not dataset labels.
 
 Noise is an explicit input. Compare runs made with the same input archive and fixed noise; regenerating noise changes the planning problem. Full NAVSIM evaluation additionally requires scene logs, sensor blobs, maps and metric cache, which this sample does not provide.
 
@@ -71,9 +71,9 @@ BEV metrics include pixel agreement, class distributions, per-class IoU and macr
 JSON records the exact reference/candidate paths and SHA-256, tensor and BEV metrics, zero-norm policy, `status: descriptive; no acceptance threshold` and `dataset_accuracy: false`. Keep the runtime `report.json`, physical input tensors, raw outputs and images with the decoded archive to retain model, runtime and input provenance.
 
 <a id="reference-results"></a>
-## Reference results (source-recorded)
+## Reference results
 
-The source-recorded S100P/S600 measurements below use `case_000` for numerical accuracy and valid quantized `case_017` inputs for profiling, with one fixed BPU core and 200 frames.
+The S100P/S600 measurements below use `case_000` for numerical accuracy and valid quantized `case_017` inputs for profiling, with one fixed BPU core and 200 frames.
 
 | Metric | S100P | S600 |
 | --- | ---: | ---: |

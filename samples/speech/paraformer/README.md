@@ -144,6 +144,5 @@ the historical dataset metrics.
 
 Sample code follows the repository [Apache-2.0 license](../../../LICENSE), except
 FunASR-derived export composition covered by its [MIT notice](conversion/LICENSE-FunASR).
-Upstream models and data have their own terms; the repository code license does
-not establish a weight/data license. The active binary manifest does not record
-per-artifact licensing; no additional rights are granted here.
+Upstream models and data follow their own terms. The active binary manifest does
+not record per-artifact licensing.

@@ -86,7 +86,7 @@ Model parameters: 22.06 M. Latency is pure BPU forward; CPU preprocessing is add
 - Python runtime: [`runtime/python/README.md`](runtime/python/README.md) — preprocessing, dual-output task API, and CLI.
 - C++ runtime: not provided; C++ is `not-supported`.
 - Conversion: [`conversion/README.md`](conversion/README.md) — pinned source, ONNX export, calibration, and compile commands.
-- Evaluation: [`evaluator/README.md`](evaluator/README.md) — source-recorded board tables and cosine reproduction conditions.
+- Evaluation: [`evaluator/README.md`](evaluator/README.md) — board reference tables and cosine reproduction conditions.
 
 ## Converted artifacts (2026-11-02)
 

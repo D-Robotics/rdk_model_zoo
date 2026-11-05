@@ -104,4 +104,4 @@ preprocess accepts nonempty BGR uint8 HWC, stretches with INTER_AREA to 2048×10
 <a id="troubleshooting"></a>
 ## Troubleshooting
 
-Missing model: use explicit download for the same target. Unknown board: use explicit target for host inspection only; actual execution still checks identity. Wrong output channels/dtype/quantization: inspect real metadata rather than renaming/reinterpreting the model. Colors differ from Cityscapes standard palette by design: this preserves source rdk_colors. alpha_f weights original pixels, not mask. Original-size mask is not the fixed 512×512 output of the separate X5 UNet sample.
+Missing model: use explicit download for the same target. Unknown board: use explicit target for host inspection only; actual execution still checks identity. Wrong output channels/dtype/quantization: inspect real metadata rather than renaming/reinterpreting the model. The palette follows source rdk_colors and differs from the Cityscapes standard. alpha_f weights original pixels, not mask. Original-size mask is not the fixed 512×512 output of the separate X5 UNet sample.

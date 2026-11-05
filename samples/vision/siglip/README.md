@@ -81,9 +81,9 @@ Each packed HBM contains `pooler_output` and `last_hidden_state` submodels with 
 - Python runtime: [`runtime/python/README.md`](runtime/python/README.md) — preprocessing, metadata binding, selected-submodel execution, and JSON summary CLI.
 - C++ runtime: not provided; C++ is `not-supported`.
 - Conversion: [`conversion/README.md`](conversion/README.md) — source model identity, toolchain and targets, export/calibration/compile steps, and post-conversion validation.
-- Evaluation: [`evaluator/README.md`](evaluator/README.md) — source-recorded tables and the array-capture comparison procedure.
+- Evaluation: [`evaluator/README.md`](evaluator/README.md) — reference tables and the array-capture comparison procedure.
 
 <a id="license"></a>
 ## License
 
-Sample code is Apache-2.0 under the repository [LICENSE](../../../LICENSE). The manifest points to precompiled Google-origin SigLIP artifacts; their individual weight/export license and version were not recorded in the source release, so refer to the accompanying model license. Preserve the source contributor attribution: Cauchy @吴超.
+Sample code is Apache-2.0 under the repository [LICENSE](../../../LICENSE). The manifest points to precompiled Google-origin SigLIP artifacts; weight and export terms follow the accompanying model license. Contributor: Cauchy @吴超.

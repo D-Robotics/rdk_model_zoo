@@ -70,7 +70,7 @@ The encoders produce 512-dimensional features. The bundled BPE vocabulary is `ru
 - Python runtime: [`runtime/python/README.md`](runtime/python/README.md) — BPE tokenization, BPU image + CPU ONNX text inference, cosine ranking, and visualization.
 - C++ runtime: not provided; C++ is `not-supported`.
 - Conversion: [`conversion/README.md`](conversion/README.md) — source protocol and missing export/calibration recipe.
-- Evaluation: [`evaluator/README.md`](evaluator/README.md) — validation commands and the qualitative expectation; no published benchmark values.
+- Evaluation: [`evaluator/README.md`](evaluator/README.md) — validation commands and the qualitative expectation.
 
 <a id="license"></a>
 ## License
