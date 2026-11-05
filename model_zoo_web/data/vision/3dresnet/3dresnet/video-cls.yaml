@@ -7,10 +7,11 @@ source: 3dresnet
 family: 3dresnet
 task: video-cls
 description:
-  zh: "3D ResNet-18 通过三维卷积提取时空特征，将短视频片段分类为 400 种动作。"
-  en: "3D ResNet-18 uses 3D convolutions to extract spatial and temporal features and classify short video clips into 400 action categories."
+  zh: 3D ResNet-18 通过三维卷积提取时空特征，将短视频片段分类为 400 种动作。
+  en: 3D ResNet-18 uses 3D convolutions to extract spatial and temporal features and
+    classify short video clips into 400 action categories.
 sample_path: samples/vision/3dresnet
-sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+sample_revision: 20cabcb026c489333bf5cf59344a11ec21611d7d
 license:
   name: Apache-2.0
   url: https://www.apache.org/licenses/LICENSE-2.0
@@ -119,3 +120,217 @@ documented_downloads:
 example_image:
   path: samples/vision/3dresnet/test_data/readme_img/image-4.png
   source: samples/vision/3dresnet/test_data/readme_img/image-4.png
+hero_visual:
+  kind: classification-panel
+  file: model_zoo_web/release/assets/pending-heroes/3dresnet-archery-clip-20261105.webp
+  predictions_source: model_zoo_web/release/assets/pending-heroes/3dresnet-archery-clip-20261105.json
+  model_url: https://download.pytorch.org/models/r3d_18-b3b3357e.pth
+  model_file: r3d_18-b3b3357e.pth
+  input: samples/vision/3dresnet/test_data/banner_input_archery_frame_20261105.png
+  framework: ONNX Runtime 1.19.2
+  commit: f1e1dc7bfe9c767f28e976fa8d8a47be583fb6e1
+  runtime: host-float-reference
+  inference_receipt_version: 2
+  note: Host float reference, not board output; board accuracy and performance remain
+    not-run
+  documented_in: samples/vision/3dresnet/runtime/python/public.py
+  topk:
+  - class_id: 5
+    label: archery
+    score: 0.9929708553682964
+  - class_id: 141
+    label: golf chipping
+    score: 0.006372290742978211
+  - class_id: 142
+    label: golf driving
+    score: 0.00022079677707094182
+  - class_id: 161
+    label: hurling (sport)
+    score: 0.00011549615416823286
+  - class_id: 328
+    label: spraying
+    score: 3.1958025902772875e-05
+provider: PyTorch TorchVision
+model_license: &id001
+  name: BSD-3-Clause
+  url: https://github.com/pytorch/vision/blob/824e8c8726b65fd9d5abdc9702f81c2b0c4c0dc8/LICENSE
+  scope: model
+variants:
+- size: tv-r3d18-k400-16x112-featuremap-int16-cpuptq-o1-20261105
+  model:
+    parameter_count: 33371472
+  input:
+    width: 112
+    height: 112
+    source:
+      name: images
+      format: RGB
+      dtype: float32
+      layout: NCTHW
+      shape:
+      - 1
+      - 3
+      - 16
+      - 112
+      - 112
+      scale: 0.00392156862745098
+      mean:
+      - 0.43216
+      - 0.394666
+      - 0.37645
+      std:
+      - 0.22803
+      - 0.22145
+      - 0.216989
+  platforms:
+  - platform: s100
+    license: *id001
+    status: converted
+    converted_at: '2026-11-05'
+    metadata_revision: 1
+    artifact:
+      filename: 3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe.hbm
+      format: HBM
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/3dresnet/3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe.hbm
+      sha256: cf4ca0a1b9b912fa9358e6550c96401e0f4d5db49d51d4205e09269bd46fc726
+      size_bytes: 38100696
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/3dresnet/3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/3dresnet/3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/3dresnet/3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/3dresnet/3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: logits
+        shape:
+        - 1
+        - 400
+        dtype: float32
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCTHW
+        shape:
+        - 1
+        - 3
+        - 16
+        - 112
+        - 112
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 100
+      calibration_manifest_sha256: 20d87f3a45bb36288c0480962111de7ef640f462a2e6cb58082a24e64e60f8c6
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: cf4ca0a1b9b912fa9358e6550c96401e0f4d5db49d51d4205e09269bd46fc726
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: b2f34e77faa91274b5c819f4315ef0bcbbe88d40
+      source_repository_commit: 824e8c8726b65fd9d5abdc9702f81c2b0c4c0dc8
+      source_checkpoint_sha256: b3b3357ead25631ec9c57362ff2128a92d0427e01e2cd184951a44380c3f2e9d
+      source_weight_url: https://download.pytorch.org/models/r3d_18-b3b3357e.pth
+      checkpoint_revision: sha256:b3b3357ead25631ec9c57362ff2128a92d0427e01e2cd184951a44380c3f2e9d
+      source_version_pair:
+        repository: https://github.com/pytorch/vision
+        version: 0.23.0
+        commit: 824e8c8726b65fd9d5abdc9702f81c2b0c4c0dc8
+        license: BSD-3-Clause
+        checkpoint:
+          model: 3dresnet
+          url: https://download.pytorch.org/models/r3d_18-b3b3357e.pth
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/inputs/source_models/3dresnet/r3d_18-b3b3357e.pth
+          sha256: b3b3357ead25631ec9c57362ff2128a92d0427e01e2cd184951a44380c3f2e9d
+          size_bytes: 133546016
+          publisher_hash_prefix: b3b3357e
+          publisher_prefix_verified: true
+          full_sha256_kind: observed
+          source_family: torchvision
+          source_version: 0.23.0
+          source_license: BSD-3-Clause
+          license_url: https://github.com/pytorch/vision/blob/v0.23.0/LICENSE
+          existing_verified_weight_reused: true
+      toolchain_image: S SDK 3.7.0 / exact cached image identified by digest
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      build_id: 3dresnet-s100-cpuptq-20261105-r01
+      precision_policy: INT16 activations; O1
+      native_variant: tv-r3d18-k400-16x112-featuremap-int16-cpuptq-o1-20261105
+      onnx_sha256: 559e17606395eaf82e360f281ec28fbed54a374d68134125ac0d21b65342343c
+      config_sha256: f43f66e5423dc047fde363f3fe154dbac01ef9bbf672f426b4c49343a67a1b19
+      recipe_sha256: 9fada3f4a09dbf50f8a30ce6b824633447bc92fc3fae2aa33ceeef0e6f60dcc1
+      calibration_manifest_sha256: 20d87f3a45bb36288c0480962111de7ef640f462a2e6cb58082a24e64e60f8c6
+      host_smoke_report_sha256: 0745138696b2e091749fe1919bf5825f0468fde90756593aed8da82ced427b34
+      compile_log_sha256: 341e7118369350fd5a9e598007f5ac28fc06169a4b4123602b2c5ea4e6c18941
+      cpu_reference_float_gate:
+        status: passed
+        report:
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/3dresnet-s100-prepare-r01/cpu-sdk-parity.json
+          sha256: 11b815081ff393c74a8a7cdb9eed8fe93b36389527cb9af92e7d8da5da39a131
+          size_bytes: 3598
+      source_export_native_revision: 8c5c37bea7c7355212fa1b39b1f09cbfcf68d691
+      actual_compiled_abi:
+        artifact:
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/3dresnet-s100-cpuptq-20261105-r01/output/3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe.hbm
+          sha256: cf4ca0a1b9b912fa9358e6550c96401e0f4d5db49d51d4205e09269bd46fc726
+          size_bytes: 38100696
+        command:
+        - docker
+        - run
+        - --rm
+        - --network
+        - none
+        - --cpus
+        - '1'
+        - --memory
+        - 1g
+        - -v
+        - /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01:/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01:ro
+        - --entrypoint
+        - /bin/bash
+        - sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+        - -lc
+        - python3 -c 'from hbdk4.compiler.hbm import Hbm;import json;h=Hbm('"'"'/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/3dresnet-s100-cpuptq-20261105-r01/output/3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe.hbm'"'"');print(json.dumps({"march":str(h.march),"models":[{"name":g.name,"inputs":[v.name
+          for v in g.flatten_inputs],"outputs":[v.name for v in g.flatten_outputs]}for
+          g in h.graphs]}))'
+        metadata:
+          march: March.nash_e
+          models:
+          - name: 3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe
+            inputs:
+            - images
+            outputs:
+            - logits
+      calibration_boundary:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/3dresnet-s100-prepare-r01/calibration-boundary.json
+        sha256: 14722349fd7488a77531d4a1deb3f267f48f12f1f68ebb123214b6fe55bf12ac
+        size_bytes: 27251
+      source_preprocessing:
+        scale: 0.00392156862745098
+        mean:
+        - 0.43216
+        - 0.394666
+        - 0.37645
+        std:
+        - 0.22803
+        - 0.22145
+        - 0.216989
+      calibration_scope: 100 distinct real UCF101 mirror training clips across 8 available
+        action classes; pilot cross-dataset PTQ, no Kinetics-400 accuracy or calibration-coverage
+        claim
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: fecd21a97230c9f2d8fa46c64d8e55cd1393059218850f3f25c356731c52c6f5
+    runtime_command: python3 -m samples.vision.3dresnet.runtime.python.public --target
+      s100 --variant tv-r3d18-k400-16x112-featuremap-int16-cpuptq-o1-20261105 --asset-id
+      s:3dresnet:s100/3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe.hbm
+      --model-path /path/to/3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe.hbm
+      --clip /path/to/normalized-video.npy

@@ -35,6 +35,7 @@ test('a converted artifact has downloads and task-labelled unmeasured tiles with
   assert.doesNotMatch(html,/模型可下载 · 板端待测/);
   assert.match(html,/data-open-download/);
   assert.match(html,/python3 example.py --model-path new.bin/);
+  assert.doesNotMatch(html,/convnext#quickstart/);
   assert.doesNotMatch(html,/data-ask-model/);
   context.window.ModelDetail.bind(root,model,[model],data);
   assert.match(grid.innerHTML,/Top-1/);

@@ -205,10 +205,10 @@
   const yoloLabelFiles = { detect: 'coco_classes.names', seg: 'coco_classes.names', cls: 'imagenet_classes.names', obb: 'ultralytics_dota_classes.names' };
   // Native board commands for this exact artifact: fetch the file the page
   // publishes (its benchmark and checksum), then run the sample against it.
-  function quickstartSection(source, steps) {
+  function quickstartSection(source, steps, fragment = '#quickstart') {
     if (!steps.length) return '';
     const step = (index, title, command) => `<li class="mz-quickstart-step"><div class="mz-quickstart-label"><span>${index}</span>${title}</div><div class="mz-code"><pre><code data-no-i18n>${esc(command)}</code></pre><button type="button" class="mz-copy" data-copy-code aria-label="复制命令" title="复制命令">${icon('copy')}</button></div></li>`;
-    const link = source ? `<a href="${esc(source)}#quickstart" target="_blank" rel="noopener">完整说明</a>` : '';
+    const link = source ? `<a href="${esc(source)}${esc(fragment)}" target="_blank" rel="noopener">完整说明</a>` : '';
     return `<section class="mz-section mz-quickstart"><div class="mz-section-heading"><h2>快速上手</h2>${link}</div><ol class="mz-quickstart-steps">${steps.map((item, index) => step(index + 1, item.title, item.command)).join('')}</ol></section>`;
   }
   function quickStart(model) {
@@ -217,7 +217,7 @@
       return `<section class="mz-section mz-quickstart"><div class="mz-section-heading"><h2>快速上手</h2></div><ol class="mz-quickstart-steps">${steps.map((step, index) => `<li class="mz-quickstart-step"><div class="mz-quickstart-label"><span>${index + 1}</span>${esc(step.title)}</div><div class="mz-code"><pre><code data-no-i18n>${esc(step.command)}</code></pre><button type="button" class="mz-copy" data-copy-code aria-label="复制命令" title="复制命令">${icon('copy')}</button></div></li>`).join('')}</ol></section>`;
     }
     if (model.runtimeCommand) {
-      return quickstartSection(model.source, [{ title: '运行模型', command: model.runtimeCommand }]);
+      return quickstartSection(model.source, [{ title: '运行模型', command: model.runtimeCommand }], model.releaseStatus === 'converted' ? '' : '#quickstart');
     }
     const asset = model.assets?.[0];
     const [sample, family, task] = String(model.catalogId || '').split('/');

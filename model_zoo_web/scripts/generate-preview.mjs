@@ -18,6 +18,7 @@ import { loadInferenceTaskBanners } from './task-banner-assets.mjs';
 import { loadFamilyInferenceBanners } from './family-banner-assets.mjs';
 import { buildPendingModels } from './pending-preview.mjs';
 import { isPublishedDownloadSource } from './model-download-policy.mjs';
+import { runtimeInputProperties } from './runtime-input-properties.mjs';
 
 const scriptRoot = dirname(fileURLToPath(import.meta.url));
 const webRoot = resolve(scriptRoot, '..');
@@ -797,15 +798,7 @@ for (const record of catalog.models || []) {
         ...(variant.model?.measurement_method ? { computeMethod: variant.model.measurement_method } : {}),
         inputShape: variant.input.source?.shape || [1, 3, variant.input.height, variant.input.width],
         sourceInput: variant.input.source,
-        runtimeInput: {
-          format: artifact.runtime_input,
-          resolution: [variant.input.height, variant.input.width],
-          ...(converted && artifact.runtime_input === 'featuremap' ? {
-            ...(artifact.runtime_dtype ? { dtype: artifact.runtime_dtype } : {}),
-            ...(artifact.runtime_layout ? { payload_layout: artifact.runtime_layout } : {}),
-          } : {}),
-          ...(artifact.runtime_tensor || {}),
-        },
+        runtimeInput: runtimeInputProperties(release, variant.input),
       };
     }
   }

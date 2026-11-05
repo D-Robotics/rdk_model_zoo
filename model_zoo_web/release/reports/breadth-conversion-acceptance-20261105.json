@@ -1,0 +1,993 @@
+{
+  "schema_version": 1,
+  "at": "2026-11-05T05:13:09.925986+00:00",
+  "scope": "Breadth-first: five independent S100 model conversions and one complete Faster R-CNN tracking deployment. Board tests and other-chip adaptations follow separately.",
+  "native_documentation_revision": "20cabcb026c489333bf5cf59344a11ec21611d7d",
+  "guide_sha256": "f9281484c3ab0b04f0cfdfe0d14b026404abf93f6e994c6de27ea7ae064c085e",
+  "model_storage": "dev-server and Archive; code, image assets and metadata only on Mac",
+  "model_artifact_count": 5,
+  "deployment_card_count": 6,
+  "models": [
+    {
+      "id": "3dresnet/3dresnet/video-cls",
+      "variant": "tv-r3d18-k400-16x112-featuremap-int16-cpuptq-o1-20261105",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "artifact": {
+        "filename": "3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe.hbm",
+        "format": "HBM",
+        "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/3dresnet/3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe.hbm",
+        "sha256": "cf4ca0a1b9b912fa9358e6550c96401e0f4d5db49d51d4205e09269bd46fc726",
+        "size_bytes": 38100696,
+        "release_manifest_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/3dresnet/3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe/v1/release.json",
+        "checksums_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/3dresnet/3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe/v1/SHA256SUMS"
+      },
+      "license": {
+        "name": "BSD-3-Clause",
+        "url": "https://github.com/pytorch/vision/blob/824e8c8726b65fd9d5abdc9702f81c2b0c4c0dc8/LICENSE",
+        "scope": "model"
+      },
+      "input": {
+        "width": 112,
+        "height": 112,
+        "source": {
+          "name": "images",
+          "format": "RGB",
+          "dtype": "float32",
+          "layout": "NCTHW",
+          "shape": [
+            1,
+            3,
+            16,
+            112,
+            112
+          ],
+          "scale": 0.00392156862745098,
+          "mean": [
+            0.43216,
+            0.394666,
+            0.37645
+          ],
+          "std": [
+            0.22803,
+            0.22145,
+            0.216989
+          ]
+        }
+      },
+      "runtime_input": {
+        "format": "FEATUREMAP",
+        "dtype": "float32",
+        "layout": "NCTHW",
+        "shape": [
+          1,
+          3,
+          16,
+          112,
+          112
+        ]
+      },
+      "outputs": [
+        {
+          "name": "logits",
+          "shape": [
+            1,
+            400
+          ],
+          "dtype": "float32"
+        }
+      ],
+      "runtime_command": "python3 -m samples.vision.3dresnet.runtime.python.public --target s100 --variant tv-r3d18-k400-16x112-featuremap-int16-cpuptq-o1-20261105 --asset-id s:3dresnet:s100/3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe.hbm --model-path /path/to/3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe.hbm --clip /path/to/normalized-video.npy",
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "artifact_sha256": "cf4ca0a1b9b912fa9358e6550c96401e0f4d5db49d51d4205e09269bd46fc726",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "publication_native_revision": "b2f34e77faa91274b5c819f4315ef0bcbbe88d40",
+      "source_checkpoint_sha256": "b3b3357ead25631ec9c57362ff2128a92d0427e01e2cd184951a44380c3f2e9d",
+      "source_weight_url": "https://download.pytorch.org/models/r3d_18-b3b3357e.pth",
+      "source": {
+        "repository": "https://github.com/pytorch/vision",
+        "version": "0.23.0",
+        "commit": "824e8c8726b65fd9d5abdc9702f81c2b0c4c0dc8",
+        "license": "BSD-3-Clause",
+        "checkpoint": {
+          "model": "3dresnet",
+          "url": "https://download.pytorch.org/models/r3d_18-b3b3357e.pth",
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/inputs/source_models/3dresnet/r3d_18-b3b3357e.pth",
+          "sha256": "b3b3357ead25631ec9c57362ff2128a92d0427e01e2cd184951a44380c3f2e9d",
+          "size_bytes": 133546016,
+          "publisher_hash_prefix": "b3b3357e",
+          "publisher_prefix_verified": true,
+          "full_sha256_kind": "observed",
+          "source_family": "torchvision",
+          "source_version": "0.23.0",
+          "source_license": "BSD-3-Clause",
+          "license_url": "https://github.com/pytorch/vision/blob/v0.23.0/LICENSE",
+          "existing_verified_weight_reused": true
+        }
+      },
+      "source_export_native_revision": "8c5c37bea7c7355212fa1b39b1f09cbfcf68d691",
+      "source_numeric_gate": {
+        "status": "passed",
+        "atol": 0.0001,
+        "rtol": 0.001,
+        "real_and_random_cases": 4
+      },
+      "calibration_samples": 100,
+      "calibration_manifest_sha256": "20d87f3a45bb36288c0480962111de7ef640f462a2e6cb58082a24e64e60f8c6",
+      "cpu_sdk_gate": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/3dresnet-s100-prepare-r01/cpu-sdk-parity.json",
+        "sha256": "11b815081ff393c74a8a7cdb9eed8fe93b36389527cb9af92e7d8da5da39a131",
+        "size_bytes": 3598
+      },
+      "calibration_loader_gate": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/3dresnet-s100-prepare-r01/calibration-boundary.json",
+        "sha256": "14722349fd7488a77531d4a1deb3f267f48f12f1f68ebb123214b6fe55bf12ac",
+        "size_bytes": 27251
+      },
+      "observed_hbm_abi": {
+        "march": "March.nash_e",
+        "models": [
+          {
+            "name": "3dresnet_tv_r3d18_k400_16x112_featuremap_int16_cpuptq_o1_20261105_nashe",
+            "inputs": [
+              "images"
+            ],
+            "outputs": [
+              "logits"
+            ]
+          }
+        ]
+      },
+      "compiler_versions": {
+        "hbdk": "4.7.5",
+        "hmct": "2.6.5",
+        "hb_compile": "3.5.3"
+      },
+      "compiler_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+      "source_onnx_sha256": "559e17606395eaf82e360f281ec28fbed54a374d68134125ac0d21b65342343c",
+      "effective_config_sha256": "f43f66e5423dc047fde363f3fe154dbac01ef9bbf672f426b4c49343a67a1b19",
+      "compiler_memory_gib": 18
+    },
+    {
+      "id": "fasterrcnn/fasterrcnn/track",
+      "variant": "mbv3-320-native-20261103-o1",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "artifact": {
+        "filename": "fasterrcnn_tracking_mbv3_320_native_20261105_s100_bundle.tar.gz",
+        "format": "TAR.GZ",
+        "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/fasterrcnn/fasterrcnn_tracking_mbv3_320_native_20261105_s100_bundle.tar.gz",
+        "sha256": "9a2f323983ca1def2d2c8197d50d03f20a52a0daed66ee2311d0eba6b989d597",
+        "size_bytes": 18106120,
+        "components": [
+          {
+            "role": "parta",
+            "filename": "frcnn_mbv3_320_parta_nashe_native_20261103_o1.hbm",
+            "format": "HBM",
+            "platform": "s100",
+            "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/fasterrcnn/frcnn_mbv3_320_parta_nashe_native_20261103_o1.hbm",
+            "sha256": "fc51cea2ca786bcf565da82e4929316e480d8b98d868515feb224530042ef9a6",
+            "size_bytes": 6637728
+          },
+          {
+            "role": "partb",
+            "filename": "frcnn_mbv3_320_partb_nashe_native_20261103_o1.hbm",
+            "format": "HBM",
+            "platform": "s100",
+            "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/fasterrcnn/frcnn_mbv3_320_partb_nashe_native_20261103_o1.hbm",
+            "sha256": "63e1ab7b4b6b64ca897f20fc50e651fc4565e2ba34fea7acd01cec89768fd93e",
+            "size_bytes": 15341384
+          }
+        ],
+        "bundle": {
+          "kind": "fasterrcnn-split",
+          "descriptor": "deployment.json",
+          "members": [
+            {
+              "filename": "LICENSE.torchvision-BSD-3-Clause.txt",
+              "sha256": "6502f676851cfe25f8af75531dfb32375b7325b73c37e7b43741fa422893e71d",
+              "size_bytes": 1517
+            },
+            {
+              "filename": "README-tracking.txt",
+              "sha256": "096fa7f5de9fd0b78b1641004e0ce2ef608fa4a90948e8c7fa1b2b8b8c19ff68",
+              "size_bytes": 683
+            },
+            {
+              "filename": "README.txt",
+              "sha256": "a3729fb247abde7696b279c11473fb6e236dee93dba50af4ee60cdf4631b9732",
+              "size_bytes": 581
+            },
+            {
+              "filename": "UPSTREAM_NOTICE.md",
+              "sha256": "16e48cdc2bcdfa3a9b8c69ca3b4464b107a6776ca347988c5b5c7a00443521cd",
+              "size_bytes": 468
+            },
+            {
+              "filename": "deployment.json",
+              "sha256": "812653e543291bd87774f7dcc223112e9d0365ccc76837f0b17f050f6dc437a7",
+              "size_bytes": 923
+            },
+            {
+              "filename": "host-smoke.json",
+              "sha256": "51d5ae8f879aa6ee4666d4a77edb715027727202f9efcdd48fecc5822c1ff4d8",
+              "size_bytes": 4655
+            },
+            {
+              "filename": "host-tracking.json",
+              "sha256": "be0eda890affeffaee445c6814dcaa320acca6e5ef91462480c64a0effaa4d24",
+              "size_bytes": 64922
+            },
+            {
+              "filename": "parta.oe_report.html",
+              "sha256": "a4c50b257980d75a115a5b3841e1ad9a3579806c152d123f4b2a6a151c561d36",
+              "size_bytes": 1801260
+            },
+            {
+              "filename": "parta.oe_report_data.json",
+              "sha256": "5b9c4928742406715771565995014bbd1119fd851be9e22da59dbb1a6acf0a92",
+              "size_bytes": 50334
+            },
+            {
+              "filename": "partb.oe_report.html",
+              "sha256": "8e32dcc124c16b9d84929c8166c739ea789e5f33b9223e0efaa5d3bd68e02be4",
+              "size_bytes": 1722550
+            },
+            {
+              "filename": "partb.oe_report_data.json",
+              "sha256": "d7bf3bac5e9698396bd25f04a70ddfbda9901a9c0c5fea7e975a849396d9a473",
+              "size_bytes": 10051
+            }
+          ]
+        },
+        "release_manifest_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/fasterrcnn/fasterrcnn_tracking_mbv3_320_native_20261105_s100_bundle.tar/v1/release.json",
+        "checksums_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/fasterrcnn/fasterrcnn_tracking_mbv3_320_native_20261105_s100_bundle.tar/v1/SHA256SUMS"
+      },
+      "license": {
+        "name": "BSD-3-Clause",
+        "url": "https://github.com/pytorch/vision/blob/7af698794eded568735f9519593603c1ec889eba/LICENSE",
+        "scope": "model"
+      },
+      "input": {
+        "width": 320,
+        "height": 320,
+        "source": {
+          "name": "images",
+          "format": "RGB",
+          "dtype": "FLOAT32",
+          "layout": "NCHW",
+          "shape": [
+            1,
+            3,
+            320,
+            320
+          ],
+          "scale": 0.00392156862745098,
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        }
+      },
+      "runtime_input": {
+        "format": "NV12",
+        "dtype": "uint8",
+        "layout": "NHWC",
+        "shape": [
+          1,
+          320,
+          320,
+          1
+        ]
+      },
+      "outputs": [
+        {
+          "name": "cls_packed",
+          "shape": [
+            1,
+            91,
+            150,
+            1
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "reg_packed",
+          "shape": [
+            1,
+            364,
+            150,
+            1
+          ],
+          "dtype": "float32"
+        }
+      ],
+      "runtime_command": "python3 -m samples.vision.fasterrcnn.runtime.python.main --target s100 --variant mbv3-320-native-20261103-o1 --parta-path /path/to/frcnn_mbv3_320_parta_nashe_native_20261103_o1.hbm --partb-path /path/to/frcnn_mbv3_320_partb_nashe_native_20261103_o1.hbm --track --video /path/to/video.mp4 --save-path /path/to/result.mp4 --records /path/to/tracks.tsv",
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run",
+        "host_pipeline": {
+          "status": "passed",
+          "stages": [
+            "parta",
+            "partb"
+          ],
+          "evidence_file": "host-smoke.json",
+          "evidence_sha256": "51d5ae8f879aa6ee4666d4a77edb715027727202f9efcdd48fecc5822c1ff4d8",
+          "component_sha256": {
+            "parta": "fc51cea2ca786bcf565da82e4929316e480d8b98d868515feb224530042ef9a6",
+            "partb": "63e1ab7b4b6b64ca897f20fc50e651fc4565e2ba34fea7acd01cec89768fd93e"
+          },
+          "scope": "Connected source/native/ONNX float inference; compiled HBM board execution not-run"
+        },
+        "artifact_sha256": "9a2f323983ca1def2d2c8197d50d03f20a52a0daed66ee2311d0eba6b989d597",
+        "host_tracking": {
+          "status": "passed",
+          "evidence_file": "host-tracking.json",
+          "evidence_sha256": "be0eda890affeffaee445c6814dcaa320acca6e5ef91462480c64a0effaa4d24",
+          "component_sha256": {
+            "parta": "fc51cea2ca786bcf565da82e4929316e480d8b98d868515feb224530042ef9a6",
+            "partb": "63e1ab7b4b6b64ca897f20fc50e651fc4565e2ba34fea7acd01cec89768fd93e"
+          },
+          "scope": "30 ordered real video frames: source PartA/PartB, Native RPN/RoIAlign, CPU ByteTrack; no HBM, board or MOT accuracy"
+        }
+      },
+      "publication_native_revision": "a8f6b193fa29ab801b29cb3d5339985322bf4a86",
+      "source_checkpoint_sha256": "907ea3f91ff92242bc1baea8049276a3e76bca48ce7560bd268cc029f37977b5",
+      "source_weight_url": "https://download.pytorch.org/models/fasterrcnn_mobilenet_v3_large_320_fpn-907ea3f9.pth",
+      "component_origin": "Previously accepted fresh two-stage detector; actual CPU tracking added, no separate neural tracker weights"
+    },
+    {
+      "id": "fcos/fcos/detect",
+      "variant": "tv-r50-fpn-coco91-512-featuremap-int16-cpuptq-o1-20261105",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "artifact": {
+        "filename": "fcos_tv_r50_fpn_coco91_512_featuremap_int16_cpuptq_o1_20261105_nashe.hbm",
+        "format": "HBM",
+        "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/fcos/fcos_tv_r50_fpn_coco91_512_featuremap_int16_cpuptq_o1_20261105_nashe.hbm",
+        "sha256": "bdb812603b134b9f32e1e2858d84f0770bb3a468be63e7988577daa082859373",
+        "size_bytes": 72961024,
+        "release_manifest_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/fcos/fcos_tv_r50_fpn_coco91_512_featuremap_int16_cpuptq_o1_20261105_nashe/v1/release.json",
+        "checksums_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/fcos/fcos_tv_r50_fpn_coco91_512_featuremap_int16_cpuptq_o1_20261105_nashe/v1/SHA256SUMS"
+      },
+      "license": {
+        "name": "BSD-3-Clause",
+        "url": "https://github.com/pytorch/vision/blob/824e8c8726b65fd9d5abdc9702f81c2b0c4c0dc8/LICENSE",
+        "scope": "model"
+      },
+      "input": {
+        "width": 512,
+        "height": 512,
+        "source": {
+          "name": "images",
+          "format": "RGB",
+          "dtype": "float32",
+          "layout": "NCHW",
+          "shape": [
+            1,
+            3,
+            512,
+            512
+          ],
+          "scale": 0.00392156862745098,
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        }
+      },
+      "runtime_input": {
+        "format": "FEATUREMAP",
+        "dtype": "float32",
+        "layout": "NCHW",
+        "shape": [
+          1,
+          3,
+          512,
+          512
+        ]
+      },
+      "outputs": [
+        {
+          "name": "cls_logits",
+          "shape": [
+            1,
+            5456,
+            91
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "bbox_regression",
+          "shape": [
+            1,
+            5456,
+            4
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "bbox_ctrness",
+          "shape": [
+            1,
+            5456,
+            1
+          ],
+          "dtype": "float32"
+        }
+      ],
+      "runtime_command": "python3 -m samples.vision.fcos.runtime.python.torchvision --target s100 --variant tv-r50-fpn-coco91-512-featuremap-int16-cpuptq-o1-20261105 --asset-id s:fcos:s100/fcos_tv_r50_fpn_coco91_512_featuremap_int16_cpuptq_o1_20261105_nashe.hbm --model-path /path/to/fcos_tv_r50_fpn_coco91_512_featuremap_int16_cpuptq_o1_20261105_nashe.hbm --test-img /path/to/image.jpg",
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "artifact_sha256": "bdb812603b134b9f32e1e2858d84f0770bb3a468be63e7988577daa082859373",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "publication_native_revision": "0bbd0b7467f104da8de065c90a415678b599de1b",
+      "source_checkpoint_sha256": "99b0c9b7cfb1527d782db86b91d207f00547c792fb4103fc612b651d0a07b9e7",
+      "source_weight_url": "https://download.pytorch.org/models/fcos_resnet50_fpn_coco-99b0c9b7.pth",
+      "source": {
+        "repository": "https://github.com/pytorch/vision",
+        "commit": "824e8c8726b65fd9d5abdc9702f81c2b0c4c0dc8",
+        "version": "v0.23.0",
+        "weights": "FCOS_ResNet50_FPN_Weights.COCO_V1",
+        "weight_url": "https://download.pytorch.org/models/fcos_resnet50_fpn_coco-99b0c9b7.pth",
+        "checkpoint": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/inputs/source_models/fcos/fcos_resnet50_fpn_coco-99b0c9b7.pth",
+          "sha256": "99b0c9b7cfb1527d782db86b91d207f00547c792fb4103fc612b651d0a07b9e7",
+          "size_bytes": 129612099
+        },
+        "license": "BSD-3-Clause"
+      },
+      "source_export_native_revision": "e3374646ac035a85fce07b21379c1b06e2f9b66d",
+      "source_numeric_gate": {
+        "status": "passed",
+        "atol": 0.0001,
+        "rtol": 0.001,
+        "real_and_random_cases": 4
+      },
+      "calibration_samples": 200,
+      "calibration_manifest_sha256": "4167a5d04d52712976fd4c399c0fd65e9448c9c7e72c3df624e814bbc0f7c90b",
+      "cpu_sdk_gate": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/fcos-s100-prepare-r01/cpu-sdk-parity.json",
+        "sha256": "dd84e771f9ba79025ea11fa416af792d6df171945f38fecdbe3b608aa48d5881",
+        "size_bytes": 4947
+      },
+      "calibration_loader_gate": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/fcos-s100-prepare-r01/calibration-boundary.json",
+        "sha256": "17c4d05ee84e0a447ac75e3d300db5233f406fede8244df6fbc676753cd68777",
+        "size_bytes": 51444
+      },
+      "observed_hbm_abi": {
+        "march": "March.nash_e",
+        "models": [
+          {
+            "name": "fcos_tv_r50_fpn_coco91_512_featuremap_int16_cpuptq_o1_20261105_nashe",
+            "inputs": [
+              "images"
+            ],
+            "outputs": [
+              "cls_logits",
+              "bbox_regression",
+              "bbox_ctrness"
+            ]
+          }
+        ]
+      },
+      "compiler_versions": {
+        "hbdk": "4.7.5",
+        "hmct": "2.6.5",
+        "hb_compile": "3.5.3"
+      },
+      "compiler_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+      "source_onnx_sha256": "c79483b0c449546b9eb6b3c668b1f566123770d64906ebf8525305ef6301356a",
+      "effective_config_sha256": "fc9eadebbd7a06a17dcae3d3098b0c1d6ef4599c80efb1be9b23a38075dc449a",
+      "compiler_memory_gib": 18
+    },
+    {
+      "id": "lanenet/lanenet/lane",
+      "variant": "enet-tusimple-3head-256x512-int16-cpuptq-o1-20261105",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "artifact": {
+        "filename": "lanenet_enet_tusimple_3head_256x512_int16_cpuptq_o1_20261105_nashe.hbm",
+        "format": "HBM",
+        "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/lanenet/lanenet_enet_tusimple_3head_256x512_int16_cpuptq_o1_20261105_nashe.hbm",
+        "sha256": "bb1651649127251301ff98b1c479055664d1c7e6c2feac58264fa6bebcae6a6a",
+        "size_bytes": 34719672,
+        "release_manifest_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/lanenet/lanenet_enet_tusimple_3head_256x512_int16_cpuptq_o1_20261105_nashe/v1/release.json",
+        "checksums_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/lanenet/lanenet_enet_tusimple_3head_256x512_int16_cpuptq_o1_20261105_nashe/v1/SHA256SUMS"
+      },
+      "license": {
+        "name": "MIT",
+        "url": "https://github.com/IrohXu/lanenet-lane-detection-pytorch/blob/0e5aa371d9572ef8d16b2eddbe5af284f649b88a/LICENSE",
+        "scope": "model"
+      },
+      "input": {
+        "width": 512,
+        "height": 256,
+        "source": {
+          "name": "images",
+          "format": "RGB",
+          "dtype": "float32",
+          "layout": "NCHW",
+          "shape": [
+            1,
+            3,
+            256,
+            512
+          ],
+          "scale": 0.00392156862745098,
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        }
+      },
+      "runtime_input": {
+        "format": "FEATUREMAP",
+        "dtype": "float32",
+        "layout": "NCHW",
+        "shape": [
+          1,
+          3,
+          256,
+          512
+        ]
+      },
+      "outputs": [
+        {
+          "name": "instance_seg_logits",
+          "shape": [
+            1,
+            3,
+            256,
+            512
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "binary_seg_pred",
+          "shape": [
+            1,
+            1,
+            256,
+            512
+          ],
+          "dtype": "int64"
+        },
+        {
+          "name": "binary_seg_logits",
+          "shape": [
+            1,
+            2,
+            256,
+            512
+          ],
+          "dtype": "float32"
+        }
+      ],
+      "runtime_command": "python3 -m samples.vision.lanenet.runtime.python.main --target s100 --asset-id s:lanenet:s100/lanenet_enet_tusimple_3head_256x512_int16_cpuptq_o1_20261105_nashe.hbm --model-path /path/to/lanenet_enet_tusimple_3head_256x512_int16_cpuptq_o1_20261105_nashe.hbm --test-img /path/to/image.jpg --output /path/to/new/lane-result",
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "artifact_sha256": "bb1651649127251301ff98b1c479055664d1c7e6c2feac58264fa6bebcae6a6a",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "publication_native_revision": "a8f6b193fa29ab801b29cb3d5339985322bf4a86",
+      "source_checkpoint_sha256": "052bda2bff1ab3aa017a4509966fc80290d2076b3b373e268bdc6865674f5b79",
+      "source_weight_url": "https://github.com/IrohXu/lanenet-lane-detection-pytorch/blob/0e5aa371d9572ef8d16b2eddbe5af284f649b88a/log/best_model.pth",
+      "source": {
+        "repository": "https://github.com/IrohXu/lanenet-lane-detection-pytorch",
+        "commit": "0e5aa371d9572ef8d16b2eddbe5af284f649b88a",
+        "checkpoint": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/upstream-lanenet/lanenet-lane-detection-pytorch-0e5aa371d9572ef8d16b2eddbe5af284f649b88a/log/best_model.pth",
+          "sha256": "052bda2bff1ab3aa017a4509966fc80290d2076b3b373e268bdc6865674f5b79",
+          "size_bytes": 15052911
+        },
+        "weight_url": "https://github.com/IrohXu/lanenet-lane-detection-pytorch/blob/0e5aa371d9572ef8d16b2eddbe5af284f649b88a/log/best_model.pth",
+        "license": "MIT"
+      },
+      "source_export_native_revision": "aadd66f735ff610af511ae32546d8eeb9cdb563e",
+      "source_numeric_gate": {
+        "status": "passed",
+        "atol": 0.0001,
+        "rtol": 0.001,
+        "real_and_random_cases": 4
+      },
+      "calibration_samples": 100,
+      "calibration_manifest_sha256": "1bfb112367efe9b854026b0a310edb70ed543f04f3e49f0328002f0cca4dc785",
+      "cpu_sdk_gate": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/lanenet-s100-prepare-r01/cpu-sdk-parity.json",
+        "sha256": "d11ec6cf3ed8aca6e55ac2847abad5e1bf297654d2e4133e1ce5a4b44eaa3dd6",
+        "size_bytes": 5019
+      },
+      "calibration_loader_gate": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/lanenet-s100-prepare-r01/calibration-boundary.json",
+        "sha256": "4bed8e8b5ff58c2886bf6b4b710b3e2623783a819290904dd0b728b4c7647b82",
+        "size_bytes": 26011
+      },
+      "observed_hbm_abi": {
+        "march": "March.nash_e",
+        "models": [
+          {
+            "name": "lanenet_enet_tusimple_3head_256x512_int16_cpuptq_o1_20261105_nashe",
+            "inputs": [
+              "images"
+            ],
+            "outputs": [
+              "instance_seg_logits",
+              "binary_seg_pred",
+              "binary_seg_logits"
+            ]
+          }
+        ]
+      },
+      "compiler_versions": {
+        "hbdk": "4.7.5",
+        "hmct": "2.6.5",
+        "hb_compile": "3.5.3"
+      },
+      "compiler_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+      "source_onnx_sha256": "063e81a31a335ea4718de540283002b0369688bedd0378b9a0b37bd52122dda4",
+      "effective_config_sha256": "af5c49485a340c4240e1565b6009d77bca6e7cb3ad7aa39cdc454bd1fc2ff56e",
+      "compiler_memory_gib": 8
+    },
+    {
+      "id": "unet/unet/semseg",
+      "variant": "vgg16-voc21-letterbox-512-featuremap-int16-cpuptq-o1-20261105-r02",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "artifact": {
+        "filename": "unet_vgg16_voc21_letterbox_512_featuremap_int16_cpuptq_o1_20261105_nashe_r02.hbm",
+        "format": "HBM",
+        "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/unet/unet_vgg16_voc21_letterbox_512_featuremap_int16_cpuptq_o1_20261105_nashe_r02.hbm",
+        "sha256": "af30c86d3afdce0bed3e63fa8907837caa62835d7c464fc3ac582f0dea9512d6",
+        "size_bytes": 73422840,
+        "release_manifest_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/unet/unet_vgg16_voc21_letterbox_512_featuremap_int16_cpuptq_o1_20261105_nashe_r02/v1/release.json",
+        "checksums_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/unet/unet_vgg16_voc21_letterbox_512_featuremap_int16_cpuptq_o1_20261105_nashe_r02/v1/SHA256SUMS"
+      },
+      "license": {
+        "name": "MIT",
+        "url": "https://github.com/bubbliiiing/unet-pytorch/blob/5bcd6b4c832648beed1b92e78ed1e85c56343eca/LICENSE",
+        "scope": "model"
+      },
+      "input": {
+        "width": 512,
+        "height": 512,
+        "source": {
+          "name": "images",
+          "format": "RGB",
+          "dtype": "float32",
+          "layout": "NCHW",
+          "shape": [
+            1,
+            3,
+            512,
+            512
+          ],
+          "scale": 0.00392156862745098,
+          "mean": [
+            0,
+            0,
+            0
+          ],
+          "std": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "runtime_input": {
+        "format": "FEATUREMAP",
+        "dtype": "float32",
+        "layout": "NCHW",
+        "shape": [
+          1,
+          3,
+          512,
+          512
+        ]
+      },
+      "outputs": [
+        {
+          "name": "logits",
+          "shape": [
+            1,
+            21,
+            512,
+            512
+          ],
+          "dtype": "float32"
+        }
+      ],
+      "runtime_command": "python3 -m samples.vision.unet.runtime.python.vgg --target s100 --variant vgg16-voc21-letterbox-512-featuremap-int16-cpuptq-o1-20261105-r02 --asset-id s:unet:s100/unet_vgg16_voc21_letterbox_512_featuremap_int16_cpuptq_o1_20261105_nashe_r02.hbm --model-path /path/to/unet_vgg16_voc21_letterbox_512_featuremap_int16_cpuptq_o1_20261105_nashe_r02.hbm --test-img /path/to/image.jpg",
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "artifact_sha256": "af30c86d3afdce0bed3e63fa8907837caa62835d7c464fc3ac582f0dea9512d6",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "publication_native_revision": "20cabcb026c489333bf5cf59344a11ec21611d7d",
+      "source_checkpoint_sha256": "6dd04820c74c7d42a1cfbeaccb4f6a19286c01903e4d67e1e7ceb338619d9d61",
+      "source_weight_url": "https://github.com/bubbliiiing/unet-pytorch/releases/download/v1.0/unet_vgg_voc.pth",
+      "source": {
+        "repository": "https://github.com/bubbliiiing/unet-pytorch",
+        "commit": "5bcd6b4c832648beed1b92e78ed1e85c56343eca",
+        "weight_url": "https://github.com/bubbliiiing/unet-pytorch/releases/download/v1.0/unet_vgg_voc.pth",
+        "checkpoint": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/inputs/source_models/unet-vgg/unet_vgg_voc.pth",
+          "url": "https://github.com/bubbliiiing/unet-pytorch/releases/download/v1.0/unet_vgg_voc.pth",
+          "sha256": "6dd04820c74c7d42a1cfbeaccb4f6a19286c01903e4d67e1e7ceb338619d9d61",
+          "size_bytes": 99578656,
+          "sha256_kind": "observed"
+        },
+        "license": "MIT"
+      },
+      "source_export_native_revision": "49a12bd803fcb22bbe8df71978bf367383416136",
+      "source_numeric_gate": {
+        "status": "passed",
+        "atol": 5e-05,
+        "rtol": 0.0001,
+        "real_and_random_cases": 4
+      },
+      "calibration_samples": 200,
+      "calibration_manifest_sha256": "a0897039af396942b341ec45793a7c8b881169997833de2b2dd86ec56f46238c",
+      "cpu_sdk_gate": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/unet-s100-prepare-r01/cpu-sdk-parity.json",
+        "sha256": "66b5611c4c68ea3979cd75be199a97bd76b28722ec4fc5c108b627808a174294",
+        "size_bytes": 3618
+      },
+      "calibration_loader_gate": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/unet-s100-prepare-r01/calibration-boundary.json",
+        "sha256": "773f95cb6cf5c9b5ec431e545bfcdd1419d4c9c1e441c7b09686416a9acef3d4",
+        "size_bytes": 46191
+      },
+      "observed_hbm_abi": {
+        "march": "March.nash_e",
+        "models": [
+          {
+            "name": "unet_vgg16_voc21_letterbox_512_featuremap_int16_cpuptq_o1_20261105_nashe_r02",
+            "inputs": [
+              "images"
+            ],
+            "outputs": [
+              "logits"
+            ]
+          }
+        ]
+      },
+      "compiler_versions": {
+        "hbdk": "4.7.5",
+        "hmct": "2.6.5",
+        "hb_compile": "3.5.3"
+      },
+      "compiler_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+      "source_onnx_sha256": "87009809bb44a57567ed8377bf4aa81c99abea50528e7ce54daa4449484fe571",
+      "effective_config_sha256": "5b4b52c43b4d9b26a8a6446f2ff09cb54dfa0ab9b171c540defe76f98d72402e",
+      "compiler_memory_gib": 32,
+      "supersedes": {
+        "job": "unet-s100-cpuptq-20261105-r01",
+        "reason": "Verified18GiB container OOM at first automatic calibration batch8",
+        "calibration_and_host_gates": "Reused exact passed source/CPU SDK/calibration-loader identities; graph/data/config numerics unchanged",
+        "quantization": "Fresh complete PTQ, no BC reuse",
+        "resources": "32GiB UNet +18GiB R3D limits; prior FCOS and ViT exited"
+      }
+    },
+    {
+      "id": "vit/vit/cls",
+      "variant": "tv-b16-imagenet1k-224-featuremap-int16-cpuptq-o1-20261105",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "artifact": {
+        "filename": "vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe.hbm",
+        "format": "HBM",
+        "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/vit/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe.hbm",
+        "sha256": "441eadef5af415056da40d208b5be88382113c6353f22e9ff22bd96980f7a3e2",
+        "size_bytes": 101583904,
+        "release_manifest_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/vit/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe/v1/release.json",
+        "checksums_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/vit/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe/v1/SHA256SUMS"
+      },
+      "license": {
+        "name": "BSD-3-Clause",
+        "url": "https://github.com/pytorch/vision/blob/824e8c8726b65fd9d5abdc9702f81c2b0c4c0dc8/LICENSE",
+        "scope": "model"
+      },
+      "input": {
+        "width": 224,
+        "height": 224,
+        "source": {
+          "name": "images",
+          "format": "RGB",
+          "dtype": "float32",
+          "layout": "NCHW",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "scale": 0.00392156862745098,
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        }
+      },
+      "runtime_input": {
+        "format": "FEATUREMAP",
+        "dtype": "float32",
+        "layout": "NCHW",
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ]
+      },
+      "outputs": [
+        {
+          "name": "logits",
+          "shape": [
+            1,
+            1000
+          ],
+          "dtype": "float32"
+        }
+      ],
+      "runtime_command": "python3 -m samples.vision.vit.runtime.python.imagenet --target s100 --variant tv-b16-imagenet1k-224-featuremap-int16-cpuptq-o1-20261105 --asset-id s:vit:s100/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe.hbm --model-path /path/to/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe.hbm --test-img /path/to/image.jpg",
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "artifact_sha256": "441eadef5af415056da40d208b5be88382113c6353f22e9ff22bd96980f7a3e2",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "publication_native_revision": "a8f6b193fa29ab801b29cb3d5339985322bf4a86",
+      "source_checkpoint_sha256": "c867db91d3e12c6cbadabb610d73c24a546bf82d8c03a9fea34f43a712ddb0e9",
+      "source_weight_url": "https://download.pytorch.org/models/vit_b_16-c867db91.pth",
+      "source": {
+        "repository": "https://github.com/pytorch/vision",
+        "commit": "824e8c8726b65fd9d5abdc9702f81c2b0c4c0dc8",
+        "version": "v0.23.0",
+        "weights": "ViT_B_16_Weights.IMAGENET1K_V1",
+        "weight_url": "https://download.pytorch.org/models/vit_b_16-c867db91.pth",
+        "checkpoint": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/inputs/source_models/vit/vit_b_16-c867db91.pth",
+          "sha256": "c867db91d3e12c6cbadabb610d73c24a546bf82d8c03a9fea34f43a712ddb0e9",
+          "size_bytes": 346328529
+        },
+        "license": "BSD-3-Clause"
+      },
+      "source_export_native_revision": "e3374646ac035a85fce07b21379c1b06e2f9b66d",
+      "source_numeric_gate": {
+        "status": "passed",
+        "atol": 0.0001,
+        "rtol": 0.001,
+        "real_and_random_cases": 4
+      },
+      "calibration_samples": 200,
+      "calibration_manifest_sha256": "88d75d6f71cadc9056dff425d481bbefa735871ecfbf9883cb2a8d2448920aa9",
+      "cpu_sdk_gate": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/vit-s100-prepare-r01/cpu-sdk-parity.json",
+        "sha256": "45d312f47b05ac1c664f65ce1387ca3597d50c541e1a74bfd7e9e5864953647a",
+        "size_bytes": 3590
+      },
+      "calibration_loader_gate": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/vit-s100-prepare-r01/calibration-boundary.json",
+        "sha256": "2a7aa3c647e8ffdd883f6c016bc6f2a7d4fdee6c42a556bf264d3bdfc75cc9d3",
+        "size_bytes": 51691
+      },
+      "observed_hbm_abi": {
+        "march": "March.nash_e",
+        "models": [
+          {
+            "name": "vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe",
+            "inputs": [
+              "images"
+            ],
+            "outputs": [
+              "logits"
+            ]
+          }
+        ]
+      },
+      "compiler_versions": {
+        "hbdk": "4.7.5",
+        "hmct": "2.6.5",
+        "hb_compile": "3.5.3"
+      },
+      "compiler_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+      "source_onnx_sha256": "0b76b5d663b28196e714e2ce6fdab6aca7354671e9ae8bfa1093d76519fc16d1",
+      "effective_config_sha256": "720739c0ab8f1f8e547f608158b4bd386b0704c7e2d3a37635c2917c40195e81",
+      "compiler_memory_gib": 18
+    }
+  ],
+  "dataset_scope": {
+    "vit-fcos-unet": "Frozen real COCO train200 for PTQ and functional source checks, not ImageNet/COCO/VOC accuracy",
+    "lanenet": "100 distinct real TuSimple training clip-end frames",
+    "3dresnet": "100 genuine UCF101 training clips from 8 available mirror classes; pilot cross-dataset PTQ, not Kinetics-400 accuracy",
+    "fasterrcnn-tracking": "Original accepted detector calibration plus 30 ordered real video frames through the complete source/Native tracker"
+  },
+  "banners": "breadth-banner-generation-20261105.json",
+  "remaining_breadth_blockers": "breadth-blockers-20261105.md",
+  "board_validation": {
+    "board_smoke": "not-run",
+    "accuracy": "not-run",
+    "runtime_1": "not-run",
+    "runtime_2": "not-run",
+    "cpp_1": "not-run",
+    "cpp_2": "not-run"
+  }
+}
