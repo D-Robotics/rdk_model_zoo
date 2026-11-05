@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Export all three trained ENet LaneNet heads on a frozen real road subset."""
 from pathlib import Path
-import argparse,json,sys
+import argparse,json,os,sys
 from utils.tools.torchvision_conversion import identity
 
 
@@ -13,6 +13,9 @@ def main():
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--native-commit',required=True)
     a=p.parse_args()
+    # Upstream ENet allocates temporary tensors using a module-level DEVICE.
+    # Hide GPUs before importing it so this explicitly CPU exporter stays on CPU.
+    os.environ['CUDA_VISIBLE_DEVICES']=''
     import cv2,numpy as np,onnx,onnxruntime as ort,torch
     from samples.vision.lanenet.runtime.python.lanenet import image_to_tensor
     sys.path.insert(0,str(a.source))
