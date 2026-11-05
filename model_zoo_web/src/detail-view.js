@@ -326,7 +326,9 @@
     const precisionPolicy = model.benchmark?.precisionPolicy;
     if (typeof precisionPolicy === 'string' && precisionPolicy.trim()) {
       const policy = precisionPolicy.trim().toLowerCase();
-      const precisionLabel = ['int8-int16', 'mixed-int8-int16'].includes(policy)
+      const precisionLabel = policy.startsWith('fp16 internal computation,') ? 'FP16'
+        : policy.startsWith('int16 activation policy,') ? 'INT16'
+        : ['int8-int16', 'mixed-int8-int16'].includes(policy)
         ? 'INT8 + INT16 混合精度'
         : policy === 'int8-fp16'
           ? 'INT8 + FP16 混合精度'

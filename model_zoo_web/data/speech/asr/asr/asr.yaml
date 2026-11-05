@@ -7,10 +7,10 @@ source: asr
 family: asr
 task: asr
 description:
-  zh: "Wav2Vec2 ASR 识别 16 kHz 语音中的内容，将音频片段转换为文字。"
-  en: "Wav2Vec2 ASR recognizes speech in 16 kHz audio clips and converts it into text."
+  zh: Wav2Vec2 ASR 识别 16 kHz 语音中的内容，将音频片段转换为文字。
+  en: Wav2Vec2 ASR recognizes speech in 16 kHz audio clips and converts it into text.
 sample_path: samples/speech/asr
-sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+sample_revision: e9f2d039c7c31eb6aee4ac1a3acb7c590bec2084
 license:
   name: Apache-2.0
   url: https://www.apache.org/licenses/LICENSE-2.0
@@ -62,3 +62,237 @@ documented_downloads:
   url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/asr/asr.hbm
   source: docs/release/s/models.yaml
   format: hbm
+hero_visual:
+  kind: speech-transcript
+  file: model_zoo_web/release/assets/pending-heroes/wav2vec2-masked-ctc-20261105.webp
+  predictions_source: model_zoo_web/release/assets/pending-heroes/wav2vec2-masked-ctc-20261105.json
+  model_url: https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn/resolve/99ccb2737be22b8bb50dcfcc39ad4d567fb90cfd/pytorch_model.bin
+  model_file: pytorch_model.bin
+  input: samples/speech/asr/test_data/banner_background_microphone_20261105.png
+  framework: ONNX Runtime 1.20.1
+  commit: 5d7b327d7e6ec9e58145b41f9bb4cd25ac29f9bf
+  runtime: host-float-reference
+  inference_receipt_version: 2
+  note: Host float reference, not board output; board accuracy and performance remain
+    not-run
+  documented_in: samples/speech/asr/runtime/python/public.py
+provider: Hugging Face / jonatasgrosman
+model_license: &id001
+  name: Apache-2.0
+  url: https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn/blob/99ccb2737be22b8bb50dcfcc39ad4d567fb90cfd/README.md
+  scope: model
+variants:
+- size: xlsr53-zh3503-30k-mask-r02
+  model:
+    parameter_count: 319029295
+  input:
+    width: 30000
+    height: 1
+    source:
+      name: waveform
+      format: FEATUREMAP
+      dtype: float32
+      layout: NT
+      shape:
+      - 1
+      - 30000
+      scale: 1.0
+  platforms:
+  - platform: s100
+    license: *id001
+    status: converted
+    converted_at: '2026-11-05'
+    metadata_revision: 1
+    artifact:
+      filename: asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe.hbm
+      format: HBM
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/asr/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe.hbm
+      sha256: f3a7e2cdba2a199462f8abb4c4e9bb4c13fd705cc8b60c9ad08fe1909c4152dc
+      size_bytes: 368444064
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/asr/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/asr/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/asr/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/asr/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: logits
+        shape:
+        - 1
+        - 93
+        - 3503
+        dtype: float32
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NT
+        shape:
+        - 1
+        - 30000
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 50
+      calibration_manifest_sha256: 4be223e2a01a8d90f4aa78c6cab44d10b3a1f194b285d951777d09b31c8cb14f
+      optimization_level: O1
+      board_validation: not-run
+      inputs:
+      - name: waveform
+        shape:
+        - 1
+        - 30000
+        dtype: float32
+      - name: attention_mask
+        shape:
+        - 1
+        - 30000
+        dtype: float32
+      runtime_inputs:
+      - name: waveform
+        shape:
+        - 1
+        - 30000
+        dtype: float32
+        format: FEATUREMAP
+        layout: NT
+      - name: attention_mask
+        shape:
+        - 1
+        - 30000
+        dtype: float32
+        format: FEATUREMAP
+        layout: NT
+      numerical_contract:
+        revision: owner-approved-20261105-guide-v2.21
+        atol: 0.002
+        rtol: 0.001
+        all_elements_required: true
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: f3a7e2cdba2a199462f8abb4c4e9bb4c13fd705cc8b60c9ad08fe1909c4152dc
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: e9f2d039c7c31eb6aee4ac1a3acb7c590bec2084
+      source_repository_commit: 99ccb2737be22b8bb50dcfcc39ad4d567fb90cfd
+      source_checkpoint_sha256: de031fd4b29e0c0667e5346450fadfe1326c89936b888b59c4ede608db763ee4
+      source_weight_url: https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn/resolve/99ccb2737be22b8bb50dcfcc39ad4d567fb90cfd/pytorch_model.bin
+      checkpoint_revision: sha256:de031fd4b29e0c0667e5346450fadfe1326c89936b888b59c4ede608db763ee4
+      source_version_pair:
+        repository: https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn
+        revision: 99ccb2737be22b8bb50dcfcc39ad4d567fb90cfd
+        checkpoint:
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/asr/pytorch_model.bin
+          sha256: de031fd4b29e0c0667e5346450fadfe1326c89936b888b59c4ede608db763ee4
+          size_bytes: 1276296151
+          url: https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn/resolve/99ccb2737be22b8bb50dcfcc39ad4d567fb90cfd/pytorch_model.bin
+        config:
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/asr/config.json
+          sha256: 9af98614e322a5300c75605227d93c98af0c8f78754aba1dfc279166688afddd
+          size_bytes: 1567
+        weight_url: https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn/resolve/99ccb2737be22b8bb50dcfcc39ad4d567fb90cfd/pytorch_model.bin
+        license: Apache-2.0
+        precision: float32
+      toolchain_image: S SDK 3.7.0 / exact cached image identified by digest
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      build_id: asr-s100-cpuptq-20261105-r02
+      precision_policy: INT16 activation policy, SDK mixed precision and CPU paths
+        retained; O1
+      native_variant: xlsr53-zh3503-30k-mask-r02
+      onnx_sha256: 522b3955b66596ec400c4dd2a264fb6c1fda7e1563c3a9ce109e3f81aaec5b5f
+      config_sha256: 143f11955286cdce9c3933c7893c0c9bbce1f8b031eb324efbc3c6baa7f3acbe
+      recipe_sha256: 75c1b6ce5a0b222a254fd2023769832ed0fd70ad862c126c45a509364abcc611
+      calibration_manifest_sha256: 4be223e2a01a8d90f4aa78c6cab44d10b3a1f194b285d951777d09b31c8cb14f
+      host_smoke_report_sha256: e432a77cea3c699170a326ffe4236287176920d59ca1ac91b27e9fdf86f0fb45
+      compile_log_sha256: e8cf6a754e8b254738fb08c3627b93838169ab008c67ee62fc929d1f38940698
+      cpu_reference_float_gate:
+        status: passed
+        report:
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/asr-s100-prepare-r02/cpu-sdk-parity.json
+          sha256: 7945a4c8dcc7db0ba7624642d9f11fa856a7e8a8ab9d46b8d410a04931f03715
+          size_bytes: 23510
+      source_export_native_revision: 73149261085570ae049f5c61b37f1fe1b4bf3fb2
+      actual_compiled_abi:
+        artifact:
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/asr-s100-cpuptq-20261105-r02/output/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe.hbm
+          sha256: f3a7e2cdba2a199462f8abb4c4e9bb4c13fd705cc8b60c9ad08fe1909c4152dc
+          size_bytes: 368444064
+        command:
+        - docker
+        - run
+        - --rm
+        - --network
+        - none
+        - --cpus
+        - '1'
+        - --memory
+        - 1g
+        - -v
+        - /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01:/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01:ro
+        - --entrypoint
+        - /bin/bash
+        - sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+        - -lc
+        - python3 -c 'from hbdk4.compiler.hbm import Hbm;import json;h=Hbm('"'"'/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/asr-s100-cpuptq-20261105-r02/output/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe.hbm'"'"');print(json.dumps({"march":str(h.march),"models":[{"name":g.name,"inputs":[v.name
+          for v in g.flatten_inputs],"outputs":[v.name for v in g.flatten_outputs]}for
+          g in h.graphs]}))'
+        metadata:
+          march: March.nash_e
+          models:
+          - name: asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe
+            inputs:
+            - waveform
+            - attention_mask
+            outputs:
+            - logits
+      calibration_boundary:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/asr-s100-prepare-r02/calibration-boundary.json
+        sha256: 14f13391e12dd93d00f54398da6d4ce943040d6e86c36e31b0a3633aa97c21e2
+        size_bytes: 32057
+      approved_numerical_contract:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/reports/approved-numerical-gates.json
+        sha256: 11fe02885293bf86f0c8a2b7af83156581dbd81da16bdd11b24c36fc95a3430e
+        size_bytes: 901
+      guide:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/GUIDELINE.approved-v221.md
+        sha256: 9dc4f3f0e5098f9dee11904bac1ddfd29e69344291e64f22ad5b31479aaff3b3
+        size_bytes: 256123
+      source_preprocessing: Valid-sample variance+1e-7 normalization before zero padding;
+        real dynamic sample mask; 16kHz mono
+      source_cpu_full_output_gate:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/asr-s100-prepare-r02/cpu-sdk-parity.json
+        sha256: 7945a4c8dcc7db0ba7624642d9f11fa856a7e8a8ab9d46b8d410a04931f03715
+        size_bytes: 23510
+      source_reference_cases:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/asr-formal-source-r02/export/source-reference-cases.json
+        sha256: dcb501a798c8c8bd19ffbe7d81055a66755d37886e33951b8dc7d4c3c1d95140
+        size_bytes: 62493
+      independent_validation_manifest:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/inputs/validation/asr-upstream-r02/calibration-manifest.json
+        sha256: c137d9118fd32d36811e7047e6f3089b16eb509f5981ae7ea92cc3f57382a652
+        size_bytes: 10503
+      native_public_source_flow:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/public-native-flows-asr-r01/source-parity.json
+        sha256: dcb3fcaef1c998e6712cf5cc952182e1ee7ce7bf28d54a21ee9392c163ccb4fa
+        size_bytes: 2037
+        native_commit: e9f2d039c7c31eb6aee4ac1a3acb7c590bec2084
+        status: passed
+      metadata_collection_guide:
+        version: '2.22'
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/GUIDELINE.metadata-v222.md
+        sha256: a1ec10cf73529124436a6966f291bef3dc56c5dd4ee68aca193d79835d55f973
+        scope: Nonfinite SDK diagnostics become JSON null; original reports and numerical
+          gates unchanged
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: cc431523d3c8c3ed3bbccfb456444889ef0ed055c1c1dd2476b344b9581b1afc
+    runtime_command: python3 -m samples.speech.asr.runtime.python.public --target
+      s100 --variant xlsr53-zh3503-30k-mask-r02 --asset-id s:asr:s100/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe.hbm
+      --model-path /path/to/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe.hbm
+      --audio-file /path/to/input.wav --output-dir /path/to/new/transcript

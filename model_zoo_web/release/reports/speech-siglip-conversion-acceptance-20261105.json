@@ -1,0 +1,712 @@
+{
+  "schema_version": 1,
+  "at": "2026-11-05T10:13:57.264412+00:00",
+  "scope": "Two independent S100 conversions from complete trained FP32 sources; ASR INT16 and SigLIP FP16 internal deployment policies; other chips and board measurements remain separate",
+  "status": "source-sdk-compilation-and-archive-accepted",
+  "native_revision": "7464cf18ea2fa96fd96866c042437cf3622c826f",
+  "guide_version": "2.23",
+  "guide_sha256": "561312df57b398100549dfc2b549d671cef77fcfbc15949e6184877f69366f79",
+  "guide_snapshots": {
+    "2.21": {
+      "path": "/Users/jasperxzy/.codex/rdk-modelzoo-release-20261104/speech-siglip-guide-v221-20261105.md",
+      "sha256": "9dc4f3f0e5098f9dee11904bac1ddfd29e69344291e64f22ad5b31479aaff3b3",
+      "size_bytes": 256123
+    },
+    "2.22": {
+      "path": "/Users/jasperxzy/.codex/rdk-modelzoo-release-20261104/speech-siglip-guide-v222-20261105.md",
+      "sha256": "a1ec10cf73529124436a6966f291bef3dc56c5dd4ee68aca193d79835d55f973",
+      "size_bytes": 258605
+    },
+    "2.23": {
+      "path": "/Users/jasperxzy/.codex/rdk-modelzoo-release-20261104/speech-siglip-guide-v223-20261105.md",
+      "sha256": "561312df57b398100549dfc2b549d671cef77fcfbc15949e6184877f69366f79",
+      "size_bytes": 261294
+    }
+  },
+  "approved_numerical_contract": {
+    "status": "approved",
+    "approved_at": "2026-11-05T06:52:46.916256+00:00",
+    "owner_instruction": "批准新合同并继续（推荐）",
+    "scope": {
+      "asr": {
+        "variant": "xlsr53-zh3503-30k-mask-r02",
+        "checkpoint_revision": "99ccb2737be22b8bb50dcfcc39ad4d567fb90cfd",
+        "source_checkpoint_sha256": "de031fd4b29e0c0667e5346450fadfe1326c89936b888b59c4ede608db763ee4",
+        "atol": 0.002,
+        "rtol": 0.001
+      },
+      "siglip": {
+        "variant": "base-patch16-224-bicubic-dual-r02",
+        "checkpoint_revision": "7fd15f0689c79d79e38b1c2e2e2370a7bf2761ed",
+        "source_checkpoint_sha256": "2c63cb7d1f2e95ba501893cbb8faeb4ea9a3af295498d35097126228659c2af8",
+        "atol": 0.006,
+        "rtol": 0.001
+      }
+    },
+    "public_input_output_dtype": "float32",
+    "all_required_outputs_retained": true,
+    "prior_failed_attempts_preserved": true,
+    "other_model_gates_unchanged": true
+  },
+  "model_storage": "dev-server and Archive; code, image assets and metadata only on Mac",
+  "models": [
+    {
+      "id": "asr/asr/asr",
+      "variant": "xlsr53-zh3503-30k-mask-r02",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "artifact": {
+        "filename": "asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe.hbm",
+        "format": "HBM",
+        "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/asr/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe.hbm",
+        "sha256": "f3a7e2cdba2a199462f8abb4c4e9bb4c13fd705cc8b60c9ad08fe1909c4152dc",
+        "size_bytes": 368444064,
+        "release_manifest_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/asr/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe/v1/release.json",
+        "checksums_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/asr/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe/v1/SHA256SUMS"
+      },
+      "license": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn/blob/99ccb2737be22b8bb50dcfcc39ad4d567fb90cfd/README.md",
+        "scope": "model"
+      },
+      "input": {
+        "width": 30000,
+        "height": 1,
+        "source": {
+          "name": "waveform",
+          "format": "FEATUREMAP",
+          "dtype": "float32",
+          "layout": "NT",
+          "shape": [
+            1,
+            30000
+          ],
+          "scale": 1.0
+        }
+      },
+      "runtime_inputs": [
+        {
+          "name": "waveform",
+          "shape": [
+            1,
+            30000
+          ],
+          "dtype": "float32",
+          "format": "FEATUREMAP",
+          "layout": "NT"
+        },
+        {
+          "name": "attention_mask",
+          "shape": [
+            1,
+            30000
+          ],
+          "dtype": "float32",
+          "format": "FEATUREMAP",
+          "layout": "NT"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "logits",
+          "shape": [
+            1,
+            93,
+            3503
+          ],
+          "dtype": "float32"
+        }
+      ],
+      "runtime_command": "python3 -m samples.speech.asr.runtime.python.public --target s100 --variant xlsr53-zh3503-30k-mask-r02 --asset-id s:asr:s100/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe.hbm --model-path /path/to/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe.hbm --audio-file /path/to/input.wav --output-dir /path/to/new/transcript",
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "artifact_sha256": "f3a7e2cdba2a199462f8abb4c4e9bb4c13fd705cc8b60c9ad08fe1909c4152dc",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "publication_native_revision": "e9f2d039c7c31eb6aee4ac1a3acb7c590bec2084",
+      "source": {
+        "repository": "https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn",
+        "revision": "99ccb2737be22b8bb50dcfcc39ad4d567fb90cfd",
+        "checkpoint": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/asr/pytorch_model.bin",
+          "sha256": "de031fd4b29e0c0667e5346450fadfe1326c89936b888b59c4ede608db763ee4",
+          "size_bytes": 1276296151
+        },
+        "config": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/inputs/source_models/asr/config.json",
+          "sha256": "9af98614e322a5300c75605227d93c98af0c8f78754aba1dfc279166688afddd",
+          "size_bytes": 1567
+        },
+        "weight_url": "https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn/resolve/99ccb2737be22b8bb50dcfcc39ad4d567fb90cfd/pytorch_model.bin",
+        "license": "Apache-2.0",
+        "precision": "float32"
+      },
+      "source_export_native_revision": "73149261085570ae049f5c61b37f1fe1b4bf3fb2",
+      "source_numeric_gate": {
+        "status": "passed",
+        "revision": "owner-approved-20261105-guide-v2.21",
+        "atol": 0.002,
+        "rtol": 0.001,
+        "all_elements_required": true,
+        "cases": 59
+      },
+      "sdk_cpu_gate": {
+        "status": "passed",
+        "report": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/asr-s100-prepare-r02/cpu-sdk-parity.json",
+          "sha256": "7945a4c8dcc7db0ba7624642d9f11fa856a7e8a8ab9d46b8d410a04931f03715",
+          "size_bytes": 23510
+        },
+        "versions": {
+          "numpy": "1.23.0",
+          "onnxruntime": "1.19.0"
+        }
+      },
+      "calibration_samples": 50,
+      "calibration_manifest_sha256": "4be223e2a01a8d90f4aa78c6cab44d10b3a1f194b285d951777d09b31c8cb14f",
+      "calibration_loader_gate": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/asr-s100-prepare-r02/calibration-boundary.json",
+        "sha256": "14f13391e12dd93d00f54398da6d4ce943040d6e86c36e31b0a3633aa97c21e2",
+        "size_bytes": 32057
+      },
+      "observed_hbm_abi": {
+        "march": "March.nash_e",
+        "models": [
+          {
+            "name": "asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe",
+            "inputs": [
+              "waveform",
+              "attention_mask"
+            ],
+            "outputs": [
+              "logits"
+            ]
+          }
+        ]
+      },
+      "compiler_versions": {
+        "hbdk": "4.7.5",
+        "hmct": "2.6.5",
+        "hb_compile": "3.5.3"
+      },
+      "compiler_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+      "source_onnx_sha256": "522b3955b66596ec400c4dd2a264fb6c1fda7e1563c3a9ce109e3f81aaec5b5f",
+      "effective_config_sha256": "143f11955286cdce9c3933c7893c0c9bbce1f8b031eb324efbc3c6baa7f3acbe",
+      "compiler_memory_gib": 32,
+      "deployment_precision_policy": "INT16 activation policy, SDK mixed precision and CPU paths retained; O1",
+      "quantization_configuration": null,
+      "output_quantization_diagnostics": [
+        {
+          "name": "logits",
+          "calibrated_cosine": null,
+          "cosine": 0.999221
+        }
+      ],
+      "native_public_source_flow": {
+        "status": "passed",
+        "native_commit": "e9f2d039c7c31eb6aee4ac1a3acb7c590bec2084",
+        "scope": "Actual registered Native source-ONNX CLIs and new independent banner inputs versus original complete trained FP32 sources",
+        "complete_output_cases": 3,
+        "server_evidence": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/public-native-flows-asr-r01/source-parity.json",
+          "sha256": "dcb3fcaef1c998e6712cf5cc952182e1ee7ce7bf28d54a21ee9392c163ccb4fa",
+          "size_bytes": 2037,
+          "native_commit": "e9f2d039c7c31eb6aee4ac1a3acb7c590bec2084",
+          "status": "passed"
+        }
+      },
+      "unpublished_quantization_trials": [],
+      "anonymous_archive_verification": {
+        "model": {
+          "status": "verified",
+          "prefix": "rdk_s100/asr",
+          "filename": "asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe.hbm",
+          "sha256": "f3a7e2cdba2a199462f8abb4c4e9bb4c13fd705cc8b60c9ad08fe1909c4152dc",
+          "size_bytes": 368444064,
+          "source_host": "dev-server",
+          "source_path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/asr-s100-cpuptq-20261105-r02/output/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe.hbm",
+          "transfer": "ssh-stdio-stream; no local model file",
+          "anonymous_verification_host": "dev-server",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/asr/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe.hbm",
+          "anonymous_https": "verified"
+        },
+        "companions": {
+          "prefix": "assets/rdk_s100/asr/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe/v1",
+          "status": "verified",
+          "files": {
+            "release.json": {
+              "sha256": "0cb0dfb8bd07fc7a61d65777a305608d3dfdf7b4dc6fc9f2bbbc3d4c55b4a837",
+              "size_bytes": 12008
+            },
+            "release.source.json": {
+              "sha256": "cc431523d3c8c3ed3bbccfb456444889ef0ed055c1c1dd2476b344b9581b1afc",
+              "size_bytes": 11838
+            },
+            "oe_report.html": {
+              "sha256": "9d440e428bccaaebbf5325b13a4ef98b936e8d2076551672670674c38dd78fcf",
+              "size_bytes": 4645171
+            },
+            "oe_report_data.json": {
+              "sha256": "966eafc2b90ba0f9784a78bc39fb17fdcbf3f27c1906ca0472d4afa7d70780a8",
+              "size_bytes": 397068
+            },
+            "SHA256SUMS": {
+              "sha256": "e40cdc0c96e64ad9947482eb8eec6c08f5a8d8f98ce3bd1124137d9e8ebabcad",
+              "size_bytes": 460
+            }
+          },
+          "anonymous_https": {
+            "release.json": {
+              "sha256": "0cb0dfb8bd07fc7a61d65777a305608d3dfdf7b4dc6fc9f2bbbc3d4c55b4a837",
+              "size_bytes": 12008
+            },
+            "release.source.json": {
+              "sha256": "cc431523d3c8c3ed3bbccfb456444889ef0ed055c1c1dd2476b344b9581b1afc",
+              "size_bytes": 11838
+            },
+            "oe_report.html": {
+              "sha256": "9d440e428bccaaebbf5325b13a4ef98b936e8d2076551672670674c38dd78fcf",
+              "size_bytes": 4645171
+            },
+            "oe_report_data.json": {
+              "sha256": "966eafc2b90ba0f9784a78bc39fb17fdcbf3f27c1906ca0472d4afa7d70780a8",
+              "size_bytes": 397068
+            },
+            "SHA256SUMS": {
+              "sha256": "e40cdc0c96e64ad9947482eb8eec6c08f5a8d8f98ce3bd1124137d9e8ebabcad",
+              "size_bytes": 460
+            }
+          },
+          "anonymous_verification_host": "dev-server",
+          "model_storage": "dev-server",
+          "control": "Mac direct SSH to dev-server; Archive SSH from Mac"
+        }
+      }
+    },
+    {
+      "id": "siglip/siglip/embed",
+      "variant": "base-patch16-224-bicubic-dual-r02",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "artifact": {
+        "filename": "siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04.hbm",
+        "format": "HBM",
+        "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/siglip/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04.hbm",
+        "sha256": "61c6e36582acac543eba54f539a76c2ad8cf2c1a02f479e051b690edf25dab92",
+        "size_bytes": 376791968,
+        "release_manifest_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/siglip/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04/v1/release.json",
+        "checksums_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/siglip/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04/v1/SHA256SUMS"
+      },
+      "license": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/google/siglip-base-patch16-224/blob/7fd15f0689c79d79e38b1c2e2e2370a7bf2761ed/README.md",
+        "scope": "model"
+      },
+      "input": {
+        "width": 224,
+        "height": 224,
+        "source": {
+          "name": "_input_0",
+          "format": "RGB",
+          "dtype": "float32",
+          "layout": "NCHW",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "scale": 0.00392156862745098,
+          "mean": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "std": [
+            0.5,
+            0.5,
+            0.5
+          ]
+        }
+      },
+      "runtime_inputs": [
+        {
+          "name": "_input_0",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "format": "FEATUREMAP",
+          "layout": "NCHW"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "pooler_output",
+          "shape": [
+            1,
+            768
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "last_hidden_state",
+          "shape": [
+            1,
+            196,
+            768
+          ],
+          "dtype": "float32"
+        }
+      ],
+      "runtime_command": "python3 -m samples.vision.siglip.runtime.python.public --target s100 --variant base-patch16-224-bicubic-dual-r02 --asset-id s:siglip:s100/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04.hbm --model-path /path/to/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04.hbm --image /path/to/input.jpg --output /path/to/new/features.npz",
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "artifact_sha256": "61c6e36582acac543eba54f539a76c2ad8cf2c1a02f479e051b690edf25dab92",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "publication_native_revision": "7464cf18ea2fa96fd96866c042437cf3622c826f",
+      "source": {
+        "repository": "https://huggingface.co/google/siglip-base-patch16-224",
+        "revision": "7fd15f0689c79d79e38b1c2e2e2370a7bf2761ed",
+        "checkpoint": {
+          "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/siglip-base224-preparation-20261102-r01/input-r02/model.safetensors",
+          "sha256": "2c63cb7d1f2e95ba501893cbb8faeb4ea9a3af295498d35097126228659c2af8",
+          "size_bytes": 812672320
+        },
+        "config": {
+          "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/siglip-base224-preparation-20261102-r01/input-r02/config.json",
+          "sha256": "cd85b3d28829722820bcb89a2cfbb4160e55fd359249a3044da724166a8d9688",
+          "size_bytes": 432
+        },
+        "weight_url": "https://huggingface.co/google/siglip-base-patch16-224/resolve/7fd15f0689c79d79e38b1c2e2e2370a7bf2761ed/model.safetensors",
+        "license": "Apache-2.0",
+        "precision": "float32"
+      },
+      "source_export_native_revision": "73149261085570ae049f5c61b37f1fe1b4bf3fb2",
+      "source_numeric_gate": {
+        "status": "passed",
+        "revision": "owner-approved-20261105-guide-v2.21",
+        "atol": 0.006,
+        "rtol": 0.001,
+        "all_elements_required": true,
+        "cases": 209
+      },
+      "sdk_cpu_gate": {
+        "status": "passed",
+        "report": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/siglip-s100-prepare-r02/cpu-sdk-parity.json",
+          "sha256": "2c7e15f94208948f1894b77013c0e26908a55eb22f2de36e047c69fcdf9739a3",
+          "size_bytes": 143837
+        },
+        "versions": {
+          "numpy": "1.23.0",
+          "onnxruntime": "1.19.0"
+        }
+      },
+      "calibration_samples": 200,
+      "calibration_manifest_sha256": "c0ca4ceb56eb720aea8bfba2603006e4b41dfa685b0d780a0a2fc3d5aeecafe0",
+      "calibration_loader_gate": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/siglip-s100-prepare-r02/calibration-boundary.json",
+        "sha256": "59ac60e91261a288942f655853ce41f6330ca4745db19fcd0cee1f52af069fa2",
+        "size_bytes": 70318
+      },
+      "observed_hbm_abi": {
+        "march": "March.nash_e",
+        "models": [
+          {
+            "name": "siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04",
+            "inputs": [
+              "_input_0"
+            ],
+            "outputs": [
+              "pooler_output",
+              "last_hidden_state"
+            ]
+          }
+        ]
+      },
+      "compiler_versions": {
+        "hbdk": "4.7.5",
+        "hmct": "2.6.5",
+        "hb_compile": "3.5.3"
+      },
+      "compiler_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+      "source_onnx_sha256": "ec000b08e37afe6e778034c849a74d31c50c94b465477cffb72aea0e82393a6e",
+      "effective_config_sha256": "a3035fbd27874188fd4748b2623ddea9dc734ae003df4cb6aabb661b82a8f919",
+      "compiler_memory_gib": 18,
+      "deployment_precision_policy": "FP16 internal computation, SDK mixed precision and CPU paths retained; O1",
+      "quantization_configuration": {
+        "activation": "float16",
+        "method": "max",
+        "max_percentile": 1.0
+      },
+      "output_quantization_diagnostics": [
+        {
+          "name": "last_hidden_state",
+          "calibrated_cosine": 0.999939,
+          "cosine": 0.999788
+        },
+        {
+          "name": "pooler_output",
+          "calibrated_cosine": 0.999997,
+          "cosine": 0.99999
+        }
+      ],
+      "native_public_source_flow": {
+        "status": "passed",
+        "native_commit": "7464cf18ea2fa96fd96866c042437cf3622c826f",
+        "scope": "Actual registered Native source-ONNX CLIs and new independent banner inputs versus original complete trained FP32 sources",
+        "complete_output_cases": 1,
+        "server_evidence": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/public-native-flows-siglip-r01/source-parity.json",
+          "sha256": "67632bb0dc772e5c95cbb627c9420a85d642068d531ee75d37318df7b3cc5d35",
+          "size_bytes": 1209,
+          "native_commit": "7464cf18ea2fa96fd96866c042437cf3622c826f",
+          "status": "passed"
+        }
+      },
+      "unpublished_quantization_trials": [
+        {
+          "attempt": "r02",
+          "policy": "int16 max0.9999",
+          "pooler_cosine": 0.603536,
+          "hidden_state_cosine": 0.529925
+        },
+        {
+          "attempt": "r03",
+          "policy": "int16 max1.0",
+          "pooler_cosine": 0.910179,
+          "hidden_state_cosine": 0.756131
+        }
+      ],
+      "anonymous_archive_verification": {
+        "model": {
+          "status": "verified",
+          "prefix": "rdk_s100/siglip",
+          "filename": "siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04.hbm",
+          "sha256": "61c6e36582acac543eba54f539a76c2ad8cf2c1a02f479e051b690edf25dab92",
+          "size_bytes": 376791968,
+          "source_host": "dev-server",
+          "source_path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/siglip-s100-fp16-backend-20261105-r04/output/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04.hbm",
+          "transfer": "ssh-stdio-stream; no local model file",
+          "anonymous_verification_host": "dev-server",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/siglip/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04.hbm",
+          "anonymous_https": "verified"
+        },
+        "companions": {
+          "prefix": "assets/rdk_s100/siglip/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04/v1",
+          "status": "verified",
+          "files": {
+            "release.json": {
+              "sha256": "e2310a297dbd66f545e8cdf17f5edf51bd2bacba26c62c5e8227a3b38e1edca1",
+              "size_bytes": 13194
+            },
+            "release.source.json": {
+              "sha256": "accdf0f186c5fd3c1e59ce4192f345d8e65b90fc79343b6f9791531514a425f3",
+              "size_bytes": 13024
+            },
+            "oe_report.html": {
+              "sha256": "f265a953969af1e4841b766a472791c0fe9c43a9792f30602e850ae7274b67eb",
+              "size_bytes": 2562918
+            },
+            "oe_report_data.json": {
+              "sha256": "ce8bfb951b778ee557cde4ac7367d9ef3b4f000ba69e02cdd5f55c1f7c9e259d",
+              "size_bytes": 144893
+            },
+            "SHA256SUMS": {
+              "sha256": "e2262895693f19d06dfb52d3d6e846f5e95d419ddf5f3a9ff2cadf61758d1216",
+              "size_bytes": 461
+            }
+          },
+          "anonymous_https": {
+            "release.json": {
+              "sha256": "e2310a297dbd66f545e8cdf17f5edf51bd2bacba26c62c5e8227a3b38e1edca1",
+              "size_bytes": 13194
+            },
+            "release.source.json": {
+              "sha256": "accdf0f186c5fd3c1e59ce4192f345d8e65b90fc79343b6f9791531514a425f3",
+              "size_bytes": 13024
+            },
+            "oe_report.html": {
+              "sha256": "f265a953969af1e4841b766a472791c0fe9c43a9792f30602e850ae7274b67eb",
+              "size_bytes": 2562918
+            },
+            "oe_report_data.json": {
+              "sha256": "ce8bfb951b778ee557cde4ac7367d9ef3b4f000ba69e02cdd5f55c1f7c9e259d",
+              "size_bytes": 144893
+            },
+            "SHA256SUMS": {
+              "sha256": "e2262895693f19d06dfb52d3d6e846f5e95d419ddf5f3a9ff2cadf61758d1216",
+              "size_bytes": 461
+            }
+          },
+          "anonymous_verification_host": "dev-server",
+          "model_storage": "dev-server",
+          "control": "Mac direct SSH to dev-server; Archive SSH from Mac"
+        }
+      }
+    }
+  ],
+  "dataset_scope": {
+    "asr": "50 frozen real MindS14 zh-CN training utterances for PTQ; eight separate real WAV windows for source validation; no dataset CER claim",
+    "siglip": "200 frozen real COCO training images for PTQ; eight separate COCO validation images; no zero-shot or retrieval accuracy claim"
+  },
+  "banners": "speech-siglip-banner-generation-20261105.json",
+  "native_host_validation": {
+    "status": "passed",
+    "native_revision": "7464cf18ea2fa96fd96866c042437cf3622c826f",
+    "python_tests": 605,
+    "catalog_tests": 137,
+    "checks": [
+      {
+        "name": "shared-utils",
+        "native_commit": "7464cf18ea2fa96fd96866c042437cf3622c826f",
+        "argv": [
+          "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/environments/bytetrack-reference/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "utils/py_utils/tests"
+        ],
+        "returncode": 0,
+        "seconds": 3.279054345097393,
+        "test_count": 235,
+        "log": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/native-final-checks-r02/shared-utils.log"
+      },
+      {
+        "name": "resnet",
+        "native_commit": "7464cf18ea2fa96fd96866c042437cf3622c826f",
+        "argv": [
+          "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/environments/bytetrack-reference/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "samples/vision/resnet/tests"
+        ],
+        "returncode": 0,
+        "seconds": 11.509116572793573,
+        "test_count": 45,
+        "log": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/native-final-checks-r02/resnet.log"
+      },
+      {
+        "name": "ultralytics",
+        "native_commit": "7464cf18ea2fa96fd96866c042437cf3622c826f",
+        "argv": [
+          "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/environments/bytetrack-reference/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "samples/vision/ultralytics_yolo/tests"
+        ],
+        "returncode": 0,
+        "seconds": 11.389689820818603,
+        "test_count": 189,
+        "log": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/native-final-checks-r02/ultralytics.log"
+      },
+      {
+        "name": "paddle-ocr",
+        "native_commit": "7464cf18ea2fa96fd96866c042437cf3622c826f",
+        "argv": [
+          "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/environments/bytetrack-reference/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "samples/vision/paddle_ocr/tests"
+        ],
+        "returncode": 0,
+        "seconds": 2.671520278789103,
+        "test_count": 53,
+        "log": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/native-final-checks-r02/paddle-ocr.log"
+      },
+      {
+        "name": "asr",
+        "native_commit": "7464cf18ea2fa96fd96866c042437cf3622c826f",
+        "argv": [
+          "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/environments/paraformer-export/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "samples/speech/asr/tests"
+        ],
+        "returncode": 0,
+        "seconds": 1.3412775099277496,
+        "test_count": 53,
+        "log": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/native-final-checks-r02/asr.log"
+      },
+      {
+        "name": "siglip",
+        "native_commit": "7464cf18ea2fa96fd96866c042437cf3622c826f",
+        "argv": [
+          "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/environments/bytetrack-reference/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "samples/vision/siglip/tests"
+        ],
+        "returncode": 0,
+        "seconds": 1.5207994659431279,
+        "test_count": 30,
+        "log": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/native-final-checks-r02/siglip.log"
+      },
+      {
+        "name": "catalog-dependencies",
+        "native_commit": "7464cf18ea2fa96fd96866c042437cf3622c826f",
+        "argv": [
+          "npm",
+          "ci",
+          "--ignore-scripts"
+        ],
+        "returncode": 0,
+        "seconds": 4.617070710286498,
+        "log": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/native-final-checks-r02/catalog-dependencies.log"
+      },
+      {
+        "name": "catalog-check",
+        "native_commit": "7464cf18ea2fa96fd96866c042437cf3622c826f",
+        "argv": [
+          "npm",
+          "run",
+          "check"
+        ],
+        "returncode": 0,
+        "seconds": 35.20213348604739,
+        "log": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/native-final-checks-r02/catalog-check.log"
+      }
+    ],
+    "shared_test_path": "utils/py_utils/tests (current Native layout; historical samples/_shared/tests does not exist)"
+  },
+  "board_validation": {
+    "board_smoke": "not-run",
+    "accuracy": "not-run",
+    "runtime_1": "not-run",
+    "runtime_2": "not-run",
+    "cpp_1": "not-run",
+    "cpp_2": "not-run"
+  }
+}

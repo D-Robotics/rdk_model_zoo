@@ -2,7 +2,9 @@
 
 本批优先补齐此前没有新目录下载的模型条目，先交付 S100。ViT ImageNet-1K、FCOS ResNet50-FPN 和 UNet VGG16/VOC21 是独立规格，旧的 ViT CIFAR-10、FCOS EfficientNet 和 UNet ResNet50 规格仍保留原状态。
 
-以下条目需要先解决源模型、导出或数据问题，再进行芯片扩展。不能用随机权重、其他任务模型或缺失输出的图替代。
+Wav2Vec2 ASR 与 SigLIP 的导出阻塞已解决。两者按负责人批准的独立 FP32 源合同核验全部原始输出，并完成 S100 编译、Native 样例与 Archive 校验；详见 `speech-siglip-conversion-acceptance-20261105.json`。Wav2Vec2 保留真实 attention mask 和全部3503类 logits；SigLIP 同时保留学习池化及196×768特征，因两次 INT16 诊断偏差较大，发布独立 FP16 内部计算产物。两个条目的独立封面来自真实主机模型输出，均未声称板端或数据集精度通过。
+
+以下11个条目需要先解决源模型、导出或数据问题，再进行芯片扩展。不能用随机权重、其他任务模型或缺失输出的图替代。
 
 | 条目 | 当前缺口 |
 | --- | --- |
@@ -10,9 +12,7 @@
 | Pi0 | 匹配策略、机器人动作/观测定义、归一化统计和成对输入数据。 |
 | HIMLoco | 匹配 Go2 的已训练权重及真实观测/动作回放。 |
 | DiffusionDrive | 匹配四输入接口的 checkpoint、可核验导出及成对 NAVSIM 校准记录。 |
-| Wav2Vec2 ASR | 已有训练权重和词表，但真实语音的全输出 ONNX 一致性检查未通过，需修复导出。 |
 | MDTC KWS | 已有训练权重；缺 HeySnips 真实正、负类校准音频，导出接口仍需验证。 |
-| SigLIP | 池化输出通过，但完整 hidden-state 输出未通过一致性检查，不能只保留池化头。 |
 | PointNet | 匹配 chair 四部件分割的训练权重和真实点云；分类权重不能替代。 |
 | UNetMobileNet | 匹配 Cityscapes 19 类、1024×2048 的原架构和训练权重。 |
 | VargConvNet | 匹配的原架构与已训练权重。 |

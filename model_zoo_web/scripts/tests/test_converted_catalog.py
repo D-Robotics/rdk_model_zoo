@@ -106,6 +106,9 @@ class ConvertedCatalogTest(unittest.TestCase):
     def test_metadata_version_and_model_license_cannot_be_bypassed(self):
         self.row['metadata_revision']=2
         with self.assertRaises(catalog.CatalogError): self.validate()
+        self.row['metadata_revision']=1
+        self.record['license']['scope']='sample-code'
+        with self.assertRaises(catalog.CatalogError): self.validate()
 
     def test_speech_waveform_keeps_its_real_two_dimensional_contract(self):
         self.record['domain']='speech'
@@ -121,9 +124,6 @@ class ConvertedCatalogTest(unittest.TestCase):
         self.path=catalog.DATA_ROOT/'vision/ultralytics_yolo/yolo26/detect.yaml'
         with self.assertRaisesRegex(catalog.CatalogError,'four dimensions'):
             self.validate()
-        self.row['metadata_revision']=1
-        self.record['license']['scope']='sample-code'
-        with self.assertRaises(catalog.CatalogError): self.validate()
 
 
 if __name__=='__main__':

@@ -7,10 +7,11 @@ source: siglip
 family: siglip
 task: embed
 description:
-  zh: "SigLIP 以 sigmoid 损失学习图文表示，视觉编码器输出全局图像向量或局部 patch 特征。"
-  en: "SigLIP learns image-text representations with a sigmoid loss; its vision encoder produces global image embeddings or local patch features."
+  zh: SigLIP 以 sigmoid 损失学习图文表示，视觉编码器输出全局图像向量或局部 patch 特征。
+  en: SigLIP learns image-text representations with a sigmoid loss; its vision encoder
+    produces global image embeddings or local patch features.
 sample_path: samples/vision/siglip
-sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+sample_revision: 7464cf18ea2fa96fd96866c042437cf3622c826f
 license:
   name: Apache-2.0
   url: https://www.apache.org/licenses/LICENSE-2.0
@@ -61,7 +62,8 @@ usage:
 - source: samples/vision/siglip/README.md
   lines:
   - python3 samples/vision/siglip/model/download.py --target s100 --variant base-patch16-224
-  - python3 samples/vision/siglip/runtime/python/main.py --target s100 --variant base-patch16-224 --submodel pooler_output
+  - python3 samples/vision/siglip/runtime/python/main.py --target s100 --variant base-patch16-224
+    --submodel pooler_output
 sourced_benchmarks:
 - id: siglip-base-224-s100
   platform: s100
@@ -1259,3 +1261,268 @@ documented_downloads:
 example_image:
   path: samples/vision/siglip/test_data/dog.jpg
   source: samples/vision/siglip/test_data/dog.jpg
+hero_visual:
+  kind: feature-panel
+  file: model_zoo_web/release/assets/pending-heroes/siglip-kayaks-patch-pca-20261105.webp
+  predictions_source: model_zoo_web/release/assets/pending-heroes/siglip-kayaks-patch-pca-20261105.json
+  model_url: https://huggingface.co/google/siglip-base-patch16-224/resolve/7fd15f0689c79d79e38b1c2e2e2370a7bf2761ed/model.safetensors
+  model_file: model.safetensors
+  input: samples/vision/siglip/test_data/banner_input_kayaks_20261105.png
+  framework: ONNX Runtime 1.20.1
+  commit: 5d7b327d7e6ec9e58145b41f9bb4cd25ac29f9bf
+  runtime: host-float-reference
+  inference_receipt_version: 2
+  note: Host float reference, not board output; board accuracy and performance remain
+    not-run
+  documented_in: samples/vision/siglip/runtime/python/public.py
+provider: Google / Hugging Face
+model_license: &id001
+  name: Apache-2.0
+  url: https://huggingface.co/google/siglip-base-patch16-224/blob/7fd15f0689c79d79e38b1c2e2e2370a7bf2761ed/README.md
+  scope: model
+variants:
+- size: base-patch16-224-bicubic-dual-r02
+  model:
+    parameter_count: 92884224
+  input:
+    width: 224
+    height: 224
+    source:
+      name: _input_0
+      format: RGB
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.5
+      - 0.5
+      - 0.5
+      std:
+      - 0.5
+      - 0.5
+      - 0.5
+  platforms:
+  - platform: s100
+    license: *id001
+    status: converted
+    converted_at: '2026-11-05'
+    metadata_revision: 1
+    artifact:
+      filename: siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04.hbm
+      format: HBM
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/siglip/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04.hbm
+      sha256: 61c6e36582acac543eba54f539a76c2ad8cf2c1a02f479e051b690edf25dab92
+      size_bytes: 376791968
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/siglip/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/siglip/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/siglip/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/siglip/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: pooler_output
+        shape:
+        - 1
+        - 768
+        dtype: float32
+      - name: last_hidden_state
+        shape:
+        - 1
+        - 196
+        - 768
+        dtype: float32
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 200
+      calibration_manifest_sha256: c0ca4ceb56eb720aea8bfba2603006e4b41dfa685b0d780a0a2fc3d5aeecafe0
+      optimization_level: O1
+      board_validation: not-run
+      inputs:
+      - name: _input_0
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+        dtype: float32
+      runtime_inputs:
+      - name: _input_0
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+        dtype: float32
+        format: FEATUREMAP
+        layout: NCHW
+      numerical_contract:
+        revision: owner-approved-20261105-guide-v2.21
+        atol: 0.006
+        rtol: 0.001
+        all_elements_required: true
+      quantization_policy:
+        activation: float16
+        method: max
+        max_percentile: 1.0
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: 61c6e36582acac543eba54f539a76c2ad8cf2c1a02f479e051b690edf25dab92
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: 7464cf18ea2fa96fd96866c042437cf3622c826f
+      source_repository_commit: 7fd15f0689c79d79e38b1c2e2e2370a7bf2761ed
+      source_checkpoint_sha256: 2c63cb7d1f2e95ba501893cbb8faeb4ea9a3af295498d35097126228659c2af8
+      source_weight_url: https://huggingface.co/google/siglip-base-patch16-224/resolve/7fd15f0689c79d79e38b1c2e2e2370a7bf2761ed/model.safetensors
+      checkpoint_revision: sha256:2c63cb7d1f2e95ba501893cbb8faeb4ea9a3af295498d35097126228659c2af8
+      source_version_pair:
+        repository: https://huggingface.co/google/siglip-base-patch16-224
+        revision: 7fd15f0689c79d79e38b1c2e2e2370a7bf2761ed
+        checkpoint:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/siglip-base224-preparation-20261102-r01/input-r02/model.safetensors
+          sha256: 2c63cb7d1f2e95ba501893cbb8faeb4ea9a3af295498d35097126228659c2af8
+          size_bytes: 812672320
+          url: https://huggingface.co/google/siglip-base-patch16-224/resolve/7fd15f0689c79d79e38b1c2e2e2370a7bf2761ed/model.safetensors
+        config:
+          path: /home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/siglip-base224-preparation-20261102-r01/input-r02/config.json
+          sha256: cd85b3d28829722820bcb89a2cfbb4160e55fd359249a3044da724166a8d9688
+          size_bytes: 432
+        weight_url: https://huggingface.co/google/siglip-base-patch16-224/resolve/7fd15f0689c79d79e38b1c2e2e2370a7bf2761ed/model.safetensors
+        license: Apache-2.0
+        precision: float32
+      toolchain_image: S SDK 3.7.0 / exact cached image identified by digest
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      build_id: siglip-s100-fp16-backend-20261105-r04
+      precision_policy: FP16 internal computation, SDK mixed precision and CPU paths
+        retained; O1
+      native_variant: base-patch16-224-bicubic-dual-r02
+      onnx_sha256: ec000b08e37afe6e778034c849a74d31c50c94b465477cffb72aea0e82393a6e
+      config_sha256: a3035fbd27874188fd4748b2623ddea9dc734ae003df4cb6aabb661b82a8f919
+      recipe_sha256: 60f27454de1e987199479d9ea3ec26ba563f83562d6d87a73c26a83e07ca9b15
+      calibration_manifest_sha256: c0ca4ceb56eb720aea8bfba2603006e4b41dfa685b0d780a0a2fc3d5aeecafe0
+      host_smoke_report_sha256: 44e5614991b85b0ca2c2961cc4c9b8075028de55ee68e9f0e4b779d0f689b276
+      compile_log_sha256: b8494b7ad8db3c418d061fa349aef785f90e6efc5f0255fc656c334be2aef9cf
+      cpu_reference_float_gate:
+        status: passed
+        report:
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/siglip-s100-prepare-r02/cpu-sdk-parity.json
+          sha256: 2c7e15f94208948f1894b77013c0e26908a55eb22f2de36e047c69fcdf9739a3
+          size_bytes: 143837
+      source_export_native_revision: 73149261085570ae049f5c61b37f1fe1b4bf3fb2
+      actual_compiled_abi:
+        artifact:
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/siglip-s100-fp16-backend-20261105-r04/output/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04.hbm
+          sha256: 61c6e36582acac543eba54f539a76c2ad8cf2c1a02f479e051b690edf25dab92
+          size_bytes: 376791968
+        command:
+        - docker
+        - run
+        - --rm
+        - --network
+        - none
+        - --cpus
+        - '1'
+        - --memory
+        - 1g
+        - -v
+        - /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01:/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01:ro
+        - --entrypoint
+        - /bin/bash
+        - sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+        - -lc
+        - python3 -c 'from hbdk4.compiler.hbm import Hbm;import json;h=Hbm('"'"'/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/siglip-s100-fp16-backend-20261105-r04/output/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04.hbm'"'"');print(json.dumps({"march":str(h.march),"models":[{"name":g.name,"inputs":[v.name
+          for v in g.flatten_inputs],"outputs":[v.name for v in g.flatten_outputs]}for
+          g in h.graphs]}))'
+        metadata:
+          march: March.nash_e
+          models:
+          - name: siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04
+            inputs:
+            - _input_0
+            outputs:
+            - pooler_output
+            - last_hidden_state
+      calibration_boundary:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/siglip-s100-prepare-r02/calibration-boundary.json
+        sha256: 59ac60e91261a288942f655853ce41f6330ca4745db19fcd0cee1f52af069fa2
+        size_bytes: 70318
+      approved_numerical_contract:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/reports/approved-numerical-gates.json
+        sha256: 11fe02885293bf86f0c8a2b7af83156581dbd81da16bdd11b24c36fc95a3430e
+        size_bytes: 901
+      guide:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/GUIDELINE.approved-v221.md
+        sha256: 9dc4f3f0e5098f9dee11904bac1ddfd29e69344291e64f22ad5b31479aaff3b3
+        size_bytes: 256123
+      source_preprocessing: Pinned upstream PIL bicubic direct224 resize, RGB rescale
+        and mean/std0.5; learned pooler retained
+      source_cpu_full_output_gate:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/siglip-s100-prepare-r02/cpu-sdk-parity.json
+        sha256: 2c7e15f94208948f1894b77013c0e26908a55eb22f2de36e047c69fcdf9739a3
+        size_bytes: 143837
+      source_reference_cases:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/siglip-formal-source-r02/export/source-reference-cases.json
+        sha256: 9c78a4968ed020ddc9deaead961528eebe2dde7a2d508c73bc0122efebde637d
+        size_bytes: 150744
+      independent_validation_manifest:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/inputs/validation/siglip-upstream-r02/calibration-manifest.json
+        sha256: 319822ad89b8f40ab6ec75cb92ecb87ef7150c048d60090bd416cac425603f49
+        size_bytes: 6823
+      native_public_source_flow:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/public-native-flows-siglip-r01/source-parity.json
+        sha256: 67632bb0dc772e5c95cbb627c9420a85d642068d531ee75d37318df7b3cc5d35
+        size_bytes: 1209
+        native_commit: 7464cf18ea2fa96fd96866c042437cf3622c826f
+        status: passed
+      metadata_collection_guide:
+        version: '2.22'
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/GUIDELINE.metadata-v222.md
+        sha256: a1ec10cf73529124436a6966f291bef3dc56c5dd4ee68aca193d79835d55f973
+        scope: Nonfinite SDK diagnostics become JSON null; original reports and numerical
+          gates unchanged
+      deployment_precision_guide:
+        version: '2.23'
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/GUIDELINE.precision-v223.md
+        sha256: 561312df57b398100549dfc2b549d671cef77fcfbc15949e6184877f69366f79
+      ptq_diagnostic_gate:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/speech-siglip-export-20261105-r01/jobs/siglip-s100-fp16-prepare-20261105-r04/diagnostic-quality.json
+        sha256: 0800f42d6ff0adeb75e9a4b26024edcc3c8af8769a7649a6092befbf61efe0be
+        size_bytes: 352
+      source_fp32_spec: base-patch16-224-bicubic-dual-r02
+      unpublished_quantization_trials:
+      - attempt: r02
+        policy: int16 max0.9999
+        pooler_cosine: 0.603536
+        hidden_state_cosine: 0.529925
+      - attempt: r03
+        policy: int16 max1.0
+        pooler_cosine: 0.910179
+        hidden_state_cosine: 0.756131
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: accdf0f186c5fd3c1e59ce4192f345d8e65b90fc79343b6f9791531514a425f3
+    runtime_command: python3 -m samples.vision.siglip.runtime.python.public --target
+      s100 --variant base-patch16-224-bicubic-dual-r02 --asset-id s:siglip:s100/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04.hbm
+      --model-path /path/to/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04.hbm
+      --image /path/to/input.jpg --output /path/to/new/features.npz
