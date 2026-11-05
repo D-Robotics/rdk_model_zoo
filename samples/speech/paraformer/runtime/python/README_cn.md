@@ -108,6 +108,7 @@ python samples/speech/paraformer/runtime/python/main.py --target s100 --output-d
 | 参数 | 默认值 | 含义 |
 | --- | --- | --- |
 | `--target` | `auto` | auto / x5 / s100 / s100p / s600；仅 S100 有制品 |
+| `--variant` | `null` | 精确指定转换后的三阶段配方；省略时使用历史发布包 |
 | `--list-models` | `false` | 列出三模型，不执行 |
 | `--dry-run` | `false` | 预览选择，不加载模型文件/SDK；显式指定 target |
 | `--preprocess-only` | `false` | 仅执行真实 CPU 前端；auto 选择 S100 配方，不检测板卡 |

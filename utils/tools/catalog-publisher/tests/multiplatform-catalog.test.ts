@@ -147,10 +147,12 @@ describe("multi-platform variant catalog", () => {
     // benchmark rows from 154 S assets: S-series classifier profiles, CLIP pairs,
     // Depth Anything V2, PP-LiteSeg, YOLO26-Depth, and YOLOE-11/26 seg: 883 variants.
     // LPRNet then added three download-only S variants (S100, S100P, S600) and no
-    // benchmark rows. 61 families, 886 variants, 760 benchmark rows.
+    // benchmark rows. The 2026-11-05 S conversion batch (unet, 3dresnet, fcos,
+    // lanenet, vit) added fifteen more download-only variants: 61 families,
+    // 901 variants, 760 benchmark rows.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(61);
-    expect(variants).toHaveLength(886);
+    expect(variants).toHaveLength(901);
     expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(760);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
@@ -257,9 +259,10 @@ describe("multi-platform variant catalog", () => {
     // its one X5 artifact with the five ResNet-18/34/50/101/152 builds the same day.
     // 197 since ConvNeXt Nano, Pico, and Femto joined the existing Atto bin.
     // 199 since the converted ConvNeXt Atto D2 BIN and the OSNet x1.0 X5 BIN joined
-    // on 2026-11-02. 251 after the later converted X5 batch added 52 bins.
+    // on 2026-11-02. 251 after the later converted X5 batch added 52 bins;
+    // 252 after the 2026-11-05 ResNet archive build.
     expect(new Set(x5Entries).size).toBe(x5Entries.length);
-    expect(x5Entries).toHaveLength(251);
+    expect(x5Entries).toHaveLength(252);
     expect(x5Models.summary.asset_count).toBe(x5Entries.length);
   });
 
