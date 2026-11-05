@@ -211,6 +211,47 @@ class InferenceBannerReceiptTest(unittest.TestCase):
         with self.assertRaisesRegex(catalog.CatalogError,'omit or repeat'):
             self.check_new_hero('speech-transcript')
 
+    def test_masked_asr_records_every_window_and_both_inputs(self):
+        self.payload['source']='asr'
+        self.payload['graph_io']={'model':{
+            'inputs':[{'name':name,'shape':[1,30000],'dtype':'tensor(float)'}for name in ('waveform','attention_mask')],
+            'outputs':[{'name':'logits','shape':[1,93,3503],'dtype':'tensor(float)'}]}}
+        self.payload['forward_outputs']=[{'role':'model','name':'logits','shape':[1,93,3503],
+            'dtype':'float32','sha256':'c'*64,'invocation':i}for i in (0,1)]
+        self.payload['feeds']=[{'role':'model','name':name,'shape':[1,30000],
+            'dtype':'float32','sha256':'d'*64,'invocation':i}for i in (0,1)for name in ('waveform','attention_mask')]
+        self.payload['recognition']={'text':'actual speech','source_samples':60007,'chunks':[
+            {'index':0,'text':'actual ','source_start':0,'source_samples':30000,'source_rate':16000,'valid_samples':30000,'valid_frames':93,'inference':'completed'},
+            {'index':1,'text':'speech','source_start':30000,'source_samples':30000,'source_rate':16000,'valid_samples':30000,'valid_frames':93,'inference':'completed'},
+            {'index':2,'text':'','source_start':60000,'source_samples':7,'source_rate':16000,'valid_samples':7,'valid_frames':0,'inference':'no-valid-feature-frame'}]}
+        self.payload['visualization']['rendered_text']='actual speech'
+        self.payload['audio']={'input':'samples/speech/asr/test_data/chi_sound.wav',
+            'sha256':hashlib.sha256(b'committed source').hexdigest(),'sample_rate':16000,'sample_count':60007}
+        self.check_new_hero('speech-transcript')
+        original=copy.deepcopy(self.payload)
+        self.payload['forward_outputs']=self.payload['forward_outputs'][:1]
+        with self.assertRaisesRegex(catalog.CatalogError,'every audio window'):
+            self.check_new_hero('speech-transcript')
+        self.payload=copy.deepcopy(original);self.payload['feeds']=self.payload['feeds'][:2]
+        with self.assertRaisesRegex(catalog.CatalogError,'both exact typed inputs'):
+            self.check_new_hero('speech-transcript')
+        self.payload=copy.deepcopy(original);self.payload['recognition']['chunks'][1]['valid_frames']=92
+        with self.assertRaisesRegex(catalog.CatalogError,'valid feature frames'):
+            self.check_new_hero('speech-transcript')
+
+    def test_siglip_cover_cannot_omit_the_trained_pooler(self):
+        self.entry['kind']='feature-panel';self.payload['source']='siglip'
+        self.payload['graph_io']={'model':{'outputs':[
+            {'name':name,'shape':shape,'dtype':'tensor(float)'}
+            for name,shape in [('pooler_output',[1,768]),('last_hidden_state',[1,196,768])]]}}
+        self.payload['forward_outputs']=[{'role':'model',**row,'dtype':'float32','sha256':'c'*64}
+            for row in self.payload['graph_io']['model']['outputs']]
+        self.check()
+        self.payload['graph_io']['model']['outputs']=self.payload['graph_io']['model']['outputs'][1:]
+        self.payload['forward_outputs']=self.payload['forward_outputs'][1:]
+        with self.assertRaisesRegex(catalog.CatalogError,'trained pooler'):
+            self.check()
+
 
 if __name__ == '__main__':
     unittest.main()

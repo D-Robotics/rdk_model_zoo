@@ -112,10 +112,11 @@ def run(row, native, output, threads):
         options = ort.SessionOptions()
         options.intra_op_num_threads = threads
         options.inter_op_num_threads = 1
-        options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
+        options.graph_optimization_level = (ort.GraphOptimizationLevel.ORT_ENABLE_BASIC
+            if row.get('ort_optimization_level') == 'basic' else ort.GraphOptimizationLevel.ORT_DISABLE_ALL)
         sessions[role] = ort.InferenceSession(graph['path'], options, providers=['CPUExecutionProvider'])
 
-    def forward(role, values):
+    def forward(role, values, *, invocation=None):
         session = sessions[role]
         metadata = session.get_inputs()
         if set(values) != {v.name for v in metadata}:
@@ -126,7 +127,8 @@ def run(row, native, output, threads):
                 isinstance(wanted, int) and observed != wanted for observed, wanted in zip(value.shape, item.shape)
             ) or not np.isfinite(value).all():
                 raise ValueError('Feed shape or values differ from source graph')
-            feeds.append({'role': role, 'name': item.name, 'shape': list(value.shape),
+            feeds.append({**({'invocation': invocation} if invocation is not None else {}),
+                          'role': role, 'name': item.name, 'shape': list(value.shape),
                           'dtype': str(value.dtype), 'sha256': hashlib.sha256(value.tobytes()).hexdigest()})
         metadata = session.get_outputs()
         values = session.run(None, values)
@@ -138,8 +140,9 @@ def run(row, native, output, threads):
             if expected_dtype is None or value.dtype != expected_dtype or not np.isfinite(value).all():
                 raise ValueError('Source output dtype or finite-value contract differs')
             result[item.name] = value
-            raw[role+'__'+item.name] = value
-            forwards.append({'role': role, 'name': item.name, 'shape': list(value.shape),
+            raw[role+'__'+(str(invocation)+'__' if invocation is not None else '')+item.name] = value
+            forwards.append({**({'invocation': invocation} if invocation is not None else {}),
+                             'role': role, 'name': item.name, 'shape': list(value.shape),
                              'dtype': str(value.dtype), 'sha256': hashlib.sha256(value.tobytes()).hexdigest()})
         return result
 
@@ -371,8 +374,8 @@ def run(row, native, output, threads):
     elif kind in ('ocr-detection','ocr-recognition'):
         from samples.vision.paddle_ocr.runtime.python.cli import resolve_pair
         from samples.vision.paddle_ocr.runtime.python.ocr import OCRPipeline
-        pair = resolve_pair(row['target'],det_asset_id=row['detector_asset_id'],rec_asset_id=row['recognizer_asset_id'])
-        pipeline=OCRPipeline(pair,lambda _: {},lambda _: {})
+        ocr_pair = resolve_pair(row['target'],det_asset_id=row['detector_asset_id'],rec_asset_id=row['recognizer_asset_id'])
+        pipeline=OCRPipeline(ocr_pair,lambda _: {},lambda _: {})
         if kind=='ocr-detection':
             values=forward('model',pipeline.prepare_detection(bgr))
             result=pipeline.postprocess_detection(values,bgr)
@@ -396,6 +399,47 @@ def run(row, native, output, threads):
                 'visualization':{'method':'Official BGR aspect resize and right padding, full source logits, Native 97-class CTC decode',
                                  'word_roi':roi,'roi_source':'manual inference-input crop, not a detector output','rendered_text':text}}
         banner=ImageOps.fit(result_image,(1672,941),Image.Resampling.LANCZOS)
+    elif kind == 'speech-transcript' and row['source'] == 'asr':
+        import soundfile as sf
+        from samples.speech.asr.runtime.python.public import transcribe
+        from samples.speech.asr.runtime.python.cli import load_vocabulary
+        audio_path = native/row['audio_input']
+        support = {}
+        for name in (row['audio_input'], 'samples/speech/asr/test_data/vocab.json'):
+            committed = subprocess.check_output(['git','-C',str(native),'show',row['native_commit']+':'+name])
+            if hashlib.sha256(committed).hexdigest() != digest(native/name):
+                raise ValueError('ASR audio or complete vocabulary differs from pinned Native source')
+            support[name] = digest(native/name)
+        def asr_forward(feed):
+            return forward('model', feed, invocation=len(forwards))
+        result = transcribe(audio_path, asr_forward,
+                            load_vocabulary(native/'samples/speech/asr/test_data/vocab.json'))
+        if not result['text']: raise ValueError('The real ASR source produced no CTC text')
+        wave, rate = sf.read(audio_path, dtype='float32')
+        if rate != 16000: raise ValueError('Banner waveform must use its pinned 16kHz audio')
+        result_image = ImageOps.fit(photo,(1672,941),Image.Resampling.LANCZOS)
+        draw = ImageDraw.Draw(result_image); draw.rectangle((0,680,1672,941),fill=(245,248,252))
+        mono = wave.mean(axis=1) if wave.ndim==2 else wave
+        edges = np.linspace(0,len(mono),701,dtype=int)
+        peak = max(float(np.max(np.abs(mono))),1e-8)
+        for i in range(700):
+            chunk = mono[edges[i]:edges[i+1]]
+            y = min(60, round((float(np.max(np.abs(chunk))) if len(chunk) else 0)/peak*60))
+            x = 65+round(i*1542/700)
+            draw.line((x,758-y,x,758+y),fill=(0,108,238),width=2)
+        for size in range(48,27,-1):
+            face = ImageFont.truetype('/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc',size)
+            if draw.textlength(result['text'],font=face)<=1542: break
+        if draw.textlength(result['text'],font=face)>1542: raise ValueError('Actual transcript exceeds the banner readout width')
+        draw.text((65,835),result['text'],font=face,fill=(25,31,41))
+        banner = result_image
+        extra = {'native_support_files':support,
+                 'audio':{'input':row['audio_input'],'sha256':digest(audio_path),
+                          'sample_rate':int(rate),'sample_count':len(wave)},
+                 'recognition':result,
+                 'visualization':{'method':'Native upstream normalization and dynamic sample mask; complete source CTC logits per independent window, valid-frame greedy decoding',
+                                  'rendered_text':result['text'],'waveform':'actual pinned audio amplitude',
+                                  'photo_role':'generated backdrop; not the speech inference input'}}
     elif kind == 'speech-transcript':
         import soundfile as sf
         from samples.speech.paraformer.runtime.python.frontend import ParaformerFrontend
@@ -459,6 +503,16 @@ def run(row, native, output, threads):
                                    'plate_roi': row['plate_roi'],
                                    'roi_source': 'manual input crop; no detector prediction',
                                    'rendered_text': plate}}
+    elif kind == 'feature-panel' and row['source'] == 'siglip':
+        from samples.vision.siglip.runtime.python.public_preprocess import prepare_image
+        from samples.vision.siglip.runtime.python.public import patch_projection
+        value = prepare_image(source)
+        values = forward('model', {session.get_inputs()[0].name: value})
+        rgb, visualization = patch_projection(values)
+        result_image = Image.fromarray(rgb).resize((224,224),Image.Resampling.NEAREST)
+        normalized = np.uint8(np.rint(np.clip(value[0].transpose(1,2,0)*.5+.5,0,1)*255))
+        banner = pair(Image.fromarray(normalized),result_image)
+        extra = {'visualization':visualization}
     elif kind == 'feature-panel':
         from samples.vision.dinov2.runtime.python.embedding import prepare_image
         prepared = prepare_image(bgr, SimpleNamespace(input_name='input', input_shape=(1, 3, 224, 224)))

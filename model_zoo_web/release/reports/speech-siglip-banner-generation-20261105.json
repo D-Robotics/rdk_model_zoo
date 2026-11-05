@@ -1,0 +1,57 @@
+{
+  "date": "2026-11-05",
+  "mode": "built-in image_gen",
+  "source_images": [
+    {
+      "model": "siglip",
+      "file": "samples/vision/siglip/test_data/banner_input_kayaks_20261105.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: unique clean inference input photograph for a SigLIP vision-feature cover on the RDK Model Zoo website. Generate one full-bleed 16:9 landscape photograph of three bright red, yellow, and deep blue kayaks resting separately on a pale pebbled lakeshore, with clear turquoise lake water, a few reeds, and soft green mountains in the distance. Calm clear morning daylight, true natural colors, crisp real textures, documentary outdoor photography. The kayaks and shore occupy the middle and lower frame; all important objects comfortably inside the image. This is only the input photograph; the trained vision encoder will process it afterward and actual patch features will be rendered separately. No text, no letters, no logos, no graphic overlays, no heatmaps, no scores, no borders, no layout panels, no watermark. Keep the composition distinct from wildlife closeups, city traffic, highway lanes, garden dogs, and waterfront walkers.",
+      "sha256": "cda94d9cb689669aa6df8b99b361fb5c69d349e01392a2da41f92b91d771e270",
+      "role": "generated photo, processed by trained image encoder"
+    },
+    {
+      "model": "asr",
+      "file": "samples/speech/asr/test_data/banner_background_microphone_20261105.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: unique full-bleed photograph used as the background of a speech-recognition model banner for RDK Model Zoo. Primary request: a compact brushed-silver tabletop recording microphone on a small dark stand, on a warm terracotta-colored desk beside a daylit window and a soft teal linen curtain. Quiet realistic home recording corner; no people. Documentary product photography with natural morning light, crisp metal mesh detail, subdued warm tones and clean uncluttered composition. Wide 16:9 framing, microphone occupying the left middle third with open softly defocused desk and curtain space toward the right. This photograph supplies only the background: a real speech waveform and actual recognition text will be composited later from a fixed audio test file and the trained Wav2Vec2 model. No text, no letters, no screens, no logos, no waveform, no graphic overlay, no scores, no border, no watermark. Entirely distinct from kayaks on a lake, wildlife photos, and urban traffic scenes.",
+      "sha256": "20fafc5e7eaeca13daaad04a3c5f53dd9ed152bb9c96ab7aa34da7c72233375f",
+      "role": "generated backdrop; inference uses the pinned real WAV"
+    }
+  ],
+  "status": "passed",
+  "rendered_size": [
+    1672,
+    941
+  ],
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "heroes": {
+    "siglip": {
+      "kind": "feature-panel",
+      "file": "model_zoo_web/release/assets/pending-heroes/siglip-kayaks-patch-pca-20261105.webp",
+      "predictions_source": "model_zoo_web/release/assets/pending-heroes/siglip-kayaks-patch-pca-20261105.json",
+      "model_url": "https://huggingface.co/google/siglip-base-patch16-224/resolve/7fd15f0689c79d79e38b1c2e2e2370a7bf2761ed/model.safetensors",
+      "model_file": "model.safetensors",
+      "input": "samples/vision/siglip/test_data/banner_input_kayaks_20261105.png",
+      "framework": "ONNX Runtime 1.20.1",
+      "commit": "5d7b327d7e6ec9e58145b41f9bb4cd25ac29f9bf",
+      "runtime": "host-float-reference",
+      "inference_receipt_version": 2,
+      "note": "Host float reference, not board output; board accuracy and performance remain not-run",
+      "documented_in": "samples/vision/siglip/runtime/python/public.py"
+    },
+    "asr": {
+      "kind": "speech-transcript",
+      "file": "model_zoo_web/release/assets/pending-heroes/wav2vec2-masked-ctc-20261105.webp",
+      "predictions_source": "model_zoo_web/release/assets/pending-heroes/wav2vec2-masked-ctc-20261105.json",
+      "model_url": "https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn/resolve/99ccb2737be22b8bb50dcfcc39ad4d567fb90cfd/pytorch_model.bin",
+      "model_file": "pytorch_model.bin",
+      "input": "samples/speech/asr/test_data/banner_background_microphone_20261105.png",
+      "framework": "ONNX Runtime 1.20.1",
+      "commit": "5d7b327d7e6ec9e58145b41f9bb4cd25ac29f9bf",
+      "runtime": "host-float-reference",
+      "inference_receipt_version": 2,
+      "note": "Host float reference, not board output; board accuracy and performance remain not-run",
+      "documented_in": "samples/speech/asr/runtime/python/public.py"
+    }
+  }
+}

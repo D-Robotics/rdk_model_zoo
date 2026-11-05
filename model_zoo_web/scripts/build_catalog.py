@@ -730,7 +730,7 @@ def _validate_inference_banner_receipt(payload: dict[str, Any], entry: dict[str,
     roles = ({"parta", "partb"} if payload.get("source") == "fasterrcnn" else
              {"image", "text"} if entry.get("kind") == "similarity-panel" else
              {"encoder", "decoder"} if entry.get("kind") == "prompt-mask-panel" else
-             {"encoder", "predictor", "decoder"} if entry.get("kind") == "speech-transcript" else {"model"})
+             {"encoder", "predictor", "decoder"} if entry.get("kind") == "speech-transcript" and payload.get('source') != 'asr' else {"model"})
     if set(graphs) != roles:
         raise CatalogError(f"{label} must record every component of this task")
     expected = {}
@@ -748,9 +748,61 @@ def _validate_inference_banner_receipt(payload: dict[str, Any], entry: dict[str,
     outputs = payload.get("forward_outputs")
     if not isinstance(outputs, list) or not outputs:
         raise CatalogError(f"{label} needs actual forward outputs")
-    actual = [(v.get("role"), v.get("name")) for v in outputs]
-    if len(actual) != len(expected) or set(actual) != set(expected):
-        raise CatalogError(f"{label} forward outputs omit or repeat a source head")
+    masked_asr = payload.get('source') == 'asr' and entry.get('kind') == 'speech-transcript'
+    if masked_asr:
+        chunks = require_list(require_mapping(payload.get('recognition'),label+'.recognition').get('chunks'),label+'.recognition.chunks')
+        calls = {r.get('index') for r in chunks if r.get('inference') == 'completed'}
+        if (not calls or any(type(i) is not int or i < 0 for i in calls)
+                or [r.get('index') for r in chunks] != list(range(len(chunks)))):
+            raise CatalogError(f'{label} needs every ordered real audio window')
+        consumed = 0
+        for chunk in chunks:
+            count = chunk.get('valid_samples')
+            if (type(count) is not int or not 0 < count <= 30000
+                    or chunk.get('source_rate') != 16000 or chunk.get('source_samples') != count
+                    or chunk.get('source_start') != consumed or not isinstance(chunk.get('text'),str)):
+                raise CatalogError(f'{label} needs contiguous bounded real audio windows')
+            frames = count
+            for kernel,stride in zip((10,3,3,3,3,2,2),(5,2,2,2,2,2,2)):
+                frames = (frames-kernel)//stride+1
+            frames = max(0,frames)
+            if (chunk.get('valid_frames') != frames
+                    or chunk.get('inference') != ('completed' if frames else 'no-valid-feature-frame')
+                    or (not frames and chunk['text'])):
+                raise CatalogError(f'{label} CTC decoding must use the actual valid feature frames')
+            consumed += count
+        wanted = {(role,name,index) for role,name in expected for index in calls}
+        actual = [(v.get('role'),v.get('name'),v.get('invocation')) for v in outputs]
+        if len(actual) != len(wanted) or set(actual) != wanted:
+            raise CatalogError(f'{label} must retain the complete logits from every audio window')
+        if expected != {('model','logits'):{'name':'logits','shape':[1,93,3503],'dtype':'tensor(float)'}}:
+            raise CatalogError(f'{label} requires the complete 3503-token ASR logits head')
+        input_rows = metadata['model'].get('inputs')
+        wanted_inputs = [{'name':name,'shape':[1,30000],'dtype':'tensor(float)'}
+                         for name in ('waveform','attention_mask')]
+        if input_rows != wanted_inputs:
+            raise CatalogError(f'{label} requires waveform and real dynamic sample-mask inputs')
+        feeds = require_list(payload.get('feeds'),label+'.feeds')
+        if (len(feeds) != 2*len(calls)
+                or {(v.get('name'),v.get('invocation')) for v in feeds}
+                   != {(name,index) for name in ('waveform','attention_mask') for index in calls}
+                or any(v.get('role')!='model' or v.get('shape')!=[1,30000]
+                       or v.get('dtype')!='float32' or not SHA256_RE.fullmatch(str(v.get('sha256',''))) for v in feeds)):
+            raise CatalogError(f'{label} must record both exact typed inputs for each window')
+        recognition = payload['recognition']
+        if (recognition.get('text') != ''.join(r.get('text','') for r in chunks)
+                or recognition.get('source_samples') != sum(r.get('source_samples',0) for r in chunks)
+                or recognition.get('source_samples') != payload.get('audio',{}).get('sample_count')):
+            raise CatalogError(f'{label} transcription must account for the complete real audio')
+    else:
+        actual = [(v.get("role"), v.get("name")) for v in outputs]
+        if len(actual) != len(expected) or set(actual) != set(expected):
+            raise CatalogError(f"{label} forward outputs omit or repeat a source head")
+    if payload.get('source') == 'siglip' and entry.get('kind') == 'feature-panel':
+        wanted = {('model',name):{'name':name,'shape':shape,'dtype':'tensor(float)'}
+                  for name,shape in [('pooler_output',[1,768]),('last_hidden_state',[1,196,768])]}
+        if expected != wanted:
+            raise CatalogError(f'{label} needs the trained pooler and all 196 patch features')
     for output in outputs:
         tensor = expected[(output["role"], output["name"])]
         declared = tensor["shape"]
@@ -1649,10 +1701,12 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
         source_shape = require_list(source_input.get("shape"), f"{variant_label}.input.source.shape")
         speech_features = (domain == "speech" and source_input["format"].upper() == "FEATUREMAP"
                            and source_input["layout"] == "NTC")
+        speech_waveform = (domain == "speech" and source_input["format"].upper() == "FEATUREMAP"
+                           and source_input["layout"] == "NT")
         video_features = (domain == "vision" and record["source"] == "3dresnet"
                           and record["task"] == "video-cls" and source_input["layout"] == "NCTHW")
-        if len(source_shape) != (3 if speech_features else 5 if video_features else 4):
-            expected = "three NTC feature dimensions" if speech_features else "five NCTHW video dimensions" if video_features else "four dimensions"
+        if len(source_shape) != (2 if speech_waveform else 3 if speech_features else 5 if video_features else 4):
+            expected = "two NT waveform dimensions" if speech_waveform else "three NTC feature dimensions" if speech_features else "five NCTHW video dimensions" if video_features else "four dimensions"
             raise CatalogError(f"{variant_label}.input.source.shape must contain {expected}")
         for dimension_index, dimension in enumerate(source_shape):
             require_positive_int(dimension, f"{variant_label}.input.source.shape[{dimension_index}]")
