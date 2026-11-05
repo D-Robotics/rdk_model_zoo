@@ -162,3 +162,7 @@ steps.
 | `model_path requires --asset-id` | Pass the exact qualified reference from `--list-models` with `--asset-id`. |
 | input shape or dtype mismatch | Confirm the artifact reference and runtime metadata; a lite1 artifact declares 240x240 and rejects 224 metadata rather than resizing in secret. |
 | output differs from a reference run | Compare the same artifact, image, resize mode, Top-K, and raw output before changing score semantics. |
+
+<!-- converted-batch-20261102 -->
+Converted variants listed in `conversion/converted.json` use resize mode 2: Pillow bicubic shorter-edge 256 and rounded center crop 224. Their board results are not-run; use an exact asset id with any external model path.
+<!-- /converted-batch-20261102 -->

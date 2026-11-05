@@ -76,3 +76,9 @@ CLI 打印 `target`、`prompts`、`scores`、`order`、`image_saved`。`scores` 
 ## 许可说明
 
 示例代码遵循仓库 [LICENSE](../../../LICENSE) 的 Apache-2.0。CLIP 制品的许可证和来源以 X5 发布记录为准。X5 源中的贡献者信息予以保留。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+本轮新增的独立规格和显式命令见 [模型准备](model/README_cn.md)。板端精度与性能尚未实测。

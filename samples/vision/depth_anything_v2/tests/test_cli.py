@@ -1,6 +1,7 @@
 """Host CLI evidence, exact preparation and no-board inspection."""
 
 import contextlib
+from dataclasses import replace
 import io
 import json
 from pathlib import Path
@@ -119,6 +120,18 @@ class CliTests(unittest.TestCase):
         asset, path = call.call_args.args
         self.assertEqual(asset.reference, "s:depth_anything_v2:s100/depth_any.hbm")
         self.assertEqual(path, Path("/tmp/prepared/s100/depth_any.hbm"))
+
+    def test_small_downloader_requires_explicit_selection(self):
+        from samples.vision.depth_anything_v2.runtime.python.cli import resolve_selection, SMALL_ASSET_ID
+        legacy = resolve_selection().asset
+        small = replace(legacy, filename=SMALL_ASSET_ID.split(":", 2)[2], sha256="a" * 64)
+        with patch("samples.vision.depth_anything_v2.runtime.python.cli.list_assets", return_value=(legacy, small)), \
+             patch.object(download, "download_asset", return_value="a" * 64) as call, \
+             contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(download.main(["--variant", "small-518x686-o1", "--output-dir", "/tmp/prepared"]), 0)
+        asset, path = call.call_args.args
+        self.assertEqual(asset.reference, SMALL_ASSET_ID)
+        self.assertEqual(path, Path("/tmp/prepared") / small.filename)
 
 
 if __name__ == "__main__":

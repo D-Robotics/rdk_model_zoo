@@ -43,13 +43,24 @@ class ModelSelection:
     asset: Asset
     model_path: Path
     explicit_model_path: bool = False
+    profile: Optional[dict] = None
 
 
 def _asset() -> Asset:
-    rows = list_assets("s", "lanenet")
+    rows = [a for a in list_assets("s", "lanenet") if a.reference == ASSET_ID]
     if len(rows) != 1 or rows[0].reference != ASSET_ID:
         raise BindingError(f"Expected one manifest asset {ASSET_ID!r}.")
     return rows[0]
+
+
+def converted_profiles():
+    path = SAMPLE_DIR / 'model/converted_featuremap.json'
+    if not path.exists():
+        return {}
+    data = json.loads(path.read_text())
+    if data.get('sample') != 'lanenet':
+        raise BindingError('Converted profiles belong to another sample')
+    return {p['asset_id']: p for p in data['profiles']}
 
 
 def list_available_assets(target: Optional[str] = None) -> tuple:
@@ -65,7 +76,9 @@ def list_available_assets(target: Optional[str] = None) -> tuple:
         BindingError: The target is unknown.
     """
     if target in (None, "auto", "s100"):
-        return (_asset(),)
+        profiles = converted_profiles()
+        return tuple(a for a in list_assets('s', 'lanenet')
+                     if a.reference == ASSET_ID or a.reference in profiles)
     if target in SUPPORTED_TARGETS:
         return ()
     raise BindingError(f"Unknown target {target!r}.")
@@ -96,9 +109,13 @@ def resolve_selection(
         key = "s100"
     if key != "s100":
         raise BindingError("LaneNet is published only for target s100.")
-    asset = _asset()
-    if asset_id is not None and asset_id != asset.reference:
-        raise BindingError(f"Expected asset-id {asset.reference}, got {asset_id!r}.")
+    profile = converted_profiles().get(asset_id)
+    asset = _asset() if profile is None else next((a for a in list_assets('s', 'lanenet')
+                  if a.reference == asset_id and a.sha256 == profile['artifact_sha256']), None)
+    if asset is None or (asset_id is not None and asset_id != asset.reference):
+        raise BindingError(f"Unregistered LaneNet asset-id {asset_id!r}.")
+    if profile is not None and profile['target'] != key:
+        raise BindingError('Converted artifact belongs to another target')
     if model_path is not None and asset_id is None:
         raise BindingError(
             "An external model path requires --asset-id s:lanenet:s100/lanenet256x512.hbm."
@@ -112,6 +129,7 @@ def resolve_selection(
             else SAMPLE_DIR / "model" / asset.filename
         ),
         explicit_model_path=model_path is not None,
+        profile=profile,
     )
 
 #: Canonical files every run writes into its fresh output directory.

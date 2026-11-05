@@ -1,0 +1,494 @@
+{
+  "schema_version": 1,
+  "status": "converted",
+  "board_validation": "not-run",
+  "profile": "raw RGB, Pillow bicubic short256, rounded center crop224, checkpoint normalization fused by mapper",
+  "models": [
+    {
+      "job": {
+        "family": "repvit",
+        "model": "repvit_m0_9.dist_450e_in1k",
+        "repo_id": "timm/repvit_m0_9.dist_450e_in1k",
+        "platform": "x5",
+        "size": "m0-9-dist-450e-in1k-224",
+        "variant": "timm-m0-9-dist-450e-in1k",
+        "filename": "repvit_m0_9_dist_450e_in1k_bayese_224x224_nv12.bin",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "run_id": "repvit_m0_9_dist_450e_in1k-x5-20261102-r03",
+        "status": "converted",
+        "updated_at": "2026-11-02T14:06:43.936112+00:00",
+        "sha256": "7ae4181373183288f432e0cb0602bb12717027f556691709d36f60efa903090e",
+        "size_bytes": 5773260
+      },
+      "source": {
+        "repo_id": "timm/repvit_m0_9.dist_450e_in1k",
+        "revision": "c073717dd84b5af671dd51b187b99ac55b2af4f0",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "c2dd32622df856ea7a68d6b241c1623f0e6fbec8acde381a3519cb5a5463e9cf",
+        "size_bytes": 22232904,
+        "url": "https://huggingface.co/timm/repvit_m0_9.dist_450e_in1k/resolve/c073717dd84b5af671dd51b187b99ac55b2af4f0/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvit_m0_9.dist_450e_in1k/blob/c073717dd84b5af671dd51b187b99ac55b2af4f0/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "repvit_m0_9.dist_450e_in1k",
+        "checkpoint_sha256": "c2dd32622df856ea7a68d6b241c1623f0e6fbec8acde381a3519cb5a5463e9cf",
+        "onnx_sha256": "67b84bbd4639928601b44a44f063ab6d9a455f2f374080b41053dd3cb51d9e87",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "15648df42cc4db6b9ecf93ab9b07c391967e85e03e5059d04cfb906e93b881cf",
+        "parameter_count": 5489328,
+        "deployment_parameter_count": 5067056,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.95,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          1.5303492546081543e-05,
+          1.2367963790893555e-05
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "repvit",
+          "family": "repvit",
+          "task": "cls",
+          "size": "m0-9-dist-450e-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "7ae4181373183288f432e0cb0602bb12717027f556691709d36f60efa903090e",
+            "name": "repvit_m0_9_dist_450e_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 5773260
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "06194f12b5262ac883c2c81db8189e1d62b291faafbcc97d6593ecde5021c097",
+        "controller_sha256": "89537afa42205e91b58214a83fa89af4e19fc1fcb2a18b7f97caa49e3bbdf6f3",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "06194f12b5262ac883c2c81db8189e1d62b291faafbcc97d6593ecde5021c097",
+        "compile_log": "1888b2704e0ac2555ef1640529024ad770e62273e912b340c5449e210cb881a2",
+        "model_info": "4d7131314c99c426b468c315e87962eb9dbb89a5f995006c59dc5acaf8b448ad",
+        "oe_report": "fae04fffd5c3b589af04dee0052f64b2836b05c23385171fe685407685d6c90a",
+        "oe_data": "39ffaf6afb4b3d388b7b4474c66aadb5a014e3c0040ef9697a7dd854cf12d638"
+      }
+    },
+    {
+      "job": {
+        "family": "repvit",
+        "model": "repvit_m1_0.dist_450e_in1k",
+        "repo_id": "timm/repvit_m1_0.dist_450e_in1k",
+        "platform": "x5",
+        "size": "m1-0-dist-450e-in1k-224",
+        "variant": "timm-m1-0-dist-450e-in1k",
+        "filename": "repvit_m1_0_dist_450e_in1k_bayese_224x224_nv12.bin",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "run_id": "repvit_m1_0_dist_450e_in1k-x5-20261102-r03",
+        "status": "converted",
+        "updated_at": "2026-11-02T14:10:48.701611+00:00",
+        "sha256": "6a2c802f09565e5cf96a63d24be84961edf686a5da4e6b689f0f7e7c603d1792",
+        "size_bytes": 7542732
+      },
+      "source": {
+        "repo_id": "timm/repvit_m1_0.dist_450e_in1k",
+        "revision": "0e20f9f1bfa9772e63b813835bab2d6f0d168f89",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "9350ed15b205ec9d4ebcde95333e8a9ad2ddda26510a358b57b81fd8a8fde055",
+        "size_bytes": 29519376,
+        "url": "https://huggingface.co/timm/repvit_m1_0.dist_450e_in1k/resolve/0e20f9f1bfa9772e63b813835bab2d6f0d168f89/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvit_m1_0.dist_450e_in1k/blob/0e20f9f1bfa9772e63b813835bab2d6f0d168f89/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "repvit_m1_0.dist_450e_in1k",
+        "checkpoint_sha256": "9350ed15b205ec9d4ebcde95333e8a9ad2ddda26510a358b57b81fd8a8fde055",
+        "onnx_sha256": "56a64221349663ce5d87017ad6681873bcc3cafa9727ac2179dbf777c57e8991",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "15648df42cc4db6b9ecf93ab9b07c391967e85e03e5059d04cfb906e93b881cf",
+        "parameter_count": 7302796,
+        "deployment_parameter_count": 6810312,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.95,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          1.1205673217773438e-05,
+          1.1086463928222656e-05
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "repvit",
+          "family": "repvit",
+          "task": "cls",
+          "size": "m1-0-dist-450e-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "6a2c802f09565e5cf96a63d24be84961edf686a5da4e6b689f0f7e7c603d1792",
+            "name": "repvit_m1_0_dist_450e_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 7542732
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "a15bfbe83bef51d098c9fc0f815a07d446597218dece679efd836449e4827f07",
+        "controller_sha256": "89537afa42205e91b58214a83fa89af4e19fc1fcb2a18b7f97caa49e3bbdf6f3",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "a15bfbe83bef51d098c9fc0f815a07d446597218dece679efd836449e4827f07",
+        "compile_log": "2acf50f053bf0f992183ad3dac4577fe8d447333e8505c6630b0ad0762420b10",
+        "model_info": "8b8bffb5149d6433c78ec8638f936febe873bbae4e2b5442a3cd3b5281391e52",
+        "oe_report": "2efbbe53d191b6bd06f2b4fc5e949a8794c2ebf188cb9e7cd5f95b5d6a7b6ecf",
+        "oe_data": "1876b38dad806507eec93725e26bcfdb72e6d290e1ef47c044f3eae2c895b3fa"
+      }
+    },
+    {
+      "job": {
+        "family": "repvit",
+        "model": "repvit_m1_1.dist_450e_in1k",
+        "repo_id": "timm/repvit_m1_1.dist_450e_in1k",
+        "platform": "x5",
+        "size": "m1-1-dist-450e-in1k-224",
+        "variant": "timm-m1-1-dist-450e-in1k",
+        "filename": "repvit_m1_1_dist_450e_in1k_bayese_224x224_nv12.bin",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "run_id": "repvit_m1_1_dist_450e_in1k-x5-20261102-r03",
+        "status": "converted",
+        "updated_at": "2026-11-02T14:14:24.107139+00:00",
+        "sha256": "7812d29c74f56463c3e4100b6a32b768486686bf3b48d4688075455ae8b5fb54",
+        "size_bytes": 8853452
+      },
+      "source": {
+        "repo_id": "timm/repvit_m1_1.dist_450e_in1k",
+        "revision": "ff441038a42982fff1c8c75be7c794f9ba76db72",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "071d227f69657c02d1bee8ae3317772ce7f9540af6f7865bf27e3f051e2cd160",
+        "size_bytes": 35525560,
+        "url": "https://huggingface.co/timm/repvit_m1_1.dist_450e_in1k/resolve/ff441038a42982fff1c8c75be7c794f9ba76db72/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvit_m1_1.dist_450e_in1k/blob/ff441038a42982fff1c8c75be7c794f9ba76db72/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "repvit_m1_1.dist_450e_in1k",
+        "checkpoint_sha256": "071d227f69657c02d1bee8ae3317772ce7f9540af6f7865bf27e3f051e2cd160",
+        "onnx_sha256": "256edd67262925d379f06886a63316eddfc78e5ecc8f61a9e951bb942d626fd0",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "15648df42cc4db6b9ecf93ab9b07c391967e85e03e5059d04cfb906e93b881cf",
+        "parameter_count": 8802912,
+        "deployment_parameter_count": 8244312,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.95,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          1.0967254638671875e-05,
+          2.339482307434082e-05
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "repvit",
+          "family": "repvit",
+          "task": "cls",
+          "size": "m1-1-dist-450e-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "7812d29c74f56463c3e4100b6a32b768486686bf3b48d4688075455ae8b5fb54",
+            "name": "repvit_m1_1_dist_450e_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 8853452
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "7b0e0c85a57f7a9aaa9d92e46fb250f9dadc2c1aa142a5117c137d8c05f9ea7a",
+        "controller_sha256": "89537afa42205e91b58214a83fa89af4e19fc1fcb2a18b7f97caa49e3bbdf6f3",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "7b0e0c85a57f7a9aaa9d92e46fb250f9dadc2c1aa142a5117c137d8c05f9ea7a",
+        "compile_log": "93fd548425f6f923e757ce2b50fed08265512d49c8d66a26dd5634e2f346185f",
+        "model_info": "5d050dcc63a68b90a6bdc4e087e58e29249e3bdc9d2f25264853ccf6aae9cd83",
+        "oe_report": "c4987a21f38afea6dad7ad64f44e72a2596b3bd61078ffe144d70dea4f8ec35b",
+        "oe_data": "e30eab891aa611094de7068634c6f525c3e7dbc61969cc4f30f06748cd0eb78a"
+      }
+    }
+  ]
+}

@@ -238,6 +238,9 @@ def prepare_detection(image: np.ndarray, pair: OCRPair) -> dict[str, np.ndarray]
     _validate_bgr_image(image)
     import cv2
 
+    if pair.detector.input_protocol == 'bgr_imagenet_f32_nchw':
+        from samples.vision.paddle_ocr.conversion.preprocess_v3 import prepare
+        return {pair.detector.input_names[0]: prepare(image, 'det')}
     interpolation = cv2.INTER_LINEAR if pair.target == "x5" else cv2.INTER_AREA
     resized = cv2.resize(
         image,
@@ -267,6 +270,9 @@ def prepare_recognition(image: np.ndarray, pair: OCRPair) -> dict[str, np.ndarra
     _validate_bgr_image(image)
     import cv2
 
+    if pair.recognizer.input_protocol == 'bgr_norm_pad_f32_nchw':
+        from samples.vision.paddle_ocr.conversion.preprocess_v3 import prepare
+        return {pair.recognizer.input_names[0]: prepare(image, 'rec')}
     shape = pair.recognizer.runtime_input_shapes["x"]
     height, width = shape[2], shape[3]
     resized = cv2.resize(image, (width, height), interpolation=cv2.INTER_LINEAR)
@@ -598,12 +604,16 @@ class OCRPipeline:
         contours, _ = cv2.findContours(
             mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
         )
+        # This independently converted PP-OCRv3 pair uses the same DB crop
+        # policy on every S chip. Hardware identity remains in self.pair.target.
+        geometry = ("x5" if self.pair.detector.input_protocol == "bgr_imagenet_f32_nchw"
+                    else self.pair.target)
         polygons = dilate_contours(
-            contours, target=self.pair.target, ratio_prime=self.ratio_prime
+            contours, target=geometry, ratio_prime=self.ratio_prime
         )
         boxes = get_bounding_boxes(polygons, min_area=self.min_area)
         crops = tuple(
-            crop_and_rotate_image(image, box, target=self.pair.target)
+            crop_and_rotate_image(image, box, target=geometry)
             for box in boxes
         )
         return DetectionResult(boxes=boxes, crops=crops, polygons=polygons)
@@ -625,10 +635,7 @@ class OCRPipeline:
 
         validated = validate_stage_output(self.pair.recognizer, outputs)
         raw = validated[self.pair.recognizer.output_name]
-        if self.pair.target == "x5":
-            scores = raw.reshape(1, 40, 97)
-        else:
-            scores = raw.reshape(1, 40, 18710)
+        scores = raw.reshape(1, 40, self.pair.vocabulary.class_count)
         if self._tokens is None:
             self._tokens = self.pair.vocabulary.load_tokens(self.vocabulary_path)
         return ctc_greedy_decode(scores, self._tokens)

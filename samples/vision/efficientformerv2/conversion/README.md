@@ -189,3 +189,41 @@ SHA-256 digests are:
 ## Additional preparation
 
 Prepare the matching ONNX graph for each `efficientformerv2_s*.onnx` input and float32 RGB `.npy` data under `./calibration_data_rgb_f32`, following the selected YAML's 224x224 normalization (mean `123.675 116.28 103.53`, scale `0.01712475 0.017507 0.01742919`). S0 sets `debug_mode: "dump_calibration_data"` and `optimization: "set_all_nodes_int16"`; S1/S2 omit these settings. S0 uses `working_dir: 'EfficientFormerv2_s0_int16_model_output'`; S1/S2 use `EfficientFormerv2_s{1,2}_224x224_nv12`. Run each variant in its YAML-selected output directory with the commands above.
+
+<!-- converted-batch-20261102 -->
+## Pinned converted recipes
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model efficientformerv2_s0.snap_dist_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/efficientformerv2/conversion/recipes/timm-s0-snap-dist-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+Use the model/tag, pinned checkpoint and matching YAML from `converted.json`; use a fresh attempt directory. The calibration producer uses raw RGB float32 binary tensors. Do not apply normalization twice or inherit historical board metrics.
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100 / timm-s0-snap-dist-in1k-s-int16-o1-20261103 / model`: [timm_s0_snap_dist_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_s0_snap_dist_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-s0-snap-dist-in1k-s-int16-o1-20261103 / model`: [timm_s0_snap_dist_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_s0_snap_dist_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-s0-snap-dist-in1k-s-int16-o1-20261103 / model`: [timm_s0_snap_dist_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_s0_snap_dist_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-s1-snap-dist-in1k-s-int16-o1-20261103 / model`: [timm_s1_snap_dist_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_s1_snap_dist_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-s1-snap-dist-in1k-s-int16-o1-20261103 / model`: [timm_s1_snap_dist_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_s1_snap_dist_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-s1-snap-dist-in1k-s-int16-o1-20261103 / model`: [timm_s1_snap_dist_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_s1_snap_dist_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-s2-snap-dist-in1k-s-int16-o1-20261103 / model`: [timm_s2_snap_dist_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_s2_snap_dist_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-s2-snap-dist-in1k-s-int16-o1-20261103 / model`: [timm_s2_snap_dist_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_s2_snap_dist_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-s2-snap-dist-in1k-s-int16-o1-20261103 / model`: [timm_s2_snap_dist_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_s2_snap_dist_in1k_s_int16_o1_20261103_s600_model.yaml)
+
+S PTQ consumes normalized ONNX-domain `.npy` tensors. NV12 runtime mean/scale remain in the recipe. The shared producer reads checkpoint normalization through `--target` and `--normalization-json`.
+
+[Shared classification workflow](../../../../utils/tools/classification_conversion/README.md).
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

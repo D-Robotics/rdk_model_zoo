@@ -1,10 +1,9 @@
 """Download one published FastViT artifact through the shared manifest.
 
-The script deliberately contains only stable target/variant-to-reference
-mappings. URL, format, and optional publisher hash facts are read from the
-platform manifest by ``utils.py_utils.assets``. It is safe to import this
-module on a host without the board SDK; network access occurs only when
-``download_target`` is called.
+Map a target and variant to one manifest reference and download that file.
+URLs and publisher hashes come from the platform manifest
+(``utils.py_utils.assets``). Importing this module does not load the board
+SDK or use the network; ``download_target`` performs the download.
 """
 
 from __future__ import annotations
@@ -14,9 +13,7 @@ from pathlib import Path
 import sys
 from typing import Optional, Sequence
 
-# Direct execution from any working directory is supported. This is the one
-# entrypoint-local import-path adjustment; importing the module itself remains
-# SDK-free and side-effect free.
+# Allow running this file from any working directory.
 ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -34,6 +31,24 @@ ASSET_REFERENCES = {
 }
 TARGETS = ("x5",)
 
+
+
+
+
+
+
+
+
+# BEGIN CONVERTED ARTIFACT BINDINGS
+VARIANTS = VARIANTS + ('timm-t8-apple-in1k', 'timm-t12-apple-in1k', 'timm-s12-apple-in1k', 'timm-sa12-apple-in1k')
+ASSET_REFERENCES.update({('x5', 'timm-t8-apple-in1k'): 'x5:fastvit:fastvit_t8_apple_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-t12-apple-in1k'): 'x5:fastvit:fastvit_t12_apple_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-s12-apple-in1k'): 'x5:fastvit:fastvit_s12_apple_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-sa12-apple-in1k'): 'x5:fastvit:fastvit_sa12_apple_in1k_bayese_224x224_nv12.bin'})
+# END CONVERTED ARTIFACT BINDINGS
+
+# BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
+VARIANTS = tuple(dict.fromkeys((*VARIANTS, *('timm-s12-apple-in1k-s-int16-o1-20261103', 'timm-sa12-apple-in1k-s-int16-o1-20261103', 'timm-t12-apple-in1k-s-int16-o1-20261103', 'timm-t8-apple-in1k-s-int16-o1-20261103'))))
+TARGETS = tuple(dict.fromkeys((*TARGETS, *('s100', 's100p', 's600'))))
+ASSET_REFERENCES.update({('s100', 'timm-s12-apple-in1k-s-int16-o1-20261103'): 's:fastvit:s100/fastvit_s12_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-s12-apple-in1k-s-int16-o1-20261103'): 's:fastvit:s100p/fastvit_s12_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-s12-apple-in1k-s-int16-o1-20261103'): 's:fastvit:s600/fastvit_s12_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm', ('s100', 'timm-sa12-apple-in1k-s-int16-o1-20261103'): 's:fastvit:s100/fastvit_sa12_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-sa12-apple-in1k-s-int16-o1-20261103'): 's:fastvit:s100p/fastvit_sa12_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-sa12-apple-in1k-s-int16-o1-20261103'): 's:fastvit:s600/fastvit_sa12_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm', ('s100', 'timm-t12-apple-in1k-s-int16-o1-20261103'): 's:fastvit:s100/fastvit_t12_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-t12-apple-in1k-s-int16-o1-20261103'): 's:fastvit:s100p/fastvit_t12_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-t12-apple-in1k-s-int16-o1-20261103'): 's:fastvit:s600/fastvit_t12_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm', ('s100', 'timm-t8-apple-in1k-s-int16-o1-20261103'): 's:fastvit:s100/fastvit_t8_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-t8-apple-in1k-s-int16-o1-20261103'): 's:fastvit:s100p/fastvit_t8_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-t8-apple-in1k-s-int16-o1-20261103'): 's:fastvit:s600/fastvit_t8_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm'})
+# END S CONVERTED ARTIFACT BINDINGS 20261103
 
 def asset_reference(target: str, variant: str = 's12') -> str:
     """Return the exact manifest reference for a supported target/variant."""

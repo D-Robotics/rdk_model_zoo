@@ -1,0 +1,905 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "variant": "timm-l1-snap-dist-in1k-s-int16-o1-20261103",
+      "web_size": "l1-snap-dist-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/efficientformer_l1_snap_dist_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/efficientformer/efficientformer_l1_snap_dist_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "0abb44ad5bc75ee18dd8549ce51b8cf6b452bd1026f888903088150feb0f4db7",
+          "size_bytes": 15566960,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "cdd6c660753aaa27fdf84f7978441a91f6b74b7fbf476abb3e27055f0ab6a266",
+          "effective_config_sha256": "625311dead40ffd5e4a928083132f2512cfd965ef6973ff0c418c4a048d77aed",
+          "recipe": "samples/vision/efficientformer/conversion/recipes/timm_l1_snap_dist_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "37f5cba9f9b3754b8733e08942cf5f34de231c7a7889077e1545d652f5ec677a",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "8a83f4908d340904a87cb1dcdd688318f3d97ffa48b8fd49c1259e61f6b36e62",
+          "oe_data_sha256": "5389812a80af0751e40d26f0c8ccdc2d9f62394f63b5c2582d12fdc191c705fd",
+          "node_info_csv_sha256": "ba86d19d212956bde8277eaf0e8f99c211499088e3989b226c49f0191b0c855f",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.991485,
+              "cosine": 0.974006
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientformer_l1_snap_dist_in1k-s100-int16-20261103-r04/ptq_output/efficientformer_l1_snap_dist_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "7e7f91a029f7e4efc839a5b2d423762f95c1f2ef208a9ee6ed4344ccad2ecb14",
+              "size_bytes": 15254669
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientformer_l1_snap_dist_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "bd6f361b8182c2f8e0d6cbe684ba6bc3870b94aab8a2ceb7cd9ea7f008d24cea",
+              "size_bytes": 1231
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.9073486328125e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 7.152557373046875e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.52587890625e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.7848949432373047e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "b7b497d9854b7e7bf1abf44618eafd556f5be3c5a0b8e9413e1fa8310d55d991",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientformer_l1.snap_dist_in1k",
+        "revision": "8738a58190800aaf5995f453b05f643df453a565",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "dab9ad0e328fe94a9c155497dc3f46cb456ae0223e19184d377e03adc3e3e08e",
+        "size_bytes": 49335032,
+        "url": "https://huggingface.co/timm/efficientformer_l1.snap_dist_in1k/resolve/8738a58190800aaf5995f453b05f643df453a565/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientformer_l1.snap_dist_in1k/blob/8738a58190800aaf5995f453b05f643df453a565/README.md"
+      }
+    },
+    {
+      "variant": "timm-l1-snap-dist-in1k-s-int16-o1-20261103",
+      "web_size": "l1-snap-dist-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/efficientformer_l1_snap_dist_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/efficientformer/efficientformer_l1_snap_dist_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "6f921ccd1495e9ad7eef8e3f76cb46197805475ff22047ccf54c432f7a0d6134",
+          "size_bytes": 15563120,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "cdd6c660753aaa27fdf84f7978441a91f6b74b7fbf476abb3e27055f0ab6a266",
+          "effective_config_sha256": "3b34fae4172e84307f6a99ece1821ca2213d321d6afdfc2ba46e8457a913d0d7",
+          "recipe": "samples/vision/efficientformer/conversion/recipes/timm_l1_snap_dist_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "b3c9e277f8a285921c1dfe582afc66dbdaef58d4b869e62e158524bea48f9948",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "32d7f1d0b8b01edf3ef3a28adcee50e834e0e8ffb4a6008e78c720240e3bff48",
+          "oe_data_sha256": "892ef66f0fa9e02acf089b2eadacbc22001cf68a8b8b15a8c6fe2f0039c63d2c",
+          "node_info_csv_sha256": "ba86d19d212956bde8277eaf0e8f99c211499088e3989b226c49f0191b0c855f",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.991485,
+              "cosine": 0.974006
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientformer_l1_snap_dist_in1k-s100p-int16-20261103-r04/ptq_output/efficientformer_l1_snap_dist_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "3f5463f5ad3dd14bf354cd2472ce3e69edb0d5e46fdf27ae2c8e3b2462fea1ca",
+              "size_bytes": 15254670
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientformer_l1_snap_dist_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "5207550a4acc7b7d7fcd2cb003db83436f409c98d120f3cb73642d121e78fabb",
+              "size_bytes": 1232
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.9073486328125e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 7.152557373046875e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.52587890625e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.7848949432373047e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "b7b497d9854b7e7bf1abf44618eafd556f5be3c5a0b8e9413e1fa8310d55d991",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientformer_l1.snap_dist_in1k",
+        "revision": "8738a58190800aaf5995f453b05f643df453a565",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "dab9ad0e328fe94a9c155497dc3f46cb456ae0223e19184d377e03adc3e3e08e",
+        "size_bytes": 49335032,
+        "url": "https://huggingface.co/timm/efficientformer_l1.snap_dist_in1k/resolve/8738a58190800aaf5995f453b05f643df453a565/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientformer_l1.snap_dist_in1k/blob/8738a58190800aaf5995f453b05f643df453a565/README.md"
+      }
+    },
+    {
+      "variant": "timm-l1-snap-dist-in1k-s-int16-o1-20261103",
+      "web_size": "l1-snap-dist-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/efficientformer_l1_snap_dist_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/efficientformer/efficientformer_l1_snap_dist_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "967e2c16b4d41084ff8484a939c7bf27d713a741b125c3bccf11c5b9310eaaf3",
+          "size_bytes": 16593912,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "cdd6c660753aaa27fdf84f7978441a91f6b74b7fbf476abb3e27055f0ab6a266",
+          "effective_config_sha256": "0d88e963268341f4bdb0d0e765983f9c885998604de8d1be29688b473f4665ed",
+          "recipe": "samples/vision/efficientformer/conversion/recipes/timm_l1_snap_dist_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "98042e6a63e3ab578658512cbf96b52beb1d8fb10db0cd46de37a95fe4ef5ca3",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "cf6059cb7f846a9514d34211bf3f8aa344d02464f60a579be3bd24e585030ccc",
+          "oe_data_sha256": "55a71cf94a5607919449b89849cf290298e0b382cebd22a54548b5992259e9dd",
+          "node_info_csv_sha256": "022b4b17029232aa5339a8ffc66ca140f0fd20250c765ed119ceb24ea70a5490",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.991485,
+              "cosine": 0.97389
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientformer_l1_snap_dist_in1k-s600-int16-20261103-r04/ptq_output/efficientformer_l1_snap_dist_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "d41c7029e9c86fad2d25bba1407e9b7ca5ff318a47b3b238c8e475ee38044cdb",
+              "size_bytes": 13504266
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientformer_l1_snap_dist_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "521a62348f434cfbfd275e13e17509a68c4c5399b4256038b682650486964871",
+              "size_bytes": 1231
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.9073486328125e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 7.62939453125e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.52587890625e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.844499588012695e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "b7b497d9854b7e7bf1abf44618eafd556f5be3c5a0b8e9413e1fa8310d55d991",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientformer_l1.snap_dist_in1k",
+        "revision": "8738a58190800aaf5995f453b05f643df453a565",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "dab9ad0e328fe94a9c155497dc3f46cb456ae0223e19184d377e03adc3e3e08e",
+        "size_bytes": 49335032,
+        "url": "https://huggingface.co/timm/efficientformer_l1.snap_dist_in1k/resolve/8738a58190800aaf5995f453b05f643df453a565/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientformer_l1.snap_dist_in1k/blob/8738a58190800aaf5995f453b05f643df453a565/README.md"
+      }
+    },
+    {
+      "variant": "timm-l3-snap-dist-in1k-s-int16-o1-20261103",
+      "web_size": "l3-snap-dist-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/efficientformer_l3_snap_dist_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/efficientformer/efficientformer_l3_snap_dist_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "0c573fa3c77c95ea9d56268eee559cb7739808b2362f0ba3d33bb568a3c86b62",
+          "size_bytes": 37502576,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "f3ba8c076abf1df1809bd86b7d371983ba04bea659967220444616d95c4dcf21",
+          "effective_config_sha256": "ef6e5ea53982100c93945022cb4b9da40e918444496d3fe243bfe51f4cc45b5c",
+          "recipe": "samples/vision/efficientformer/conversion/recipes/timm_l3_snap_dist_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "643844f60913f9a2c7fffd524a4bdc0091b0726b744d19639954589106474651",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "75cdec7275c4b9e4cb3e0a39ff2793d4c1233fcbad013677e3a16c22e7131967",
+          "oe_data_sha256": "1af32ab20f3a7c914de5f6485ba312a7d92af60402c48300b0ebfda5cbba570e",
+          "node_info_csv_sha256": "95e7d396e4f3d433474f878a3297ac23511d1b90aca4d4877c6e9b0b7ba6350c",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.988741,
+              "cosine": 0.941597
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientformer_l3_snap_dist_in1k-s100-int16-20261103-r04/ptq_output/efficientformer_l3_snap_dist_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "64f7aa66135069256f48a778314a0d469240ab7836336a95d38851c5022dc1bd",
+              "size_bytes": 37917497
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientformer_l3_snap_dist_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "b75b971f8c4e9134d277d10ef4e009b5b30c064467607e3e3d0b18b5e243fdb8",
+              "size_bytes": 1231
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.0994415283203125e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 4.410743713378906e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.293156623840332e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "2573e3afad901546b751f6fee0644055048658fb37146c18ec67ada79212d572",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientformer_l3.snap_dist_in1k",
+        "revision": "ca929ef48f056232098ad9226a69e4c29a00cc46",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "ab0c5bfd7c1863e6b7625a08615d0ea88b6acb978d30fdd0fbb24e2e12da3e2a",
+        "size_bytes": 125981408,
+        "url": "https://huggingface.co/timm/efficientformer_l3.snap_dist_in1k/resolve/ca929ef48f056232098ad9226a69e4c29a00cc46/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientformer_l3.snap_dist_in1k/blob/ca929ef48f056232098ad9226a69e4c29a00cc46/README.md"
+      }
+    },
+    {
+      "variant": "timm-l3-snap-dist-in1k-s-int16-o1-20261103",
+      "web_size": "l3-snap-dist-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/efficientformer_l3_snap_dist_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/efficientformer/efficientformer_l3_snap_dist_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "bfff73dc4d7361e354fcd2aeaf4b735126cf68336860519f4076e81449635913",
+          "size_bytes": 37504112,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "f3ba8c076abf1df1809bd86b7d371983ba04bea659967220444616d95c4dcf21",
+          "effective_config_sha256": "e69350e107bced584e21760cf6c2efa69694dabe69760d50cf46601d2146da98",
+          "recipe": "samples/vision/efficientformer/conversion/recipes/timm_l3_snap_dist_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "333d5a7f5c390525cbcf302cd5f8da5264c08f1341f248df1681c890184782fb",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "a69533504a9aaf706206619cd9b1b6d5e6fade79d66efa8037233e60ca06dbfa",
+          "oe_data_sha256": "84f434f93616003532f3abba10cfc705cc41d30e26267b805fec64830f06df80",
+          "node_info_csv_sha256": "8f6fb83c0efe5e5a084f59c1f26235d14893d0854fa48c832a82f98c32e31d06",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.988741,
+              "cosine": 0.941597
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientformer_l3_snap_dist_in1k-s100p-int16-20261103-r04/ptq_output/efficientformer_l3_snap_dist_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "e64f60f7e1b644157362579e8e291e18fe02de18e8c3c2520a85003adbd99cdb",
+              "size_bytes": 37917498
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientformer_l3_snap_dist_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "649f2b277b172d47083aa7d0197887b407287fe5ec907f853b1e69d72fd8a6e0",
+              "size_bytes": 1232
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 4.5299530029296875e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.2782554626464844e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "2573e3afad901546b751f6fee0644055048658fb37146c18ec67ada79212d572",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientformer_l3.snap_dist_in1k",
+        "revision": "ca929ef48f056232098ad9226a69e4c29a00cc46",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "ab0c5bfd7c1863e6b7625a08615d0ea88b6acb978d30fdd0fbb24e2e12da3e2a",
+        "size_bytes": 125981408,
+        "url": "https://huggingface.co/timm/efficientformer_l3.snap_dist_in1k/resolve/ca929ef48f056232098ad9226a69e4c29a00cc46/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientformer_l3.snap_dist_in1k/blob/ca929ef48f056232098ad9226a69e4c29a00cc46/README.md"
+      }
+    },
+    {
+      "variant": "timm-l3-snap-dist-in1k-s-int16-o1-20261103",
+      "web_size": "l3-snap-dist-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/efficientformer_l3_snap_dist_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/efficientformer/efficientformer_l3_snap_dist_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "215cefaf8b1ee52bb6ee1d2c9ae148ea2bdaa2005335c00ef57f95017ee8bf4a",
+          "size_bytes": 39813624,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "f3ba8c076abf1df1809bd86b7d371983ba04bea659967220444616d95c4dcf21",
+          "effective_config_sha256": "6742c4899179da5c39797dec69d23da9a4fd97176b4121af2f534ca1cd639aa4",
+          "recipe": "samples/vision/efficientformer/conversion/recipes/timm_l3_snap_dist_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "df462880cfef009f045e00830ae0b153c9d9208965b1a26369eba82ceae1b6d6",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "0436da2009a05eb5693797b5b10b15aa878eef8c4b3ea29cb7304a18b3d37fa7",
+          "oe_data_sha256": "236cc986570a76a0a7d7292cd86578dce5a6b9ce29bd50b3ca6e6086ad2f22c0",
+          "node_info_csv_sha256": "29122f5f6c61b33cfce37edefd964ac61f04757bba2885fa73e0a6fc0343ec0b",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.988741,
+              "cosine": 0.941437
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientformer_l3_snap_dist_in1k-s600-int16-20261103-r04/ptq_output/efficientformer_l3_snap_dist_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "3f18938f1852e33db3fa495df41e2c5ad26f73cd8d7d5ddf707c8adee4f4c886",
+              "size_bytes": 34251807
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientformer_l3_snap_dist_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "7ad4c50203c44196f40879de96c1cd9a5650ea3274eded7238a89d9fdb8eefdd",
+              "size_bytes": 1231
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 4.649162292480469e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.3527612686157227e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "2573e3afad901546b751f6fee0644055048658fb37146c18ec67ada79212d572",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientformer_l3.snap_dist_in1k",
+        "revision": "ca929ef48f056232098ad9226a69e4c29a00cc46",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "ab0c5bfd7c1863e6b7625a08615d0ea88b6acb978d30fdd0fbb24e2e12da3e2a",
+        "size_bytes": 125981408,
+        "url": "https://huggingface.co/timm/efficientformer_l3.snap_dist_in1k/resolve/ca929ef48f056232098ad9226a69e4c29a00cc46/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientformer_l3.snap_dist_in1k/blob/ca929ef48f056232098ad9226a69e4c29a00cc46/README.md"
+      }
+    }
+  ]
+}

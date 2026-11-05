@@ -1,14 +1,9 @@
-"""Paraformer: explicit model selection, host feature preparation and inference.
+"""Paraformer entry.
 
-This file stays deliberately small and keeps the loop visible: parse the
-arguments, validate them, handle the model-free listing/dry-run modes, gate
-the board, collect input evidence, construct the frontend and the
-three-model pipeline, run the per-utterance loop — one
-``model.predict`` per utterance between the CLI's
-prepare/record helpers — and print the report. Option declarations,
-validation, the model-free rendering and the evidence records live in
-``cli.py``; the readable encoder → predictor → CIF → decoder composition
-lives in ``pipeline.py``.
+Parse arguments, build the pipeline, call ``predict`` once per utterance, and print the report.
+``cli.py`` holds options, model selection, and the report.
+``pipeline.py`` runs encoder, predictor, CIF, then decoder.
+``--list-models`` and ``--dry-run`` do not load the board SDK.
 """
 
 import json

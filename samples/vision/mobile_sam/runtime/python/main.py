@@ -1,11 +1,9 @@
-"""SDK-free CLI and board entrypoint for MobileSAM.
+"""MobileSAM entry.
 
-This file stays deliberately small: parse the arguments, handle the
-model-free listing/dry-run modes, resolve the selection, construct the
-model pipeline, call ``predict`` with the box
-prompt, show the result.  Option declarations (including the box parser),
-the model-free modes, image reading and the overlay/mask writes live in
-``cli.py``; the encoder → decoder composition lives in ``pipeline.py``.
+Parse arguments, build the pipeline, call ``predict`` with the box, and save the mask.
+``cli.py`` holds options, model selection, and image output.
+``pipeline.py`` runs the encoder and then the decoder.
+``--list-models`` and ``--dry-run`` do not load the board SDK.
 """
 from __future__ import annotations
 
@@ -36,11 +34,12 @@ def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     try:
         if args.list_models:
-            return run_list_models(args.target)
+            return run_list_models(args.target, args.variant)
         if args.dry_run and args.target == "auto":
             raise ValueError("--dry-run requires an explicit --target; auto target detection needs a board identity.")
         selection = resolve_selection(
             args.target,
+            variant=args.variant,
             encoder_model_path=args.encoder_model_path,
             decoder_model_path=args.decoder_model_path,
             encoder_asset_id=args.encoder_asset_id,

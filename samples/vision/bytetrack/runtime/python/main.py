@@ -1,12 +1,11 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""People and Agent entrypoint for the ByteTrack tracking sample.
+"""ByteTrack entry.
 
-This file stays deliberately small: parse the arguments, resolve the
-detector, construct the tracker through ``ByteTrackTask.from_model``, call
-``predict`` per frame, write the annotated video. Option declarations,
-model-free listing/dry-run live in ``cli.py``; the tracking flow lives in
-``tracking.py``; overlay rendering lives in ``cli.py``.
+Parse arguments, build the tracker, call ``predict`` per frame, and write the video.
+``cli.py`` holds options, model selection, and overlay drawing.
+``tracking.py`` holds the tracking steps.
+``--list-models`` and ``--dry-run`` do not load the board SDK.
 """
 import json, math, sys
 from pathlib import Path

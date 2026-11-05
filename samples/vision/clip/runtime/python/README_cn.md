@@ -68,7 +68,8 @@ python3 samples/vision/clip/runtime/python/main.py \
 
 | 参数 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| `--target` | str | `auto` | `auto`、`x5`、`s100`、`s100p`、`s600`；只有 X5 有发布制品对。 |
+| `--target` | str | `auto` | `auto`、`x5`、`s100`、`s100p`、`s600`；S 系列转换制品对须选择精确规格。 |
+| `--variant` | str | `null` | 选择精确转换规格；省略时保留原有默认模型。 |
 | `--image-asset-id` | str | `None` | 精确图像 asset identity；与 `--image-model-path` 一起使用时必需。 |
 | `--text-asset-id` | str | `None` | 精确文本 asset identity；与 `--text-model-path` 一起使用时必需。 |
 | `--image-model-path` | str | `None` | 显式本地图像 `.bin` 路径；默认使用清单 `img_encoder.bin`。 |

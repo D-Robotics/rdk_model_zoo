@@ -91,7 +91,9 @@ class YOLOv5Tests(unittest.TestCase):
         return YOLOv5Task(runner=lambda tensors:runtime.outputs,binding=b),runtime,b
 
     def test_all_source_assets_and_defaults(self):
-        self.assertEqual(len(list_available_assets('x5')),9)
+        legacy = {f'yolov5{size}_tag_v{tag}_detect_640x640_bayese_nv12.bin'
+                  for tag,sizes in [('2.0','smlx'),('7.0','nsmlx')] for size in sizes}
+        self.assertTrue(legacy <= {a.filename for a in list_available_assets('x5')})
         self.assertIn('yolov5n_tag_v7.0',resolve_selection('x5').asset.filename)
         for t in ('s100','s600'): self.assertEqual(resolve_selection(t).asset.filename,f'{t}/yolov5x_672x672_nv12.hbm')
         with self.assertRaises(ValueError):resolve_selection('s100p')

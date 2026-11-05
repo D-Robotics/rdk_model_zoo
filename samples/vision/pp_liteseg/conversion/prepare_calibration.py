@@ -11,13 +11,14 @@ import numpy as np
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Prepare PP-LiteSeg calibration tensors for hb_mapper.")
+    parser = argparse.ArgumentParser(description="Prepare PP-LiteSeg calibration tensors on the conversion server.")
     parser.add_argument("--src", type=Path, required=True, help="Directory containing calibration images.")
     parser.add_argument("--out", type=Path, default=Path("calibration_data_rgb_f32_1024x512"), help="Output directory.")
     parser.add_argument("--width", type=int, default=1024, help="Model input width.")
     parser.add_argument("--height", type=int, default=512, help="Model input height.")
     parser.add_argument("--num", type=int, default=50, help="Maximum number of images to export.")
     parser.add_argument("--seed", type=int, default=0, help="Random seed used when sampling images.")
+    parser.add_argument('--source-logits',action='store_true',help='Write normalized [-1,1] RGB NPY tensors for the new S logits profiles')
     return parser.parse_args()
 
 
@@ -59,15 +60,22 @@ def main():
             relative = image_path.relative_to(args.src).as_posix()
             identity = hashlib.sha256(relative.encode()).hexdigest()[:12]
             name = f"{index:06d}_{identity}_{image_path.stem}.rgbchw"
-            data = tensor.tobytes()
-            (staging / name).write_bytes(data)
+            if args.source_logits:
+                tensor=np.ascontiguousarray((tensor/255-.5)/.5)
+                name=str(Path(name).with_suffix('.npy'))
+                np.save(staging/name,tensor,allow_pickle=False)
+                data=(staging/name).read_bytes()
+            else:
+                data = tensor.tobytes()
+                (staging / name).write_bytes(data)
             samples.append({"source": relative, "source_sha256": hashlib.sha256(source_bytes).hexdigest(),
                             "tensor": name, "tensor_sha256": hashlib.sha256(data).hexdigest(),
                             "bytes": len(data)})
         # The compiler directory contains tensors only; provenance is a sibling.
         manifest = {"source_directory": str(args.src.resolve()), "seed": args.seed,
                     "shape": [1, 3, args.height, args.width], "dtype": "<f4",
-                    "normalization": "none; RGB values 0..255", "samples": samples}
+                    "normalization": "RGB/255; mean=.5, std=.5; normalized [-1,1] ONNX input" if args.source_logits else "none; RGB values 0..255",
+                    'count':len(samples), 'samples': samples}
         staging.rename(args.out)
         with manifest_path.open("x") as stream:
             json.dump(manifest, stream, indent=2)
@@ -77,8 +85,8 @@ def main():
             shutil.rmtree(staging)
 
     expected_bytes = 1 * 3 * args.height * args.width * 4
-    print(f"Wrote {len(list(args.out.glob('*.rgbchw')))} calibration tensors to {args.out}")
-    print(f"Expected file size: {expected_bytes} bytes per tensor")
+    print(f"Wrote {len(samples)} calibration tensors to {args.out}")
+    print(f"Expected tensor payload: {expected_bytes} bytes plus NPY header" if args.source_logits else f"Expected file size: {expected_bytes} bytes per tensor")
 
 
 if __name__ == "__main__":

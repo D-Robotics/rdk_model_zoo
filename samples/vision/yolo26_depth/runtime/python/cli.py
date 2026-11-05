@@ -102,7 +102,9 @@ def resolve_selection(
             if profile == "lite"
             else f"{march}/yolo26{variant}_depth_{suffix}_768x768_nv12.hbm"
         )
-    rows = [a for a in list_available_assets(target) if a.filename == filename]
+    rows = [asset] if asset_id is not None else [
+        a for a in list_available_assets(target) if a.filename == filename
+    ]
     if len(rows) != 1:
         raise ValueError(f"Expected one published artifact for {target}/{variant}")
     if model_path is not None and asset_id is None:
@@ -110,7 +112,7 @@ def resolve_selection(
     path = (
         Path(model_path).expanduser()
         if model_path is not None
-        else SAMPLE_DIR / "model" / filename
+        else SAMPLE_DIR / "model" / rows[0].filename
     )
     return ModelSelection(
         target, rows[0], path, model_path is not None, variant, profile, converted_model

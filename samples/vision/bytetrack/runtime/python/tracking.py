@@ -3,7 +3,8 @@
 """Stateful person tracking around the unified YOLOv5 detector.
 
 The detector publications differ by target — X5 packed-NV12 640x640 .bin
-(raw F32 heads) and S split-NV12 672x672 .hbm (declared dequant) — but the
+(raw F32 heads) and S split-NV12 672x672 .hbm (legacy dequantized heads or
+explicitly selected rebuilt raw-F32 heads) — but the
 tracking stage is target-independent CPU code fed with original-pixel
 person detections.
 """

@@ -171,3 +171,47 @@ python3 samples/vision/repvgg/runtime/python/main.py --target x5 \
 ## 补充准备
 
 加载匹配的 RepVGG 训练权重，以 `deploy=False` 创建所选模型，并在 ONNX 导出前运行 `repvgg_model_convert`。将模型图导出至所选 YAML 路径，输入 RGB/NCHW 1×3×224×224、输出 ImageNet-1k；编译前检查输入名称与形状。按 mean `123.675/116.28/103.53` 和 scale `0.01712475/0.017507/0.01742919` 准备 `./calibration_data_rgb_f32` float32 RGB 数据。各 YAML 使用变体专属目录；部署文件按 Manifest 文件名保存。
+
+<!-- converted-batch-20261102 -->
+## 固定版本转换配方
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model repvgg_a0.rvgg_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/repvgg/conversion/recipes/timm-a0-rvgg-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+各规格使用 converted.json 中对应的模型、固定权重及 recipes 配方，输出到全新目录。校准为原始 RGB float32 二进制张量，不重复归一化，不套用历史板端数据。
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
+
+- `s100 / timm-a0-rvgg-in1k-s-int16-o1-20261103 / model`: [timm_a0_rvgg_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_a0_rvgg_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-a0-rvgg-in1k-s-int16-o1-20261103 / model`: [timm_a0_rvgg_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_a0_rvgg_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-a0-rvgg-in1k-s-int16-o1-20261103 / model`: [timm_a0_rvgg_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_a0_rvgg_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-a1-rvgg-in1k-s-int16-o1-20261103 / model`: [timm_a1_rvgg_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_a1_rvgg_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-a1-rvgg-in1k-s-int16-o1-20261103 / model`: [timm_a1_rvgg_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_a1_rvgg_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-a1-rvgg-in1k-s-int16-o1-20261103 / model`: [timm_a1_rvgg_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_a1_rvgg_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-a2-rvgg-in1k-s-int16-o1-20261103 / model`: [timm_a2_rvgg_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_a2_rvgg_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-a2-rvgg-in1k-s-int16-o1-20261103 / model`: [timm_a2_rvgg_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_a2_rvgg_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-a2-rvgg-in1k-s-int16-o1-20261103 / model`: [timm_a2_rvgg_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_a2_rvgg_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-b0-rvgg-in1k-s-int16-o1-20261103 / model`: [timm_b0_rvgg_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_b0_rvgg_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-b0-rvgg-in1k-s-int16-o1-20261103 / model`: [timm_b0_rvgg_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_b0_rvgg_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-b0-rvgg-in1k-s-int16-o1-20261103 / model`: [timm_b0_rvgg_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_b0_rvgg_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-b1g4-rvgg-in1k-s-int16-o1-20261103 / model`: [timm_b1g4_rvgg_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_b1g4_rvgg_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-b1g4-rvgg-in1k-s-int16-o1-20261103 / model`: [timm_b1g4_rvgg_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_b1g4_rvgg_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-b1g4-rvgg-in1k-s-int16-o1-20261103 / model`: [timm_b1g4_rvgg_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_b1g4_rvgg_in1k_s_int16_o1_20261103_s600_model.yaml)
+
+S 校准必须使用 ONNX 输入域的归一化 `.npy`；NV12 Runtime 的 mean/scale 仍写在配方中。公共工具的 `--target` 和 `--normalization-json` 从同一 checkpoint 导出记录读取实际归一化。
+
+[Shared classification workflow](../../../../utils/tools/classification_conversion/README.md).
+
+原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。

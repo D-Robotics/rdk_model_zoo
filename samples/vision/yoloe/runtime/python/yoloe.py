@@ -67,6 +67,26 @@ class PF11Contract(DFLSegmentationContract):
         super().__init__(classes=4585)
 
 
+def bgr_to_regular_nv12_planes(pixels):
+    """Match X5 1.2.8 RGB2NV12Transformer's raw-float32 calibration path.
+
+    Full-range coefficients, top-left UV sampling and uint8 truncation are
+    specific to the converted 11s artifact; legacy assets retain OpenCV I420.
+    """
+    if (not isinstance(pixels, np.ndarray) or pixels.dtype != np.uint8
+            or pixels.ndim != 3 or pixels.shape[2] != 3
+            or min(pixels.shape[:2]) <= 0 or any(v % 2 for v in pixels.shape[:2])):
+        raise ValueError("Expected even-sized uint8 HWC BGR pixels.")
+    b, g, r = (pixels[..., i].astype(np.float32) for i in range(3))
+    y = np.float32(.299) * r + np.float32(.587) * g + np.float32(.114) * b
+    u = (-np.float32(.169) * r - np.float32(.331) * g
+         + np.float32(.5) * b + np.float32(128))[::2, ::2]
+    v = (np.float32(.5) * r - np.float32(.419) * g
+         - np.float32(.081) * b + np.float32(128))[::2, ::2]
+    return (np.ascontiguousarray(y.astype(np.uint8)[None, ..., None]),
+            np.ascontiguousarray(np.stack((u, v), axis=-1).astype(np.uint8)[None]))
+
+
 class PF26Contract(LTRBSegmentationContract):
     """Direct offsets with deterministic Top-K; no NMS policy is implied."""
 
@@ -373,7 +393,10 @@ class YOLOE:
             pixels, context = letterbox(image)
         else:
             pixels, context = resize_with_transform(image, (640, 640), self.cfg.resize_type)
-        y, uv = bgr_to_nv12_planes(pixels)
+        convert = (bgr_to_regular_nv12_planes
+                   if self.selection.variant == "11s-native-20261102"
+                   else bgr_to_nv12_planes)
+        y, uv = convert(pixels)
         return Prepared(self.runner.prepare_input(y, uv), context)
 
     def infer(self, prepared):

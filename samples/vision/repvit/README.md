@@ -139,11 +139,14 @@ rank 1 being class 915 (yurt).
 <a id="performance"></a>
 ## Performance data
 
-Published performance records; full timing conditions and all columns
-are listed under [evaluation](evaluator/README.md#reference-results).
-Single-thread latency and multi-thread FPS are measured under different
-concurrency and are not reciprocal quantities. Compare latency and FPS using
-the same thread count, concurrent submission mode and BPU utilization.
+X5 records from the x5-v1.1.3 release; full conditions and all rows are in
+[evaluator](evaluator/README.md#reference-results).
+
+| Model | Size | Params (M) | Float Top-1 | Quant Top-1 | Single-thread latency (ms) | Multi-thread latency (ms) | FPS |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| RepViT-m1.1 | 224x224 | 8.2 | 77.73% | 77.50% | 2.32 | 6.69 | 590.42 |
+| RepViT-m1.0 | 224x224 | 6.8 | 76.75% | 76.50% | 1.97 | 5.71 | 692.29 |
+| RepViT-m0.9 | 224x224 | 5.1 | 76.32% | 75.75% | 1.65 | 4.37 | 902.69 |
 
 <a id="entry-points"></a>
 ## Entry points
@@ -154,3 +157,36 @@ the same thread count, concurrent submission mode and BPU utilization.
 ## License
 
 Source Python headers retain Apache-2.0 provenance. Conversion YAMLs retain their original proprietary notices verbatim; before redistribution, follow the original conversion YAML notices and applicable upstream weight license terms.
+
+<!-- converted-batch-20261102 -->
+## Converted-only additions (2026-11-02)
+
+These independently converted timm weights have passed strict checkpoint loading,
+reparameterization and two-input PyTorch/ONNX host comparison, checker and compiler.
+Board smoke, accuracy, Runtime 1/2 and C++ 1/2 are **not-run**; historical metrics
+and screenshots do not describe these artifacts. Existing defaults are retained.
+Pillow is needed for the explicit bicubic shorter-edge 256 / rounded center crop
+224 profile. Normalization is fused in Mapper from the actual checkpoint config;
+output is float32 1,000-class logits followed by native softmax.
+
+| Variant | Artifact | Checkpoint revision | Board |
+|---|---|---|---|
+| `timm-m0-9-dist-450e-in1k` | `repvit_m0_9_dist_450e_in1k_bayese_224x224_nv12.bin` | [`c073717dd84b`](https://huggingface.co/timm/repvit_m0_9.dist_450e_in1k/blob/c073717dd84b5af671dd51b187b99ac55b2af4f0/README.md) | not-run |
+| `timm-m1-0-dist-450e-in1k` | `repvit_m1_0_dist_450e_in1k_bayese_224x224_nv12.bin` | [`0e20f9f1bfa9`](https://huggingface.co/timm/repvit_m1_0.dist_450e_in1k/blob/0e20f9f1bfa9772e63b813835bab2d6f0d168f89/README.md) | not-run |
+| `timm-m1-1-dist-450e-in1k` | `repvit_m1_1_dist_450e_in1k_bayese_224x224_nv12.bin` | [`ff441038a429`](https://huggingface.co/timm/repvit_m1_1.dist_450e_in1k/blob/ff441038a42982fff1c8c75be7c794f9ba76db72/README.md) | not-run |
+
+```bash
+python3 samples/vision/repvit/model/download.py --target x5 --variant timm-m0-9-dist-450e-in1k
+python3 samples/vision/repvit/runtime/python/main.py --target x5 --variant timm-m0-9-dist-450e-in1k --dry-run
+```
+
+Exact model URLs/SHA-256/size are in `docs/release/x5/models.yaml`; source and host
+receipts are in `conversion/converted.json`. Each weight retains its own model
+license in its public release manifest. No board result is implied by download.
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Independent converted profiles and explicit commands are listed in [model preparation](model/README.md). Board accuracy and performance are not measured yet.

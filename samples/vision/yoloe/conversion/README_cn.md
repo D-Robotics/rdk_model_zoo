@@ -92,6 +92,13 @@ E26 还要求选中的 `(anchor, class)` 集合与上游完全一致，再按这
 
 `s` 取 8、16、32，共十个 float32 输出。形状一致证明的是张量接口；权重尺寸、架构、标签语义与精度由导出器检查和评估器验证。报告用 `variant_declared` 标记此阶段的尺寸为调用者声明；请将导出元数据与准备目录一并保存。
 
+本次发布候选可重复传入 `--validation-image <图像>` 增加真实图像，并用
+`--validate-random` 在 `--test-image` 之外加入原生 seed-0 随机输入。所有输入检查
+同一份 ONNX 图，保留原有全部 raw anchors、解码、prototype 与 E26 Top-K 身份集合
+门禁。`export.json` 逐例记录计划和结果，所有输入通过后才写 `status=float_checked`；
+原有单图/默认行为保持可用。11s/X5 与 26n/S100 候选的公开输入版本与许可见
+[UPSTREAM_NOTICE.md](UPSTREAM_NOTICE.md)。
+
 <a id="calibration"></a>
 ## 校准
 
@@ -183,3 +190,42 @@ python3 samples/vision/yoloe/runtime/python/main.py \
 浮点 S HBM 通过上述本地路线生成；当前没有发布浮点 S HBM，已发布的量化 S 制品属于不同输入。导出对照在未优化的 ONNX Runtime CPU 上执行；优化引擎行为、更多输入与 X5 11m/11l 编译需自行运行验证。图接口校验不识别错误标注的权重尺寸或标签语义，这部分由导出器检查和评估器覆盖。[C++ 运行时](../runtime/cpp/README_cn.md)的 SDK 构建与板端执行见其指南。[统一评估器](../evaluator/README_cn.md)提供显式数据集映射与计分。
 
 每次转换保存本地权重、导出 ONNX 和生成 HBM 的 SHA-256。原始量化输出路线与浮点输出路线分别保存制品记录。
+
+## 本轮 S100 复现（2026-11-03）
+
+本轮新增配方采用上面的独立 variant、S100/nash-e 和 O1；旧配方保留。配方使用相对工作目录，实际执行的绝对路径 YAML 摘要另存于 `converted.json`。
+
+- `model`: [26n_native_cal32_20261103_o1_s100_model.yaml](recipes/26n_native_cal32_20261103_o1_s100_model.yaml)
+
+沿用固定8.4.127 exporter 的全部十输出与词表一致性门禁。原生 `prepare.py --target s100 --variant 26n --sample-count 32` 读取单独冻结的32图目录。200图 KL 尝试因40 GiB内存上限终止，修改校准集后另建本轮尝试，使用独立 O1 文件名。
+
+在匹配 OE 3.7.0 容器中从工作目录运行 `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml`，每件模型分别编译。板端各项数据仍为 `not-run`。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
+
+- `s100 / 26n-native-cal32-cpuptq-20261103-o1 / model`: [26n_native_cal32_cpuptq_20261103_o1_s100_model.yaml](recipes/26n_native_cal32_cpuptq_20261103_o1_s100_model.yaml)
+- `s100p / 26n-native-cal32-cpuptq-20261103-o1 / model`: [26n_native_cal32_cpuptq_20261103_o1_s100p_model.yaml](recipes/26n_native_cal32_cpuptq_20261103_o1_s100p_model.yaml)
+- `s600 / 26n-native-cal32-cpuptq-20261103-o1 / model`: [26n_native_cal32_cpuptq_20261103_o1_s600_model.yaml](recipes/26n_native_cal32_cpuptq_20261103_o1_s600_model.yaml)
+
+原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。
+
+<!-- BEGIN CPU S CONVERSIONS 20261104 -->
+
+## Additional CPU PTQ S profiles (2026-11-04)
+
+These exact trained-checkpoint exports passed the source host gate and the full-output CPU source/CPU SDK gate (three frozen images plus deterministic random input, atol=1e-4, rtol=1e-3). Each target has its own INT16 PTQ, compiler metadata, OE report and checksum in `converted_targets_20261103.json`. Compiler estimates describe conversion; board accuracy, Runtime 1/2 concurrency and C++ 1/2 streams remain not run.
+
+Models and intermediate outputs stay on dev-server. The Mac holds code and metadata only; Archive uploads stream from server files without a local model copy.
+
+| Target | Native variant | Manifest filename | SHA-256 | Bytes |
+|---|---|---|---|---:|
+| s100 | `26n-native-cal32-cpuptq-20261103-o1` | `s:yoloe26_seg:nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12_float_cal32_20261103_o1_cpuptq.hbm` | `6582c867d89472f3b5c6aed29944fb15768fcc07adb376965dd831c617a0ed30` | 167799968 |
+| s100p | `26n-native-cal32-cpuptq-20261103-o1` | `s:yoloe26_seg:nash-m/yoloe_26n_seg_pf_nashm_640x640_nv12_float_cal32_20261103_o1_cpuptq.hbm` | `9358de5bc440818e81cd51fbdf669e68b65dbc32060b95fabc7304e5238ad0f2` | 174226456 |
+| s600 | `26n-native-cal32-cpuptq-20261103-o1` | `s:yoloe26_seg:nash-p/yoloe_26n_seg_pf_nashp_640x640_nv12_float_cal32_20261103_o1_cpuptq.hbm` | `bd831c5607a7091c19d63ba4e8ffa0db41d9b818f3a65139550fb19010253efd` | 12553336 |
+| s600 | `11s-int16-cal32-cpuptq-s-o1-20261103` | `s:yoloe11_seg:nash-p/yoloe_11s_seg_pf_nashp_640x640_nv12_float_20261103_o1_cpuptq.hbm` | `d0f400a5e1f7d9fe59cbde4b0b0b9841c16b19588d67b660bd7305dfeb5520e5` | 54169136 |
+
+<!-- END CPU S CONVERSIONS 20261104 -->

@@ -15,8 +15,8 @@ for every run. Model files and datasets belong outside the repository.
 `v4-small`, `v4-medium-224`, `v4-medium-256`, `v4-large-256` (MobileNet), and
 `resnet18`, `resnet34`, `resnet50`, `resnet101`, `resnet152` (timm `a1_in1k`).
 Medium-224 targets all four platforms; Medium-256 targets S100/S100P/S600.
-Other variants have all four targets in their candidate matrix. A matrix
-entry is not a claim that a compiled model has passed board acceptance.
+Other variants list all four targets. A compiled model is accepted only
+when its conversion record says so.
 
 Use Python 3.10 with the versions in `requirements.lock.txt`. Install the
 PyTorch 2.8.0 CUDA 12.8 wheels using the
@@ -31,9 +31,13 @@ python -m pip install -r utils/tools/classification/requirements.lock.txt
 
 ## Source and preprocessing
 
-The pins include model-card URLs, licenses, upstream preprocessing settings,
-and the explicit deployment contract. V1 uses mean/std 0.5; the other models
-use their recorded ImageNet normalization. Each model uses PIL bicubic
+The pins include model-card URLs, licenses, and upstream preprocessing.
+MobileNetV1 uses mean/std 0.5. The other models use ImageNet mean
+`0.485 0.456 0.406` and std `0.229 0.224 0.225`. Sample PTQ YAML compiles
+these as `mean_value` (mean × 255) and `scale_value` (1 / (255 × std)):
+V1 `127.5` / `0.0078431372549`, and the others
+`123.675 116.28 103.53` / `0.0171247538317 0.0175070028011 0.0174291938998`.
+Each model uses PIL bicubic
 shorter-edge resize followed by center crop. `crop_pct` and the deployed size
 are explicit; upstream `test_input_size` does not override them.
 
@@ -144,8 +148,7 @@ records the actual ORT provider; a missing requested CUDA provider is an error.
 This RGB FP32 baseline does not include an NV12 roundtrip. Subsequent board
 evaluation should apply `prepare_rgb`, pass its contiguous BGR view to the
 sample classifier with `resize_type=0` at the same size, and record NV12 and
-quantization effects explicitly. Do not use the legacy default letterbox for
-this checkpoint contract.
+quantization effects explicitly. Do not use the legacy default letterbox with these checkpoints.
 
 ## Host verification
 

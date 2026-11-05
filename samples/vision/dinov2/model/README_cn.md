@@ -48,7 +48,7 @@ bash samples/vision/dinov2/model/download.sh s600 /tmp/dinov2-model
 # 预期：/tmp/dinov2-model/nash-p/dinov2_vits14_224_int16_nashp.hbm
 ```
 
-`download_model.sh` 是位置快捷入口，使用同样的必需 target 参数。manifest 的 SHA-256 均未知；下载器打印下载文件的 SHA-256。I/O、选择或下载错误退出 2。
+`download_model.sh` 是位置快捷入口，使用同样的必需 target 参数。历史三条 manifest 的 SHA-256 仍未知；新转换制品的精确摘要见下文。下载器打印下载文件的 SHA-256。I/O、选择或下载错误退出 2。
 
 <a id="accompanying-files"></a>
 ## 伴随文件
@@ -70,13 +70,30 @@ bash samples/vision/dinov2/model/download.sh s600 /tmp/dinov2-model
 <a id="formats-checksums"></a>
 ## 格式与校验值
 
-active manifest 将三个发布 SHA-256 均记录为未知；下载观测 digest 用于跨主机识别同一份字节，发布者认证以发布摘要为准。
+历史三个制品的发布 SHA-256 仍记录为未知；下载观测 digest 用于跨主机识别同一份字节，发布者认证以发布摘要为准。
 
 | 制品 | 格式 | SHA-256 | 数值来源 |
 | --- | --- | --- | --- |
 | `nash-e/dinov2_vits14_224_int16_nashe.hbm` | HBM | `sha256: null (unknown)` | `docs/release/s/models.yaml` |
 | `nash-m/dinov2_vits14_224_int16_nashm.hbm` | HBM | `sha256: null (unknown)` | `docs/release/s/models.yaml` |
 | `nash-p/dinov2_vits14_224_int16_nashp.hbm` | HBM | `sha256: null (unknown)` | `docs/release/s/models.yaml` |
+
+## 新转换制品（2026-11-02）
+
+显式版本 `vits14_224_int16_20261102_o1` 当前提供 3 个分别编译的 O1 HBM，目标为 `s100`, `s100p`, `s600`。不传 `--variant` 或 `--asset-id` 时仍选择历史默认模型。新文件已通过浮点图对照、原装转换及 HBM 输入输出/架构静态检查；板端功能、精度、Python/C++ 性能均为 **not-run**，历史测量数据不适用于这些文件。
+
+| Target | HBM | SHA-256 |
+| --- | --- | --- |
+| s100 | `dinov2_vits14_224_int16_nashe_20261102_o1.hbm` | `40d9654edb2b83b12928a4b23e8f482ec30c415d2389af5e64957d9921a9df1a` |
+| s100p | `dinov2_vits14_224_int16_nashm_20261102_o1.hbm` | `05a94aae2cb7da14a6a0810c7c7e5e5bff604012b943dd66708e4cd9cc224cbe` |
+| s600 | `dinov2_vits14_224_int16_nashp_20261102_o1.hbm` | `e7b720b39d5475d440d8631ba0ac008f230fa28e8a5b1d12d887a60a7cd2c549` |
+
+```bash
+python3 samples/vision/dinov2/model/download.py --target s100 --variant vits14_224_int16_20261102_o1
+python3 samples/vision/dinov2/runtime/python/main.py --target s100 --variant vits14_224_int16_20261102_o1 --dry-run
+```
+
+此版本仅开放表中已完成的目标；尚未发布的目标会报错，不会回退。也可用完整的 `s:dinov2:nash-*/filename.hbm` 资产 ID 选择。输入仍是已归一化 RGB float32 FEATUREMAP `(1,3,224,224)`；实际公开输出为 float32，沿用元数据绑定的 `raw_f32` 路径；内部量化仍为 int16 配方，不添加 L2 归一化或 softmax。来源/权重版本、完整哈希、50 张真实图像校准配方、实际环境和验证记录见[转换记录](../conversion/converted.json)。
 
 ## 许可
 

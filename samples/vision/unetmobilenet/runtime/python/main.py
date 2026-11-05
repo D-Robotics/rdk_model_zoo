@@ -1,11 +1,11 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""People and Agent entrypoint for the UnetMobileNet segmentation sample.
+"""UnetMobileNet segmentation entry.
 
-This file stays deliberately small: parse the arguments, resolve the model,
-construct the segmenter, call ``predict``, present results. Option
-declarations, model-free listing/dry-run, and artifact writing live in
-``cli.py``; the segmentation flow lives in ``unetmobilenet.py``.
+Parse arguments, build the segmenter, call ``predict``, and write the result.
+``cli.py`` holds options, model selection, and file output.
+``unetmobilenet.py`` holds preprocess, infer, and postprocess.
+``--list-models`` and ``--dry-run`` do not load the board SDK.
 """
 
 from __future__ import annotations

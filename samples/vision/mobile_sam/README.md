@@ -17,7 +17,7 @@ mobile_sam/
 ├── conversion/  # Export and quantization configuration
 ├── evaluator/  # Evaluation commands and metrics
 ├── model/  # Model files and download scripts
-├── runtime/  # Python and native inference implementations
+├── runtime/  # Python inference
 ├── test_data/  # Example inputs
 ├── README.md  # English instructions
 └── README_cn.md  # Chinese instructions
@@ -84,3 +84,9 @@ The input is stretched to 512×512; the `[x1,y1,x2,y2]` box and output mask use 
 ## License
 
 Runtime code follows the repository Apache-2.0 license. MobileSAM checkpoints and ONNX/model assets retain upstream terms; verify them before redistribution.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Independent converted profiles and explicit commands are listed in [model preparation](model/README.md). Board accuracy and performance are not measured yet.

@@ -2,6 +2,9 @@ English | [简体中文](README_cn.md)
 
 # Faster R-CNN
 
+<!-- tracking-deployment-20261105 -->
+The complete S100 tracking bundle and its validation scope are documented in [tracking deployment](conversion/tracking-20261105.md).
+
 <a id="overview"></a>
 ## Overview
 
@@ -120,3 +123,8 @@ MobileNetV3-Large-320-FPN, 320×320 canvas, up to 150 proposals, 30 ordered 1280
 
 Sample code follows the repository [LICENSE](../../../LICENSE). TorchVision source uses [BSD-3-Clause](https://github.com/pytorch/vision/blob/v0.21.0/LICENSE); weights come from the official COCO_V1 release. ByteTrack and LAP source attribution is in the [ByteTrack sample license notes](../bytetrack/README.md#license) and [C++ third-party licenses](../bytetrack/runtime/cpp/THIRD_PARTY_LICENSES.md). Dataset terms are listed by [COCO](https://cocodataset.org/#termsofuse).
 
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Independent converted profiles and explicit commands are listed in [model preparation](model/README.md). Board accuracy and performance are not measured yet.

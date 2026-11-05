@@ -43,7 +43,7 @@ python3 -m samples.vision.lprnet.runtime.python.main --target x5
 
 | 选项 | 默认值 | 含义 |
 |---|---|---|
-| `--target` | `auto` | `auto` 解析唯一发布目标 X5；S 目标拒绝 |
+| `--target` | `auto` | `auto` 默认历史 X5 制品；显式 S100/S100P/S600 选择独立转换制品 |
 | `--asset-id` | `null` | 精确 `x5:lprnet:lpr.bin`，外部模型路径必需 |
 | `--model-path` | `null` | 已存在模型路径；不下载 |
 | `--test-bin` | `samples/vision/lprnet/test_data/test_input.dat` | 预打包 float32 输入 |

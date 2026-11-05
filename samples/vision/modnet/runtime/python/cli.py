@@ -26,6 +26,7 @@ class BindingError(ValueError):
 SUPPORTED_TARGETS = ("x5", "s100", "s100p", "s600")
 SAMPLE_DIR = Path(__file__).resolve().parents[2]
 ASSET_ID = "x5:modnet:modnet_512x512_rgb.bin"
+CONVERTED_ASSET_ID = "x5:modnet:modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin"
 
 DEFAULT_TEST_IMAGE = SAMPLE_DIR / "test_data" / "person.jpg"
 DEFAULT_BG_IMAGE = SAMPLE_DIR / "test_data" / "bg.jpg"
@@ -50,11 +51,28 @@ class ModelSelection:
     explicit_model_path: bool = False
 
 
-def _asset() -> Asset:
+def _assets() -> tuple[Asset, ...]:
     rows = list_assets("x5", "modnet")
-    if len(rows) != 1 or rows[0].reference != ASSET_ID:
-        raise BindingError(f"Expected one manifest asset {ASSET_ID!r}.")
-    return rows[0]
+    references = {row.reference for row in rows}
+    if ASSET_ID not in references or not references <= {ASSET_ID, CONVERTED_ASSET_ID}:
+        raise BindingError("Unknown MODNet manifest contract; review its native binding.")
+    if any(row.format != "bin" for row in rows):
+        raise BindingError("MODNet X5 artifacts must be bin models.")
+    path = SAMPLE_DIR / 'model/converted_assets.json'
+    if path.exists():
+        data = json.loads(path.read_text())
+        if data.get('sample') != 'modnet':
+            raise BindingError('Invalid converted MODNet registry.')
+        published = list_assets('s','modnet')
+        for profile in data['profiles'].values():
+            for target, expected in profile.items():
+                matches = [a for a in published if a.filename == expected['filename']
+                           and a.filename.startswith(target+'/') and a.format == 'hbm'
+                           and a.sha256 == expected['sha256'] and a.sha256 is not None]
+                if len(matches) != 1:
+                    raise BindingError('MODNet converted asset differs from its frozen target identity.')
+                rows = (*rows, matches[0])
+    return tuple(rows)
 
 
 def list_available_assets(target: Optional[str] = None) -> tuple[Asset, ...]:
@@ -69,10 +87,11 @@ def list_available_assets(target: Optional[str] = None) -> tuple[Asset, ...]:
     Raises:
         BindingError: The target is unknown.
     """
-    if target in (None, "auto", "x5"):
-        return (_asset(),)
+    if target in (None, "auto"):
+        return _assets()
     if target in SUPPORTED_TARGETS:
-        return ()
+        return tuple(a for a in _assets() if (a.group == 'x5' if target == 'x5' else
+                     a.group == 's' and a.filename.startswith(target+'/')))
     raise BindingError(f"Unknown target {target!r}.")
 
 
@@ -99,13 +118,17 @@ def resolve_selection(
     key = (target or "auto").lower()
     if key == "auto":
         key = "x5"
-    if key != "x5":
-        raise BindingError("MODNet is published only for target x5.")
-    asset = _asset()
-    if asset_id is not None and asset_id != asset.reference:
-        raise BindingError(f"Expected asset-id {asset.reference}, got {asset_id!r}.")
+    if key not in SUPPORTED_TARGETS:
+        raise BindingError(f'Unknown target {key!r}.')
+    available = list_available_assets(key)
+    reference = asset_id or (ASSET_ID if key == 'x5' else
+                            available[0].reference if len(available) == 1 else None)
+    matches = [row for row in available if row.reference == reference]
+    if len(matches) != 1:
+        raise BindingError(f"Unknown MODNet asset-id {reference!r}.")
+    asset = matches[0]
     if model_path is not None and asset_id is None:
-        raise BindingError("An external model path requires --asset-id x5:modnet:modnet_512x512_rgb.bin.")
+        raise BindingError("An external model path requires its exact --asset-id.")
     return ModelSelection(
         target=key,
         asset=asset,
@@ -168,7 +191,9 @@ def run_list_models(target: str) -> int:
     rows = list_available_assets(target)
     print(json.dumps([
         {"asset_id": row.reference, "filename": row.filename, "format": row.format,
-         "url": row.url, "sha256": row.sha256, "target": "x5", "availability": "manual"}
+         "url": row.url, "sha256": row.sha256,
+         "target": "x5" if row.group == "x5" else row.filename.split("/", 1)[0],
+         "availability": "download" if row.url else "manual"}
         for row in rows
     ], ensure_ascii=False, indent=2))
     return 0

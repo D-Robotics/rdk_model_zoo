@@ -117,3 +117,38 @@ S lite 的运行时系数必须与导出权重校准参数一致。
 
 摘要确认字节；精度与板卡兼容性以运行时元数据校验和板端执行为准。
 真实制品元数据，也没有新增板测结果。
+
+## 本轮 S100 转换规格（2026-11-03）
+
+`n-int16-20261103-o1` · S100 / nash-e · OE 3.7.0 (hb_compile 3.5.3, HMCT 2.6.5, HBDK 4.7.5) · O1.
+
+显式选择本轮独立规格。原默认规格及其历史数据保留。实际 HBM 输出为 float32。
+
+| Role | Exact asset ID | SHA-256 | Bytes |
+| --- | --- | --- | ---: |
+| model | `s:yolo26_depth:nash-e/yolo26n_depth_nashe_768x768_nv12_int16_20261103_o1.hbm` | `dbea30f0d72550f207d0e055aca90cad878891cc314f8089a81e3c93fcd54518` | 22320760 |
+
+```bash
+bash samples/vision/yolo26_depth/model/download.sh --target s100 --asset-id s:yolo26_depth:nash-e/yolo26n_depth_nashe_768x768_nv12_int16_20261103_o1.hbm
+python3 samples/vision/yolo26_depth/runtime/python/main.py --target s100 --asset-id s:yolo26_depth:nash-e/yolo26n_depth_nashe_768x768_nv12_int16_20261103_o1.hbm --test-img /path/to/image.jpg
+```
+
+校准图片数量：200；输入来自独立的 COCO 训练图片。板端 smoke、精度、Runtime 1/2 并发和 C++ 1/2 流均为 `not-run`。源码、checkpoint、ONNX、实际配置、原生配方与完整 OE 的摘要见 [converted.json](../conversion/converted.json)。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+这些独立规格已完成转换、完整 OE 和实际 HBM 接口核验。源权重、ONNX、每目标配置、校准数量和摘要见 [converted_targets_20261103.json](../conversion/converted_targets_20261103.json)。
+
+| 目标 | Native variant | 组件 | 校准图片 |
+| --- | --- | --- | ---: |
+| s100p | `n-int16-20261103-o1` | model | 200 |
+| s600 | `n-int16-20261103-o1` | model | 200 |
+
+```bash
+python3 samples/vision/yolo26_depth/model/download.py --target s100p --asset-id s:yolo26_depth:nash-m/yolo26n_depth_nashm_768x768_nv12_int16_20261103_o1.hbm
+python3 samples/vision/yolo26_depth/runtime/python/main.py --target s100p --asset-id s:yolo26_depth:nash-m/yolo26n_depth_nashm_768x768_nv12_int16_20261103_o1.hbm --model-path /path/to/yolo26n_depth_nashm_768x768_nv12_int16_20261103_o1.hbm --test-img samples/vision/yolo26_depth/test_data/bus.jpg
+```
+
+命令中的路径需要替换为实际文件。每套多组件模型须同时准备全部组件。旧默认与既有指标保留原身份；本轮规格的板端 smoke、数据集精度、Runtime 1/2 并发和 C++ 1/2 流均为 `not-run`。

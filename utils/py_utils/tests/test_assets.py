@@ -51,11 +51,17 @@ class ManifestAssetsTests(unittest.TestCase):
             with self.subTest(reference=reference), self.assertRaises(ValueError):
                 resolve_asset(reference)
 
-    def test_s_classification_does_not_invent_s100p_artifact(self):
+    def test_s_classification_keeps_legacy_and_exact_converted_targets(self):
         from utils.py_utils.assets import list_assets
         records = list_assets('s', 'efficientnet')
         self.assertTrue(records)
-        self.assertEqual({a.filename.split('/')[0] for a in records}, {'s100', 's600'})
+        legacy = [a for a in records if '/efficientnet_lite' in a.filename]
+        self.assertEqual({a.filename.split('/')[0] for a in legacy}, {'s100', 's600'})
+        converted = [a for a in records if '_int16_20261103_o1.hbm' in a.filename]
+        self.assertEqual(len(converted), 9)
+        self.assertEqual({a.filename.split('/')[0] for a in converted}, {'s100', 's100p', 's600'})
+        for asset in converted:
+            self.assertRegex(asset.sha256, r'^[0-9a-f]{64}$')
 
     def test_download_validates_hash_before_installing_file(self):
         from utils.py_utils.assets import Asset, download_asset

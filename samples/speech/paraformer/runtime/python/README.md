@@ -117,6 +117,7 @@ unless explicitly described as relative to the working directory.
 | Parameter | Default | Meaning |
 | --- | --- | --- |
 | `--target` | `auto` | auto / x5 / s100 / s100p / s600; only S100 has assets |
+| `--variant` | `null` | Exact converted three-stage profile; omitted uses the historical package |
 | `--list-models` | `false` | List the three model records without execution |
 | `--dry-run` | `false` | Validate selection without loading files/SDK; use explicit target |
 | `--preprocess-only` | `false` | Run real CPU frontend only; auto declares S100 without board detection |

@@ -14,11 +14,10 @@
 
 """Download one published GoogLeNet artifact through the shared manifest.
 
-The script deliberately contains only stable target/variant-to-reference
-mappings. URL, format, and optional publisher hash facts are read from the
-platform manifest by ``utils.py_utils.assets``. It is safe to import this
-module on a host without the board SDK; network access occurs only when
-``download_target`` is called.
+Map a target and variant to one manifest reference and download that file.
+URLs and publisher hashes come from the platform manifest
+(``utils.py_utils.assets``). Importing this module does not load the board
+SDK or use the network; ``download_target`` performs the download.
 """
 
 from __future__ import annotations
@@ -28,9 +27,7 @@ from pathlib import Path
 import sys
 from typing import Optional, Sequence
 
-# Direct execution from any working directory is supported. This is the one
-# entrypoint-local import-path adjustment; importing the module itself remains
-# SDK-free and side-effect free.
+# Allow running this file from any working directory.
 ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -45,6 +42,12 @@ ASSET_REFERENCES = {
 }
 TARGETS = ("x5",)
 
+
+# BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
+VARIANTS = tuple(dict.fromkeys((*VARIANTS, *('torchvision-021-crop224-int16-o1-20261103',))))
+TARGETS = tuple(dict.fromkeys((*TARGETS, *('s100', 's100p', 's600'))))
+ASSET_REFERENCES.update({('s100', 'torchvision-021-crop224-int16-o1-20261103'): 's:googlenet:s100/googlenet_tv021_crop224_nashe_int16_20261103_o1.hbm', ('s100p', 'torchvision-021-crop224-int16-o1-20261103'): 's:googlenet:s100p/googlenet_tv021_crop224_nashm_int16_20261103_o1.hbm', ('s600', 'torchvision-021-crop224-int16-o1-20261103'): 's:googlenet:s600/googlenet_tv021_crop224_nashp_int16_20261103_o1.hbm'})
+# END S CONVERTED ARTIFACT BINDINGS 20261103
 
 def asset_reference(target: str, variant: str = 'googlenet') -> str:
     """Return the exact manifest reference for a supported target/variant."""

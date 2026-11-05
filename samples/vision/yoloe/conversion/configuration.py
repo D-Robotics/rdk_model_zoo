@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Generate target-specific PTQ configurations retaining floating output nodes."""
 
-MARCHES = {"x5": "bayes-e", "s100": "nash-e", "s100p": "nash-m"}
+MARCHES = {"x5": "bayes-e", "s100": "nash-e", "s100p": "nash-m", "s600": "nash-p"}
 ATTENTION_NODE = "/model.10/m/m.0/attn/Softmax"
 
 
@@ -29,7 +29,8 @@ def make_config(selection, root, graph):
         "input_type_rt": "nv12",
         "input_type_train": "rgb",
         "input_layout_train": "NCHW",
-        "scale_value": 1 / 255,
+        # OE parses normalization values as scalar/list strings.
+        "scale_value": str(1 / 255),
     }
     calibration = {
         "cal_data_dir": str(root / "calibration"),

@@ -1,14 +1,11 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Stream independent ASR chunks and save identity-bound transcription records.
+"""ASR entry.
 
-This file stays deliberately small: parse the arguments, handle the
-model-free listing/dry-run modes, gate the board, construct the chunk model,
-call ``predict`` once per chunk, save the report. Option declarations, the
-model-free rendering, the report records, audio streaming and vocabulary
-loading live in ``cli.py``; the frontend, decoders, tensor binding, the
-readable preprocess → infer → postprocess chain and the raw runner
-construction live in ``asr.py``.
+Parse arguments, build the chunk model, call ``predict`` once per chunk, and save the report.
+``cli.py`` holds options, audio streaming, and the report.
+``asr.py`` holds preprocess, infer, and postprocess.
+``--list-models`` and ``--dry-run`` do not load the board SDK.
 """
 
 import json

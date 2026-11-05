@@ -3004,6 +3004,7 @@ class RealRepositoryTests(unittest.TestCase):
         # so a new sample that forgets the inventory fails right here.
         self.assertIn("vision/hobot_mot", declared)
         self.assertIn("vision/lite_avatar", declared)
+        self.assertIn("vision/osnet", declared)
         self.assertEqual(coverage["missing_samples"], [])
         self.assertEqual(coverage["missing_tests_dirs"], [])
         self.assertEqual(coverage["extra_samples"], [])

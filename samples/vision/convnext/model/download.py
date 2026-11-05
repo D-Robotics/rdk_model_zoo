@@ -1,10 +1,9 @@
 """Download one published ConvNeXt artifact through the shared manifest.
 
-The script deliberately contains only stable target/variant-to-reference
-mappings. URL, format, and optional publisher hash facts are read from the
-platform manifest by ``utils.py_utils.assets``. It is safe to import this
-module on a host without the board SDK; network access occurs only when
-``download_target`` is called.
+Map a target and variant to one manifest reference and download that file.
+URLs and publisher hashes come from the platform manifest
+(``utils.py_utils.assets``). Importing this module does not load the board
+SDK or use the network; ``download_target`` performs the download.
 """
 
 from __future__ import annotations
@@ -14,9 +13,7 @@ from pathlib import Path
 import sys
 from typing import Optional, Sequence
 
-# Direct execution from any working directory is supported. This is the one
-# entrypoint-local import-path adjustment; importing the module itself remains
-# SDK-free and side-effect free.
+# Allow running this file from any working directory.
 ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -25,12 +22,43 @@ from utils.py_utils.assets import download_asset, resolve_asset
 
 
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent
-VARIANTS = ('atto',)
+VARIANTS = ('atto', 'nano', 'pico', 'femto', 'atto-d2')
 ASSET_REFERENCES = {
     ('x5', 'atto'): 'x5:convnext:ConvNeXt_atto_224x224_nv12.bin',
+    ('x5', 'nano'): 'x5:convnext:ConvNeXt_nano_224x224_nv12.bin',
+    ('x5', 'pico'): 'x5:convnext:ConvNeXt_pico_224x224_nv12.bin',
+    ('x5', 'femto'): 'x5:convnext:ConvNeXt_femto_224x224_nv12.bin',
+    ('x5', 'atto-d2'): 'x5:convnext:convnext_atto_d2_bayese_224x224_nv12.bin',
 }
 TARGETS = ("x5",)
 
+
+
+
+
+
+
+
+
+
+
+# BEGIN CONVERTED ARTIFACT BINDINGS
+VARIANTS = VARIANTS + ('timm-femto-d1-in1k', 'timm-pico-d1-in1k', 'timm-nano-d1h-in1k')
+ASSET_REFERENCES.update({('x5', 'timm-femto-d1-in1k'): 'x5:convnext:convnext_femto_d1_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-pico-d1-in1k'): 'x5:convnext:convnext_pico_d1_in1k_bayese_224x224_nv12.bin', ('x5', 'timm-nano-d1h-in1k'): 'x5:convnext:convnext_nano_d1h_in1k_bayese_224x224_nv12.bin'})
+# END CONVERTED ARTIFACT BINDINGS
+
+
+
+# BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
+VARIANTS = tuple(dict.fromkeys((*VARIANTS, *('timm-femto-d1-in1k-s-int16-o1-20261103', 'timm-nano-d1h-in1k-s-int16-o1-20261103', 'timm-pico-d1-in1k-s-int16-o1-20261103'))))
+TARGETS = tuple(dict.fromkeys((*TARGETS, *('s100', 's100p', 's600'))))
+ASSET_REFERENCES.update({('s100', 'timm-femto-d1-in1k-s-int16-o1-20261103'): 's:convnext:s100/convnext_femto_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-femto-d1-in1k-s-int16-o1-20261103'): 's:convnext:s100p/convnext_femto_d1_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-femto-d1-in1k-s-int16-o1-20261103'): 's:convnext:s600/convnext_femto_d1_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm', ('s100', 'timm-nano-d1h-in1k-s-int16-o1-20261103'): 's:convnext:s100/convnext_nano_d1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-nano-d1h-in1k-s-int16-o1-20261103'): 's:convnext:s100p/convnext_nano_d1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-nano-d1h-in1k-s-int16-o1-20261103'): 's:convnext:s600/convnext_nano_d1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm', ('s100', 'timm-pico-d1-in1k-s-int16-o1-20261103'): 's:convnext:s100/convnext_pico_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm', ('s100p', 'timm-pico-d1-in1k-s-int16-o1-20261103'): 's:convnext:s100p/convnext_pico_d1_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm', ('s600', 'timm-pico-d1-in1k-s-int16-o1-20261103'): 's:convnext:s600/convnext_pico_d1_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm'})
+# END S CONVERTED ARTIFACT BINDINGS 20261103
+
+# BEGIN CPU S CONVERTED ARTIFACT BINDINGS 20261104
+VARIANTS = tuple(dict.fromkeys((*VARIANTS, *('timm-atto-d2-s-int16-cpuptq-o1-20261104',))))
+ASSET_REFERENCES.update({('s100', 'timm-atto-d2-s-int16-cpuptq-o1-20261104'): 's:convnext:s100/convnext_atto_d2_nashe_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm', ('s100p', 'timm-atto-d2-s-int16-cpuptq-o1-20261104'): 's:convnext:s100p/convnext_atto_d2_nashm_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm', ('s600', 'timm-atto-d2-s-int16-cpuptq-o1-20261104'): 's:convnext:s600/convnext_atto_d2_nashp_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm'})
+# END CPU S CONVERTED ARTIFACT BINDINGS 20261104
 
 def asset_reference(target: str, variant: str = 'atto') -> str:
     """Return the exact manifest reference for a supported target/variant."""

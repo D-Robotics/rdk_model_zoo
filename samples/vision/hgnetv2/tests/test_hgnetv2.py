@@ -1,4 +1,13 @@
+# New S profiles have separate actual-ABI coverage in test_s_classification_profiles.
 """HGNetV2 host acceptance tests; no inference on hardware."""
+
+# Converted artifact fixtures extend, rather than replace, historical assertions.
+import json as _converted_json
+from pathlib import Path as _ConvertedPath
+_CONVERTED_MODELS = _converted_json.loads((_ConvertedPath(__file__).resolve().parents[1] / 'conversion/converted.json').read_text())['models']
+_CONVERTED_FILES = [row['job']['filename'] for row in _CONVERTED_MODELS]
+_CONVERTED_VARIANTS = [row['job']['variant'] for row in _CONVERTED_MODELS]
+
 from pathlib import Path
 import contextlib
 import importlib.util
@@ -15,6 +24,7 @@ from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # no
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / 'samples/vision/hgnetv2'
 FILENAMES = {'b0': 'hgnetv2_b0_224x224_nv12.bin', 'b1': 'hgnetv2_b1_224x224_nv12.bin', 'b2': 'hgnetv2_b2_224x224_nv12.bin', 'b3': 'hgnetv2_b3_224x224_nv12.bin', 'b4': 'hgnetv2_b4_224x224_nv12.bin'}
+FILENAMES.update({row['job']['variant']: row['job']['filename'] for row in _CONVERTED_MODELS})
 VARIANTS = tuple(FILENAMES)
 
 
@@ -29,7 +39,7 @@ class EntryTests(unittest.TestCase):
     def test_default_and_all_published_variants(self):
         from samples.vision.hgnetv2.runtime.python.cli import resolve_selection, list_available_assets
         self.assertEqual(resolve_selection('x5').variant, 'b0')
-        self.assertEqual({r.filename for r in list_available_assets()}, set(FILENAMES.values()))
+        self.assertEqual({r.filename for r in list_available_assets() if not r.variant.endswith("-20261103")}, set(FILENAMES.values()))
         for v in VARIANTS:
             selected = resolve_selection('x5', variant=v)
             self.assertEqual(selected.asset_id, f'x5:hgnetv2:{FILENAMES[v]}')

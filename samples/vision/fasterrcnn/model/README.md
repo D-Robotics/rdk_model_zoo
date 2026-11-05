@@ -98,3 +98,38 @@ Runtime defaults read `model/<target>/frcnn_mbv3_320_parta.{bin,hbm}` and `frcnn
 
 Reference digests are recorded in `frcnn_mbv3_320.json` and the release manifests; they are the published-artifact digests, and `download.py` verifies each downloaded file against them. `sha256sum` prints your local file digests. Default selection checks the recorded pair; explicit paths use the supplied files and their live tensor metadata.
 
+## Converted S100 profile (2026-11-03)
+
+`mbv3-320-native-20261103-o1` · S100 / nash-e · OE 3.7.0 (hb_compile 3.5.3, HMCT 2.6.5, HBDK 4.7.5) · O1.
+
+Select this independent build explicitly. Historical defaults and measurements are retained. Actual HBM outputs are float32.
+
+| Role | Exact asset ID | SHA-256 | Bytes |
+| --- | --- | --- | ---: |
+| parta | `s:fasterrcnn:s100/frcnn_mbv3_320_parta_nashe_native_20261103_o1.hbm` | `fc51cea2ca786bcf565da82e4929316e480d8b98d868515feb224530042ef9a6` | 6637728 |
+| partb | `s:fasterrcnn:s100/frcnn_mbv3_320_partb_nashe_native_20261103_o1.hbm` | `63e1ab7b4b6b64ca897f20fc50e651fc4565e2ba34fea7acd01cec89768fd93e` | 15341384 |
+
+```bash
+python3 samples/vision/fasterrcnn/model/download.py --target s100 --variant mbv3-320-native-20261103-o1
+python3 samples/vision/fasterrcnn/runtime/python/main.py --target s100 --variant mbv3-320-native-20261103-o1 --input /path/to/image.jpg
+```
+
+Calibration uses 200 independent COCO training photographs. Board smoke, accuracy, Runtime 1/2 and C++ 1/2 are `not-run`. Source, checkpoint, ONNX, effective configuration, native recipe and complete OE identities are recorded in [converted.json](../conversion/converted.json).
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+These independent profiles passed conversion, complete OE collection and actual HBM metadata binding. Source weights, graphs, per-target recipes, calibration counts and digests are in [converted_targets_20261103.json](../conversion/converted_targets_20261103.json).
+
+| Target | Native variant | Components | Calibration photographs |
+| --- | --- | --- | ---: |
+| s100p | `mbv3-320-native-20261103-o1` | parta, partb | 200 |
+| s600 | `mbv3-320-native-20261103-o1` | parta, partb | 200 |
+
+```bash
+python3 samples/vision/fasterrcnn/model/download.py --target s100p --variant mbv3-320-native-20261103-o1
+python3 samples/vision/fasterrcnn/runtime/python/main.py --target s100p --variant mbv3-320-native-20261103-o1 --parta-path /path/to/frcnn_mbv3_320_parta_nashm_native_20261103_o1.hbm --partb-path /path/to/frcnn_mbv3_320_partb_nashm_native_20261103_o1.hbm --input /path/to/image.jpg
+```
+
+Substitute the actual file paths. Multi-component tasks require every component together. Historical defaults and measurements retain their original identities. Board smoke, dataset accuracy, Runtime 1/2 and C++ 1/2 are `not-run` for these profiles.

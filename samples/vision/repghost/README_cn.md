@@ -116,9 +116,16 @@ rank 1 为 class 350（ibex, Capra ibex）。
 <a id="performance"></a>
 ## 性能数据
 
-已发布性能记录：完整列与计时条件见
-[评估说明](evaluator/README_cn.md#reference-results)。单线程延迟与多线程 FPS 采用不同的并发方式，
-二者不能直接互相取倒数。比较延迟与 FPS 时，应使用相同线程数、并发提交方式和 BPU 利用率。
+X5（x5-v1.1.3）记录；完整条件与全部行见
+[evaluator](evaluator/README_cn.md#reference-results)。
+
+| 模型 | 尺寸 | 参数量 (M) | 浮点 Top-1 | 量化 Top-1 | 单线程延迟 (ms) | 多线程延迟 (ms) | FPS |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| RepGhost_200 | 224x224 | 9.79 | 76.43 | 75.25 | 2.89 | 8.76 | 451.42 |
+| RepGhost_150 | 224x224 | 6.57 | 74.75 | 73.50 | 2.20 | 6.30 | 626.60 |
+| RepGhost_130 | 224x224 | 5.48 | 75.00 | 73.57 | 1.87 | 5.30 | 743.56 |
+| RepGhost_111 | 224x224 | 4.54 | 72.75 | 71.25 | 1.71 | 4.47 | 881.19 |
+| RepGhost_100 | 224x224 | 4.07 | 72.50 | 72.25 | 1.55 | 4.08 | 964.69 |
 
 <a id="entry-points"></a>
 ## 入口
@@ -132,3 +139,35 @@ rank 1 为 class 350（ibex, Capra ibex）。
 Python 文件采用 Apache-2.0。转换 YAML 的许可见文件声明；
 仓库许可不覆盖这些声明或上游权重许可。再分发转换材料或权重前请核对
 适用声明。
+
+<!-- converted-batch-20261102 -->
+## 已转换新增规格（2026-11-02）
+
+以下 timm 权重单独转换，已通过严格权重加载、结构重参数化及两组输入的
+PyTorch/ONNX 主机对照、checker 和编译。板端冒烟、精度、Runtime 1/2 并发和
+C++ 1/2 流均为 **not-run**，历史指标和截图不适用于这些产物。原有默认规格保留。
+新规格需要 Pillow，使用 bicubic 短边 256、四舍五入居中裁剪 224；Mapper 融合
+该权重实际的归一化参数。输出为 float32 1,000 类 logits，由原生 Runtime 做 softmax。
+
+| 规格 | 模型文件 | 权重版本 | 板端 |
+|---|---|---|---|
+| `timm-100-in1k` | `repghostnet_100_in1k_bayese_224x224_nv12.bin` | [`3c79eee5f138`](https://huggingface.co/timm/repghostnet_100.in1k/blob/3c79eee5f138318c2cb58957105b91bb50259b29/README.md) | not-run |
+| `timm-111-in1k` | `repghostnet_111_in1k_bayese_224x224_nv12.bin` | [`03ffb284f8ea`](https://huggingface.co/timm/repghostnet_111.in1k/blob/03ffb284f8ea7ae1c41a1c2617d4dab98d7cd9f4/README.md) | not-run |
+| `timm-130-in1k` | `repghostnet_130_in1k_bayese_224x224_nv12.bin` | [`efb0a7881fad`](https://huggingface.co/timm/repghostnet_130.in1k/blob/efb0a7881fada70cec140ce2810f9c0a7d416704/README.md) | not-run |
+| `timm-150-in1k` | `repghostnet_150_in1k_bayese_224x224_nv12.bin` | [`577d935410a6`](https://huggingface.co/timm/repghostnet_150.in1k/blob/577d935410a68c6efc6a0fee9f11f88f942ac690/README.md) | not-run |
+| `timm-200-in1k` | `repghostnet_200_in1k_bayese_224x224_nv12.bin` | [`0c520f5e8de7`](https://huggingface.co/timm/repghostnet_200.in1k/blob/0c520f5e8de77f9bfedc23f2104c344b1d685530/README.md) | not-run |
+
+```bash
+python3 samples/vision/repghost/model/download.py --target x5 --variant timm-100-in1k
+python3 samples/vision/repghost/runtime/python/main.py --target x5 --variant timm-100-in1k --dry-run
+```
+
+精确 URL、SHA-256 和大小登记在 `docs/release/x5/models.yaml`；来源及主机对照
+记录见 `conversion/converted.json`。模型许可逐项保留在公开 release 清单中。
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+本轮新增的独立规格和显式命令见 [模型准备](model/README_cn.md)。板端精度与性能尚未实测。

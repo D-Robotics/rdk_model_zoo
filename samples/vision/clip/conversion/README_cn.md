@@ -70,3 +70,42 @@ conversion/
 ## 许可
 
 转换文档遵循仓库 [LICENSE](../../../../LICENSE) 的 Apache-2.0。发布制品沿用其发布来源。
+
+## 独立 ViT-B/32 导出流程
+
+[上游声明](UPSTREAM_NOTICE.md) 固定官方源码 commit、完整 checkpoint SHA-256、
+BPE 字典和 MIT 许可。旧 X5 默认模型保留原身份。
+
+```bash
+# 仓库根目录；使用现有 Torch 2.8.0、ONNX 1.17.0、ORT 1.19.2 导出环境。
+python3 samples/vision/clip/conversion/export_pair.py \
+  --source-dir /path/to/CLIP-d05afc436d78f1c48dc0dbf8e5980a9d471f35f6 \
+  --checkpoint /path/to/ViT-B-32.pt --images /path/to/frozen/images \
+  --opset 17 --output /path/to/new-run/export
+```
+
+严格加载权重，保留图像塔、文本塔和学习到的投影；三个真实图片及 seed-0 输入的
+上游模型、原生 wrapper、两张 ONNX 和余弦匹配均需通过原阈值对照。原生 BPE token
+也与官方实现逐项一致。图像输入为 RGB/NCHW float32 [0,1]，图内仅做一次官方
+mean/std；生成 200 张真实图片的独立 `.npy` 校准张量，随机输入仅用于数值验证。
+文本 ONNX 使用动态 int32 [prompts,77] 输入和 float32 [prompts,512] 输出，在 CPU 运行。
+
+S SDK 仅编译图像编码器。登记前逐目标读取完整 HBM ABI、NodeInfo 和原始 OE；
+模型包同时包含 BPU 图像模型、CPU 文本 ONNX、BPE/分词文件、许可、原始串联报告和
+各自的 BPU 转换报告或 CPU 主机报告。原生 `--variant` 在任一 Runtime 加载前校验
+两份模型摘要。板端精度、速度和完整流水线延迟尚未实测。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
+
+- `s100 / vit-b32-native-int16-o1-20261103 / image`: [vit_b32_native_int16_o1_20261103_s100_image.yaml](recipes/vit_b32_native_int16_o1_20261103_s100_image.yaml)
+- `s100 / vit-b32-native-int16-o1-20261103 / text`: [clip_vitb32_text_runtime_20261103.json](recipes/clip_vitb32_text_runtime_20261103.json)
+- `s100p / vit-b32-native-int16-o1-20261103 / image`: [vit_b32_native_int16_o1_20261103_s100p_image.yaml](recipes/vit_b32_native_int16_o1_20261103_s100p_image.yaml)
+- `s100p / vit-b32-native-int16-o1-20261103 / text`: [clip_vitb32_text_runtime_20261103.json](recipes/clip_vitb32_text_runtime_20261103.json)
+- `s600 / vit-b32-native-int16-o1-20261103 / image`: [vit_b32_native_int16_o1_20261103_s600_image.yaml](recipes/vit_b32_native_int16_o1_20261103_s600_image.yaml)
+- `s600 / vit-b32-native-int16-o1-20261103 / text`: [clip_vitb32_text_runtime_20261103.json](recipes/clip_vitb32_text_runtime_20261103.json)
+
+原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。

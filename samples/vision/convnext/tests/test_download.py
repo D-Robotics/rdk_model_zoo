@@ -2,11 +2,19 @@
 
 The variant must be forwarded into the manifest reference.  These tests pin
 the exact published reference every supported (target, variant) combination
-must resolve to — the single atto row — with the network downloader stubbed
-out.
+must resolve to, with the network downloader stubbed out. Atto stays the
+default.
 """
 
 from __future__ import annotations
+
+# Converted artifact fixtures extend, rather than replace, historical assertions.
+import json as _converted_json
+from pathlib import Path as _ConvertedPath
+_CONVERTED_MODELS = _converted_json.loads((_ConvertedPath(__file__).resolve().parents[1] / 'conversion/converted.json').read_text())['models']
+_CONVERTED_FILES = [row['job']['filename'] for row in _CONVERTED_MODELS]
+_CONVERTED_VARIANTS = [row['job']['variant'] for row in _CONVERTED_MODELS]
+
 
 from pathlib import Path
 import unittest
@@ -16,7 +24,12 @@ from samples.vision.convnext.model import download as download_mod
 
 EXPECTED_REFERENCES = {
     ('x5', 'atto'): 'x5:convnext:ConvNeXt_atto_224x224_nv12.bin',
+    ('x5', 'nano'): 'x5:convnext:ConvNeXt_nano_224x224_nv12.bin',
+    ('x5', 'pico'): 'x5:convnext:ConvNeXt_pico_224x224_nv12.bin',
+    ('x5', 'femto'): 'x5:convnext:ConvNeXt_femto_224x224_nv12.bin',
+    ('x5', 'atto-d2'): 'x5:convnext:convnext_atto_d2_bayese_224x224_nv12.bin',
 }
+EXPECTED_REFERENCES.update({('x5', row['job']['variant']): 'x5:' + row['job']['family'] + ':' + row['job']['filename'] for row in _CONVERTED_MODELS})
 
 
 class DownloadTargetReferenceTests(unittest.TestCase):

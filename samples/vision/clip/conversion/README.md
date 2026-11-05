@@ -30,7 +30,7 @@ The D-Robotics developer forum carries an offline-image discussion at <https://f
 <a id="export"></a>
 ## Export (ONNX)
 
-No export command or source checkpoint is provided. The text encoder remains the published ONNX asset and the image encoder remains the published `.bin`. Known deployed contracts are:
+The historical default pair has no matching source export recipe. The independent pinned ViT-B/32 workflow below exports both graphs. The text encoder remains the published ONNX asset and the image encoder remains the published `.bin`. Known deployed contracts are:
 
 | Encoder | Input | Output |
 | --- | --- | --- |
@@ -40,12 +40,12 @@ No export command or source checkpoint is provided. The text encoder remains the
 <a id="calibration"></a>
 ## Calibration
 
-No calibration dataset, sample count, quantization configuration, or calibration script is included. Calibration is therefore not reproducible from this directory.
+The historical default pair has no frozen calibration provenance. The independent workflow below prepares 200 real-image tensors with the native preprocessing.
 
 <a id="compile"></a>
 ## Compile
 
-No conversion YAML or compile command is published for either encoder. The model downloader prepares the already published pair; it does not compile it.
+The historical default pair has no matching conversion YAML. New per-target recipes are recorded with their converted profiles. The model downloader prepares the already published pair; it does not compile it.
 
 <a id="validation"></a>
 ## Post-Conversion Validation
@@ -63,10 +63,57 @@ The validation path runs the published pair through `runtime/python/main.py`, co
 <a id="known-gaps"></a>
 ## Additional preparation
 
-- No source checkpoint, image ONNX export script, text ONNX export script, conversion YAML, compiler/version matrix, or calibration dataset is provided.
+- The historical default pair has no matching source checkpoint or conversion provenance.
 - The published `.bin` and `.onnx` files can be prepared from the manifest, but the conversion process cannot be reproduced from this sample.
-- HBM/BPU and ONNX artifact SHA-256 values are `sha256: null (unknown)` in the active manifest.
+- The historical default pair retains its unknown publisher hashes. New pairs require exact hashes for both files.
 
 ## License
 
 Conversion documentation follows the repository [LICENSE](../../../../LICENSE), Apache-2.0. The published pair retains its publication provenance.
+
+## Independent pinned ViT-B/32 export
+
+The [upstream notice](UPSTREAM_NOTICE.md) fixes the official code, checkpoint,
+BPE vocabulary and MIT license. Use the existing PyTorch 2.8.0 / ONNX 1.17.0 /
+ONNX Runtime 1.19.2 export environment, with ftfy 6.3.1 and regex 2024.11.6
+in an isolated dependency directory. No toolchain upgrade is required.
+
+```bash
+# Repository root; an exact upstream source checkout and 200 frozen photographs.
+python3 samples/vision/clip/conversion/export_pair.py \
+  --source-dir /path/to/CLIP-d05afc436d78f1c48dc0dbf8e5980a9d471f35f6 \
+  --checkpoint /path/to/ViT-B-32.pt --images /path/to/frozen/images \
+  --opset 17 --output /path/to/new-run/export
+```
+
+This strictly loads the official checkpoint into its eager source model. Both
+encoder wrappers, both ONNX graphs, native BPE tokenization and cosine matching
+must pass three real photographs and seed-0 data at atol 1e-4 / rtol 1e-3.
+The report records all graph, source and producer identities. The text graph
+has dynamic prompt batches, int32 [prompts,77] input and float32 [prompts,512]
+output. The image graph takes float32 [1,3,224,224] RGB in [0,1] and includes
+the official mean/std. Its calibration directory contains 200 independent
+real-image `.npy` tensors; random inputs are validation-only.
+
+Compile only the image graph in the matching S SDK. The CPU text ONNX remains
+unchanged. Inspect the final HBM ABI and original full NodeInfo/OE before
+registering a complete pair. Native `--variant` selection authenticates both
+files before either runtime loads. A complete download contains the BPU image
+model, CPU text ONNX, BPE/tokenizer, MIT notice, host matching evidence and
+separate BPU conversion / CPU host reports. There is no measured pipeline
+latency or board accuracy until independent board acceptance.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100 / vit-b32-native-int16-o1-20261103 / image`: [vit_b32_native_int16_o1_20261103_s100_image.yaml](recipes/vit_b32_native_int16_o1_20261103_s100_image.yaml)
+- `s100 / vit-b32-native-int16-o1-20261103 / text`: [clip_vitb32_text_runtime_20261103.json](recipes/clip_vitb32_text_runtime_20261103.json)
+- `s100p / vit-b32-native-int16-o1-20261103 / image`: [vit_b32_native_int16_o1_20261103_s100p_image.yaml](recipes/vit_b32_native_int16_o1_20261103_s100p_image.yaml)
+- `s100p / vit-b32-native-int16-o1-20261103 / text`: [clip_vitb32_text_runtime_20261103.json](recipes/clip_vitb32_text_runtime_20261103.json)
+- `s600 / vit-b32-native-int16-o1-20261103 / image`: [vit_b32_native_int16_o1_20261103_s600_image.yaml](recipes/vit_b32_native_int16_o1_20261103_s600_image.yaml)
+- `s600 / vit-b32-native-int16-o1-20261103 / text`: [clip_vitb32_text_runtime_20261103.json](recipes/clip_vitb32_text_runtime_20261103.json)
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

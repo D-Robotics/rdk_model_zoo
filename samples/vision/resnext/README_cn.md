@@ -109,9 +109,12 @@ rank 1 为 class 92（bee eater）。
 <a id="performance"></a>
 ## 性能数据
 
-已发布性能记录：完整列与计时条件见
-[评估说明](evaluator/README_cn.md#reference-results)。单线程延迟与多线程 FPS 采用不同的并发方式，
-二者不能直接互相取倒数。比较延迟与 FPS 时，应使用相同线程数、并发提交方式和 BPU 利用率。
+X5（x5-v1.1.3）记录；完整条件与全部行见
+[evaluator](evaluator/README_cn.md#reference-results)。
+
+| 模型 | 尺寸 | 参数量 (M) | 浮点 Top-1 | 量化 Top-1 | 单线程延迟 (ms) | 多线程延迟 (ms) | FPS |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| ResNeXt50_32x4d | 224x224 | 24.99 | 76.25% | 76.00% | 5.89 | 20.90 | 189.61 |
 
 <a id="entry-points"></a>
 ## 入口
@@ -124,3 +127,31 @@ rank 1 为 class 92（bee eater）。
 
 Python 代码遵循 Apache-2.0。转换材料保留各文件原声明；上游模型/权重
 遵循其各自许可；再分发前请核对上游许可条款。
+
+<!-- converted-batch-20261102 -->
+## 已转换新增规格（2026-11-02）
+
+以下 timm 权重单独转换，已通过严格权重加载、结构重参数化及两组输入的
+PyTorch/ONNX 主机对照、checker 和编译。板端冒烟、精度、Runtime 1/2 并发和
+C++ 1/2 流均为 **not-run**，历史指标和截图不适用于这些产物。原有默认规格保留。
+新规格需要 Pillow，使用 bicubic 短边 256、四舍五入居中裁剪 224；Mapper 融合
+该权重实际的归一化参数。输出为 float32 1,000 类 logits，由原生 Runtime 做 softmax。
+
+| 规格 | 模型文件 | 权重版本 | 板端 |
+|---|---|---|---|
+| `timm-50-32x4d-a1h-in1k` | `resnext50_32x4d_a1h_in1k_bayese_224x224_nv12.bin` | [`cc736cb09401`](https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/blob/cc736cb0940158d05966023116d90fca4c38dae3/README.md) | not-run |
+
+```bash
+python3 samples/vision/resnext/model/download.py --target x5 --variant timm-50-32x4d-a1h-in1k
+python3 samples/vision/resnext/runtime/python/main.py --target x5 --variant timm-50-32x4d-a1h-in1k --dry-run
+```
+
+精确 URL、SHA-256 和大小登记在 `docs/release/x5/models.yaml`；来源及主机对照
+记录见 `conversion/converted.json`。模型许可逐项保留在公开 release 清单中。
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+本轮新增的独立规格和显式命令见 [模型准备](model/README_cn.md)。板端精度与性能尚未实测。

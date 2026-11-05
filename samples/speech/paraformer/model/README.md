@@ -35,6 +35,21 @@ model/
 <a id="preparation"></a>
 ## Preview and prepare
 
+The rebuilt `large-contextual-8404-int16-cpuptq-o1-20261104-r02` profile uses
+the new Archive namespace and recorded SHA-256 values. Select it explicitly:
+
+```bash
+python3 -m samples.speech.paraformer.model.download --target s100 --variant large-contextual-8404-int16-cpuptq-o1-20261104-r02 --dry-run
+python3 -m samples.speech.paraformer.model.download --target s100 --variant large-contextual-8404-int16-cpuptq-o1-20261104-r02
+python3 -m samples.speech.paraformer.runtime.python.main --target s100 --variant large-contextual-8404-int16-cpuptq-o1-20261104-r02 --output-dir outputs/paraformer-o1
+```
+
+This prepares exactly three new HBMs, the matching vocabulary (installed as
+`s100/tokens.json`) and the two pinned local frontend files. The Web download
+also offers a complete bundle containing those files and all three original
+conversion reports. New board accuracy and performance checks are `not-run`.
+Omitting `--variant` keeps the historical package described below.
+
 Use Python with NumPy and PyYAML; no SDK, board or publisher build is required to
 prepare files on a host. From repository root, preview all sources/destinations
 without network access or writes:
@@ -65,8 +80,8 @@ output directory; inspect the error, retain any user files, and resume after
 correcting the failing input. Do not treat a partially prepared package as ready.
 
 The script prints each observed digest and a final success line after all
-six entries are processed. The active manifest carries no publisher hashes for
-the HBM files; the printed digests bind the downloaded bytes. A vocabulary
+six entries are processed. The historical HBMs have no publisher hashes in
+the manifest; the rebuilt profile has recorded hashes checked by the downloader. A vocabulary
 that differs from the recorded fixed package is rejected.
 
 <a id="accompanying-files"></a>

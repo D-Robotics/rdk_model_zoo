@@ -25,7 +25,7 @@ python/
 <a id="environment"></a>
 ## 环境
 
-在带有 `hbm_runtime` 的 RDK X5 系统镜像上使用 Python 3、NumPy 和 OpenCV。运行时在模型文件和板卡检查通过后才懒加载板端 SDK；`--help`、`--list-models`、`--dry-run` 不加载 SDK。绑定模型必须暴露 float32 `(1,3,512,512)` 输入和 float32 `(1,1,512,512)` 输出。
+在所选 RDK X5/S100/S100P/S600 对应的 `hbm_runtime` 系统镜像上使用 Python 3、NumPy 和 OpenCV。运行时在模型文件和板卡检查通过后才懒加载板端 SDK；`--help`、`--list-models`、`--dry-run` 不加载 SDK。绑定模型必须暴露 float32 `(1,3,512,512)` 输入和 float32 `(1,1,512,512)` 输出。
 
 <a id="usage"></a>
 ## 使用
@@ -39,13 +39,22 @@ python3 -m samples.vision.modnet.runtime.python.main --target x5 \
 
 成功判断为退出码 `0`、JSON 含 `matte_path` 且写出 uint8 matte。默认背景可读时会合成 `test_data/result.png`。`bash samples/vision/modnet/runtime/python/run.sh --target x5 --asset-id x5:modnet:modnet_512x512_rgb.bin` 等价。
 
+公开摄影人像制品登记并下载后，显式替换 asset ID；默认值仍选择旧手工模型。此命令先检查协议，不加载 SDK：
+
+```bash
+python3 -m samples.vision.modnet.runtime.python.main --target x5 --dry-run \
+  --asset-id x5:modnet:modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin
+```
+
+实际推理移除 `--dry-run`，保持相同 RGB float32 NCHW、归一化、缩放和补边协议。摄影人像制品的板端执行待验证。S 的显式命令和模型身份见[模型准备](../../model/README_cn.md)。
+
 <a id="parameters"></a>
 ## 参数
 
 | 选项 | 默认值 | 含义 |
 |---|---|---|
-| `--target` | `auto` | 解析唯一发布目标 X5 |
-| `--asset-id` | `null` | 精确手工身份，外部模型路径必需 |
+| `--target` | `auto` | `auto` 保留历史 X5 默认；S 必须显式使用 `--target s100/s100p/s600` |
+| `--asset-id` | `null` | 精确制品身份，外部模型路径必需 |
 | `--model-path` | `null` | 已存在外部模型路径；不下载 |
 | `--test-img` | `samples/vision/modnet/test_data/person.jpg` | BGR 输入图像 |
 | `--bg-img` | `samples/vision/modnet/test_data/bg.jpg` | 可选 BGR 背景；文件缺失则跳过合成 |

@@ -116,6 +116,37 @@ Nv12Input to_nv12(const cv::Mat &pixels) {
   return input;
 }
 
+Nv12Input to_regular_nv12(const cv::Mat &pixels) {
+  if (pixels.type() != CV_8UC3 || pixels.rows != 640 || pixels.cols != 640)
+    throw std::invalid_argument("NV12 requires prepared uint8 BGR 640x640");
+  // Preserve the SDK raw-float32 transform's separate rounded operations.
+  // Volatile intermediates prevent contraction into a different FMA result.
+  auto channel = [](float r, float g, float b, float cr, float cg, float cb,
+                    float offset) {
+    volatile float rr = cr * r, gg = cg * g, bb = cb * b;
+    volatile float rg = rr + gg;
+    volatile float rgb = rg + bb;
+    volatile float value = rgb + offset;
+    return static_cast<uint8_t>(value);
+  };
+  Nv12Input input;
+  input.y.resize(640 * 640);
+  input.uv.resize(320 * 640);
+  for (int row = 0; row < 640; ++row) {
+    const auto *line = pixels.ptr<cv::Vec3b>(row);
+    for (int col = 0; col < 640; ++col) {
+      const float b = line[col][0], g = line[col][1], r = line[col][2];
+      input.y[row * 640 + col] = channel(r, g, b, .299f, .587f, .114f, 0);
+      if (row % 2 == 0 && col % 2 == 0) {
+        const int index = (row / 2) * 640 + col;
+        input.uv[index] = channel(r, g, b, -.169f, -.331f, .5f, 128);
+        input.uv[index + 1] = channel(r, g, b, .5f, -.419f, -.081f, 128);
+      }
+    }
+  }
+  return input;
+}
+
 PreparedBGR prepare_bgr(const cv::Mat &image, Protocol protocol,
                         int resize_type) {
   if (image.empty() || image.type() != CV_8UC3)
@@ -592,7 +623,9 @@ YOLOE::YOLOE(Config config, std::unique_ptr<Runner> runner)
 }
 Prepared YOLOE::preprocess(const cv::Mat &image) const {
   auto prepared = prepare_bgr(image, config_.protocol, config_.resize_type);
-  return Prepared(to_nv12(prepared.pixels), prepared.geometry, identity_);
+  return Prepared(runner_->full_range_nv12() ? to_regular_nv12(prepared.pixels)
+                                            : to_nv12(prepared.pixels),
+                  prepared.geometry, identity_);
 }
 RawBatch YOLOE::infer(const Prepared &input) {
   if (input.owner_ != identity_)
@@ -635,6 +668,7 @@ Protocol model_protocol(const SdkModel &model) {
 
 struct SdkRunner::Impl {
   Protocol family;
+  bool full_range = false;
   yolo::PackedModelOwner packed;
   hbDNNHandle_t model = nullptr;
   yolo::InputPlan plan;
@@ -645,6 +679,7 @@ struct SdkRunner::Impl {
 SdkRunner::SdkRunner(SdkModel spec, SdkPreflight preflight)
     : impl_(std::make_unique<Impl>()) {
   impl_->family = model_protocol(spec);
+  impl_->full_range = spec.variant == "11s-native-20261102";
   if (!preflight)
     throw std::invalid_argument(
         "Provide board/artifact preflight before SDK use");
@@ -686,6 +721,7 @@ SdkRunner::SdkRunner(SdkModel spec, SdkPreflight preflight)
 }
 SdkRunner::~SdkRunner() = default;
 Protocol SdkRunner::protocol() const { return impl_->family; }
+bool SdkRunner::full_range_nv12() const { return impl_->full_range; }
 Heads SdkRunner::infer(const Nv12Input &input) {
   if (!impl_->input.upload_planes(impl_->plan, input.y.data(), input.y.size(),
                                   input.uv.data(), input.uv.size()))

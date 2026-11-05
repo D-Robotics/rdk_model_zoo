@@ -190,3 +190,44 @@ ImageNet-1k 分类 logits。
 ## 补充准备
 
 为所选 `fasternet_<variant>.onnx` 准备对应模型图，并在 `./calibration_data_rgb_f32` 准备 RGB float32 校准数据，使用 YAML 的 224x224 输入与归一化值。四份 YAML 共用 `output_model_file_prefix: 'FasterNet_224x224_nv12'`；`working_dir` 分别为 S 的 `model_output`、T0 的 `FasterNet_224x224_nv12_mix`、T1/T2 的 `FasterNet_224x224_nv12`。各变体在独立目录构建，并以对应 Manifest 文件名保存产物。使用匹配 YAML 运行上文 OE 命令。
+
+<!-- converted-batch-20261102 -->
+## 固定版本转换配方
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model fasternet_t0.in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/fasternet/conversion/recipes/timm-t0-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+各规格使用 converted.json 中对应的模型、固定权重及 recipes 配方，输出到全新目录。校准为原始 RGB float32 二进制张量，不重复归一化，不套用历史板端数据。
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
+
+- `s100 / timm-s-in1k-s-int16-o1-20261103 / model`: [timm_s_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_s_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-s-in1k-s-int16-o1-20261103 / model`: [timm_s_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_s_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-s-in1k-s-int16-o1-20261103 / model`: [timm_s_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_s_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-t0-in1k-s-int16-o1-20261103 / model`: [timm_t0_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_t0_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-t0-in1k-s-int16-o1-20261103 / model`: [timm_t0_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_t0_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-t0-in1k-s-int16-o1-20261103 / model`: [timm_t0_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_t0_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-t1-in1k-s-int16-o1-20261103 / model`: [timm_t1_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_t1_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-t1-in1k-s-int16-o1-20261103 / model`: [timm_t1_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_t1_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-t1-in1k-s-int16-o1-20261103 / model`: [timm_t1_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_t1_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-t2-in1k-s-int16-o1-20261103 / model`: [timm_t2_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_t2_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-t2-in1k-s-int16-o1-20261103 / model`: [timm_t2_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_t2_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-t2-in1k-s-int16-o1-20261103 / model`: [timm_t2_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_t2_in1k_s_int16_o1_20261103_s600_model.yaml)
+
+S 校准必须使用 ONNX 输入域的归一化 `.npy`；NV12 Runtime 的 mean/scale 仍写在配方中。公共工具的 `--target` 和 `--normalization-json` 从同一 checkpoint 导出记录读取实际归一化。
+
+[Shared classification workflow](../../../../utils/tools/classification_conversion/README.md).
+
+原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。

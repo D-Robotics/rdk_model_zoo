@@ -46,3 +46,14 @@ Default runtime path: `samples/vision/pp_liteseg/model/pp_liteseg_stdc1_cityscap
 ## Formats and checksums
 
 `sha256: null (unknown)`. The publisher manifest has no trusted digest. Download preparation prints an observed digest, which can track local copies but cannot independently authenticate the publisher. Runtime validates file availability and tensor metadata; the asset ID selects the requested input/output contract. BIN is for X5, not interchangeable with Nash HBM.
+
+## S100 / S100P / S600 logits variant
+
+The new `stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104` variant uses the official trained PaddleSeg STDC1 Cityscapes checkpoint. Its S input is normalized RGB float32 NCHW `(1,3,512,1024)`: RGB/255, mean .5, std .5. The HBM exposes 19-class float logits; the Python runtime applies one CPU argmax. Select the exact converted variant or manifest asset. The existing X5 NV12/int32 class-map contract remains the default.
+
+```bash
+python3 samples/vision/pp_liteseg/model/download.py --target s100 --variant stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104
+python3 samples/vision/pp_liteseg/runtime/python/main.py --target s100 --variant stdc1-cityscapes-1024x512-logits-int16-cpuptq-o1-20261104 --test-img /path/to/street.png
+```
+
+Use `--list-models` to obtain the exact asset reference before an external `--model-path` override. S100P and S600 require their own target and HBM. Board smoke, Cityscapes accuracy, Runtime 1/2 concurrency and C++ 1/2 streams remain not run; compiler estimates and source-host checks are conversion evidence. See `conversion/converted_targets_20261103.json` and `conversion/source_export_20261104.json`.

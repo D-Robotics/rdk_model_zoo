@@ -29,7 +29,7 @@ OpenExplorer（OE）工具链容器中运行。
   分类模型 `a1_in1k` 版本（按“ResNet strikes back”的 A1 方案训练），权重不做修改。许可证：Apache-2.0（检查点 model card）。
 
 <a id="preprocessing"></a>
-### 预处理合同
+### 预处理
 
 校准、评测与 runtime 使用同一几何，跟随检查点自带的评测设置（`crop_pct`）：
 
@@ -41,12 +41,13 @@ OpenExplorer（OE）工具链容器中运行。
 | 101 | 0.95 | 235（`int(224 / 0.95)`） | 224x224 中心裁剪 |
 | 152 | 0.95 | 235（`int(224 / 0.95)`） | 224x224 中心裁剪 |
 
-缩放为抗锯齿双三次（Pillow）。像素为 RGB；ONNX 输入 `data` 是按 ImageNet
-均值/标准差归一化的 float32 `[1,3,224,224]`，输出 `logits` 为 `[1,1000]`。
+缩放为抗锯齿双三次（Pillow）。像素为 RGB；ONNX 输入 `data` 是按下方 ImageNet 均值和标准差归一化的 float32 `[1,3,224,224]`，输出 `logits` 为 `[1,1000]`。
 部署模型把归一化编译进去（`mean_value` = 均值 x 255，`scale_value` =
 1 / (255 x 标准差)），因此 runtime 送入由 224x224 裁剪图转换的 NV12。NV12
 转换使用 OpenCV 的有限范围 BT.601 变换，所以两种配置都设置
 `input_space_and_range: bt601_video`。
+
+`checkpoints.json` 记录均值 `0.485 0.456 0.406`、标准差 `0.229 0.224 0.225`。本目录 PTQ YAML 将其编译进模型：`norm_type: data_mean_and_scale`，`mean_value: 123.675 116.28 103.53`，`scale_value: 0.0171247538317 0.0175070028011 0.0174291938998`，`input_type_rt: nv12`，`calibration_type: default`。
 
 <a id="directory"></a>
 ## 目录结构
@@ -102,7 +103,7 @@ python3 samples/vision/resnet/conversion/export.py --model resnet18 \
 
 `export.py` 校验检查点哈希，严格加载权重，简化计算图，并用真实图像把 logits
 与 Top-5 同 PyTorch 对比。`export.json` 记录每张图像的最大绝对误差，并把 ONNX
-的 SHA-256 与检查点、预处理合同和依赖版本绑定。
+的 SHA-256 与检查点、预处理设置和依赖版本绑定。
 
 <a id="calibration"></a>
 ## 校准

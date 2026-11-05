@@ -3,6 +3,7 @@
 from pathlib import Path
 from types import SimpleNamespace
 import json
+import re
 import subprocess
 import sys
 import unittest
@@ -62,20 +63,96 @@ def fake_runtime(selection, integer=False):
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_regular_nv12_matches_full_range_color_boundaries(self):
+        from samples.vision.yoloe.runtime.python.yoloe import bgr_to_regular_nv12_planes
+        from utils.py_utils.image import bgr_to_nv12_planes
+
+        black = np.zeros((2, 2, 3), np.uint8)
+        y, uv = bgr_to_regular_nv12_planes(black)
+        np.testing.assert_array_equal(y, 0)
+        np.testing.assert_array_equal(uv, 128)
+        np.testing.assert_array_equal(bgr_to_nv12_planes(black)[0], 16)
+        red = black.copy()
+        red[..., 2] = 255
+        y, uv = bgr_to_regular_nv12_planes(red)
+        np.testing.assert_array_equal(y, 76)
+        np.testing.assert_array_equal(uv, np.array([[[[84, 255]]]], np.uint8))
+
+    def test_converted_x5_exact_identity_and_full_float_binding(self):
+        from dataclasses import replace
+        from utils.py_utils.assets import Asset
+        from samples.vision.yoloe.runtime.python import cli
+
+        name, (variant, digest) = next(iter(cli.CONVERTED_X5.items()))
+        asset = Asset("x5", "yoloe", name, "bin", None, digest)
+        original = cli.list_assets
+
+        def assets(group, sample):
+            rows = tuple(a for a in original(group, sample) if a.filename != name)
+            return rows + (asset,) if (group, sample) == ("x5", "yoloe") else rows
+
+        with patch.object(cli, "list_assets", side_effect=assets):
+            selected = resolve_selection("x5", variant=variant)
+            self.assertEqual(resolve_selection("x5").variant, "11s")
+            self.assertEqual(resolve_selection("x5", asset_id=asset.reference), selected)
+            self.assertTrue(selected.published_float)
+            with self.assertRaises(ValueError):
+                resolve_selection("s100", variant=variant)
+            runtime, _ = fake_runtime(selected)
+            # Actual X5 BIN uses an RGB-shaped NHWC NV12 descriptor.
+            runtime.input_names = {"m": ["images"]}
+            runtime.input_shapes = {"images": (1, 640, 640, 3)}
+            runtime.input_dtypes = {"images": np.uint8}
+            runner = build_runner(selected, runtime_loader=lambda: SimpleNamespace(
+                HB_HBMRuntime=lambda p: runtime))
+            self.assertEqual(len(runner.binding.output_roles), 10)
+            integer, _ = fake_runtime(selected, integer=True)
+            with self.assertRaises(ValueError):
+                build_runner(selected, runtime_loader=lambda: SimpleNamespace(
+                    HB_HBMRuntime=lambda p: integer))
+            asset = replace(asset, sha256="0" * 64)
+            with self.assertRaisesRegex(ValueError, "identity mismatch"):
+                resolve_selection("x5", variant=variant)
+
     def test_published_matrix_and_defaults(self):
-        self.assertEqual(len(list_models()), 14)
+        self.assertEqual(len([r for r in list_models() if re.fullmatch(r'11[sml]|26[nslmx]',r[1])]), 16)
         for target, variant in [("x5", "11s"), ("s100", "11s"), ("s100p", "26n")]:
             selection = resolve_selection(target)
             self.assertEqual(selection.variant, variant)
             self.assertEqual(selection.published_float, target == "x5")
+        for variant in ("11m", "11l"):
+            selection = resolve_selection("s100", variant=variant)
+            self.assertEqual(selection.variant, variant)
+            self.assertFalse(selection.published_float)
+            self.assertTrue(selection.asset.filename.endswith(".hbm"))
         for target, variant in [
             ("s600", "26n"),
             ("s100p", "11s"),
             ("x5", "26n"),
-            ("s100", "11m"),
         ]:
             with self.assertRaises(ValueError):
                 resolve_selection(target, variant=variant)
+
+    def test_converted_s_profiles_bind_all_actual_float_heads(self):
+        from samples.vision.yoloe.runtime.python.yoloe import RuntimeMetadata,runtime_selection,bind_yoloe_outputs
+        path=ROOT/'samples/vision/yoloe/conversion/converted_targets_20261103.json'
+        for profile in json.loads(path.read_text())['profiles']:
+            with self.subTest(variant=profile['variant'],target=profile['target']['platform']):
+                component=profile['components']['model']
+                sample='yoloe26_seg'if profile['variant'].startswith('26')else 'yoloe11_seg'
+                selected=resolve_selection(profile['target']['platform'],variant=profile['variant'],asset_id='s:'+sample+':'+component['filename'])
+                self.assertTrue(selected.published_float)
+                self.assertEqual(selected.asset.sha256,component['sha256'])
+                values={'model_name':'actual_static_abi'}
+                for side in ['input','output']:
+                    values[side+'_names']=[v['name']for v in component[side+'s']]
+                    values[side+'_shapes']={v['name']:v['shape']for v in component[side+'s']}
+                    values[side+'_dtypes']={v['name']:v['dtype']for v in component[side+'s']}
+                binding=bind_yoloe_outputs(runtime_selection(selected),RuntimeMetadata(**values),allow_integer=False)
+                self.assertEqual(len(binding.output_roles),10)
+                self.assertEqual(len(component['precision_outputs']),10)
+                for check in ['board_smoke','accuracy','runtime_1','runtime_2','cpp_1','cpp_2']:
+                    self.assertEqual(profile['validation'][check],'not-run')
 
     def test_exact_asset_and_custom_float_identity(self):
         s = resolve_selection("x5", variant="11m")
@@ -192,7 +269,7 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual(facts["variant"], variant)
             self.assertEqual(facts["published_float"], target == "x5")
         result = subprocess.run(
-            [sys.executable, str(main), "--target", "s600", "--dry-run"],
+            [sys.executable, str(main), "--target", "s600", "--variant", "26x", "--dry-run"],
             capture_output=True,
             text=True,
         )

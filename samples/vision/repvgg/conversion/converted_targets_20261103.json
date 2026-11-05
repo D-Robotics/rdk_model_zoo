@@ -1,0 +1,2255 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "variant": "timm-a0-rvgg-in1k-s-int16-o1-20261103",
+      "web_size": "a0-rvgg-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/repvgg_a0_rvgg_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/repvgg/repvgg_a0_rvgg_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "dc6e53bdb9a5c05adc31093e4e4aea5a51a506fcf50da9d757827e89e1e371f3",
+          "size_bytes": 9284016,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "67a452ef3ae715a1b20bea7915ba11d9111804acd7c148a10e7d6389e1098abe",
+          "effective_config_sha256": "2cd4fe467fe272f9cd21be85afd066379d763163ed97f98581b4813b27386f1e",
+          "recipe": "samples/vision/repvgg/conversion/recipes/timm_a0_rvgg_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "5b59617498b77ce66a4ae89bcfab4bef240220a3a4761329546344decba03461",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "d60991ee0019d8e889a1fa649501dc274bfde3f950c1d871e64db1607672c82b",
+          "oe_data_sha256": "23b04585119b1effad9a74b4d1ba85d87a00d57d347e231b1d6f98fede049752",
+          "node_info_csv_sha256": "16363a1300632e1a3a6a4fe8fb71dde267974b86ae296885a3b9c44743618b3a",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.804705,
+              "cosine": 0.794379
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a0_rvgg_in1k-s100-int16-20261103-r04/ptq_output/repvgg_a0_rvgg_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "e5c16a8e7b39942dc3da487fb3c82b1fcacc64538b073d1a4aa4efc94553adfd",
+              "size_bytes": 9048260
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a0_rvgg_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "90f943f94a6cd2eb88410404a9c26ce34eb12094c1e3d2380b9d0f4509cca601",
+              "size_bytes": 1203
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.09808349609375e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 2.2172927856445312e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.430511474609375e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 5.7220458984375e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "8dfbf9e283b68fb9e03206148096982d4b24f7dc3f4987eaccdb3afa9253d806",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvgg_a0.rvgg_in1k",
+        "revision": "e292d220aa8b811232037f8aa6d6c8c552dbd0c0",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "2b2bfd7feff2e4aaacfa828b20e84c44df56abacb341b764550f890634789608",
+        "size_bytes": 36565360,
+        "url": "https://huggingface.co/timm/repvgg_a0.rvgg_in1k/resolve/e292d220aa8b811232037f8aa6d6c8c552dbd0c0/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_a0.rvgg_in1k/blob/e292d220aa8b811232037f8aa6d6c8c552dbd0c0/README.md"
+      }
+    },
+    {
+      "variant": "timm-a0-rvgg-in1k-s-int16-o1-20261103",
+      "web_size": "a0-rvgg-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/repvgg_a0_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/repvgg/repvgg_a0_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "eed172fca2dff8e6b5269178dd98e1cc1c89071bdaac9e658c3f7adf0f3669d4",
+          "size_bytes": 9263792,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "67a452ef3ae715a1b20bea7915ba11d9111804acd7c148a10e7d6389e1098abe",
+          "effective_config_sha256": "1e04ac05405c8084e448bb52d710aabe976fa8ae496c1231b24f67b426c6a10e",
+          "recipe": "samples/vision/repvgg/conversion/recipes/timm_a0_rvgg_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "6f46d1f139e2b9c8e8423a77cdd2898ae66ce1b2eddfac97733fd71d9ced5374",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "3b97d8d59201789f8085b69f8c01c240bb9030561f00b895fe46703dad5a6e05",
+          "oe_data_sha256": "cb3fce94f3935677e85f3d6a0f9bfd62e0ff2bb0e7a8a787c4a037d788fd89c8",
+          "node_info_csv_sha256": "a985ec6f23ee94e9c8496914697322863a5dc94ef1fcc414647756e4cf10ed34",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.804705,
+              "cosine": 0.794379
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a0_rvgg_in1k-s100p-int16-20261103-r04/ptq_output/repvgg_a0_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "8ff1b9c8a7ce5f5277369a3d256c131373d9456abc9d5f746608c0e4fdb87775",
+              "size_bytes": 9048261
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a0_rvgg_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "c3719456cee973d334b9eeb96eaa402369b25b2469234303c237b93d560b1ec9",
+              "size_bytes": 1204
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.002716064453125e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.633167266845703e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.2636184692382812e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 6.9141387939453125e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "8dfbf9e283b68fb9e03206148096982d4b24f7dc3f4987eaccdb3afa9253d806",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvgg_a0.rvgg_in1k",
+        "revision": "e292d220aa8b811232037f8aa6d6c8c552dbd0c0",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "2b2bfd7feff2e4aaacfa828b20e84c44df56abacb341b764550f890634789608",
+        "size_bytes": 36565360,
+        "url": "https://huggingface.co/timm/repvgg_a0.rvgg_in1k/resolve/e292d220aa8b811232037f8aa6d6c8c552dbd0c0/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_a0.rvgg_in1k/blob/e292d220aa8b811232037f8aa6d6c8c552dbd0c0/README.md"
+      }
+    },
+    {
+      "variant": "timm-a0-rvgg-in1k-s-int16-o1-20261103",
+      "web_size": "a0-rvgg-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/repvgg_a0_rvgg_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/repvgg/repvgg_a0_rvgg_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "b9afa71d1e474ecfd6e64c8be99f0fbe8f94deecba0440a263d2b9991a32959d",
+          "size_bytes": 9163320,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "67a452ef3ae715a1b20bea7915ba11d9111804acd7c148a10e7d6389e1098abe",
+          "effective_config_sha256": "4c0bae106347ce242a27309099180a0748f5e668b972dd86654ca52367090143",
+          "recipe": "samples/vision/repvgg/conversion/recipes/timm_a0_rvgg_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "766b6d566a05f9c2b917ea2fa5956877450012f975c595403edaf1239009490b",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "71f8d86679d892870bd6297a4b2bdc5840a1689730c70090f2fb37b7ed69fa87",
+          "oe_data_sha256": "154beaf06fb49c666ddd1435dc1322ad439fa9c6e95977f55dce20f742ee6689",
+          "node_info_csv_sha256": "e2506740037c5cf8ccf3fcdfecc1e685c5be50c6c1e45f32ebc9aab8f4d701ca",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.804705,
+              "cosine": 0.794375
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a0_rvgg_in1k-s600-int16-20261103-r04/ptq_output/repvgg_a0_rvgg_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "4bf30cc36ef276aa850cd7b45686cb053d7c9d8f38f7b26c5b1194ddf080f198",
+              "size_bytes": 8601813
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a0_rvgg_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "f84512fc4f4154528b6fa3da5ec5c56858123d6b1be3fafbd31d036371f4eb55",
+              "size_bytes": 1203
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.4543533325195312e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.475214958190918e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.1920928955078125e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 6.9588422775268555e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "8dfbf9e283b68fb9e03206148096982d4b24f7dc3f4987eaccdb3afa9253d806",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvgg_a0.rvgg_in1k",
+        "revision": "e292d220aa8b811232037f8aa6d6c8c552dbd0c0",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "2b2bfd7feff2e4aaacfa828b20e84c44df56abacb341b764550f890634789608",
+        "size_bytes": 36565360,
+        "url": "https://huggingface.co/timm/repvgg_a0.rvgg_in1k/resolve/e292d220aa8b811232037f8aa6d6c8c552dbd0c0/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_a0.rvgg_in1k/blob/e292d220aa8b811232037f8aa6d6c8c552dbd0c0/README.md"
+      }
+    },
+    {
+      "variant": "timm-a1-rvgg-in1k-s-int16-o1-20261103",
+      "web_size": "a1-rvgg-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/repvgg_a1_rvgg_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/repvgg/repvgg_a1_rvgg_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "2df40e3a8d28babb207ec73cbafc4c1e0c37117bbdd3f59376764201a03d9be9",
+          "size_bytes": 13826480,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "300dc561dbb208f7c2a16e71a2ce9f47b62d7409dc22d94499ddf949930df618",
+          "effective_config_sha256": "85a0478c7cb50a37ff42734795117543a6ec04c8f9c3aae2e75c6c455cac116b",
+          "recipe": "samples/vision/repvgg/conversion/recipes/timm_a1_rvgg_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "30745704dd9d5ec2103484892e151c4f343747db93e499807b96a14b3debc3c2",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "28ce195ce7f95107d770f881c933275033e0f9684e6d3726a4c731c0acb49098",
+          "oe_data_sha256": "592f118b587b062d15263c97e4e89781daa742809e9ac6ee062c01e127ee75a9",
+          "node_info_csv_sha256": "98e6332e01a143e85384839598ef11eaacae29de74d92552e3e6f0d379ac57e9",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.913334,
+              "cosine": 0.897857
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a1_rvgg_in1k-s100-int16-20261103-r04/ptq_output/repvgg_a1_rvgg_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "996bf615a29276c4c1fb1c4903a4f5299c92a537609b21f9600069ae57907d5f",
+              "size_bytes": 13646154
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a1_rvgg_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "727dd62237f82e4eadb842ce602a2a534340cf86175dce9a36437513f2988aa1",
+              "size_bytes": 1203
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.0311603546142578e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.239776611328125e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 9.298324584960938e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.5020370483398438e-05
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "8520ab97228c131b6371dc07b3b84c743c71daf72eaeb05dd9cebf378db0e5d0",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvgg_a1.rvgg_in1k",
+        "revision": "a08d661370717300608086640790e6a4f54ac802",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "1d258c9ce6b22185686104c93887ae44909eaa8aaced0e44abc8256f2976bfb8",
+        "size_bytes": 56523336,
+        "url": "https://huggingface.co/timm/repvgg_a1.rvgg_in1k/resolve/a08d661370717300608086640790e6a4f54ac802/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_a1.rvgg_in1k/blob/a08d661370717300608086640790e6a4f54ac802/README.md"
+      }
+    },
+    {
+      "variant": "timm-a1-rvgg-in1k-s-int16-o1-20261103",
+      "web_size": "a1-rvgg-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/repvgg_a1_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/repvgg/repvgg_a1_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "51d3a0154300c0231bfc79880bcb4782e0b23aea37cbc91018bbdb34af832aba",
+          "size_bytes": 13714864,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "300dc561dbb208f7c2a16e71a2ce9f47b62d7409dc22d94499ddf949930df618",
+          "effective_config_sha256": "fbae6f5b01ad3241263e3928b4f458b293dce6b6d60ec4cbbae853b72b0dd87f",
+          "recipe": "samples/vision/repvgg/conversion/recipes/timm_a1_rvgg_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "ea326916924a846c6b6831ec4e2e5052880593326d4c8918efec4db81f2b58b6",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "8750c082a78c8e97a86788dbe1687a631024111ec48994a56c81a03a714399ce",
+          "oe_data_sha256": "3feb2e988f60f03608373d7a41dcfcae87fb64cc0d3a5bb38da9ab4e4eb68e43",
+          "node_info_csv_sha256": "98e6332e01a143e85384839598ef11eaacae29de74d92552e3e6f0d379ac57e9",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.913334,
+              "cosine": 0.897857
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a1_rvgg_in1k-s100p-int16-20261103-r04/ptq_output/repvgg_a1_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "ded286b0b792d25e5a094db1639549ecf3bf2609add66a39562e3f1e27ec1880",
+              "size_bytes": 13646155
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a1_rvgg_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "9da0032a265201aa7af41c0dde549b9a770657c8be84769fcb7f833012a438fd",
+              "size_bytes": 1204
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.0728836059570312e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.239776611328125e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.1354684829711914e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.5974044799804688e-05
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "8520ab97228c131b6371dc07b3b84c743c71daf72eaeb05dd9cebf378db0e5d0",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvgg_a1.rvgg_in1k",
+        "revision": "a08d661370717300608086640790e6a4f54ac802",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "1d258c9ce6b22185686104c93887ae44909eaa8aaced0e44abc8256f2976bfb8",
+        "size_bytes": 56523336,
+        "url": "https://huggingface.co/timm/repvgg_a1.rvgg_in1k/resolve/a08d661370717300608086640790e6a4f54ac802/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_a1.rvgg_in1k/blob/a08d661370717300608086640790e6a4f54ac802/README.md"
+      }
+    },
+    {
+      "variant": "timm-a1-rvgg-in1k-s-int16-o1-20261103",
+      "web_size": "a1-rvgg-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/repvgg_a1_rvgg_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/repvgg/repvgg_a1_rvgg_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "7c06a7ecf64b88ea50f897c65416b65ef4e9754a7c962a3d9f2818f114a0d238",
+          "size_bytes": 13714968,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "300dc561dbb208f7c2a16e71a2ce9f47b62d7409dc22d94499ddf949930df618",
+          "effective_config_sha256": "bcada4fa6ec95b51c80381e72ad50dc25385c0605cc2d98b6fc1cb4d61c6bd13",
+          "recipe": "samples/vision/repvgg/conversion/recipes/timm_a1_rvgg_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "7e4d9fc31e2b5f5542fa04a06e413af55cb970186653cf87cde6cf1e22441b18",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "eb0a3e2f4bac063b47ed5911d9ffcc0c2d4963780eccfa7853530ac83c70a786",
+          "oe_data_sha256": "fc3fd895bbacc4cb6632ff5af408c782516f12616a902f6160b2c6e56218b016",
+          "node_info_csv_sha256": "79707fc47b6809a042858dd678edbd5de5e56d64b03345c11ad1bf0ef8c320b9",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.913334,
+              "cosine": 0.89799
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a1_rvgg_in1k-s600-int16-20261103-r04/ptq_output/repvgg_a1_rvgg_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "bf0ebd0fb4260909bd3fa883de33d64405f005dd0f8b6422ed618e8f8421200f",
+              "size_bytes": 13130954
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a1_rvgg_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "a5d396f2c8f961008d8cd2d06fbd63b9a0bd0c5898063db5315a53f3414890b6",
+              "size_bytes": 1203
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 7.62939453125e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 9.5367431640625e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.049041748046875e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.2159347534179688e-05
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "8520ab97228c131b6371dc07b3b84c743c71daf72eaeb05dd9cebf378db0e5d0",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvgg_a1.rvgg_in1k",
+        "revision": "a08d661370717300608086640790e6a4f54ac802",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "1d258c9ce6b22185686104c93887ae44909eaa8aaced0e44abc8256f2976bfb8",
+        "size_bytes": 56523336,
+        "url": "https://huggingface.co/timm/repvgg_a1.rvgg_in1k/resolve/a08d661370717300608086640790e6a4f54ac802/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_a1.rvgg_in1k/blob/a08d661370717300608086640790e6a4f54ac802/README.md"
+      }
+    },
+    {
+      "variant": "timm-a2-rvgg-in1k-s-int16-o1-20261103",
+      "web_size": "a2-rvgg-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/repvgg_a2_rvgg_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/repvgg/repvgg_a2_rvgg_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "859001bfe57e631d713a22bc28189dc3809b7201bee88974e051659030020f3c",
+          "size_bytes": 26815152,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "30554eea3fd28443f83a09accb2e52860a9f57b92b9faf6dc0b10770d3a6df4f",
+          "effective_config_sha256": "80745c03e44e4c583835d4efb78fbacd821b72fde5945e52cfcad5c4ff50053f",
+          "recipe": "samples/vision/repvgg/conversion/recipes/timm_a2_rvgg_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "5e2169a2ce2054144fd3c6f65119cb2287547bf00d9639ddfe891d85a40f1384",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "cb2618947649f8e8c32784e6c9a1d5ac985bd444f09a2e1d51fa1f31301c658c",
+          "oe_data_sha256": "2503869c83619bbb17c51a17f4d9d4d76f53e616373e218793527968cb9bc8cf",
+          "node_info_csv_sha256": "073789ede3bfe67512719be6c9ca38c507fdf47ca1e17eee8649ba72615bd12a",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.831941,
+              "cosine": 0.806408
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a2_rvgg_in1k-s100-int16-20261103-r04/ptq_output/repvgg_a2_rvgg_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "eb642b33c59dacbda44dc81244fb512e3682676bfbd5809554b75c158d914b7c",
+              "size_bytes": 26586039
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a2_rvgg_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "aefda8d20f558a7a0351eaa5fe31f5f6e7aca176ed97e71abce97edc20428165",
+              "size_bytes": 1203
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.049041748046875e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.0967254638671875e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.049041748046875e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 8.58306884765625e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "883206cd8ac1f6ce07c08eaca41f1fa645d152d2b0b28a961a07fcbe043bd473",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvgg_a2.rvgg_in1k",
+        "revision": "87d4d383cb45031cb9fa2fc8ddca73fd6649240f",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "a41919193e37f0f831acb5d8da43862275c9f8619cfa3bd4117aefa2ff61d0a4",
+        "size_bytes": 113047706,
+        "url": "https://huggingface.co/timm/repvgg_a2.rvgg_in1k/resolve/87d4d383cb45031cb9fa2fc8ddca73fd6649240f/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_a2.rvgg_in1k/blob/87d4d383cb45031cb9fa2fc8ddca73fd6649240f/README.md"
+      }
+    },
+    {
+      "variant": "timm-a2-rvgg-in1k-s-int16-o1-20261103",
+      "web_size": "a2-rvgg-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/repvgg_a2_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/repvgg/repvgg_a2_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "893b31ad008ccaea505da7cd12d43b409388cf377efe396158116345d2464dea",
+          "size_bytes": 26798000,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "30554eea3fd28443f83a09accb2e52860a9f57b92b9faf6dc0b10770d3a6df4f",
+          "effective_config_sha256": "385a819969de2b00c68b2955697e039533371803a3f3775d7b090858c2bba88e",
+          "recipe": "samples/vision/repvgg/conversion/recipes/timm_a2_rvgg_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "6f20f8cba843c8f7accb2cdf990d252cd1a135172312cd9346daa408e966bc20",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "63a5fb77dc871ac112433447c9735a78d009a6fc7ce0b8752cc491af5472c893",
+          "oe_data_sha256": "fa3926f5416caf93c0fe1faf7b50a569fb0f002bb84ab20b27f7b37e42ceeb5e",
+          "node_info_csv_sha256": "073789ede3bfe67512719be6c9ca38c507fdf47ca1e17eee8649ba72615bd12a",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.831941,
+              "cosine": 0.806408
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a2_rvgg_in1k-s100p-int16-20261103-r04/ptq_output/repvgg_a2_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "766ab9ace510c85557765cf6a486e2d7c9885eebb57335b5c1ee3b6642e67508",
+              "size_bytes": 26586040
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a2_rvgg_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "386d2145d27cf4d07ebccd2bb9c179fbf23555ce969a8468b28f4d6d90cdaaa7",
+              "size_bytes": 1204
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.1444091796875e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.2159347534179688e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.1444091796875e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 9.5367431640625e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "883206cd8ac1f6ce07c08eaca41f1fa645d152d2b0b28a961a07fcbe043bd473",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvgg_a2.rvgg_in1k",
+        "revision": "87d4d383cb45031cb9fa2fc8ddca73fd6649240f",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "a41919193e37f0f831acb5d8da43862275c9f8619cfa3bd4117aefa2ff61d0a4",
+        "size_bytes": 113047706,
+        "url": "https://huggingface.co/timm/repvgg_a2.rvgg_in1k/resolve/87d4d383cb45031cb9fa2fc8ddca73fd6649240f/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_a2.rvgg_in1k/blob/87d4d383cb45031cb9fa2fc8ddca73fd6649240f/README.md"
+      }
+    },
+    {
+      "variant": "timm-a2-rvgg-in1k-s-int16-o1-20261103",
+      "web_size": "a2-rvgg-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/repvgg_a2_rvgg_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/repvgg/repvgg_a2_rvgg_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "816b1cfc07aab3b3ee8acce3f020f041f234c24b58cc724df67e2c61f242b5d9",
+          "size_bytes": 26572776,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "30554eea3fd28443f83a09accb2e52860a9f57b92b9faf6dc0b10770d3a6df4f",
+          "effective_config_sha256": "afc6a5322d4ee485fb2d01ce5a3e7af9db8173059abcf3ee39622433be6e7e5c",
+          "recipe": "samples/vision/repvgg/conversion/recipes/timm_a2_rvgg_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "352bb7876bf895337764e118a564539e455895e3c9075dd3e93eb7a589d8e8bd",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "125f32327d93ed4757645227d6dc199573839d7bdd81afac21917905b7d56132",
+          "oe_data_sha256": "2810e369a109a33afa88b6550f78cdc0a0da0408443dc6ce1943d9df05e63013",
+          "node_info_csv_sha256": "8dc5098b82f097ccbe13e3306593a7ff71660bf9f3baba919cc26f011667b155",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.831941,
+              "cosine": 0.806726
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a2_rvgg_in1k-s600-int16-20261103-r04/ptq_output/repvgg_a2_rvgg_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "8458a8ddfc49b34d63f3a628415f9dd980d1bf236c978549cc82dcbe8c68b445",
+              "size_bytes": 25941498
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_a2_rvgg_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "f8d50397899523601e7fb5203263cf2a880c99b74ddba921e20a087edf66639b",
+              "size_bytes": 1203
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.049041748046875e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.0967254638671875e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.049041748046875e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 8.58306884765625e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "883206cd8ac1f6ce07c08eaca41f1fa645d152d2b0b28a961a07fcbe043bd473",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvgg_a2.rvgg_in1k",
+        "revision": "87d4d383cb45031cb9fa2fc8ddca73fd6649240f",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "a41919193e37f0f831acb5d8da43862275c9f8619cfa3bd4117aefa2ff61d0a4",
+        "size_bytes": 113047706,
+        "url": "https://huggingface.co/timm/repvgg_a2.rvgg_in1k/resolve/87d4d383cb45031cb9fa2fc8ddca73fd6649240f/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_a2.rvgg_in1k/blob/87d4d383cb45031cb9fa2fc8ddca73fd6649240f/README.md"
+      }
+    },
+    {
+      "variant": "timm-b0-rvgg-in1k-s-int16-o1-20261103",
+      "web_size": "b0-rvgg-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/repvgg_b0_rvgg_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/repvgg/repvgg_b0_rvgg_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "58f46632c845559fd6cc547bb2144ad50c9a948bb2fe736b0197d75477a26988",
+          "size_bytes": 15473328,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "8b423674fdd7568547b4061b083d64982d96877be097b882f2933994c7544601",
+          "effective_config_sha256": "f012db4c127bde2f843a3c02334dcf088824720c28dd21a7053cac80e1680693",
+          "recipe": "samples/vision/repvgg/conversion/recipes/timm_b0_rvgg_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "1a662a52116f1075584c05e2d11b9fc94d11b749a47240d86dda75153d598401",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "ef98838467a0b9bda0899d39a6ca6abbdc88b815b45c32f19218637c943937a9",
+          "oe_data_sha256": "c9c3e04928fb4af0b4c131507c495fe64b0d286745595484741d74be4ef897f5",
+          "node_info_csv_sha256": "10454aaf1061342f69f0ba19ecd04e4adc5753176f4b9263bfa96071294440e2",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.904869,
+              "cosine": 0.894141
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100-int16-20261103-r04/ptq_output/repvgg_b0_rvgg_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "4bba24b954ca55188c5234f9f489e92f514a7882abc4dfb5edb4b4420eacb8fb",
+              "size_bytes": 15295073
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "ef63522518b93e834f4891b8bc41deec59ad746df0998c43cd5d363004d5d36d",
+              "size_bytes": 1203
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.9073486328125e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.3530254364013672e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.3828277587890625e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 9.387731552124023e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "a46d54356cf891d42a0c04ed853aad131105ddb01541416536b9500563afbe80",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvgg_b0.rvgg_in1k",
+        "revision": "cad20ccf7d400643ebb88cc9403ec97d101e6531",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "e671de393378347fd40311b2a3e56fa1ed6785f6b5d61a7577e3379b0bca7db2",
+        "size_bytes": 63457764,
+        "url": "https://huggingface.co/timm/repvgg_b0.rvgg_in1k/resolve/cad20ccf7d400643ebb88cc9403ec97d101e6531/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_b0.rvgg_in1k/blob/cad20ccf7d400643ebb88cc9403ec97d101e6531/README.md"
+      }
+    },
+    {
+      "variant": "timm-b0-rvgg-in1k-s-int16-o1-20261103",
+      "web_size": "b0-rvgg-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/repvgg_b0_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/repvgg/repvgg_b0_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "375eba30ff4e7161a5a2050524e7a8350dfca2f1ecb2d38a39b1e10a42c8ad17",
+          "size_bytes": 15350960,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "8b423674fdd7568547b4061b083d64982d96877be097b882f2933994c7544601",
+          "effective_config_sha256": "e9570d144c1c8446fc289053b3797aea24b7aa1b529a529db8a24fe5a798a835",
+          "recipe": "samples/vision/repvgg/conversion/recipes/timm_b0_rvgg_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "38a0f202b89305d253c07da160bc7b75578ce709e5fa3a997f0ca3fd0b37b1cb",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "8cfa22a2cd6613b55fd4cfb9e2a682fd98281fd35c259628920bc29ab8d4d59b",
+          "oe_data_sha256": "ae1ccf0e9f2e60041fbaf5e0ec2f8e943a18c6b578552005653f248257be8ebf",
+          "node_info_csv_sha256": "bd10df2548390c73ec086daa0d04c7530cac148614f15556c7570053d3cab100",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.904869,
+              "cosine": 0.894141
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/ptq_output/repvgg_b0_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "4e65f73b82ffd897d1bce59e9f391e61b762d8fb5bf7efdab92a3b613df224d3",
+              "size_bytes": 15295074
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "f02d4d160f961e467b534d716159ba15cc651b01a2efe179a482215646934caa",
+              "size_bytes": 1204
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.4543533325195312e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.52587890625e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.2874603271484375e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 8.314847946166992e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "a46d54356cf891d42a0c04ed853aad131105ddb01541416536b9500563afbe80",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvgg_b0.rvgg_in1k",
+        "revision": "cad20ccf7d400643ebb88cc9403ec97d101e6531",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "e671de393378347fd40311b2a3e56fa1ed6785f6b5d61a7577e3379b0bca7db2",
+        "size_bytes": 63457764,
+        "url": "https://huggingface.co/timm/repvgg_b0.rvgg_in1k/resolve/cad20ccf7d400643ebb88cc9403ec97d101e6531/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_b0.rvgg_in1k/blob/cad20ccf7d400643ebb88cc9403ec97d101e6531/README.md"
+      }
+    },
+    {
+      "variant": "timm-b0-rvgg-in1k-s-int16-o1-20261103",
+      "web_size": "b0-rvgg-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/repvgg_b0_rvgg_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/repvgg/repvgg_b0_rvgg_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "77e370b203c2ff0f8ae1ca43294b99babb5c6d17098d3e5224ce8590654e7c97",
+          "size_bytes": 15433816,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "8b423674fdd7568547b4061b083d64982d96877be097b882f2933994c7544601",
+          "effective_config_sha256": "71436794dd36bd7f1c6399bcc2dd86edee84cbbb04c7cd925772755a5d5e5737",
+          "recipe": "samples/vision/repvgg/conversion/recipes/timm_b0_rvgg_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "82999852c688f0729ebadfc52866f0a797239de265ed0ffe20f52a93625c9b4f",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "0568f4545c504d425581472e3cca245bfa8e3faa4849c2834c748a402887234c",
+          "oe_data_sha256": "143619adede9bb0a7aee847c243298885fad9e95f91b945c1c75624c18f10108",
+          "node_info_csv_sha256": "2cbaf62e25ed5fead5a20207bfd121f0828e8c47fd3772fec076fec0142ee8a4",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.904869,
+              "cosine": 0.894241
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s600-int16-20261103-r04/ptq_output/repvgg_b0_rvgg_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "c8746bc8ad42b68b7bbae1b4023ca4983201e8ec45f175194810e575e3fc7725",
+              "size_bytes": 14731307
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b0_rvgg_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "2b7e80e6759a6e007d0a1e7eababa377aa3ef5acf2e9a554204780219c0962ba",
+              "size_bytes": 1203
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.239776611328125e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.1205673217773438e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.33514404296875e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 8.13603401184082e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "a46d54356cf891d42a0c04ed853aad131105ddb01541416536b9500563afbe80",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvgg_b0.rvgg_in1k",
+        "revision": "cad20ccf7d400643ebb88cc9403ec97d101e6531",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "e671de393378347fd40311b2a3e56fa1ed6785f6b5d61a7577e3379b0bca7db2",
+        "size_bytes": 63457764,
+        "url": "https://huggingface.co/timm/repvgg_b0.rvgg_in1k/resolve/cad20ccf7d400643ebb88cc9403ec97d101e6531/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_b0.rvgg_in1k/blob/cad20ccf7d400643ebb88cc9403ec97d101e6531/README.md"
+      }
+    },
+    {
+      "variant": "timm-b1g4-rvgg-in1k-s-int16-o1-20261103",
+      "web_size": "b1g4-rvgg-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/repvgg_b1g4_rvgg_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/repvgg/repvgg_b1g4_rvgg_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "1a7ec10170aec3f9ce765c8ce7aa0396911b1356882c350a327824b2323f0328",
+          "size_bytes": 37773248,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "979684c0a7471a2d4280b471c89f05a3d21a743186f32452921e77cde757aae3",
+          "effective_config_sha256": "8bdd08fa95b82257c645a7be085088ac4528c11ffb2a9d0cc7b13395c9a86951",
+          "recipe": "samples/vision/repvgg/conversion/recipes/timm_b1g4_rvgg_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "2cd4a90b5b64daf81e5e93c59abeb62aafadb0bc475729b1a7c7d95ede457810",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "80da38532b773a03da9cbff926c4fda373e3bcaea0559c068b54a2abf2ce7144",
+          "oe_data_sha256": "e62edaeba66f621eca99e66db42de23e1db28b9b0dcf40b6927913a36b912a1e",
+          "node_info_csv_sha256": "de21954fb95d5ccf80c63fcd9e58043a052c209fdb7522094eea9d40aafe1761",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.882206,
+              "cosine": 0.887995
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b1g4_rvgg_in1k-s100-int16-20261103-r04/ptq_output/repvgg_b1g4_rvgg_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "f9f529b1d4fad6aaeacb639bb3ef3319c52baee9779363f79d68150854f539c7",
+              "size_bytes": 37689608
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b1g4_rvgg_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "de208ca065c28265fd55c95cb3894d1c5ab5c5987d2b4b2590922f0a7c3ad471",
+              "size_bytes": 1209
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.049041748046875e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.3828277587890625e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 8.881092071533203e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 6.67572021484375e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "959db617140e27e464302ae6c4dcd0a90aaa344c16304d70bccfb1c550405fde",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvgg_b1g4.rvgg_in1k",
+        "revision": "54ad9d95acf3a556fa8c9a38a58c4ff0a352666a",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "d03c1ac75cfb344bc52f119abb7b1f79ec8bddcf36acf01db3c41fa912ec5896",
+        "size_bytes": 160182074,
+        "url": "https://huggingface.co/timm/repvgg_b1g4.rvgg_in1k/resolve/54ad9d95acf3a556fa8c9a38a58c4ff0a352666a/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_b1g4.rvgg_in1k/blob/54ad9d95acf3a556fa8c9a38a58c4ff0a352666a/README.md"
+      }
+    },
+    {
+      "variant": "timm-b1g4-rvgg-in1k-s-int16-o1-20261103",
+      "web_size": "b1g4-rvgg-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/repvgg_b1g4_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/repvgg/repvgg_b1g4_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "ddf75da850a5e1216789f6973e2d79d88fc446cc0efce6ae1358e1f9d9464639",
+          "size_bytes": 37706176,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "979684c0a7471a2d4280b471c89f05a3d21a743186f32452921e77cde757aae3",
+          "effective_config_sha256": "6daa7c9735e65b7a5073f07b3882c3d9ecde2ec1fb38b7a41293bf30e6c37ba1",
+          "recipe": "samples/vision/repvgg/conversion/recipes/timm_b1g4_rvgg_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "b4ac4d757624e9f8bd24fbd4b5df84175fd8d95e62eee0aa9fc045f8d5ca3784",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "4b21262a490399333f185d937272f933c9c87251f84ac40555f1297e25e14e1d",
+          "oe_data_sha256": "a34d9efc41b645d1a3883213c160e9e7058266d1a11ee49c903e945af0e67565",
+          "node_info_csv_sha256": "de21954fb95d5ccf80c63fcd9e58043a052c209fdb7522094eea9d40aafe1761",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.882206,
+              "cosine": 0.887995
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b1g4_rvgg_in1k-s100p-int16-20261103-r04/ptq_output/repvgg_b1g4_rvgg_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "23a4e9dfc0f787b906163daa16c2d25e6fbaf5376639c1913d33678c3a78f7cc",
+              "size_bytes": 37689609
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b1g4_rvgg_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "6478ee29e329ddba9e5370b00d91ce8f73b8d5f09d8e03d580cd678664894ce5",
+              "size_bytes": 1210
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.049041748046875e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.2874603271484375e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.0013580322265625e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 9.5367431640625e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "959db617140e27e464302ae6c4dcd0a90aaa344c16304d70bccfb1c550405fde",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvgg_b1g4.rvgg_in1k",
+        "revision": "54ad9d95acf3a556fa8c9a38a58c4ff0a352666a",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "d03c1ac75cfb344bc52f119abb7b1f79ec8bddcf36acf01db3c41fa912ec5896",
+        "size_bytes": 160182074,
+        "url": "https://huggingface.co/timm/repvgg_b1g4.rvgg_in1k/resolve/54ad9d95acf3a556fa8c9a38a58c4ff0a352666a/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_b1g4.rvgg_in1k/blob/54ad9d95acf3a556fa8c9a38a58c4ff0a352666a/README.md"
+      }
+    },
+    {
+      "variant": "timm-b1g4-rvgg-in1k-s-int16-o1-20261103",
+      "web_size": "b1g4-rvgg-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/repvgg_b1g4_rvgg_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/repvgg/repvgg_b1g4_rvgg_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "1e84808d07ae02e0ae6d9017eb353d71dbcb4d02a16c810b8e441c2b562ef671",
+          "size_bytes": 38291272,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "979684c0a7471a2d4280b471c89f05a3d21a743186f32452921e77cde757aae3",
+          "effective_config_sha256": "db6189a66d87571e28e0aba3cf4e0826ea6f557c9ed5aaaa59c687f22d2afc17",
+          "recipe": "samples/vision/repvgg/conversion/recipes/timm_b1g4_rvgg_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "d987f532ce5294de282e301cb9e7948650a74b0d7ad546bc9ee4948c7bda382c",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "ed2f995326385941558aa446e33ea2d4f995808d7c705a4a88f8968437d7b7e5",
+          "oe_data_sha256": "54d8856c53cf0acf7b49ff81f7ca62a7db5f4258c83ff9452c0f1ff0d8ba3c89",
+          "node_info_csv_sha256": "19f512e839819590b9f4cc1eb89e5941c3d964526aa5f9a6b8b42368bfcba91e",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.882206,
+              "cosine": 0.888231
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b1g4_rvgg_in1k-s600-int16-20261103-r04/ptq_output/repvgg_b1g4_rvgg_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "3045d9fdd36a12d7051439c6f4987e12b8ba7cd1d18bfc7eebb41bb297f39ce9",
+              "size_bytes": 36780668
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvgg_b1g4_rvgg_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "17a6647d5fdd30e161d2e9bae1bf909635a035be6a68a62b83673555c405ec18",
+              "size_bytes": 1209
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 9.059906005859375e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.1205673217773438e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 8.58306884765625e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 5.7220458984375e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "959db617140e27e464302ae6c4dcd0a90aaa344c16304d70bccfb1c550405fde",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvgg_b1g4.rvgg_in1k",
+        "revision": "54ad9d95acf3a556fa8c9a38a58c4ff0a352666a",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "d03c1ac75cfb344bc52f119abb7b1f79ec8bddcf36acf01db3c41fa912ec5896",
+        "size_bytes": 160182074,
+        "url": "https://huggingface.co/timm/repvgg_b1g4.rvgg_in1k/resolve/54ad9d95acf3a556fa8c9a38a58c4ff0a352666a/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvgg_b1g4.rvgg_in1k/blob/54ad9d95acf3a556fa8c9a38a58c4ff0a352666a/README.md"
+      }
+    }
+  ]
+}

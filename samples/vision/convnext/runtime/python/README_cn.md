@@ -41,7 +41,7 @@ cwd：仓库根目录。最小无 SDK 调用是清单模式：
 python3 samples/vision/convnext/runtime/python/main.py --list-models --target auto
 ```
 
-在已准备好的 X5 板卡上的完整运行（缺省变体为 `atto`，唯一已发布变体）：
+在已准备好的 X5 板卡上的完整运行（缺省变体为 `atto`；nano、pico、femto 同样已发布）：
 
 ```bash
 # 前置：bash samples/vision/convnext/model/download.sh x5
@@ -144,3 +144,25 @@ print(result.class_ids, result.scores, result.labels)
 | `model_path requires --asset-id` | 从 `--list-models` 复制完整限定引用；不要使用裸文件名。 |
 | 输入形状或 dtype 不匹配 | 核对制品引用与运行时元数据；不得跨平台复用 X5 制品。 |
 | 输出与参考运行不一致 | 先在同一制品、图像、resize 模式、Top-K 和原始输出上对照，再考虑分数语义。 |
+
+## Atto D2 已转换产物（2026-11-02）
+
+`atto-d2` 是单独转换的 [timm/convnext_atto.d2_in1k](https://huggingface.co/timm/convnext_atto.d2_in1k/tree/435c0a8d02d5b872e90c8cde36887465982cb399)（Apache-2.0），权重版本固定为 `435c0a8d02d5b872e90c8cde36887465982cb399`。默认 `atto` 及四个历史产物的身份和历史数据保持原样。
+
+新 BIN 为 4,528,264 字节，SHA-256 为 `c334e6c87ae202a0ef8d78b4506ecdab7fafb4684ce720fc4407f9bf990ea101`。导出和主机 PyTorch/ONNX 对照已通过；板端冒烟、精度、Runtime 1/2 并发、C++ 1/2 流均为 **not-run**。历史性能表不适用于此文件。预处理为 Pillow bicubic 短边缩放至 256、四舍五入居中裁剪 224，然后通过 OpenCV 转 BT.601 video-range NV12；ImageNet 归一化融合于 Mapper。输出为 1,000 类 float32 logits，Runtime 再做 softmax。此规格需要 Pillow。
+
+```bash
+# 仓库根目录：下载并验证已登记模型。
+python3 samples/vision/convnext/model/download.py --target x5 --variant atto-d2
+# 主机检查契约，不加载 SDK、不下载、不推理。
+python3 samples/vision/convnext/runtime/python/main.py --target x5 --variant atto-d2 --dry-run
+# 已准备好的 X5 板端命令；本次仅转换交付未执行。
+python3 samples/vision/convnext/runtime/python/main.py \
+  --target x5 --asset-id x5:convnext:convnext_atto_d2_bayese_224x224_nv12.bin \
+  --model-path samples/vision/convnext/model/convnext_atto_d2_bayese_224x224_nv12.bin \
+  --test-img samples/vision/convnext/test_data/cheetah.JPEG
+```
+
+<!-- converted-batch-20261102 -->
+`conversion/converted.json` 中的新增规格使用模式 2：Pillow bicubic 短边 256、四舍五入居中裁剪 224。板端结果为 not-run；外部模型路径须配合精确 asset id 使用。
+<!-- /converted-batch-20261102 -->

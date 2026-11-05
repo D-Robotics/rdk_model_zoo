@@ -9,7 +9,7 @@
 |---|---|---|---|---|
 | X5 | recognition | `x5:lprnet:lpr.bin` | `lpr.bin` | 发布下载 |
 
-S100/S100P/S600 清单没有 LPRNet 制品。随源提供的 `test_data/test_input.dat` 是输入制品，不是模型。
+S 清单已登记三个独立转换的 Sirius LPRNet HBM，分别对应 S100/S100P/S600（2026-11-04），精确 ID 和 SHA-256 见 `docs/release/s/models.yaml`。随源提供的 `test_data/test_input.dat` 是输入制品，不是模型。
 
 <a id="directory"></a>
 ## 目录结构

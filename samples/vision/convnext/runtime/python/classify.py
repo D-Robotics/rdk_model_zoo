@@ -42,6 +42,7 @@ class ConvNeXtClassifier:
         input_size: tuple[int, int] = (224, 224), class_count: int = 1000,
         top_k: int = 5, labels: Mapping[int, str] | Sequence[str] | None = None,
         resize_type: int | None = None, resize_interpolation: str | None = None,
+        resize_shorter: int = 0,
         score_policy: str = "softmax", output_transform: str = "raw_f32",
         runner: RuntimeModelRunner | None = None,
     ) -> None:
@@ -55,8 +56,9 @@ class ConvNeXtClassifier:
             top_k: Number of results in [1, class_count]; defaults to 5.
             labels: Full class-name sequence, sparse index/name mapping, or None.
                 Missing names are rendered as class IDs.
-            resize_type: 0 stretches; 1 preserves aspect ratio with letterbox padding.
+            resize_type: 0 stretches; 1 letterboxes; 2 resizes the shorter edge and center-crops.
                 None follows an injected binding or uses 1 for a local model.
+            resize_shorter: Shorter-edge size for mode 2 (Atto D2 uses 256).
             resize_interpolation: Direct-resize interpolation; None uses linear on
                 X5 and nearest on S. Letterbox uses linear interpolation.
             score_policy: softmax or legacy_softmax normalizes scores; none preserves
@@ -81,7 +83,7 @@ class ConvNeXtClassifier:
         self.resize_type = resize_type
         self.runner = runner if runner is not None else RuntimeModelRunner.from_file(
             model_path, target=target, input_size=input_size, class_count=class_count,
-            resize_type=1 if resize_type is None else resize_type,
+            resize_type=1 if resize_type is None else resize_type, resize_shorter=resize_shorter,
             resize_interpolation=resize_interpolation or ("linear" if target == "x5" else "nearest"),
             score_policy=score_policy, output_transform=output_transform)
         self.binding = self.runner.load()

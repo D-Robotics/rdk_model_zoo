@@ -158,3 +158,47 @@ Published artifacts and landing paths: [model preparation](../model/README.md#ar
 ## Additional preparation
 
 The export scripts fetch `hgnetv2_b*.ssld_stage2_ft_in1k` at run time. Record the timm version and weight hashes used for a build. Prepare the 20–50 ImageNet-style JPEGs for calibration, then run the per-artifact YAML and compile commands above. Keep each published output name and target paired with its configuration.
+
+<!-- converted-batch-20261102 -->
+## Pinned converted recipes
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model hgnetv2_b0.ssld_stage2_ft_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/hgnetv2/conversion/recipes/timm-b0-ssld-stage2-ft-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+Use the model/tag, pinned checkpoint and matching YAML from `converted.json`; use a fresh attempt directory. The calibration producer uses raw RGB float32 binary tensors. Do not apply normalization twice or inherit historical board metrics.
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100 / timm-b0-ssld-stage2-ft-in1k-s-int16-o1-20261103 / model`: [timm_b0_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_b0_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-b0-ssld-stage2-ft-in1k-s-int16-o1-20261103 / model`: [timm_b0_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_b0_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-b0-ssld-stage2-ft-in1k-s-int16-o1-20261103 / model`: [timm_b0_ssld_stage2_ft_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_b0_ssld_stage2_ft_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-b1-ssld-stage2-ft-in1k-s-int16-o1-20261103 / model`: [timm_b1_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_b1_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-b1-ssld-stage2-ft-in1k-s-int16-o1-20261103 / model`: [timm_b1_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_b1_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-b1-ssld-stage2-ft-in1k-s-int16-o1-20261103 / model`: [timm_b1_ssld_stage2_ft_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_b1_ssld_stage2_ft_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-b2-ssld-stage2-ft-in1k-s-int16-o1-20261103 / model`: [timm_b2_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_b2_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-b2-ssld-stage2-ft-in1k-s-int16-o1-20261103 / model`: [timm_b2_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_b2_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-b2-ssld-stage2-ft-in1k-s-int16-o1-20261103 / model`: [timm_b2_ssld_stage2_ft_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_b2_ssld_stage2_ft_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-b3-ssld-stage2-ft-in1k-s-int16-o1-20261103 / model`: [timm_b3_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_b3_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-b3-ssld-stage2-ft-in1k-s-int16-o1-20261103 / model`: [timm_b3_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_b3_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-b3-ssld-stage2-ft-in1k-s-int16-o1-20261103 / model`: [timm_b3_ssld_stage2_ft_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_b3_ssld_stage2_ft_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-b4-ssld-stage2-ft-in1k-s-int16-o1-20261103 / model`: [timm_b4_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_b4_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-b4-ssld-stage2-ft-in1k-s-int16-o1-20261103 / model`: [timm_b4_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_b4_ssld_stage2_ft_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-b4-ssld-stage2-ft-in1k-s-int16-o1-20261103 / model`: [timm_b4_ssld_stage2_ft_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_b4_ssld_stage2_ft_in1k_s_int16_o1_20261103_s600_model.yaml)
+
+S PTQ consumes normalized ONNX-domain `.npy` tensors. NV12 runtime mean/scale remain in the recipe. The shared producer reads checkpoint normalization through `--target` and `--normalization-json`.
+
+[Shared classification workflow](../../../../utils/tools/classification_conversion/README.md).
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

@@ -140,7 +140,7 @@ class BindingTests(unittest.TestCase):
             "s600": "nash-p/dinov2_vits14_224_int16_nashp.hbm",
         }
         self.assertEqual(
-            {asset.filename for asset in list_available_assets()}, set(expected.values())
+            {asset.filename for asset in list_available_assets() if not asset.filename.endswith("_20261102_o1.hbm")}, set(expected.values())
         )
         for target, filename in expected.items():
             selection = resolve_selection(target)
@@ -506,3 +506,40 @@ class SimplifiedRuntimeTests(unittest.TestCase):
         base = ROOT / "samples/vision/dinov2/runtime/python"
         for name in ("model_binding.py", "model_runner.py", "tensor_io.py"):
             self.assertFalse((base / name).exists(), name)
+
+
+class ConvertedSelectionTests(unittest.TestCase):
+    def test_partial_publications_keep_defaults_and_require_explicit_selection(self):
+        from dataclasses import replace
+        from samples.vision.dinov2.runtime.python import cli
+        from samples.vision.dinov2.runtime.python.embedding import bind_model
+        from samples.vision.dinov2.model import download
+        old = tuple(a for a in cli.list_available_assets() if not a.filename.endswith('_20261102_o1.hbm'))
+        new = tuple(replace(a, filename=a.filename.replace('.hbm', '_20261102_o1.hbm'), sha256='a' * 64) for a in old)
+        for count in (1, 2, 3):
+            with self.subTest(published=count), patch.object(cli, 'list_assets', return_value=old + new[:count]):
+                self.assertEqual(len(cli.list_available_assets()), 3 + count)
+                for target in cli.SUPPORTED_TARGETS:
+                    legacy = next(a for a in old if a.filename == cli._expected_filename(target))
+                    self.assertEqual(cli.resolve_selection(target).asset, legacy)
+                    converted = next((a for a in new[:count] if a.filename == cli._expected_filename(target, 'vits14_224_int16_20261102_o1')), None)
+                    if converted is None:
+                        with self.assertRaises(ValueError):
+                            cli.resolve_selection(target, variant='vits14_224_int16_20261102_o1')
+                        continue
+                    selection = cli.resolve_selection(target, variant='vits14_224_int16_20261102_o1')
+                    self.assertEqual(selection.asset, converted)
+                    self.assertEqual(cli.resolve_selection(target, asset_id=converted.reference).asset, converted)
+                    self.assertEqual(set(bind_model(selection, metadata('F32')).output_transforms.values()), {'raw_f32'})
+                    with self.assertRaises(ValueError):
+                        cli.resolve_selection(target, asset_id=converted.reference, variant='legacy')
+                    with patch.object(download, 'download_asset', return_value='a' * 64) as fetch, contextlib.redirect_stdout(io.StringIO()):
+                        download.download_target(target, '/tmp/dinov2-fixture', variant='vits14_224_int16_20261102_o1')
+                        self.assertEqual(fetch.call_args.args[0], converted)
+
+    def test_unpublished_variant_does_not_fall_back(self):
+        from samples.vision.dinov2.runtime.python import cli
+        old = tuple(a for a in cli.list_available_assets() if not a.filename.endswith('_20261102_o1.hbm'))
+        with patch.object(cli, 'list_assets', return_value=old):
+            with self.assertRaises(ValueError):
+                cli.resolve_selection('s100', variant='vits14_224_int16_20261102_o1')

@@ -3,7 +3,7 @@ English | [简体中文](README_cn.md)
 # Choose a sample by task
 
 
-Find models, conversion instructions and evaluation programs by task. There are 51 samples: 45 vision, three speech, one robotics policy and two language-model examples.
+Find models, conversion instructions and evaluation programs by task. There are 54 samples: 46 vision, three speech, one robotics policy and four language-model examples.
 
 ## Image classification
 
@@ -37,6 +37,7 @@ Find models, conversion instructions and evaluation programs by task. There are 
 | Sample | Conversion | Evaluation |
 |---|---|---|
 | [ultralytics_yolo](vision/ultralytics_yolo/README.md) | [conversion](vision/ultralytics_yolo/conversion/README.md) | [evaluator](vision/ultralytics_yolo/evaluator/README.md) |
+| [osnet](vision/osnet/README.md) | [conversion](vision/osnet/conversion/README.md) | [evaluator](vision/osnet/evaluator/README.md) |
 | [paddle_ocr](vision/paddle_ocr/README.md) | [conversion](vision/paddle_ocr/conversion/README.md) | [evaluator](vision/paddle_ocr/evaluator/README.md) |
 | [yoloe](vision/yoloe/README.md) | [conversion](vision/yoloe/conversion/README.md) | [evaluator](vision/yoloe/evaluator/README.md) |
 | [yolov5](vision/yolov5/README.md) | [conversion](vision/yolov5/conversion/README.md) | [evaluator](vision/yolov5/evaluator/README.md) |
@@ -90,10 +91,12 @@ HIMLoco reads prepared six-frame observations and saves the predicted actions.
 
 | Sample | Conversion | Evaluation |
 | --- | --- | --- |
+| [oellm](llm/oellm/README.md) | [conversion](llm/oellm/conversion/README.md) | [evaluator](llm/oellm/evaluator/README.md) |
+| [gemma4](llm/gemma4/README.md) | [conversion](llm/gemma4/conversion/README.md) | [evaluator](llm/gemma4/evaluator/README.md) |
 | [gemma4-e2b](llm/gemma4-e2b/README.md) | [conversion](llm/gemma4-e2b/conversion/README.md) | [evaluator](llm/gemma4-e2b/evaluator/README.md) |
 | [minicpm5-2b](llm/minicpm5-2b/README.md) | [conversion](llm/minicpm5-2b/conversion/README.md) | [evaluator](llm/minicpm5-2b/evaluator/README.md) |
 
-Gemma supports chat, HTTP serving and single-shot inference. MiniCPM5-2B provides separate S100/S100P (OELLM 1.0.0) and S600 (OELLM 2.0 beta) programs. See each sample for supported boards, model preparation and build commands.
+Gemma4 uses the official SDK 2.0.0 Runtime for S600 E2B/E4B W4/W8 text generation; gemma4-e2b retains the native C++ implementation. The gemma4-e2b sample supports chat, HTTP serving and single-shot inference. MiniCPM5-2B provides separate S100/S100P (OELLM 1.0.0) and S600 (OELLM 2.0 beta) programs. See each sample for supported boards, model preparation and build commands.
 
 ## ACT and Pi0
 

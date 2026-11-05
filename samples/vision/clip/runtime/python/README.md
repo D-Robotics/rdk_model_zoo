@@ -68,7 +68,8 @@ All default asset, image, and visualization paths are absolute paths derived fro
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
-| `--target` | str | `auto` | `auto`, `x5`, `s100`, `s100p`, or `s600`; only X5 has a published pair. |
+| `--target` | str | `auto` | `auto`, `x5`, `s100`, `s100p`, or `s600`; converted S pairs select their exact variant. |
+| `--variant` | str | `null` | Exact converted variant; omitted keeps the original default model. |
 | `--image-asset-id` | str | `None` | Exact image asset identity; required with `--image-model-path`. |
 | `--text-asset-id` | str | `None` | Exact text asset identity; required with `--text-model-path`. |
 | `--image-model-path` | str | `None` | Explicit local image `.bin` path; defaults to the manifest `img_encoder.bin`. |

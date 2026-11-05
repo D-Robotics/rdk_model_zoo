@@ -13,6 +13,17 @@ needs a rename step).  No exporter script and no
 
 from __future__ import annotations
 
+# Historical assertions exclude the new S profiles; test_s_classification_profiles
+# validates every new profile against its actual compiler ABI and source record.
+
+# Converted artifact fixtures extend, rather than replace, historical assertions.
+import json as _converted_json
+from pathlib import Path as _ConvertedPath
+_CONVERTED_MODELS = _converted_json.loads((_ConvertedPath(__file__).resolve().parents[1] / 'conversion/converted.json').read_text())['models']
+_CONVERTED_FILES = [row['job']['filename'] for row in _CONVERTED_MODELS]
+_CONVERTED_VARIANTS = [row['job']['variant'] for row in _CONVERTED_MODELS]
+
+
 import hashlib
 from pathlib import Path
 import re
@@ -118,10 +129,10 @@ class RecipeConsistencyTests(unittest.TestCase):
         # recipe keys keep the source spelling; the binding table's variant
         # ids are lowercase (unified-family convention)
         self.assertEqual(
-            set(BINDING_TABLE.filename_variants.values()),
-            {v.lower() for v in VARIANTS},
+            {v for v in BINDING_TABLE.filename_variants.values() if not v.endswith("-20261103")},
+            {v.lower() for v in VARIANTS} | set(_CONVERTED_VARIANTS),
         )
-        self.assertEqual(len(list_available_assets("auto")), 4)
+        self.assertEqual(len([r for r in list_available_assets("auto") if not r.variant.endswith("-20261103")]), 4 + len(_CONVERTED_MODELS))
 
     def test_int16_placement_counts_are_pinned(self):
         for variant, expected in INT16_PLACEMENTS.items():

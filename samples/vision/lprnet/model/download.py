@@ -8,23 +8,24 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from utils.py_utils.assets import download_asset, resolve_asset
+from utils.py_utils.assets import download_asset
+from samples.vision.lprnet.runtime.python.cli import SUPPORTED_TARGETS, resolve_selection
 
 
 ASSET_ID = "x5:lprnet:lpr.bin"
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Download the published LPRNet X5 model.")
-    parser.add_argument("--target", choices=("x5",), default="x5")
-    parser.add_argument("--asset-id", default=ASSET_ID)
+    parser = argparse.ArgumentParser(description="Download one exact published LPRNet model.")
+    parser.add_argument("--target", choices=SUPPORTED_TARGETS, default="x5")
+    parser.add_argument("--asset-id")
     parser.add_argument("--output-dir", type=Path, default=Path(__file__).resolve().parent)
     return parser
 
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
-    asset = resolve_asset(args.asset_id)
+    asset = resolve_selection(args.target, asset_id=args.asset_id).asset
     destination = args.output_dir / asset.filename
     digest = download_asset(asset, destination)
     print(f"Prepared {asset.reference} at {destination} (observed_sha256={digest})")

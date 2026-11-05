@@ -53,3 +53,63 @@ Files land at `samples/vision/mobileone/model/<filename>`. The default runtime s
 ## Formats and checksums
 
 For every file above: `format: bin`, `sha256: null (unknown)` in `docs/release/x5/models.yaml`. The downloader prints the computed digest after transfer; the manifest SHA-256 is `null (unknown)`.
+
+<!-- converted-batch-20261102 -->
+## Converted-only additions (2026-11-02)
+
+These independently converted timm weights have passed strict checkpoint loading,
+reparameterization and two-input PyTorch/ONNX host comparison, checker and compiler.
+Board smoke, accuracy, Runtime 1/2 and C++ 1/2 are **not-run**; historical metrics
+and screenshots do not describe these artifacts. Existing defaults are retained.
+Pillow is needed for the explicit bicubic shorter-edge 256 / rounded center crop
+224 profile. Normalization is fused in Mapper from the actual checkpoint config;
+output is float32 1,000-class logits followed by native softmax.
+
+| Variant | Artifact | Checkpoint revision | Board |
+|---|---|---|---|
+| `timm-s0-apple-in1k` | `mobileone_s0_apple_in1k_bayese_224x224_nv12.bin` | [`2f1da1a4433b`](https://huggingface.co/timm/mobileone_s0.apple_in1k/blob/2f1da1a4433b0636bace873cab611c9ee90d40de/README.md) | not-run |
+| `timm-s1-apple-in1k` | `mobileone_s1_apple_in1k_bayese_224x224_nv12.bin` | [`c4a13fe645a4`](https://huggingface.co/timm/mobileone_s1.apple_in1k/blob/c4a13fe645a42cbb683439dfb1934c815155f2a0/README.md) | not-run |
+| `timm-s2-apple-in1k` | `mobileone_s2_apple_in1k_bayese_224x224_nv12.bin` | [`0cd6548c3117`](https://huggingface.co/timm/mobileone_s2.apple_in1k/blob/0cd6548c311753d2dd525d414c22fce35738264c/README.md) | not-run |
+| `timm-s3-apple-in1k` | `mobileone_s3_apple_in1k_bayese_224x224_nv12.bin` | [`29a687f5d735`](https://huggingface.co/timm/mobileone_s3.apple_in1k/blob/29a687f5d735adb9ee23667dce14b60e8eaa6e88/README.md) | not-run |
+| `timm-s4-apple-in1k` | `mobileone_s4_apple_in1k_bayese_224x224_nv12.bin` | [`f4dfe4c260ea`](https://huggingface.co/timm/mobileone_s4.apple_in1k/blob/f4dfe4c260ea8d7d07ac6c06042fe254efdd329a/README.md) | not-run |
+
+```bash
+python3 samples/vision/mobileone/model/download.py --target x5 --variant timm-s0-apple-in1k
+python3 samples/vision/mobileone/runtime/python/main.py --target x5 --variant timm-s0-apple-in1k --dry-run
+```
+
+Exact model URLs/SHA-256/size are in `docs/release/x5/models.yaml`; source and host
+receipts are in `conversion/converted.json`. Each weight retains its own model
+license in its public release manifest. No board result is implied by download.
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+These independent profiles passed conversion, complete OE collection and actual HBM metadata binding. Source weights, graphs, per-target recipes, calibration counts and digests are in [converted_targets_20261103.json](../conversion/converted_targets_20261103.json).
+
+| Target | Native variant | Components | Calibration photographs |
+| --- | --- | --- | ---: |
+| s100 | `timm-s0-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-s0-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-s0-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-s1-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-s1-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-s1-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-s2-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-s2-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-s2-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-s3-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-s3-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-s3-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-s4-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-s4-apple-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-s4-apple-in1k-s-int16-o1-20261103` | model | 200 |
+
+```bash
+python3 samples/vision/mobileone/model/download.py --target s100 --variant timm-s0-apple-in1k-s-int16-o1-20261103
+python3 samples/vision/mobileone/runtime/python/main.py --target s100 --variant timm-s0-apple-in1k-s-int16-o1-20261103 --asset-id s:mobileone:s100/mobileone_s0_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --model-path /path/to/mobileone_s0_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --test-img samples/vision/mobileone/test_data/tiger_beetle.JPEG
+```
+
+Substitute the actual file paths. Multi-component tasks require every component together. Historical defaults and measurements retain their original identities. Board smoke, dataset accuracy, Runtime 1/2 and C++ 1/2 are `not-run` for these profiles.

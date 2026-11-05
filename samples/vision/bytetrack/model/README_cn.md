@@ -2,6 +2,15 @@
 
 # ByteTrack 模型制品
 
+重新转换的 `yolov5x-v7-672-nv12-int16-cpuptq-o1-20261104-r02` 为 S100、S100P、S600 分别提供新版 Archive 文件和已登记的 SHA-256。准备和推理都要显式选择该变体；将以下 `s100` 换成实际目标：
+
+```bash
+python3 -m samples.vision.bytetrack.model.download --target s100 --variant yolov5x-v7-672-nv12-int16-cpuptq-o1-20261104-r02
+python3 -m samples.vision.bytetrack.runtime.python.main --target s100 --variant yolov5x-v7-672-nv12-int16-cpuptq-o1-20261104-r02 --input /path/to/video.mp4 --output /path/to/result.mp4
+```
+
+新组合使用原始 F32 检测头，板端精度、性能仍为 not-run。下列表格和默认命令保留历史交付信息。
+
 <a id="artifacts"></a>
 ## 制品清单
 
@@ -27,7 +36,7 @@ ByteTrack 使用 YOLOv5 检测模型，跟踪部分在 CPU 上执行。X5 复用
 | S100P | `s:bytetrack:s100p/yolov5x_672x672_nv12.hbm` | `s100p/yolov5x_672x672_nv12.hbm` | 未发布（无归档文件） | — |
 | S600 | `s:bytetrack:s600/yolov5x_672x672_nv12.hbm` | `s600/yolov5x_672x672_nv12.hbm` | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
 
-表中 `null` 表示发布方未提供 SHA-256。S100P 检测模型没有发布文件：请按[转换指南](../conversion/README_cn.md)为 nash-m 架构转换 672×672 YOLOv5x HBM，并配合上表 S100P 的 `--asset-id` 与 `--model-path` 运行。
+表中 `null` 表示发布方未提供 SHA-256。历史 x-672 的 S100P 检测模型没有发布文件：请按[转换指南](../conversion/README_cn.md)为 nash-m 架构转换 672×672 YOLOv5x HBM，并配合上表 S100P 的 `--asset-id` 与 `--model-path` 运行。
 
 <a id="directory"></a>
 ## 目录结构
@@ -57,7 +66,7 @@ python3 -m samples.vision.bytetrack.model.download \
   --target s100 --output-dir samples/vision/bytetrack/model
 ```
 
-下载完成后显示模型标识、保存路径和文件 SHA-256。上述 S100 命令将模型保存到 `samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm`。S600 使用 `--target s600` 下载。S100P 没有已发布检测模型：请按[转换指南](../conversion/README_cn.md)转换 nash-m HBM，放到 `samples/vision/bytetrack/model/s100p/yolov5x_672x672_nv12.hbm`，并传入 `--model-path` 与表中 S100P 的 asset ID。
+下载完成后显示模型标识、保存路径和文件 SHA-256。上述 S100 命令将模型保存到 `samples/vision/bytetrack/model/s100/yolov5x_672x672_nv12.hbm`。S600 使用 `--target s600` 下载。历史 x-672 的 S100P 没有已发布检测模型：请按[转换指南](../conversion/README_cn.md)转换 nash-m HBM，放到 `samples/vision/bytetrack/model/s100p/yolov5x_672x672_nv12.hbm`，并传入 `--model-path` 与表中 S100P 的 asset ID。
 
 <a id="accompanying-files"></a>
 ## 伴随文件

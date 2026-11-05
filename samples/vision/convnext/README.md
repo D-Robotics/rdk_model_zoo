@@ -34,8 +34,9 @@ blocks](./test_data/ConvNeXt_Block.png)
 
 *Figure: block comparison from the ConvNeXt paper — Swin Transformer
 block (left), ResNet block (middle), ConvNeXt block (right). The figure
-shows the upstream training architecture; the artifact deployed on X5 is
-the INT8-quantized atto variant at 224×224 NV12 (see
+shows the upstream training architecture; the default X5 artifact is
+the INT8-quantized atto variant at 224×224 NV12. Nano, Pico, and Femto
+are published at the same input (see
 [Support matrix](#support-matrix)).*
 
 Start with `runtime/python/main.py`; `classify.py` holds the model stages and `cli.py` handles options and results.
@@ -66,11 +67,15 @@ unpublished combination.
 | Model | Input | X5 | S100 | S100P | S600 |
 | --- | --- | --- | --- | --- | --- |
 | ConvNeXt-atto | 224x224 | ✓ | — | — | — |
+| ConvNeXt-nano | 224x224 | ✓ | — | — | — |
+| ConvNeXt-pico | 224x224 | ✓ | — | — | — |
+| ConvNeXt-femto | 224x224 | ✓ | — | — | — |
+| ConvNeXt-atto-d2 (converted / 板端待测) | 224x224 | ✓ | — | — | — |
 
-Runtime coverage: the Python CLI serves the published combination with
-`--target auto|x5` and `--variant atto`. Only the X5 archive publishes
-`ConvNeXt_atto_224x224_nv12.bin`; `--target s100`, `s100p` and `s600`
-resolve no asset. The sample ships no C++ runtime.
+Runtime coverage: the Python CLI serves the published combinations with
+`--target auto|x5` and `--variant atto|nano|pico|femto|atto-d2`. The default
+variant is `atto`. `--target s100`, `s100p` and `s600` resolve no asset.
+The sample ships no C++ runtime.
 
 <a id="prerequisites"></a>
 ## Prerequisites
@@ -113,7 +118,8 @@ python3 samples/vision/convnext/runtime/python/main.py \
   --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-The default variant is `atto`. Full commands:
+The default variant is `atto`. Nano, Pico, and Femto are selected with
+`--variant`. Full commands:
 [runtime/python/README.md](runtime/python/README.md).
 
 <a id="expected-results"></a>
@@ -134,20 +140,22 @@ cheetah.JPEG, score 0.8048811](./test_data/inference.png)
 <a id="performance"></a>
 ## Performance data
 
-Published performance of the ConvNeXt series on RDK X5 (X5 release
+Measurements recorded for the ConvNeXt series on RDK X5 (X5 release
 x5-v1.1.3; Float Top-1 on the pre-quantization ONNX, Quant Top-1 on the
 deployment model; latency single-frame single-thread single-core, FPS
 4-thread concurrent; CPU 8xA55@1.8GHz performance mode, BPU
-1xBayes-e@1GHz):
+1xBayes-e@1GHz). The download script and the quick start above default to
+ConvNeXt Atto. Nano, Pico, and Femto are published bins with the same
+recorded numbers.
 
-| Model | Size | Classes | Params (M) | Float Top-1 | Quant Top-1 | Latency (ms) | FPS |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ |
-| ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ |
-| ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ |
-| ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ |
+| Model | Size | Classes | Params (M) | Float Top-1 | Quant Top-1 | Latency (ms) | FPS | Artifact |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ | `ConvNeXt_atto_224x224_nv12.bin` |
+| ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ | `ConvNeXt_nano_224x224_nv12.bin` |
+| ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ | `ConvNeXt_pico_224x224_nv12.bin` |
+| ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ | `ConvNeXt_femto_224x224_nv12.bin` |
 
-All rows are quoted from the published X5 release table. Prepare the atto artifact using [model/README.md](model/README.md); [conversion/](conversion/README.md) also documents the nano and femto PTQ configurations.
+Numbers are unchanged from the X5 release table. Prepare an artifact with [model/README.md](model/README.md). Pico has no PTQ config in this sample. [conversion/](conversion/README.md) has reference PTQ configs for nano and femto; those YAML recipes are not the published bins.
 
 <a id="entry-points"></a>
 ## Entry points
@@ -165,3 +173,54 @@ source models are the upstream ConvNeXt distribution
 ([facebookresearch/ConvNeXt](https://github.com/facebookresearch/ConvNeXt));
 upstream model/weights licensing is governed by that distribution.
 Published artifact use follows the applicable platform release terms.
+
+## Atto D2 converted artifact (2026-11-02)
+
+`atto-d2` is a separate conversion of [timm/convnext_atto.d2_in1k](https://huggingface.co/timm/convnext_atto.d2_in1k/tree/435c0a8d02d5b872e90c8cde36887465982cb399) (Apache-2.0), pinned to `435c0a8d02d5b872e90c8cde36887465982cb399`. The default `atto` and the four historical artifacts retain their identities and measurements.
+
+The new 4,528,264-byte BIN has SHA-256 `c334e6c87ae202a0ef8d78b4506ecdab7fafb4684ce720fc4407f9bf990ea101`. Export and host PyTorch/ONNX comparison passed; board smoke, accuracy, Runtime 1/2 and C++ 1/2 are **not-run**. Historical performance tables do not describe this file. Its preprocessing is Pillow bicubic resize (shorter edge 256), rounded center crop 224, then OpenCV BT.601 video-range NV12. Mapper fuses ImageNet normalization. Output is float32 logits for 1,000 classes; runtime applies softmax. Pillow is required for this variant.
+
+```bash
+# From the repository root; download and verify the registered artifact.
+python3 samples/vision/convnext/model/download.py --target x5 --variant atto-d2
+# Inspect the contract on a host; no SDK, download or board inference.
+python3 samples/vision/convnext/runtime/python/main.py --target x5 --variant atto-d2 --dry-run
+# On a prepared X5 board; not executed for this converted-only release.
+python3 samples/vision/convnext/runtime/python/main.py \
+  --target x5 --asset-id x5:convnext:convnext_atto_d2_bayese_224x224_nv12.bin \
+  --model-path samples/vision/convnext/model/convnext_atto_d2_bayese_224x224_nv12.bin \
+  --test-img samples/vision/convnext/test_data/cheetah.JPEG
+```
+
+<!-- converted-batch-20261102 -->
+## Converted-only additions (2026-11-02)
+
+These independently converted timm weights have passed strict checkpoint loading,
+reparameterization and two-input PyTorch/ONNX host comparison, checker and compiler.
+Board smoke, accuracy, Runtime 1/2 and C++ 1/2 are **not-run**; historical metrics
+and screenshots do not describe these artifacts. Existing defaults are retained.
+Pillow is needed for the explicit bicubic shorter-edge 256 / rounded center crop
+224 profile. Normalization is fused in Mapper from the actual checkpoint config;
+output is float32 1,000-class logits followed by native softmax.
+
+| Variant | Artifact | Checkpoint revision | Board |
+|---|---|---|---|
+| `timm-femto-d1-in1k` | `convnext_femto_d1_in1k_bayese_224x224_nv12.bin` | [`1e0c02df687c`](https://huggingface.co/timm/convnext_femto.d1_in1k/blob/1e0c02df687c47abf0819e1a4f858293e17e0c50/README.md) | not-run |
+| `timm-pico-d1-in1k` | `convnext_pico_d1_in1k_bayese_224x224_nv12.bin` | [`0d879cb0cfd9`](https://huggingface.co/timm/convnext_pico.d1_in1k/blob/0d879cb0cfd9b851a13f007d3ed170dd049f1476/README.md) | not-run |
+| `timm-nano-d1h-in1k` | `convnext_nano_d1h_in1k_bayese_224x224_nv12.bin` | [`fe9cba6df2f1`](https://huggingface.co/timm/convnext_nano.d1h_in1k/blob/fe9cba6df2f17352639e23ca89e1aa6b37f51462/README.md) | not-run |
+
+```bash
+python3 samples/vision/convnext/model/download.py --target x5 --variant timm-femto-d1-in1k
+python3 samples/vision/convnext/runtime/python/main.py --target x5 --variant timm-femto-d1-in1k --dry-run
+```
+
+Exact model URLs/SHA-256/size are in `docs/release/x5/models.yaml`; source and host
+receipts are in `conversion/converted.json`. Each weight retains its own model
+license in its public release manifest. No board result is implied by download.
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Independent converted profiles and explicit commands are listed in [model preparation](model/README.md). Board accuracy and performance are not measured yet.

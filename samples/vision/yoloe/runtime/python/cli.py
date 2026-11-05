@@ -29,6 +29,21 @@ SAMPLE_DIR = Path(__file__).resolve().parents[2]
 
 
 DEFAULTS = {"x5": "11s", "s100": "11s", "s100p": "26n"}
+CONVERTED_X5 = {
+    "yoloe_11s_seg_pf_bayese_640x640_nv12_float_20261102.bin": (
+        "11s-native-20261102",
+        "352e8b8e4b445a8223c2a76a7fdad5594b3317a6ea04e47cd70bdc2066fdc7df",
+    ),
+}
+CONVERTED_S = {'nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12_float_cal32_20261103_o1.hbm': ('26n-native-cal32-20261103-o1', '00340e52995a559be99fce15909babc7cad09e66785f8a596ab71f67bdeb61c4')}
+_converted_path = SAMPLE_DIR / 'model/converted_assets.json'
+if _converted_path.exists():
+    _converted = json.loads(_converted_path.read_text())
+    if _converted.get('sample') != 'yoloe':
+        raise ValueError('Invalid converted YOLOE registry.')
+    for _variant, _targets in _converted['profiles'].items():
+        for _entry in _targets.values():
+            CONVERTED_S[_entry['filename']] = (_variant,_entry['sha256'])
 
 
 @dataclass(frozen=True)
@@ -45,7 +60,7 @@ class Selection:
 
     @property
     def published_float(self):
-        return self.target == "x5"
+        return self.target == "x5" or self.asset.filename in CONVERTED_S
 
 
 def list_models(target=None):
@@ -55,6 +70,17 @@ def list_models(target=None):
     rows = []
     for group, sample in [("x5", "yoloe"), ("s", "yoloe11_seg"), ("s", "yoloe26_seg")]:
         for asset in list_assets(group, sample):
+            converted = (CONVERTED_X5 if group == "x5" else CONVERTED_S).get(asset.filename)
+            if converted is not None:
+                variant, digest = converted
+                if asset.sha256 != digest or asset.format != ("bin" if group == "x5" else "hbm"):
+                    raise ValueError(f"Converted YOLOE identity mismatch: {asset.reference}.")
+                concrete = "x5" if group == "x5" else {
+                    "nash-e":"s100", "nash-m":"s100p", "nash-p":"s600"
+                }[asset.filename.split('/')[0]]
+                if target in (None, "auto", concrete):
+                    rows.append((concrete, variant, asset))
+                continue
             match = re.fullmatch(
                 r"(?:nash-[em]/)?yoloe_(11[sml]|26[nslmx])_seg_pf_(bayese|nashe|nashm)_640x640_nv12\.(bin|hbm)",
                 asset.filename,
@@ -123,7 +149,7 @@ def build_parser():
     p.add_argument(
         "--variant",
         default=None,
-        help="11s/m/l or 26n/s/m/l/x; defaults x5/s100=11s, s100p=26n.",
+        help="11s/m/l, 26n/s/m/l/x, or x5 11s-native-20261102; defaults unchanged.",
     )
     p.add_argument(
         "--asset-id", default=None, help="Exact original publication identity."
@@ -177,7 +203,7 @@ def run_list_models(target) -> int:
                     "target": t,
                     "variant": v,
                     "asset_id": a.reference,
-                    "published_float": t == "x5",
+                    "published_float": t == "x5" or a.filename in CONVERTED_S,
                 }
                 for t, v, a in list_models(target)
             ],

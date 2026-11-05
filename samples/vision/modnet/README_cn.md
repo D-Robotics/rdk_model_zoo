@@ -29,14 +29,16 @@ modnet/
 | 目标板卡 | variant | Python | C++ | 状态 |
 |---|---|---|---|---|
 | X5 | `modnet_512x512_rgb.bin` | supported | not-supported | 制品需手工准备，见[模型准备](model/README_cn.md) |
-| S100/S100P/S600 | — | not-supported | not-supported | 没有源制品 |
+| S100/S100P/S600 | `photographic-portrait-512-s-o1-20261103` | Native 绑定已核验 | not-supported | HBM 已转换；板端运行、精度与性能 `not-run` |
 
 本示例没有 C++ 实现。
+
+公开摄影人像模型的独立转换配方见[转换说明](conversion/README_cn.md)。新文件 `modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin` 使用精确 asset ID `x5:modnet:modnet_photographic_portrait_512x512_rgb_bayese_20261102.bin`，与旧手工模型保持独立。新模型的板端性能和精度待补测，后文历史数据不代表新模型。
 
 <a id="prerequisites"></a>
 ## 环境前提
 
-板端运行需要带 `hbm_runtime` 的 RDK X5、NumPy 和 OpenCV。必须精确准备外部模型 `x5:modnet:modnet_512x512_rgb.bin`；active 清单没有 URL，且 `sha256: null (unknown)`。模型契约为 float32 RGB NCHW `(1,3,512,512)` 输入和 float32 `(1,1,512,512)` matte 输出。
+板端运行需要所选 RDK X5/S100/S100P/S600 对应的 `hbm_runtime`、NumPy 和 OpenCV。历史默认仍需精确准备外部模型 `x5:modnet:modnet_512x512_rgb.bin`；active 清单没有 URL，且 `sha256: null (unknown)`。模型契约为 float32 RGB NCHW `(1,3,512,512)` 输入和 float32 `(1,1,512,512)` matte 输出。
 
 <a id="quickstart"></a>
 ## 快速体验
@@ -48,7 +50,7 @@ python3 -m samples.vision.modnet.runtime.python.main --target x5 \
   --asset-id x5:modnet:modnet_512x512_rgb.bin
 ```
 
-命令读取 `test_data/person.jpg`，写出 `test_data/matte.png`；当 `test_data/bg.jpg` 存在时同时写出 `test_data/result.png`。成功判断为退出码 `0` 且 JSON 列出输出路径。该 manual 制品没有可用下载器；`model/download.py` 只打印精确准备要求并返回 `2`。
+命令读取 `test_data/person.jpg`，写出 `test_data/matte.png`；当 `test_data/bg.jpg` 存在时同时写出 `test_data/result.png`。成功判断为退出码 `0` 且 JSON 列出输出路径。该 manual 制品没有可用下载器；`model/download.py` 对旧手工模型打印准备要求并返回 `2`；显式选择已发布摄影人像制品时通过清单下载。
 
 <a id="expected-results"></a>
 ## 预期结果
@@ -79,3 +81,9 @@ matte 是与原图高宽相同的 8-bit 灰度 PNG；可选合成图是保持原
 ## 许可
 
 本示例脚本和仓库文件遵循 Apache-2.0。MODNet 源许可声明、论文和上游工程仍归其作者所有。外部 manual 模型没有随源提供模型许可或发布者 checksum。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+本轮新增的独立规格和显式命令见 [模型准备](model/README_cn.md)。板端精度与性能尚未实测。

@@ -216,6 +216,15 @@ int main(int argc, char **argv) {
     expect(tasks == before);
   }
   setup(e26);
+#ifdef YOLO_DNN_STACK_X5
+  {
+    auto converted = spec;
+    converted.variant = "11s-native-20261102";
+    yoloe::SdkRunner runner(converted, gate);
+    expect(runner.full_range_nv12());
+  }
+  setup(e26);
+#endif
   rejects([&] { yoloe::SdkRunner runner(spec, {}); });
   expect(models == 0);
   rejects([&] {

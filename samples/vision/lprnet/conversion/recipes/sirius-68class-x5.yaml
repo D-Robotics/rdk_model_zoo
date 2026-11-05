@@ -1,0 +1,27 @@
+model_parameters:
+  march: bayes-e
+  output_model_file_prefix: lprnet_sirius_68class_24x94_bgr_featuremap_defaultptq_o2_20261104_bayese
+  working_dir: output
+  layer_out_dump: false
+  onnx_model: model.onnx
+input_parameters:
+  input_name: images
+  input_type_train: featuremap
+  input_layout_train: NCHW
+  input_shape: 1x3x24x94
+  input_type_rt: featuremap
+  input_batch: 1
+  norm_type: no_preprocess
+  input_layout_rt: NCHW
+calibration_parameters:
+  calibration_type: default
+  cal_data_dir: calibration-bin
+  cal_data_type: float32
+compiler_parameters:
+  compile_mode: latency
+  debug: true
+  core_num: 1
+  optimize_level: O2
+  input_source:
+    images: ddr
+  jobs: 2

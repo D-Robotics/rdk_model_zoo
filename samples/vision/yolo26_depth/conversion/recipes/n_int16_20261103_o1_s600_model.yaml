@@ -1,0 +1,28 @@
+model_parameters:
+  onnx_model: ./export/yolo26n-depth_op11_log.onnx
+  march: nash-p
+  layer_out_dump: false
+  working_dir: ./compiled/model
+  output_model_file_prefix: yolo26n_depth_nashp_768x768_nv12_int16_20261103_o1
+input_parameters:
+  input_name: images
+  input_type_rt: nv12
+  input_type_train: rgb
+  input_layout_train: NCHW
+  input_shape: 1x3x768x768
+  norm_type: data_scale
+  scale_value: 0.003921568627451
+calibration_parameters:
+  cal_data_dir: ./calibration/calibration
+  cal_data_type: float32
+  calibration_type: max
+  max_percentile: 0.9999
+  optimization: set_all_nodes_int16
+compiler_parameters:
+  extra_params:
+    input_no_padding: true
+    output_no_padding: true
+  jobs: 2
+  compile_mode: latency
+  debug: true
+  optimize_level: O1

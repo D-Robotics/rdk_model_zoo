@@ -1,4 +1,13 @@
+# New S profiles have separate actual-ABI coverage in test_s_classification_profiles.
 """RepViT host acceptance tests; no inference on hardware."""
+
+# Converted artifact fixtures extend, rather than replace, historical assertions.
+import json as _converted_json
+from pathlib import Path as _ConvertedPath
+_CONVERTED_MODELS = _converted_json.loads((_ConvertedPath(__file__).resolve().parents[1] / 'conversion/converted.json').read_text())['models']
+_CONVERTED_FILES = [row['job']['filename'] for row in _CONVERTED_MODELS]
+_CONVERTED_VARIANTS = [row['job']['variant'] for row in _CONVERTED_MODELS]
+
 from pathlib import Path
 import contextlib
 import importlib.util
@@ -15,6 +24,8 @@ from utils.py_utils.tests.legacy_platforms import legacy_path, legacy_tree  # no
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / 'samples/vision/repvit'
 FILENAMES = {'m0_9': 'RepViT_m0_9_224x224_nv12.bin', 'm1_0': 'RepViT_m1_0_224x224_nv12.bin', 'm1_1': 'RepViT_m1_1_224x224_nv12.bin'}
+HISTORICAL_VARIANTS = tuple(FILENAMES)
+FILENAMES.update({row['job']['variant']: row['job']['filename'] for row in _CONVERTED_MODELS})
 VARIANTS = tuple(FILENAMES)
 
 
@@ -29,7 +40,7 @@ class EntryTests(unittest.TestCase):
     def test_default_and_all_published_variants(self):
         from samples.vision.repvit.runtime.python.cli import resolve_selection, list_available_assets
         self.assertEqual(resolve_selection('x5').variant, 'm0_9')
-        self.assertEqual({r.filename for r in list_available_assets()}, set(FILENAMES.values()))
+        self.assertEqual({r.filename for r in list_available_assets() if not r.variant.endswith("-20261103")}, set(FILENAMES.values()))
         for v in VARIANTS:
             selected = resolve_selection('x5', variant=v)
             self.assertEqual(selected.asset_id, f'x5:repvit:{FILENAMES[v]}')
@@ -157,7 +168,7 @@ class SourceComparisonTests(unittest.TestCase):
     def test_conversion_recipes_remain_identical_to_source(self):
         source = legacy_tree('x5/samples/vision/repvit/conversion')
         recipes = list(source.glob('*.yaml'))
-        self.assertEqual(len(recipes), len(VARIANTS))
+        self.assertEqual(len(recipes), len(HISTORICAL_VARIANTS))
         for recipe in recipes:
             self.assertEqual((SAMPLE/'conversion'/recipe.name).read_bytes(), recipe.read_bytes())
 

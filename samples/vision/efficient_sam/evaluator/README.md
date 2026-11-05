@@ -76,6 +76,16 @@ The following values are source measurements from the source evaluator READMEs:
 | S600 | encoder | 1 / 12 | 6.72 / 19.58 | 148.60 / 598.44 |
 | S600 | decoder | 1 / 12 | 1.50 / 4.08 | 662.55 / 2831.10 |
 
+### X5 quantization cosine (source record)
+
+Recorded from the `rdk_x5` Validation section. The source did not name the reference tensor or image count.
+
+| Artifact | Scope | cosine |
+| --- | --- | --- |
+| `efficient_sam_vitt_encoder_512x512_default_none.bin` | encoder final | 0.968013 |
+| `efficient_sam_vitt_decoder_fixedprompt_512_default.bin` | fixed-prompt `low_res_masks` | 0.965641 |
+| `efficient_sam_vitt_decoder_fixedprompt_512_default.bin` | fixed-prompt `iou_predictions` | 0.997313 |
+
 A successful local or board invocation is the reference evidence for its selected target and prepared pair; preserve the complete output directory for review.
 
 ### Per-model performance measurement
@@ -108,9 +118,9 @@ for STAGE_MODEL in "$ENCODER" "$DECODER"; do
 done
 ```
 
-The X5 source used the tool's default 200 frames. The S source did not record a frame count; capture the frame count and tool/SDK versions when retesting. S100/S100P use 2 threads for throughput, S600 uses 12 with explicit `--core_id 1,2,3,4`. Do not copy this tool's core IDs into the Python runtime's `--bpu-cores` option. Preserve the complete commands, tool/system versions, board identity and output when retesting, not only the FPS summary.
+The X5 source used the tool's default 200 frames; the S source did not record a frame count. S100/S100P use 2 threads for throughput, S600 uses 12 with explicit `--core_id 1,2,3,4`. This tool's core IDs do not map to the Python runtime's `--bpu-cores` option.
 
-### Measurement conditions (source-recorded)
+### Measurement conditions
 
 The S source tables also record the following model facts. Parameter counts and FLOPs describe the original FP32 models, not the compiled artifact size. FLOPs use `2×MACs`. Classes are `-` (class agnostic); CPU pre/post-processing latency was not reported.
 
@@ -119,7 +129,7 @@ The S source tables also record the following model facts. Parameter counts and 
 | encoder | RGB 512×512 | 6.16 | 22.19 |
 | decoder | 256×32×32 embedding | 4.06 | 0.98 |
 
-The S source defines BPU task latency from submission to completion, including cache warmup; streaming measurements reuse preallocated buffers and exclude allocation/deallocation. Inputs are float32 tensors, not NV12. The stages execute sequentially, and end-to-end latency also includes CPU preprocessing and mask resizing. Per-stage FPS is not whole-sample throughput. These are the source-recorded conditions; measure this implementation with the same definitions on the target board.
+The S source defines BPU task latency from submission to completion, including cache warmup; streaming measurements reuse preallocated buffers and exclude allocation/deallocation. Inputs are float32 tensors, not NV12. The stages execute sequentially, and end-to-end latency also includes CPU preprocessing and mask resizing. Per-stage FPS is not whole-sample throughput. The same definitions apply to this implementation on the target board.
 
 <a id="boundaries"></a>
 ## Scope

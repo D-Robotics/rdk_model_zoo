@@ -414,3 +414,17 @@ print("Gather-only rewrite validated; input model preserved")
   任意随机隐藏向量会产生明显更大的 Torch/ONNX Runtime 差异，不满足导出容差；
   检查定义在真实特征 context 上。
 - 两条语音的校准准备只是流程示例；实际量化应提供代表性的 16 kHz WAV 集合。
+
+## Explicit O1 conversion-only profile
+
+The new S100 profile uses the same complete trained8404-class contextual Paraformer source, fixed encoder/predictor/decoder graphs and50 real Mandarin MInDS14 training WAVs. Export gates compare all stage outputs against the exact source PyTorch model; connected host inference checks real frontend→three ONNX stages→masked CPU CIF→greedy text against the complete source pipeline on three real utterances and seed42 random features. These are host reference checks, not CER. MInDS14 calibration is telephone/e-banking speech and does not establish general ASR accuracy.
+
+Use a new workspace to select backend O1 explicitly; the historical default remains O2. The recorded choice, all effective YAMLs, graph and calibration files are checked again before compilation.
+
+```bash
+python3 -m samples.speech.paraformer.conversion.prepare --export-dir /path/to/checked-export --wav-dir /path/to/50-real-wavs --output-dir /path/to/new/o1-workspace --sample-count 50 --threads 2 --jobs 4 --optimize-level O1
+# Exact cached S SDK3.7.0 CPU container, 4 CPU budget / 28GiB limit:
+python3 -m samples.speech.paraformer.conversion.compile --workspace /path/to/new/o1-workspace --output-dir /path/to/new/o1-build
+```
+
+The long-running original O2 attempt is preserved as superseded, not a failed model. The O1 attempt performs fresh PTQ and does not reuse its BC. Actual tools are hb_compile3.5.3/HMCT2.6.5/HBDK4.7.5, INT16, one BPU core, four compiler jobs. All three accepted HBM interfaces, source/config/recipe hashes, full original NodeInfo/OE, tokens/CMVN/config and connected source evidence must be present before publication. A single encoder HBM is not the ASR package. Board smoke, CER, Runtime1/2 and C++1/2 remain `not-run`.

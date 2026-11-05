@@ -9,6 +9,8 @@ from unittest.mock import patch
 import cv2
 import numpy as np
 from samples.vision.depth_anything_v2.runtime.python.cli import (
+    ASSET_ID,
+    SMALL_ASSET_ID,
     resolve_selection,
     list_available_assets,
 )
@@ -63,17 +65,55 @@ def task(raw=None, mode=0):
 
 class DepthTests(unittest.TestCase):
     def test_exact_asset_and_target_rejection(self):
-        self.assertEqual(len(list_available_assets()), 1)
+        self.assertIn(ASSET_ID, [asset.reference for asset in list_available_assets()])
         s = resolve_selection("s100")
         self.assertTrue(str(s.model_path).endswith("model/s100/depth_any.hbm"))
-        for target in ("x5", "s100p", "s600"):
+        for target in ("x5",):
             self.assertEqual(list_available_assets(target), ())
+            with self.assertRaises(ValueError):
+                resolve_selection(target)
+        for target in ("s100p", "s600"):
+            self.assertTrue(list_available_assets(target))
+            selected = resolve_selection(target, variant="small-518x686-int16-20261103-o1")
+            self.assertEqual(selected.target, target)
+            self.assertRegex(selected.asset.sha256, r"^[0-9a-f]{64}$")
             with self.assertRaises(ValueError):
                 resolve_selection(target)
         with self.assertRaises(ValueError):
             resolve_selection("s100", model_path="/tmp/depth.hbm")
         with self.assertRaises(ValueError):
             resolve_selection("s100", asset_id="wrong")
+
+    def test_small_is_explicit_manifest_backed_and_uses_official_normalization(self):
+        legacy = resolve_selection("s100").asset
+        small = replace(legacy, filename=SMALL_ASSET_ID.split(":", 2)[2], sha256="a" * 64)
+        with patch("samples.vision.depth_anything_v2.runtime.python.cli.list_assets",
+                   return_value=(legacy, small)):
+            self.assertEqual(resolve_selection().asset.reference, ASSET_ID)
+            selected = resolve_selection("s100", variant="small-518x686-o1")
+            self.assertEqual(selected.asset.reference, SMALL_ASSET_ID)
+            self.assertEqual(resolve_selection(asset_id=SMALL_ASSET_ID), selected)
+            with self.assertRaises(ValueError):
+                resolve_selection(variant="legacy", asset_id=SMALL_ASSET_ID)
+            binding = bind_model(selected, metadata())
+            estimator = DepthEstimator(selected, runner=StubRunner(binding))
+            with self.assertRaises(ValueError):
+                DepthEstimator(selected, resize_type=1, runner=StubRunner(binding))
+            # Constant BGR pixel has a closed-form ImageNet-normalized RGB value.
+            image = np.full((13, 17, 3), [0, 127, 255], dtype=np.uint8)
+            value = estimator.preprocess(image).tensors["image"]
+            expected = (np.array([1, 127 / 255, 0]) - [0.485, 0.456, 0.406]) / [0.229, 0.224, 0.225]
+            np.testing.assert_allclose(value[0, :, 123, 456], expected, rtol=1e-6, atol=1e-6)
+            from samples.vision.depth_anything_v2.conversion.export_small import preprocess
+            varied = np.random.default_rng(22).integers(0, 256, (37, 51, 3), dtype=np.uint8)
+            np.testing.assert_array_equal(estimator.preprocess(varied).tensors["image"], preprocess(varied))
+
+    def test_small_cannot_resolve_without_its_manifest_entry(self):
+        legacy = resolve_selection("s100").asset
+        with patch("samples.vision.depth_anything_v2.runtime.python.cli.list_assets",
+                   return_value=(legacy,)):
+            with self.assertRaisesRegex(ValueError, "not published"):
+                resolve_selection(variant="small-518x686-o1")
 
     def test_metadata_binds_exact_source_geometry(self):
         for field, value in [

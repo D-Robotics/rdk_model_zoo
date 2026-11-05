@@ -1,0 +1,573 @@
+{
+  "schema_version": 1,
+  "status": "converted",
+  "profiles": [
+    {
+      "variant": "tv-r50-fpn-coco91-512-featuremap-int16-cpuptq-o1-20261105",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "source": {
+        "repository": "https://github.com/pytorch/vision",
+        "commit": "824e8c8726b65fd9d5abdc9702f81c2b0c4c0dc8",
+        "version": "v0.23.0",
+        "weights": "FCOS_ResNet50_FPN_Weights.COCO_V1",
+        "weight_url": "https://download.pytorch.org/models/fcos_resnet50_fpn_coco-99b0c9b7.pth",
+        "checkpoint": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/inputs/source_models/fcos/fcos_resnet50_fpn_coco-99b0c9b7.pth",
+          "sha256": "99b0c9b7cfb1527d782db86b91d207f00547c792fb4103fc612b651d0a07b9e7",
+          "size_bytes": 129612099
+        },
+        "license": "BSD-3-Clause"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/fcos_tv_r50_fpn_coco91_512_featuremap_int16_cpuptq_o1_20261105_nashe.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/fcos/fcos_tv_r50_fpn_coco91_512_featuremap_int16_cpuptq_o1_20261105_nashe.hbm",
+          "sha256": "bdb812603b134b9f32e1e2858d84f0770bb3a468be63e7988577daa082859373",
+          "size_bytes": 72961024,
+          "onnx_sha256": "c79483b0c449546b9eb6b3c668b1f566123770d64906ebf8525305ef6301356a",
+          "effective_config_sha256": "fc9eadebbd7a06a17dcae3d3098b0c1d6ef4599c80efb1be9b23a38075dc449a",
+          "recipe_sha256": "97ab372a49f93c934f52d6536ff69cffa96ca125d1c00e43e2885f0ec0244888",
+          "calibration_manifest_sha256": "4167a5d04d52712976fd4c399c0fd65e9448c9c7e72c3df624e814bbc0f7c90b",
+          "cpu_reference_float_gate": {
+            "status": "passed",
+            "report": {
+              "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/fcos-s100-prepare-r01/cpu-sdk-parity.json",
+              "sha256": "dd84e771f9ba79025ea11fa416af792d6df171945f38fecdbe3b608aa48d5881",
+              "size_bytes": 4947
+            }
+          }
+        }
+      },
+      "io": {
+        "inputs": [
+          {
+            "name": "images",
+            "shape": [
+              1,
+              3,
+              512,
+              512
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "cls_logits",
+            "shape": [
+              1,
+              5456,
+              91
+            ],
+            "dtype": "float32"
+          },
+          {
+            "name": "bbox_regression",
+            "shape": [
+              1,
+              5456,
+              4
+            ],
+            "dtype": "float32"
+          },
+          {
+            "name": "bbox_ctrness",
+            "shape": [
+              1,
+              5456,
+              1
+            ],
+            "dtype": "float32"
+          }
+        ]
+      },
+      "compiler_versions": {
+        "hbdk": "4.7.5",
+        "hmct": "2.6.5",
+        "hb_compile": "3.5.3"
+      },
+      "compiler_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+      "calibration_count": 200,
+      "host_export_report": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/fcos-source-export-r01/export.json",
+        "sha256": "a46dc38a7cde7753c78ea6c58d2e82b44010edf01aeab3c97f1d0aa963165195",
+        "size_bytes": 7819
+      },
+      "compile_receipt": {
+        "argv": [
+          "docker",
+          "run",
+          "--rm",
+          "--network",
+          "none",
+          "--cpus",
+          "2",
+          "--memory",
+          "18g",
+          "--shm-size",
+          "2g",
+          "--name",
+          "modelzoo-breadth-fcos-s100-cpuptq-20261105-r01",
+          "-v",
+          "/home/zhengyi/work/rdk_model_zoo_workbench:/home/zhengyi/work/rdk_model_zoo_workbench:ro",
+          "-v",
+          "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01:/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01",
+          "-w",
+          "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/fcos-s100-cpuptq-20261105-r01",
+          "-e",
+          "HBTL_THREAD_NUM=2",
+          "-e",
+          "OMP_NUM_THREADS=2",
+          "-e",
+          "MKL_NUM_THREADS=2",
+          "-e",
+          "OPENBLAS_NUM_THREADS=2",
+          "-e",
+          "OMP_WAIT_POLICY=PASSIVE",
+          "-e",
+          "GOMP_SPINCOUNT=0",
+          "-e",
+          "NVIDIA_TF32_OVERRIDE=0",
+          "--entrypoint",
+          "/bin/bash",
+          "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "-lc",
+          "hb_compile -c /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/fcos-s100-cpuptq-20261105-r01/config.yaml"
+        ],
+        "cwd": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/fcos-s100-cpuptq-20261105-r01",
+        "env": {
+          "HBTL_THREAD_NUM": "2",
+          "OMP_NUM_THREADS": "2",
+          "MKL_NUM_THREADS": "2",
+          "OPENBLAS_NUM_THREADS": "2",
+          "OMP_WAIT_POLICY": "PASSIVE",
+          "GOMP_SPINCOUNT": "0",
+          "NVIDIA_TF32_OVERRIDE": "0"
+        },
+        "image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+        "target": {
+          "platform": "s100",
+          "march": "nash-e"
+        },
+        "model": {
+          "source": "fcos",
+          "family": "fcos",
+          "task": "detect",
+          "size": "tv-r50-fpn-coco91-512-featuremap-int16-cpuptq-o1-20261105"
+        },
+        "role": "model",
+        "kind": "single",
+        "calibration_count": 200,
+        "onnx_sha256": "c79483b0c449546b9eb6b3c668b1f566123770d64906ebf8525305ef6301356a",
+        "config_sha256": "fc9eadebbd7a06a17dcae3d3098b0c1d6ef4599c80efb1be9b23a38075dc449a",
+        "host_report": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/fcos-source-export-r01/export.json",
+          "sha256": "a46dc38a7cde7753c78ea6c58d2e82b44010edf01aeab3c97f1d0aa963165195",
+          "size_bytes": 7819
+        },
+        "source_facts": {
+          "schema_version": 1,
+          "status": "passed",
+          "source": {
+            "repository": "https://github.com/pytorch/vision",
+            "commit": "824e8c8726b65fd9d5abdc9702f81c2b0c4c0dc8",
+            "version": "v0.23.0",
+            "weights": "FCOS_ResNet50_FPN_Weights.COCO_V1",
+            "weight_url": "https://download.pytorch.org/models/fcos_resnet50_fpn_coco-99b0c9b7.pth",
+            "checkpoint": {
+              "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/inputs/source_models/fcos/fcos_resnet50_fpn_coco-99b0c9b7.pth",
+              "sha256": "99b0c9b7cfb1527d782db86b91d207f00547c792fb4103fc612b651d0a07b9e7",
+              "size_bytes": 129612099
+            },
+            "license": "BSD-3-Clause"
+          },
+          "native_commit": "e3374646ac035a85fce07b21379c1b06e2f9b66d",
+          "onnx": {
+            "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/fcos-source-export-r01/model.onnx",
+            "sha256": "c79483b0c449546b9eb6b3c668b1f566123770d64906ebf8525305ef6301356a",
+            "size_bytes": 129362431
+          },
+          "exporter": {
+            "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/source/native-e3374646/utils/tools/torchvision_conversion.py",
+            "sha256": "c2828f60827432534143e23b4a3df45be0e1436cec8f53f8e4397a16af49aca5",
+            "size_bytes": 9761
+          },
+          "source_implementation": {
+            "path": "/home/zhengyi/app/miniconda3/envs/modelzoo-float/lib/python3.10/site-packages/torchvision/models/detection/fcos.py",
+            "sha256": "b316db1ea0dd0848ec828fa82028707197ac8f4bb7473ad287eba28feb693e28",
+            "size_bytes": 34216
+          },
+          "calibration_manifest": {
+            "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/fcos-source-export-r01/calibration.manifest.json",
+            "sha256": "4167a5d04d52712976fd4c399c0fd65e9448c9c7e72c3df624e814bbc0f7c90b",
+            "size_bytes": 135491
+          },
+          "parameter_count": 32322720,
+          "input": {
+            "name": "images",
+            "shape": [
+              1,
+              3,
+              512,
+              512
+            ],
+            "dtype": "float32"
+          },
+          "outputs": [
+            {
+              "name": "cls_logits",
+              "shape": [
+                1,
+                5456,
+                91
+              ],
+              "dtype": "float32"
+            },
+            {
+              "name": "bbox_regression",
+              "shape": [
+                1,
+                5456,
+                4
+              ],
+              "dtype": "float32"
+            },
+            {
+              "name": "bbox_ctrness",
+              "shape": [
+                1,
+                5456,
+                1
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "categories": [
+            "__background__",
+            "person",
+            "bicycle",
+            "car",
+            "motorcycle",
+            "airplane",
+            "bus",
+            "train",
+            "truck",
+            "boat",
+            "traffic light",
+            "fire hydrant",
+            "N/A",
+            "stop sign",
+            "parking meter",
+            "bench",
+            "bird",
+            "cat",
+            "dog",
+            "horse",
+            "sheep",
+            "cow",
+            "elephant",
+            "bear",
+            "zebra",
+            "giraffe",
+            "N/A",
+            "backpack",
+            "umbrella",
+            "N/A",
+            "N/A",
+            "handbag",
+            "tie",
+            "suitcase",
+            "frisbee",
+            "skis",
+            "snowboard",
+            "sports ball",
+            "kite",
+            "baseball bat",
+            "baseball glove",
+            "skateboard",
+            "surfboard",
+            "tennis racket",
+            "bottle",
+            "N/A",
+            "wine glass",
+            "cup",
+            "fork",
+            "knife",
+            "spoon",
+            "bowl",
+            "banana",
+            "apple",
+            "sandwich",
+            "orange",
+            "broccoli",
+            "carrot",
+            "hot dog",
+            "pizza",
+            "donut",
+            "cake",
+            "chair",
+            "couch",
+            "potted plant",
+            "bed",
+            "N/A",
+            "dining table",
+            "N/A",
+            "N/A",
+            "toilet",
+            "N/A",
+            "tv",
+            "laptop",
+            "mouse",
+            "remote",
+            "keyboard",
+            "cell phone",
+            "microwave",
+            "oven",
+            "toaster",
+            "sink",
+            "refrigerator",
+            "N/A",
+            "book",
+            "clock",
+            "vase",
+            "scissors",
+            "teddy bear",
+            "hair drier",
+            "toothbrush"
+          ],
+          "normalization": {
+            "scale": 0.00392156862745098,
+            "mean": [
+              0.485,
+              0.456,
+              0.406
+            ],
+            "std": [
+              0.229,
+              0.224,
+              0.225
+            ]
+          },
+          "geometry": "OpenCV INTER_LINEAR direct stretch 512x512",
+          "atol": 0.0001,
+          "rtol": 0.001,
+          "raw_wrapper_bit_exact": true,
+          "cases": [
+            {
+              "input": "real-0",
+              "comparisons": [
+                {
+                  "name": "cls_logits",
+                  "shape": [
+                    1,
+                    5456,
+                    91
+                  ],
+                  "dtype": "float32",
+                  "max_abs": 2.193450927734375e-05,
+                  "violations": 0,
+                  "passed": true
+                },
+                {
+                  "name": "bbox_regression",
+                  "shape": [
+                    1,
+                    5456,
+                    4
+                  ],
+                  "dtype": "float32",
+                  "max_abs": 2.574920654296875e-05,
+                  "violations": 0,
+                  "passed": true
+                },
+                {
+                  "name": "bbox_ctrness",
+                  "shape": [
+                    1,
+                    5456,
+                    1
+                  ],
+                  "dtype": "float32",
+                  "max_abs": 6.474554538726807e-06,
+                  "violations": 0,
+                  "passed": true
+                }
+              ],
+              "status": "passed"
+            },
+            {
+              "input": "real-100",
+              "comparisons": [
+                {
+                  "name": "cls_logits",
+                  "shape": [
+                    1,
+                    5456,
+                    91
+                  ],
+                  "dtype": "float32",
+                  "max_abs": 2.384185791015625e-05,
+                  "violations": 0,
+                  "passed": true
+                },
+                {
+                  "name": "bbox_regression",
+                  "shape": [
+                    1,
+                    5456,
+                    4
+                  ],
+                  "dtype": "float32",
+                  "max_abs": 2.0742416381835938e-05,
+                  "violations": 0,
+                  "passed": true
+                },
+                {
+                  "name": "bbox_ctrness",
+                  "shape": [
+                    1,
+                    5456,
+                    1
+                  ],
+                  "dtype": "float32",
+                  "max_abs": 5.364418029785156e-06,
+                  "violations": 0,
+                  "passed": true
+                }
+              ],
+              "status": "passed"
+            },
+            {
+              "input": "real-199",
+              "comparisons": [
+                {
+                  "name": "cls_logits",
+                  "shape": [
+                    1,
+                    5456,
+                    91
+                  ],
+                  "dtype": "float32",
+                  "max_abs": 2.09808349609375e-05,
+                  "violations": 0,
+                  "passed": true
+                },
+                {
+                  "name": "bbox_regression",
+                  "shape": [
+                    1,
+                    5456,
+                    4
+                  ],
+                  "dtype": "float32",
+                  "max_abs": 2.3365020751953125e-05,
+                  "violations": 0,
+                  "passed": true
+                },
+                {
+                  "name": "bbox_ctrness",
+                  "shape": [
+                    1,
+                    5456,
+                    1
+                  ],
+                  "dtype": "float32",
+                  "max_abs": 6.467103958129883e-06,
+                  "violations": 0,
+                  "passed": true
+                }
+              ],
+              "status": "passed"
+            },
+            {
+              "input": "random-seed0",
+              "comparisons": [
+                {
+                  "name": "cls_logits",
+                  "shape": [
+                    1,
+                    5456,
+                    91
+                  ],
+                  "dtype": "float32",
+                  "max_abs": 2.47955322265625e-05,
+                  "violations": 0,
+                  "passed": true
+                },
+                {
+                  "name": "bbox_regression",
+                  "shape": [
+                    1,
+                    5456,
+                    4
+                  ],
+                  "dtype": "float32",
+                  "max_abs": 1.811981201171875e-05,
+                  "violations": 0,
+                  "passed": true
+                },
+                {
+                  "name": "bbox_ctrness",
+                  "shape": [
+                    1,
+                    5456,
+                    1
+                  ],
+                  "dtype": "float32",
+                  "max_abs": 3.337860107421875e-06,
+                  "violations": 0,
+                  "passed": true
+                }
+              ],
+              "status": "passed"
+            }
+          ],
+          "versions": {
+            "torch": "2.8.0+cu128",
+            "torchvision": "0.23.0+cu128",
+            "onnx": "1.17.0",
+            "onnxruntime": "1.19.2"
+          },
+          "board": "not-run",
+          "dataset_accuracy": "not-run"
+        },
+        "calibration_manifest": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/fcos-source-export-r01/calibration.manifest.json",
+          "sha256": "4167a5d04d52712976fd4c399c0fd65e9448c9c7e72c3df624e814bbc0f7c90b",
+          "size_bytes": 135491
+        },
+        "cpu_reference_gate": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/fcos-s100-prepare-r01/cpu-sdk-parity.json",
+          "sha256": "dd84e771f9ba79025ea11fa416af792d6df171945f38fecdbe3b608aa48d5881",
+          "size_bytes": 4947
+        },
+        "calibration_boundary_gate": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/fcos-s100-prepare-r01/calibration-boundary.json",
+          "sha256": "17c4d05ee84e0a447ac75e3d300db5233f406fede8244df6fbc676753cd68777",
+          "size_bytes": 51444
+        },
+        "artifact": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/fcos-s100-cpuptq-20261105-r01/output/fcos_tv_r50_fpn_coco91_512_featuremap_int16_cpuptq_o1_20261105_nashe.hbm",
+        "device": "cpu",
+        "memory_gib": 18,
+        "priority": 10,
+        "board": "not-run",
+        "source_native_base": "e3374646ac035a85fce07b21379c1b06e2f9b66d",
+        "generated_template": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/fcos-s100-cpuptq-20261105-r01/template/full_compile_config.yaml",
+          "sha256": "4030848e51a5016eefa559f46a5762cd040f32539ecc65c2a16a41f0bbc9ffa1",
+          "size_bytes": 713
+        },
+        "started_utc": "2026-11-05T02:33:36.927067+00:00",
+        "returncode": 0,
+        "wall_seconds": 4864.808123135939,
+        "finished_utc": "2026-11-05T03:54:41.735226+00:00"
+      },
+      "board_validation": "not-run",
+      "native_recipe": "samples/vision/fcos/conversion/recipes/fcos-public-s100-20261105.yaml"
+    }
+  ]
+}

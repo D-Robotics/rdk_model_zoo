@@ -99,3 +99,52 @@ SHA-256（如有），原子落盘且不覆盖已有文件（校验失败保留�
 | `s600/efficientnet_lite4_380x380_nv12.hbm` | nash-p `.hbm`，split Y/UV 输入（380x380），F32 `[1,1000]` logits 输出 | null（未知） |
 
 Manifest 中的 SHA-256 为 `null (unknown)`。下载器打印下载文件的 SHA-256，供本地记录。
+
+<!-- converted-batch-20261102 -->
+## 已转换新增规格（2026-11-02）
+
+以下 timm 权重单独转换，已通过严格权重加载、结构重参数化及两组输入的
+PyTorch/ONNX 主机对照、checker 和编译。板端冒烟、精度、Runtime 1/2 并发和
+C++ 1/2 流均为 **not-run**，历史指标和截图不适用于这些产物。原有默认规格保留。
+新规格需要 Pillow，使用 bicubic 短边 256、四舍五入居中裁剪 224；Mapper 融合
+该权重实际的归一化参数。输出为 float32 1,000 类 logits，由原生 Runtime 做 softmax。
+
+| 规格 | 模型文件 | 权重版本 | 板端 |
+|---|---|---|---|
+| `timm-b2-ra-in1k` | `efficientnet_b2_ra_in1k_bayese_224x224_nv12.bin` | [`3577c4a7d847`](https://huggingface.co/timm/efficientnet_b2.ra_in1k/blob/3577c4a7d84723645311bb5a9e5086f1b62ec8e2/README.md) | not-run |
+| `timm-b3-ra2-in1k` | `efficientnet_b3_ra2_in1k_bayese_224x224_nv12.bin` | [`0366a7551862`](https://huggingface.co/timm/efficientnet_b3.ra2_in1k/blob/0366a75518620e0f2077789202073759f2d61393/README.md) | not-run |
+| `timm-b4-ra2-in1k` | `efficientnet_b4_ra2_in1k_bayese_224x224_nv12.bin` | [`442c00e15609`](https://huggingface.co/timm/efficientnet_b4.ra2_in1k/blob/442c00e15609ff467772913d230768706a406aca/README.md) | not-run |
+
+```bash
+python3 samples/vision/efficientnet/model/download.py --target x5 --variant timm-b2-ra-in1k
+python3 samples/vision/efficientnet/runtime/python/main.py --target x5 --variant timm-b2-ra-in1k --dry-run
+```
+
+精确 URL、SHA-256 和大小登记在 `docs/release/x5/models.yaml`；来源及主机对照
+记录见 `conversion/converted.json`。模型许可逐项保留在公开 release 清单中。
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+这些独立规格已完成转换、完整 OE 和实际 HBM 接口核验。源权重、ONNX、每目标配置、校准数量和摘要见 [converted_targets_20261103.json](../conversion/converted_targets_20261103.json)。
+
+| 目标 | Native variant | 组件 | 校准图片 |
+| --- | --- | --- | ---: |
+| s100 | `timm-b2-ra-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-b2-ra-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-b2-ra-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-b3-ra2-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-b3-ra2-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-b3-ra2-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-b4-ra2-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-b4-ra2-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-b4-ra2-in1k-s-int16-o1-20261103` | model | 200 |
+
+```bash
+python3 samples/vision/efficientnet/model/download.py --target s100 --variant timm-b2-ra-in1k-s-int16-o1-20261103
+python3 samples/vision/efficientnet/runtime/python/main.py --target s100 --variant timm-b2-ra-in1k-s-int16-o1-20261103 --asset-id s:efficientnet:s100/efficientnet_b2_ra_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --model-path /path/to/efficientnet_b2_ra_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --test-img samples/vision/efficientnet/test_data/Scottish_deerhound.JPEG
+```
+
+命令中的路径需要替换为实际文件。每套多组件模型须同时准备全部组件。旧默认与既有指标保留原身份；本轮规格的板端 smoke、数据集精度、Runtime 1/2 并发和 C++ 1/2 流均为 `not-run`。

@@ -163,9 +163,53 @@ Select the artifact's matching target and reference, then compare its outputs an
 <a id="artifacts"></a>
 ## Artifacts
 
-The per-variant published filenames are listed above and downloaded under `samples/vision/repghost/model/`. Compilation produces a common basename in its working directory. Preserve the selected variant identity when moving a verified build; record the compilation configuration and evaluation results with the model.
+The per-variant published filenames are listed above and downloaded under `samples/vision/repghost/model/`. Compilation produces a common basename in its working directory. A verified build is identified by its selected variant; keep the compilation configuration and evaluation results with the model.
 
 <a id="known-gaps"></a>
 ## Additional preparation
 
 For each variant, select the matching PyTorch/timm checkpoint and record its revision and digest. Export a graph beside the corresponding YAML with RGB/NCHW input; inspect its actual input and output metadata because `input_shape` and `input_name` are empty. Prepare `./calibration_data_rgb_f32` with float32 RGB values, `cal_data_type: float32`, `calibration: default`, mean `123.675/116.28/103.53`, and scale `0.01712475/0.017507/0.01742919`. Build variants in separate workspaces because each YAML writes `RepGhost_224x224_nv12/RepGhost_224x224_nv12.bin`.
+
+<!-- converted-batch-20261102 -->
+## Pinned converted recipes
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model repghostnet_100.in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/repghost/conversion/recipes/timm-100-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+Use the model/tag, pinned checkpoint and matching YAML from `converted.json`; use a fresh attempt directory. The calibration producer uses raw RGB float32 binary tensors. Do not apply normalization twice or inherit historical board metrics.
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100 / timm-100-in1k-s-int16-o1-20261103 / model`: [timm_100_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_100_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-100-in1k-s-int16-o1-20261103 / model`: [timm_100_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_100_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-100-in1k-s-int16-o1-20261103 / model`: [timm_100_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_100_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-111-in1k-s-int16-o1-20261103 / model`: [timm_111_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_111_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-111-in1k-s-int16-o1-20261103 / model`: [timm_111_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_111_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-111-in1k-s-int16-o1-20261103 / model`: [timm_111_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_111_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-130-in1k-s-int16-o1-20261103 / model`: [timm_130_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_130_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-130-in1k-s-int16-o1-20261103 / model`: [timm_130_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_130_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-130-in1k-s-int16-o1-20261103 / model`: [timm_130_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_130_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-150-in1k-s-int16-o1-20261103 / model`: [timm_150_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_150_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-150-in1k-s-int16-o1-20261103 / model`: [timm_150_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_150_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-150-in1k-s-int16-o1-20261103 / model`: [timm_150_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_150_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-200-in1k-s-int16-o1-20261103 / model`: [timm_200_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_200_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-200-in1k-s-int16-o1-20261103 / model`: [timm_200_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_200_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-200-in1k-s-int16-o1-20261103 / model`: [timm_200_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_200_in1k_s_int16_o1_20261103_s600_model.yaml)
+
+S PTQ consumes normalized ONNX-domain `.npy` tensors. NV12 runtime mean/scale remain in the recipe. The shared producer reads checkpoint normalization through `--target` and `--normalization-json`.
+
+[Shared classification workflow](../../../../utils/tools/classification_conversion/README.md).
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

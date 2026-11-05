@@ -172,3 +172,44 @@ ImageNet-1k classification logits.
 ## Additional preparation
 
 For the selected variant, prepare the ONNX file named by its YAML (`edgenext_<variant>.onnx`) with the expected RGB/NCHW 224x224 input. Prepare `./calibration_data_rgb_f32` as float32 RGB `.npy` data using the YAML mean `123.675 116.28 103.53` and scale `0.01712475 0.017507 0.01742919`. The output prefix carries the variant name, so the emitted `.bin` uses the published filename. Run the checker and compiler commands above with that variant's YAML.
+
+<!-- converted-batch-20261102 -->
+## Pinned converted recipes
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model edgenext_xx_small.in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/edgenext/conversion/recipes/timm-xx-small-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+Use the model/tag, pinned checkpoint and matching YAML from `converted.json`; use a fresh attempt directory. The calibration producer uses raw RGB float32 binary tensors. Do not apply normalization twice or inherit historical board metrics.
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100 / timm-base-usi-in1k-s-int16-o1-20261103 / model`: [timm_base_usi_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_base_usi_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-base-usi-in1k-s-int16-o1-20261103 / model`: [timm_base_usi_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_base_usi_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-base-usi-in1k-s-int16-o1-20261103 / model`: [timm_base_usi_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_base_usi_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-small-usi-in1k-s-int16-o1-20261103 / model`: [timm_small_usi_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_small_usi_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-small-usi-in1k-s-int16-o1-20261103 / model`: [timm_small_usi_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_small_usi_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-small-usi-in1k-s-int16-o1-20261103 / model`: [timm_small_usi_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_small_usi_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-x-small-in1k-s-int16-o1-20261103 / model`: [timm_x_small_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_x_small_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-x-small-in1k-s-int16-o1-20261103 / model`: [timm_x_small_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_x_small_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-x-small-in1k-s-int16-o1-20261103 / model`: [timm_x_small_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_x_small_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-xx-small-in1k-s-int16-o1-20261103 / model`: [timm_xx_small_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_xx_small_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-xx-small-in1k-s-int16-o1-20261103 / model`: [timm_xx_small_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_xx_small_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-xx-small-in1k-s-int16-o1-20261103 / model`: [timm_xx_small_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_xx_small_in1k_s_int16_o1_20261103_s600_model.yaml)
+
+S PTQ consumes normalized ONNX-domain `.npy` tensors. NV12 runtime mean/scale remain in the recipe. The shared producer reads checkpoint normalization through `--target` and `--normalization-json`.
+
+[Shared classification workflow](../../../../utils/tools/classification_conversion/README.md).
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

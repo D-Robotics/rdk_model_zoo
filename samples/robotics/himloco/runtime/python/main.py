@@ -1,15 +1,10 @@
-"""HIMLoco: published X5 model selection and source-indexed offline inference.
+"""HIMLoco offline policy entry.
 
-This entry stays deliberately small and keeps the construction and loop
-visible: parse the arguments, handle the model-free listing/dry-run modes,
-resolve the selection, prepare the evidence-collected run, construct the
-bound policy task through ``HimLocoTask.from_model``, apply scheduling,
-record the runtime evidence, execute the explicitly requested warmups,
-call ``task.predict`` once per observation, record each action dump and
-complete the report through the ``cli`` helpers. The policy's preprocess →
-infer → postprocess chain, the raw runner construction and the model-owned
-loader live in ``policy.py``; offline policy inference only — never
-actuators.
+Parse arguments, build ``HimLocoTask``, call ``predict`` once per observation, and write the report.
+``cli.py`` holds options, model selection, and the report.
+``policy.py`` holds preprocess, infer, and postprocess.
+This path does not command actuators.
+``--list-models`` and ``--dry-run`` do not load the board SDK.
 """
 
 import json

@@ -5,6 +5,8 @@
 
 使用 `run.sh` 执行 E11/E26 无提示实例分割，或将 C++ 三阶段库嵌入应用。启动器精确选择模型，核验本机和文件身份，按显式要求构建原生程序，并保留日志、图片和掩码结果。真实 SDK 编译与板端推理按下文构建/运行说明执行。Python 入口见 [Python runtime](../python/README_cn.md)，注意其 X5 掩码协议不同。
 
+新转换的 X5 制品通过 `--target x5 --variant 11s-native-20261102` 显式选择，保留完整十个 FLOAT32 输出头，并使用该制品专用的 full-range NV12 输入转换。精确身份见[模型说明](../../model/README_cn.md)。旧默认选项和历史实测保持不变；该制品尚无板端精度或性能测量。
+
 <a id="overview"></a>
 ## C++ 推理
 
@@ -34,7 +36,7 @@ cpp/
 | S100P | 26n/s/m/l/x；默认 26n | 自行转换的浮点输出 HBM，显式提供 SHA-256 | 支持 |
 | S600 | 无 | 无发布路线，显式拒绝 | 不支持 |
 
-已发布制品请在匹配板卡上通过 [Python 运行时](../python/README_cn.md)运行：X5 已发布 11s/m/l BIN 无法通过本入口的输出绑定（`Task output requires NHWC aligned geometry.`），S 已发布 HBM 的输出为量化数据。本入口运行自行转换、十个输出均为未量化 FLOAT32 NHWC 的模型——请通过[转换流程](../../conversion/README_cn.md)准备并记录其 SHA-256。14 个发布身份仍是模型选择键；本地转换模型的发布身份即其架构参考。
+已发布制品请在匹配板卡上通过 [Python 运行时](../python/README_cn.md)运行：X5 已发布 11s/m/l BIN 无法通过本入口的输出绑定（`Task output requires NHWC aligned geometry.`），S 已发布 HBM 的输出为量化数据。本入口运行自行转换、十个输出均为未量化 FLOAT32 NHWC 的模型——请通过[转换流程](../../conversion/README_cn.md)准备并记录其 SHA-256。16 个发布身份仍是模型选择键；本地转换模型的发布身份即其架构参考。
 
 ## 选择、构建与运行
 

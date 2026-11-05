@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="overview"></a>
 ## Algorithm and source
 
-LPRNet recognizes license-plate text without a separate character detector. This sample runs the X5 model on a prepared plate tensor and decodes its character sequence with CTC.
+LPRNet recognizes license-plate text without a separate character detector. The Python entry runs the selected model on a prepared plate tensor and decodes its character sequence with CTC.
 
 References: [LPRNet: License Plate Recognition via Deep Neural Networks](https://arxiv.org/abs/1806.10447).
 
@@ -29,7 +29,7 @@ lprnet/
 | target | variant | Python | C++ | note |
 |---|---|---|---|---|
 | X5 | `lpr.bin` | supported | not-supported | verify with the bundled `test_input.dat` |
-| S100/S100P/S600 | — | not-supported | not-supported | no published asset |
+| S100/S100P/S600 | `sirius-68class` | integrated; board not-run | not-supported | independent HBM conversions, 2026-11-04 |
 
 Python is the available runtime. The evaluator compares raw `(1,68,18,1)` logits and decoded text for the bundled input; dataset recognition accuracy requires labeled plates.
 
@@ -66,6 +66,21 @@ The CLI consumes pre-packed float32 `test_input.dat`, reshaped to `(1,3,24,94)`.
 - [`runtime/python/README.md`](./runtime/python/README.md): CLI and `LPRNetRecognizer` API.
 - [`conversion/README.md`](./conversion/README.md): source OE commands and missing reproducibility inputs.
 - [`evaluator/README.md`](./evaluator/README.md): exact raw/text comparison procedure.
+
+
+## Independently converted S models (2026-11-04)
+
+S100, S100P and S600 are independently compiled for nash-e, nash-m and nash-p. The trained source is [sirius-ai/LPRNet_Pytorch](https://github.com/sirius-ai/LPRNet_Pytorch/tree/7c976664b3f3879efabeaff59c7a117e49d5f29e), Apache-2.0. Exact hashes, configuration and provenance are in the [conversion registry](conversion/converted_targets_20261104.json).
+
+List exact IDs with `python3 -m samples.vision.lprnet.runtime.python.main --target s100 --list-models`. The new model consumes a cropped plate: BGR, linear resize to 94×24, `(pixel-127.5)/128`, float32 NCHW. Historical X5 fixtures do not establish preprocessing for this independent checkpoint.
+
+```bash
+python3 -m samples.vision.lprnet.model.download --target s100
+python3 -m samples.vision.lprnet.model.prepare_input --image /path/to/plate.jpg --output /path/to/plate.dat
+python3 -m samples.vision.lprnet.runtime.python.main --target s100 --test-bin /path/to/plate.dat
+```
+
+The downloader preserves `model/s100/`; an external `--model-path` also requires the target's exact `--asset-id`. Substitute s100p/s600 as appropriate. Full-output float gates, compilation, actual HBM ABI and complete OE reports passed. Board smoke, recognition accuracy, Runtime 1/2 concurrency and C++ 1/2 streams remain `not-run`. Historical performance below belongs only to the old X5 file.
 
 <a id="historical-performance"></a>
 ## Reference performance

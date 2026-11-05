@@ -1,0 +1,455 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "variant": "timm-50-32x4d-a1h-in1k-s-int16-o1-20261103",
+      "web_size": "50-32x4d-a1h-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/resnext50_32x4d_a1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/resnext/resnext50_32x4d_a1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "4e4a8b408898bff6dfb9b946cba50e66d3a93297aac10c7f2ed0647b1f0a24c8",
+          "size_bytes": 29178840,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "6017a888ee2b37606a00a51c794ce59fa92f72497684a8c00b4905ea243a1801",
+          "effective_config_sha256": "6e873036fddda8722a5d19dc32bb952e92df0744b82e44420d13dfe8634451ca",
+          "recipe": "samples/vision/resnext/conversion/recipes/timm_50_32x4d_a1h_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "92ec7e139c50965333bb43fc0e8241e7be2ec5fed1b1dc013d07d594443c1abf",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "56ae945ce186f00cddbf726ffbfc12f67ed03d20c6962c2bdc9bf40777358504",
+          "oe_data_sha256": "4a9d7b2b5bd909a04acccd0bae6a95f0512c884464a1eac67f4b1428d1884ee8",
+          "node_info_csv_sha256": "f9c2fbf16e5031686f7b4fbb619800f22bcba20ac3119134f124aa2482caf3ba",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.999904,
+              "cosine": 0.999808
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/resnext50_32x4d_a1h_in1k-s100-int16-20261103-r04/ptq_output/resnext50_32x4d_a1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "16fb2011eeef515ac7bd488f246ef5dcb76e090ab155bd5520414223c5b77a1e",
+              "size_bytes": 29046038
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/resnext50_32x4d_a1h_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "fc2df6bfab9b0912d78dbb404a75ecb9e95e300ae980d21ff5a9169f84e8e2a2",
+              "size_bytes": 1218
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.384185791015625e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 5.7220458984375e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.6689300537109375e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "a6aac7918c9086c0ecc0cdd9aec36b45c5ae6c6aa2210349be932d8743938302",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/resnext50_32x4d.a1h_in1k",
+        "revision": "cc736cb0940158d05966023116d90fca4c38dae3",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "b952952a7b3e856b16ebf82fb44d2aa8c502e73ec678976c9e3b970fcd530bd5",
+        "size_bytes": 100417784,
+        "url": "https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/resolve/cc736cb0940158d05966023116d90fca4c38dae3/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/blob/cc736cb0940158d05966023116d90fca4c38dae3/README.md"
+      }
+    },
+    {
+      "variant": "timm-50-32x4d-a1h-in1k-s-int16-o1-20261103",
+      "web_size": "50-32x4d-a1h-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/resnext50_32x4d_a1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/resnext/resnext50_32x4d_a1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "2c26f836e4a805ca89d23f89a8b5f134c519d7cff6d5fd1ccefea4bf24a57ed8",
+          "size_bytes": 29419480,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "6017a888ee2b37606a00a51c794ce59fa92f72497684a8c00b4905ea243a1801",
+          "effective_config_sha256": "063e5623b6ab9daac49b135ba735299853313bc38eec5454ae1ce24a6d54b788",
+          "recipe": "samples/vision/resnext/conversion/recipes/timm_50_32x4d_a1h_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "5a5825397d8a04c3c736fb254694f95b663883b0dddcd23e43cb9b89894a2e01",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "4c46ad90be00dd4cb962c87b574e4d6f76a6f709970f72f6f8ed0400bf162f33",
+          "oe_data_sha256": "5496464b744b9948f08d91dcb7a2e0802638dec0d32736584a46caf9a5247af2",
+          "node_info_csv_sha256": "763a42072d50434dab0acc26e53f20d92a14f2338eea41847a5e54e295d66618",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.999904,
+              "cosine": 0.999808
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/resnext50_32x4d_a1h_in1k-s100p-int16-20261103-r04/ptq_output/resnext50_32x4d_a1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "3bc0f967dda4ee436568814e43f64af9d502b90711ce03ece4a96f037964acdf",
+              "size_bytes": 29046039
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/resnext50_32x4d_a1h_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "dc226f1dac4362dd5967a3ab20ab6bf0282859991db95f2c1b71168df46b15eb",
+              "size_bytes": 1219
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.384185791015625e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 5.7220458984375e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.6689300537109375e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "a6aac7918c9086c0ecc0cdd9aec36b45c5ae6c6aa2210349be932d8743938302",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/resnext50_32x4d.a1h_in1k",
+        "revision": "cc736cb0940158d05966023116d90fca4c38dae3",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "b952952a7b3e856b16ebf82fb44d2aa8c502e73ec678976c9e3b970fcd530bd5",
+        "size_bytes": 100417784,
+        "url": "https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/resolve/cc736cb0940158d05966023116d90fca4c38dae3/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/blob/cc736cb0940158d05966023116d90fca4c38dae3/README.md"
+      }
+    },
+    {
+      "variant": "timm-50-32x4d-a1h-in1k-s-int16-o1-20261103",
+      "web_size": "50-32x4d-a1h-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/resnext50_32x4d_a1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/resnext/resnext50_32x4d_a1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "aa5525d5fdd88d2b918531ee56c48668e439000d2b6330d814363fc46e4016c6",
+          "size_bytes": 30320944,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "6017a888ee2b37606a00a51c794ce59fa92f72497684a8c00b4905ea243a1801",
+          "effective_config_sha256": "b29e5d67a241dcf6f3702313b5665883bf7bf96980c4715db5c0b11c5b6c1a50",
+          "recipe": "samples/vision/resnext/conversion/recipes/timm_50_32x4d_a1h_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "71f4eb739d6dba171f066b406057bebde2124cfaa2165110f62e61298fdd749f",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "8596300c6346f4448ec1392a49997d252566ea482bca93ca4ef61bfb01738efb",
+          "oe_data_sha256": "c8b2d3f66414dd10c92896c03bc9f2746b53a2965a1926c6856c36e35a096bc4",
+          "node_info_csv_sha256": "bfcdb256d2a65cfdd4292ef41ff5aa944a1f1790cfd4b43647300c1d06d3e703",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.999904,
+              "cosine": 0.999809
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/resnext50_32x4d_a1h_in1k-s600-int16-20261103-r04/ptq_output/resnext50_32x4d_a1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "c8893aae6514b0ffa81b672d8b10c75f4f1072a8616db25945ed13644165ab57",
+              "size_bytes": 26677461
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/resnext50_32x4d_a1h_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "5c89b115cec717770a2f17ef94871386b4a71d5794ffbdc344deebe8dabdf250",
+              "size_bytes": 1218
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.384185791015625e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 5.7220458984375e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.6689300537109375e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "a6aac7918c9086c0ecc0cdd9aec36b45c5ae6c6aa2210349be932d8743938302",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/resnext50_32x4d.a1h_in1k",
+        "revision": "cc736cb0940158d05966023116d90fca4c38dae3",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "b952952a7b3e856b16ebf82fb44d2aa8c502e73ec678976c9e3b970fcd530bd5",
+        "size_bytes": 100417784,
+        "url": "https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/resolve/cc736cb0940158d05966023116d90fca4c38dae3/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/resnext50_32x4d.a1h_in1k/blob/cc736cb0940158d05966023116d90fca4c38dae3/README.md"
+      }
+    }
+  ]
+}

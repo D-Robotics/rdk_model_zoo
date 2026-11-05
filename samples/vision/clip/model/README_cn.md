@@ -75,3 +75,22 @@ bash samples/vision/clip/model/download.sh --target x5 --output-dir /tmp/clip-mo
 ## 许可
 
 准备代码遵循仓库 [LICENSE](../../../../LICENSE) 的 Apache-2.0。模型制品沿用发布记录中的来源和许可证元数据；不在此新增断言。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+这些独立规格已完成转换、完整 OE 和实际 HBM 接口核验。源权重、ONNX、每目标配置、校准数量和摘要见 [converted_targets_20261103.json](../conversion/converted_targets_20261103.json)。
+
+| 目标 | Native variant | 组件 | 校准图片 |
+| --- | --- | --- | ---: |
+| s100 | `vit-b32-native-int16-o1-20261103` | image, text | 200 |
+| s100p | `vit-b32-native-int16-o1-20261103` | image, text | 200 |
+| s600 | `vit-b32-native-int16-o1-20261103` | image, text | 200 |
+
+```bash
+python3 samples/vision/clip/model/download.py --target s100 --variant vit-b32-native-int16-o1-20261103
+python3 samples/vision/clip/runtime/python/main.py --target s100 --variant vit-b32-native-int16-o1-20261103 --image-model-path /path/to/clip_vitb32_image_nashe_int16_20261103_o1.hbm --image-asset-id s:clip:s100/clip_vitb32_image_nashe_int16_20261103_o1.hbm --text-model-path /path/to/clip_vitb32_text_20261103.onnx --text-asset-id s:clip:s100/clip_vitb32_text_20261103.onnx --test-img samples/vision/clip/test_data/dog.jpg --texts 'a diagram,a dog'
+```
+
+命令中的路径需要替换为实际文件。每套多组件模型须同时准备全部组件。旧默认与既有指标保留原身份；本轮规格的板端 smoke、数据集精度、Runtime 1/2 并发和 C++ 1/2 流均为 `not-run`。

@@ -45,7 +45,7 @@ bash samples/vision/clip/model/download.sh --target x5 --output-dir /tmp/clip-mo
 # expect: /tmp/clip-model/img_encoder.bin and /tmp/clip-model/text_encoder.onnx
 ```
 
-The manifest records both SHA-256 values as unknown. The downloader prints observed digests and reports that they cannot be verified against a published value. I/O or selection errors exit 2.
+The manifest records both SHA-256 values as unknown. The downloader prints observed digests; no published digest exists for comparison. I/O or selection errors exit 2.
 
 <a id="accompanying-files"></a>
 ## Accompanying Files
@@ -74,4 +74,23 @@ The manifest records both SHA-256 values as unknown. The downloader prints obser
 
 ## License
 
-Preparation code follows the repository [LICENSE](../../../../LICENSE), Apache-2.0. The model assets retain the publication's provenance and license metadata; no additional license is asserted here.
+Preparation code follows the repository [LICENSE](../../../../LICENSE), Apache-2.0. The model assets retain the publication's provenance and license metadata.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+These independent profiles passed conversion, complete OE collection and actual HBM metadata binding. Source weights, graphs, per-target recipes, calibration counts and digests are in [converted_targets_20261103.json](../conversion/converted_targets_20261103.json).
+
+| Target | Native variant | Components | Calibration photographs |
+| --- | --- | --- | ---: |
+| s100 | `vit-b32-native-int16-o1-20261103` | image, text | 200 |
+| s100p | `vit-b32-native-int16-o1-20261103` | image, text | 200 |
+| s600 | `vit-b32-native-int16-o1-20261103` | image, text | 200 |
+
+```bash
+python3 samples/vision/clip/model/download.py --target s100 --variant vit-b32-native-int16-o1-20261103
+python3 samples/vision/clip/runtime/python/main.py --target s100 --variant vit-b32-native-int16-o1-20261103 --image-model-path /path/to/clip_vitb32_image_nashe_int16_20261103_o1.hbm --image-asset-id s:clip:s100/clip_vitb32_image_nashe_int16_20261103_o1.hbm --text-model-path /path/to/clip_vitb32_text_20261103.onnx --text-asset-id s:clip:s100/clip_vitb32_text_20261103.onnx --test-img samples/vision/clip/test_data/dog.jpg --texts 'a diagram,a dog'
+```
+
+Substitute the actual file paths. Multi-component tasks require every component together. Historical defaults and measurements retain their original identities. Board smoke, dataset accuracy, Runtime 1/2 and C++ 1/2 are `not-run` for these profiles.

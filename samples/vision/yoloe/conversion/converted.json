@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "source": {
+    "repository": "https://github.com/ultralytics/ultralytics",
+    "commit": "8e1eb77948c6c4aa110ad0b4aaacb93fd9855967",
+    "version": "8.4.127",
+    "checkpoint": {
+      "url": "https://github.com/ultralytics/assets/releases/download/v8.4.0/yoloe-26n-seg-pf.pt",
+      "sha256": "ae805a9ac11c85214588b32da8248d68a516e1d071465e1e86a03cbfadb66ba7",
+      "bytes": 16271345,
+      "publisher_sha256_verified": true
+    }
+  },
+  "variant": "26n-native-cal32-20261103-o1",
+  "target": {
+    "platform": "s100",
+    "march": "nash-e"
+  },
+  "components": {
+    "model": {
+      "filename": "nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12_float_cal32_20261103_o1.hbm",
+      "format": "hbm",
+      "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/yoloe/yoloe_26n_seg_pf_nashe_640x640_nv12_float_cal32_20261103_o1.hbm",
+      "sha256": "00340e52995a559be99fce15909babc7cad09e66785f8a596ab71f67bdeb61c4",
+      "size_bytes": 167770984,
+      "inputs": [
+        {
+          "name": "images_y",
+          "shape": [
+            1,
+            640,
+            640,
+            1
+          ],
+          "dtype": "uint8"
+        },
+        {
+          "name": "images_uv",
+          "shape": [
+            1,
+            320,
+            320,
+            2
+          ],
+          "dtype": "uint8"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "cls_8",
+          "shape": [
+            1,
+            80,
+            80,
+            4585
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "box_8",
+          "shape": [
+            1,
+            80,
+            80,
+            4
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "mces_8",
+          "shape": [
+            1,
+            80,
+            80,
+            32
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "cls_16",
+          "shape": [
+            1,
+            40,
+            40,
+            4585
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "box_16",
+          "shape": [
+            1,
+            40,
+            40,
+            4
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "mces_16",
+          "shape": [
+            1,
+            40,
+            40,
+            32
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "cls_32",
+          "shape": [
+            1,
+            20,
+            20,
+            4585
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "box_32",
+          "shape": [
+            1,
+            20,
+            20,
+            4
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "mces_32",
+          "shape": [
+            1,
+            20,
+            20,
+            32
+          ],
+          "dtype": "float32"
+        },
+        {
+          "name": "protos",
+          "shape": [
+            1,
+            160,
+            160,
+            32
+          ],
+          "dtype": "float32"
+        }
+      ],
+      "onnx_sha256": "8cacf1865c7de1a1992aaa503f38c89b73d4d4c36b62c81e6e5ad1d8a67a4e2b",
+      "effective_config_sha256": "5386a7a8eb7e21faa745bf65d6f559081d835fdc9b281023f27c1246b355b30e",
+      "recipe": "samples/vision/yoloe/conversion/recipes/26n_native_cal32_20261103_o1_s100_model.yaml",
+      "recipe_sha256": "e552846f5d71abcada0facd7cb7b875d66d60f0cde06831e0d8642af627f3fe9",
+      "toolchain": {
+        "hbdk": "4.7.5",
+        "hmct": "2.6.5",
+        "hb_compile": "3.5.3"
+      },
+      "toolchain_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92",
+      "calibration_count": 32,
+      "oe_report_sha256": "e502334c689e00d01ff87195e551184350659ee424afd7f4deaadbc437e40d08",
+      "oe_data_sha256": "9cc4bd38123b1abef82191ba65cffcc65d777817e83fcc1cfab02957f9c4a75e",
+      "node_info_csv_sha256": "8c70bebf2eae8419d98776ba8aa6d09d40bf906991824512bed87ced748ff440"
+    }
+  },
+  "host_smoke": {
+    "status": "passed",
+    "scope": "Source/native/ONNX float graph checks; not HBM board execution",
+    "report_sha256": "ba1a492a93b59d65638b4d1b1f31d7d359cbb96d20d38f6a3f53aa3d9b115c13"
+  },
+  "calibration": {
+    "manifest_sha256": "bcc3fab83f321fd4d2a91191c753e2139c9afac6d3dd74a65e1aaaf9d30c9b80",
+    "images": "Frozen independent COCO train2017 images",
+    "count": 32
+  },
+  "validation": {
+    "conversion": "passed",
+    "host_smoke": "passed",
+    "board_smoke": "not-run",
+    "accuracy": "not-run",
+    "runtime_1": "not-run",
+    "runtime_2": "not-run",
+    "cpp_1": "not-run",
+    "cpp_2": "not-run"
+  },
+  "source_layout": "Current samples/ native layout; no platform-directory migration in this batch"
+}

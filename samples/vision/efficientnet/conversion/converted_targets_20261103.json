@@ -1,0 +1,1355 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "variant": "timm-b2-ra-in1k-s-int16-o1-20261103",
+      "web_size": "b2-ra-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/efficientnet_b2_ra_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/efficientnet/efficientnet_b2_ra_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "e8566edd67924c881f23ea373533623cdce30747a9d8aeaf1838a1b4b45dc4ab",
+          "size_bytes": 24572112,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "3c35e61742a79c02f1736275fb2a78a56c10a62eebe0ce88074724abf9667b3d",
+          "effective_config_sha256": "5a6b199abf1e4552dcf0c82ecfac5cf0472b28a4f628c482d7493897086dde9d",
+          "recipe": "samples/vision/efficientnet/conversion/recipes/timm_b2_ra_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "f691f95857195b813d3a614ed96e81ced187ee9d1b3b2c329ab7f188cef47042",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "a978161207ed6f59e6cb2487f162edc9d478c981ba17f0cf39741cc332baa7be",
+          "oe_data_sha256": "4cb00128a3ed7cd9f373be81578ad8eaaa5463abf88185872ec109d8191bd206",
+          "node_info_csv_sha256": "bd3fe6b3000da14ee8b23df953d30603e3a036139843c830eecd25bb747e7d5b",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.898583,
+              "cosine": 0.894141
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b2_ra_in1k-s100-int16-20261103-r04/ptq_output/efficientnet_b2_ra_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "049fbff426a2a5ea395bed60eaec736b8ea036e385355842ae9c6226ba551799",
+              "size_bytes": 15286352
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b2_ra_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "6212b0ec9442c6d0967c7779b751cf92dedf9bea8e5d539310d7a1e60d1c899d",
+              "size_bytes": 1209
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 4.5299530029296875e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 4.291534423828125e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 7.152557373046875e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.039836883544922e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "a334f2b4962c4fb0e6f1a24ff3c262cca5d867bce396bdb6ea30ce0eca7515d1",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientnet_b2.ra_in1k",
+        "revision": "3577c4a7d84723645311bb5a9e5086f1b62ec8e2",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "e9adbcce7e5d5055c571c4cafdcc7f920b6a6ec42e643c49dff1aabe1d5f53c5",
+        "size_bytes": 36757206,
+        "url": "https://huggingface.co/timm/efficientnet_b2.ra_in1k/resolve/3577c4a7d84723645311bb5a9e5086f1b62ec8e2/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientnet_b2.ra_in1k/blob/3577c4a7d84723645311bb5a9e5086f1b62ec8e2/README.md"
+      }
+    },
+    {
+      "variant": "timm-b2-ra-in1k-s-int16-o1-20261103",
+      "web_size": "b2-ra-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/efficientnet_b2_ra_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/efficientnet/efficientnet_b2_ra_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "7c3ddac3de10bd20f693a8bf167e84eff31ba58b33450c169d90f2dda5d8eabc",
+          "size_bytes": 24747216,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "3c35e61742a79c02f1736275fb2a78a56c10a62eebe0ce88074724abf9667b3d",
+          "effective_config_sha256": "77f8cd095fd5c63ffcc66335b317c7207f61ae2684c27953deef783da04c77a3",
+          "recipe": "samples/vision/efficientnet/conversion/recipes/timm_b2_ra_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "8b26fa1425a87ae1e506f97be6a6179b744b4fe4dc78677a2ee27be01c34f487",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "1cdb1eaeabeaf8beb11134d9aef1e828ff2450d6b3cea8cefd3bc2a82a5e0e78",
+          "oe_data_sha256": "5d451a04958ef4577ad43ea95db4db3d43cc96ec7fcc3a9f1a8c302a8be754fd",
+          "node_info_csv_sha256": "bd3fe6b3000da14ee8b23df953d30603e3a036139843c830eecd25bb747e7d5b",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.898583,
+              "cosine": 0.894141
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b2_ra_in1k-s100p-int16-20261103-r04/ptq_output/efficientnet_b2_ra_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "83dac7e41838621ad364dd88bbe94fc919a1443e3285e34eee80dbac7f140d3f",
+              "size_bytes": 15286353
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b2_ra_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "c5cb6574e8951f521f6d335b210427acf3e64c894dd967cd55979e3aa2d5c058",
+              "size_bytes": 1210
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.814697265625e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 4.291534423828125e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 6.198883056640625e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 2.5331974029541016e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "a334f2b4962c4fb0e6f1a24ff3c262cca5d867bce396bdb6ea30ce0eca7515d1",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientnet_b2.ra_in1k",
+        "revision": "3577c4a7d84723645311bb5a9e5086f1b62ec8e2",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "e9adbcce7e5d5055c571c4cafdcc7f920b6a6ec42e643c49dff1aabe1d5f53c5",
+        "size_bytes": 36757206,
+        "url": "https://huggingface.co/timm/efficientnet_b2.ra_in1k/resolve/3577c4a7d84723645311bb5a9e5086f1b62ec8e2/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientnet_b2.ra_in1k/blob/3577c4a7d84723645311bb5a9e5086f1b62ec8e2/README.md"
+      }
+    },
+    {
+      "variant": "timm-b2-ra-in1k-s-int16-o1-20261103",
+      "web_size": "b2-ra-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/efficientnet_b2_ra_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/efficientnet/efficientnet_b2_ra_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "6bdf2f916278b3f13ef62e4f6943b52b7db1265b10042ff921541db9b96080a8",
+          "size_bytes": 25886664,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "3c35e61742a79c02f1736275fb2a78a56c10a62eebe0ce88074724abf9667b3d",
+          "effective_config_sha256": "722500ba764be081c77869935b93c53659851e874e97ed49c2fdb87a7d4edb77",
+          "recipe": "samples/vision/efficientnet/conversion/recipes/timm_b2_ra_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "cb8cfa4de5a9528ac63b9b065eb613905c5d2057bfb83ad827439bd6faed098b",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "75be147027bdd65d224e44ee1fbcd2581558949968d24593da992c734e942142",
+          "oe_data_sha256": "4392815172bb7a350937e28b1e144920fa97fbda7b39bd9a21d15020e2bd18b0",
+          "node_info_csv_sha256": "2be919a2e12251cef832c5959d7735fb70d5b7db4b25dcac1d4bb264c78b1abd",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.898583,
+              "cosine": 0.894153
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b2_ra_in1k-s600-int16-20261103-r04/ptq_output/efficientnet_b2_ra_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "5a6a91cf7117350df2dafa9ce9e5cbd007417a29bea58520068cc90e967d487a",
+              "size_bytes": 11636624
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b2_ra_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "59a5faea18404d800c0d3d33948e120cafd613066dae64d01def6a108ce5de1f",
+              "size_bytes": 1209
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.2186508178710938e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 6.4373016357421875e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.0249357223510742e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "a334f2b4962c4fb0e6f1a24ff3c262cca5d867bce396bdb6ea30ce0eca7515d1",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientnet_b2.ra_in1k",
+        "revision": "3577c4a7d84723645311bb5a9e5086f1b62ec8e2",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "e9adbcce7e5d5055c571c4cafdcc7f920b6a6ec42e643c49dff1aabe1d5f53c5",
+        "size_bytes": 36757206,
+        "url": "https://huggingface.co/timm/efficientnet_b2.ra_in1k/resolve/3577c4a7d84723645311bb5a9e5086f1b62ec8e2/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientnet_b2.ra_in1k/blob/3577c4a7d84723645311bb5a9e5086f1b62ec8e2/README.md"
+      }
+    },
+    {
+      "variant": "timm-b3-ra2-in1k-s-int16-o1-20261103",
+      "web_size": "b3-ra2-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/efficientnet_b3_ra2_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/efficientnet/efficientnet_b3_ra2_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "ab002926a539500682e143ccd56bb103f01ff520b84da65b6768ae5b95115457",
+          "size_bytes": 32458200,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "ecfa9d4002d501a12f7b9da646d32323e52b81f8891c349a82a57875e7b314c9",
+          "effective_config_sha256": "5b89e5e69f1657fdcc0410105a3fb14c589983e06be962d4565729c5357b0dd8",
+          "recipe": "samples/vision/efficientnet/conversion/recipes/timm_b3_ra2_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "99f659ff1f3d910eba362392f08f336e901f3f6a630a4474182c2583fa269249",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "7bef22b0c9af3b59f58b07941550a20cd0b9cb7d33bf8d18ca1cf940a0bc3da6",
+          "oe_data_sha256": "e4dbd2146f90650be30088c7f76a58ed35a4f34737e1e46a834c541a69b63d2e",
+          "node_info_csv_sha256": "02a8a0193d4cedd8eac4f8754de869dc1355743eb6fd0086b8f728fcb61ed9a3",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.983888,
+              "cosine": 0.982779
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b3_ra2_in1k-s100-int16-20261103-r04/ptq_output/efficientnet_b3_ra2_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "0e883c06a248df73f507fe9a811d65bbe040de141f1d0f7a3e8a940cf4bae803",
+              "size_bytes": 20129239
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b3_ra2_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "505f137fc669a2a9c8d633259c354016c858e92971a5de0480e670c26abe345a",
+              "size_bytes": 1212
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.814697265625e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 4.0531158447265625e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 6.467103958129883e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.9073486328125e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "72b4235450782381925ffa1d55e154cdedd03a17898d27a412f52f6721ac69b0",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientnet_b3.ra2_in1k",
+        "revision": "0366a75518620e0f2077789202073759f2d61393",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "279d2a53898aa89dab43fd6bd7df9f706aea4cb9cf916223988bbcb8e5850469",
+        "size_bytes": 49335454,
+        "url": "https://huggingface.co/timm/efficientnet_b3.ra2_in1k/resolve/0366a75518620e0f2077789202073759f2d61393/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientnet_b3.ra2_in1k/blob/0366a75518620e0f2077789202073759f2d61393/README.md"
+      }
+    },
+    {
+      "variant": "timm-b3-ra2-in1k-s-int16-o1-20261103",
+      "web_size": "b3-ra2-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/efficientnet_b3_ra2_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/efficientnet/efficientnet_b3_ra2_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "39ebfb44a3f3b72b36cb414753e1b9b9b6fe056f2eca6fda1924e20252657f90",
+          "size_bytes": 32706776,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "ecfa9d4002d501a12f7b9da646d32323e52b81f8891c349a82a57875e7b314c9",
+          "effective_config_sha256": "b64b6cf0a26944ff3338f2aaea5f5714a5fe9de2816cf68f0e81f9c62e0bec11",
+          "recipe": "samples/vision/efficientnet/conversion/recipes/timm_b3_ra2_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "80e30a5081c031ca1509ded770a671fc7e1cbc2c361699dc1e2a87f1f4d3fe13",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "7183403d6a7de7346a99295813b1806dbfda273389b7c8a2c56756179160fa73",
+          "oe_data_sha256": "38a2fd414c30954478d802ba0cdd591a0b387a4e6777b2c6f76bffba768242e3",
+          "node_info_csv_sha256": "9bcdd868609d6d534ce787a5b6fd776e65f5bf47d3b27b8c31984db162b930dd",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.983888,
+              "cosine": 0.982779
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b3_ra2_in1k-s100p-int16-20261103-r04/ptq_output/efficientnet_b3_ra2_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "dd2e01dbb6c2eb4b502fa6d388365c2ce19f7273de03f47e2dcc99ae53e6db20",
+              "size_bytes": 20129240
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b3_ra2_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "7604fbaf283d7467d7e14e7c60f668e62a70e9e57f9e42b1365d53b6264c76e3",
+              "size_bytes": 1213
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 4.76837158203125e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 4.0531158447265625e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 6.467103958129883e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 2.0265579223632812e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "72b4235450782381925ffa1d55e154cdedd03a17898d27a412f52f6721ac69b0",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientnet_b3.ra2_in1k",
+        "revision": "0366a75518620e0f2077789202073759f2d61393",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "279d2a53898aa89dab43fd6bd7df9f706aea4cb9cf916223988bbcb8e5850469",
+        "size_bytes": 49335454,
+        "url": "https://huggingface.co/timm/efficientnet_b3.ra2_in1k/resolve/0366a75518620e0f2077789202073759f2d61393/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientnet_b3.ra2_in1k/blob/0366a75518620e0f2077789202073759f2d61393/README.md"
+      }
+    },
+    {
+      "variant": "timm-b3-ra2-in1k-s-int16-o1-20261103",
+      "web_size": "b3-ra2-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/efficientnet_b3_ra2_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/efficientnet/efficientnet_b3_ra2_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "217d3f54a5b8331460717e9eb444375429ff4254ab6f90c121fc93ecbce4b230",
+          "size_bytes": 34762656,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "ecfa9d4002d501a12f7b9da646d32323e52b81f8891c349a82a57875e7b314c9",
+          "effective_config_sha256": "788fdbb1c0e6038554e6e0a8b058546143c84a6d96b579cca4a760d38eab40b2",
+          "recipe": "samples/vision/efficientnet/conversion/recipes/timm_b3_ra2_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "33a8e7882724ed81fcb606ac91f793005ae0dba47d45f9a2d84451145989f303",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "a0e89e33faae34f57d5812c18ceb350049e28264ff18083589e7d977737c576e",
+          "oe_data_sha256": "b44c1456abfd7e9949ae66d24fd32f2739b0bf7b215be7646eab2bf39044ca8c",
+          "node_info_csv_sha256": "36d2e2ab38217e670a65520d05c97b350e2db5a2b384d2568d19da5e599d53ae",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.983888,
+              "cosine": 0.982808
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b3_ra2_in1k-s600-int16-20261103-r04/ptq_output/efficientnet_b3_ra2_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "db8d61ec37cff5a97ba28d0cda370fdf3bf795d443270c825bdc1eb7b36ef42f",
+              "size_bytes": 15439724
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b3_ra2_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "485c09774ccb78fbc31be54643a7ba9c0eb6c39d4d66b097320f8bbeee5ad93d",
+              "size_bytes": 1212
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.814697265625e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 4.0531158447265625e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 6.467103958129883e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.9073486328125e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "72b4235450782381925ffa1d55e154cdedd03a17898d27a412f52f6721ac69b0",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientnet_b3.ra2_in1k",
+        "revision": "0366a75518620e0f2077789202073759f2d61393",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "279d2a53898aa89dab43fd6bd7df9f706aea4cb9cf916223988bbcb8e5850469",
+        "size_bytes": 49335454,
+        "url": "https://huggingface.co/timm/efficientnet_b3.ra2_in1k/resolve/0366a75518620e0f2077789202073759f2d61393/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientnet_b3.ra2_in1k/blob/0366a75518620e0f2077789202073759f2d61393/README.md"
+      }
+    },
+    {
+      "variant": "timm-b4-ra2-in1k-s-int16-o1-20261103",
+      "web_size": "b4-ra2-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/efficientnet_b4_ra2_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/efficientnet/efficientnet_b4_ra2_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "6435fad19dcd6848860c4d25fecf324c2a93714a36a558a7436f2231e577a238",
+          "size_bytes": 48840408,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "adafa6a2436e6d8ffe5f06cedde9f597ad3865906deb426f6491d394e4069f26",
+          "effective_config_sha256": "acce181688ac6d36c2fbadef82435d9164c398701e7d6ec18639f936ab1ab8b0",
+          "recipe": "samples/vision/efficientnet/conversion/recipes/timm_b4_ra2_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "fc7e104a489053c2591e5fa20a719d4c6b35c41319e3b62150d182a75322ef5f",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "8a99df004d564aaf3f46294e9a34abf64b956abe692368f683e0cdc6e9fcb8eb",
+          "oe_data_sha256": "78bd59750e92b08890eeed22dda4e409d468205d3372b214764ea33e43f207c5",
+          "node_info_csv_sha256": "1e6f20a8e0d9329f5e7804dba9b55727137486b39e0918961fac72d1f8ef0f7b",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.937169,
+              "cosine": 0.91966
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b4_ra2_in1k-s100-int16-20261103-r04/ptq_output/efficientnet_b4_ra2_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "8e9f5f0becedda499c4bf4cd4602215957c85a5143e7156c77f583a801b08257",
+              "size_bytes": 30440927
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b4_ra2_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "3c21c4ea9924aece2b2abe2530a3130b86f37e39ce05a37e417e3ef5d4203402",
+              "size_bytes": 1212
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 5.4836273193359375e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 5.4836273193359375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.4930963516235352e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.3676624298095703e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "a90cb6aaa40ea92ddf2a3d07df5684b544184543f19e74f684bd85f49d9103d9",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientnet_b4.ra2_in1k",
+        "revision": "442c00e15609ff467772913d230768706a406aca",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "8030f9c929ed71a06728db4b61323960e573b463e68f310bd1bfb31ed62cbf91",
+        "size_bytes": 77933206,
+        "url": "https://huggingface.co/timm/efficientnet_b4.ra2_in1k/resolve/442c00e15609ff467772913d230768706a406aca/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientnet_b4.ra2_in1k/blob/442c00e15609ff467772913d230768706a406aca/README.md"
+      }
+    },
+    {
+      "variant": "timm-b4-ra2-in1k-s-int16-o1-20261103",
+      "web_size": "b4-ra2-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/efficientnet_b4_ra2_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/efficientnet/efficientnet_b4_ra2_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "e6cf519528014d2b92255fd1ff907334c8bfd60739eea1be47270832e70aaed9",
+          "size_bytes": 49101784,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "adafa6a2436e6d8ffe5f06cedde9f597ad3865906deb426f6491d394e4069f26",
+          "effective_config_sha256": "1260a8291e674b42ebf0bbf823a8423925ce630ea5af54c95e111ae8f3a010f9",
+          "recipe": "samples/vision/efficientnet/conversion/recipes/timm_b4_ra2_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "7f9b81d7cebb0de26ab8207bc5abf809bec97264bce9c96909b24b52e45fa445",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "97578d63d33c92c2e7cd54261ddfa1621733697bad6dce57a6c51fa184a907af",
+          "oe_data_sha256": "e472a672852067ef6a267692abdb5378660e39a504707578a055727e3501448b",
+          "node_info_csv_sha256": "1e6f20a8e0d9329f5e7804dba9b55727137486b39e0918961fac72d1f8ef0f7b",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.937169,
+              "cosine": 0.91966
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b4_ra2_in1k-s100p-int16-20261103-r04/ptq_output/efficientnet_b4_ra2_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "d3361f5b57fef130c296c706d58245be95552a5db41654233ce43a59fd125168",
+              "size_bytes": 30440928
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b4_ra2_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "98522a619b26f5e83a6479bdf7b593a3d0fad0d36c37de772f740d6c37d14e05",
+              "size_bytes": 1213
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 5.4836273193359375e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 5.7220458984375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.9073486328125e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.0994415283203125e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "a90cb6aaa40ea92ddf2a3d07df5684b544184543f19e74f684bd85f49d9103d9",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientnet_b4.ra2_in1k",
+        "revision": "442c00e15609ff467772913d230768706a406aca",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "8030f9c929ed71a06728db4b61323960e573b463e68f310bd1bfb31ed62cbf91",
+        "size_bytes": 77933206,
+        "url": "https://huggingface.co/timm/efficientnet_b4.ra2_in1k/resolve/442c00e15609ff467772913d230768706a406aca/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientnet_b4.ra2_in1k/blob/442c00e15609ff467772913d230768706a406aca/README.md"
+      }
+    },
+    {
+      "variant": "timm-b4-ra2-in1k-s-int16-o1-20261103",
+      "web_size": "b4-ra2-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/efficientnet_b4_ra2_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/efficientnet/efficientnet_b4_ra2_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "c4aab6454123b8fca151abfe37ad28d3a325eaab8c753f2e3a3a9b28b55a4a61",
+          "size_bytes": 51498408,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "adafa6a2436e6d8ffe5f06cedde9f597ad3865906deb426f6491d394e4069f26",
+          "effective_config_sha256": "06ecbf27b7c0cd1179540d0469088a0e52ef73cae2c445aec17a95f157ec3450",
+          "recipe": "samples/vision/efficientnet/conversion/recipes/timm_b4_ra2_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "d4b7648a8707762b8b3ff601f87deec63e90eb785557605ae86a8ad40205b1d6",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "e6dd63f1293ed4106d4fa975704e3ca08c19aacd01bd6472a670e8f774fd5e81",
+          "oe_data_sha256": "f3471cb7334a1905bead0eafc8dd28f6a1303b3d087f8854f754df1676ed7374",
+          "node_info_csv_sha256": "0f6567812f87fb6defc1091fc59b67d885e88f49367b2b45af97bddd167202b5",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.937169,
+              "cosine": 0.91916
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b4_ra2_in1k-s600-int16-20261103-r04/ptq_output/efficientnet_b4_ra2_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "5c1d9d51c5fd3db20a0b7dbc73809bc61b9bcb626a26f2d07acb0ff18cc28028",
+              "size_bytes": 23858923
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientnet_b4_ra2_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "a3b324ec2331d26ec8b5f0a261bf9a90cf1aab79f57469853976086f3ae3f0ee",
+              "size_bytes": 1212
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 5.632638931274414e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 5.4836273193359375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.3828277587890625e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 4.231929779052734e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "a90cb6aaa40ea92ddf2a3d07df5684b544184543f19e74f684bd85f49d9103d9",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientnet_b4.ra2_in1k",
+        "revision": "442c00e15609ff467772913d230768706a406aca",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "8030f9c929ed71a06728db4b61323960e573b463e68f310bd1bfb31ed62cbf91",
+        "size_bytes": 77933206,
+        "url": "https://huggingface.co/timm/efficientnet_b4.ra2_in1k/resolve/442c00e15609ff467772913d230768706a406aca/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientnet_b4.ra2_in1k/blob/442c00e15609ff467772913d230768706a406aca/README.md"
+      }
+    }
+  ]
+}

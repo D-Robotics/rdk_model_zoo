@@ -2,6 +2,9 @@
 
 # UNet 模型说明
 
+<!-- public-specification-20261105 -->
+本次新增的独立 S100 规格、下载与运行命令见 [公开转换规格](conversion/public-20261105.md)。以下旧规格及测试记录保留原含义。
+
 <a id="overview"></a>
 ## 算法与来源
 
@@ -106,7 +109,7 @@ ONNX 或 X5 BIN，详见[evaluator/README_cn.md](./evaluator/README_cn.md)。
 ## 参考结果
 
 以下结果来自验证部署链路的 ResNet18 基线权重文件，在完整 1,449 张
-Pascal VOC 验证集上测得。复测时使用相同的 ResNet18 权重文件与数据划分。
+Pascal VOC 验证集上测得。使用相同的 ResNet18 权重文件与数据划分。
 已发布 ResNet18 可在 RDK X5 上正常下载并输出掩码与叠加图；板端精度与
 纯 BPU 性能复测按[评估说明](evaluator/README_cn.md)执行。
 

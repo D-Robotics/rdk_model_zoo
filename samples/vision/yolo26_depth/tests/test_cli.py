@@ -24,7 +24,7 @@ class CliTests(unittest.TestCase):
     def test_sdk_free_list_dry_run_and_validation(self):
         path = ROOT / "samples/vision/yolo26_depth/runtime/python/main.py"
         for argv, count in (
-            (["--list-models"], 20),
+            (["--list-models"], 23),
             (["--target", "s100p", "--variant", "l", "--dry-run"], None),
         ):
             run = subprocess.run(
@@ -37,6 +37,10 @@ class CliTests(unittest.TestCase):
             value = json.loads(run.stdout)
             if count:
                 self.assertEqual(len(value), count)
+                converted = next(row for row in value if row["asset_id"] ==
+                    "s:yolo26_depth:nash-m/yolo26n_depth_nashm_768x768_nv12_int16_20261103_o1.hbm")
+                self.assertEqual(converted["sha256"],
+                    "06ab3c57698dce5a177bef778ff2834d26692e4cde8d9bf828bae1ed19d285b1")
             else:
                 self.assertEqual(value["profile"], "lite")
                 self.assertFalse(value["sdk_loaded"])

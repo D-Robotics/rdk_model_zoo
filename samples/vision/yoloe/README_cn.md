@@ -37,11 +37,12 @@ yoloe/
 
 | 变体 | x5 | s100 | s100p | s600 | Python | C++ |
 | --- | --- | --- | --- | --- | --- | --- |
+| 11s-native-20261102 | 已转换；未板测 | 不支持 | 不支持 | 不支持 | 浮点头 | 浮点头 |
 | 11s | 支持 | 支持（Python）* | 不支持 | 不支持 | X5/S 发布制品* | 仅浮点输出模型† |
-| 11m / 11l | 支持 | 不支持 | 不支持 | 不支持 | X5 | 仅浮点输出模型† |
+| 11m / 11l | 支持 | 支持（Python）* | 不支持 | 不支持 | X5/S 发布制品* | 仅浮点输出模型† |
 | 26n/s/m/l/x | 不支持 | 支持（Python）* | 支持（Python）* | 不支持 | S 发布制品* | 仅浮点输出模型† |
 
-* Python 支持 S11 发布制品的混合 float32/int32/int16 输出与 S26 的 int32/int8 输出。整数头需要有效的运行时 SCALE 元数据，postprocess 先反量化，再执行与浮点头相同的 logit/sigmoid 解码。可选本地浮点模型需显式 SHA-256。S600 没有发布 YOLOE 模型。
+* Python 支持 S11 发布制品的混合 float32/int32/int16 输出与 S26 的 int32/int8 输出。整数头需要有效的运行时 SCALE 元数据，postprocess 先反量化，再执行与浮点头相同的 logit/sigmoid 解码。可选本地浮点模型需显式 SHA-256。S100 11m 与 11l 是已发布制品，本仓库没有它们的延迟记录。S600 没有发布 YOLOE 模型。
 
 † C++ 运行时只绑定未量化 FLOAT32 NHWC 输出，仅运行显式提供 SHA-256 的本地转换浮点输出模型。已发布制品——X5 11s/m/l BIN 与 S 量化 HBM——请使用 Python 运行时运行。详见 [C++ 运行时](runtime/cpp/README_cn.md)。
 
@@ -123,3 +124,26 @@ S100 量化 YOLOE-26n PF 模型在 `office_desk.jpg` 上的示例结果。
 ## 许可
 
 样例代码沿用源文件 Apache-2.0 声明和仓库 [LICENSE](../../../LICENSE)。权重与上游 YOLOE/Ultralytics 软件遵循其各自许可，仓库代码许可不自动覆盖模型权重；版本来源见概述中的源说明。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+本轮新增的独立规格和显式命令见 [模型准备](model/README_cn.md)。板端精度与性能尚未实测。
+
+<!-- BEGIN CPU S CONVERSIONS 20261104 -->
+
+## Additional CPU PTQ S profiles (2026-11-04)
+
+These exact trained-checkpoint exports passed the source host gate and the full-output CPU source/CPU SDK gate (three frozen images plus deterministic random input, atol=1e-4, rtol=1e-3). Each target has its own INT16 PTQ, compiler metadata, OE report and checksum in `converted_targets_20261103.json`. Compiler estimates describe conversion; board accuracy, Runtime 1/2 concurrency and C++ 1/2 streams remain not run.
+
+Models and intermediate outputs stay on dev-server. The Mac holds code and metadata only; Archive uploads stream from server files without a local model copy.
+
+| Target | Native variant | Manifest filename | SHA-256 | Bytes |
+|---|---|---|---|---:|
+| s100 | `26n-native-cal32-cpuptq-20261103-o1` | `s:yoloe26_seg:nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12_float_cal32_20261103_o1_cpuptq.hbm` | `6582c867d89472f3b5c6aed29944fb15768fcc07adb376965dd831c617a0ed30` | 167799968 |
+| s100p | `26n-native-cal32-cpuptq-20261103-o1` | `s:yoloe26_seg:nash-m/yoloe_26n_seg_pf_nashm_640x640_nv12_float_cal32_20261103_o1_cpuptq.hbm` | `9358de5bc440818e81cd51fbdf669e68b65dbc32060b95fabc7304e5238ad0f2` | 174226456 |
+| s600 | `26n-native-cal32-cpuptq-20261103-o1` | `s:yoloe26_seg:nash-p/yoloe_26n_seg_pf_nashp_640x640_nv12_float_cal32_20261103_o1_cpuptq.hbm` | `bd831c5607a7091c19d63ba4e8ffa0db41d9b818f3a65139550fb19010253efd` | 12553336 |
+| s600 | `11s-int16-cal32-cpuptq-s-o1-20261103` | `s:yoloe11_seg:nash-p/yoloe_11s_seg_pf_nashp_640x640_nv12_float_20261103_o1_cpuptq.hbm` | `d0f400a5e1f7d9fe59cbde4b0b0b9841c16b19588d67b660bd7305dfeb5520e5` | 54169136 |
+
+<!-- END CPU S CONVERSIONS 20261104 -->

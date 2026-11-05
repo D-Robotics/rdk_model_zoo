@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """PP-LiteSeg semantic segmentation: load, preprocess, infer, postprocess, predict.
 
-``PPLiteSegSegmenter`` owns the fixed 1024x512 Cityscapes class-map contract
+``PPLiteSegSegmenter`` owns the fixed 1024x512 Cityscapes segmentation contract
 end to end: construction loads the model through the shared lazy transport,
 and each ``predict`` call runs preprocess -> infer -> postprocess visible in
 this file. Catalog selection and presentation live in ``cli.py``; rendering
@@ -32,13 +32,13 @@ NUM_CLASSES = 19
 
 @dataclass(frozen=True)
 class ModelBinding:
-    """Validated PP-LiteSeg tensor protocol; class-map output semantics are fixed by the source runtime.
+    """Validated X5 class-map or separately registered S float-logits protocol.
 
     Attributes:
         selection: The manifest-backed selection this binding was built from.
         metadata: Board-observed model metadata validated against the contract.
-        input_name: Bound NV12 input tensor name.
-        output_name: Bound int32 class-map output tensor name.
+        input_name: Bound input tensor name.
+        output_name: Bound int32 class-map or float-logits output tensor name.
     """
 
     selection: ModelSelection
@@ -53,7 +53,7 @@ class ModelBinding:
 
 
 def bind_model(selection: ModelSelection, metadata: RuntimeMetadata | Mapping[str, Any]) -> ModelBinding:
-    """Validate the fixed source PP-LiteSeg tensor protocol.
+    """Validate the selected artifact's exact input and output protocol.
 
     Args:
         selection: Manifest-backed selection whose asset and path must match.
@@ -88,6 +88,12 @@ def bind_model(selection: ModelSelection, metadata: RuntimeMetadata | Mapping[st
     if len(meta.input_names) != 1 or len(meta.output_names) != 1:
         raise MetadataMismatchError("PP-LiteSeg requires exactly one input and one output.")
     input_name, output_name = meta.input_names[0], meta.output_names[0]
+    if selection.float_logits:
+        if meta.input_shapes.get(input_name)!=(1,3,INPUT_HEIGHT,INPUT_WIDTH) or meta.input_dtypes.get(input_name)!='float32':
+            raise MetadataMismatchError('S PP-LiteSeg requires normalized RGB float32 NCHW (1,3,512,1024).')
+        if meta.output_shapes.get(output_name) not in ((1,NUM_CLASSES,INPUT_HEIGHT,INPUT_WIDTH),(1,INPUT_HEIGHT,INPUT_WIDTH,NUM_CLASSES)) or meta.output_dtypes.get(output_name)!='float32':
+            raise MetadataMismatchError('S PP-LiteSeg requires a float32 19-class logits tensor.')
+        return ModelBinding(selection,meta,input_name,output_name)
     shape = meta.input_shapes.get(input_name, ())
     if shape not in ((1, 3, INPUT_HEIGHT, INPUT_WIDTH), (1, INPUT_HEIGHT, INPUT_WIDTH, 3),
                      (1, 768, INPUT_WIDTH, 1), (768, INPUT_WIDTH)):
@@ -110,13 +116,13 @@ def create_runner(selection: ModelSelection, *, runtime_factory=None, runtime=No
         runtime: Optional prebuilt SDK object; overrides the factory.
 
     Returns:
-        SingleArrayRunner: Lazy runner bound to the packed-NV12 physical input
-        contract; loading gates board identity and the published file hash.
+        SingleArrayRunner: Lazy runner bound to the selected physical input;
+        loading gates board identity and the published file hash.
     """
     return SingleArrayRunner(
         selection,
         binding_loader=bind_model,
-        physical_input=lambda binding: ((768, INPUT_WIDTH), "uint8"),
+        physical_input=lambda binding: ((1,3,INPUT_HEIGHT,INPUT_WIDTH), "float32") if binding.selection.float_logits else ((768, INPUT_WIDTH), "uint8"),
         task_name="PP-LiteSeg",
         runtime_factory=runtime_factory,
         runtime=runtime,
@@ -139,10 +145,10 @@ class ImageContext:
 
 @dataclass(frozen=True)
 class PreparedInput:
-    """Packed NV12 tensors plus this call's geometry context.
+    """Prepared input tensors plus this call's geometry context.
 
     Attributes:
-        tensors: Input-name to packed NV12 uint8 ``(768, 1024)`` mapping.
+        tensors: Packed NV12 uint8 on X5; normalized NCHW float32 on S.
         context: Frozen source geometry of this call only.
     """
 
@@ -181,12 +187,13 @@ class PPLiteSegSegmenter:
         self.binding = self.runner.load()
 
     def preprocess(self, image: np.ndarray) -> PreparedInput:
-        """Convert one BGR image to the model's packed NV12 input tensors.
+        """Prepare packed NV12 on X5 or normalized float RGB on S.
 
         Args:
             image: uint8 BGR array shaped (H, W, 3), values [0, 255]; not
                 modified. INTER_LINEAR stretches to 1024x512; no letterbox or
-                CPU normalization.
+                CPU normalization on X5. S profiles use RGB/255, mean .5 and
+                standard deviation .5 in contiguous float32 NCHW.
 
         Returns:
             PreparedInput: Input-name mapping of owned contiguous uint8 packed
@@ -204,6 +211,10 @@ class PPLiteSegSegmenter:
         ):
             raise ValueError('Expected a nonempty BGR HWC uint8 image.')
         resized = cv2.resize(image, (INPUT_WIDTH, INPUT_HEIGHT), interpolation=cv2.INTER_LINEAR)
+        if self.binding.selection.float_logits:
+            rgb=cv2.cvtColor(resized,cv2.COLOR_BGR2RGB).astype(np.float32)
+            tensor=np.ascontiguousarray(((rgb/255-.5)/.5).transpose(2,0,1)[None])
+            return PreparedInput({self.binding.input_name:tensor},ImageContext(*image.shape[:2]))
         y, uv = bgr_to_nv12_planes(resized)
         packed = np.concatenate((y.reshape(-1), uv.reshape(-1))).reshape(768, INPUT_WIDTH)
         return PreparedInput(
@@ -228,11 +239,12 @@ class PPLiteSegSegmenter:
         return self.runner(tensors)
 
     def postprocess(self, raw: np.ndarray) -> np.ndarray:
-        """Validate class IDs and return the owned model-resolution label map.
+        """Return model-resolution labels using the selected output semantics.
 
         Args:
-            raw: Output of ``infer``. The deployment boundary is already a
-                class map: no argmax, softmax or dequantization is permitted.
+            raw: Output of ``infer``. X5 already returns an int32 class map.
+                S returns float logits and applies one CPU argmax along the
+                bound class axis, without softmax or dequantization.
 
         Returns:
             np.ndarray: Owned int32 ``(512, 1024)`` class IDs in [0, 18]. No
@@ -242,6 +254,12 @@ class PPLiteSegSegmenter:
         Raises:
             ValueError: Logits, wrong dtype/shape, or out-of-range IDs.
         """
+        if self.binding.selection.float_logits:
+            expected=self.binding.metadata.output_shapes[self.binding.output_name]
+            if not isinstance(raw,np.ndarray) or tuple(raw.shape)!=expected or raw.dtype!=np.float32 or not np.isfinite(raw).all():
+                raise ValueError('Expected the bound finite float32 19-class logits tensor.')
+            axis=1 if expected[1]==NUM_CLASSES else 3
+            return np.argmax(raw,axis=axis)[0].astype(np.int32)
         if (
             not isinstance(raw, np.ndarray)
             or raw.shape != (1, INPUT_HEIGHT, INPUT_WIDTH, 1)

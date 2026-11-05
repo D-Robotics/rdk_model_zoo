@@ -13,15 +13,15 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from utils.py_utils.assets import download_asset
-from samples.vision.dinov2.runtime.python.cli import SUPPORTED_TARGETS, resolve_selection
+from samples.vision.dinov2.runtime.python.cli import SUPPORTED_TARGETS, VARIANTS, resolve_selection
 
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent
 
 
-def download_target(target: str, output_dir: str | Path = DEFAULT_OUTPUT_DIR) -> str:
+def download_target(target: str, output_dir: str | Path = DEFAULT_OUTPUT_DIR, *, variant: str | None = None, asset_id: str | None = None) -> str:
     """Fetch exactly the manifest row selected by an explicit target."""
 
-    selection = resolve_selection(target)
+    selection = resolve_selection(target, variant=variant, asset_id=asset_id)
     destination = Path(output_dir).expanduser() / selection.asset.filename
     digest = download_asset(selection.asset, destination)
     print(f"Downloaded {selection.asset.reference} to {destination}")
@@ -35,13 +35,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Prepare one published DINOv2 HBM asset.")
     parser.add_argument("--target", choices=SUPPORTED_TARGETS, required=True, help="Concrete target; no auto fallback.")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR, help="Destination model directory.")
+    parser.add_argument("--variant", choices=VARIANTS, default=None, help="Explicit variant; defaults to the historical artifact.")
+    parser.add_argument("--asset-id", default=None, help="Exact qualified manifest asset reference.")
     return parser
 
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        download_target(args.target, args.output_dir)
+        download_target(args.target, args.output_dir, variant=args.variant, asset_id=args.asset_id)
     except (ImportError, OSError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

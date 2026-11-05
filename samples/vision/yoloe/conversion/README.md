@@ -22,6 +22,8 @@ conversion/
 ├── export.py  # Python script
 ├── export_heads.py  # Python script
 ├── prepare.py  # Python script
+├── UPSTREAM_NOTICE.md  # Pinned public weights and per-candidate license
+├── licenses/  # Original upstream license
 ├── requirements-export.txt  # Source or data file
 └── requirements-host.txt  # Source or data file
 ```
@@ -73,6 +75,14 @@ python3 samples/vision/yoloe/conversion/export.py \
 
 `--weights`, `--variant` and `--output-dir` are required. The eight variants are 11s/m/l and 26n/s/m/l/x. `--threads` defaults to 2 and must be positive. If `--test-image` is omitted, validation uses a CPU random tensor with seed 0; an image is recommended for a meaningful model comparison. No checkpoint download or compiler runs implicitly. Existing output directories are rejected. An export failure exits nonzero (2 for handled input/validation errors) and, once preparation starts, preserves `export.json` with the failed stage rather than reporting success.
 
+For a release candidate, repeat `--validation-image <image>` to add real images and use
+`--validate-random` to include the native seed-0 random tensor alongside `--test-image`.
+All cases use the same exported ONNX graph and retain the original raw-anchor, decoded,
+prototype and E26 selected-identity gates. `export.json` records each planned case;
+`status=float_checked` requires every case to pass. The single-image/default behavior
+remains available. Public input versions for the current 11s/X5 and 26n/S100 candidates
+are recorded in [UPSTREAM_NOTICE.md](UPSTREAM_NOTICE.md).
+
 E11 uses the source cv2/cv3/cv5 branches, DFL16 and opset 11. E26 uses one2one branches, direct LTRB and opset 17. Linear vocabulary weights are applied as equivalent dense 1x1 convolutions without replacing checkpoint parameters; existing vocabulary convolutions are retained. Raw heads return all anchors and ten NHWC tensors, with no proposal filtering. Backbone layer routing and `model.<index>` node names are preserved for X5 attention configuration.
 
 For both families, the exporter compares all raw anchors, decoded pre-Top-K tensors and prototypes with the original static PF head (rtol/atol 1e-4), checks the ONNX graph, then compares all ten ONNX Runtime CPU outputs with PyTorch (rtol/atol 2e-3). The comparison uses `ORT_DISABLE_ALL` to evaluate the exported graph with CPU fusion disabled. It writes `yoloe_<variant>_seg_pf.onnx`, `yoloe_<variant>_seg_pf.names` and `export.json`; the record includes checkpoint/input/ONNX/vocabulary hashes, dependency versions, per-output maximum absolute errors and `status=float_checked`. The export is platform-independent — no hardware march is embedded; the march is selected by the later target-specific preparation and compile steps.
@@ -90,7 +100,7 @@ A reference float-export comparison with the eight checkpoints (E11s/m/l and E26
 | mask coefficients, stride `s` | `[1,640/s,640/s,32]` | same |
 | prototypes | `[1,160,160,32]` | same |
 
-Here `s` is 8, 16 or 32, for ten float32 outputs total. Matching dimensions certify the tensor interface; checkpoint size, architecture, class semantics and accuracy are certified by the exporter checks and the evaluator. `variant_declared` in the report marks the variant as caller-declared at this stage. Preserve the exporter metadata alongside the preparation directory.
+Here `s` is 8, 16 or 32, for ten float32 outputs total. Matching dimensions certify the tensor interface; checkpoint size, architecture, class semantics and accuracy are certified by the exporter checks and the evaluator. `variant_declared` in the report marks the variant as caller-declared at this stage. Exporter metadata is stored alongside the preparation directory.
 
 <a id="calibration"></a>
 ## Calibration
@@ -183,3 +193,42 @@ Expected output is `compiler_output/yoloe_<variant>_seg_pf_<march-without-hyphen
 Float S HBMs come from the local route above; no float S HBM is published, and the published quantized S artifacts are distinct inputs. Export comparisons run on unoptimized ONNX Runtime CPU; validate optimized-engine behavior, broader inputs and X5 11m/11l compilation with your own runs. Graph/interface validation does not detect an incorrectly labelled checkpoint size or changed label semantics; the exporter checks and evaluator cover those. SDK build and board execution for the [C++ runtime](../runtime/cpp/README.md) follow its guide. The [evaluator](../evaluator/README.md) provides explicit dataset mapping and scoring.
 
 Record the local checkpoint SHA-256, exported ONNX SHA-256 and resulting HBM SHA-256 with each conversion. Keep original quantized-output and float-output routes as distinct artifact records.
+
+## S100 reproduction profile (2026-11-03)
+
+This independent variant targets S100/nash-e with O1. Existing recipes remain available. Portable recipes use paths relative to the working directory; the effective execution YAML has its own digest in `converted.json`.
+
+- `model`: [26n_native_cal32_20261103_o1_s100_model.yaml](recipes/26n_native_cal32_20261103_o1_s100_model.yaml)
+
+Keep all ten output and vocabulary gates in the fixed 8.4.127 exporter. Native `prepare.py --target s100 --variant 26n --sample-count 32` consumes the separately frozen 32-image directory. The 200-image KL attempt hit its 40 GiB memory cap; the new calibration subset is a separate attempt with an explicit O1 filename.
+
+From the working directory in the matching OE 3.7.0 container, run `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml` for each component. Board checks remain `not-run`.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100 / 26n-native-cal32-cpuptq-20261103-o1 / model`: [26n_native_cal32_cpuptq_20261103_o1_s100_model.yaml](recipes/26n_native_cal32_cpuptq_20261103_o1_s100_model.yaml)
+- `s100p / 26n-native-cal32-cpuptq-20261103-o1 / model`: [26n_native_cal32_cpuptq_20261103_o1_s100p_model.yaml](recipes/26n_native_cal32_cpuptq_20261103_o1_s100p_model.yaml)
+- `s600 / 26n-native-cal32-cpuptq-20261103-o1 / model`: [26n_native_cal32_cpuptq_20261103_o1_s600_model.yaml](recipes/26n_native_cal32_cpuptq_20261103_o1_s600_model.yaml)
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.
+
+<!-- BEGIN CPU S CONVERSIONS 20261104 -->
+
+## Additional CPU PTQ S profiles (2026-11-04)
+
+These exact trained-checkpoint exports passed the source host gate and the full-output CPU source/CPU SDK gate (three frozen images plus deterministic random input, atol=1e-4, rtol=1e-3). Each target has its own INT16 PTQ, compiler metadata, OE report and checksum in `converted_targets_20261103.json`. Compiler estimates describe conversion; board accuracy, Runtime 1/2 concurrency and C++ 1/2 streams remain not run.
+
+Models and intermediate outputs stay on dev-server. The Mac holds code and metadata only; Archive uploads stream from server files without a local model copy.
+
+| Target | Native variant | Manifest filename | SHA-256 | Bytes |
+|---|---|---|---|---:|
+| s100 | `26n-native-cal32-cpuptq-20261103-o1` | `s:yoloe26_seg:nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12_float_cal32_20261103_o1_cpuptq.hbm` | `6582c867d89472f3b5c6aed29944fb15768fcc07adb376965dd831c617a0ed30` | 167799968 |
+| s100p | `26n-native-cal32-cpuptq-20261103-o1` | `s:yoloe26_seg:nash-m/yoloe_26n_seg_pf_nashm_640x640_nv12_float_cal32_20261103_o1_cpuptq.hbm` | `9358de5bc440818e81cd51fbdf669e68b65dbc32060b95fabc7304e5238ad0f2` | 174226456 |
+| s600 | `26n-native-cal32-cpuptq-20261103-o1` | `s:yoloe26_seg:nash-p/yoloe_26n_seg_pf_nashp_640x640_nv12_float_cal32_20261103_o1_cpuptq.hbm` | `bd831c5607a7091c19d63ba4e8ffa0db41d9b818f3a65139550fb19010253efd` | 12553336 |
+| s600 | `11s-int16-cal32-cpuptq-s-o1-20261103` | `s:yoloe11_seg:nash-p/yoloe_11s_seg_pf_nashp_640x640_nv12_float_20261103_o1_cpuptq.hbm` | `d0f400a5e1f7d9fe59cbde4b0b0b9841c16b19588d67b660bd7305dfeb5520e5` | 54169136 |
+
+<!-- END CPU S CONVERSIONS 20261104 -->

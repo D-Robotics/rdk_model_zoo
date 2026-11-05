@@ -63,7 +63,7 @@ The new directory contains `comparison.json` and NumPy arrays for both sides: en
 <a id="reference-results"></a>
 ## Reference Results
 
-The following values are source-recorded measurements from the fixed source evaluator READMEs; the measurement conditions are defined below, and current board support is defined by the support matrix:
+The following reference measurements come from the source evaluator READMEs. Measurement conditions are defined below; board support is in the support matrix.
 
 | Source target | Stage | Threads | Source-record latency (ms) | Source-record FPS |
 |---|---|---:|---:|---:|
@@ -77,6 +77,16 @@ The following values are source-recorded measurements from the fixed source eval
 | S100P | decoder | 1 / 2 | 2.84 / 3.88 | 345.15 / 505.87 |
 | S600 | encoder | 1 / 12 | 5.52 / 15.87 | 180.70 / 738.48 |
 | S600 | decoder | 1 / 12 | 2.58 / 6.42 | 381.09 / 1772.04 |
+
+### X5 quantization cosine (source record)
+
+Recorded from the `rdk_x5` Validation section. The source did not name the reference tensor or image count.
+
+| Artifact | Scope | cosine |
+| --- | --- | --- |
+| `mobile_sam_image_encoder_norm_512x512_allint16.bin` | encoder final | 0.961277 |
+| `mobile_sam_decoder_512_box_default.bin` | `low_res_masks` | 0.997539 |
+| `mobile_sam_decoder_512_box_default.bin` | `iou_predictions` | 0.999972 |
 
 A successful local or board invocation is the reference evidence for its selected target, pair and box; preserve the complete output directory for review.
 
@@ -110,9 +120,9 @@ for STAGE_MODEL in "$ENCODER" "$DECODER"; do
 done
 ```
 
-The X5 source used the tool's default 200 frames. The S source did not record a frame count; capture the frame count and tool/SDK versions when retesting. S100/S100P use 2 threads for throughput, S600 uses 12 with explicit `--core_id 1,2,3,4`. Do not copy this tool's core IDs into the Python runtime's `--bpu-cores` option. Preserve the complete commands, tool/system versions, board identity and output when retesting, not only the FPS summary.
+The X5 source used the tool's default 200 frames; the S source did not record a frame count. S100/S100P use 2 threads for throughput, S600 uses 12 with explicit `--core_id 1,2,3,4`. This tool's core IDs do not map to the Python runtime's `--bpu-cores` option.
 
-### Measurement conditions (source-recorded)
+### Measurement conditions
 
 The S source tables also record the following model facts. Parameter counts and FLOPs describe the original FP32 models, not the compiled artifact size. FLOPs use `2×MACs`. Classes are `-` (class agnostic); CPU pre/post-processing latency was not reported.
 
@@ -121,7 +131,7 @@ The S source tables also record the following model facts. Parameter counts and 
 | encoder | RGB 512×512 | 6.07 | 20.78 |
 | decoder | 256×32×32 embedding + 1×4 box | 4.06 | 0.94 |
 
-The S source defines BPU task latency from submission to completion, including cache warmup; streaming measurements reuse preallocated buffers and exclude allocation/deallocation. Inputs are float32 tensors, not NV12. The stages execute sequentially, and end-to-end latency also includes CPU preprocessing and mask resizing. Per-stage FPS is not whole-sample throughput. These are the source-recorded conditions; measure this implementation with the same definitions on the target board.
+The S source defines BPU task latency from submission to completion, including cache warmup; streaming measurements reuse preallocated buffers and exclude allocation/deallocation. Inputs are float32 tensors, not NV12. The stages execute sequentially, and end-to-end latency also includes CPU preprocessing and mask resizing. Per-stage FPS is not whole-sample throughput. The same definitions apply to this implementation on the target board.
 
 <a id="boundaries"></a>
 ## Scope

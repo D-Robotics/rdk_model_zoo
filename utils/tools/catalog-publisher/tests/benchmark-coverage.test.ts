@@ -17,7 +17,10 @@ import type { BenchmarkRecord, MetricRecord } from "../src/catalog/types";
 // assets (eight performance metrics each; two accuracy metrics per detect/pose record, four per seg/cls).
 // On 2026-10-15 YOLO26 OBB moved to the 1024x1024 builds the Web publishes: five measured X5 records
 // (eight performance and two accuracy metrics each) joined; X5 had no OBB record before.
-const EXPECTED_MODEL_COUNT = 36;
+// On 2026-11-02 OSNet x1.0 joined with one X5 asset and no X5 benchmark rows: the audited
+// sample-directory count gains one, and that directory stays unpublished. Record and metric
+// totals are unchanged.
+const EXPECTED_MODEL_COUNT = 37;
 const EXPECTED_BENCHMARK_RECORD_COUNT = 247;
 const EXPECTED_PERFORMANCE_METRIC_COUNT = 817;
 const EXPECTED_ACCURACY_METRIC_COUNT = 440;
@@ -47,6 +50,7 @@ const EXPECTED_MODEL_PATHS = new Map([
   ["mobilenetv4", "samples/vision/mobilenetv4"],
   ["mobileone", "samples/vision/mobileone"],
   ["modnet", "samples/vision/modnet"],
+  ["osnet", "samples/vision/osnet"],
   ["paddleocr", "samples/vision/paddle_ocr"],
   ["pp_liteseg", "samples/vision/pp_liteseg"],
   ["repghost", "samples/vision/repghost"],
@@ -65,6 +69,7 @@ const EXPECTED_MODEL_PATHS = new Map([
 const EXPECTED_WITHOUT_PUBLISHED_BENCHMARKS = new Set([
   "clip",
   "fasterrcnn",
+  "osnet",
   "vargconvnet",
   "yoloworld"
 ]);
@@ -264,7 +269,8 @@ describe("audited benchmark coverage", () => {
     expect(records.every((record) => record.source.path.length > 0 && record.source.section.length > 0)).toBe(true);
 
     const yoloe = platformSlice(catalog, "x5", "yoloe");
-    expect(yoloe.entry?.assets).toHaveLength(3);
+    // The 2026-11-02 float YOLOE-11s bin joined the three earlier X5 assets.
+    expect(yoloe.entry?.assets).toHaveLength(4);
     expect(yoloe.entry?.assets.every(asset => /^[a-f0-9]{64}$/.test(asset.sha256 ?? ""))).toBe(true);
     expect(yoloe.benchmarks.flatMap(record => record.performance ?? [])).toHaveLength(12);
     expect(yoloe.benchmarks.every(record => record.performance?.every(metric => metric.concurrency === 1))).toBe(true);

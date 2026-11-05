@@ -34,7 +34,7 @@ class ModelSelection:
     """One exact manifest asset and the path selected for execution.
 
     Attributes:
-        target: Concrete execution target (``x5`` for LPRNet).
+        target: Concrete execution target for the selected artifact.
         asset: Manifest asset record backing the selection.
         model_path: Local compiled model path.
         explicit_model_path: Whether the caller supplied the path explicitly.
@@ -46,48 +46,35 @@ class ModelSelection:
     explicit_model_path: bool = False
 
 
-def _asset() -> Asset:
-    rows = list_assets("x5", "lprnet")
-    if len(rows) != 1 or rows[0].reference != ASSET_ID:
-        raise BindingError(f"Expected one manifest asset {ASSET_ID!r}.")
-    return rows[0]
-
-
 def list_available_assets(target: str | None = None) -> tuple[Asset, ...]:
-    """List the one X5 asset without detecting a board or loading an SDK."""
-
-    if target in (None, "auto", "x5"):
-        return (_asset(),)
-    if target in SUPPORTED_TARGETS:
-        return ()
-    raise BindingError(f"Unknown target {target!r}.")
+    """List exact target assets without detecting hardware or loading an SDK."""
+    if target not in (None, "auto") + SUPPORTED_TARGETS:
+        raise BindingError(f"Unknown target {target!r}.")
+    rows = list_assets("x5", "lprnet") + list_assets("s", "lprnet")
+    return tuple(row for row in rows if target in (None, "auto") or
+                 (row.group == "x5" and target == "x5") or
+                 (row.group == "s" and row.filename.split("/", 1)[0] == target))
 
 
 def resolve_selection(
-    target: str = "auto",
-    *,
-    asset_id: str | None = None,
+    target: str = "auto", *, asset_id: str | None = None,
     model_path: str | Path | None = None,
 ) -> ModelSelection:
-    """Resolve an exact published LPRNet model without touching the runtime."""
-
+    """Resolve an exact target artifact; an external path requires its asset ID."""
     key = (target or "auto").lower()
     if key == "auto":
         key = "x5"
-    if key != "x5":
-        raise BindingError("LPRNet is published only for target x5.")
-    asset = _asset()
-    if asset_id is not None and asset_id != asset.reference:
-        raise BindingError(f"Expected asset-id {asset.reference}, got {asset_id!r}.")
+    rows = list_available_assets(key)
+    selected_id = ASSET_ID if key == "x5" and asset_id is None else asset_id
+    matches = [row for row in rows if selected_id is None or row.reference == selected_id]
+    if len(matches) != 1:
+        raise BindingError(f"Select one published {key} LPRNet asset with --asset-id.")
+    asset = matches[0]
     if model_path is not None and asset_id is None:
-        raise BindingError("An external model path requires --asset-id x5:lprnet:lpr.bin.")
-    return ModelSelection(
-        target=key,
-        asset=asset,
-        model_path=Path(model_path).expanduser() if model_path else SAMPLE_DIR / "model" / asset.filename,
-        explicit_model_path=model_path is not None,
-    )
-
+        raise BindingError(f"An external model path requires --asset-id {asset.reference}.")
+    return ModelSelection(key, asset,
+        Path(model_path).expanduser() if model_path else SAMPLE_DIR / "model" / asset.filename,
+        model_path is not None)
 
 
 
@@ -141,7 +128,7 @@ def run_list_models(target: str) -> int:
     rows = list_available_assets(target)
     print(json.dumps([
         {"asset_id": row.reference, "filename": row.filename, "format": row.format,
-         "url": row.url, "sha256": row.sha256, "target": "x5"}
+         "url": row.url, "sha256": row.sha256, "target": ("x5" if row.group == "x5" else row.filename.split("/", 1)[0])}
         for row in rows
     ], ensure_ascii=False, indent=2))
     return 0
@@ -161,8 +148,8 @@ def run_dry_run(selection) -> int:
         "model_path": str(selection.model_path), "model_format": selection.asset.format,
         "input_shape": [1, 3, 24, 94], "input_dtype": "float32",
         "output_shape": [1, 68, 18, 1], "output_dtype": "float32",
-        "output_layout": ("released lpr.bin binds native logits (1, 68, 18, 1) "
-                          "(measured board protocol); the 3D (1, 68, 18) layout "
+        "output_layout": ("The published artifacts bind native logits (1, 68, 18, 1) "
+                          "(X5 board metadata; S compiler ABI); the 3D (1, 68, 18) layout "
                           "is the old host/API compatibility contract and no "
                           "published SDK artifact has been observed with it; "
                           "post_process drops only singleton axes to the CTC "

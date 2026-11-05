@@ -17,6 +17,12 @@ template <class F> void rejects(F fn) {
   EXPECT(bad);
 }
 int main() {
+  cv::Mat black(640, 640, CV_8UC3, cv::Scalar(0, 0, 0));
+  EXPECT(yoloe::to_regular_nv12(black).y[0] == 0);
+  EXPECT(yoloe::to_nv12(black).y[0] == 16);
+  cv::Mat red(640, 640, CV_8UC3, cv::Scalar(0, 0, 255));
+  auto regular = yoloe::to_regular_nv12(red);
+  EXPECT(regular.y[0] == 76 && regular.uv[0] == 84 && regular.uv[1] == 255);
   cv::Mat image(334, 1000, CV_8UC3, cv::Scalar(1, 2, 3));
   auto prepared = yoloe::prepare_bgr(image, yoloe::Protocol::E26);
   EXPECT(prepared.geometry.resized_h == 214);

@@ -65,13 +65,14 @@ class DepthTests(unittest.TestCase):
         binding = bind_model(selection, metadata(selection.profile == "lite"))
         return Yolo26DepthTask(runner=runner or (lambda tensors: self.raw.copy()), binding=binding)
 
-    def test_twenty_assets_default_and_profile_identity(self):
-        self.assertEqual(len(list_available_assets()), 20)
+    def test_historical_defaults_and_new_converted_inventory(self):
+        historical = set()
         for target in ("x5", "s100", "s100p", "s600"):
-            self.assertEqual(len(list_available_assets(target)), 5)
+            self.assertEqual(len(list_available_assets(target)), 5 if target == "x5" else 6)
             self.assertEqual(resolve_selection(target).variant, "n")
             for variant in ("n", "s", "m", "l", "x"):
                 s = resolve_selection(target, variant=variant)
+                historical.add(s.asset.filename)
                 self.assertEqual(
                     s.profile,
                     "lite" if target != "x5" and variant in ("l", "x") else "nv12",
@@ -79,6 +80,11 @@ class DepthTests(unittest.TestCase):
                 self.assertEqual(
                     resolve_selection("auto", asset_id=s.asset.reference), s
                 )
+        self.assertEqual({a.filename for a in list_available_assets()}, historical | {
+            "nash-e/yolo26n_depth_nashe_768x768_nv12_int16_20261103_o1.hbm",
+            "nash-m/yolo26n_depth_nashm_768x768_nv12_int16_20261103_o1.hbm",
+            "nash-p/yolo26n_depth_nashp_768x768_nv12_int16_20261103_o1.hbm",
+        })
 
     def test_selection_rejects_conflicts_and_forgery(self):
         s = resolve_selection("s100p", variant="l")

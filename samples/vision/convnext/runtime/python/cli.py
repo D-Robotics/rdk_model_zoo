@@ -36,16 +36,12 @@ from utils.py_utils.platform_profile import (
 
 #: Targets the shared classification machinery can address.
 SUPPORTED_TARGETS = _SHARED_TARGETS
-#: ConvNeXt variants published across the manifests (X5 atto only).
-SUPPORTED_VARIANTS = ('atto',)
+#: ConvNeXt variants published on X5. Atto remains the default.
+SUPPORTED_VARIANTS = ('atto', 'nano', 'pico', 'femto', 'atto-d2')
 _SAMPLE_DIR = Path(__file__).resolve().parents[2]
 
-#: Platform deployment profiles for this sample.  X5 publishes flat
-#: ``.bin`` artifacts; the S manifests carry no ConvNeXt row, so S
-#: selection errors with zero published assets.  ``url_prefix_s`` is
-#: structurally required by the shared four-profile builder but is never
-#: consulted for this sample: no S manifest row exists, so no S URL can ever
-#: resolve.  No C++ runtime exists on any target for this sample.
+#: X5 artifacts use packed NV12; registered S variants use split NV12.
+#: C++ runtime is not provided by this sample.
 PLATFORMS = classification_profiles(url_prefix_s="rdk_s100/ConvNeXt")
 
 
@@ -61,11 +57,18 @@ def _x5_224_facts() -> VariantFacts:
     )
 
 
-#: The single published variant is 224x224 (manifest filename and YAML
-#: input agree); the unpublished femto/nano recipes share the geometry but
-#: publish no asset and never reach this table.
+#: Every published X5 variant is 224x224. The conversion YAMLs stay recipes;
+#: these rows bind the archive bins.
 _FACTS = {
     ('atto', 'x5'): _x5_224_facts(),
+    ('nano', 'x5'): _x5_224_facts(),
+    ('pico', 'x5'): _x5_224_facts(),
+    ('femto', 'x5'): _x5_224_facts(),
+    ('atto-d2', 'x5'): VariantFacts(
+        input_height=224, input_width=224,
+        output_semantics='source_declared_logits', output_score_policy='softmax',
+        resize_type=2, resize_shorter=256,
+    ),
 }
 
 BINDING_TABLE = SampleBindingTable(
@@ -75,19 +78,83 @@ BINDING_TABLE = SampleBindingTable(
     ),
     filename_variants={
         'ConvNeXt_atto_224x224_nv12.bin': 'atto',
+        'ConvNeXt_nano_224x224_nv12.bin': 'nano',
+        'ConvNeXt_pico_224x224_nv12.bin': 'pico',
+        'ConvNeXt_femto_224x224_nv12.bin': 'femto',
+        'convnext_atto_d2_bayese_224x224_nv12.bin': 'atto-d2',
     },
     default_variant='atto',
     facts=_FACTS,
 )
 
 
+
+
+
+
+
+
+
+
+
+# BEGIN CONVERTED ARTIFACT BINDINGS
+from dataclasses import replace as _with_converted_bindings
+CONVERTED_VARIANTS = ('timm-femto-d1-in1k', 'timm-pico-d1-in1k', 'timm-nano-d1h-in1k')
+SUPPORTED_VARIANTS = SUPPORTED_VARIANTS + CONVERTED_VARIANTS
+BINDING_TABLE = _with_converted_bindings(
+    BINDING_TABLE,
+    filename_variants={**BINDING_TABLE.filename_variants, **{'convnext_femto_d1_in1k_bayese_224x224_nv12.bin': 'timm-femto-d1-in1k', 'convnext_pico_d1_in1k_bayese_224x224_nv12.bin': 'timm-pico-d1-in1k', 'convnext_nano_d1h_in1k_bayese_224x224_nv12.bin': 'timm-nano-d1h-in1k'}},
+    facts={**BINDING_TABLE.facts,
+        ('timm-femto-d1-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-pico-d1-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-nano-d1h-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+    },
+)
+# END CONVERTED ARTIFACT BINDINGS
+
+
+
+# BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
+from dataclasses import replace as _with_s_converted_bindings
+SUPPORTED_VARIANTS = tuple(dict.fromkeys((*SUPPORTED_VARIANTS, *('timm-femto-d1-in1k-s-int16-o1-20261103', 'timm-nano-d1h-in1k-s-int16-o1-20261103', 'timm-pico-d1-in1k-s-int16-o1-20261103'))))
+BINDING_TABLE = _with_s_converted_bindings(
+    BINDING_TABLE,
+    manifest_rows=tuple(dict.fromkeys((*BINDING_TABLE.manifest_rows, ('s', 'convnext')))),
+    s_filename_targets=('s100', 's100p', 's600'),
+    filename_variants={**BINDING_TABLE.filename_variants, **{'s100/convnext_femto_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-femto-d1-in1k-s-int16-o1-20261103', 's100p/convnext_femto_d1_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-femto-d1-in1k-s-int16-o1-20261103', 's600/convnext_femto_d1_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-femto-d1-in1k-s-int16-o1-20261103', 's100/convnext_nano_d1h_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-nano-d1h-in1k-s-int16-o1-20261103', 's100p/convnext_nano_d1h_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-nano-d1h-in1k-s-int16-o1-20261103', 's600/convnext_nano_d1h_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-nano-d1h-in1k-s-int16-o1-20261103', 's100/convnext_pico_d1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-pico-d1-in1k-s-int16-o1-20261103', 's100p/convnext_pico_d1_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-pico-d1-in1k-s-int16-o1-20261103', 's600/convnext_pico_d1_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-pico-d1-in1k-s-int16-o1-20261103'}},
+    facts={**BINDING_TABLE.facts,
+        ('timm-femto-d1-in1k-s-int16-o1-20261103', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-femto-d1-in1k-s-int16-o1-20261103', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-femto-d1-in1k-s-int16-o1-20261103', 's600'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-nano-d1h-in1k-s-int16-o1-20261103', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-nano-d1h-in1k-s-int16-o1-20261103', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-nano-d1h-in1k-s-int16-o1-20261103', 's600'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-pico-d1-in1k-s-int16-o1-20261103', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-pico-d1-in1k-s-int16-o1-20261103', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-pico-d1-in1k-s-int16-o1-20261103', 's600'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+    },
+)
+# END S CONVERTED ARTIFACT BINDINGS 20261103
+
+# BEGIN CPU S CONVERTED ARTIFACT BINDINGS 20261104
+SUPPORTED_VARIANTS = tuple(dict.fromkeys((*SUPPORTED_VARIANTS, *('timm-atto-d2-s-int16-cpuptq-o1-20261104',))))
+BINDING_TABLE = _with_s_converted_bindings(
+    BINDING_TABLE,
+    filename_variants={**BINDING_TABLE.filename_variants, **{'s100/convnext_atto_d2_nashe_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm': 'timm-atto-d2-s-int16-cpuptq-o1-20261104', 's100p/convnext_atto_d2_nashm_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm': 'timm-atto-d2-s-int16-cpuptq-o1-20261104', 's600/convnext_atto_d2_nashp_224x224_nv12_float_int16_cpuptq_20261104_20261103_o1.hbm': 'timm-atto-d2-s-int16-cpuptq-o1-20261104'}},
+    facts={**BINDING_TABLE.facts,
+        ('timm-atto-d2-s-int16-cpuptq-o1-20261104', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics="source_declared_logits", output_score_policy="softmax"),
+        ('timm-atto-d2-s-int16-cpuptq-o1-20261104', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics="source_declared_logits", output_score_policy="softmax"),
+        ('timm-atto-d2-s-int16-cpuptq-o1-20261104', 's600'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics="source_declared_logits", output_score_policy="softmax"),
+    },
+)
+# END CPU S CONVERTED ARTIFACT BINDINGS 20261104
+
 def list_available_assets(target: Optional[str] = None) -> tuple[AssetRecord, ...]:
     """Return the finite sample assets read from the existing manifests.
 
     ``target=None`` or ``target="auto"`` is intentionally host-independent so
-    the listing command can run on a workstation.  Every S target (S100,
-    S100P, S600) returns no rows: no ConvNeXt asset for those targets
-    is present in the source manifest.
+    the listing command can run on a workstation. Registered S profiles
+    are selected by their exact converted variant and manifest reference.
     """
 
     return cls_binding.list_assets(BINDING_TABLE, target)

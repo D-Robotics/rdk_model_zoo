@@ -79,6 +79,34 @@ BINDING_TABLE = SampleBindingTable(
     facts=_FACTS,
 )
 
+# BEGIN CONVERTED ARTIFACT BINDINGS
+from dataclasses import replace as _with_converted_bindings
+CONVERTED_VARIANTS = ('timm-m5-r224-in1k',)
+SUPPORTED_VARIANTS = SUPPORTED_VARIANTS + CONVERTED_VARIANTS
+BINDING_TABLE = _with_converted_bindings(
+    BINDING_TABLE,
+    filename_variants={**BINDING_TABLE.filename_variants, **{'efficientvit_m5_r224_in1k_bayese_224x224_nv12.bin': 'timm-m5-r224-in1k'}},
+    facts={**BINDING_TABLE.facts,
+        ('timm-m5-r224-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+    },
+)
+# END CONVERTED ARTIFACT BINDINGS
+
+# BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
+from dataclasses import replace as _with_s_converted_bindings
+SUPPORTED_VARIANTS = tuple(dict.fromkeys((*SUPPORTED_VARIANTS, *('timm-m5-r224-in1k-s-int16-o1-20261103',))))
+BINDING_TABLE = _with_s_converted_bindings(
+    BINDING_TABLE,
+    manifest_rows=tuple(dict.fromkeys((*BINDING_TABLE.manifest_rows, ('s', 'efficientvit')))),
+    s_filename_targets=('s100', 's100p', 's600'),
+    filename_variants={**BINDING_TABLE.filename_variants, **{'s100/efficientvit_m5_r224_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-m5-r224-in1k-s-int16-o1-20261103', 's100p/efficientvit_m5_r224_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-m5-r224-in1k-s-int16-o1-20261103', 's600/efficientvit_m5_r224_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-m5-r224-in1k-s-int16-o1-20261103'}},
+    facts={**BINDING_TABLE.facts,
+        ('timm-m5-r224-in1k-s-int16-o1-20261103', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-m5-r224-in1k-s-int16-o1-20261103', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-m5-r224-in1k-s-int16-o1-20261103', 's600'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+    },
+)
+# END S CONVERTED ARTIFACT BINDINGS 20261103
 
 def list_available_assets(target: Optional[str] = None) -> tuple[AssetRecord, ...]:
     """Return the finite sample assets read from the existing manifests.

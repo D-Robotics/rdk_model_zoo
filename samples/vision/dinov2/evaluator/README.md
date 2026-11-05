@@ -78,7 +78,7 @@ For accuracy, run the exported float ONNX with ONNXRuntime on the same preproces
 | `thread_num` | int | `1` in the baseline record | `hrt_model_exec perf` worker count. |
 | `core_id` | CSV ints | unset, except S600 12-thread record | BPU cores used for the S600 high-concurrency record: `1,2,3,4`. |
 | `frames` | int | `200` in source records | Performance measurement scope. |
-| `input` | tensor | `(1,3,224,224)` F32 | RGB normalized tensor produced by the runtime preprocessing contract. |
+| `input` | tensor | `(1,3,224,224)` F32 | RGB normalized tensor produced by the runtime preprocessing. |
 
 <a id="metrics"></a>
 ## Metrics

@@ -25,8 +25,9 @@ ConvNeXt 是从原始 ResNet 出发、逐步借鉴 Swin Transformer 设计改造
 ![ConvNeXt block 与 ResNet、Swin Transformer block 的对比](./test_data/ConvNeXt_Block.png)
 
 *图：ConvNeXt 论文的 block 对比——Swin Transformer block（左）、ResNet
-block（中）、ConvNeXt block（右）。图中为上游训练结构；X5 上部署的制品
-为 INT8 量化的 atto 变体（224×224 NV12，见[支持范围](#support-matrix)）。*
+block（中）、ConvNeXt block（右）。图中为上游训练结构；X5 缺省制品为
+INT8 量化的 atto 变体。nano、pico、femto 以相同 224×224 NV12 输入发布
+（见[支持范围](#support-matrix)）。*
 
 Python 入口见 `runtime/python/main.py`，模型推理流程在 `classify.py`，参数和结果展示在 `cli.py`。
 [runtime/python/README_cn.md](runtime/python/README_cn.md)
@@ -55,9 +56,13 @@ convnext/
 | 模型 | 输入 | X5 | S100 | S100P | S600 |
 | --- | --- | --- | --- | --- | --- |
 | ConvNeXt-atto | 224x224 | ✓ | — | — | — |
+| ConvNeXt-nano | 224x224 | ✓ | — | — | — |
+| ConvNeXt-pico | 224x224 | ✓ | — | — | — |
+| ConvNeXt-femto | 224x224 | ✓ | — | — | — |
+| ConvNeXt-atto-d2 (converted / 板端待测) | 224x224 | ✓ | — | — | — |
 
-运行时覆盖：Python CLI 通过 `--target auto|x5` 和 `--variant atto` 运行已
-发布的组合。仅 X5 归档发布 `ConvNeXt_atto_224x224_nv12.bin`；`--target
+运行时覆盖：Python CLI 通过 `--target auto|x5` 和 `--variant
+atto|nano|pico|femto` 运行已发布组合。缺省变体为 `atto`。`--target
 s100`、`s100p`、`s600` 不会解析出任何资产。本 Sample 不提供 C++ 运行时。
 
 <a id="prerequisites"></a>
@@ -99,7 +104,7 @@ python3 samples/vision/convnext/runtime/python/main.py \
   --label-file datasets/imagenet/imagenet_classes.names
 ```
 
-缺省变体（未指定时）为 `atto`，即唯一已发布变体。
+缺省变体（未指定时）为 `atto`。nano、pico、femto 通过 `--variant` 选择。
 完整命令见 [runtime/python/README_cn.md](runtime/python/README_cn.md)。
 
 <a id="expected-results"></a>
@@ -107,7 +112,7 @@ python3 samples/vision/convnext/runtime/python/main.py \
 
 Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并退出 0；除非
 指定 `--img-save-path`，不写任何输出文件。使用随附 `cheetah.JPEG` 时 Top-5
-含猎豹相关 ImageNet 类别。按支持矩阵选择目标并准备对应制品；运行时会在加载模型前核验板卡身份。
+含猎豹相关 ImageNet 类别。按支持矩阵选择目标并准备对应制品，在对应板卡上运行。
 
 下图为 X5 发布的参考运行效果：demo 将 top-1 标签画在随附的
 `cheetah.JPEG` 上（即 `--img-save-path` 写出的可视化）；该记录运行返回
@@ -119,20 +124,23 @@ Python 运行打印稳定的 Top-K（默认 5）类别 ID、分数与标签并�
 <a id="performance"></a>
 ## 性能数据
 
-ConvNeXt 系列在 RDK X5 上的发布性能（X5 发布 x5-v1.1.3；Float Top-1 为
+ConvNeXt 系列在 RDK X5 上记录的测量（X5 发布 x5-v1.1.3；Float Top-1 为
 量化前 ONNX 结果，Quant Top-1 为部署模型结果；延迟为单帧单线程单核，
-FPS 为 4 线程并发；CPU 8xA55@1.8GHz 性能模式、BPU 1xBayes-e@1GHz）：
+FPS 为 4 线程并发；CPU 8xA55@1.8GHz 性能模式、BPU 1xBayes-e@1GHz）。
+上文的下载脚本和快速上手缺省使用 ConvNeXt Atto。nano、pico、femto
+同样是已发布 bin，数字与原记录相同。
 
-| 模型 | 尺寸 | 类别数 | 参数量 (M) | Float Top-1 | Quant Top-1 | 延迟 (ms) | FPS |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ |
-| ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ |
-| ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ |
-| ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ |
+| 模型 | 尺寸 | 类别数 | 参数量 (M) | Float Top-1 | Quant Top-1 | 延迟 (ms) | FPS | 制品 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ConvNeXt_atto | 224x224 | 1000 | 3.69 | 73.25% | 69.75% | 1.96 | 732+ | `ConvNeXt_atto_224x224_nv12.bin` |
+| ConvNeXt_nano | 224x224 | 1000 | 15.59 | 77.37% | 71.75% | 5.71 | 200+ | `ConvNeXt_nano_224x224_nv12.bin` |
+| ConvNeXt_pico | 224x224 | 1000 | 9.04 | 77.25% | 71.03% | 3.37 | 364+ | `ConvNeXt_pico_224x224_nv12.bin` |
+| ConvNeXt_femto | 224x224 | 1000 | 5.22 | 73.75% | 72.25% | 2.46 | 556+ | `ConvNeXt_femto_224x224_nv12.bin` |
 
-全部数值引自 X5 发布的同一张性能表。仅 atto 提供可下载制品（见
-[model/README_cn.md](model/README_cn.md)）；nano 与 femto 对应
-[conversion/](conversion/README_cn.md) 中的参考 PTQ 配方，无已发布制品。
+数字与 X5 发布性能表相同，没有增删。制品见
+[model/README_cn.md](model/README_cn.md)。本示例没有 pico 的 PTQ 配置。
+nano 与 femto 在 [conversion/](conversion/README_cn.md) 里有参考 PTQ
+配方；这些 YAML 配方不是已发布 bin。
 
 <a id="entry-points"></a>
 ## 入口
@@ -147,3 +155,51 @@ FPS 为 4 线程并发；CPU 8xA55@1.8GHz 性能模式、BPU 1xBayes-e@1GHz）�
 
 样例代码遵循仓库顶层 LICENSE（Apache-2.0）。源模型与权重遵循上游 ConvNeXt 发行版
 （[facebookresearch/ConvNeXt](https://github.com/facebookresearch/ConvNeXt)）的许可。已发布制品按平台发布 Manifest 提供。
+
+## Atto D2 已转换产物（2026-11-02）
+
+`atto-d2` 是单独转换的 [timm/convnext_atto.d2_in1k](https://huggingface.co/timm/convnext_atto.d2_in1k/tree/435c0a8d02d5b872e90c8cde36887465982cb399)（Apache-2.0），权重版本固定为 `435c0a8d02d5b872e90c8cde36887465982cb399`。默认 `atto` 及四个历史产物的身份和历史数据保持原样。
+
+新 BIN 为 4,528,264 字节，SHA-256 为 `c334e6c87ae202a0ef8d78b4506ecdab7fafb4684ce720fc4407f9bf990ea101`。导出和主机 PyTorch/ONNX 对照已通过；板端冒烟、精度、Runtime 1/2 并发、C++ 1/2 流均为 **not-run**。历史性能表不适用于此文件。预处理为 Pillow bicubic 短边缩放至 256、四舍五入居中裁剪 224，然后通过 OpenCV 转 BT.601 video-range NV12；ImageNet 归一化融合于 Mapper。输出为 1,000 类 float32 logits，Runtime 再做 softmax。此规格需要 Pillow。
+
+```bash
+# 仓库根目录：下载并验证已登记模型。
+python3 samples/vision/convnext/model/download.py --target x5 --variant atto-d2
+# 主机检查契约，不加载 SDK、不下载、不推理。
+python3 samples/vision/convnext/runtime/python/main.py --target x5 --variant atto-d2 --dry-run
+# 已准备好的 X5 板端命令；本次仅转换交付未执行。
+python3 samples/vision/convnext/runtime/python/main.py \
+  --target x5 --asset-id x5:convnext:convnext_atto_d2_bayese_224x224_nv12.bin \
+  --model-path samples/vision/convnext/model/convnext_atto_d2_bayese_224x224_nv12.bin \
+  --test-img samples/vision/convnext/test_data/cheetah.JPEG
+```
+
+<!-- converted-batch-20261102 -->
+## 已转换新增规格（2026-11-02）
+
+以下 timm 权重单独转换，已通过严格权重加载、结构重参数化及两组输入的
+PyTorch/ONNX 主机对照、checker 和编译。板端冒烟、精度、Runtime 1/2 并发和
+C++ 1/2 流均为 **not-run**，历史指标和截图不适用于这些产物。原有默认规格保留。
+新规格需要 Pillow，使用 bicubic 短边 256、四舍五入居中裁剪 224；Mapper 融合
+该权重实际的归一化参数。输出为 float32 1,000 类 logits，由原生 Runtime 做 softmax。
+
+| 规格 | 模型文件 | 权重版本 | 板端 |
+|---|---|---|---|
+| `timm-femto-d1-in1k` | `convnext_femto_d1_in1k_bayese_224x224_nv12.bin` | [`1e0c02df687c`](https://huggingface.co/timm/convnext_femto.d1_in1k/blob/1e0c02df687c47abf0819e1a4f858293e17e0c50/README.md) | not-run |
+| `timm-pico-d1-in1k` | `convnext_pico_d1_in1k_bayese_224x224_nv12.bin` | [`0d879cb0cfd9`](https://huggingface.co/timm/convnext_pico.d1_in1k/blob/0d879cb0cfd9b851a13f007d3ed170dd049f1476/README.md) | not-run |
+| `timm-nano-d1h-in1k` | `convnext_nano_d1h_in1k_bayese_224x224_nv12.bin` | [`fe9cba6df2f1`](https://huggingface.co/timm/convnext_nano.d1h_in1k/blob/fe9cba6df2f17352639e23ca89e1aa6b37f51462/README.md) | not-run |
+
+```bash
+python3 samples/vision/convnext/model/download.py --target x5 --variant timm-femto-d1-in1k
+python3 samples/vision/convnext/runtime/python/main.py --target x5 --variant timm-femto-d1-in1k --dry-run
+```
+
+精确 URL、SHA-256 和大小登记在 `docs/release/x5/models.yaml`；来源及主机对照
+记录见 `conversion/converted.json`。模型许可逐项保留在公开 release 清单中。
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+本轮新增的独立规格和显式命令见 [模型准备](model/README_cn.md)。板端精度与性能尚未实测。

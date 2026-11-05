@@ -25,7 +25,7 @@ in the matching OpenExplorer (OE) toolchain container.
   are used unchanged. License: Apache-2.0 (the checkpoint model cards).
 
 <a id="preprocessing"></a>
-### Preprocessing contract
+### Preprocessing
 
 Calibration, evaluation, and the runtime share one geometry, which follows the
 checkpoint's own evaluation settings (`crop_pct`):
@@ -36,12 +36,14 @@ checkpoint's own evaluation settings (`crop_pct`):
 | small | 0.875 | 256 (`int(224 / 0.875)`) | 224x224 center crop |
 
 The resize is antialiased bicubic (Pillow). Pixels are RGB; the ONNX input
-`data` is normalized float32 `[1,3,224,224]` with the ImageNet mean/std and
+`data` is normalized float32 `[1,3,224,224]` using the ImageNet mean and standard deviation below;
 the output `logits` is `[1,1000]`. In the deployed model the normalization is
 compiled in (`mean_value` = mean x 255, `scale_value` = 1 / (255 x std)), so the
 runtime feeds NV12 produced from the 224x224 crop. NV12 conversion uses
 OpenCV's limited-range BT.601 transform, hence `input_space_and_range:
 bt601_video` in both configurations.
+
+`checkpoints.json` records mean `0.485 0.456 0.406` and std `0.229 0.224 0.225`. The PTQ YAML in this directory compiles that normalization in as `norm_type: data_mean_and_scale`, `mean_value: 123.675 116.28 103.53`, `scale_value: 0.0171247538317 0.0175070028011 0.0174291938998`, `input_type_rt: nv12`, and `calibration_type: default`.
 
 <a id="directory"></a>
 ## Directory structure
@@ -100,7 +102,7 @@ python3 samples/vision/mobilenetv3/conversion/export.py --model v3-large-100 \
 `export.py` verifies the checkpoint hashes, loads it strictly, simplifies the
 graph, and compares real-image logits and Top-5 with PyTorch. `export.json`
 records the maximum absolute error per image and binds the ONNX SHA-256 to
-the checkpoint, the preprocessing contract, and the dependency versions.
+the checkpoint, these preprocessing settings, and the dependency versions.
 
 <a id="calibration"></a>
 ## Calibration
@@ -108,7 +110,7 @@ the checkpoint, the preprocessing contract, and the dependency versions.
 - Dataset: a fixed 200-image subset of COCO 2017 train2017 (selection seed 42),
   listed with SHA-256 in a manifest. The set shares no image with the
   evaluation set, which `workflow.py calibrate` verifies.
-- Preprocessing: the contract above; the S series takes the normalized ONNX
+- Preprocessing: the preprocessing above; the S series takes the normalized ONNX
   input as float32 `.npy`.
 
 ```bash

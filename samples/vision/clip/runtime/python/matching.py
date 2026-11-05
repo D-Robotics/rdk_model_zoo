@@ -77,6 +77,7 @@ def bind_model(selection, image_metadata, text_session):
     from samples.vision.clip.runtime.python.cli import resolve_selection
 
     expected = resolve_selection(selection.target, image_asset_id=selection.image_asset.reference,
+                                 variant=selection.variant,
                                  text_asset_id=selection.text_asset.reference,
                                  image_model_path=selection.image_model_path,
                                  text_model_path=selection.text_model_path)
@@ -140,6 +141,13 @@ class RuntimeModelRunner:
             from utils.py_utils.platforms import require_execution_target
             require_execution_target(self.selection.target)
         try:
+            if self.selection.variant != 'published':
+                # Authenticate both halves before constructing either runtime.
+                from utils.py_utils.assets import sha256_file
+                for path, asset in ((self.selection.image_model_path, self.selection.image_asset),
+                                    (self.selection.text_model_path, self.selection.text_asset)):
+                    if sha256_file(path) != asset.sha256:
+                        raise MetadataMismatchError(f'CLIP model bytes differ from {asset.reference}.')
             if self.image_runtime is None:
                 factory = self.image_factory or _default_runtime_factory()
                 self.image_runtime = factory(str(self.selection.image_model_path))

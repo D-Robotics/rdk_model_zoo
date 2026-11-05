@@ -130,3 +130,7 @@ Default preprocessing is linear letterbox with BGR 127 padding. Classification p
 ## Troubleshooting
 
 Prepare the target-specific artifact with the model downloader. When using `--model-path`, pass its exact qualified reference with `--asset-id`. Select a target listed in the support matrix and check that artifact metadata matches the sample tensor contract before inference.
+
+<!-- converted-batch-20261102 -->
+Converted variants listed in `conversion/converted.json` use resize mode 2: Pillow bicubic shorter-edge 256 and rounded center crop 224. Their board results are not-run; use an exact asset id with any external model path.
+<!-- /converted-batch-20261102 -->

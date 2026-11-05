@@ -106,7 +106,7 @@ CliOptions parse_cli(int argc, char **argv) {
 }
 std::string cli_help() {
   return R"(YOLOE native FLOAT32 PF segmentation
-Required: --target x5|s100|s100p --variant 11s|11m|11l|26n|26s|26m|26l|26x
+Required: --target x5|s100|s100p --variant 11s|11m|11l|26n|26s|26m|26l|26x|11s-native-20261102
   --model-path FILE --model-sha256 HEX64 --test-img FILE --label-file FILE --output NEW_DIR
 Not every target/variant pair is supported. S models need separately converted float outputs.
 Options: --score-thres 0.25 --nms-thres 0.7 (E11 only) --resize-type 1

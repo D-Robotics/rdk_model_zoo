@@ -2,18 +2,31 @@
 
 The conversion directory is a verbatim rdk_x5 @ac11571 delivery: three PTQ
 reference configs (atto/femto/nano, march ``bayes-e``, calibration
-``default``) while the X5 manifest publishes exactly one asset (atto).
+``default``). The X5 manifest publishes atto, nano, pico, and femto bins;
+the YAML output prefix is still variant-less, so a recipe is not the
+published filename.
 Adjusting a pinned file is a source-branch change, not a local edit.  The
 source recipes carry quirks these tests pin instead of silently repairing:
 the ONNX references are mutually inconsistent (atto points at
 ``convnext_femto.onnx``, femto at an external common-zoo ``convnext_atto.onnx``
 path, nano at ``convnext_pico.onnx``), and the shared output prefix is
 variant-less (``ConvNeXt-deploy_224x224_nv12``), so reproducing the published
-atto artifact needs an explicit rename step.  No exporter script and no
-``calibration_data_rgb_f32`` producer ship with the delivery.
+atto artifact needs an explicit rename step.  The historical delivery contained no exporter or calibration producer.
+The new Atto D2 exporter, producer and recipe are maintained separately.
 """
 
 from __future__ import annotations
+
+# Historical assertions exclude the new S profiles; test_s_classification_profiles
+# validates every new profile against its actual compiler ABI and source record.
+
+# Converted artifact fixtures extend, rather than replace, historical assertions.
+import json as _converted_json
+from pathlib import Path as _ConvertedPath
+_CONVERTED_MODELS = _converted_json.loads((_ConvertedPath(__file__).resolve().parents[1] / 'conversion/converted.json').read_text())['models']
+_CONVERTED_FILES = [row['job']['filename'] for row in _CONVERTED_MODELS]
+_CONVERTED_VARIANTS = [row['job']['variant'] for row in _CONVERTED_MODELS]
+
 
 import hashlib
 from pathlib import Path
@@ -29,7 +42,7 @@ VERBATIM_SHA256 = {
     "ConvNeXt_nano.yaml": "f844e099d6080417fa44d76cace538574d6322671e4d616c6d0c91e85116437f",
 }
 
-#: The only filename the X5 manifest publishes for this sample.
+#: Atto remains the default published filename used by the prefix check.
 MANIFEST_BASENAME = "ConvNeXt_atto_224x224_nv12.bin"
 #: The femto recipe points outside the sample tree (common model zoo).
 EXTERNAL_ONNX_REFERENCE = (
@@ -59,7 +72,7 @@ class ProvenanceTests(unittest.TestCase):
     def test_conversion_directory_is_exactly_the_source_set(self):
         names = sorted(p.name for p in CONVERSION.iterdir() if p.suffix in {".yaml", ".py"})
         self.assertEqual(
-            names, sorted(VERBATIM_SHA256),
+            names, sorted([*VERBATIM_SHA256, "convnext_atto_d2_x5.yaml", "export.py", "prepare_calibration.py"]),
             "the conversion set must change only together with its provenance pins",
         )
 
@@ -109,21 +122,35 @@ class RecipeConsistencyTests(unittest.TestCase):
                 self.assertNotEqual(f"{prefix}.bin", MANIFEST_BASENAME)
         self.assertTrue(MANIFEST_BASENAME.startswith("ConvNeXt_atto_"))
 
-    def test_only_atto_is_published_femto_and_nano_are_recipes_only(self):
-        """The manifest carries exactly one ConvNeXt row (atto).  femto and
-        nano exist as conversion recipes with no published asset — the
-        runtime binding must not grow variants for them."""
+    def test_published_bins_stay_distinct_from_recipe_yamls(self):
+        """The manifest publishes atto, nano, pico, and femto bins. Atto
+        stays the default. The femto and nano YAMLs remain conversion
+        recipes; pico still has no PTQ config."""
 
         from samples.vision.convnext.runtime.python.cli import (
             BINDING_TABLE,
             list_available_assets,
         )
 
-        records = list_available_assets("auto")
-        self.assertEqual([r.filename for r in records], [MANIFEST_BASENAME])
-        self.assertEqual(set(BINDING_TABLE.filename_variants.values()), {"atto"})
-        self.assertNotIn("femto", BINDING_TABLE.filename_variants.values())
-        self.assertNotIn("nano", BINDING_TABLE.filename_variants.values())
+        records = tuple(r for r in list_available_assets("auto") if r.target == "x5")
+        self.assertEqual(
+            sorted(r.filename for r in records),
+            sorted([
+                "ConvNeXt_atto_224x224_nv12.bin",
+                "ConvNeXt_femto_224x224_nv12.bin",
+                "ConvNeXt_nano_224x224_nv12.bin",
+                "ConvNeXt_pico_224x224_nv12.bin",
+                "convnext_atto_d2_bayese_224x224_nv12.bin",
+            ] + _CONVERTED_FILES),
+        )
+        self.assertEqual(BINDING_TABLE.default_variant, "atto")
+        self.assertEqual(
+            {v for filename, v in BINDING_TABLE.filename_variants.items() if filename.endswith(".bin")},
+            {"atto", "femto", "nano", "pico", "atto-d2"} | set(_CONVERTED_VARIANTS),
+        )
+        self.assertTrue((CONVERSION / "ConvNeXt_femto.yaml").is_file())
+        self.assertTrue((CONVERSION / "ConvNeXt_nano.yaml").is_file())
+        self.assertFalse((CONVERSION / "ConvNeXt_pico.yaml").is_file())
 
     def test_int16_placement_counts_are_pinned(self):
         """The node_info tables place 8/5/8 int16 nodes (atto/femto/nano) —
@@ -141,18 +168,13 @@ class RecipeConsistencyTests(unittest.TestCase):
                 self.assertNotIn("debug_mode", text)
                 self.assertNotIn("set_all_nodes_int16", text)
 
-    def test_no_exporter_or_calibration_producer_is_claimed(self):
-        """The X5 delivery ships reference configs only: no exporter script
-        for the ONNX inputs and no producer for ``calibration_data_rgb_f32``
-        exists in this directory, and the test set must stay that way."""
-
-        py_files = sorted(p.name for p in CONVERSION.glob("*.py"))
-        self.assertEqual(py_files, [])
-        self.assertFalse(
-            (CONVERSION / "calibration_data_rgb_f32").exists(),
-            "no producer ships for this directory; checked-in data would "
-            "fake a reproducible pipeline",
-        )
+    def test_new_flow_has_separate_exporter_recipe_and_no_checked_in_dataset(self):
+        self.assertEqual(sorted(p.name for p in CONVERSION.glob("*.py")),
+                         ["export.py", "prepare_calibration.py"])
+        self.assertFalse((CONVERSION / "calibration_rgb_f32").exists())
+        recipe = _yaml_text("convnext_atto_d2_x5.yaml")
+        self.assertIn("convnext_atto_d2_224x224.onnx", recipe)
+        self.assertIn("input_space_and_range: bt601_video", recipe)
 
 
 if __name__ == "__main__":

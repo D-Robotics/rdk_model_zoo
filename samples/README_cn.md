@@ -3,7 +3,7 @@
 # 按任务选择 Sample
 
 
-按任务查找模型、转换方法和评估程序。共 51 个 Sample：45 个视觉、3 个语音、1 个机器人策略和 2 个大模型示例。
+按任务查找模型、转换方法和评估程序。共 54 个 Sample：46 个视觉、3 个语音、1 个机器人策略和 4 个大模型示例。
 
 ## 图像分类
 
@@ -37,6 +37,7 @@
 | Sample | 转换 | 评估 |
 |---|---|---|
 | [ultralytics_yolo](vision/ultralytics_yolo/README_cn.md) | [conversion](vision/ultralytics_yolo/conversion/README_cn.md) | [evaluator](vision/ultralytics_yolo/evaluator/README_cn.md) |
+| [osnet](vision/osnet/README_cn.md) | [conversion](vision/osnet/conversion/README_cn.md) | [evaluator](vision/osnet/evaluator/README_cn.md) |
 | [paddle_ocr](vision/paddle_ocr/README_cn.md) | [conversion](vision/paddle_ocr/conversion/README_cn.md) | [evaluator](vision/paddle_ocr/evaluator/README_cn.md) |
 | [yoloe](vision/yoloe/README_cn.md) | [conversion](vision/yoloe/conversion/README_cn.md) | [evaluator](vision/yoloe/evaluator/README_cn.md) |
 | [yolov5](vision/yolov5/README_cn.md) | [conversion](vision/yolov5/conversion/README_cn.md) | [evaluator](vision/yolov5/evaluator/README_cn.md) |
@@ -90,10 +91,12 @@ HIMLoco 读取准备好的六帧观测数据，保存预测的动作。
 
 | Sample | 转换 | 评测 |
 | --- | --- | --- |
+| [oellm](llm/oellm/README_cn.md) | [conversion](llm/oellm/conversion/README_cn.md) | [evaluator](llm/oellm/evaluator/README_cn.md) |
+| [gemma4](llm/gemma4/README_cn.md) | [conversion](llm/gemma4/conversion/README_cn.md) | [evaluator](llm/gemma4/evaluator/README_cn.md) |
 | [gemma4-e2b](llm/gemma4-e2b/README_cn.md) | [conversion](llm/gemma4-e2b/conversion/README_cn.md) | [evaluator](llm/gemma4-e2b/evaluator/README_cn.md) |
 | [minicpm5-2b](llm/minicpm5-2b/README_cn.md) | [conversion](llm/minicpm5-2b/conversion/README_cn.md) | [evaluator](llm/minicpm5-2b/evaluator/README_cn.md) |
 
-Gemma 提供对话、HTTP 服务和单次推理程序。MiniCPM5-2B 提供 S100/S100P（OELLM 1.0.0）与 S600（OELLM 2.0 beta）两套程序。支持的板卡、模型准备和构建命令见各 Sample 说明。
+Gemma4 使用 SDK 2.0.0 官方 Runtime，提供 S600 E2B/E4B W4/W8 文本生成；gemma4-e2b 保留原生 C++ 实现。gemma4-e2b 提供对话、HTTP 服务和单次推理程序。MiniCPM5-2B 提供 S100/S100P（OELLM 1.0.0）与 S600（OELLM 2.0 beta）两套程序。支持的板卡、模型准备和构建命令见各 Sample 说明。
 
 ## ACT 与 Pi0
 

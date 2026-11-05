@@ -38,7 +38,7 @@ bash samples/vision/unetmobilenet/model/download.sh --target s600
 <a id="accompanying-files"></a>
 ## Accompanying files
 
-No external class file is needed; the fixed 19-class IDs use source rdk_colors for display. segmentation.png is an example input; result.jpg is source-recorded output, neither is a labeled validation set.
+No external class file is needed; the fixed 19-class IDs use source rdk_colors for display. segmentation.png is an example input; result.jpg is source output, neither is a labeled validation set.
 
 <a id="local-paths"></a>
 ## Local paths

@@ -52,8 +52,7 @@ bash samples/speech/asr/runtime/python/run.sh --target s600 \
   --output-dir outputs/asr-s600-run1
 ```
 
-覆盖路径必须提供精确 ID；默认路径相对 sample，用户相对路径相对调用目录。运行时在
-构造 SDK 前核验板卡身份。
+覆盖路径必须提供精确 ID；默认路径相对 sample，用户相对路径相对调用目录。在与 `--target` 匹配的板卡上运行。
 
 <a id="formats-checksums"></a>
 ## 运行契约

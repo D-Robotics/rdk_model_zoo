@@ -31,9 +31,14 @@ class CppLauncherTests(unittest.TestCase):
         listed = self.invoke("--list-models", "--target", "s100")
         self.assertEqual(listed.returncode, 0, listed.stderr)
         self.assertEqual(listed.stdout.strip(), "s:yolov5:s100/yolov5x_672x672_nv12.hbm")
+        s100p = self.invoke("--list-models", "--target", "s100p")
+        self.assertEqual(s100p.returncode, 0, s100p.stderr)
+        self.assertEqual(s100p.stdout.strip(), "")
         x5 = self.invoke("--list-models", "--target", "x5")
         self.assertEqual(x5.returncode, 0, x5.stderr)
-        self.assertEqual(len(x5.stdout.splitlines()), 9)
+        legacy = {f'x5:yolov5:yolov5{size}_tag_v{tag}_detect_640x640_bayese_nv12.bin'
+                  for tag,sizes in [('2.0','smlx'),('7.0','nsmlx')] for size in sizes}
+        self.assertTrue(legacy <= set(x5.stdout.splitlines()))
 
     def test_dry_run_is_explicit_and_reports_exact_publication(self):
         result = self.invoke("--dry-run", "--target", "s600")

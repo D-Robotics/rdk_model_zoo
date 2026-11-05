@@ -1,0 +1,494 @@
+{
+  "schema_version": 1,
+  "status": "converted",
+  "board_validation": "not-run",
+  "profile": "raw RGB, Pillow bicubic short256, rounded center crop224, checkpoint normalization fused by mapper",
+  "models": [
+    {
+      "job": {
+        "family": "convnext",
+        "model": "convnext_femto.d1_in1k",
+        "repo_id": "timm/convnext_femto.d1_in1k",
+        "platform": "x5",
+        "size": "femto-d1-in1k-224",
+        "variant": "timm-femto-d1-in1k",
+        "filename": "convnext_femto_d1_in1k_bayese_224x224_nv12.bin",
+        "run_id": "convnext_femto_d1_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T10:37:43.701150+00:00",
+        "sha256": "804ffffe492c320387eceb894623cd49140b91c1f6edc10347fc3c0d18864054",
+        "size_bytes": 6035412
+      },
+      "source": {
+        "repo_id": "timm/convnext_femto.d1_in1k",
+        "revision": "1e0c02df687c47abf0819e1a4f858293e17e0c50",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "b6a71d3e93892518be64acf2728f28ad978e8efe0a0d12b1120332046c9047e2",
+        "size_bytes": 20883504,
+        "url": "https://huggingface.co/timm/convnext_femto.d1_in1k/resolve/1e0c02df687c47abf0819e1a4f858293e17e0c50/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/convnext_femto.d1_in1k/blob/1e0c02df687c47abf0819e1a4f858293e17e0c50/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "convnext_femto.d1_in1k",
+        "checkpoint_sha256": "b6a71d3e93892518be64acf2728f28ad978e8efe0a0d12b1120332046c9047e2",
+        "onnx_sha256": "33e8e20122d89cd7c7acf17685b3ea94c07513dc29db4e991f2b4b202a2375b6",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "d66377d5492ef98df0a05e093826a4a5f9ad72b2f05cf2d9e3e7697a7a131887",
+        "parameter_count": 5217784,
+        "deployment_parameter_count": 5217784,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.875,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          1.2636184692382812e-05,
+          4.5299530029296875e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "convnext",
+          "family": "convnext",
+          "task": "cls",
+          "size": "femto-d1-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "804ffffe492c320387eceb894623cd49140b91c1f6edc10347fc3c0d18864054",
+            "name": "convnext_femto_d1_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 6035412
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "7869854a7672c42f467f43d1930c2b8b5c27c5e978a9a7e608b5e42fdff860c2",
+        "controller_sha256": "56b746069bba643fee2cb39b942e3b19a651e41731c11e6c06a653e20c3a6eb5",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "7869854a7672c42f467f43d1930c2b8b5c27c5e978a9a7e608b5e42fdff860c2",
+        "compile_log": "b7116c0811ec78fce3079155e5198d50f66404d936ef45ebc28c312e8344b973",
+        "model_info": "451f4090151adaa9c3447ea5ece9155b77c7c240e49bbd36906bac714810ff48",
+        "oe_report": "6fd06c628bbf61f488ed61913d7ee85ce394ac295513aa1f0e8769e1f94d848c",
+        "oe_data": "bbb90dfd029602b98f764e0324c3ce20782882f1dae054b0c215463cef0d5861"
+      }
+    },
+    {
+      "job": {
+        "family": "convnext",
+        "model": "convnext_pico.d1_in1k",
+        "repo_id": "timm/convnext_pico.d1_in1k",
+        "platform": "x5",
+        "size": "pico-d1-in1k-224",
+        "variant": "timm-pico-d1-in1k",
+        "filename": "convnext_pico_d1_in1k_bayese_224x224_nv12.bin",
+        "run_id": "convnext_pico_d1_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T10:38:44.465368+00:00",
+        "sha256": "c5f30d22fbc01d8cc9fde89bfec638536ee71f1840ee2dbba1098dfbea350428",
+        "size_bytes": 9967568
+      },
+      "source": {
+        "repo_id": "timm/convnext_pico.d1_in1k",
+        "revision": "0d879cb0cfd9b851a13f007d3ed170dd049f1476",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "886829b6326981758d9996f4f18b3ac61c49f259cb9fad37ef1d1e8306b64875",
+        "size_bytes": 36195162,
+        "url": "https://huggingface.co/timm/convnext_pico.d1_in1k/resolve/0d879cb0cfd9b851a13f007d3ed170dd049f1476/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/convnext_pico.d1_in1k/blob/0d879cb0cfd9b851a13f007d3ed170dd049f1476/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "convnext_pico.d1_in1k",
+        "checkpoint_sha256": "886829b6326981758d9996f4f18b3ac61c49f259cb9fad37ef1d1e8306b64875",
+        "onnx_sha256": "280cd9d4fc1dd7d4da5e65da3bbdedfe8619a80e326e17b9befcee5f1de9c796",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "d66377d5492ef98df0a05e093826a4a5f9ad72b2f05cf2d9e3e7697a7a131887",
+        "parameter_count": 9045672,
+        "deployment_parameter_count": 9045672,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.875,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          2.3543834686279297e-05,
+          6.556510925292969e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "convnext",
+          "family": "convnext",
+          "task": "cls",
+          "size": "pico-d1-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "c5f30d22fbc01d8cc9fde89bfec638536ee71f1840ee2dbba1098dfbea350428",
+            "name": "convnext_pico_d1_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 9967568
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "1b26185a298c306ec5e0cf822565ec37d0da58c4451101531b08637847c42022",
+        "controller_sha256": "56b746069bba643fee2cb39b942e3b19a651e41731c11e6c06a653e20c3a6eb5",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "1b26185a298c306ec5e0cf822565ec37d0da58c4451101531b08637847c42022",
+        "compile_log": "a9428133bb8e49eaf50c208bb8688be5339b93f0a3dd2de21c219a9bd372a4bd",
+        "model_info": "b761a4040a67e38b1aedd77e56c131086f8412224b316f7657977e90860abaff",
+        "oe_report": "ca631e87dcc6cf045c38f860592d6312d6b38ee5ccaf9c7278c401110652c7d2",
+        "oe_data": "3e473ed3f70a0621177ca60b1ab61913792c6cbf80a99faf5b1d7b7cdd12755a"
+      }
+    },
+    {
+      "job": {
+        "family": "convnext",
+        "model": "convnext_nano.d1h_in1k",
+        "repo_id": "timm/convnext_nano.d1h_in1k",
+        "platform": "x5",
+        "size": "nano-d1h-in1k-224",
+        "variant": "timm-nano-d1h-in1k",
+        "filename": "convnext_nano_d1h_in1k_bayese_224x224_nv12.bin",
+        "run_id": "convnext_nano_d1h_in1k-x5-20261102-r01",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T10:45:44.386398+00:00",
+        "sha256": "489c2c71296bb57034e6840cbb7657453ae2fdf939ea75c26d14911fb0756401",
+        "size_bytes": 16783316
+      },
+      "source": {
+        "repo_id": "timm/convnext_nano.d1h_in1k",
+        "revision": "fe9cba6df2f17352639e23ca89e1aa6b37f51462",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "9dfdcca04dfe3a335d11639ccda0904a875e92b6b152a986fc6740eb42d6d5c8",
+        "size_bytes": 62388542,
+        "url": "https://huggingface.co/timm/convnext_nano.d1h_in1k/resolve/fe9cba6df2f17352639e23ca89e1aa6b37f51462/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/convnext_nano.d1h_in1k/blob/fe9cba6df2f17352639e23ca89e1aa6b37f51462/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "convnext_nano.d1h_in1k",
+        "checkpoint_sha256": "9dfdcca04dfe3a335d11639ccda0904a875e92b6b152a986fc6740eb42d6d5c8",
+        "onnx_sha256": "751b3037d96cc1a2c714a09a7e8796e5d2b90fb9d2e1229d392c5b883f44c8b3",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "d66377d5492ef98df0a05e093826a4a5f9ad72b2f05cf2d9e3e7697a7a131887",
+        "parameter_count": 15593560,
+        "deployment_parameter_count": 15593560,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.95,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          2.2470951080322266e-05,
+          1.2874603271484375e-05
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "convnext",
+          "family": "convnext",
+          "task": "cls",
+          "size": "nano-d1h-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "489c2c71296bb57034e6840cbb7657453ae2fdf939ea75c26d14911fb0756401",
+            "name": "convnext_nano_d1h_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 16783316
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "89941b646489acc08ee9742464ed6c155251abc7de1880dec9f8dd9905567c11",
+        "controller_sha256": "56b746069bba643fee2cb39b942e3b19a651e41731c11e6c06a653e20c3a6eb5",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "89941b646489acc08ee9742464ed6c155251abc7de1880dec9f8dd9905567c11",
+        "compile_log": "4206b2a6ca665155eafe0db5f4370476463924543a3d4369c31a9bd764f72eae",
+        "model_info": "b3233d70bb256935d1ca8b0ec462105b87c8d8469e460123f2e550df6d8ecd3a",
+        "oe_report": "53e16f740948017b4e2020f709e8e2b3c695f7e59c86439df430e662e78e7bfc",
+        "oe_data": "f81c4657120ed77bd69909fc29b2e5ccc789f76ab80f4a165342600098e582cf"
+      }
+    }
+  ]
+}

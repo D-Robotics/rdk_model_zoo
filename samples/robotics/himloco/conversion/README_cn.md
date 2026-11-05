@@ -64,10 +64,10 @@ conversion/
 <a id="toolchain-targets"></a>
 ## 环境
 
-ONNX 导出在能够加载 `policy.pt` 的训练/导出环境中执行。源记录的版本为 PyTorch 2.7.0、
+ONNX 导出在能够加载 `policy.pt` 的训练/导出环境中执行。记录的版本为 PyTorch 2.7.0、
 ONNX 1.22.0 和 NumPy 1.26.0。
 
-PTQ 在 x86 Linux 主机的 RDK X5 OpenExplorer 环境中执行。源记录的工具链为
+PTQ 在 x86 Linux 主机的 RDK X5 OpenExplorer 环境中执行。工具链为
 OpenExplorer v1.2.8 / Mapper 1.24.3。开始前检查依赖和工具：
 
 ```bash
@@ -119,7 +119,7 @@ python3 samples/robotics/himloco/conversion/prepare_calibration.py \
 ```
 
 每个 `.bin` 包含 270 个连续 float32（1080 字节）。`calibration-manifest.json` 记录
-源文件哈希、选中行号、统计量和预处理合同。不能把序列化 `.pt` 直接改名为 `.bin`。
+源文件哈希、选中行号、统计量和预处理设置。不能把序列化 `.pt` 直接改名为 `.bin`。
 
 <a id="compile"></a>
 ## 3. 执行 Checker 和 MIX PTQ

@@ -2,6 +2,9 @@
 
 # 3D ResNet-18（R3D-18）视频动作分类
 
+<!-- public-specification-20261105 -->
+本次新增的独立 S100 规格、下载与运行命令见 [公开转换规格](conversion/public-20261105.md)。以下旧规格及测试记录保留原含义。
+
 <a id="overview"></a>
 ## 算法与来源
 
@@ -24,7 +27,7 @@ R3D-18 用于短视频片段的动作识别。它把 ResNet-18 的卷积扩展�
 └── requirements-host.txt  # 源码或数据文件
 ```
 
-本示例没有转换脚本、C++ 运行时或视频解码器。
+新增公开规格提供可复现导出及视频/预处理片段运行入口，见[公开转换规格](conversion/public-20261105.md)。暂未提供 C++ 实现。
 
 <a id="support-matrix"></a>
 ## 支持与实测矩阵
@@ -44,7 +47,7 @@ R3D-18 用于短视频片段的动作识别。它把 ResNet-18 的卷积扩展�
 ## 环境前提
 
 - 板卡：RDK S100，使用提供 `hbm_runtime` Python 包的 S 系列系统镜像；镜像与运行时版本由部署环境选择。
-- 转换：x86 Linux 主机上的 OpenExplorer 3.5.0（见[转换说明](conversion/README_cn.md)）；未包含完整的导出、校准和编译配方。
+- 转换：新增公开规格的精确 S SDK CPU 镜像、导出、校准及编译配方见[公开转换规格](conversion/public-20261105.md)。下文 OpenExplorer 3.5.0 说明对应历史文件。
 - 磁盘：需要保存下载的 HBM 和随附的 2.4 MB `video0.npy`。
 
 <a id="quickstart"></a>

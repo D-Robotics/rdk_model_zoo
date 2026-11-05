@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from utils.py_utils.assets import Asset, list_assets
+from utils.py_utils.assets import Asset, list_assets, resolve_asset
 from utils.py_utils.runtime_meta import metadata_evidence
 
 
@@ -28,12 +28,18 @@ SAMPLE_DIR = Path(__file__).resolve().parents[2]
 ASSET_ID = "x5:pp_liteseg:pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin"
 
 
+def converted_profiles() -> tuple[dict, ...]:
+    """Read accepted S profiles without loading a model or board SDK."""
+    path=SAMPLE_DIR/'conversion/converted_targets_20261103.json'
+    return tuple(json.loads(path.read_text())['profiles']) if path.is_file() else ()
+
+
 @dataclass(frozen=True)
 class ModelSelection:
     """One published manifest asset and its selected local path.
 
     Attributes:
-        target: Concrete execution target (``x5`` for PP-LiteSeg).
+        target: Concrete execution target.
         asset: Manifest asset record backing the selection.
         model_path: Local compiled model path.
         explicit_model_path: Whether the caller supplied the path explicitly.
@@ -44,6 +50,11 @@ class ModelSelection:
     model_path: Path
     explicit_model_path: bool = False
 
+    @property
+    def float_logits(self) -> bool:
+        """S profiles consume normalized RGB and expose pre-argmax logits."""
+        return self.target != 'x5'
+
 
 def _asset() -> Asset:
     rows = list_assets("x5", "pp_liteseg")
@@ -53,10 +64,10 @@ def _asset() -> Asset:
 
 
 def list_available_assets(target: Optional[str] = None) -> tuple[Asset, ...]:
-    """List the published X5 asset without board or SDK access.
+    """List exact published assets without board or SDK access.
 
     Args:
-        target: Concrete target filter; S targets publish nothing.
+        target: Concrete target filter, or auto for all registered profiles.
 
     Returns:
         tuple[Asset, ...]: Published assets in manifest order.
@@ -64,11 +75,12 @@ def list_available_assets(target: Optional[str] = None) -> tuple[Asset, ...]:
     Raises:
         BindingError: The target is unknown.
     """
-    if target in (None, "auto", "x5"):
-        return (_asset(),)
-    if target in SUPPORTED_TARGETS:
-        return ()
-    raise BindingError(f"Unknown target {target!r}.")
+    if target not in (None,'auto',*SUPPORTED_TARGETS):
+        raise BindingError(f"Unknown target {target!r}.")
+    rows=[_asset()] if target in (None,'auto','x5') else []
+    rows.extend(resolve_asset('s:pp_liteseg:'+p['components']['model']['filename'])
+                for p in converted_profiles() if target in (None,'auto',p['target']['platform']))
+    return tuple(rows)
 
 
 def resolve_selection(
@@ -76,11 +88,12 @@ def resolve_selection(
     *,
     asset_id: Optional[str] = None,
     model_path: "str | Path | None" = None,
+    variant: Optional[str] = None,
 ) -> ModelSelection:
     """Resolve PP-LiteSeg's exact published asset identity without loading it.
 
     Args:
-        target: ``auto``/``x5``; other targets publish nothing.
+        target: Concrete target; auto preserves the X5 default.
         asset_id: Qualified manifest reference; a ``model_path`` override
             requires the exact reference.
         model_path: Optional explicit local path for the selected asset.
@@ -94,13 +107,22 @@ def resolve_selection(
     key = (target or "auto").lower()
     if key == "auto":
         key = "x5"
-    if key != "x5":
-        raise BindingError("PP-LiteSeg is published only for target x5.")
-    asset = _asset()
+    if key not in SUPPORTED_TARGETS:
+        raise BindingError(f'Unknown target {target!r}.')
+    if key == 'x5':
+        if variant is not None:raise BindingError('The X5 default has no named converted S variant.')
+        asset=_asset()
+    else:
+        if not asset_id and not variant:raise BindingError('Select an exact S --asset-id or converted --variant.')
+        profiles=[p for p in converted_profiles() if p['target']['platform']==key
+                  and (variant is None or p['variant']==variant)
+                  and (asset_id is None or asset_id=='s:pp_liteseg:'+p['components']['model']['filename'])]
+        if len(profiles)!=1:raise BindingError('No exact PP-LiteSeg target/variant/asset combination is published.')
+        asset=resolve_asset('s:pp_liteseg:'+profiles[0]['components']['model']['filename'])
     if asset_id is not None and asset_id != asset.reference:
         raise BindingError(f"Expected asset-id {asset.reference}, got {asset_id!r}.")
     if model_path is not None and asset_id is None:
-        raise BindingError("An external model path requires --asset-id x5:pp_liteseg:pp_liteseg_stdc1_cityscapes_1024x512_nv12.bin.")
+        raise BindingError('An external model path requires the exact --asset-id.')
     return ModelSelection(
         target=key,
         asset=asset,
@@ -119,6 +141,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description='PP-LiteSeg Cityscapes class-map inference')
     p.add_argument('--target', choices=('auto',) + SUPPORTED_TARGETS, default='auto')
     p.add_argument('--asset-id')
+    p.add_argument('--variant',choices=tuple(dict.fromkeys(p['variant'] for p in converted_profiles())))
     p.add_argument('--model-path', type=Path)
     p.add_argument('--test-img', type=Path, default=SAMPLE_DIR / 'test_data/street.png')
     p.add_argument('--output', type=Path, default=Path('outputs/pp_liteseg/result.jpg'))
@@ -144,7 +167,8 @@ def run_list_models(target: str) -> int:
     Returns:
         int: 0 after printing the list.
     """
-    print(json.dumps([{'asset_id': a.reference, 'url': a.url, 'sha256': a.sha256, 'target': 'x5'}
+    print(json.dumps([{'asset_id': a.reference, 'url': a.url, 'sha256': a.sha256,
+                       'target': 'x5' if a.group=='x5' else a.filename.split('/')[0]}
                       for a in list_available_assets(target)], indent=2))
     return 0
 
@@ -161,8 +185,8 @@ def run_dry_run(selection: ModelSelection, test_img: Path) -> int:
     """
     print(json.dumps({'target': selection.target, 'asset_id': selection.asset.reference,
                       'model_path': str(selection.model_path), 'test_img': str(test_img),
-                      'input_shape': [768, 1024], 'mask_shape': [512, 1024],
-                      'output_semantics': 'int32 class IDs 0..18; not logits',
+                      'input_shape': [1,3,512,1024] if selection.float_logits else [768, 1024], 'mask_shape': [512, 1024],
+                      'output_semantics': 'float32 logits; CPU argmax across 19 classes' if selection.float_logits else 'int32 class IDs 0..18; not logits',
                       'sdk_loaded': False, 'downloaded': False}, indent=2))
     return 0
 

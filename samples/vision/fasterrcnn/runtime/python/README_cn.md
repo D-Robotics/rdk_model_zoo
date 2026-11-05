@@ -55,6 +55,7 @@ python3 main.py --target x5 \
 | 参数 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
 | `--target` | `str` | `auto` | `auto`, `x5`, `s100`, `s100p`, `s600` |
+| `--variant` | str | `published` | 原有模型使用 published；转换模型选择精确规格。 |
 | `--parta-path` | `Path` | `None` | 第一段模型 |
 | `--partb-path` | `Path` | `None` | 第二段模型，与 PartA 一起指定 |
 | `--input` | `Path` | `samples/vision/fasterrcnn/test_data/bus.jpg` | 图片，配合 `--track` 时为视频 |

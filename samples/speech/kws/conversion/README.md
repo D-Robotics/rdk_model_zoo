@@ -24,7 +24,7 @@ The published deployment is an S100 HBM. A conversion workflow needs the target'
 <a id="export"></a>
 ## Export prerequisite
 
-Export a model from its trained wake-word checkpoint and architecture, using the matching preprocessing definitions and export tools. Record weight and graph SHA-256, input/output names, shapes and probability semantics. Preserve the final activation when the graph already returns probabilities; the runtime does not add sigmoid.
+Export a model from its trained wake-word checkpoint and architecture, using the matching preprocessing definitions and export tools. Record weight and graph SHA-256, input/output names, shapes and probability semantics. When the graph already returns probabilities, its final activation is used as-is; the runtime does not add sigmoid.
 
 <a id="calibration"></a>
 ## Calibration prerequisite

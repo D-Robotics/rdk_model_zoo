@@ -26,7 +26,7 @@ python/
 <a id="environment"></a>
 ## Environment
 
-Use X5 with its matching `hbm_runtime`, NumPy, OpenCV and PyYAML. Host imports/help/list/dry-run need no board SDK. Host Python dependencies: `samples/vision/googlenet/requirements-host.txt`.
+Use the selected X5/S100/S100P/S600 target with its matching `hbm_runtime`, NumPy, OpenCV and PyYAML. Host imports/help/list/dry-run need no board SDK. Host Python dependencies: `samples/vision/googlenet/requirements-host.txt`.
 
 [Environment requirements](../../README.md#prerequisites). For board inference, use the matching board image with `hbm_runtime`.
 
@@ -40,7 +40,7 @@ python3 samples/vision/googlenet/runtime/python/main.py --list-models
 python3 samples/vision/googlenet/runtime/python/main.py --dry-run --target x5
 ```
 
-Expected: 1 references or default `googlenet` contract, exit 0. A prepared X5 runs:
+Expected: manifest references or the default `googlenet` contract, exit 0. A prepared X5 runs:
 
 ```bash
 # cwd: repository root
@@ -68,12 +68,12 @@ python3 samples/vision/googlenet/runtime/python/main.py
 | `--target` | choice | auto | execution target: `auto`, `x5`, `s100`, `s100p`, `s600`; an execution target must match detected hardware |
 | `--asset-id` | string | null | complete `group:sample:filename` reference from the manifest |
 | `--variant` | choice | null | model variant (`googlenet` default when omitted; see `--list-models` for published combinations) |
-| `--model-path` | string | null | existing `.bin`; must be paired with `--asset-id`; defaults to the `model/` location for the resolved reference when omitted |
+| `--model-path` | string | null | existing X5 `.bin` or S `.hbm`; must be paired with `--asset-id`; defaults to the `model/` location for the resolved reference when omitted |
 | `--test-img` | string | samples/vision/googlenet/test_data/indigo_bunting.JPEG | BGR input image |
 | `--label-file` | string | datasets/imagenet/imagenet_classes.names | one-label-per-line ImageNet labels |
 | `--top-k` | int | 5 | number of printed results |
 | `--topk` | int | 5 | alias of `--top-k` |
-| `--resize-type` | int | null | `0` direct stretch or `1` letterbox with BGR 127 padding; default follows the model configuration (1) |
+| `--resize-type` | int | null | `0` direct stretch or `1` letterbox with BGR 127 padding; default follows the model: historical X5 uses 1; converted S uses Pillow bicubic short256/center224 (policy 2) |
 | `--priority` | int | 0 | runtime scheduling priority (0-255) |
 | `--bpu-cores` | int list | [0] | runtime BPU core indexes |
 | `--img-save-path` | string | null | optional annotated output image path |
@@ -119,12 +119,12 @@ print(result.class_ids, result.scores, result.labels)
 
 | Stage | Input | Output |
 | --- | --- | --- |
-| preprocess (pre_process) | image path or BGR uint8 H×W×3 | PreparedInput: named flat NV12 uint8 tensor (75264 bytes) and immutable resize context |
+| preprocess (pre_process) | image path or BGR uint8 H×W×3 | PreparedInput: packed X5 NV12 or split S Y/UV uint8 tensors and immutable resize context |
 | infer (forward) | PreparedInput | runner raw output mapping, unchanged; no softmax or sorting |
 | postprocess (post_process) | F32 scores squeezing to (1000,) | softmax and stable Top-K ClassificationResult |
 | predict | image path or BGR image | the three stages chained |
 
-Default preprocessing is linear letterbox with BGR 127 padding. Classification postprocessing does not consume geometry. The runner handles SDK loading, scheduling and metadata checks; file/label loading and drawing stay in the CLI layer (`cli.py`).
+Historical X5 default preprocessing is linear letterbox with BGR 127 padding. Converted S profiles use Pillow bicubic short256/center224 and the recorded normalization. Classification postprocessing does not consume geometry. The runner handles SDK loading, scheduling and metadata checks; file/label loading and drawing stay in the CLI layer (`cli.py`).
 
 <a id="troubleshooting"></a>
 ## Troubleshooting

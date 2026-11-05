@@ -54,8 +54,7 @@ bash samples/speech/asr/runtime/python/run.sh --target s600 \
 ```
 
 The exact ID is required with a path override. The default path is sample-relative;
-supplied relative paths are caller-relative. The runtime checks board identity
-before constructing the SDK.
+supplied relative paths are caller-relative. Run on the board that matches `--target`.
 
 <a id="formats-checksums"></a>
 ## Runtime contract

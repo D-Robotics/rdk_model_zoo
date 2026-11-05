@@ -97,3 +97,35 @@ SHA-256 如下，可用于核对本地副本：
 ## 补充准备
 
 将 ONNX 图准备为 `./efficientvit_m5.onnx`，并在 `./calibration_data_rgb_f32` 准备 224x224 输入的 float32 RGB `.npy` 校准数据。使用 `calibration_type: 'max'`、`max_percentile: 0.99999`、mean `123.675 116.28 103.53` 和 scale `0.01712475 0.017507 0.01742919`。YAML 产出 `EfficientViT_msra_224x224_nv12.bin`；部署前将文件命名为与 Manifest 一致的 `EfficientViT_m5_224x224_nv12.bin`。使用上文命令运行 checker 与编译。
+
+<!-- converted-batch-20261102 -->
+## 固定版本转换配方
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model efficientvit_m5.r224_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/efficientvit/conversion/recipes/timm-m5-r224-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+各规格使用 converted.json 中对应的模型、固定权重及 recipes 配方，输出到全新目录。校准为原始 RGB float32 二进制张量，不重复归一化，不套用历史板端数据。
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
+
+- `s100 / timm-m5-r224-in1k-s-int16-o1-20261103 / model`: [timm_m5_r224_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_m5_r224_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-m5-r224-in1k-s-int16-o1-20261103 / model`: [timm_m5_r224_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_m5_r224_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-m5-r224-in1k-s-int16-o1-20261103 / model`: [timm_m5_r224_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_m5_r224_in1k_s_int16_o1_20261103_s600_model.yaml)
+
+S 校准必须使用 ONNX 输入域的归一化 `.npy`；NV12 Runtime 的 mean/scale 仍写在配方中。公共工具的 `--target` 和 `--normalization-json` 从同一 checkpoint 导出记录读取实际归一化。
+
+[Shared classification workflow](../../../../utils/tools/classification_conversion/README.md).
+
+原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。

@@ -17,7 +17,7 @@ def build_parser():
     p = argparse.ArgumentParser(
         description="Download an exact published YOLOE model; S publications remain quantized."
     )
-    p.add_argument("--target", required=True, choices=("x5", "s100", "s100p"))
+    p.add_argument("--target", required=True, choices=("x5", "s100", "s100p", "s600"))
     p.add_argument("--variant", default=None)
     p.add_argument("--asset-id", default=None)
     p.add_argument("--output-dir", type=Path, default=None)

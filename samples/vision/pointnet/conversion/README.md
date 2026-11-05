@@ -40,7 +40,7 @@ references; they do not fill the sample-specific missing recipe.
 
 No checkpoint/export script or pinned export environment is included. The source
 operator notes list Conv, BatchNorm and ReLU; keep the graph below as the
-source-recorded illustration — a new export passes its own operator checks.
+source illustration — a new export passes its own operator checks.
 Expected runtime boundary is float32 `(1,3,N)` points and `(1,N,4)` part logits.
 N is fixed by the actual compiled model, not by a user-selectable runtime option.
 

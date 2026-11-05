@@ -88,16 +88,19 @@ def main(argv=None) -> int:
         description="Download published FasterRCNN PartA/PartB pairs "
                     "into model/<target>/ (default: all four targets)")
     parser.add_argument("--target", nargs="+", choices=SUPPORTED_TARGETS,
-                        default=list(SUPPORTED_TARGETS),
-                        help="board target(s) to fetch (default: all)")
+                        default=None,
+                        help="board target(s) to fetch (default: all targets in the selected variant)")
     parser.add_argument("--output-dir", type=Path, default=MODEL_DIR,
                         help="destination directory (default: the sample "
                              "model directory, the runtime's lookup path)")
+    parser.add_argument('--variant', default='published', help='Exact paired deployment variant')
     args = parser.parse_args(argv)
 
     try:
-        pairs = descriptor_pairs()
-        for target in args.target:
+        pairs = descriptor_pairs(args.variant)
+        for target in (args.target or [item for item in SUPPORTED_TARGETS if item in pairs]):
+            if target not in pairs:
+                raise ValueError(f'Variant {args.variant!r} has no published {target} pair')
             download_target(target, args.output_dir, pairs)
     except (ImportError, OSError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)

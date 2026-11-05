@@ -163,3 +163,41 @@ Compiled paths are listed above. Published files and per-variant targets are lis
 ## Additional preparation
 
 Use `timm.models.create_model` for the selected `repvit_m0_9`, `repvit_m1_0`, or `repvit_m1_1` checkpoint, export with PyTorch, and simplify with `onnxsim`. Place the matching RGB/NCHW 1×3×224×224 graph at the YAML path. Prepare `./calibration_data_rgb_f32` as float32 RGB data with `calibration: default`, mean `123.675/116.28/103.53`, and scale `0.01712475/0.017507/0.01742919`. The YAMLs share one working directory and output prefix; build variants separately and retain the selected identity.
+
+<!-- converted-batch-20261102 -->
+## Pinned converted recipes
+
+[Shared export/calibration instructions](../../../../utils/tools/classification_conversion/README.md).
+
+```bash
+python3 utils/tools/classification_conversion/export.py --model repvit_m0_9.dist_450e_in1k --checkpoint /path/to/pinned/model.safetensors --calibration-sample /path/to/run/calibration_rgb_f32/0000.rgb --output /path/to/run/model.onnx
+cp samples/vision/repvit/conversion/recipes/timm-m0-9-dist-450e-in1k_x5.yaml /path/to/run/compile.yaml
+# In the X5 OE container, cwd /path/to/run:
+hb_mapper checker --model model.onnx --model-type onnx --march bayes-e
+hb_mapper makertbin --model-type onnx --config compile.yaml
+```
+
+Use the model/tag, pinned checkpoint and matching YAML from `converted.json`; use a fresh attempt directory. The calibration producer uses raw RGB float32 binary tensors. Do not apply normalization twice or inherit historical board metrics.
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100 / timm-m0-9-dist-450e-in1k-s-int16-o1-20261103 / model`: [timm_m0_9_dist_450e_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_m0_9_dist_450e_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-m0-9-dist-450e-in1k-s-int16-o1-20261103 / model`: [timm_m0_9_dist_450e_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_m0_9_dist_450e_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-m0-9-dist-450e-in1k-s-int16-o1-20261103 / model`: [timm_m0_9_dist_450e_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_m0_9_dist_450e_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-m1-0-dist-450e-in1k-s-int16-o1-20261103 / model`: [timm_m1_0_dist_450e_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_m1_0_dist_450e_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-m1-0-dist-450e-in1k-s-int16-o1-20261103 / model`: [timm_m1_0_dist_450e_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_m1_0_dist_450e_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-m1-0-dist-450e-in1k-s-int16-o1-20261103 / model`: [timm_m1_0_dist_450e_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_m1_0_dist_450e_in1k_s_int16_o1_20261103_s600_model.yaml)
+- `s100 / timm-m1-1-dist-450e-in1k-s-int16-o1-20261103 / model`: [timm_m1_1_dist_450e_in1k_s_int16_o1_20261103_s100_model.yaml](recipes/timm_m1_1_dist_450e_in1k_s_int16_o1_20261103_s100_model.yaml)
+- `s100p / timm-m1-1-dist-450e-in1k-s-int16-o1-20261103 / model`: [timm_m1_1_dist_450e_in1k_s_int16_o1_20261103_s100p_model.yaml](recipes/timm_m1_1_dist_450e_in1k_s_int16_o1_20261103_s100p_model.yaml)
+- `s600 / timm-m1-1-dist-450e-in1k-s-int16-o1-20261103 / model`: [timm_m1_1_dist_450e_in1k_s_int16_o1_20261103_s600_model.yaml](recipes/timm_m1_1_dist_450e_in1k_s_int16_o1_20261103_s600_model.yaml)
+
+S PTQ consumes normalized ONNX-domain `.npy` tensors. NV12 runtime mean/scale remain in the recipe. The shared producer reads checkpoint normalization through `--target` and `--normalization-json`.
+
+[Shared classification workflow](../../../../utils/tools/classification_conversion/README.md).
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

@@ -54,7 +54,7 @@ sudo docker run -it --rm --network host --shm-size=15g \
 
 也可以在线拉取镜像：`docker pull registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0`。下载链接失效时，请在 OE 在线文档查看最新地址。
 
-有效制品清单是 `docs/release/x5/models.yaml` 或 `docs/release/s/models.yaml`；其中发布模型的 SHA 字段均为 `null`（未知）。S 为三个 march 分别提供编码器和解码器 YAML，X5 提供两份 bayes-e YAML。
+有效制品清单是 `docs/release/x5/models.yaml` 或 `docs/release/s/models.yaml`；历史发布行中的 SHA 字段为 `null`（未知），下方带日期的转换配置记录了核验后的摘要。S 为三个 march 分别提供编码器和解码器 YAML，X5 提供两份 bayes-e YAML。
 
 导出与浮点嵌入特征生成依赖主机 PyTorch、ONNX、ONNX Runtime、NumPy、OpenCV。随导出模型记录所选框架版本和上游仓库版本。在导出环境检查导入：
 
@@ -224,3 +224,33 @@ S 源 evaluator 只有性能材料，没有数据集精度 harness。
 ## 来源
 
 上游代码保留 Apache-2.0 归属声明，本仓转换脚本遵循仓库许可证。
+
+## 本轮 S100 复现（2026-11-03）
+
+本轮新增配方采用上面的独立 variant、S100/nash-e 和 O1；旧配方保留。配方使用相对工作目录，实际执行的绝对路径 YAML 摘要另存于 `converted.json`。
+
+- `encoder`: [vitt_512_int16_20261103_o1_s100_encoder.yaml](recipes/vitt_512_int16_20261103_o1_s100_encoder.yaml)
+- `decoder`: [vitt_512_int16_20261103_o1_s100_decoder.yaml](recipes/vitt_512_int16_20261103_o1_s100_decoder.yaml)
+
+先用本目录两个 exporter 输出 `export/encoder.onnx` 和 `export/decoder.onnx`。再从仓库根目录运行真实串联对照及逐图校准：
+
+```bash
+python3 samples/_shared/sam_conversion.py --sample efficient_sam --repo /path/to/upstream --checkpoint /path/to/checkpoint.pt \
+  --encoder /work/export/encoder.onnx --decoder /work/export/decoder.onnx \
+  --images /path/to/calibration-images --count 200 --output /work/calibration
+```
+
+每张图生成独立的 encoder 输入及真实 embedding；解码器校准读取这些 embedding。在匹配 OE 3.7.0 容器中从工作目录运行 `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml`，每件模型分别编译。板端各项数据仍为 `not-run`。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
+
+- `s100p / vitt-512-int16-20261103-o1 / encoder`: [vitt_512_int16_20261103_o1_s100p_encoder.yaml](recipes/vitt_512_int16_20261103_o1_s100p_encoder.yaml)
+- `s100p / vitt-512-int16-20261103-o1 / decoder`: [vitt_512_int16_20261103_o1_s100p_decoder.yaml](recipes/vitt_512_int16_20261103_o1_s100p_decoder.yaml)
+- `s600 / vitt-512-int16-20261103-o1 / encoder`: [vitt_512_int16_20261103_o1_s600_encoder.yaml](recipes/vitt_512_int16_20261103_o1_s600_encoder.yaml)
+- `s600 / vitt-512-int16-20261103-o1 / decoder`: [vitt_512_int16_20261103_o1_s600_decoder.yaml](recipes/vitt_512_int16_20261103_o1_s600_decoder.yaml)
+
+原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。

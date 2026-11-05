@@ -1,0 +1,728 @@
+{
+  "schema_version": 1,
+  "status": "converted",
+  "board_validation": "not-run",
+  "profile": "raw RGB, Pillow bicubic short256, rounded center crop224, checkpoint normalization fused by mapper",
+  "models": [
+    {
+      "job": {
+        "family": "edgenext",
+        "model": "edgenext_xx_small.in1k",
+        "repo_id": "timm/edgenext_xx_small.in1k",
+        "platform": "x5",
+        "size": "xx-small-in1k-224",
+        "variant": "timm-xx-small-in1k",
+        "filename": "edgenext_xx_small_in1k_bayese_224x224_nv12.bin",
+        "run_id": "edgenext_xx_small_in1k-x5-20261102-r01",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:16:51.624297+00:00",
+        "sha256": "2508371b8c127d4242a16ba1b5dfd2e8fde6722551a935f3f3809795ad10af24",
+        "size_bytes": 2437140
+      },
+      "source": {
+        "repo_id": "timm/edgenext_xx_small.in1k",
+        "revision": "e10d04b6e70f33cfb54ebd4bce2ede078f4c9ba2",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "73c3aa9ed636622ddd270c9fd52f206ed1b5b46ba86ad1cb2ec508f4558da9e9",
+        "size_bytes": 5324082,
+        "url": "https://huggingface.co/timm/edgenext_xx_small.in1k/resolve/e10d04b6e70f33cfb54ebd4bce2ede078f4c9ba2/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/edgenext_xx_small.in1k/blob/e10d04b6e70f33cfb54ebd4bce2ede078f4c9ba2/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "edgenext_xx_small.in1k",
+        "checkpoint_sha256": "73c3aa9ed636622ddd270c9fd52f206ed1b5b46ba86ad1cb2ec508f4558da9e9",
+        "onnx_sha256": "b3d633a52d3e4c36c071309e99b8668802658b15e35653d51a76e61e7b0ed837",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "9db72b1d55e4ff1d1cf55bc4fb69613f78b1a4ddc408d3e8589dee7bb0238cb3",
+        "parameter_count": 1327216,
+        "deployment_parameter_count": 1327216,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            256,
+            256
+          ],
+          "crop_pct": 0.9,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          8.344650268554688e-06,
+          4.857778549194336e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "edgenext",
+          "family": "edgenext",
+          "task": "cls",
+          "size": "xx-small-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "2508371b8c127d4242a16ba1b5dfd2e8fde6722551a935f3f3809795ad10af24",
+            "name": "edgenext_xx_small_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 2437140
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "f89fbe3f7b0ff34ce1fd686fac6fe67367ab9505c350cf7e87b2e7ec4fff9279",
+        "controller_sha256": "56b746069bba643fee2cb39b942e3b19a651e41731c11e6c06a653e20c3a6eb5",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "f89fbe3f7b0ff34ce1fd686fac6fe67367ab9505c350cf7e87b2e7ec4fff9279",
+        "compile_log": "7369274a0ead66cc94e88ad1206fe95b03420b5bd0483a8f28fbfe16f2987bfe",
+        "model_info": "240c961e6cd301ab8982d6bb942d4deb245cd4b9513be92666af72be13b7c6d8",
+        "oe_report": "a7b87d83452e40ff958e31e841c644998916fc28462f3cc9c06b9217242681ee",
+        "oe_data": "74a32b013b9937b45c1251648669e34591d055f36156924d434a6babe0bac5e5"
+      },
+      "original_reports": [
+        {
+          "name": "main_graph_subgraph_0.html",
+          "sha256": "ff734c84cdd4bebcb08e2a67faa8addd2e1adcbd9d9ff787577c04c8d77e8762"
+        },
+        {
+          "name": "main_graph_subgraph_1.html",
+          "sha256": "6fb36bb5955557983fc92a5923e9e47411223d49f35550c1f604f612c89d2133"
+        },
+        {
+          "name": "main_graph_subgraph_2.html",
+          "sha256": "c94960f18fc3372bcb107e7fa36df34993451a32675a9e29a74722599d432912"
+        },
+        {
+          "name": "main_graph_subgraph_3.html",
+          "sha256": "85a04bf2918f5a2fdf0c5c6a3e6b28724f46de20f2dc3957b3ae1ef2d3e9b037"
+        }
+      ]
+    },
+    {
+      "job": {
+        "family": "edgenext",
+        "model": "edgenext_x_small.in1k",
+        "repo_id": "timm/edgenext_x_small.in1k",
+        "platform": "x5",
+        "size": "x-small-in1k-224",
+        "variant": "timm-x-small-in1k",
+        "filename": "edgenext_x_small_in1k_bayese_224x224_nv12.bin",
+        "run_id": "edgenext_x_small_in1k-x5-20261102-r01",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:33:24.550624+00:00",
+        "sha256": "228ff7445e626ed52e425ffdd16dbcc2041673eb0f0e2dba716f4eeec7a1ec83",
+        "size_bytes": 3682320
+      },
+      "source": {
+        "repo_id": "timm/edgenext_x_small.in1k",
+        "revision": "8525b3ecc3c7a25c07406163de827d8814f5f1ef",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "acc97b0fe8f75f4a7fca77b4769550bf35de2755ee743467bf6fffc038fd5837",
+        "size_bytes": 9367762,
+        "url": "https://huggingface.co/timm/edgenext_x_small.in1k/resolve/8525b3ecc3c7a25c07406163de827d8814f5f1ef/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/edgenext_x_small.in1k/blob/8525b3ecc3c7a25c07406163de827d8814f5f1ef/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "edgenext_x_small.in1k",
+        "checkpoint_sha256": "acc97b0fe8f75f4a7fca77b4769550bf35de2755ee743467bf6fffc038fd5837",
+        "onnx_sha256": "64d0a955037bd53212c08fbee8163225a979216a5384ec91ce041fce8735d19c",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "9db72b1d55e4ff1d1cf55bc4fb69613f78b1a4ddc408d3e8589dee7bb0238cb3",
+        "parameter_count": 2336804,
+        "deployment_parameter_count": 2336804,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            256,
+            256
+          ],
+          "crop_pct": 0.9,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          6.67572021484375e-06,
+          5.0067901611328125e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "edgenext",
+          "family": "edgenext",
+          "task": "cls",
+          "size": "x-small-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "228ff7445e626ed52e425ffdd16dbcc2041673eb0f0e2dba716f4eeec7a1ec83",
+            "name": "edgenext_x_small_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 3682320
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "897eb65e45f3f4b9b80c51acb856de997a2adac8af4c48ee37e4a6e9dceff339",
+        "controller_sha256": "56b746069bba643fee2cb39b942e3b19a651e41731c11e6c06a653e20c3a6eb5",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "897eb65e45f3f4b9b80c51acb856de997a2adac8af4c48ee37e4a6e9dceff339",
+        "compile_log": "8e9fc85d0279717ffa52880f84eb9653e4739fcf19be53bef21124d764b704d7",
+        "model_info": "9017c48924d89d1fcc8d93e06517778117b799e1de34ab4cee2d11f12dd1440b",
+        "oe_report": "8bdbccb06f3c6d06f2b502a6e16abefd7ee9d7d81220f7869ae1917fe67206a3",
+        "oe_data": "90680a816f5aeb85eaf46204b065021283890103c66113363533e879bffac49a"
+      },
+      "original_reports": [
+        {
+          "name": "main_graph_subgraph_0.html",
+          "sha256": "44501dbb52257b609cada02509f2fa6f9d7e25305c8a975b21a8aaf390875df2"
+        },
+        {
+          "name": "main_graph_subgraph_1.html",
+          "sha256": "fd39fc16bd9e2b996d8260e1297baf782cf1bfc3ddf82fa70e3850d58582600f"
+        },
+        {
+          "name": "main_graph_subgraph_2.html",
+          "sha256": "ec96e17debc3f3f5bc5274042eeb58149144316e904c60eea198143ad7659bb0"
+        },
+        {
+          "name": "main_graph_subgraph_3.html",
+          "sha256": "800350e8f0c09b5b13ff782a87868161cbf61471cef5ca24c7eae540d065dadf"
+        }
+      ]
+    },
+    {
+      "job": {
+        "family": "edgenext",
+        "model": "edgenext_small.usi_in1k",
+        "repo_id": "timm/edgenext_small.usi_in1k",
+        "platform": "x5",
+        "size": "small-usi-in1k-224",
+        "variant": "timm-small-usi-in1k",
+        "filename": "edgenext_small_usi_in1k_bayese_224x224_nv12.bin",
+        "run_id": "edgenext_small_usi_in1k-x5-20261102-r01",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T12:13:19.706146+00:00",
+        "sha256": "cf2c1d997ea9f6124769f965bbf953443f6e82e4c853e88903dd40122bc0bbb6",
+        "size_bytes": 7155786
+      },
+      "source": {
+        "repo_id": "timm/edgenext_small.usi_in1k",
+        "revision": "81bd8f2ee56330bdf6a7a2e47e1b2b82eb34f978",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "14d824931ca7f09e631c90347253bbc7a925ad017a02d7b8bf6e13b872d8059b",
+        "size_bytes": 22368078,
+        "url": "https://huggingface.co/timm/edgenext_small.usi_in1k/resolve/81bd8f2ee56330bdf6a7a2e47e1b2b82eb34f978/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/edgenext_small.usi_in1k/blob/81bd8f2ee56330bdf6a7a2e47e1b2b82eb34f978/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "edgenext_small.usi_in1k",
+        "checkpoint_sha256": "14d824931ca7f09e631c90347253bbc7a925ad017a02d7b8bf6e13b872d8059b",
+        "onnx_sha256": "d9e0bc0ad0a1ea4f4e597adf6c6eb157be8876cccf61a252ea56412120f9683e",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "9db72b1d55e4ff1d1cf55bc4fb69613f78b1a4ddc408d3e8589dee7bb0238cb3",
+        "parameter_count": 5586832,
+        "deployment_parameter_count": 5586832,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            256,
+            256
+          ],
+          "crop_pct": 0.95,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          4.291534423828125e-06,
+          3.814697265625e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "edgenext",
+          "family": "edgenext",
+          "task": "cls",
+          "size": "small-usi-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "cf2c1d997ea9f6124769f965bbf953443f6e82e4c853e88903dd40122bc0bbb6",
+            "name": "edgenext_small_usi_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 7155786
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "34b0faf3a03c4bd7953e3c84c67510c1713ee9244f1f74eb89c4c5646ca6ad79",
+        "controller_sha256": "56b746069bba643fee2cb39b942e3b19a651e41731c11e6c06a653e20c3a6eb5",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "34b0faf3a03c4bd7953e3c84c67510c1713ee9244f1f74eb89c4c5646ca6ad79",
+        "compile_log": "2bc656b799f8c5eb0783ec1f2230f1b9a027b21043043973b95dd3c8d3c18350",
+        "model_info": "d158aa8f492baf6aea9c15303cd3ffada1b8c3fdf855b16de4c4f8f131f9eb1a",
+        "oe_report": "73f197a8290b98c5f84ab99c77e35a777f63dce40aa45ab0364fcb4baea6b140",
+        "oe_data": "a67007cdb4ab5bee3e0b5efdff9ed540b52943d926e4a5289de44f42d01753a0"
+      },
+      "original_reports": [
+        {
+          "name": "main_graph_subgraph_0.html",
+          "sha256": "3bbc186665542606e029ddca809b96e954e1863c6c3404d7eee0d3829bfda329"
+        },
+        {
+          "name": "main_graph_subgraph_1.html",
+          "sha256": "87e55590fa7c25a75d3ea6ff003bbf0234fcc08c46b2d7f634c3a11b7a9e0fc8"
+        },
+        {
+          "name": "main_graph_subgraph_2.html",
+          "sha256": "74b037901195fc58e01e8fce9cd8b3e79ed7c122ce17c528e50be8e2afbea1da"
+        },
+        {
+          "name": "main_graph_subgraph_3.html",
+          "sha256": "587c9925c012d595edad3daa8dec77ca68d4d122bfcebf6c3577901b95e5c6f0"
+        }
+      ]
+    },
+    {
+      "job": {
+        "family": "edgenext",
+        "model": "edgenext_base.usi_in1k",
+        "repo_id": "timm/edgenext_base.usi_in1k",
+        "platform": "x5",
+        "size": "base-usi-in1k-224",
+        "variant": "timm-base-usi-in1k",
+        "filename": "edgenext_base_usi_in1k_bayese_224x224_nv12.bin",
+        "run_id": "edgenext_base_usi_in1k-x5-20261102-r01",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T12:22:42.062487+00:00",
+        "sha256": "6f720707b4dd6f4c246725c264f1782446b913fd7fe337030e3f54e8651b5f86",
+        "size_bytes": 20590664
+      },
+      "source": {
+        "repo_id": "timm/edgenext_base.usi_in1k",
+        "revision": "ce0946556d0ed93eaa61c686955e3118814573bb",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "44064d77619abf98e25e3ece1a2ad058d958bfc78a1a55312e338174658daa54",
+        "size_bytes": 74066124,
+        "url": "https://huggingface.co/timm/edgenext_base.usi_in1k/resolve/ce0946556d0ed93eaa61c686955e3118814573bb/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/edgenext_base.usi_in1k/blob/ce0946556d0ed93eaa61c686955e3118814573bb/README.md"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "edgenext_base.usi_in1k",
+        "checkpoint_sha256": "44064d77619abf98e25e3ece1a2ad058d958bfc78a1a55312e338174658daa54",
+        "onnx_sha256": "72f7655c3a907f3c98987acb93287dd92f504c18d7bf3eacf28efed2ae3173ca",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "9db72b1d55e4ff1d1cf55bc4fb69613f78b1a4ddc408d3e8589dee7bb0238cb3",
+        "parameter_count": 18511292,
+        "deployment_parameter_count": 18511292,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            256,
+            256
+          ],
+          "crop_pct": 0.95,
+          "crop_mode": "center",
+          "interpolation": "bicubic"
+        },
+        "torch_onnx_max_absolute_errors": [
+          4.0531158447265625e-06,
+          3.814697265625e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "edgenext",
+          "family": "edgenext",
+          "task": "cls",
+          "size": "base-usi-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "6f720707b4dd6f4c246725c264f1782446b913fd7fe337030e3f54e8651b5f86",
+            "name": "edgenext_base_usi_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 20590664
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "3666d384e124682b27afcfc0424fe3ada9cee21d83f53b28ffa9e717506ea55d",
+        "controller_sha256": "56b746069bba643fee2cb39b942e3b19a651e41731c11e6c06a653e20c3a6eb5",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "3666d384e124682b27afcfc0424fe3ada9cee21d83f53b28ffa9e717506ea55d",
+        "compile_log": "feb103f49654c487c7cc72f1eedefd2259408dec6f153140bc523ce5fbd62c7e",
+        "model_info": "9dd3efd1d46d9a48c14eb835f9516830098944ab8d4eccc0ef8967f50abec6a3",
+        "oe_report": "1c4f41734f512525e359f4b80d963b1ce2b38fa4781bbd0c21977635af193cb2",
+        "oe_data": "76a38e09d7a098df8dcbcd06e791a12ebec5b0fc21eae130051d811c8dbb9a47"
+      },
+      "original_reports": [
+        {
+          "name": "main_graph_subgraph_0.html",
+          "sha256": "2e67be1e57c9d1db6840fb82a2ddeddd19f90b1a6f292e5a7d034d24138896fa"
+        },
+        {
+          "name": "main_graph_subgraph_1.html",
+          "sha256": "1a13e21785746c4505b7ca8d55157ec5cd11a1cf9e6cba291389b524f8be8e4e"
+        },
+        {
+          "name": "main_graph_subgraph_2.html",
+          "sha256": "87236cb8b5356a97126060b7c019defab75a801edd722dbb077a5e5c3a163537"
+        },
+        {
+          "name": "main_graph_subgraph_3.html",
+          "sha256": "376952929e4c7cbce63dceadb97ceb99ebaa53c431b096a6b54126fb894873b0"
+        }
+      ]
+    }
+  ]
+}

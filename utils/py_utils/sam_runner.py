@@ -65,6 +65,14 @@ class RuntimeModelRunner:
             require_execution_target(self.selection.target)
         stage = 'encoder'
         try:
+            if getattr(self.selection,'variant','published') != 'published':
+                from utils.py_utils.assets import verify_asset_file
+                for stage,asset,path in (
+                    ('encoder',self.selection.encoder_asset,self.selection.encoder_model_path),
+                    ('decoder',self.selection.decoder_asset,self.selection.decoder_model_path),
+                ):
+                    verify_asset_file(asset,path)
+                stage = 'encoder'
             factory = self._factory or _default_runtime_factory()
             encoder = factory(str(self.selection.encoder_model_path))
             enc_meta = RuntimeMetadata.from_runtime(encoder)

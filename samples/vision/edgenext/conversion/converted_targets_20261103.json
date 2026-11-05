@@ -1,0 +1,1805 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "variant": "timm-base-usi-in1k-s-int16-o1-20261103",
+      "web_size": "base-usi-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/edgenext_base_usi_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/edgenext/edgenext_base_usi_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "022e2857a5dfe3bf88c53fac8632c40f372deb0b2fcdacd11084c26e30a422c4",
+          "size_bytes": 30539976,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "72f7655c3a907f3c98987acb93287dd92f504c18d7bf3eacf28efed2ae3173ca",
+          "effective_config_sha256": "583c0eb4059468dc799014eb65e4af9d7aefc9b5b8745b9905b8e04126fd1b73",
+          "recipe": "samples/vision/edgenext/conversion/recipes/timm_base_usi_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "104947b66e1aff19264fe4c85966a8b8555d3a70012eb73fe8282c8567465b51",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "49b6e025ffc20a4441b9f0b0381e01fc367578fef0718731e46f6a52e6596451",
+          "oe_data_sha256": "5d56640d5ccda332236582a4c3d773675f52985522561e12146c7173e16d0d4c",
+          "node_info_csv_sha256": "15a66765bc3f4d1f3026df0f24d4113ce045429cd4f62ec4ffadaa6ccc328da8",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.99031,
+              "cosine": 0.987207
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_base_usi_in1k-s100-int16-20261103-r04/ptq_output/edgenext_base_usi_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "b98e69183a877111126e6854a80254929b5ae9f4c54adca708a628834de53975",
+              "size_bytes": 24744225
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_base_usi_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "d8f10e8cba7dd3b2182724ab47fcc3413d0e2e20eddeb5e3b8b2f509a753f89a",
+              "size_bytes": 1198
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.814697265625e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 4.410743713378906e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 6.67572021484375e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "2d90e4bb432b7504dddbb8215c3d1adad4a6e428b6bc117cd6b8ee225d0a755c",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/edgenext_base.usi_in1k",
+        "revision": "ce0946556d0ed93eaa61c686955e3118814573bb",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "44064d77619abf98e25e3ece1a2ad058d958bfc78a1a55312e338174658daa54",
+        "size_bytes": 74066124,
+        "url": "https://huggingface.co/timm/edgenext_base.usi_in1k/resolve/ce0946556d0ed93eaa61c686955e3118814573bb/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/edgenext_base.usi_in1k/blob/ce0946556d0ed93eaa61c686955e3118814573bb/README.md"
+      }
+    },
+    {
+      "variant": "timm-base-usi-in1k-s-int16-o1-20261103",
+      "web_size": "base-usi-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/edgenext_base_usi_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/edgenext/edgenext_base_usi_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "13b8fb28940ed462047e5ade28b417eed91601399d2248f035d10cc9c76e8127",
+          "size_bytes": 30266568,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "72f7655c3a907f3c98987acb93287dd92f504c18d7bf3eacf28efed2ae3173ca",
+          "effective_config_sha256": "1b5793cffe8f76f5c77d6eb59e3a0bc7d6bd142156841c42023c8b2c30cacef6",
+          "recipe": "samples/vision/edgenext/conversion/recipes/timm_base_usi_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "7f0f5703d18b569edf3a65e4da6c0c440b4c0dc7c07dba487828c2d21d31e0e8",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "07053039185d785a4997f7744506ba62bde9cda45328cb708349e5bccab77131",
+          "oe_data_sha256": "6378c7be13ad99fa6334945598d080447a2a6a500afef95fb51eff063d0b3420",
+          "node_info_csv_sha256": "ac87ca220984a7340e2257fe5d091190f4971bd018e8ed7c38ff917169a4b41f",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.99031,
+              "cosine": 0.987207
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_base_usi_in1k-s100p-int16-20261103-r04/ptq_output/edgenext_base_usi_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "77afe33f37f7498f829f656015da70344ed143cf77620f48b1898d50d7d426fe",
+              "size_bytes": 24744226
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_base_usi_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "c5dd52f10bb416012136d4b8067e0e5c7b8ace00bcd0ea2ed91682341125f0cc",
+              "size_bytes": 1199
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.86102294921875e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 3.5762786865234375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 5.9604644775390625e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 2.86102294921875e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "2d90e4bb432b7504dddbb8215c3d1adad4a6e428b6bc117cd6b8ee225d0a755c",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/edgenext_base.usi_in1k",
+        "revision": "ce0946556d0ed93eaa61c686955e3118814573bb",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "44064d77619abf98e25e3ece1a2ad058d958bfc78a1a55312e338174658daa54",
+        "size_bytes": 74066124,
+        "url": "https://huggingface.co/timm/edgenext_base.usi_in1k/resolve/ce0946556d0ed93eaa61c686955e3118814573bb/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/edgenext_base.usi_in1k/blob/ce0946556d0ed93eaa61c686955e3118814573bb/README.md"
+      }
+    },
+    {
+      "variant": "timm-base-usi-in1k-s-int16-o1-20261103",
+      "web_size": "base-usi-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/edgenext_base_usi_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/edgenext/edgenext_base_usi_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "e1dc27e65ea7eda7c7d38a89748087bccbb860046675fb0b99ba58c19bceb1b2",
+          "size_bytes": 33508600,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "72f7655c3a907f3c98987acb93287dd92f504c18d7bf3eacf28efed2ae3173ca",
+          "effective_config_sha256": "87258cdd688c50ab653a6f72ec9c59994ecd625431f8e58537345769e8b2be2e",
+          "recipe": "samples/vision/edgenext/conversion/recipes/timm_base_usi_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "901a2742c7b04b7214a5977a5129ab701df69ffbff1f216cdb6edfc4d1fc4835",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "d5c3f896b677d6d59dabbaa92fd26d5de9de557c77361e2a79517e670a8c37d1",
+          "oe_data_sha256": "f85db34681c91bea6a85526723cae92ebd04f17ef792de5b0a98093ed8f1d24a",
+          "node_info_csv_sha256": "fc64ff9d87895738a1e580f2c2ac498edf4ba560b3d018d5b6ca44c033a61260",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.99031,
+              "cosine": 0.987164
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_base_usi_in1k-s600-int16-20261103-r04/ptq_output/edgenext_base_usi_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "9e41749d20ddeaa61e609e81b8fcbc444344958aa460ed82d2a1e81d26592d08",
+              "size_bytes": 21070680
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_base_usi_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "4c10e79e36b15ae21b400114549ee609f2ac5f0d27a3954e8ddb9069cb942772",
+              "size_bytes": 1198
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.814697265625e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 3.6954879760742188e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 5.245208740234375e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "2d90e4bb432b7504dddbb8215c3d1adad4a6e428b6bc117cd6b8ee225d0a755c",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/edgenext_base.usi_in1k",
+        "revision": "ce0946556d0ed93eaa61c686955e3118814573bb",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "44064d77619abf98e25e3ece1a2ad058d958bfc78a1a55312e338174658daa54",
+        "size_bytes": 74066124,
+        "url": "https://huggingface.co/timm/edgenext_base.usi_in1k/resolve/ce0946556d0ed93eaa61c686955e3118814573bb/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/edgenext_base.usi_in1k/blob/ce0946556d0ed93eaa61c686955e3118814573bb/README.md"
+      }
+    },
+    {
+      "variant": "timm-small-usi-in1k-s-int16-o1-20261103",
+      "web_size": "small-usi-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/edgenext_small_usi_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/edgenext/edgenext_small_usi_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "e3f4b5b937bc19afeea8f6a385ab2c63de422e418efb01cc37c231f45d0c4b8c",
+          "size_bytes": 12917712,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "d9e0bc0ad0a1ea4f4e597adf6c6eb157be8876cccf61a252ea56412120f9683e",
+          "effective_config_sha256": "c480d85fd228ab46ee18eee248dc50a1544a64a02f081bebcf5869944e422f52",
+          "recipe": "samples/vision/edgenext/conversion/recipes/timm_small_usi_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "1f49e2ab2f0f906dae5edfc56d7562bc1c8d1d4257ddaf6dc730df2965880dc7",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "05e531244638ba3763d0fd3295125f04b5a9da1be50d1c259ad6e23993032198",
+          "oe_data_sha256": "979d96af34369b0319262db3d0eb1e47a6e7b81b88c309921a20a72cc06cbfa6",
+          "node_info_csv_sha256": "48a7d3a312c1ca11f58ee66a9aa9df2bee0fbbf1e1b46bdd369542f414097946",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.992813,
+              "cosine": 0.990427
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_small_usi_in1k-s100-int16-20261103-r04/ptq_output/edgenext_small_usi_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "1d3ac9db5d4e105900b5f051c672ff6a6dafa2a7af558d86d2b2f44ea0957dff",
+              "size_bytes": 9802959
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_small_usi_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "966fb8ea8fa0c536b98c6e04d5259cbd4a4d75a01b03bf1de7bbaab1c9ee7b25",
+              "size_bytes": 1201
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.2649765014648438e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 4.76837158203125e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 4.76837158203125e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.5762786865234375e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "1ca94d360b7d599ec1c46026b9dc7533ff61cdefe4dc4cc8ed1407d3bc9743bb",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/edgenext_small.usi_in1k",
+        "revision": "81bd8f2ee56330bdf6a7a2e47e1b2b82eb34f978",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "14d824931ca7f09e631c90347253bbc7a925ad017a02d7b8bf6e13b872d8059b",
+        "size_bytes": 22368078,
+        "url": "https://huggingface.co/timm/edgenext_small.usi_in1k/resolve/81bd8f2ee56330bdf6a7a2e47e1b2b82eb34f978/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/edgenext_small.usi_in1k/blob/81bd8f2ee56330bdf6a7a2e47e1b2b82eb34f978/README.md"
+      }
+    },
+    {
+      "variant": "timm-small-usi-in1k-s-int16-o1-20261103",
+      "web_size": "small-usi-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/edgenext_small_usi_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/edgenext/edgenext_small_usi_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "2da8963e3491fdeba9f50f6c064770cb22a66b02b24a0f01f8edc2896dc573d3",
+          "size_bytes": 12950224,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "d9e0bc0ad0a1ea4f4e597adf6c6eb157be8876cccf61a252ea56412120f9683e",
+          "effective_config_sha256": "c87cd751ecfc251ca7ae603bcd2af5ce2b169d29d4b03417d9630f2baa82f418",
+          "recipe": "samples/vision/edgenext/conversion/recipes/timm_small_usi_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "2573473c5eaafaf919094a22a51470b9563ae516acfa25d028a429026a0b6eb9",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "621ab0973505debe8776906905993a320489213bc6c9713d62a3b24fca838e45",
+          "oe_data_sha256": "7f353d1b2387b82cda4bcffa032e5d369f175ff67a1f950068699a67db2de129",
+          "node_info_csv_sha256": "661881a396d3c350f3cfd7ac16e7146c0f4f42278b60802d24b2d5b2ae913d25",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.992813,
+              "cosine": 0.990427
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_small_usi_in1k-s100p-int16-20261103-r04/ptq_output/edgenext_small_usi_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "fd9694a9836f2b322f143cab003fafb20f23fd42819f7d21dc71e7c121562b9d",
+              "size_bytes": 9802960
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_small_usi_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "d76518c87e15b41fc8345ac13931f1ead768b5543c82af3084da5a53ab6419ba",
+              "size_bytes": 1202
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.2649765014648438e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 4.76837158203125e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 4.76837158203125e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "1ca94d360b7d599ec1c46026b9dc7533ff61cdefe4dc4cc8ed1407d3bc9743bb",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/edgenext_small.usi_in1k",
+        "revision": "81bd8f2ee56330bdf6a7a2e47e1b2b82eb34f978",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "14d824931ca7f09e631c90347253bbc7a925ad017a02d7b8bf6e13b872d8059b",
+        "size_bytes": 22368078,
+        "url": "https://huggingface.co/timm/edgenext_small.usi_in1k/resolve/81bd8f2ee56330bdf6a7a2e47e1b2b82eb34f978/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/edgenext_small.usi_in1k/blob/81bd8f2ee56330bdf6a7a2e47e1b2b82eb34f978/README.md"
+      }
+    },
+    {
+      "variant": "timm-small-usi-in1k-s-int16-o1-20261103",
+      "web_size": "small-usi-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/edgenext_small_usi_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/edgenext/edgenext_small_usi_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "c8ee3556a6a40f6edf398ecb42a32a7ea0dae35a7ccded4817ab8a1edd0ec129",
+          "size_bytes": 15721120,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "d9e0bc0ad0a1ea4f4e597adf6c6eb157be8876cccf61a252ea56412120f9683e",
+          "effective_config_sha256": "59cd09c51a02f346cb97ca42c27172c15d2898918e38d36e257fafedb0f2525d",
+          "recipe": "samples/vision/edgenext/conversion/recipes/timm_small_usi_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "2d9fa40de0dc5189f8065b67f844a6202fd9032d04c4f272c44710a11ae9251b",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "85f235ee3b790bf34939179d2115bb9d445a23958fa8b9ce77b275e1fe0fd6b6",
+          "oe_data_sha256": "5acd2d25fa7706a13a066addeaae22bb5dbc97506b5e0d16b085370cbaa55e26",
+          "node_info_csv_sha256": "2c39fa0a489c2c503db8201acaf8ee6a3db13299ffa3a266c159f9a98bd2773f",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.992813,
+              "cosine": 0.990389
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_small_usi_in1k-s600-int16-20261103-r04/ptq_output/edgenext_small_usi_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "1cc1cab7c98d0c794c2b10a0f9bf63c14ba9790aaf9d2197fa5d591bb2d7401f",
+              "size_bytes": 7327043
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_small_usi_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "f46dae412e93b9ec91cd748af3903e6ed6c165add60c1a6ba4f58c1177ee4539",
+              "size_bytes": 1201
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.2649765014648438e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 4.76837158203125e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 5.0067901611328125e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.337860107421875e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "1ca94d360b7d599ec1c46026b9dc7533ff61cdefe4dc4cc8ed1407d3bc9743bb",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/edgenext_small.usi_in1k",
+        "revision": "81bd8f2ee56330bdf6a7a2e47e1b2b82eb34f978",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "14d824931ca7f09e631c90347253bbc7a925ad017a02d7b8bf6e13b872d8059b",
+        "size_bytes": 22368078,
+        "url": "https://huggingface.co/timm/edgenext_small.usi_in1k/resolve/81bd8f2ee56330bdf6a7a2e47e1b2b82eb34f978/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/edgenext_small.usi_in1k/blob/81bd8f2ee56330bdf6a7a2e47e1b2b82eb34f978/README.md"
+      }
+    },
+    {
+      "variant": "timm-x-small-in1k-s-int16-o1-20261103",
+      "web_size": "x-small-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/edgenext_x_small_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/edgenext/edgenext_x_small_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "53136ad963578a5d1830d08ffd1565a6d475885b77944c46f2030b53c6375173",
+          "size_bytes": 8405440,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "64d0a955037bd53212c08fbee8163225a979216a5384ec91ce041fce8735d19c",
+          "effective_config_sha256": "1c82faf827adf053a1b66b10be16432382c435009da2f1cd990383a0a2c22066",
+          "recipe": "samples/vision/edgenext/conversion/recipes/timm_x_small_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "cd02b83e7a2184cea7b53fceb13bd6ee5aa22bf8b587bdcda47e9aad4dcb1ac7",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "3a8c69cbca7d7a6ce4c92e703dbbfd449e79e4319e3a668a147030654b1580b8",
+          "oe_data_sha256": "f3b8f4f7650a00c6d1f16c604b356377081476b8189cd29ba117299e144b177c",
+          "node_info_csv_sha256": "cfdf34bf22d1051fa72519d431ec2dff268770f108c83f6f8410b71915ef70dc",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.978981,
+              "cosine": 0.976325
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_x_small_in1k-s100-int16-20261103-r04/ptq_output/edgenext_x_small_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "957e6fd6259a9c1f06ab787add43d9263fe1cd0f7fad94c25fc7e1212e9bf61e",
+              "size_bytes": 5059126
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_x_small_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "5839ebb028d06a78d2fe30f1b43444f858939c0353749f684d4329988dec22ca",
+              "size_bytes": 1195
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.1457672119140625e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 4.060566425323486e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.0967254638671875e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 5.7220458984375e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "e2e7fafbd72208dc2f91afc81c4ac9757b8a00deaf831009110fbcca25058d49",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/edgenext_x_small.in1k",
+        "revision": "8525b3ecc3c7a25c07406163de827d8814f5f1ef",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "acc97b0fe8f75f4a7fca77b4769550bf35de2755ee743467bf6fffc038fd5837",
+        "size_bytes": 9367762,
+        "url": "https://huggingface.co/timm/edgenext_x_small.in1k/resolve/8525b3ecc3c7a25c07406163de827d8814f5f1ef/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/edgenext_x_small.in1k/blob/8525b3ecc3c7a25c07406163de827d8814f5f1ef/README.md"
+      }
+    },
+    {
+      "variant": "timm-x-small-in1k-s-int16-o1-20261103",
+      "web_size": "x-small-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/edgenext_x_small_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/edgenext/edgenext_x_small_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "c5f4db10fa7fd3ea45ff3d489102f2c3cf4e32cffbbc894ff69013474e51bb26",
+          "size_bytes": 8546240,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "64d0a955037bd53212c08fbee8163225a979216a5384ec91ce041fce8735d19c",
+          "effective_config_sha256": "33517a7ec4afd35ba0c59a2f6470ccb447f6c5b77b875b28f2aefd1325dde6a8",
+          "recipe": "samples/vision/edgenext/conversion/recipes/timm_x_small_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "d2f6a17cb1a05bdb06d7a818572fdff44a7222509143710a1e71341a6367af0a",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "97b82fff007c90e4df0e5c0fd87b030402b636df79dc05ebf7e5a9b434dde087",
+          "oe_data_sha256": "f975eca1c70a020ac79b764688c6613c3281cc8065ad7325cb93ac814768c49c",
+          "node_info_csv_sha256": "cfdf34bf22d1051fa72519d431ec2dff268770f108c83f6f8410b71915ef70dc",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.978981,
+              "cosine": 0.976325
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_x_small_in1k-s100p-int16-20261103-r04/ptq_output/edgenext_x_small_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "d981a92c399542a599d19d0ec2881f9d3ae229daeaf43a842c5eaa2315dd6868",
+              "size_bytes": 5059127
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_x_small_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "74770f53afebfb0ffb0a13aee8d789f720999fc641d1a943ec52068658ea9753",
+              "size_bytes": 1196
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.1457672119140625e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 3.822147846221924e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.0967254638671875e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 5.245208740234375e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "e2e7fafbd72208dc2f91afc81c4ac9757b8a00deaf831009110fbcca25058d49",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/edgenext_x_small.in1k",
+        "revision": "8525b3ecc3c7a25c07406163de827d8814f5f1ef",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "acc97b0fe8f75f4a7fca77b4769550bf35de2755ee743467bf6fffc038fd5837",
+        "size_bytes": 9367762,
+        "url": "https://huggingface.co/timm/edgenext_x_small.in1k/resolve/8525b3ecc3c7a25c07406163de827d8814f5f1ef/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/edgenext_x_small.in1k/blob/8525b3ecc3c7a25c07406163de827d8814f5f1ef/README.md"
+      }
+    },
+    {
+      "variant": "timm-x-small-in1k-s-int16-o1-20261103",
+      "web_size": "x-small-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/edgenext_x_small_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/edgenext/edgenext_x_small_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "cefeb7691017fab4e3fb7532c1430fbfd8bb7336b36e32e0283ae92a72b05bf0",
+          "size_bytes": 9808216,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "64d0a955037bd53212c08fbee8163225a979216a5384ec91ce041fce8735d19c",
+          "effective_config_sha256": "c48e6f7ce34bdb335180272bd177547aa80196e4f94d1c7b09678e1ae2dd0b39",
+          "recipe": "samples/vision/edgenext/conversion/recipes/timm_x_small_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "9526079c3729c6c57bde8cee784325debc687066452fb57764914e23a659c6ad",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "dd8ea53d2245e3dd465249dcaab579526143838ea4cb845a9623404656635045",
+          "oe_data_sha256": "f6d9ed7f7514123e0a841d0a5074820c126ec02be540dccfa5b3cab056baddfc",
+          "node_info_csv_sha256": "5cc1bc3d4fabbd63fe921e6ae62187bf6ab91acfb2c5ad6dd6995234781546fd",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.978981,
+              "cosine": 0.976394
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_x_small_in1k-s600-int16-20261103-r04/ptq_output/edgenext_x_small_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "163c71ca45c80670604699c4ee7ba5615815af15ccc1b7c12de5709d36e79e0a",
+              "size_bytes": 3560344
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_x_small_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "aea9e2953bb41fc5aaad64ba129f7f461eb122a98c53edd029d9f01d6026599a",
+              "size_bytes": 1195
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.9073486328125e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 3.941357135772705e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.1682510375976562e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 5.245208740234375e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "e2e7fafbd72208dc2f91afc81c4ac9757b8a00deaf831009110fbcca25058d49",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/edgenext_x_small.in1k",
+        "revision": "8525b3ecc3c7a25c07406163de827d8814f5f1ef",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "acc97b0fe8f75f4a7fca77b4769550bf35de2755ee743467bf6fffc038fd5837",
+        "size_bytes": 9367762,
+        "url": "https://huggingface.co/timm/edgenext_x_small.in1k/resolve/8525b3ecc3c7a25c07406163de827d8814f5f1ef/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/edgenext_x_small.in1k/blob/8525b3ecc3c7a25c07406163de827d8814f5f1ef/README.md"
+      }
+    },
+    {
+      "variant": "timm-xx-small-in1k-s-int16-o1-20261103",
+      "web_size": "xx-small-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/edgenext_xx_small_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/edgenext/edgenext_xx_small_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "ba46e2956d763632178da1f2da819a0849aba09dbb3609c08196cfa296ac0544",
+          "size_bytes": 5513416,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "b3d633a52d3e4c36c071309e99b8668802658b15e35653d51a76e61e7b0ed837",
+          "effective_config_sha256": "db278658cb49298b27e06876e14cd76821fc82acd3280810114ef3ed80b67cd3",
+          "recipe": "samples/vision/edgenext/conversion/recipes/timm_xx_small_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "f72075671fce345dc093727b91461128d1db0e03b6d208cea806b0aa9e26d0ad",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "be92e6ef332b4376cd1b38363479c2d15ce411e9fdf8678d44870e92ef68c0c2",
+          "oe_data_sha256": "4c8731b66a7d1a6c8596411ec75302c2d93626dc75d2a8a8cee6ef869f5d68b5",
+          "node_info_csv_sha256": "19e9c92b67e8328f5a2441ef44cb4e1ca2c98699bd2c4c4c683bf320c9d0ecac",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.997038,
+              "cosine": 0.994542
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_xx_small_in1k-s100-int16-20261103-r04/ptq_output/edgenext_xx_small_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "68e3cff2433038d26872de32bddd443bd31105b310451f8b35287600c1c05503",
+              "size_bytes": 3398898
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_xx_small_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "37b7c236c346fe6d4d86fb45981bc08ebb8b78dbf7afa5e98ff466dee57f191e",
+              "size_bytes": 1198
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.9802322387695312e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 7.3909759521484375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 5.0067901611328125e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 7.033348083496094e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "35da2e3fe69a1813d7b584459b56a586ca9a10a888a9530818d487a28c893746",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/edgenext_xx_small.in1k",
+        "revision": "e10d04b6e70f33cfb54ebd4bce2ede078f4c9ba2",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "73c3aa9ed636622ddd270c9fd52f206ed1b5b46ba86ad1cb2ec508f4558da9e9",
+        "size_bytes": 5324082,
+        "url": "https://huggingface.co/timm/edgenext_xx_small.in1k/resolve/e10d04b6e70f33cfb54ebd4bce2ede078f4c9ba2/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/edgenext_xx_small.in1k/blob/e10d04b6e70f33cfb54ebd4bce2ede078f4c9ba2/README.md"
+      }
+    },
+    {
+      "variant": "timm-xx-small-in1k-s-int16-o1-20261103",
+      "web_size": "xx-small-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/edgenext_xx_small_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/edgenext/edgenext_xx_small_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "c0901bfeef15f24c30ac49397417df88a3130611dea2aa98e7dcb37a6da70f8b",
+          "size_bytes": 5474760,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "b3d633a52d3e4c36c071309e99b8668802658b15e35653d51a76e61e7b0ed837",
+          "effective_config_sha256": "286447f84c883f55baa5f4e791c5339e7efc62d3844b7467791cd1c6f1d0844a",
+          "recipe": "samples/vision/edgenext/conversion/recipes/timm_xx_small_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "9304fd52c5dcf9858b9827606d61fd02ee059738b6ce52e8dada2cc3d065111a",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "7395f7864d424e5212fd4cd7c9be2c23c1e1b8c8a6b885384ddd927951aec900",
+          "oe_data_sha256": "e81cb52edd40b54e2d85846c6d6453d9fef371a94de9586e6576efc2972c68f2",
+          "node_info_csv_sha256": "d2da82843cb18fce22221cfbb1c5adc3d2a5648c2ac19f785f65f794b8b8382b",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.997038,
+              "cosine": 0.994542
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_xx_small_in1k-s100p-int16-20261103-r04/ptq_output/edgenext_xx_small_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "d95150cb9ab855806907f1fd0f9b81c01ff27c2e7950b99bd6bb6790256a7d0a",
+              "size_bytes": 3398899
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_xx_small_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "949ed37950b40a47395852492e91f53058c92030a9d03aef6c6fc3f86ab28717",
+              "size_bytes": 1199
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.9802322387695312e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 7.3909759521484375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 5.0067901611328125e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 7.033348083496094e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "35da2e3fe69a1813d7b584459b56a586ca9a10a888a9530818d487a28c893746",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/edgenext_xx_small.in1k",
+        "revision": "e10d04b6e70f33cfb54ebd4bce2ede078f4c9ba2",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "73c3aa9ed636622ddd270c9fd52f206ed1b5b46ba86ad1cb2ec508f4558da9e9",
+        "size_bytes": 5324082,
+        "url": "https://huggingface.co/timm/edgenext_xx_small.in1k/resolve/e10d04b6e70f33cfb54ebd4bce2ede078f4c9ba2/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/edgenext_xx_small.in1k/blob/e10d04b6e70f33cfb54ebd4bce2ede078f4c9ba2/README.md"
+      }
+    },
+    {
+      "variant": "timm-xx-small-in1k-s-int16-o1-20261103",
+      "web_size": "xx-small-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/edgenext_xx_small_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/edgenext/edgenext_xx_small_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "f6f7a67ffd08bf6801b9f1845b09820fa39ab2828f5a47bbb5dfb8dd9b176cd3",
+          "size_bytes": 6370808,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "b3d633a52d3e4c36c071309e99b8668802658b15e35653d51a76e61e7b0ed837",
+          "effective_config_sha256": "de07cc89868d965cdb050f39c68645e644ca20b21c220565061cdf735d49c625",
+          "recipe": "samples/vision/edgenext/conversion/recipes/timm_xx_small_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "54f8d46626c1391c89e087efb9a1831fa0c5b61f877cdd907051a5948b9e663f",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "e1b88869f683ba402ed85121228bc7b4a8202fd9ac9f389702ad756943ac2b08",
+          "oe_data_sha256": "b4fdb54ca1cd93d4ffbd095e9f40ac25215237c71fe690b9f37407e820c34145",
+          "node_info_csv_sha256": "ccfa5ce9764602cbd87f67ee8e79986f27cdfbe10ba8c7a390f955e7a7abb986",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.997038,
+              "cosine": 0.994518
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_xx_small_in1k-s600-int16-20261103-r04/ptq_output/edgenext_xx_small_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "4c83b5c4e4a4fbcfac3abc2a69cab440ff20a41d81256b947e584f0ded8c1c76",
+              "size_bytes": 2250383
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/edgenext_xx_small_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "f316d535e86d47fc0a4a744f5804c5e2750f617e709b344374f74ac8c07cd5ea",
+              "size_bytes": 1198
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.9802322387695312e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 7.3909759521484375e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 5.0067901611328125e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 7.033348083496094e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "35da2e3fe69a1813d7b584459b56a586ca9a10a888a9530818d487a28c893746",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/edgenext_xx_small.in1k",
+        "revision": "e10d04b6e70f33cfb54ebd4bce2ede078f4c9ba2",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "73c3aa9ed636622ddd270c9fd52f206ed1b5b46ba86ad1cb2ec508f4558da9e9",
+        "size_bytes": 5324082,
+        "url": "https://huggingface.co/timm/edgenext_xx_small.in1k/resolve/e10d04b6e70f33cfb54ebd4bce2ede078f4c9ba2/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/edgenext_xx_small.in1k/blob/e10d04b6e70f33cfb54ebd4bce2ede078f4c9ba2/README.md"
+      }
+    }
+  ]
+}

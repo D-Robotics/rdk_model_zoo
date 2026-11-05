@@ -34,10 +34,10 @@ class EntryEvidenceTests(unittest.TestCase):
         with self.assertRaises(ValueError):resolve_selection('s100p',asset_id=resolve_selection('s100').asset.reference)
 
     def test_x5_selection_reuses_yolov5_identity_into_bytetrack_storage(self):
-        from samples.vision.yolov5.runtime.python.cli import X5_VARIANTS
+        from samples.vision.yolov5.runtime.python.cli import X5_VARIANTS, list_available_assets as detector_assets
         from samples.vision.bytetrack.runtime.python.cli import list_available_assets
         rows=list_available_assets('x5')
-        self.assertEqual(len(rows),9)
+        self.assertEqual({a.reference for a in rows}, {a.reference for a in detector_assets('x5')})
         self.assertEqual({a.sample_id for a in rows},{'yolov5'})
         for variant in X5_VARIANTS:
             selected=resolve_selection('x5',variant=variant)

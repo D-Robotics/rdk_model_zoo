@@ -88,8 +88,10 @@ bash samples/speech/paraformer/model/download_model.sh --target s100
 python samples/speech/paraformer/runtime/python/main.py --target s100 --output-dir outputs/paraformer-inference
 ```
 
-下载器打印路径与实测摘要，不覆盖已有文件。清单没有 HBM 发布方哈希，
-本地摘要仅标识文件内容，不能独立认证来源。推理核对本机板型、声明制品和物理
+下载器打印路径与实测摘要，不覆盖已有文件。历史 HBM 没有发布方哈希；新 O1
+组合已登记并核对 SHA-256。准备和推理时传入
+`--variant large-contextual-8404-int16-cpuptq-o1-20261104-r02` 选择新组合，详见
+[模型包](model/README_cn.md#preparation)。推理核对本机板型、声明制品和物理
 张量契约，不自动下载。可选 `runtime/python/run.sh` 转发相同参数，接受 `PYTHON`
 环境变量指定解释器，不安装依赖。
 
@@ -123,6 +125,4 @@ CIF 无 token 时返回空文本并标明跳过 decoder。输出目录创建后�
 ## 许可证
 
 Sample 代码遵循仓库 [Apache-2.0 许可证](../../../LICENSE)，FunASR 派生导出编排另遵循其
-[MIT 许可](conversion/LICENSE-FunASR)。上游模型和数据有各自条款，
-代码许可证不能代替权重／数据许可证。活动二进制清单没有逐制品许可字段，
-此处不新增权利声明。
+[MIT 许可](conversion/LICENSE-FunASR)。上游模型和数据遵循各自条款。活动二进制清单没有逐制品许可字段。

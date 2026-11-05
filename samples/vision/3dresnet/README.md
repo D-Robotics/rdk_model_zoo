@@ -2,6 +2,9 @@ English | [简体中文](README_cn.md)
 
 # 3D ResNet-18 (R3D-18) Video Action Classification
 
+<!-- public-specification-20261105 -->
+The independent new S100 specification, preparation and execution commands are in [public conversion](conversion/public-20261105.md). Existing specifications and measurements below retain their historical scope.
+
 <a id="overview"></a>
 ## Overview
 
@@ -24,7 +27,7 @@ References: [A Closer Look at Spatiotemporal Convolutions for Action Recognition
 └── requirements-host.txt  # Source or data file
 ```
 
-There are no conversion scripts, C++ runtime files, or video decoder in this sample.
+The public specification adds reproducible export and a video/prepared-clip runtime in [public conversion](conversion/public-20261105.md). C++ is not provided.
 
 <a id="support-matrix"></a>
 ## Support Matrix
@@ -44,7 +47,7 @@ Board execution requires an S100 board with the `hbm_runtime` Python package. Th
 ## Prerequisites
 
 - Board: RDK S100 with an S-series system image providing the `hbm_runtime` Python package; choose the image and runtime version for your deployment.
-- Conversion: OpenExplorer 3.5.0 on an x86 Linux host (see [conversion](conversion/README.md)). No complete export, calibration, or compile recipe is included.
+- Conversion: the public specification records the exact cached S SDK CPU image and complete source/calibration/compile recipe in [public conversion](conversion/public-20261105.md). OpenExplorer 3.5.0 notes below refer to the historical file.
 - Storage: enough space for the downloaded HBM and the supplied 2.4 MB `video0.npy`.
 
 <a id="quickstart"></a>

@@ -107,6 +107,7 @@ rdk_model_zoo/
 |   |   |-- mobilenetv4/           # Image classification
 |   |   |-- mobileone/             # Image classification
 |   |   |-- modnet/                # Image matting
+|   |   |-- osnet/                 # Person re-identification
 |   |   |-- paddle_ocr/            # OCR text detection and recognition
 |   |   |-- pointnet/              # Point cloud part segmentation
 |   |   |-- pp_liteseg/            # Semantic segmentation
@@ -191,6 +192,7 @@ The table lists each model family with its platforms and available models; choos
 | Image Classification | ResNeXt | `samples/vision/resnext` | RDK X5 | [Details](./samples/vision/resnext) |
 | Image Classification | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [Details](./samples/vision/vargconvnet) |
 | Image Classification | ViT | `samples/vision/vit` | RDK S100 | [Details](./samples/vision/vit) |
+| Person Re-Identification | OSNet x1.0 | `samples/vision/osnet` | RDK X5 / S100 / S100P / S600 (Archive, research-only) | [Details](./samples/vision/osnet) |
 | Multi-Object Tracking | ByteTrack | `samples/vision/bytetrack` | RDK X5 / RDK S100 / RDK S100P (local detector model) / RDK S600 | [Details](./samples/vision/bytetrack) |
 | Multi-Object Tracking | HobotMot (IOU 2.0) | `samples/vision/hobot_mot` | RDK X5 / RDK S100 / RDK S100P / RDK S600 (CPU tracker over detector results) | [Details](./samples/vision/hobot_mot) |
 | Object Detection / Person Tracking | Faster R-CNN MobileNetV3-Large-320-FPN | `samples/vision/fasterrcnn` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/fasterrcnn) |

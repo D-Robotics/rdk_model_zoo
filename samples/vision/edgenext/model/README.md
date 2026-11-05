@@ -70,3 +70,59 @@ locations.
 | `EdgeNeXt_xx_small_224x224_nv12.bin` | bayes-e `.bin`, packed NV12 input (224x224), F32 `[1,1000,1,1]` logits output | null (unknown) |
 
 The manifest SHA-256 fields are `null (unknown)`. The downloader prints each artifact's computed digest after transfer; keep that digest with its artifact identity.
+
+<!-- converted-batch-20261102 -->
+## Converted-only additions (2026-11-02)
+
+These independently converted timm weights have passed strict checkpoint loading,
+reparameterization and two-input PyTorch/ONNX host comparison, checker and compiler.
+Board smoke, accuracy, Runtime 1/2 and C++ 1/2 are **not-run**; historical metrics
+and screenshots do not describe these artifacts. Existing defaults are retained.
+Pillow is needed for the explicit bicubic shorter-edge 256 / rounded center crop
+224 profile. Normalization is fused in Mapper from the actual checkpoint config;
+output is float32 1,000-class logits followed by native softmax.
+
+| Variant | Artifact | Checkpoint revision | Board |
+|---|---|---|---|
+| `timm-xx-small-in1k` | `edgenext_xx_small_in1k_bayese_224x224_nv12.bin` | [`e10d04b6e70f`](https://huggingface.co/timm/edgenext_xx_small.in1k/blob/e10d04b6e70f33cfb54ebd4bce2ede078f4c9ba2/README.md) | not-run |
+| `timm-x-small-in1k` | `edgenext_x_small_in1k_bayese_224x224_nv12.bin` | [`8525b3ecc3c7`](https://huggingface.co/timm/edgenext_x_small.in1k/blob/8525b3ecc3c7a25c07406163de827d8814f5f1ef/README.md) | not-run |
+| `timm-small-usi-in1k` | `edgenext_small_usi_in1k_bayese_224x224_nv12.bin` | [`81bd8f2ee563`](https://huggingface.co/timm/edgenext_small.usi_in1k/blob/81bd8f2ee56330bdf6a7a2e47e1b2b82eb34f978/README.md) | not-run |
+| `timm-base-usi-in1k` | `edgenext_base_usi_in1k_bayese_224x224_nv12.bin` | [`ce0946556d0e`](https://huggingface.co/timm/edgenext_base.usi_in1k/blob/ce0946556d0ed93eaa61c686955e3118814573bb/README.md) | not-run |
+
+```bash
+python3 samples/vision/edgenext/model/download.py --target x5 --variant timm-xx-small-in1k
+python3 samples/vision/edgenext/runtime/python/main.py --target x5 --variant timm-xx-small-in1k --dry-run
+```
+
+Exact model URLs/SHA-256/size are in `docs/release/x5/models.yaml`; source and host
+receipts are in `conversion/converted.json`. Each weight retains its own model
+license in its public release manifest. No board result is implied by download.
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+These independent profiles passed conversion, complete OE collection and actual HBM metadata binding. Source weights, graphs, per-target recipes, calibration counts and digests are in [converted_targets_20261103.json](../conversion/converted_targets_20261103.json).
+
+| Target | Native variant | Components | Calibration photographs |
+| --- | --- | --- | ---: |
+| s100 | `timm-base-usi-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-base-usi-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-base-usi-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-small-usi-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-small-usi-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-small-usi-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-x-small-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-x-small-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-x-small-in1k-s-int16-o1-20261103` | model | 200 |
+| s100 | `timm-xx-small-in1k-s-int16-o1-20261103` | model | 200 |
+| s100p | `timm-xx-small-in1k-s-int16-o1-20261103` | model | 200 |
+| s600 | `timm-xx-small-in1k-s-int16-o1-20261103` | model | 200 |
+
+```bash
+python3 samples/vision/edgenext/model/download.py --target s100 --variant timm-base-usi-in1k-s-int16-o1-20261103
+python3 samples/vision/edgenext/runtime/python/main.py --target s100 --variant timm-base-usi-in1k-s-int16-o1-20261103 --asset-id s:edgenext:s100/edgenext_base_usi_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --model-path /path/to/edgenext_base_usi_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm --test-img samples/vision/edgenext/test_data/Zebra.jpg
+```
+
+Substitute the actual file paths. Multi-component tasks require every component together. Historical defaults and measurements retain their original identities. Board smoke, dataset accuracy, Runtime 1/2 and C++ 1/2 are `not-run` for these profiles.

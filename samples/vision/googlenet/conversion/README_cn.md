@@ -67,3 +67,38 @@ python3 samples/vision/googlenet/runtime/python/main.py --target x5 --variant go
 ## 补充准备
 
 推理时按 [model/download.sh](../model/README_cn.md) 准备已发布的 X5 模型。构建替代制品时，先准备符合[源模型](#source-model)运行时输入输出要求的 ONNX 图、匹配的校准数据与归一化配置，并为 X5 OE 工具链配置 PTQ YAML。编译后使用样例运行时运行该制品。
+
+## 独立 TorchVision 0.21 crop224 规格
+
+[上游声明](UPSTREAM_NOTICE.md) 固定 TorchVision commit、官方权重完整摘要和原始
+BSD-3-Clause 文件。它使用新的独立文件与 variant，旧 X5 默认及其数据保留。
+
+```bash
+# 仓库根目录；Torch 2.6.0 CPU / TorchVision 0.21.0 / ORT 1.19.2。
+python3 samples/vision/googlenet/conversion/export.py \
+  --checkpoint /path/to/googlenet-1378be20.pth \
+  --calibration /path/to/frozen/raw-rgb-calibration --output /path/to/new-run/export
+```
+
+先严格加载全部权重，保留 transform_input=True，再去掉不参与 eval 的辅助头。
+三个真实图片和 seed-0 输入必须在 atol 1e-4 / rtol 1e-3 下通过原模型与 ORT 对照，
+并保留 Top-5 排名。部署几何为 Pillow bicubic short256、rounded crop224 和
+ImageNet mean/std；不引用上游其他预处理条件下的精度。S 校准采用归一化后的 ONNX
+输入域张量；按[公共分类流程](../../../../utils/tools/classification_conversion/README.md)
+逐芯片生成 PTQ、BC、完整 NodeInfo 和最终 HBM/OE。板端数据保持 `not-run`。
+
+<!-- converted-all-20261103 -->
+
+## 本轮 S 系列转换规格（2026-11-03）
+
+每个目标使用自己的 PTQ、BC、完整 NodeInfo 和最终 OE。内部 INT16 配置不能替代实际公共 dtype；本轮按已读取的 float32 输出绑定。具体配方及 SHA 见 [converted_targets_20261103.json](converted_targets_20261103.json)。
+
+- `s100 / torchvision-021-crop224-int16-o1-20261103 / model`: [torchvision_021_crop224_int16_o1_20261103_s100_model.yaml](recipes/torchvision_021_crop224_int16_o1_20261103_s100_model.yaml)
+- `s100p / torchvision-021-crop224-int16-o1-20261103 / model`: [torchvision_021_crop224_int16_o1_20261103_s100p_model.yaml](recipes/torchvision_021_crop224_int16_o1_20261103_s100p_model.yaml)
+- `s600 / torchvision-021-crop224-int16-o1-20261103 / model`: [torchvision_021_crop224_int16_o1_20261103_s600_model.yaml](recipes/torchvision_021_crop224_int16_o1_20261103_s600_model.yaml)
+
+S 校准必须使用 ONNX 输入域的归一化 `.npy`；NV12 Runtime 的 mean/scale 仍写在配方中。公共工具的 `--target` 和 `--normalization-json` 从同一 checkpoint 导出记录读取实际归一化。
+
+[Shared classification workflow](../../../../utils/tools/classification_conversion/README.md).
+
+原始浮点门禁的阈值、真实输入和 checkpoint 绑定保持不变。编译估算及首条校准输入的 NodeInfo 诊断不作为数据集精度或板端性能。

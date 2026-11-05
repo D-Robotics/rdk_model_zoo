@@ -116,7 +116,7 @@ The table includes an s-variant cosine of 0.9984. The evaluator lists separate X
 - [Python](runtime/python/README.md): CLI parameters, three-stage API, tensor contracts and errors.
 - [C++](runtime/cpp/README.md): native dependencies, lifecycle, build/run and verification limits.
 - [Conversion](conversion/README.md): checkpoint boundaries, calibration, resolved compiler inputs and known gaps.
-- [Evaluator](evaluator/README.md): saved-array formats, protocols, metric definitions and source-recorded tables.
+- [Evaluator](evaluator/README.md): saved-array formats, protocols, metric definitions and reference tables.
 
 API integration uses `RuntimeModelRunner` plus `Yolo26DepthTask`; `predict` is
 exactly pre_process → forward → post_process, with no hidden second implementation.
@@ -132,3 +132,9 @@ Use the model, runtime, conversion and evaluator guides above for artifact prepa
 
 Code follows the repository [license](../../../LICENSE). Upstream Ultralytics
 weights and SUN RGB-D data retain their own terms; neither is bundled here.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Independent converted profiles and explicit commands are listed in [model preparation](model/README.md). Board accuracy and performance are not measured yet.

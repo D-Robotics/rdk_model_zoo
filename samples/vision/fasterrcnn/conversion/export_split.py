@@ -230,7 +230,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", default=str(Path(__file__).parent / "onnx"),
                         help="output directory for the ONNX graphs")
+    parser.add_argument("--threads", type=int, default=2, help="Host Torch/ORT worker count")
     args = parser.parse_args()
+    if args.threads < 1:
+        raise ValueError('threads must be positive')
+    torch.set_num_threads(args.threads)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
 
@@ -291,6 +295,12 @@ def main() -> None:
     # ---- numeric equivalence of the saved graphs vs torch references ----
     import onnxruntime as ort
 
+    def session_for(path):
+        options = ort.SessionOptions()
+        options.intra_op_num_threads = args.threads
+        options.inter_op_num_threads = 1
+        return ort.InferenceSession(path,sess_options=options,providers=['CPUExecutionProvider'])
+
     torch.manual_seed(0)
     norm = torch.randn(1, 3, INPUT_SIZE, INPUT_SIZE)
     with torch.no_grad():
@@ -303,20 +313,20 @@ def main() -> None:
 
     report["equivalence"] = {}
     for tag, path in (("part_a_f0only.op16", pa16), ("part_a_f0only.op11", pa11)):
-        session = ort.InferenceSession(path, providers=["CPUExecutionProvider"])
+        session = session_for(path)
         obj, deltas, feat0 = (torch.from_numpy(v) for v in session.run(None, {"images": norm.numpy()}))
         report["equivalence"][tag] = {
             "obj_max_abs": float((obj - ref_obj_cat).abs().max()),
             "deltas_max_abs": float((deltas - ref_deltas_cat).abs().max()),
             "feat0_max_abs": float((feat0 - ref_feat0).abs().max()),
         }
-    session = ort.InferenceSession(pb11, providers=["CPUExecutionProvider"])
+    session = session_for(pb11)
     cls_b, reg_b = (torch.from_numpy(v) for v in session.run(None, {"pooled": pooled.numpy()}))
     report["equivalence"]["part_b_batch150.op11"] = {
         "class_logits_max_abs": float((cls_b - ref_cls).abs().max()),
         "box_regression_max_abs": float((reg_b - ref_reg).abs().max()),
     }
-    session = ort.InferenceSession(pb16, providers=["CPUExecutionProvider"])
+    session = session_for(pb16)
     cls_p, reg_p = (torch.from_numpy(v) for v in session.run(None, {"bank": pack_bank(pooled).numpy()}))
     report["equivalence"]["part_b_packed.op16"] = {
         "class_logits_max_abs": float((cls_p[0, :, :, 0].t() - ref_cls).abs().max()),

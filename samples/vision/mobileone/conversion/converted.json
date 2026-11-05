@@ -1,0 +1,828 @@
+{
+  "schema_version": 1,
+  "status": "converted",
+  "board_validation": "not-run",
+  "profile": "raw RGB, Pillow bicubic short256, rounded center crop224, checkpoint normalization fused by mapper",
+  "models": [
+    {
+      "job": {
+        "family": "mobileone",
+        "model": "mobileone_s0.apple_in1k",
+        "repo_id": "timm/mobileone_s0.apple_in1k",
+        "platform": "x5",
+        "size": "s0-apple-in1k-224",
+        "variant": "timm-s0-apple-in1k",
+        "filename": "mobileone_s0_apple_in1k_bayese_224x224_nv12.bin",
+        "run_id": "mobileone_s0_apple_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T10:58:56.960063+00:00",
+        "sha256": "7e1eff64efcfa8c8e988b14795156481162629cc54bd0dd98bb6e2d786b2a2e2",
+        "size_bytes": 2234328
+      },
+      "source": {
+        "repo_id": "timm/mobileone_s0.apple_in1k",
+        "revision": "2f1da1a4433b0636bace873cab611c9ee90d40de",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "b624d5ab2a210791dff05fd4ec734b3ad271a47c2b053db625c5a5783eacb8bf",
+        "size_bytes": 21660528,
+        "url": "https://huggingface.co/timm/mobileone_s0.apple_in1k/resolve/2f1da1a4433b0636bace873cab611c9ee90d40de/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/mobileone_s0.apple_in1k/blob/2f1da1a4433b0636bace873cab611c9ee90d40de/README.md",
+        "license_url": "https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE",
+        "license_sha256": "4673c0517676de103c28e9973d9e247f73ffdc53e46a3bd2bb2d709496dc48df"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "mobileone_s0.apple_in1k",
+        "checkpoint_sha256": "b624d5ab2a210791dff05fd4ec734b3ad271a47c2b053db625c5a5783eacb8bf",
+        "onnx_sha256": "ea99e479b944d4501b96ea57aa742d7bc5fd8e8993b75772dd11142623b46b9a",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "2d0e91fa1680b46a60835a8984d3d89c42c9559970bd55ee761cd75e8bfe9718",
+        "parameter_count": 5293272,
+        "deployment_parameter_count": 2078504,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.875,
+          "crop_mode": "center",
+          "interpolation": "bilinear"
+        },
+        "torch_onnx_max_absolute_errors": [
+          9.953975677490234e-06,
+          1.7642974853515625e-05
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "mobileone",
+          "family": "mobileone",
+          "task": "cls",
+          "size": "s0-apple-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "7e1eff64efcfa8c8e988b14795156481162629cc54bd0dd98bb6e2d786b2a2e2",
+            "name": "mobileone_s0_apple_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 2234328
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "3fccd21f438f2873bccdf63b0cc31fcacc334cec34e5be5968b239ed18da2d7b",
+        "controller_sha256": "ffe81251b3cbf8f65289e72698526c52de4a0eaffa1ab796ae1e258cd32f5604",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "3fccd21f438f2873bccdf63b0cc31fcacc334cec34e5be5968b239ed18da2d7b",
+        "compile_log": "6a28d8e0627ec2f6728190de6db6489207fad270c36805547ff60217bc9be331",
+        "model_info": "4f974c6491916a6e4129376ba7a447f90532b65879233e4e8b6d8582bec0b9f8",
+        "oe_report": "68a02d131337d184e5a5c56b184b224fc7a8550359299ec336aba05a2e2cf4a3",
+        "oe_data": "2aa14c19c7a025ad4ef1caccccdf46d1e1ec7f07778770873a9acdaaf151f86b"
+      }
+    },
+    {
+      "job": {
+        "family": "mobileone",
+        "model": "mobileone_s1.apple_in1k",
+        "repo_id": "timm/mobileone_s1.apple_in1k",
+        "platform": "x5",
+        "size": "s1-apple-in1k-224",
+        "variant": "timm-s1-apple-in1k",
+        "filename": "mobileone_s1_apple_in1k_bayese_224x224_nv12.bin",
+        "run_id": "mobileone_s1_apple_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:01:46.675346+00:00",
+        "sha256": "54029e4f9a504685b63cef09d4e482d93de3914a12b6c17765b7e9b1f2ee8d87",
+        "size_bytes": 4790232
+      },
+      "source": {
+        "repo_id": "timm/mobileone_s1.apple_in1k",
+        "revision": "c4a13fe645a42cbb683439dfb1934c815155f2a0",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "5d6c420683128b11cc5ea28fa9b7ce7857eaf579af9bf0dd38d6295af24c703a",
+        "size_bytes": 19630656,
+        "url": "https://huggingface.co/timm/mobileone_s1.apple_in1k/resolve/c4a13fe645a42cbb683439dfb1934c815155f2a0/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/mobileone_s1.apple_in1k/blob/c4a13fe645a42cbb683439dfb1934c815155f2a0/README.md",
+        "license_url": "https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE",
+        "license_sha256": "4673c0517676de103c28e9973d9e247f73ffdc53e46a3bd2bb2d709496dc48df"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "mobileone_s1.apple_in1k",
+        "checkpoint_sha256": "5d6c420683128b11cc5ea28fa9b7ce7857eaf579af9bf0dd38d6295af24c703a",
+        "onnx_sha256": "922339845fc559f1c2f0968cc586989b6db1e77ad846610629f1398a2674c6cf",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "2d0e91fa1680b46a60835a8984d3d89c42c9559970bd55ee761cd75e8bfe9718",
+        "parameter_count": 4825192,
+        "deployment_parameter_count": 4764840,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.9,
+          "crop_mode": "center",
+          "interpolation": "bilinear"
+        },
+        "torch_onnx_max_absolute_errors": [
+          9.775161743164062e-06,
+          9.5367431640625e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "mobileone",
+          "family": "mobileone",
+          "task": "cls",
+          "size": "s1-apple-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "54029e4f9a504685b63cef09d4e482d93de3914a12b6c17765b7e9b1f2ee8d87",
+            "name": "mobileone_s1_apple_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 4790232
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "e671d0d4dd4125735eb1b05eebcd4bf3cae3da5f6b6ea662db71dd94cde54360",
+        "controller_sha256": "ffe81251b3cbf8f65289e72698526c52de4a0eaffa1ab796ae1e258cd32f5604",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "e671d0d4dd4125735eb1b05eebcd4bf3cae3da5f6b6ea662db71dd94cde54360",
+        "compile_log": "2e7955e52c4f40d73789752dabd107afea1a5046af356e5c24c46545dda456cd",
+        "model_info": "d657b2b1b2974c0f9180c91f0848c62a757f4fba039e4536718bcc0a915be720",
+        "oe_report": "31458b8634eb5ad1c079f3016e4723d46e1519753cfcb5b5f8ba7dadf936ad8c",
+        "oe_data": "781880c912cac9ffd60d602bf18222fdffde89a8e52b6947ed75f33f60c7338a"
+      }
+    },
+    {
+      "job": {
+        "family": "mobileone",
+        "model": "mobileone_s2.apple_in1k",
+        "repo_id": "timm/mobileone_s2.apple_in1k",
+        "platform": "x5",
+        "size": "s2-apple-in1k-224",
+        "variant": "timm-s2-apple-in1k",
+        "filename": "mobileone_s2_apple_in1k_bayese_224x224_nv12.bin",
+        "run_id": "mobileone_s2_apple_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:05:17.488285+00:00",
+        "sha256": "79d92879aade0806677ba5706000a318353246fe929bbbf0c22da9df2805dd83",
+        "size_bytes": 7411672
+      },
+      "source": {
+        "repo_id": "timm/mobileone_s2.apple_in1k",
+        "revision": "0cd6548c311753d2dd525d414c22fce35738264c",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "21d333af83f23dfd7d4f71648b50bbaf785cde48fb48181eb928c9da3179ae7a",
+        "size_bytes": 31943448,
+        "url": "https://huggingface.co/timm/mobileone_s2.apple_in1k/resolve/0cd6548c311753d2dd525d414c22fce35738264c/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/mobileone_s2.apple_in1k/blob/0cd6548c311753d2dd525d414c22fce35738264c/README.md",
+        "license_url": "https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE",
+        "license_sha256": "4673c0517676de103c28e9973d9e247f73ffdc53e46a3bd2bb2d709496dc48df"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "mobileone_s2.apple_in1k",
+        "checkpoint_sha256": "21d333af83f23dfd7d4f71648b50bbaf785cde48fb48181eb928c9da3179ae7a",
+        "onnx_sha256": "c57998a41929c4a3b9b16b447c1ff66a5c4a2c1f7e47101278d5f04755c0ce97",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "2d0e91fa1680b46a60835a8984d3d89c42c9559970bd55ee761cd75e8bfe9718",
+        "parameter_count": 7884648,
+        "deployment_parameter_count": 7808168,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.9,
+          "crop_mode": "center",
+          "interpolation": "bilinear"
+        },
+        "torch_onnx_max_absolute_errors": [
+          1.1205673217773438e-05,
+          7.3015689849853516e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "mobileone",
+          "family": "mobileone",
+          "task": "cls",
+          "size": "s2-apple-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "79d92879aade0806677ba5706000a318353246fe929bbbf0c22da9df2805dd83",
+            "name": "mobileone_s2_apple_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 7411672
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "eba5851ba8066d6a7c859c0cce079b6b72778245c4cec0ce40467fcfce12c10e",
+        "controller_sha256": "ffe81251b3cbf8f65289e72698526c52de4a0eaffa1ab796ae1e258cd32f5604",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "eba5851ba8066d6a7c859c0cce079b6b72778245c4cec0ce40467fcfce12c10e",
+        "compile_log": "8e9d034eb55e76f59ce1fd6232d57bbd6aa8677bab15a38878740a10ed21a5f6",
+        "model_info": "5c7e1fbfd8f41c5c75fde59be3dee86f260471628a9acb0bafc880c900b1e322",
+        "oe_report": "f73090ce65b34f4829075e4abec3622eb3d23028cf61455d4328c4c7557b56b2",
+        "oe_data": "94cd713571df7b9bc74fe65501aa4c17a25bcb7d010ed5b0c4521ac7b29a7517"
+      }
+    },
+    {
+      "job": {
+        "family": "mobileone",
+        "model": "mobileone_s3.apple_in1k",
+        "repo_id": "timm/mobileone_s3.apple_in1k",
+        "platform": "x5",
+        "size": "s3-apple-in1k-224",
+        "variant": "timm-s3-apple-in1k",
+        "filename": "mobileone_s3_apple_in1k_bayese_224x224_nv12.bin",
+        "run_id": "mobileone_s3_apple_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:08:30.387489+00:00",
+        "sha256": "def6a1ae035182b3b9d094895ca8ed3b179f7c5f1eb097024e6ac03d62916efc",
+        "size_bytes": 9377752
+      },
+      "source": {
+        "repo_id": "timm/mobileone_s3.apple_in1k",
+        "revision": "29a687f5d735adb9ee23667dce14b60e8eaa6e88",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "9340b9e332591b2c83579ce71d9f149eb7e7bec4a520ed60a26d52819f9f55bd",
+        "size_bytes": 41158048,
+        "url": "https://huggingface.co/timm/mobileone_s3.apple_in1k/resolve/29a687f5d735adb9ee23667dce14b60e8eaa6e88/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/mobileone_s3.apple_in1k/blob/29a687f5d735adb9ee23667dce14b60e8eaa6e88/README.md",
+        "license_url": "https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE",
+        "license_sha256": "4673c0517676de103c28e9973d9e247f73ffdc53e46a3bd2bb2d709496dc48df"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "mobileone_s3.apple_in1k",
+        "checkpoint_sha256": "9340b9e332591b2c83579ce71d9f149eb7e7bec4a520ed60a26d52819f9f55bd",
+        "onnx_sha256": "2d68ec19a27c9e62e427bc9a0639af228af576615b868545dd8e8ba6713c739a",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "2d0e91fa1680b46a60835a8984d3d89c42c9559970bd55ee761cd75e8bfe9718",
+        "parameter_count": 10170600,
+        "deployment_parameter_count": 10078312,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.9,
+          "crop_mode": "center",
+          "interpolation": "bilinear"
+        },
+        "torch_onnx_max_absolute_errors": [
+          1.0788440704345703e-05,
+          8.52346420288086e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "mobileone",
+          "family": "mobileone",
+          "task": "cls",
+          "size": "s3-apple-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "def6a1ae035182b3b9d094895ca8ed3b179f7c5f1eb097024e6ac03d62916efc",
+            "name": "mobileone_s3_apple_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 9377752
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "06fd9673e6c8bc8f164a4a6576d578b9f6df68d1ff577764aefb09fe66e7c76b",
+        "controller_sha256": "ffe81251b3cbf8f65289e72698526c52de4a0eaffa1ab796ae1e258cd32f5604",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "06fd9673e6c8bc8f164a4a6576d578b9f6df68d1ff577764aefb09fe66e7c76b",
+        "compile_log": "882710f5c24fad12758b57e98beb2288b3c2a0566a17e3185b5fa9f504186ba0",
+        "model_info": "460cf92d865505013674631fd609462c30d9d656fcfaa30d688d7a7c5c85013d",
+        "oe_report": "eaecbe0164ee6bc5eda0a746c9abbb6a1e4e1231fcbbb7b2317d8ec612e04025",
+        "oe_data": "e3086dd8584af631363b78e3e0104d651f20e13934d06ae95e2f7675dcbbb4c8"
+      }
+    },
+    {
+      "job": {
+        "family": "mobileone",
+        "model": "mobileone_s4.apple_in1k",
+        "repo_id": "timm/mobileone_s4.apple_in1k",
+        "platform": "x5",
+        "size": "s4-apple-in1k-224",
+        "variant": "timm-s4-apple-in1k",
+        "filename": "mobileone_s4_apple_in1k_bayese_224x224_nv12.bin",
+        "run_id": "mobileone_s4_apple_in1k-x5-20261102-r02",
+        "resolution": 224,
+        "resize_shorter": 256,
+        "opset": 11,
+        "status": "converted",
+        "updated_at": "2026-11-02T11:14:29.667745+00:00",
+        "sha256": "f24c60bd77074f2f550afdc17bc03f0399d73412f15bd5efb7de3a272d7f5faa",
+        "size_bytes": 13834200
+      },
+      "source": {
+        "repo_id": "timm/mobileone_s4.apple_in1k",
+        "revision": "f4dfe4c260ea8d7d07ac6c06042fe254efdd329a",
+        "license": "other",
+        "license_name": "Apple software license",
+        "filename": "model.safetensors",
+        "sha256": "bb333a71202569a31d5d338eda74dd20e59cc5105c9126af109c30f7813c0440",
+        "size_bytes": 60377552,
+        "url": "https://huggingface.co/timm/mobileone_s4.apple_in1k/resolve/f4dfe4c260ea8d7d07ac6c06042fe254efdd329a/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/mobileone_s4.apple_in1k/blob/f4dfe4c260ea8d7d07ac6c06042fe254efdd329a/README.md",
+        "license_url": "https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE",
+        "license_sha256": "4673c0517676de103c28e9973d9e247f73ffdc53e46a3bd2bb2d709496dc48df"
+      },
+      "export": {
+        "schema_version": 1,
+        "status": "passed",
+        "model": "mobileone_s4.apple_in1k",
+        "checkpoint_sha256": "bb333a71202569a31d5d338eda74dd20e59cc5105c9126af109c30f7813c0440",
+        "onnx_sha256": "f893163138f00374cad10ec91837791ae7c9f6183ddc940d4b8e1cd21538a822",
+        "exporter_sha256": "24f8a35958da23d386b0b27bb5806610af1856b1cee37c94464bab8083407d3b",
+        "implementation_sha256": "2d0e91fa1680b46a60835a8984d3d89c42c9559970bd55ee761cd75e8bfe9718",
+        "parameter_count": 14951248,
+        "deployment_parameter_count": 14838352,
+        "opset": 11,
+        "input": {
+          "name": "data",
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32"
+        },
+        "outputs": [
+          {
+            "name": "output",
+            "shape": [
+              1,
+              1000
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        },
+        "upstream_data_config": {
+          "input_size": [
+            3,
+            224,
+            224
+          ],
+          "crop_pct": 0.9,
+          "crop_mode": "center",
+          "interpolation": "bilinear"
+        },
+        "torch_onnx_max_absolute_errors": [
+          5.7220458984375e-06,
+          8.58306884765625e-06
+        ],
+        "host_inputs": [
+          "deterministic-random",
+          "frozen-calibration-image"
+        ],
+        "method": "Strict checkpoint load; reparameterization and PyTorch/ORT CPU parity; not dataset accuracy or board inference",
+        "versions": {
+          "torch": "2.8.0+cu128",
+          "timm": "1.0.20",
+          "onnx": "1.17.0",
+          "onnxruntime": "1.19.2"
+        }
+      },
+      "build": {
+        "model": {
+          "source": "mobileone",
+          "family": "mobileone",
+          "task": "cls",
+          "size": "s4-apple-in1k-224"
+        },
+        "target": {
+          "platform": "x5",
+          "march": "bayes-e"
+        },
+        "artifacts": {
+          "model": {
+            "sha256": "f24c60bd77074f2f550afdc17bc03f0399d73412f15bd5efb7de3a272d7f5faa",
+            "name": "mobileone_s4_apple_in1k_bayese_224x224_nv12.bin",
+            "size_bytes": 13834200
+          }
+        },
+        "toolchain": {
+          "image": "registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_20_x5_gpu:v1.2.8",
+          "image_id": "sha256:bb706c129bafb4d36d2c338c957369cc5fdb51e0eb65ad5c927b3fda4023ad3f",
+          "workflow": "x5-ptq",
+          "execution_mode": "Docker",
+          "board": "not-run",
+          "maximum_parallel_jobs": 2
+        },
+        "config_sha256": "031762ab1a6edff462e56f815e0ef6cf37ba65584eea78b41f460182469f6f63",
+        "controller_sha256": "ffe81251b3cbf8f65289e72698526c52de4a0eaffa1ab796ae1e258cd32f5604",
+        "board_validation": "not-run"
+      },
+      "oe_toolchain": {
+        "hbdk": "3.49.15",
+        "hb_mapper": "1.24.3",
+        "horizon_nn": "1.1.0",
+        "runtime": "3.15.55.0"
+      },
+      "calibration": {
+        "manifest_sha256": "e1ae9a45e4ec433a1a27ccdf7e4dc4d61cef8f45b082786f7e4cce01277f92c9",
+        "manifest": {
+          "count": 200,
+          "shape": [
+            1,
+            3,
+            224,
+            224
+          ],
+          "dtype": "float32",
+          "range": [
+            0,
+            255
+          ],
+          "normalization": "fused in mapper; not applied to calibration tensors",
+          "geometry": "PIL bicubic shortest edge 256, rounded center crop 224",
+          "producer_sha256": "425df13b73aac3a1628ac0e674adb6f1608fa27431b041cd9438e30516fd0f84"
+        }
+      },
+      "files": {
+        "config": "031762ab1a6edff462e56f815e0ef6cf37ba65584eea78b41f460182469f6f63",
+        "compile_log": "b07d1aa860c2a489875ca6d5594bb55be9d0d6fd36b1c48a63957367c2e82d08",
+        "model_info": "93723c82040e0d0b49665afdcc8156dfbbe4a6bf2f8e97b3540bbd9c1bcf1c59",
+        "oe_report": "ba1eaa76fa3b30604135db338cb18c9420b2f9e1ea38a218a2e905e9285998d9",
+        "oe_data": "c067ec7884b752ae3efeb1df7689d1ce1cd6d26ffcecc6e3202e7ae402ed8ee9"
+      }
+    }
+  ]
+}

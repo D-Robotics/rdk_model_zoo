@@ -1,0 +1,455 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "variant": "timm-m5-r224-in1k-s-int16-o1-20261103",
+      "web_size": "m5-r224-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/efficientvit_m5_r224_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/efficientvit/efficientvit_m5_r224_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "4270b730e93c31ad4efc8c30fa2f74f59c3d21b7aa3f5b792010cce6caffaf54",
+          "size_bytes": 22485472,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "8fc5045f87b6738a4366d056d91f0b1e7a0d317221a0e13b114574661783f832",
+          "effective_config_sha256": "8b9aa5ef375c9cd79421f18c78fa5e5154c55e1aac3fea109e3e0e5dc08d0c5f",
+          "recipe": "samples/vision/efficientvit/conversion/recipes/timm_m5_r224_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "e0f5b2bd47a60484426343c664f7579962acdaf1a8723d0505ba9e7a34f27216",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "94e67bcf6f36075322fde00dd3db89094d380176cebe56bb4d4fec26ab94f7a6",
+          "oe_data_sha256": "8e03ce7c80047b9c6a4a5af808faade7c18b1611731445d71868133f456bd6ae",
+          "node_info_csv_sha256": "43b2dc7e80a780d7b71893766af1e4ddcb150d2ac8c0983059547b4c256c7dc3",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.977699,
+              "cosine": 0.961128
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientvit_m5_r224_in1k-s100-int16-20261103-r04/ptq_output/efficientvit_m5_r224_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "c49c0ba4a52af68f9a95a47cc5ebeb672af2724e0b924fdc26e71b5377fa92a8",
+              "size_bytes": 17981913
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientvit_m5_r224_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "ae5ed76440aaca05ad97099b0b5fbc47d9888878a15ceac1a1e7205ccfab4020",
+              "size_bytes": 1207
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 5.066394805908203e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 5.364418029785156e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 6.9141387939453125e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.0994415283203125e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "68b7e85564a00d719f7f956e10be91cc64de99bad6b950da070ad3724cff0594",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientvit_m5.r224_in1k",
+        "revision": "e45d80f65cd8ef0964ab526dd4f8025abbff4e19",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "93fe829b6eac0660aaf48703746112ff648d2d740bc6260874a61bf9b3a7f452",
+        "size_bytes": 50285696,
+        "url": "https://huggingface.co/timm/efficientvit_m5.r224_in1k/resolve/e45d80f65cd8ef0964ab526dd4f8025abbff4e19/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientvit_m5.r224_in1k/blob/e45d80f65cd8ef0964ab526dd4f8025abbff4e19/README.md"
+      }
+    },
+    {
+      "variant": "timm-m5-r224-in1k-s-int16-o1-20261103",
+      "web_size": "m5-r224-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/efficientvit_m5_r224_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/efficientvit/efficientvit_m5_r224_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "588cbf420ff5f9ac6bab0222c53471dec194eccba0a3701ba1be9e4a3dd76e8f",
+          "size_bytes": 22419424,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "8fc5045f87b6738a4366d056d91f0b1e7a0d317221a0e13b114574661783f832",
+          "effective_config_sha256": "96a3bdb597afe17ca881f222310278d3c2f80d212b3844ede992c10169406e14",
+          "recipe": "samples/vision/efficientvit/conversion/recipes/timm_m5_r224_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "05f6494465a1f3f4766df9346fa562ef5eab04b15abbdbde4d82e295d5df77e6",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "4f02173f266d86bd2d5e9ddbdae7c8db72fd67d347b55da2c9be7797773a1abf",
+          "oe_data_sha256": "7c6403b262fd37d29ac7db519d76e2dab92301debe7df0f52cccdba65d7bbd12",
+          "node_info_csv_sha256": "3654d8702863f42d488027239933b94806b2a6c586e6b333bcb0645de698b001",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.977699,
+              "cosine": 0.961128
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientvit_m5_r224_in1k-s100p-int16-20261103-r04/ptq_output/efficientvit_m5_r224_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "d8716f77c68bc827b6511894d1172db14801a4ff0eb2606989226db5915cd414",
+              "size_bytes": 17981914
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientvit_m5_r224_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "f74a473f54426e8f0accebc595f4637cf77adae02468a289f639e5598d308221",
+              "size_bytes": 1208
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 4.708766937255859e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 4.887580871582031e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 7.3909759521484375e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.0994415283203125e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "68b7e85564a00d719f7f956e10be91cc64de99bad6b950da070ad3724cff0594",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientvit_m5.r224_in1k",
+        "revision": "e45d80f65cd8ef0964ab526dd4f8025abbff4e19",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "93fe829b6eac0660aaf48703746112ff648d2d740bc6260874a61bf9b3a7f452",
+        "size_bytes": 50285696,
+        "url": "https://huggingface.co/timm/efficientvit_m5.r224_in1k/resolve/e45d80f65cd8ef0964ab526dd4f8025abbff4e19/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientvit_m5.r224_in1k/blob/e45d80f65cd8ef0964ab526dd4f8025abbff4e19/README.md"
+      }
+    },
+    {
+      "variant": "timm-m5-r224-in1k-s-int16-o1-20261103",
+      "web_size": "m5-r224-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/efficientvit_m5_r224_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/efficientvit/efficientvit_m5_r224_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "6dfab14188fea9f23c60d59f5a7591a37669b868ea6ea69d1e11f5e09beb6834",
+          "size_bytes": 24181320,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "8fc5045f87b6738a4366d056d91f0b1e7a0d317221a0e13b114574661783f832",
+          "effective_config_sha256": "41a7f73b7472b20ab0766ebf0c09b04c8723729d01495c626c4820bb0b58bf86",
+          "recipe": "samples/vision/efficientvit/conversion/recipes/timm_m5_r224_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "596d99d05fd1350f29aef8197572b404863441fac1054c33e01538fac6aad036",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "fb9e7c23d653fb80ee69eb367ffce3995ebf02b37369d26c70ade2ed89196455",
+          "oe_data_sha256": "753710055a9aca608440a4618ae02f902460d531860e36e453c2a524333539fd",
+          "node_info_csv_sha256": "74e2c233968ebdc3bfafb994b0293fe8f4525c6289eeba124d56b93b53323def",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.977699,
+              "cosine": 0.961981
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientvit_m5_r224_in1k-s600-int16-20261103-r04/ptq_output/efficientvit_m5_r224_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "b2e0339c5e55ba65061b4d406980131dd085c6ad368c7e49d5021385738adedd",
+              "size_bytes": 15107251
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/efficientvit_m5_r224_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "9e15b4b8ca372cc61ed4a5a93e4510077eb926ef56c40cc0d2986a8e0e0fa485",
+              "size_bytes": 1207
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 4.231929779052734e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 4.410743713378906e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 7.152557373046875e-06
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 3.0994415283203125e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "68b7e85564a00d719f7f956e10be91cc64de99bad6b950da070ad3724cff0594",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/efficientvit_m5.r224_in1k",
+        "revision": "e45d80f65cd8ef0964ab526dd4f8025abbff4e19",
+        "license": "mit",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "93fe829b6eac0660aaf48703746112ff648d2d740bc6260874a61bf9b3a7f452",
+        "size_bytes": 50285696,
+        "url": "https://huggingface.co/timm/efficientvit_m5.r224_in1k/resolve/e45d80f65cd8ef0964ab526dd4f8025abbff4e19/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/efficientvit_m5.r224_in1k/blob/e45d80f65cd8ef0964ab526dd4f8025abbff4e19/README.md"
+      }
+    }
+  ]
+}

@@ -26,7 +26,7 @@ ModelSelection = _shared.ModelSelection
 ModelBinding = _shared.ModelBinding
 
 
-def list_available_assets(target=None):
+def list_available_assets(target=None, variant="published"):
     """Return manifest-backed encoder/decoder assets for the selected target.
 
     Args:
@@ -35,12 +35,13 @@ def list_available_assets(target=None):
     Returns:
         The shared catalog's exact asset rows for this sample.
     """
-    return _shared.list_available_assets(SAMPLE, target)
+    return _shared.list_available_assets(SAMPLE, target, variant)
 
 
 def resolve_selection(
     target="auto",
     *,
+    variant="published",
     encoder_model_path=None,
     decoder_model_path=None,
     encoder_asset_id=None,
@@ -70,6 +71,7 @@ def resolve_selection(
         encoder_asset_id=encoder_asset_id,
         decoder_asset_id=decoder_asset_id,
         sample_dir=SAMPLE_DIR,
+        variant=variant,
     )
 
 DEFAULT_TEST_IMAGE = SAMPLE_DIR / "test_data" / "dogs.jpg"
@@ -96,6 +98,7 @@ def build_parser() -> argparse.ArgumentParser:
     """Build the SDK-free parser; ``main`` returns zero or a user error code."""
     parser = argparse.ArgumentParser(description="MobileSAM dual-model box-prompt mask segmentation.")
     parser.add_argument("--target", choices=("auto", "x5", "s100", "s100p", "s600"), default="auto")
+    parser.add_argument("--variant", default="published", help="Exact converted pair variant; published preserves the historical pair.")
     parser.add_argument("--encoder-asset-id", default=None, help="Exact manifest encoder asset reference.")
     parser.add_argument("--decoder-asset-id", default=None, help="Exact manifest decoder asset reference.")
     parser.add_argument("--encoder-model-path", default=None, help="External encoder model path; requires its asset ID.")
@@ -123,6 +126,7 @@ def selection_report(selection) -> dict:
     """Serializable description of one resolved encoder/decoder selection."""
     return {
         "target": selection.target,
+        "variant": selection.variant,
         "encoder_asset_id": asset_ref(selection.encoder_asset),
         "decoder_asset_id": asset_ref(selection.decoder_asset),
         "encoder_model_path": str(selection.encoder_model_path),
@@ -143,9 +147,9 @@ def dry_run_report(selection, box) -> dict:
     return report
 
 
-def run_list_models(target: str) -> int:
+def run_list_models(target: str, variant="published") -> int:
     """Print the manifest encoder/decoder references for ``target`` (model-free)."""
-    assets = list_available_assets(target)
+    assets = list_available_assets(target, variant)
     for asset in assets:
         print(asset_ref(asset))
     print(f"{len(assets)} manifest assets; no model loaded.")

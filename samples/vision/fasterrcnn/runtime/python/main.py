@@ -44,9 +44,9 @@ def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     try:
         if args.list_models:
-            return list_models(args.target)
+            return list_models(args.target,args.variant)
         selection = resolve_selection(args.target, parta_path=args.parta_path,
-                                      partb_path=args.partb_path)
+                                      partb_path=args.partb_path,variant=args.variant)
         if args.dry_run:
             return dry_run(selection, args)
         require_pair_files(selection)

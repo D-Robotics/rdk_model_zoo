@@ -37,11 +37,12 @@ Checkpoint export, conversion preparation and evaluation workflows are documente
 
 | Variant | x5 | s100 | s100p | s600 | Python | C++ |
 | --- | --- | --- | --- | --- | --- | --- |
+| 11s-native-20261102 | converted; board not tested | not-supported | not-supported | not-supported | float heads | float heads |
 | 11s | supported | supported (Python)* | not-supported | not-supported | X5/S published* | float-output model only† |
-| 11m / 11l | supported | not-supported | not-supported | not-supported | X5 | float-output model only† |
+| 11m / 11l | supported | supported (Python)* | not-supported | not-supported | X5/S published* | float-output model only† |
 | 26n/s/m/l/x | not-supported | supported (Python)* | supported (Python)* | not-supported | S published* | float-output model only† |
 
-* Python supports the published S11 mixed float32/int32/int16 outputs and S26 int32/int8 outputs. Integer heads require valid runtime SCALE metadata; postprocess dequantizes them before running the same logit/sigmoid decode as the float heads. Optional local float models require an explicit SHA-256. S600 has no published YOLOE model.
+* Python supports the published S11 mixed float32/int32/int16 outputs and S26 int32/int8 outputs. Integer heads require valid runtime SCALE metadata; postprocess dequantizes them before running the same logit/sigmoid decode as the float heads. Optional local float models require an explicit SHA-256. S100 11m and 11l are published artifacts and have no latency row in this repository. S600 has no published YOLOE model.
 
 † The C++ runtime binds only unquantized FLOAT32 NHWC outputs and runs locally converted floating-output models with an explicit SHA-256. Published artifacts — the X5 11s/m/l BINs and the S quantized HBMs — run with the Python runtime. See the [C++ runtime](runtime/cpp/README.md).
 
@@ -84,7 +85,7 @@ Results contain original-image xyxy float32 boxes, sigmoid float32 probabilities
 
 The table below records Runtime-only performance (preprocessing/postprocessing excluded); end-to-end performance additionally includes every host-side stage:
 
-| Model (source-recorded) | Target | Runtime latency / FPS |
+| Model | Target | Runtime latency / FPS |
 | --- | --- | --- |
 | YOLOE-11s PF | X5 | 146.16 ms / 6.84 |
 | YOLOE-11m PF | X5 | 177.14 ms / 5.65 |
@@ -123,3 +124,26 @@ Running the sample writes `test_data/result.jpg`; accuracy metrics come from the
 ## License
 
 Sample code retains source Apache-2.0 notices and the repository [LICENSE](../../../LICENSE). Model weights and upstream YOLOE/Ultralytics software retain their respective licenses; the repository code license does not automatically license the weights. Version references are in the source overviews above.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Independent converted profiles and explicit commands are listed in [model preparation](model/README.md). Board accuracy and performance are not measured yet.
+
+<!-- BEGIN CPU S CONVERSIONS 20261104 -->
+
+## Additional CPU PTQ S profiles (2026-11-04)
+
+These exact trained-checkpoint exports passed the source host gate and the full-output CPU source/CPU SDK gate (three frozen images plus deterministic random input, atol=1e-4, rtol=1e-3). Each target has its own INT16 PTQ, compiler metadata, OE report and checksum in `converted_targets_20261103.json`. Compiler estimates describe conversion; board accuracy, Runtime 1/2 concurrency and C++ 1/2 streams remain not run.
+
+Models and intermediate outputs stay on dev-server. The Mac holds code and metadata only; Archive uploads stream from server files without a local model copy.
+
+| Target | Native variant | Manifest filename | SHA-256 | Bytes |
+|---|---|---|---|---:|
+| s100 | `26n-native-cal32-cpuptq-20261103-o1` | `s:yoloe26_seg:nash-e/yoloe_26n_seg_pf_nashe_640x640_nv12_float_cal32_20261103_o1_cpuptq.hbm` | `6582c867d89472f3b5c6aed29944fb15768fcc07adb376965dd831c617a0ed30` | 167799968 |
+| s100p | `26n-native-cal32-cpuptq-20261103-o1` | `s:yoloe26_seg:nash-m/yoloe_26n_seg_pf_nashm_640x640_nv12_float_cal32_20261103_o1_cpuptq.hbm` | `9358de5bc440818e81cd51fbdf669e68b65dbc32060b95fabc7304e5238ad0f2` | 174226456 |
+| s600 | `26n-native-cal32-cpuptq-20261103-o1` | `s:yoloe26_seg:nash-p/yoloe_26n_seg_pf_nashp_640x640_nv12_float_cal32_20261103_o1_cpuptq.hbm` | `bd831c5607a7091c19d63ba4e8ffa0db41d9b818f3a65139550fb19010253efd` | 12553336 |
+| s600 | `11s-int16-cal32-cpuptq-s-o1-20261103` | `s:yoloe11_seg:nash-p/yoloe_11s_seg_pf_nashp_640x640_nv12_float_20261103_o1_cpuptq.hbm` | `d0f400a5e1f7d9fe59cbde4b0b0b9841c16b19588d67b660bd7305dfeb5520e5` | 54169136 |
+
+<!-- END CPU S CONVERSIONS 20261104 -->

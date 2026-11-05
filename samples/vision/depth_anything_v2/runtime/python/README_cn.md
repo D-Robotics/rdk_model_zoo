@@ -63,19 +63,20 @@ python -m samples.vision.depth_anything_v2.runtime.python.main --target s100 \
 
 | 参数 | 默认值 | 含义 |
 | --- | --- | --- |
-| `--target` | `auto` | auto 选择唯一 S100 制品；x5/s100p/s600 无制品并报错 |
-| `--asset-id` | `null` | 精确 `s:depth_anything_v2:s100/depth_any.hbm` |
+| `--target` | `auto` | auto 选择历史 S100 制品；x5/s100p/s600 无制品并报错 |
+| `--asset-id` | `null` | 精确清单 asset ID；不指定时选择历史制品 |
+| `--variant` | `null` | 显式 `legacy` 或 `small-518x686-o1`；不指定时保持历史默认 |
 | `--model-path` | `null` | 外部副本；需精确 asset ID |
 | `--test-img` | `samples/vision/depth_anything_v2/test_data/furseal.jpg` | 解码为 BGR uint8 的图片 |
 | `--output` | `outputs/depth_anything_v2` | 新输出目录 |
 | `--img-save-path` | `null` | 可选额外源风格彩色图片；新路径 |
-| `--resize-type` | `0` | 0 最近邻拉伸；1 线性 letterbox、灰127填充 |
+| `--resize-type` | `0` | 历史：0 最近邻拉伸 / 1 线性 letterbox；Small：只允许 0 cubic 拉伸 |
 | `--priority` | `0` | 0–255 整数；传入 SDK 调度 |
 | `--bpu-cores` | `[0]` | 非负核编号；可用核由 SDK 决定 |
 | `--list-models` | `false` | 列出匹配清单，不加载 SDK |
 | `--dry-run` | `false` | 解析选择，不下载、不推理 |
 
-路径为 `null` 时使用 `model/s100/depth_any.hbm`。列出模型和 dry-run 模式互斥。推理在匹配的 S100 板卡上执行，默认调度优先级为 0、BPU 核为 `[0]`；不进行预热或计时。外部模型需符合所选输入输出协议，清单未提供发布者摘要。
+不指定规格且路径为 `null` 时使用历史 `model/s100/depth_any.hbm`；显式 O1 规格使用其对应清单路径。列出模型和 dry-run 模式互斥。推理在匹配的 S100 板卡上执行，默认调度优先级为 0、BPU 核为 `[0]`；不进行预热或计时。外部模型需符合所选输入输出协议，历史资产的清单未提供发布者摘要，O1 资产按其清单摘要校验。
 
 <a id="results"></a>
 ## 结果
@@ -156,3 +157,8 @@ Letterbox 使用向下取整尺寸、INTER_LINEAR、127填充，灰色填充归�
 - **颜色不同：** 先比较浮点数组和前处理模式，逐图显示归一化会隐藏尺度/偏移差异。
 - **恒定图：** 零灰度是明确行为；判断其是否准确需检查输入/模型，数据集精度另行评测。
 - **输出已存在：** 换新路径，不混入部分写入或既有结果。
+
+
+## 独立公开 Small 绑定
+
+`--variant small-518x686-o1` 或精确 asset ID `s:depth_anything_v2:s100/depth_anything_v2_small_518x686_nashe_20261102_o1.hbm` 仅在清单存在该制品时可选择。默认仍为历史模型。新绑定使用 RGB/255、浮点 cubic 拉伸和 ImageNet 通道归一化，与转换数据生成器逐元素一致；拒绝 `--resize-type 1`。固定图仍为 float32 `[1,3,518,686]` 输入、`[1,518,686]` 相对深度输出，使用现有 OpenCV linear 恢复原图尺寸，不宣称复现上游保持宽高比的 `infer_image`。结果报告记录所选归一化。主机测试不代表板端兼容性或性能。

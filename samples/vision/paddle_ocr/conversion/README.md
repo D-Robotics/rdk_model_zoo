@@ -2,6 +2,27 @@ English | [简体中文](README_cn.md)
 
 # PaddleOCR model conversion
 
+## Independently rebuilt English PP-OCRv3 S profiles / 新 S 规格
+
+The 2026-11-04 R02 profiles use the official `en_PP-OCRv3_det_infer.tar` and `en_PP-OCRv3_rec_infer.tar` source inference programs and parameters, pinned by their separate SHA-256 values in `export_v3.py` and `converted_targets_20261104.json`. Preprocessing and dictionary are independently checked against PaddleOCR commit `c833dfc9ff04a4bce5749b808c200688b4f7bd3a`. These are distinct from the historical PP-OCRv6 S100 pair described below.
+
+```bash
+# dev-server only; trained official source inference directory already present.
+paddle2onnx --model_dir /path/to/en_PP-OCRv3_det_infer --model_filename inference.pdmodel --params_filename inference.pdiparams --save_file /path/to/raw-det.onnx --opset_version 11
+python3 -m samples.vision.paddle_ocr.conversion.export_v3 --role det --model-dir /path/to/en_PP-OCRv3_det_infer --raw-onnx /path/to/raw-det.onnx --image /path/to/real1.jpg --image /path/to/real2.jpg --image /path/to/real3.jpg --output /path/to/fresh/det-export
+python3 -m samples.vision.paddle_ocr.conversion.prepare_v3_calibration --role det --images /path/to/real-det-images --output /path/to/fresh/det-calibration --count 100
+# Use rec for the recognizer, its official source directory and real word crops.
+# Each accepted S100/nash-e, S100P/nash-m or S600/nash-p target has its own fresh recipe:
+hb_compile -c /path/to/target-specific-config.yaml
+```
+
+Source Paddle Inference CPU versus all ONNX outputs passed on three real CTW1500 training images/word crops plus deterministic random verification at atol1e-4/rtol1e-3. SDK CPU full-output gates passed independently. Calibration uses100 distinct real CTW1500 train images (seed42) and actual annotated word crops. Both calibration and Native runtime use the same pinned BGR producer: detection fixed linear640x640, `/255` and ImageNet mean/std; recognition aspect resize to height48, maxwidth320, `(pixel/255-.5)/.5`, right zero padding. This recognizer has97 classes (blank plus the exact96-character alphabet, including its two space entries). Do not use the18710-class PP-OCRv6 dictionary.
+
+Cached S SDK3.7.0 CPU image: hb_compile3.5.3/HMCT2.6.5/HBDK4.7.5. Each march has an independent INT16 max-percentile0.9999 PTQ/O1 build, one core, two compiler jobs. Runtime inputs are **single normalized BGR F32 NCHW FEATUREMAP** tensors; do not supply NV12, RGB or unnormalized0..255 to these new profiles. Detector output is full F32`[1,1,640,640]`; recognizer output is full F32`[1,40,97]`. Exact model names, asset pairs, IO, checksums, original NodeInfo/OE and compiler receipts are recorded after acceptance. Full Native detection→DB polygons/crops→recognition→CTC is host checked with the actual source graphs. Board smoke, accuracy, Runtime1/2 and C++1/2 remain `not-run`.
+
+The early R01 RGB/preprocessing-mismatch attempts are retained in Workbench and never uploaded. The portable producer here is a subsequent repository entry; the actual original export/calibration producer identities remain in the run evidence. The following recipes preserve historical source deliveries.
+
+
 Conversion runs on an x86 Linux host inside the matching RDK OpenExplorer
 (OE) environment, never on the board. Two complete, target-separated
 recipe families are provided — choose the one matching the target board:

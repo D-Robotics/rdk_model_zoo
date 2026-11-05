@@ -2,8 +2,8 @@ English | [简体中文](README_cn.md)
 
 # YOLO26 Depth conversion
 
-This directory combines the X5 Mapper and S-series `hb_compile` recipes while
-keeping their input representations separate. It prepares ONNX, deterministic
+This directory gives the X5 Mapper and S-series `hb_compile` steps and keeps
+their input representations separate. It prepares ONNX, deterministic
 calibration tensors, resolved compiler configurations, logs and artifact hashes.
 Torch export and OpenExplorer compilation run in their corresponding host
 environments; the board is validated by the runtime samples.
@@ -43,17 +43,17 @@ These maps are relative depth, not independently calibrated distances in metres.
 
 ```text
 conversion/
-├── ptq_yamls/  # Files for ptq_yamls
+├── ptq_yamls/  # X5 / S compiler YAML
 ├── README.md  # English instructions
 ├── README_cn.md  # Chinese instructions
-├── compile.py  # Python script
-├── export.py  # Python script
-├── extract_sunrgbd_subset.py  # Python script
-├── mapper.py  # Python script
-├── prepare_calibration.py  # Python script
-├── requirements-s-source.txt  # Source or data file
-├── requirements-x5-source.txt  # Source or data file
-└── requirements.txt  # Source or data file
+├── compile.py  # render a config and invoke the compiler
+├── export.py  # export ONNX
+├── extract_sunrgbd_subset.py  # draw a fixed SUN RGB-D subset
+├── mapper.py  # direct X5 hb_mapper entry
+├── prepare_calibration.py  # write calibration tensors
+├── requirements-s-source.txt  # recorded S source environment
+├── requirements-x5-source.txt  # recorded X5 source environment
+└── requirements.txt  # host calibration and config dependencies
 ```
 
 <a id="toolchain-targets"></a>
@@ -237,3 +237,24 @@ and restored-depth comparisons separately.
 Repository code follows the root license; Ultralytics weights and SUNRGBD retain
 their respective upstream terms. No export or dataset license is granted by this
 sample's presence.
+
+## S100 reproduction profile (2026-11-03)
+
+This independent variant targets S100/nash-e with O1. Existing recipes remain available. Portable recipes use paths relative to the working directory; the effective execution YAML has its own digest in `converted.json`.
+
+- `model`: [n_int16_20261103_o1_s100_model.yaml](recipes/n_int16_20261103_o1_s100_model.yaml)
+
+Export n/log with fixed Ultralytics 8.4.105. `validate_export.py --weights WEIGHT --onnx ONNX --image IMAGE1 --image IMAGE2 --image IMAGE3 --output /work/host-smoke.json` compares source, native log boundary and ONNX, plus seed-0 input. This run uses 200 photographs, INT16 and O1; the earlier INT8 attempt is retained.
+
+From the working directory in the matching OE 3.7.0 container, run `HBTL_THREAD_NUM=2 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE GOMP_SPINCOUNT=0 NVIDIA_TF32_OVERRIDE=0 hb_compile -c /path/to/recipe.yaml` for each component. Board checks remain `not-run`.
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Each target uses its own PTQ, BC, full NodeInfo and final OE. Internal INT16 settings do not determine the public ABI; these profiles bind the observed float32 outputs. Recipes and hashes are in [converted_targets_20261103.json](converted_targets_20261103.json).
+
+- `s100p / n-int16-20261103-o1 / model`: [n_int16_20261103_o1_s100p_model.yaml](recipes/n_int16_20261103_o1_s100p_model.yaml)
+- `s600 / n-int16-20261103-o1 / model`: [n_int16_20261103_o1_s600_model.yaml](recipes/n_int16_20261103_o1_s600_model.yaml)
+
+The original float tolerances, real inputs and checkpoint identity are retained. Compiler estimates and first-calibration-input NodeInfo diagnostics are separate from dataset accuracy and board performance.

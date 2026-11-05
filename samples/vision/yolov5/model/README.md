@@ -5,7 +5,7 @@ English | [简体中文](README_cn.md)
 <a id="artifacts"></a>
 ## Artifacts
 
-The active manifest publishes nine X5 artifacts and two S artifacts. The `{size}` notation below is a documentation shorthand for each of `s`, `m`, `l`, and `x`; it is not a filename to pass literally.
+The historical manifest contains nine X5 artifacts and two S artifacts; converted additions are listed below. The `{size}` notation below is a documentation shorthand for each of `s`, `m`, `l`, and `x`; it is not a filename to pass literally.
 
 | target | variant | filename | format | URL | SHA-256 |
 |---|---|---|---|---|---|
@@ -21,7 +21,9 @@ The active manifest publishes nine X5 artifacts and two S artifacts. The `{size}
 | S100 | x-672 | `s100/yolov5x_672x672_nv12.hbm` | hbm | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
 | S600 | x-672 | `s600/yolov5x_672x672_nv12.hbm` | hbm | `https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s600/ultralytics_YOLO/yolov5x_672x672_nv12.hbm` | null (unknown) |
 
-S100P has no YOLOv5 asset. Every manifest publisher checksum is `sha256: null (unknown)`.
+S100P has no YOLOv5 asset. Publisher checksums in the historical table remain `sha256: null (unknown)`; converted additions have exact digests.
+
+Converted profiles `s-v2.0-native-20261102` and `n-v7.0-native-20261102` have independent filenames and exact manifest identities. Defaults remain X5 `n-v7.0` and S `x-672`. New models use 640×640 nearest-neighbor stretch and three NHWC float32 raw heads; new S F32 outputs bypass legacy dequantization. New S profiles bind the Python runtime; the historical C++ S32/672 adapter is incompatible. Board performance, accuracy and execution remain pending.
 
 <a id="directory"></a>
 ## Directory structure
@@ -63,9 +65,45 @@ With the commands above, X5 files are under `samples/vision/yolov5/model/`; S fi
 <a id="formats-checksums"></a>
 ## Formats and checksums
 
-X5 artifacts use `.bin`, Bayes-e and compact NV12 at 640×640. S100/S600 artifacts use target-relative `.hbm` files and split NV12 at 672×672. Publisher SHA-256 is `null`; the downloader records an observed file digest.
+Historical X5 artifacts use `.bin`, Bayes-e and compact NV12 at 640×640; historical S100/S600 artifacts use target-relative `.hbm` files and split NV12 at 672×672. Historical publisher SHA-256 values are `null`; converted 640×640 additions below have exact recorded digests.
 
 <a id="license"></a>
 ## License
 
 The repository helper follows Apache-2.0. Model provenance and any upstream weight license remain tied to the manifest/source release.
+
+<!-- completed-s-converted-20261102 -->
+## Converted S artifacts
+
+| Target | Variant | Artifact | Board |
+|---|---|---|---|
+| S100 | `n-v7.0-native-20261102` | `s100/yolov5n_tag_v7.0_native_640x640_nashe_nv12_20261102.hbm` | not-run |
+| S600 | `n-v7.0-native-20261102` | `s600/yolov5n_tag_v7.0_native_640x640_nashp_nv12_20261102.hbm` | not-run |
+| S100 | `s-v2.0-native-20261102` | `s100/yolov5s_tag_v2.0_native_640x640_nashe_nv12_20261102.hbm` | not-run |
+| S600 | `s-v2.0-native-20261102` | `s600/yolov5s_tag_v2.0_native_640x640_nashp_nv12_20261102.hbm` | not-run |
+
+```bash
+python3 -m samples.vision.yolov5.model.download --target s100 --variant n-v7.0-native-20261102
+python3 -m samples.vision.yolov5.runtime.python.main --target s100 --variant n-v7.0-native-20261102 --dry-run
+```
+
+These 640×640 profiles use split UINT8 Y/UV inputs and three NHWC float32 raw heads. Python bindings and host parity are checked; board inference, accuracy and performance are not-run. Historical 672×672 C++ bindings are incompatible. Exact URLs, SHA-256 and model license are in `docs/release/s/models.yaml` and the public release manifest.
+<!-- /completed-s-converted-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+These independent profiles passed conversion, complete OE collection and actual HBM metadata binding. Source weights, graphs, per-target recipes, calibration counts and digests are in [converted_targets_20261103.json](../conversion/converted_targets_20261103.json).
+
+| Target | Native variant | Components | Calibration photographs |
+| --- | --- | --- | ---: |
+| s100p | `n-v7.0-native-20261102-s100p-o1-20261103` | model | 200 |
+| s100p | `s-v2.0-native-20261102-s100p-o1-20261103` | model | 200 |
+
+```bash
+python3 samples/vision/yolov5/model/download.py --target s100p --asset-id s:yolov5:s100p/yolov5n_tag_v7.0_native_640x640_nashm_nv12_20261103_o1.hbm
+python3 samples/vision/yolov5/runtime/python/main.py --target s100p --variant n-v7.0-native-20261102-s100p-o1-20261103 --asset-id s:yolov5:s100p/yolov5n_tag_v7.0_native_640x640_nashm_nv12_20261103_o1.hbm --model-path /path/to/yolov5n_tag_v7.0_native_640x640_nashm_nv12_20261103_o1.hbm --test-img samples/vision/yolov5/test_data/kite.jpg
+```
+
+Substitute the actual file paths. Multi-component tasks require every component together. Historical defaults and measurements retain their original identities. Board smoke, dataset accuracy, Runtime 1/2 and C++ 1/2 are `not-run` for these profiles.

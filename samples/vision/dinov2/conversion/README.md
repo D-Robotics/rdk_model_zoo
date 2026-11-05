@@ -38,15 +38,22 @@ The OE entry point is the following x86 Linux container command:
 
 ```bash
 # cwd: repository root; source tree is mounted at /workspace
-sudo docker run -it --rm --network host --shm-size=15g \
+sudo docker run -it --rm --gpus all --network host --shm-size=15g \
+  -e HBTL_THREAD_NUM=2 -e OMP_NUM_THREADS=2 \
+  -e MKL_NUM_THREADS=2 -e OPENBLAS_NUM_THREADS=2 \
+  -e OMP_WAIT_POLICY=PASSIVE -e GOMP_SPINCOUNT=0 \
+  -e NVIDIA_TF32_OVERRIDE=0 \
+  --entrypoint /bin/bash \
   -v "$(pwd)":/workspace -w /workspace \
   registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_gpu:v3.7.0 \
-  /bin/bash
+  -l
 ```
+
+Set `HBTL_THREAD_NUM` explicitly: the installed HBTL Context has its own thread count, which is separate from `OMP_NUM_THREADS` and the mapper’s `--jobs` compiler setting. The command above also uses passive OpenMP waiting and disables TF32 for the CUDA float comparison.
 
 ### Prepare the pinned source and checkpoint
 
-Run inside the OE container from `samples/vision/dinov2/conversion`. These commands fetch upstream materials and need network access. `dinov2/` is a new upstream checkout. Preserve the OE Torch installation and install only the pinned ONNX additions:
+Run inside the OE container from `samples/vision/dinov2/conversion`. These commands fetch upstream materials and need network access. `dinov2/` is a new upstream checkout. The OE Torch installation is kept; add only the pinned ONNX packages:
 
 ```bash
 # cwd: samples/vision/dinov2/conversion, inside OE 3.7.0
@@ -71,7 +78,7 @@ printf '%s  %s\n' \
 <a id="export"></a>
 ## Export (ONNX)
 
-`onnx_export/export_dinov2.py` verifies the pinned source checkout and checkpoint, builds ViT-S/14, bakes positional embeddings at 224, rewrites attention to explicit MatMul + Softmax + MatMul, and exports two outputs (`cls_feat`, `patch_feat`) with input `input` `(1,3,224,224)` float32. It also runs ONNXRuntime parity after export. Run:
+`onnx_export/export_dinov2.py` verifies the pinned source checkout and checkpoint, builds ViT-S/14, bakes positional embeddings at 224, rewrites attention to explicit MatMul + Softmax + MatMul, and exports two outputs (`cls_feat`, `patch_feat`) with input `input` `(1,3,224,224)` float32. It checks the unmodified upstream model against both the export rewrites and ONNX Runtime. Every output must be finite, have its declared shape, pass `atol=1e-3, rtol=1e-3`, and have cosine similarity at least `0.99999`; a mismatch stops export. The random input uses seed 0. Repeat `--parity-input normalized.npy` to check real preprocessed inputs, and use `--parity-report host_parity.json` to retain the measurements. Run:
 
 ```bash
 # cwd: samples/vision/dinov2/conversion; prerequisites: OE environment, local source clone, verified checkpoint
@@ -89,7 +96,7 @@ python3 onnx_export/export_dinov2.py \
 
 `mapper.py::prepare_calibration` reads real JPG/JPEG/PNG/BMP files from `--cal-images`, converts BGR to RGB, bicubic-resizes the short side to 256, center-crops 224, scales by `/255`, applies ImageNet mean/std, and writes contiguous float32 NCHW `.npy` tensors plus `calibration_manifest.json` in the temporary workspace. Use 50 diverse real photographs; random or synthetic images are unsuitable.
 
-Use featuremap float32 input, int16 for all nodes and model outputs, and hmct's default modelwise KL calibration (`calibration_type` remains unset). The reference measurements below compare this configuration with int8 and max/percentile alternatives.
+Use featuremap float32 input, int16 for all nodes and model outputs, and hmct's default modelwise calibration search (`calibration_type` remains unset). The tool records the selected method in its log; the 2026-11-02 runs selected `max`. The reference measurements below belong to the fixed source and are separate from these new conversions.
 
 ```bash
 # cwd: samples/vision/dinov2/conversion; prerequisite: ./cal_images contains real photographs
@@ -99,9 +106,9 @@ python3 mapper.py --cal-images ./cal_images --march nash-e --output-dir ./output
 ```
 
 
-### Fixed-source quantization matrix (source-recorded, Nash-E)
+### Fixed-source quantization matrix (Nash-E)
 
-The table compares five quantization configurations. `(sim)` denotes toolchain simulation. In these measurements, int8 activations reached a cosine similarity of at most 0.91 and max+percentile calibration fell to about 0.18. Attention logits after subtracting the maximum reached -345; use the all-int16 featuremap/KL configuration above.
+The table compares five historical quantization configurations. `(sim)` denotes toolchain simulation. In these measurements, int8 activations reached a cosine similarity of at most 0.91 and max+percentile calibration fell to about 0.18. Attention logits after subtracting the maximum reached -345. These historical KL results do not establish accuracy for newly converted artifacts.
 
 | Config | cls cosine | patch cosine | Verdict |
 |---|---|---|---|
@@ -109,14 +116,14 @@ The table compares five quantization configurations. `(sim)` denotes toolchain s
 | int8 + softmax-int32, featuremap, KL | 0.892 | 0.894 | FAIL |
 | int16, featuremap, max + 0.9999 | 0.184 | 0.840 | FAIL |
 | int16, nv12, KL | 0.999 (sim) | 0.999 (sim) | FAIL (executed 0.01 / 0.12) |
-| int16, featuremap, KL (this recipe) | **0.9989** | **0.9983** | **PASS** |
+| int16, featuremap, KL  | **0.9989** | **0.9983** | **PASS** |
 
 The `_reg4` register-token variant measured about 0.80 cosine similarity with per-tensor quantization, compared with about 0.999 for the plain variant. Use the plain ViT-S/14 checkpoint for this recipe.
 
 <a id="compile"></a>
 ## Compile
 
-`mapper.py` performs export, calibration preparation, YAML generation, `hb_compile`, and artifact collection in that order. It checks `hb_compile --help`, writes a target-specific generated config, uses `featuremap` input and all-int16 quantization, then copies the HBM into `--output-dir`.
+`mapper.py` prepares calibration first, exports with the first three real calibration tensors included in the parity checks, generates YAML, runs `hb_compile`, and collects artifacts. It checks `hb_compile --help`, writes a target-specific generated config, uses `featuremap` input and all-int16 quantization, then copies the HBM into `--output-dir`.
 
 ```bash
 # cwd: samples/vision/dinov2/conversion; run inside the OE 3.7.0 image
@@ -134,10 +141,29 @@ python3 mapper.py \
 
 Use `--march nash-m` or `nash-p` for S100P or S600. Other mapper defaults are `--weights./dinov2_vits14_pretrain.pth`, `--repo./dinov2`, `--cal-images./cal_images`, `--output-dir.`, `--jobs 16`, and no `--save-cache`; `--save-cache` retains the temporary workspace. Do not install the upstream `requirements.txt`, because it would downgrade the OE Torch installation to 2.0.
 
+### Rebuild the independently named O1 variant from source
+
+The mapper accepts `--optimize-level O1` and `--output-prefix`; their defaults remain O2 and the historical target filename. For this O1 route, start a fresh OE container with its bundled ONNX/ONNX Runtime packages; use the source/checkpoint fetch commands above and skip the package-upgrade command. Record the installed versions with `python3 -c "import torch, onnx, onnxruntime; print(torch.__version__, onnx.__version__, onnxruntime.__version__)"`. Under that container environment, this command starts from the pinned upstream source, verified checkpoint and 50 real calibration images. It exports and checks ONNX, calibrates, and compiles through `hb_compile`; it does not require a saved private BC file.
+
+```bash
+# cwd: samples/vision/dinov2/conversion; same pinned source and checkpoint as above
+python3 mapper.py \
+  --weights ./dinov2_vits14_pretrain.pth \
+  --weights-sha256 b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9 \
+  --repo ./dinov2 \
+  --repo-revision 7764ea0f912e53c92e82eb78a2a1631e92725fc8 \
+  --cal-images ./cal_images \
+  --march nash-e --jobs 2 --optimize-level O1 \
+  --output-prefix dinov2_vits14_224_int16_nashe_20261102_o1 \
+  --output-dir ./output-o1 --save-cache
+```
+
+For S100P use `--march nash-m` with prefix `dinov2_vits14_224_int16_nashm_20261102_o1`; for S600 use `--march nash-p` with prefix `dinov2_vits14_224_int16_nashp_20261102_o1`. Keep HBTL threads at 2 and the full environment shown above. O1 is an independent compiler optimization choice; no bit identity with O2 or board performance improvement is claimed. The generated YAML, calibration manifest, float comparison and complete toolchain logs belong with the reproduction.
+
 <a id="validation"></a>
 ## Post-Conversion Validation
 
-The exporter performs ONNXRuntime float parity and reports cosine/max-absolute error. `mapper.py` confirms that `hb_compile` emits the expected HBM path. Board validation then runs the runtime command and compares both outputs against float ONNX on identical preprocessed tensors.
+The exporter validates the ONNX graph and enforces upstream-to-rewrite and upstream-to-ONNX float parity. The mapper retains the comparison in `host_parity.json` inside its workspace; use `--save-cache` to keep it. `mapper.py` confirms that `hb_compile` emits the expected HBM path. Board validation then runs the runtime command and compares both outputs against float ONNX on identical preprocessed tensors.
 
 <a id="artifacts"></a>
 ## Artifacts
@@ -152,7 +178,24 @@ The exporter performs ONNXRuntime float parity and reports cosine/max-absolute e
 ## Additional preparation
 
 - Run conversion in the specified OE container with network access to the pinned checkpoint. Use the matching board for the runtime check.
-- Manifest HBM hashes are `sha256: null (unknown)`. The downloader prints the SHA-256 of the downloaded file.
+- Historical HBM rows retain `sha256: null (unknown)`; the new converted rows above have exact digests. The downloader prints the SHA-256 of the downloaded file.
+
+## Converted artifacts (2026-11-02)
+
+The explicit variant `vits14_224_int16_20261102_o1` currently provides 3 separately compiled O1 HBM artifacts for `s100`, `s100p`, `s600`. The historical default remains selected when `--variant` and `--asset-id` are omitted. These artifacts passed float graph checks, native conversion, and static HBM IO/march inspection. Board smoke, accuracy, and Python/C++ performance checks are **not-run**; historical measurements do not describe these files.
+
+| Target | HBM | SHA-256 |
+| --- | --- | --- |
+| s100 | `dinov2_vits14_224_int16_nashe_20261102_o1.hbm` | `40d9654edb2b83b12928a4b23e8f482ec30c415d2389af5e64957d9921a9df1a` |
+| s100p | `dinov2_vits14_224_int16_nashm_20261102_o1.hbm` | `05a94aae2cb7da14a6a0810c7c7e5e5bff604012b943dd66708e4cd9cc224cbe` |
+| s600 | `dinov2_vits14_224_int16_nashp_20261102_o1.hbm` | `e7b720b39d5475d440d8631ba0ac008f230fa28e8a5b1d12d887a60a7cd2c549` |
+
+```bash
+python3 samples/vision/dinov2/model/download.py --target s100 --variant vits14_224_int16_20261102_o1
+python3 samples/vision/dinov2/runtime/python/main.py --target s100 --variant vits14_224_int16_20261102_o1 --dry-run
+```
+
+Only the targets in the table are available for this variant; selecting an unpublished target fails. You can also select the exact `s:dinov2:nash-*/filename.hbm` asset ID. The input remains normalized RGB float32 FEATUREMAP `(1,3,224,224)`. The actual public outputs are float32 and follow the existing metadata-bound `raw_f32` path. Internal quantization retains the int16 recipe; no L2 normalization or softmax is added. Source/weight revisions, full digests, the 50-image calibration recipe, actual environments and validation facts are in the [conversion record](converted.json).
 
 ## License
 

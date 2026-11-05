@@ -43,7 +43,7 @@ Success is exit code `0` and one JSON line with `plate`. The zero-argument input
 
 | option | default | meaning |
 |---|---|---|
-| `--target` | `auto` | `auto` resolves the only published target, X5; S targets are rejected |
+| `--target` | `auto` | `auto` defaults to the historical X5 asset; explicit S100/S100P/S600 select the independently converted artifacts |
 | `--asset-id` | `null` | exact `x5:lprnet:lpr.bin`, required with external model path |
 | `--model-path` | `null` | existing model path; no download |
 | `--test-bin` | `samples/vision/lprnet/test_data/test_input.dat` | pre-packed float32 input |

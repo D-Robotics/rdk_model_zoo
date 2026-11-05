@@ -1,0 +1,1355 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "variant": "timm-m0-9-dist-450e-in1k-s-int16-o1-20261103",
+      "web_size": "m0-9-dist-450e-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/repvit_m0_9_dist_450e_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/repvit/repvit_m0_9_dist_450e_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "26da3bd828124408d4df60b2a2e1c3f9f93d47d26f62c163ab98367644075405",
+          "size_bytes": 11245032,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "67b84bbd4639928601b44a44f063ab6d9a455f2f374080b41053dd3cb51d9e87",
+          "effective_config_sha256": "cd017fd2719a2a11473968b996b8e6ddd5133e9a54b23e14fc9913777dfce2a8",
+          "recipe": "samples/vision/repvit/conversion/recipes/timm_m0_9_dist_450e_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "6568f6c800415f90edf0dee60367d30d3a61ea0d7ee819970efa717054c007f7",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "2768038e48350183dddee86fb45dbb4c9ab8b78bfe2c8859d37c3e35b506befe",
+          "oe_data_sha256": "29603d9ffb45c6039aed544de50ea0f4516c46ed9c00ad305c8ec352e7edd202",
+          "node_info_csv_sha256": "7bf8737279c47430182ff30b3eb1a5e2b2b9dfbd35eec32aa6a6d39ded0b5795",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.960232,
+              "cosine": 0.963085
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m0_9_dist_450e_in1k-s100-int16-20261103-r04/ptq_output/repvit_m0_9_dist_450e_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "f0ccf58d9334a3212b15de1a1bf89214020a80b2ca61e751f89b2f16bcca5518",
+              "size_bytes": 8001415
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m0_9_dist_450e_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "07820a5bded3f62fe6a5fb33e66e0ee094cae0a88ad5cfc97e25fc1e2ff5045b",
+              "size_bytes": 1224
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 9.5367431640625e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.0967254638671875e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.1205673217773438e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 8.344650268554688e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "00a7b22ecc9679e044833fae051d60c99e6dcd8f49fb948e92b47385cfd22fb0",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvit_m0_9.dist_450e_in1k",
+        "revision": "c073717dd84b5af671dd51b187b99ac55b2af4f0",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "c2dd32622df856ea7a68d6b241c1623f0e6fbec8acde381a3519cb5a5463e9cf",
+        "size_bytes": 22232904,
+        "url": "https://huggingface.co/timm/repvit_m0_9.dist_450e_in1k/resolve/c073717dd84b5af671dd51b187b99ac55b2af4f0/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvit_m0_9.dist_450e_in1k/blob/c073717dd84b5af671dd51b187b99ac55b2af4f0/README.md"
+      }
+    },
+    {
+      "variant": "timm-m0-9-dist-450e-in1k-s-int16-o1-20261103",
+      "web_size": "m0-9-dist-450e-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/repvit_m0_9_dist_450e_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/repvit/repvit_m0_9_dist_450e_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "13c5fca8bd092899f4d294b677b8575b3195dc3d4f9396721fa020e6e7d3b6aa",
+          "size_bytes": 11298536,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "67b84bbd4639928601b44a44f063ab6d9a455f2f374080b41053dd3cb51d9e87",
+          "effective_config_sha256": "b349d35ea18a3beae950015d1190e40ac2c16812436f03a562c56f47ef8e2ff9",
+          "recipe": "samples/vision/repvit/conversion/recipes/timm_m0_9_dist_450e_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "cdf24e6bff90305057a34d7ead5ca07c561615fafa437faaf745d4915514a609",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "2b42c20a1c0e65b253465edab1c4a8b31f0781e300686ffe463e764461548be2",
+          "oe_data_sha256": "81fcdf970d4ccea909a8e3df6330910249d57883e20657a9cc8194b3173fcf7d",
+          "node_info_csv_sha256": "38fb19f7e6b7686871c883fe11965c47720612aaae65a5fe635258110bf23a16",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.960232,
+              "cosine": 0.963085
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m0_9_dist_450e_in1k-s100p-int16-20261103-r04/ptq_output/repvit_m0_9_dist_450e_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "7d7d9bca63604b9386cc6a538b554b98e84664c2b5c9e71bfd2f9c43438aed63",
+              "size_bytes": 8001416
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m0_9_dist_450e_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "599be26c8451215546783c9586a2e5b8e1d57c29a63cca27a1bd3e75fea86ba4",
+              "size_bytes": 1225
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.049041748046875e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.0013580322265625e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.0251998901367188e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 7.3909759521484375e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "00a7b22ecc9679e044833fae051d60c99e6dcd8f49fb948e92b47385cfd22fb0",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvit_m0_9.dist_450e_in1k",
+        "revision": "c073717dd84b5af671dd51b187b99ac55b2af4f0",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "c2dd32622df856ea7a68d6b241c1623f0e6fbec8acde381a3519cb5a5463e9cf",
+        "size_bytes": 22232904,
+        "url": "https://huggingface.co/timm/repvit_m0_9.dist_450e_in1k/resolve/c073717dd84b5af671dd51b187b99ac55b2af4f0/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvit_m0_9.dist_450e_in1k/blob/c073717dd84b5af671dd51b187b99ac55b2af4f0/README.md"
+      }
+    },
+    {
+      "variant": "timm-m0-9-dist-450e-in1k-s-int16-o1-20261103",
+      "web_size": "m0-9-dist-450e-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/repvit_m0_9_dist_450e_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/repvit/repvit_m0_9_dist_450e_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "2a5e917d4879fbf8e1881947ae03241118785afd3a79f6cf55e6ba15f035b590",
+          "size_bytes": 12290096,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "67b84bbd4639928601b44a44f063ab6d9a455f2f374080b41053dd3cb51d9e87",
+          "effective_config_sha256": "fef9d76b3ce7290e6eb7ffbb48e9e9b01b08a7149f4ac0ed49002548ac83d87c",
+          "recipe": "samples/vision/repvit/conversion/recipes/timm_m0_9_dist_450e_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "695288ce6ac1f0b5ae6372202cc13cab3a146312236a118a0362f4da2cc3ee55",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "20d05238b0b6725327b5f2b818e834f8c1711d3f9eb92ced7a4d4487d4c28a5d",
+          "oe_data_sha256": "93f483f70b8bf185bf249e5891f290583ade50bc3dc6623372ad428912af9417",
+          "node_info_csv_sha256": "47831d19527f242597d1a8aeb84934e489efc18223aa43127d4e12c61fa29ba5",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.960232,
+              "cosine": 0.963205
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m0_9_dist_450e_in1k-s600-int16-20261103-r04/ptq_output/repvit_m0_9_dist_450e_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "0da5ae61f99697aaafa0218902e6652f8919f0667ec9e90003b30b9ea8c30894",
+              "size_bytes": 6309431
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m0_9_dist_450e_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "6d29fe1d210f8be5c0944a1ba47dfb766cc85b67de0f3ca4263e0b32f79882bc",
+              "size_bytes": 1224
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.239776611328125e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 1.1920928955078125e-05
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.049041748046875e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 8.344650268554688e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "00a7b22ecc9679e044833fae051d60c99e6dcd8f49fb948e92b47385cfd22fb0",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvit_m0_9.dist_450e_in1k",
+        "revision": "c073717dd84b5af671dd51b187b99ac55b2af4f0",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "c2dd32622df856ea7a68d6b241c1623f0e6fbec8acde381a3519cb5a5463e9cf",
+        "size_bytes": 22232904,
+        "url": "https://huggingface.co/timm/repvit_m0_9.dist_450e_in1k/resolve/c073717dd84b5af671dd51b187b99ac55b2af4f0/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvit_m0_9.dist_450e_in1k/blob/c073717dd84b5af671dd51b187b99ac55b2af4f0/README.md"
+      }
+    },
+    {
+      "variant": "timm-m1-0-dist-450e-in1k-s-int16-o1-20261103",
+      "web_size": "m1-0-dist-450e-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/repvit_m1_0_dist_450e_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/repvit/repvit_m1_0_dist_450e_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "7df54c0f9ddb3fac5321dd7bb87334f6b83ec02e7a52de9b59f96458c49dd576",
+          "size_bytes": 11919848,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "56a64221349663ce5d87017ad6681873bcc3cafa9727ac2179dbf777c57e8991",
+          "effective_config_sha256": "fc56153c212873650afd07cc795dc5bcfcac42802f8ac89977483950f679b174",
+          "recipe": "samples/vision/repvit/conversion/recipes/timm_m1_0_dist_450e_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "19f4de22e3eb537f3f33bda6e866750fe382eaa049d35cf8c31634938d30ce40",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "2d1a61fba910745138689e1c705c15c4d78354345ade3c4290b15ce046b8cf23",
+          "oe_data_sha256": "d26f1ea3a1efddf9a78d1b690ddc96d03741a6fe7e586ed8d86539c3cb28c318",
+          "node_info_csv_sha256": "10502527c1f6a11b50916e6605736c68d14757e203a933d38bcadb4c568bc713",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.97745,
+              "cosine": 0.976922
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m1_0_dist_450e_in1k-s100-int16-20261103-r04/ptq_output/repvit_m1_0_dist_450e_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "8612b1b1ff8dadc54037cefb654e8c45b94c1732fb3724181923a1c788403b86",
+              "size_bytes": 10166887
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m1_0_dist_450e_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "f3670ccd416121a19902b2213ee9c71dfb85031b8d6ff796ffc7a58086e30426",
+              "size_bytes": 1224
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.0013580322265625e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 8.821487426757812e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.049041748046875e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 8.58306884765625e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "34c90cc74d83733bd0bdb5b61ebf1eaf69bc5afaa5fa787ef8539331e7ddaf9c",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvit_m1_0.dist_450e_in1k",
+        "revision": "0e20f9f1bfa9772e63b813835bab2d6f0d168f89",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "9350ed15b205ec9d4ebcde95333e8a9ad2ddda26510a358b57b81fd8a8fde055",
+        "size_bytes": 29519376,
+        "url": "https://huggingface.co/timm/repvit_m1_0.dist_450e_in1k/resolve/0e20f9f1bfa9772e63b813835bab2d6f0d168f89/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvit_m1_0.dist_450e_in1k/blob/0e20f9f1bfa9772e63b813835bab2d6f0d168f89/README.md"
+      }
+    },
+    {
+      "variant": "timm-m1-0-dist-450e-in1k-s-int16-o1-20261103",
+      "web_size": "m1-0-dist-450e-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/repvit_m1_0_dist_450e_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/repvit/repvit_m1_0_dist_450e_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "a81b8716a854cc059601c0c4e9804b2ff4981e178c91678189e88470b5fe54b0",
+          "size_bytes": 11951336,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "56a64221349663ce5d87017ad6681873bcc3cafa9727ac2179dbf777c57e8991",
+          "effective_config_sha256": "40e911b0b9f2d871276631d6b1b7867607b05e97b7d6ce56c1192be54a6683c4",
+          "recipe": "samples/vision/repvit/conversion/recipes/timm_m1_0_dist_450e_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "762ecb16b6a18584ccd0d40ea68657dab8298928017240296af7217de7f5aa4b",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "e9a0987ca19aa3da4226f368930820234ed8ae1a58066ddb06680bf4b456a30c",
+          "oe_data_sha256": "e7b8c84e16e9b709f400dc6b2e6857e8880759353268c1f8392e82f9ca532201",
+          "node_info_csv_sha256": "3209bda9bb6fef3a377ed0cc7a5de1c244bdc90a4bff80eef4fee92755dde22f",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.97745,
+              "cosine": 0.976922
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m1_0_dist_450e_in1k-s100p-int16-20261103-r04/ptq_output/repvit_m1_0_dist_450e_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "d05ec806934a5988a30c18e1a5e9359477f9335bb7e99b1e30d6f9a18553006b",
+              "size_bytes": 10166888
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m1_0_dist_450e_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "e8cb23f3d7c74f5a38b641f3eb00ca25118773abf9b543f11652ad468ce9c605",
+              "size_bytes": 1225
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 8.58306884765625e-06
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 8.58306884765625e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.049041748046875e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 1.1444091796875e-05
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "34c90cc74d83733bd0bdb5b61ebf1eaf69bc5afaa5fa787ef8539331e7ddaf9c",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvit_m1_0.dist_450e_in1k",
+        "revision": "0e20f9f1bfa9772e63b813835bab2d6f0d168f89",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "9350ed15b205ec9d4ebcde95333e8a9ad2ddda26510a358b57b81fd8a8fde055",
+        "size_bytes": 29519376,
+        "url": "https://huggingface.co/timm/repvit_m1_0.dist_450e_in1k/resolve/0e20f9f1bfa9772e63b813835bab2d6f0d168f89/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvit_m1_0.dist_450e_in1k/blob/0e20f9f1bfa9772e63b813835bab2d6f0d168f89/README.md"
+      }
+    },
+    {
+      "variant": "timm-m1-0-dist-450e-in1k-s-int16-o1-20261103",
+      "web_size": "m1-0-dist-450e-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/repvit_m1_0_dist_450e_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/repvit/repvit_m1_0_dist_450e_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "4760ab29eb0289d376af14bdfbf5c61f02cab2e38574ab9e2c9cff5bfe2cdcaf",
+          "size_bytes": 12656832,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "56a64221349663ce5d87017ad6681873bcc3cafa9727ac2179dbf777c57e8991",
+          "effective_config_sha256": "20e2179a37344423a648a2bdb6a9b4d03de10cb39913f51db512edd09fa53b80",
+          "recipe": "samples/vision/repvit/conversion/recipes/timm_m1_0_dist_450e_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "77cb8996f11439a2e0ce20f88c35ee46aae957cbe3d514f7a57df7025fbb1093",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "860224e19ddfaa4d965a322888e5cce4337a26ff606076a4c0085b504395b603",
+          "oe_data_sha256": "f864e61e320132cdbbf1e540a4de88491e308d688b13c7d04ff0a00402a99e68",
+          "node_info_csv_sha256": "5125dec0447f64dde15bffb6e39dd88c2d8ce4b8b5ca693c03015a0749f9974b",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.97745,
+              "cosine": 0.976987
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m1_0_dist_450e_in1k-s600-int16-20261103-r04/ptq_output/repvit_m1_0_dist_450e_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "373a2b6c21b096fd71a88682b03e8bb5dfa3a53abc9b20daedf0af8894e23c19",
+              "size_bytes": 8215090
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m1_0_dist_450e_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "3a1f64221b1a174ce2401386bb423d20150fcd872637f4ca39513e7da94bd90e",
+              "size_bytes": 1224
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 1.0013580322265625e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 8.821487426757812e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 1.049041748046875e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 8.58306884765625e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "34c90cc74d83733bd0bdb5b61ebf1eaf69bc5afaa5fa787ef8539331e7ddaf9c",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvit_m1_0.dist_450e_in1k",
+        "revision": "0e20f9f1bfa9772e63b813835bab2d6f0d168f89",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "9350ed15b205ec9d4ebcde95333e8a9ad2ddda26510a358b57b81fd8a8fde055",
+        "size_bytes": 29519376,
+        "url": "https://huggingface.co/timm/repvit_m1_0.dist_450e_in1k/resolve/0e20f9f1bfa9772e63b813835bab2d6f0d168f89/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvit_m1_0.dist_450e_in1k/blob/0e20f9f1bfa9772e63b813835bab2d6f0d168f89/README.md"
+      }
+    },
+    {
+      "variant": "timm-m1-1-dist-450e-in1k-s-int16-o1-20261103",
+      "web_size": "m1-1-dist-450e-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/repvit_m1_1_dist_450e_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/repvit/repvit_m1_1_dist_450e_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "f7e71a6087d1ee4a3d539e31e6b5c8ff2de76b7d5e55d8304a8135e73a056301",
+          "size_bytes": 14951656,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "256edd67262925d379f06886a63316eddfc78e5ecc8f61a9e951bb942d626fd0",
+          "effective_config_sha256": "5f523b39f80b0e025e94126c943e51d51ccaf1b8a6222a2e8779d5c82137a44f",
+          "recipe": "samples/vision/repvit/conversion/recipes/timm_m1_1_dist_450e_in1k_s_int16_o1_20261103_s100_model.yaml",
+          "recipe_sha256": "8ac08d67de4d4749e2424b928cf96f7e28849805c0fbf929b49a796a6288d837",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "809b362cb125dc2d9c9fc720131d28c27b031445a497626c738541368f10a498",
+          "oe_data_sha256": "94888d6795dc2ade9218bd6893167006c9f810cda97457be7be71a269cfcf409",
+          "node_info_csv_sha256": "837e78511c2d28034f5898c8465400b7f4309d6a5ab7363b799b72f1cd0298f7",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.973325,
+              "cosine": 0.968481
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m1_1_dist_450e_in1k-s100-int16-20261103-r04/ptq_output/repvit_m1_1_dist_450e_in1k_nashe_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "e65ce00edf96c667ed031d9a630f8887b9604f1a894995efa97d7446c5fd259f",
+              "size_bytes": 11726053
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m1_1_dist_450e_in1k-s100-int16-20261103-r04/ptq.yaml",
+              "sha256": "a51989ab511c69ed926eeca8b32de71906ec981384e6326e6bbd403f4389b493",
+              "size_bytes": 1224
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.0040740966796875e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 8.58306884765625e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 3.6716461181640625e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 9.5367431640625e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "b61996d1d4ba64f70ef8271fed89a51679f19faf46246718be5c5986ffcffbe9",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvit_m1_1.dist_450e_in1k",
+        "revision": "ff441038a42982fff1c8c75be7c794f9ba76db72",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "071d227f69657c02d1bee8ae3317772ce7f9540af6f7865bf27e3f051e2cd160",
+        "size_bytes": 35525560,
+        "url": "https://huggingface.co/timm/repvit_m1_1.dist_450e_in1k/resolve/ff441038a42982fff1c8c75be7c794f9ba76db72/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvit_m1_1.dist_450e_in1k/blob/ff441038a42982fff1c8c75be7c794f9ba76db72/README.md"
+      }
+    },
+    {
+      "variant": "timm-m1-1-dist-450e-in1k-s-int16-o1-20261103",
+      "web_size": "m1-1-dist-450e-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s100p",
+        "march": "nash-m"
+      },
+      "components": {
+        "model": {
+          "filename": "s100p/repvit_m1_1_dist_450e_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100p/repvit/repvit_m1_1_dist_450e_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "7752feb72c2e414b9e8db8056ae0252a9ff96da9b9ca808028663e3a877b323a",
+          "size_bytes": 15070440,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "256edd67262925d379f06886a63316eddfc78e5ecc8f61a9e951bb942d626fd0",
+          "effective_config_sha256": "0e8e5f8edbb5107abd8dfc27fd0c15587f13495e19f4afd899e659e22dd6d124",
+          "recipe": "samples/vision/repvit/conversion/recipes/timm_m1_1_dist_450e_in1k_s_int16_o1_20261103_s100p_model.yaml",
+          "recipe_sha256": "4f8860b20c1ff13e523f81ae989bf975fb4bdce2dce3a159d82441534e1a0f36",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "c2facc3733502a9bf1b6707891e1a01d95218209c92699a399337aacacb455cb",
+          "oe_data_sha256": "ec88b1898c4fddf953df75cd4b4a284060555798fad34a12d17d01e98e1ccd58",
+          "node_info_csv_sha256": "8fb1dca69b82bb96fb65d801ceab4322f38dfab4ad56d1cc94c0e46e9593a05c",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.973325,
+              "cosine": 0.968481
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m1_1_dist_450e_in1k-s100p-int16-20261103-r04/ptq_output/repvit_m1_1_dist_450e_in1k_nashm_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "a6da734ef5746d01e7acb91f311c23ffeb71eaf22e5bceb26f4ced3c4a5ad852",
+              "size_bytes": 11726054
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m1_1_dist_450e_in1k-s100p-int16-20261103-r04/ptq.yaml",
+              "sha256": "03764a0a61048373785982b12db7feea38d161e1ba669810acf013cc7e5e112c",
+              "size_bytes": 1225
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 2.956390380859375e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 9.5367431640625e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 3.9577484130859375e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 9.5367431640625e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "b61996d1d4ba64f70ef8271fed89a51679f19faf46246718be5c5986ffcffbe9",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvit_m1_1.dist_450e_in1k",
+        "revision": "ff441038a42982fff1c8c75be7c794f9ba76db72",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "071d227f69657c02d1bee8ae3317772ce7f9540af6f7865bf27e3f051e2cd160",
+        "size_bytes": 35525560,
+        "url": "https://huggingface.co/timm/repvit_m1_1.dist_450e_in1k/resolve/ff441038a42982fff1c8c75be7c794f9ba76db72/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvit_m1_1.dist_450e_in1k/blob/ff441038a42982fff1c8c75be7c794f9ba76db72/README.md"
+      }
+    },
+    {
+      "variant": "timm-m1-1-dist-450e-in1k-s-int16-o1-20261103",
+      "web_size": "m1-1-dist-450e-in1k-224-s-int16-o1-20261103",
+      "target": {
+        "platform": "s600",
+        "march": "nash-p"
+      },
+      "components": {
+        "model": {
+          "filename": "s600/repvit_m1_1_dist_450e_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s600/repvit/repvit_m1_1_dist_450e_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm",
+          "sha256": "9a03ea92c8a9deef8291b490c4b67a709acfa4d52657e17d479639b5d95ae289",
+          "size_bytes": 15982848,
+          "inputs": [
+            {
+              "name": "data_y",
+              "shape": [
+                1,
+                224,
+                224,
+                1
+              ],
+              "dtype": "uint8"
+            },
+            {
+              "name": "data_uv",
+              "shape": [
+                1,
+                112,
+                112,
+                2
+              ],
+              "dtype": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "shape": [
+                1,
+                1000
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "onnx_sha256": "256edd67262925d379f06886a63316eddfc78e5ecc8f61a9e951bb942d626fd0",
+          "effective_config_sha256": "d1c5a2350bb0abe43ea81311c780bc9870c989aa074d4282231372f58e09cc46",
+          "recipe": "samples/vision/repvit/conversion/recipes/timm_m1_1_dist_450e_in1k_s_int16_o1_20261103_s600_model.yaml",
+          "recipe_sha256": "acad222b62c938ce100222185957daff91a03241b855438ca4433e8fbc383c29",
+          "toolchain": {
+            "hbdk": "4.7.5",
+            "hmct": "2.6.5",
+            "hb_compile": "3.5.3"
+          },
+          "toolchain_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "calibration_count": 200,
+          "calibration_manifest_sha256": "94e7aedf2b83a7d479671612ef718d8d353605cf818402ab50a001872ba555bb",
+          "oe_report_sha256": "a23842c8aa2c46100e4bfc3249596857aa99e5c16f3df98850a55040211cc3e3",
+          "oe_data_sha256": "86be59cdbd29244b683e23473b3aafec2f6350c68769b5aa622917b7448e877f",
+          "node_info_csv_sha256": "e9a4dd7b89392dc459c5de9387f121717cb95492e29c958d65513a70d5c094a5",
+          "precision_outputs": [
+            {
+              "name": "output",
+              "calibrated_cosine": 0.973325,
+              "cosine": 0.968547
+            }
+          ],
+          "same_target_bc": {
+            "bc": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m1_1_dist_450e_in1k-s600-int16-20261103-r04/ptq_output/repvit_m1_1_dist_450e_in1k_nashp_224x224_nv12_float_int16_20261103_o1_quantized_model.bc",
+              "sha256": "10878835c5298e6b20620000fd6ec8e4ad7f32c9ba425e4d46895a68d9a59c80",
+              "size_bytes": 9687733
+            },
+            "ptq_config": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/jobs/repvit_m1_1_dist_450e_in1k-s600-int16-20261103-r04/ptq.yaml",
+              "sha256": "2c674936c1e9e567d524030589de1d0b6322a8f20a2eed998a864348e57b9d12",
+              "size_bytes": 1224
+            },
+            "producer": {
+              "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/prepare_bc.py",
+              "sha256": "f51a0942b2a359e6a2b4577fa6b542b80e2c3c2e0db04eb68d990bfdb6a13141",
+              "size_bytes": 4634
+            },
+            "cpu_cuda_gate": {
+              "atol": 0.0001,
+              "rtol": 0.001,
+              "cases": [
+                {
+                  "case": "0",
+                  "status": "passed",
+                  "max_abs": 3.123283386230469e-05
+                },
+                {
+                  "case": "52",
+                  "status": "passed",
+                  "max_abs": 9.5367431640625e-06
+                },
+                {
+                  "case": "143",
+                  "status": "passed",
+                  "max_abs": 3.719329833984375e-05
+                },
+                {
+                  "case": "random-seed0",
+                  "status": "passed",
+                  "max_abs": 9.059906005859375e-06
+                }
+              ],
+              "providers": [
+                "CPUExecutionProvider",
+                "CUDAExecutionProvider"
+              ],
+              "TF32": false
+            },
+            "versions": {
+              "torch": "2.6.0+cu126",
+              "onnxruntime": "1.19.0"
+            },
+            "gpu_image_id": "sha256:21948008ec575097dd616773e4ef7290251a4e50aa8957c6d14859219868df92"
+          }
+        }
+      },
+      "host_smoke": {
+        "status": "passed",
+        "report_sha256": "b61996d1d4ba64f70ef8271fed89a51679f19faf46246718be5c5986ffcffbe9",
+        "scope": "Frozen source/native/ONNX host gate; not board inference"
+      },
+      "validation": {
+        "conversion": "passed",
+        "host_smoke": "passed",
+        "board_smoke": "not-run",
+        "accuracy": "not-run",
+        "runtime_1": "not-run",
+        "runtime_2": "not-run",
+        "cpp_1": "not-run",
+        "cpp_2": "not-run"
+      },
+      "source": {
+        "repo_id": "timm/repvit_m1_1.dist_450e_in1k",
+        "revision": "ff441038a42982fff1c8c75be7c794f9ba76db72",
+        "license": "apache-2.0",
+        "license_name": null,
+        "filename": "model.safetensors",
+        "sha256": "071d227f69657c02d1bee8ae3317772ce7f9540af6f7865bf27e3f051e2cd160",
+        "size_bytes": 35525560,
+        "url": "https://huggingface.co/timm/repvit_m1_1.dist_450e_in1k/resolve/ff441038a42982fff1c8c75be7c794f9ba76db72/model.safetensors",
+        "model_card_url": "https://huggingface.co/timm/repvit_m1_1.dist_450e_in1k/blob/ff441038a42982fff1c8c75be7c794f9ba76db72/README.md"
+      }
+    }
+  ]
+}

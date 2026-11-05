@@ -120,11 +120,16 @@ overlay, rank 1 class 977 (sandbar, sand bar)](./test_data/result.jpg)
 <a id="performance"></a>
 ## Performance data
 
-Published performance records; full timing conditions and all columns
-are listed under [evaluation](evaluator/README.md#reference-results).
-Single-thread latency and multi-thread FPS are measured under different
-concurrency and are not reciprocal quantities. Compare latency and FPS using
-the same thread count, concurrent submission mode and BPU utilization.
+X5 records from the x5-v1.1.3 release; full conditions and all rows are in
+[evaluator](evaluator/README.md#reference-results).
+
+| Model | Size | Params (M) | Float Top-1 | Quant Top-1 | Single-thread latency (ms) | Multi-thread latency (ms) | FPS |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| HGNetv2_b0 | 224x224 | 6.0 | 77.342 | 72.17 | 1.96 | 3.29 | 902.09 |
+| HGNetv2_b1 | 224x224 | 6.34 | 78.872 | 73.47 | 2.41 | 3.89 | 760.13 |
+| HGNetv2_b2 | 224x224 | 11.2 | 81.578 | 75.55 | 3.52 | 7.41 | 401.16 |
+| HGNetv2_b3 | 224x224 | 16.3 | 82.916 | 76.51 | 4.53 | 10.37 | 287.27 |
+| HGNetv2_b4 | 224x224 | 19.8 | 83.694 | 81.93 | 5.29 | 12.32 | 241.94 |
 
 <a id="entry-points"></a>
 ## Entry points
@@ -136,3 +141,38 @@ the same thread count, concurrent submission mode and BPU utilization.
 ## License
 
 Python code follows Apache-2.0. Follow the original conversion notices and applicable upstream model and weight license terms. Review the upstream model and weight license terms before redistribution.
+
+<!-- converted-batch-20261102 -->
+## Converted-only additions (2026-11-02)
+
+These independently converted timm weights have passed strict checkpoint loading,
+reparameterization and two-input PyTorch/ONNX host comparison, checker and compiler.
+Board smoke, accuracy, Runtime 1/2 and C++ 1/2 are **not-run**; historical metrics
+and screenshots do not describe these artifacts. Existing defaults are retained.
+Pillow is needed for the explicit bicubic shorter-edge 256 / rounded center crop
+224 profile. Normalization is fused in Mapper from the actual checkpoint config;
+output is float32 1,000-class logits followed by native softmax.
+
+| Variant | Artifact | Checkpoint revision | Board |
+|---|---|---|---|
+| `timm-b0-ssld-stage2-ft-in1k` | `hgnetv2_b0_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin` | [`9e0a904b210d`](https://huggingface.co/timm/hgnetv2_b0.ssld_stage2_ft_in1k/blob/9e0a904b210d65e4fcd6582f8ca6e0921fac2650/README.md) | not-run |
+| `timm-b1-ssld-stage2-ft-in1k` | `hgnetv2_b1_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin` | [`ec7014d7f1d0`](https://huggingface.co/timm/hgnetv2_b1.ssld_stage2_ft_in1k/blob/ec7014d7f1d0dd1ea2bf3012bc51dc95c5919fd2/README.md) | not-run |
+| `timm-b2-ssld-stage2-ft-in1k` | `hgnetv2_b2_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin` | [`7a3092bc8711`](https://huggingface.co/timm/hgnetv2_b2.ssld_stage2_ft_in1k/blob/7a3092bc87118c7974bb9000b1eb6d9c560f8f75/README.md) | not-run |
+| `timm-b3-ssld-stage2-ft-in1k` | `hgnetv2_b3_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin` | [`1aac877b3ea5`](https://huggingface.co/timm/hgnetv2_b3.ssld_stage2_ft_in1k/blob/1aac877b3ea55ab0f06d57cad9889d1e601bd472/README.md) | not-run |
+| `timm-b4-ssld-stage2-ft-in1k` | `hgnetv2_b4_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin` | [`3c808d9d9d98`](https://huggingface.co/timm/hgnetv2_b4.ssld_stage2_ft_in1k/blob/3c808d9d9d9873ed5e37b00509ba2a4882e816e8/README.md) | not-run |
+
+```bash
+python3 samples/vision/hgnetv2/model/download.py --target x5 --variant timm-b0-ssld-stage2-ft-in1k
+python3 samples/vision/hgnetv2/runtime/python/main.py --target x5 --variant timm-b0-ssld-stage2-ft-in1k --dry-run
+```
+
+Exact model URLs/SHA-256/size are in `docs/release/x5/models.yaml`; source and host
+receipts are in `conversion/converted.json`. Each weight retains its own model
+license in its public release manifest. No board result is implied by download.
+<!-- /converted-batch-20261102 -->
+
+<!-- converted-all-20261103 -->
+
+## Converted S profiles (2026-11-03)
+
+Independent converted profiles and explicit commands are listed in [model preparation](model/README.md). Board accuracy and performance are not measured yet.

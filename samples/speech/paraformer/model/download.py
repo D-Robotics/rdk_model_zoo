@@ -13,7 +13,7 @@ if str(ROOT) not in sys.path:
 
 from utils.py_utils.assets import download_asset, list_assets, sha256_file
 from samples.speech.paraformer.runtime.python.pipeline import validate_vocabulary
-from samples.speech.paraformer.runtime.python.cli import resolve_selections, LOCAL_DIGESTS, VOCABULARY_DIGEST
+from samples.speech.paraformer.runtime.python.cli import resolve_selections, converted_profiles, LOCAL_DIGESTS, VOCABULARY_DIGEST
 
 MODEL_DIR = Path(__file__).resolve().parent
 
@@ -50,6 +50,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target", choices=("s100",), default="s100")
     parser.add_argument("--output-dir", type=Path, default=MODEL_DIR)
+    parser.add_argument("--variant", help="Exact converted profile; omitted keeps the historical package")
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -57,20 +58,25 @@ def main(argv=None):
     )
     args = parser.parse_args(argv)
     try:
-        selections = resolve_selections(args.target)
+        selections = resolve_selections(args.target, variant=args.variant)
         assets = list_assets("s", "paraformer")
         expected = {s.asset.filename for s in selections} | {
             "s100/tokens.json",
             "s100/am.mvn",
             "s100/paraformer_config.yaml",
         }
+        tokens_filename = "s100/tokens.json"
+        if args.variant:
+            entry = converted_profiles(args.target)[args.variant]
+            tokens_filename = entry['tokens']
+            expected = {s.asset.filename for s in selections} | {tokens_filename,
+                "s100/am.mvn", "s100/paraformer_config.yaml"}
+        assets = [asset for asset in assets if asset.filename in expected]
         if {asset.filename for asset in assets} != expected:
-            raise ValueError(
-                "Expected exactly the published six-file Paraformer package"
-            )
+            raise ValueError("Expected the selected six-file Paraformer package")
         for asset in assets:
             name = Path(asset.filename).name
-            destination = args.output_dir.expanduser() / asset.filename
+            destination = args.output_dir.expanduser() / ("s100/tokens.json" if asset.filename == tokens_filename else asset.filename)
             if args.dry_run:
                 print(
                     f"{asset.reference}: {asset.url or str(MODEL_DIR / name)} -> {destination}"
@@ -82,7 +88,7 @@ def main(argv=None):
                 )
             else:
                 digest = download_asset(asset, destination)
-                if name == "tokens.json":
+                if asset.filename == tokens_filename:
                     _check_digest(destination, VOCABULARY_DIGEST)
                     validate_vocabulary(
                         json.loads(destination.read_text(encoding="utf-8"))

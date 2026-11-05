@@ -71,13 +71,28 @@ BINDING_TABLE = SampleBindingTable(
 )
 
 
+# BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
+from dataclasses import replace as _with_s_converted_bindings
+SUPPORTED_VARIANTS = tuple(dict.fromkeys((*SUPPORTED_VARIANTS, *('torchvision-021-crop224-int16-o1-20261103',))))
+BINDING_TABLE = _with_s_converted_bindings(
+    BINDING_TABLE,
+    manifest_rows=tuple(dict.fromkeys((*BINDING_TABLE.manifest_rows, ('s', 'googlenet')))),
+    s_filename_targets=('s100', 's100p', 's600'),
+    filename_variants={**BINDING_TABLE.filename_variants, **{'s100/googlenet_tv021_crop224_nashe_int16_20261103_o1.hbm': 'torchvision-021-crop224-int16-o1-20261103', 's100p/googlenet_tv021_crop224_nashm_int16_20261103_o1.hbm': 'torchvision-021-crop224-int16-o1-20261103', 's600/googlenet_tv021_crop224_nashp_int16_20261103_o1.hbm': 'torchvision-021-crop224-int16-o1-20261103'}},
+    facts={**BINDING_TABLE.facts,
+        ('torchvision-021-crop224-int16-o1-20261103', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('torchvision-021-crop224-int16-o1-20261103', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('torchvision-021-crop224-int16-o1-20261103', 's600'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+    },
+)
+# END S CONVERTED ARTIFACT BINDINGS 20261103
+
 def list_available_assets(target: Optional[str] = None) -> tuple[AssetRecord, ...]:
     """Return the finite sample assets read from the existing manifests.
 
     ``target=None`` or ``target="auto"`` is intentionally host-independent so
-    the listing command can run on a workstation.  Every S target (S100,
-    S100P, S600) returns no rows: no GoogLeNet asset for those targets
-    is present in the source manifest.
+    the listing command can run on a workstation. Historical default assets
+    remain X5; explicit converted S profiles are read from the manifest.
     """
 
     return cls_binding.list_assets(BINDING_TABLE, target)

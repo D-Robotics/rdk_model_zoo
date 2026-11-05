@@ -91,7 +91,9 @@ class LaneTests(unittest.TestCase):
         self.assertEqual(path, Path("/tmp/lane-prepared/s100/lanenet256x512.hbm"))
 
     def test_only_exact_s100_asset(self):
-        self.assertEqual(len(list_available_assets()), 1)
+        from samples.vision.lanenet.runtime.python.cli import converted_profiles
+        refs={a.reference for a in list_available_assets()}
+        self.assertEqual(refs, {'s:lanenet:s100/lanenet256x512.hbm'} | set(converted_profiles()))
         self.assertEqual(
             resolve_selection("auto").asset.reference,
             "s:lanenet:s100/lanenet256x512.hbm",

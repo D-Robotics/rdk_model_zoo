@@ -2,6 +2,9 @@ English | [简体中文](README_cn.md)
 
 # LaneNet: binary lane labels and embeddings
 
+<!-- public-specification-20261105 -->
+The independent new S100 specification, preparation and execution commands are in [public conversion](conversion/public-20261105.md). Existing specifications and measurements below retain their historical scope.
+
 <a id="overview"></a>
 ## Overview
 
@@ -73,7 +76,7 @@ bash samples/vision/lanenet/runtime/cpp/run.sh --target s100 --build --output ou
 
 Input preparation stretches the image to 512×256 with INTER_AREA, converts BGR to RGB, divides by 255 and applies ImageNet mean/std normalization. The physical model input is float32 NCHW `[1,3,256,512]`. Results remain on that model grid, not the input image's resolution.
 
-Both entries write `embedding.npy` (float32 CHW), `binary.npy` (uint8 labels 0/1), `instance_pred.png`, `binary_pred.png` and `report.json`. Python preserves every named raw output in `raw_outputs.npz` with a name/key map. C++ writes `raw_output_N.npy` and records actual metadata and role indices; its launcher additionally records digests and full output streams. See each runtime README before comparing results.
+Both entries write `embedding.npy` (float32 CHW), `binary.npy` (uint8 labels 0/1), `instance_pred.png`, `binary_pred.png` and `report.json`. Python preserves every named raw output in `raw_outputs.npz` with a name/key map. C++ writes `raw_output_N.npy` and records actual metadata and role indices; its launcher additionally records digests and full output streams. Runtime-specific output details are in each runtime README.
 
 The embedding PNG clips features to [0,1] and rounds after multiplying by 255. Raw embeddings remain unchanged. The binary PNG displays labels as 0/255. No clustering, lane IDs, tracking, curve fitting, dataset accuracy or latency is produced.
 

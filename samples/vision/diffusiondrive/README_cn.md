@@ -92,8 +92,18 @@ S600 参考可视化：
 
 输入包括三相机 RGB 全景、LiDAR BEV 直方图、自车状态和显式扩散噪声。推理前准备这些 NAVSIM 特征。输出可用于轨迹可视化与浮点参考比较；完整 NAVSIM 得分需使用其数据集评估器。
 
+<a id="performance"></a>
+## 性能数据
+
+`case_017` 的单线程延迟与吞吐；完整精度与时序表见[评估记录](evaluator/README_cn.md#reference-results)。
+
+| 板卡 | 单线程延迟 | 单线程吞吐 | 双线程聚合吞吐 |
+| --- | ---: | ---: | ---: |
+| S100P | 14.370 ms | 69.375 FPS | 71.109 FPS |
+| S600 | 7.215 ms | 138.247 FPS | 143.767 FPS |
+
 <a id="entry-points"></a>
-## 人与 Agent 的入口
+## 入口
 
 使用 `DiffusionDrivePlanner.predict`，或由它组合的 `preprocess` → `infer` → `postprocess` 阶段。模型类负责规划张量处理与 Runtime 初始化；CLI 负责 NPZ 读写、下载命令和绘图，指标由评估器计算。共享 `NamedArrayRunner` 保留全部具名物理张量并检查板卡/资产身份。[完整 API 示例](runtime/python/README_cn.md#integration-example)包括变量和输入加载过程。
 

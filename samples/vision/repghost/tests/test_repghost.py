@@ -1,3 +1,4 @@
+# New S profiles have separate actual-ABI coverage in test_s_classification_profiles.
 """RepGhost host acceptance tests; no inference on hardware."""
 from pathlib import Path
 from utils.py_utils.tests.legacy_platforms import legacy_path  # noqa: E402
@@ -15,6 +16,15 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[4]
 SAMPLE = ROOT / 'samples/vision/repghost'
 VARIANTS = ('100', '111', '130', '150', '200')
+HISTORICAL_VARIANTS = VARIANTS
+
+# Independently converted fixture identities; keep all five historical filenames.
+import json as _converted_json
+_CONVERTED_MODELS = _converted_json.loads((SAMPLE / 'conversion/converted.json').read_text())['models']
+FILES = {v: f'RepGhost_{v}_224x224_nv12.bin' for v in VARIANTS}
+FILES.update({r['job']['variant']: r['job']['filename'] for r in _CONVERTED_MODELS})
+VARIANTS = tuple(FILES)
+
 
 
 class EntryTests(unittest.TestCase):
@@ -28,10 +38,10 @@ class EntryTests(unittest.TestCase):
     def test_default_and_all_published_variants(self):
         from samples.vision.repghost.runtime.python.cli import resolve_selection, list_available_assets
         self.assertEqual(resolve_selection('x5').variant, '100')
-        self.assertEqual({r.filename for r in list_available_assets()}, {f'RepGhost_{v}_224x224_nv12.bin' for v in VARIANTS})
+        self.assertEqual({r.filename for r in list_available_assets() if not r.variant.endswith("-20261103")}, set(FILES.values()))
         for v in VARIANTS:
             selected = resolve_selection('x5', variant=v)
-            self.assertEqual(selected.asset_id, f'x5:repghost:RepGhost_{v}_224x224_nv12.bin')
+            self.assertEqual(selected.asset_id, f'x5:repghost:{FILES[v]}')
             self.assertEqual((selected.contract.input_height, selected.contract.input_width), (224,224))
 
     def test_rejects_unpublished_target_and_mismatched_identity(self):
@@ -52,7 +62,7 @@ class EntryTests(unittest.TestCase):
             argv=['--target','x5'] + (['--variant',v] if v else [])
             with patch.object(download,'download_asset',fetch), contextlib.redirect_stdout(io.StringIO()):
                 self.assertEqual(download.main(argv),0)
-            filename=f'RepGhost_{v or "100"}_224x224_nv12.bin'
+            filename=FILES[v or '100']
             self.assertEqual(downloaded,[(f'x5:repghost:{filename}',filename)])
 
 
@@ -132,7 +142,7 @@ class SourceComparisonTests(unittest.TestCase):
             self.assertEqual(chained.labels, explicit.labels)
 
     def test_conversion_recipes_remain_identical_to_source(self):
-        for v in VARIANTS:
+        for v in HISTORICAL_VARIANTS:
             filename=f'RepGhost_{v}.yaml'
             expected=legacy_path(f'x5/samples/vision/repghost/conversion/{filename}').read_bytes()
             self.assertEqual((SAMPLE/'conversion'/filename).read_bytes(),expected)

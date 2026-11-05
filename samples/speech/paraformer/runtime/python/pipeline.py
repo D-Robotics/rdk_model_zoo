@@ -28,6 +28,7 @@ from samples.speech.paraformer.runtime.python.cli import (
     STAGES,
     Selection,
     resolve_selections,
+    variant_for_asset,
 )
 
 # ======================================================================
@@ -90,7 +91,8 @@ def validate_selection(selection):
     """Reject stage/asset/path mismatches before SDK construction."""
     if selection.stage not in STAGES:
         raise ValueError("Unknown Paraformer stage")
-    expected = resolve_selections(selection.target)[STAGES.index(selection.stage)]
+    variant = variant_for_asset(selection.target, selection.stage, selection.asset.reference)
+    expected = resolve_selections(selection.target, variant=variant)[STAGES.index(selection.stage)]
     if selection.asset != expected.asset or (
         not selection.explicit_model_path
         and selection.model_path != expected.model_path
@@ -448,6 +450,8 @@ def load_model_runners(selections, vocabulary, *, runtime_factory=None):
         raise ValueError("Expected ordered encoder, predictor and decoder selections")
     if any(s.target != "s100" for s in selections):
         raise ValueError("All three models must target s100")
+    if len({variant_for_asset(s.target, s.stage, s.asset.reference) for s in selections}) != 1:
+        raise ValueError("Paraformer stages must belong to one complete publication profile")
     for selection in selections:
         validate_selection(selection)
     runners = tuple(

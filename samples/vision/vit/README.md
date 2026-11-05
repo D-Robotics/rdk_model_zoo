@@ -2,6 +2,9 @@ English | [简体中文](README_cn.md)
 
 # ViT CIFAR-10 classification
 
+<!-- public-specification-20261105 -->
+The independent new S100 specification, preparation and execution commands are in [public conversion](conversion/public-20261105.md). Existing specifications and measurements below retain their historical scope.
+
 ViT classifies images with self-attention over a sequence of image patches.
 
 [中文说明](README_cn.md)

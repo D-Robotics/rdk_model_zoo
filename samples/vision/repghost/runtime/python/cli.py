@@ -81,6 +81,54 @@ BINDING_TABLE = SampleBindingTable(
 )
 
 
+
+
+
+# BEGIN CONVERTED ARTIFACT BINDINGS
+from dataclasses import replace as _with_converted_bindings
+CONVERTED_VARIANTS = ('timm-100-in1k', 'timm-111-in1k', 'timm-130-in1k', 'timm-150-in1k', 'timm-200-in1k')
+SUPPORTED_VARIANTS = SUPPORTED_VARIANTS + CONVERTED_VARIANTS
+BINDING_TABLE = _with_converted_bindings(
+    BINDING_TABLE,
+    filename_variants={**BINDING_TABLE.filename_variants, **{'repghostnet_100_in1k_bayese_224x224_nv12.bin': 'timm-100-in1k', 'repghostnet_111_in1k_bayese_224x224_nv12.bin': 'timm-111-in1k', 'repghostnet_130_in1k_bayese_224x224_nv12.bin': 'timm-130-in1k', 'repghostnet_150_in1k_bayese_224x224_nv12.bin': 'timm-150-in1k', 'repghostnet_200_in1k_bayese_224x224_nv12.bin': 'timm-200-in1k'}},
+    facts={**BINDING_TABLE.facts,
+        ('timm-100-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-111-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-130-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-150-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-200-in1k', 'x5'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+    },
+)
+# END CONVERTED ARTIFACT BINDINGS
+
+# BEGIN S CONVERTED ARTIFACT BINDINGS 20261103
+from dataclasses import replace as _with_s_converted_bindings
+SUPPORTED_VARIANTS = tuple(dict.fromkeys((*SUPPORTED_VARIANTS, *('timm-100-in1k-s-int16-o1-20261103', 'timm-111-in1k-s-int16-o1-20261103', 'timm-130-in1k-s-int16-o1-20261103', 'timm-150-in1k-s-int16-o1-20261103', 'timm-200-in1k-s-int16-o1-20261103'))))
+BINDING_TABLE = _with_s_converted_bindings(
+    BINDING_TABLE,
+    manifest_rows=tuple(dict.fromkeys((*BINDING_TABLE.manifest_rows, ('s', 'repghost')))),
+    s_filename_targets=('s100', 's100p', 's600'),
+    filename_variants={**BINDING_TABLE.filename_variants, **{'s100/repghostnet_100_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-100-in1k-s-int16-o1-20261103', 's100p/repghostnet_100_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-100-in1k-s-int16-o1-20261103', 's600/repghostnet_100_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-100-in1k-s-int16-o1-20261103', 's100/repghostnet_111_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-111-in1k-s-int16-o1-20261103', 's100p/repghostnet_111_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-111-in1k-s-int16-o1-20261103', 's600/repghostnet_111_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-111-in1k-s-int16-o1-20261103', 's100/repghostnet_130_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-130-in1k-s-int16-o1-20261103', 's100p/repghostnet_130_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-130-in1k-s-int16-o1-20261103', 's600/repghostnet_130_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-130-in1k-s-int16-o1-20261103', 's100/repghostnet_150_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-150-in1k-s-int16-o1-20261103', 's100p/repghostnet_150_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-150-in1k-s-int16-o1-20261103', 's600/repghostnet_150_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-150-in1k-s-int16-o1-20261103', 's100/repghostnet_200_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-200-in1k-s-int16-o1-20261103', 's100p/repghostnet_200_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-200-in1k-s-int16-o1-20261103', 's600/repghostnet_200_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm': 'timm-200-in1k-s-int16-o1-20261103'}},
+    facts={**BINDING_TABLE.facts,
+        ('timm-100-in1k-s-int16-o1-20261103', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-100-in1k-s-int16-o1-20261103', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-100-in1k-s-int16-o1-20261103', 's600'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-111-in1k-s-int16-o1-20261103', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-111-in1k-s-int16-o1-20261103', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-111-in1k-s-int16-o1-20261103', 's600'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-130-in1k-s-int16-o1-20261103', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-130-in1k-s-int16-o1-20261103', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-130-in1k-s-int16-o1-20261103', 's600'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-150-in1k-s-int16-o1-20261103', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-150-in1k-s-int16-o1-20261103', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-150-in1k-s-int16-o1-20261103', 's600'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-200-in1k-s-int16-o1-20261103', 's100'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-200-in1k-s-int16-o1-20261103', 's100p'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+        ('timm-200-in1k-s-int16-o1-20261103', 's600'): VariantFacts(input_height=224, input_width=224, resize_type=2, resize_shorter=256, output_semantics='source_declared_logits', output_score_policy='softmax'),
+    },
+)
+# END S CONVERTED ARTIFACT BINDINGS 20261103
+
 def list_available_assets(target: Optional[str] = None) -> tuple[AssetRecord, ...]:
     """Return the finite sample assets read from the existing manifests.
 

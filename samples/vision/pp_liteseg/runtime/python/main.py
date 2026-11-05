@@ -1,11 +1,11 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""People and Agent entrypoint for the PP-LiteSeg segmentation sample.
+"""PP-LiteSeg segmentation entry.
 
-This file stays deliberately small: parse the arguments, resolve the model,
-construct the segmenter, call ``predict``, present results. Option
-declarations, model-free listing/dry-run, and artifact writing live in
-``cli.py``; the segmentation flow lives in ``pp_liteseg.py``.
+Parse arguments, build the segmenter, call ``predict``, and write the result.
+``cli.py`` holds options, model selection, and file output.
+``pp_liteseg.py`` holds preprocess, infer, and postprocess.
+``--list-models`` and ``--dry-run`` do not load the board SDK.
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ def main(argv=None) -> int:
     if args.list_models:
         return run_list_models(args.target)
     try:
-        selection = resolve_selection(args.target, asset_id=args.asset_id, model_path=args.model_path)
+        selection = resolve_selection(args.target, asset_id=args.asset_id, model_path=args.model_path, variant=args.variant)
         if (args.input_width, args.input_height) != (1024, 512):
             raise ValueError('The published model requires input-width=1024 and input-height=512')
         if not 0 <= args.alpha <= 1:

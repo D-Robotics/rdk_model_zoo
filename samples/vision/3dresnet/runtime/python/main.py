@@ -1,12 +1,12 @@
 # Copyright (c) 2026 D-Robotics Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""People and Agent entrypoint for the R3D-18 video classification sample.
+"""R3D-18 video classification entry.
 
-This file stays deliberately small: parse the arguments, resolve the model,
-construct the classifier, call ``predict``, present results. Option
-declarations, model-free listing/dry-run, label loading, and report assembly
-live in ``cli.py``; the classification flow lives in ``classification.py``.
+Parse arguments, build the classifier, call ``predict``, and print the result.
+``cli.py`` holds options, model selection, and the report.
+``classification.py`` holds preprocess, infer, and postprocess.
+``--list-models`` and ``--dry-run`` do not load the board SDK.
 """
 
 from __future__ import annotations

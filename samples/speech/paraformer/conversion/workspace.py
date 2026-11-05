@@ -75,7 +75,7 @@ def verify_prepared(root):
         config = yaml.safe_load(data)
         if hashlib.sha256(data).hexdigest() != report["configs"][
             stage
-        ] or config != make_config(stage, report.get("jobs")):
+        ] or config != make_config(stage, report.get("jobs"), report.get("optimize_level", "O2")):
             raise ValueError(f"Compiler config differs from source contract: {stage}")
         configs[stage] = config
     return report, hashlib.sha256(raw).hexdigest(), configs
