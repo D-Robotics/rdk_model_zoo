@@ -2,6 +2,9 @@ English | [简体中文](README_cn.md)
 
 # LaneNet: binary lane labels and embeddings
 
+<!-- public-specification-20261105 -->
+The independent new S100 specification, preparation and execution commands are in [public conversion](conversion/public-20261105.md). Existing specifications and measurements below retain their historical scope.
+
 <a id="overview"></a>
 ## Overview
 

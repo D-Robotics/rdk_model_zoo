@@ -1,0 +1,495 @@
+{
+  "schema_version": 1,
+  "status": "converted",
+  "profiles": [
+    {
+      "variant": "enet-tusimple-3head-256x512-int16-cpuptq-o1-20261105",
+      "target": {
+        "platform": "s100",
+        "march": "nash-e"
+      },
+      "source": {
+        "repository": "https://github.com/IrohXu/lanenet-lane-detection-pytorch",
+        "commit": "0e5aa371d9572ef8d16b2eddbe5af284f649b88a",
+        "checkpoint": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/upstream-lanenet/lanenet-lane-detection-pytorch-0e5aa371d9572ef8d16b2eddbe5af284f649b88a/log/best_model.pth",
+          "sha256": "052bda2bff1ab3aa017a4509966fc80290d2076b3b373e268bdc6865674f5b79",
+          "size_bytes": 15052911
+        },
+        "weight_url": "https://github.com/IrohXu/lanenet-lane-detection-pytorch/blob/0e5aa371d9572ef8d16b2eddbe5af284f649b88a/log/best_model.pth",
+        "license": "MIT"
+      },
+      "components": {
+        "model": {
+          "filename": "s100/lanenet_enet_tusimple_3head_256x512_int16_cpuptq_o1_20261105_nashe.hbm",
+          "format": "hbm",
+          "url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/lanenet/lanenet_enet_tusimple_3head_256x512_int16_cpuptq_o1_20261105_nashe.hbm",
+          "sha256": "bb1651649127251301ff98b1c479055664d1c7e6c2feac58264fa6bebcae6a6a",
+          "size_bytes": 34719672,
+          "onnx_sha256": "063e81a31a335ea4718de540283002b0369688bedd0378b9a0b37bd52122dda4",
+          "effective_config_sha256": "af5c49485a340c4240e1565b6009d77bca6e7cb3ad7aa39cdc454bd1fc2ff56e",
+          "recipe_sha256": "f83025dd4ba07b82a72ae162a3713f20d255db2b10953082fcbef963039f5009",
+          "calibration_manifest_sha256": "1bfb112367efe9b854026b0a310edb70ed543f04f3e49f0328002f0cca4dc785",
+          "cpu_reference_float_gate": {
+            "status": "passed",
+            "report": {
+              "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/lanenet-s100-prepare-r01/cpu-sdk-parity.json",
+              "sha256": "d11ec6cf3ed8aca6e55ac2847abad5e1bf297654d2e4133e1ce5a4b44eaa3dd6",
+              "size_bytes": 5019
+            }
+          }
+        }
+      },
+      "io": {
+        "inputs": [
+          {
+            "name": "images",
+            "shape": [
+              1,
+              3,
+              256,
+              512
+            ],
+            "dtype": "float32"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "instance_seg_logits",
+            "shape": [
+              1,
+              3,
+              256,
+              512
+            ],
+            "dtype": "float32"
+          },
+          {
+            "name": "binary_seg_pred",
+            "shape": [
+              1,
+              1,
+              256,
+              512
+            ],
+            "dtype": "int64"
+          },
+          {
+            "name": "binary_seg_logits",
+            "shape": [
+              1,
+              2,
+              256,
+              512
+            ],
+            "dtype": "float32"
+          }
+        ]
+      },
+      "compiler_versions": {
+        "hbdk": "4.7.5",
+        "hmct": "2.6.5",
+        "hb_compile": "3.5.3"
+      },
+      "compiler_image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+      "calibration_count": 100,
+      "host_export_report": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/lanenet-source-export-r02/export.json",
+        "sha256": "ec6f72ac1d18b64605aacbe2f99ebe1d0edf85cb6fe329822db946697e7e7fd5",
+        "size_bytes": 6904
+      },
+      "compile_receipt": {
+        "argv": [
+          "docker",
+          "run",
+          "--rm",
+          "--network",
+          "none",
+          "--cpus",
+          "2",
+          "--memory",
+          "8g",
+          "--shm-size",
+          "2g",
+          "--name",
+          "modelzoo-breadth-lanenet-s100-cpuptq-20261105-r01",
+          "-v",
+          "/home/zhengyi/work/rdk_model_zoo_workbench:/home/zhengyi/work/rdk_model_zoo_workbench:ro",
+          "-v",
+          "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01:/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01",
+          "-w",
+          "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/lanenet-s100-cpuptq-20261105-r01",
+          "-e",
+          "HBTL_THREAD_NUM=2",
+          "-e",
+          "OMP_NUM_THREADS=2",
+          "-e",
+          "MKL_NUM_THREADS=2",
+          "-e",
+          "OPENBLAS_NUM_THREADS=2",
+          "-e",
+          "OMP_WAIT_POLICY=PASSIVE",
+          "-e",
+          "GOMP_SPINCOUNT=0",
+          "-e",
+          "NVIDIA_TF32_OVERRIDE=0",
+          "--entrypoint",
+          "/bin/bash",
+          "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+          "-lc",
+          "hb_compile -c /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/lanenet-s100-cpuptq-20261105-r01/config.yaml"
+        ],
+        "cwd": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/lanenet-s100-cpuptq-20261105-r01",
+        "env": {
+          "HBTL_THREAD_NUM": "2",
+          "OMP_NUM_THREADS": "2",
+          "MKL_NUM_THREADS": "2",
+          "OPENBLAS_NUM_THREADS": "2",
+          "OMP_WAIT_POLICY": "PASSIVE",
+          "GOMP_SPINCOUNT": "0",
+          "NVIDIA_TF32_OVERRIDE": "0"
+        },
+        "image_id": "sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01",
+        "target": {
+          "platform": "s100",
+          "march": "nash-e"
+        },
+        "model": {
+          "source": "lanenet",
+          "family": "lanenet",
+          "task": "lane",
+          "size": "enet-tusimple-3head-256x512-int16-cpuptq-o1-20261105"
+        },
+        "role": "model",
+        "kind": "single",
+        "calibration_count": 100,
+        "onnx_sha256": "063e81a31a335ea4718de540283002b0369688bedd0378b9a0b37bd52122dda4",
+        "config_sha256": "af5c49485a340c4240e1565b6009d77bca6e7cb3ad7aa39cdc454bd1fc2ff56e",
+        "host_report": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/lanenet-source-export-r02/export.json",
+          "sha256": "ec6f72ac1d18b64605aacbe2f99ebe1d0edf85cb6fe329822db946697e7e7fd5",
+          "size_bytes": 6904
+        },
+        "source_facts": {
+          "schema_version": 1,
+          "status": "passed",
+          "source": {
+            "repository": "https://github.com/IrohXu/lanenet-lane-detection-pytorch",
+            "commit": "0e5aa371d9572ef8d16b2eddbe5af284f649b88a",
+            "checkpoint": {
+              "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/upstream-lanenet/lanenet-lane-detection-pytorch-0e5aa371d9572ef8d16b2eddbe5af284f649b88a/log/best_model.pth",
+              "sha256": "052bda2bff1ab3aa017a4509966fc80290d2076b3b373e268bdc6865674f5b79",
+              "size_bytes": 15052911
+            },
+            "weight_url": "https://github.com/IrohXu/lanenet-lane-detection-pytorch/blob/0e5aa371d9572ef8d16b2eddbe5af284f649b88a/log/best_model.pth",
+            "license": "MIT"
+          },
+          "native_commit": "aadd66f735ff610af511ae32546d8eeb9cdb563e",
+          "exporter": {
+            "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/source/native-aadd66f7/samples/vision/lanenet/conversion/export_enet.py",
+            "sha256": "6554c623ed23b5b17c88a3641da97cb5ea2aa98e9e20c01725e8b780b4630ee0",
+            "size_bytes": 6667
+          },
+          "source_implementation": {
+            "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/legacy-refresh-20261104-r01/source/upstream-lanenet/lanenet-lane-detection-pytorch-0e5aa371d9572ef8d16b2eddbe5af284f649b88a/model/lanenet/LaneNet.py",
+            "sha256": "42d79d633c64d1ae05825b218b2e9a52cb350f616d3a86de7d3a06f2ed2bba50",
+            "size_bytes": 3002
+          },
+          "onnx": {
+            "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/lanenet-source-export-r02/model.onnx",
+            "sha256": "063e81a31a335ea4718de540283002b0369688bedd0378b9a0b37bd52122dda4",
+            "size_bytes": 16776569
+          },
+          "calibration_manifest": {
+            "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/lanenet-source-export-r02/calibration.manifest.json",
+            "sha256": "1bfb112367efe9b854026b0a310edb70ed543f04f3e49f0328002f0cca4dc785",
+            "size_bytes": 80829
+          },
+          "calibration_count": 100,
+          "raw_wrapper_bit_exact": true,
+          "input": {
+            "name": "images",
+            "shape": [
+              1,
+              3,
+              256,
+              512
+            ],
+            "dtype": "float32"
+          },
+          "outputs": [
+            {
+              "name": "instance_seg_logits",
+              "shape": [
+                1,
+                3,
+                256,
+                512
+              ],
+              "dtype": "float32"
+            },
+            {
+              "name": "binary_seg_pred",
+              "shape": [
+                1,
+                1,
+                256,
+                512
+              ],
+              "dtype": "int64"
+            },
+            {
+              "name": "binary_seg_logits",
+              "shape": [
+                1,
+                2,
+                256,
+                512
+              ],
+              "dtype": "float32"
+            }
+          ],
+          "parameter_count": 3665580,
+          "normalization": {
+            "scale": 0.00392156862745098,
+            "mean": [
+              0.485,
+              0.456,
+              0.406
+            ],
+            "std": [
+              0.229,
+              0.224,
+              0.225
+            ]
+          },
+          "geometry": "OpenCV INTER_AREA RGB stretch 512x256",
+          "atol": 0.0001,
+          "rtol": 0.001,
+          "integer_outputs": "exact element equality; all three source heads retained",
+          "cases": [
+            {
+              "input": "real-0",
+              "comparisons": [
+                {
+                  "name": "instance_seg_logits",
+                  "shape": [
+                    1,
+                    3,
+                    256,
+                    512
+                  ],
+                  "dtype": "float32",
+                  "violations": 0,
+                  "max_abs": 9.98377799987793e-06,
+                  "passed": true
+                },
+                {
+                  "name": "binary_seg_pred",
+                  "shape": [
+                    1,
+                    1,
+                    256,
+                    512
+                  ],
+                  "dtype": "int64",
+                  "violations": 0,
+                  "max_abs": 0.0,
+                  "passed": true
+                },
+                {
+                  "name": "binary_seg_logits",
+                  "shape": [
+                    1,
+                    2,
+                    256,
+                    512
+                  ],
+                  "dtype": "float32",
+                  "violations": 0,
+                  "max_abs": 2.574920654296875e-05,
+                  "passed": true
+                }
+              ],
+              "status": "passed"
+            },
+            {
+              "input": "real-49",
+              "comparisons": [
+                {
+                  "name": "instance_seg_logits",
+                  "shape": [
+                    1,
+                    3,
+                    256,
+                    512
+                  ],
+                  "dtype": "float32",
+                  "violations": 0,
+                  "max_abs": 1.2278556823730469e-05,
+                  "passed": true
+                },
+                {
+                  "name": "binary_seg_pred",
+                  "shape": [
+                    1,
+                    1,
+                    256,
+                    512
+                  ],
+                  "dtype": "int64",
+                  "violations": 0,
+                  "max_abs": 0.0,
+                  "passed": true
+                },
+                {
+                  "name": "binary_seg_logits",
+                  "shape": [
+                    1,
+                    2,
+                    256,
+                    512
+                  ],
+                  "dtype": "float32",
+                  "violations": 0,
+                  "max_abs": 3.147125244140625e-05,
+                  "passed": true
+                }
+              ],
+              "status": "passed"
+            },
+            {
+              "input": "real-99",
+              "comparisons": [
+                {
+                  "name": "instance_seg_logits",
+                  "shape": [
+                    1,
+                    3,
+                    256,
+                    512
+                  ],
+                  "dtype": "float32",
+                  "violations": 0,
+                  "max_abs": 1.1324882507324219e-05,
+                  "passed": true
+                },
+                {
+                  "name": "binary_seg_pred",
+                  "shape": [
+                    1,
+                    1,
+                    256,
+                    512
+                  ],
+                  "dtype": "int64",
+                  "violations": 0,
+                  "max_abs": 0.0,
+                  "passed": true
+                },
+                {
+                  "name": "binary_seg_logits",
+                  "shape": [
+                    1,
+                    2,
+                    256,
+                    512
+                  ],
+                  "dtype": "float32",
+                  "violations": 0,
+                  "max_abs": 2.47955322265625e-05,
+                  "passed": true
+                }
+              ],
+              "status": "passed"
+            },
+            {
+              "input": "random-seed0",
+              "comparisons": [
+                {
+                  "name": "instance_seg_logits",
+                  "shape": [
+                    1,
+                    3,
+                    256,
+                    512
+                  ],
+                  "dtype": "float32",
+                  "violations": 0,
+                  "max_abs": 8.344650268554688e-06,
+                  "passed": true
+                },
+                {
+                  "name": "binary_seg_pred",
+                  "shape": [
+                    1,
+                    1,
+                    256,
+                    512
+                  ],
+                  "dtype": "int64",
+                  "violations": 0,
+                  "max_abs": 0.0,
+                  "passed": true
+                },
+                {
+                  "name": "binary_seg_logits",
+                  "shape": [
+                    1,
+                    2,
+                    256,
+                    512
+                  ],
+                  "dtype": "float32",
+                  "violations": 0,
+                  "max_abs": 2.288818359375e-05,
+                  "passed": true
+                }
+              ],
+              "status": "passed"
+            }
+          ],
+          "versions": {
+            "torch": "2.8.0+cu128",
+            "onnx": "1.17.0",
+            "onnxruntime": "1.19.2"
+          },
+          "board": "not-run",
+          "dataset_accuracy": "not-run"
+        },
+        "calibration_manifest": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/lanenet-source-export-r02/calibration.manifest.json",
+          "sha256": "1bfb112367efe9b854026b0a310edb70ed543f04f3e49f0328002f0cca4dc785",
+          "size_bytes": 80829
+        },
+        "cpu_reference_gate": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/lanenet-s100-prepare-r01/cpu-sdk-parity.json",
+          "sha256": "d11ec6cf3ed8aca6e55ac2847abad5e1bf297654d2e4133e1ce5a4b44eaa3dd6",
+          "size_bytes": 5019
+        },
+        "calibration_boundary_gate": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/lanenet-s100-prepare-r01/calibration-boundary.json",
+          "sha256": "4bed8e8b5ff58c2886bf6b4b710b3e2623783a819290904dd0b728b4c7647b82",
+          "size_bytes": 26011
+        },
+        "artifact": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/lanenet-s100-cpuptq-20261105-r01/output/lanenet_enet_tusimple_3head_256x512_int16_cpuptq_o1_20261105_nashe.hbm",
+        "device": "cpu",
+        "memory_gib": 8,
+        "priority": 10,
+        "board": "not-run",
+        "source_native_base": "aadd66f735ff610af511ae32546d8eeb9cdb563e",
+        "generated_template": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/lanenet-s100-cpuptq-20261105-r01/template/full_compile_config.yaml",
+          "sha256": "5e734b653e7931fe74508cd858683d1bbe571a39f98ed3c573ea16ee1ebc6261",
+          "size_bytes": 716
+        },
+        "started_utc": "2026-11-05T02:53:05.678865+00:00",
+        "returncode": 0,
+        "wall_seconds": 3205.2811243347824,
+        "finished_utc": "2026-11-05T03:46:30.960022+00:00"
+      },
+      "board_validation": "not-run",
+      "native_recipe": "samples/vision/lanenet/conversion/recipes/lanenet-public-s100-20261105.yaml"
+    }
+  ]
+}
