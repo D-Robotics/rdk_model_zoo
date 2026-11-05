@@ -5,7 +5,7 @@
 <a id="dataset"></a>
 ## 数据集
 
-WikiText2 TEST 与校准 TRAIN 分开；固定 checkpoint/tokenizer 和 TEST 摘要沿用源记录。完整口径为 140 × 2048-token 片段，不能把一段接线检查当成全量评估。下文参考数据注明了模型与运行环境。
+WikiText2 TEST 与校准 TRAIN 分开；固定 checkpoint/tokenizer 和 TEST 摘要沿用记录。完整口径为 140 × 2048-token 片段，不能把一段接线检查当成全量评估。下文参考数据注明了模型与运行环境。
 
 <a id="directory"></a>
 ## 目录结构

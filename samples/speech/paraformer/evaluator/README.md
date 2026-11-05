@@ -171,8 +171,12 @@ RTF ~0.008, excluding WAV preprocessing. The C++ pipeline totals 40.81 ms;
 300 utterances took 13.4 s wall-clock (RTF ~0.007), with one model load of
 about 1.85 s.
 
-For the two bundled utterances, the evaluator records 4 edits across 28
-reference characters (CER 14.2857%).
+For the two bundled utterances, the S100 INT16 C++ board run records one
+homophone substitution (搅/绞): 1 edit over 28 reference characters
+(CER 3.57%). A host FP32 ONNX Runtime smoke run measured 4 edits over the
+same 28 characters (2 substitutions, 2 deletions; CER 14.2857%). The host
+run checks the backend and is not a reproduction of the 300-utterance
+benchmark.
 
 
 ## Additional reference measurements

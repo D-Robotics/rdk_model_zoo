@@ -218,5 +218,4 @@ Sample code follows the repository top-level LICENSE (Apache-2.0). The
 source model is the upstream MobileNetV2 distribution; upstream model/weights
 licensing is governed by that distribution (see the reference-implementation
 link above). Published artifacts follow the platform release manifests; the
-manifests carry no separate license field, and no additional license is
-claimed here.
+manifests carry no separate license field.

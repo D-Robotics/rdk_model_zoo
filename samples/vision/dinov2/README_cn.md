@@ -68,6 +68,17 @@ CLI 打印包含 `output`、`shape`、`dtype`、`mean`、`std`、`min`、`max`�
 
 输出为 `cls_feat` `(1,384)` 和 `patch_feat` `(1,256,384)`，按元数据反量化后返回独立 float32 数组。运行时不执行 softmax 或 L2 归一化。主干包含 patch-14 stem 与 12 个 pre-LN Transformer block。
 
+<a id="performance"></a>
+## 性能数据
+
+| 板卡 | 模型 | 输入 | BPU 延迟 / 吞吐 |
+| --- | --- | --- | --- |
+| S100 | dinov2_vits14_224_int16 | 1x3x224x224 | 3.73 ms / 267.44 FPS（1 线程）；288.26 FPS（2 线程） |
+| S100P | dinov2_vits14_224_int16 | 1x3x224x224 | 3.02 ms / 329.53 FPS（1 线程）；357.63 FPS（2 线程） |
+| S600 | dinov2_vits14_224_int16 | 1x3x224x224 | 2.25 ms / 441.64 FPS（1 线程）；1898.42 FPS（12 线程） |
+
+模型参数量 22.06 M。延迟为纯 BPU 前向，CPU 预处理另计。完整条件与 PTQ cosine 表见[评估记录](evaluator/README_cn.md#reference-results)。
+
 <a id="entry-points"></a>
 ## 入口索引
 
@@ -75,7 +86,7 @@ CLI 打印包含 `output`、`shape`、`dtype`、`mean`、`std`、`min`、`max`�
 - Python 运行：[`runtime/python/README_cn.md`](runtime/python/README_cn.md) —— 预处理、双输出 task API 和 CLI。
 - C++ 运行：未提供；C++ 为 `not-supported`。
 - 模型转换：[`conversion/README_cn.md`](conversion/README_cn.md) —— 固定源、ONNX 导出、校准和编译命令。
-- 模型评估：[`evaluator/README_cn.md`](evaluator/README_cn.md) —— 板端源记录表格和 cosine 复现条件。
+- 模型评估：[`evaluator/README_cn.md`](evaluator/README_cn.md) —— 板端参考表格和 cosine 复现条件。
 
 ## 新转换制品（2026-11-02）
 

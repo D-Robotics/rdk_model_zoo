@@ -68,6 +68,17 @@ The CLI prints a JSON summary with `output`, `shape`, `dtype`, `mean`, `std`, `m
 
 Outputs are `cls_feat` `(1,384)` and `patch_feat` `(1,256,384)`, returned as owned float32 arrays after metadata-based dequantization. The runtime applies neither softmax nor L2 normalization. The backbone uses a patch-14 stem and 12 pre-LN transformer blocks.
 
+<a id="performance"></a>
+## Performance data
+
+| Board | Model | Input | BPU latency / throughput |
+| --- | --- | --- | --- |
+| S100 | dinov2_vits14_224_int16 | 1x3x224x224 | 3.73 ms / 267.44 FPS (1 thread); 288.26 FPS (2 threads) |
+| S100P | dinov2_vits14_224_int16 | 1x3x224x224 | 3.02 ms / 329.53 FPS (1 thread); 357.63 FPS (2 threads) |
+| S600 | dinov2_vits14_224_int16 | 1x3x224x224 | 2.25 ms / 441.64 FPS (1 thread); 1898.42 FPS (12 threads) |
+
+Model parameters: 22.06 M. Latency is pure BPU forward; CPU preprocessing is additional. Conditions and PTQ cosine tables are in the [evaluator](evaluator/README.md#reference-results).
+
 <a id="entry-points"></a>
 ## Entry Points
 
@@ -75,7 +86,7 @@ Outputs are `cls_feat` `(1,384)` and `patch_feat` `(1,256,384)`, returned as own
 - Python runtime: [`runtime/python/README.md`](runtime/python/README.md) — preprocessing, dual-output task API, and CLI.
 - C++ runtime: not provided; C++ is `not-supported`.
 - Conversion: [`conversion/README.md`](conversion/README.md) — pinned source, ONNX export, calibration, and compile commands.
-- Evaluation: [`evaluator/README.md`](evaluator/README.md) — source-recorded board tables and cosine reproduction conditions.
+- Evaluation: [`evaluator/README.md`](evaluator/README.md) — board reference tables and cosine reproduction conditions.
 
 ## Converted artifacts (2026-11-02)
 

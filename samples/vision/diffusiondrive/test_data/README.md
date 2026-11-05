@@ -34,7 +34,7 @@ These are logical float features, not physical quantized HBM buffers. The sample
 
 ## Files and reference outputs
 
-The default pair is `reference_inputs.npz` and `reference_outputs.npz`; `reference_result.png` is the source-recorded display. Each case directory contains `inputs.npz`, `reference_outputs.npz` and `result.png`.
+The default pair is `reference_inputs.npz` and `reference_outputs.npz`; `reference_result.png` is the source display. Each case directory contains `inputs.npz`, `reference_outputs.npz` and `result.png`.
 
 | Float reference tensor | Shape | Meaning |
 | --- | --- | --- |

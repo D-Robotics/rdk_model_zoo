@@ -58,7 +58,7 @@ The export must apply those rewrites and produce the caller-supplied file `build
 
 The source requires at least 100 real NAVSIM mini samples. For each sample, provide corresponding finite float32 `.npy` tensors in `calibration_data/camera`, `calibration_data/lidar`, `calibration_data/status` and `calibration_data/noise`. Pair the same sample across all four directories; use the input order `camera;lidar;status;noise` and the shapes above. YAML declares featuremap/NCHW inputs and `separate_batch: false`.
 
-The source does not include the original calibration set, a feature-preparation/export script or a sample manifest. The six demonstration archives are insufficient for the stated >=100-sample recipe; duplicating them does not supply the missing representative data. Do not feed already quantized runtime buffers into a calibration directory expecting logical float features. Keep dataset identity, tensor hashes and preparation revision when building a new calibration set.
+The original calibration set, feature-preparation/export script and sample manifest are not included. The six demonstration archives do not meet the stated >=100-sample recipe; duplicating them does not add representative data. Calibration directories need logical float features, not quantized runtime buffers. A new calibration set should retain dataset identity, tensor hashes and preparation revision.
 
 <a id="compile"></a>
 ## Compile after prerequisites exist
@@ -71,7 +71,7 @@ hb_compile -c configs/diffusiondrive_r34_256x1024_s600.yaml
 hb_compile -c configs/diffusiondrive_r34_256x1024_s100p.yaml
 ```
 
-These are the source compiler commands. They require the ONNX and four complete calibration directories first. Preserve the compiler version, logs, generated reports, graph-placement report and resulting HBM digest, and verify numerical correctness and target execution after compilation. The toolchain and export/calibration inputs are user-provided; no script here downloads a toolchain or fabricates inputs.
+These are the source compiler commands. They require the ONNX and four complete calibration directories first. The compiler version, logs, generated reports, graph-placement report and resulting HBM digest belong with the result; verify numerical correctness and target execution after compilation. The toolchain and export/calibration inputs are user-provided; no script here downloads a toolchain or fabricates inputs.
 
 <a id="validation"></a>
 ## Validation

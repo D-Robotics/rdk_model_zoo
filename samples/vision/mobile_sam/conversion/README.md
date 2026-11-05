@@ -7,7 +7,7 @@ This directory provides the conversion scripts for the MobileSAM image encoder a
 <a id="source-model"></a>
 ## Source model
 
-The upstream source is [ChaoningZhang/MobileSAM](https://github.com/ChaoningZhang/MobileSAM), with checkpoint `weights/mobile_sam.pt`. The fixed source does not pin an upstream commit or checkpoint digest. The encoder consumes `normalized_images` `(1,3,512,512)` float32 RGB NCHW and emits `image_embeddings` `(1,256,32,32)` float32. The decoder consumes `image_embeddings` `(1,256,32,32)` and runtime `boxes` `(1,4)` float32, then emits `low_res_masks` `(1,3,128,128)` and `iou_predictions` (decoder metadata must confirm its final rank).
+The upstream source is [ChaoningZhang/MobileSAM](https://github.com/ChaoningZhang/MobileSAM), with checkpoint `weights/mobile_sam.pt`. Upstream commit and checkpoint digest are not pinned. The encoder consumes `normalized_images` `(1,3,512,512)` float32 RGB NCHW and emits `image_embeddings` `(1,256,32,32)` float32. The decoder consumes `image_embeddings` `(1,256,32,32)` and runtime `boxes` `(1,4)` float32, then emits `low_res_masks` `(1,3,128,128)` and `iou_predictions` (decoder metadata must confirm its final rank).
 
 Preprocessing is RGB resize to 512×512 followed by ImageNet normalization in channel order: mean `[123.675,116.28,103.53]`, standard deviation `[58.395,57.12,57.375]`. The source default box is `[185,120,380,445]` in the 512-pixel coordinate system. The decoder box remains a runtime input; it is not baked into the ONNX graph.
 

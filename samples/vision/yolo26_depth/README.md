@@ -116,7 +116,7 @@ The table includes an s-variant cosine of 0.9984. The evaluator lists separate X
 - [Python](runtime/python/README.md): CLI parameters, three-stage API, tensor contracts and errors.
 - [C++](runtime/cpp/README.md): native dependencies, lifecycle, build/run and verification limits.
 - [Conversion](conversion/README.md): checkpoint boundaries, calibration, resolved compiler inputs and known gaps.
-- [Evaluator](evaluator/README.md): saved-array formats, protocols, metric definitions and source-recorded tables.
+- [Evaluator](evaluator/README.md): saved-array formats, protocols, metric definitions and reference tables.
 
 API integration uses `RuntimeModelRunner` plus `Yolo26DepthTask`; `predict` is
 exactly pre_process → forward → post_process, with no hidden second implementation.

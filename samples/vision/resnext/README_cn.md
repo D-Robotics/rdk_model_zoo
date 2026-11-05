@@ -109,9 +109,12 @@ rank 1 为 class 92（bee eater）。
 <a id="performance"></a>
 ## 性能数据
 
-已发布性能记录：完整列与计时条件见
-[评估说明](evaluator/README_cn.md#reference-results)。单线程延迟与多线程 FPS 采用不同的并发方式，
-二者不能直接互相取倒数。比较延迟与 FPS 时，应使用相同线程数、并发提交方式和 BPU 利用率。
+X5（x5-v1.1.3）记录；完整条件与全部行见
+[evaluator](evaluator/README_cn.md#reference-results)。
+
+| 模型 | 尺寸 | 参数量 (M) | 浮点 Top-1 | 量化 Top-1 | 单线程延迟 (ms) | 多线程延迟 (ms) | FPS |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| ResNeXt50_32x4d | 224x224 | 24.99 | 76.25% | 76.00% | 5.89 | 20.90 | 189.61 |
 
 <a id="entry-points"></a>
 ## 入口

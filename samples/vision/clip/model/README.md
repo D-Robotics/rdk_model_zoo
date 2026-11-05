@@ -45,7 +45,7 @@ bash samples/vision/clip/model/download.sh --target x5 --output-dir /tmp/clip-mo
 # expect: /tmp/clip-model/img_encoder.bin and /tmp/clip-model/text_encoder.onnx
 ```
 
-The manifest records both SHA-256 values as unknown. The downloader prints observed digests and reports that they cannot be verified against a published value. I/O or selection errors exit 2.
+The manifest records both SHA-256 values as unknown. The downloader prints observed digests; no published digest exists for comparison. I/O or selection errors exit 2.
 
 <a id="accompanying-files"></a>
 ## Accompanying Files
@@ -74,7 +74,7 @@ The manifest records both SHA-256 values as unknown. The downloader prints obser
 
 ## License
 
-Preparation code follows the repository [LICENSE](../../../../LICENSE), Apache-2.0. The model assets retain the publication's provenance and license metadata; no additional license is asserted here.
+Preparation code follows the repository [LICENSE](../../../../LICENSE), Apache-2.0. The model assets retain the publication's provenance and license metadata.
 
 <!-- converted-all-20261103 -->
 

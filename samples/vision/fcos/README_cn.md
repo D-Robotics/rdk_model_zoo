@@ -76,6 +76,17 @@ python3 samples/vision/fcos/runtime/python/main.py \
 
 ![参考记录 FCOS 演示图](test_data/demo_rdkx5_fcos_detect.jpg)
 
+<a id="performance"></a>
+## 性能数据
+
+X5 参考记录（x5-v1.1.3）；完整条件见[评估说明](evaluator/README_cn.md#reference-results)。
+
+| 模型 | 输入尺寸 | BPU 吞吐 | Python 后处理 |
+| --- | --- | ---: | ---: |
+| FCOS EfficientNet-B0 | 512x512 | 323.0 FPS | 9 ms |
+| FCOS EfficientNet-B2 | 768x768 | 70.9 FPS | 16 ms |
+| FCOS EfficientNet-B3 | 896x896 | 38.7 FPS | 20 ms |
+
 <a id="entry-points"></a>
 ## 入口索引
 

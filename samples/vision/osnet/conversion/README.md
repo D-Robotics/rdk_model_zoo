@@ -50,7 +50,7 @@ Configs use latency/O3/jobs=8. The accuracy-first config requests set_all_nodes_
 <a id="validation"></a>
 ## Validate artifacts
 
-Inspect compiler logs and quant-info. On X5, use the native model-info command below, then collect full Market1501 features using evaluator/main.py after registering the newly verified artifact identity. A new build does not inherit original BIN hashes or measured scores. The library matching.OSNet accepts matching custom tensor contracts; the normal CLI deliberately selects only registered artifacts.
+Inspect compiler logs and quant-info. On X5, use the native model-info command below, then collect full Market1501 features using evaluator/main.py after registering the newly verified artifact identity. A new build does not inherit original BIN hashes or measured scores. The library matching.OSNet accepts matching custom tensor contracts; the normal CLI selects only registered artifacts.
 
 ```bash
 hrt_model_exec model_info --model_file=/work/runs/spatial-rgb-late8/compiled/osnet_x1_0.bin

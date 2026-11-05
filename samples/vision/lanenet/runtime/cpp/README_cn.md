@@ -77,7 +77,7 @@ bash samples/vision/lanenet/runtime/cpp/run.sh --target s100 --output outputs/la
 python3 samples/vision/lanenet/runtime/cpp/launcher.py --target s100 --asset-id s:lanenet:s100/lanenet256x512.hbm --model-path /data/models/lanenet256x512.hbm --binary /data/bin/lanenet --test-img samples/vision/lanenet/test_data/lane.jpg --output outputs/lanenet_cpp_external
 ```
 
-每次使用新输出目录。成功返回 0 的前提是生成原生 `report.json`；入口错误返回 2，原生非零返回码则保留。如果在创建结果目录前失败，仅向终端输出日志，不会保存启动报告；排障时请保留终端输出。
+每次使用新输出目录。成功返回 0 的前提是生成原生 `report.json`；入口错误返回 2，原生非零返回码则保留。如果在创建结果目录前失败，仅向终端输出日志，不会保存启动报告；排障需要查看终端输出。
 
 <a id="parameters"></a>
 ## 参数

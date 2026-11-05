@@ -22,7 +22,7 @@ evaluator/
 <a id="environment"></a>
 ## Environment
 
-- Source-recorded measurements: RDK S100 and S100P boards, with the CPU/BPU settings recorded below.
+- Reference measurements: RDK S100 and S100P boards, with the CPU/BPU settings recorded below.
 - Comparison recipe: same board, board-image `hbm_runtime`, Python runtime dependencies (`numpy`, `opencv-python`, `PyYAML`), and this sample's runtime.
 - Board and runtime versions: not pinned.
 
@@ -58,7 +58,7 @@ The runtime sample's CLI also exposes individual embeddings (see [runtime/python
 | Cosine Similarity | Mean/min~max and 1% low similarity of patch features against the reference. | COCO2014 val, 5,000 images; same RGB letterbox preprocessing. |
 | MSE | Mean/min~max and 1% low mean-squared error of patch features against the reference. | COCO2014 val, 5,000 images; same RGB letterbox preprocessing. |
 
-Source-recorded board settings:
+Board settings:
 
 - S100: CPU `6 x A78AE @ 1.5GHz`, BPU `1 x Nash-E @ 1.0GHz`.
 - S100P: CPU `6 x A78AE @ 2.0GHz`, BPU `1 x Nash-M @ 1.5GHz`.

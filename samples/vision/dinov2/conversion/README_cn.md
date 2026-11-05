@@ -117,7 +117,7 @@ python3 mapper.py --cal-images ./cal_images --march nash-e --output-dir ./output
 | int8 + softmax-int32, featuremap, KL | 0.892 | 0.894 | FAIL |
 | int16, featuremap, max + 0.9999 | 0.184 | 0.840 | FAIL |
 | int16, nv12, KL | 0.999 (sim) | 0.999 (sim) | FAIL (executed 0.01 / 0.12) |
-| int16, featuremap, KL (source-recorded) | **0.9989** | **0.9983** | **PASS** |
+| int16, featuremap, KL  | **0.9989** | **0.9983** | **PASS** |
 
 `_reg4` register-token 变体在逐张量量化下的余弦相似度约为 0.80，普通变体约为 0.999。本配方使用普通 ViT-S/14 权重。
 
