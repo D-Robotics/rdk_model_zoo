@@ -23,11 +23,32 @@
 
 </div>
 
+<p align="center">
+  <a href="https://d-robotics.github.io/rdk_model_zoo/"><b>🔎 Explore the Web Model Catalog · 80+ released models →</b></a>
+</p>
+
 ## Introduction
 
 This repository is the official collection of BPU model examples and tools (Model Zoo) provided by D-Robotics. It is oriented towards AI model deployment and application development on BPU (Brain Processing Unit), helping developers to **quickly get started with BPU** and **fast-track model inference workflows**.
 
 The samples provide model preparation, conversion guides and board-side inference programs, with preprocessing, BPU execution, postprocessing and result output. Each sample documents its supported boards and available conversion steps.
+
+### Explore the Web Model Catalog
+
+<a href="https://d-robotics.github.io/rdk_model_zoo/">
+  <img src="docs/assets/model_zoo_web_en.png" alt="RDK Model Zoo Web Model Catalog with task and hardware filters, search, and model cards" width="100%">
+</a>
+
+The [Web Model Catalog](https://d-robotics.github.io/rdk_model_zoo/) indexes **80+ released models** for RDK X5, RDK S100, RDK S100P and RDK S600 from the same records as this repository. It is the fastest way to go from a task or board to the right model and deployment path. Use it before cloning the repository: compare boards and measured numbers, then jump straight to the sample that runs the model.
+
+- **Search and filter** by task (vision, LLM, robotics, audio, multimodal) and by board.
+- **See a visual example and supported boards on each card**, then open the model for measured latency, throughput, accuracy and quantization precision.
+- **Get deployment details**: model assets, quick-start command, runtime settings, conversion notes and links back to the model repository.
+- **Share exact views**: model and benchmark selections are linkable, so a result can be cited directly.
+
+<p align="center">
+  <a href="https://d-robotics.github.io/rdk_model_zoo/"><b>Open the Web Model Catalog →</b></a>
+</p>
 
 ### Core Value
 
@@ -49,10 +70,6 @@ The `samples/` tree is the unified source for all maintained boards. Choose the 
 | Delivery / development | [`main`](https://github.com/D-Robotics/rdk_model_zoo/tree/main) (default) / [`develop`](https://github.com/D-Robotics/rdk_model_zoo/tree/develop) | Delivery branch and unified development branch. |
 | Historical per-board delivery lines | [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) / [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | Preserved board-specific release branches. |
 | RDK X3 (archive) | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | Historical archive only, not an adaptation target. |
-
-**[Browse the online model catalog →](https://d-robotics.github.io/rdk_model_zoo/)**
-
-The online catalog presents released models as searchable cards with model assets, measured performance and accuracy results, and their measurement conditions.
 
 ---
 
@@ -165,7 +182,7 @@ python3 main.py \
 
 ## Model List
 
-The table lists each model family with its platforms and available models; choose the Python or C++ runtime and a compatible model artifact in each sample's support table.
+The table lists each model family with its platforms and available models; choose the Python or C++ runtime and a compatible model artifact in each sample's support table. To filter this inventory by task or board instead of scanning the table, use the [Web Model Catalog](https://d-robotics.github.io/rdk_model_zoo/).
 
 | Category | Model Name | Model Path | Supported Platform | Details |
 | :--- | :--- | :--- | :--- | :---: |
@@ -229,6 +246,7 @@ Upstream VLA integrations (ACT and Pi0) are additionally available under `sample
 
 ## Documentation & Resources
 
+- **Web Model Catalog**: Search and filter released models, compare measured performance and accuracy, and open deployment details at [d-robotics.github.io/rdk_model_zoo](https://d-robotics.github.io/rdk_model_zoo/).
 - **Model Docs**: Each model's top-level `README.md` provides an overview and run guide.
 - **Source Reference**: For code-level interface details, see **[Source Documentation](./docs/source_reference/README.md)**.
 - **Guidelines**: To contribute or develop, please read the **[Model Zoo Repository Guidelines](./docs/Model_Zoo_Repository_Guidelines.md)**.

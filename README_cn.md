@@ -23,11 +23,32 @@
 
 </div>
 
+<p align="center">
+  <a href="https://d-robotics.github.io/rdk_model_zoo/"><b>🔎 在线模型目录 · 80+ 已发布模型 →</b></a>
+</p>
+
 ## 仓库简介 (Introduction)
 
 本仓库是 D-Robotics（地瓜机器人）官方提供的 BPU 模型示例与工具集合（Model Zoo），面向运行在 BPU（Brain Processing Unit）上的 AI 模型部署与应用开发，用于帮助开发者**快速上手 BPU**、**快速跑通模型推理流程**。
 
 各示例提供模型准备、转换指南和板端推理程序，涵盖前处理、BPU 执行、后处理与结果输出。支持的板卡和可用转换步骤见对应示例说明。
+
+### 在线模型目录（Web Model Catalog）
+
+<a href="https://d-robotics.github.io/rdk_model_zoo/">
+  <img src="docs/assets/model_zoo_web_cn.png" alt="RDK Model Zoo 在线模型目录：任务与硬件筛选、搜索和模型卡片" width="100%">
+</a>
+
+[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/) 与本仓库同源，收录 RDK X5、RDK S100、RDK S100P、RDK S600 上的 **80+ 个已发布模型**。从任务或板卡出发找到对应模型与部署路径，这是最快的方式。建议在 clone 仓库之前先用它：比较板卡与实测数据，再直接跳到运行该模型的 Sample。
+
+- **搜索与筛选**：按任务（视觉、语言模型、机器人、音频、多模态）和板卡筛选。
+- **卡片先看效果**：每张卡片展示输入示例和支持板卡；进入详情可查看实测时延、吞吐、精度与量化精度。
+- **获取部署信息**：模型制品、快速开始命令、运行时配置、转换说明，以及跳回模型仓库的链接。
+- **分享精确视图**：模型与 Benchmark 选择都可直接用链接引用，方便把结果发给同事或写进报告。
+
+<p align="center">
+  <a href="https://d-robotics.github.io/rdk_model_zoo/"><b>打开在线模型目录 →</b></a>
+</p>
 
 ### 仓库核心价值
 
@@ -49,10 +70,6 @@
 | 交付 / 开发 | [`main`](https://github.com/D-Robotics/rdk_model_zoo/tree/main)（默认）/ [`develop`](https://github.com/D-Robotics/rdk_model_zoo/tree/develop) | 交付分支与统一开发分支。 |
 | 历史分板卡交付线 | [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) / [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | 保留的按板卡发布交付分支。 |
 | RDK X3（归档） | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | 仅作历史归档，不再作为适配目标。 |
-
-**[浏览在线模型目录 →](https://d-robotics.github.io/rdk_model_zoo/)**
-
-在线模型目录提供模型搜索、模型文件下载，以及性能、精度指标和对应测量条件。
 
 ---
 
@@ -168,7 +185,7 @@ python3 main.py \
 
 ## 模型列表
 
-下表列出各模型家族及其平台与可用模型；请在各样例的支持表中选择 Python 或 C++ 运行时及兼容的模型制品。
+下表列出各模型家族及其平台与可用模型；请在各样例的支持表中选择 Python 或 C++ 运行时及兼容的模型制品。如果想按任务或板卡筛选，而不是逐行浏览下表，请使用[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/)。
 
 | 类别 | 模型名称 | 模型路径 | 支持平台 | 详情 |
 | :--- | :--- | :--- | :--- | :---: |
@@ -234,6 +251,8 @@ python3 main.py \
 
 建议优先阅读以下文档：
 
+- **在线模型目录**
+  - 搜索和筛选已发布模型，比较实测性能与精度，并查看部署详情：[d-robotics.github.io/rdk_model_zoo](https://d-robotics.github.io/rdk_model_zoo/)。
 - **模型说明**
   - 每个模型目录下的 `README.md` / `README_cn.md` 都包含整体介绍、运行方法和目录说明。
 - **源码参考**
