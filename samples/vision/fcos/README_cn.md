@@ -2,6 +2,9 @@
 
 # FCOS 目标检测
 
+<!-- public-specification-20261105 -->
+本次新增的独立 S100 规格、下载与运行命令见 [公开转换规格](conversion/public-20261105.md)。以下旧规格及测试记录保留原含义。
+
 <a id="overview"></a>
 ## 算法与来源
 
