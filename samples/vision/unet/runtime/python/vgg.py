@@ -7,7 +7,7 @@ import cv2,numpy as np
 from PIL import Image
 from utils.py_utils.converted_featuremap import Runner,select
 SAMPLE=Path(__file__).resolve().parents[2]
-VARIANT='vgg16-voc21-letterbox-512-featuremap-int16-cpuptq-o1-20261105'
+VARIANT='vgg16-voc21-letterbox-512-featuremap-int16-cpuptq-o1-20261105-r02'
 
 
 def preprocess(source):
