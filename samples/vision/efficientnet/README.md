@@ -181,8 +181,7 @@ Sample code follows the repository top-level LICENSE (Apache-2.0). The
 source models are the upstream EfficientNet / EfficientNet-Lite
 distributions; upstream model/weights licensing is governed by those
 distributions (see the paper links above). Published artifacts follow the
-platform release manifests; the manifests carry no separate license field,
-and no additional license is claimed here.
+platform release manifests; the manifests carry no separate license field.
 
 <!-- converted-batch-20261102 -->
 ## Converted-only additions (2026-11-02)

@@ -120,11 +120,16 @@ overlay, rank 1 class 977 (sandbar, sand bar)](./test_data/result.jpg)
 <a id="performance"></a>
 ## Performance data
 
-Published performance records; full timing conditions and all columns
-are listed under [evaluation](evaluator/README.md#reference-results).
-Single-thread latency and multi-thread FPS are measured under different
-concurrency and are not reciprocal quantities. Compare latency and FPS using
-the same thread count, concurrent submission mode and BPU utilization.
+X5 records from the x5-v1.1.3 release; full conditions and all rows are in
+[evaluator](evaluator/README.md#reference-results).
+
+| Model | Size | Params (M) | Float Top-1 | Quant Top-1 | Single-thread latency (ms) | Multi-thread latency (ms) | FPS |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| HGNetv2_b0 | 224x224 | 6.0 | 77.342 | 72.17 | 1.96 | 3.29 | 902.09 |
+| HGNetv2_b1 | 224x224 | 6.34 | 78.872 | 73.47 | 2.41 | 3.89 | 760.13 |
+| HGNetv2_b2 | 224x224 | 11.2 | 81.578 | 75.55 | 3.52 | 7.41 | 401.16 |
+| HGNetv2_b3 | 224x224 | 16.3 | 82.916 | 76.51 | 4.53 | 10.37 | 287.27 |
+| HGNetv2_b4 | 224x224 | 19.8 | 83.694 | 81.93 | 5.29 | 12.32 | 241.94 |
 
 <a id="entry-points"></a>
 ## Entry points

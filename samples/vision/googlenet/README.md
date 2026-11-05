@@ -118,11 +118,12 @@ top-5 overlay, rank 1 class 14 (indigo bunting)](./test_data/inference.png)
 <a id="performance"></a>
 ## Performance data
 
-Published performance records; full timing conditions and all columns
-are listed under [evaluation](evaluator/README.md#reference-results).
-Single-thread latency and multi-thread FPS are measured under different
-concurrency and are not reciprocal quantities. Compare latency and FPS using
-the same thread count, concurrent submission mode and BPU utilization.
+X5 records from the x5-v1.1.3 release; full conditions and all rows are in
+[evaluator](evaluator/README.md#reference-results).
+
+| Model | Size | Params (M) | Float Top-1 | Quant Top-1 | Single-thread latency (ms) | Multi-thread latency (ms) | FPS |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| GoogLeNet | 224x224 | 6.81 | 68.72% | 67.71% | 2.19 | 6.30 | 626.27 |
 
 <a id="entry-points"></a>
 ## Entry points

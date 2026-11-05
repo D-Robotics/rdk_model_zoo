@@ -141,6 +141,16 @@ S100 reference results:
 ![Python OCR example](test_data/readme_img/python_demo.jpg)
 ![C++ OCR example](test_data/readme_img/cpp_demo.jpg)
 
+<a id="performance"></a>
+## Performance data
+
+X5 PP-OCRv3 reference throughput on ICDAR2019-ArT; full per-platform notes are in the [evaluator](evaluator/README.md#reference-results).
+
+| Model | Input | Params | BPU throughput |
+| --- | --- | ---: | ---: |
+| PP-OCRv3 det | 640x640 | 3.8 M | 158.12 FPS |
+| PP-OCRv3 rec | 48x320 | 9.6 M | 245.68 FPS |
+
 <a id="entry-points"></a>
 ## Entry points
 

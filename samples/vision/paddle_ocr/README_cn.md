@@ -134,6 +134,16 @@ S100 参考结果：
 ![Python OCR example](test_data/readme_img/python_demo.jpg)
 ![C++ OCR example](test_data/readme_img/cpp_demo.jpg)
 
+<a id="performance"></a>
+## 性能数据
+
+X5 PP-OCRv3 在 ICDAR2019-ArT 上的参考吞吐；各平台说明见[评估记录](evaluator/README_cn.md#reference-results)。
+
+| 模型 | 输入 | 参数量 | BPU 吞吐 |
+| --- | --- | ---: | ---: |
+| PP-OCRv3 det | 640x640 | 3.8 M | 158.12 FPS |
+| PP-OCRv3 rec | 48x320 | 9.6 M | 245.68 FPS |
+
 <a id="entry-points"></a>
 ## 入口
 

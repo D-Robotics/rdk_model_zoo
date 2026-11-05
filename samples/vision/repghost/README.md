@@ -126,11 +126,16 @@ rank 1 being class 350 (ibex, Capra ibex).
 <a id="performance"></a>
 ## Performance data
 
-Published performance records; full timing conditions and all columns
-are listed under [evaluation](evaluator/README.md#reference-results).
-Single-thread latency and multi-thread FPS are measured under different
-concurrency and are not reciprocal quantities. Compare latency and FPS using
-the same thread count, concurrent submission mode and BPU utilization.
+X5 records from the x5-v1.1.3 release; full conditions and all rows are in
+[evaluator](evaluator/README.md#reference-results).
+
+| Model | Size | Params (M) | Float Top-1 | Quant Top-1 | Single-thread latency (ms) | Multi-thread latency (ms) | FPS |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| RepGhost_200 | 224x224 | 9.79 | 76.43 | 75.25 | 2.89 | 8.76 | 451.42 |
+| RepGhost_150 | 224x224 | 6.57 | 74.75 | 73.50 | 2.20 | 6.30 | 626.60 |
+| RepGhost_130 | 224x224 | 5.48 | 75.00 | 73.57 | 1.87 | 5.30 | 743.56 |
+| RepGhost_111 | 224x224 | 4.54 | 72.75 | 71.25 | 1.71 | 4.47 | 881.19 |
+| RepGhost_100 | 224x224 | 4.07 | 72.50 | 72.25 | 1.55 | 4.08 | 964.69 |
 
 <a id="entry-points"></a>
 ## Entry points
