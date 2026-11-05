@@ -111,6 +111,9 @@ def bind_model(
         if isinstance(metadata, RuntimeMetadata)
         else RuntimeMetadata.from_mapping(metadata)
     )
+    if selection.profile is not None:
+        from utils.py_utils.converted_featuremap import bind
+        bind(selection, meta)
     if len(meta.model_names) != 1 or len(meta.input_names) != 1:
         raise MetadataMismatchError("Expected exactly one model and one input")
     inp = meta.input_names[0]

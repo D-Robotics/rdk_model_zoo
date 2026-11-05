@@ -73,9 +73,10 @@ class Runner:
             options=ort.SessionOptions();options.intra_op_num_threads=2;options.inter_op_num_threads=1
             self.session=ort.InferenceSession(str(source_onnx),options,providers=['CPUExecutionProvider'])
             inputs=selection.profile['io']['inputs'];outputs=selection.profile['io']['outputs']
-            if [(t.name,t.shape)for t in self.session.get_inputs()]!=[(t['name'],t['shape'])for t in inputs]:
+            dtype={'float32':'tensor(float)','int64':'tensor(int64)'}
+            if [(t.name,t.shape,t.type)for t in self.session.get_inputs()]!=[(t['name'],t['shape'],dtype[t['dtype']])for t in inputs]:
                 raise ValueError('Source input ABI differs')
-            if [(t.name,t.shape)for t in self.session.get_outputs()]!=[(t['name'],t['shape'])for t in outputs]:
+            if [(t.name,t.shape,t.type)for t in self.session.get_outputs()]!=[(t['name'],t['shape'],dtype[t['dtype']])for t in outputs]:
                 raise ValueError('Source output ABI differs')
         elif backend=='board':
             self.runner=NamedArrayRunner(selection,binding_loader=bind,
@@ -90,3 +91,24 @@ class Runner:
         feed={inputs[0]['name']:tensor}
         if self.backend=='board':return self.runner(feed)
         return {t.name:np.array(value,copy=True)for t,value in zip(self.session.get_outputs(),self.session.run(None,feed),strict=True)}
+
+
+def main(argv=None):
+    """Explicitly prepare one registered featuremap artifact without a board SDK."""
+    import argparse
+    from utils.py_utils.assets import download_asset
+    p=argparse.ArgumentParser(description=main.__doc__)
+    p.add_argument('--sample',choices=['vit','fcos','lanenet','unet','3dresnet'],required=True)
+    p.add_argument('--target',choices=['s100'],default='s100')
+    p.add_argument('--variant',required=True);p.add_argument('--asset-id')
+    p.add_argument('--output-dir',type=Path);p.add_argument('--dry-run',action='store_true')
+    a=p.parse_args(argv);sample=Path(__file__).resolve().parents[2]/'samples/vision'/a.sample
+    selection=select(sample,a.target,a.variant,asset_id=a.asset_id)
+    destination=a.output_dir/selection.asset.filename if a.output_dir else selection.model_path
+    if not a.dry_run:download_asset(selection.asset,destination)
+    print(json.dumps({'asset_id':selection.asset.reference,'path':str(destination),
+                      'sha256':selection.asset.sha256,'download':'not-run'if a.dry_run else'verified'}))
+    return 0
+
+
+if __name__=='__main__':raise SystemExit(main())

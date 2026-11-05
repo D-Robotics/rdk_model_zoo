@@ -1,0 +1,28 @@
+model_parameters:
+  onnx_model: model.onnx
+  march: nash-e
+  working_dir: output
+  output_model_file_prefix: vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe
+input_parameters:
+  input_name: images
+  input_type_rt: featuremap
+  input_type_train: featuremap
+  input_shape: 1x3x224x224
+  input_layout_train: NCHW
+  input_layout_rt: NCHW
+  norm_type: no_preprocess
+calibration_parameters:
+  cal_data_dir: calibration
+  cal_data_type: float32
+  calibration_type: max
+  max_percentile: 0.9999
+  optimization: set_all_nodes_int16
+compiler_parameters:
+  compile_mode: latency
+  core_num: 1
+  optimize_level: O1
+  jobs: 2
+  debug: true
+  extra_params:
+    input_no_padding: true
+    output_no_padding: true
