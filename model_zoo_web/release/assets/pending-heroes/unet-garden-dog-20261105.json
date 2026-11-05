@@ -1,0 +1,124 @@
+{
+  "schema_version": 2,
+  "kind": "host-float-model-inference-banner",
+  "status": "passed",
+  "source": "unet",
+  "model_url": "https://github.com/bubbliiiing/unet-pytorch/releases/download/v1.0/unet_vgg_voc.pth",
+  "model_file": "unet_vgg_voc.pth",
+  "checkpoint_sha256": "6dd04820c74c7d42a1cfbeaccb4f6a19286c01903e4d67e1e7ceb338619d9d61",
+  "commit": "8c5c37bea7c7355212fa1b39b1f09cbfcf68d691",
+  "input": "samples/vision/unet/test_data/banner_input_garden_dog_20261105.png",
+  "input_sha256": "c94ad29dd7e65b67edc7540bb2b4bf39170e0fc041502b3f2f00403c4bf1d426",
+  "native_helpers": {
+    "samples/vision/unet/runtime/python/vgg.py": "952607a60af0d12af101fec4b39d1cda605df4f190f7737847d7f9ae1d9acfdd"
+  },
+  "graphs": {
+    "model": {
+      "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/unet-vgg-source-export-r01/model.onnx",
+      "sha256": "87009809bb44a57567ed8377bf4aa81c99abea50528e7ce54daa4449484fe571",
+      "size_bytes": 99582597
+    }
+  },
+  "framework": "ONNX Runtime 1.19.2",
+  "graph_io": {
+    "model": {
+      "inputs": [
+        {
+          "name": "images",
+          "shape": [
+            1,
+            3,
+            512,
+            512
+          ],
+          "dtype": "tensor(float)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "logits",
+          "shape": [
+            1,
+            21,
+            512,
+            512
+          ],
+          "dtype": "tensor(float)"
+        }
+      ]
+    }
+  },
+  "provider": "CPUExecutionProvider",
+  "runtime": "host-float-reference",
+  "versions": {
+    "onnxruntime": "1.19.2",
+    "numpy": "2.2.6",
+    "opencv": "4.11.0",
+    "pillow": "12.3.0"
+  },
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "feeds": [
+    {
+      "role": "model",
+      "name": "images",
+      "shape": [
+        1,
+        3,
+        512,
+        512
+      ],
+      "dtype": "float32",
+      "sha256": "fc48f0d3d58731a258ede988de4ac6db0df8c84d5a2ec4a3dd01bcab2739f568"
+    }
+  ],
+  "forward_outputs": [
+    {
+      "role": "model",
+      "name": "logits",
+      "shape": [
+        1,
+        21,
+        512,
+        512
+      ],
+      "dtype": "float32",
+      "sha256": "5d96e2ad6d2be03bd415d830633e6e3b6f71c53dd023a0d434e2cab4d1be98fd"
+    }
+  ],
+  "files": {
+    "source.png": {
+      "file": "source.png",
+      "sha256": "c94ad29dd7e65b67edc7540bb2b4bf39170e0fc041502b3f2f00403c4bf1d426",
+      "size_bytes": 2989258
+    },
+    "outputs.npz": {
+      "file": "outputs.npz",
+      "sha256": "7291f43db4a0dfb75e9f50218ffa7d09bc341c8127a98031162033c25ccc568b",
+      "size_bytes": 19127964
+    },
+    "banner.webp": {
+      "file": "banner.webp",
+      "sha256": "cb3c1a66b2ea99c301678d78adb4c8d1f1e06d9c2843cb19096daf7c38cc5537",
+      "size_bytes": 455254
+    },
+    "result.png": {
+      "file": "result.png",
+      "sha256": "a4754b2aa40a11f0bd534567c47633fd92bbeece19416b58e9987b99945a956e",
+      "size_bytes": 2647372
+    }
+  },
+  "renderer_sha256": "36ca5eae5211597b50d30446e74aba0bc175dec1084875c582a508eedefaec81",
+  "visualization": {
+    "method": "Native source PIL letterbox; all VOC21 logits, softmax, unpad, resize scores, argmax; standard VOC palette on actual foreground",
+    "class_pixels": {
+      "0": 1093301,
+      "9": 241121,
+      "10": 589,
+      "12": 178798,
+      "16": 59485,
+      "18": 58
+    },
+    "alpha": 0.48
+  }
+}

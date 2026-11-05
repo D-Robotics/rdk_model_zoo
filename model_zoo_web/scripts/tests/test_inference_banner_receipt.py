@@ -30,7 +30,7 @@ class InferenceBannerReceiptTest(unittest.TestCase):
                         'board_execution': 'not-run', 'dataset_accuracy': 'not-run',
                         'input_sha256': digest, 'native_helpers': {'utils/py_utils/example.py': digest},
                         'graphs': {'model': {'sha256': 'b'*64}},
-                        'graph_io': {'model': {'outputs': [{'name': n, 'shape': [1, 2]} for n in ('cls', 'patch')]}},
+                        'graph_io': {'model': {'outputs': [{'name': n, 'shape': [1, 2], 'dtype': 'tensor(float)'} for n in ('cls', 'patch')]}},
                         'forward_outputs': [{'role': 'model', 'name': n, 'shape': [1, 2],
                                              'dtype': 'float32', 'sha256': 'c'*64} for n in ('cls', 'patch')],
                         'files': {'banner.webp': {'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
@@ -79,7 +79,7 @@ class InferenceBannerReceiptTest(unittest.TestCase):
     def test_clip_features_cover_the_complete_prompt_batch(self):
         self.entry['kind'] = 'similarity-panel'
         self.payload['graphs'] = {role: {'sha256': 'b'*64} for role in ('image', 'text')}
-        self.payload['graph_io'] = {role: {'outputs': [{'name': 'feature', 'shape': ['batch', 512]}]}
+        self.payload['graph_io'] = {role: {'outputs': [{'name': 'feature', 'shape': ['batch', 512], 'dtype': 'tensor(float)'}]}
                                     for role in ('image', 'text')}
         self.payload['prompts'] = ['a dog', 'a cat']
         self.payload['forward_outputs'] = [{'role': role, 'name': 'feature', 'shape': shape,
@@ -93,6 +93,24 @@ class InferenceBannerReceiptTest(unittest.TestCase):
     def test_changed_render_is_rejected(self):
         (self.root/self.asset).write_bytes(b'another render')
         with self.assertRaises(catalog.CatalogError):
+            self.check()
+
+    def test_integer_label_head_retains_its_declared_dtype(self):
+        self.payload['graph_io']['model']['outputs'][1]['dtype'] = 'tensor(int64)'
+        self.payload['forward_outputs'][1]['dtype'] = 'int64'
+        self.check()
+        self.payload['forward_outputs'][1]['dtype'] = 'float32'
+        with self.assertRaises(catalog.CatalogError):
+            self.check()
+
+    def test_action_cover_binds_the_complete_temporal_input(self):
+        self.payload['source']='3dresnet'
+        self.payload['video']={'input':'samples/vision/3dresnet/test_data/video0.npy',
+            'sha256':hashlib.sha256(b'committed source').hexdigest(),'shape':[1,3,16,112,112],
+            'dtype':'float32','preview_frame':8,'frame_sha256':['a'*64]*15+['b'*64]}
+        self.check()
+        self.payload['video']['frame_sha256']=['a'*64]*16
+        with self.assertRaisesRegex(catalog.CatalogError,'complete temporal'):
             self.check()
 
     def test_semantic_hero_requires_the_computed_result_image(self):
@@ -178,7 +196,7 @@ class InferenceBannerReceiptTest(unittest.TestCase):
     def test_transcript_requires_every_asr_stage_and_exact_native_audio(self):
         roles=('encoder','predictor','decoder')
         self.payload['graphs']={r:{'sha256':'b'*64}for r in roles}
-        self.payload['graph_io']={r:{'outputs':[{'name':n,'shape':[1,2]}for n in (['alphas','hidden']if r=='predictor'else['value'])]}for r in roles}
+        self.payload['graph_io']={r:{'outputs':[{'name':n,'shape':[1,2],'dtype':'tensor(float)'}for n in (['alphas','hidden']if r=='predictor'else['value'])]}for r in roles}
         self.payload['forward_outputs']=[{'role':r,'name':v['name'],'shape':[1,2],'dtype':'float32','sha256':'c'*64}for r in roles for v in self.payload['graph_io'][r]['outputs']]
         self.payload['recognition']={'text':'actual speech'}
         self.payload['visualization']['rendered_text']='actual speech'

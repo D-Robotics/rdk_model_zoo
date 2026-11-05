@@ -7,10 +7,11 @@ source: vit
 family: vit
 task: cls
 description:
-  zh: "ViT 将图像分块组织为序列，通过自注意力完成 CIFAR-10 十分类。"
-  en: "ViT treats image patches as a sequence and uses self-attention for ten-class CIFAR-10 classification."
+  zh: ViT 将图像分块组织为序列，通过自注意力完成 CIFAR-10 十分类。
+  en: ViT treats image patches as a sequence and uses self-attention for ten-class
+    CIFAR-10 classification.
 sample_path: samples/vision/vit
-sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+sample_revision: a8f6b193fa29ab801b29cb3d5339985322bf4a86
 license:
   name: Apache-2.0
   url: https://www.apache.org/licenses/LICENSE-2.0
@@ -49,7 +50,9 @@ usage:
 - source: samples/vision/vit/README.md
   lines:
   - bash samples/vision/vit/model/download.sh s100 int8
-  - python3 samples/vision/vit/runtime/python/main.py --target s100 --variant int8 --test-img samples/vision/vit/test_data/airplane_0000.png --label-file samples/vision/vit/test_data/cifar10_classes.names --top-k 5
+  - python3 samples/vision/vit/runtime/python/main.py --target s100 --variant int8
+    --test-img samples/vision/vit/test_data/airplane_0000.png --label-file samples/vision/vit/test_data/cifar10_classes.names
+    --top-k 5
 sourced_benchmarks:
 - id: vit-s100-hbm
   platform: s100
@@ -78,3 +81,196 @@ documented_downloads:
   url: https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_s100/ViT/vit_cifar10_batch1_int16.hbm
   source: docs/release/s/models.yaml
   format: hbm
+hero_visual:
+  kind: classification-panel
+  file: model_zoo_web/release/assets/pending-heroes/vit-red-panda-20261105.webp
+  predictions_source: model_zoo_web/release/assets/pending-heroes/vit-red-panda-20261105.json
+  model_url: https://download.pytorch.org/models/vit_b_16-c867db91.pth
+  model_file: vit_b_16-c867db91.pth
+  input: samples/vision/vit/test_data/banner_input_red_panda_20261105.png
+  framework: ONNX Runtime 1.19.2
+  commit: deb7e0dd545d36818096599dcca2c24cfe585e44
+  runtime: host-float-reference
+  inference_receipt_version: 2
+  note: Host float reference, not board output; board accuracy and performance remain
+    not-run
+  documented_in: samples/vision/vit/runtime/python/imagenet.py
+  topk:
+  - class_id: 387
+    label: lesser panda
+    score: 0.8714295646285565
+  - class_id: 358
+    label: polecat
+    score: 0.000982251413685602
+  - class_id: 356
+    label: weasel
+    score: 0.0005733199999918036
+  - class_id: 362
+    label: badger
+    score: 0.00039735536037542113
+  - class_id: 388
+    label: giant panda
+    score: 0.00034113686293774537
+provider: PyTorch TorchVision
+model_license: &id001
+  name: BSD-3-Clause
+  url: https://github.com/pytorch/vision/blob/824e8c8726b65fd9d5abdc9702f81c2b0c4c0dc8/LICENSE
+  scope: model
+variants:
+- size: tv-b16-imagenet1k-224-featuremap-int16-cpuptq-o1-20261105
+  model:
+    parameter_count: 86567656
+  input:
+    width: 224
+    height: 224
+    source:
+      name: images
+      format: RGB
+      dtype: float32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 224
+      - 224
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: s100
+    license: *id001
+    status: converted
+    converted_at: '2026-11-05'
+    metadata_revision: 1
+    artifact:
+      filename: vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe.hbm
+      format: HBM
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/vit/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe.hbm
+      sha256: 441eadef5af415056da40d208b5be88382113c6353f22e9ff22bd96980f7a3e2
+      size_bytes: 101583904
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/vit/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/vit/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/vit/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/vit/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: logits
+        shape:
+        - 1
+        - 1000
+        dtype: float32
+      runtime_input:
+        format: FEATUREMAP
+        dtype: float32
+        layout: NCHW
+        shape:
+        - 1
+        - 3
+        - 224
+        - 224
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 200
+      calibration_manifest_sha256: 88d75d6f71cadc9056dff425d481bbefa735871ecfbf9883cb2a8d2448920aa9
+      optimization_level: O1
+      board_validation: not-run
+    validation:
+      conversion: passed
+      host_smoke: passed
+      artifact_sha256: 441eadef5af415056da40d208b5be88382113c6353f22e9ff22bd96980f7a3e2
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+    provenance:
+      repository_commit: a8f6b193fa29ab801b29cb3d5339985322bf4a86
+      source_repository_commit: 824e8c8726b65fd9d5abdc9702f81c2b0c4c0dc8
+      source_checkpoint_sha256: c867db91d3e12c6cbadabb610d73c24a546bf82d8c03a9fea34f43a712ddb0e9
+      source_weight_url: https://download.pytorch.org/models/vit_b_16-c867db91.pth
+      checkpoint_revision: sha256:c867db91d3e12c6cbadabb610d73c24a546bf82d8c03a9fea34f43a712ddb0e9
+      source_version_pair:
+        repository: https://github.com/pytorch/vision
+        commit: 824e8c8726b65fd9d5abdc9702f81c2b0c4c0dc8
+        version: v0.23.0
+        weights: ViT_B_16_Weights.IMAGENET1K_V1
+        weight_url: https://download.pytorch.org/models/vit_b_16-c867db91.pth
+        checkpoint:
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/inputs/source_models/vit/vit_b_16-c867db91.pth
+          sha256: c867db91d3e12c6cbadabb610d73c24a546bf82d8c03a9fea34f43a712ddb0e9
+          size_bytes: 346328529
+          url: https://download.pytorch.org/models/vit_b_16-c867db91.pth
+        license: BSD-3-Clause
+      toolchain_image: S SDK 3.7.0 / exact cached image identified by digest
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      build_id: vit-s100-cpuptq-20261105-r01
+      precision_policy: INT16 activations; O1
+      native_variant: tv-b16-imagenet1k-224-featuremap-int16-cpuptq-o1-20261105
+      onnx_sha256: 0b76b5d663b28196e714e2ce6fdab6aca7354671e9ae8bfa1093d76519fc16d1
+      config_sha256: 720739c0ab8f1f8e547f608158b4bd386b0704c7e2d3a37635c2917c40195e81
+      recipe_sha256: dd5a4701d41b220a292432af0a286d936019c815d35534a6c77bf32c154c45c0
+      calibration_manifest_sha256: 88d75d6f71cadc9056dff425d481bbefa735871ecfbf9883cb2a8d2448920aa9
+      host_smoke_report_sha256: d5f5ab946c52dbcd4e4453db6a78a40c6dbf526085bfd2e07de2d92b247890b4
+      compile_log_sha256: 44664449c98520545b18474dfb060a093315725fcddf9f62abb3364b3eda8142
+      cpu_reference_float_gate:
+        status: passed
+        report:
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/vit-s100-prepare-r01/cpu-sdk-parity.json
+          sha256: 45d312f47b05ac1c664f65ce1387ca3597d50c541e1a74bfd7e9e5864953647a
+          size_bytes: 3590
+      source_export_native_revision: e3374646ac035a85fce07b21379c1b06e2f9b66d
+      actual_compiled_abi:
+        artifact:
+          path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/vit-s100-cpuptq-20261105-r01/output/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe.hbm
+          sha256: 441eadef5af415056da40d208b5be88382113c6353f22e9ff22bd96980f7a3e2
+          size_bytes: 101583904
+        command:
+        - docker
+        - run
+        - --rm
+        - --network
+        - none
+        - --cpus
+        - '1'
+        - --memory
+        - 1g
+        - -v
+        - /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01:/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01:ro
+        - --entrypoint
+        - /bin/bash
+        - sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+        - -lc
+        - python3 -c 'from hbdk4.compiler.hbm import Hbm;import json;h=Hbm('"'"'/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/vit-s100-cpuptq-20261105-r01/output/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe.hbm'"'"');print(json.dumps({"march":str(h.march),"models":[{"name":g.name,"inputs":[v.name
+          for v in g.flatten_inputs],"outputs":[v.name for v in g.flatten_outputs]}for
+          g in h.graphs]}))'
+        metadata:
+          march: March.nash_e
+          models:
+          - name: vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe
+            inputs:
+            - images
+            outputs:
+            - logits
+      calibration_boundary:
+        path: /data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/vit-s100-prepare-r01/calibration-boundary.json
+        sha256: 2a7aa3c647e8ffdd883f6c016bc6f2a7d4fdee6c42a556bf264d3bdfc75cc9d3
+        size_bytes: 51691
+      source_preprocessing: PIL bilinear resize-shorter 256 and center crop 224
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 1c9b73b39b84da291397f3747a29efc1023bdb9eb4bb7cbeaa3265f8fb36736a
+    runtime_command: python3 -m samples.vision.vit.runtime.python.imagenet --target
+      s100 --variant tv-b16-imagenet1k-224-featuremap-int16-cpuptq-o1-20261105 --asset-id
+      s:vit:s100/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe.hbm
+      --model-path /path/to/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe.hbm
+      --test-img /path/to/image.jpg

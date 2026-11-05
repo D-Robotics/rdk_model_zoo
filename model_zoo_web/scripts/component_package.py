@@ -45,7 +45,34 @@ def tensors(items):
                 and all(type(d) is int and d > 0 for d in shape), 'Invalid component tensor shape')
 
 
-def validate_components(row, *, platform, source, oe=None):
+def validate_tracking_reference(row, host=None):
+    """Tracking releases also need ordered-frame evidence for the real CPU tracker."""
+    if row.get('model', {}).get('source') != 'fasterrcnn' or row['model'].get('task') != 'track':
+        return
+    proof = row.get('validation', {}).get('host_tracking', {})
+    members = {m['filename']: m for m in row['artifact']['bundle']['members']}
+    member = members.get(proof.get('evidence_file'))
+    require(proof.get('status') == 'passed' and member is not None
+            and member['filename'].endswith('.json') and member['sha256'] == proof.get('evidence_sha256')
+            and proof.get('component_sha256') == {c['role']: c['sha256'] for c in row['artifact']['components']},
+            'Tracking bundle requires its exact ordered-frame host report and detector identities')
+    if host is None:
+        return
+    require(host.get('status') == 'passed' and host.get('source_checkpoint_sha256')
+            == row['provenance'].get('source_checkpoint_sha256')
+            and host.get('onnx_sha256') == {role: p['onnx_sha256'] for role, p in row['provenance']['components'].items()},
+            'Tracking report belongs to another source detector')
+    frames = host.get('frames', [])
+    require(type(host.get('frame_count')) is int and host['frame_count'] >= 2
+            and len(frames) == host['frame_count'] and host.get('stable_adjacent_ids') is True
+            and host.get('all_five_detector_outputs_preserved') is True
+            and [f.get('frame') for f in frames] == list(range(1, len(frames)+1))
+            and all(set(f.get('outputs', [])) == {'rpn_obj','rpn_deltas','feat0','cls_packed','reg_packed'}
+                    and isinstance(f.get('tracks'), list) for f in frames),
+            'Tracking report must preserve all detector heads and actual ordered tracker updates')
+
+
+def validate_components(row, *, platform, source, oe=None, task=None):
     artifact = row['artifact']
     bundle = artifact.get('bundle')
     if isinstance(bundle, dict) and bundle.get('kind') == 'clip-image-text':
@@ -121,6 +148,10 @@ def validate_components(row, *, platform, source, oe=None):
                             oe_report_sha256=conv[c['role']]['oe_report_sha256'],
                             oe_data_sha256=conv[c['role']]['oe_data_sha256'])
             require(all(r.get(k) == v for k,v in expected.items()), 'OE component identity differs from conversion')
+    context = dict(row, model=dict(row.get('model', {}), source=source))
+    if task is not None:
+        context['model']['task'] = task
+    validate_tracking_reference(context)
     return components
 
 
@@ -195,6 +226,8 @@ def validate_bundle_files(row, model_bytes, html_bytes, oe):
         graphs = host.get('onnx_sha256',{})
     require(graphs == {role:p['onnx_sha256'] for role,p in row['provenance']['components'].items()},
             'Connected host report belongs to other component graphs')
+    if row.get('model', {}).get('source') == 'fasterrcnn' and row['model'].get('task') == 'track':
+        validate_tracking_reference(row, json.loads(payloads[row['validation']['host_tracking']['evidence_file']]))
     cases = host.get('cases',[])
     require(isinstance(cases,list) and len(cases)>=4
             and len({item.get('input') for item in cases})==len(cases)

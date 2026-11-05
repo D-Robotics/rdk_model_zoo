@@ -7,10 +7,11 @@ source: fasterrcnn
 family: fasterrcnn
 task: track
 description:
-  zh: "Faster R-CNN + ByteTrack 将目标检测与轨迹关联结合，在视频中持续跟踪行人身份。"
-  en: "Faster R-CNN + ByteTrack combines object detection with trajectory association to maintain pedestrian identities across video frames."
+  zh: Faster R-CNN + ByteTrack 将目标检测与轨迹关联结合，在视频中持续跟踪行人身份。
+  en: Faster R-CNN + ByteTrack combines object detection with trajectory association
+    to maintain pedestrian identities across video frames.
 sample_path: samples/vision/fasterrcnn
-sample_revision: 7a97c1780b0cfa131ff0007d662e255e5e41c12e
+sample_revision: a8f6b193fa29ab801b29cb3d5339985322bf4a86
 license:
   name: BSD-3-Clause
   url: https://opensource.org/license/bsd-3-clause
@@ -49,11 +50,300 @@ usage:
   - python3 samples/vision/fasterrcnn/runtime/python/main.py --target x5
   - docker run --rm -v "$PWD":/work
   - -w /work/samples/vision/fasterrcnn/conversion
-  - registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0 bash -lc '
-  - python3 -m pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cpu &&
-  - python3 -m pip install numpy==1.23.0 onnx==1.15.0 onnxruntime==1.19.0 Pillow==9.3.0 &&
+  - registry.d-robotics.cc/deliver/ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0 bash
+    -lc '
+  - python3 -m pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cpu
+    &&
+  - python3 -m pip install numpy==1.23.0 onnx==1.15.0 onnxruntime==1.19.0 Pillow==9.3.0
+    &&
   - python3 export_split.py &&
-  - python3 prepare_calibration.py --images ../test_data/bus.jpg ../../yolov5/test_data/kite.jpg --coco-urls recorded_calibration_urls.txt --hflip repo
+  - python3 prepare_calibration.py --images ../test_data/bus.jpg ../../yolov5/test_data/kite.jpg
+    --coco-urls recorded_calibration_urls.txt --hflip repo
 example_image:
   path: samples/vision/fasterrcnn/test_data/bus.jpg
   source: samples/vision/fasterrcnn/test_data/bus.jpg
+hero_visual:
+  kind: tracking-overlay
+  file: model_zoo_web/release/assets/pending-heroes/fasterrcnn-tracking-promenade-20261105.webp
+  predictions_source: model_zoo_web/release/assets/pending-heroes/fasterrcnn-tracking-promenade-20261105.json
+  model_url: https://download.pytorch.org/models/fasterrcnn_mobilenet_v3_large_320_fpn-907ea3f9.pth
+  model_file: fasterrcnn_mobilenet_v3_large_320_fpn-907ea3f9.pth
+  input: samples/vision/fasterrcnn/test_data/banner_input_tracking_promenade_20261105.png
+  framework: ONNX Runtime 1.19.2
+  commit: deb7e0dd545d36818096599dcca2c24cfe585e44
+  runtime: host-float-reference
+  inference_receipt_version: 2
+  note: Host float reference, not board output; board accuracy and performance remain
+    not-run
+  documented_in: samples/vision/fasterrcnn/conversion/reference.py
+provider: PyTorch TorchVision
+model_license: &id001
+  name: BSD-3-Clause
+  url: https://github.com/pytorch/vision/blob/7af698794eded568735f9519593603c1ec889eba/LICENSE
+  scope: model
+variants:
+- size: mbv3-320-native-20261103-o1
+  model: {}
+  input:
+    width: 320
+    height: 320
+    source:
+      name: images
+      format: RGB
+      dtype: FLOAT32
+      layout: NCHW
+      shape:
+      - 1
+      - 3
+      - 320
+      - 320
+      scale: 0.00392156862745098
+      mean:
+      - 0.485
+      - 0.456
+      - 0.406
+      std:
+      - 0.229
+      - 0.224
+      - 0.225
+  platforms:
+  - platform: s100
+    license: *id001
+    status: converted
+    converted_at: '2026-11-05'
+    metadata_revision: 1
+    artifact:
+      filename: fasterrcnn_tracking_mbv3_320_native_20261105_s100_bundle.tar.gz
+      format: TAR.GZ
+      url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/fasterrcnn/fasterrcnn_tracking_mbv3_320_native_20261105_s100_bundle.tar.gz
+      sha256: 9a2f323983ca1def2d2c8197d50d03f20a52a0daed66ee2311d0eba6b989d597
+      size_bytes: 18106120
+      components:
+      - role: parta
+        filename: frcnn_mbv3_320_parta_nashe_native_20261103_o1.hbm
+        format: HBM
+        platform: s100
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/fasterrcnn/frcnn_mbv3_320_parta_nashe_native_20261103_o1.hbm
+        sha256: fc51cea2ca786bcf565da82e4929316e480d8b98d868515feb224530042ef9a6
+        size_bytes: 6637728
+      - role: partb
+        filename: frcnn_mbv3_320_partb_nashe_native_20261103_o1.hbm
+        format: HBM
+        platform: s100
+        url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/fasterrcnn/frcnn_mbv3_320_partb_nashe_native_20261103_o1.hbm
+        sha256: 63e1ab7b4b6b64ca897f20fc50e651fc4565e2ba34fea7acd01cec89768fd93e
+        size_bytes: 15341384
+      bundle:
+        kind: fasterrcnn-split
+        descriptor: deployment.json
+        members:
+        - filename: LICENSE.torchvision-BSD-3-Clause.txt
+          sha256: 6502f676851cfe25f8af75531dfb32375b7325b73c37e7b43741fa422893e71d
+          size_bytes: 1517
+        - filename: README-tracking.txt
+          sha256: 096fa7f5de9fd0b78b1641004e0ce2ef608fa4a90948e8c7fa1b2b8b8c19ff68
+          size_bytes: 683
+        - filename: README.txt
+          sha256: a3729fb247abde7696b279c11473fb6e236dee93dba50af4ee60cdf4631b9732
+          size_bytes: 581
+        - filename: UPSTREAM_NOTICE.md
+          sha256: 16e48cdc2bcdfa3a9b8c69ca3b4464b107a6776ca347988c5b5c7a00443521cd
+          size_bytes: 468
+        - filename: deployment.json
+          sha256: 812653e543291bd87774f7dcc223112e9d0365ccc76837f0b17f050f6dc437a7
+          size_bytes: 923
+        - filename: host-smoke.json
+          sha256: 51d5ae8f879aa6ee4666d4a77edb715027727202f9efcdd48fecc5822c1ff4d8
+          size_bytes: 4655
+        - filename: host-tracking.json
+          sha256: be0eda890affeffaee445c6814dcaa320acca6e5ef91462480c64a0effaa4d24
+          size_bytes: 64922
+        - filename: parta.oe_report.html
+          sha256: a4c50b257980d75a115a5b3841e1ad9a3579806c152d123f4b2a6a151c561d36
+          size_bytes: 1801260
+        - filename: parta.oe_report_data.json
+          sha256: 5b9c4928742406715771565995014bbd1119fd851be9e22da59dbb1a6acf0a92
+          size_bytes: 50334
+        - filename: partb.oe_report.html
+          sha256: 8e32dcc124c16b9d84929c8166c739ea789e5f33b9223e0efaa5d3bd68e02be4
+          size_bytes: 1722550
+        - filename: partb.oe_report_data.json
+          sha256: d7bf3bac5e9698396bd25f04a70ddfbda9901a9c0c5fea7e975a849396d9a473
+          size_bytes: 10051
+      release_manifest_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/fasterrcnn/fasterrcnn_tracking_mbv3_320_native_20261105_s100_bundle.tar/v1/release.json
+      checksums_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/fasterrcnn/fasterrcnn_tracking_mbv3_320_native_20261105_s100_bundle.tar/v1/SHA256SUMS
+    reports:
+      oe_conversion_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/fasterrcnn/fasterrcnn_tracking_mbv3_320_native_20261105_s100_bundle.tar/v1/oe_report.html
+      oe_data_url: https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_s100/fasterrcnn/fasterrcnn_tracking_mbv3_320_native_20261105_s100_bundle.tar/v1/oe_report_data.json
+    conversion:
+      outputs:
+      - name: cls_packed
+        shape:
+        - 1
+        - 91
+        - 150
+        - 1
+        dtype: float32
+      - name: reg_packed
+        shape:
+        - 1
+        - 364
+        - 150
+        - 1
+        dtype: float32
+      runtime_input:
+        format: NV12
+        dtype: uint8
+        layout: NHWC
+        shape:
+        - 1
+        - 320
+        - 320
+        - 1
+      compiler_versions:
+        hbdk: 4.7.5
+        hmct: 2.6.5
+        hb_compile: 3.5.3
+      calibration_samples: 200
+      calibration_manifest_sha256: 2a57c3e7ac60b8417147f69a3af64f2aca9aadf451ffba937cfbbb539dd8053d
+      optimization_level: O1
+      board_validation: not-run
+      components:
+        parta:
+          status: passed
+          artifact_sha256: fc51cea2ca786bcf565da82e4929316e480d8b98d868515feb224530042ef9a6
+          inputs:
+          - name: images_y
+            shape:
+            - 1
+            - 320
+            - 320
+            - 1
+            dtype: uint8
+          - name: images_uv
+            shape:
+            - 1
+            - 160
+            - 160
+            - 2
+            dtype: uint8
+          outputs:
+          - name: rpn_obj
+            shape:
+            - 3375
+            - 1
+            dtype: float32
+          - name: rpn_deltas
+            shape:
+            - 3375
+            - 4
+            dtype: float32
+          - name: feat0
+            shape:
+            - 1
+            - 256
+            - 10
+            - 10
+            dtype: float32
+          oe_report_filename: parta.oe_report.html
+          oe_report_sha256: a4c50b257980d75a115a5b3841e1ad9a3579806c152d123f4b2a6a151c561d36
+          oe_data_filename: parta.oe_report_data.json
+          oe_data_sha256: 5b9c4928742406715771565995014bbd1119fd851be9e22da59dbb1a6acf0a92
+        partb:
+          status: passed
+          artifact_sha256: 63e1ab7b4b6b64ca897f20fc50e651fc4565e2ba34fea7acd01cec89768fd93e
+          inputs:
+          - name: bank
+            shape:
+            - 1
+            - 256
+            - 1050
+            - 7
+            dtype: float32
+          outputs:
+          - name: cls_packed
+            shape:
+            - 1
+            - 91
+            - 150
+            - 1
+            dtype: float32
+          - name: reg_packed
+            shape:
+            - 1
+            - 364
+            - 150
+            - 1
+            dtype: float32
+          oe_report_filename: partb.oe_report.html
+          oe_report_sha256: 8e32dcc124c16b9d84929c8166c739ea789e5f33b9223e0efaa5d3bd68e02be4
+          oe_data_filename: partb.oe_report_data.json
+          oe_data_sha256: d7bf3bac5e9698396bd25f04a70ddfbda9901a9c0c5fea7e975a849396d9a473
+    validation:
+      conversion: passed
+      host_smoke: passed
+      board_smoke: not-run
+      accuracy: not-run
+      runtime_1: not-run
+      runtime_2: not-run
+      cpp_1: not-run
+      cpp_2: not-run
+      host_pipeline:
+        status: passed
+        stages:
+        - parta
+        - partb
+        evidence_file: host-smoke.json
+        evidence_sha256: 51d5ae8f879aa6ee4666d4a77edb715027727202f9efcdd48fecc5822c1ff4d8
+        component_sha256:
+          parta: fc51cea2ca786bcf565da82e4929316e480d8b98d868515feb224530042ef9a6
+          partb: 63e1ab7b4b6b64ca897f20fc50e651fc4565e2ba34fea7acd01cec89768fd93e
+        scope: Connected source/native/ONNX float inference; compiled HBM board execution
+          not-run
+      artifact_sha256: 9a2f323983ca1def2d2c8197d50d03f20a52a0daed66ee2311d0eba6b989d597
+      host_tracking:
+        status: passed
+        evidence_file: host-tracking.json
+        evidence_sha256: be0eda890affeffaee445c6814dcaa320acca6e5ef91462480c64a0effaa4d24
+        component_sha256:
+          parta: fc51cea2ca786bcf565da82e4929316e480d8b98d868515feb224530042ef9a6
+          partb: 63e1ab7b4b6b64ca897f20fc50e651fc4565e2ba34fea7acd01cec89768fd93e
+        scope: '30 ordered real video frames: source PartA/PartB, Native RPN/RoIAlign,
+          CPU ByteTrack; no HBM, board or MOT accuracy'
+    provenance:
+      repository_commit: a8f6b193fa29ab801b29cb3d5339985322bf4a86
+      source_repository_commit: 7af698794eded568735f9519593603c1ec889eba
+      source_checkpoint_sha256: 907ea3f91ff92242bc1baea8049276a3e76bca48ce7560bd268cc029f37977b5
+      checkpoint_revision: sha256:907ea3f91ff92242bc1baea8049276a3e76bca48ce7560bd268cc029f37977b5
+      source_weight_url: https://download.pytorch.org/models/fasterrcnn_mobilenet_v3_large_320_fpn-907ea3f9.pth
+      toolchain_image_id: sha256:c6b9dc0a061844245dafd661cc23cba67208d50942a0dc2717f2fd3f24f5bf01
+      toolchain_image: ai_toolchain_ubuntu_22_s100_s600_cpu:v3.7.0
+      build_id: fasterrcnn-tracking-s100-20261105
+      precision_policy: native automatic precision
+      native_variant: mbv3-320-native-20261103-o1
+      source_version_pair:
+        repository: https://github.com/pytorch/vision
+        version: v0.21.0
+        checkpoint:
+          url: https://download.pytorch.org/models/fasterrcnn_mobilenet_v3_large_320_fpn-907ea3f9.pth
+          sha256: 907ea3f91ff92242bc1baea8049276a3e76bca48ce7560bd268cc029f37977b5
+          bytes: 77844807
+          publisher_sha256_verified: true
+        commit: 7af698794eded568735f9519593603c1ec889eba
+      components:
+        parta:
+          onnx_sha256: 8ab21cf106ff9d3009879a7f0775a912b78ae2e132c589ce505c40f43c7217a4
+          config_sha256: e965621d3abe98d999b0089e86d0830b9636dc4dfec42fe9dfe395c93d5a5b7d
+        partb:
+          onnx_sha256: 95751d28b7597605a56820c5d84031e94dbc2ac98ef9decd37901496852e92bc
+          config_sha256: 0ec3fce779ab410418476014ac7815cd90a4f2e94d34e73a5a46d58d7dfb3e9c
+      asset_publication:
+        layout: archive-assets-v1
+        source_manifest_sha256: 5523fcb75d7d547c0f337e5e436b010ccbb7ab535e5725d00bd06bce55ccb40b
+      accepted_detector_release_sha256: 9978cfae994e974f1eb586d405a3f60529f40736cb2004fe74e5ab7f1eb99cd0
+      component_origin: Existing accepted 20261103 detector; no fictional neural tracker
+        or reconversion claim
+    runtime_command: python3 -m samples.vision.fasterrcnn.runtime.python.main --target
+      s100 --variant mbv3-320-native-20261103-o1 --parta-path /path/to/frcnn_mbv3_320_parta_nashe_native_20261103_o1.hbm
+      --partb-path /path/to/frcnn_mbv3_320_partb_nashe_native_20261103_o1.hbm --track
+      --video /path/to/video.mp4 --save-path /path/to/result.mp4 --records /path/to/tracks.tsv

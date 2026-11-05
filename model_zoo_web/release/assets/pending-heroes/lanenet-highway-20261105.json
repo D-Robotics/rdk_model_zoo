@@ -1,0 +1,169 @@
+{
+  "schema_version": 2,
+  "kind": "host-float-model-inference-banner",
+  "status": "passed",
+  "source": "lanenet",
+  "model_url": "https://github.com/IrohXu/lanenet-lane-detection-pytorch/blob/0e5aa371d9572ef8d16b2eddbe5af284f649b88a/log/best_model.pth",
+  "model_file": "best_model.pth",
+  "checkpoint_sha256": "052bda2bff1ab3aa017a4509966fc80290d2076b3b373e268bdc6865674f5b79",
+  "commit": "deb7e0dd545d36818096599dcca2c24cfe585e44",
+  "input": "samples/vision/lanenet/test_data/banner_input_highway_20261105.png",
+  "input_sha256": "cdf48657e05541497ec38b8e8ca5bc734fc3751b20d783777f670836b25778c6",
+  "native_helpers": {
+    "samples/vision/lanenet/runtime/python/lanenet.py": "020827908553335424cd6eb5ce70d1edbe0d888a5ccd707193c4361c4e5f0694"
+  },
+  "graphs": {
+    "model": {
+      "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/lanenet-source-export-r02/model.onnx",
+      "sha256": "063e81a31a335ea4718de540283002b0369688bedd0378b9a0b37bd52122dda4",
+      "size_bytes": 16776569
+    }
+  },
+  "framework": "ONNX Runtime 1.19.2",
+  "graph_io": {
+    "model": {
+      "inputs": [
+        {
+          "name": "images",
+          "shape": [
+            1,
+            3,
+            256,
+            512
+          ],
+          "dtype": "tensor(float)"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "instance_seg_logits",
+          "shape": [
+            1,
+            3,
+            256,
+            512
+          ],
+          "dtype": "tensor(float)"
+        },
+        {
+          "name": "binary_seg_pred",
+          "shape": [
+            1,
+            1,
+            256,
+            512
+          ],
+          "dtype": "tensor(int64)"
+        },
+        {
+          "name": "binary_seg_logits",
+          "shape": [
+            1,
+            2,
+            256,
+            512
+          ],
+          "dtype": "tensor(float)"
+        }
+      ]
+    }
+  },
+  "provider": "CPUExecutionProvider",
+  "runtime": "host-float-reference",
+  "versions": {
+    "onnxruntime": "1.19.2",
+    "numpy": "2.2.6",
+    "opencv": "4.11.0",
+    "pillow": "12.3.0"
+  },
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "feeds": [
+    {
+      "role": "model",
+      "name": "images",
+      "shape": [
+        1,
+        3,
+        256,
+        512
+      ],
+      "dtype": "float32",
+      "sha256": "1ac2c940000bd00f1886336806b92fe2832ad427e77b143be2b919843218d689"
+    }
+  ],
+  "forward_outputs": [
+    {
+      "role": "model",
+      "name": "instance_seg_logits",
+      "shape": [
+        1,
+        3,
+        256,
+        512
+      ],
+      "dtype": "float32",
+      "sha256": "47bc03bf7a10603217e04f1cfa0d9141628a5075209b78c1e901e6413595d01a"
+    },
+    {
+      "role": "model",
+      "name": "binary_seg_pred",
+      "shape": [
+        1,
+        1,
+        256,
+        512
+      ],
+      "dtype": "int64",
+      "sha256": "750a3fff5ebe4f65daeeae963f804805480ebc498ad08de730387289a42b87a9"
+    },
+    {
+      "role": "model",
+      "name": "binary_seg_logits",
+      "shape": [
+        1,
+        2,
+        256,
+        512
+      ],
+      "dtype": "float32",
+      "sha256": "4a72414ed90d844e63a2ee9803788c2bb3b32302d6f07dc8352b7effa4e7b1ee"
+    }
+  ],
+  "files": {
+    "source.png": {
+      "file": "source.png",
+      "sha256": "cdf48657e05541497ec38b8e8ca5bc734fc3751b20d783777f670836b25778c6",
+      "size_bytes": 2564057
+    },
+    "outputs.npz": {
+      "file": "outputs.npz",
+      "sha256": "7c6a9ba58c9021450b47b21d098b36c05c193074cc2c93337d056954f03369c8",
+      "size_bytes": 2186137
+    },
+    "banner.webp": {
+      "file": "banner.webp",
+      "sha256": "b0e272d96e2931e113da57596c7bf23d01fc6899cd551e240ac12c9f37dd83e4",
+      "size_bytes": 318776
+    },
+    "result.png": {
+      "file": "result.png",
+      "sha256": "fdd7fecd1838cfd3ce48e71fd70e89a40489d0fac184db794d9d745fdbaeeed1",
+      "size_bytes": 2299882
+    }
+  },
+  "renderer_sha256": "9312432a3b39cb907fc7e491b159de39202256b6adcb867a87a0f28ce9dbd71a",
+  "visualization": {
+    "method": "All three source heads retained; Native discrete lane-label decoding and actual mask overlay, without invented instance IDs",
+    "foreground_pixels": 18024,
+    "mask_grid_shape": [
+      256,
+      512
+    ],
+    "rendered_size": [
+      1672,
+      941
+    ],
+    "layout": "full-bleed"
+  }
+}

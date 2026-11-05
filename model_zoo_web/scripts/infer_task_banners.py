@@ -134,8 +134,9 @@ def run(row, native, output, threads):
             raise ValueError('Missing source output')
         result = {}
         for item, value in zip(metadata, values):
-            if value.dtype != np.float32 or not np.isfinite(value).all():
-                raise ValueError('Expected every finite float32 source output')
+            expected_dtype = {'tensor(float)': np.dtype('float32'), 'tensor(int64)': np.dtype('int64')}.get(item.type)
+            if expected_dtype is None or value.dtype != expected_dtype or not np.isfinite(value).all():
+                raise ValueError('Source output dtype or finite-value contract differs')
             result[item.name] = value
             raw[role+'__'+item.name] = value
             forwards.append({'role': role, 'name': item.name, 'shape': list(value.shape),
@@ -154,14 +155,38 @@ def run(row, native, output, threads):
                     'mean': [.485, .456, .406], 'std': [.229, .224, .225],
                     'color': 'RGB', 'layout': 'NCHW', 'dtype': 'float32',
                     'class_count': 1000, 'output': 'logits', 'batch': 1}
-        value = float_input(prepare_rgb(source, contract), contract)
-        values = forward('model', {session.get_inputs()[0].name: value})
-        labels = ast.literal_eval((native/'datasets/imagenet/imagenet_classes.names').read_text())
-        decoded = topk_from_scores(next(iter(values.values())), top_k=5, labels=labels, softmax=True)
-        rows = [{'class_id': int(i), 'label': label, 'score': float(score)}
-                for i, label, score in zip(decoded.class_ids, decoded.labels, decoded.scores)]
+        if row['source'] == '3dresnet':
+            import importlib
+            native_video = importlib.import_module('samples.vision.3dresnet.runtime.python.public')
+            clip = native/row['clip']
+            value = np.load(clip, allow_pickle=False)
+            if value.dtype != np.float32 or value.shape != (1,3,16,112,112) or not np.isfinite(value).all():
+                raise ValueError('Expected the complete prepared temporal input')
+            frame_hashes = [hashlib.sha256(value[0,:,i].tobytes()).hexdigest() for i in range(16)]
+            if len(set(frame_hashes)) < 2:
+                raise ValueError('Video banner cannot infer from a repeated still image')
+            preview = np.uint8(np.rint(np.clip(value[0,:,8].transpose(1,2,0)
+                *np.array(native_video.STD,np.float32)+np.array(native_video.MEAN,np.float32),0,1)*255))
+            np.testing.assert_array_equal(np.asarray(photo), preview)
+            values = forward('model', {'images': value})
+            rows = native_video.predictions(values['logits'], row['labels'])
+            extra['video'] = {'input':row['clip'], 'sha256':digest(clip), 'shape':list(value.shape),
+                              'dtype':'float32','preview_frame':8,'frame_sha256':frame_hashes}
+        elif row['source'] == 'vit':
+            from samples.vision.vit.runtime.python.imagenet import preprocess, predictions
+            value = preprocess(source)
+            values = forward('model', {session.get_inputs()[0].name: value})
+            decoded = predictions(values['logits'], row['labels'])
+            rows = [{'class_id': r['class_id'], 'label': r['label'], 'score': r['probability']} for r in decoded]
+        else:
+            value = float_input(prepare_rgb(source, contract), contract)
+            values = forward('model', {session.get_inputs()[0].name: value})
+            labels = ast.literal_eval((native/'datasets/imagenet/imagenet_classes.names').read_text())
+            decoded = topk_from_scores(next(iter(values.values())), top_k=5, labels=labels, softmax=True)
+            rows = [{'class_id': int(i), 'label': label, 'score': float(score)}
+                    for i, label, score in zip(decoded.class_ids, decoded.labels, decoded.scores)]
         banner = panel(photo, rows)
-        extra = {'topk': rows, 'visualization': {'method': 'Native ImageNet softmax Top-5'}}
+        extra.update(topk=rows, visualization={'method': 'Native source logits softmax Top-5'})
     elif kind == 'similarity-panel':
         from samples.vision.clip.runtime.python.matching import prepare_inputs, CLIPMatcher
         from samples.vision.clip.runtime.python.simple_tokenizer import PromptTokenizer
@@ -204,6 +229,20 @@ def run(row, native, output, threads):
         extra = {'prompts': prompts, 'mask_index': decoded['mask_index'], 'predicted_iou': decoded['iou'],
                  'visualization': {'method': 'Native highest-IoU decoder candidate; actual mask overlay',
                                    'selected_mask_shape': list(mask.shape), 'foreground_pixels': int(mask.sum())}}
+    elif kind == 'detection-overlay' and row['source'] == 'fcos':
+        from samples.vision.fcos.runtime.python.torchvision import preprocess, decode
+        from infer_vision_banners import overlay
+        value, size = preprocess(bgr)
+        values = forward('model', {session.get_inputs()[0].name: value})
+        decoded = decode(values, size)
+        boxes, scores, ids = (decoded[k] for k in ('boxes', 'scores', 'labels'))
+        result_image, selected = overlay(photo, boxes, scores, ids, row['labels'])
+        banner = ImageOps.fit(result_image, (1672, 941), Image.Resampling.LANCZOS)
+        extra = {'detections': [{'class_id': r['class_id'], 'label': r['label'], 'score': r['score'],
+                                 'box': boxes[r['prediction_index']].tolist()} for r in selected],
+                 'confidence_threshold': .5,
+                 'visualization': {'method': 'Native ResNet50-FPN FCOS preprocessing, all three dense heads, exact stride anchors and class-aware NMS',
+                                   'rendered_predictions': selected, 'rendered_size': [1672, 941], 'layout': 'full-bleed'}}
     elif kind == 'detection-overlay':
         from samples.vision.fasterrcnn.runtime.python.detect import (
             letterbox_geometry, generate_anchors, FasterRCNNTask, pack_bank, unpack_bank_outputs, tail)
@@ -277,6 +316,34 @@ def run(row, native, output, threads):
         extra = {'detections': detections, 'confidence_threshold': .5, 'masks': True,
                  'visualization': {'method': 'Native PF26 Top-K and ROI mask restoration; no NMS',
                                    'rendered_instances': selected, 'foreground_pixels': int(full.sum())}}
+    elif kind == 'tracking-overlay' and row['source'] == 'fasterrcnn':
+        from samples.vision.fasterrcnn.conversion.reference import SourceFloatDetector
+        from samples.vision.fasterrcnn.runtime.python.cli import resolve_selection
+        from samples.vision.fasterrcnn.runtime.python.detect import FasterRCNNTask, PairedRuntime, pack_bank, unpack_bank_outputs
+        from samples.vision.fasterrcnn.runtime.python.tracking import PersonTrackerTask
+        class SourceCallbacks(PairedRuntime):
+            def run_parta(self, tensors):
+                return forward('parta', tensors)
+            def run_partb(self, pooled):
+                values = forward('partb', {'bank': pack_bank(pooled)})
+                return unpack_bank_outputs(values['cls_packed'], values['reg_packed'])
+        detector = SourceFloatDetector.__new__(SourceFloatDetector)
+        FasterRCNNTask.__init__(detector, runner=SourceCallbacks(resolve_selection('s100', variant='mbv3-320-native-20261103-o1')))
+        tracks = PersonTrackerTask(detector).predict(bgr)
+        if not tracks:
+            raise ValueError('No actual person tracks on this banner input')
+        result_image = photo.copy(); draw = ImageDraw.Draw(result_image)
+        for track in tracks:
+            box = tuple(track.tlbr); text = f'ID {track.track_id}  {track.score:.2f}'
+            draw.rectangle(box, outline=(46, 100, 234), width=4)
+            face = font(24, True); width = draw.textlength(text, font=face)
+            top = max(0, box[1]-33)
+            draw.rectangle((box[0], top, box[0]+width+12, top+32), fill=(46, 100, 234))
+            draw.text((box[0]+6, top+2), text, font=face, fill='white')
+        banner = ImageOps.fit(result_image, (1672, 941), Image.Resampling.LANCZOS)
+        extra = {'tracks': [{'id': t.track_id, 'box': list(t.tlbr), 'score': t.score} for t in tracks],
+                 'visualization': {'method': 'Both source Faster R-CNN stages, Native RPN/RoIAlign, person filter and real CPU ByteTrack update',
+                                   'rendered_track_ids': [t.track_id for t in tracks], 'rendered_size': [1672, 941], 'layout': 'full-bleed'}}
     elif kind == 'tracking-overlay':
         from samples.vision.bytetrack.conversion.reference import SourceFloatDetector
         from samples.vision.bytetrack.runtime.python.cli import resolve_selection
@@ -425,6 +492,48 @@ def run(row, native, output, threads):
         banner = pair(photo, result_image)
         extra = {'visualization': {'method': 'Native MODNet restored alpha, composite onto light blue',
                                    'alpha_range': [int(matte.min()), int(matte.max())]}}
+    elif kind == 'semantic-wipe' and row['source'] == 'lanenet':
+        from samples.vision.lanenet.runtime.python.lanenet import image_to_tensor, LaneNetSegmenter
+        from utils.py_utils.runtime_meta import RuntimeMetadata
+        values = forward('model', {session.get_inputs()[0].name: image_to_tensor(bgr)})
+        metadata = RuntimeMetadata.from_mapping({'input_names': ['images'],
+            'input_shapes': {'images': [1, 3, 256, 512]}, 'input_dtypes': {'images': 'float32'},
+            'output_names': list(values), 'output_shapes': {n: list(v.shape) for n,v in values.items()},
+            'output_dtypes': {n: str(v.dtype) for n,v in values.items()}})
+        task = LaneNetSegmenter.__new__(LaneNetSegmenter)
+        task.binding = SimpleNamespace(metadata=metadata, input_name='images',
+                                       embedding_name='instance_seg_logits', binary_name='binary_seg_pred')
+        labels = task.postprocess(values).binary
+        mask = cv2.resize(labels, photo.size, interpolation=cv2.INTER_NEAREST).astype(bool)
+        if not mask.any(): raise ValueError('No predicted lane pixels on the source input')
+        result_image = mask_overlay(photo, mask)
+        banner = ImageOps.fit(result_image, (1672, 941), Image.Resampling.LANCZOS)
+        raw['lane_mask'] = labels
+        extra = {'visualization': {'method': 'All three source heads retained; Native discrete lane-label decoding and actual mask overlay, without invented instance IDs',
+                                   'foreground_pixels': int(mask.sum()), 'mask_grid_shape': list(labels.shape),
+                                   'rendered_size': [1672, 941], 'layout': 'full-bleed'}}
+    elif kind == 'semantic-wipe' and row['source'] == 'unet':
+        from samples.vision.unet.runtime.python.vgg import preprocess, postprocess
+        value, context = preprocess(source)
+        values = forward('model', {'images': value})
+        labels = postprocess(values['logits'], context)
+        raw['class_ids'] = labels
+        palette = np.zeros((21, 3), dtype=np.uint8)
+        for index in range(21):
+            code = index
+            for bit in range(8):
+                for channel in range(3):
+                    palette[index, channel] |= ((code >> channel) & 1) << (7-bit)
+                code >>= 3
+        pixels = np.asarray(photo).copy()
+        foreground = labels != 0
+        pixels[foreground] = np.uint8(pixels[foreground]*.52 + palette[labels[foreground]]*.48)
+        result_image = Image.fromarray(pixels)
+        banner = ImageOps.fit(result_image, (1672, 941), Image.Resampling.LANCZOS)
+        classes, counts = np.unique(labels, return_counts=True)
+        extra = {'visualization': {'method': 'Native source PIL letterbox; all VOC21 logits, softmax, unpad, resize scores, argmax; standard VOC palette on actual foreground',
+                                   'class_pixels': {str(int(i)): int(n) for i, n in zip(classes, counts)},
+                                   'alpha': .48}}
     elif kind == 'semantic-wipe':
         from samples.vision.pp_liteseg.runtime.python.pp_liteseg import PPLiteSegSegmenter
         from samples.vision.pp_liteseg.runtime.python.cli import colorize, CITYSCAPES_CLASS_NAMES

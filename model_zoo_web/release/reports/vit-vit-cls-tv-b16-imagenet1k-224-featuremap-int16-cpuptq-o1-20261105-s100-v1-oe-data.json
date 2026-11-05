@@ -1,0 +1,6848 @@
+{
+  "schema_version": 1,
+  "generated_from_run": "vit-s100-cpuptq-20261105-r01-model",
+  "generated_at": "'2026-11-05T03:30:42.817570+00:00'",
+  "model": {
+    "source": "vit",
+    "family": "vit",
+    "task": "cls",
+    "size": "tv-b16-imagenet1k-224-featuremap-int16-cpuptq-o1-20261105",
+    "component": "model"
+  },
+  "target": {
+    "platform": "s100",
+    "march": "nash-e"
+  },
+  "toolchain": {
+    "hbdk": "4.7.5",
+    "hmct": "2.6.5",
+    "hb_compile": "3.5.3"
+  },
+  "io": {
+    "inputs": [
+      {
+        "name": "images",
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "dtype": "float32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "logits",
+        "shape": [
+          1,
+          1000
+        ],
+        "dtype": "float32"
+      }
+    ]
+  },
+  "quantization": {
+    "summary": {
+      "total_nodes": 725,
+      "unit_counts": {
+        "BPU": 616,
+        "--": 109
+      },
+      "dtype_counts": {
+        "si16": 554,
+        "--": 109,
+        "si8": 36,
+        "si8,si16": 24,
+        "si32": 1,
+        "si32,f32": 1
+      },
+      "measured_nodes": 368,
+      "weakest_node": {
+        "name": "/Gather",
+        "cosine": 0.115073
+      },
+      "weakest_nodes": [
+        {
+          "name": "/Gather",
+          "cosine": 0.115073
+        },
+        {
+          "name": "/heads/head/Gemm_transpose_in_reshape",
+          "cosine": 0.115073
+        },
+        {
+          "name": "/heads/head/Gemm",
+          "cosine": 0.168184
+        },
+        {
+          "name": "/heads/head/Gemm_reshape_output",
+          "cosine": 0.168184
+        },
+        {
+          "name": "...on/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+          "cosine": 0.662462
+        }
+      ],
+      "cosine_percentiles": {
+        "p10": 0.952384,
+        "median": 0.978412
+      }
+    },
+    "nodes": [
+      {
+        "name": "/conv_proj/Conv",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.999843,
+        "calibrated_cosine": 0.999843,
+        "threshold": 2.64,
+        "dtype": "si16"
+      },
+      {
+        "name": "/Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.999843,
+        "threshold": 3.007406,
+        "dtype": "si16"
+      },
+      {
+        "name": "/Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.999843,
+        "threshold": 3.007406,
+        "dtype": "si16"
+      },
+      {
+        "name": "/Concat",
+        "on": "BPU",
+        "type": "Concat",
+        "cosine": 0.999843,
+        "calibrated_cosine": 0.999843,
+        "threshold": 3.007406,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.99986,
+        "calibrated_cosine": 0.99986,
+        "threshold": 3.007406,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_0/ln_1/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999983,
+        "threshold": 3.00746,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_0/ln_1/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.999858,
+        "threshold": 3.00746,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_0/ln_1/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999974,
+        "threshold": 3.011368,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_0/ln_1/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999999,
+        "threshold": 9.068336,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_0/ln_1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 1.0,
+        "threshold": 0.462907,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_0/ln_1/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999379,
+        "threshold": 3.011368,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_0/ln_1/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.997589,
+        "threshold": 15.981328,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_0/ln_1/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.997551,
+        "threshold": 3.319241,
+        "dtype": "si16"
+      },
+      {
+        "name": "...self_attention/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.997157,
+        "calibrated_cosine": 0.997551,
+        "threshold": 3.315761,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._0/self_attention/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.997157,
+        "calibrated_cosine": 0.99755,
+        "threshold": 3.315761,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_0/self_attention/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.999545,
+        "calibrated_cosine": 0.999541,
+        "threshold": 3.315761,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.999546,
+        "calibrated_cosine": 0.999541,
+        "threshold": 3.903811,
+        "dtype": "si16"
+      },
+      {
+        "name": "...oder_layer_0/self_attention/Unsqueeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.999546,
+        "calibrated_cosine": 0.999541,
+        "threshold": 3.903811,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_layer_0/self_attention/Transpose_1",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.999546,
+        "calibrated_cosine": 0.999541,
+        "threshold": 3.903811,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ncoder_layer_0/self_attention/Squeeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.999546,
+        "calibrated_cosine": 0.999541,
+        "threshold": 3.903811,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_0/self_attention/Gather",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": 0.999583,
+        "calibrated_cosine": 0.999587,
+        "threshold": 3.903811,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_0/self_attention/Gather_1",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.999555,
+        "threshold": 3.903811,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_0/self_attention/Gather_2",
+        "on": "--",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.995568,
+        "threshold": 3.903811,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_0/self_attention/Reshape_5",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.995568,
+        "threshold": 3.903811,
+        "dtype": "--"
+      },
+      {
+        "name": "...er_layer_0/self_attention/Transpose_4",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.995569,
+        "threshold": 3.903811,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_0/self_attention/Reshape_8",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.995569,
+        "threshold": 3.903811,
+        "dtype": "--"
+      },
+      {
+        "name": "...rs/encoder_layer_0/self_attention/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.999582,
+        "calibrated_cosine": 0.999586,
+        "threshold": 3.903811,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ul_output_0_reshape_transpose_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.999583,
+        "calibrated_cosine": 0.999586,
+        "threshold": 1.118136,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Mul_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.999583,
+        "calibrated_cosine": 0.999586,
+        "threshold": 1.118136,
+        "dtype": "si16"
+      },
+      {
+        "name": "...0/self_attention/Mul_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.999583,
+        "calibrated_cosine": 0.999586,
+        "threshold": 1.118136,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../encoder_layer_0/self_attention/Mul_1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.999505,
+        "threshold": 3.903811,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ul_1_output_0_transpose_Reshape_moved",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.999516,
+        "calibrated_cosine": 0.999505,
+        "threshold": 1.380206,
+        "dtype": "si8"
+      },
+      {
+        "name": "...lf_attention/Mul_1_output_0_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.999516,
+        "calibrated_cosine": 0.999502,
+        "threshold": 1.380206,
+        "dtype": "si8"
+      },
+      {
+        "name": "...coder_layer_0/self_attention/MatMul_1",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": 0.999457,
+        "calibrated_cosine": 0.999416,
+        "threshold": 1.118136,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.999148,
+        "threshold": 25.263269,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.966893,
+        "threshold": 25.263269,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.996859,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.998008,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.965382,
+        "threshold": 194.812363,
+        "dtype": "--"
+      },
+      {
+        "name": "...on/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.957869,
+        "calibrated_cosine": 0.956409,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_0/self_attention/MatMul_2",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.984859,
+        "threshold": 1.0,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...er_layer_0/self_attention/Transpose_6",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.984116,
+        "calibrated_cosine": 0.984858,
+        "threshold": 1.094715,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_0/self_attention/Gemm_pre_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.984116,
+        "calibrated_cosine": 0.984858,
+        "threshold": 1.094715,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_0/self_attention/Gemm_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.984116,
+        "calibrated_cosine": 0.984859,
+        "threshold": 1.094715,
+        "dtype": "si16"
+      },
+      {
+        "name": "...s/encoder_layer_0/self_attention/Gemm",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.994232,
+        "calibrated_cosine": 0.994611,
+        "threshold": 1.094715,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../self_attention/Gemm_transpose_output",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.994232,
+        "calibrated_cosine": 0.99461,
+        "threshold": 0.806874,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._0/self_attention/Transpose_7_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.994232,
+        "calibrated_cosine": 0.99461,
+        "threshold": 0.806874,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_0/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.999019,
+        "calibrated_cosine": 0.998976,
+        "threshold": 0.806874,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_0/ln_2/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999845,
+        "threshold": 2.942408,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_0/ln_2/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.998964,
+        "threshold": 2.942408,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_0/ln_2/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.992037,
+        "threshold": 2.945259,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_0/ln_2/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999862,
+        "threshold": 8.674551,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_0/ln_2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.99895,
+        "threshold": 0.468196,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_0/ln_2/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.998322,
+        "threshold": 2.945259,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_0/ln_2/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.986563,
+        "threshold": 14.310771,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_0/ln_2/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.986208,
+        "threshold": 4.149593,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_0/mlp/mlp.0/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.986179,
+        "calibrated_cosine": 0.986208,
+        "threshold": 4.150639,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_0/mlp/mlp.0/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.986179,
+        "calibrated_cosine": 0.986207,
+        "threshold": 4.150639,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yers/encoder_layer_0/mlp/mlp.0/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.958822,
+        "calibrated_cosine": 0.958675,
+        "threshold": 4.150639,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayers/encoder_layer_0/mlp/mlp.1/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.992802,
+        "threshold": 4.383104,
+        "dtype": "--"
+      },
+      {
+        "name": "...yers/encoder_layer_0/mlp/mlp.3/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.997121,
+        "calibrated_cosine": 0.997216,
+        "threshold": 3.145828,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../mlp.3/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.997121,
+        "calibrated_cosine": 0.997216,
+        "threshold": 2.180509,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_0/mlp/mlp.3/Add_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.997121,
+        "calibrated_cosine": 0.997216,
+        "threshold": 2.180509,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_0/Add_1",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.996281,
+        "calibrated_cosine": 0.996336,
+        "threshold": 2.942408,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_1/ln_1/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999745,
+        "threshold": 2.550115,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_1/ln_1/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.99631,
+        "threshold": 2.550115,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_1/ln_1/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.982406,
+        "threshold": 2.563878,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_1/ln_1/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.996862,
+        "threshold": 6.573468,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_1/ln_1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.998277,
+        "threshold": 0.362417,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_1/ln_1/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.996378,
+        "threshold": 2.563878,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_1/ln_1/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.996159,
+        "threshold": 13.27295,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_1/ln_1/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.99613,
+        "threshold": 4.660208,
+        "dtype": "si16"
+      },
+      {
+        "name": "...self_attention/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.996132,
+        "calibrated_cosine": 0.99613,
+        "threshold": 4.643147,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._1/self_attention/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.996132,
+        "calibrated_cosine": 0.99613,
+        "threshold": 4.643147,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_1/self_attention/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.995719,
+        "calibrated_cosine": 0.995873,
+        "threshold": 4.643147,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.995719,
+        "calibrated_cosine": 0.995873,
+        "threshold": 2.946072,
+        "dtype": "si16"
+      },
+      {
+        "name": "...oder_layer_1/self_attention/Unsqueeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.995719,
+        "calibrated_cosine": 0.995873,
+        "threshold": 2.946072,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_layer_1/self_attention/Transpose_1",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.995719,
+        "calibrated_cosine": 0.995873,
+        "threshold": 2.946072,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ncoder_layer_1/self_attention/Squeeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.995719,
+        "calibrated_cosine": 0.995873,
+        "threshold": 2.946072,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_1/self_attention/Gather",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": 0.997173,
+        "calibrated_cosine": 0.99727,
+        "threshold": 2.946072,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_1/self_attention/Gather_1",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.993743,
+        "threshold": 2.946072,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_1/self_attention/Gather_2",
+        "on": "--",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.997842,
+        "threshold": 2.946072,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_1/self_attention/Reshape_5",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.997842,
+        "threshold": 2.946072,
+        "dtype": "--"
+      },
+      {
+        "name": "...er_layer_1/self_attention/Transpose_4",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.997842,
+        "threshold": 2.946072,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_1/self_attention/Reshape_8",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.997842,
+        "threshold": 2.946072,
+        "dtype": "--"
+      },
+      {
+        "name": "...rs/encoder_layer_1/self_attention/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.997173,
+        "calibrated_cosine": 0.99727,
+        "threshold": 2.946072,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ul_output_0_reshape_transpose_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.997173,
+        "calibrated_cosine": 0.99727,
+        "threshold": 1.002056,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Mul_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.997173,
+        "calibrated_cosine": 0.99727,
+        "threshold": 1.002056,
+        "dtype": "si16"
+      },
+      {
+        "name": "...1/self_attention/Mul_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.997173,
+        "calibrated_cosine": 0.99727,
+        "threshold": 1.002056,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../encoder_layer_1/self_attention/Mul_1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.993684,
+        "threshold": 2.946072,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ul_1_output_0_transpose_Reshape_moved",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.993437,
+        "calibrated_cosine": 0.993684,
+        "threshold": 0.99603,
+        "dtype": "si8"
+      },
+      {
+        "name": "...lf_attention/Mul_1_output_0_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.993437,
+        "calibrated_cosine": 0.993684,
+        "threshold": 0.99603,
+        "dtype": "si8"
+      },
+      {
+        "name": "...coder_layer_1/self_attention/MatMul_1",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": 0.9891,
+        "calibrated_cosine": 0.989812,
+        "threshold": 1.002056,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.948604,
+        "threshold": 10.420115,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.960968,
+        "threshold": 10.420115,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.830821,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.860545,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.719424,
+        "threshold": 162.008499,
+        "dtype": "--"
+      },
+      {
+        "name": "...on/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.662462,
+        "calibrated_cosine": 0.660306,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_1/self_attention/MatMul_2",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.978826,
+        "threshold": 1.0,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...er_layer_1/self_attention/Transpose_6",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.978293,
+        "calibrated_cosine": 0.978826,
+        "threshold": 0.746538,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_1/self_attention/Gemm_pre_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.978293,
+        "calibrated_cosine": 0.978826,
+        "threshold": 0.746538,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_1/self_attention/Gemm_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.978293,
+        "calibrated_cosine": 0.978826,
+        "threshold": 0.746538,
+        "dtype": "si16"
+      },
+      {
+        "name": "...s/encoder_layer_1/self_attention/Gemm",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.990109,
+        "calibrated_cosine": 0.990901,
+        "threshold": 0.746538,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../self_attention/Gemm_transpose_output",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.990108,
+        "calibrated_cosine": 0.990902,
+        "threshold": 0.588996,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._1/self_attention/Transpose_7_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.990108,
+        "calibrated_cosine": 0.990902,
+        "threshold": 0.588996,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_1/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.994265,
+        "calibrated_cosine": 0.994498,
+        "threshold": 0.588996,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_1/ln_2/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999803,
+        "threshold": 2.372144,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_1/ln_2/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.994454,
+        "threshold": 2.372144,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_1/ln_2/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.97723,
+        "threshold": 2.379043,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_1/ln_2/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.995856,
+        "threshold": 5.659844,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_1/ln_2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.998305,
+        "threshold": 0.339872,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_1/ln_2/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.99417,
+        "threshold": 2.379043,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_1/ln_2/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.9953,
+        "threshold": 13.883075,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_1/ln_2/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.995555,
+        "threshold": 7.214518,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_1/mlp/mlp.0/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.995228,
+        "calibrated_cosine": 0.995555,
+        "threshold": 7.275601,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_1/mlp/mlp.0/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.995228,
+        "calibrated_cosine": 0.995556,
+        "threshold": 7.275601,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yers/encoder_layer_1/mlp/mlp.0/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.999308,
+        "calibrated_cosine": 0.999346,
+        "threshold": 7.275601,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayers/encoder_layer_1/mlp/mlp.1/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.995423,
+        "threshold": 6.125808,
+        "dtype": "--"
+      },
+      {
+        "name": "...yers/encoder_layer_1/mlp/mlp.3/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.995322,
+        "calibrated_cosine": 0.995624,
+        "threshold": 1.769446,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../mlp.3/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.995322,
+        "calibrated_cosine": 0.995624,
+        "threshold": 1.245729,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_1/mlp/mlp.3/Add_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.995322,
+        "calibrated_cosine": 0.995624,
+        "threshold": 1.245729,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_1/Add_1",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.99394,
+        "calibrated_cosine": 0.994094,
+        "threshold": 2.372144,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_2/ln_1/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.99977,
+        "threshold": 2.08348,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_2/ln_1/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.994058,
+        "threshold": 2.08348,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_2/ln_1/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.97665,
+        "threshold": 2.098338,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_2/ln_1/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.998686,
+        "threshold": 4.403021,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_2/ln_1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999654,
+        "threshold": 0.20702,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_2/ln_1/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.993587,
+        "threshold": 2.098338,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_2/ln_1/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.995723,
+        "threshold": 9.332461,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_2/ln_1/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.995742,
+        "threshold": 2.867577,
+        "dtype": "si16"
+      },
+      {
+        "name": "...self_attention/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.995569,
+        "calibrated_cosine": 0.995742,
+        "threshold": 2.862521,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._2/self_attention/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.995569,
+        "calibrated_cosine": 0.995742,
+        "threshold": 2.862521,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_2/self_attention/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.996361,
+        "calibrated_cosine": 0.996401,
+        "threshold": 2.862521,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.996361,
+        "calibrated_cosine": 0.996402,
+        "threshold": 4.69274,
+        "dtype": "si16"
+      },
+      {
+        "name": "...oder_layer_2/self_attention/Unsqueeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.996361,
+        "calibrated_cosine": 0.996402,
+        "threshold": 4.69274,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_layer_2/self_attention/Transpose_1",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.996361,
+        "calibrated_cosine": 0.996402,
+        "threshold": 4.69274,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ncoder_layer_2/self_attention/Squeeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.996361,
+        "calibrated_cosine": 0.996402,
+        "threshold": 4.69274,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_2/self_attention/Gather",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": 0.997933,
+        "calibrated_cosine": 0.997943,
+        "threshold": 4.69274,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_2/self_attention/Gather_1",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.994551,
+        "threshold": 4.69274,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_2/self_attention/Gather_2",
+        "on": "--",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.996025,
+        "threshold": 4.69274,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_2/self_attention/Reshape_5",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.996025,
+        "threshold": 4.69274,
+        "dtype": "--"
+      },
+      {
+        "name": "...er_layer_2/self_attention/Transpose_4",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.996025,
+        "threshold": 4.69274,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_2/self_attention/Reshape_8",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.996025,
+        "threshold": 4.69274,
+        "dtype": "--"
+      },
+      {
+        "name": "...rs/encoder_layer_2/self_attention/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.997933,
+        "calibrated_cosine": 0.997943,
+        "threshold": 4.69274,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ul_output_0_reshape_transpose_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.997933,
+        "calibrated_cosine": 0.997943,
+        "threshold": 1.645403,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Mul_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.997933,
+        "calibrated_cosine": 0.997943,
+        "threshold": 1.645403,
+        "dtype": "si16"
+      },
+      {
+        "name": "...2/self_attention/Mul_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.997933,
+        "calibrated_cosine": 0.997943,
+        "threshold": 1.645403,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../encoder_layer_2/self_attention/Mul_1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.994472,
+        "threshold": 4.69274,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ul_1_output_0_transpose_Reshape_moved",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.994406,
+        "calibrated_cosine": 0.994472,
+        "threshold": 1.469472,
+        "dtype": "si8"
+      },
+      {
+        "name": "...lf_attention/Mul_1_output_0_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.994406,
+        "calibrated_cosine": 0.994472,
+        "threshold": 1.469472,
+        "dtype": "si8"
+      },
+      {
+        "name": "...coder_layer_2/self_attention/MatMul_1",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": 0.993557,
+        "calibrated_cosine": 0.993609,
+        "threshold": 1.645403,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.963273,
+        "threshold": 16.471006,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.952761,
+        "threshold": 16.471006,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.865841,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.880564,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.800403,
+        "threshold": 141.891724,
+        "dtype": "--"
+      },
+      {
+        "name": "...on/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.792001,
+        "calibrated_cosine": 0.792266,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_2/self_attention/MatMul_2",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.983506,
+        "threshold": 1.0,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...er_layer_2/self_attention/Transpose_6",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.98315,
+        "calibrated_cosine": 0.983506,
+        "threshold": 1.082062,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_2/self_attention/Gemm_pre_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.98315,
+        "calibrated_cosine": 0.983506,
+        "threshold": 1.082062,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_2/self_attention/Gemm_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.98315,
+        "calibrated_cosine": 0.983506,
+        "threshold": 1.082062,
+        "dtype": "si16"
+      },
+      {
+        "name": "...s/encoder_layer_2/self_attention/Gemm",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.986131,
+        "calibrated_cosine": 0.986317,
+        "threshold": 1.082062,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../self_attention/Gemm_transpose_output",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.986131,
+        "calibrated_cosine": 0.986317,
+        "threshold": 0.714825,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._2/self_attention/Transpose_7_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.986131,
+        "calibrated_cosine": 0.986317,
+        "threshold": 0.714825,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_2/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.990557,
+        "calibrated_cosine": 0.990674,
+        "threshold": 0.714825,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_2/ln_2/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999603,
+        "threshold": 1.960473,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_2/ln_2/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.990619,
+        "threshold": 1.960473,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_2/ln_2/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.965129,
+        "threshold": 1.973637,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_2/ln_2/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.997903,
+        "threshold": 3.895242,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_2/ln_2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999359,
+        "threshold": 0.197966,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_2/ln_2/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.990075,
+        "threshold": 1.973637,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_2/ln_2/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.988804,
+        "threshold": 9.366001,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_2/ln_2/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.989362,
+        "threshold": 3.382056,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_2/mlp/mlp.0/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.989265,
+        "calibrated_cosine": 0.989362,
+        "threshold": 3.426202,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_2/mlp/mlp.0/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.989265,
+        "calibrated_cosine": 0.989362,
+        "threshold": 3.426202,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yers/encoder_layer_2/mlp/mlp.0/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.995898,
+        "calibrated_cosine": 0.995929,
+        "threshold": 3.426202,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayers/encoder_layer_2/mlp/mlp.1/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.991767,
+        "threshold": 9.531796,
+        "dtype": "--"
+      },
+      {
+        "name": "...yers/encoder_layer_2/mlp/mlp.3/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.991726,
+        "calibrated_cosine": 0.99175,
+        "threshold": 1.530388,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../mlp.3/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.991726,
+        "calibrated_cosine": 0.99175,
+        "threshold": 1.390879,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_2/mlp/mlp.3/Add_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.991726,
+        "calibrated_cosine": 0.99175,
+        "threshold": 1.390879,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_2/Add_1",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.99071,
+        "calibrated_cosine": 0.990785,
+        "threshold": 1.960473,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_3/ln_1/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999496,
+        "threshold": 2.198231,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_3/ln_1/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.990744,
+        "threshold": 2.198231,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_3/ln_1/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.973681,
+        "threshold": 2.214872,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_3/ln_1/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999385,
+        "threshold": 4.90566,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_3/ln_1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999842,
+        "threshold": 0.178782,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_3/ln_1/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.990492,
+        "threshold": 2.214872,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_3/ln_1/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.993051,
+        "threshold": 8.425506,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_3/ln_1/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.993076,
+        "threshold": 3.144118,
+        "dtype": "si16"
+      },
+      {
+        "name": "...self_attention/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.993007,
+        "calibrated_cosine": 0.993076,
+        "threshold": 3.134448,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._3/self_attention/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.993007,
+        "calibrated_cosine": 0.993076,
+        "threshold": 3.134448,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_3/self_attention/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.995074,
+        "calibrated_cosine": 0.995118,
+        "threshold": 3.134448,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.995074,
+        "calibrated_cosine": 0.995118,
+        "threshold": 4.732967,
+        "dtype": "si16"
+      },
+      {
+        "name": "...oder_layer_3/self_attention/Unsqueeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.995074,
+        "calibrated_cosine": 0.995118,
+        "threshold": 4.732967,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_layer_3/self_attention/Transpose_1",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.995074,
+        "calibrated_cosine": 0.995118,
+        "threshold": 4.732967,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ncoder_layer_3/self_attention/Squeeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.995074,
+        "calibrated_cosine": 0.995118,
+        "threshold": 4.732967,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_3/self_attention/Gather",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": 0.996623,
+        "calibrated_cosine": 0.996656,
+        "threshold": 4.732967,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_3/self_attention/Gather_1",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.993522,
+        "threshold": 4.732967,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_3/self_attention/Gather_2",
+        "on": "--",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.993068,
+        "threshold": 4.732967,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_3/self_attention/Reshape_5",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.993068,
+        "threshold": 4.732967,
+        "dtype": "--"
+      },
+      {
+        "name": "...er_layer_3/self_attention/Transpose_4",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.993068,
+        "threshold": 4.732967,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_3/self_attention/Reshape_8",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.993068,
+        "threshold": 4.732967,
+        "dtype": "--"
+      },
+      {
+        "name": "...rs/encoder_layer_3/self_attention/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.996623,
+        "calibrated_cosine": 0.996656,
+        "threshold": 4.732967,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ul_output_0_reshape_transpose_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.996623,
+        "calibrated_cosine": 0.996656,
+        "threshold": 1.667627,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Mul_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.996623,
+        "calibrated_cosine": 0.996657,
+        "threshold": 1.667627,
+        "dtype": "si16"
+      },
+      {
+        "name": "...3/self_attention/Mul_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.996623,
+        "calibrated_cosine": 0.996657,
+        "threshold": 1.667627,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../encoder_layer_3/self_attention/Mul_1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.993465,
+        "threshold": 4.732967,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ul_1_output_0_transpose_Reshape_moved",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.993407,
+        "calibrated_cosine": 0.993465,
+        "threshold": 1.461589,
+        "dtype": "si8"
+      },
+      {
+        "name": "...lf_attention/Mul_1_output_0_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.993407,
+        "calibrated_cosine": 0.993465,
+        "threshold": 1.461589,
+        "dtype": "si8"
+      },
+      {
+        "name": "...coder_layer_3/self_attention/MatMul_1",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": 0.993174,
+        "calibrated_cosine": 0.993244,
+        "threshold": 1.667627,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.987383,
+        "threshold": 16.74839,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.962896,
+        "threshold": 16.74839,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.877119,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.918732,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.935511,
+        "threshold": 113.543068,
+        "dtype": "--"
+      },
+      {
+        "name": "...on/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.909242,
+        "calibrated_cosine": 0.909312,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_3/self_attention/MatMul_2",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.981398,
+        "threshold": 1.0,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...er_layer_3/self_attention/Transpose_6",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.981023,
+        "calibrated_cosine": 0.981398,
+        "threshold": 1.177863,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_3/self_attention/Gemm_pre_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.981023,
+        "calibrated_cosine": 0.981398,
+        "threshold": 1.177863,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_3/self_attention/Gemm_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.981023,
+        "calibrated_cosine": 0.981398,
+        "threshold": 1.177863,
+        "dtype": "si16"
+      },
+      {
+        "name": "...s/encoder_layer_3/self_attention/Gemm",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.983341,
+        "calibrated_cosine": 0.983655,
+        "threshold": 1.177863,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../self_attention/Gemm_transpose_output",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.983341,
+        "calibrated_cosine": 0.983655,
+        "threshold": 0.922913,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._3/self_attention/Transpose_7_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.983341,
+        "calibrated_cosine": 0.983655,
+        "threshold": 0.922913,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_3/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.98813,
+        "calibrated_cosine": 0.988277,
+        "threshold": 0.922913,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_3/ln_2/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999255,
+        "threshold": 2.137034,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_3/ln_2/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.988229,
+        "threshold": 2.137034,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_3/ln_2/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.973317,
+        "threshold": 2.152838,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_3/ln_2/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999288,
+        "threshold": 4.634711,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_3/ln_2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.99982,
+        "threshold": 0.182054,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_3/ln_2/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.987997,
+        "threshold": 2.152838,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_3/ln_2/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.987136,
+        "threshold": 8.161812,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_3/ln_2/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.988001,
+        "threshold": 4.112997,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_3/mlp/mlp.0/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.987864,
+        "calibrated_cosine": 0.988001,
+        "threshold": 4.250695,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_3/mlp/mlp.0/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.987864,
+        "calibrated_cosine": 0.988002,
+        "threshold": 4.250695,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yers/encoder_layer_3/mlp/mlp.0/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.997346,
+        "calibrated_cosine": 0.997379,
+        "threshold": 4.250695,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayers/encoder_layer_3/mlp/mlp.1/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.98723,
+        "threshold": 7.237324,
+        "dtype": "--"
+      },
+      {
+        "name": "...yers/encoder_layer_3/mlp/mlp.3/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.985883,
+        "calibrated_cosine": 0.986354,
+        "threshold": 1.709882,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../mlp.3/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.985884,
+        "calibrated_cosine": 0.986355,
+        "threshold": 0.923406,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_3/mlp/mlp.3/Add_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.985884,
+        "calibrated_cosine": 0.986355,
+        "threshold": 0.923406,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_3/Add_1",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.986971,
+        "calibrated_cosine": 0.987265,
+        "threshold": 2.137034,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_4/ln_1/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.998827,
+        "threshold": 2.161831,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_4/ln_1/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.987224,
+        "threshold": 2.161831,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_4/ln_1/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.974016,
+        "threshold": 2.175318,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_4/ln_1/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999074,
+        "threshold": 4.73201,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_4/ln_1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999811,
+        "threshold": 0.184617,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_4/ln_1/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.98684,
+        "threshold": 2.175318,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_4/ln_1/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.989452,
+        "threshold": 7.518515,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_4/ln_1/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.989527,
+        "threshold": 3.096863,
+        "dtype": "si16"
+      },
+      {
+        "name": "...self_attention/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.989272,
+        "calibrated_cosine": 0.989527,
+        "threshold": 3.0943,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._4/self_attention/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.989272,
+        "calibrated_cosine": 0.989527,
+        "threshold": 3.0943,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_4/self_attention/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.992547,
+        "calibrated_cosine": 0.992711,
+        "threshold": 3.0943,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.992547,
+        "calibrated_cosine": 0.992709,
+        "threshold": 4.10972,
+        "dtype": "si16"
+      },
+      {
+        "name": "...oder_layer_4/self_attention/Unsqueeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.992547,
+        "calibrated_cosine": 0.992709,
+        "threshold": 4.10972,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_layer_4/self_attention/Transpose_1",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.992547,
+        "calibrated_cosine": 0.992711,
+        "threshold": 4.10972,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ncoder_layer_4/self_attention/Squeeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.992547,
+        "calibrated_cosine": 0.992711,
+        "threshold": 4.10972,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_4/self_attention/Gather",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": 0.992635,
+        "calibrated_cosine": 0.992787,
+        "threshold": 4.10972,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_4/self_attention/Gather_1",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.993166,
+        "threshold": 4.10972,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_4/self_attention/Gather_2",
+        "on": "--",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.988915,
+        "threshold": 4.10972,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_4/self_attention/Reshape_5",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.988915,
+        "threshold": 4.10972,
+        "dtype": "--"
+      },
+      {
+        "name": "...er_layer_4/self_attention/Transpose_4",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.988914,
+        "threshold": 4.10972,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_4/self_attention/Reshape_8",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.988914,
+        "threshold": 4.10972,
+        "dtype": "--"
+      },
+      {
+        "name": "...rs/encoder_layer_4/self_attention/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.992635,
+        "calibrated_cosine": 0.992788,
+        "threshold": 4.10972,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ul_output_0_reshape_transpose_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.992635,
+        "calibrated_cosine": 0.992788,
+        "threshold": 1.449826,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Mul_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.992635,
+        "calibrated_cosine": 0.992788,
+        "threshold": 1.449826,
+        "dtype": "si16"
+      },
+      {
+        "name": "...4/self_attention/Mul_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.992635,
+        "calibrated_cosine": 0.992788,
+        "threshold": 1.449826,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../encoder_layer_4/self_attention/Mul_1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.993128,
+        "threshold": 4.10972,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ul_1_output_0_transpose_Reshape_moved",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.992977,
+        "calibrated_cosine": 0.993128,
+        "threshold": 1.222688,
+        "dtype": "si8"
+      },
+      {
+        "name": "...lf_attention/Mul_1_output_0_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.992977,
+        "calibrated_cosine": 0.993128,
+        "threshold": 1.222688,
+        "dtype": "si8"
+      },
+      {
+        "name": "...coder_layer_4/self_attention/MatMul_1",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": 0.991375,
+        "calibrated_cosine": 0.991605,
+        "threshold": 1.449826,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.994661,
+        "threshold": 9.23285,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.994825,
+        "threshold": 9.23285,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.949199,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.949212,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.941327,
+        "threshold": 57.934116,
+        "dtype": "--"
+      },
+      {
+        "name": "...on/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.942302,
+        "calibrated_cosine": 0.942388,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_4/self_attention/MatMul_2",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.978106,
+        "threshold": 1.0,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...er_layer_4/self_attention/Transpose_6",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.977377,
+        "calibrated_cosine": 0.978106,
+        "threshold": 1.097185,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_4/self_attention/Gemm_pre_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.977377,
+        "calibrated_cosine": 0.978106,
+        "threshold": 1.097185,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_4/self_attention/Gemm_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.977377,
+        "calibrated_cosine": 0.978106,
+        "threshold": 1.097185,
+        "dtype": "si16"
+      },
+      {
+        "name": "...s/encoder_layer_4/self_attention/Gemm",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.979261,
+        "calibrated_cosine": 0.979938,
+        "threshold": 1.097185,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../self_attention/Gemm_transpose_output",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.979262,
+        "calibrated_cosine": 0.979938,
+        "threshold": 1.040686,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._4/self_attention/Transpose_7_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.979262,
+        "calibrated_cosine": 0.979938,
+        "threshold": 1.040686,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_4/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.986548,
+        "calibrated_cosine": 0.986797,
+        "threshold": 1.040686,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_4/ln_2/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.998917,
+        "threshold": 2.176242,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_4/ln_2/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.986751,
+        "threshold": 2.176242,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_4/ln_2/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.973618,
+        "threshold": 2.188844,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_4/ln_2/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.999583,
+        "threshold": 4.791037,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_4/ln_2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999901,
+        "threshold": 0.227169,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_4/ln_2/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.98643,
+        "threshold": 2.188844,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_4/ln_2/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.985483,
+        "threshold": 7.076933,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_4/ln_2/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.986623,
+        "threshold": 3.490656,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_4/mlp/mlp.0/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.986373,
+        "calibrated_cosine": 0.986623,
+        "threshold": 3.657945,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_4/mlp/mlp.0/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.986373,
+        "calibrated_cosine": 0.986623,
+        "threshold": 3.657945,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yers/encoder_layer_4/mlp/mlp.0/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.997173,
+        "calibrated_cosine": 0.997216,
+        "threshold": 3.657945,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayers/encoder_layer_4/mlp/mlp.1/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.984351,
+        "threshold": 5.980268,
+        "dtype": "--"
+      },
+      {
+        "name": "...yers/encoder_layer_4/mlp/mlp.3/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.974608,
+        "calibrated_cosine": 0.975148,
+        "threshold": 1.937666,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../mlp.3/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.974609,
+        "calibrated_cosine": 0.975149,
+        "threshold": 1.892383,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_4/mlp/mlp.3/Add_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.974609,
+        "calibrated_cosine": 0.975149,
+        "threshold": 1.892383,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_4/Add_1",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.982373,
+        "calibrated_cosine": 0.982653,
+        "threshold": 2.176242,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_5/ln_1/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.99813,
+        "threshold": 2.664314,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_5/ln_1/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.982597,
+        "threshold": 2.664314,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_5/ln_1/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.819847,
+        "threshold": 2.66714,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_5/ln_1/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.989488,
+        "threshold": 7.113635,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_5/ln_1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999819,
+        "threshold": 0.964925,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_5/ln_1/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.984122,
+        "threshold": 2.66714,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_5/ln_1/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.986784,
+        "threshold": 7.288119,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_5/ln_1/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.986867,
+        "threshold": 2.80509,
+        "dtype": "si16"
+      },
+      {
+        "name": "...self_attention/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.986609,
+        "calibrated_cosine": 0.986867,
+        "threshold": 2.797974,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._5/self_attention/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.986609,
+        "calibrated_cosine": 0.986867,
+        "threshold": 2.797974,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_5/self_attention/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.989267,
+        "calibrated_cosine": 0.989391,
+        "threshold": 2.797974,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.989267,
+        "calibrated_cosine": 0.98939,
+        "threshold": 3.713212,
+        "dtype": "si16"
+      },
+      {
+        "name": "...oder_layer_5/self_attention/Unsqueeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.989267,
+        "calibrated_cosine": 0.98939,
+        "threshold": 3.713212,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_layer_5/self_attention/Transpose_1",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.989267,
+        "calibrated_cosine": 0.989391,
+        "threshold": 3.713212,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ncoder_layer_5/self_attention/Squeeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.989267,
+        "calibrated_cosine": 0.989391,
+        "threshold": 3.713212,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_5/self_attention/Gather",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": 0.989796,
+        "calibrated_cosine": 0.989908,
+        "threshold": 3.713212,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_5/self_attention/Gather_1",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.989118,
+        "threshold": 3.713212,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_5/self_attention/Gather_2",
+        "on": "--",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.98707,
+        "threshold": 3.713212,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_5/self_attention/Reshape_5",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.98707,
+        "threshold": 3.713212,
+        "dtype": "--"
+      },
+      {
+        "name": "...er_layer_5/self_attention/Transpose_4",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.98707,
+        "threshold": 3.713212,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_5/self_attention/Reshape_8",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.98707,
+        "threshold": 3.713212,
+        "dtype": "--"
+      },
+      {
+        "name": "...rs/encoder_layer_5/self_attention/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.989796,
+        "calibrated_cosine": 0.989908,
+        "threshold": 3.713212,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ul_output_0_reshape_transpose_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.989797,
+        "calibrated_cosine": 0.989908,
+        "threshold": 1.310346,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Mul_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.989797,
+        "calibrated_cosine": 0.989908,
+        "threshold": 1.310346,
+        "dtype": "si16"
+      },
+      {
+        "name": "...5/self_attention/Mul_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.989797,
+        "calibrated_cosine": 0.989908,
+        "threshold": 1.310346,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../encoder_layer_5/self_attention/Mul_1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.989076,
+        "threshold": 3.713212,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ul_1_output_0_transpose_Reshape_moved",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.98897,
+        "calibrated_cosine": 0.989076,
+        "threshold": 1.094426,
+        "dtype": "si8"
+      },
+      {
+        "name": "...lf_attention/Mul_1_output_0_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.98897,
+        "calibrated_cosine": 0.989076,
+        "threshold": 1.094426,
+        "dtype": "si8"
+      },
+      {
+        "name": "...coder_layer_5/self_attention/MatMul_1",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": 0.987219,
+        "calibrated_cosine": 0.98733,
+        "threshold": 1.310346,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.978809,
+        "threshold": 7.871406,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.983381,
+        "threshold": 7.871406,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.922226,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.919391,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.780813,
+        "threshold": 92.711029,
+        "dtype": "--"
+      },
+      {
+        "name": "...on/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.853744,
+        "calibrated_cosine": 0.854801,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_5/self_attention/MatMul_2",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.968558,
+        "threshold": 1.0,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...er_layer_5/self_attention/Transpose_6",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.968177,
+        "calibrated_cosine": 0.968558,
+        "threshold": 0.881599,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_5/self_attention/Gemm_pre_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.968177,
+        "calibrated_cosine": 0.968558,
+        "threshold": 0.881599,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_5/self_attention/Gemm_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.968177,
+        "calibrated_cosine": 0.968558,
+        "threshold": 0.881599,
+        "dtype": "si16"
+      },
+      {
+        "name": "...s/encoder_layer_5/self_attention/Gemm",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.961139,
+        "calibrated_cosine": 0.96113,
+        "threshold": 0.881599,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../self_attention/Gemm_transpose_output",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.961139,
+        "calibrated_cosine": 0.96113,
+        "threshold": 0.945819,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._5/self_attention/Transpose_7_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.961139,
+        "calibrated_cosine": 0.96113,
+        "threshold": 0.945819,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_5/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.976941,
+        "calibrated_cosine": 0.977216,
+        "threshold": 0.945819,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_5/ln_2/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.997317,
+        "threshold": 2.677826,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_5/ln_2/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.977146,
+        "threshold": 2.677826,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_5/ln_2/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.78704,
+        "threshold": 2.683418,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_5/ln_2/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.987644,
+        "threshold": 7.200731,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_5/ln_2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999694,
+        "threshold": 0.753423,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_5/ln_2/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.979271,
+        "threshold": 2.683418,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_5/ln_2/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.979457,
+        "threshold": 7.36766,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_5/ln_2/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.981146,
+        "threshold": 3.725358,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_5/mlp/mlp.0/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.980912,
+        "calibrated_cosine": 0.981146,
+        "threshold": 3.909656,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_5/mlp/mlp.0/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.980912,
+        "calibrated_cosine": 0.981146,
+        "threshold": 3.909656,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yers/encoder_layer_5/mlp/mlp.0/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.995832,
+        "calibrated_cosine": 0.995877,
+        "threshold": 3.909656,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayers/encoder_layer_5/mlp/mlp.1/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.934772,
+        "threshold": 5.818027,
+        "dtype": "--"
+      },
+      {
+        "name": "...yers/encoder_layer_5/mlp/mlp.3/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.929614,
+        "calibrated_cosine": 0.93044,
+        "threshold": 2.409942,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../mlp.3/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.929616,
+        "calibrated_cosine": 0.930442,
+        "threshold": 13.292728,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_5/mlp/mlp.3/Add_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.929616,
+        "calibrated_cosine": 0.930442,
+        "threshold": 13.292728,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_5/Add_1",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.933715,
+        "calibrated_cosine": 0.93474,
+        "threshold": 2.677826,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_6/ln_1/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.994707,
+        "threshold": 15.256376,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_6/ln_1/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.934711,
+        "threshold": 15.256376,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_6/ln_1/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.945955,
+        "threshold": 15.264094,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_6/ln_1/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.931691,
+        "threshold": 232.992569,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_6/ln_1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999163,
+        "threshold": 13.672329,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_6/ln_1/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.979387,
+        "threshold": 15.264094,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_6/ln_1/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.98063,
+        "threshold": 9.114269,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_6/ln_1/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.980646,
+        "threshold": 2.822677,
+        "dtype": "si16"
+      },
+      {
+        "name": "...self_attention/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.980437,
+        "calibrated_cosine": 0.980646,
+        "threshold": 2.778416,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._6/self_attention/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.980437,
+        "calibrated_cosine": 0.980646,
+        "threshold": 2.778416,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_6/self_attention/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.978412,
+        "calibrated_cosine": 0.97835,
+        "threshold": 2.778416,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.978411,
+        "calibrated_cosine": 0.978349,
+        "threshold": 3.990375,
+        "dtype": "si16"
+      },
+      {
+        "name": "...oder_layer_6/self_attention/Unsqueeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.978411,
+        "calibrated_cosine": 0.978349,
+        "threshold": 3.990375,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_layer_6/self_attention/Transpose_1",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.978411,
+        "calibrated_cosine": 0.97835,
+        "threshold": 3.990375,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ncoder_layer_6/self_attention/Squeeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.978411,
+        "calibrated_cosine": 0.97835,
+        "threshold": 3.990375,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_6/self_attention/Gather",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": 0.978431,
+        "calibrated_cosine": 0.978407,
+        "threshold": 3.990375,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_6/self_attention/Gather_1",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.977395,
+        "threshold": 3.990375,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_6/self_attention/Gather_2",
+        "on": "--",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.982429,
+        "threshold": 3.990375,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_6/self_attention/Reshape_5",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.982429,
+        "threshold": 3.990375,
+        "dtype": "--"
+      },
+      {
+        "name": "...er_layer_6/self_attention/Transpose_4",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.98243,
+        "threshold": 3.990375,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_6/self_attention/Reshape_8",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.98243,
+        "threshold": 3.990375,
+        "dtype": "--"
+      },
+      {
+        "name": "...rs/encoder_layer_6/self_attention/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.978431,
+        "calibrated_cosine": 0.978407,
+        "threshold": 3.990375,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ul_output_0_reshape_transpose_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.978431,
+        "calibrated_cosine": 0.978407,
+        "threshold": 1.407165,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Mul_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.978431,
+        "calibrated_cosine": 0.978407,
+        "threshold": 1.407165,
+        "dtype": "si16"
+      },
+      {
+        "name": "...6/self_attention/Mul_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.978431,
+        "calibrated_cosine": 0.978407,
+        "threshold": 1.407165,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../encoder_layer_6/self_attention/Mul_1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.977353,
+        "threshold": 3.990375,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ul_1_output_0_transpose_Reshape_moved",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.977519,
+        "calibrated_cosine": 0.977353,
+        "threshold": 1.132679,
+        "dtype": "si8"
+      },
+      {
+        "name": "...lf_attention/Mul_1_output_0_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.977519,
+        "calibrated_cosine": 0.977354,
+        "threshold": 1.132679,
+        "dtype": "si8"
+      },
+      {
+        "name": "...coder_layer_6/self_attention/MatMul_1",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": 0.979176,
+        "calibrated_cosine": 0.979226,
+        "threshold": 1.407165,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.981778,
+        "threshold": 8.465663,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.985139,
+        "threshold": 8.465663,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.926162,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.949994,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.809513,
+        "threshold": 98.754318,
+        "dtype": "--"
+      },
+      {
+        "name": "...on/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.864312,
+        "calibrated_cosine": 0.864427,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_6/self_attention/MatMul_2",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.95181,
+        "threshold": 1.0,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...er_layer_6/self_attention/Transpose_6",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.951984,
+        "calibrated_cosine": 0.95181,
+        "threshold": 1.086508,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_6/self_attention/Gemm_pre_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.951984,
+        "calibrated_cosine": 0.95181,
+        "threshold": 1.086508,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_6/self_attention/Gemm_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.951984,
+        "calibrated_cosine": 0.951809,
+        "threshold": 1.086508,
+        "dtype": "si16"
+      },
+      {
+        "name": "...s/encoder_layer_6/self_attention/Gemm",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.960265,
+        "calibrated_cosine": 0.960246,
+        "threshold": 1.086508,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../self_attention/Gemm_transpose_output",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.960265,
+        "calibrated_cosine": 0.960246,
+        "threshold": 1.354882,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._6/self_attention/Transpose_7_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.960265,
+        "calibrated_cosine": 0.960246,
+        "threshold": 1.354882,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_6/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.937017,
+        "calibrated_cosine": 0.938039,
+        "threshold": 1.354882,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_6/ln_2/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.99488,
+        "threshold": 15.32308,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_6/ln_2/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.93801,
+        "threshold": 15.32308,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_6/ln_2/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.943223,
+        "threshold": 15.322331,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_6/ln_2/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.923958,
+        "threshold": 234.773834,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_6/ln_2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.999014,
+        "threshold": 13.778241,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_6/ln_2/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.978839,
+        "threshold": 15.322331,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_6/ln_2/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.979071,
+        "threshold": 9.072882,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_6/ln_2/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.980734,
+        "threshold": 4.217502,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_6/mlp/mlp.0/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.980469,
+        "calibrated_cosine": 0.980734,
+        "threshold": 4.404982,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_6/mlp/mlp.0/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.980469,
+        "calibrated_cosine": 0.980734,
+        "threshold": 4.404982,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yers/encoder_layer_6/mlp/mlp.0/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.995202,
+        "calibrated_cosine": 0.995253,
+        "threshold": 4.404982,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayers/encoder_layer_6/mlp/mlp.1/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.97164,
+        "threshold": 5.476653,
+        "dtype": "--"
+      },
+      {
+        "name": "...yers/encoder_layer_6/mlp/mlp.3/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.969538,
+        "calibrated_cosine": 0.970019,
+        "threshold": 2.175403,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../mlp.3/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.969537,
+        "calibrated_cosine": 0.970019,
+        "threshold": 1.159548,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_6/mlp/mlp.3/Add_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.969537,
+        "calibrated_cosine": 0.970019,
+        "threshold": 1.159548,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_6/Add_1",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.938536,
+        "calibrated_cosine": 0.939529,
+        "threshold": 15.32308,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_7/ln_1/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.993731,
+        "threshold": 15.372393,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_7/ln_1/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.939489,
+        "threshold": 15.372393,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_7/ln_1/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.941438,
+        "threshold": 15.363954,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_7/ln_1/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.910852,
+        "threshold": 236.051071,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_7/ln_1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.998514,
+        "threshold": 13.795054,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_7/ln_1/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.976006,
+        "threshold": 15.363954,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_7/ln_1/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.977169,
+        "threshold": 9.163436,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_7/ln_1/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.977228,
+        "threshold": 2.316932,
+        "dtype": "si16"
+      },
+      {
+        "name": "...self_attention/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.977007,
+        "calibrated_cosine": 0.977228,
+        "threshold": 2.292057,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._7/self_attention/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.977007,
+        "calibrated_cosine": 0.977228,
+        "threshold": 2.292057,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_7/self_attention/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.973732,
+        "calibrated_cosine": 0.973791,
+        "threshold": 2.292057,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.973732,
+        "calibrated_cosine": 0.973791,
+        "threshold": 3.711203,
+        "dtype": "si16"
+      },
+      {
+        "name": "...oder_layer_7/self_attention/Unsqueeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.973732,
+        "calibrated_cosine": 0.973791,
+        "threshold": 3.711203,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_layer_7/self_attention/Transpose_1",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.973732,
+        "calibrated_cosine": 0.973791,
+        "threshold": 3.711203,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ncoder_layer_7/self_attention/Squeeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.973732,
+        "calibrated_cosine": 0.973791,
+        "threshold": 3.711203,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_7/self_attention/Gather",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": 0.97373,
+        "calibrated_cosine": 0.97392,
+        "threshold": 3.711203,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_7/self_attention/Gather_1",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.971615,
+        "threshold": 3.711203,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_7/self_attention/Gather_2",
+        "on": "--",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.982192,
+        "threshold": 3.711203,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_7/self_attention/Reshape_5",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.982192,
+        "threshold": 3.711203,
+        "dtype": "--"
+      },
+      {
+        "name": "...er_layer_7/self_attention/Transpose_4",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.982192,
+        "threshold": 3.711203,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_7/self_attention/Reshape_8",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.982192,
+        "threshold": 3.711203,
+        "dtype": "--"
+      },
+      {
+        "name": "...rs/encoder_layer_7/self_attention/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.97373,
+        "calibrated_cosine": 0.97392,
+        "threshold": 3.711203,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ul_output_0_reshape_transpose_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.97373,
+        "calibrated_cosine": 0.97392,
+        "threshold": 1.309062,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Mul_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.97373,
+        "calibrated_cosine": 0.97392,
+        "threshold": 1.309062,
+        "dtype": "si16"
+      },
+      {
+        "name": "...7/self_attention/Mul_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.97373,
+        "calibrated_cosine": 0.97392,
+        "threshold": 1.309062,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../encoder_layer_7/self_attention/Mul_1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.971575,
+        "threshold": 3.711203,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ul_1_output_0_transpose_Reshape_moved",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.971768,
+        "calibrated_cosine": 0.971575,
+        "threshold": 1.00978,
+        "dtype": "si8"
+      },
+      {
+        "name": "...lf_attention/Mul_1_output_0_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.971768,
+        "calibrated_cosine": 0.971575,
+        "threshold": 1.00978,
+        "dtype": "si8"
+      },
+      {
+        "name": "...coder_layer_7/self_attention/MatMul_1",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": 0.975263,
+        "calibrated_cosine": 0.975519,
+        "threshold": 1.309062,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.98621,
+        "threshold": 7.771308,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.98747,
+        "threshold": 7.771308,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.910913,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.934864,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.902926,
+        "threshold": 114.299866,
+        "dtype": "--"
+      },
+      {
+        "name": "...on/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.934844,
+        "calibrated_cosine": 0.935107,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_7/self_attention/MatMul_2",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.968176,
+        "threshold": 1.0,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...er_layer_7/self_attention/Transpose_6",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.968155,
+        "calibrated_cosine": 0.968176,
+        "threshold": 1.037309,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_7/self_attention/Gemm_pre_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.968155,
+        "calibrated_cosine": 0.968176,
+        "threshold": 1.037309,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_7/self_attention/Gemm_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.968155,
+        "calibrated_cosine": 0.968176,
+        "threshold": 1.037309,
+        "dtype": "si16"
+      },
+      {
+        "name": "...s/encoder_layer_7/self_attention/Gemm",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.969956,
+        "calibrated_cosine": 0.969962,
+        "threshold": 1.037309,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../self_attention/Gemm_transpose_output",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.969955,
+        "calibrated_cosine": 0.969962,
+        "threshold": 0.875142,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._7/self_attention/Transpose_7_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.969955,
+        "calibrated_cosine": 0.969962,
+        "threshold": 0.875142,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_7/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.938865,
+        "calibrated_cosine": 0.939882,
+        "threshold": 0.875142,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_7/ln_2/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.993909,
+        "threshold": 15.361972,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_7/ln_2/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.939837,
+        "threshold": 15.361972,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_7/ln_2/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.93792,
+        "threshold": 15.3559,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_7/ln_2/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.903298,
+        "threshold": 235.803665,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_7/ln_2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.998467,
+        "threshold": 13.815495,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_7/ln_2/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.975082,
+        "threshold": 15.3559,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_7/ln_2/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.97575,
+        "threshold": 8.984362,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_7/ln_2/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.977528,
+        "threshold": 4.769868,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_7/mlp/mlp.0/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.977249,
+        "calibrated_cosine": 0.977528,
+        "threshold": 4.962857,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_7/mlp/mlp.0/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.977249,
+        "calibrated_cosine": 0.977527,
+        "threshold": 4.962857,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yers/encoder_layer_7/mlp/mlp.0/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.994997,
+        "calibrated_cosine": 0.995028,
+        "threshold": 4.962857,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayers/encoder_layer_7/mlp/mlp.1/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.971385,
+        "threshold": 5.95015,
+        "dtype": "--"
+      },
+      {
+        "name": "...yers/encoder_layer_7/mlp/mlp.3/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.970051,
+        "calibrated_cosine": 0.970394,
+        "threshold": 2.417267,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../mlp.3/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.970052,
+        "calibrated_cosine": 0.970394,
+        "threshold": 1.313667,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_7/mlp/mlp.3/Add_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.970052,
+        "calibrated_cosine": 0.970394,
+        "threshold": 1.313667,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_7/Add_1",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.938458,
+        "calibrated_cosine": 0.939409,
+        "threshold": 15.361972,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_8/ln_1/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.992887,
+        "threshold": 15.390198,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_8/ln_1/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.939371,
+        "threshold": 15.390198,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_8/ln_1/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.931047,
+        "threshold": 15.391215,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_8/ln_1/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.877405,
+        "threshold": 236.889511,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_8/ln_1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.996558,
+        "threshold": 13.734669,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_8/ln_1/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.971862,
+        "threshold": 15.391215,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_8/ln_1/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.972954,
+        "threshold": 8.609445,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_8/ln_1/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.973038,
+        "threshold": 2.560529,
+        "dtype": "si16"
+      },
+      {
+        "name": "...self_attention/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.97275,
+        "calibrated_cosine": 0.973038,
+        "threshold": 2.69925,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._8/self_attention/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.97275,
+        "calibrated_cosine": 0.973039,
+        "threshold": 2.69925,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_8/self_attention/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.96386,
+        "calibrated_cosine": 0.964118,
+        "threshold": 2.69925,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.963861,
+        "calibrated_cosine": 0.964117,
+        "threshold": 3.318564,
+        "dtype": "si16"
+      },
+      {
+        "name": "...oder_layer_8/self_attention/Unsqueeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.963861,
+        "calibrated_cosine": 0.964117,
+        "threshold": 3.318564,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_layer_8/self_attention/Transpose_1",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.963861,
+        "calibrated_cosine": 0.964119,
+        "threshold": 3.318564,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ncoder_layer_8/self_attention/Squeeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.963861,
+        "calibrated_cosine": 0.964119,
+        "threshold": 3.318564,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_8/self_attention/Gather",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": 0.961518,
+        "calibrated_cosine": 0.961965,
+        "threshold": 3.318564,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_8/self_attention/Gather_1",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.963475,
+        "threshold": 3.318564,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_8/self_attention/Gather_2",
+        "on": "--",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.979681,
+        "threshold": 3.318564,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_8/self_attention/Reshape_5",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.979681,
+        "threshold": 3.318564,
+        "dtype": "--"
+      },
+      {
+        "name": "...er_layer_8/self_attention/Transpose_4",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.979682,
+        "threshold": 3.318564,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_8/self_attention/Reshape_8",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.979682,
+        "threshold": 3.318564,
+        "dtype": "--"
+      },
+      {
+        "name": "...rs/encoder_layer_8/self_attention/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.961519,
+        "calibrated_cosine": 0.961966,
+        "threshold": 3.318564,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ul_output_0_reshape_transpose_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.961519,
+        "calibrated_cosine": 0.961966,
+        "threshold": 1.169622,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Mul_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.961519,
+        "calibrated_cosine": 0.961966,
+        "threshold": 1.169622,
+        "dtype": "si16"
+      },
+      {
+        "name": "...8/self_attention/Mul_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.961519,
+        "calibrated_cosine": 0.961966,
+        "threshold": 1.169622,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../encoder_layer_8/self_attention/Mul_1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.963423,
+        "threshold": 3.318564,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ul_1_output_0_transpose_Reshape_moved",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.963452,
+        "calibrated_cosine": 0.963423,
+        "threshold": 0.94706,
+        "dtype": "si8"
+      },
+      {
+        "name": "...lf_attention/Mul_1_output_0_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.963452,
+        "calibrated_cosine": 0.963423,
+        "threshold": 0.94706,
+        "dtype": "si8"
+      },
+      {
+        "name": "...coder_layer_8/self_attention/MatMul_1",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": 0.960959,
+        "calibrated_cosine": 0.962099,
+        "threshold": 1.169622,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.990471,
+        "threshold": 6.933711,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.988958,
+        "threshold": 6.933711,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.92668,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.947689,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.968381,
+        "threshold": 128.436493,
+        "dtype": "--"
+      },
+      {
+        "name": "...on/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.961829,
+        "calibrated_cosine": 0.962105,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_8/self_attention/MatMul_2",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.973632,
+        "threshold": 1.0,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...er_layer_8/self_attention/Transpose_6",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.972715,
+        "calibrated_cosine": 0.973632,
+        "threshold": 1.167914,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_8/self_attention/Gemm_pre_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.972715,
+        "calibrated_cosine": 0.973632,
+        "threshold": 1.167914,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_8/self_attention/Gemm_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.972715,
+        "calibrated_cosine": 0.973633,
+        "threshold": 1.167914,
+        "dtype": "si16"
+      },
+      {
+        "name": "...s/encoder_layer_8/self_attention/Gemm",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.974898,
+        "calibrated_cosine": 0.975865,
+        "threshold": 1.167914,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../self_attention/Gemm_transpose_output",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.974898,
+        "calibrated_cosine": 0.975865,
+        "threshold": 1.286695,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._8/self_attention/Transpose_7_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.974898,
+        "calibrated_cosine": 0.975865,
+        "threshold": 1.286695,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_8/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.939334,
+        "calibrated_cosine": 0.940402,
+        "threshold": 1.286695,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_8/ln_2/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.993085,
+        "threshold": 15.058634,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_8/ln_2/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.940366,
+        "threshold": 15.058634,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_8/ln_2/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.92206,
+        "threshold": 15.065786,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_8/ln_2/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.871988,
+        "threshold": 226.977921,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_8/ln_2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.995003,
+        "threshold": 13.609248,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_8/ln_2/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.971665,
+        "threshold": 15.065786,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_8/ln_2/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.97244,
+        "threshold": 8.067685,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_8/ln_2/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.974795,
+        "threshold": 4.325882,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_8/mlp/mlp.0/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.974335,
+        "calibrated_cosine": 0.974795,
+        "threshold": 4.537668,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_8/mlp/mlp.0/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.974335,
+        "calibrated_cosine": 0.974795,
+        "threshold": 4.537668,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yers/encoder_layer_8/mlp/mlp.0/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.995937,
+        "calibrated_cosine": 0.996033,
+        "threshold": 4.537668,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayers/encoder_layer_8/mlp/mlp.1/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.976598,
+        "threshold": 6.398622,
+        "dtype": "--"
+      },
+      {
+        "name": "...yers/encoder_layer_8/mlp/mlp.3/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.973171,
+        "calibrated_cosine": 0.973452,
+        "threshold": 2.221633,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../mlp.3/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.973171,
+        "calibrated_cosine": 0.973452,
+        "threshold": 1.154182,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_8/mlp/mlp.3/Add_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.973171,
+        "calibrated_cosine": 0.973452,
+        "threshold": 1.154182,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_8/Add_1",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.939116,
+        "calibrated_cosine": 0.940226,
+        "threshold": 15.058634,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_9/ln_1/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.992802,
+        "threshold": 14.738909,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_9/ln_1/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.940198,
+        "threshold": 14.738909,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_9/ln_1/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.907291,
+        "threshold": 14.734722,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_9/ln_1/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.853832,
+        "threshold": 217.11203,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_9/ln_1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.992249,
+        "threshold": 13.338145,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_9/ln_1/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.970982,
+        "threshold": 14.734722,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_9/ln_1/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.971699,
+        "threshold": 8.219592,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_9/ln_1/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.971642,
+        "threshold": 2.451196,
+        "dtype": "si16"
+      },
+      {
+        "name": "...self_attention/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.971234,
+        "calibrated_cosine": 0.971642,
+        "threshold": 2.675251,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._9/self_attention/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.971234,
+        "calibrated_cosine": 0.971642,
+        "threshold": 2.675251,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_9/self_attention/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.970865,
+        "calibrated_cosine": 0.971049,
+        "threshold": 2.675251,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.970865,
+        "calibrated_cosine": 0.971048,
+        "threshold": 4.071713,
+        "dtype": "si16"
+      },
+      {
+        "name": "...oder_layer_9/self_attention/Unsqueeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.970865,
+        "calibrated_cosine": 0.971048,
+        "threshold": 4.071713,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_layer_9/self_attention/Transpose_1",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.970865,
+        "calibrated_cosine": 0.971049,
+        "threshold": 4.071713,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ncoder_layer_9/self_attention/Squeeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.970865,
+        "calibrated_cosine": 0.971049,
+        "threshold": 4.071713,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_9/self_attention/Gather",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": 0.969201,
+        "calibrated_cosine": 0.969331,
+        "threshold": 4.071713,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_9/self_attention/Gather_1",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.972899,
+        "threshold": 4.071713,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_9/self_attention/Gather_2",
+        "on": "--",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.975073,
+        "threshold": 4.071713,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_9/self_attention/Reshape_5",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.975073,
+        "threshold": 4.071713,
+        "dtype": "--"
+      },
+      {
+        "name": "...er_layer_9/self_attention/Transpose_4",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.975073,
+        "threshold": 4.071713,
+        "dtype": "--"
+      },
+      {
+        "name": "...oder_layer_9/self_attention/Reshape_8",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.975073,
+        "threshold": 4.071713,
+        "dtype": "--"
+      },
+      {
+        "name": "...rs/encoder_layer_9/self_attention/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.969202,
+        "calibrated_cosine": 0.969331,
+        "threshold": 4.071713,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ul_output_0_reshape_transpose_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.969202,
+        "calibrated_cosine": 0.969331,
+        "threshold": 1.439568,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Mul_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.969202,
+        "calibrated_cosine": 0.969332,
+        "threshold": 1.439568,
+        "dtype": "si16"
+      },
+      {
+        "name": "...9/self_attention/Mul_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.969202,
+        "calibrated_cosine": 0.969332,
+        "threshold": 1.439568,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../encoder_layer_9/self_attention/Mul_1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.972857,
+        "threshold": 4.071713,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ul_1_output_0_transpose_Reshape_moved",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.972659,
+        "calibrated_cosine": 0.972857,
+        "threshold": 0.787166,
+        "dtype": "si8"
+      },
+      {
+        "name": "...lf_attention/Mul_1_output_0_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.972659,
+        "calibrated_cosine": 0.972856,
+        "threshold": 0.787166,
+        "dtype": "si8"
+      },
+      {
+        "name": "...coder_layer_9/self_attention/MatMul_1",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": 0.969692,
+        "calibrated_cosine": 0.969899,
+        "threshold": 1.439568,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.965156,
+        "threshold": 7.294574,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.980377,
+        "threshold": 7.294574,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.937136,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.962607,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.884225,
+        "threshold": 126.889893,
+        "dtype": "--"
+      },
+      {
+        "name": "...on/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.933021,
+        "calibrated_cosine": 0.933613,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_9/self_attention/MatMul_2",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.977399,
+        "threshold": 1.0,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...er_layer_9/self_attention/Transpose_6",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.976784,
+        "calibrated_cosine": 0.977399,
+        "threshold": 0.760578,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_9/self_attention/Gemm_pre_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.976784,
+        "calibrated_cosine": 0.977399,
+        "threshold": 0.760578,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_9/self_attention/Gemm_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.976784,
+        "calibrated_cosine": 0.977399,
+        "threshold": 0.760578,
+        "dtype": "si16"
+      },
+      {
+        "name": "...s/encoder_layer_9/self_attention/Gemm",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.980829,
+        "calibrated_cosine": 0.98205,
+        "threshold": 0.760578,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../self_attention/Gemm_transpose_output",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.980829,
+        "calibrated_cosine": 0.98205,
+        "threshold": 0.742269,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._9/self_attention/Transpose_7_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.980829,
+        "calibrated_cosine": 0.98205,
+        "threshold": 0.742269,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_9/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.93967,
+        "calibrated_cosine": 0.940898,
+        "threshold": 0.742269,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_9/ln_2/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.993641,
+        "threshold": 14.684785,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_9/ln_2/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.940868,
+        "threshold": 14.684785,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_9/ln_2/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.903876,
+        "threshold": 14.694987,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_9/ln_2/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.853274,
+        "threshold": 215.942657,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_9/ln_2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.994814,
+        "threshold": 13.267919,
+        "dtype": "--"
+      },
+      {
+        "name": "..._layer_9/ln_2/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.971496,
+        "threshold": 14.694987,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_9/ln_2/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.971089,
+        "threshold": 8.195901,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_9/ln_2/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.973361,
+        "threshold": 4.004979,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_9/mlp/mlp.0/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.972789,
+        "calibrated_cosine": 0.973361,
+        "threshold": 4.184882,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_9/mlp/mlp.0/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.972789,
+        "calibrated_cosine": 0.973361,
+        "threshold": 4.184882,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yers/encoder_layer_9/mlp/mlp.0/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.995941,
+        "calibrated_cosine": 0.996097,
+        "threshold": 4.184882,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayers/encoder_layer_9/mlp/mlp.1/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.977015,
+        "threshold": 4.877841,
+        "dtype": "--"
+      },
+      {
+        "name": "...yers/encoder_layer_9/mlp/mlp.3/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.977139,
+        "calibrated_cosine": 0.976289,
+        "threshold": 2.477089,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../mlp.3/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.977139,
+        "calibrated_cosine": 0.976289,
+        "threshold": 2.284995,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_9/mlp/mlp.3/Add_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.977139,
+        "calibrated_cosine": 0.976289,
+        "threshold": 2.284995,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_9/Add_1",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.944964,
+        "calibrated_cosine": 0.946233,
+        "threshold": 14.684785,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_10/ln_1/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.993544,
+        "threshold": 14.511228,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_10/ln_1/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.946209,
+        "threshold": 14.511228,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_10/ln_1/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.884468,
+        "threshold": 14.507556,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_10/ln_1/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.846413,
+        "threshold": 210.469177,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_10/ln_1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.995223,
+        "threshold": 13.057555,
+        "dtype": "--"
+      },
+      {
+        "name": "...layer_10/ln_1/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.971394,
+        "threshold": 14.507556,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_10/ln_1/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.972137,
+        "threshold": 7.731146,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_10/ln_1/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.971198,
+        "threshold": 2.429344,
+        "dtype": "si16"
+      },
+      {
+        "name": "...self_attention/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.970789,
+        "calibrated_cosine": 0.971198,
+        "threshold": 2.436731,
+        "dtype": "si16"
+      },
+      {
+        "name": "...10/self_attention/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.970789,
+        "calibrated_cosine": 0.971198,
+        "threshold": 2.436731,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ncoder_layer_10/self_attention/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.976478,
+        "calibrated_cosine": 0.976259,
+        "threshold": 2.436731,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.976479,
+        "calibrated_cosine": 0.976259,
+        "threshold": 3.668224,
+        "dtype": "si16"
+      },
+      {
+        "name": "...der_layer_10/self_attention/Unsqueeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.976479,
+        "calibrated_cosine": 0.976259,
+        "threshold": 3.668224,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_10/self_attention/Transpose_1",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.976479,
+        "calibrated_cosine": 0.976259,
+        "threshold": 3.668224,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_10/self_attention/Squeeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.976479,
+        "calibrated_cosine": 0.976259,
+        "threshold": 3.668224,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ncoder_layer_10/self_attention/Gather",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": 0.970185,
+        "calibrated_cosine": 0.969729,
+        "threshold": 3.668224,
+        "dtype": "si16"
+      },
+      {
+        "name": "...oder_layer_10/self_attention/Gather_1",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.980845,
+        "threshold": 3.668224,
+        "dtype": "si16"
+      },
+      {
+        "name": "...oder_layer_10/self_attention/Gather_2",
+        "on": "--",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.971516,
+        "threshold": 3.668224,
+        "dtype": "--"
+      },
+      {
+        "name": "...der_layer_10/self_attention/Reshape_5",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.971516,
+        "threshold": 3.668224,
+        "dtype": "--"
+      },
+      {
+        "name": "...r_layer_10/self_attention/Transpose_4",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.971516,
+        "threshold": 3.668224,
+        "dtype": "--"
+      },
+      {
+        "name": "...der_layer_10/self_attention/Reshape_8",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.971516,
+        "threshold": 3.668224,
+        "dtype": "--"
+      },
+      {
+        "name": "...s/encoder_layer_10/self_attention/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.970185,
+        "calibrated_cosine": 0.969729,
+        "threshold": 3.668224,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ul_output_0_reshape_transpose_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.970185,
+        "calibrated_cosine": 0.969729,
+        "threshold": 1.296913,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Mul_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.970185,
+        "calibrated_cosine": 0.969729,
+        "threshold": 1.296913,
+        "dtype": "si16"
+      },
+      {
+        "name": "...0/self_attention/Mul_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.970185,
+        "calibrated_cosine": 0.969729,
+        "threshold": 1.296913,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_10/self_attention/Mul_1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.980797,
+        "threshold": 3.668224,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ul_1_output_0_transpose_Reshape_moved",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.98073,
+        "calibrated_cosine": 0.980797,
+        "threshold": 1.083828,
+        "dtype": "si8"
+      },
+      {
+        "name": "...lf_attention/Mul_1_output_0_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.98073,
+        "calibrated_cosine": 0.980797,
+        "threshold": 1.083828,
+        "dtype": "si8"
+      },
+      {
+        "name": "...oder_layer_10/self_attention/MatMul_1",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": 0.970614,
+        "calibrated_cosine": 0.971514,
+        "threshold": 1.296913,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.897774,
+        "threshold": 6.713217,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.968005,
+        "threshold": 6.713217,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.921728,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.955836,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.704686,
+        "threshold": 170.988434,
+        "dtype": "--"
+      },
+      {
+        "name": "...on/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.835965,
+        "calibrated_cosine": 0.836941,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...oder_layer_10/self_attention/MatMul_2",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.962848,
+        "threshold": 1.0,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...r_layer_10/self_attention/Transpose_6",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.957426,
+        "calibrated_cosine": 0.962848,
+        "threshold": 0.571166,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_10/self_attention/Gemm_pre_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.957426,
+        "calibrated_cosine": 0.962848,
+        "threshold": 0.571166,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_10/self_attention/Gemm_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.957426,
+        "calibrated_cosine": 0.962848,
+        "threshold": 0.571166,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../encoder_layer_10/self_attention/Gemm",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.951284,
+        "calibrated_cosine": 0.960204,
+        "threshold": 0.571166,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../self_attention/Gemm_transpose_output",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.951285,
+        "calibrated_cosine": 0.960204,
+        "threshold": 0.523754,
+        "dtype": "si16"
+      },
+      {
+        "name": "...10/self_attention/Transpose_7_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.951285,
+        "calibrated_cosine": 0.960204,
+        "threshold": 0.523754,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_10/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.943692,
+        "calibrated_cosine": 0.944985,
+        "threshold": 0.523754,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_10/ln_2/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.993523,
+        "threshold": 14.597681,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_10/ln_2/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.944959,
+        "threshold": 14.597681,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_10/ln_2/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.890782,
+        "threshold": 14.599447,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_10/ln_2/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.847174,
+        "threshold": 213.14386,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_10/ln_2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.992632,
+        "threshold": 13.127658,
+        "dtype": "--"
+      },
+      {
+        "name": "...layer_10/ln_2/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.970117,
+        "threshold": 14.599447,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_10/ln_2/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.969427,
+        "threshold": 7.833476,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_10/ln_2/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.971949,
+        "threshold": 3.727531,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_10/mlp/mlp.0/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.971306,
+        "calibrated_cosine": 0.971949,
+        "threshold": 3.836934,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_10/mlp/mlp.0/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.971306,
+        "calibrated_cosine": 0.971949,
+        "threshold": 3.836934,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ers/encoder_layer_10/mlp/mlp.0/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.995408,
+        "calibrated_cosine": 0.995535,
+        "threshold": 3.836934,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yers/encoder_layer_10/mlp/mlp.1/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.967931,
+        "threshold": 4.917825,
+        "dtype": "--"
+      },
+      {
+        "name": "...ers/encoder_layer_10/mlp/mlp.3/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.971511,
+        "calibrated_cosine": 0.971452,
+        "threshold": 3.955519,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../mlp.3/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.971511,
+        "calibrated_cosine": 0.971453,
+        "threshold": 4.599616,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_10/mlp/mlp.3/Add_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.971511,
+        "calibrated_cosine": 0.971453,
+        "threshold": 4.599616,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_10/Add_1",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.96137,
+        "calibrated_cosine": 0.962018,
+        "threshold": 14.597681,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_11/ln_1/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.989888,
+        "threshold": 15.796398,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_11/ln_1/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.962012,
+        "threshold": 15.796398,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_11/ln_1/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.857003,
+        "threshold": 15.812138,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_11/ln_1/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.91512,
+        "threshold": 250.023697,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_11/ln_1/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.992672,
+        "threshold": 13.978496,
+        "dtype": "--"
+      },
+      {
+        "name": "...layer_11/ln_1/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.967556,
+        "threshold": 15.812138,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_11/ln_1/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.968528,
+        "threshold": 7.498705,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_11/ln_1/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.966962,
+        "threshold": 1.548113,
+        "dtype": "si16"
+      },
+      {
+        "name": "...self_attention/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.96627,
+        "calibrated_cosine": 0.966962,
+        "threshold": 1.445436,
+        "dtype": "si16"
+      },
+      {
+        "name": "...11/self_attention/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.96627,
+        "calibrated_cosine": 0.966962,
+        "threshold": 1.445436,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ncoder_layer_11/self_attention/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.972438,
+        "calibrated_cosine": 0.973178,
+        "threshold": 1.445436,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.972439,
+        "calibrated_cosine": 0.973177,
+        "threshold": 3.631543,
+        "dtype": "si16"
+      },
+      {
+        "name": "...der_layer_11/self_attention/Unsqueeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.972439,
+        "calibrated_cosine": 0.973177,
+        "threshold": 3.631543,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_layer_11/self_attention/Transpose_1",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.972439,
+        "calibrated_cosine": 0.973178,
+        "threshold": 3.631543,
+        "dtype": "si16"
+      },
+      {
+        "name": "...coder_layer_11/self_attention/Squeeze",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.972439,
+        "calibrated_cosine": 0.973178,
+        "threshold": 3.631543,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ncoder_layer_11/self_attention/Gather",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": 0.963875,
+        "calibrated_cosine": 0.965457,
+        "threshold": 3.631543,
+        "dtype": "si16"
+      },
+      {
+        "name": "...oder_layer_11/self_attention/Gather_1",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.975103,
+        "threshold": 3.631543,
+        "dtype": "si16"
+      },
+      {
+        "name": "...oder_layer_11/self_attention/Gather_2",
+        "on": "--",
+        "type": "Gather",
+        "cosine": null,
+        "calibrated_cosine": 0.96887,
+        "threshold": 3.631543,
+        "dtype": "--"
+      },
+      {
+        "name": "...der_layer_11/self_attention/Reshape_5",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.96887,
+        "threshold": 3.631543,
+        "dtype": "--"
+      },
+      {
+        "name": "...r_layer_11/self_attention/Transpose_4",
+        "on": "--",
+        "type": "Transpose",
+        "cosine": null,
+        "calibrated_cosine": 0.968871,
+        "threshold": 3.631543,
+        "dtype": "--"
+      },
+      {
+        "name": "...der_layer_11/self_attention/Reshape_8",
+        "on": "--",
+        "type": "Reshape",
+        "cosine": null,
+        "calibrated_cosine": 0.968871,
+        "threshold": 3.631543,
+        "dtype": "--"
+      },
+      {
+        "name": "...s/encoder_layer_11/self_attention/Mul",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.963859,
+        "calibrated_cosine": 0.965446,
+        "threshold": 3.631543,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ul_output_0_reshape_transpose_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.963859,
+        "calibrated_cosine": 0.965446,
+        "threshold": 0.914002,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ention/Mul_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.963859,
+        "calibrated_cosine": 0.965446,
+        "threshold": 0.914002,
+        "dtype": "si16"
+      },
+      {
+        "name": "...1/self_attention/Mul_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.963859,
+        "calibrated_cosine": 0.965446,
+        "threshold": 0.914002,
+        "dtype": "si16"
+      },
+      {
+        "name": "...encoder_layer_11/self_attention/Mul_1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.975083,
+        "threshold": 3.631543,
+        "dtype": "si8"
+      },
+      {
+        "name": "...ul_1_output_0_transpose_Reshape_moved",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.97452,
+        "calibrated_cosine": 0.975083,
+        "threshold": 1.283944,
+        "dtype": "si8"
+      },
+      {
+        "name": "...lf_attention/Mul_1_output_0_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.97452,
+        "calibrated_cosine": 0.975082,
+        "threshold": 1.283944,
+        "dtype": "si8"
+      },
+      {
+        "name": "...oder_layer_11/self_attention/MatMul_1",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": 0.886823,
+        "calibrated_cosine": 0.895261,
+        "threshold": 0.914002,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...tmax_reducemax_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceMax",
+        "cosine": null,
+        "calibrated_cosine": 0.962188,
+        "threshold": 6.622921,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_sub_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.961374,
+        "threshold": 6.622921,
+        "dtype": "si16"
+      },
+      {
+        "name": "...on/Softmax_exp_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Exp",
+        "cosine": null,
+        "calibrated_cosine": 0.904395,
+        "threshold": 11.090324,
+        "dtype": "--"
+      },
+      {
+        "name": "...tmax_reducesum_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "ReduceSum",
+        "cosine": null,
+        "calibrated_cosine": 0.952521,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...max_reciprocal_FROM_QUANTIZED_SOFTMAX",
+        "on": "--",
+        "type": "Reciprocal",
+        "cosine": null,
+        "calibrated_cosine": 0.844375,
+        "threshold": 159.531586,
+        "dtype": "--"
+      },
+      {
+        "name": "...on/Softmax_mul_FROM_QUANTIZED_SOFTMAX",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": 0.836434,
+        "calibrated_cosine": 0.837806,
+        "threshold": 1.0,
+        "dtype": "si16"
+      },
+      {
+        "name": "...oder_layer_11/self_attention/MatMul_2",
+        "on": "BPU",
+        "type": "MatMul",
+        "cosine": null,
+        "calibrated_cosine": 0.987143,
+        "threshold": 1.0,
+        "dtype": "si8,si16"
+      },
+      {
+        "name": "...r_layer_11/self_attention/Transpose_6",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.986545,
+        "calibrated_cosine": 0.987143,
+        "threshold": 1.198903,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_11/self_attention/Gemm_pre_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.986545,
+        "calibrated_cosine": 0.987143,
+        "threshold": 1.198903,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_11/self_attention/Gemm_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.986545,
+        "calibrated_cosine": 0.987143,
+        "threshold": 1.198903,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../encoder_layer_11/self_attention/Gemm",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.996197,
+        "calibrated_cosine": 0.996426,
+        "threshold": 1.198903,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../self_attention/Gemm_transpose_output",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.996196,
+        "calibrated_cosine": 0.996426,
+        "threshold": 3.759987,
+        "dtype": "si16"
+      },
+      {
+        "name": "...11/self_attention/Transpose_7_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.996196,
+        "calibrated_cosine": 0.996426,
+        "threshold": 3.759987,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_11/Add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.956439,
+        "calibrated_cosine": 0.957141,
+        "threshold": 3.759987,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_11/ln_2/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.988992,
+        "threshold": 15.574286,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_11/ln_2/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.957132,
+        "threshold": 15.574286,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_11/ln_2/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.845673,
+        "threshold": 15.572265,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_11/ln_2/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.897883,
+        "threshold": 242.495422,
+        "dtype": "si16"
+      },
+      {
+        "name": "...er_11/ln_2/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.995491,
+        "threshold": 13.896008,
+        "dtype": "--"
+      },
+      {
+        "name": "...layer_11/ln_2/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.96669,
+        "threshold": 15.572265,
+        "dtype": "si16"
+      },
+      {
+        "name": "...layer_11/ln_2/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.965449,
+        "threshold": 7.528028,
+        "dtype": "si16"
+      },
+      {
+        "name": "..._layer_11/ln_2/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": null,
+        "calibrated_cosine": 0.967015,
+        "threshold": 4.164069,
+        "dtype": "si16"
+      },
+      {
+        "name": "...r_11/mlp/mlp.0/MatMul_reshape_to_4dim",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.966093,
+        "calibrated_cosine": 0.967015,
+        "threshold": 4.17033,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ayer_11/mlp/mlp.0/MatMul_transpose_in",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.966093,
+        "calibrated_cosine": 0.967015,
+        "threshold": 4.17033,
+        "dtype": "si16"
+      },
+      {
+        "name": "...ers/encoder_layer_11/mlp/mlp.0/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.992203,
+        "calibrated_cosine": 0.992683,
+        "threshold": 4.17033,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yers/encoder_layer_11/mlp/mlp.1/Mul_1",
+        "on": "--",
+        "type": "HzGelu",
+        "cosine": null,
+        "calibrated_cosine": 0.971996,
+        "threshold": 4.666344,
+        "dtype": "--"
+      },
+      {
+        "name": "...ers/encoder_layer_11/mlp/mlp.3/MatMul",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.952384,
+        "calibrated_cosine": 0.955254,
+        "threshold": 1.323452,
+        "dtype": "si16"
+      },
+      {
+        "name": ".../mlp.3/Add_output_0_reshape_Transpose",
+        "on": "BPU",
+        "type": "Transpose",
+        "cosine": 0.952384,
+        "calibrated_cosine": 0.955255,
+        "threshold": 5.1573,
+        "dtype": "si16"
+      },
+      {
+        "name": "...yer_11/mlp/mlp.3/Add_output_0_Reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.952384,
+        "calibrated_cosine": 0.955255,
+        "threshold": 5.1573,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/layers/encoder_layer_11/Add_1",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.949154,
+        "calibrated_cosine": 0.950311,
+        "threshold": 15.574286,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/ln/LayerNormalization_mean1",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.989892,
+        "threshold": 15.58059,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/ln/LayerNormalization_sub1",
+        "on": "BPU",
+        "type": "Sub",
+        "cosine": null,
+        "calibrated_cosine": 0.950298,
+        "threshold": 15.58059,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/ln/LayerNormalization_mul1",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.84582,
+        "threshold": 15.589403,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/ln/LayerNormalization_mean2",
+        "on": "BPU",
+        "type": "ReduceMean",
+        "cosine": null,
+        "calibrated_cosine": 0.909357,
+        "threshold": 243.029495,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/ln/LayerNormalization_hzrsqrt",
+        "on": "--",
+        "type": "HzRsqrt",
+        "cosine": null,
+        "calibrated_cosine": 0.995257,
+        "threshold": 13.783501,
+        "dtype": "--"
+      },
+      {
+        "name": "/encoder/ln/LayerNormalization_mul2",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.955191,
+        "threshold": 15.589403,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/ln/LayerNormalization_mul3",
+        "on": "BPU",
+        "type": "Mul",
+        "cosine": null,
+        "calibrated_cosine": 0.963194,
+        "threshold": 7.374349,
+        "dtype": "si16"
+      },
+      {
+        "name": "/encoder/ln/LayerNormalization_add",
+        "on": "BPU",
+        "type": "Add",
+        "cosine": 0.962314,
+        "calibrated_cosine": 0.96311,
+        "threshold": 3.829536,
+        "dtype": "si16"
+      },
+      {
+        "name": "/Gather",
+        "on": "BPU",
+        "type": "Gather",
+        "cosine": 0.115073,
+        "calibrated_cosine": 0.111603,
+        "threshold": 3.799019,
+        "dtype": "si16"
+      },
+      {
+        "name": "/heads/head/Gemm_transpose_in_reshape",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.115073,
+        "calibrated_cosine": 0.111603,
+        "threshold": 3.799019,
+        "dtype": "si16"
+      },
+      {
+        "name": "/heads/head/Gemm",
+        "on": "BPU",
+        "type": "Conv",
+        "cosine": 0.168184,
+        "calibrated_cosine": 0.164351,
+        "threshold": 3.799019,
+        "dtype": "si32"
+      },
+      {
+        "name": "/heads/head/Gemm_reshape_output",
+        "on": "BPU",
+        "type": "Reshape",
+        "cosine": 0.168184,
+        "calibrated_cosine": 0.164351,
+        "threshold": null,
+        "dtype": "si32,f32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "logits",
+        "calibrated_cosine": 0.164351,
+        "cosine": 0.168184
+      }
+    ]
+  },
+  "subgraphs": [
+    {
+      "name": "subgraph_0",
+      "perf": {
+        "fps": 136.09,
+        "latency_ms": 7.35,
+        "latency_us": 7348.1,
+        "ddr_mb_per_frame": 143.736,
+        "bpu_ops_per_frame": 35127656448.0,
+        "core_number": 1,
+        "march": "nash-e"
+      },
+      "intervals": {
+        "count": 37,
+        "interval_ms": 0.2,
+        "utilization": [
+          0.709,
+          0.889,
+          0.793,
+          0.87,
+          0.953,
+          0.754,
+          0.913,
+          0.915,
+          0.781,
+          0.913,
+          0.962,
+          0.797,
+          0.87,
+          0.959,
+          0.803,
+          0.904,
+          0.903,
+          0.793,
+          0.87,
+          0.903,
+          0.791,
+          0.878,
+          0.903,
+          0.791,
+          0.913,
+          0.903,
+          0.791,
+          0.876,
+          0.905,
+          0.789,
+          0.903,
+          0.961,
+          0.803,
+          0.868,
+          0.903,
+          0.786,
+          0.648
+        ],
+        "load_bandwidth_mbs": [
+          19649,
+          8199,
+          22839,
+          18438,
+          7862,
+          21724,
+          18266,
+          7802,
+          22513,
+          17755,
+          9741,
+          22963,
+          17964,
+          9507,
+          22197,
+          16150,
+          9441,
+          22970,
+          17064,
+          8574,
+          22963,
+          17939,
+          8197,
+          22662,
+          17212,
+          8382,
+          22961,
+          18134,
+          8181,
+          22440,
+          17449,
+          9624,
+          22443,
+          17195,
+          8348,
+          22715,
+          11697
+        ],
+        "store_bandwidth_mbs": [
+          3046,
+          3779,
+          3046,
+          3046,
+          2996,
+          3829,
+          3046,
+          3779,
+          3046,
+          3046,
+          3779,
+          3046,
+          3046,
+          3779,
+          3046,
+          3046,
+          3779,
+          3046,
+          3046,
+          3779,
+          3046,
+          3046,
+          3779,
+          3046,
+          3046,
+          3779,
+          3046,
+          3046,
+          3779,
+          3046,
+          3046,
+          3779,
+          3046,
+          3046,
+          3779,
+          3046,
+          19
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "latency_ms": 7.35,
+    "fps_derived": 136.05,
+    "ddr_mb_per_frame": 143.736,
+    "bpu_ops_per_frame": 35127656448.0,
+    "derivation": "latency = sum of subgraph latency; fps_derived = 1000 / latency (sequential subgraph execution assumption); values from hbdk static estimation, not board measurement"
+  },
+  "similarity_provenance": {
+    "stage": "ptq-simulation",
+    "method": "hb_compile node_info.csv calibrated/quantized cosine (x86 PTQ simulation)",
+    "calibration_samples": 200,
+    "source_log": "output/hb_compile.log",
+    "comparison_input_count": 1,
+    "comparison_scope": "Native full NodeInfo uses one first_cali_data mapping as one verifier input_files entry",
+    "calibration_count_source": "Actual native dataset-count log and frozen tensor manifest",
+    "note": "Native NodeInfo hook diagnostics; not a held-out dataset accuracy measurement"
+  },
+  "performance_provenance": {
+    "stage": "compiler-static-estimate",
+    "source": "hb_compile-json",
+    "method": "hbdk-cc static latency estimate of the compiled release artifact",
+    "note": "Estimates describe the compiled artifact; on-board measurements live in the model benchmark."
+  },
+  "board_measurement": null,
+  "provenance": {
+    "artifact_sha256": "441eadef5af415056da40d208b5be88382113c6353f22e9ff22bd96980f7a3e2",
+    "hb_compile_log_sha256": "4c01a6a692c632253a431c77bd135b2451a97008b666b4de15f30497e71c79ef",
+    "oe_report_json_sha256": "f1bfa7a1e0a4e9c982a88f9ebc80904627fb3bcd2de17381cb4e7da68bcdc58f",
+    "derived_metadata": {
+      "extracted_json": {
+        "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/vit-s100-cpuptq-20261105-r01/collected/model/output/oe_report_data.extracted.json",
+        "sha256": "a1bb2622bd9876e3097332e216414d4f1bc5bad80b60d4f2b9a9a11f402d9d7c",
+        "size_bytes": 181668
+      },
+      "supplements": "Actual public HBM IO, native per-output cosine table and observed PTQ dataset count",
+      "source_evidence": {
+        "native_compile_stdout": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/vit-s100-cpuptq-20261105-r01/compile.log",
+          "sha256": "44664449c98520545b18474dfb060a093315725fcddf9f62abb3364b3eda8142",
+          "size_bytes": 182619
+        },
+        "actual_hbm_info": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/vit-s100-cpuptq-20261105-r01/compile-info.log",
+          "sha256": "bbc84e77d195747799ccb74a4633bf63551eab8b05eea57cb4a723790c07d47f",
+          "size_bytes": 9658
+        },
+        "derived_extraction_log": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/vit-s100-cpuptq-20261105-r01/collected/model/output/hb_compile.log",
+          "sha256": "4c01a6a692c632253a431c77bd135b2451a97008b666b4de15f30497e71c79ef",
+          "size_bytes": 192335
+        },
+        "native_node_csv": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/vit-s100-cpuptq-20261105-r01/output/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe_node_info.csv",
+          "sha256": "c95c6195a81f5138b1cde54ed27e2590b29299cec0401b854aba08db20a50e0e",
+          "size_bytes": 58243
+        },
+        "native_perf_json": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/vit-s100-cpuptq-20261105-r01/output/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe.json",
+          "sha256": "f1bfa7a1e0a4e9c982a88f9ebc80904627fb3bcd2de17381cb4e7da68bcdc58f",
+          "size_bytes": 1877600
+        },
+        "native_htmls": [
+          {
+            "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/vit-s100-cpuptq-20261105-r01/output/vit_tv_b16_imagenet1k_224_featuremap_int16_cpuptq_o1_20261105_nashe.html",
+            "sha256": "87f710d2c486db92ce18df4d1657d370e795d55b139f618ea6c2d1f9807a979c",
+            "size_bytes": 2745700
+          }
+        ],
+        "config": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/vit-s100-cpuptq-20261105-r01/config.yaml",
+          "sha256": "720739c0ab8f1f8e547f608158b4bd386b0704c7e2d3a37635c2917c40195e81",
+          "size_bytes": 1066
+        },
+        "onnx": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/vit-source-export-r01/model.onnx",
+          "sha256": "0b76b5d663b28196e714e2ce6fdab6aca7354671e9ae8bfa1093d76519fc16d1",
+          "size_bytes": 346507329
+        },
+        "native_debug_log": {
+          "path": "/data/disk1/zhengyi/rdk_model_zoo_workbench/runs/conversion/breadth-first-20261105-r01/jobs/vit-s100-cpuptq-20261105-r01/hb_compile.log",
+          "sha256": "3712cf7fb71528c98700b86ff613707ca02c86828a8bbee7f95af542252ced4b",
+          "size_bytes": 370644
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "tool": "built-in image_gen for five unique input photographs; actual source ONNX/Native inference renders all six covers",
+  "prompts": {
+    "vit": "Use case: photorealistic-natural. Asset type: inference input photograph for a ViT image-classification model cover on RDK Model Zoo. Generate a single full-bleed 16:9 wildlife photograph, no layout panels. A red panda with a clear round reddish face and ringed tail resting across a moss-covered tree branch in a lush green temperate forest. One main animal, whole face unobstructed, realistic fur, calm natural morning light, shallow depth of field. The animal occupies the central 65 percent so a center crop still contains its face and body. This is ONLY the clean input image; actual classification labels will be rendered later from real model inference. No text, no letters, no scores, no charts, no bounding boxes, no icons, no frame, no watermark, no fake AI overlays.",
+    "fcos": "Use case: photorealistic-natural. Asset type: clean inference photograph for an FCOS object-detection cover in RDK Model Zoo. A crisp full-bleed 16:9 candid street photograph at a quiet European city intersection in soft daylight: one yellow city bus toward the left, one cyclist with a clearly visible bicycle near the center, a pedestrian standing separately on the right, and one parked blue car. Camera at eye level, ordinary realistic architecture, natural materials, realistic proportions. Subjects separated with minimal overlap, all important subjects fully inside the frame, enough detail for an object detector at 512 pixels. This is the raw input photograph only; boxes, category labels and confidences will be drawn later using real model output. No text, no legible lettering, no logos, no bounding boxes, no colored annotations, no panels, no frame, no watermark.",
+    "fasterrcnn_tracking": "Use case: photorealistic-natural. Asset type: clean photograph for a person-tracking inference cover on RDK Model Zoo. One full-bleed 16:9 candid photo on a waterfront promenade on an overcast morning. Three adults walking toward the camera at a relaxed pace, clearly separated from one another, full bodies and shoes visible: a person in a mustard rain jacket, a person in a muted red sweater, a person in a dark blue coat. Simple railings and soft distant water in the background. People take up most of the image height; lifelike anatomy, documentary photography, natural colors, clean sharp foreground. This must be distinct from a glass plaza group photo. Generate only the source photograph. Real detection boxes and tracking IDs will be computed afterward. No text, no numbers, no boxes, no tracks, no graphics, no panels, no borders, no logos or watermark.",
+    "lanenet": "Use case: photorealistic-natural. Asset type: clean input photograph for a LaneNet lane-segmentation website cover. A realistic full-bleed 16:9 front-facing dashcam view along a gently curving three-lane highway in clear morning daylight. Crisp white dashed lane dividers and solid shoulder lines are visible from the bottom foreground to the vanishing point. Low green hills, a guardrail and distant trees; one small distant car, leaving all foreground lane markings unobstructed. The road fills the lower two thirds of the frame. Ordinary photographic colors, realistic asphalt texture, no dramatic cinematic effects. This is only the inference input photograph; segmentation colors will come from the actual model later. Do not add text, labels, colored lanes, outlines, masks, UI, frames, borders, arrows, watermarks or logos."
+  },
+  "unet_prompt": {
+    "mode": "built-in image_gen",
+    "intent": "generate",
+    "prompt": "Use case: photorealistic-natural\nAsset type: new unique RDK Model Zoo UNet semantic segmentation banner input photograph, 16:9 widescreen.\nPrimary request: a natural realistic photograph of a brown and white medium-sized dog sitting in a sunlit green garden beside a red outdoor chair, with the dog fully visible and not touching the chair. A small terracotta plant pot nearby. Bright daylight, candid documentary photography, true textures, clear object silhouettes, simple uncluttered background, camera at dog eye level. Compose an attractive full-bleed landscape photograph suitable for a computer-vision demo banner, with subject comfortably inside image bounds.\nConstraints: image pixels only; no text, no title, no watermark, no logo, no labels, no bounding boxes, no segmentation colors, no split screen, no mock UI, no decorative border. This will be passed through the actual trained UNet, whose real results will be added later. Use a new composition distinct from city traffic, panda close-up, highway lane or waterfront people images.",
+    "generated_image": "/Users/jasperxzy/.codex/generated_images/01a187bf-d2ba-7d92-be45-e8629c6f13d6/exec-6159e40d-3972-47a2-a14a-72aef4dd1edf.png"
+  },
+  "temporal_cover": "3D ResNet uses the existing 16-frame native video0.npy and its exact eighth frame; no generated or repeated still is substituted as a video",
+  "assets": {
+    "vit": {
+      "file": "model_zoo_web/release/assets/pending-heroes/vit-red-panda-20261105.webp",
+      "sha256": "ec26ddcfdf8cbb5a99af8a9339a7a1e6084cd30dcbf2d0aad382b55e1b1d4532",
+      "input": "samples/vision/vit/test_data/banner_input_red_panda_20261105.png",
+      "native_commit": "deb7e0dd545d36818096599dcca2c24cfe585e44",
+      "receipt": "model_zoo_web/release/assets/pending-heroes/vit-red-panda-20261105.json",
+      "runtime": "host-float-reference",
+      "board": "not-run",
+      "renderer_sha256": "9312432a3b39cb907fc7e491b159de39202256b6adcb867a87a0f28ce9dbd71a"
+    },
+    "fcos": {
+      "file": "model_zoo_web/release/assets/pending-heroes/fcos-intersection-20261105.webp",
+      "sha256": "c83bcfd1cf3a8b15625022b68fc4db9eb2da966bd2a1d05aa8889cac8b9b2d6e",
+      "input": "samples/vision/fcos/test_data/banner_input_intersection_20261105.png",
+      "native_commit": "deb7e0dd545d36818096599dcca2c24cfe585e44",
+      "receipt": "model_zoo_web/release/assets/pending-heroes/fcos-intersection-20261105.json",
+      "runtime": "host-float-reference",
+      "board": "not-run",
+      "renderer_sha256": "9312432a3b39cb907fc7e491b159de39202256b6adcb867a87a0f28ce9dbd71a"
+    },
+    "lanenet": {
+      "file": "model_zoo_web/release/assets/pending-heroes/lanenet-highway-20261105.webp",
+      "sha256": "b0e272d96e2931e113da57596c7bf23d01fc6899cd551e240ac12c9f37dd83e4",
+      "input": "samples/vision/lanenet/test_data/banner_input_highway_20261105.png",
+      "native_commit": "deb7e0dd545d36818096599dcca2c24cfe585e44",
+      "receipt": "model_zoo_web/release/assets/pending-heroes/lanenet-highway-20261105.json",
+      "runtime": "host-float-reference",
+      "board": "not-run",
+      "renderer_sha256": "9312432a3b39cb907fc7e491b159de39202256b6adcb867a87a0f28ce9dbd71a"
+    },
+    "fasterrcnn": {
+      "file": "model_zoo_web/release/assets/pending-heroes/fasterrcnn-tracking-promenade-20261105.webp",
+      "sha256": "fbe3aa730e414ce958859251db411416f7d97e0cddaed8c0290f253cb8fef4d9",
+      "input": "samples/vision/fasterrcnn/test_data/banner_input_tracking_promenade_20261105.png",
+      "native_commit": "deb7e0dd545d36818096599dcca2c24cfe585e44",
+      "receipt": "model_zoo_web/release/assets/pending-heroes/fasterrcnn-tracking-promenade-20261105.json",
+      "runtime": "host-float-reference",
+      "board": "not-run",
+      "renderer_sha256": "9312432a3b39cb907fc7e491b159de39202256b6adcb867a87a0f28ce9dbd71a"
+    },
+    "unet": {
+      "file": "model_zoo_web/release/assets/pending-heroes/unet-garden-dog-20261105.webp",
+      "sha256": "cb3c1a66b2ea99c301678d78adb4c8d1f1e06d9c2843cb19096daf7c38cc5537",
+      "input": "samples/vision/unet/test_data/banner_input_garden_dog_20261105.png",
+      "native_commit": "8c5c37bea7c7355212fa1b39b1f09cbfcf68d691",
+      "receipt": "model_zoo_web/release/assets/pending-heroes/unet-garden-dog-20261105.json",
+      "runtime": "host-float-reference",
+      "board": "not-run",
+      "renderer_sha256": "36ca5eae5211597b50d30446e74aba0bc175dec1084875c582a508eedefaec81"
+    },
+    "3dresnet": {
+      "file": "model_zoo_web/release/assets/pending-heroes/3dresnet-archery-clip-20261105.webp",
+      "sha256": "16a30bacf707f854f36f83a7d0b5733ceaa42bc7f422219c4202793a9391ada8",
+      "input": "samples/vision/3dresnet/test_data/banner_input_archery_frame_20261105.png",
+      "native_commit": "f1e1dc7bfe9c767f28e976fa8d8a47be583fb6e1",
+      "receipt": "model_zoo_web/release/assets/pending-heroes/3dresnet-archery-clip-20261105.json",
+      "runtime": "host-float-reference",
+      "board": "not-run",
+      "renderer_sha256": "43d4780fd1c9658139ce25c69a399097b6c7d5845ca9e2fc390748be47f24809"
+    }
+  }
+}

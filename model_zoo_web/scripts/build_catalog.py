@@ -715,6 +715,14 @@ def _validate_inference_banner_receipt(payload: dict[str, Any], entry: dict[str,
             raise CatalogError(f"{label} helper must be a native sample or shared Python source")
         if digest != source_digest(path):
             raise CatalogError(f"{label} helper hash differs from its inference revision")
+    if payload.get('source') == '3dresnet':
+        video = require_mapping(payload.get('video'), label+'.video')
+        path = validate_evidence_path(video.get('input'), label+'.video.input', entry['commit'])
+        if (not path.startswith('samples/vision/3dresnet/test_data/') or PurePosixPath(path).suffix != '.npy'
+                or video.get('sha256') != source_digest(path) or video.get('shape') != [1,3,16,112,112]
+                or video.get('dtype') != 'float32' or video.get('preview_frame') != 8
+                or len(video.get('frame_sha256', [])) != 16 or len(set(video['frame_sha256'])) < 2):
+            raise CatalogError(f"{label} requires its pinned complete temporal input and actual frame preview")
     graphs = require_mapping(payload.get("graphs"), f"{label}.graphs")
     metadata = require_mapping(payload.get("graph_io"), f"{label}.graph_io")
     if not graphs or set(graphs) != set(metadata):
@@ -744,8 +752,10 @@ def _validate_inference_banner_receipt(payload: dict[str, Any], entry: dict[str,
     if len(actual) != len(expected) or set(actual) != set(expected):
         raise CatalogError(f"{label} forward outputs omit or repeat a source head")
     for output in outputs:
-        declared = expected[(output["role"], output["name"])]["shape"]
-        if (output.get("dtype") != "float32" or not SHA256_RE.fullmatch(str(output.get("sha256", "")))
+        tensor = expected[(output["role"], output["name"])]
+        declared = tensor["shape"]
+        dtype = {"tensor(float)": "float32", "tensor(int64)": "int64"}.get(tensor.get("dtype"))
+        if (dtype is None or output.get("dtype") != dtype or not SHA256_RE.fullmatch(str(output.get("sha256", "")))
                 or not isinstance(output.get("shape"), list) or not output["shape"]
                 or any(type(dim) is not int or dim <= 0 for dim in output["shape"])
                 or len(output["shape"]) != len(declared)
@@ -1170,7 +1180,7 @@ def validate_performance(performance_value: Any, platform_label: str, *, complet
         seen_pipeline_streams.add(pipeline_streams)
 
 
-def validate_converted_platform(platform: dict[str, Any], license_info: dict[str, Any], label: str, source: str = "") -> None:
+def validate_converted_platform(platform: dict[str, Any], license_info: dict[str, Any], label: str, source: str = "", task: str = "") -> None:
     """Validate a downloadable artifact without claiming unmeasured board results."""
     if "license" in platform:
         license_info = require_mapping(platform["license"], f"{label}.license")
@@ -1186,7 +1196,7 @@ def validate_converted_platform(platform: dict[str, Any], license_info: dict[str
     artifact = platform["artifact"]
     provenance = require_mapping(platform.get("provenance"), f"{label}.provenance")
     try:
-        components = validate_components(platform, platform=platform['platform'], source=source)
+        components = validate_components(platform, platform=platform['platform'], source=source, task=task)
     except ValueError as error:
         raise CatalogError(f'{label}: {error}') from error
     identity_fields = ("source_checkpoint_sha256",) if components else ("onnx_sha256", "config_sha256", "source_checkpoint_sha256")
@@ -1639,8 +1649,10 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
         source_shape = require_list(source_input.get("shape"), f"{variant_label}.input.source.shape")
         speech_features = (domain == "speech" and source_input["format"].upper() == "FEATUREMAP"
                            and source_input["layout"] == "NTC")
-        if len(source_shape) != (3 if speech_features else 4):
-            expected = "three NTC feature dimensions" if speech_features else "four dimensions"
+        video_features = (domain == "vision" and record["source"] == "3dresnet"
+                          and record["task"] == "video-cls" and source_input["layout"] == "NCTHW")
+        if len(source_shape) != (3 if speech_features else 5 if video_features else 4):
+            expected = "three NTC feature dimensions" if speech_features else "five NCTHW video dimensions" if video_features else "four dimensions"
             raise CatalogError(f"{variant_label}.input.source.shape must contain {expected}")
         for dimension_index, dimension in enumerate(source_shape):
             require_positive_int(dimension, f"{variant_label}.input.source.shape[{dimension_index}]")
@@ -1689,7 +1701,7 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
                 )
 
             if status == "converted" or "validation" in platform_record and platform_record.get("metadata_revision"):
-                validate_converted_platform(platform_record, license_info, platform_label, source)
+                validate_converted_platform(platform_record, license_info, platform_label, source, task)
             if status == "converted":
                 if "accuracy" not in platform_record and "performance" not in platform_record:
                     continue
