@@ -243,6 +243,7 @@ def export(kind, source_dir, calibration_manifest, output, validation_manifest=N
             or not manifest['official_preprocessing_byte_exact']):
         raise ValueError('Wrong or unverified calibration manifest')
     cases = []
+    case_inputs = []
     prepared_rows = [('real', manifest['records'])]
     if validation_manifest is not None:
         validation = json.loads(Path(validation_manifest).read_text())
@@ -262,6 +263,7 @@ def export(kind, source_dir, calibration_manifest, output, validation_manifest=N
                     raise ValueError('Wrong calibration tensor boundary')
                 feed[name] = value
             cases.append((f'{prefix}-{index:04d}', feed))
+            case_inputs.append(row['inputs'])
     random = np.random.default_rng(42 if kind == 'siglip' else 0)
     feed = ({'_input_0': random.uniform(-1, 1, (1, 3, 224, 224)).astype(np.float32)}
             if kind == 'siglip' else
@@ -269,8 +271,25 @@ def export(kind, source_dir, calibration_manifest, output, validation_manifest=N
              'attention_mask': np.ones((1, 30000), np.float32)})
     cases.append(('deterministic-random', feed))
     output.mkdir(parents=True, exist_ok=False)
+    reference_dir = output / 'reference'
+    reference_dir.mkdir()
+    random_inputs = {}
+    for name, value in feed.items():
+        path = reference_dir / ('random-' + name + '.npy')
+        np.save(path, value)
+        random_inputs[name] = identity(path)
+    case_inputs.append(random_inputs)
     with torch.inference_mode():
         references = [original(feed) for _, feed in cases]
+    reference_cases = []
+    for (name, _), inputs, values in zip(cases, case_inputs, references):
+        path = reference_dir / (name + '.npz')
+        np.savez(path, **values)
+        reference_cases.append({'case': name, 'inputs': inputs, 'source_outputs': identity(path)})
+    reference_manifest = output / 'source-reference-cases.json'
+    reference_manifest.write_text(json.dumps({'sample': kind, 'variant': facts['variant'],
+        'source_precision': 'float32', 'gate_revision': 'owner-approved-20261105-guide-v2.21',
+        'count': len(cases), 'cases': reference_cases}, indent=2) + '\n')
     folded = []
     if kind == 'asr':
         for name, module in model.named_modules():
@@ -311,6 +330,7 @@ def export(kind, source_dir, calibration_manifest, output, validation_manifest=N
               'parameter_count': parameter_count, 'onnx': identity(onnx_path),
               'calibration_manifest': identity(calibration_manifest),
               'validation_manifest': identity(validation_manifest) if validation_manifest else None,
+              'source_reference_cases': identity(reference_manifest),
               'exporter': identity(__file__),
               'input_specs': facts['inputs'], 'output_specs': facts['outputs'],
               'gate': {'revision': 'owner-approved-20261105-guide-v2.21',
