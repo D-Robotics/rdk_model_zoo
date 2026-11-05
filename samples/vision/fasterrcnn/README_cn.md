@@ -2,6 +2,9 @@
 
 # Faster R-CNN
 
+<!-- tracking-deployment-20261105 -->
+S100 的完整跟踪部署包及验证范围见 [跟踪部署](conversion/tracking-20261105.md)。
+
 <a id="overview"></a>
 ## 模型介绍
 

@@ -2,6 +2,9 @@ English | [简体中文](README_cn.md)
 
 # Faster R-CNN
 
+<!-- tracking-deployment-20261105 -->
+The complete S100 tracking bundle and its validation scope are documented in [tracking deployment](conversion/tracking-20261105.md).
+
 <a id="overview"></a>
 ## Overview
 
