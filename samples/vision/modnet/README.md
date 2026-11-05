@@ -66,7 +66,7 @@ The matte is an 8-bit grayscale PNG with the original input height and width. Th
 - [`evaluator/README.md`](./evaluator/README.md): complete saved-matte comparison.
 
 <a id="historical-performance"></a>
-## Source-recorded performance
+## Performance data
 
 The complete source table and test conditions:
 

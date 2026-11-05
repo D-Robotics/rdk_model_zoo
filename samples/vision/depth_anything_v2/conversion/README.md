@@ -57,7 +57,7 @@ Prepare representative calibration images and record the sample count, random se
 Prepare the compiler version, march, ONNX, input layout and type, normalization settings, calibration set and quantization configuration before compilation. For the historical artifact, compiler YAML and launch scripts remain external prerequisites. Save the tool logs and model digests with the generated artifact.
 
 <a id="validation"></a>
-## Validation and source-recorded similarity
+## Validation and quantization similarity
 
 The source reports most operator similarities above.99 and final quantization
 similarity about.999; the statistic, dataset and reproducible raw logs are not

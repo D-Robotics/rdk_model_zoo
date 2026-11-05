@@ -55,9 +55,9 @@ python3 samples/vision/repvit/runtime/python/main.py \
 <a id="reference-results"></a>
 ## 参考结果
 
-下表来自已发布的源 evaluator。
+数据来源：X5 发布（x5-v1.1.3）。
 
-源条件：X5 CPU 8×A55@1.8GHz 性能模式、BPU Bayes-e@1GHz。Float Top-1 为量化前 ONNX，Quant Top-1 为部署结果；单线程延迟为单帧单 BPU 核，多线程延迟和 FPS 使用并发提交。开展新对照时，使用相同数据子集，并记录预热、重复次数、板卡模式和并发设置。
+源条件：X5 CPU 8×A55@1.8GHz 性能模式、BPU Bayes-e@1GHz。Float Top-1 为量化前 ONNX，Quant Top-1 为部署结果；单线程延迟为单帧单 BPU 核，多线程延迟和 FPS 使用并发提交。
 
 | Model | Size | Params (M) | Float Top-1 | Quant Top-1 | Single-thread Latency (ms) | Multi-thread Latency (ms) | FPS |
 | --- | --- | --- | --- | --- | --- | --- | --- |

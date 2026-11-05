@@ -77,7 +77,7 @@ hrt_model_exec perf --model_file ../model/nash-p/dinov2_vits14_224_int16_nashp.h
 | --- | --- | --- | --- |
 | `thread_num` | int | 基线记录为 `1` | `hrt_model_exec perf` 工作线程数。 |
 | `core_id` | CSV ints | 未设置；S600 高并发记录除外 | S600 12 线程记录使用 `1,2,3,4`。 |
-| `frames` | int | 源记录为 `200` | 性能测量范围。 |
+| `frames` | int | 记录为 `200` | 性能测量范围。 |
 | `input` | tensor | `(1,3,224,224)` F32 | runtime 预处理生成的 RGB 归一化 tensor。 |
 
 <a id="metrics"></a>

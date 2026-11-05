@@ -399,7 +399,7 @@ To verify board inference matches the PC golden data:
 
 `main` and `demo` print generated text; `server` returns JSON or SSE; `text_bench` prints generation/throughput records.
 For dataset-level accuracy, use the evaluator's PC BC comparison. The golden verifier compares five prefill inputs: exact integer equality,
-embedding maximum absolute error ≤1e-3, and zero error for both masks. Cosine is printed for reference only.
+embedding maximum absolute error ≤1e-3, and zero error for both masks. The cosine value is informational.
 `ALL PASSED` corresponds to exit code 0; mismatches or exceptions return 1. See [evaluation prerequisites](../../evaluator/README.md).
 Each TextEngine owns one session and its KV state; callers must serialize access. An interactive session is not a stateless, concurrently shared inference function.
 

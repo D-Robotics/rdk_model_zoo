@@ -110,7 +110,7 @@ Expected sequence: trained.pdparams → inference model.json/model.pdiparams →
 <a id="known-gaps"></a>
 ## Additional preparation
 
-Prepare the checkpoint, PaddleSeg and export packages, then record their versions with the exported graph and compiled artifact. The source documentation's expectation of ≈95 FPS / ≈10.5 ms is not a measured value in this repository. Unsupported graph operators require inspection, not blindly deleting argmax, because the runtime boundary is already a class map. Changing calibration_type to mix or using more representative data is an experiment requiring revalidation, not a guaranteed repair.
+Prepare the checkpoint, PaddleSeg and export packages, then record their versions with the exported graph and compiled artifact. The source expects ≈95 FPS / ≈10.5 ms; no measurement is included. Unsupported graph operators require inspection, not blindly deleting argmax, because the runtime boundary is already a class map. Changing calibration_type to mix or using more representative data requires revalidation.
 
 ## Reproduce the S float-logits export
 

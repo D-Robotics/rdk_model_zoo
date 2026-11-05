@@ -76,6 +76,17 @@ The source records list B0/B2/B3 BPU throughput of 323.0/70.9/38.7 FPS and Pytho
 
 ![FCOS demonstration image from the source record](test_data/demo_rdkx5_fcos_detect.jpg)
 
+<a id="performance"></a>
+## Performance data
+
+X5 reference records (x5-v1.1.3); full conditions are in the [evaluator](evaluator/README.md#reference-results).
+
+| Model | Input size | BPU throughput | Python post-process |
+| --- | --- | ---: | ---: |
+| FCOS EfficientNet-B0 | 512x512 | 323.0 FPS | 9 ms |
+| FCOS EfficientNet-B2 | 768x768 | 70.9 FPS | 16 ms |
+| FCOS EfficientNet-B3 | 896x896 | 38.7 FPS | 20 ms |
+
 <a id="entry-points"></a>
 ## Entry Points
 

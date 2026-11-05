@@ -124,11 +124,17 @@ rank 1 being class 99 (goose).
 <a id="performance"></a>
 ## Performance data
 
-Published performance records; full timing conditions and all columns
-are listed under [evaluation](evaluator/README.md#reference-results).
-Single-thread latency and multi-thread FPS are measured under different
-concurrency and are not reciprocal quantities. Compare latency and FPS using
-the same thread count, concurrent submission mode and BPU utilization.
+X5 records from the x5-v1.1.3 release; full conditions and all rows are in
+[evaluator](evaluator/README.md#reference-results).
+
+| Model | Size | Params (M) | Float Top-1 | Quant Top-1 | Single-thread latency (ms) | Multi-thread latency (ms) | FPS |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| RepVGG_B1g2 | 224x224 | 41.36 | 77.78 | 68.25 | 9.77 | 36.19 | 109.61 |
+| RepVGG_B1g4 | 224x224 | 36.12 | 77.58 | 62.75 | 7.58 | 27.47 | 144.39 |
+| RepVGG_B0 | 224x224 | 14.33 | 75.14 | 60.36 | 3.07 | 9.65 | 410.55 |
+| RepVGG_A2 | 224x224 | 25.49 | 76.48 | 62.97 | 6.07 | 21.31 | 186.04 |
+| RepVGG_A1 | 224x224 | 12.78 | 74.46 | 62.78 | 2.67 | 8.21 | 482.20 |
+| RepVGG_A0 | 224x224 | 8.30 | 72.41 | 51.75 | 1.85 | 5.21 | 757.73 |
 
 <a id="entry-points"></a>
 ## Entry points

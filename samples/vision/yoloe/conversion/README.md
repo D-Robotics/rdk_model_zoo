@@ -100,7 +100,7 @@ A reference float-export comparison with the eight checkpoints (E11s/m/l and E26
 | mask coefficients, stride `s` | `[1,640/s,640/s,32]` | same |
 | prototypes | `[1,160,160,32]` | same |
 
-Here `s` is 8, 16 or 32, for ten float32 outputs total. Matching dimensions certify the tensor interface; checkpoint size, architecture, class semantics and accuracy are certified by the exporter checks and the evaluator. `variant_declared` in the report marks the variant as caller-declared at this stage. Preserve the exporter metadata alongside the preparation directory.
+Here `s` is 8, 16 or 32, for ten float32 outputs total. Matching dimensions certify the tensor interface; checkpoint size, architecture, class semantics and accuracy are certified by the exporter checks and the evaluator. `variant_declared` in the report marks the variant as caller-declared at this stage. Exporter metadata is stored alongside the preparation directory.
 
 <a id="calibration"></a>
 ## Calibration

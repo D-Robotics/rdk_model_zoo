@@ -7,7 +7,7 @@ English | [简体中文](README_cn.md)
 
 The public photographic model uses official [MODNet source](https://github.com/ZHKKKe/MODNet/tree/28165a451e4610c9d77cfdf925a94610bb2810fb), pinned to `28165a451e4610c9d77cfdf925a94610bb2810fb`. Its [official checkpoint folder](https://drive.google.com/drive/folders/1umYmlCulvIFNaqPjwod1SayFmSRHziyR) identifies `modnet_photographic_portrait_matting.ckpt`, file ID `1mcr7ALciuAsHCpLnrtG_eop5-EYhbCmz`. The observed snapshot SHA-256 is `7c22235f0925deba15d4d63e53afcb654c47055bbcd98f56e393ab2584007ed8` (26,255,603 bytes). The author provides no publisher checksum; the observed digest fixes this conversion's checkpoint bytes.
 
-The upstream [license statement](https://github.com/ZHKKKe/MODNet/blob/28165a451e4610c9d77cfdf925a94610bb2810fb/README.md#license) covers code, models and demos under Apache-2.0, excluding `doc/gif`. Preserve the upstream LICENSE and copyright notices.
+The upstream [license statement](https://github.com/ZHKKKe/MODNet/blob/28165a451e4610c9d77cfdf925a94610bb2810fb/README.md#license) covers code, models and demos under Apache-2.0, excluding `doc/gif`. Upstream LICENSE and copyright notices apply.
 
 <a id="directory"></a>
 ## Directory structure
@@ -59,7 +59,7 @@ The config selects `bayes-e`, default calibration, O3 latency, one BPU core and 
 <a id="validation"></a>
 ## Post-conversion validation
 
-Verify checker/compiler completion, one BIN, `BPU march: bayes-e`, and actual float32 NCHW input and matte output metadata. Preserve the original OE output, node cosine and static compiler reports. Those reports are not board latency or matting accuracy. The repository Runtime binds the new artifact by exact asset ID and validates metadata at load.
+Verify checker/compiler completion, one BIN, `BPU march: bayes-e`, and actual float32 NCHW input and matte output metadata. The original OE output, node cosine and static compiler reports belong with the result. Those reports are not board latency or matting accuracy. The repository Runtime binds the new artifact by exact asset ID and validates metadata at load.
 
 <a id="artifacts"></a>
 ## Artifacts

@@ -22,7 +22,7 @@ evaluator/
 ## 环境
 
 - 板端功能检查：RDK S100、匹配的 `hbm_runtime`、准备好的 `model/s100/r3d_18.hbm` 和可识别的 S100 身份。
-- 下面的性能表为发布记录，由 `hrt_model_exec` 测得；其完整命令、镜像、运行时版本与 raw 输出未随附，复测时请记录这些条件。
+- 下面的性能表为发布记录，由 `hrt_model_exec` 测得；完整命令、镜像、运行时版本与 raw 输出未随附。
 
 <a id="command"></a>
 ## 评测命令

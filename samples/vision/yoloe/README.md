@@ -85,7 +85,7 @@ Results contain original-image xyxy float32 boxes, sigmoid float32 probabilities
 
 The table below records Runtime-only performance (preprocessing/postprocessing excluded); end-to-end performance additionally includes every host-side stage:
 
-| Model (source-recorded) | Target | Runtime latency / FPS |
+| Model | Target | Runtime latency / FPS |
 | --- | --- | --- |
 | YOLOE-11s PF | X5 | 146.16 ms / 6.84 |
 | YOLOE-11m PF | X5 | 177.14 ms / 5.65 |
