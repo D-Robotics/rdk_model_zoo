@@ -24,7 +24,7 @@
 </div>
 
 <p align="center">
-  <a href="https://d-robotics.github.io/rdk_model_zoo/"><b>🔎 在线模型目录 · 80+ 已发布模型 →</b></a>
+  <a href="https://d-robotics.github.io/rdk_model_zoo/"><b>🔎 在线模型目录 →</b></a>
 </p>
 
 ## 仓库简介 (Introduction)
@@ -39,7 +39,7 @@
   <img src="docs/assets/model_zoo_web_cn.png" alt="RDK Model Zoo 在线模型目录：任务与硬件筛选、搜索和模型卡片" width="100%">
 </a>
 
-[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/) 与本仓库同源，收录 RDK X5、RDK S100、RDK S100P、RDK S600 上的 **80+ 个已发布模型**。从任务或板卡出发找到对应模型与部署路径，这是最快的方式。建议在 clone 仓库之前先用它：比较板卡与实测数据，再直接跳到运行该模型的 Sample。
+[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/) 与本仓库同源，收录 RDK X5、RDK S100、RDK S100P、RDK S600 的已发布模型清单，覆盖模型家族、各平台构建与变体。从任务或板卡出发找到对应模型与部署路径，这是最快的方式。建议在 clone 仓库之前先用它：比较板卡与实测数据，再直接跳到运行该模型的 Sample。
 
 - **搜索与筛选**：按任务（视觉、语言模型、机器人、音频、多模态）和板卡筛选。
 - **卡片先看效果**：每张卡片展示输入示例和支持板卡；进入详情可查看实测时延、吞吐、精度与量化精度。

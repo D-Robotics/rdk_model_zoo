@@ -24,7 +24,7 @@
 </div>
 
 <p align="center">
-  <a href="https://d-robotics.github.io/rdk_model_zoo/"><b>🔎 Explore the Web Model Catalog · 80+ released models →</b></a>
+  <a href="https://d-robotics.github.io/rdk_model_zoo/"><b>🔎 Explore the Web Model Catalog →</b></a>
 </p>
 
 ## Introduction
@@ -39,7 +39,7 @@ The samples provide model preparation, conversion guides and board-side inferenc
   <img src="docs/assets/model_zoo_web_en.png" alt="RDK Model Zoo Web Model Catalog with task and hardware filters, search, and model cards" width="100%">
 </a>
 
-The [Web Model Catalog](https://d-robotics.github.io/rdk_model_zoo/) indexes **80+ released models** for RDK X5, RDK S100, RDK S100P and RDK S600 from the same records as this repository. It is the fastest way to go from a task or board to the right model and deployment path. Use it before cloning the repository: compare boards and measured numbers, then jump straight to the sample that runs the model.
+The [Web Model Catalog](https://d-robotics.github.io/rdk_model_zoo/) indexes the released model inventory — model families, per-platform builds and variants — for RDK X5, RDK S100, RDK S100P and RDK S600 from the same records as this repository. It is the fastest way to go from a task or board to the right model and deployment path. Use it before cloning the repository: compare boards and measured numbers, then jump straight to the sample that runs the model.
 
 - **Search and filter** by task (vision, LLM, robotics, audio, multimodal) and by board.
 - **See a visual example and supported boards on each card**, then open the model for measured latency, throughput, accuracy and quantization precision.
