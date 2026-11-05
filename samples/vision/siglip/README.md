@@ -2,6 +2,9 @@ English | [简体中文](README_cn.md)
 
 # SigLIP vision features
 
+<!-- public-specification-20261105 -->
+The independent new S100 specification, complete source contract and Native Python commands are in [public conversion](conversion/public-20261105.md). Its board accuracy/performance remain unmeasured; legacy specifications and C++ records below retain their original scope.
+
 <a id="overview"></a>
 ## Overview
 

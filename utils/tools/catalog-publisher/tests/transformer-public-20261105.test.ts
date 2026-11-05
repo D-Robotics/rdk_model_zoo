@@ -5,7 +5,7 @@ import {repositoryCatalog} from './helpers/repository';
 describe('independent complete transformer conversions',()=>{
   it('retains an exact S100 artifact without inheriting historical measurements',async()=>{
     const catalog=await repositoryCatalog();
-    const expected=[["asr", "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/asr/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe.hbm"]];
+    const expected=[["asr", "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/asr/asr_xlsr53_zh3503_30k_mask_int16_cpuptq_o1_20261105_nashe.hbm"], ["siglip", "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/siglip/siglip_base224_bicubic_dual_fp16_cpu_o1_20261105_nashe_r04.hbm"]];
     for(const [source,url] of expected){
       const matches=catalog.models.flatMap(m=>m.variants??[])
         .filter(v=>v.assets.some(a=>a.url===url));

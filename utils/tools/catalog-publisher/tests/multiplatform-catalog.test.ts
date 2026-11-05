@@ -152,7 +152,7 @@ describe("multi-platform variant catalog", () => {
     // 901 variants, 760 benchmark rows.
     // Explicit retirement/retention checks below guard more than these totals.
     expect(catalog.models).toHaveLength(61);
-    expect(variants).toHaveLength(902);
+    expect(variants).toHaveLength(903);
     expect(catalog.models.flatMap((model) => model.benchmarks)).toHaveLength(760);
     expect(new Set(variants.map((variant) => variant.hardware)))
       .toEqual(new Set(["x5", "s100", "s100p", "s600", "x3"]));
