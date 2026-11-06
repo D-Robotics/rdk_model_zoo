@@ -58,14 +58,16 @@ The samples provide model preparation, conversion guides and board-side inferenc
 
 Every maintained board uses the same `samples/` tree. Select the target in the sample README: Python entries use `--target` or `--platform`, native C++ entries use their documented flags, and each README lists the artifacts it supports.
 
-| Board | Target ID | Published artifacts | System / architecture |
-| :--- | :--- | :--- | :--- |
-| RDK X5 | `x5` | [`docs/release/x5/`](docs/release/x5) | RDK OS ≥ 3.5.0; Ubuntu 22.04 aarch64; TROS-Humble |
-| RDK S100 | `s100` | [`docs/release/s/`](docs/release/s) | Nash-E |
-| RDK S100P | `s100p` | [`docs/release/s/`](docs/release/s) | Nash-M |
-| RDK S600 | `s600` | [`docs/release/s/`](docs/release/s) | Nash-P |
+| Board | Target ID | CPU | BPU (INT8) | Published artifacts |
+| :--- | :--- | :--- | :--- | :--- |
+| [RDK X5](https://www.d-robotics.cc/rdkX5) | `x5` | 8× Cortex-A55 | 1× Bayes-E, 10 TOPS | [`docs/release/x5/`](docs/release/x5) |
+| [RDK S100](https://www.d-robotics.cc/rdkS100) | `s100` | 6× Cortex-A78AE | 1× Nash-E, 80 TOPS | [`docs/release/s/`](docs/release/s) |
+| [RDK S100P](https://www.d-robotics.cc/rdkS100) | `s100p` | 6× Cortex-A78AE | 1× Nash-M, 128 TOPS | [`docs/release/s/`](docs/release/s) |
+| [RDK S600](https://www.d-robotics.cc/rdkS600) | `s600` | 18× Cortex-A78AE | 4× Nash-P, 560 TOPS | [`docs/release/s/`](docs/release/s) |
 
-**Repository lines.** The default [`main`](https://github.com/D-Robotics/rdk_model_zoo/tree/main) branch is the delivery line; [`develop`](https://github.com/D-Robotics/rdk_model_zoo/tree/develop) is the unified development branch. The preserved [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) and [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) branches are historical per-board delivery lines; RDK X3 material is archived on [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) and is not an adaptation target.
+All four targets run RDK OS. RDK X5 images should be ≥ 3.5.0 (Ubuntu 22.04 aarch64, TROS-Humble); for S100/S100P/S600, use the board image and runtime that match the published artifacts.
+
+**Repository lines.** The default [`main`](https://github.com/D-Robotics/rdk_model_zoo/tree/main) branch is the delivery line; [`develop`](https://github.com/D-Robotics/rdk_model_zoo/tree/develop) is the unified development branch. Earlier per-board delivery lines remain available as [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) and [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s); RDK X3 material is archived on [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3).
 
 ---
 
@@ -178,7 +180,7 @@ python3 main.py \
 
 ## Model List
 
-The table lists each model family with its platforms and available models; choose the Python or C++ runtime and a compatible model artifact in each sample's support table. To filter this inventory by task or board instead of scanning the table, use the [Web Model Catalog](https://d-robotics.github.io/rdk_model_zoo/).
+The table lists each model family with its platforms and available models; choose the Python or C++ runtime and a compatible model artifact in each sample's support table. To filter this inventory by task or board, use the [Web Model Catalog](https://d-robotics.github.io/rdk_model_zoo/).
 
 <details>
 <summary><b>Click to expand the full model list (by category and platform)</b></summary>
@@ -210,9 +212,9 @@ The table lists each model family with its platforms and available models; choos
 | Image Classification | ResNeXt | `samples/vision/resnext` | RDK X5 | [Details](./samples/vision/resnext) |
 | Image Classification | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [Details](./samples/vision/vargconvnet) |
 | Image Classification | ViT | `samples/vision/vit` | RDK S100 | [Details](./samples/vision/vit) |
-| Person Re-Identification | OSNet x1.0 | `samples/vision/osnet` | RDK X5 / S100 / S100P / S600 (Archive, research-only) | [Details](./samples/vision/osnet) |
-| Multi-Object Tracking | ByteTrack | `samples/vision/bytetrack` | RDK X5 / RDK S100 / RDK S100P (local detector model) / RDK S600 | [Details](./samples/vision/bytetrack) |
-| Multi-Object Tracking | HobotMot (IOU 2.0) | `samples/vision/hobot_mot` | RDK X5 / RDK S100 / RDK S100P / RDK S600 (CPU tracker over detector results) | [Details](./samples/vision/hobot_mot) |
+| Person Re-Identification | OSNet x1.0 | `samples/vision/osnet` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/osnet) |
+| Multi-Object Tracking | ByteTrack | `samples/vision/bytetrack` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/bytetrack) |
+| Multi-Object Tracking | HobotMot (IOU 2.0) | `samples/vision/hobot_mot` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/hobot_mot) |
 | Object Detection / Person Tracking | Faster R-CNN MobileNetV3-Large-320-FPN | `samples/vision/fasterrcnn` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/fasterrcnn) |
 | Promptable Image Segmentation | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/efficient_sam) |
 | Promptable Image Segmentation | MobileSAM | `samples/vision/mobile_sam` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/mobile_sam) |
@@ -229,7 +231,7 @@ The table lists each model family with its platforms and available models; choos
 | Open-Vocabulary Object Detection | YOLOWorld | `samples/vision/yoloworld` | RDK X5 | [Details](./samples/vision/yoloworld) |
 | Point Cloud Segmentation | PointNet | `samples/vision/pointnet` | RDK S100 | [Details](./samples/vision/pointnet) |
 | Image Matting | MODNet | `samples/vision/modnet` | RDK X5 | [Details](./samples/vision/modnet) |
-| OCR Text Detection and Recognition | PaddleOCR | `samples/vision/paddle_ocr` | RDK X5 / RDK S100 / RDK S600 (C++; matching models required) | [Details](./samples/vision/paddle_ocr) |
+| OCR Text Detection and Recognition | PaddleOCR | `samples/vision/paddle_ocr` | RDK X5 / RDK S100 / RDK S600 | [Details](./samples/vision/paddle_ocr) |
 | License Plate Recognition | LPRNet | `samples/vision/lprnet` | RDK X5 | [Details](./samples/vision/lprnet) |
 | Image-Text Multimodal Matching | CLIP | `samples/vision/clip` | RDK X5 | [Details](./samples/vision/clip) |
 | Vision Feature Encoder | DINOv2 | `samples/vision/dinov2` | RDK S100 / RDK S100P / RDK S600 | [Details](./samples/vision/dinov2) |
@@ -240,8 +242,10 @@ The table lists each model family with its platforms and available models; choos
 | Speech Recognition | Paraformer | `samples/speech/paraformer` | RDK S100 | [Details](./samples/speech/paraformer) |
 | Planning / End-to-End Driving | DiffusionDrive | `samples/vision/diffusiondrive` | RDK S100P / RDK S600 | [Details](./samples/vision/diffusiondrive) |
 | Legged Locomotion | HIMLoco (Unitree Go2) | `samples/robotics/himloco` | RDK X5 | [Details](./samples/robotics/himloco) |
-| Vision-Language Model | Gemma4-E2B (native C++) | `samples/llm/gemma4-e2b` | RDK S100 (user-supplied models) / RDK S100P / RDK S600 | [Details](./samples/llm/gemma4-e2b) |
+| Vision-Language Model | Gemma4-E2B (native C++) | `samples/llm/gemma4-e2b` | RDK S100 / RDK S100P / RDK S600 | [Details](./samples/llm/gemma4-e2b) |
 | Text Generation | MiniCPM5-2B (native C++) | `samples/llm/minicpm5-2b` | RDK S100 / RDK S100P / RDK S600 | [Details](./samples/llm/minicpm5-2b) |
+
+Some samples are archival or reference implementations, or require a local detector, C++ runtime or user-supplied model files; each sample's support table lists the exact requirement.
 
 </details>
 
