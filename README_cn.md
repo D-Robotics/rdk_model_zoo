@@ -185,6 +185,11 @@ python3 main.py \
 
 下表列出各模型家族及其平台与可用模型；请在各样例的支持表中选择 Python 或 C++ 运行时及兼容的模型制品。如果想按任务或板卡筛选，而不是逐行浏览下表，请使用[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/)。
 
+<details>
+<summary><b>点击展开完整模型列表（按类别与平台）</b></summary>
+
+<br>
+
 | 类别 | 模型名称 | 模型路径 | 支持平台 | 详情 |
 | :--- | :--- | :--- | :--- | :---: |
 | 视频动作分类 | 3D ResNet | `samples/vision/3dresnet` | RDK S100 | [详情](./samples/vision/3dresnet) |
@@ -242,6 +247,8 @@ python3 main.py \
 | 足式机器人运动控制 | HIMLoco (Unitree Go2) | `samples/robotics/himloco` | RDK X5 | [详情](./samples/robotics/himloco) |
 | 视觉-语言模型 | Gemma4-E2B（原生 C++） | `samples/llm/gemma4-e2b` | RDK S100（需自行提供模型）/ RDK S100P / RDK S600 | [详情](./samples/llm/gemma4-e2b) |
 | 文本生成 | MiniCPM5-2B (native C++) | `samples/llm/minicpm5-2b` | RDK S100 / RDK S100P / RDK S600 | [详情](./samples/llm/minicpm5-2b) |
+
+</details>
 
 上游 VLA 集成（ACT 与 Pi0）另外以固定 Git 子模块形式提供于 `samples/vla/`，集成范围见 [VLA 总览](./samples/vla/README_cn.md)。
 

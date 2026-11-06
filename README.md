@@ -182,6 +182,11 @@ python3 main.py \
 
 The table lists each model family with its platforms and available models; choose the Python or C++ runtime and a compatible model artifact in each sample's support table. To filter this inventory by task or board instead of scanning the table, use the [Web Model Catalog](https://d-robotics.github.io/rdk_model_zoo/).
 
+<details>
+<summary><b>Click to expand the full model list (by category and platform)</b></summary>
+
+<br>
+
 | Category | Model Name | Model Path | Supported Platform | Details |
 | :--- | :--- | :--- | :--- | :---: |
 | Video Action Classification | 3D ResNet | `samples/vision/3dresnet` | RDK S100 | [Details](./samples/vision/3dresnet) |
@@ -239,6 +244,8 @@ The table lists each model family with its platforms and available models; choos
 | Legged Locomotion | HIMLoco (Unitree Go2) | `samples/robotics/himloco` | RDK X5 | [Details](./samples/robotics/himloco) |
 | Vision-Language Model | Gemma4-E2B (native C++) | `samples/llm/gemma4-e2b` | RDK S100 (user-supplied models) / RDK S100P / RDK S600 | [Details](./samples/llm/gemma4-e2b) |
 | Text Generation | MiniCPM5-2B (native C++) | `samples/llm/minicpm5-2b` | RDK S100 / RDK S100P / RDK S600 | [Details](./samples/llm/minicpm5-2b) |
+
+</details>
 
 Upstream VLA integrations (ACT and Pi0) are additionally available under `samples/vla/` as pinned Git submodules; see the [VLA overview](./samples/vla/README.md) for their integration scope.
 
