@@ -23,11 +23,31 @@
 
 </div>
 
+<p align="center">
+  <a href="https://d-robotics.github.io/rdk_model_zoo/"><b>🔎 Explore the Web Model Catalog →</b></a>
+</p>
+
 ## Introduction
 
 This repository is the official collection of BPU model examples and tools (Model Zoo) provided by D-Robotics. It is oriented towards AI model deployment and application development on BPU (Brain Processing Unit), helping developers to **quickly get started with BPU** and **fast-track model inference workflows**.
 
 The samples provide model preparation, conversion guides and board-side inference programs, with preprocessing, BPU execution, postprocessing and result output. Each sample documents its supported boards and available conversion steps.
+
+### Explore the Web Model Catalog
+
+<a href="https://d-robotics.github.io/rdk_model_zoo/">
+  <img src="docs/assets/model_zoo_web_en.png" alt="RDK Model Zoo Web Model Catalog with task and hardware filters, search, and model cards" width="100%">
+</a>
+
+The [Web Model Catalog](https://d-robotics.github.io/rdk_model_zoo/) indexes the released model inventory — model families, per-platform builds and variants — for RDK X5, RDK S100, RDK S100P and RDK S600 from the same records as this repository. It is the fastest way to go from a task or board to the right model and deployment path. Use it before cloning the repository: compare boards and measured numbers, then jump straight to the sample that runs the model.
+
+- **Search and filter** by task (vision, LLM, robotics, audio, multimodal) and by board.
+- **See a visual example and supported boards on each card**, then open the model for measured latency, throughput, accuracy and quantization precision.
+- **Get deployment details**: model assets, quick-start command, runtime settings, conversion notes and links back to the model repository.
+
+<p align="center">
+  <a href="https://d-robotics.github.io/rdk_model_zoo/"><b>Open the Web Model Catalog →</b></a>
+</p>
 
 ### Core Value
 
@@ -38,21 +58,16 @@ The samples provide model preparation, conversion guides and board-side inferenc
 
 ### Hardware & System Support
 
-The `samples/` tree is the unified source for all maintained boards. Choose the runtime and model for your board inside each sample: Python entries select the target with the `--target` or `--platform` option their README documents, native C++ entries take the arguments their README documents, and each README states which boards its published artifacts support. Platform artifacts are recorded in the manifests under `docs/release/x5/` and `docs/release/s/`. The default branch `main` is the delivery line and `develop` is the unified development branch; the preserved `rdk_x5` and `rdk_s` branches are historical per-board delivery lines, and RDK X3 material is archived on `rdk_x3`.
+Every maintained board uses the same `samples/` tree. Select the target in the sample README: Python entries use `--target` or `--platform`, native C++ entries use their documented flags, and each README lists the artifacts it supports.
 
-| Target Hardware | Where | Description |
-| :--- | :--- | :--- |
-| RDK X5 | `samples/` tree, model target `x5` | Recommended system version: RDK OS >= 3.5.0, based on Ubuntu 22.04 aarch64 and TROS-Humble. |
-| RDK S100 | `samples/` tree, model target `s100` | Nash-E artifacts published under `docs/release/s/`. |
-| RDK S100P | `samples/` tree, model target `s100p` | Nash-M artifacts published under `docs/release/s/`. |
-| RDK S600 | `samples/` tree, model target `s600` | Nash-P artifacts published under `docs/release/s/`. |
-| Delivery / development | [`main`](https://github.com/D-Robotics/rdk_model_zoo/tree/main) (default) / [`develop`](https://github.com/D-Robotics/rdk_model_zoo/tree/develop) | Delivery branch and unified development branch. |
-| Historical per-board delivery lines | [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) / [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | Preserved board-specific release branches. |
-| RDK X3 (archive) | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | Historical archive only, not an adaptation target. |
+| Board | Target ID | Published artifacts | System / architecture |
+| :--- | :--- | :--- | :--- |
+| RDK X5 | `x5` | [`docs/release/x5/`](docs/release/x5) | RDK OS ≥ 3.5.0; Ubuntu 22.04 aarch64; TROS-Humble |
+| RDK S100 | `s100` | [`docs/release/s/`](docs/release/s) | Nash-E |
+| RDK S100P | `s100p` | [`docs/release/s/`](docs/release/s) | Nash-M |
+| RDK S600 | `s600` | [`docs/release/s/`](docs/release/s) | Nash-P |
 
-**[Browse the online model catalog →](https://d-robotics.github.io/rdk_model_zoo/)**
-
-The online catalog presents released models as searchable cards with model assets, measured performance and accuracy results, and their measurement conditions.
+**Repository lines.** The default [`main`](https://github.com/D-Robotics/rdk_model_zoo/tree/main) branch is the delivery line; [`develop`](https://github.com/D-Robotics/rdk_model_zoo/tree/develop) is the unified development branch. The preserved [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) and [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) branches are historical per-board delivery lines; RDK X3 material is archived on [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) and is not an adaptation target.
 
 ---
 
@@ -165,7 +180,12 @@ python3 main.py \
 
 ## Model List
 
-The table lists each model family with its platforms and available models; choose the Python or C++ runtime and a compatible model artifact in each sample's support table.
+The table lists each model family with its platforms and available models; choose the Python or C++ runtime and a compatible model artifact in each sample's support table. To filter this inventory by task or board instead of scanning the table, use the [Web Model Catalog](https://d-robotics.github.io/rdk_model_zoo/).
+
+<details>
+<summary><b>Click to expand the full model list (by category and platform)</b></summary>
+
+<br>
 
 | Category | Model Name | Model Path | Supported Platform | Details |
 | :--- | :--- | :--- | :--- | :---: |
@@ -225,10 +245,13 @@ The table lists each model family with its platforms and available models; choos
 | Vision-Language Model | Gemma4-E2B (native C++) | `samples/llm/gemma4-e2b` | RDK S100 (user-supplied models) / RDK S100P / RDK S600 | [Details](./samples/llm/gemma4-e2b) |
 | Text Generation | MiniCPM5-2B (native C++) | `samples/llm/minicpm5-2b` | RDK S100 / RDK S100P / RDK S600 | [Details](./samples/llm/minicpm5-2b) |
 
+</details>
+
 Upstream VLA integrations (ACT and Pi0) are additionally available under `samples/vla/` as pinned Git submodules; see the [VLA overview](./samples/vla/README.md) for their integration scope.
 
 ## Documentation & Resources
 
+- **Web Model Catalog**: Search and filter released models, compare measured performance and accuracy, and open deployment details at [d-robotics.github.io/rdk_model_zoo](https://d-robotics.github.io/rdk_model_zoo/).
 - **Model Docs**: Each model's top-level `README.md` provides an overview and run guide.
 - **Source Reference**: For code-level interface details, see **[Source Documentation](./docs/source_reference/README.md)**.
 - **Guidelines**: To contribute or develop, please read the **[Model Zoo Repository Guidelines](./docs/Model_Zoo_Repository_Guidelines.md)**.
