@@ -44,7 +44,6 @@
 - **搜索与筛选**：按任务（视觉、语言模型、机器人、音频、多模态）和板卡筛选。
 - **卡片先看效果**：每张卡片展示输入示例和支持板卡；进入详情可查看实测时延、吞吐、精度与量化精度。
 - **获取部署信息**：模型制品、快速开始命令、运行时配置、转换说明，以及跳回模型仓库的链接。
-- **分享精确视图**：模型与 Benchmark 选择都可直接用链接引用，方便把结果发给同事或写进报告。
 
 <p align="center">
   <a href="https://d-robotics.github.io/rdk_model_zoo/"><b>打开在线模型目录 →</b></a>
@@ -59,17 +58,16 @@
 
 ### 硬件与系统支持
 
-`samples/` 目录是所有在维护板卡的统一源。请在每个 Sample 中按板卡选择运行时与模型：Python 入口使用其 README 声明的 `--target` 或 `--platform` 选项选择目标板，原生 C++ 入口使用其 README 声明的参数，各 README 同时说明其发布制品支持的板卡。平台制品清单记录在 `docs/release/x5/` 与 `docs/release/s/`。默认分支 `main` 为交付线，`develop` 为统一开发分支；保留的 `rdk_x5` 与 `rdk_s` 为历史分板卡交付线，RDK X3 资料归档在 `rdk_x3`。
+所有在维护的板卡共用同一份 `samples/` 目录。请在对应 Sample 的 README 中选择目标：Python 入口使用 `--target` 或 `--platform`，原生 C++ 入口使用其文档中的参数；每个 README 都会列出支持的制品。
 
-| 目标硬件 | 获取方式 | 说明 |
-| :--- | :--- | :--- |
-| RDK X5 | `samples/` 目录，模型目标 `x5` | 推荐系统版本为 RDK OS >= 3.5.0，系统基于 Ubuntu 22.04 aarch64 和 TROS-Humble。 |
-| RDK S100 | `samples/` 目录，模型目标 `s100` | Nash-E 制品发布于 `docs/release/s/`。 |
-| RDK S100P | `samples/` 目录，模型目标 `s100p` | Nash-M 制品发布于 `docs/release/s/`。 |
-| RDK S600 | `samples/` 目录，模型目标 `s600` | Nash-P 制品发布于 `docs/release/s/`。 |
-| 交付 / 开发 | [`main`](https://github.com/D-Robotics/rdk_model_zoo/tree/main)（默认）/ [`develop`](https://github.com/D-Robotics/rdk_model_zoo/tree/develop) | 交付分支与统一开发分支。 |
-| 历史分板卡交付线 | [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) / [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | 保留的按板卡发布交付分支。 |
-| RDK X3（归档） | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | 仅作历史归档，不再作为适配目标。 |
+| 板卡 | Target ID | 已发布制品 | 系统 / 架构 |
+| :--- | :--- | :--- | :--- |
+| RDK X5 | `x5` | [`docs/release/x5/`](docs/release/x5) | RDK OS ≥ 3.5.0；Ubuntu 22.04 aarch64；TROS-Humble |
+| RDK S100 | `s100` | [`docs/release/s/`](docs/release/s) | Nash-E |
+| RDK S100P | `s100p` | [`docs/release/s/`](docs/release/s) | Nash-M |
+| RDK S600 | `s600` | [`docs/release/s/`](docs/release/s) | Nash-P |
+
+**分支说明。** 默认分支 [`main`](https://github.com/D-Robotics/rdk_model_zoo/tree/main) 为交付线，[`develop`](https://github.com/D-Robotics/rdk_model_zoo/tree/develop) 为统一开发分支。保留的 [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) 与 [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) 为历史分板卡交付线；RDK X3 资料归档在 [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3)，不再作为适配目标。
 
 ---
 

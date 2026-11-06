@@ -44,7 +44,6 @@ The [Web Model Catalog](https://d-robotics.github.io/rdk_model_zoo/) indexes the
 - **Search and filter** by task (vision, LLM, robotics, audio, multimodal) and by board.
 - **See a visual example and supported boards on each card**, then open the model for measured latency, throughput, accuracy and quantization precision.
 - **Get deployment details**: model assets, quick-start command, runtime settings, conversion notes and links back to the model repository.
-- **Share exact views**: model and benchmark selections are linkable, so a result can be cited directly.
 
 <p align="center">
   <a href="https://d-robotics.github.io/rdk_model_zoo/"><b>Open the Web Model Catalog →</b></a>
@@ -59,17 +58,16 @@ The [Web Model Catalog](https://d-robotics.github.io/rdk_model_zoo/) indexes the
 
 ### Hardware & System Support
 
-The `samples/` tree is the unified source for all maintained boards. Choose the runtime and model for your board inside each sample: Python entries select the target with the `--target` or `--platform` option their README documents, native C++ entries take the arguments their README documents, and each README states which boards its published artifacts support. Platform artifacts are recorded in the manifests under `docs/release/x5/` and `docs/release/s/`. The default branch `main` is the delivery line and `develop` is the unified development branch; the preserved `rdk_x5` and `rdk_s` branches are historical per-board delivery lines, and RDK X3 material is archived on `rdk_x3`.
+Every maintained board uses the same `samples/` tree. Select the target in the sample README: Python entries use `--target` or `--platform`, native C++ entries use their documented flags, and each README lists the artifacts it supports.
 
-| Target Hardware | Where | Description |
-| :--- | :--- | :--- |
-| RDK X5 | `samples/` tree, model target `x5` | Recommended system version: RDK OS >= 3.5.0, based on Ubuntu 22.04 aarch64 and TROS-Humble. |
-| RDK S100 | `samples/` tree, model target `s100` | Nash-E artifacts published under `docs/release/s/`. |
-| RDK S100P | `samples/` tree, model target `s100p` | Nash-M artifacts published under `docs/release/s/`. |
-| RDK S600 | `samples/` tree, model target `s600` | Nash-P artifacts published under `docs/release/s/`. |
-| Delivery / development | [`main`](https://github.com/D-Robotics/rdk_model_zoo/tree/main) (default) / [`develop`](https://github.com/D-Robotics/rdk_model_zoo/tree/develop) | Delivery branch and unified development branch. |
-| Historical per-board delivery lines | [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) / [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | Preserved board-specific release branches. |
-| RDK X3 (archive) | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | Historical archive only, not an adaptation target. |
+| Board | Target ID | Published artifacts | System / architecture |
+| :--- | :--- | :--- | :--- |
+| RDK X5 | `x5` | [`docs/release/x5/`](docs/release/x5) | RDK OS ≥ 3.5.0; Ubuntu 22.04 aarch64; TROS-Humble |
+| RDK S100 | `s100` | [`docs/release/s/`](docs/release/s) | Nash-E |
+| RDK S100P | `s100p` | [`docs/release/s/`](docs/release/s) | Nash-M |
+| RDK S600 | `s600` | [`docs/release/s/`](docs/release/s) | Nash-P |
+
+**Repository lines.** The default [`main`](https://github.com/D-Robotics/rdk_model_zoo/tree/main) branch is the delivery line; [`develop`](https://github.com/D-Robotics/rdk_model_zoo/tree/develop) is the unified development branch. The preserved [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) and [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) branches are historical per-board delivery lines; RDK X3 material is archived on [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) and is not an adaptation target.
 
 ---
 
