@@ -64,7 +64,7 @@
         const shortName = name => name.split('/').slice(-2).join('/');
         const tip = weakestList.slice(0, 3)
           .map(node => `${node.cosine != null ? node.cosine.toFixed(4) : '—'} ${node.name}`).join('\n');
-        return `<div class="rd-card"><span>最弱相似度</span><strong title="${esc(tip)}">${weakest ? `${fmt(weakest.cosine, 4)} · ${esc(shortName(weakest.name))}` : '—'}</strong></div>`;
+        return `<div class="rd-card"><span>最弱相似度</span><strong title="${esc(tip)}">${weakest ? fmt(weakest.cosine, 4) : '—'}</strong>${weakest ? `<small class="rd-card-node" title="${esc(weakest.name)}">${esc(shortName(weakest.name))}</small>` : ''}</div>`;
       })(),
     ];
     const subgraphs = data.subgraphs || [];
