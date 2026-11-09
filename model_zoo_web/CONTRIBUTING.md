@@ -71,6 +71,14 @@ Eagle3/DFlash 的生成速度保留官方区间，不能取上限作为单值；
 缺少任一正式发布证据时，不应伪造数值、URL 或占位下载链接，也不应将状态标记为
 `released`。
 
+已公开制品的 `status: converted` 可以分别补充真实精度与性能，不必等待全部条件完成。
+精度完成后保留浮点与板端数值、数据集和样本数，并用 `accuracy.acceptance` 记录
+`execution: completed`、`status: pass|fail`、批次/job/基线、门槛修订、具体门槛和报告 URL。
+`validation.accuracy` 对应 `passed|failed`，证据必须绑定同一制品 SHA。精度未达标也展示
+实测数值和 fail 结论；未测项仍为 `not-run`。分类门槛分别检查 Top-1/Top-5 的绝对差值，
+检测门槛同时检查 AP 绝对差值与保留率；比例值 0.10 表示 10 个百分点。
+这些局部结果不将模型自动提升为 `released`，也不改写其它测试状态。
+
 已经进入 `main` / `develop` 的示例，在证据齐套之前可以先登记为 `registration: pending`。
 登记只写能核对的身份、任务、示例路径和支持的板卡，并标明证据文件；性能、精度、
 文件大小、下载地址、封面和转换报告留空。字段规则、任务代码和“待补”与“完整”的

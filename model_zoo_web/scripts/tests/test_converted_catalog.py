@@ -51,6 +51,51 @@ class ConvertedCatalogTest(unittest.TestCase):
         self.row.update(status='released',released_at='2026-11-02')
         with self.assertRaises(catalog.CatalogError): self.validate()
 
+    def test_completed_accuracy_can_publish_a_failed_verdict_without_performance(self):
+        self.row['accuracy'] = {
+            'dataset': 'COCO val2017', 'task': 'object-detection', 'images': 5000,
+            'float_onnx': {'map_50_95': 0.5, 'map_50': 0.7, 'map_75': 0.6},
+            'runtime': {'map_50_95': 0.4, 'map_50': 0.6, 'map_75': 0.5},
+            'acceptance': {
+                'execution': 'completed', 'status': 'fail', 'campaign': 'fixture',
+                'job_id': 'fixture-x5', 'baseline_key': 'fixture-baseline', 'policy_revision': 2,
+                'thresholds': {'max_ap_drop': 0.03, 'min_ap_retention': 0.9},
+                'report_url': 'https://example.org/evaluation/',
+            },
+        }
+        self.row['validation']['accuracy'] = 'failed'
+        self.row['validation']['evidence'] = {'accuracy': {
+            'artifact_sha256': self.row['artifact']['sha256'], 'url': 'https://example.org/evaluation/data.json'}}
+        self.validate()
+        self.assertNotIn('performance', self.row)
+        self.row['validation']['accuracy'] = 'passed'
+        with self.assertRaises(catalog.CatalogError): self.validate()
+        self.row['validation']['accuracy'] = 'failed'
+        self.row['accuracy']['acceptance']['status'] = 'pass'
+        with self.assertRaises(catalog.CatalogError): self.validate()
+        self.row['accuracy']['acceptance']['status'] = 'fail'
+        self.row['validation']['evidence']['accuracy']['artifact_sha256'] = '0' * 64
+        with self.assertRaises(catalog.CatalogError): self.validate()
+
+    def test_classification_gate_is_inclusive_and_checks_top1_and_top5(self):
+        accuracy = {
+            'dataset': 'ImageNetV2 MatchedFrequency', 'task': 'image-classification', 'images': 10000,
+            'float_onnx': {'top1': 0.7, 'top5': 0.9}, 'runtime': {'top1': 0.6, 'top5': 0.8},
+            'acceptance': {'execution': 'completed', 'status': 'pass', 'campaign': 'fixture',
+                'job_id': 'fixture-x5', 'baseline_key': 'fixture-baseline', 'policy_revision': 2,
+                'thresholds': {'max_top1_drop': 0.1, 'max_top5_drop': 0.1},
+                'report_url': 'https://example.org/evaluation/'},
+        }
+        catalog.validate_accuracy(accuracy, 'cls', 'fixture.accuracy')
+        for metric in ('top1', 'top5'):
+            with self.subTest(metric=metric):
+                invalid = copy.deepcopy(accuracy)
+                invalid['runtime'][metric] -= 0.0001
+                with self.assertRaises(catalog.CatalogError):
+                    catalog.validate_accuracy(invalid, 'cls', 'fixture.accuracy')
+                invalid['acceptance']['status'] = 'fail'
+                catalog.validate_accuracy(invalid, 'cls', 'fixture.accuracy')
+
     def test_conversion_validation_cannot_describe_a_different_binary_or_missing_sources(self):
         for section,field,value in [('validation','artifact_sha256','0'*64),
                                     ('validation','conversion','not-run'),

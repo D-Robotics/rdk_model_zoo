@@ -293,7 +293,18 @@ if (preview) {
       assert.equal(model.validation?.host_smoke, 'passed', `${model.id}: host smoke must pass`);
       assert.equal(model.validation?.artifact_sha256, model.assets[0].sha256, `${model.id}: validation must match the artifact`);
       assert(Number.isInteger(model.metadataRevision) && model.metadataRevision > 0, `${model.id}: metadata revision is required`);
-      if (model.validation.accuracy !== 'passed') assert.deepEqual(Array.from(model.benchmark?.accuracy || []), [], `${model.id}: unmeasured accuracy cannot be displayed`);
+      const completedFailure = model.validation.accuracy === 'failed'
+        && model.accuracyEvaluation?.execution === 'completed'
+        && model.accuracyEvaluation?.status === 'fail';
+      if (model.validation.accuracy === 'passed' || completedFailure) {
+        assert(model.benchmark?.accuracy?.length, `${model.id}: completed accuracy needs its measured metrics`);
+        if (model.accuracyEvaluation) {
+          assert.equal(model.accuracyEvaluation.status, model.validation.accuracy === 'passed' ? 'pass' : 'fail', `${model.id}: accuracy verdict must match validation`);
+          assert.equal(model.accuracyEvaluation.execution, 'completed', `${model.id}: published accuracy must be completed`);
+        }
+      } else {
+        assert.deepEqual(Array.from(model.benchmark?.accuracy || []), [], `${model.id}: unmeasured accuracy cannot be displayed`);
+      }
     }
     for (const asset of model.assets || []) {
       assert(asset.url && asset.sha256 && asset.sizeBytes, `${model.id}: assets need url, sha256 and size_bytes`);

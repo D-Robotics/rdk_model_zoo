@@ -12,14 +12,16 @@ import {
 
 const detailSource = readFileSync(new URL('../../src/detail-view.js', import.meta.url), 'utf8');
 
-function renderAccuracy(records, metricLabels, taskId = 'pose-estimation', catalogId = 'fixture/pose') {
+function renderAccuracy(records, metricLabels, taskId = 'pose-estimation', catalogId = 'fixture/pose', modelFields = {}) {
   const performanceRoot = { innerHTML: '' };
+  const evaluationRoot = { innerHTML: '', hidden: true };
   const root = {
     addEventListener() {},
     querySelectorAll: () => [],
     querySelector: selector => {
       if (selector === '#benchmark-condition') return { dataset: { value: '1' }, addEventListener() {} };
       if (selector === '#detail-performance') return performanceRoot;
+      if (selector === '#detail-evaluation-summary') return evaluationRoot;
       return null;
     },
   };
@@ -41,9 +43,30 @@ function renderAccuracy(records, metricLabels, taskId = 'pose-estimation', catal
     taskId,
     catalogId,
     benchmark: { accuracy: records },
+    ...modelFields,
   }, [], { accuracyMetricLabels: metricLabels, release: { compatibility: { hardware: 'RDK S100' } } });
-  return performanceRoot.innerHTML;
+  return performanceRoot.innerHTML + (evaluationRoot.hidden ? '' : evaluationRoot.innerHTML);
 }
+
+test('measured converted accuracy shows its verdict and dataset while performance remains unmeasured', () => {
+  for (const status of ['pass', 'fail']) {
+    const board = { top1: status === 'pass' ? 0.6322 : 0.4322, top5: 0.8408 };
+    const records = accuracyRecords('cls', { top1: 0.6366, top5: 0.8463 }, board);
+    const html = renderAccuracy(records, accuracyMetricLabels(), 'image-classification', 'fasternet/fasternet/cls', {
+      releaseStatus: 'converted',
+      accuracyEvaluation: { status, dataset: 'ImageNetV2 MatchedFrequency', images: 10000,
+        report_url: 'https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/' },
+    });
+    assert.match(html, new RegExp(`${board.top1 * 100}<small>%</small>`));
+    assert.match(html, /84\.08<small>%<\/small>/);
+    assert.match(html, /63\.66%/);
+    assert.match(html, /差值（百分点）/);
+    assert.match(html, /ImageNetV2 MatchedFrequency · 10,000/);
+    assert.match(html, status === 'pass' ? /精度达标/ : /精度未达标/);
+    assert.equal((html.match(/待实测/g) || []).length, 3);
+    assert.match(html, /查看精度报告/);
+  }
+});
 
 function renderDetail(model) {
   const context = {

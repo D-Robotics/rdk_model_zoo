@@ -183,16 +183,42 @@ variants:
       calibration_manifest_sha256: 88d75d6f71cadc9056dff425d481bbefa735871ecfbf9883cb2a8d2448920aa9
       optimization_level: O1
       board_validation: not-run
+    accuracy:
+      dataset: ImageNetV2 MatchedFrequency
+      task: image-classification
+      images: 10000
+      float_onnx:
+        top1: 0.6957
+        top5: 0.8926
+      runtime:
+        top1: 0.2054
+        top5: 0.3651
+      acceptance:
+        status: fail
+        execution: completed
+        campaign: first208-20261109
+        job_id: vit--tv-b16-imagenet1k-224-featuremap-int16-cpuptq-o1-20261105--s100
+        baseline_key: 75a07e11d65195a0a6e105e4
+        policy_revision: 2
+        thresholds:
+          max_top1_drop: 0.1
+          max_top5_drop: 0.1
+        report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/
     validation:
       conversion: passed
       host_smoke: passed
       artifact_sha256: 441eadef5af415056da40d208b5be88382113c6353f22e9ff22bd96980f7a3e2
       board_smoke: not-run
-      accuracy: not-run
+      accuracy: failed
       runtime_1: not-run
       runtime_2: not-run
       cpp_1: not-run
       cpp_2: not-run
+      evidence:
+        accuracy:
+          artifact_sha256: 441eadef5af415056da40d208b5be88382113c6353f22e9ff22bd96980f7a3e2
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/data.json
+          job_id: vit--tv-b16-imagenet1k-224-featuremap-int16-cpuptq-o1-20261105--s100
     provenance:
       repository_commit: a8f6b193fa29ab801b29cb3d5339985322bf4a86
       source_repository_commit: 824e8c8726b65fd9d5abdc9702f81c2b0c4c0dc8

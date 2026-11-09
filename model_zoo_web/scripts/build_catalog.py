@@ -501,6 +501,36 @@ def validate_accuracy(value: Any, task: str, label: str) -> None:
             if not 0 <= metric_value <= 1:
                 raise CatalogError(f"{metric_label} must be a ratio between 0 and 1")
 
+    if "acceptance" not in accuracy:
+        return
+    acceptance = require_mapping(accuracy["acceptance"], f"{label}.acceptance")
+    if acceptance.get("execution") != "completed" or acceptance.get("status") not in {"pass", "fail"}:
+        raise CatalogError(f"{label}.acceptance must distinguish completed execution from pass/fail accuracy")
+    for field in ("campaign", "job_id", "baseline_key"):
+        require_string(acceptance.get(field), f"{label}.acceptance.{field}")
+    require_positive_int(acceptance.get("policy_revision"), f"{label}.acceptance.policy_revision")
+    _require_https(acceptance.get("report_url"), f"{label}.acceptance.report_url")
+    thresholds = require_mapping(acceptance.get("thresholds"), f"{label}.acceptance.thresholds")
+    def threshold(field: str) -> float:
+        value = require_number(thresholds.get(field), f"{label}.acceptance.thresholds.{field}")
+        if not 0 <= value <= 1:
+            raise CatalogError(f"{label}.acceptance.thresholds.{field} must be a ratio between 0 and 1")
+        return value
+    reference, board = accuracy["float_onnx"], accuracy["runtime"]
+    if canonical_task == "cls":
+        limits = {field: threshold(f"max_{field}_drop") for field in ("top1", "top5")}
+        passed = all(reference[field] - board[field] <= limits[field] + 1e-12
+                     for field in ("top1", "top5"))
+    elif canonical_task == "detect":
+        max_drop, min_retention = threshold("max_ap_drop"), threshold("min_ap_retention")
+        passed = (reference["map_50_95"] > 0
+                  and reference["map_50_95"] - board["map_50_95"] <= max_drop + 1e-12
+                  and board["map_50_95"] / reference["map_50_95"] >= min_retention - 1e-12)
+    else:
+        raise CatalogError(f"{label}.acceptance has no threshold contract for task {canonical_task}")
+    if acceptance["status"] != ("pass" if passed else "fail"):
+        raise CatalogError(f"{label}.acceptance.status disagrees with its measured metrics and thresholds")
+
 
 def _validate_pending_facts(record: dict[str, Any], relative_source: str) -> None:
     """Every optional fact must be a substring of the file it cites at sample_revision."""
@@ -1283,15 +1313,22 @@ def validate_converted_platform(platform: dict[str, Any], license_info: dict[str
     for key in board_checks:
         if validation.get(key) not in {"not-run", "passed", "failed"}:
             raise CatalogError(f"{label}.validation.{key} must declare its actual execution state")
-        if validation[key] == "passed":
+        if validation[key] == "passed" or (key == "accuracy" and "accuracy" in platform):
             evidence = require_mapping(validation.get("evidence", {}).get(key), f"{label}.validation.evidence.{key}")
             if evidence.get("artifact_sha256") != artifact["sha256"]:
                 raise CatalogError(f"{label}.validation.evidence.{key} belongs to another artifact")
             _require_https(evidence.get("url"), f"{label}.validation.evidence.{key}.url")
     if platform.get("status") == "released" and any(validation[key] != "passed" for key in board_checks):
         raise CatalogError(f"{label}: promotion to released requires every board check to pass")
-    if ("accuracy" in platform) != (validation["accuracy"] == "passed"):
-        raise CatalogError(f"{label}: accuracy values and the passed accuracy check must be supplied together")
+    has_accuracy = "accuracy" in platform
+    if ((validation["accuracy"] == "passed" and not has_accuracy)
+            or (has_accuracy and validation["accuracy"] == "not-run")):
+        raise CatalogError(f"{label}: accuracy values must match a completed accuracy check")
+    if has_accuracy:
+        verdict = platform["accuracy"].get("acceptance", {}).get("status")
+        if (validation["accuracy"] == "failed" and verdict != "fail"
+                or verdict == "fail" and validation["accuracy"] != "failed"):
+            raise CatalogError(f"{label}: failed accuracy must retain its measured values and fail verdict")
     performance = platform.get("performance", {})
     runtime_conditions = {item.get("threads") for item in performance.get("measurements", [])}
     cpp = performance.get("end_to_end", [])

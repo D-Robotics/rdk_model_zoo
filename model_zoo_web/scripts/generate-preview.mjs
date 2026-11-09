@@ -727,6 +727,13 @@ for (const record of catalog.models || []) {
             sizeBytes: Number(artifact.size_bytes),
           },
         ]),
+        ...(release.accuracy?.acceptance ? {
+          accuracyEvaluation: {
+            ...release.accuracy.acceptance,
+            dataset: release.accuracy.dataset,
+            images: release.accuracy.images,
+          },
+        } : {}),
         benchmark: {
           precision: release.provenance?.precision_policy || 'int8',
           ...(release.provenance?.precision_policy
