@@ -381,6 +381,10 @@ variants:
 - size: s0-apple-in1k-224
   model:
     parameter_count: 5293272
+    gflops: 0.5502208
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -405,7 +409,7 @@ variants:
   platforms:
   - platform: x5
     license: *id001
-    status: converted
+    status: released
     converted_at: '2026-11-02'
     metadata_revision: 1
     artifact:
@@ -533,38 +537,38 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 5396.401711
+        aggregate_wall_ms: 5513.3924990000005
         metrics_ms:
           preprocess:
-            mean: 7.899721463333334
-            p50: 8.0527865
-            p95: 8.302041000000001
-            min: 7.227556
-            max: 9.830352
+            mean: 8.09716745
+            p50: 8.058786
+            p95: 9.49803055
+            min: 7.265431
+            max: 15.34953
           runtime:
-            mean: 1.0564918116666666
-            p50: 1.0558975
-            p95: 1.07901125
-            min: 1.020752
-            max: 1.225627
+            mean: 1.0548263883333333
+            p50: 1.0506060000000002
+            p95: 1.0808842
+            min: 1.014294
+            max: 1.808837
           postprocess:
-            mean: 0.03156205166666667
-            p50: 0.03125
-            p95: 0.033667
-            min: 0.027875
-            max: 0.09325
+            mean: 0.030933873333333337
+            p50: 0.030708
+            p95: 0.032875
+            min: 0.027542
+            max: 0.065125
           end_to_end:
-            mean: 8.987775326666666
-            p50: 9.1423925
-            p95: 9.3962829
-            min: 8.309933
-            max: 10.924479
-        throughput_fps: 111.18519934810686
+            mean: 9.182927711666666
+            p50: 9.14833
+            p95: 10.61039535
+            min: 8.341266
+            max: 16.518032
+        throughput_fps: 108.82591800036474
         measurement_status: measured
         environment_status: recorded
       - tool: classification_benchmark
@@ -578,47 +582,48 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 9832.69407
+        aggregate_wall_ms: 9823.075771
         metrics_ms:
           preprocess:
-            mean: 14.539795713333334
-            p50: 8.98033
-            p95: 49.641604
-            min: 7.301056
-            max: 53.602479
+            mean: 14.718368663333335
+            p50: 9.0293295
+            p95: 49.42280505
+            min: 7.274847
+            max: 53.82452
           runtime:
-            mean: 1.2830800966666667
-            p50: 1.059044
-            p95: 2.9035723
-            min: 0.84471
-            max: 4.208383
+            mean: 1.2307581108333332
+            p50: 1.0531895
+            p95: 2.5781511499999996
+            min: 0.834293
+            max: 4.106633
           postprocess:
-            mean: 0.03143774083333334
-            p50: 0.0310835
-            p95: 0.03437804999999999
-            min: 0.026792
-            max: 0.134042
+            mean: 0.031369735833333336
+            p50: 0.031
+            p95: 0.03441905
+            min: 0.02675
+            max: 0.064542
           end_to_end:
-            mean: 15.854313550833334
-            p50: 10.149165
-            p95: 51.44634515
-            min: 8.357141
-            max: 55.599732
-        throughput_fps: 122.04183222391258
+            mean: 15.98049651
+            p50: 10.183456499999998
+            p95: 50.82022829999998
+            min: 8.344432
+            max: 55.82794
+        throughput_fps: 122.16132991080845
         measurement_status: measured
         environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s0-apple-in1k-224--x5
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s0-apple-in1k-224--x5
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       artifact_sha256: 7e1eff64efcfa8c8e988b14795156481162629cc54bd0dd98bb6e2d786b2a2e2
       conversion: passed
@@ -627,8 +632,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 7e1eff64efcfa8c8e988b14795156481162629cc54bd0dd98bb6e2d786b2a2e2
@@ -648,11 +653,11 @@ variants:
           job_id: mobileone--s0-apple-in1k-224--x5
         cpp_1:
           artifact_sha256: 7e1eff64efcfa8c8e988b14795156481162629cc54bd0dd98bb6e2d786b2a2e2
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s0-apple-in1k-224--x5
         cpp_2:
           artifact_sha256: 7e1eff64efcfa8c8e988b14795156481162629cc54bd0dd98bb6e2d786b2a2e2
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s0-apple-in1k-224--x5
     provenance:
       repository_commit: 6e8e913e772996c1a1f4fac7e25a8c7c1fe2e79c
@@ -681,9 +686,14 @@ variants:
     runtime_command: python3 samples/vision/mobileone/runtime/python/main.py --target
       x5 --asset-id x5:mobileone:mobileone_s0_apple_in1k_bayese_224x224_nv12.bin --model-path
       /path/to/mobileone_s0_apple_in1k_bayese_224x224_nv12.bin --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: s1-apple-in1k-224
   model:
     parameter_count: 4825192
+    gflops: 1.650114048
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -711,7 +721,7 @@ variants:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-02'
     metadata_revision: 1
     artifact:
@@ -839,38 +849,38 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 5712.179563
+        aggregate_wall_ms: 5700.453548
         metrics_ms:
           preprocess:
-            mean: 7.901391636666667
-            p50: 8.0476195
-            p95: 8.2951371
-            min: 7.258055
-            max: 11.079897
+            mean: 7.881174193333333
+            p50: 8.045077500000001
+            p95: 8.27186775
+            min: 7.261514
+            max: 8.806392
           runtime:
-            mean: 1.58232311
-            p50: 1.581003
-            p95: 1.60643215
-            min: 1.555795
-            max: 1.679294
+            mean: 1.5830490833333333
+            p50: 1.5800445
+            p95: 1.6077054
+            min: 1.552961
+            max: 1.63942
           postprocess:
-            mean: 0.03050528333333333
-            p50: 0.030458
-            p95: 0.03196105
-            min: 0.0285
-            max: 0.034167
+            mean: 0.030723175
+            p50: 0.030666
+            p95: 0.03225
+            min: 0.028375
+            max: 0.061542
           end_to_end:
-            mean: 9.51422003
-            p50: 9.658123
-            p95: 9.91475655
-            min: 8.869225
-            max: 12.793358
-        throughput_fps: 105.03871479923924
+            mean: 9.494946451666666
+            p50: 9.6592475
+            p95: 9.887110700000001
+            min: 8.85585
+            max: 10.418228
+        throughput_fps: 105.25478279013598
         measurement_status: measured
         environment_status: recorded
       - tool: classification_benchmark
@@ -884,47 +894,48 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 10252.171116
+        aggregate_wall_ms: 10225.723877
         metrics_ms:
           preprocess:
-            mean: 14.818566943333336
-            p50: 8.9621845
-            p95: 49.632840849999994
-            min: 7.293222
-            max: 53.131143
+            mean: 14.777724488333334
+            p50: 8.964038
+            p95: 49.54988455
+            min: 7.266806
+            max: 53.116268
           runtime:
-            mean: 1.7836169008333331
-            p50: 1.5916485
-            p95: 3.196277499999997
-            min: 1.425253
-            max: 6.152304
+            mean: 1.8113147425
+            p50: 1.5885865
+            p95: 3.2938813
+            min: 1.391919
+            max: 5.627302
           postprocess:
-            mean: 0.031084159166666663
-            p50: 0.03075
-            p95: 0.03446215
-            min: 0.026417
-            max: 0.058167
+            mean: 0.03085141416666667
+            p50: 0.0303755
+            p95: 0.034041
+            min: 0.026333
+            max: 0.073333
           end_to_end:
-            mean: 16.633268003333335
-            p50: 10.6418955
-            p95: 51.82700205
-            min: 8.871684
-            max: 55.55819
-        throughput_fps: 117.04837798963636
+            mean: 16.619890644999998
+            p50: 10.680625
+            p95: 51.7124472
+            min: 8.8606
+            max: 56.630858
+        throughput_fps: 117.35110535294967
         measurement_status: measured
         environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s1-apple-in1k-224--x5
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s1-apple-in1k-224--x5
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       artifact_sha256: 54029e4f9a504685b63cef09d4e482d93de3914a12b6c17765b7e9b1f2ee8d87
       conversion: passed
@@ -933,8 +944,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 54029e4f9a504685b63cef09d4e482d93de3914a12b6c17765b7e9b1f2ee8d87
@@ -954,11 +965,11 @@ variants:
           job_id: mobileone--s1-apple-in1k-224--x5
         cpp_1:
           artifact_sha256: 54029e4f9a504685b63cef09d4e482d93de3914a12b6c17765b7e9b1f2ee8d87
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s1-apple-in1k-224--x5
         cpp_2:
           artifact_sha256: 54029e4f9a504685b63cef09d4e482d93de3914a12b6c17765b7e9b1f2ee8d87
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s1-apple-in1k-224--x5
     provenance:
       repository_commit: 6e8e913e772996c1a1f4fac7e25a8c7c1fe2e79c
@@ -987,9 +998,14 @@ variants:
     runtime_command: python3 samples/vision/mobileone/runtime/python/main.py --target
       x5 --asset-id x5:mobileone:mobileone_s1_apple_in1k_bayese_224x224_nv12.bin --model-path
       /path/to/mobileone_s1_apple_in1k_bayese_224x224_nv12.bin --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: s2-apple-in1k-224
   model:
     parameter_count: 7884648
+    gflops: 2.596852992
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -1017,7 +1033,7 @@ variants:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-02'
     metadata_revision: 1
     artifact:
@@ -1145,38 +1161,38 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 6080.9878069999995
+        aggregate_wall_ms: 6076.4434200000005
         metrics_ms:
           preprocess:
-            mean: 7.892105915000002
-            p50: 8.046327999999999
-            p95: 8.28380145
-            min: 7.244556
-            max: 11.525147
+            mean: 7.900664416666666
+            p50: 8.047495
+            p95: 8.27805345
+            min: 7.255555
+            max: 9.531144
           runtime:
-            mean: 2.2060907316666665
-            p50: 2.204358
-            p95: 2.2311862
-            min: 2.180463
-            max: 2.277338
+            mean: 2.1906246683333332
+            p50: 2.1890665
+            p95: 2.21427485
+            min: 2.158963
+            max: 2.273254
           postprocess:
-            mean: 0.030659418333333334
-            p50: 0.030542
-            p95: 0.032041
-            min: 0.028042
-            max: 0.056625
+            mean: 0.030140216666666664
+            p50: 0.0301455
+            p95: 0.031333
+            min: 0.028041
+            max: 0.059583
           end_to_end:
-            mean: 10.128856065
-            p50: 10.2798945
-            p95: 10.52398875
-            min: 9.472102
-            max: 13.836068
-        throughput_fps: 98.66818007911853
+            mean: 10.121429301666668
+            p50: 10.268874
+            p95: 10.5021971
+            min: 9.480268
+            max: 11.752981
+        throughput_fps: 98.74197100645429
         measurement_status: measured
         environment_status: recorded
       - tool: classification_benchmark
@@ -1190,47 +1206,48 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 10903.732232
+        aggregate_wall_ms: 10788.876962
         metrics_ms:
           preprocess:
-            mean: 14.55457393
-            p50: 8.9214345
-            p95: 49.6348793
-            min: 7.255472
-            max: 53.284519
+            mean: 14.923775295833332
+            p50: 8.9417255
+            p95: 49.3257961
+            min: 7.294972
+            max: 53.332352
           runtime:
-            mean: 2.38575742
-            p50: 2.193921
-            p95: 3.8087201499999996
-            min: 2.028003
-            max: 6.200095
+            mean: 2.4146609125
+            p50: 2.1933995
+            p95: 3.8611885999999993
+            min: 2.026004
+            max: 6.377679
           postprocess:
-            mean: 0.030811758333333335
-            p50: 0.0305
-            p95: 0.03358815
-            min: 0.026625
-            max: 0.05925
+            mean: 0.03066012
+            p50: 0.030333
+            p95: 0.0339601
+            min: 0.026834
+            max: 0.059376
           end_to_end:
-            mean: 16.971143108333333
-            p50: 11.162583999999999
-            p95: 52.41941349999999
-            min: 9.447477
-            max: 57.472361
-        throughput_fps: 110.0540598821998
+            mean: 17.36909632833333
+            p50: 11.233208999999999
+            p95: 51.58581565
+            min: 9.485393
+            max: 58.124319
+        throughput_fps: 111.22566363733456
         measurement_status: measured
         environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s2-apple-in1k-224--x5
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s2-apple-in1k-224--x5
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       artifact_sha256: 79d92879aade0806677ba5706000a318353246fe929bbbf0c22da9df2805dd83
       conversion: passed
@@ -1239,8 +1256,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 79d92879aade0806677ba5706000a318353246fe929bbbf0c22da9df2805dd83
@@ -1260,11 +1277,11 @@ variants:
           job_id: mobileone--s2-apple-in1k-224--x5
         cpp_1:
           artifact_sha256: 79d92879aade0806677ba5706000a318353246fe929bbbf0c22da9df2805dd83
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s2-apple-in1k-224--x5
         cpp_2:
           artifact_sha256: 79d92879aade0806677ba5706000a318353246fe929bbbf0c22da9df2805dd83
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s2-apple-in1k-224--x5
     provenance:
       repository_commit: 6e8e913e772996c1a1f4fac7e25a8c7c1fe2e79c
@@ -1293,9 +1310,14 @@ variants:
     runtime_command: python3 samples/vision/mobileone/runtime/python/main.py --target
       x5 --asset-id x5:mobileone:mobileone_s2_apple_in1k_bayese_224x224_nv12.bin --model-path
       /path/to/mobileone_s2_apple_in1k_bayese_224x224_nv12.bin --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: s3-apple-in1k-224
   model:
     parameter_count: 10170600
+    gflops: 3.791581184
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -1323,7 +1345,7 @@ variants:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-02'
     metadata_revision: 1
     artifact:
@@ -1451,38 +1473,38 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 6530.190746
+        aggregate_wall_ms: 6540.253004
         metrics_ms:
           preprocess:
-            mean: 7.893671761666668
-            p50: 8.0485985
-            p95: 8.277542799999999
-            min: 7.235847
-            max: 12.661233
+            mean: 7.9080428650000005
+            p50: 8.045932
+            p95: 8.28153055
+            min: 7.279222
+            max: 10.856437
           runtime:
-            mean: 2.9534891966666668
-            p50: 2.9518805
-            p95: 2.97813625
-            min: 2.926506
-            max: 3.03663
+            mean: 2.956038935
+            p50: 2.9531305
+            p95: 2.98509315
+            min: 2.925381
+            max: 3.137506
           postprocess:
-            mean: 0.030233475
+            mean: 0.03025486
             p50: 0.030167
-            p95: 0.03175205
-            min: 0.027666
-            max: 0.068833
+            p95: 0.032
+            min: 0.027333
+            max: 0.063417
           end_to_end:
-            mean: 10.877394433333333
-            p50: 11.0307505
-            p95: 11.26390705
-            min: 10.203978
-            max: 15.727155
-        throughput_fps: 91.8809301807185
+            mean: 10.89433666
+            p50: 11.0361675
+            p95: 11.2720234
+            min: 10.257686
+            max: 14.023152
+        throughput_fps: 91.73957026326683
         measurement_status: measured
         environment_status: recorded
       - tool: classification_benchmark
@@ -1496,47 +1518,48 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 11426.496599
+        aggregate_wall_ms: 11439.131266
         metrics_ms:
           preprocess:
-            mean: 15.132515453333331
-            p50: 8.9567675
-            p95: 49.588340249999995
-            min: 7.278389
-            max: 53.136435
+            mean: 14.906297626666667
+            p50: 8.936517
+            p95: 49.17205859999999
+            min: 7.287139
+            max: 53.147811
           runtime:
-            mean: 3.2290975074999997
-            p50: 2.956943
-            p95: 5.2036183
-            min: 2.810463
-            max: 7.900599
+            mean: 3.168710991666667
+            p50: 2.9475474999999998
+            p95: 4.836492999999999
+            min: 2.839005
+            max: 7.345181
           postprocess:
-            mean: 0.030827197499999997
-            p50: 0.0304165
-            p95: 0.03391605
-            min: 0.027542
-            max: 0.074334
+            mean: 0.030274181666666664
+            p50: 0.029958
+            p95: 0.03316905
+            min: 0.026541
+            max: 0.063041
           end_to_end:
-            mean: 18.392440158333333
-            p50: 11.9665645
-            p95: 52.876499249999995
-            min: 10.225394
-            max: 59.848323
-        throughput_fps: 105.0190659580662
+            mean: 18.1052828
+            p50: 11.9388775
+            p95: 52.2447295
+            min: 10.235061
+            max: 59.315405
+        throughput_fps: 104.90307105459173
         measurement_status: measured
         environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s3-apple-in1k-224--x5
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s3-apple-in1k-224--x5
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       artifact_sha256: def6a1ae035182b3b9d094895ca8ed3b179f7c5f1eb097024e6ac03d62916efc
       conversion: passed
@@ -1545,8 +1568,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: def6a1ae035182b3b9d094895ca8ed3b179f7c5f1eb097024e6ac03d62916efc
@@ -1566,11 +1589,11 @@ variants:
           job_id: mobileone--s3-apple-in1k-224--x5
         cpp_1:
           artifact_sha256: def6a1ae035182b3b9d094895ca8ed3b179f7c5f1eb097024e6ac03d62916efc
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s3-apple-in1k-224--x5
         cpp_2:
           artifact_sha256: def6a1ae035182b3b9d094895ca8ed3b179f7c5f1eb097024e6ac03d62916efc
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s3-apple-in1k-224--x5
     provenance:
       repository_commit: 6e8e913e772996c1a1f4fac7e25a8c7c1fe2e79c
@@ -1599,9 +1622,14 @@ variants:
     runtime_command: python3 samples/vision/mobileone/runtime/python/main.py --target
       x5 --asset-id x5:mobileone:mobileone_s3_apple_in1k_bayese_224x224_nv12.bin --model-path
       /path/to/mobileone_s3_apple_in1k_bayese_224x224_nv12.bin --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: s4-apple-in1k-224
   model:
     parameter_count: 14951248
+    gflops: 5.95853952
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -1629,7 +1657,7 @@ variants:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-02'
     metadata_revision: 1
     artifact:
@@ -1757,38 +1785,38 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 7596.492033
+        aggregate_wall_ms: 7839.401871
         metrics_ms:
           preprocess:
-            mean: 8.348181906666667
-            p50: 8.1810365
-            p95: 10.0432961
-            min: 7.25843
-            max: 10.810979
+            mean: 8.740909128333334
+            p50: 8.4792245
+            p95: 10.23864675
+            min: 7.247764
+            max: 12.39969
           runtime:
-            mean: 4.274846878333332
-            p50: 4.270946
-            p95: 4.30688715
-            min: 4.225758
-            max: 4.505551
+            mean: 4.285923926666666
+            p50: 4.279154
+            p95: 4.34242145
+            min: 4.229341
+            max: 4.395967
           postprocess:
-            mean: 0.031459288333333335
-            p50: 0.030416
-            p95: 0.036419049999999994
-            min: 0.027709
-            max: 0.058667
+            mean: 0.03249702166666667
+            p50: 0.0310205
+            p95: 0.03683305
+            min: 0.027667
+            max: 0.088375
           end_to_end:
-            mean: 12.654488073333333
-            p50: 12.49767
-            p95: 14.34215205
-            min: 11.553188
-            max: 15.079529
-        throughput_fps: 78.9838253490603
+            mean: 13.059330076666667
+            p50: 12.8135455
+            p95: 14.54951725
+            min: 11.533522
+            max: 16.770574
+        throughput_fps: 76.53645136111176
         measurement_status: measured
         environment_status: recorded
       - tool: classification_benchmark
@@ -1802,47 +1830,48 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 12241.575481
+        aggregate_wall_ms: 12347.809786
         metrics_ms:
           preprocess:
-            mean: 15.338585735833336
-            p50: 8.950245500000001
-            p95: 44.65864785
-            min: 7.279264
-            max: 52.001267
+            mean: 15.183096548333333
+            p50: 8.956288
+            p95: 44.6619804
+            min: 7.259889
+            max: 52.527102
           runtime:
-            mean: 4.647635883333334
-            p50: 4.263883
-            p95: 7.340211599999998
-            min: 4.140175
-            max: 9.264393
+            mean: 4.634915138333334
+            p50: 4.261342
+            p95: 7.33051225
+            min: 4.1133
+            max: 8.854642
           postprocess:
-            mean: 0.030892814999999997
-            p50: 0.030417
-            p95: 0.0345021
+            mean: 0.030481926666666662
+            p50: 0.030146
+            p95: 0.0337521
             min: 0.02725
-            max: 0.076375
+            max: 0.047375
           end_to_end:
-            mean: 20.01711443416667
-            p50: 13.3138595
-            p95: 52.153554199999995
-            min: 11.532564
-            max: 56.323233
-        throughput_fps: 98.02659811741596
+            mean: 19.848493613333332
+            p50: 13.3251715
+            p95: 52.07351285
+            min: 11.521439
+            max: 56.898318
+        throughput_fps: 97.18322688778096
         measurement_status: measured
         environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s4-apple-in1k-224--x5
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s4-apple-in1k-224--x5
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       artifact_sha256: f24c60bd77074f2f550afdc17bc03f0399d73412f15bd5efb7de3a272d7f5faa
       conversion: passed
@@ -1851,8 +1880,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: f24c60bd77074f2f550afdc17bc03f0399d73412f15bd5efb7de3a272d7f5faa
@@ -1872,11 +1901,11 @@ variants:
           job_id: mobileone--s4-apple-in1k-224--x5
         cpp_1:
           artifact_sha256: f24c60bd77074f2f550afdc17bc03f0399d73412f15bd5efb7de3a272d7f5faa
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s4-apple-in1k-224--x5
         cpp_2:
           artifact_sha256: f24c60bd77074f2f550afdc17bc03f0399d73412f15bd5efb7de3a272d7f5faa
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s4-apple-in1k-224--x5
     provenance:
       repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
@@ -1905,9 +1934,14 @@ variants:
     runtime_command: python3 samples/vision/mobileone/runtime/python/main.py --target
       x5 --asset-id x5:mobileone:mobileone_s4_apple_in1k_bayese_224x224_nv12.bin --model-path
       /path/to/mobileone_s4_apple_in1k_bayese_224x224_nv12.bin --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: s0-apple-in1k-224-s-int16-o1-20261103
   model:
     parameter_count: 5293272
+    gflops: 0.5502208
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -1935,7 +1969,7 @@ variants:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -2036,40 +2070,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1821.9096059999997
+        aggregate_wall_ms: 1822.4395470000002
         metrics_ms:
           preprocess:
-            mean: 2.0520067016666665
-            p50: 2.0829185
-            p95: 2.1251225
-            min: 1.908087
-            max: 2.898845
+            mean: 2.0509230816666664
+            p50: 2.0824885
+            p95: 2.1244189999999996
+            min: 1.911564
+            max: 3.126758
           runtime:
-            mean: 0.9739456266666665
-            p50: 0.9459185
-            p95: 1.323003
-            min: 0.914155
-            max: 1.382495
+            mean: 0.9757158783333334
+            p50: 0.9487190000000001
+            p95: 1.324493
+            min: 0.92002
+            max: 1.368017
           postprocess:
-            mean: 0.007004970000000001
-            p50: 0.006725500000000001
-            p95: 0.008375
-            min: 0.00565
-            max: 0.028276
+            mean: 0.007159464999999999
+            p50: 0.00685
+            p95: 0.00807625
+            min: 0.0058
+            max: 0.032375
           end_to_end:
-            mean: 3.0329572983333333
-            p50: 3.03535
-            p95: 3.40738575
-            min: 2.844094
-            max: 3.903128
-        throughput_fps: 329.3247908809808
+            mean: 3.033798425
+            p50: 3.0411704999999998
+            p95: 3.288762
+            min: 2.85366
+            max: 4.186453
+        throughput_fps: 329.2290276446684
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -2081,47 +2115,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2959.027904
+        aggregate_wall_ms: 2982.257296
         metrics_ms:
           preprocess:
-            mean: 3.8320688675000003
-            p50: 2.4102915
-            p95: 9.50564945
-            min: 1.919763
-            max: 10.703426
+            mean: 3.715979180833333
+            p50: 2.405825
+            p95: 9.49652525
+            min: 1.911565
+            max: 10.353619
           runtime:
-            mean: 1.0110856083333333
-            p50: 0.9569945
-            p95: 1.349394
-            min: 0.890304
-            max: 2.240523
+            mean: 1.0143011558333335
+            p50: 0.95727
+            p95: 1.3581867499999998
+            min: 0.904545
+            max: 2.177914
           postprocess:
-            mean: 0.007287053333333334
-            p50: 0.006826
-            p95: 0.010859999999999991
-            min: 0.0054
-            max: 0.047751
+            mean: 0.007410650833333332
+            p50: 0.006875
+            p95: 0.01137625
+            min: 0.0053
+            max: 0.042899
           end_to_end:
-            mean: 4.850441529166667
-            p50: 3.392011
-            p95: 10.49163525
-            min: 2.862368
-            max: 12.385106
-        throughput_fps: 405.538588662123
+            mean: 4.7376909875
+            p50: 3.3921194999999997
+            p95: 10.478114
+            min: 2.851285
+            max: 11.365339
+        throughput_fps: 402.37976837529044
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s0-apple-in1k-224-s-int16-o1-20261103--s100
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s0-apple-in1k-224-s-int16-o1-20261103--s100
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -2130,8 +2165,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: c2fb00df63cb38e10e114edead5b0e84d6f9dd1de268b7c914f48856ef365ad5
@@ -2151,11 +2186,11 @@ variants:
           job_id: mobileone--s0-apple-in1k-224-s-int16-o1-20261103--s100
         cpp_1:
           artifact_sha256: c2fb00df63cb38e10e114edead5b0e84d6f9dd1de268b7c914f48856ef365ad5
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s0-apple-in1k-224-s-int16-o1-20261103--s100
         cpp_2:
           artifact_sha256: c2fb00df63cb38e10e114edead5b0e84d6f9dd1de268b7c914f48856ef365ad5
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s0-apple-in1k-224-s-int16-o1-20261103--s100
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -2230,12 +2265,13 @@ variants:
       s100 --variant timm-s0-apple-in1k-s-int16-o1-20261103 --asset-id s:mobileone:s100/mobileone_s0_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/mobileone_s0_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s100p
     license:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -2336,40 +2372,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1505.335131
+        aggregate_wall_ms: 1491.296512
         metrics_ms:
           preprocess:
-            mean: 1.7091746883333334
-            p50: 1.5977765
-            p95: 1.8622969499999997
-            min: 1.462188
-            max: 5.018319
+            mean: 1.6823308033333333
+            p50: 1.6026764999999998
+            p95: 1.8580902499999998
+            min: 1.460708
+            max: 4.621834
           runtime:
-            mean: 0.7908599333333334
-            p50: 0.766182
-            p95: 0.9449842999999958
-            min: 0.726432
-            max: 1.138961
+            mean: 0.7940799350000001
+            p50: 0.7708425
+            p95: 0.9876428999999972
+            min: 0.735779
+            max: 1.163421
           postprocess:
-            mean: 0.00571149
-            p50: 0.00565
-            p95: 0.006375
-            min: 0.00475
-            max: 0.02195
+            mean: 0.0058985516666666665
+            p50: 0.0056
+            p95: 0.00805225
+            min: 0.00465
+            max: 0.025901
           end_to_end:
-            mean: 2.5057461116666664
-            p50: 2.3689465
-            p95: 2.7810774999999985
-            min: 2.208745
-            max: 6.137204
-        throughput_fps: 398.5823406655086
+            mean: 2.48230929
+            p50: 2.3787190000000002
+            p95: 2.7163789499999997
+            min: 2.217389
+            max: 5.393965
+        throughput_fps: 402.33447551978185
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -2381,47 +2417,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2430.478727
+        aggregate_wall_ms: 2410.506475
         metrics_ms:
           preprocess:
-            mean: 3.0823120016666667
-            p50: 1.8879169999999998
-            p95: 7.14566675
-            min: 1.462363
-            max: 20.813285
+            mean: 3.1153067725000003
+            p50: 1.9331260000000001
+            p95: 7.14212825
+            min: 1.469158
+            max: 16.186185
           runtime:
-            mean: 0.8552867416666667
-            p50: 0.7866070000000001
-            p95: 1.1426375
-            min: 0.726282
-            max: 5.359597
+            mean: 0.836910815
+            p50: 0.781531
+            p95: 1.1039739499999999
+            min: 0.717903
+            max: 6.094466
           postprocess:
-            mean: 0.0058687025000000006
-            p50: 0.005575
-            p95: 0.008375
-            min: 0.00425
-            max: 0.012725
+            mean: 0.005815835
+            p50: 0.005613
+            p95: 0.007925
+            min: 0.004251
+            max: 0.014275
           end_to_end:
-            mean: 3.9434674458333334
-            p50: 2.7834995
-            p95: 7.93790125
-            min: 2.228669
-            max: 21.649167
-        throughput_fps: 493.72989225097626
+            mean: 3.9580334225000002
+            p50: 2.810698
+            p95: 7.987153149999999
+            min: 2.248739
+            max: 17.001242
+        throughput_fps: 497.82069139640043
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s0-apple-in1k-224-s-int16-o1-20261103--s100p
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s0-apple-in1k-224-s-int16-o1-20261103--s100p
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -2430,8 +2467,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 2b000a3e58e986147f6d271943b3311af6fbd36301d88e16741bb7ee4344d01a
@@ -2451,11 +2488,11 @@ variants:
           job_id: mobileone--s0-apple-in1k-224-s-int16-o1-20261103--s100p
         cpp_1:
           artifact_sha256: 2b000a3e58e986147f6d271943b3311af6fbd36301d88e16741bb7ee4344d01a
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s0-apple-in1k-224-s-int16-o1-20261103--s100p
         cpp_2:
           artifact_sha256: 2b000a3e58e986147f6d271943b3311af6fbd36301d88e16741bb7ee4344d01a
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s0-apple-in1k-224-s-int16-o1-20261103--s100p
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -2530,12 +2567,13 @@ variants:
       s100p --variant timm-s0-apple-in1k-s-int16-o1-20261103 --asset-id s:mobileone:s100p/mobileone_s0_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/mobileone_s0_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s600
     license:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -2636,40 +2674,40 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 948.4082269999999
+        aggregate_wall_ms: 948.227303
         metrics_ms:
           preprocess:
-            mean: 0.8262264599999999
-            p50: 0.8284905
-            p95: 0.861609
-            min: 0.783578
-            max: 0.912879
+            mean: 0.8306719499999999
+            p50: 0.829153
+            p95: 0.87088075
+            min: 0.78084
+            max: 1.496953
           runtime:
-            mean: 0.7467144316666666
-            p50: 0.737778
-            p95: 0.7763742499999998
-            min: 0.715178
-            max: 1.004579
+            mean: 0.7423685750000001
+            p50: 0.7329885
+            p95: 0.77217125
+            min: 0.713388
+            max: 0.976769
           postprocess:
-            mean: 0.005756020000000001
-            p50: 0.005375
-            p95: 0.008
-            min: 0.004575
-            max: 0.023725
+            mean: 0.005496108333333333
+            p50: 0.005225
+            p95: 0.007651249999999998
+            min: 0.0045
+            max: 0.020226
           end_to_end:
-            mean: 1.5786969116666667
-            p50: 1.5717314999999998
-            p95: 1.63627825
-            min: 1.513282
-            max: 1.856733
-        throughput_fps: 632.6389659207375
+            mean: 1.5785366333333333
+            p50: 1.5680795
+            p95: 1.6599810499999994
+            min: 1.513703
+            max: 2.403495
+        throughput_fps: 632.7596749236401
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -2681,47 +2719,48 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 1170.325662
+        aggregate_wall_ms: 1182.3630210000001
         metrics_ms:
           preprocess:
-            mean: 1.0845282158333334
-            p50: 0.8643535
-            p95: 2.889734549999994
-            min: 0.782854
-            max: 7.375832
+            mean: 1.11628016
+            p50: 0.8656155000000001
+            p95: 3.7291595999999996
+            min: 0.781389
+            max: 7.08833
           runtime:
-            mean: 0.7750806283333332
-            p50: 0.754453
-            p95: 0.9026842999999999
-            min: 0.699203
-            max: 1.20088
+            mean: 0.7745951183333333
+            p50: 0.7501255
+            p95: 0.9031807499999999
+            min: 0.708913
+            max: 3.886521
           postprocess:
-            mean: 0.0061734225
-            p50: 0.005775
-            p95: 0.008802499999999998
-            min: 0.00465
-            max: 0.03645
+            mean: 0.006223401666666666
+            p50: 0.00585
+            p95: 0.00877505
+            min: 0.00485
+            max: 0.025151
           end_to_end:
-            mean: 1.8657822666666668
-            p50: 1.631857
-            p95: 3.7935585
-            min: 1.501231
-            max: 8.12536
-        throughput_fps: 1025.3556244757453
+            mean: 1.8970986799999998
+            p50: 1.6300545
+            p95: 4.515112349999999
+            min: 1.514052
+            max: 8.130949
+        throughput_fps: 1014.9167207420638
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s0-apple-in1k-224-s-int16-o1-20261103--s600
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s0-apple-in1k-224-s-int16-o1-20261103--s600
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -2730,8 +2769,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 756fceae4f26ef4905041f91986be6ada7197d00140ec04eb29625a3309cad7e
@@ -2751,11 +2790,11 @@ variants:
           job_id: mobileone--s0-apple-in1k-224-s-int16-o1-20261103--s600
         cpp_1:
           artifact_sha256: 756fceae4f26ef4905041f91986be6ada7197d00140ec04eb29625a3309cad7e
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s0-apple-in1k-224-s-int16-o1-20261103--s600
         cpp_2:
           artifact_sha256: 756fceae4f26ef4905041f91986be6ada7197d00140ec04eb29625a3309cad7e
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s0-apple-in1k-224-s-int16-o1-20261103--s600
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -2830,9 +2869,14 @@ variants:
       s600 --variant timm-s0-apple-in1k-s-int16-o1-20261103 --asset-id s:mobileone:s600/mobileone_s0_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/mobileone_s0_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: s1-apple-in1k-224-s-int16-o1-20261103
   model:
     parameter_count: 4825192
+    gflops: 1.650114048
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -2860,7 +2904,7 @@ variants:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -2961,40 +3005,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 2033.1292750000002
+        aggregate_wall_ms: 2022.5348299999996
         metrics_ms:
           preprocess:
-            mean: 2.0735295766666666
-            p50: 2.0785679999999997
-            p95: 2.1992807
-            min: 1.911937
-            max: 11.735833
+            mean: 2.065342518333333
+            p50: 2.0764639999999996
+            p95: 2.12526525
+            min: 1.910965
+            max: 11.998312
           runtime:
-            mean: 1.3048554
-            p50: 1.2726665
-            p95: 1.6532239999999998
-            min: 1.23664
-            max: 1.737407
+            mean: 1.295086325
+            p50: 1.2644055
+            p95: 1.64699725
+            min: 1.233094
+            max: 1.675941
           postprocess:
-            mean: 0.006931541666666667
-            p50: 0.006751
-            p95: 0.00775005
-            min: 0.0057
-            max: 0.021751
+            mean: 0.007068221666666667
+            p50: 0.0067875
+            p95: 0.01012625
+            min: 0.005775
+            max: 0.03345
           end_to_end:
-            mean: 3.3853165183333336
-            p50: 3.361885
-            p95: 3.6198580499999995
-            min: 3.169579
-            max: 13.055626
-        throughput_fps: 295.11158359568645
+            mean: 3.3674970650000002
+            p50: 3.3518945
+            p95: 3.7369847
+            min: 3.173384
+            max: 13.27588
+        throughput_fps: 296.6574375384181
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -3006,47 +3050,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 3166.1827719999997
+        aggregate_wall_ms: 3176.138457
         metrics_ms:
           preprocess:
-            mean: 3.7974459725
-            p50: 2.4096405
-            p95: 9.513775299999999
-            min: 1.915588
-            max: 9.942499
+            mean: 3.7564455741666665
+            p50: 2.4036625000000003
+            p95: 9.507213799999999
+            min: 1.920765
+            max: 11.072867
           runtime:
-            mean: 1.3482090708333332
-            p50: 1.2881170000000002
-            p95: 1.68404
-            min: 1.22259
-            max: 2.538257
+            mean: 1.3456215041666666
+            p50: 1.286168
+            p95: 1.6788660499999999
+            min: 1.222343
+            max: 6.299643
           postprocess:
-            mean: 0.007847010000000001
-            p50: 0.0071
-            p95: 0.012377499999999998
-            min: 0.0056
-            max: 0.017125
+            mean: 0.007717839999999999
+            p50: 0.00705
+            p95: 0.012354999999999994
+            min: 0.005625
+            max: 0.04425
           end_to_end:
-            mean: 5.153502053333333
-            p50: 3.7385345
-            p95: 10.7899598
-            min: 3.177703
-            max: 12.300651
-        throughput_fps: 379.0052837796188
+            mean: 5.109784918333333
+            p50: 3.723318
+            p95: 10.78770995
+            min: 3.185108
+            max: 12.37031
+        throughput_fps: 377.81728228984446
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s1-apple-in1k-224-s-int16-o1-20261103--s100
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s1-apple-in1k-224-s-int16-o1-20261103--s100
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -3055,8 +3100,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 6984ce821c2e0eb81890ba5b7d7f5f14b51bffd8f9293db576c2e69f921860f1
@@ -3076,11 +3121,11 @@ variants:
           job_id: mobileone--s1-apple-in1k-224-s-int16-o1-20261103--s100
         cpp_1:
           artifact_sha256: 6984ce821c2e0eb81890ba5b7d7f5f14b51bffd8f9293db576c2e69f921860f1
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s1-apple-in1k-224-s-int16-o1-20261103--s100
         cpp_2:
           artifact_sha256: 6984ce821c2e0eb81890ba5b7d7f5f14b51bffd8f9293db576c2e69f921860f1
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s1-apple-in1k-224-s-int16-o1-20261103--s100
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -3155,12 +3200,13 @@ variants:
       s100 --variant timm-s1-apple-in1k-s-int16-o1-20261103 --asset-id s:mobileone:s100/mobileone_s1_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/mobileone_s1_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s100p
     license:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -3261,40 +3307,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1639.804396
+        aggregate_wall_ms: 1622.0221819999997
         metrics_ms:
           preprocess:
-            mean: 1.7055779066666665
-            p50: 1.602727
-            p95: 1.8693572499999997
-            min: 1.463063
-            max: 6.888286
+            mean: 1.669357575
+            p50: 1.5991620000000002
+            p95: 1.86499955
+            min: 1.458631
+            max: 5.705897
           runtime:
-            mean: 1.0184618066666666
-            p50: 0.995984
-            p95: 1.1475300499999943
-            min: 0.960258
-            max: 1.376612
+            mean: 1.0250998016666666
+            p50: 1.0021765
+            p95: 1.1841249499999955
+            min: 0.970063
+            max: 1.464382
           postprocess:
-            mean: 0.005830796666666666
-            p50: 0.005725
-            p95: 0.006776249999999998
-            min: 0.004725
-            max: 0.025226
+            mean: 0.005853305
+            p50: 0.0057255
+            p95: 0.006976249999999999
+            min: 0.004575
+            max: 0.02065
           end_to_end:
-            mean: 2.72987051
-            p50: 2.6055865
-            p95: 2.9479634999999993
-            min: 2.438747
-            max: 7.93662
-        throughput_fps: 365.89729937521156
+            mean: 2.7003106816666667
+            p50: 2.6059140000000003
+            p95: 2.9465977999999997
+            min: 2.459221
+            max: 6.786589
+        throughput_fps: 369.9086280436577
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -3306,47 +3352,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2546.937326
+        aggregate_wall_ms: 2522.09798
         metrics_ms:
           preprocess:
-            mean: 3.1230066308333333
-            p50: 1.9411675000000002
-            p95: 7.1346505
-            min: 1.454363
-            max: 11.432801
+            mean: 3.058757949166667
+            p50: 1.916111
+            p95: 7.1325211500000005
+            min: 1.467482
+            max: 11.001623
           runtime:
-            mean: 1.0818988683333333
-            p50: 1.0282339999999999
-            p95: 1.3600019999999997
-            min: 0.968509
-            max: 2.235295
+            mean: 1.0817799208333334
+            p50: 1.024102
+            p95: 1.3562494999999999
+            min: 0.956887
+            max: 6.145386
           postprocess:
-            mean: 0.005960244999999999
-            p50: 0.0057
-            p95: 0.007851249999999999
-            min: 0.0042
-            max: 0.059401
+            mean: 0.006012875833333333
+            p50: 0.005775
+            p95: 0.008151299999999998
+            min: 0.0044
+            max: 0.020776
           end_to_end:
-            mean: 4.210865744166667
-            p50: 3.093715
-            p95: 8.1826808
-            min: 2.450122
-            max: 12.475136
-        throughput_fps: 471.1541142964112
+            mean: 4.146550745833333
+            p50: 3.0825180000000003
+            p95: 8.156790249999998
+            min: 2.470371
+            max: 12.026263
+        throughput_fps: 475.7943622792958
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s1-apple-in1k-224-s-int16-o1-20261103--s100p
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s1-apple-in1k-224-s-int16-o1-20261103--s100p
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -3355,8 +3402,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: a7013a80f558c39d3abda0deae31957597b21990952fa2798ef4699932408fc7
@@ -3376,11 +3423,11 @@ variants:
           job_id: mobileone--s1-apple-in1k-224-s-int16-o1-20261103--s100p
         cpp_1:
           artifact_sha256: a7013a80f558c39d3abda0deae31957597b21990952fa2798ef4699932408fc7
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s1-apple-in1k-224-s-int16-o1-20261103--s100p
         cpp_2:
           artifact_sha256: a7013a80f558c39d3abda0deae31957597b21990952fa2798ef4699932408fc7
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s1-apple-in1k-224-s-int16-o1-20261103--s100p
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -3455,12 +3502,13 @@ variants:
       s100p --variant timm-s1-apple-in1k-s-int16-o1-20261103 --asset-id s:mobileone:s100p/mobileone_s1_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/mobileone_s1_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s600
     license:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -3561,40 +3609,40 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1070.805659
+        aggregate_wall_ms: 1070.350414
         metrics_ms:
           preprocess:
-            mean: 0.823316465
-            p50: 0.824516
-            p95: 0.85964645
-            min: 0.775928
-            max: 0.941254
+            mean: 0.8263424266666667
+            p50: 0.8275764999999999
+            p95: 0.8657012499999999
+            min: 0.775488
+            max: 0.960517
           runtime:
-            mean: 0.9541944766666666
-            p50: 0.9444165
-            p95: 0.9992789999999998
-            min: 0.919154
-            max: 1.194755
+            mean: 0.9502320683333333
+            p50: 0.939729
+            p95: 0.9950882499999999
+            min: 0.917866
+            max: 1.214371
           postprocess:
-            mean: 0.005407941666666667
+            mean: 0.005540655
             p50: 0.00525
-            p95: 0.006387499999999988
-            min: 0.0046
-            max: 0.0195
+            p95: 0.007308499999999993
+            min: 0.0045
+            max: 0.022151
           end_to_end:
-            mean: 1.7829188833333334
-            p50: 1.774645
-            p95: 1.8418057499999998
-            min: 1.712132
-            max: 2.064508
-        throughput_fps: 560.3257649575047
+            mean: 1.78211515
+            p50: 1.7744435
+            p95: 1.8429008
+            min: 1.70463
+            max: 2.096162
+        throughput_fps: 560.5640845765114
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -3606,47 +3654,48 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 1222.017014
+        aggregate_wall_ms: 1244.306181
         metrics_ms:
           preprocess:
-            mean: 0.9567535666666667
-            p50: 0.8647659999999999
-            p95: 0.948664
-            min: 0.783828
-            max: 6.639077
+            mean: 0.9754678900000001
+            p50: 0.868414
+            p95: 0.9680044499999999
+            min: 0.780488
+            max: 6.803841
           runtime:
-            mean: 1.0302667741666667
-            p50: 1.022229
-            p95: 1.13550905
-            min: 0.919078
-            max: 1.739332
+            mean: 1.0425524108333333
+            p50: 1.035992
+            p95: 1.1520277499999998
+            min: 0.917441
+            max: 1.729704
           postprocess:
-            mean: 0.006380363333333333
-            p50: 0.0058755000000000005
-            p95: 0.00935
-            min: 0.00475
-            max: 0.02765
+            mean: 0.006659481666666666
+            p50: 0.006125
+            p95: 0.009578749999999997
+            min: 0.0049
+            max: 0.024625
           end_to_end:
-            mean: 1.9934007041666666
-            p50: 1.902258
-            p95: 2.1102665
-            min: 1.738406
-            max: 7.638656
-        throughput_fps: 981.9830544519734
+            mean: 2.0246797825
+            p50: 1.9238445
+            p95: 2.10809875
+            min: 1.718804
+            max: 8.317214
+        throughput_fps: 964.3928627241947
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s1-apple-in1k-224-s-int16-o1-20261103--s600
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s1-apple-in1k-224-s-int16-o1-20261103--s600
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -3655,8 +3704,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 18d438a3617474be8ca91de0038a305374237c593c80ad2c9f960673d2273144
@@ -3676,11 +3725,11 @@ variants:
           job_id: mobileone--s1-apple-in1k-224-s-int16-o1-20261103--s600
         cpp_1:
           artifact_sha256: 18d438a3617474be8ca91de0038a305374237c593c80ad2c9f960673d2273144
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s1-apple-in1k-224-s-int16-o1-20261103--s600
         cpp_2:
           artifact_sha256: 18d438a3617474be8ca91de0038a305374237c593c80ad2c9f960673d2273144
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s1-apple-in1k-224-s-int16-o1-20261103--s600
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -3755,9 +3804,14 @@ variants:
       s600 --variant timm-s1-apple-in1k-s-int16-o1-20261103 --asset-id s:mobileone:s600/mobileone_s1_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/mobileone_s1_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: s2-apple-in1k-224-s-int16-o1-20261103
   model:
     parameter_count: 7884648
+    gflops: 2.596852992
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -3785,7 +3839,7 @@ variants:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -3886,40 +3940,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 2159.41532
+        aggregate_wall_ms: 2160.8778970000003
         metrics_ms:
           preprocess:
-            mean: 2.053694095
-            p50: 2.0815305
-            p95: 2.1366515
-            min: 1.911512
-            max: 2.739839
+            mean: 2.0561696449999998
+            p50: 2.0824144999999996
+            p95: 2.12820025
+            min: 1.916165
+            max: 2.97926
           runtime:
-            mean: 1.5350177733333332
-            p50: 1.5005359999999999
-            p95: 1.8868873
-            min: 1.467022
-            max: 1.927013
+            mean: 1.534766145
+            p50: 1.50073
+            p95: 1.88539
+            min: 1.462693
+            max: 2.067839
           postprocess:
-            mean: 0.006912380000000001
-            p50: 0.00655
-            p95: 0.008528749999999974
-            min: 0.0055
-            max: 0.037301
+            mean: 0.006857808333333333
+            p50: 0.006625
+            p95: 0.007975
+            min: 0.00565
+            max: 0.024625
           end_to_end:
-            mean: 3.5956242483333334
-            p50: 3.5900045
-            p95: 3.98336905
-            min: 3.39961
-            max: 4.370667
-        throughput_fps: 277.8529884654148
+            mean: 3.5977935983333333
+            p50: 3.5925195
+            p95: 3.9703912499999996
+            min: 3.402307
+            max: 4.958475
+        throughput_fps: 277.6649253680621
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -3931,47 +3985,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 3254.887332
+        aggregate_wall_ms: 3259.290964
         metrics_ms:
           preprocess:
-            mean: 3.722474288333333
-            p50: 2.4043900000000002
-            p95: 7.4161138
-            min: 1.912837
-            max: 11.87116
+            mean: 3.717392788333333
+            p50: 2.403613
+            p95: 8.2123693
+            min: 1.922566
+            max: 10.076149
           runtime:
-            mean: 1.5941336683333334
-            p50: 1.524962
-            p95: 1.9410467
-            min: 1.456523
-            max: 2.568608
+            mean: 1.5840408841666667
+            p50: 1.5137925
+            p95: 1.93719125
+            min: 1.457167
+            max: 3.054085
           postprocess:
-            mean: 0.007413089166666665
-            p50: 0.0067
-            p95: 0.0115763
-            min: 0.005126
-            max: 0.042651
+            mean: 0.007685255833333334
+            p50: 0.006825
+            p95: 0.012726549999999996
+            min: 0.00535
+            max: 0.042575
           end_to_end:
-            mean: 5.324021045833333
-            p50: 3.9672780000000003
-            p95: 9.142838549999999
-            min: 3.410086
-            max: 13.385234
-        throughput_fps: 368.67635576886386
+            mean: 5.3091189283333335
+            p50: 3.9532925
+            p95: 9.7430235
+            min: 3.427532
+            max: 12.586962
+        throughput_fps: 368.17823669455
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s2-apple-in1k-224-s-int16-o1-20261103--s100
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s2-apple-in1k-224-s-int16-o1-20261103--s100
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -3980,8 +4035,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 0ed01ac523b3c895d21ec07c5706f32a512ac33c64556c341ed971fabe9ca354
@@ -4001,11 +4056,11 @@ variants:
           job_id: mobileone--s2-apple-in1k-224-s-int16-o1-20261103--s100
         cpp_1:
           artifact_sha256: 0ed01ac523b3c895d21ec07c5706f32a512ac33c64556c341ed971fabe9ca354
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s2-apple-in1k-224-s-int16-o1-20261103--s100
         cpp_2:
           artifact_sha256: 0ed01ac523b3c895d21ec07c5706f32a512ac33c64556c341ed971fabe9ca354
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s2-apple-in1k-224-s-int16-o1-20261103--s100
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -4080,12 +4135,13 @@ variants:
       s100 --variant timm-s2-apple-in1k-s-int16-o1-20261103 --asset-id s:mobileone:s100/mobileone_s2_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/mobileone_s2_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s100p
     license:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -4186,40 +4242,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1739.947054
+        aggregate_wall_ms: 1743.309738
         metrics_ms:
           preprocess:
-            mean: 1.6785483066666667
-            p50: 1.601064
-            p95: 1.8826494499999997
-            min: 1.464213
-            max: 5.242222
+            mean: 1.6812781883333334
+            p50: 1.6036725
+            p95: 1.87462225
+            min: 1.465455
+            max: 6.997616
           runtime:
-            mean: 1.2125318316666667
-            p50: 1.1878354999999998
-            p95: 1.4665867499999998
-            min: 1.151286
-            max: 1.645914
+            mean: 1.21538684
+            p50: 1.190233
+            p95: 1.46941505
+            min: 1.151319
+            max: 1.538759
           postprocess:
-            mean: 0.005568206666666667
-            p50: 0.005475
-            p95: 0.006325
-            min: 0.0046
-            max: 0.01225
+            mean: 0.005624961666666667
+            p50: 0.0055
+            p95: 0.006275
+            min: 0.00455
+            max: 0.036177
           end_to_end:
-            mean: 2.896648345
-            p50: 2.793987
-            p95: 3.2336952499999994
-            min: 2.631998
-            max: 6.524358
-        throughput_fps: 344.83807919364426
+            mean: 2.90228999
+            p50: 2.796369
+            p95: 3.1905063
+            min: 2.636
+            max: 8.224288
+        throughput_fps: 344.1729182837846
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -4231,47 +4287,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2631.830046
+        aggregate_wall_ms: 2621.753405
         metrics_ms:
           preprocess:
-            mean: 3.0604288566666664
-            p50: 1.9274045000000002
-            p95: 6.20938125
-            min: 1.472163
-            max: 12.261959
+            mean: 2.9592742508333334
+            p50: 1.8739955
+            p95: 6.197039899999999
+            min: 1.467755
+            max: 9.886697
           runtime:
-            mean: 1.2831446558333333
-            p50: 1.2189985
-            p95: 1.5858277499999998
-            min: 1.152735
-            max: 3.989911
+            mean: 1.2818060608333333
+            p50: 1.2160335
+            p95: 1.55750175
+            min: 1.140668
+            max: 6.070052
           postprocess:
-            mean: 0.00596072
-            p50: 0.005575
-            p95: 0.008526249999999999
-            min: 0.004275
-            max: 0.03555
+            mean: 0.00589091
+            p50: 0.00555
+            p95: 0.008276
+            min: 0.004075
+            max: 0.024101
           end_to_end:
-            mean: 4.3495342325
-            p50: 3.259254
-            p95: 7.497604799999999
-            min: 2.655348
-            max: 14.034099
-        throughput_fps: 455.9564937803738
+            mean: 4.246971221666667
+            p50: 3.2046324999999998
+            p95: 7.493079449999999
+            min: 2.6553
+            max: 11.112868
+        throughput_fps: 457.70895070125795
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s2-apple-in1k-224-s-int16-o1-20261103--s100p
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s2-apple-in1k-224-s-int16-o1-20261103--s100p
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -4280,8 +4337,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: afd94d3a3437dbb01a86f62dd206653d5e8b3c005dc986eac109736181a76b7c
@@ -4301,11 +4358,11 @@ variants:
           job_id: mobileone--s2-apple-in1k-224-s-int16-o1-20261103--s100p
         cpp_1:
           artifact_sha256: afd94d3a3437dbb01a86f62dd206653d5e8b3c005dc986eac109736181a76b7c
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s2-apple-in1k-224-s-int16-o1-20261103--s100p
         cpp_2:
           artifact_sha256: afd94d3a3437dbb01a86f62dd206653d5e8b3c005dc986eac109736181a76b7c
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s2-apple-in1k-224-s-int16-o1-20261103--s100p
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -4380,12 +4437,13 @@ variants:
       s100p --variant timm-s2-apple-in1k-s-int16-o1-20261103 --asset-id s:mobileone:s100p/mobileone_s2_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/mobileone_s2_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s600
     license:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -4486,40 +4544,40 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1115.138506
+        aggregate_wall_ms: 1108.4170920000001
         metrics_ms:
           preprocess:
-            mean: 0.8244174366666666
-            p50: 0.826191
-            p95: 0.8618543
-            min: 0.780853
-            max: 0.954528
+            mean: 0.8202183566666666
+            p50: 0.8207385
+            p95: 0.85677525
+            min: 0.776762
+            max: 0.932065
           runtime:
-            mean: 1.0268508383333335
-            p50: 1.016904
-            p95: 1.0908439999999997
-            min: 0.990179
-            max: 1.402231
+            mean: 1.0200497283333334
+            p50: 1.0096159999999998
+            p95: 1.0413019999999995
+            min: 0.988991
+            max: 1.400998
           postprocess:
-            mean: 0.005493061666666666
-            p50: 0.0052
-            p95: 0.007409999999999991
-            min: 0.00455
-            max: 0.022125
+            mean: 0.005347756666666667
+            p50: 0.0051
+            p95: 0.006680949999999995
+            min: 0.00445
+            max: 0.024725
           end_to_end:
-            mean: 1.8567613366666664
-            p50: 1.84702
-            p95: 1.9499517499999999
-            min: 1.778407
-            max: 2.255559
-        throughput_fps: 538.0497550498898
+            mean: 1.8456158416666666
+            p50: 1.8386665
+            p95: 1.9183284999999999
+            min: 1.776429
+            max: 2.257311
+        throughput_fps: 541.3124755387659
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -4531,47 +4589,48 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 1249.112222
+        aggregate_wall_ms: 1307.144464
         metrics_ms:
           preprocess:
-            mean: 0.90813476
-            p50: 0.853116
-            p95: 0.9199302
-            min: 0.785503
-            max: 6.562401
+            mean: 0.9886025549999999
+            p50: 0.8623505
+            p95: 0.94626775
+            min: 0.788788
+            max: 6.924458
           runtime:
-            mean: 1.1452034291666666
-            p50: 1.146342
-            p95: 1.2490903
-            min: 1.001303
-            max: 1.780681
+            mean: 1.1567805916666667
+            p50: 1.1625554999999999
+            p95: 1.2763449999999998
+            min: 0.993365
+            max: 1.751352
           postprocess:
-            mean: 0.006384054166666667
-            p50: 0.005975
-            p95: 0.009001249999999999
-            min: 0.004975
-            max: 0.022375
+            mean: 0.006203848333333334
+            p50: 0.00575
+            p95: 0.009
+            min: 0.00485
+            max: 0.0272
           end_to_end:
-            mean: 2.0597222433333333
-            p50: 2.0017699999999996
-            p95: 2.1612355
-            min: 1.817757
-            max: 7.72223
-        throughput_fps: 960.6822980873851
+            mean: 2.151586995
+            p50: 2.0324695
+            p95: 2.31110105
+            min: 1.834504
+            max: 7.98015
+        throughput_fps: 918.0316583584597
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s2-apple-in1k-224-s-int16-o1-20261103--s600
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s2-apple-in1k-224-s-int16-o1-20261103--s600
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -4580,8 +4639,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: ba79378d83101c97636685f3133920d52094840b1e25c2c98021b0a75f77e70d
@@ -4601,11 +4660,11 @@ variants:
           job_id: mobileone--s2-apple-in1k-224-s-int16-o1-20261103--s600
         cpp_1:
           artifact_sha256: ba79378d83101c97636685f3133920d52094840b1e25c2c98021b0a75f77e70d
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s2-apple-in1k-224-s-int16-o1-20261103--s600
         cpp_2:
           artifact_sha256: ba79378d83101c97636685f3133920d52094840b1e25c2c98021b0a75f77e70d
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s2-apple-in1k-224-s-int16-o1-20261103--s600
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -4680,9 +4739,14 @@ variants:
       s600 --variant timm-s2-apple-in1k-s-int16-o1-20261103 --asset-id s:mobileone:s600/mobileone_s2_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/mobileone_s2_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: s3-apple-in1k-224-s-int16-o1-20261103
   model:
     parameter_count: 10170600
+    gflops: 3.791581184
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -4710,7 +4774,7 @@ variants:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -4811,40 +4875,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 2354.982822
+        aggregate_wall_ms: 2348.194759
         metrics_ms:
           preprocess:
-            mean: 2.066335516666667
-            p50: 2.0787795
-            p95: 2.1271768
-            min: 1.908061
-            max: 11.526622
+            mean: 2.062274571666667
+            p50: 2.0799025
+            p95: 2.1403386999999996
+            min: 1.913066
+            max: 5.681272
           runtime:
-            mean: 1.8483793016666663
-            p50: 1.810571
-            p95: 2.19788475
-            min: 1.784107
-            max: 2.32695
+            mean: 1.84125155
+            p50: 1.8059915
+            p95: 2.19459275
+            min: 1.775316
+            max: 2.290839
           postprocess:
-            mean: 0.006914168333333332
-            p50: 0.006613
-            p95: 0.01005
-            min: 0.00555
-            max: 0.017475
+            mean: 0.006740406666666666
+            p50: 0.00655
+            p95: 0.007376549999999998
+            min: 0.0057
+            max: 0.0354
           end_to_end:
-            mean: 3.9216289866666663
-            p50: 3.9000885
-            p95: 4.278355199999999
-            min: 3.715095
-            max: 13.830797
-        throughput_fps: 254.7789284893561
+            mean: 3.910266528333333
+            p50: 3.897381
+            p95: 4.279795249999999
+            min: 3.713632
+            max: 7.505163
+        throughput_fps: 255.5154327384307
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -4856,47 +4920,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 3299.4585350000007
+        aggregate_wall_ms: 3360.404606
         metrics_ms:
           preprocess:
-            mean: 3.4713913808333334
-            p50: 2.3810884999999997
-            p95: 8.170403
-            min: 1.914387
-            max: 9.94252
+            mean: 3.472034944166667
+            p50: 2.3852254999999998
+            p95: 7.2659603
+            min: 1.915591
+            max: 11.586769
           runtime:
-            mean: 1.9292580941666666
-            p50: 1.838434
-            p95: 2.32356875
-            min: 1.777732
-            max: 2.969021
+            mean: 1.9324858708333332
+            p50: 1.834166
+            p95: 2.3267027000000002
+            min: 1.765341
+            max: 4.487003
           postprocess:
-            mean: 0.0076393325
-            p50: 0.006926
-            p95: 0.011978449999999998
-            min: 0.005375
-            max: 0.039801
+            mean: 0.007801445000000001
+            p50: 0.006975
+            p95: 0.012853749999999997
+            min: 0.005575
+            max: 0.035774
           end_to_end:
-            mean: 5.4082888075
-            p50: 4.2509745
-            p95: 10.007937
-            min: 3.71072
-            max: 12.44655
-        throughput_fps: 363.6960389926524
+            mean: 5.41232226
+            p50: 4.2501169999999995
+            p95: 9.247454949999996
+            min: 3.702107
+            max: 13.399935
+        throughput_fps: 357.0998557308846
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s3-apple-in1k-224-s-int16-o1-20261103--s100
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s3-apple-in1k-224-s-int16-o1-20261103--s100
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -4905,8 +4970,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 80823bb0ccdec9ea3157dfbe12f6d4d63ca2c99da558d77b7c6f0a760dc3e6b7
@@ -4926,11 +4991,11 @@ variants:
           job_id: mobileone--s3-apple-in1k-224-s-int16-o1-20261103--s100
         cpp_1:
           artifact_sha256: 80823bb0ccdec9ea3157dfbe12f6d4d63ca2c99da558d77b7c6f0a760dc3e6b7
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s3-apple-in1k-224-s-int16-o1-20261103--s100
         cpp_2:
           artifact_sha256: 80823bb0ccdec9ea3157dfbe12f6d4d63ca2c99da558d77b7c6f0a760dc3e6b7
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s3-apple-in1k-224-s-int16-o1-20261103--s100
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -5005,12 +5070,13 @@ variants:
       s100 --variant timm-s3-apple-in1k-s-int16-o1-20261103 --asset-id s:mobileone:s100/mobileone_s3_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/mobileone_s3_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s100p
     license:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -5111,40 +5177,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1865.828215
+        aggregate_wall_ms: 1867.262355
         metrics_ms:
           preprocess:
-            mean: 1.6756708283333335
-            p50: 1.5955270000000001
-            p95: 1.8771007
-            min: 1.459488
-            max: 5.379098
+            mean: 1.675894145
+            p50: 1.602984
+            p95: 1.87119025
+            min: 1.462779
+            max: 12.070322
           runtime:
-            mean: 1.4252662266666667
-            p50: 1.397325
-            p95: 1.6865975
-            min: 1.370712
-            max: 1.828941
+            mean: 1.4273898333333332
+            p50: 1.3986395
+            p95: 1.6825941999999998
+            min: 1.367075
+            max: 1.917196
           postprocess:
-            mean: 0.005615598333333333
-            p50: 0.005525
-            p95: 0.006426249999999999
-            min: 0.004475
-            max: 0.010225
+            mean: 0.005664606666666666
+            p50: 0.0055
+            p95: 0.007351249999999998
+            min: 0.0046
+            max: 0.012626
           end_to_end:
-            mean: 3.106552653333333
-            p50: 3.0017145000000003
-            p95: 3.42597625
-            min: 2.835375
-            max: 6.834935
-        throughput_fps: 321.57301255089016
+            mean: 3.1089485850000003
+            p50: 3.008398
+            p95: 3.44354705
+            min: 2.847004
+            max: 13.533876
+        throughput_fps: 321.32603026745
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -5156,47 +5222,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2616.339397
+        aggregate_wall_ms: 2660.799239
         metrics_ms:
           preprocess:
-            mean: 2.809364340833333
-            p50: 1.8551785
-            p95: 6.15675
-            min: 1.478063
-            max: 12.004256
+            mean: 2.8545933975
+            p50: 1.8657555000000001
+            p95: 6.192312
+            min: 1.468078
+            max: 11.165132
           runtime:
-            mean: 1.4985323416666665
-            p50: 1.4248005
-            p95: 1.7852097499999997
-            min: 1.359387
-            max: 6.421432
+            mean: 1.5049052841666666
+            p50: 1.427165
+            p95: 1.82507975
+            min: 1.355874
+            max: 6.380983
           postprocess:
-            mean: 0.006185630833333334
-            p50: 0.0057
-            p95: 0.009130049999999995
-            min: 0.004375
-            max: 0.059301
+            mean: 0.006179695833333334
+            p50: 0.005725
+            p95: 0.009401
+            min: 0.0043
+            max: 0.030301
           end_to_end:
-            mean: 4.3140823133333335
-            p50: 3.3195795
-            p95: 7.6004605
-            min: 2.887401
-            max: 13.409794
-        throughput_fps: 458.6560907869859
+            mean: 4.3656783775
+            p50: 3.332397
+            p95: 7.63985895
+            min: 2.849203
+            max: 12.568883
+        throughput_fps: 450.99231178786425
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s3-apple-in1k-224-s-int16-o1-20261103--s100p
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s3-apple-in1k-224-s-int16-o1-20261103--s100p
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -5205,8 +5272,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 2d1e336dcf32072056f6170150ebc7c8b8e712921d7b38b0059d7814cb63aba1
@@ -5226,11 +5293,11 @@ variants:
           job_id: mobileone--s3-apple-in1k-224-s-int16-o1-20261103--s100p
         cpp_1:
           artifact_sha256: 2d1e336dcf32072056f6170150ebc7c8b8e712921d7b38b0059d7814cb63aba1
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s3-apple-in1k-224-s-int16-o1-20261103--s100p
         cpp_2:
           artifact_sha256: 2d1e336dcf32072056f6170150ebc7c8b8e712921d7b38b0059d7814cb63aba1
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s3-apple-in1k-224-s-int16-o1-20261103--s100p
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -5305,12 +5372,13 @@ variants:
       s100p --variant timm-s3-apple-in1k-s-int16-o1-20261103 --asset-id s:mobileone:s100p/mobileone_s3_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/mobileone_s3_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s600
     license:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -5411,40 +5479,40 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1190.6069200000002
+        aggregate_wall_ms: 1186.016038
         metrics_ms:
           preprocess:
-            mean: 0.8335204316666667
-            p50: 0.8325655000000001
-            p95: 0.8832377
-            min: 0.781928
-            max: 0.991379
+            mean: 0.8279676933333333
+            p50: 0.8279000000000001
+            p95: 0.86642775
+            min: 0.775086
+            max: 1.056865
           runtime:
-            mean: 1.143737905
-            p50: 1.1312915000000001
-            p95: 1.2237702999999998
-            min: 1.097429
-            max: 1.394655
+            mean: 1.141538435
+            p50: 1.1284795
+            p95: 1.2646177499999995
+            min: 1.107817
+            max: 1.512197
           postprocess:
-            mean: 0.005321019999999999
+            mean: 0.00541132
             p50: 0.005125
-            p95: 0.006351249999999998
-            min: 0.004575
-            max: 0.0272
+            p95: 0.006877499999999997
+            min: 0.0044
+            max: 0.027751
           end_to_end:
-            mean: 1.9825793566666667
-            p50: 1.969758
-            p95: 2.1200795499999994
-            min: 1.904358
-            max: 2.288808
-        throughput_fps: 503.94466042579353
+            mean: 1.9749174483333332
+            p50: 1.9624294999999998
+            p95: 2.1148945
+            min: 1.894854
+            max: 2.35751
+        throughput_fps: 505.89535113858216
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -5456,47 +5524,48 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 1376.592381
+        aggregate_wall_ms: 1338.331899
         metrics_ms:
           preprocess:
-            mean: 1.0248898116666667
-            p50: 0.8554029999999999
-            p95: 1.196746249999996
-            min: 0.781577
-            max: 6.643624
+            mean: 0.9868834733333334
+            p50: 0.858312
+            p95: 0.9667102499999999
+            min: 0.787836
+            max: 6.9084
           runtime:
-            mean: 1.2078923725000001
-            p50: 1.166654
-            p95: 1.38903125
-            min: 1.116029
-            max: 1.965958
+            mean: 1.2146189983333333
+            p50: 1.178092
+            p95: 1.3933524999999998
+            min: 1.126266
+            max: 1.866401
           postprocess:
-            mean: 0.0062182875
-            p50: 0.0059
-            p95: 0.008451249999999999
-            min: 0.00495
-            max: 0.031125
+            mean: 0.00625045
+            p50: 0.005875
+            p95: 0.008627499999999998
+            min: 0.0049
+            max: 0.021951
           end_to_end:
-            mean: 2.2390004716666665
-            p50: 2.0374825
-            p95: 2.6748437499999973
-            min: 1.923582
-            max: 8.515057
-        throughput_fps: 871.7177405328092
+            mean: 2.2077529216666667
+            p50: 2.049668
+            p95: 2.3612265
+            min: 1.938203
+            max: 8.136768
+        throughput_fps: 896.6385699217351
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s3-apple-in1k-224-s-int16-o1-20261103--s600
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s3-apple-in1k-224-s-int16-o1-20261103--s600
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -5505,8 +5574,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 87ac08284643ada215f81d85ce292402d5d5346f1397206a784e9e01216bd7ca
@@ -5526,11 +5595,11 @@ variants:
           job_id: mobileone--s3-apple-in1k-224-s-int16-o1-20261103--s600
         cpp_1:
           artifact_sha256: 87ac08284643ada215f81d85ce292402d5d5346f1397206a784e9e01216bd7ca
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s3-apple-in1k-224-s-int16-o1-20261103--s600
         cpp_2:
           artifact_sha256: 87ac08284643ada215f81d85ce292402d5d5346f1397206a784e9e01216bd7ca
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s3-apple-in1k-224-s-int16-o1-20261103--s600
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -5605,9 +5674,14 @@ variants:
       s600 --variant timm-s3-apple-in1k-s-int16-o1-20261103 --asset-id s:mobileone:s600/mobileone_s3_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/mobileone_s3_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: s4-apple-in1k-224-s-int16-o1-20261103
   model:
     parameter_count: 14951248
+    gflops: 5.95853952
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -5635,7 +5709,7 @@ variants:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-04'
     metadata_revision: 1
     artifact:
@@ -5736,40 +5810,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 2670.855977
+        aggregate_wall_ms: 2671.1764599999997
         metrics_ms:
           preprocess:
-            mean: 2.0486518433333334
-            p50: 2.082267
-            p95: 2.12323455
-            min: 1.905586
-            max: 3.527163
+            mean: 2.0496452066666664
+            p50: 2.0820410000000003
+            p95: 2.1250525
+            min: 1.908291
+            max: 2.455439
           runtime:
-            mean: 2.39241358
-            p50: 2.3527
-            p95: 2.7387705
-            min: 2.326625
-            max: 3.299756
+            mean: 2.3920373466666667
+            p50: 2.355889
+            p95: 2.7378157499999998
+            min: 2.312539
+            max: 2.944561
           postprocess:
-            mean: 0.006844006666666666
-            p50: 0.006501
-            p95: 0.009332549999999993
-            min: 0.005625
-            max: 0.028676
+            mean: 0.006702561666666667
+            p50: 0.00655
+            p95: 0.0073
+            min: 0.0057
+            max: 0.0142
           end_to_end:
-            mean: 4.447909429999999
-            p50: 4.447305500000001
-            p95: 4.6924275
-            min: 4.248411
-            max: 5.894288
-        throughput_fps: 224.64708137274448
+            mean: 4.448385115
+            p50: 4.444879
+            p95: 4.817444500000001
+            min: 4.24318
+            max: 5.163901
+        throughput_fps: 224.62012861553896
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -5781,47 +5855,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2969.342759
+        aggregate_wall_ms: 2979.478576
         metrics_ms:
           preprocess:
-            mean: 2.481138500833333
-            p50: 2.153381
-            p95: 4.789824649999988
-            min: 1.912036
-            max: 11.931806
+            mean: 2.4744736125
+            p50: 2.1572899999999997
+            p95: 4.824403249999997
+            min: 1.920866
+            max: 11.85717
           runtime:
-            mean: 2.4497842399999996
-            p50: 2.3990270000000002
-            p95: 2.7839452999999996
-            min: 2.320999
-            max: 8.550498
+            mean: 2.443810523333333
+            p50: 2.397864
+            p95: 2.77179825
+            min: 2.325439
+            max: 4.040231
           postprocess:
-            mean: 0.008029196666666667
-            p50: 0.0071
-            p95: 0.012502499999999998
-            min: 0.0053
-            max: 0.037026
+            mean: 0.008383066666666666
+            p50: 0.007225
+            p95: 0.013176249999999999
+            min: 0.005675
+            max: 0.040125
           end_to_end:
-            mean: 4.9389519375
-            p50: 4.6075345
-            p95: 7.460284149999975
-            min: 4.287962
-            max: 16.529228
-        throughput_fps: 404.12983525153214
+            mean: 4.9266672025
+            p50: 4.6192779999999996
+            p95: 7.291432199999998
+            min: 4.284454
+            max: 15.907426
+        throughput_fps: 402.7550356180175
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s4-apple-in1k-224-s-int16-o1-20261103--s100
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s4-apple-in1k-224-s-int16-o1-20261103--s100
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -5830,8 +5905,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: dad029543e4412d9b01464c85060e8f203d7f297a5d7f762189051a5025980d3
@@ -5851,11 +5926,11 @@ variants:
           job_id: mobileone--s4-apple-in1k-224-s-int16-o1-20261103--s100
         cpp_1:
           artifact_sha256: dad029543e4412d9b01464c85060e8f203d7f297a5d7f762189051a5025980d3
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s4-apple-in1k-224-s-int16-o1-20261103--s100
         cpp_2:
           artifact_sha256: dad029543e4412d9b01464c85060e8f203d7f297a5d7f762189051a5025980d3
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s4-apple-in1k-224-s-int16-o1-20261103--s100
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -5930,12 +6005,13 @@ variants:
       s100 --variant timm-s4-apple-in1k-s-int16-o1-20261103 --asset-id s:mobileone:s100/mobileone_s4_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/mobileone_s4_apple_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s100p
     license:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-04'
     metadata_revision: 1
     artifact:
@@ -6036,40 +6112,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 2137.6734210000004
+        aggregate_wall_ms: 2121.750107
         metrics_ms:
           preprocess:
-            mean: 1.6940280300000004
-            p50: 1.6003765
-            p95: 1.8707747499999992
-            min: 1.464138
-            max: 6.685884
+            mean: 1.6544747633333332
+            p50: 1.6039455
+            p95: 1.9804822499999999
+            min: 1.460227
+            max: 4.620766
           runtime:
-            mean: 1.8599960650000003
-            p50: 1.834867
-            p95: 2.1211777499999998
-            min: 1.800116
-            max: 2.222945
+            mean: 1.8731044899999998
+            p50: 1.8426535
+            p95: 2.1348082500000003
+            min: 1.809315
+            max: 2.355235
           postprocess:
-            mean: 0.005582166666666667
-            p50: 0.005425
-            p95: 0.006557499999999993
-            min: 0.00455
-            max: 0.021925
+            mean: 0.005552573333333333
+            p50: 0.0054
+            p95: 0.007004999999999996
+            min: 0.00445
+            max: 0.011876
           end_to_end:
-            mean: 3.559606261666667
-            p50: 3.4442174999999997
-            p95: 3.8643064999999996
-            min: 3.273379
-            max: 8.562776
-        throughput_fps: 280.6789821615132
+            mean: 3.5331318266666667
+            p50: 3.453237
+            p95: 3.958759549999999
+            min: 3.287443
+            max: 6.519584
+        throughput_fps: 282.78542228912914
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -6081,47 +6157,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2504.4197219999996
+        aggregate_wall_ms: 2524.4892
         metrics_ms:
           preprocess:
-            mean: 2.1969203250000002
-            p50: 1.747515
-            p95: 5.45784425
-            min: 1.481488
-            max: 8.744928
+            mean: 2.21645758
+            p50: 1.7832265
+            p95: 5.731582049999991
+            min: 1.486478
+            max: 21.18135
           runtime:
-            mean: 1.9475317325
-            p50: 1.883604
-            p95: 2.22635405
-            min: 1.790891
-            max: 5.900753
+            mean: 1.9588867116666666
+            p50: 1.882367
+            p95: 2.21589055
+            min: 1.806114
+            max: 10.81611
           postprocess:
-            mean: 0.006200805833333333
-            p50: 0.005775
-            p95: 0.00917625
-            min: 0.00425
-            max: 0.030075
+            mean: 0.006285695833333334
+            p50: 0.0058130000000000005
+            p95: 0.009425049999999999
+            min: 0.004525
+            max: 0.0215
           end_to_end:
-            mean: 4.150652863333333
-            p50: 3.6653200000000004
-            p95: 7.510533249999999
-            min: 3.29973
-            max: 10.633394
-        throughput_fps: 479.1529109352702
+            mean: 4.1816299875
+            p50: 3.684631
+            p95: 8.02529695
+            min: 3.342344
+            max: 23.059167
+        throughput_fps: 475.34368536811326
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s4-apple-in1k-224-s-int16-o1-20261103--s100p
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s4-apple-in1k-224-s-int16-o1-20261103--s100p
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -6130,8 +6207,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 8ea2d72abdd68f2741c347b041accdb1ca4edc025de4cadc7d986023962e0c5e
@@ -6151,11 +6228,11 @@ variants:
           job_id: mobileone--s4-apple-in1k-224-s-int16-o1-20261103--s100p
         cpp_1:
           artifact_sha256: 8ea2d72abdd68f2741c347b041accdb1ca4edc025de4cadc7d986023962e0c5e
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s4-apple-in1k-224-s-int16-o1-20261103--s100p
         cpp_2:
           artifact_sha256: 8ea2d72abdd68f2741c347b041accdb1ca4edc025de4cadc7d986023962e0c5e
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s4-apple-in1k-224-s-int16-o1-20261103--s100p
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -6230,12 +6307,13 @@ variants:
       s100p --variant timm-s4-apple-in1k-s-int16-o1-20261103 --asset-id s:mobileone:s100p/mobileone_s4_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/mobileone_s4_apple_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s600
     license:
       name: Apple software license
       url: https://github.com/apple/ml-mobileone/blob/b7f4e6d48884593c7eb46eedc53c3a097c09e957/LICENSE
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-04'
     metadata_revision: 1
     artifact:
@@ -6336,40 +6414,40 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1430.690363
+        aggregate_wall_ms: 1436.834288
         metrics_ms:
           preprocess:
-            mean: 0.8226805566666667
-            p50: 0.8238155
-            p95: 0.8606343
-            min: 0.778578
-            max: 1.079254
+            mean: 0.8301994116666667
+            p50: 0.8275615000000001
+            p95: 0.8736392000000001
+            min: 0.780011
+            max: 2.51311
           runtime:
-            mean: 1.5548380666666666
-            p50: 1.5400429999999998
-            p95: 1.697007249999997
-            min: 1.517906
-            max: 1.831982
+            mean: 1.5574878799999998
+            p50: 1.5425465
+            p95: 1.7400477999999993
+            min: 1.520171
+            max: 1.870301
           postprocess:
-            mean: 0.00520139
-            p50: 0.00505
-            p95: 0.006
-            min: 0.0044
-            max: 0.02345
+            mean: 0.005201658333333334
+            p50: 0.005075
+            p95: 0.006201249999999998
+            min: 0.004425
+            max: 0.00995
           end_to_end:
-            mean: 2.3827200133333335
-            p50: 2.3714705
-            p95: 2.5555802499999998
-            min: 2.308858
-            max: 2.870935
-        throughput_fps: 419.37795592742106
+            mean: 2.3928889499999997
+            p50: 2.375533
+            p95: 2.5631925
+            min: 2.311082
+            max: 4.119933
+        throughput_fps: 417.5846894878667
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -6381,47 +6459,48 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 1534.774185
+        aggregate_wall_ms: 1551.269435
         metrics_ms:
           preprocess:
-            mean: 0.9245050758333332
-            p50: 0.8554405
-            p95: 0.93693525
-            min: 0.783228
-            max: 7.000425
+            mean: 0.9273105491666667
+            p50: 0.859162
+            p95: 0.9397105
+            min: 0.783611
+            max: 6.988944
           runtime:
-            mean: 1.6137281424999999
-            p50: 1.590318
-            p95: 1.7634819499999987
-            min: 1.543806
-            max: 1.928357
+            mean: 1.6254312341666668
+            p50: 1.6035845000000002
+            p95: 1.7935152499999996
+            min: 1.53347
+            max: 1.998152
           postprocess:
-            mean: 0.006088311666666667
-            p50: 0.005825
-            p95: 0.0085
-            min: 0.00465
-            max: 0.014025
+            mean: 0.006381341666666667
+            p50: 0.0059
+            p95: 0.009001249999999999
+            min: 0.004925
+            max: 0.024
           end_to_end:
-            mean: 2.54432153
-            p50: 2.4629335
-            p95: 2.68328525
-            min: 2.348158
-            max: 8.826156
-        throughput_fps: 781.8739797216488
+            mean: 2.5591231249999997
+            p50: 2.4771965
+            p95: 2.6929295
+            min: 2.359881
+            max: 8.594041
+        throughput_fps: 773.5600102247872
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: mobileone--s4-apple-in1k-224-s-int16-o1-20261103--s600
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#mobileone--s4-apple-in1k-224-s-int16-o1-20261103--s600
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -6430,8 +6509,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 6a748685aad95a56bb09978b5555189a55c3fc8bfa3bb96378eca8d54c111776
@@ -6451,11 +6530,11 @@ variants:
           job_id: mobileone--s4-apple-in1k-224-s-int16-o1-20261103--s600
         cpp_1:
           artifact_sha256: 6a748685aad95a56bb09978b5555189a55c3fc8bfa3bb96378eca8d54c111776
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s4-apple-in1k-224-s-int16-o1-20261103--s600
         cpp_2:
           artifact_sha256: 6a748685aad95a56bb09978b5555189a55c3fc8bfa3bb96378eca8d54c111776
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: mobileone--s4-apple-in1k-224-s-int16-o1-20261103--s600
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -6530,3 +6609,4 @@ variants:
       s600 --variant timm-s4-apple-in1k-s-int16-o1-20261103 --asset-id s:mobileone:s600/mobileone_s4_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/mobileone_s4_apple_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'

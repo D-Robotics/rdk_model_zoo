@@ -321,6 +321,10 @@ variants:
 - size: s-in1k-224
   model:
     parameter_count: 31181032
+    gflops: 9.099481088
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -345,7 +349,7 @@ variants:
   platforms:
   - platform: x5
     license: *id001
-    status: converted
+    status: released
     converted_at: '2026-11-02'
     metadata_revision: 1
     artifact:
@@ -473,38 +477,38 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 9616.773152999998
+        aggregate_wall_ms: 9600.436819
         metrics_ms:
           preprocess:
-            mean: 8.860924961666667
-            p50: 8.4843705
-            p95: 10.283828
-            min: 7.267931
-            max: 11.90719
+            mean: 8.836029165
+            p50: 8.265931
+            p95: 10.2116097
+            min: 7.282888
+            max: 10.821186
           runtime:
-            mean: 7.127971610000001
-            p50: 7.126326000000001
-            p95: 7.169164
-            min: 7.065597
-            max: 7.311555
+            mean: 7.124880883333334
+            p50: 7.1183875
+            p95: 7.19806025
+            min: 7.056887
+            max: 7.29293
           postprocess:
-            mean: 0.03241424
-            p50: 0.0310415
-            p95: 0.036878049999999996
-            min: 0.028083
-            max: 0.0655
+            mean: 0.03299901833333333
+            p50: 0.031792
+            p95: 0.03754819999999999
+            min: 0.028166
+            max: 0.046375
           end_to_end:
-            mean: 16.021310811666666
-            p50: 15.653801000000001
-            p95: 17.4260566
-            min: 14.417403
-            max: 19.252246
-        throughput_fps: 62.39099024737077
+            mean: 15.993909066666665
+            p50: 15.442506
+            p95: 17.33225775
+            min: 14.429776
+            max: 18.05324
+        throughput_fps: 62.49715625569807
         measurement_status: measured
         environment_status: recorded
       - tool: classification_benchmark
@@ -518,47 +522,48 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 13800.486921
+        aggregate_wall_ms: 13628.500225
         metrics_ms:
           preprocess:
-            mean: 14.720708509166665
-            p50: 8.920413
-            p95: 50.57386029999996
-            min: 7.300556
-            max: 54.690481
+            mean: 14.106192011666666
+            p50: 8.8823075
+            p95: 50.2344654
+            min: 7.300972
+            max: 52.692218
           runtime:
-            mean: 7.780891493333334
-            p50: 7.1159305
-            p95: 12.79956845
-            min: 6.959972
-            max: 15.379113
+            mean: 7.77061108
+            p50: 7.107575499999999
+            p95: 12.777344099999999
+            min: 6.992804
+            max: 15.356986
           postprocess:
-            mean: 0.03306869666666666
-            p50: 0.032458
-            p95: 0.038129149999999994
-            min: 0.027708
-            max: 0.063916
+            mean: 0.0325454575
+            p50: 0.031875
+            p95: 0.037796149999999994
+            min: 0.027958
+            max: 0.165917
           end_to_end:
-            mean: 22.534668699166666
-            p50: 16.075135
-            p95: 63.25121465
-            min: 14.42207
-            max: 67.048046
-        throughput_fps: 86.95345366212966
+            mean: 21.90934854916667
+            p50: 16.023799
+            p95: 63.2431437
+            min: 14.408526
+            max: 66.397575
+        throughput_fps: 88.05077449378697
         measurement_status: measured
         environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: fasternet--s-in1k-224--x5
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#fasternet--s-in1k-224--x5
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       artifact_sha256: d9c176d83bf1a2df7277bbaa7e1202f489041be584137a9b57faa1e27c2fe63e
       conversion: passed
@@ -567,8 +572,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: d9c176d83bf1a2df7277bbaa7e1202f489041be584137a9b57faa1e27c2fe63e
@@ -588,11 +593,11 @@ variants:
           job_id: fasternet--s-in1k-224--x5
         cpp_1:
           artifact_sha256: d9c176d83bf1a2df7277bbaa7e1202f489041be584137a9b57faa1e27c2fe63e
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--s-in1k-224--x5
         cpp_2:
           artifact_sha256: d9c176d83bf1a2df7277bbaa7e1202f489041be584137a9b57faa1e27c2fe63e
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--s-in1k-224--x5
     provenance:
       repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
@@ -620,9 +625,14 @@ variants:
     runtime_command: python3 samples/vision/fasternet/runtime/python/main.py --target
       x5 --asset-id x5:fasternet:fasternet_s_in1k_bayese_224x224_nv12.bin --model-path
       /path/to/fasternet_s_in1k_bayese_224x224_nv12.bin --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: t0-in1k-224
   model:
     parameter_count: 3905500
+    gflops: 0.67084544
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -650,7 +660,7 @@ variants:
       name: Apache-2.0
       url: https://huggingface.co/timm/fasternet_t0.in1k/blob/a8c465730c7896ba51d860a6e384fad94e7cfb44/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-02'
     metadata_revision: 1
     artifact:
@@ -778,38 +788,38 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 5640.693474
+        aggregate_wall_ms: 5632.593669
         metrics_ms:
           preprocess:
-            mean: 7.903609876666668
-            p50: 8.0498695
-            p95: 8.28889515
-            min: 7.274598
-            max: 10.684354
+            mean: 7.896326863333334
+            p50: 8.0495765
+            p95: 8.27308615
+            min: 7.262513
+            max: 11.25477
           runtime:
-            mean: 1.4611771416666666
-            p50: 1.459378
-            p95: 1.484336
-            min: 1.432295
-            max: 1.67117
+            mean: 1.4553010333333334
+            p50: 1.4538980000000001
+            p95: 1.47763005
+            min: 1.430253
+            max: 1.589545
           postprocess:
-            mean: 0.030469771666666663
-            p50: 0.030333
-            p95: 0.032375
-            min: 0.027375
-            max: 0.066958
+            mean: 0.029838238333333333
+            p50: 0.029834
+            p95: 0.031333
+            min: 0.02725
+            max: 0.035125
           end_to_end:
-            mean: 9.39525679
-            p50: 9.541601499999999
-            p95: 9.7922946
-            min: 8.765683
-            max: 12.20669
-        throughput_fps: 106.36989986525901
+            mean: 9.381466135
+            p50: 9.5304745
+            p95: 9.7614325
+            min: 8.731182
+            max: 12.87944
+        throughput_fps: 106.52286233644169
         measurement_status: measured
         environment_status: recorded
       - tool: classification_benchmark
@@ -823,47 +833,48 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 10164.933610999999
+        aggregate_wall_ms: 10119.758115
         metrics_ms:
           preprocess:
-            mean: 14.859169822500002
-            p50: 8.9905175
-            p95: 49.4866168
-            min: 7.286722
-            max: 52.791353
+            mean: 14.740224588333334
+            p50: 8.981725
+            p95: 49.4399139
+            min: 7.265638
+            max: 52.917847
           runtime:
-            mean: 1.5963016325000001
-            p50: 1.4568984999999999
-            p95: 2.656455349999999
-            min: 1.283877
-            max: 5.642386
+            mean: 1.6624082916666667
+            p50: 1.4619195
+            p95: 3.1287508999999996
+            min: 1.279711
+            max: 6.023511
           postprocess:
-            mean: 0.030737827499999995
-            p50: 0.030417
-            p95: 0.033292
-            min: 0.02625
-            max: 0.117208
+            mean: 0.030840683333333334
+            p50: 0.030583
+            p95: 0.033875
+            min: 0.025834
+            max: 0.060916
           end_to_end:
-            mean: 16.4862092825
-            p50: 10.563124
-            p95: 51.4023761
-            min: 8.7541
-            max: 55.984067
-        throughput_fps: 118.0529107146768
+            mean: 16.433473563333333
+            p50: 10.5622905
+            p95: 51.23589465
+            min: 8.717766
+            max: 56.082478
+        throughput_fps: 118.57990935784339
         measurement_status: measured
         environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: fasternet--t0-in1k-224--x5
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#fasternet--t0-in1k-224--x5
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       artifact_sha256: 6184220a85312ab715e1fb4556f1b53ace7ddce3bfed9beb56a965cfd3fa5fde
       conversion: passed
@@ -872,8 +883,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 6184220a85312ab715e1fb4556f1b53ace7ddce3bfed9beb56a965cfd3fa5fde
@@ -893,11 +904,11 @@ variants:
           job_id: fasternet--t0-in1k-224--x5
         cpp_1:
           artifact_sha256: 6184220a85312ab715e1fb4556f1b53ace7ddce3bfed9beb56a965cfd3fa5fde
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t0-in1k-224--x5
         cpp_2:
           artifact_sha256: 6184220a85312ab715e1fb4556f1b53ace7ddce3bfed9beb56a965cfd3fa5fde
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t0-in1k-224--x5
     provenance:
       repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
@@ -925,9 +936,14 @@ variants:
     runtime_command: python3 samples/vision/fasternet/runtime/python/main.py --target
       x5 --asset-id x5:fasternet:fasternet_t0_in1k_bayese_224x224_nv12.bin --model-path
       /path/to/fasternet_t0_in1k_bayese_224x224_nv12.bin --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: t1-in1k-224
   model:
     parameter_count: 7595368
+    gflops: 1.701023744
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -955,7 +971,7 @@ variants:
       name: Apache-2.0
       url: https://huggingface.co/timm/fasternet_t1.in1k/blob/2c27a878042ecd9de0c2f045fbf8169704f9aae6/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-02'
     metadata_revision: 1
     artifact:
@@ -1083,38 +1099,38 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 6015.4900259999995
+        aggregate_wall_ms: 5990.781452
         metrics_ms:
           preprocess:
-            mean: 7.9117526850000015
-            p50: 8.068661500000001
-            p95: 8.3015136
-            min: 7.274722
-            max: 10.297103
+            mean: 7.895340718333333
+            p50: 8.057557
+            p95: 8.2777844
+            min: 7.287181
+            max: 8.757308
           runtime:
-            mean: 2.0747382666666665
-            p50: 2.071129
-            p95: 2.1073355499999997
-            min: 2.032088
-            max: 2.237963
+            mean: 2.05280975
+            p50: 2.052587
+            p95: 2.0664641
+            min: 2.027837
+            max: 2.084712
           postprocess:
-            mean: 0.03284493166666667
-            p50: 0.0324165
-            p95: 0.03620805
-            min: 0.028125
-            max: 0.064834
+            mean: 0.030365955
+            p50: 0.030375
+            p95: 0.032083
+            min: 0.027583
+            max: 0.035875
           end_to_end:
-            mean: 10.019335883333333
-            p50: 10.178124
-            p95: 10.42438905
-            min: 9.349435
-            max: 12.473941
-        throughput_fps: 99.74249768625583
+            mean: 9.978516423333334
+            p50: 10.140477
+            p95: 10.36685825
+            min: 9.353101
+            max: 10.829187
+        throughput_fps: 100.15387888998892
         measurement_status: measured
         environment_status: recorded
       - tool: classification_benchmark
@@ -1128,47 +1144,48 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 10659.802389999999
+        aggregate_wall_ms: 10807.473435
         metrics_ms:
           preprocess:
-            mean: 14.947390511666667
-            p50: 8.960538
-            p95: 49.23626375
-            min: 7.247306
-            max: 52.994811
+            mean: 14.715677058333334
+            p50: 8.9391835
+            p95: 49.5207181
+            min: 7.280638
+            max: 53.10339
           runtime:
-            mean: 2.24623991
-            p50: 2.0612955
-            p95: 3.6366649999999994
-            min: 1.893587
-            max: 6.030637
+            mean: 2.2453937416666667
+            p50: 2.064317
+            p95: 3.6288354999999997
+            min: 1.909253
+            max: 6.054928
           postprocess:
-            mean: 0.030690674999999997
-            p50: 0.030375
-            p95: 0.033875
-            min: 0.026083
-            max: 0.064208
+            mean: 0.031245674166666664
+            p50: 0.0306875
+            p95: 0.03475205
+            min: 0.026458
+            max: 0.137959
           end_to_end:
-            mean: 17.224321096666667
-            p50: 11.1332925
-            p95: 51.38357224999999
-            min: 9.30881
-            max: 56.957235
-        throughput_fps: 112.57244328710301
+            mean: 16.992316474166667
+            p50: 11.0680205
+            p95: 51.68969985
+            min: 9.335767
+            max: 56.97198
+        throughput_fps: 111.03427708772341
         measurement_status: measured
         environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: fasternet--t1-in1k-224--x5
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#fasternet--t1-in1k-224--x5
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       artifact_sha256: a258b14522e97c4b94d067108b46ce71e154e9c732be0ee2da2a6aa42d2f2757
       conversion: passed
@@ -1177,8 +1194,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: a258b14522e97c4b94d067108b46ce71e154e9c732be0ee2da2a6aa42d2f2757
@@ -1198,11 +1215,11 @@ variants:
           job_id: fasternet--t1-in1k-224--x5
         cpp_1:
           artifact_sha256: a258b14522e97c4b94d067108b46ce71e154e9c732be0ee2da2a6aa42d2f2757
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t1-in1k-224--x5
         cpp_2:
           artifact_sha256: a258b14522e97c4b94d067108b46ce71e154e9c732be0ee2da2a6aa42d2f2757
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t1-in1k-224--x5
     provenance:
       repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
@@ -1230,9 +1247,14 @@ variants:
     runtime_command: python3 samples/vision/fasternet/runtime/python/main.py --target
       x5 --asset-id x5:fasternet:fasternet_t1_in1k_bayese_224x224_nv12.bin --model-path
       /path/to/fasternet_t1_in1k_bayese_224x224_nv12.bin --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: t2-in1k-224
   model:
     parameter_count: 14982888
+    gflops: 3.808669696
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -1260,7 +1282,7 @@ variants:
       name: Apache-2.0
       url: https://huggingface.co/timm/fasternet_t2.in1k/blob/945917af83878941c27f52a011f4340824fc4f41/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-02'
     metadata_revision: 1
     artifact:
@@ -1388,38 +1410,38 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 7043.78955
+        aggregate_wall_ms: 6857.66367
         metrics_ms:
           preprocess:
-            mean: 8.201974286666667
-            p50: 8.082141
-            p95: 10.131832150000001
-            min: 7.258347
-            max: 10.383186
+            mean: 7.897697548333334
+            p50: 8.0478065
+            p95: 8.27905105
+            min: 7.243096
+            max: 10.692437
           runtime:
-            mean: 3.4996384149999993
-            p50: 3.497799
-            p95: 3.52450905
-            min: 3.452632
-            max: 3.57284
+            mean: 3.495125005
+            p50: 3.4923395
+            p95: 3.51972125
+            min: 3.46909
+            max: 3.760257
           postprocess:
-            mean: 0.03185171833333333
-            p50: 0.030875
-            p95: 0.037377099999999996
-            min: 0.028583
-            max: 0.069125
+            mean: 0.030423111666666666
+            p50: 0.030209
+            p95: 0.03191605
+            min: 0.027375
+            max: 0.065083
           end_to_end:
-            mean: 11.73346442
-            p50: 11.6183765
-            p95: 13.63877875
-            min: 10.777396
-            max: 13.891485
-        throughput_fps: 85.18142056075483
+            mean: 11.423245665
+            p50: 11.5720005
+            p95: 11.81042375
+            min: 10.749936
+            max: 14.243651
+        throughput_fps: 87.49335471565931
         measurement_status: measured
         environment_status: recorded
       - tool: classification_benchmark
@@ -1433,47 +1455,48 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 11815.984489
+        aggregate_wall_ms: 11766.519484
         metrics_ms:
           preprocess:
-            mean: 15.357480179166666
-            p50: 8.961059
-            p95: 44.815961349999995
-            min: 7.269264
-            max: 52.992728
+            mean: 15.36246081
+            p50: 9.007975
+            p95: 44.32694
+            min: 7.31293
+            max: 53.132223
           runtime:
-            mean: 3.7707622425
-            p50: 3.5050904999999997
-            p95: 5.849155099999999
-            min: 3.352631
-            max: 7.761681
+            mean: 3.850526056666667
+            p50: 3.501048
+            p95: 6.32511375
+            min: 3.348631
+            max: 8.426557
           postprocess:
-            mean: 0.03169359
-            p50: 0.031416
-            p95: 0.034791050000000004
-            min: 0.028
-            max: 0.062833
+            mean: 0.03153748
+            p50: 0.0312505
+            p95: 0.034334
+            min: 0.027875
+            max: 0.064875
           end_to_end:
-            mean: 19.15993601166667
-            p50: 12.5464825
-            p95: 50.60473345
-            min: 10.769812
-            max: 59.425824
-        throughput_fps: 101.55734387745099
+            mean: 19.244524346666665
+            p50: 12.6204605
+            p95: 49.644369399999995
+            min: 10.81152
+            max: 58.158232
+        throughput_fps: 101.98427849728617
         measurement_status: measured
         environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: fasternet--t2-in1k-224--x5
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#fasternet--t2-in1k-224--x5
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       artifact_sha256: 8ef79e32621b475814c7d2d781e6e0e24d09c6f381c2b7efade3a577bb097012
       conversion: passed
@@ -1482,8 +1505,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 8ef79e32621b475814c7d2d781e6e0e24d09c6f381c2b7efade3a577bb097012
@@ -1503,11 +1526,11 @@ variants:
           job_id: fasternet--t2-in1k-224--x5
         cpp_1:
           artifact_sha256: 8ef79e32621b475814c7d2d781e6e0e24d09c6f381c2b7efade3a577bb097012
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t2-in1k-224--x5
         cpp_2:
           artifact_sha256: 8ef79e32621b475814c7d2d781e6e0e24d09c6f381c2b7efade3a577bb097012
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t2-in1k-224--x5
     provenance:
       repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
@@ -1535,9 +1558,14 @@ variants:
     runtime_command: python3 samples/vision/fasternet/runtime/python/main.py --target
       x5 --asset-id x5:fasternet:fasternet_t2_in1k_bayese_224x224_nv12.bin --model-path
       /path/to/fasternet_t2_in1k_bayese_224x224_nv12.bin --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: s-in1k-224-s-int16-o1-20261103
   model:
     parameter_count: 31181032
+    gflops: 9.099481088
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -1565,7 +1593,7 @@ variants:
       name: Apache-2.0
       url: https://huggingface.co/timm/fasternet_s.in1k/blob/8c427163d414879c948337c43795c7fd60aec2c4/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -1666,40 +1694,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 2694.453911
+        aggregate_wall_ms: 2695.90466
         metrics_ms:
           preprocess:
-            mean: 2.044813923333334
-            p50: 2.0777520000000003
-            p95: 2.119808
-            min: 1.909871
-            max: 2.669523
+            mean: 2.0522551116666667
+            p50: 2.0831955
+            p95: 2.12794105
+            min: 1.912184
+            max: 3.570345
           runtime:
-            mean: 2.435638225
-            p50: 2.396438
-            p95: 2.78698175
-            min: 2.370212
-            max: 2.976785
+            mean: 2.429990743333333
+            p50: 2.38988
+            p95: 2.773146
+            min: 2.361105
+            max: 2.819977
           postprocess:
-            mean: 0.0069587550000000005
-            p50: 0.00685
-            p95: 0.007751249999999999
-            min: 0.005876
-            max: 0.011451
+            mean: 0.007337638333333333
+            p50: 0.007012
+            p95: 0.010879949999999994
+            min: 0.005825
+            max: 0.0157
           end_to_end:
-            mean: 4.487410903333333
-            p50: 4.486352500000001
-            p95: 4.749375
-            min: 4.298833
-            max: 5.272819
-        throughput_fps: 222.67963001724544
+            mean: 4.489583493333334
+            p50: 4.4816745000000004
+            p95: 4.878027749999999
+            min: 4.294589
+            max: 6.0118
+        throughput_fps: 222.55979927717473
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -1711,47 +1739,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2966.752956
+        aggregate_wall_ms: 2936.9513070000003
         metrics_ms:
           preprocess:
-            mean: 2.389631336666666
-            p50: 2.1456660000000003
-            p95: 2.5965137999999994
-            min: 1.91527
-            max: 9.83491
+            mean: 2.3806510616666667
+            p50: 2.1371945
+            p95: 2.76616075
+            min: 1.90981
+            max: 9.846268
           runtime:
-            mean: 2.4880174716666668
-            p50: 2.4418015
-            p95: 2.8235952
-            min: 2.368536
-            max: 3.715411
+            mean: 2.4739638225
+            p50: 2.4315045
+            p95: 2.8137857
+            min: 2.354505
+            max: 3.742569
           postprocess:
-            mean: 0.008710491666666667
+            mean: 0.008521431666666668
             p50: 0.00765
-            p95: 0.013527199999999998
-            min: 0.00575
-            max: 0.035051
+            p95: 0.013253749999999996
+            min: 0.005324
+            max: 0.036724
           end_to_end:
-            mean: 4.8863593
-            p50: 4.6456575
-            p95: 5.22836945
-            min: 4.308582
-            max: 12.570161
-        throughput_fps: 404.48261712290684
+            mean: 4.863136315833334
+            p50: 4.615762
+            p95: 5.2521523
+            min: 4.323889
+            max: 12.57052
+        throughput_fps: 408.5869578906164
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: fasternet--s-in1k-224-s-int16-o1-20261103--s100
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#fasternet--s-in1k-224-s-int16-o1-20261103--s100
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -1760,8 +1789,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 3088c660ddd44b769afd209b7ba8a1cdebe081e6b70b929a10b25c01439b33b8
@@ -1781,11 +1810,11 @@ variants:
           job_id: fasternet--s-in1k-224-s-int16-o1-20261103--s100
         cpp_1:
           artifact_sha256: 3088c660ddd44b769afd209b7ba8a1cdebe081e6b70b929a10b25c01439b33b8
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--s-in1k-224-s-int16-o1-20261103--s100
         cpp_2:
           artifact_sha256: 3088c660ddd44b769afd209b7ba8a1cdebe081e6b70b929a10b25c01439b33b8
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--s-in1k-224-s-int16-o1-20261103--s100
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -1858,12 +1887,13 @@ variants:
       s100 --variant timm-s-in1k-s-int16-o1-20261103 --asset-id s:fasternet:s100/fasternet_s_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/fasternet_s_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s100p
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/fasternet_s.in1k/blob/8c427163d414879c948337c43795c7fd60aec2c4/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -1964,40 +1994,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 2158.1926789999998
+        aggregate_wall_ms: 2177.930794
         metrics_ms:
           preprocess:
-            mean: 1.6178098616666667
-            p50: 1.5989520000000002
-            p95: 1.8428897499999999
-            min: 1.460263
-            max: 3.814109
+            mean: 1.6547202133333334
+            p50: 1.60147
+            p95: 1.8332277499999998
+            min: 1.469363
+            max: 10.644084
           runtime:
-            mean: 1.970146135
-            p50: 1.9414805
-            p95: 2.2301349999999998
-            min: 1.902792
-            max: 2.467797
+            mean: 1.9658820299999997
+            p50: 1.935491
+            p95: 2.2264771
+            min: 1.903738
+            max: 2.34474
           postprocess:
-            mean: 0.005901096666666666
-            p50: 0.005775
-            p95: 0.0069012499999999985
-            min: 0.004775
-            max: 0.0334
+            mean: 0.005983153333333333
+            p50: 0.0058130000000000005
+            p95: 0.00685
+            min: 0.004801
+            max: 0.026251
           end_to_end:
-            mean: 3.5938570933333334
-            p50: 3.5459069999999997
-            p95: 3.85857875
-            min: 3.38143
-            max: 5.888252
-        throughput_fps: 278.0103953823115
+            mean: 3.626585396666667
+            p50: 3.543349
+            p95: 3.87506755
+            min: 3.385027
+            max: 12.929721
+        throughput_fps: 275.49084739191215
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -2009,47 +2039,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2509.6254200000003
+        aggregate_wall_ms: 2501.607127
         metrics_ms:
           preprocess:
-            mean: 2.10938732
-            p50: 1.7202155000000001
-            p95: 5.5137665
-            min: 1.480988
-            max: 8.271549
+            mean: 2.0729972583333334
+            p50: 1.7159885
+            p95: 5.318150899999999
+            min: 1.467961
+            max: 16.216832
           runtime:
-            mean: 2.0344630725000004
-            p50: 1.987968
-            p95: 2.306431
-            min: 1.909218
-            max: 5.522024
+            mean: 2.037688359166667
+            p50: 1.9862419999999998
+            p95: 2.272379
+            min: 1.912812
+            max: 7.426685
           postprocess:
-            mean: 0.006764639999999999
-            p50: 0.006225
-            p95: 0.00982625
-            min: 0.004675
-            max: 0.067525
+            mean: 0.006810210833333333
+            p50: 0.00625
+            p95: 0.010201
+            min: 0.004625
+            max: 0.037802
           end_to_end:
-            mean: 4.1506150325
-            p50: 3.744308
-            p95: 7.854826249999999
-            min: 3.415181
-            max: 10.662721
-        throughput_fps: 478.15900749044846
+            mean: 4.117495828333333
+            p50: 3.7419585
+            p95: 7.40287175
+            min: 3.393923
+            max: 19.655684
+        throughput_fps: 479.6916298519963
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: fasternet--s-in1k-224-s-int16-o1-20261103--s100p
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#fasternet--s-in1k-224-s-int16-o1-20261103--s100p
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -2058,8 +2089,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 0aa92e46f250f6332ac68d7fb97fe17576db70631c9d219043677b75a265b3ad
@@ -2079,11 +2110,11 @@ variants:
           job_id: fasternet--s-in1k-224-s-int16-o1-20261103--s100p
         cpp_1:
           artifact_sha256: 0aa92e46f250f6332ac68d7fb97fe17576db70631c9d219043677b75a265b3ad
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--s-in1k-224-s-int16-o1-20261103--s100p
         cpp_2:
           artifact_sha256: 0aa92e46f250f6332ac68d7fb97fe17576db70631c9d219043677b75a265b3ad
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--s-in1k-224-s-int16-o1-20261103--s100p
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -2156,12 +2187,13 @@ variants:
       s100p --variant timm-s-in1k-s-int16-o1-20261103 --asset-id s:fasternet:s100p/fasternet_s_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/fasternet_s_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s600
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/fasternet_s.in1k/blob/8c427163d414879c948337c43795c7fd60aec2c4/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -2262,40 +2294,40 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1329.599226
+        aggregate_wall_ms: 1331.5416069999999
         metrics_ms:
           preprocess:
-            mean: 0.8269085166666668
-            p50: 0.8277455
-            p95: 0.8698502
-            min: 0.778783
-            max: 1.201037
+            mean: 0.8288359966666667
+            p50: 0.8291355
+            p95: 0.8727918
+            min: 0.775599
+            max: 1.046548
           runtime:
-            mean: 1.3815534233333333
-            p50: 1.3686765
-            p95: 1.5013162499999995
-            min: 1.345889
-            max: 1.632217
+            mean: 1.3830217333333332
+            p50: 1.369135
+            p95: 1.5014582499999996
+            min: 1.343372
+            max: 1.666747
           postprocess:
-            mean: 0.005719335
-            p50: 0.005425
-            p95: 0.008
-            min: 0.0048
-            max: 0.0112
+            mean: 0.005569285
+            p50: 0.005325
+            p95: 0.00725
+            min: 0.0046
+            max: 0.02745
           end_to_end:
-            mean: 2.214181275
-            p50: 2.2016595
-            p95: 2.3769489999999998
-            min: 2.137647
-            max: 2.637801
-        throughput_fps: 451.2638006003171
+            mean: 2.2174270149999997
+            p50: 2.2058835
+            p95: 2.357441
+            min: 2.14452
+            max: 2.508645
+        throughput_fps: 450.6055213338895
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -2307,47 +2339,48 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 1459.329612
+        aggregate_wall_ms: 1482.99647
         metrics_ms:
           preprocess:
-            mean: 0.9718140525000001
-            p50: 0.8518835
-            p95: 0.9282139999999999
-            min: 0.787308
-            max: 6.992394
+            mean: 0.96864842
+            p50: 0.863424
+            p95: 0.9589892499999999
+            min: 0.784299
+            max: 6.936912
           runtime:
-            mean: 1.4472637666666666
-            p50: 1.424839
-            p95: 1.62409755
-            min: 1.365539
-            max: 2.372873
+            mean: 1.4630311483333331
+            p50: 1.435972
+            p95: 1.6463357499999998
+            min: 1.366097
+            max: 2.447745
           postprocess:
-            mean: 0.006365948333333333
-            p50: 0.006075
-            p95: 0.00885125
-            min: 0.00485
-            max: 0.020975
+            mean: 0.006709048333333334
+            p50: 0.0063
+            p95: 0.00929905
+            min: 0.005
+            max: 0.0269
           end_to_end:
-            mean: 2.4254437675
-            p50: 2.2906095000000004
-            p95: 2.5499747
-            min: 2.186446
-            max: 8.428332
-        throughput_fps: 822.2953814768476
+            mean: 2.4383886166666664
+            p50: 2.3150209999999998
+            p95: 2.5753749999999997
+            min: 2.179021
+            max: 8.366559
+        throughput_fps: 809.1725262164649
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: fasternet--s-in1k-224-s-int16-o1-20261103--s600
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#fasternet--s-in1k-224-s-int16-o1-20261103--s600
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -2356,8 +2389,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: c198edf52a2a4b64b75d74d804dda07cc02744cb9dfc2427be7cf3a02d0531d0
@@ -2377,11 +2410,11 @@ variants:
           job_id: fasternet--s-in1k-224-s-int16-o1-20261103--s600
         cpp_1:
           artifact_sha256: c198edf52a2a4b64b75d74d804dda07cc02744cb9dfc2427be7cf3a02d0531d0
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--s-in1k-224-s-int16-o1-20261103--s600
         cpp_2:
           artifact_sha256: c198edf52a2a4b64b75d74d804dda07cc02744cb9dfc2427be7cf3a02d0531d0
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--s-in1k-224-s-int16-o1-20261103--s600
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -2454,9 +2487,14 @@ variants:
       s600 --variant timm-s-in1k-s-int16-o1-20261103 --asset-id s:fasternet:s600/fasternet_s_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/fasternet_s_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: t0-in1k-224-s-int16-o1-20261103
   model:
     parameter_count: 3905500
+    gflops: 0.67084544
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -2484,7 +2522,7 @@ variants:
       name: Apache-2.0
       url: https://huggingface.co/timm/fasternet_t0.in1k/blob/a8c465730c7896ba51d860a6e384fad94e7cfb44/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -2585,40 +2623,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1756.846278
+        aggregate_wall_ms: 1752.291129
         metrics_ms:
           preprocess:
-            mean: 2.0539601750000003
-            p50: 2.078788
-            p95: 2.1235570499999996
-            min: 1.907545
-            max: 5.332994
+            mean: 2.0444102833333333
+            p50: 2.0756455000000003
+            p95: 2.12375425
+            min: 1.908409
+            max: 2.861451
           runtime:
-            mean: 0.8637399783333334
-            p50: 0.835755
-            p95: 1.21363995
-            min: 0.807104
-            max: 1.428227
+            mean: 0.8659181216666667
+            p50: 0.838743
+            p95: 1.2047062499999996
+            min: 0.808018
+            max: 1.287789
           postprocess:
-            mean: 0.006904603333333332
-            p50: 0.006738
-            p95: 0.0078
-            min: 0.00565
-            max: 0.031676
+            mean: 0.0068451783333333335
+            p50: 0.00665
+            p95: 0.007752499999999997
+            min: 0.00545
+            max: 0.01585
           end_to_end:
-            mean: 2.9246047566666666
-            p50: 2.9237935
-            p95: 3.30278975
-            min: 2.741674
-            max: 6.691993
-        throughput_fps: 341.5210582243098
+            mean: 2.917173583333333
+            p50: 2.921751
+            p95: 3.2164539499999996
+            min: 2.743778
+            max: 3.893993
+        throughput_fps: 342.4088555093062
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -2630,47 +2668,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2930.3045270000002
+        aggregate_wall_ms: 2907.223936
         metrics_ms:
           preprocess:
-            mean: 3.838849094166667
-            p50: 2.4166125000000003
-            p95: 9.48866525
-            min: 1.900169
-            max: 15.025519
+            mean: 3.7824182566666664
+            p50: 2.400143
+            p95: 9.50235805
+            min: 1.90216
+            max: 13.378318
           runtime:
-            mean: 0.9029933708333334
-            p50: 0.8459185
-            p95: 1.2534750000000001
-            min: 0.795279
-            max: 2.120802
+            mean: 0.9055373116666667
+            p50: 0.849643
+            p95: 1.2436587499999998
+            min: 0.787269
+            max: 2.277532
           postprocess:
-            mean: 0.0070518824999999995
-            p50: 0.006775
-            p95: 0.00850125
-            min: 0.0054
-            max: 0.036801
+            mean: 0.007446769999999999
+            p50: 0.00695
+            p95: 0.01127625
+            min: 0.005375
+            max: 0.044775
           end_to_end:
-            mean: 4.748894347499999
-            p50: 3.2893565000000002
-            p95: 10.354057549999998
-            min: 2.751324
-            max: 15.927027
-        throughput_fps: 409.5137515378107
+            mean: 4.695402338333333
+            p50: 3.273274
+            p95: 10.378026
+            min: 2.753128
+            max: 14.521209
+        throughput_fps: 412.7649009560164
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: fasternet--t0-in1k-224-s-int16-o1-20261103--s100
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#fasternet--t0-in1k-224-s-int16-o1-20261103--s100
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -2679,8 +2718,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 13f473701fadb5b2163766c499d4c55664d6188a704e6fde5af2971c06cd8f34
@@ -2700,11 +2739,11 @@ variants:
           job_id: fasternet--t0-in1k-224-s-int16-o1-20261103--s100
         cpp_1:
           artifact_sha256: 13f473701fadb5b2163766c499d4c55664d6188a704e6fde5af2971c06cd8f34
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t0-in1k-224-s-int16-o1-20261103--s100
         cpp_2:
           artifact_sha256: 13f473701fadb5b2163766c499d4c55664d6188a704e6fde5af2971c06cd8f34
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t0-in1k-224-s-int16-o1-20261103--s100
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -2777,12 +2816,13 @@ variants:
       s100 --variant timm-t0-in1k-s-int16-o1-20261103 --asset-id s:fasternet:s100/fasternet_t0_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/fasternet_t0_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s100p
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/fasternet_t0.in1k/blob/a8c465730c7896ba51d860a6e384fad94e7cfb44/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -2883,40 +2923,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1456.7318129999999
+        aggregate_wall_ms: 1470.4994550000001
         metrics_ms:
           preprocess:
-            mean: 1.6775633433333332
-            p50: 1.597739
-            p95: 1.8850769999999997
-            min: 1.457963
-            max: 3.885335
+            mean: 1.7050438
+            p50: 1.59878
+            p95: 1.9118037999999997
+            min: 1.459734
+            max: 6.539303
           runtime:
-            mean: 0.7414190183333333
-            p50: 0.712857
-            p95: 0.9860577499999998
-            min: 0.683681
-            max: 3.35288
+            mean: 0.7367741783333334
+            p50: 0.7141785
+            p95: 0.910070749999996
+            min: 0.678439
+            max: 1.123991
           postprocess:
-            mean: 0.005838678333333334
-            p50: 0.005575
-            p95: 0.006778749999999997
-            min: 0.00455
-            max: 0.062625
+            mean: 0.00588323
+            p50: 0.005675
+            p95: 0.006627199999999999
+            min: 0.004625
+            max: 0.062903
           end_to_end:
-            mean: 2.4248210400000003
-            p50: 2.3144085
-            p95: 2.7846349999999984
-            min: 2.159344
-            max: 4.947145
-        throughput_fps: 411.88089300003503
+            mean: 2.447701208333333
+            p50: 2.3189085
+            p95: 2.7843584999999993
+            min: 2.156124
+            max: 7.292097
+        throughput_fps: 408.02463269189036
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -2928,47 +2968,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2392.70696
+        aggregate_wall_ms: 2390.3650660000003
         metrics_ms:
           preprocess:
-            mean: 3.0691940108333333
-            p50: 1.8904795
-            p95: 7.15757025
-            min: 1.452938
-            max: 12.358236
+            mean: 3.149290510833333
+            p50: 1.988502
+            p95: 7.1456872
+            min: 1.478934
+            max: 11.850124
           runtime:
-            mean: 0.7880281708333333
-            p50: 0.7255564999999999
-            p95: 1.06481625
-            min: 0.652981
-            max: 5.886427
+            mean: 0.7819994825
+            p50: 0.725867
+            p95: 1.05028905
+            min: 0.660587
+            max: 4.577113
           postprocess:
-            mean: 0.0057564458333333336
-            p50: 0.005575
-            p95: 0.007525
-            min: 0.0042
-            max: 0.02205
+            mean: 0.0059902033333333335
+            p50: 0.00565
+            p95: 0.0081
+            min: 0.004175
+            max: 0.063853
           end_to_end:
-            mean: 3.8629786275
-            p50: 2.7275745000000002
-            p95: 7.901554999999999
-            min: 2.175694
-            max: 13.090742
-        throughput_fps: 501.5240144576668
+            mean: 3.9372801966666664
+            p50: 2.8310255
+            p95: 7.8881028
+            min: 2.184449
+            max: 12.782652
+        throughput_fps: 502.0153687269457
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: fasternet--t0-in1k-224-s-int16-o1-20261103--s100p
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#fasternet--t0-in1k-224-s-int16-o1-20261103--s100p
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -2977,8 +3018,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 5bceb1136dd47b2487f72da34ff0839214e750debe66f5fd19593ad85a91e2ac
@@ -2998,11 +3039,11 @@ variants:
           job_id: fasternet--t0-in1k-224-s-int16-o1-20261103--s100p
         cpp_1:
           artifact_sha256: 5bceb1136dd47b2487f72da34ff0839214e750debe66f5fd19593ad85a91e2ac
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t0-in1k-224-s-int16-o1-20261103--s100p
         cpp_2:
           artifact_sha256: 5bceb1136dd47b2487f72da34ff0839214e750debe66f5fd19593ad85a91e2ac
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t0-in1k-224-s-int16-o1-20261103--s100p
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -3075,12 +3116,13 @@ variants:
       s100p --variant timm-t0-in1k-s-int16-o1-20261103 --asset-id s:fasternet:s100p/fasternet_t0_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/fasternet_t0_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s600
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/fasternet_t0.in1k/blob/a8c465730c7896ba51d860a6e384fad94e7cfb44/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -3181,40 +3223,40 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 928.340096
+        aggregate_wall_ms: 938.216674
         metrics_ms:
           preprocess:
-            mean: 0.8207431900000001
-            p50: 0.82257
-            p95: 0.85546425
-            min: 0.776382
-            max: 1.215511
+            mean: 0.827258155
+            p50: 0.8282735
+            p95: 0.86518025
+            min: 0.778474
+            max: 1.012073
           runtime:
-            mean: 0.719353935
-            p50: 0.7108814999999999
-            p95: 0.74045325
-            min: 0.693407
-            max: 0.969509
+            mean: 0.728647225
+            p50: 0.718836
+            p95: 0.7603955499999998
+            min: 0.696874
+            max: 0.975748
           postprocess:
-            mean: 0.005407931666666667
-            p50: 0.005225
-            p95: 0.006526249999999999
-            min: 0.0046
-            max: 0.02135
+            mean: 0.005932243333333333
+            p50: 0.005475
+            p95: 0.00865125
+            min: 0.004675
+            max: 0.0259
           end_to_end:
-            mean: 1.5455050566666666
-            p50: 1.538815
-            p95: 1.59058255
-            min: 1.481464
-            max: 1.978968
-        throughput_fps: 646.3148608847764
+            mean: 1.5618376233333333
+            p50: 1.5519845
+            p95: 1.6449557499999996
+            min: 1.489122
+            max: 1.830997
+        throughput_fps: 639.5111242714921
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -3226,47 +3268,48 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 1149.451576
+        aggregate_wall_ms: 1237.192261
         metrics_ms:
           preprocess:
-            mean: 1.0982442149999998
-            p50: 0.862783
-            p95: 3.2931100499999992
-            min: 0.777557
-            max: 7.417094
+            mean: 1.20205073
+            p50: 0.8691985
+            p95: 4.377841049999999
+            min: 0.787524
+            max: 7.016162
           runtime:
-            mean: 0.7509202533333333
-            p50: 0.7322815
-            p95: 0.8832117500000001
-            min: 0.692006
-            max: 1.281186
+            mean: 0.7680980141666667
+            p50: 0.7445984999999999
+            p95: 0.9229617999999999
+            min: 0.689773
+            max: 1.279123
           postprocess:
-            mean: 0.006005390833333333
-            p50: 0.005775
-            p95: 0.007727499999999997
-            min: 0.004825
-            max: 0.026475
+            mean: 0.006286035000000001
+            p50: 0.005975
+            p95: 0.008801199999999999
+            min: 0.00475
+            max: 0.022625
           end_to_end:
-            mean: 1.8551698591666665
-            p50: 1.6055395
-            p95: 4.075626749999994
-            min: 1.490814
-            max: 8.167976
-        throughput_fps: 1043.9761230968115
+            mean: 1.9764347791666668
+            p50: 1.6273845
+            p95: 5.1738612999999996
+            min: 1.501048
+            max: 8.08921
+        throughput_fps: 969.9381719621023
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: fasternet--t0-in1k-224-s-int16-o1-20261103--s600
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#fasternet--t0-in1k-224-s-int16-o1-20261103--s600
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -3275,8 +3318,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 0a5edae36c991047aadfc3daf80729a349afa4bad2acd979c82ec628a3e76a63
@@ -3296,11 +3339,11 @@ variants:
           job_id: fasternet--t0-in1k-224-s-int16-o1-20261103--s600
         cpp_1:
           artifact_sha256: 0a5edae36c991047aadfc3daf80729a349afa4bad2acd979c82ec628a3e76a63
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t0-in1k-224-s-int16-o1-20261103--s600
         cpp_2:
           artifact_sha256: 0a5edae36c991047aadfc3daf80729a349afa4bad2acd979c82ec628a3e76a63
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t0-in1k-224-s-int16-o1-20261103--s600
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -3373,9 +3416,14 @@ variants:
       s600 --variant timm-t0-in1k-s-int16-o1-20261103 --asset-id s:fasternet:s600/fasternet_t0_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/fasternet_t0_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: t1-in1k-224-s-int16-o1-20261103
   model:
     parameter_count: 7595368
+    gflops: 1.701023744
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -3403,7 +3451,7 @@ variants:
       name: Apache-2.0
       url: https://huggingface.co/timm/fasternet_t1.in1k/blob/2c27a878042ecd9de0c2f045fbf8169704f9aae6/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -3504,40 +3552,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1889.142061
+        aggregate_wall_ms: 1892.871905
         metrics_ms:
           preprocess:
-            mean: 2.053191441666667
-            p50: 2.08025
-            p95: 2.130372
-            min: 1.909894
-            max: 2.809902
+            mean: 2.0629632416666666
+            p50: 2.080259
+            p95: 2.13625675
+            min: 1.91176
+            max: 5.399832
           runtime:
-            mean: 1.0848401566666666
-            p50: 1.054363
-            p95: 1.4341848
-            min: 1.015336
-            max: 1.547755
+            mean: 1.0811574400000001
+            p50: 1.050742
+            p95: 1.4292542999999998
+            min: 1.018217
+            max: 1.471839
           postprocess:
-            mean: 0.00715219
-            p50: 0.006976
-            p95: 0.00805125
-            min: 0.00585
-            max: 0.014551
+            mean: 0.0070801449999999995
+            p50: 0.00685
+            p95: 0.008225
+            min: 0.0057
+            max: 0.0288
           end_to_end:
-            mean: 3.1451837883333336
-            p50: 3.1435639999999996
-            p95: 3.5302983
-            min: 2.941382
-            max: 4.000345
-        throughput_fps: 317.6044895651709
+            mean: 3.1512008266666665
+            p50: 3.1404
+            p95: 3.51142175
+            min: 2.955752
+            max: 6.467849
+        throughput_fps: 316.97866000076743
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -3549,47 +3597,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 3010.416982
+        aggregate_wall_ms: 3025.278727
         metrics_ms:
           preprocess:
-            mean: 3.767059719166667
-            p50: 2.4109119999999997
-            p95: 9.4873423
-            min: 1.916294
-            max: 13.296779
+            mean: 3.716047221666667
+            p50: 2.406831
+            p95: 9.5018938
+            min: 1.918835
+            max: 10.459542
           runtime:
-            mean: 1.1213777183333333
-            p50: 1.0650140000000001
-            p95: 1.45451455
-            min: 1.022536
-            max: 3.123012
+            mean: 1.1180267133333333
+            p50: 1.0634044999999999
+            p95: 1.4662217499999999
+            min: 1.011618
+            max: 2.361956
           postprocess:
-            mean: 0.007550783333333333
+            mean: 0.0076159075000000005
             p50: 0.00705
-            p95: 0.011305049999999995
-            min: 0.00545
-            max: 0.016426
+            p95: 0.011854949999999994
+            min: 0.005275
+            max: 0.0288
           end_to_end:
-            mean: 4.895988220833334
-            p50: 3.502326
-            p95: 10.588893500000001
-            min: 2.981257
-            max: 14.394744
-        throughput_fps: 398.6158752010388
+            mean: 4.8416898425
+            p50: 3.4973105
+            p95: 10.5720005
+            min: 2.974601
+            max: 11.560784
+        throughput_fps: 396.65766637971007
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: fasternet--t1-in1k-224-s-int16-o1-20261103--s100
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#fasternet--t1-in1k-224-s-int16-o1-20261103--s100
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -3598,8 +3647,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 9fb2f11f259f7a6effd23ede49e41dc6c7ccd674f95e90a16024010ef1350aa1
@@ -3619,11 +3668,11 @@ variants:
           job_id: fasternet--t1-in1k-224-s-int16-o1-20261103--s100
         cpp_1:
           artifact_sha256: 9fb2f11f259f7a6effd23ede49e41dc6c7ccd674f95e90a16024010ef1350aa1
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t1-in1k-224-s-int16-o1-20261103--s100
         cpp_2:
           artifact_sha256: 9fb2f11f259f7a6effd23ede49e41dc6c7ccd674f95e90a16024010ef1350aa1
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t1-in1k-224-s-int16-o1-20261103--s100
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -3696,12 +3745,13 @@ variants:
       s100 --variant timm-t1-in1k-s-int16-o1-20261103 --asset-id s:fasternet:s100/fasternet_t1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/fasternet_t1_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s100p
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/fasternet_t1.in1k/blob/2c27a878042ecd9de0c2f045fbf8169704f9aae6/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -3802,40 +3852,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1570.5951499999999
+        aggregate_wall_ms: 1559.438691
         metrics_ms:
           preprocess:
-            mean: 1.6973585416666668
-            p50: 1.6019895000000002
-            p95: 1.8920044999999979
-            min: 1.462963
-            max: 6.466033
+            mean: 1.6772138116666668
+            p50: 1.6106025
+            p95: 1.8633062
+            min: 1.461108
+            max: 6.621445
           runtime:
-            mean: 0.9117913333333335
-            p50: 0.8878455000000001
-            p95: 1.17405225
-            min: 0.859408
-            max: 1.240836
+            mean: 0.9127749883333333
+            p50: 0.8900255
+            p95: 1.1617012999999998
+            min: 0.853848
+            max: 1.25537
           postprocess:
-            mean: 0.005658213333333334
-            p50: 0.0055
-            p95: 0.006902249999999999
-            min: 0.00435
-            max: 0.021901
+            mean: 0.005879365
+            p50: 0.005751
+            p95: 0.006902199999999999
+            min: 0.004675
+            max: 0.022076
           end_to_end:
-            mean: 2.6148080883333336
-            p50: 2.4966225
-            p95: 2.9511572999999993
-            min: 2.344071
-            max: 7.407816
-        throughput_fps: 382.0207900170837
+            mean: 2.595868165
+            p50: 2.505541
+            p95: 2.8745051
+            min: 2.334205
+            max: 7.565423
+        throughput_fps: 384.75382422071766
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -3847,47 +3897,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2474.437278
+        aggregate_wall_ms: 2454.266243
         metrics_ms:
           preprocess:
-            mean: 3.0641134291666665
-            p50: 1.917592
-            p95: 7.13484025
-            min: 1.461663
-            max: 8.897055
+            mean: 3.015454525
+            p50: 1.885254
+            p95: 7.124889899999999
+            min: 1.465456
+            max: 11.970589
           runtime:
-            mean: 0.9676505166666668
-            p50: 0.9124334999999999
-            p95: 1.2452409999999998
-            min: 0.856482
-            max: 6.031054
+            mean: 0.9610183725
+            p50: 0.9063625
+            p95: 1.2345705
+            min: 0.839922
+            max: 2.98269
           postprocess:
-            mean: 0.006003666666666667
-            p50: 0.00565
-            p95: 0.00842625
-            min: 0.00425
-            max: 0.067325
+            mean: 0.005948315833333333
+            p50: 0.005713
+            p95: 0.008254749999999996
+            min: 0.004251
+            max: 0.013876
           end_to_end:
-            mean: 4.0377676125
-            p50: 2.9559135000000003
-            p95: 8.05347575
-            min: 2.372621
-            max: 10.897898
-        throughput_fps: 484.95874624468865
+            mean: 3.9824212133333337
+            p50: 2.915937
+            p95: 8.04142855
+            min: 2.350756
+            max: 12.879039
+        throughput_fps: 488.94450772103943
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: fasternet--t1-in1k-224-s-int16-o1-20261103--s100p
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#fasternet--t1-in1k-224-s-int16-o1-20261103--s100p
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -3896,8 +3947,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 5e934d517d13b9e540adc08f8a69c75ed7a9f0aaca5f6c0b983877fab124baee
@@ -3917,11 +3968,11 @@ variants:
           job_id: fasternet--t1-in1k-224-s-int16-o1-20261103--s100p
         cpp_1:
           artifact_sha256: 5e934d517d13b9e540adc08f8a69c75ed7a9f0aaca5f6c0b983877fab124baee
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t1-in1k-224-s-int16-o1-20261103--s100p
         cpp_2:
           artifact_sha256: 5e934d517d13b9e540adc08f8a69c75ed7a9f0aaca5f6c0b983877fab124baee
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t1-in1k-224-s-int16-o1-20261103--s100p
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -3994,12 +4045,13 @@ variants:
       s100p --variant timm-t1-in1k-s-int16-o1-20261103 --asset-id s:fasternet:s100p/fasternet_t1_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/fasternet_t1_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s600
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/fasternet_t1.in1k/blob/2c27a878042ecd9de0c2f045fbf8169704f9aae6/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -4100,40 +4152,40 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 976.812535
+        aggregate_wall_ms: 981.66988
         metrics_ms:
           preprocess:
-            mean: 0.8248121799999999
-            p50: 0.8260325
-            p95: 0.8615158
-            min: 0.778707
-            max: 0.975659
+            mean: 0.8278528283333334
+            p50: 0.8295984999999999
+            p95: 0.8663142999999999
+            min: 0.780374
+            max: 1.039448
           runtime:
-            mean: 0.7961819250000001
-            p50: 0.785557
-            p95: 0.8317819999999991
-            min: 0.764882
-            max: 1.043059
+            mean: 0.8006348183333334
+            p50: 0.790686
+            p95: 0.829244
+            min: 0.770599
+            max: 1.064173
           postprocess:
-            mean: 0.0052933550000000005
-            p50: 0.00515
-            p95: 0.0060787499999999965
-            min: 0.00455
-            max: 0.0107
+            mean: 0.005680826666666666
+            p50: 0.0054
+            p95: 0.007676249999999999
+            min: 0.0046
+            max: 0.011375
           end_to_end:
-            mean: 1.62628746
-            p50: 1.618152
-            p95: 1.6929890499999987
-            min: 1.554189
-            max: 1.928341
-        throughput_fps: 614.2427318461879
+            mean: 1.6341684733333333
+            p50: 1.6259345
+            p95: 1.7119444999999995
+            min: 1.562722
+            max: 1.888922
+        throughput_fps: 611.2034322576955
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -4145,47 +4197,48 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 1182.944751
+        aggregate_wall_ms: 1260.6931889999998
         metrics_ms:
           preprocess:
-            mean: 1.0770184925000001
-            p50: 0.870107
-            p95: 2.742393049999993
-            min: 0.781932
-            max: 7.464389
+            mean: 1.1786812316666668
+            p50: 0.8796485
+            p95: 4.341177
+            min: 0.779949
+            max: 7.388062
           runtime:
-            mean: 0.8462115366666667
-            p50: 0.8215445
-            p95: 0.9799780499999999
-            min: 0.770082
-            max: 2.894299
+            mean: 0.8548724174999999
+            p50: 0.8319735
+            p95: 0.99513305
+            min: 0.766499
+            max: 1.325223
           postprocess:
-            mean: 0.0064451391666666665
-            p50: 0.006
-            p95: 0.00925
-            min: 0.00485
-            max: 0.025075
+            mean: 0.006589633333333333
+            p50: 0.006125
+            p95: 0.00950125
+            min: 0.004875
+            max: 0.0275
           end_to_end:
-            mean: 1.9296751683333333
-            p50: 1.7089895
-            p95: 3.8740279999999996
-            min: 1.573564
-            max: 8.351872
-        throughput_fps: 1014.4176209291113
+            mean: 2.0401432825
+            p50: 1.726997
+            p95: 5.206219699999999
+            min: 1.570198
+            max: 8.416185
+        throughput_fps: 951.8572880939075
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: fasternet--t1-in1k-224-s-int16-o1-20261103--s600
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#fasternet--t1-in1k-224-s-int16-o1-20261103--s600
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -4194,8 +4247,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: d8a4305fd30064afca44566a9948b4eb8ac23c67b5b08154f20a052f71efcfff
@@ -4215,11 +4268,11 @@ variants:
           job_id: fasternet--t1-in1k-224-s-int16-o1-20261103--s600
         cpp_1:
           artifact_sha256: d8a4305fd30064afca44566a9948b4eb8ac23c67b5b08154f20a052f71efcfff
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t1-in1k-224-s-int16-o1-20261103--s600
         cpp_2:
           artifact_sha256: d8a4305fd30064afca44566a9948b4eb8ac23c67b5b08154f20a052f71efcfff
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t1-in1k-224-s-int16-o1-20261103--s600
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -4292,9 +4345,14 @@ variants:
       s600 --variant timm-t1-in1k-s-int16-o1-20261103 --asset-id s:fasternet:s600/fasternet_t1_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/fasternet_t1_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: t2-in1k-224-s-int16-o1-20261103
   model:
     parameter_count: 14982888
+    gflops: 3.808669696
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -4322,7 +4380,7 @@ variants:
       name: Apache-2.0
       url: https://huggingface.co/timm/fasternet_t2.in1k/blob/945917af83878941c27f52a011f4340824fc4f41/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -4423,40 +4481,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 2044.0064699999998
+        aggregate_wall_ms: 2030.5801480000002
         metrics_ms:
           preprocess:
-            mean: 2.0686638316666666
-            p50: 2.0788875
-            p95: 2.12286975
-            min: 1.907043
-            max: 11.627216
+            mean: 2.0432746016666665
+            p50: 2.078334
+            p95: 2.1218493
+            min: 1.907861
+            max: 2.403782
           runtime:
-            mean: 1.3275065783333333
-            p50: 1.2951335
-            p95: 1.67525125
-            min: 1.262696
-            max: 1.825115
+            mean: 1.3302670116666666
+            p50: 1.3014275
+            p95: 1.67845575
+            min: 1.26309
+            max: 1.722137
           postprocess:
-            mean: 0.007168546666666667
-            p50: 0.007
-            p95: 0.00842505
-            min: 0.005776
-            max: 0.023551
+            mean: 0.007279028333333333
+            p50: 0.007025
+            p95: 0.008502499999999998
+            min: 0.0061
+            max: 0.02985
           end_to_end:
-            mean: 3.4033389566666665
-            p50: 3.3872095
-            p95: 3.63157255
-            min: 3.200315
-            max: 12.925962
-        throughput_fps: 293.5411451999954
+            mean: 3.380820641666667
+            p50: 3.392999
+            p95: 3.62898575
+            min: 3.195125
+            max: 3.91477
+        throughput_fps: 295.4820574755269
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -4468,47 +4526,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 3173.07482
+        aggregate_wall_ms: 3204.7555589999997
         metrics_ms:
           preprocess:
-            mean: 3.746957813333333
-            p50: 2.4059855
-            p95: 9.50365895
-            min: 1.911868
-            max: 11.916176
+            mean: 3.8284145066666664
+            p50: 2.4110945
+            p95: 9.4959477
+            min: 1.919385
+            max: 14.338016
           runtime:
-            mean: 1.3796214508333333
-            p50: 1.3185095
-            p95: 1.72336945
-            min: 1.250695
-            max: 2.572917
+            mean: 1.3757359225
+            p50: 1.3161900000000002
+            p95: 1.72185825
+            min: 1.251716
+            max: 2.689429
           postprocess:
-            mean: 0.007706420833333333
-            p50: 0.007175
-            p95: 0.011304699999999997
-            min: 0.005725
-            max: 0.023125
+            mean: 0.007687148333333333
+            p50: 0.0072
+            p95: 0.01115
+            min: 0.005575
+            max: 0.02825
           end_to_end:
-            mean: 5.134285685
-            p50: 3.773135
-            p95: 10.811990999999999
-            min: 3.194389
-            max: 13.252424
-        throughput_fps: 378.1820688363094
+            mean: 5.2118375775
+            p50: 3.7666715
+            p95: 10.8038805
+            min: 3.217201
+            max: 15.716031
+        throughput_fps: 374.44353489925567
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: fasternet--t2-in1k-224-s-int16-o1-20261103--s100
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#fasternet--t2-in1k-224-s-int16-o1-20261103--s100
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -4517,8 +4576,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 87492dc32abe163eb034f07c7b89af2435558b83df30c7a198e1c12b407604e5
@@ -4538,11 +4597,11 @@ variants:
           job_id: fasternet--t2-in1k-224-s-int16-o1-20261103--s100
         cpp_1:
           artifact_sha256: 87492dc32abe163eb034f07c7b89af2435558b83df30c7a198e1c12b407604e5
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t2-in1k-224-s-int16-o1-20261103--s100
         cpp_2:
           artifact_sha256: 87492dc32abe163eb034f07c7b89af2435558b83df30c7a198e1c12b407604e5
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t2-in1k-224-s-int16-o1-20261103--s100
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -4615,12 +4674,13 @@ variants:
       s100 --variant timm-t2-in1k-s-int16-o1-20261103 --asset-id s:fasternet:s100/fasternet_t2_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/fasternet_t2_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s100p
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/fasternet_t2.in1k/blob/945917af83878941c27f52a011f4340824fc4f41/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -4721,40 +4781,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1713.682096
+        aggregate_wall_ms: 1691.160326
         metrics_ms:
           preprocess:
-            mean: 1.7156248883333334
-            p50: 1.601702
-            p95: 1.8796345
-            min: 1.462638
-            max: 20.899337
+            mean: 1.6683671583333335
+            p50: 1.6021625
+            p95: 1.8636959999999998
+            min: 1.457404
+            max: 9.414935
           runtime:
-            mean: 1.1315153233333333
-            p50: 1.1066099999999999
-            p95: 1.383252
-            min: 1.075234
-            max: 1.525239
+            mean: 1.1409943683333335
+            p50: 1.1163859999999999
+            p95: 1.39105605
+            min: 1.073208
+            max: 1.596638
           postprocess:
-            mean: 0.005896918333333333
-            p50: 0.005725
-            p95: 0.0067
-            min: 0.004625
-            max: 0.070751
+            mean: 0.0059863600000000005
+            p50: 0.005826
+            p95: 0.006928799999999996
+            min: 0.004826
+            max: 0.027201
           end_to_end:
-            mean: 2.85303713
-            p50: 2.7133995
-            p95: 3.09638425
-            min: 2.557098
-            max: 22.430726
-        throughput_fps: 350.12328214229063
+            mean: 2.815347886666667
+            p50: 2.722449
+            p95: 3.11349535
+            min: 2.550115
+            max: 10.532321
+        throughput_fps: 354.78599561234034
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -4766,47 +4826,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2577.026581
+        aggregate_wall_ms: 2599.670573
         metrics_ms:
           preprocess:
-            mean: 3.0190824766666666
-            p50: 1.9428295
-            p95: 6.20640225
-            min: 1.470989
-            max: 11.629304
+            mean: 3.0237403925
+            p50: 1.9337170000000001
+            p95: 6.4320603
+            min: 1.461303
+            max: 15.939583
           runtime:
-            mean: 1.2011091308333335
-            p50: 1.1405854999999998
-            p95: 1.489183
-            min: 1.066535
-            max: 3.461906
+            mean: 1.1978179325
+            p50: 1.1412985
+            p95: 1.4707077499999999
+            min: 1.064582
+            max: 3.813704
           postprocess:
-            mean: 0.0061951625
-            p50: 0.005875
-            p95: 0.008652499999999997
-            min: 0.00435
-            max: 0.02645
+            mean: 0.006235955
+            p50: 0.00595
+            p95: 0.008202199999999998
+            min: 0.00445
+            max: 0.031401
           end_to_end:
-            mean: 4.2263867699999995
-            p50: 3.1849030000000003
-            p95: 7.452806999999999
-            min: 2.592274
-            max: 12.788139
-        throughput_fps: 465.65293848631825
+            mean: 4.2277942799999995
+            p50: 3.1754705000000003
+            p95: 7.650620249999997
+            min: 2.566163
+            max: 18.015644
+        throughput_fps: 461.59694711442194
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: fasternet--t2-in1k-224-s-int16-o1-20261103--s100p
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#fasternet--t2-in1k-224-s-int16-o1-20261103--s100p
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -4815,8 +4876,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 9f2287dbec50ee5de4ffe1e6ef74f370e0e64e3276c625eec2cea9b4a40e2410
@@ -4836,11 +4897,11 @@ variants:
           job_id: fasternet--t2-in1k-224-s-int16-o1-20261103--s100p
         cpp_1:
           artifact_sha256: 9f2287dbec50ee5de4ffe1e6ef74f370e0e64e3276c625eec2cea9b4a40e2410
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t2-in1k-224-s-int16-o1-20261103--s100p
         cpp_2:
           artifact_sha256: 9f2287dbec50ee5de4ffe1e6ef74f370e0e64e3276c625eec2cea9b4a40e2410
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t2-in1k-224-s-int16-o1-20261103--s100p
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -4913,12 +4974,13 @@ variants:
       s100p --variant timm-t2-in1k-s-int16-o1-20261103 --asset-id s:fasternet:s100p/fasternet_t2_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/fasternet_t2_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s600
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/fasternet_t2.in1k/blob/945917af83878941c27f52a011f4340824fc4f41/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -5019,40 +5081,40 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1082.286036
+        aggregate_wall_ms: 1092.3187409999998
         metrics_ms:
           preprocess:
-            mean: 0.8206381683333334
-            p50: 0.8210195
-            p95: 0.85342325
-            min: 0.777582
-            max: 1.432312
+            mean: 0.8304881716666667
+            p50: 0.832049
+            p95: 0.87220895
+            min: 0.781549
+            max: 0.945998
           runtime:
-            mean: 0.9762064883333335
-            p50: 0.965433
-            p95: 1.0309339499999999
-            min: 0.950433
-            max: 1.209585
+            mean: 0.982462995
+            p50: 0.9710235
+            p95: 1.0296779999999999
+            min: 0.953848
+            max: 1.272222
           postprocess:
-            mean: 0.005325431666666667
-            p50: 0.005225
-            p95: 0.00585
-            min: 0.004725
-            max: 0.0113
+            mean: 0.0057111133333333335
+            p50: 0.005375
+            p95: 0.007726249999999999
+            min: 0.0046
+            max: 0.022275
           end_to_end:
-            mean: 1.8021700883333331
-            p50: 1.794102
-            p95: 1.9183234999999998
-            min: 1.739689
-            max: 2.468246
-        throughput_fps: 554.3820949751217
+            mean: 1.81866228
+            p50: 1.808284
+            p95: 1.8960532
+            min: 1.750547
+            max: 2.170546
+        throughput_fps: 549.2902185773264
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -5064,47 +5126,48 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 1217.852764
+        aggregate_wall_ms: 1250.425599
         metrics_ms:
           preprocess:
-            mean: 0.8885090258333332
-            p50: 0.8591945000000001
-            p95: 0.9222342
-            min: 0.778806
-            max: 6.598978
+            mean: 0.9422064633333334
+            p50: 0.8658355
+            p95: 0.9582880500000001
+            min: 0.787124
+            max: 6.980113
           runtime:
-            mean: 1.1098166508333334
-            p50: 1.1111835
-            p95: 1.1818002499999998
-            min: 0.963357
-            max: 1.404161
+            mean: 1.0951348425
+            p50: 1.0958605000000001
+            p95: 1.1936867499999997
+            min: 0.954723
+            max: 1.777622
           postprocess:
-            mean: 0.006614011666666667
+            mean: 0.00658968
             p50: 0.00615
-            p95: 0.0093
-            min: 0.004925
-            max: 0.024425
+            p95: 0.009175
+            min: 0.005025
+            max: 0.029375
           end_to_end:
-            mean: 2.0049396883333332
-            p50: 1.974753
-            p95: 2.08426575
-            min: 1.788964
-            max: 7.680937
-        throughput_fps: 985.3407862364551
+            mean: 2.0439309858333337
+            p50: 1.969884
+            p95: 2.1508710499999997
+            min: 1.787397
+            max: 8.400985
+        throughput_fps: 959.6732512191635
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: fasternet--t2-in1k-224-s-int16-o1-20261103--s600
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#fasternet--t2-in1k-224-s-int16-o1-20261103--s600
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -5113,8 +5176,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: ed1512bb90b8ca2091b61ff77d91e3451f12e2dc182704162bf4500939970db2
@@ -5134,11 +5197,11 @@ variants:
           job_id: fasternet--t2-in1k-224-s-int16-o1-20261103--s600
         cpp_1:
           artifact_sha256: ed1512bb90b8ca2091b61ff77d91e3451f12e2dc182704162bf4500939970db2
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t2-in1k-224-s-int16-o1-20261103--s600
         cpp_2:
           artifact_sha256: ed1512bb90b8ca2091b61ff77d91e3451f12e2dc182704162bf4500939970db2
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: fasternet--t2-in1k-224-s-int16-o1-20261103--s600
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -5211,3 +5274,4 @@ variants:
       s600 --variant timm-t2-in1k-s-int16-o1-20261103 --asset-id s:fasternet:s600/fasternet_t2_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/fasternet_t2_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'

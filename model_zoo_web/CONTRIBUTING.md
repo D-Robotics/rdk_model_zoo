@@ -92,6 +92,12 @@ Eagle3/DFlash 的生成速度保留官方区间，不能取上限作为单值；
 模型详情页只展示指标与指标提示，不附加状态说明栏或批次报告入口。
 `released` 仍要求所有板端检查通过及完整环境字段，不能用 `measured` 代替。
 
+`cpp_1/cpp_2` 由 `measured` 改为 `passed` 前，须在目标板上用同一 SHA256 制品完成逐模型 C++
+等价性检查，与板端 Python 原生路径的结果对照，结论与公开证据记入
+`performance.review.equivalence_status`、`equivalence_url`。首批 208 项分类模型取 ImageNetV2
+第 0、100、…、9900 号共 100 张图，要求 Top-1 100/100 一致、Top-5 集合至少 98/100 一致。
+E2E 记录的 BPU/CPU 频率、governor 和温度须在每次运行前后从 sysfs 实际采样，不使用预检值代替。
+
 已经进入 `main` / `develop` 的示例，在证据齐套之前可以先登记为 `registration: pending`。
 登记只写能核对的身份、任务、示例路径和支持的板卡，并标明证据文件；性能、精度、
 文件大小、下载地址、封面和转换报告留空。字段规则、任务代码和“待补”与“完整”的

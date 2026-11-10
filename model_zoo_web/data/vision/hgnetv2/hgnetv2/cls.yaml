@@ -383,6 +383,10 @@ variants:
 - size: b0-ssld-stage2-ft-in1k-224
   model:
     parameter_count: 5996550
+    gflops: 0.642652928
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -407,7 +411,7 @@ variants:
   platforms:
   - platform: x5
     license: *id001
-    status: converted
+    status: released
     converted_at: '2026-11-02'
     metadata_revision: 1
     artifact:
@@ -535,38 +539,38 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 5815.663969
+        aggregate_wall_ms: 5817.989504
         metrics_ms:
           preprocess:
-            mean: 7.895066975
-            p50: 8.055557
-            p95: 8.283861199999999
-            min: 7.232681
-            max: 11.399397
+            mean: 7.8948734583333335
+            p50: 8.042682
+            p95: 8.2823772
+            min: 7.256889
+            max: 10.566437
           runtime:
-            mean: 1.7618831983333332
-            p50: 1.7602955
-            p95: 1.78478845
-            min: 1.73367
-            max: 1.840379
+            mean: 1.7657896816666667
+            p50: 1.7621905
+            p95: 1.7874703
+            min: 1.726462
+            max: 3.236297
           postprocess:
-            mean: 0.029835181666666665
-            p50: 0.02975
-            p95: 0.031043099999999997
-            min: 0.027167
-            max: 0.06075
+            mean: 0.030002173333333337
+            p50: 0.0299585
+            p95: 0.03179315
+            min: 0.0275
+            max: 0.064583
           end_to_end:
-            mean: 9.686785355
-            p50: 9.8439565
-            p95: 10.078818700000001
-            min: 9.023767
-            max: 13.272984
-        throughput_fps: 103.16964721453286
+            mean: 9.690665313333334
+            p50: 9.837081
+            p95: 10.07672735
+            min: 9.014976
+            max: 12.754441
+        throughput_fps: 103.12840880642469
         measurement_status: measured
         environment_status: recorded
       - tool: classification_benchmark
@@ -580,47 +584,48 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 10392.540793
+        aggregate_wall_ms: 10406.918185
         metrics_ms:
           preprocess:
-            mean: 14.588007329166667
-            p50: 8.937245999999998
-            p95: 49.370018550000005
-            min: 7.279348
-            max: 52.801685
+            mean: 14.811443224166666
+            p50: 8.9449755
+            p95: 49.6629933
+            min: 7.263472
+            max: 53.467183
           runtime:
-            mean: 1.9861411633333335
-            p50: 1.76542
-            p95: 3.6439469
-            min: 1.587795
-            max: 6.920805
+            mean: 1.9526937400000002
+            p50: 1.75942
+            p95: 3.5757316499999994
+            min: 1.594253
+            max: 7.85539
           postprocess:
-            mean: 0.03070926416666667
-            p50: 0.030375
-            p95: 0.03441905
-            min: 0.025792
-            max: 0.0725
+            mean: 0.030178999166666665
+            p50: 0.029875
+            p95: 0.0332941
+            min: 0.02575
+            max: 0.058792
           end_to_end:
-            mean: 16.604857756666668
-            p50: 10.7790415
-            p95: 51.34600205
-            min: 9.038559
-            max: 56.716859
-        throughput_fps: 115.46743225759306
+            mean: 16.794315963333332
+            p50: 10.759749500000002
+            p95: 52.00833725
+            min: 9.011476
+            max: 56.223398
+        throughput_fps: 115.30791139778717
         measurement_status: measured
         environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b0-ssld-stage2-ft-in1k-224--x5
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b0-ssld-stage2-ft-in1k-224--x5
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       artifact_sha256: 954668728414f5190755572dd843718c5ec292cb22ff134d67b27fbb98e1cf0b
       conversion: passed
@@ -629,8 +634,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 954668728414f5190755572dd843718c5ec292cb22ff134d67b27fbb98e1cf0b
@@ -650,11 +655,11 @@ variants:
           job_id: hgnetv2--b0-ssld-stage2-ft-in1k-224--x5
         cpp_1:
           artifact_sha256: 954668728414f5190755572dd843718c5ec292cb22ff134d67b27fbb98e1cf0b
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b0-ssld-stage2-ft-in1k-224--x5
         cpp_2:
           artifact_sha256: 954668728414f5190755572dd843718c5ec292cb22ff134d67b27fbb98e1cf0b
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b0-ssld-stage2-ft-in1k-224--x5
     provenance:
       repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
@@ -683,9 +688,14 @@ variants:
       x5 --asset-id x5:hgnetv2:hgnetv2_b0_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
       --model-path /path/to/hgnetv2_b0_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: b1-ssld-stage2-ft-in1k-224
   model:
     parameter_count: 6343158
+    gflops: 0.97877568
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -713,7 +723,7 @@ variants:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b1.ssld_stage2_ft_in1k/blob/ec7014d7f1d0dd1ea2bf3012bc51dc95c5919fd2/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-02'
     metadata_revision: 1
     artifact:
@@ -841,38 +851,38 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 5930.6941019999995
+        aggregate_wall_ms: 5927.637656
         metrics_ms:
           preprocess:
-            mean: 7.894719855
-            p50: 8.0510365
-            p95: 8.27661455
-            min: 7.258931
-            max: 9.029643
+            mean: 7.894630205
+            p50: 8.047285500000001
+            p95: 8.28450795
+            min: 7.243389
+            max: 11.358063
           runtime:
-            mean: 1.9528294683333336
-            p50: 1.952233
-            p95: 1.9757718
-            min: 1.915087
-            max: 2.028838
+            mean: 1.9480181033333335
+            p50: 1.9476915
+            p95: 1.97167515
+            min: 1.912254
+            max: 2.061837
           postprocess:
-            mean: 0.030791183333333336
-            p50: 0.030833
-            p95: 0.032625
-            min: 0.0275
-            max: 0.033666
+            mean: 0.03081699
+            p50: 0.031
+            p95: 0.0327521
+            min: 0.027084
+            max: 0.067917
           end_to_end:
-            mean: 9.878340506666667
-            p50: 10.032415
-            p95: 10.264642599999998
-            min: 9.251684
-            max: 11.006063
-        throughput_fps: 101.1685967410902
+            mean: 9.873465298333334
+            p50: 10.026997999999999
+            p95: 10.26028985
+            min: 9.187601
+            max: 13.45915
+        throughput_fps: 101.22076193248341
         measurement_status: measured
         environment_status: recorded
       - tool: classification_benchmark
@@ -886,47 +896,48 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 10543.336653999999
+        aggregate_wall_ms: 10683.158925000002
         metrics_ms:
           preprocess:
-            mean: 14.985581661666668
-            p50: 8.952642
-            p95: 49.66833555
-            min: 7.303389
-            max: 53.267644
+            mean: 15.093368578333333
+            p50: 8.954954
+            p95: 49.79022255
+            min: 7.28443
+            max: 53.674018
           runtime:
-            mean: 2.1464771366666664
-            p50: 1.948795
-            p95: 3.5888326499999996
-            min: 1.782795
-            max: 5.830094
+            mean: 2.0758174591666667
+            p50: 1.9367955000000001
+            p95: 3.191722049999999
+            min: 1.757254
+            max: 5.254677
           postprocess:
-            mean: 0.030804421666666665
-            p50: 0.030375
-            p95: 0.034167
-            min: 0.0265
-            max: 0.151083
+            mean: 0.030397631666666668
+            p50: 0.03
+            p95: 0.033375
+            min: 0.026458
+            max: 0.102875
           end_to_end:
-            mean: 17.16286322
-            p50: 10.9755
-            p95: 52.0306816
-            min: 9.264476
-            max: 56.701776
-        throughput_fps: 113.81596162394533
+            mean: 17.199583669166667
+            p50: 10.972874999999998
+            p95: 52.430199049999985
+            min: 9.211809
+            max: 56.506565
+        throughput_fps: 112.32632673766949
         measurement_status: measured
         environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b1-ssld-stage2-ft-in1k-224--x5
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b1-ssld-stage2-ft-in1k-224--x5
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       artifact_sha256: 9ab984ea54bbb9d1094791c7bd806c7d658f60d321a32dff5945f1fb1297608a
       conversion: passed
@@ -935,8 +946,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 9ab984ea54bbb9d1094791c7bd806c7d658f60d321a32dff5945f1fb1297608a
@@ -956,11 +967,11 @@ variants:
           job_id: hgnetv2--b1-ssld-stage2-ft-in1k-224--x5
         cpp_1:
           artifact_sha256: 9ab984ea54bbb9d1094791c7bd806c7d658f60d321a32dff5945f1fb1297608a
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b1-ssld-stage2-ft-in1k-224--x5
         cpp_2:
           artifact_sha256: 9ab984ea54bbb9d1094791c7bd806c7d658f60d321a32dff5945f1fb1297608a
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b1-ssld-stage2-ft-in1k-224--x5
     provenance:
       repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
@@ -989,9 +1000,14 @@ variants:
       x5 --asset-id x5:hgnetv2:hgnetv2_b1_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
       --model-path /path/to/hgnetv2_b1_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: b2-ssld-stage2-ft-in1k-224
   model:
     parameter_count: 11221356
+    gflops: 2.27540736
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -1019,7 +1035,7 @@ variants:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b2.ssld_stage2_ft_in1k/blob/7a3092bc87118c7974bb9000b1eb6d9c560f8f75/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-02'
     metadata_revision: 1
     artifact:
@@ -1147,38 +1163,38 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 6621.156048999999
+        aggregate_wall_ms: 6609.786392
         metrics_ms:
           preprocess:
-            mean: 7.900594199999999
-            p50: 8.0520575
-            p95: 8.301821899999998
-            min: 7.253389
-            max: 9.688727
+            mean: 7.888099755
+            p50: 8.053056999999999
+            p95: 8.2707192
+            min: 7.236722
+            max: 9.137559
           runtime:
-            mean: 3.097321188333334
-            p50: 3.095214
-            p95: 3.1200983
-            min: 3.066715
-            max: 3.245507
+            mean: 3.0913926833333334
+            p50: 3.0899225
+            p95: 3.11602265
+            min: 3.062381
+            max: 3.146089
           postprocess:
-            mean: 0.03113322666666667
-            p50: 0.0312295
-            p95: 0.03262705
-            min: 0.028125
-            max: 0.065625
+            mean: 0.030621453333333336
+            p50: 0.03075
+            p95: 0.031875
+            min: 0.028667
+            max: 0.040708
           end_to_end:
-            mean: 11.029048614999999
-            p50: 11.180458999999999
-            p95: 11.43721815
-            min: 10.369603
-            max: 12.966442
-        throughput_fps: 90.61861638053655
+            mean: 11.010113891666666
+            p50: 11.1707505
+            p95: 11.3920008
+            min: 10.380603
+            max: 12.29294
+        throughput_fps: 90.77449170312008
         measurement_status: measured
         environment_status: recorded
       - tool: classification_benchmark
@@ -1192,47 +1208,48 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 11487.996836999999
+        aggregate_wall_ms: 11498.223314
         metrics_ms:
           preprocess:
-            mean: 15.316409084166665
-            p50: 8.9662255
-            p95: 49.4655349
-            min: 7.284306
-            max: 52.926768
+            mean: 15.025688664166667
+            p50: 8.946975
+            p95: 49.10255305
+            min: 7.243931
+            max: 53.243309
           runtime:
-            mean: 3.334145205
-            p50: 3.100339
-            p95: 5.08940755
-            min: 2.946256
-            max: 7.509722
+            mean: 3.3762139316666664
+            p50: 3.0890684999999998
+            p95: 5.4646582499999985
+            min: 2.943005
+            max: 7.836182
           postprocess:
-            mean: 0.0314775625
-            p50: 0.031208
-            p95: 0.034791050000000004
-            min: 0.026542
-            max: 0.066042
+            mean: 0.030529948333333334
+            p50: 0.03025
+            p95: 0.03329405
+            min: 0.026833
+            max: 0.070625
           end_to_end:
-            mean: 18.682031851666665
-            p50: 12.129274
-            p95: 52.9454975
-            min: 10.399937
-            max: 59.710906
-        throughput_fps: 104.45685327272172
+            mean: 18.43243254416667
+            p50: 12.105835500000001
+            p95: 52.2728067
+            min: 10.33027
+            max: 59.475113
+        throughput_fps: 104.36394973638272
         measurement_status: measured
         environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b2-ssld-stage2-ft-in1k-224--x5
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b2-ssld-stage2-ft-in1k-224--x5
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       artifact_sha256: 9d16c0d3686c79bdf9031b1ccdde120e37bfb6df6c82e6c6f82a20bdb0f0e9f0
       conversion: passed
@@ -1241,8 +1258,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 9d16c0d3686c79bdf9031b1ccdde120e37bfb6df6c82e6c6f82a20bdb0f0e9f0
@@ -1262,11 +1279,11 @@ variants:
           job_id: hgnetv2--b2-ssld-stage2-ft-in1k-224--x5
         cpp_1:
           artifact_sha256: 9d16c0d3686c79bdf9031b1ccdde120e37bfb6df6c82e6c6f82a20bdb0f0e9f0
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b2-ssld-stage2-ft-in1k-224--x5
         cpp_2:
           artifact_sha256: 9d16c0d3686c79bdf9031b1ccdde120e37bfb6df6c82e6c6f82a20bdb0f0e9f0
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b2-ssld-stage2-ft-in1k-224--x5
     provenance:
       repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
@@ -1295,9 +1312,14 @@ variants:
       x5 --asset-id x5:hgnetv2:hgnetv2_b2_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
       --model-path /path/to/hgnetv2_b2_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: b3-ssld-stage2-ft-in1k-224
   model:
     parameter_count: 16292216
+    gflops: 3.54183936
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -1325,7 +1347,7 @@ variants:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b3.ssld_stage2_ft_in1k/blob/1aac877b3ea55ab0f06d57cad9889d1e601bd472/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-02'
     metadata_revision: 1
     artifact:
@@ -1453,38 +1475,38 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 7512.208757
+        aggregate_wall_ms: 7549.383038
         metrics_ms:
           preprocess:
-            mean: 8.33502176
-            p50: 8.1874115
-            p95: 10.1229961
-            min: 7.281889
-            max: 11.353605
+            mean: 8.401729046666667
+            p50: 8.184682500000001
+            p95: 10.14056785
+            min: 7.236097
+            max: 10.563853
           runtime:
-            mean: 4.147516491666667
-            p50: 4.1434665
-            p95: 4.17937855
-            min: 4.103591
-            max: 4.418384
+            mean: 4.142833538333334
+            p50: 4.1397575
+            p95: 4.17637325
+            min: 4.097091
+            max: 4.212633
           postprocess:
-            mean: 0.031562925
-            p50: 0.03025
-            p95: 0.037211049999999996
-            min: 0.027625
-            max: 0.064791
+            mean: 0.03140496833333333
+            p50: 0.030125
+            p95: 0.036086049999999995
+            min: 0.027667
+            max: 0.065333
           end_to_end:
-            mean: 12.514101176666667
-            p50: 12.3779825
-            p95: 14.2662663
-            min: 11.440605
-            max: 15.706447
-        throughput_fps: 79.86998490169886
+            mean: 12.575967553333333
+            p50: 12.363544000000001
+            p95: 14.2900312
+            min: 11.426439
+            max: 14.709944
+        throughput_fps: 79.47669325822861
         measurement_status: measured
         environment_status: recorded
       - tool: classification_benchmark
@@ -1498,47 +1520,48 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 12274.131127999999
+        aggregate_wall_ms: 12055.021767
         metrics_ms:
           preprocess:
-            mean: 15.227315140833333
-            p50: 8.949350500000001
-            p95: 44.700998500000004
-            min: 7.316597
-            max: 52.585059
+            mean: 15.288812075
+            p50: 8.9511415
+            p95: 44.73911415
+            min: 7.310347
+            max: 51.94089
           runtime:
-            mean: 4.542684928333333
-            p50: 4.1476120000000005
-            p95: 7.122874099999999
-            min: 4.030383
-            max: 8.966851
+            mean: 4.569627746666667
+            p50: 4.1417995
+            p95: 7.407305699999999
+            min: 4.039132
+            max: 9.005142
           postprocess:
-            mean: 0.031130969166666668
-            p50: 0.030791
-            p95: 0.03491904999999999
-            min: 0.026833
-            max: 0.060083
+            mean: 0.03067557666666667
+            p50: 0.030167
+            p95: 0.03404615
+            min: 0.027292
+            max: 0.068208
           end_to_end:
-            mean: 19.801131038333335
-            p50: 13.174088000000001
-            p95: 51.5751035
-            min: 11.454397
-            max: 56.804151
-        throughput_fps: 97.76659443229634
+            mean: 19.889115398333335
+            p50: 13.269003999999999
+            p95: 52.13975555
+            min: 11.455647
+            max: 56.11844
+        throughput_fps: 99.54357803690891
         measurement_status: measured
         environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b3-ssld-stage2-ft-in1k-224--x5
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b3-ssld-stage2-ft-in1k-224--x5
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       artifact_sha256: 30ffaf3fdd73a46f17f4050225d4867e3b730f2902c43dd23f2f3e2037698050
       conversion: passed
@@ -1547,8 +1570,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 30ffaf3fdd73a46f17f4050225d4867e3b730f2902c43dd23f2f3e2037698050
@@ -1568,11 +1591,11 @@ variants:
           job_id: hgnetv2--b3-ssld-stage2-ft-in1k-224--x5
         cpp_1:
           artifact_sha256: 30ffaf3fdd73a46f17f4050225d4867e3b730f2902c43dd23f2f3e2037698050
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b3-ssld-stage2-ft-in1k-224--x5
         cpp_2:
           artifact_sha256: 30ffaf3fdd73a46f17f4050225d4867e3b730f2902c43dd23f2f3e2037698050
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b3-ssld-stage2-ft-in1k-224--x5
     provenance:
       repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
@@ -1601,9 +1624,14 @@ variants:
       x5 --asset-id x5:hgnetv2:hgnetv2_b3_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
       --model-path /path/to/hgnetv2_b3_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: b4-ssld-stage2-ft-in1k-224
   model:
     parameter_count: 19796680
+    gflops: 5.468296704
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -1631,7 +1659,7 @@ variants:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b4.ssld_stage2_ft_in1k/blob/3c808d9d9d9873ed5e37b00509ba2a4882e816e8/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-02'
     metadata_revision: 1
     artifact:
@@ -1759,38 +1787,38 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 8256.239303999999
+        aggregate_wall_ms: 8296.930378
         metrics_ms:
           preprocess:
-            mean: 8.904211293333335
-            p50: 8.948788
-            p95: 10.25502
-            min: 7.273222
-            max: 12.602733
+            mean: 8.980836151666667
+            p50: 9.0869755
+            p95: 10.2656166
+            min: 7.296306
+            max: 11.887564
           runtime:
-            mean: 4.81583092
-            p50: 4.814738
-            p95: 4.861265250000001
-            min: 4.737551
-            max: 4.944051
+            mean: 4.807695513333333
+            p50: 4.8139675
+            p95: 4.841763149999999
+            min: 4.758384
+            max: 4.886051
           postprocess:
-            mean: 0.0338418
-            p50: 0.032542
-            p95: 0.037921149999999994
-            min: 0.02875
-            max: 0.065333
+            mean: 0.03318200833333333
+            p50: 0.031938
+            p95: 0.036962199999999994
+            min: 0.028292
+            max: 0.065917
           end_to_end:
-            mean: 13.753884013333334
-            p50: 13.820880500000001
-            p95: 15.0950016
-            min: 12.112732
-            max: 17.467784
-        throughput_fps: 72.67231216388203
+            mean: 13.821713673333333
+            p50: 13.90313
+            p95: 15.08811055
+            min: 12.130814
+            max: 16.788115
+        throughput_fps: 72.31590150388027
         measurement_status: measured
         environment_status: recorded
       - tool: classification_benchmark
@@ -1804,47 +1832,48 @@ variants:
         opencv_threads: 8
         cpu_governor: schedutil
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: 1000
+        bpu_frequency_mhz: 996.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 12873.642473
+        aggregate_wall_ms: 13078.987038000001
         metrics_ms:
           preprocess:
-            mean: 15.420256598333332
-            p50: 9.043705
-            p95: 44.64300205
-            min: 7.287139
-            max: 50.865598
+            mean: 15.238943602500001
+            p50: 9.007809
+            p95: 44.80557764999999
+            min: 7.292473
+            max: 50.474888
           runtime:
-            mean: 5.297404485
-            p50: 4.798051
-            p95: 8.737175649999998
-            min: 4.685759
-            max: 9.925436
+            mean: 5.19323601
+            p50: 4.787551000000001
+            p95: 8.66030655
+            min: 4.677509
+            max: 9.805768
           postprocess:
-            mean: 0.031565034166666665
-            p50: 0.030959
-            p95: 0.03458715
-            min: 0.027625
-            max: 0.143709
+            mean: 0.03111625083333333
+            p50: 0.030667
+            p95: 0.035336049999999994
+            min: 0.027
+            max: 0.058291
           end_to_end:
-            mean: 20.7492261175
-            p50: 13.9599645
-            p95: 53.45198985
-            min: 12.110732
-            max: 59.467739
-        throughput_fps: 93.2137118548049
+            mean: 20.463295863333332
+            p50: 13.935902
+            p95: 53.487980549999996
+            min: 12.105232
+            max: 58.529403
+        throughput_fps: 91.75022473173888
         measurement_status: measured
         environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b4-ssld-stage2-ft-in1k-224--x5
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b4-ssld-stage2-ft-in1k-224--x5
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       artifact_sha256: c3aef8c8372e6702b29e9c3df4f312bb37d2ab0902c8a59107d06dc1b3675f2c
       conversion: passed
@@ -1853,8 +1882,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: c3aef8c8372e6702b29e9c3df4f312bb37d2ab0902c8a59107d06dc1b3675f2c
@@ -1874,11 +1903,11 @@ variants:
           job_id: hgnetv2--b4-ssld-stage2-ft-in1k-224--x5
         cpp_1:
           artifact_sha256: c3aef8c8372e6702b29e9c3df4f312bb37d2ab0902c8a59107d06dc1b3675f2c
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b4-ssld-stage2-ft-in1k-224--x5
         cpp_2:
           artifact_sha256: c3aef8c8372e6702b29e9c3df4f312bb37d2ab0902c8a59107d06dc1b3675f2c
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b4-ssld-stage2-ft-in1k-224--x5
     provenance:
       repository_commit: af9fdbe1b47dcb88ada02aea24abdd6391bf6c66
@@ -1907,9 +1936,14 @@ variants:
       x5 --asset-id x5:hgnetv2:hgnetv2_b4_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
       --model-path /path/to/hgnetv2_b4_ssld_stage2_ft_in1k_bayese_224x224_nv12.bin
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: b0-ssld-stage2-ft-in1k-224-s-int16-o1-20261103
   model:
     parameter_count: 5996550
+    gflops: 0.642652928
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -1937,7 +1971,7 @@ variants:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b0.ssld_stage2_ft_in1k/blob/9e0a904b210d65e4fcd6582f8ca6e0921fac2650/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -2038,40 +2072,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1980.668321
+        aggregate_wall_ms: 1975.192702
         metrics_ms:
           preprocess:
-            mean: 2.0445504199999998
-            p50: 2.0699705
-            p95: 2.1234642
-            min: 1.90524
-            max: 3.925834
+            mean: 2.0304285
+            p50: 2.061337
+            p95: 2.11033445
+            min: 1.896038
+            max: 2.40636
           runtime:
-            mean: 1.2463530433333334
-            p50: 1.2172915
-            p95: 1.59258995
-            min: 1.184915
-            max: 1.768536
+            mean: 1.251859335
+            p50: 1.224717
+            p95: 1.60319875
+            min: 1.196168
+            max: 1.813313
           postprocess:
-            mean: 0.006727483333333334
-            p50: 0.006426
-            p95: 0.008402499999999997
-            min: 0.005325
-            max: 0.025976
+            mean: 0.006478765
+            p50: 0.006275
+            p95: 0.00726124999999999
+            min: 0.0053
+            max: 0.015325
           end_to_end:
-            mean: 3.2976309466666667
-            p50: 3.298187
-            p95: 3.5999118499999976
-            min: 3.114656
-            max: 5.172577
-        throughput_fps: 302.9280539495234
+            mean: 3.2887666
+            p50: 3.2985165
+            p95: 3.552469499999999
+            min: 3.108731
+            max: 3.900775
+        throughput_fps: 303.76782953504454
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -2083,47 +2117,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 3185.7110839999996
+        aggregate_wall_ms: 3189.604149
         metrics_ms:
           preprocess:
-            mean: 3.8016932041666665
-            p50: 2.406457
-            p95: 9.51654775
-            min: 1.91704
-            max: 10.268399
+            mean: 3.881241616666667
+            p50: 2.4094975
+            p95: 9.505222250000001
+            min: 1.925038
+            max: 11.356878
           runtime:
-            mean: 1.2929430275
-            p50: 1.236167
-            p95: 1.63822975
-            min: 1.17504
-            max: 2.724043
+            mean: 1.3125500008333333
+            p50: 1.2426545
+            p95: 1.6585527999999998
+            min: 1.185467
+            max: 7.004705
           postprocess:
-            mean: 0.0075781925000000016
-            p50: 0.006625
-            p95: 0.01310005
-            min: 0.004875
-            max: 0.028251
+            mean: 0.007743387499999999
+            p50: 0.006725
+            p95: 0.013225299999999999
+            min: 0.0051
+            max: 0.026525
           end_to_end:
-            mean: 5.102214424166667
-            p50: 3.6712625
-            p95: 10.78858605
-            min: 3.136856
-            max: 11.545043
-        throughput_fps: 376.68199292362453
+            mean: 5.201535005
+            p50: 3.698377
+            p95: 10.75719795
+            min: 3.132106
+            max: 12.798644
+        throughput_fps: 376.22223446637486
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b0-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b0-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -2132,8 +2167,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 75713a1ccf28aa432049c4de2e867b8e8eed2a039beedb116f62e5f758b49e35
@@ -2153,11 +2188,11 @@ variants:
           job_id: hgnetv2--b0-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
         cpp_1:
           artifact_sha256: 75713a1ccf28aa432049c4de2e867b8e8eed2a039beedb116f62e5f758b49e35
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b0-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
         cpp_2:
           artifact_sha256: 75713a1ccf28aa432049c4de2e867b8e8eed2a039beedb116f62e5f758b49e35
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b0-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -2230,12 +2265,13 @@ variants:
       s100 --variant timm-b0-ssld-stage2-ft-in1k-s-int16-o1-20261103 --asset-id s:hgnetv2:s100/hgnetv2_b0_ssld_stage2_ft_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/hgnetv2_b0_ssld_stage2_ft_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s100p
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b0.ssld_stage2_ft_in1k/blob/9e0a904b210d65e4fcd6582f8ca6e0921fac2650/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -2336,40 +2372,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1646.781872
+        aggregate_wall_ms: 1624.8906330000002
         metrics_ms:
           preprocess:
-            mean: 1.692383185
-            p50: 1.5916515
-            p95: 1.848821
-            min: 1.451513
-            max: 20.867661
+            mean: 1.648568005
+            p50: 1.5930975
+            p95: 1.904003349999999
+            min: 1.449166
+            max: 3.080766
           runtime:
-            mean: 1.0435409483333333
-            p50: 1.019459
-            p95: 1.2898834999999997
-            min: 0.987384
-            max: 1.468988
+            mean: 1.0510518616666666
+            p50: 1.0263594999999999
+            p95: 1.2410395999999972
+            min: 0.987446
+            max: 1.484217
           postprocess:
-            mean: 0.005519701666666667
-            p50: 0.00535
-            p95: 0.007053749999999997
-            min: 0.004375
-            max: 0.0114
+            mean: 0.005513253333333333
+            p50: 0.005325
+            p95: 0.006882549999999993
+            min: 0.004125
+            max: 0.035052
           end_to_end:
-            mean: 2.7414438349999997
-            p50: 2.6167605
-            p95: 2.9890682499999994
-            min: 2.456297
-            max: 21.948446
-        throughput_fps: 364.34697891792194
+            mean: 2.70513312
+            p50: 2.6252820000000003
+            p95: 3.0677797499999997
+            min: 2.456487
+            max: 4.173691
+        throughput_fps: 369.25562115662706
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -2381,47 +2417,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2533.533317
+        aggregate_wall_ms: 2537.028965
         metrics_ms:
           preprocess:
-            mean: 2.986068504166666
-            p50: 1.8756789999999999
-            p95: 6.81602475
-            min: 1.477013
-            max: 10.682845
+            mean: 3.0508090316666667
+            p50: 1.9158115
+            p95: 6.7970884499999995
+            min: 1.470416
+            max: 9.383999
           runtime:
-            mean: 1.1012418691666666
-            p50: 1.049109
-            p95: 1.36678825
-            min: 0.992659
-            max: 5.886302
+            mean: 1.1134227766666667
+            p50: 1.054385
+            p95: 1.4037255
+            min: 0.985844
+            max: 5.479523
           postprocess:
-            mean: 0.005763986666666667
-            p50: 0.005325
-            p95: 0.008925
-            min: 0.0039
-            max: 0.045675
+            mean: 0.006452151666666666
+            p50: 0.00545
+            p95: 0.009575
+            min: 0.00385
+            max: 0.55685
           end_to_end:
-            mean: 4.09307436
-            p50: 3.054052
-            p95: 7.8942897
-            min: 2.489197
-            max: 11.969781
-        throughput_fps: 473.646820410059
+            mean: 4.17068396
+            p50: 3.109902
+            p95: 7.92788635
+            min: 2.494161
+            max: 10.426597
+        throughput_fps: 472.9942056455788
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b0-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b0-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -2430,8 +2467,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 55de0a6adfdb85cbe286044a182a05411ca4af1de14bb25029426e6abec2120b
@@ -2451,11 +2488,11 @@ variants:
           job_id: hgnetv2--b0-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
         cpp_1:
           artifact_sha256: 55de0a6adfdb85cbe286044a182a05411ca4af1de14bb25029426e6abec2120b
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b0-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
         cpp_2:
           artifact_sha256: 55de0a6adfdb85cbe286044a182a05411ca4af1de14bb25029426e6abec2120b
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b0-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -2528,12 +2565,13 @@ variants:
       s100p --variant timm-b0-ssld-stage2-ft-in1k-s-int16-o1-20261103 --asset-id s:hgnetv2:s100p/hgnetv2_b0_ssld_stage2_ft_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/hgnetv2_b0_ssld_stage2_ft_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s600
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b0.ssld_stage2_ft_in1k/blob/9e0a904b210d65e4fcd6582f8ca6e0921fac2650/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -2634,40 +2672,40 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1032.010002
+        aggregate_wall_ms: 1041.6896069999998
         metrics_ms:
           preprocess:
-            mean: 0.8247922950000001
-            p50: 0.8257665000000001
-            p95: 0.86923875
-            min: 0.776429
-            max: 0.96823
+            mean: 0.836930405
+            p50: 0.825936
+            p95: 0.9570219999999999
+            min: 0.778097
+            max: 1.39649
           runtime:
-            mean: 0.8879102500000001
-            p50: 0.8772800000000001
-            p95: 0.9157949999999997
-            min: 0.854355
-            max: 1.144757
+            mean: 0.8923070833333333
+            p50: 0.8771625000000001
+            p95: 1.0016189999999996
+            min: 0.8589
+            max: 1.176758
           postprocess:
-            mean: 0.005551319999999999
-            p50: 0.0051
-            p95: 0.00822625
+            mean: 0.0051511050000000004
+            p50: 0.005
+            p95: 0.00625005
             min: 0.004525
-            max: 0.0206
+            max: 0.00885
           end_to_end:
-            mean: 1.7182538649999999
-            p50: 1.70871
-            p95: 1.7826624999999998
-            min: 1.645984
-            max: 2.019137
-        throughput_fps: 581.3897140892245
+            mean: 1.7343885933333334
+            p50: 1.7083975
+            p95: 1.9526662499999998
+            min: 1.644847
+            max: 2.338117
+        throughput_fps: 575.987315192634
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -2679,47 +2717,48 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 1226.855335
+        aggregate_wall_ms: 1198.6415809999999
         metrics_ms:
           preprocess:
-            mean: 1.0552895508333333
-            p50: 0.8805675
-            p95: 1.3307232999999947
-            min: 0.794305
-            max: 6.929813
+            mean: 1.0106078816666666
+            p50: 0.8825615
+            p95: 0.9816995
+            min: 0.786822
+            max: 6.705432
           runtime:
-            mean: 0.9468053558333335
-            p50: 0.9260675
-            p95: 1.0671372000000001
-            min: 0.857505
-            max: 1.503933
+            mean: 0.9620019858333334
+            p50: 0.9363135
+            p95: 1.10483625
+            min: 0.865224
+            max: 3.078608
           postprocess:
-            mean: 0.006117311666666667
-            p50: 0.005763
-            p95: 0.008627499999999998
-            min: 0.0046
-            max: 0.023275
+            mean: 0.006459303333333334
+            p50: 0.005925
+            p95: 0.00912725
+            min: 0.004825
+            max: 0.028951
           end_to_end:
-            mean: 2.008212218333333
-            p50: 1.8208350000000002
-            p95: 2.324385799999997
-            min: 1.682184
-            max: 7.878993
-        throughput_fps: 978.1104305993828
+            mean: 1.9790691708333334
+            p50: 1.8417625
+            p95: 2.0835686
+            min: 1.68002
+            max: 8.329852
+        throughput_fps: 1001.1332987454571
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b0-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b0-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -2728,8 +2767,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: aa472c3a841ab29bd47031b440a2c002aaaadaad90ce157f41ca87b64540fac7
@@ -2749,11 +2788,11 @@ variants:
           job_id: hgnetv2--b0-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
         cpp_1:
           artifact_sha256: aa472c3a841ab29bd47031b440a2c002aaaadaad90ce157f41ca87b64540fac7
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b0-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
         cpp_2:
           artifact_sha256: aa472c3a841ab29bd47031b440a2c002aaaadaad90ce157f41ca87b64540fac7
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b0-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -2826,9 +2865,14 @@ variants:
       s600 --variant timm-b0-ssld-stage2-ft-in1k-s-int16-o1-20261103 --asset-id s:hgnetv2:s600/hgnetv2_b0_ssld_stage2_ft_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/hgnetv2_b0_ssld_stage2_ft_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: b1-ssld-stage2-ft-in1k-224-s-int16-o1-20261103
   model:
     parameter_count: 6343158
+    gflops: 0.97877568
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -2856,7 +2900,7 @@ variants:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b1.ssld_stage2_ft_in1k/blob/ec7014d7f1d0dd1ea2bf3012bc51dc95c5919fd2/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -2957,40 +3001,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 2053.006657
+        aggregate_wall_ms: 2073.478708
         metrics_ms:
           preprocess:
-            mean: 2.03416404
-            p50: 2.065595
-            p95: 2.1144648
-            min: 1.895264
-            max: 2.304403
+            mean: 2.062824
+            p50: 2.0692744999999997
+            p95: 2.119817
+            min: 1.904138
+            max: 11.769177
           runtime:
-            mean: 1.3772592716666667
-            p50: 1.3474085
-            p95: 1.72926175
-            min: 1.321945
-            max: 1.762434
+            mean: 1.3826887116666668
+            p50: 1.3501664999999998
+            p95: 1.7293977999999999
+            min: 1.321492
+            max: 1.931163
           postprocess:
-            mean: 0.006922216666666667
-            p50: 0.006475
-            p95: 0.01062625
-            min: 0.00535
-            max: 0.040651
+            mean: 0.006828356666666666
+            p50: 0.006625
+            p95: 0.007527449999999997
+            min: 0.0056
+            max: 0.023299
           end_to_end:
-            mean: 3.4183455283333335
-            p50: 3.426541
-            p95: 3.6652065
-            min: 3.235534
-            max: 3.83703
-        throughput_fps: 292.25428858412124
+            mean: 3.4523410683333333
+            p50: 3.433404
+            p95: 3.681757
+            min: 3.247055
+            max: 13.128744
+        throughput_fps: 289.36877802750024
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -3002,47 +3046,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 3208.024389
+        aggregate_wall_ms: 3202.3293739999995
         metrics_ms:
           preprocess:
-            mean: 3.6924351124999997
-            p50: 2.4014059999999997
-            p95: 9.49491005
-            min: 1.909914
-            max: 10.754288
+            mean: 3.7831049950000004
+            p50: 2.4074099999999996
+            p95: 9.49548075
+            min: 1.919363
+            max: 11.767378
           runtime:
-            mean: 1.4321020841666665
-            p50: 1.369971
-            p95: 1.78181595
-            min: 1.309819
-            max: 2.36263
+            mean: 1.4334987916666668
+            p50: 1.3739035
+            p95: 1.7778952499999998
+            min: 1.315067
+            max: 2.437885
           postprocess:
-            mean: 0.0075312316666666665
-            p50: 0.006776
-            p95: 0.012675
-            min: 0.005425
-            max: 0.026276
+            mean: 0.008086493333333333
+            p50: 0.00695
+            p95: 0.01350125
+            min: 0.0052
+            max: 0.037075
           end_to_end:
-            mean: 5.1320684283333335
-            p50: 3.8104034999999996
-            p95: 10.85216075
-            min: 3.274685
-            max: 12.076708
-        throughput_fps: 374.0619940779384
+            mean: 5.22469028
+            p50: 3.830527
+            p95: 10.869525199999998
+            min: 3.273405
+            max: 13.195019
+        throughput_fps: 374.72722504527735
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b1-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b1-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -3051,8 +3096,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 46069db0d7fff2e464b0ed25914f83823e3770c79da7851cee9f858f242a1f53
@@ -3072,11 +3117,11 @@ variants:
           job_id: hgnetv2--b1-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
         cpp_1:
           artifact_sha256: 46069db0d7fff2e464b0ed25914f83823e3770c79da7851cee9f858f242a1f53
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b1-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
         cpp_2:
           artifact_sha256: 46069db0d7fff2e464b0ed25914f83823e3770c79da7851cee9f858f242a1f53
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b1-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -3149,12 +3194,13 @@ variants:
       s100 --variant timm-b1-ssld-stage2-ft-in1k-s-int16-o1-20261103 --asset-id s:hgnetv2:s100/hgnetv2_b1_ssld_stage2_ft_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/hgnetv2_b1_ssld_stage2_ft_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s100p
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b1.ssld_stage2_ft_in1k/blob/ec7014d7f1d0dd1ea2bf3012bc51dc95c5919fd2/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -3255,40 +3301,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1725.254914
+        aggregate_wall_ms: 1707.0396660000001
         metrics_ms:
           preprocess:
-            mean: 1.7008654266666665
-            p50: 1.5955650000000001
-            p95: 1.9062582499999996
-            min: 1.449988
-            max: 11.587204
+            mean: 1.6606545633333334
+            p50: 1.6019584999999998
+            p95: 1.936593849999999
+            min: 1.451264
+            max: 7.592713
           runtime:
-            mean: 1.1657134233333333
-            p50: 1.1417605000000002
-            p95: 1.4280242499999998
-            min: 1.112985
-            max: 1.509238
+            mean: 1.1751255316666667
+            p50: 1.1470135
+            p95: 1.42954645
+            min: 1.113949
+            max: 1.591421
           postprocess:
-            mean: 0.005648686666666667
-            p50: 0.005425
-            p95: 0.0072
-            min: 0.0044
-            max: 0.036451
+            mean: 0.006080786666666667
+            p50: 0.00565
+            p95: 0.009025
+            min: 0.0043
+            max: 0.061452
           end_to_end:
-            mean: 2.8722275366666667
-            p50: 2.7419615
-            p95: 3.1598255
-            min: 2.576023
-            max: 12.758764
-        throughput_fps: 347.77469412267965
+            mean: 2.8418608816666664
+            p50: 2.7564095
+            p95: 3.2145679999999994
+            min: 2.57949
+            max: 8.754415
+        throughput_fps: 351.4856812940631
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -3300,47 +3346,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2597.644277
+        aggregate_wall_ms: 2594.219388
         metrics_ms:
           preprocess:
-            mean: 3.0279964208333334
-            p50: 1.889017
-            p95: 6.219483449999999
-            min: 1.487913
-            max: 10.828847
+            mean: 3.0509100683333332
+            p50: 1.9057835
+            p95: 6.2493963
+            min: 1.478415
+            max: 16.198484
           runtime:
-            mean: 1.2414994566666666
-            p50: 1.1822105
-            p95: 1.51680675
-            min: 1.114785
-            max: 3.789984
+            mean: 1.2338170633333334
+            p50: 1.1789895
+            p95: 1.49832225
+            min: 1.115149
+            max: 4.784261
           postprocess:
-            mean: 0.0061173074999999995
-            p50: 0.00555
-            p95: 0.00955
-            min: 0.0042
-            max: 0.04095
+            mean: 0.006101653333333333
+            p50: 0.005551
+            p95: 0.009426
+            min: 0.004075
+            max: 0.059003
           end_to_end:
-            mean: 4.275613185
-            p50: 3.1682905000000003
-            p95: 7.46340355
-            min: 2.636499
-            max: 12.111483
-        throughput_fps: 461.9570164494852
+            mean: 4.290828785
+            p50: 3.2070790000000002
+            p95: 7.482660849999999
+            min: 2.661642
+            max: 17.415062
+        throughput_fps: 462.5668922030275
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b1-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b1-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -3349,8 +3396,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 5a4829cf15d6dc97ae78701c14981985afcae4658e8bf73e86eadae711d097ef
@@ -3370,11 +3417,11 @@ variants:
           job_id: hgnetv2--b1-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
         cpp_1:
           artifact_sha256: 5a4829cf15d6dc97ae78701c14981985afcae4658e8bf73e86eadae711d097ef
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b1-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
         cpp_2:
           artifact_sha256: 5a4829cf15d6dc97ae78701c14981985afcae4658e8bf73e86eadae711d097ef
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b1-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -3447,12 +3494,13 @@ variants:
       s100p --variant timm-b1-ssld-stage2-ft-in1k-s-int16-o1-20261103 --asset-id s:hgnetv2:s100p/hgnetv2_b1_ssld_stage2_ft_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/hgnetv2_b1_ssld_stage2_ft_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s600
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b1.ssld_stage2_ft_in1k/blob/ec7014d7f1d0dd1ea2bf3012bc51dc95c5919fd2/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -3553,40 +3601,40 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1057.631188
+        aggregate_wall_ms: 1061.422726
         metrics_ms:
           preprocess:
-            mean: 0.8206509433333334
-            p50: 0.822404
-            p95: 0.85888155
-            min: 0.775229
-            max: 0.902255
+            mean: 0.8270977266666667
+            p50: 0.8260835
+            p95: 0.8700445499999999
+            min: 0.77962
+            max: 1.254932
           runtime:
-            mean: 0.9352245566666666
-            p50: 0.9240925
-            p95: 0.9690912499999992
-            min: 0.908155
-            max: 1.307757
+            mean: 0.93473251
+            p50: 0.922899
+            p95: 0.9812162499999999
+            min: 0.904873
+            max: 1.18688
           postprocess:
-            mean: 0.005167308333333333
-            p50: 0.005075
-            p95: 0.005578749999999997
-            min: 0.00455
-            max: 0.01065
+            mean: 0.005389093333333333
+            p50: 0.005125
+            p95: 0.007401249999999999
+            min: 0.004525
+            max: 0.011175
           end_to_end:
-            mean: 1.7610428083333334
-            p50: 1.753622
-            p95: 1.81891875
-            min: 1.695684
-            max: 2.157286
-        throughput_fps: 567.3055095270129
+            mean: 1.7672193299999999
+            p50: 1.7573455
+            p95: 1.8671007999999998
+            min: 1.694119
+            max: 2.368712
+        throughput_fps: 565.2790215460301
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -3598,47 +3646,48 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 1202.862381
+        aggregate_wall_ms: 1218.854286
         metrics_ms:
           preprocess:
-            mean: 0.9556885466666665
-            p50: 0.88378
-            p95: 0.96778625
-            min: 0.793504
-            max: 6.63106
+            mean: 0.9641391708333333
+            p50: 0.8831100000000001
+            p95: 0.9758340499999999
+            min: 0.78767
+            max: 6.989149
           runtime:
-            mean: 1.0146328858333333
-            p50: 0.9972425
-            p95: 1.12258975
-            min: 0.911554
-            max: 1.491132
+            mean: 1.023395675
+            p50: 1.0081625
+            p95: 1.13214675
+            min: 0.917298
+            max: 1.578514
           postprocess:
-            mean: 0.006382128333333333
-            p50: 0.00595
-            p95: 0.00897625
-            min: 0.004775
-            max: 0.02635
+            mean: 0.006536230833333333
+            p50: 0.006025
+            p95: 0.009327199999999999
+            min: 0.00485
+            max: 0.012225
           end_to_end:
-            mean: 1.9767035608333337
-            p50: 1.8983474999999999
-            p95: 2.08706625
-            min: 1.745634
-            max: 8.110492
-        throughput_fps: 997.6203587000366
+            mean: 1.9940710766666667
+            p50: 1.91126
+            p95: 2.0973658
+            min: 1.740494
+            max: 7.9991
+        throughput_fps: 984.5311402547753
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b1-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b1-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -3647,8 +3696,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 99ca0abcc0d74740f46cbcd406e8e4dea4ac3ef359c9e2c3e965ef502a701cbb
@@ -3668,11 +3717,11 @@ variants:
           job_id: hgnetv2--b1-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
         cpp_1:
           artifact_sha256: 99ca0abcc0d74740f46cbcd406e8e4dea4ac3ef359c9e2c3e965ef502a701cbb
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b1-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
         cpp_2:
           artifact_sha256: 99ca0abcc0d74740f46cbcd406e8e4dea4ac3ef359c9e2c3e965ef502a701cbb
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b1-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -3745,9 +3794,14 @@ variants:
       s600 --variant timm-b1-ssld-stage2-ft-in1k-s-int16-o1-20261103 --asset-id s:hgnetv2:s600/hgnetv2_b1_ssld_stage2_ft_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/hgnetv2_b1_ssld_stage2_ft_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: b2-ssld-stage2-ft-in1k-224-s-int16-o1-20261103
   model:
     parameter_count: 11221356
+    gflops: 2.27540736
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -3775,7 +3829,7 @@ variants:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b2.ssld_stage2_ft_in1k/blob/7a3092bc87118c7974bb9000b1eb6d9c560f8f75/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -3876,40 +3930,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 2359.496776
+        aggregate_wall_ms: 2376.087282
         metrics_ms:
           preprocess:
-            mean: 2.052510671666667
-            p50: 2.0729075
-            p95: 2.1421657999999995
-            min: 1.900289
-            max: 3.338438
+            mean: 2.076946416666667
+            p50: 2.0705005
+            p95: 2.20027695
+            min: 1.899663
+            max: 11.609781
           runtime:
-            mean: 1.8695931233333332
-            p50: 1.8325870000000002
-            p95: 2.21488655
-            min: 1.803811
-            max: 2.276127
+            mean: 1.8727743583333332
+            p50: 1.8350140000000001
+            p95: 2.220461
+            min: 1.800114
+            max: 2.41566
           postprocess:
-            mean: 0.006839625000000001
+            mean: 0.006858378333333334
             p50: 0.006675
-            p95: 0.00757505
-            min: 0.005675
-            max: 0.032051
+            p95: 0.007501249999999998
+            min: 0.005725
+            max: 0.0152
           end_to_end:
-            mean: 3.92894342
-            p50: 3.916144
-            p95: 4.30110125
-            min: 3.71955
-            max: 5.367006
-        throughput_fps: 254.2915108437512
+            mean: 3.9565791533333328
+            p50: 3.916939
+            p95: 4.3009664999999995
+            min: 3.726652
+            max: 13.466769
+        throughput_fps: 252.51597638911988
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -3921,47 +3975,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 3257.970016
+        aggregate_wall_ms: 3323.6438460000004
         metrics_ms:
           preprocess:
-            mean: 3.4262377291666666
-            p50: 2.3929549999999997
-            p95: 7.2444755
-            min: 1.954215
-            max: 10.02021
+            mean: 3.509930719166667
+            p50: 2.3927855
+            p95: 7.322628549999998
+            min: 1.934038
+            max: 11.472582
           runtime:
-            mean: 1.9611532658333333
-            p50: 1.860487
-            p95: 2.38387
-            min: 1.79071
-            max: 3.321061
+            mean: 1.9595097625000002
+            p50: 1.866939
+            p95: 2.34130475
+            min: 1.806415
+            max: 3.36173
           postprocess:
-            mean: 0.0079187575
-            p50: 0.006951
-            p95: 0.012853449999999997
-            min: 0.005225
-            max: 0.031176
+            mean: 0.008139454166666667
+            p50: 0.007025
+            p95: 0.013274049999999999
+            min: 0.005575
+            max: 0.0426
           end_to_end:
-            mean: 5.3953097525
-            p50: 4.291619
-            p95: 9.17683205
-            min: 3.782527
-            max: 13.175516
-        throughput_fps: 368.3275150190946
+            mean: 5.477579935833333
+            p50: 4.291074500000001
+            p95: 9.41912
+            min: 3.772128
+            max: 13.716894
+        throughput_fps: 361.04951541188683
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b2-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b2-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -3970,8 +4025,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 142352d3dec60aed263dedb4b92370fe3b97f91a00ad7a6c28dc14c09f6b6624
@@ -3991,11 +4046,11 @@ variants:
           job_id: hgnetv2--b2-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
         cpp_1:
           artifact_sha256: 142352d3dec60aed263dedb4b92370fe3b97f91a00ad7a6c28dc14c09f6b6624
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b2-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
         cpp_2:
           artifact_sha256: 142352d3dec60aed263dedb4b92370fe3b97f91a00ad7a6c28dc14c09f6b6624
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b2-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -4068,12 +4123,13 @@ variants:
       s100 --variant timm-b2-ssld-stage2-ft-in1k-s-int16-o1-20261103 --asset-id s:hgnetv2:s100/hgnetv2_b2_ssld_stage2_ft_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/hgnetv2_b2_ssld_stage2_ft_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s100p
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b2.ssld_stage2_ft_in1k/blob/7a3092bc87118c7974bb9000b1eb6d9c560f8f75/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -4174,40 +4230,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1962.639946
+        aggregate_wall_ms: 1943.5464370000002
         metrics_ms:
           preprocess:
-            mean: 1.6992159716666666
-            p50: 1.584314
-            p95: 1.9529283
-            min: 1.445113
-            max: 6.592334
+            mean: 1.6592690666666665
+            p50: 1.593744
+            p95: 1.8685647499999998
+            min: 1.450912
+            max: 4.341589
           runtime:
-            mean: 1.5634942799999998
-            p50: 1.5395385
-            p95: 1.8285885499999999
-            min: 1.507263
-            max: 2.068218
+            mean: 1.5708904716666665
+            p50: 1.5432545000000002
+            p95: 1.832279
+            min: 1.50884
+            max: 2.018663
           postprocess:
-            mean: 0.005456508333333333
-            p50: 0.0053
-            p95: 0.006701249999999999
-            min: 0.004475
-            max: 0.012751
+            mean: 0.00582946
+            p50: 0.00555
+            p95: 0.008002199999999998
+            min: 0.00445
+            max: 0.030301
           end_to_end:
-            mean: 3.2681667599999997
-            p50: 3.1292030000000004
-            p95: 3.6409867
-            min: 2.963026
-            max: 8.168423
-        throughput_fps: 305.71068382809733
+            mean: 3.2359889983333336
+            p50: 3.1439615
+            p95: 3.558793149999998
+            min: 2.982304
+            max: 5.948009
+        throughput_fps: 308.71400270020916
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -4219,47 +4275,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2700.252156
+        aggregate_wall_ms: 2642.283511
         metrics_ms:
           preprocess:
-            mean: 2.7603236158333333
-            p50: 1.8559415000000001
-            p95: 6.4318045
-            min: 1.478113
-            max: 12.37736
+            mean: 2.7040473074999998
+            p50: 1.848004
+            p95: 6.19841355
+            min: 1.455138
+            max: 9.740915
           runtime:
-            mean: 1.6513839391666667
-            p50: 1.572914
-            p95: 1.9720207999999995
-            min: 1.504188
-            max: 6.515808
+            mean: 1.6507868008333333
+            p50: 1.575005
+            p95: 1.9331282999999995
+            min: 1.506839
+            max: 5.930228
           postprocess:
-            mean: 0.006125987499999999
-            p50: 0.005725
-            p95: 0.009175
-            min: 0.00435
-            max: 0.035351
+            mean: 0.006094714166666667
+            p50: 0.00565
+            p95: 0.00912505
+            min: 0.004
+            max: 0.033852
           end_to_end:
-            mean: 4.4178335425
-            p50: 3.4549185
-            p95: 8.0497023
-            min: 3.014726
-            max: 13.950699
-        throughput_fps: 444.4029411599885
+            mean: 4.3609288225
+            p50: 3.4527099999999997
+            p95: 7.799137549999999
+            min: 3.023905
+            max: 11.481814
+        throughput_fps: 454.1526278328276
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b2-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b2-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -4268,8 +4325,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 232a4d666887b593603eed2aadcb5693cfaa8269514c71b6efe08717f2852d40
@@ -4289,11 +4346,11 @@ variants:
           job_id: hgnetv2--b2-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
         cpp_1:
           artifact_sha256: 232a4d666887b593603eed2aadcb5693cfaa8269514c71b6efe08717f2852d40
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b2-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
         cpp_2:
           artifact_sha256: 232a4d666887b593603eed2aadcb5693cfaa8269514c71b6efe08717f2852d40
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b2-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -4366,12 +4423,13 @@ variants:
       s100p --variant timm-b2-ssld-stage2-ft-in1k-s-int16-o1-20261103 --asset-id s:hgnetv2:s100p/hgnetv2_b2_ssld_stage2_ft_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/hgnetv2_b2_ssld_stage2_ft_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s600
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b2.ssld_stage2_ft_in1k/blob/7a3092bc87118c7974bb9000b1eb6d9c560f8f75/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -4472,40 +4530,40 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1239.362649
+        aggregate_wall_ms: 1256.769172
         metrics_ms:
           preprocess:
-            mean: 0.821056225
-            p50: 0.8217295
-            p95: 0.86042155
-            min: 0.777004
-            max: 1.057905
+            mean: 0.84091844
+            p50: 0.8294575
+            p95: 0.9135706999999996
+            min: 0.778319
+            max: 1.823843
           runtime:
-            mean: 1.2374253566666666
-            p50: 1.2253185
-            p95: 1.2995645
-            min: 1.207381
-            max: 1.527958
+            mean: 1.2463449050000002
+            p50: 1.224542
+            p95: 1.4407777499999999
+            min: 1.197154
+            max: 2.011448
           postprocess:
-            mean: 0.00539241
+            mean: 0.0055341033333333334
             p50: 0.00515
-            p95: 0.006976249999999999
-            min: 0.00465
-            max: 0.019625
+            p95: 0.008275
+            min: 0.004625
+            max: 0.011475
           end_to_end:
-            mean: 2.0638739916666666
-            p50: 2.053935
-            p95: 2.169979749999999
-            min: 1.99351
-            max: 2.324687
-        throughput_fps: 484.1198018062912
+            mean: 2.092797448333333
+            p50: 2.0596484999999998
+            p95: 2.3078738
+            min: 1.993597
+            max: 3.596385
+        throughput_fps: 477.41463855703165
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -4517,47 +4575,48 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 1414.136144
+        aggregate_wall_ms: 1447.4829900000002
         metrics_ms:
           preprocess:
-            mean: 1.004027635833333
-            p50: 0.8597045
-            p95: 0.9575952999999998
-            min: 0.781104
-            max: 7.028485
+            mean: 1.0571415183333333
+            p50: 0.86662
+            p95: 2.9182129999999997
+            min: 0.780868
+            max: 6.959811
           runtime:
-            mean: 1.3029823041666668
-            p50: 1.2753445
-            p95: 1.4950854499999997
-            min: 1.218781
-            max: 2.250236
+            mean: 1.3062227775000002
+            p50: 1.278967
+            p95: 1.4993325
+            min: 1.216628
+            max: 2.288353
           postprocess:
-            mean: 0.00630905
-            p50: 0.0059
-            p95: 0.008902499999999997
-            min: 0.004825
-            max: 0.031125
+            mean: 0.006419331666666667
+            p50: 0.00605
+            p95: 0.0089
+            min: 0.005
+            max: 0.031851
           end_to_end:
-            mean: 2.3133189900000004
-            p50: 2.146423
-            p95: 2.4333019999999994
-            min: 2.014085
-            max: 9.04542
-        throughput_fps: 848.5745909907242
+            mean: 2.3697836275
+            p50: 2.1597115000000002
+            p95: 4.215383299999999
+            min: 2.041272
+            max: 9.21394
+        throughput_fps: 829.02528616243
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b2-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b2-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -4566,8 +4625,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: f4b6816886232874d339aa77d8f3eb42be08d39d1416154369fc7b79759a4387
@@ -4587,11 +4646,11 @@ variants:
           job_id: hgnetv2--b2-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
         cpp_1:
           artifact_sha256: f4b6816886232874d339aa77d8f3eb42be08d39d1416154369fc7b79759a4387
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b2-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
         cpp_2:
           artifact_sha256: f4b6816886232874d339aa77d8f3eb42be08d39d1416154369fc7b79759a4387
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b2-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -4664,9 +4723,14 @@ variants:
       s600 --variant timm-b2-ssld-stage2-ft-in1k-s-int16-o1-20261103 --asset-id s:hgnetv2:s600/hgnetv2_b2_ssld_stage2_ft_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/hgnetv2_b2_ssld_stage2_ft_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: b3-ssld-stage2-ft-in1k-224-s-int16-o1-20261103
   model:
     parameter_count: 16292216
+    gflops: 3.54183936
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -4694,7 +4758,7 @@ variants:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b3.ssld_stage2_ft_in1k/blob/1aac877b3ea55ab0f06d57cad9889d1e601bd472/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -4795,40 +4859,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 2642.622086
+        aggregate_wall_ms: 2626.780279
         metrics_ms:
           preprocess:
-            mean: 2.0587977916666667
-            p50: 2.0648815000000003
-            p95: 2.124866
-            min: 1.897563
-            max: 12.146981
+            mean: 2.038541868333333
+            p50: 2.064488
+            p95: 2.1187058
+            min: 1.897789
+            max: 2.666935
           runtime:
-            mean: 2.334785683333333
-            p50: 2.2961765
-            p95: 2.680644
-            min: 2.246825
-            max: 2.885646
+            mean: 2.3290711516666667
+            p50: 2.2910245
+            p95: 2.6758375
+            min: 2.246337
+            max: 2.722735
           postprocess:
-            mean: 0.007138086666666667
-            p50: 0.006725
-            p95: 0.01090125
-            min: 0.005825
-            max: 0.028126
+            mean: 0.006957006666666666
+            p50: 0.006525
+            p95: 0.011102499999999998
+            min: 0.0057
+            max: 0.02065
           end_to_end:
-            mean: 4.400721561666667
-            p50: 4.375408
-            p95: 4.76506525
-            min: 4.163663
-            max: 14.474858
-        throughput_fps: 227.04722070501913
+            mean: 4.3745700266666665
+            p50: 4.370075
+            p95: 4.6258327
+            min: 4.181626
+            max: 5.037696
+        throughput_fps: 228.41651614211773
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -4840,47 +4904,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 3116.778829
+        aggregate_wall_ms: 3069.763301
         metrics_ms:
           preprocess:
-            mean: 2.7362217325
-            p50: 2.2744755000000003
-            p95: 7.144803299999999
-            min: 1.922763
-            max: 11.85887
+            mean: 2.6815459566666666
+            p50: 2.286387
+            p95: 6.966553399999994
+            min: 1.933715
+            max: 10.357866
           runtime:
-            mean: 2.3877257716666667
-            p50: 2.3326775
-            p95: 2.75295225
-            min: 2.256275
-            max: 4.582752
+            mean: 2.3917469608333333
+            p50: 2.3297115
+            p95: 2.7331375
+            min: 2.263687
+            max: 9.59742
           postprocess:
-            mean: 0.008771478333333334
-            p50: 0.007475
-            p95: 0.014101
-            min: 0.0056
-            max: 0.027001
+            mean: 0.008241813333333334
+            p50: 0.007275
+            p95: 0.012875
+            min: 0.005625
+            max: 0.034725
           end_to_end:
-            mean: 5.1327189825
-            p50: 4.6619305
-            p95: 9.5817549
-            min: 4.220415
-            max: 14.659288
-        throughput_fps: 385.01288215725367
+            mean: 5.081534730833334
+            p50: 4.667611
+            p95: 9.525413499999999
+            min: 4.216627
+            max: 12.681453
+        throughput_fps: 390.9096182135901
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b3-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b3-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -4889,8 +4954,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 9138dcb92f088e1c4e7cbc546c53b4fb40c545cd8380e74ad395053f43f56ef8
@@ -4910,11 +4975,11 @@ variants:
           job_id: hgnetv2--b3-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
         cpp_1:
           artifact_sha256: 9138dcb92f088e1c4e7cbc546c53b4fb40c545cd8380e74ad395053f43f56ef8
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b3-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
         cpp_2:
           artifact_sha256: 9138dcb92f088e1c4e7cbc546c53b4fb40c545cd8380e74ad395053f43f56ef8
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b3-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -4987,12 +5052,13 @@ variants:
       s100 --variant timm-b3-ssld-stage2-ft-in1k-s-int16-o1-20261103 --asset-id s:hgnetv2:s100/hgnetv2_b3_ssld_stage2_ft_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/hgnetv2_b3_ssld_stage2_ft_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s100p
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b3.ssld_stage2_ft_in1k/blob/1aac877b3ea55ab0f06d57cad9889d1e601bd472/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -5093,40 +5159,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 2153.609336
+        aggregate_wall_ms: 2159.9245339999998
         metrics_ms:
           preprocess:
-            mean: 1.6422645283333335
-            p50: 1.5977394999999999
-            p95: 1.848602
-            min: 1.449488
-            max: 8.912305
+            mean: 1.6601339283333334
+            p50: 1.5916795
+            p95: 1.89298875
+            min: 1.44851
+            max: 5.33945
           runtime:
-            mean: 1.9379112066666668
-            p50: 1.908917
-            p95: 2.1989411999999997
-            min: 1.880341
-            max: 2.322645
+            mean: 1.9311437450000002
+            p50: 1.9039044999999999
+            p95: 2.1954944999999997
+            min: 1.877054
+            max: 2.325623
           postprocess:
-            mean: 0.005827296666666666
-            p50: 0.0056
-            p95: 0.00798374999999999
-            min: 0.0046
-            max: 0.0112
+            mean: 0.005575806666666666
+            p50: 0.00535
+            p95: 0.006278449999999998
+            min: 0.00435
+            max: 0.051677
           end_to_end:
-            mean: 3.5860030316666665
-            p50: 3.5100815
-            p95: 3.90964405
-            min: 3.348229
-            max: 10.844197
-        throughput_fps: 278.6020611864584
+            mean: 3.5968534799999996
+            p50: 3.5037965
+            p95: 3.9149462999999995
+            min: 3.34099
+            max: 7.363959
+        throughput_fps: 277.78748310657414
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -5138,47 +5204,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2560.737527
+        aggregate_wall_ms: 2566.104554
         metrics_ms:
           preprocess:
-            mean: 2.2054982175
-            p50: 1.7710154999999999
-            p95: 5.5161627499999994
-            min: 1.471788
-            max: 11.806805
+            mean: 2.2196792650000003
+            p50: 1.7842115
+            p95: 5.47985985
+            min: 1.476461
+            max: 15.290061
           runtime:
-            mean: 2.0085582441666663
-            p50: 1.9539805000000001
-            p95: 2.29061725
-            min: 1.883791
-            max: 6.597934
+            mean: 2.0072966374999996
+            p50: 1.9523065
+            p95: 2.2740065
+            min: 1.880753
+            max: 6.235983
           postprocess:
-            mean: 0.0065128366666666665
-            p50: 0.006
-            p95: 0.009528449999999997
-            min: 0.00415
-            max: 0.104301
+            mean: 0.006481909166666667
+            p50: 0.005975
+            p95: 0.009527199999999998
+            min: 0.004451
+            max: 0.028901
           end_to_end:
-            mean: 4.220569298333333
-            p50: 3.7509205000000003
-            p95: 8.034302299999997
-            min: 3.37078
-            max: 14.05565
-        throughput_fps: 468.61499366779896
+            mean: 4.233457811666667
+            p50: 3.7578315
+            p95: 7.797424249999999
+            min: 3.376764
+            max: 17.196816
+        throughput_fps: 467.63488187940766
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b3-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b3-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -5187,8 +5254,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: eb45edc1bce5bdbddbe89a7ad87384a3607acf6f5093ee295746b6fda8221bf6
@@ -5208,11 +5275,11 @@ variants:
           job_id: hgnetv2--b3-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
         cpp_1:
           artifact_sha256: eb45edc1bce5bdbddbe89a7ad87384a3607acf6f5093ee295746b6fda8221bf6
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b3-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
         cpp_2:
           artifact_sha256: eb45edc1bce5bdbddbe89a7ad87384a3607acf6f5093ee295746b6fda8221bf6
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b3-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -5285,12 +5352,13 @@ variants:
       s100p --variant timm-b3-ssld-stage2-ft-in1k-s-int16-o1-20261103 --asset-id s:hgnetv2:s100p/hgnetv2_b3_ssld_stage2_ft_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/hgnetv2_b3_ssld_stage2_ft_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s600
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b3.ssld_stage2_ft_in1k/blob/1aac877b3ea55ab0f06d57cad9889d1e601bd472/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -5391,40 +5459,40 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1393.821231
+        aggregate_wall_ms: 1397.878096
         metrics_ms:
           preprocess:
-            mean: 0.8267608916666668
-            p50: 0.8282665
-            p95: 0.8649452999999999
-            min: 0.775629
-            max: 0.899379
+            mean: 0.8303868433333333
+            p50: 0.832093
+            p95: 0.8671087
+            min: 0.781442
+            max: 1.175326
           runtime:
-            mean: 1.488959915
-            p50: 1.475132
-            p95: 1.6184017499999999
-            min: 1.453532
-            max: 1.767408
+            mean: 1.49206105
+            p50: 1.479107
+            p95: 1.6268997499999998
+            min: 1.449582
+            max: 1.746838
           postprocess:
-            mean: 0.005405653333333333
-            p50: 0.00515
-            p95: 0.007707499999999993
-            min: 0.00445
-            max: 0.0102
+            mean: 0.005422515
+            p50: 0.005175
+            p95: 0.007401249999999999
+            min: 0.004675
+            max: 0.019401
           end_to_end:
-            mean: 2.32112646
-            p50: 2.310286
-            p95: 2.4482482499999985
-            min: 2.243436
-            max: 2.607837
-        throughput_fps: 430.4712732561325
+            mean: 2.3278704083333333
+            p50: 2.3151505
+            p95: 2.4925937499999993
+            min: 2.245074
+            max: 2.679634
+        throughput_fps: 429.2219770213783
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -5436,47 +5504,48 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 1486.412267
+        aggregate_wall_ms: 1535.2490460000001
         metrics_ms:
           preprocess:
-            mean: 0.8908476775
-            p50: 0.857129
-            p95: 0.91762155
-            min: 0.785304
-            max: 6.935132
+            mean: 0.9602031524999999
+            p50: 0.867081
+            p95: 1.0128282499999997
+            min: 0.783442
+            max: 7.010824
           runtime:
-            mean: 1.5636110875
-            p50: 1.5406445
-            p95: 1.7343779999999998
-            min: 1.473732
-            max: 1.871184
+            mean: 1.5698934966666667
+            p50: 1.5434204999999999
+            p95: 1.75538325
+            min: 1.468256
+            max: 2.540204
           postprocess:
-            mean: 0.006456304999999999
-            p50: 0.006025
-            p95: 0.009225
-            min: 0.005025
-            max: 0.01525
+            mean: 0.006451043333333333
+            p50: 0.006
+            p95: 0.008852499999999998
+            min: 0.0048
+            max: 0.026075
           end_to_end:
-            mean: 2.46091507
-            p50: 2.4132369999999996
-            p95: 2.609537
-            min: 2.273261
-            max: 8.48359
-        throughput_fps: 807.31303598694
+            mean: 2.5365476925
+            p50: 2.423489
+            p95: 2.7286042499999996
+            min: 2.267648
+            max: 8.662834
+        throughput_fps: 781.6321417860695
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b3-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b3-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -5485,8 +5554,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 841b442edd64d5b74f048777a332af9f304207c91e63d9b6043397e2ec9497c5
@@ -5506,11 +5575,11 @@ variants:
           job_id: hgnetv2--b3-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
         cpp_1:
           artifact_sha256: 841b442edd64d5b74f048777a332af9f304207c91e63d9b6043397e2ec9497c5
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b3-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
         cpp_2:
           artifact_sha256: 841b442edd64d5b74f048777a332af9f304207c91e63d9b6043397e2ec9497c5
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b3-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -5583,9 +5652,14 @@ variants:
       s600 --variant timm-b3-ssld-stage2-ft-in1k-s-int16-o1-20261103 --asset-id s:hgnetv2:s600/hgnetv2_b3_ssld_stage2_ft_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/hgnetv2_b3_ssld_stage2_ft_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
 - size: b4-ssld-stage2-ft-in1k-224-s-int16-o1-20261103
   model:
     parameter_count: 19796680
+    gflops: 5.468296704
+    gflops_method: FP32 source ONNX static batch=1 224x224; Conv, ConvTranspose, Gemm
+      and MatMul multiply-accumulate counted as 2 FLOPs; excludes activation, normalization,
+      pooling, element-wise additions and preprocessing
   input:
     width: 224
     height: 224
@@ -5613,7 +5687,7 @@ variants:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b4.ssld_stage2_ft_in1k/blob/3c808d9d9d9873ed5e37b00509ba2a4882e816e8/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -5714,40 +5788,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 2703.142556
+        aggregate_wall_ms: 2711.844372
         metrics_ms:
           preprocess:
-            mean: 2.0438392883333334
-            p50: 2.0682185
-            p95: 2.1224724999999998
-            min: 1.898488
-            max: 3.490441
+            mean: 2.0519543166666665
+            p50: 2.0682264999999997
+            p95: 2.1916504999999997
+            min: 1.896039
+            max: 2.80121
           runtime:
-            mean: 2.450893585
-            p50: 2.410642
-            p95: 2.7966642
-            min: 2.380629
-            max: 3.022076
+            mean: 2.457144646666667
+            p50: 2.4171245
+            p95: 2.800535
+            min: 2.385237
+            max: 3.000008
           postprocess:
-            mean: 0.00703841
+            mean: 0.007026383333333334
             p50: 0.006725
-            p95: 0.00798504999999999
-            min: 0.005675
-            max: 0.055452
+            p95: 0.01005
+            min: 0.00575
+            max: 0.0224
           end_to_end:
-            mean: 4.5017712833333325
-            p50: 4.4890615
-            p95: 4.88499795
-            min: 4.304443
-            max: 5.952223
-        throughput_fps: 221.96387632913283
+            mean: 4.516125346666667
+            p50: 4.499275
+            p95: 4.868614249999999
+            min: 4.292951
+            max: 5.415369
+        throughput_fps: 221.25163456835716
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -5759,47 +5833,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 1500.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1000.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2995.834243
+        aggregate_wall_ms: 2972.115094
         metrics_ms:
           preprocess:
-            mean: 2.428304338333333
-            p50: 2.168746
-            p95: 2.871934999999999
-            min: 1.944464
-            max: 9.910802
+            mean: 2.395360360833333
+            p50: 2.174538
+            p95: 2.646048499999999
+            min: 1.913765
+            max: 12.236082
           runtime:
-            mean: 2.5043541400000002
-            p50: 2.463906
-            p95: 2.83746425
-            min: 2.386229
-            max: 3.724298
+            mean: 2.5015007916666665
+            p50: 2.4634489999999998
+            p95: 2.8378387
+            min: 2.391637
+            max: 3.61233
           postprocess:
-            mean: 0.008606868333333335
-            p50: 0.007501
-            p95: 0.01337505
-            min: 0.0057
-            max: 0.032626
+            mean: 0.008568356666666667
+            p50: 0.007537
+            p95: 0.01380125
+            min: 0.0059
+            max: 0.03285
           end_to_end:
-            mean: 4.9412653466666665
-            p50: 4.6810795
-            p95: 5.534568299999998
-            min: 4.366519
-            max: 12.495688
-        throughput_fps: 400.55620660718915
+            mean: 4.905429509166667
+            p50: 4.695724
+            p95: 5.24953755
+            min: 4.323476
+            max: 15.862462
+        throughput_fps: 403.7528702783136
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b4-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b4-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -5808,8 +5883,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 9a656a39364eabdf1f89805388432e29d51a5978da9d697dd33f7f875d135951
@@ -5829,11 +5904,11 @@ variants:
           job_id: hgnetv2--b4-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
         cpp_1:
           artifact_sha256: 9a656a39364eabdf1f89805388432e29d51a5978da9d697dd33f7f875d135951
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b4-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
         cpp_2:
           artifact_sha256: 9a656a39364eabdf1f89805388432e29d51a5978da9d697dd33f7f875d135951
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b4-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -5906,12 +5981,13 @@ variants:
       s100 --variant timm-b4-ssld-stage2-ft-in1k-s-int16-o1-20261103 --asset-id s:hgnetv2:s100/hgnetv2_b4_ssld_stage2_ft_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/hgnetv2_b4_ssld_stage2_ft_in1k_nashe_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s100p
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b4.ssld_stage2_ft_in1k/blob/3c808d9d9d9873ed5e37b00509ba2a4882e816e8/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -6012,40 +6088,40 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 2210.0705550000002
+        aggregate_wall_ms: 2215.240146
         metrics_ms:
           preprocess:
-            mean: 1.6543731933333334
-            p50: 1.5897014999999999
-            p95: 1.8583157
-            min: 1.453538
-            max: 4.335739
+            mean: 1.6618377083333333
+            p50: 1.5923275000000001
+            p95: 1.8605484999999997
+            min: 1.449084
+            max: 4.802072
           runtime:
-            mean: 2.0200097983333336
-            p50: 1.9915305
-            p95: 2.2851675
-            min: 1.965343
-            max: 2.356696
+            mean: 2.0212432483333336
+            p50: 1.9905184999999999
+            p95: 2.2813355
+            min: 1.951905
+            max: 2.471326
           postprocess:
-            mean: 0.005905773333333333
-            p50: 0.005613
-            p95: 0.0074762499999999985
-            min: 0.004651
-            max: 0.0639
+            mean: 0.005733751666666667
+            p50: 0.0056255
+            p95: 0.0066071999999999945
+            min: 0.00455
+            max: 0.012076
           end_to_end:
-            mean: 3.6802887650000002
-            p50: 3.5889445
-            p95: 3.95066345
-            min: 3.430255
-            max: 6.397507
-        throughput_fps: 271.4845454334375
+            mean: 3.6888147083333336
+            p50: 3.589584
+            p95: 4.021164049999999
+            min: 3.426065
+            max: 6.976436
+        throughput_fps: 270.8509960346303
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -6057,47 +6133,48 @@ variants:
         opencv_threads: 6
         cpu_governor: performance
         cpu_frequency_mhz: 2000.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 2534.433058
+        aggregate_wall_ms: 2552.436753
         metrics_ms:
           preprocess:
-            mean: 2.09349185
-            p50: 1.7273525
-            p95: 5.1117612999999995
-            min: 1.485263
-            max: 8.45855
+            mean: 2.122362615
+            p50: 1.7369705
+            p95: 5.3809295
+            min: 1.48146
+            max: 11.739399
           runtime:
-            mean: 2.0998327308333335
-            p50: 2.049418
-            p95: 2.3472913
-            min: 1.955242
-            max: 6.622083
+            mean: 2.0902179941666668
+            p50: 2.046333
+            p95: 2.34965845
+            min: 1.96833
+            max: 4.675915
           postprocess:
-            mean: 0.006886285
-            p50: 0.0062
-            p95: 0.01052625
-            min: 0.00475
-            max: 0.020175
+            mean: 0.007253344166666667
+            p50: 0.0064005
+            p95: 0.0108013
+            min: 0.004501
+            max: 0.070528
           end_to_end:
-            mean: 4.200210865833333
-            p50: 3.8149965
-            p95: 7.314866299999996
-            min: 3.502681
-            max: 10.474368
-        throughput_fps: 473.4786725623589
+            mean: 4.2198339533333336
+            p50: 3.8191545
+            p95: 7.604897349999998
+            min: 3.48939
+            max: 14.642214
+        throughput_fps: 470.1389754671034
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b4-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b4-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -6106,8 +6183,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: ba0c5c5a9d98bb802ae27586d79586a92e638594c8f1bdc85d06451e4c32444d
@@ -6127,11 +6204,11 @@ variants:
           job_id: hgnetv2--b4-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
         cpp_1:
           artifact_sha256: ba0c5c5a9d98bb802ae27586d79586a92e638594c8f1bdc85d06451e4c32444d
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b4-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
         cpp_2:
           artifact_sha256: ba0c5c5a9d98bb802ae27586d79586a92e638594c8f1bdc85d06451e4c32444d
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b4-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s100p
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -6204,12 +6281,13 @@ variants:
       s100p --variant timm-b4-ssld-stage2-ft-in1k-s-int16-o1-20261103 --asset-id s:hgnetv2:s100p/hgnetv2_b4_ssld_stage2_ft_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/hgnetv2_b4_ssld_stage2_ft_in1k_nashm_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
   - platform: s600
     license:
       name: Apache-2.0
       url: https://huggingface.co/timm/hgnetv2_b4.ssld_stage2_ft_in1k/blob/3c808d9d9d9873ed5e37b00509ba2a4882e816e8/README.md
       scope: model
-    status: converted
+    status: released
     converted_at: '2026-11-03'
     metadata_revision: 1
     artifact:
@@ -6310,40 +6388,40 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 600
-        aggregate_wall_ms: 1420.554286
+        aggregate_wall_ms: 1422.2077319999999
         metrics_ms:
           preprocess:
-            mean: 0.8268969916666666
-            p50: 0.8267785
-            p95: 0.8745689999999999
-            min: 0.778153
-            max: 0.950654
+            mean: 0.8291337866666667
+            p50: 0.8303415
+            p95: 0.87070425
+            min: 0.775891
+            max: 1.057197
           runtime:
-            mean: 1.5334291666666666
-            p50: 1.517607
-            p95: 1.7002504999999986
-            min: 1.495657
-            max: 1.777483
+            mean: 1.533851665
+            p50: 1.5197305
+            p95: 1.695831249999998
+            min: 1.494155
+            max: 1.790912
           postprocess:
-            mean: 0.005475516666666667
-            p50: 0.00535
-            p95: 0.00642505
-            min: 0.004575
-            max: 0.009825
+            mean: 0.00552973
+            p50: 0.005175
+            p95: 0.007931249999999994
+            min: 0.00465
+            max: 0.025325
           end_to_end:
-            mean: 2.3658016749999997
-            p50: 2.3519484999999998
-            p95: 2.5323745
-            min: 2.282836
-            max: 2.645512
-        throughput_fps: 422.370342276381
+            mean: 2.3685151816666665
+            p50: 2.356498
+            p95: 2.5373273
+            min: 2.281745
+            max: 2.675405
+        throughput_fps: 421.8792982908632
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       - tool: classification_benchmark
         implementation: native_cpp_cli
         timing_scope: preprocess_runtime_postprocess
@@ -6355,47 +6433,48 @@ variants:
         opencv_threads: 18
         cpu_governor: performance
         cpu_frequency_mhz: 2100.0
-        bpu_frequency_mhz: null
+        bpu_frequency_mhz: 1500.0
         warmup_frames_per_round: 20
         rounds: 3
         frames_per_round: 200
         timed_frames: 1200
-        aggregate_wall_ms: 1515.142518
+        aggregate_wall_ms: 1573.5188629999998
         metrics_ms:
           preprocess:
-            mean: 0.9131473875
-            p50: 0.8556790000000001
-            p95: 0.91682275
-            min: 0.778628
-            max: 6.956081
+            mean: 0.9692245791666666
+            p50: 0.8646045
+            p95: 0.9751687
+            min: 0.78999
+            max: 6.956986
           runtime:
-            mean: 1.5957468958333334
-            p50: 1.5725820000000001
-            p95: 1.7878454999999998
-            min: 1.514481
-            max: 1.939559
+            mean: 1.6181642858333334
+            p50: 1.5941934999999998
+            p95: 1.7937646999999999
+            min: 1.509605
+            max: 2.009965
           postprocess:
-            mean: 0.006466506666666667
-            p50: 0.00605
-            p95: 0.009001249999999999
-            min: 0.0051
-            max: 0.033325
+            mean: 0.0064836725
+            p50: 0.006075
+            p95: 0.00897625
+            min: 0.00515
+            max: 0.027376
           end_to_end:
-            mean: 2.51536079
-            p50: 2.4433360000000004
-            p95: 2.6778606999999996
-            min: 2.34826
-            max: 8.551288
-        throughput_fps: 792.004703018967
+            mean: 2.5938725375000002
+            p50: 2.4744235
+            p95: 2.7376802000000002
+            min: 2.356321
+            max: 8.522442
+        throughput_fps: 762.6219349618309
         measurement_status: measured
-        environment_status: incomplete
+        environment_status: recorded
       review:
         campaign: first208-20261109
         job_id: hgnetv2--b4-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
         runtime_status: measured
-        cpp_status: measured
-        equivalence_status: not-run
+        cpp_status: passed
+        equivalence_status: passed
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#hgnetv2--b4-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
+        equivalence_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
     validation:
       conversion: passed
       host_smoke: passed
@@ -6404,8 +6483,8 @@ variants:
       accuracy: passed
       runtime_1: passed
       runtime_2: passed
-      cpp_1: measured
-      cpp_2: measured
+      cpp_1: passed
+      cpp_2: passed
       evidence:
         board_smoke:
           artifact_sha256: 494860359dbeaeba99bf0f2830a5afa2972ac73c08ad5acc757614e696433ba7
@@ -6425,11 +6504,11 @@ variants:
           job_id: hgnetv2--b4-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
         cpp_1:
           artifact_sha256: 494860359dbeaeba99bf0f2830a5afa2972ac73c08ad5acc757614e696433ba7
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b4-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
         cpp_2:
           artifact_sha256: 494860359dbeaeba99bf0f2830a5afa2972ac73c08ad5acc757614e696433ba7
-          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/promotion.json
           job_id: hgnetv2--b4-ssld-stage2-ft-in1k-224-s-int16-o1-20261103--s600
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -6502,3 +6581,4 @@ variants:
       s600 --variant timm-b4-ssld-stage2-ft-in1k-s-int16-o1-20261103 --asset-id s:hgnetv2:s600/hgnetv2_b4_ssld_stage2_ft_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --model-path /path/to/hgnetv2_b4_ssld_stage2_ft_in1k_nashp_224x224_nv12_float_int16_20261103_o1.hbm
       --test-img /path/to/image.jpg
+    released_at: '2026-11-10'
