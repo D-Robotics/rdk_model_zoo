@@ -12,12 +12,22 @@ const models = [
   { catalogId: 'vision/b/seg', sample: 'vision/b/seg/tiny', platforms: ['S600'] },
 ];
 
-test('counts supported variant/chip combinations, not a Cartesian product of four chips', () => {
-  assert.equal(count(models), 4);
+test('counts model variants once across their supported chips', () => {
+  assert.equal(count(models), 3);
   assert.equal(count(models, new Set(['S100'])), 2);
+  assert.equal(count(models, new Set(['X5', 'S100'])), 2);
   assert.equal(count(models, new Set(['X5', 'S600'])), 2);
   assert.equal(count(models, new Set(['S100P'])), 0);
   assert.equal(count([]), 0);
+});
+
+test('per-chip rows for the same model count once, including when multiple chips are selected', () => {
+  const releases = ['X5', 'S100', 'S100P', 'S600'].map(releasePlatform => ({
+    catalogId: 'vision/a/cls', sample: 'vision/a/cls/n', releasePlatform,
+  }));
+  assert.equal(count(releases), 1);
+  assert.equal(count(releases, ['S100']), 1);
+  assert.equal(count(releases, ['S100', 'S600']), 1);
 });
 
 test('duplicate rows do not inflate the count and distinct quantized variants remain distinct', () => {

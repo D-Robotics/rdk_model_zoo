@@ -53,19 +53,20 @@
   const isVerified = model => model.releaseStatus === 'released' && isDownloadable(model);
   function modelCount(models, selectedPlatforms = []) {
     const selected = new Set([...selectedPlatforms].map(platform => String(platform).toUpperCase()));
-    const combinations = new Set();
+    const variants = new Set();
     for (const model of models) {
       const category = model.catalogId || model.sample || model.id;
       // sample retains distinct published variants, including W4/W8 and
       // accelerator builds whose displayed parameter scale can be identical.
       const variant = model.sample || model.modelSize || model.variantName || model.id;
-      const supported = model.platforms?.length ? model.platforms : [model.releasePlatform].filter(Boolean);
-      for (const value of supported) {
-        const platform = String(value).toUpperCase();
-        if (!selected.size || selected.has(platform)) combinations.add(JSON.stringify([category, variant, platform]));
+      const supported = (model.platforms?.length ? model.platforms : [model.releasePlatform].filter(Boolean))
+        .map(platform => String(platform).toUpperCase());
+      // Platform support filters the variants; it never multiplies their count.
+      if (supported.some(platform => !selected.size || selected.has(platform))) {
+        variants.add(JSON.stringify([category, variant]));
       }
     }
-    return combinations.size;
+    return variants.size;
   }
   const matchesAvailability = (model, mode) => mode === 'downloadable' ? isDownloadable(model)
     : mode === 'verified' ? isVerified(model) : true;
