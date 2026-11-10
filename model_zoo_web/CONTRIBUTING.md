@@ -96,6 +96,9 @@ Eagle3/DFlash 的生成速度保留官方区间，不能取上限作为单值；
 等价性检查，与板端 Python 原生路径的结果对照，结论与公开证据记入
 `performance.review.equivalence_status`、`equivalence_url`。首批 208 项分类模型取 ImageNetV2
 第 0、100、…、9900 号共 100 张图，要求 Top-1 100/100 一致、Top-5 集合至少 98/100 一致。
+YOLOv5 原生检测取 COCO val2017 清单第 0、50、…、4950 号共 100 张图，类别相同、IoU ≥ 0.99 且分数差
+≤ 1e-3 记为一致；分数 ≥ 0.25 的检测须双向全部一致，且全部参考检测一致率 ≥ 99%。
+E2E 使用冻结评测协议的分数阈值、NMS 阈值和每图最多 100 个检测。
 E2E 记录的 BPU/CPU 频率、governor 和温度须在每次运行前后从 sysfs 实际采样，不使用预检值代替。
 
 已经进入 `main` / `develop` 的示例，在证据齐套之前可以先登记为 `registration: pending`。

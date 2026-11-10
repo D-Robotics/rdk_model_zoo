@@ -2,8 +2,11 @@
   "schema_version": 1,
   "campaign": "first208-20261109",
   "generated_at": "2026-11-10",
-  "equivalence_criterion": "100 fixed ImageNetV2 images (indices 0:10000:100), same artifact SHA; C++ top-1 equals board Python native top-1 on 100/100 and top-5 set matches on >= 98/100",
-  "e2e_method": "C++ classification_benchmark, 3 runs x 200 frames after 20 warmup; statistics from every timed CSV frame; FPS = timed frames / sum of run wall windows; BPU/CPU frequency, governor and temperature sampled from sysfs before and after each run",
+  "equivalence_criterion": {
+    "classification": "100 fixed ImageNetV2 images (indices 0:10000:100), same artifact SHA; C++ top-1 equals board Python native top-1 on 100/100 and top-5 set matches on >= 98/100",
+    "yolov5": "100 COCO val2017 images (manifest 0:5000:50), same artifact SHA; detections match when class equal, IoU >= 0.99 and |score diff| <= 1e-3; all score >= 0.25 matched both ways on 100/100 images and >= 99% of reference detections matched"
+  },
+  "e2e_method": "C++ classification_benchmark (classification) or yolov5_benchmark (YOLOv5: 100 COCO images cycled, frozen score 0.001 / NMS 0.6 / top-100), 3 runs x 200 frames after 20 warmup; statistics from every timed CSV frame; FPS = timed frames / sum of run wall windows; BPU/CPU frequency, governor and temperature sampled from sysfs before and after each run",
   "gflops_method": "FP32 source ONNX static batch=1; Conv, ConvTranspose, Gemm and MatMul MACs x2",
   "released": [
     "convnext--atto-d2-224--x5",
@@ -171,7 +174,15 @@
     "resnext--50-32x4d-a1h-in1k-224--x5",
     "resnext--50-32x4d-a1h-in1k-224-s-int16-o1-20261103--s100",
     "resnext--50-32x4d-a1h-in1k-224-s-int16-o1-20261103--s100p",
-    "resnext--50-32x4d-a1h-in1k-224-s-int16-o1-20261103--s600"
+    "resnext--50-32x4d-a1h-in1k-224-s-int16-o1-20261103--s600",
+    "yolov5--n-v7.0-native-20261102--s100",
+    "yolov5--n-v7.0-native-20261102--s600",
+    "yolov5--n-v7.0-native-20261102--x5",
+    "yolov5--n-v7.0-native-20261102-s100p-o1-20261103--s100p",
+    "yolov5--s-v2.0-native-20261102--s100",
+    "yolov5--s-v2.0-native-20261102--s600",
+    "yolov5--s-v2.0-native-20261102--x5",
+    "yolov5--s-v2.0-native-20261102-s100p-o1-20261103--s100p"
   ],
   "equivalence": {
     "convnext--atto-d2-224-s-int16-cpuptq-o1-20261104--s100": {
@@ -3157,6 +3168,142 @@
       "top5_ordered_agreement": 100,
       "reference": "board Python native predictions.jsonl (same artifact)",
       "criterion": "top1 100/100 and top5 set >= 98/100",
+      "status": "passed"
+    },
+    "yolov5--n-v7.0-native-20261102--s100": {
+      "job_id": "yolov5--n-v7.0-native-20261102--s100",
+      "target": "s100",
+      "artifact_sha256": "ba794efef666925c280b82ea5d084ebcdaf7122051e5fed76938342b45973c25",
+      "artifact_sha_matches_job": true,
+      "returncode": 0,
+      "images": 100,
+      "image_indices": "0:5000:50",
+      "reference_detections": 9058,
+      "matched_detections": 9058,
+      "matched_ratio": 1.0,
+      "high_confidence_all_matched": true,
+      "high_confidence_mismatch_images": [],
+      "reference": "board Python native predictions.jsonl (same artifact)",
+      "criterion": "class equal, IoU>=0.99, |dscore|<=1e-3; all score>=0.25 matched both ways on 100/100 images; >=99% of reference detections matched",
+      "status": "passed"
+    },
+    "yolov5--s-v2.0-native-20261102--s100": {
+      "job_id": "yolov5--s-v2.0-native-20261102--s100",
+      "target": "s100",
+      "artifact_sha256": "6823f9eb2666928d79356868e30ac72ed4035317f30032e8505a483b8bee8d48",
+      "artifact_sha_matches_job": true,
+      "returncode": 0,
+      "images": 100,
+      "image_indices": "0:5000:50",
+      "reference_detections": 8376,
+      "matched_detections": 8376,
+      "matched_ratio": 1.0,
+      "high_confidence_all_matched": true,
+      "high_confidence_mismatch_images": [],
+      "reference": "board Python native predictions.jsonl (same artifact)",
+      "criterion": "class equal, IoU>=0.99, |dscore|<=1e-3; all score>=0.25 matched both ways on 100/100 images; >=99% of reference detections matched",
+      "status": "passed"
+    },
+    "yolov5--n-v7.0-native-20261102-s100p-o1-20261103--s100p": {
+      "job_id": "yolov5--n-v7.0-native-20261102-s100p-o1-20261103--s100p",
+      "target": "s100p",
+      "artifact_sha256": "7405a04d23cf0ad358365792c11c2b4b7a1a37e75f25e7f033abaa52e4311f0e",
+      "artifact_sha_matches_job": true,
+      "returncode": 0,
+      "images": 100,
+      "image_indices": "0:5000:50",
+      "reference_detections": 9058,
+      "matched_detections": 9058,
+      "matched_ratio": 1.0,
+      "high_confidence_all_matched": true,
+      "high_confidence_mismatch_images": [],
+      "reference": "board Python native predictions.jsonl (same artifact)",
+      "criterion": "class equal, IoU>=0.99, |dscore|<=1e-3; all score>=0.25 matched both ways on 100/100 images; >=99% of reference detections matched",
+      "status": "passed"
+    },
+    "yolov5--s-v2.0-native-20261102-s100p-o1-20261103--s100p": {
+      "job_id": "yolov5--s-v2.0-native-20261102-s100p-o1-20261103--s100p",
+      "target": "s100p",
+      "artifact_sha256": "b0d5a40af49b0a305974d1609b81464b07fdc5c985efe32a22805f00fb2a38c1",
+      "artifact_sha_matches_job": true,
+      "returncode": 0,
+      "images": 100,
+      "image_indices": "0:5000:50",
+      "reference_detections": 8384,
+      "matched_detections": 8384,
+      "matched_ratio": 1.0,
+      "high_confidence_all_matched": true,
+      "high_confidence_mismatch_images": [],
+      "reference": "board Python native predictions.jsonl (same artifact)",
+      "criterion": "class equal, IoU>=0.99, |dscore|<=1e-3; all score>=0.25 matched both ways on 100/100 images; >=99% of reference detections matched",
+      "status": "passed"
+    },
+    "yolov5--n-v7.0-native-20261102--s600": {
+      "job_id": "yolov5--n-v7.0-native-20261102--s600",
+      "target": "s600",
+      "artifact_sha256": "441c096372f87cc44af8baf1e7d394d705a1fc6c9b19e992865157b4cc4342c5",
+      "artifact_sha_matches_job": true,
+      "returncode": 0,
+      "images": 100,
+      "image_indices": "0:5000:50",
+      "reference_detections": 9031,
+      "matched_detections": 9031,
+      "matched_ratio": 1.0,
+      "high_confidence_all_matched": true,
+      "high_confidence_mismatch_images": [],
+      "reference": "board Python native predictions.jsonl (same artifact)",
+      "criterion": "class equal, IoU>=0.99, |dscore|<=1e-3; all score>=0.25 matched both ways on 100/100 images; >=99% of reference detections matched",
+      "status": "passed"
+    },
+    "yolov5--s-v2.0-native-20261102--s600": {
+      "job_id": "yolov5--s-v2.0-native-20261102--s600",
+      "target": "s600",
+      "artifact_sha256": "59837af69bddf1ea97249946bbc00cf86ccc820b6596b84a8fffbb29e17e024a",
+      "artifact_sha_matches_job": true,
+      "returncode": 0,
+      "images": 100,
+      "image_indices": "0:5000:50",
+      "reference_detections": 8387,
+      "matched_detections": 8387,
+      "matched_ratio": 1.0,
+      "high_confidence_all_matched": true,
+      "high_confidence_mismatch_images": [],
+      "reference": "board Python native predictions.jsonl (same artifact)",
+      "criterion": "class equal, IoU>=0.99, |dscore|<=1e-3; all score>=0.25 matched both ways on 100/100 images; >=99% of reference detections matched",
+      "status": "passed"
+    },
+    "yolov5--n-v7.0-native-20261102--x5": {
+      "job_id": "yolov5--n-v7.0-native-20261102--x5",
+      "target": "x5",
+      "artifact_sha256": "a8e1595913f51be48fd13677c5b03552813571358a980ac033f2b2b06f2657f1",
+      "artifact_sha_matches_job": true,
+      "returncode": 0,
+      "images": 100,
+      "image_indices": "0:5000:50",
+      "reference_detections": 5203,
+      "matched_detections": 5203,
+      "matched_ratio": 1.0,
+      "high_confidence_all_matched": true,
+      "high_confidence_mismatch_images": [],
+      "reference": "board Python native predictions.jsonl (same artifact)",
+      "criterion": "class equal, IoU>=0.99, |dscore|<=1e-3; all score>=0.25 matched both ways on 100/100 images; >=99% of reference detections matched",
+      "status": "passed"
+    },
+    "yolov5--s-v2.0-native-20261102--x5": {
+      "job_id": "yolov5--s-v2.0-native-20261102--x5",
+      "target": "x5",
+      "artifact_sha256": "0db68b461ede76c5e580aca4c1b54da64409171b4966e0cf4c136542c8c898ff",
+      "artifact_sha_matches_job": true,
+      "returncode": 0,
+      "images": 100,
+      "image_indices": "0:5000:50",
+      "reference_detections": 4380,
+      "matched_detections": 4380,
+      "matched_ratio": 1.0,
+      "high_confidence_all_matched": true,
+      "high_confidence_mismatch_images": [],
+      "reference": "board Python native predictions.jsonl (same artifact)",
+      "criterion": "class equal, IoU>=0.99, |dscore|<=1e-3; all score>=0.25 matched both ways on 100/100 images; >=99% of reference detections matched",
       "status": "passed"
     }
   },
@@ -29030,6 +29177,1046 @@
         "measurement_status": "measured",
         "environment_status": "recorded"
       }
+    ],
+    "yolov5--n-v7.0-native-20261102--s100": [
+      {
+        "tool": "yolov5_benchmark",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "preprocess_runtime_postprocess",
+        "pipeline_streams": 1,
+        "runtime_submission_threads": 1,
+        "cpu_thread_policy": "all_online",
+        "online_cpu_threads": 6,
+        "cpu_backend": "opencv",
+        "opencv_threads": 6,
+        "cpu_governor": "performance",
+        "cpu_frequency_mhz": 1500.0,
+        "bpu_frequency_mhz": 1000.0,
+        "bpu_frequency_samples_mhz": {
+          "min": 1000.0,
+          "max": 1000.0
+        },
+        "bpu_governor": "performance",
+        "temperature_max_c": 45.266,
+        "warmup_frames_per_round": 20,
+        "rounds": 3,
+        "frames_per_round": 200,
+        "timed_frames": 600,
+        "aggregate_wall_ms": 16080.647426999998,
+        "metrics_ms": {
+          "preprocess": {
+            "mean": 0.6662987783333333,
+            "p50": 0.6346695,
+            "p95": 0.6922224999999995,
+            "min": 0.613583,
+            "max": 10.782669
+          },
+          "runtime": {
+            "mean": 1.8727499250000001,
+            "p50": 1.85501,
+            "p95": 2.21957825,
+            "min": 1.632104,
+            "max": 2.28696
+          },
+          "postprocess": {
+            "mean": 24.25821548,
+            "p50": 22.663794,
+            "p95": 29.809072999999994,
+            "min": 21.163426,
+            "max": 70.490299
+          },
+          "end_to_end": {
+            "mean": 26.797264183333333,
+            "p50": 25.2754845,
+            "p95": 32.434529600000005,
+            "min": 23.483759,
+            "max": 73.399516
+          }
+        },
+        "throughput_fps": 37.311930550294754,
+        "run_started_at": [
+          "2026-11-10T14:50:39+08:00",
+          "2026-11-10T14:50:47+08:00",
+          "2026-11-10T14:50:55+08:00"
+        ],
+        "input_images": "100 COCO val2017 images (manifest 0:5000:50), cycled",
+        "measurement_status": "measured",
+        "environment_status": "recorded"
+      },
+      {
+        "tool": "yolov5_benchmark",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "preprocess_runtime_postprocess",
+        "pipeline_streams": 2,
+        "runtime_submission_threads": 2,
+        "cpu_thread_policy": "all_online",
+        "online_cpu_threads": 6,
+        "cpu_backend": "opencv",
+        "opencv_threads": 6,
+        "cpu_governor": "performance",
+        "cpu_frequency_mhz": 1500.0,
+        "bpu_frequency_mhz": 1000.0,
+        "bpu_frequency_samples_mhz": {
+          "min": 1000.0,
+          "max": 1000.0
+        },
+        "bpu_governor": "performance",
+        "temperature_max_c": 46.001,
+        "warmup_frames_per_round": 20,
+        "rounds": 3,
+        "frames_per_round": 200,
+        "timed_frames": 1200,
+        "aggregate_wall_ms": 16360.171541999996,
+        "metrics_ms": {
+          "preprocess": {
+            "mean": 0.9331463541666667,
+            "p50": 0.873351,
+            "p95": 1.2339371999999997,
+            "min": 0.619283,
+            "max": 6.674913
+          },
+          "runtime": {
+            "mean": 1.9244065583333334,
+            "p50": 1.846298,
+            "p95": 2.3712805,
+            "min": 1.627855,
+            "max": 2.795096
+          },
+          "postprocess": {
+            "mean": 24.3574554275,
+            "p50": 22.798535,
+            "p95": 29.96465085,
+            "min": 21.184178,
+            "max": 70.737884
+          },
+          "end_to_end": {
+            "mean": 27.21500834,
+            "p50": 25.700116,
+            "p95": 32.6314253,
+            "min": 23.602212,
+            "max": 74.602432
+          }
+        },
+        "throughput_fps": 73.34886415581572,
+        "run_started_at": [
+          "2026-11-10T14:51:03+08:00",
+          "2026-11-10T14:51:12+08:00",
+          "2026-11-10T14:51:20+08:00"
+        ],
+        "input_images": "100 COCO val2017 images (manifest 0:5000:50), cycled",
+        "measurement_status": "measured",
+        "environment_status": "recorded"
+      }
+    ],
+    "yolov5--s-v2.0-native-20261102--s100": [
+      {
+        "tool": "yolov5_benchmark",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "preprocess_runtime_postprocess",
+        "pipeline_streams": 1,
+        "runtime_submission_threads": 1,
+        "cpu_thread_policy": "all_online",
+        "online_cpu_threads": 6,
+        "cpu_backend": "opencv",
+        "opencv_threads": 6,
+        "cpu_governor": "performance",
+        "cpu_frequency_mhz": 1500.0,
+        "bpu_frequency_mhz": 1000.0,
+        "bpu_frequency_samples_mhz": {
+          "min": 1000.0,
+          "max": 1000.0
+        },
+        "bpu_governor": "performance",
+        "temperature_max_c": 45.822,
+        "warmup_frames_per_round": 20,
+        "rounds": 3,
+        "frames_per_round": 200,
+        "timed_frames": 600,
+        "aggregate_wall_ms": 16164.90322,
+        "metrics_ms": {
+          "preprocess": {
+            "mean": 0.6492310483333333,
+            "p50": 0.63532,
+            "p95": 0.7019713,
+            "min": 0.613683,
+            "max": 1.086845
+          },
+          "runtime": {
+            "mean": 2.7304791133333333,
+            "p50": 2.7099124999999997,
+            "p95": 3.06971495,
+            "min": 2.468756,
+            "max": 3.141963
+          },
+          "postprocess": {
+            "mean": 23.557915868333332,
+            "p50": 22.367153000000002,
+            "p95": 26.711494699999996,
+            "min": 21.210236,
+            "max": 69.291003
+          },
+          "end_to_end": {
+            "mean": 26.93762603,
+            "p50": 25.7611705,
+            "p95": 30.156485449999998,
+            "min": 24.313725,
+            "max": 72.963503
+          }
+        },
+        "throughput_fps": 37.11745080277691,
+        "run_started_at": [
+          "2026-11-10T14:51:33+08:00",
+          "2026-11-10T14:51:41+08:00",
+          "2026-11-10T14:51:50+08:00"
+        ],
+        "input_images": "100 COCO val2017 images (manifest 0:5000:50), cycled",
+        "measurement_status": "measured",
+        "environment_status": "recorded"
+      },
+      {
+        "tool": "yolov5_benchmark",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "preprocess_runtime_postprocess",
+        "pipeline_streams": 2,
+        "runtime_submission_threads": 2,
+        "cpu_thread_policy": "all_online",
+        "online_cpu_threads": 6,
+        "cpu_backend": "opencv",
+        "opencv_threads": 6,
+        "cpu_governor": "performance",
+        "cpu_frequency_mhz": 1500.0,
+        "bpu_frequency_mhz": 1000.0,
+        "bpu_frequency_samples_mhz": {
+          "min": 1000.0,
+          "max": 1000.0
+        },
+        "bpu_governor": "performance",
+        "temperature_max_c": 45.266,
+        "warmup_frames_per_round": 20,
+        "rounds": 3,
+        "frames_per_round": 200,
+        "timed_frames": 1200,
+        "aggregate_wall_ms": 16430.415919000003,
+        "metrics_ms": {
+          "preprocess": {
+            "mean": 0.8486492841666666,
+            "p50": 0.8668635,
+            "p95": 1.026481,
+            "min": 0.618783,
+            "max": 6.077707
+          },
+          "runtime": {
+            "mean": 2.8617508666666667,
+            "p50": 2.9035825,
+            "p95": 3.33136675,
+            "min": 2.484257,
+            "max": 5.839914
+          },
+          "postprocess": {
+            "mean": 23.657852125833333,
+            "p50": 22.4546055,
+            "p95": 26.775233899999996,
+            "min": 21.233439,
+            "max": 69.408331
+          },
+          "end_to_end": {
+            "mean": 27.36825227666667,
+            "p50": 26.247488,
+            "p95": 30.729576599999998,
+            "min": 24.662495,
+            "max": 73.332627
+          }
+        },
+        "throughput_fps": 73.03527834693031,
+        "run_started_at": [
+          "2026-11-10T14:51:58+08:00",
+          "2026-11-10T14:52:06+08:00",
+          "2026-11-10T14:52:15+08:00"
+        ],
+        "input_images": "100 COCO val2017 images (manifest 0:5000:50), cycled",
+        "measurement_status": "measured",
+        "environment_status": "recorded"
+      }
+    ],
+    "yolov5--n-v7.0-native-20261102-s100p-o1-20261103--s100p": [
+      {
+        "tool": "yolov5_benchmark",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "preprocess_runtime_postprocess",
+        "pipeline_streams": 1,
+        "runtime_submission_threads": 1,
+        "cpu_thread_policy": "all_online",
+        "online_cpu_threads": 6,
+        "cpu_backend": "opencv",
+        "opencv_threads": 6,
+        "cpu_governor": "performance",
+        "cpu_frequency_mhz": 2000.0,
+        "bpu_frequency_mhz": 1500.0,
+        "bpu_frequency_samples_mhz": {
+          "min": 1500.0,
+          "max": 1500.0
+        },
+        "bpu_governor": "performance",
+        "temperature_max_c": 49.133,
+        "warmup_frames_per_round": 20,
+        "rounds": 3,
+        "frames_per_round": 200,
+        "timed_frames": 600,
+        "aggregate_wall_ms": 12227.05151,
+        "metrics_ms": {
+          "preprocess": {
+            "mean": 0.5470082700000001,
+            "p50": 0.5074285000000001,
+            "p95": 0.6885125,
+            "min": 0.480803,
+            "max": 0.963132
+          },
+          "runtime": {
+            "mean": 1.487495295,
+            "p50": 1.3959234999999999,
+            "p95": 1.70741295,
+            "min": 1.330985,
+            "max": 1.905765
+          },
+          "postprocess": {
+            "mean": 18.340475848333334,
+            "p50": 17.1279545,
+            "p95": 22.510971299999994,
+            "min": 16.001296,
+            "max": 53.121527
+          },
+          "end_to_end": {
+            "mean": 20.374979413333335,
+            "p50": 19.2763585,
+            "p95": 24.443123899999986,
+            "min": 17.989111,
+            "max": 55.222942
+          }
+        },
+        "throughput_fps": 49.071519778033554,
+        "run_started_at": [
+          "2026-11-10T14:50:38+08:00",
+          "2026-11-10T14:50:46+08:00",
+          "2026-11-10T14:50:53+08:00"
+        ],
+        "input_images": "100 COCO val2017 images (manifest 0:5000:50), cycled",
+        "measurement_status": "measured",
+        "environment_status": "recorded"
+      },
+      {
+        "tool": "yolov5_benchmark",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "preprocess_runtime_postprocess",
+        "pipeline_streams": 2,
+        "runtime_submission_threads": 2,
+        "cpu_thread_policy": "all_online",
+        "online_cpu_threads": 6,
+        "cpu_backend": "opencv",
+        "opencv_threads": 6,
+        "cpu_governor": "performance",
+        "cpu_frequency_mhz": 2000.0,
+        "bpu_frequency_mhz": 1500.0,
+        "bpu_frequency_samples_mhz": {
+          "min": 1500.0,
+          "max": 1500.0
+        },
+        "bpu_governor": "performance",
+        "temperature_max_c": 49.318,
+        "warmup_frames_per_round": 20,
+        "rounds": 3,
+        "frames_per_round": 200,
+        "timed_frames": 1200,
+        "aggregate_wall_ms": 12529.048407,
+        "metrics_ms": {
+          "preprocess": {
+            "mean": 0.7404878925,
+            "p50": 0.6904925,
+            "p95": 1.128853999999996,
+            "min": 0.489004,
+            "max": 2.957673
+          },
+          "runtime": {
+            "mean": 1.5674350541666666,
+            "p50": 1.5512865,
+            "p95": 1.8507415,
+            "min": 1.328585,
+            "max": 2.196017
+          },
+          "postprocess": {
+            "mean": 18.497491585000002,
+            "p50": 17.3295315,
+            "p95": 22.739288249999998,
+            "min": 16.017622,
+            "max": 53.937909
+          },
+          "end_to_end": {
+            "mean": 20.805414531666667,
+            "p50": 19.6346115,
+            "p95": 25.113815,
+            "min": 18.161613,
+            "max": 56.164176
+          }
+        },
+        "throughput_fps": 95.77742546908495,
+        "run_started_at": [
+          "2026-11-10T14:51:00+08:00",
+          "2026-11-10T14:51:07+08:00",
+          "2026-11-10T14:51:14+08:00"
+        ],
+        "input_images": "100 COCO val2017 images (manifest 0:5000:50), cycled",
+        "measurement_status": "measured",
+        "environment_status": "recorded"
+      }
+    ],
+    "yolov5--s-v2.0-native-20261102-s100p-o1-20261103--s100p": [
+      {
+        "tool": "yolov5_benchmark",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "preprocess_runtime_postprocess",
+        "pipeline_streams": 1,
+        "runtime_submission_threads": 1,
+        "cpu_thread_policy": "all_online",
+        "online_cpu_threads": 6,
+        "cpu_backend": "opencv",
+        "opencv_threads": 6,
+        "cpu_governor": "performance",
+        "cpu_frequency_mhz": 2000.0,
+        "bpu_frequency_mhz": 1500.0,
+        "bpu_frequency_samples_mhz": {
+          "min": 1500.0,
+          "max": 1500.0
+        },
+        "bpu_governor": "performance",
+        "temperature_max_c": 49.868,
+        "warmup_frames_per_round": 20,
+        "rounds": 3,
+        "frames_per_round": 200,
+        "timed_frames": 600,
+        "aggregate_wall_ms": 12324.672556,
+        "metrics_ms": {
+          "preprocess": {
+            "mean": 0.57019054,
+            "p50": 0.5085415,
+            "p95": 0.68869595,
+            "min": 0.475254,
+            "max": 10.429129
+          },
+          "runtime": {
+            "mean": 2.10085228,
+            "p50": 2.01194,
+            "p95": 2.3217516999999996,
+            "min": 1.944615,
+            "max": 2.492244
+          },
+          "postprocess": {
+            "mean": 17.86640557833333,
+            "p50": 16.9968035,
+            "p95": 20.22328555,
+            "min": 16.009421,
+            "max": 52.918326
+          },
+          "end_to_end": {
+            "mean": 20.537448398333332,
+            "p50": 19.730424,
+            "p95": 22.927984,
+            "min": 18.552941,
+            "max": 55.569046
+          }
+        },
+        "throughput_fps": 48.682834961639855,
+        "run_started_at": [
+          "2026-11-10T14:51:26+08:00",
+          "2026-11-10T14:51:34+08:00",
+          "2026-11-10T14:51:41+08:00"
+        ],
+        "input_images": "100 COCO val2017 images (manifest 0:5000:50), cycled",
+        "measurement_status": "measured",
+        "environment_status": "recorded"
+      },
+      {
+        "tool": "yolov5_benchmark",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "preprocess_runtime_postprocess",
+        "pipeline_streams": 2,
+        "runtime_submission_threads": 2,
+        "cpu_thread_policy": "all_online",
+        "online_cpu_threads": 6,
+        "cpu_backend": "opencv",
+        "opencv_threads": 6,
+        "cpu_governor": "performance",
+        "cpu_frequency_mhz": 2000.0,
+        "bpu_frequency_mhz": 1500.0,
+        "bpu_frequency_samples_mhz": {
+          "min": 1500.0,
+          "max": 1500.0
+        },
+        "bpu_governor": "performance",
+        "temperature_max_c": 49.868,
+        "warmup_frames_per_round": 20,
+        "rounds": 3,
+        "frames_per_round": 200,
+        "timed_frames": 1200,
+        "aggregate_wall_ms": 12503.618067000001,
+        "metrics_ms": {
+          "preprocess": {
+            "mean": 0.6815658108333333,
+            "p50": 0.679005,
+            "p95": 0.7794697500000001,
+            "min": 0.493103,
+            "max": 6.056646
+          },
+          "runtime": {
+            "mean": 2.1920578799999997,
+            "p50": 2.188691,
+            "p95": 2.536274,
+            "min": 1.94154,
+            "max": 3.34245
+          },
+          "postprocess": {
+            "mean": 17.949373513333335,
+            "p50": 17.064779,
+            "p95": 20.2861393,
+            "min": 16.068797,
+            "max": 52.909651
+          },
+          "end_to_end": {
+            "mean": 20.82299720416667,
+            "p50": 20.003963499999998,
+            "p95": 23.17581375,
+            "min": 18.785868,
+            "max": 55.640422
+          }
+        },
+        "throughput_fps": 95.9722212858599,
+        "run_started_at": [
+          "2026-11-10T14:51:48+08:00",
+          "2026-11-10T14:51:55+08:00",
+          "2026-11-10T14:52:01+08:00"
+        ],
+        "input_images": "100 COCO val2017 images (manifest 0:5000:50), cycled",
+        "measurement_status": "measured",
+        "environment_status": "recorded"
+      }
+    ],
+    "yolov5--n-v7.0-native-20261102--s600": [
+      {
+        "tool": "yolov5_benchmark",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "preprocess_runtime_postprocess",
+        "pipeline_streams": 1,
+        "runtime_submission_threads": 1,
+        "cpu_thread_policy": "all_online",
+        "online_cpu_threads": 18,
+        "cpu_backend": "opencv",
+        "opencv_threads": 18,
+        "cpu_governor": "performance",
+        "cpu_frequency_mhz": 2100.0,
+        "bpu_frequency_mhz": 1500.0,
+        "bpu_frequency_samples_mhz": {
+          "min": 1500.0,
+          "max": 1500.0
+        },
+        "bpu_governor": "performance",
+        "temperature_max_c": 41.86,
+        "warmup_frames_per_round": 20,
+        "rounds": 3,
+        "frames_per_round": 200,
+        "timed_frames": 600,
+        "aggregate_wall_ms": 12333.659689999999,
+        "metrics_ms": {
+          "preprocess": {
+            "mean": 0.4310879966666667,
+            "p50": 0.425205,
+            "p95": 0.45403345,
+            "min": 0.406554,
+            "max": 1.862472
+          },
+          "runtime": {
+            "mean": 1.842885215,
+            "p50": 1.777545,
+            "p95": 2.02653525,
+            "min": 1.697195,
+            "max": 2.13705
+          },
+          "postprocess": {
+            "mean": 18.277864935,
+            "p50": 17.160288,
+            "p95": 21.790851999999962,
+            "min": 16.080988,
+            "max": 51.000145
+          },
+          "end_to_end": {
+            "mean": 20.551838146666665,
+            "p50": 19.4911155,
+            "p95": 24.010209349999954,
+            "min": 18.33094,
+            "max": 53.287697
+          }
+        },
+        "throughput_fps": 48.64736137372702,
+        "run_started_at": [
+          "2026-11-10T14:50:36+08:00",
+          "2026-11-10T14:50:47+08:00",
+          "2026-11-10T14:50:59+08:00"
+        ],
+        "input_images": "100 COCO val2017 images (manifest 0:5000:50), cycled",
+        "measurement_status": "measured",
+        "environment_status": "recorded"
+      },
+      {
+        "tool": "yolov5_benchmark",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "preprocess_runtime_postprocess",
+        "pipeline_streams": 2,
+        "runtime_submission_threads": 2,
+        "cpu_thread_policy": "all_online",
+        "online_cpu_threads": 18,
+        "cpu_backend": "opencv",
+        "opencv_threads": 18,
+        "cpu_governor": "performance",
+        "cpu_frequency_mhz": 2100.0,
+        "bpu_frequency_mhz": 1500.0,
+        "bpu_frequency_samples_mhz": {
+          "min": 1500.0,
+          "max": 1500.0
+        },
+        "bpu_governor": "performance",
+        "temperature_max_c": 43.5,
+        "warmup_frames_per_round": 20,
+        "rounds": 3,
+        "frames_per_round": 200,
+        "timed_frames": 1200,
+        "aggregate_wall_ms": 12425.511419999999,
+        "metrics_ms": {
+          "preprocess": {
+            "mean": 0.43452576583333336,
+            "p50": 0.42638,
+            "p95": 0.4534434499999999,
+            "min": 0.40203,
+            "max": 4.204098
+          },
+          "runtime": {
+            "mean": 1.9186832708333335,
+            "p50": 1.8469959999999999,
+            "p95": 2.15810345,
+            "min": 1.733245,
+            "max": 3.294439
+          },
+          "postprocess": {
+            "mean": 18.3316461975,
+            "p50": 17.211876,
+            "p95": 22.001303799999974,
+            "min": 16.104938,
+            "max": 51.332447
+          },
+          "end_to_end": {
+            "mean": 20.68485523416667,
+            "p50": 19.5804775,
+            "p95": 24.494336449999984,
+            "min": 18.390089,
+            "max": 53.862127
+          }
+        },
+        "throughput_fps": 96.57550175910586,
+        "run_started_at": [
+          "2026-11-10T14:51:10+08:00",
+          "2026-11-10T14:51:23+08:00",
+          "2026-11-10T14:51:34+08:00"
+        ],
+        "input_images": "100 COCO val2017 images (manifest 0:5000:50), cycled",
+        "measurement_status": "measured",
+        "environment_status": "recorded"
+      }
+    ],
+    "yolov5--s-v2.0-native-20261102--s600": [
+      {
+        "tool": "yolov5_benchmark",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "preprocess_runtime_postprocess",
+        "pipeline_streams": 1,
+        "runtime_submission_threads": 1,
+        "cpu_thread_policy": "all_online",
+        "online_cpu_threads": 18,
+        "cpu_backend": "opencv",
+        "opencv_threads": 18,
+        "cpu_governor": "performance",
+        "cpu_frequency_mhz": 2100.0,
+        "bpu_frequency_mhz": 1500.0,
+        "bpu_frequency_samples_mhz": {
+          "min": 1500.0,
+          "max": 1500.0
+        },
+        "bpu_governor": "performance",
+        "temperature_max_c": 43.613,
+        "warmup_frames_per_round": 20,
+        "rounds": 3,
+        "frames_per_round": 200,
+        "timed_frames": 600,
+        "aggregate_wall_ms": 12252.788380999998,
+        "metrics_ms": {
+          "preprocess": {
+            "mean": 0.4296065983333333,
+            "p50": 0.42659250000000004,
+            "p95": 0.45425625,
+            "min": 0.406404,
+            "max": 0.633432
+          },
+          "runtime": {
+            "mean": 2.2116424649999997,
+            "p50": 2.1526994999999998,
+            "p95": 2.396333,
+            "min": 2.060524,
+            "max": 2.506654
+          },
+          "postprocess": {
+            "mean": 17.776274854999997,
+            "p50": 16.918846000000002,
+            "p95": 19.921802249999995,
+            "min": 16.063911,
+            "max": 50.180206
+          },
+          "end_to_end": {
+            "mean": 20.417523918333334,
+            "p50": 19.6317275,
+            "p95": 22.526656049999996,
+            "min": 18.640141,
+            "max": 52.878014
+          }
+        },
+        "throughput_fps": 48.9684454952638,
+        "run_started_at": [
+          "2026-11-10T14:51:57+08:00",
+          "2026-11-10T14:52:09+08:00",
+          "2026-11-10T14:52:20+08:00"
+        ],
+        "input_images": "100 COCO val2017 images (manifest 0:5000:50), cycled",
+        "measurement_status": "measured",
+        "environment_status": "recorded"
+      },
+      {
+        "tool": "yolov5_benchmark",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "preprocess_runtime_postprocess",
+        "pipeline_streams": 2,
+        "runtime_submission_threads": 2,
+        "cpu_thread_policy": "all_online",
+        "online_cpu_threads": 18,
+        "cpu_backend": "opencv",
+        "opencv_threads": 18,
+        "cpu_governor": "performance",
+        "cpu_frequency_mhz": 2100.0,
+        "bpu_frequency_mhz": 1500.0,
+        "bpu_frequency_samples_mhz": {
+          "min": 1500.0,
+          "max": 1500.0
+        },
+        "bpu_governor": "performance",
+        "temperature_max_c": 43.145,
+        "warmup_frames_per_round": 20,
+        "rounds": 3,
+        "frames_per_round": 200,
+        "timed_frames": 1200,
+        "aggregate_wall_ms": 12359.721971,
+        "metrics_ms": {
+          "preprocess": {
+            "mean": 0.43901957416666665,
+            "p50": 0.43063,
+            "p95": 0.49439599999999995,
+            "min": 0.401904,
+            "max": 1.361441
+          },
+          "runtime": {
+            "mean": 2.3187453391666666,
+            "p50": 2.2674635,
+            "p95": 2.5606053,
+            "min": 2.11535,
+            "max": 3.095911
+          },
+          "postprocess": {
+            "mean": 17.832982101666666,
+            "p50": 16.992396,
+            "p95": 20.00825095,
+            "min": 16.112911,
+            "max": 50.297881
+          },
+          "end_to_end": {
+            "mean": 20.590747015,
+            "p50": 19.808779,
+            "p95": 22.681613299999995,
+            "min": 18.778467,
+            "max": 53.847197
+          }
+        },
+        "throughput_fps": 97.08956259822003,
+        "run_started_at": [
+          "2026-11-10T14:52:32+08:00",
+          "2026-11-10T14:52:43+08:00",
+          "2026-11-10T14:52:55+08:00"
+        ],
+        "input_images": "100 COCO val2017 images (manifest 0:5000:50), cycled",
+        "measurement_status": "measured",
+        "environment_status": "recorded"
+      }
+    ],
+    "yolov5--n-v7.0-native-20261102--x5": [
+      {
+        "tool": "yolov5_benchmark",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "preprocess_runtime_postprocess",
+        "pipeline_streams": 1,
+        "runtime_submission_threads": 1,
+        "cpu_thread_policy": "all_online",
+        "online_cpu_threads": 8,
+        "cpu_backend": "opencv",
+        "opencv_threads": 8,
+        "cpu_governor": "schedutil",
+        "cpu_frequency_mhz": 1500.0,
+        "bpu_frequency_mhz": 996.0,
+        "bpu_frequency_samples_mhz": {
+          "min": 996.0,
+          "max": 996.0
+        },
+        "bpu_governor": "performance",
+        "temperature_max_c": 50.423,
+        "warmup_frames_per_round": 20,
+        "rounds": 3,
+        "frames_per_round": 200,
+        "timed_frames": 600,
+        "aggregate_wall_ms": 25287.187826,
+        "metrics_ms": {
+          "preprocess": {
+            "mean": 1.5448094733333333,
+            "p50": 1.5284615,
+            "p95": 1.6343161499999999,
+            "min": 1.482794,
+            "max": 2.325339
+          },
+          "runtime": {
+            "mean": 9.543112568333333,
+            "p50": 9.5334365,
+            "p95": 9.66526375,
+            "min": 9.412853,
+            "max": 9.899312
+          },
+          "postprocess": {
+            "mean": 31.04770482,
+            "p50": 29.703124,
+            "p95": 38.18060614999996,
+            "min": 28.025475,
+            "max": 57.819121
+          },
+          "end_to_end": {
+            "mean": 42.135626861666665,
+            "p50": 40.7801055,
+            "p95": 49.34328399999997,
+            "min": 39.044623,
+            "max": 68.871477
+          }
+        },
+        "throughput_fps": 23.727430828946776,
+        "run_started_at": [
+          "2026-11-10T14:50:58+08:00",
+          "2026-11-10T14:51:11+08:00",
+          "2026-11-10T14:51:23+08:00"
+        ],
+        "input_images": "100 COCO val2017 images (manifest 0:5000:50), cycled",
+        "measurement_status": "measured",
+        "environment_status": "recorded"
+      },
+      {
+        "tool": "yolov5_benchmark",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "preprocess_runtime_postprocess",
+        "pipeline_streams": 2,
+        "runtime_submission_threads": 2,
+        "cpu_thread_policy": "all_online",
+        "online_cpu_threads": 8,
+        "cpu_backend": "opencv",
+        "opencv_threads": 8,
+        "cpu_governor": "schedutil",
+        "cpu_frequency_mhz": 1500.0,
+        "bpu_frequency_mhz": 996.0,
+        "bpu_frequency_samples_mhz": {
+          "min": 996.0,
+          "max": 996.0
+        },
+        "bpu_governor": "performance",
+        "temperature_max_c": 51.644,
+        "warmup_frames_per_round": 20,
+        "rounds": 3,
+        "frames_per_round": 200,
+        "timed_frames": 1200,
+        "aggregate_wall_ms": 25593.048422,
+        "metrics_ms": {
+          "preprocess": {
+            "mean": 1.7878335233333333,
+            "p50": 1.711795,
+            "p95": 1.9682307499999998,
+            "min": 1.555129,
+            "max": 7.25364
+          },
+          "runtime": {
+            "mean": 9.767412895000001,
+            "p50": 9.7458745,
+            "p95": 10.1013186,
+            "min": 9.393769,
+            "max": 13.567611
+          },
+          "postprocess": {
+            "mean": 31.03540961166667,
+            "p50": 29.783354000000003,
+            "p95": 37.645522449999994,
+            "min": 28.121017,
+            "max": 56.55416
+          },
+          "end_to_end": {
+            "mean": 42.59065603,
+            "p50": 41.2947945,
+            "p95": 49.0941773,
+            "min": 39.475666,
+            "max": 70.472855
+          }
+        },
+        "throughput_fps": 46.88773217685432,
+        "run_started_at": [
+          "2026-11-10T14:51:35+08:00",
+          "2026-11-10T14:51:48+08:00",
+          "2026-11-10T14:52:00+08:00"
+        ],
+        "input_images": "100 COCO val2017 images (manifest 0:5000:50), cycled",
+        "measurement_status": "measured",
+        "environment_status": "recorded"
+      }
+    ],
+    "yolov5--s-v2.0-native-20261102--x5": [
+      {
+        "tool": "yolov5_benchmark",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "preprocess_runtime_postprocess",
+        "pipeline_streams": 1,
+        "runtime_submission_threads": 1,
+        "cpu_thread_policy": "all_online",
+        "online_cpu_threads": 8,
+        "cpu_backend": "opencv",
+        "opencv_threads": 8,
+        "cpu_governor": "schedutil",
+        "cpu_frequency_mhz": 1500.0,
+        "bpu_frequency_mhz": 996.0,
+        "bpu_frequency_samples_mhz": {
+          "min": 996.0,
+          "max": 996.0
+        },
+        "bpu_governor": "performance",
+        "temperature_max_c": 51.302,
+        "warmup_frames_per_round": 20,
+        "rounds": 3,
+        "frames_per_round": 200,
+        "timed_frames": 600,
+        "aggregate_wall_ms": 29154.503467,
+        "metrics_ms": {
+          "preprocess": {
+            "mean": 1.5507361100000001,
+            "p50": 1.5344615,
+            "p95": 1.6232050999999998,
+            "min": 1.496587,
+            "max": 2.117046
+          },
+          "runtime": {
+            "mean": 16.003964378333333,
+            "p50": 16.261055,
+            "p95": 16.336542350000002,
+            "min": 15.040573,
+            "max": 16.649826
+          },
+          "postprocess": {
+            "mean": 31.02655790833333,
+            "p50": 30.0617295,
+            "p95": 35.820682399999995,
+            "min": 28.0886,
+            "max": 61.482378
+          },
+          "end_to_end": {
+            "mean": 48.58125839666666,
+            "p50": 47.6765165,
+            "p95": 53.289522449999986,
+            "min": 44.751218,
+            "max": 79.247707
+          }
+        },
+        "throughput_fps": 20.580010929671307,
+        "run_started_at": [
+          "2026-11-10T14:52:20+08:00",
+          "2026-11-10T14:52:34+08:00",
+          "2026-11-10T14:52:48+08:00"
+        ],
+        "input_images": "100 COCO val2017 images (manifest 0:5000:50), cycled",
+        "measurement_status": "measured",
+        "environment_status": "recorded"
+      },
+      {
+        "tool": "yolov5_benchmark",
+        "implementation": "native_cpp_cli",
+        "timing_scope": "preprocess_runtime_postprocess",
+        "pipeline_streams": 2,
+        "runtime_submission_threads": 2,
+        "cpu_thread_policy": "all_online",
+        "online_cpu_threads": 8,
+        "cpu_backend": "opencv",
+        "opencv_threads": 8,
+        "cpu_governor": "schedutil",
+        "cpu_frequency_mhz": 1500.0,
+        "bpu_frequency_mhz": 996.0,
+        "bpu_frequency_samples_mhz": {
+          "min": 996.0,
+          "max": 996.0
+        },
+        "bpu_governor": "performance",
+        "temperature_max_c": 53.061,
+        "warmup_frames_per_round": 20,
+        "rounds": 3,
+        "frames_per_round": 200,
+        "timed_frames": 1200,
+        "aggregate_wall_ms": 28778.507533000004,
+        "metrics_ms": {
+          "preprocess": {
+            "mean": 1.7547158083333334,
+            "p50": 1.6966700000000001,
+            "p95": 1.97089775,
+            "min": 1.557586,
+            "max": 4.637801
+          },
+          "runtime": {
+            "mean": 15.724732479166665,
+            "p50": 15.5795745,
+            "p95": 16.36221415,
+            "min": 15.144865,
+            "max": 22.584172
+          },
+          "postprocess": {
+            "mean": 30.452329699999996,
+            "p50": 29.5413325,
+            "p95": 34.7388233,
+            "min": 28.058017,
+            "max": 58.644997
+          },
+          "end_to_end": {
+            "mean": 47.931777987500006,
+            "p50": 47.03239000000001,
+            "p95": 52.21031795,
+            "min": 45.501011,
+            "max": 76.743494
+          }
+        },
+        "throughput_fps": 41.697784314352404,
+        "run_started_at": [
+          "2026-11-10T14:53:02+08:00",
+          "2026-11-10T14:53:16+08:00",
+          "2026-11-10T14:53:30+08:00"
+        ],
+        "input_images": "100 COCO val2017 images (manifest 0:5000:50), cycled",
+        "measurement_status": "measured",
+        "environment_status": "recorded"
+      }
     ]
   },
   "gflops": {
@@ -32076,6 +33263,118 @@
         "Conv": 115605504,
         "MatMul": 16053110784,
         "Gemm": 1395111936
+      }
+    },
+    "yolov5--n-v7.0-native-20261102--s100": {
+      "onnx_sha256": "87e74e9db4eee072b8697e63fbbcc02b954cd6fd73ffe1bd55746e247f2576db",
+      "input_shape": [
+        1,
+        3,
+        640,
+        640
+      ],
+      "macs": 2234060800,
+      "gflops": 4.4681216,
+      "macs_by_op": {
+        "Conv": 2234060800
+      }
+    },
+    "yolov5--n-v7.0-native-20261102--s600": {
+      "onnx_sha256": "87e74e9db4eee072b8697e63fbbcc02b954cd6fd73ffe1bd55746e247f2576db",
+      "input_shape": [
+        1,
+        3,
+        640,
+        640
+      ],
+      "macs": 2234060800,
+      "gflops": 4.4681216,
+      "macs_by_op": {
+        "Conv": 2234060800
+      }
+    },
+    "yolov5--n-v7.0-native-20261102--x5": {
+      "onnx_sha256": "87e74e9db4eee072b8697e63fbbcc02b954cd6fd73ffe1bd55746e247f2576db",
+      "input_shape": [
+        1,
+        3,
+        640,
+        640
+      ],
+      "macs": 2234060800,
+      "gflops": 4.4681216,
+      "macs_by_op": {
+        "Conv": 2234060800
+      }
+    },
+    "yolov5--n-v7.0-native-20261102-s100p-o1-20261103--s100p": {
+      "onnx_sha256": "87e74e9db4eee072b8697e63fbbcc02b954cd6fd73ffe1bd55746e247f2576db",
+      "input_shape": [
+        1,
+        3,
+        640,
+        640
+      ],
+      "macs": 2234060800,
+      "gflops": 4.4681216,
+      "macs_by_op": {
+        "Conv": 2234060800
+      }
+    },
+    "yolov5--s-v2.0-native-20261102--s100": {
+      "onnx_sha256": "3cda298cd1e1ff79fa0d8e8c31114d320597e8b80e64bd2065324a934f303ec3",
+      "input_shape": [
+        1,
+        3,
+        640,
+        640
+      ],
+      "macs": 8688640000,
+      "gflops": 17.37728,
+      "macs_by_op": {
+        "Conv": 8688640000
+      }
+    },
+    "yolov5--s-v2.0-native-20261102--s600": {
+      "onnx_sha256": "3cda298cd1e1ff79fa0d8e8c31114d320597e8b80e64bd2065324a934f303ec3",
+      "input_shape": [
+        1,
+        3,
+        640,
+        640
+      ],
+      "macs": 8688640000,
+      "gflops": 17.37728,
+      "macs_by_op": {
+        "Conv": 8688640000
+      }
+    },
+    "yolov5--s-v2.0-native-20261102--x5": {
+      "onnx_sha256": "3cda298cd1e1ff79fa0d8e8c31114d320597e8b80e64bd2065324a934f303ec3",
+      "input_shape": [
+        1,
+        3,
+        640,
+        640
+      ],
+      "macs": 8688640000,
+      "gflops": 17.37728,
+      "macs_by_op": {
+        "Conv": 8688640000
+      }
+    },
+    "yolov5--s-v2.0-native-20261102-s100p-o1-20261103--s100p": {
+      "onnx_sha256": "3cda298cd1e1ff79fa0d8e8c31114d320597e8b80e64bd2065324a934f303ec3",
+      "input_shape": [
+        1,
+        3,
+        640,
+        640
+      ],
+      "macs": 8688640000,
+      "gflops": 17.37728,
+      "macs_by_op": {
+        "Conv": 8688640000
       }
     }
   }
