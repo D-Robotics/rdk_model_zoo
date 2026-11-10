@@ -79,6 +79,11 @@ Eagle3/DFlash 的生成速度保留官方区间，不能取上限作为单值；
 检测门槛同时检查 AP 绝对差值与保留率；比例值 0.10 表示 10 个百分点。
 这些局部结果不将模型自动提升为 `released`，也不改写其它测试状态。
 
+`board_smoke` 检查当前制品在目标板卡上的加载与执行。同一 SHA256 制品的全量板端
+精度原始结果记录为 `backend: board`、`state: completed`，且实际与预期样本数一致时，
+可用该执行记录将 `validation.board_smoke` 回填为 `passed`，并登记公开证据。
+精度结论、原生入口支持和 C++ 等价性仍分别记录。
+
 已测得有效性能数值、但验收证据尚未齐套的 `converted` 条目，可将对应
 `validation.runtime_1/runtime_2/cpp_1/cpp_2` 写为 `measured`，附同一制品的公开测量记录。
 该状态与 `passed` 分开；测量结果仍显示在详情页。缺失 BPU 频率的 E2E 记录必须保持
