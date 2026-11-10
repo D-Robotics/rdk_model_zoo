@@ -1,0 +1,328 @@
+{
+  "number": 38,
+  "status": "completed",
+  "runtime": "host-float-reference",
+  "provider": "CPUExecutionProvider",
+  "framework": {
+    "onnxruntime": "1.19.2",
+    "numpy": "2.2.6",
+    "opencv": "4.11.0"
+  },
+  "native_checkout": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/validation/native-unique-covers",
+  "native_commit": "7a9f2d0596b80376697ca98a20ff0d81e14f41b7",
+  "source_model_reference": {
+    "schema_version": 2,
+    "kind": "host-float-model-inference-banner",
+    "status": "passed",
+    "source": "mobile_sam",
+    "model_url": "https://github.com/ChaoningZhang/MobileSAM/blob/f706ad9c4eb7f219c00d9050e46328518ffb65d2/weights/mobile_sam.pt",
+    "model_file": "mobile_sam.pt",
+    "checkpoint_sha256": "6dbb90523a35330fedd7f1d3dfc66f995213d81b29a5ca8108dbcdd4e37d6c2f",
+    "commit": "7a9f2d0596b80376697ca98a20ff0d81e14f41b7",
+    "input": "samples/vision/mobile_sam/test_data/banner_input_unique_20261103.png",
+    "input_sha256": "1b13875641d973242fa4586fb93da979be1690145da852496e37b3f2dc02535a",
+    "native_helpers": {
+      "utils/py_utils/sam_tensor_io.py": "bb135cf1c3806ed6783d991e02f6dd2131368ba2cf926b5e8717d0513626a61f",
+      "utils/py_utils/sam_binding.py": "3d0ddc2bb502d98a29823be932e6e01a7f74945de82b02b0af672e86be6240d8",
+      "utils/py_utils/sam_stages.py": "09e0fd98772af54d1192c637d1c6df7ad0c7f9a55203e3e189b4aaa153520bb2"
+    },
+    "graphs": {
+      "encoder": {
+        "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/mobile-sam-s100-r02/encoder.onnx",
+        "sha256": "d37b75853d7ea2cbbc86f44d067fc3fb1937c86bde6de19e892352a6fe3fad0a",
+        "size_bytes": 27996317
+      },
+      "decoder": {
+        "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/mobile-sam-s100-r02/decoder.onnx",
+        "sha256": "5de5e99343d00e42941093cf3d3136ed28a6c24809c37039d8bf613ce4784253",
+        "size_bytes": 16395858
+      }
+    },
+    "framework": "ONNX Runtime 1.19.2",
+    "graph_io": {
+      "encoder": {
+        "inputs": [
+          {
+            "name": "normalized_images",
+            "shape": [
+              1,
+              3,
+              512,
+              512
+            ],
+            "dtype": "tensor(float)"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "image_embeddings",
+            "shape": [
+              1,
+              256,
+              32,
+              32
+            ],
+            "dtype": "tensor(float)"
+          }
+        ]
+      },
+      "decoder": {
+        "inputs": [
+          {
+            "name": "image_embeddings",
+            "shape": [
+              1,
+              256,
+              32,
+              32
+            ],
+            "dtype": "tensor(float)"
+          },
+          {
+            "name": "boxes",
+            "shape": [
+              1,
+              4
+            ],
+            "dtype": "tensor(float)"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "low_res_masks",
+            "shape": [
+              1,
+              3,
+              128,
+              128
+            ],
+            "dtype": "tensor(float)"
+          },
+          {
+            "name": "iou_predictions",
+            "shape": [
+              1,
+              3
+            ],
+            "dtype": "tensor(float)"
+          }
+        ]
+      }
+    },
+    "provider": "CPUExecutionProvider",
+    "runtime": "host-float-reference",
+    "versions": {
+      "onnxruntime": "1.19.2",
+      "numpy": "2.2.6",
+      "opencv": "4.11.0",
+      "pillow": "12.3.0"
+    },
+    "board_execution": "not-run",
+    "dataset_accuracy": "not-run",
+    "feeds": [
+      {
+        "role": "encoder",
+        "name": "normalized_images",
+        "shape": [
+          1,
+          3,
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "sha256": "195d690f888075a98d40f5806922097d43b27d2e5beb9199bf9daec87ee3df53"
+      },
+      {
+        "role": "decoder",
+        "name": "image_embeddings",
+        "shape": [
+          1,
+          256,
+          32,
+          32
+        ],
+        "dtype": "float32",
+        "sha256": "696998a0fd3e76eebd3fe843df835cefa7a13b2f8b0b5ed3d3d5d64efd878655"
+      },
+      {
+        "role": "decoder",
+        "name": "boxes",
+        "shape": [
+          1,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "fabde9a9fa1d9e145e32a73f7a017220d4c90dce9c24887bad04540b73854ef5"
+      }
+    ],
+    "forward_outputs": [
+      {
+        "role": "encoder",
+        "name": "image_embeddings",
+        "shape": [
+          1,
+          256,
+          32,
+          32
+        ],
+        "dtype": "float32",
+        "sha256": "696998a0fd3e76eebd3fe843df835cefa7a13b2f8b0b5ed3d3d5d64efd878655"
+      },
+      {
+        "role": "decoder",
+        "name": "low_res_masks",
+        "shape": [
+          1,
+          3,
+          128,
+          128
+        ],
+        "dtype": "float32",
+        "sha256": "aea53730a6be5b9431e7e463903d933075780e54482d3eb0c263dc1cfd973373"
+      },
+      {
+        "role": "decoder",
+        "name": "iou_predictions",
+        "shape": [
+          1,
+          3
+        ],
+        "dtype": "float32",
+        "sha256": "2beb5d34502eea31fb4cef2a6e605f5dd6d64d3f7a24cc120dfc34ac84802b2a"
+      }
+    ],
+    "files": {
+      "source.png": {
+        "file": "source.png",
+        "sha256": "1b13875641d973242fa4586fb93da979be1690145da852496e37b3f2dc02535a",
+        "size_bytes": 2257062
+      },
+      "outputs.npz": {
+        "file": "outputs.npz",
+        "sha256": "b79577a10276cc9727e6dd7362b7d04ec05d6d2753c0cd464d899ba90878a70b",
+        "size_bytes": 1129649
+      },
+      "banner.webp": {
+        "file": "banner.webp",
+        "sha256": "48660ab3a05be29b72591735b1ec9c403457937a1a313e1b3a2a782ef5e76320",
+        "size_bytes": 199782
+      },
+      "result.png": {
+        "file": "result.png",
+        "sha256": "fffb89f392d340b7295e69bd869d3fa737e4c8940e6deb502a295c9a34a73d7d",
+        "size_bytes": 1993671
+      }
+    },
+    "renderer_sha256": "c5d38352a8cf7810d4525fe0c04767e96dd5eeede370dc608ab5a726668a5789",
+    "prompts": {
+      "box": [
+        20,
+        115,
+        495,
+        425
+      ]
+    },
+    "mask_index": 1,
+    "predicted_iou": 0.9837417602539062,
+    "visualization": {
+      "method": "Native highest-IoU decoder candidate; actual mask overlay",
+      "selected_mask_shape": [
+        1254,
+        1254
+      ],
+      "foreground_pixels": 360585
+    }
+  },
+  "input": {
+    "file": "38-mobilesam.png",
+    "sha256": "53804a213c13c309f1e95a758abfa2f40da11c02ce4d00a2b2bf54946ed0ec8b",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "role": "generated photographic inference input"
+  },
+  "forward": [
+    {
+      "role": "encoder",
+      "seconds": 0.2845014319755137,
+      "inputs": {
+        "normalized_images": {
+          "shape": [
+            1,
+            3,
+            512,
+            512
+          ],
+          "dtype": "float32"
+        }
+      },
+      "outputs": {
+        "image_embeddings": {
+          "shape": [
+            1,
+            256,
+            32,
+            32
+          ],
+          "dtype": "float32"
+        }
+      }
+    },
+    {
+      "role": "decoder",
+      "seconds": 0.014739186968654394,
+      "inputs": {
+        "image_embeddings": {
+          "shape": [
+            1,
+            256,
+            32,
+            32
+          ],
+          "dtype": "float32"
+        },
+        "boxes": {
+          "shape": [
+            1,
+            4
+          ],
+          "dtype": "float32"
+        }
+      },
+      "outputs": {
+        "low_res_masks": {
+          "shape": [
+            1,
+            3,
+            128,
+            128
+          ],
+          "dtype": "float32"
+        },
+        "iou_predictions": {
+          "shape": [
+            1,
+            3
+          ],
+          "dtype": "float32"
+        }
+      }
+    }
+  ],
+  "result": {
+    "box_prompt_512": [
+      70,
+      38,
+      445,
+      445
+    ],
+    "mask_index": 1,
+    "predicted_iou": 1.0038940906524658,
+    "foreground_pixels": 484202,
+    "method": "Native MobileSAM encoder, box decoder and highest-IoU candidate"
+  },
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "migration": "not-run; review only"
+}

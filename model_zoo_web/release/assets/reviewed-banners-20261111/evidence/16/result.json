@@ -1,0 +1,401 @@
+{
+  "number": 16,
+  "status": "completed",
+  "runtime": "host-float-reference",
+  "provider": "CPUExecutionProvider",
+  "framework": {
+    "onnxruntime": "1.19.2",
+    "numpy": "2.2.6",
+    "opencv": "4.11.0"
+  },
+  "native_checkout": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-all-20261103-r01/validation/native-unique-covers",
+  "native_commit": "7a9f2d0596b80376697ca98a20ff0d81e14f41b7",
+  "source_model_reference": {
+    "schema_version": 2,
+    "kind": "host-float-model-inference-banner",
+    "status": "passed",
+    "source": "fasterrcnn",
+    "model_url": "https://download.pytorch.org/models/fasterrcnn_mobilenet_v3_large_320_fpn-907ea3f9.pth",
+    "model_file": "fasterrcnn_mobilenet_v3_large_320_fpn-907ea3f9.pth",
+    "checkpoint_sha256": "907ea3f91ff92242bc1baea8049276a3e76bca48ce7560bd268cc029f37977b5",
+    "commit": "deb7e0dd545d36818096599dcca2c24cfe585e44",
+    "input": "samples/vision/fasterrcnn/test_data/banner_input_tracking_promenade_20261105.png",
+    "input_sha256": "da099bdaefc4004699c53194dc88f9debd4e3204e3703e83469fbfe43c27c10e",
+    "native_helpers": {
+      "samples/vision/fasterrcnn/conversion/reference.py": "9024a3bc4d87f799ed6cfa88b1616364f113d0051f3058a8c797ecf8beec55af",
+      "samples/vision/fasterrcnn/runtime/python/detect.py": "3515d91d72abb0c3f6e9e894207d92fe18f91609cbec4d3a35b3e468709eddc7",
+      "samples/vision/fasterrcnn/runtime/python/tracking.py": "ae891303c57028efa459c4e53a928a73d2bdc3a0d1a6fbeceac41316a431b798",
+      "samples/vision/bytetrack/runtime/python/tracker_backend/byte_tracker.py": "60104a1cdfb5b0473308be39e821c0eebad485d2bcf6bcf738959af712f48bac"
+    },
+    "graphs": {
+      "parta": {
+        "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/fasterrcnn-s100-r02/export/part_a_f0only.op16.onnx",
+        "sha256": "8ab21cf106ff9d3009879a7f0775a912b78ae2e132c589ce505c40f43c7217a4",
+        "size_bytes": 20267987
+      },
+      "partb": {
+        "path": "/home/zhengyi/work/rdk_model_zoo_workbench/runs/conversion/batch-20261103-r01/jobs/fasterrcnn-s100-r02/export/part_b_packed.op16.onnx",
+        "sha256": "95751d28b7597605a56820c5d84031e94dbc2ac98ef9decd37901496852e92bc",
+        "size_bytes": 57449454
+      }
+    },
+    "framework": "ONNX Runtime 1.19.2",
+    "graph_io": {
+      "parta": {
+        "inputs": [
+          {
+            "name": "images",
+            "shape": [
+              1,
+              3,
+              320,
+              320
+            ],
+            "dtype": "tensor(float)"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "rpn_obj",
+            "shape": [
+              3375,
+              1
+            ],
+            "dtype": "tensor(float)"
+          },
+          {
+            "name": "rpn_deltas",
+            "shape": [
+              3375,
+              4
+            ],
+            "dtype": "tensor(float)"
+          },
+          {
+            "name": "feat0",
+            "shape": [
+              1,
+              256,
+              10,
+              10
+            ],
+            "dtype": "tensor(float)"
+          }
+        ]
+      },
+      "partb": {
+        "inputs": [
+          {
+            "name": "bank",
+            "shape": [
+              1,
+              256,
+              1050,
+              7
+            ],
+            "dtype": "tensor(float)"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "cls_packed",
+            "shape": [
+              1,
+              91,
+              150,
+              1
+            ],
+            "dtype": "tensor(float)"
+          },
+          {
+            "name": "reg_packed",
+            "shape": [
+              1,
+              364,
+              150,
+              1
+            ],
+            "dtype": "tensor(float)"
+          }
+        ]
+      }
+    },
+    "provider": "CPUExecutionProvider",
+    "runtime": "host-float-reference",
+    "versions": {
+      "onnxruntime": "1.19.2",
+      "numpy": "2.2.6",
+      "opencv": "4.11.0",
+      "pillow": "12.3.0"
+    },
+    "board_execution": "not-run",
+    "dataset_accuracy": "not-run",
+    "feeds": [
+      {
+        "role": "parta",
+        "name": "images",
+        "shape": [
+          1,
+          3,
+          320,
+          320
+        ],
+        "dtype": "float32",
+        "sha256": "48aa4138382e0711673b3aead590caa29dd8ca41e90dfe77a41b9124a5d609da"
+      },
+      {
+        "role": "partb",
+        "name": "bank",
+        "shape": [
+          1,
+          256,
+          1050,
+          7
+        ],
+        "dtype": "float32",
+        "sha256": "f49db2a37be359376c372f5f3f2708f8d0682041f8e41ca165827e79964e9d27"
+      }
+    ],
+    "forward_outputs": [
+      {
+        "role": "parta",
+        "name": "rpn_obj",
+        "shape": [
+          3375,
+          1
+        ],
+        "dtype": "float32",
+        "sha256": "6ce7abe7c529bed8a1ea585aed04b7b97119a87696f9128204867c5c4171c0ee"
+      },
+      {
+        "role": "parta",
+        "name": "rpn_deltas",
+        "shape": [
+          3375,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "de8465c8e0c96c28d3289f0bf64c4c8975d0aac8fe03ec43661ca2b3d269eda1"
+      },
+      {
+        "role": "parta",
+        "name": "feat0",
+        "shape": [
+          1,
+          256,
+          10,
+          10
+        ],
+        "dtype": "float32",
+        "sha256": "d186503bbdc9a2591cfee0500e3cfe20139e8585aaa6ec09c32fef20a64fea05"
+      },
+      {
+        "role": "partb",
+        "name": "cls_packed",
+        "shape": [
+          1,
+          91,
+          150,
+          1
+        ],
+        "dtype": "float32",
+        "sha256": "227468b8a82effac1ed3d344fc637fdd50f845c72b3375457204325ee79032ee"
+      },
+      {
+        "role": "partb",
+        "name": "reg_packed",
+        "shape": [
+          1,
+          364,
+          150,
+          1
+        ],
+        "dtype": "float32",
+        "sha256": "522755771b6381a00a4d1f22aec55f71707655b533afe26d14795252c99836f1"
+      }
+    ],
+    "files": {
+      "source.png": {
+        "file": "source.png",
+        "sha256": "da099bdaefc4004699c53194dc88f9debd4e3204e3703e83469fbfe43c27c10e",
+        "size_bytes": 2467233
+      },
+      "outputs.npz": {
+        "file": "outputs.npz",
+        "sha256": "17a3a034b5baaae62860567f6f9a6104a44a880092db3eae61b2e634d74b94b1",
+        "size_bytes": 414881
+      },
+      "banner.webp": {
+        "file": "banner.webp",
+        "sha256": "fbe3aa730e414ce958859251db411416f7d97e0cddaed8c0290f253cb8fef4d9",
+        "size_bytes": 306676
+      },
+      "result.png": {
+        "file": "result.png",
+        "sha256": "cdeff380573dca378e27a762916253aac067f7e78bc011fef1b634c4cb79e597",
+        "size_bytes": 2265614
+      }
+    },
+    "renderer_sha256": "9312432a3b39cb907fc7e491b159de39202256b6adcb867a87a0f28ce9dbd71a",
+    "tracks": [
+      {
+        "id": 1,
+        "box": [
+          1151.5826416015625,
+          59.98973846435547,
+          1431.80126953125,
+          878.7395553588867
+        ],
+        "score": 0.999736487865448
+      },
+      {
+        "id": 2,
+        "box": [
+          217.03988647460938,
+          28.205997467041016,
+          527.8682250976562,
+          913.588321685791
+        ],
+        "score": 0.9996191263198853
+      },
+      {
+        "id": 3,
+        "box": [
+          668.7677612304688,
+          79.2378158569336,
+          938.5010375976562,
+          853.5343246459961
+        ],
+        "score": 0.9994606375694275
+      }
+    ],
+    "visualization": {
+      "method": "Both source Faster R-CNN stages, Native RPN/RoIAlign, person filter and real CPU ByteTrack update",
+      "rendered_track_ids": [
+        1,
+        2,
+        3
+      ],
+      "rendered_size": [
+        1672,
+        941
+      ],
+      "layout": "full-bleed"
+    }
+  },
+  "input": {
+    "file": "16-fasterrcnn-track.png",
+    "sha256": "5c285afd3bda55e5f7e257d94c1737ed7c7a8ff7c322fed30bbb8244cb39dac2",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "role": "generated photographic inference input"
+  },
+  "forward": [
+    {
+      "role": "parta",
+      "seconds": 0.03466571494936943,
+      "inputs": {
+        "images": {
+          "shape": [
+            1,
+            3,
+            320,
+            320
+          ],
+          "dtype": "float32"
+        }
+      },
+      "outputs": {
+        "rpn_obj": {
+          "shape": [
+            3375,
+            1
+          ],
+          "dtype": "float32"
+        },
+        "rpn_deltas": {
+          "shape": [
+            3375,
+            4
+          ],
+          "dtype": "float32"
+        },
+        "feat0": {
+          "shape": [
+            1,
+            256,
+            10,
+            10
+          ],
+          "dtype": "float32"
+        }
+      }
+    },
+    {
+      "role": "partb",
+      "seconds": 0.03353633312508464,
+      "inputs": {
+        "bank": {
+          "shape": [
+            1,
+            256,
+            1050,
+            7
+          ],
+          "dtype": "float32"
+        }
+      },
+      "outputs": {
+        "cls_packed": {
+          "shape": [
+            1,
+            91,
+            150,
+            1
+          ],
+          "dtype": "float32"
+        },
+        "reg_packed": {
+          "shape": [
+            1,
+            364,
+            150,
+            1
+          ],
+          "dtype": "float32"
+        }
+      }
+    }
+  ],
+  "result": {
+    "tracks": [
+      {
+        "id": 4,
+        "box": [
+          856.6271362304688,
+          153.40780639648438,
+          1099.4586181640625,
+          876.2758483886719
+        ],
+        "score": 0.999395489692688
+      },
+      {
+        "id": 5,
+        "box": [
+          143.63064575195312,
+          128.67054748535156,
+          465.8047790527344,
+          1124.959243774414
+        ],
+        "score": 0.9990473389625549
+      }
+    ],
+    "frame_index": 1,
+    "method": "Actual native detector and first CPU ByteTrack update; no temporal/MOT accuracy claim"
+  },
+  "board_execution": "not-run",
+  "dataset_accuracy": "not-run",
+  "migration": "not-run; review only"
+}

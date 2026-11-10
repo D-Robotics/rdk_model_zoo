@@ -150,6 +150,8 @@ if (preview) {
   const explicitHeroes = new Map(JSON.parse(fs.readFileSync(catalogPath, 'utf8')).models
     .filter(record => record.hero_visual?.inference_receipt_version === 2)
     .map(record => [record.id, record.hero_visual]));
+  const releaseInputsPath = process.env.MODEL_ZOO_INPUTS || path.join(webRoot, 'release/inputs.json');
+  const reviewedCovers = JSON.parse(fs.readFileSync(releaseInputsPath, 'utf8')).reviewed_covers || {};
 
   const checkedCovers = new Set();
   for (const model of data.models) {
@@ -159,7 +161,16 @@ if (preview) {
       assertCoverResolves(model.coverImage, root, `${model.id} catalog cover and detail hero`);
       checkedCovers.add(model.coverImage);
     }
-    const explicitHero = explicitHeroes.get(model.catalogId);
+    const reviewedCover = reviewedCovers[model.catalogId];
+    if (reviewedCover) {
+      const source = path.resolve(path.dirname(releaseInputsPath), reviewedCover.cover);
+      const bytes = fs.readFileSync(path.join(root, model.coverImage));
+      assert(bytes.equals(fs.readFileSync(source)), `${model.id}: built cover must match its reviewed artwork`);
+      assert.equal(model.coverLabel, reviewedCover.cover_label);
+      assert.equal(model.coverProvenance?.kind, reviewedCover.kind);
+      assert.equal(model.heroProvenance, undefined, `${model.id}: a replacement must not retain the old image receipt`);
+    }
+    const explicitHero = reviewedCover ? null : explicitHeroes.get(model.catalogId);
     if (explicitHero) {
       const receiptPath = path.resolve(webRoot, '..', explicitHero.predictions_source);
       const receipt = JSON.parse(fs.readFileSync(receiptPath, 'utf8'));
@@ -170,9 +181,9 @@ if (preview) {
       assert.equal(model.heroProvenance?.revision, explicitHero.commit);
       assert.equal(model.heroProvenance?.input, explicitHero.input);
     }
-    const familyBanner = model.coverLabel === '主机浮点推理参考'
+    const familyBanner = !reviewedCover && model.coverLabel === '主机浮点推理参考'
       ? familyBannerItems[model.catalogId] : null;
-    if (model.coverLabel === '主机浮点推理参考') {
+    if (!reviewedCover && model.coverLabel === '主机浮点推理参考') {
       assert.ok(familyBanner, `${model.id}: host inference cover needs a reviewed manifest entry`);
       const bytes = fs.readFileSync(path.join(root, model.coverImage));
       assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), familyBanner.banner.sha256,
@@ -245,7 +256,9 @@ if (preview) {
         if (row.model_stage !== undefined) assert.ok(['float', 'quantized', 'board'].includes(row.model_stage), `${model.id}: unknown model stage`);
         if (row.concurrency !== undefined) assert.ok(Number.isInteger(row.concurrency) && row.concurrency > 0, `${model.id}: concurrency must be a positive integer from the source`);
       }
-      if (familyBanner) {
+      if (reviewedCover) {
+        assert.match(model.coverImage, /^assets\/models\/reviewed-/, `${model.id}: pending artwork must use the checked reviewed cover`);
+      } else if (familyBanner) {
         assert.equal(model.heroProvenance?.runtime, 'host-float-reference');
         assert.equal(model.heroProvenance?.revision, familyBanner.model.conversion_source_commit);
         assert.equal(model.heroProvenance?.input, `model_zoo_web/release/assets/${familyBanner.source_image.file}`);

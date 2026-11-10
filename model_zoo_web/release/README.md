@@ -114,3 +114,19 @@ Each component retains its own ONNX/config/model identity and public HBM URL.
 staging; the five companion files retain their existing Archive directory layout.
 Upload and verify both component HBMs and the complete bundle before registration.
 Combined compiler reports leave whole-pipeline latency and FPS empty until measured.
+
+## Reviewed cover refresh (2026-11-11)
+
+`inputs.json.reviewed_covers` selects the 28 human-reviewed family/task banners
+after the existing official, inference and pending defaults. It applies the
+same cover to every size/platform of that catalog record.
+
+`assets/reviewed-banners-20261111/provenance.json` distinguishes 21 illustrative
+task scenes from seven recorded model-result references. English speech copy,
+illustrative masks and photographic scene sequences are artwork, not measured
+model outputs. Native/recorded references retain their exact input and compact
+result evidence in that directory. The prior hero receipt is not attached to a
+replacement picture; the selected cover gets its own `coverProvenance`.
+
+This refresh changes imagery and image labels only. It does not promote pending
+models, certify deployment artifacts, or change accuracy/performance records.

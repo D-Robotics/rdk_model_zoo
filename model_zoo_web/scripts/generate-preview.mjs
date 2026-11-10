@@ -16,6 +16,7 @@ import { loadVerifiedPreviewDownloads, previewDownloadAssets } from './preview-d
 import { readFileSync } from 'node:fs';
 import { loadInferenceTaskBanners } from './task-banner-assets.mjs';
 import { loadFamilyInferenceBanners } from './family-banner-assets.mjs';
+import { applyReviewedCovers } from './reviewed-cover-assets.mjs';
 import { buildPendingModels } from './pending-preview.mjs';
 import { isPublishedDownloadSource } from './model-download-policy.mjs';
 import { runtimeInputProperties } from './runtime-input-properties.mjs';
@@ -870,6 +871,11 @@ if (technicalPassedPreview) {
   if (usedReleaseInputs.size !== selectedReleaseIds.size) {
     throw new Error('Preview loaded a release outside the technical-passed selection');
   }
+}
+
+// Reviewed artwork has its own provenance and does not change release facts.
+if (!candidatePreview && !technicalPassedPreview) {
+  await applyReviewedCovers({ models, covers: inputs.reviewed_covers, inputRoot, assetsRoot });
 }
 
 const platformNames = [...new Set(models.flatMap(model => model.platforms))];
