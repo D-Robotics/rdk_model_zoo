@@ -198,20 +198,164 @@ variants:
           max_top1_drop: 0.1
           max_top5_drop: 0.1
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      core_selection: sdk-default-any-core
+      warmup_frames_per_condition: 20
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.2923333333333331
+        observed_min_latency_ms: 1.26
+        observed_max_latency_ms: 1.682
+        aggregate_fps: 765.1176157506728
+        reported_frame_count: 600
+        fps_aggregation: frame-count-weighted-harmonic-mean-of-sdk-fps
+      - threads: 2
+        average_latency_ms: 2.0566666666666666
+        observed_min_latency_ms: 1.567
+        observed_max_latency_ms: 2.557
+        aggregate_fps: 960.7979932197463
+        reported_frame_count: 600
+        fps_aggregation: frame-count-weighted-harmonic-mean-of-sdk-fps
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_cli
+        timing_scope: preprocess_runtime_postprocess
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        cpu_backend: opencv
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: null
+        warmup_frames_per_round: 20
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 600
+        aggregate_wall_ms: 2132.267959
+        metrics_ms:
+          preprocess:
+            mean: 2.060361131666667
+            p50: 2.0674085
+            p95: 2.1255751999999997
+            min: 1.898565
+            max: 11.533421
+          runtime:
+            mean: 1.4834355033333333
+            p50: 1.451775
+            p95: 1.8303529499999998
+            min: 1.414599
+            max: 2.024419
+          postprocess:
+            mean: 0.006637098333333333
+            p50: 0.006475
+            p95: 0.0077024999999999975
+            min: 0.005425
+            max: 0.014226
+          end_to_end:
+            mean: 3.5504337333333336
+            p50: 3.530109
+            p95: 3.9260125
+            min: 3.34784
+            max: 13.002322
+        throughput_fps: 281.3905248012968
+        measurement_status: measured
+        environment_status: incomplete
+      - tool: classification_benchmark
+        implementation: native_cpp_cli
+        timing_scope: preprocess_runtime_postprocess
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        cpu_backend: opencv
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: null
+        warmup_frames_per_round: 20
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 1200
+        aggregate_wall_ms: 3266.0274529999997
+        metrics_ms:
+          preprocess:
+            mean: 3.727078664166667
+            p50: 2.4073700000000002
+            p95: 8.196371
+            min: 1.908715
+            max: 10.905174
+          runtime:
+            mean: 1.5387282291666668
+            p50: 1.4776384999999999
+            p95: 1.87965775
+            min: 1.408774
+            max: 2.63389
+          postprocess:
+            mean: 0.007231569166666666
+            p50: 0.0066
+            p95: 0.012102199999999999
+            min: 0.005
+            max: 0.029051
+          end_to_end:
+            mean: 5.273038462500001
+            p50: 3.922509
+            p95: 9.715818
+            min: 3.35719
+            max: 13.024871
+        throughput_fps: 367.41883443072214
+        measurement_status: measured
+        environment_status: incomplete
+      review:
+        campaign: first208-20261109
+        job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s100
+        runtime_status: measured
+        cpp_status: measured
+        equivalence_status: not-run
+        report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#googlenet--torchvision-021-crop224-int16-o1-20261103--s100
     validation:
       conversion: passed
       host_smoke: passed
       board_smoke: not-run
       accuracy: passed
-      runtime_1: not-run
-      runtime_2: not-run
-      cpp_1: not-run
-      cpp_2: not-run
+      runtime_1: passed
+      runtime_2: passed
+      cpp_1: measured
+      cpp_2: measured
       artifact_sha256: 0763c1e75a7b38aba372d763b130027ec58f69785ed07eab16b01ee06b1ddb47
       evidence:
         accuracy:
           artifact_sha256: 0763c1e75a7b38aba372d763b130027ec58f69785ed07eab16b01ee06b1ddb47
           url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/data.json
+          job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s100
+        runtime_1:
+          artifact_sha256: 0763c1e75a7b38aba372d763b130027ec58f69785ed07eab16b01ee06b1ddb47
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s100
+        runtime_2:
+          artifact_sha256: 0763c1e75a7b38aba372d763b130027ec58f69785ed07eab16b01ee06b1ddb47
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s100
+        cpp_1:
+          artifact_sha256: 0763c1e75a7b38aba372d763b130027ec58f69785ed07eab16b01ee06b1ddb47
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s100
+        cpp_2:
+          artifact_sha256: 0763c1e75a7b38aba372d763b130027ec58f69785ed07eab16b01ee06b1ddb47
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
           job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s100
     provenance:
       repository_commit: c5e3d097a9e44b8512cc71b66459ac3ed0016b64
@@ -313,20 +457,164 @@ variants:
           max_top1_drop: 0.1
           max_top5_drop: 0.1
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      core_selection: sdk-default-any-core
+      warmup_frames_per_condition: 20
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.0126666666666666
+        observed_min_latency_ms: 0.972
+        observed_max_latency_ms: 1.345
+        aggregate_fps: 971.3818382819234
+        reported_frame_count: 600
+        fps_aggregation: frame-count-weighted-harmonic-mean-of-sdk-fps
+      - threads: 2
+        average_latency_ms: 1.5366666666666666
+        observed_min_latency_ms: 1.326
+        observed_max_latency_ms: 2.016
+        aggregate_fps: 1285.4379691484576
+        reported_frame_count: 600
+        fps_aggregation: frame-count-weighted-harmonic-mean-of-sdk-fps
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_cli
+        timing_scope: preprocess_runtime_postprocess
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        cpu_backend: opencv
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: null
+        warmup_frames_per_round: 20
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 600
+        aggregate_wall_ms: 1703.6321359999997
+        metrics_ms:
+          preprocess:
+            mean: 1.6491231033333333
+            p50: 1.5881025000000002
+            p95: 1.8466398
+            min: 1.449612
+            max: 4.51054
+          runtime:
+            mean: 1.1818196833333334
+            p50: 1.157273
+            p95: 1.4428416999999998
+            min: 1.130111
+            max: 1.566789
+          postprocess:
+            mean: 0.005500706666666666
+            p50: 0.005325
+            p95: 0.0064274999999999975
+            min: 0.004425
+            max: 0.026025
+          end_to_end:
+            mean: 2.8364434933333333
+            p50: 2.7538125
+            p95: 3.083101749999999
+            min: 2.599598
+            max: 5.737126
+        throughput_fps: 352.1887074804511
+        measurement_status: measured
+        environment_status: incomplete
+      - tool: classification_benchmark
+        implementation: native_cpp_cli
+        timing_scope: preprocess_runtime_postprocess
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        cpu_backend: opencv
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: null
+        warmup_frames_per_round: 20
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 1200
+        aggregate_wall_ms: 2585.4786679999997
+        metrics_ms:
+          preprocess:
+            mean: 2.9718385075
+            p50: 1.8654035
+            p95: 6.205950949999999
+            min: 1.471413
+            max: 12.947791
+          runtime:
+            mean: 1.2381566758333333
+            p50: 1.1822485
+            p95: 1.5013604999999999
+            min: 1.124285
+            max: 4.836143
+          postprocess:
+            mean: 0.005862513333333333
+            p50: 0.005375
+            p95: 0.009325
+            min: 0.004
+            max: 0.0121
+          end_to_end:
+            mean: 4.215857696666667
+            p50: 3.1354155
+            p95: 7.450856049999999
+            min: 2.631223
+            max: 14.175477
+        throughput_fps: 464.1306907120071
+        measurement_status: measured
+        environment_status: incomplete
+      review:
+        campaign: first208-20261109
+        job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s100p
+        runtime_status: measured
+        cpp_status: measured
+        equivalence_status: not-run
+        report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#googlenet--torchvision-021-crop224-int16-o1-20261103--s100p
     validation:
       conversion: passed
       host_smoke: passed
       board_smoke: not-run
       accuracy: passed
-      runtime_1: not-run
-      runtime_2: not-run
-      cpp_1: not-run
-      cpp_2: not-run
+      runtime_1: passed
+      runtime_2: passed
+      cpp_1: measured
+      cpp_2: measured
       artifact_sha256: 42b589e0ad1526ced9be76aeba443ca424a54fc6995caaeeb8d7f09523d3d0ef
       evidence:
         accuracy:
           artifact_sha256: 42b589e0ad1526ced9be76aeba443ca424a54fc6995caaeeb8d7f09523d3d0ef
           url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/data.json
+          job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s100p
+        runtime_1:
+          artifact_sha256: 42b589e0ad1526ced9be76aeba443ca424a54fc6995caaeeb8d7f09523d3d0ef
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s100p
+        runtime_2:
+          artifact_sha256: 42b589e0ad1526ced9be76aeba443ca424a54fc6995caaeeb8d7f09523d3d0ef
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s100p
+        cpp_1:
+          artifact_sha256: 42b589e0ad1526ced9be76aeba443ca424a54fc6995caaeeb8d7f09523d3d0ef
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s100p
+        cpp_2:
+          artifact_sha256: 42b589e0ad1526ced9be76aeba443ca424a54fc6995caaeeb8d7f09523d3d0ef
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
           job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s100p
     provenance:
       repository_commit: c5e3d097a9e44b8512cc71b66459ac3ed0016b64
@@ -428,20 +716,164 @@ variants:
           max_top1_drop: 0.1
           max_top5_drop: 0.1
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      core_selection: sdk-default-any-core
+      warmup_frames_per_condition: 20
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 0.7413333333333333
+        observed_min_latency_ms: 0.722
+        observed_max_latency_ms: 1.206
+        aggregate_fps: 1327.5011202564806
+        reported_frame_count: 600
+        fps_aggregation: frame-count-weighted-harmonic-mean-of-sdk-fps
+      - threads: 2
+        average_latency_ms: 0.7596666666666667
+        observed_min_latency_ms: 0.729
+        observed_max_latency_ms: 1.755
+        aggregate_fps: 2578.9032866178704
+        reported_frame_count: 600
+        fps_aggregation: frame-count-weighted-harmonic-mean-of-sdk-fps
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_cli
+        timing_scope: preprocess_runtime_postprocess
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        cpu_backend: opencv
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: null
+        warmup_frames_per_round: 20
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 600
+        aggregate_wall_ms: 1067.42729
+        metrics_ms:
+          preprocess:
+            mean: 0.81966901
+            p50: 0.82013
+            p95: 0.8567812499999999
+            min: 0.77793
+            max: 0.946006
+          runtime:
+            mean: 0.9521655850000001
+            p50: 0.9410555
+            p95: 1.0078097499999996
+            min: 0.920656
+            max: 1.312832
+          postprocess:
+            mean: 0.0054947450000000005
+            p50: 0.005025
+            p95: 0.00835
+            min: 0.004425
+            max: 0.032601
+          end_to_end:
+            mean: 1.7773293400000003
+            p50: 1.7664855
+            p95: 1.884025999999999
+            min: 1.709685
+            max: 2.162762
+        throughput_fps: 562.0991758604935
+        measurement_status: measured
+        environment_status: incomplete
+      - tool: classification_benchmark
+        implementation: native_cpp_cli
+        timing_scope: preprocess_runtime_postprocess
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        cpu_backend: opencv
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: null
+        warmup_frames_per_round: 20
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 1200
+        aggregate_wall_ms: 1233.873426
+        metrics_ms:
+          preprocess:
+            mean: 0.9681618624999999
+            p50: 0.872905
+            p95: 0.969386
+            min: 0.78828
+            max: 6.947215
+          runtime:
+            mean: 1.0527430991666664
+            p50: 1.044431
+            p95: 1.158512
+            min: 0.926806
+            max: 1.847086
+          postprocess:
+            mean: 0.006451575
+            p50: 0.005975
+            p95: 0.009300049999999999
+            min: 0.004625
+            max: 0.02685
+          end_to_end:
+            mean: 2.0273565366666664
+            p50: 1.934936
+            p95: 2.12130575
+            min: 1.759986
+            max: 8.138147
+        throughput_fps: 972.5470819889429
+        measurement_status: measured
+        environment_status: incomplete
+      review:
+        campaign: first208-20261109
+        job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s600
+        runtime_status: measured
+        cpp_status: measured
+        equivalence_status: not-run
+        report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#googlenet--torchvision-021-crop224-int16-o1-20261103--s600
     validation:
       conversion: passed
       host_smoke: passed
       board_smoke: not-run
       accuracy: passed
-      runtime_1: not-run
-      runtime_2: not-run
-      cpp_1: not-run
-      cpp_2: not-run
+      runtime_1: passed
+      runtime_2: passed
+      cpp_1: measured
+      cpp_2: measured
       artifact_sha256: ff6ae99848ba954d82423f900f8609aeeff3b9364dca0a0047c844f6db8aa682
       evidence:
         accuracy:
           artifact_sha256: ff6ae99848ba954d82423f900f8609aeeff3b9364dca0a0047c844f6db8aa682
           url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/data.json
+          job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s600
+        runtime_1:
+          artifact_sha256: ff6ae99848ba954d82423f900f8609aeeff3b9364dca0a0047c844f6db8aa682
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s600
+        runtime_2:
+          artifact_sha256: ff6ae99848ba954d82423f900f8609aeeff3b9364dca0a0047c844f6db8aa682
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s600
+        cpp_1:
+          artifact_sha256: ff6ae99848ba954d82423f900f8609aeeff3b9364dca0a0047c844f6db8aa682
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s600
+        cpp_2:
+          artifact_sha256: ff6ae99848ba954d82423f900f8609aeeff3b9364dca0a0047c844f6db8aa682
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
           job_id: googlenet--torchvision-021-crop224-int16-o1-20261103--s600
     provenance:
       repository_commit: c5e3d097a9e44b8512cc71b66459ac3ed0016b64

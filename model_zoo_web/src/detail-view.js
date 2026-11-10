@@ -434,7 +434,7 @@
       : textDemo
       ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid">${dash('首 token 延迟')}${dash('生成速度')}${dash('板端 PPL')}${dash('峰值内存')}</div></div></div>`
       : b
-      ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid" id="detail-performance" aria-live="polite"></div></div><div class="mz-evaluation-summary" id="detail-evaluation-summary" aria-live="polite" hidden></div></div>`
+      ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid" id="detail-performance" aria-live="polite"></div></div><div class="mz-evaluation-summary" id="detail-performance-summary" aria-live="polite" hidden></div><div class="mz-evaluation-summary" id="detail-evaluation-summary" aria-live="polite" hidden></div></div>`
       : benchmarkEmpty;
     const upstreamLine = !m.dataPending && (m.upstream || []).length
       ? `<section class="mz-section"><h2>上游</h2><div class="mz-resource-links">${m.upstream.map(item => external(item.url, esc(item.name))).join('')}</div></section>`
@@ -821,6 +821,14 @@
       });
       root.querySelector('#detail-performance').innerHTML = `<div class="${m.releaseStatus === 'converted' && !delay ? 'is-unmeasured' : ''}"><span>Runtime 延迟</span><strong>${value(delay, delay?.unit || 'ms')}</strong></div>${endToEndTile}<div class="${m.releaseStatus === 'converted' && !speed ? 'is-unmeasured' : ''}"><span>吞吐量</span><strong>${value(speed, speed?.unit || 'fps')}</strong></div>${accuracyTiles.join('')}`;
       const evaluationRoot = root.querySelector('#detail-evaluation-summary');
+      const performanceSummary = root.querySelector('#detail-performance-summary');
+      if (performanceSummary) {
+        const review = m.performanceEvaluation;
+        performanceSummary.hidden = !review;
+        performanceSummary.innerHTML = review
+          ? `<span>Runtime 已实测</span><span>${review.cpp_status === 'measured' ? 'E2E 已测量，验收记录待补齐' : 'E2E 待实测'}</span>${external(review.report_url, '查看性能记录')}`
+          : '';
+      }
       if (evaluationRoot) {
         const evaluation = m.accuracyEvaluation;
         evaluationRoot.hidden = !evaluation;

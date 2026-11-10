@@ -12,16 +12,18 @@ import {
 
 const detailSource = readFileSync(new URL('../../src/detail-view.js', import.meta.url), 'utf8');
 
-function renderAccuracy(records, metricLabels, taskId = 'pose-estimation', catalogId = 'fixture/pose', modelFields = {}) {
+function renderAccuracy(records, metricLabels, taskId = 'pose-estimation', catalogId = 'fixture/pose', modelFields = {}, threads = 1) {
   const performanceRoot = { innerHTML: '' };
   const evaluationRoot = { innerHTML: '', hidden: true };
+  const performanceSummary = { innerHTML: '', hidden: true };
   const root = {
     addEventListener() {},
     querySelectorAll: () => [],
     querySelector: selector => {
-      if (selector === '#benchmark-condition') return { dataset: { value: '1' }, addEventListener() {} };
+      if (selector === '#benchmark-condition') return { dataset: { value: String(threads) }, addEventListener() {} };
       if (selector === '#detail-performance') return performanceRoot;
       if (selector === '#detail-evaluation-summary') return evaluationRoot;
+      if (selector === '#detail-performance-summary') return performanceSummary;
       return null;
     },
   };
@@ -45,8 +47,44 @@ function renderAccuracy(records, metricLabels, taskId = 'pose-estimation', catal
     benchmark: { accuracy: records },
     ...modelFields,
   }, [], { accuracyMetricLabels: metricLabels, release: { compatibility: { hardware: 'RDK S100' } } });
-  return performanceRoot.innerHTML + (evaluationRoot.hidden ? '' : evaluationRoot.innerHTML);
+  return performanceRoot.innerHTML + (evaluationRoot.hidden ? '' : evaluationRoot.innerHTML)
+    + (performanceSummary.hidden ? '' : performanceSummary.innerHTML);
 }
+
+test('measured performance selects matching runtime concurrency and keeps missing E2E explicit', () => {
+  const accuracy = accuracyRecords('cls', { top1: 0.8, top5: 0.95 }, { top1: 0.79, top5: 0.94 });
+  for (const hasCpp of [true, false]) {
+    const html = renderAccuracy(accuracy, accuracyMetricLabels(), 'image-classification', 'fixture/fixture/cls', {
+      releaseStatus: 'converted',
+      performanceEvaluation: { cpp_status: hasCpp ? 'measured' : 'not-run', report_url: 'https://example.org/performance.html' },
+      benchmark: {
+        accuracy,
+        performance: [
+          { metric: 'latency', value: 1.5, unit: 'ms', concurrency: 1 },
+          { metric: 'throughput', value: 100, unit: 'fps', concurrency: 1 },
+          { metric: 'latency', value: 2.5, unit: 'ms', concurrency: 2 },
+          { metric: 'throughput', value: 200, unit: 'fps', concurrency: 2 },
+        ],
+        endToEnd: hasCpp ? [
+          { timing: { pipelineStreams: 1, runtimeSubmissionThreads: 1 }, metrics: { endToEnd: { value: 5, unit: 'ms' } }, throughputFps: 190 },
+          { timing: { pipelineStreams: 2, runtimeSubmissionThreads: 2 }, metrics: { endToEnd: { value: 7.25, unit: 'ms' } }, throughputFps: 270 },
+        ] : [],
+      },
+    }, 2);
+    assert.match(html, /2\.5<small>ms<\/small>/);
+    assert.match(html, /200<small>fps<\/small>/);
+    assert.doesNotMatch(html, /1\.5<small>ms<\/small>/);
+    assert.match(html, /查看性能记录/);
+    if (hasCpp) {
+      assert.match(html, /7\.25<small>ms<\/small>/);
+      assert.match(html, /E2E 已测量，验收记录待补齐/);
+      assert.doesNotMatch(html, /待实测/);
+    } else {
+      assert.match(html, /E2E 待实测/);
+      assert.equal((html.match(/<strong>待实测<\/strong>/g) || []).length, 1);
+    }
+  }
+});
 
 test('measured converted accuracy shows its verdict and dataset while performance remains unmeasured', () => {
   for (const status of ['pass', 'fail']) {

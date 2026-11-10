@@ -734,6 +734,7 @@ for (const record of catalog.models || []) {
             images: release.accuracy.images,
           },
         } : {}),
+        ...(performance.review ? { performanceEvaluation: performance.review } : {}),
         benchmark: {
           precision: release.provenance?.precision_policy || 'int8',
           ...(release.provenance?.precision_policy
@@ -764,7 +765,9 @@ for (const record of catalog.models || []) {
                 : { opencvThreads: Number(endToEnd.opencv_threads) }),
               cpuGovernor: endToEnd.cpu_governor,
               cpuFrequencyMhz: Number(endToEnd.cpu_frequency_mhz),
-              bpuFrequencyMhz: Number(endToEnd.bpu_frequency_mhz),
+              bpuFrequencyMhz: endToEnd.bpu_frequency_mhz == null ? null : Number(endToEnd.bpu_frequency_mhz),
+              measurementStatus: endToEnd.measurement_status,
+              environmentStatus: endToEnd.environment_status,
               warmupFramesPerRound: Number(endToEnd.warmup_frames_per_round),
               rounds: Number(endToEnd.rounds),
               framesPerRound: Number(endToEnd.frames_per_round),

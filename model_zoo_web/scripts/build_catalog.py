@@ -357,7 +357,7 @@ def validate_artifact(
     return base_url
 
 
-def validate_end_to_end_record(end_to_end: dict[str, Any], label: str) -> int:
+def validate_end_to_end_record(end_to_end: dict[str, Any], label: str, *, allow_incomplete_environment: bool = False) -> int:
     require_string(end_to_end.get("tool"), f"{label}.tool")
     require_string(end_to_end.get("implementation"), f"{label}.implementation")
     require_string(end_to_end.get("timing_scope"), f"{label}.timing_scope")
@@ -401,10 +401,11 @@ def validate_end_to_end_record(end_to_end: dict[str, Any], label: str) -> int:
         end_to_end.get("cpu_frequency_mhz"),
         f"{label}.cpu_frequency_mhz",
     )
-    require_positive_number(
-        end_to_end.get("bpu_frequency_mhz"),
-        f"{label}.bpu_frequency_mhz",
-    )
+    if end_to_end.get("bpu_frequency_mhz") is None and allow_incomplete_environment:
+        if end_to_end.get("measurement_status") != "measured" or end_to_end.get("environment_status") != "incomplete":
+            raise CatalogError(f"{label}: an unknown BPU frequency requires a qualified measured record")
+    else:
+        require_positive_number(end_to_end.get("bpu_frequency_mhz"), f"{label}.bpu_frequency_mhz")
     require_nonnegative_int(
         end_to_end.get("warmup_frames_per_round"),
         f"{label}.warmup_frames_per_round",
@@ -1254,7 +1255,7 @@ def validate_performance(performance_value: Any, platform_label: str, *, complet
     for condition_index, condition_value in enumerate(end_to_end_records):
         condition_label = f"{end_to_end_label}[{condition_index}]"
         condition = require_mapping(condition_value, condition_label)
-        pipeline_streams = validate_end_to_end_record(condition, condition_label)
+        pipeline_streams = validate_end_to_end_record(condition, condition_label, allow_incomplete_environment=not complete)
         if pipeline_streams in seen_pipeline_streams:
             raise CatalogError(
                 f"{end_to_end_label}: duplicate pipeline_streams {pipeline_streams}"
@@ -1311,9 +1312,12 @@ def validate_converted_platform(platform: dict[str, Any], license_info: dict[str
             raise CatalogError(f"{label}.validation.{key} must be passed")
     board_checks = ("board_smoke", "accuracy", "runtime_1", "runtime_2", "cpp_1", "cpp_2")
     for key in board_checks:
-        if validation.get(key) not in {"not-run", "passed", "failed"}:
+        allowed = {"not-run", "passed", "failed"}
+        if platform.get("status") == "converted" and key.startswith(("runtime_", "cpp_")):
+            allowed.add("measured")
+        if validation.get(key) not in allowed:
             raise CatalogError(f"{label}.validation.{key} must declare its actual execution state")
-        if validation[key] == "passed" or (key == "accuracy" and "accuracy" in platform):
+        if validation[key] in {"passed", "measured"} or (key == "accuracy" and "accuracy" in platform):
             evidence = require_mapping(validation.get("evidence", {}).get(key), f"{label}.validation.evidence.{key}")
             if evidence.get("artifact_sha256") != artifact["sha256"]:
                 raise CatalogError(f"{label}.validation.evidence.{key} belongs to another artifact")
@@ -1335,8 +1339,8 @@ def validate_converted_platform(platform: dict[str, Any], license_info: dict[str
     cpp_conditions = {item.get("pipeline_streams") for item in ([cpp] if isinstance(cpp, dict) else cpp)}
     for prefix, conditions in (("runtime", runtime_conditions), ("cpp", cpp_conditions)):
         for count in (1, 2):
-            if (count in conditions) != (validation[f"{prefix}_{count}"] == "passed"):
-                raise CatalogError(f"{label}: {prefix} {count} measurements must match their passed check")
+            if (count in conditions) != (validation[f"{prefix}_{count}"] in {"passed", "measured"}):
+                raise CatalogError(f"{label}: {prefix} {count} measurements must match their measured or passed check")
     if any(count not in {1, 2} for count in runtime_conditions | cpp_conditions):
         raise CatalogError(f"{label}: converted board conditions must be explicitly tracked as 1 or 2")
 

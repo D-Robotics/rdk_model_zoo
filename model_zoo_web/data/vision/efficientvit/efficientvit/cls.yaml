@@ -315,20 +315,164 @@ variants:
           max_top1_drop: 0.1
           max_top5_drop: 0.1
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      core_selection: sdk-default-any-core
+      warmup_frames_per_condition: 20
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 28.945219666666667
+        observed_min_latency_ms: 26.372999
+        observed_max_latency_ms: 40.479
+        aggregate_fps: 34.53011023282137
+        reported_frame_count: 600
+        fps_aggregation: frame-count-weighted-harmonic-mean-of-sdk-fps
+      - threads: 2
+        average_latency_ms: 28.773629
+        observed_min_latency_ms: 26.757999
+        observed_max_latency_ms: 42.57
+        aggregate_fps: 69.15984057164577
+        reported_frame_count: 600
+        fps_aggregation: frame-count-weighted-harmonic-mean-of-sdk-fps
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_cli
+        timing_scope: preprocess_runtime_postprocess
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        cpu_backend: opencv
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000
+        warmup_frames_per_round: 20
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 600
+        aggregate_wall_ms: 21881.090117
+        metrics_ms:
+          preprocess:
+            mean: 8.903232240000001
+            p50: 8.961141999999999
+            p95: 10.339895
+            min: 7.35839
+            max: 11.32023
+          runtime:
+            mean: 27.521286228333338
+            p50: 27.5757205
+            p95: 28.386327899999998
+            min: 25.647758
+            max: 28.630055
+          postprocess:
+            mean: 0.0340247
+            p50: 0.032666
+            p95: 0.038542
+            min: 0.029334
+            max: 0.058083
+          end_to_end:
+            mean: 36.458543168333335
+            p50: 36.495133499999994
+            p95: 37.559343500000004
+            min: 34.472817
+            max: 38.699658
+        throughput_fps: 27.420937292966226
+        measurement_status: measured
+        environment_status: recorded
+      - tool: classification_benchmark
+        implementation: native_cpp_cli
+        timing_scope: preprocess_runtime_postprocess
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 8
+        cpu_backend: opencv
+        opencv_threads: 8
+        cpu_governor: schedutil
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: 1000
+        warmup_frames_per_round: 20
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 1200
+        aggregate_wall_ms: 23372.258982
+        metrics_ms:
+          preprocess:
+            mean: 11.409315625
+            p50: 9.546101499999999
+            p95: 27.81430015
+            min: 7.542181
+            max: 68.818509
+          runtime:
+            mean: 27.257489240833333
+            p50: 27.207448499999998
+            p95: 28.5979015
+            min: 25.362591
+            max: 30.695351
+          postprocess:
+            mean: 0.03405889333333333
+            p50: 0.0325835
+            p95: 0.03941605
+            min: 0.028917
+            max: 0.07875
+          end_to_end:
+            mean: 38.700863759166666
+            p50: 36.862508500000004
+            p95: 55.185525799999986
+            min: 33.883565
+            max: 98.021649
+        throughput_fps: 51.34291901027507
+        measurement_status: measured
+        environment_status: recorded
+      review:
+        campaign: first208-20261109
+        job_id: efficientvit--m5-r224-in1k-224--x5
+        runtime_status: measured
+        cpp_status: measured
+        equivalence_status: not-run
+        report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#efficientvit--m5-r224-in1k-224--x5
     validation:
       artifact_sha256: 68a3eee6456a1a57d35ce49c8c32bc97535314c051e3fb482180df78b6cc8f32
       conversion: passed
       host_smoke: passed
       board_smoke: not-run
       accuracy: passed
-      runtime_1: not-run
-      runtime_2: not-run
-      cpp_1: not-run
-      cpp_2: not-run
+      runtime_1: passed
+      runtime_2: passed
+      cpp_1: measured
+      cpp_2: measured
       evidence:
         accuracy:
           artifact_sha256: 68a3eee6456a1a57d35ce49c8c32bc97535314c051e3fb482180df78b6cc8f32
           url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/data.json
+          job_id: efficientvit--m5-r224-in1k-224--x5
+        runtime_1:
+          artifact_sha256: 68a3eee6456a1a57d35ce49c8c32bc97535314c051e3fb482180df78b6cc8f32
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: efficientvit--m5-r224-in1k-224--x5
+        runtime_2:
+          artifact_sha256: 68a3eee6456a1a57d35ce49c8c32bc97535314c051e3fb482180df78b6cc8f32
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: efficientvit--m5-r224-in1k-224--x5
+        cpp_1:
+          artifact_sha256: 68a3eee6456a1a57d35ce49c8c32bc97535314c051e3fb482180df78b6cc8f32
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: efficientvit--m5-r224-in1k-224--x5
+        cpp_2:
+          artifact_sha256: 68a3eee6456a1a57d35ce49c8c32bc97535314c051e3fb482180df78b6cc8f32
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
           job_id: efficientvit--m5-r224-in1k-224--x5
     provenance:
       repository_commit: 214a78c0c4dda7891726740da6fb30db286aecfc
@@ -446,20 +590,164 @@ variants:
           max_top1_drop: 0.1
           max_top5_drop: 0.1
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      core_selection: sdk-default-any-core
+      warmup_frames_per_condition: 20
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.6820000000000002
+        observed_min_latency_ms: 1.644
+        observed_max_latency_ms: 2.152
+        aggregate_fps: 587.9955803745316
+        reported_frame_count: 600
+        fps_aggregation: frame-count-weighted-harmonic-mean-of-sdk-fps
+      - threads: 2
+        average_latency_ms: 2.816666666666667
+        observed_min_latency_ms: 1.985
+        observed_max_latency_ms: 3.305
+        aggregate_fps: 703.7642886312211
+        reported_frame_count: 600
+        fps_aggregation: frame-count-weighted-harmonic-mean-of-sdk-fps
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_cli
+        timing_scope: preprocess_runtime_postprocess
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        cpu_backend: opencv
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: null
+        warmup_frames_per_round: 20
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 600
+        aggregate_wall_ms: 2359.9862120000003
+        metrics_ms:
+          preprocess:
+            mean: 2.0490675733333332
+            p50: 2.071252
+            p95: 2.1283765
+            min: 1.905521
+            max: 2.907433
+          runtime:
+            mean: 1.8738150216666667
+            p50: 1.837318
+            p95: 2.2207858
+            min: 1.806592
+            max: 2.289035
+          postprocess:
+            mean: 0.006958391666666666
+            p50: 0.0067504999999999996
+            p95: 0.008115949999999986
+            min: 0.005675
+            max: 0.014901
+          end_to_end:
+            mean: 3.929840986666667
+            p50: 3.921246
+            p95: 4.295275299999999
+            min: 3.736239
+            max: 4.868381
+        throughput_fps: 254.23877349330883
+        measurement_status: measured
+        environment_status: incomplete
+      - tool: classification_benchmark
+        implementation: native_cpp_cli
+        timing_scope: preprocess_runtime_postprocess
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        cpu_backend: opencv
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 1500.0
+        bpu_frequency_mhz: null
+        warmup_frames_per_round: 20
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 1200
+        aggregate_wall_ms: 3337.500014
+        metrics_ms:
+          preprocess:
+            mean: 3.487636370833334
+            p50: 2.3964265
+            p95: 7.475916049999999
+            min: 1.920296
+            max: 12.098222
+          runtime:
+            mean: 1.9694231458333336
+            p50: 1.8716940000000002
+            p95: 2.3879714499999998
+            min: 1.805092
+            max: 3.258596
+          postprocess:
+            mean: 0.007882465833333333
+            p50: 0.007075
+            p95: 0.01270225
+            min: 0.0052
+            max: 0.030401
+          end_to_end:
+            mean: 5.464941982499999
+            p50: 4.2974215000000004
+            p95: 9.4593875
+            min: 3.753039
+            max: 14.36203
+        throughput_fps: 359.5505602895257
+        measurement_status: measured
+        environment_status: incomplete
+      review:
+        campaign: first208-20261109
+        job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s100
+        runtime_status: measured
+        cpp_status: measured
+        equivalence_status: not-run
+        report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s100
     validation:
       conversion: passed
       host_smoke: passed
       artifact_sha256: 4270b730e93c31ad4efc8c30fa2f74f59c3d21b7aa3f5b792010cce6caffaf54
       board_smoke: not-run
       accuracy: passed
-      runtime_1: not-run
-      runtime_2: not-run
-      cpp_1: not-run
-      cpp_2: not-run
+      runtime_1: passed
+      runtime_2: passed
+      cpp_1: measured
+      cpp_2: measured
       evidence:
         accuracy:
           artifact_sha256: 4270b730e93c31ad4efc8c30fa2f74f59c3d21b7aa3f5b792010cce6caffaf54
           url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/data.json
+          job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s100
+        runtime_1:
+          artifact_sha256: 4270b730e93c31ad4efc8c30fa2f74f59c3d21b7aa3f5b792010cce6caffaf54
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s100
+        runtime_2:
+          artifact_sha256: 4270b730e93c31ad4efc8c30fa2f74f59c3d21b7aa3f5b792010cce6caffaf54
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s100
+        cpp_1:
+          artifact_sha256: 4270b730e93c31ad4efc8c30fa2f74f59c3d21b7aa3f5b792010cce6caffaf54
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s100
+        cpp_2:
+          artifact_sha256: 4270b730e93c31ad4efc8c30fa2f74f59c3d21b7aa3f5b792010cce6caffaf54
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
           job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s100
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -596,20 +884,164 @@ variants:
           max_top1_drop: 0.1
           max_top5_drop: 0.1
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      core_selection: sdk-default-any-core
+      warmup_frames_per_condition: 20
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.4873333333333334
+        observed_min_latency_ms: 1.446
+        observed_max_latency_ms: 1.846
+        aggregate_fps: 664.5059961666456
+        reported_frame_count: 600
+        fps_aggregation: frame-count-weighted-harmonic-mean-of-sdk-fps
+      - threads: 2
+        average_latency_ms: 2.480666666666667
+        observed_min_latency_ms: 1.742
+        observed_max_latency_ms: 2.985
+        aggregate_fps: 798.7569587471746
+        reported_frame_count: 600
+        fps_aggregation: frame-count-weighted-harmonic-mean-of-sdk-fps
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_cli
+        timing_scope: preprocess_runtime_postprocess
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        cpu_backend: opencv
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: null
+        warmup_frames_per_round: 20
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 600
+        aggregate_wall_ms: 1982.020614
+        metrics_ms:
+          preprocess:
+            mean: 1.6366045733333332
+            p50: 1.5918895
+            p95: 1.8565657
+            min: 1.452138
+            max: 3.640583
+          runtime:
+            mean: 1.6578119383333334
+            p50: 1.630277
+            p95: 1.9185082500000001
+            min: 1.600564
+            max: 2.042718
+          postprocess:
+            mean: 0.0057094066666666665
+            p50: 0.00555
+            p95: 0.006602499999999997
+            min: 0.0046
+            max: 0.025326
+          end_to_end:
+            mean: 3.3001259183333334
+            p50: 3.2306415
+            p95: 3.59082795
+            min: 3.072002
+            max: 5.499699
+        throughput_fps: 302.72137220062234
+        measurement_status: measured
+        environment_status: incomplete
+      - tool: classification_benchmark
+        implementation: native_cpp_cli
+        timing_scope: preprocess_runtime_postprocess
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 6
+        cpu_backend: opencv
+        opencv_threads: 6
+        cpu_governor: performance
+        cpu_frequency_mhz: 2000.0
+        bpu_frequency_mhz: null
+        warmup_frames_per_round: 20
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 1200
+        aggregate_wall_ms: 2632.9657639999996
+        metrics_ms:
+          preprocess:
+            mean: 2.5837146766666668
+            p50: 1.8437285
+            p95: 6.2291022499999995
+            min: 1.469438
+            max: 20.890587
+          runtime:
+            mean: 1.7376640966666665
+            p50: 1.6645895
+            p95: 2.103904
+            min: 1.595465
+            max: 6.093505
+          postprocess:
+            mean: 0.006542819166666667
+            p50: 0.006
+            p95: 0.0098
+            min: 0.00435
+            max: 0.013125
+          end_to_end:
+            mean: 4.3279215925
+            p50: 3.5257940000000003
+            p95: 8.012090749999999
+            min: 3.111628
+            max: 22.559477
+        throughput_fps: 455.7598189871489
+        measurement_status: measured
+        environment_status: incomplete
+      review:
+        campaign: first208-20261109
+        job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s100p
+        runtime_status: measured
+        cpp_status: measured
+        equivalence_status: not-run
+        report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s100p
     validation:
       conversion: passed
       host_smoke: passed
       artifact_sha256: 588cbf420ff5f9ac6bab0222c53471dec194eccba0a3701ba1be9e4a3dd76e8f
       board_smoke: not-run
       accuracy: passed
-      runtime_1: not-run
-      runtime_2: not-run
-      cpp_1: not-run
-      cpp_2: not-run
+      runtime_1: passed
+      runtime_2: passed
+      cpp_1: measured
+      cpp_2: measured
       evidence:
         accuracy:
           artifact_sha256: 588cbf420ff5f9ac6bab0222c53471dec194eccba0a3701ba1be9e4a3dd76e8f
           url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/data.json
+          job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s100p
+        runtime_1:
+          artifact_sha256: 588cbf420ff5f9ac6bab0222c53471dec194eccba0a3701ba1be9e4a3dd76e8f
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s100p
+        runtime_2:
+          artifact_sha256: 588cbf420ff5f9ac6bab0222c53471dec194eccba0a3701ba1be9e4a3dd76e8f
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s100p
+        cpp_1:
+          artifact_sha256: 588cbf420ff5f9ac6bab0222c53471dec194eccba0a3701ba1be9e4a3dd76e8f
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s100p
+        cpp_2:
+          artifact_sha256: 588cbf420ff5f9ac6bab0222c53471dec194eccba0a3701ba1be9e4a3dd76e8f
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
           job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s100p
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc
@@ -746,20 +1178,164 @@ variants:
           max_top1_drop: 0.1
           max_top5_drop: 0.1
         report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/
+    performance:
+      tool: hrt_model_exec perf
+      implementation: native_cpp_cli
+      timing_scope: model_runtime
+      thread_semantics: runtime_submission_concurrency
+      core_id: 0
+      core_selection: sdk-default-any-core
+      warmup_frames_per_condition: 20
+      runs_per_condition: 3
+      frames_per_run: 200
+      stages:
+        preprocess: not_measured
+        runtime: measured
+        postprocess: not_measured
+        end_to_end: not_measured
+      measurements:
+      - threads: 1
+        average_latency_ms: 1.305
+        observed_min_latency_ms: 1.28
+        observed_max_latency_ms: 1.561
+        aggregate_fps: 759.3673763216489
+        reported_frame_count: 600
+        fps_aggregation: frame-count-weighted-harmonic-mean-of-sdk-fps
+      - threads: 2
+        average_latency_ms: 1.3390000000000002
+        observed_min_latency_ms: 1.306
+        observed_max_latency_ms: 2.58
+        aggregate_fps: 1475.4482069722646
+        reported_frame_count: 600
+        fps_aggregation: frame-count-weighted-harmonic-mean-of-sdk-fps
+      end_to_end:
+      - tool: classification_benchmark
+        implementation: native_cpp_cli
+        timing_scope: preprocess_runtime_postprocess
+        pipeline_streams: 1
+        runtime_submission_threads: 1
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        cpu_backend: opencv
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: null
+        warmup_frames_per_round: 20
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 600
+        aggregate_wall_ms: 1409.51314
+        metrics_ms:
+          preprocess:
+            mean: 0.8233030766666666
+            p50: 0.8243965
+            p95: 0.86063375
+            min: 0.777983
+            max: 1.001336
+          runtime:
+            mean: 1.518636615
+            p50: 1.5047165
+            p95: 1.648351799999997
+            min: 1.481991
+            max: 1.776494
+          postprocess:
+            mean: 0.005410558333333333
+            p50: 0.00515
+            p95: 0.0076262499999999985
+            min: 0.0046
+            max: 0.023325
+          end_to_end:
+            mean: 2.3473502500000003
+            p50: 2.3352375
+            p95: 2.5192782499999997
+            min: 2.270074
+            max: 2.652179
+        throughput_fps: 425.67889789236017
+        measurement_status: measured
+        environment_status: incomplete
+      - tool: classification_benchmark
+        implementation: native_cpp_cli
+        timing_scope: preprocess_runtime_postprocess
+        pipeline_streams: 2
+        runtime_submission_threads: 2
+        cpu_thread_policy: all_online
+        online_cpu_threads: 18
+        cpu_backend: opencv
+        opencv_threads: 18
+        cpu_governor: performance
+        cpu_frequency_mhz: 2100.0
+        bpu_frequency_mhz: null
+        warmup_frames_per_round: 20
+        rounds: 3
+        frames_per_round: 200
+        timed_frames: 1200
+        aggregate_wall_ms: 1567.176442
+        metrics_ms:
+          preprocess:
+            mean: 0.9719402108333333
+            p50: 0.863584
+            p95: 0.9440212499999999
+            min: 0.779408
+            max: 7.209825
+          runtime:
+            mean: 1.5909829283333332
+            p50: 1.5691665000000001
+            p95: 1.7844305
+            min: 1.494515
+            max: 1.961646
+          postprocess:
+            mean: 0.006457088333333334
+            p50: 0.0061
+            p95: 0.008825
+            min: 0.005075
+            max: 0.087526
+          end_to_end:
+            mean: 2.5693802275
+            p50: 2.4481384999999998
+            p95: 2.7021446
+            min: 2.304524
+            max: 8.783191
+        throughput_fps: 765.7082941271012
+        measurement_status: measured
+        environment_status: incomplete
+      review:
+        campaign: first208-20261109
+        job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s600
+        runtime_status: measured
+        cpp_status: measured
+        equivalence_status: not-run
+        report_url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.html#efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s600
     validation:
       conversion: passed
       host_smoke: passed
       artifact_sha256: 6dfab14188fea9f23c60d59f5a7591a37669b868ea6ea69d1e11f5e09beb6834
       board_smoke: not-run
       accuracy: passed
-      runtime_1: not-run
-      runtime_2: not-run
-      cpp_1: not-run
-      cpp_2: not-run
+      runtime_1: passed
+      runtime_2: passed
+      cpp_1: measured
+      cpp_2: measured
       evidence:
         accuracy:
           artifact_sha256: 6dfab14188fea9f23c60d59f5a7591a37669b868ea6ea69d1e11f5e09beb6834
           url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/data.json
+          job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s600
+        runtime_1:
+          artifact_sha256: 6dfab14188fea9f23c60d59f5a7591a37669b868ea6ea69d1e11f5e09beb6834
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s600
+        runtime_2:
+          artifact_sha256: 6dfab14188fea9f23c60d59f5a7591a37669b868ea6ea69d1e11f5e09beb6834
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s600
+        cpp_1:
+          artifact_sha256: 6dfab14188fea9f23c60d59f5a7591a37669b868ea6ea69d1e11f5e09beb6834
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
+          job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s600
+        cpp_2:
+          artifact_sha256: 6dfab14188fea9f23c60d59f5a7591a37669b868ea6ea69d1e11f5e09beb6834
+          url: https://d-robotics.github.io/rdk_model_zoo/evaluation/first208-20261109/performance.json
           job_id: efficientvit--m5-r224-in1k-224-s-int16-o1-20261103--s600
     provenance:
       repository_commit: b68415839877a8a88b8b32e28140257d0ac07efc

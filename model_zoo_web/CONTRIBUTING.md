@@ -79,6 +79,13 @@ Eagle3/DFlash 的生成速度保留官方区间，不能取上限作为单值；
 检测门槛同时检查 AP 绝对差值与保留率；比例值 0.10 表示 10 个百分点。
 这些局部结果不将模型自动提升为 `released`，也不改写其它测试状态。
 
+已测得有效性能数值、但验收证据尚未齐套的 `converted` 条目，可将对应
+`validation.runtime_1/runtime_2/cpp_1/cpp_2` 写为 `measured`，附同一制品的公开测量记录。
+该状态与 `passed` 分开；测量结果仍显示在详情页。缺失 BPU 频率的 E2E 记录必须保持
+`bpu_frequency_mhz: null`，并标记 `measurement_status: measured`、
+`environment_status: incomplete`。网页须提供记录入口和待补说明。
+`released` 仍要求所有板端检查通过及完整环境字段，不能用 `measured` 代替。
+
 已经进入 `main` / `develop` 的示例，在证据齐套之前可以先登记为 `registration: pending`。
 登记只写能核对的身份、任务、示例路径和支持的板卡，并标明证据文件；性能、精度、
 文件大小、下载地址、封面和转换报告留空。字段规则、任务代码和“待补”与“完整”的

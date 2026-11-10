@@ -118,6 +118,30 @@ class ConvertedCatalogTest(unittest.TestCase):
         self.validate()
         self.assertEqual(self.row['validation']['runtime_2'],'not-run')
 
+    def test_measured_performance_keeps_unknown_frequency_and_needs_artifact_evidence(self):
+        self.row['performance'] = copy.deepcopy(self.original_performance)
+        performance = self.row['performance']
+        end_to_end = performance['end_to_end']
+        conditions = [end_to_end] if isinstance(end_to_end, dict) else end_to_end
+        checks = [f"runtime_{m['threads']}" for m in performance['measurements']]
+        checks += [f"cpp_{m['pipeline_streams']}" for m in conditions]
+        for check in checks:
+            self.row['validation'][check] = 'measured'
+            self.row['validation'].setdefault('evidence', {})[check] = {
+                'artifact_sha256': self.row['artifact']['sha256'],
+                'url': 'https://example.org/performance.json',
+            }
+        for condition in conditions:
+            condition.update(bpu_frequency_mhz=None, measurement_status='measured', environment_status='incomplete')
+        self.validate()
+        with self.assertRaises(catalog.CatalogError):
+            catalog.validate_end_to_end_record(conditions[0], 'released.end_to_end')
+        conditions[0].pop('environment_status')
+        with self.assertRaises(catalog.CatalogError): self.validate()
+        conditions[0]['environment_status'] = 'incomplete'
+        self.row['validation']['evidence'][checks[0]]['artifact_sha256'] = '0' * 64
+        with self.assertRaises(catalog.CatalogError): self.validate()
+
     def test_artifact_license_can_differ_without_rewriting_existing_family_license(self):
         original=copy.deepcopy(self.record['license'])
         self.row['license']={'name':'MIT','url':'https://opensource.org/license/mit','scope':'model'}

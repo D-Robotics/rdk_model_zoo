@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>首批 208 项性能记录 · RDK Model Zoo</title>
+  <style>
+    :root{color-scheme:light dark;--bg:#f4f6f9;--panel:#fff;--ink:#192330;--muted:#5f6d7d;--line:#dce3eb;--link:#006bd6}
+    @media(prefers-color-scheme:dark){:root{--bg:#14191f;--panel:#202831;--ink:#edf2f7;--muted:#b3bfcc;--line:#3b4856;--link:#80baff}}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.65 system-ui,sans-serif}main{max-width:1600px;margin:auto;padding:24px}a{color:var(--link)}nav{display:flex;gap:24px;flex-wrap:wrap}h1{font-size:28px;margin:24px 0 8px}p{margin:8px 0}.muted{color:var(--muted)}.cards{display:flex;gap:16px;flex-wrap:wrap;margin:24px 0}.card{padding:16px 24px;background:var(--panel);border:1px solid var(--line);border-radius:8px;min-width:200px}.card strong{font-size:25px;display:block}.filters{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}input,select,button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:8px 12px}input{flex:1;min-width:240px}button{cursor:pointer}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th{background:var(--bg);font-size:12px}th:first-child,td:first-child{text-align:left;white-space:normal;min-width:240px;max-width:350px}td small{display:block;color:var(--muted);overflow-wrap:anywhere}dialog{max-width:min(950px,92vw);max-height:85vh;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:24px}dialog::backdrop{background:#0008}dialog pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}.dialog-head{display:flex;align-items:center;justify-content:space-between;gap:20px}.dialog-head h2{font-size:18px;overflow-wrap:anywhere}.notes{margin:20px 0;padding-left:20px}.error{color:#d94b30}
+  </style>
+</head>
+<body><main>
+  <nav><a href="../../">RDK Model Zoo</a><a href="index.html">本批精度报告</a><a href="performance.csv" download>下载性能 CSV</a><a href="performance.json">测量记录 JSON</a></nav>
+  <h1>首批 208 项性能记录</h1>
+  <p>Runtime 1/2 路提交并发、C++ E2E 1/2 路流水线；每个已完成条件重复 3 次。</p>
+  <p class="muted" id="updated">正在读取记录…</p>
+  <div class="cards"><div class="card">Runtime 已测条件<strong>416 / 416</strong></div><div class="card">E2E 已测条件<strong>398 / 416</strong></div><div class="card">E2E 待测条件<strong>18</strong></div><div class="card">正式运行记录<strong>2,442</strong></div></div>
+  <ul class="notes">
+    <li>Runtime FPS 使用 SDK 的测量窗口，排除模型加载与控制命令开销；E2E FPS 使用所有流水线共用的实际墙钟窗口。</li>
+    <li>E2E 包含前处理、输入上传、模型执行、输出读回和后处理；不含图片解码、模型加载、绘制及写盘。延迟和分位数由三次运行的全部逐帧数据重新汇总。</li>
+    <li>E2E 数值属于已测量记录，逐模型一致性验收尚待补齐。S 系列 BPU 频率及 C++ 运行起止时间未记录，保留为空；频率与 governor 为预检观测，不代表锁频测试。</li>
+    <li>ViT / S100 和 8 个 YOLOv5 组合的 E2E 尚未完成。原始日志与 CSV 归档在 dev-server；本页公开从它们解析的测量记录。</li>
+  </ul>
+  <div class="filters"><input id="query" type="search" placeholder="搜索模型、变体或任务 ID" aria-label="搜索模型"><select id="target" aria-label="目标板卡"><option value="">全部板卡</option><option>x5</option><option>s100</option><option>s100p</option><option>s600</option></select><select id="state" aria-label="E2E 状态"><option value="">全部 E2E 状态</option><option value="measured">已测量，待验收</option><option value="not-run">待实测</option></select></div>
+  <p id="count" class="muted"></p>
+  <div class="table-wrap"><table><thead><tr><th>模型 / 变体</th><th>板卡</th><th>Runtime 1 路<br>ms / FPS</th><th>Runtime 2 路<br>ms / FPS</th><th>E2E 1 路<br>均值 ms / FPS</th><th>E2E 1 路<br>P95 ms</th><th>E2E 2 路<br>均值 ms / FPS</th><th>E2E 2 路<br>P95 ms</th><th>状态 / 测试条件</th></tr></thead><tbody id="rows"></tbody></table></div>
+  <dialog id="record"><div class="dialog-head"><h2 id="record-title"></h2><button id="close-record">关闭</button></div><pre id="record-body"></pre></dialog>
+  <script>
+    'use strict';
+    const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const fmt = (n, digits = 3) => n == null ? '待实测' : Number(n).toFixed(digits);
+    const $ = id => document.getElementById(id);
+    let rows = [];
+    function render() {
+      const q = $('query').value.trim().toLowerCase();
+      const selected = rows.filter(r => (!q || `${r.job_id} ${r.source} ${r.variant}`.toLowerCase().includes(q)) && (!$('target').value || r.target === $('target').value) && (!$('state').value || r.review.cpp_status === $('state').value));
+      $('count').textContent = `显示 ${selected.length} / ${rows.length} 个组合`;
+      $('rows').innerHTML = selected.map(r => {
+        const rt = r.runtime; const e = r.end_to_end;
+        const runtime = i => `${fmt(rt[i].average_latency_ms)} / ${fmt(rt[i].aggregate_fps,2)}`;
+        const e2e = i => e[i] ? `${fmt(e[i].metrics_ms.end_to_end.mean)} / ${fmt(e[i].throughput_fps,2)}` : '待实测';
+        return `<tr><td><b>${esc(r.source)}</b><small>${esc(r.variant)}</small></td><td>${esc(r.target.toUpperCase())}</td><td>${runtime(0)}</td><td>${runtime(1)}</td><td>${e2e(0)}</td><td>${fmt(e[0]?.metrics_ms.end_to_end.p95)}</td><td>${e2e(1)}</td><td>${fmt(e[1]?.metrics_ms.end_to_end.p95)}</td><td>${e.length ? '已测量，待验收' : '待实测'}<br><button data-job="${esc(r.job_id)}">测试条件与记录</button></td></tr>`;
+      }).join('');
+    }
+    ['query','target','state'].forEach(id => $(id).addEventListener('input', render));
+    $('rows').addEventListener('click', event => {
+      const button = event.target.closest('button[data-job]'); if (!button) return;
+      const row = rows.find(r => r.job_id === button.dataset.job);
+      $('record-title').textContent = row.job_id; $('record-body').textContent = JSON.stringify(row, null, 2); $('record').showModal();
+    });
+    $('close-record').addEventListener('click', () => $('record').close());
+    fetch('performance.json').then(r => {if(!r.ok) throw new Error(`HTTP ${r.status}`);return r.json();}).then(data => {
+      rows = data.rows;
+      $('updated').textContent = `源测量汇总：${new Date(data.source_generated_at).toLocaleString('zh-CN', {timeZone:'Asia/Singapore'})}（新加坡时间）`;
+      if (location.hash) $('query').value = decodeURIComponent(location.hash.slice(1));
+      render();
+    }).catch(error => {$('updated').className='error';$('updated').textContent=`记录加载失败：${error.message}`;});
+  </script>
+</main></body></html>
