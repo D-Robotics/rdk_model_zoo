@@ -51,7 +51,23 @@
   }
   const isDownloadable = model => (model.assets || []).some(asset => asset.url && asset.sha256 && Number(asset.sizeBytes) > 0);
   const isVerified = model => model.releaseStatus === 'released' && isDownloadable(model);
+  function modelCount(models, selectedPlatforms = []) {
+    const selected = new Set([...selectedPlatforms].map(platform => String(platform).toUpperCase()));
+    const combinations = new Set();
+    for (const model of models) {
+      const category = model.catalogId || model.sample || model.id;
+      // sample retains distinct published variants, including W4/W8 and
+      // accelerator builds whose displayed parameter scale can be identical.
+      const variant = model.sample || model.modelSize || model.variantName || model.id;
+      const supported = model.platforms?.length ? model.platforms : [model.releasePlatform].filter(Boolean);
+      for (const value of supported) {
+        const platform = String(value).toUpperCase();
+        if (!selected.size || selected.has(platform)) combinations.add(JSON.stringify([category, variant, platform]));
+      }
+    }
+    return combinations.size;
+  }
   const matchesAvailability = (model, mode) => mode === 'downloadable' ? isDownloadable(model)
     : mode === 'verified' ? isVerified(model) : true;
-  window.CatalogFacets = { groups, taskIds, quantizations, searchTerms, isDownloadable, isVerified, matchesAvailability };
+  window.CatalogFacets = { groups, taskIds, quantizations, searchTerms, isDownloadable, isVerified, matchesAvailability, modelCount };
 })();

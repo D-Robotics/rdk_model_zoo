@@ -128,7 +128,7 @@
   function syncLoadMore() {
     const remaining = state.visibleCount < filteredItems.length;
     $('load-more-trigger').hidden = !remaining;
-    $('load-status').textContent = `已显示 ${Math.min(state.visibleCount, filteredItems.length)} / ${filteredItems.length} 个模型`;
+    $('load-status').textContent = `已显示 ${Math.min(state.visibleCount, filteredItems.length)} / ${filteredItems.length} 类`;
     listObserver?.disconnect();
     if (remaining && !$('catalog').hidden) listObserver?.observe($('load-more-trigger'));
   }
@@ -153,7 +153,8 @@
       return groupMatchesTask(group) && terms.every(term => searchable.includes(term));
     });
     filteredItems = items;
-    $('result-count').textContent = `共 ${items.length} 个模型`;
+    const modelCount = facets.modelCount(items.flatMap(group => group.members.filter(matchesTask)), selectedPlatforms);
+    $('result-count').textContent = `${items.length} 类，共 ${modelCount} 个模型`;
 
     if (!models.length) {
       $('grid').innerHTML = '<div class="empty"><p>当前目录暂未发布任何模型。</p></div>';
