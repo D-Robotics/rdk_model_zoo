@@ -83,7 +83,8 @@ Eagle3/DFlash 的生成速度保留官方区间，不能取上限作为单值；
 `validation.runtime_1/runtime_2/cpp_1/cpp_2` 写为 `measured`，附同一制品的公开测量记录。
 该状态与 `passed` 分开；测量结果仍显示在详情页。缺失 BPU 频率的 E2E 记录必须保持
 `bpu_frequency_mhz: null`，并标记 `measurement_status: measured`、
-`environment_status: incomplete`。网页须提供记录入口和待补说明。
+`environment_status: incomplete`。测量记录和待补信息保留在公开测评记录中。
+模型详情页只展示指标与指标提示，不附加状态说明栏或批次报告入口。
 `released` 仍要求所有板端检查通过及完整环境字段，不能用 `measured` 代替。
 
 已经进入 `main` / `develop` 的示例，在证据齐套之前可以先登记为 `registration: pending`。

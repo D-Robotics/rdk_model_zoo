@@ -14,16 +14,12 @@ const detailSource = readFileSync(new URL('../../src/detail-view.js', import.met
 
 function renderAccuracy(records, metricLabels, taskId = 'pose-estimation', catalogId = 'fixture/pose', modelFields = {}, threads = 1) {
   const performanceRoot = { innerHTML: '' };
-  const evaluationRoot = { innerHTML: '', hidden: true };
-  const performanceSummary = { innerHTML: '', hidden: true };
   const root = {
     addEventListener() {},
     querySelectorAll: () => [],
     querySelector: selector => {
       if (selector === '#benchmark-condition') return { dataset: { value: String(threads) }, addEventListener() {} };
       if (selector === '#detail-performance') return performanceRoot;
-      if (selector === '#detail-evaluation-summary') return evaluationRoot;
-      if (selector === '#detail-performance-summary') return performanceSummary;
       return null;
     },
   };
@@ -47,8 +43,7 @@ function renderAccuracy(records, metricLabels, taskId = 'pose-estimation', catal
     benchmark: { accuracy: records },
     ...modelFields,
   }, [], { accuracyMetricLabels: metricLabels, release: { compatibility: { hardware: 'RDK S100' } } });
-  return performanceRoot.innerHTML + (evaluationRoot.hidden ? '' : evaluationRoot.innerHTML)
-    + (performanceSummary.hidden ? '' : performanceSummary.innerHTML);
+  return performanceRoot.innerHTML;
 }
 
 test('measured performance selects matching runtime concurrency and keeps missing E2E explicit', () => {
@@ -74,19 +69,17 @@ test('measured performance selects matching runtime concurrency and keeps missin
     assert.match(html, /2\.5<small>ms<\/small>/);
     assert.match(html, /200<small>fps<\/small>/);
     assert.doesNotMatch(html, /1\.5<small>ms<\/small>/);
-    assert.match(html, /查看性能记录/);
+    assert.doesNotMatch(html, /Runtime 已实测|E2E 已测量|E2E 待实测|查看性能记录/);
     if (hasCpp) {
       assert.match(html, /7\.25<small>ms<\/small>/);
-      assert.match(html, /E2E 已测量，验收记录待补齐/);
       assert.doesNotMatch(html, /待实测/);
     } else {
-      assert.match(html, /E2E 待实测/);
       assert.equal((html.match(/<strong>待实测<\/strong>/g) || []).length, 1);
     }
   }
 });
 
-test('measured converted accuracy shows its verdict and dataset while performance remains unmeasured', () => {
+test('measured converted accuracy retains values and comparisons without summary copy', () => {
   for (const status of ['pass', 'fail']) {
     const board = { top1: status === 'pass' ? 0.6322 : 0.4322, top5: 0.8408 };
     const records = accuracyRecords('cls', { top1: 0.6366, top5: 0.8463 }, board);
@@ -99,10 +92,8 @@ test('measured converted accuracy shows its verdict and dataset while performanc
     assert.match(html, /84\.08<small>%<\/small>/);
     assert.match(html, /63\.66%/);
     assert.match(html, /差值（百分点）/);
-    assert.match(html, /ImageNetV2 MatchedFrequency · 10,000/);
-    assert.match(html, status === 'pass' ? /精度达标/ : /精度未达标/);
+    assert.doesNotMatch(html, /ImageNetV2|精度达标|精度未达标|量化后板端精度|查看精度报告/);
     assert.equal((html.match(/待实测/g) || []).length, 3);
-    assert.match(html, /查看精度报告/);
   }
 });
 

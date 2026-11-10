@@ -434,7 +434,7 @@
       : textDemo
       ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid">${dash('首 token 延迟')}${dash('生成速度')}${dash('板端 PPL')}${dash('峰值内存')}</div></div></div>`
       : b
-      ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid" id="detail-performance" aria-live="polite"></div></div><div class="mz-evaluation-summary" id="detail-performance-summary" aria-live="polite" hidden></div><div class="mz-evaluation-summary" id="detail-evaluation-summary" aria-live="polite" hidden></div></div>`
+      ? `<div class="mz-benchmark-body"><div class="mz-performance"><div class="mz-performance-grid" id="detail-performance" aria-live="polite"></div></div></div>`
       : benchmarkEmpty;
     const upstreamLine = !m.dataPending && (m.upstream || []).length
       ? `<section class="mz-section"><h2>上游</h2><div class="mz-resource-links">${m.upstream.map(item => external(item.url, esc(item.name))).join('')}</div></section>`
@@ -813,29 +813,13 @@
         const modelTask = String(m.catalogId || '').split('/').at(-1).toLowerCase();
         const usesEndToEndDelta = ['detect', 'cls', 'seg', 'pose', 'obb'].includes(modelTask);
         const deltaText = delta === null ? '—' : `${delta > 0 ? '+' : delta < 0 ? '−' : ''}${Math.abs(delta)}%`;
-        const comparisonRows = `${infoRow('浮点参考', plain(reference))}${m.accuracyEvaluation ? infoRow('量化后板端精度', plain(quantized)) : ''}${infoRow(m.accuracyEvaluation ? '差值（百分点）' : usesEndToEndDelta ? '端到端差值' : '差距', m.accuracyEvaluation && delta !== null ? `${delta > 0 ? '+' : delta < 0 ? '−' : ''}${Math.abs(delta)}` : deltaText)}`;
+        const comparisonRows = `${infoRow('浮点参考', plain(reference))}${infoRow(m.accuracyEvaluation ? '差值（百分点）' : usesEndToEndDelta ? '端到端差值' : '差距', m.accuracyEvaluation && delta !== null ? `${delta > 0 ? '+' : delta < 0 ? '−' : ''}${Math.abs(delta)}` : deltaText)}`;
         const comparisonControl = reference && quantized
           ? `<button type="button" class="mz-accuracy-info" aria-label="${tileNameZh}：查看浮点参考" aria-haspopup="dialog">${icon('circle-help')}<span class="mz-accuracy-popover" role="dialog" aria-label="${tileNameZh}对照">${comparisonRows}</span></button>`
           : '';
         return `<div class="${m.releaseStatus === 'converted' && !(quantized || board || reference) ? 'is-unmeasured' : ''}"><span class="mz-accuracy-label"><span data-i18n-zh="${tileNameZh}" data-i18n-en="${tileNameEn}">${tileNameZh}</span>${comparisonControl}</span><strong>${big(quantized || board || reference)}</strong>${scopeNote}</div>`;
       });
       root.querySelector('#detail-performance').innerHTML = `<div class="${m.releaseStatus === 'converted' && !delay ? 'is-unmeasured' : ''}"><span>Runtime 延迟</span><strong>${value(delay, delay?.unit || 'ms')}</strong></div>${endToEndTile}<div class="${m.releaseStatus === 'converted' && !speed ? 'is-unmeasured' : ''}"><span>吞吐量</span><strong>${value(speed, speed?.unit || 'fps')}</strong></div>${accuracyTiles.join('')}`;
-      const evaluationRoot = root.querySelector('#detail-evaluation-summary');
-      const performanceSummary = root.querySelector('#detail-performance-summary');
-      if (performanceSummary) {
-        const review = m.performanceEvaluation;
-        performanceSummary.hidden = !review;
-        performanceSummary.innerHTML = review
-          ? `<span>Runtime 已实测</span><span>${review.cpp_status === 'measured' ? 'E2E 已测量，验收记录待补齐' : 'E2E 待实测'}</span>${external(review.report_url, '查看性能记录')}`
-          : '';
-      }
-      if (evaluationRoot) {
-        const evaluation = m.accuracyEvaluation;
-        evaluationRoot.hidden = !evaluation;
-        evaluationRoot.innerHTML = evaluation
-          ? `<span class="mz-evaluation-verdict ${evaluation.status === 'pass' ? 'is-pass' : 'is-fail'}">${evaluation.status === 'pass' ? '精度达标' : '精度未达标'}</span><span>量化后板端精度</span><span data-no-i18n>${esc(evaluation.dataset)} · ${esc(Number(evaluation.images).toLocaleString('en-US'))}</span>${external(evaluation.report_url, '查看精度报告')}`
-          : '';
-      }
       refresh();
     }
     listen(root.querySelector('#benchmark-condition'), 'change', performance);
