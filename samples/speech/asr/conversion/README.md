@@ -2,9 +2,12 @@ English | [简体中文](README_cn.md)
 
 # ASR model conversion
 
+The pinned Mandarin XLSR53 exporter, exact upstream frontend and complete dynamic
+padding mask are documented in [the independent 2026-11-05 specification](public-20261105.md).
+
 <a id="source-model"></a>
 ## Source model
-The sample runs a Wav2Vec2 ASR model. The published S100/S600 HBM artifacts and the fixed vocabulary are available through the [model guide](../model/README.md). This directory ships no checkpoint-to-HBM script: bring a Wav2Vec2 checkpoint, an exporter and the per-target OE configuration as external inputs, and record the checkpoint URL/revision, architecture and training configuration.
+The sample runs a Wav2Vec2 ASR model. The historical S100/S600 HBM artifacts and fixed vocabulary are described in the [model guide](../model/README.md). Their exact source checkpoint is unknown. The independent public-source exporter linked above records its checkpoint, configuration, complete vocabulary, frontend and numerical contract separately.
 
 <a id="directory"></a>
 ## Directory structure

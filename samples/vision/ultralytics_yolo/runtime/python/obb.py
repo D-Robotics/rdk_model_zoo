@@ -39,6 +39,7 @@ from samples.vision.ultralytics_yolo.runtime.python.cli import (
 )
 from samples.vision.ultralytics_yolo.runtime.python.detect import (
     YoloDetect,
+    _ltrb_grid,
     _normalise_grids,
     _semantic_outputs,
     _size_from_runner,
@@ -125,6 +126,7 @@ class YOLO26OBB:
         _normalise_grids(None, self.input_size, self.contract.strides)
         if self.input_h != self.input_w:
             raise ValueError("Published YOLO26 OBB requires square model input.")
+        self.grids = {stride: _ltrb_grid(self.input_size, stride) for stride in self.contract.strides}
         self.input_names = tuple(runner.input_names)
         self.output_names = tuple(runner.output_names)
         self.input_shapes = dict(runner.input_shapes)
@@ -164,6 +166,7 @@ class YOLO26OBB:
             angle_offset=self.cfg.angle_offset,
             regularize=self.cfg.regularize,
             platform_family=self.profile.family,
+            grids=self.grids,
         )
 
     def predict(self, img, image_format="BGR", score_thres=None, nms_thres=None):
@@ -226,6 +229,13 @@ def _rotated_nms(boxes, scores, ids, score_thres, nms_thres, family):
             [_cv_rectangle(b) for b in boxes], scores, score_thres, nms_thres
         )
         return np.asarray(kept, dtype=np.int64).reshape(-1).tolist()
+    if not len(boxes):
+        return []
+    # Round the OpenCV corners outwards so touching or nearly touching
+    # rectangles still go through the exact intersection calculation.
+    corners = np.asarray([cv2.boxPoints(_cv_rectangle(box)) for box in boxes])
+    left, top = np.floor(corners.min(axis=1)).T
+    right, bottom = (np.floor(corners.max(axis=1)) + 1).T
     keep = []
     score_array = np.asarray(scores, np.float32)
     ids = np.asarray(ids, np.int32)
@@ -235,14 +245,17 @@ def _rotated_nms(boxes, scores, ids, score_thres, nms_thres, family):
         while order.size:
             current = order[0]
             keep.append(int(current))
-            order = np.array(
-                [
-                    i
-                    for i in order[1:]
-                    if _rotated_iou(boxes[current], boxes[i]) < nms_thres
-                ],
-                dtype=np.int64,
-            )
+            # The original strict IoU < threshold rule rejects even disjoint
+            # boxes when the threshold is zero.
+            if nms_thres == 0 or order.size == 1:
+                break
+            rest = order[1:]
+            overlap = ((left[current] <= right[rest]) & (right[current] >= left[rest])
+                       & (top[current] <= bottom[rest]) & (bottom[current] >= top[rest]))
+            survive = np.ones(rest.size, dtype=bool)
+            for pos in np.flatnonzero(overlap):
+                survive[pos] = _rotated_iou(boxes[current], boxes[rest[pos]]) < nms_thres
+            order = rest[survive]
     return keep
 
 
@@ -274,6 +287,7 @@ def decode_obb(
     angle_offset=0.0,
     regularize=True,
     platform_family,
+    grids=None,
 ):
     """Return independent scalar records, preserving X5/S rotated NMS distinctions."""
     score_thres, nms_thres = float(score_thres), float(nms_thres)
@@ -311,12 +325,7 @@ def decode_obb(
             continue
         offsets = np.abs(outputs[f"box_{stride}"].reshape(-1, 4)[selected])
         angles = outputs[f"angle_{stride}"].reshape(-1)[selected] * angle_sign + offset
-        grid = (
-            np.stack(np.indices((ih // stride, iw // stride))[::-1], axis=-1)
-            .reshape(-1, 2)
-            .astype(np.float32)
-            + 0.5
-        )
+        grid = grids[stride] if grids is not None else _ltrb_grid((ih, iw), stride)
         grid = grid[selected]
         left, top, right, bottom = offsets.T
         dx, dy = (right - left) / 2, (bottom - top) / 2

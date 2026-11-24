@@ -23,11 +23,29 @@
 
 </div>
 
+<p align="center">
+  <a href="https://d-robotics.github.io/rdk_model_zoo/"><b>🔎 在线模型目录 →</b></a>
+</p>
+
 ## 仓库简介 (Introduction)
 
 本仓库是 D-Robotics（地瓜机器人）官方提供的 BPU 模型示例与工具集合（Model Zoo），面向运行在 BPU（Brain Processing Unit）上的 AI 模型部署与应用开发，用于帮助开发者**快速上手 BPU**、**快速跑通模型推理流程**。
 
 各示例提供模型准备、转换指南和板端推理程序，涵盖前处理、BPU 执行、后处理与结果输出。支持的板卡和可用转换步骤见对应示例说明。
+
+### 在线模型目录（Web Model Catalog）
+
+<a href="https://d-robotics.github.io/rdk_model_zoo/">
+  <img src="docs/assets/model_zoo_web_cn.png" alt="RDK Model Zoo 在线模型目录：任务与硬件筛选、搜索和模型卡片" width="100%">
+</a>
+
+- **搜索与筛选**：按任务（视觉、语言模型、机器人、音频、多模态）和板卡筛选。
+- **卡片先看效果**：每张卡片展示输入示例和支持板卡；进入详情可查看实测时延、吞吐、精度与量化精度。
+- **获取部署信息**：模型制品、快速开始命令、运行时配置、转换说明，以及跳回模型仓库的链接。
+
+<p align="center">
+  <a href="https://d-robotics.github.io/rdk_model_zoo/"><b>打开在线模型目录 →</b></a>
+</p>
 
 ### 仓库核心价值
 
@@ -38,21 +56,18 @@
 
 ### 硬件与系统支持
 
-`samples/` 目录是所有在维护板卡的统一源。请在每个 Sample 中按板卡选择运行时与模型：Python 入口使用其 README 声明的 `--target` 或 `--platform` 选项选择目标板，原生 C++ 入口使用其 README 声明的参数，各 README 同时说明其发布制品支持的板卡。平台制品清单记录在 `docs/release/x5/` 与 `docs/release/s/`。默认分支 `main` 为交付线，`develop` 为统一开发分支；保留的 `rdk_x5` 与 `rdk_s` 为历史分板卡交付线，RDK X3 资料归档在 `rdk_x3`。
+所有在维护的板卡共用同一份 `samples/` 目录。请在对应 Sample 的 README 中选择目标：Python 入口使用 `--target` 或 `--platform`，原生 C++ 入口使用其文档中的参数；每个 README 都会列出支持的制品。
 
-| 目标硬件 | 获取方式 | 说明 |
-| :--- | :--- | :--- |
-| RDK X5 | `samples/` 目录，模型目标 `x5` | 推荐系统版本为 RDK OS >= 3.5.0，系统基于 Ubuntu 22.04 aarch64 和 TROS-Humble。 |
-| RDK S100 | `samples/` 目录，模型目标 `s100` | Nash-E 制品发布于 `docs/release/s/`。 |
-| RDK S100P | `samples/` 目录，模型目标 `s100p` | Nash-M 制品发布于 `docs/release/s/`。 |
-| RDK S600 | `samples/` 目录，模型目标 `s600` | Nash-P 制品发布于 `docs/release/s/`。 |
-| 交付 / 开发 | [`main`](https://github.com/D-Robotics/rdk_model_zoo/tree/main)（默认）/ [`develop`](https://github.com/D-Robotics/rdk_model_zoo/tree/develop) | 交付分支与统一开发分支。 |
-| 历史分板卡交付线 | [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) / [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s) | 保留的按板卡发布交付分支。 |
-| RDK X3（归档） | [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3) | 仅作历史归档，不再作为适配目标。 |
+| 板卡 | Target ID | CPU | BPU（INT8） | 已发布制品 |
+| :--- | :--- | :--- | :--- | :--- |
+| [RDK X5](https://www.d-robotics.cc/rdkX5) | `x5` | 8× Cortex-A55 | 1× Bayes-E，10 TOPS | [`docs/release/x5/`](docs/release/x5) |
+| [RDK S100](https://www.d-robotics.cc/rdkS100) | `s100` | 6× Cortex-A78AE | 1× Nash-E，80 TOPS | [`docs/release/s/`](docs/release/s) |
+| [RDK S100P](https://www.d-robotics.cc/rdkS100) | `s100p` | 6× Cortex-A78AE | 1× Nash-M，128 TOPS | [`docs/release/s/`](docs/release/s) |
+| [RDK S600](https://www.d-robotics.cc/rdkS600) | `s600` | 18× Cortex-A78AE | 4× Nash-P，560 TOPS | [`docs/release/s/`](docs/release/s) |
 
-**[浏览在线模型目录 →](https://d-robotics.github.io/rdk_model_zoo/)**
+四个目标均运行 RDK OS。RDK X5 推荐使用 RDK OS ≥ 3.5.0（Ubuntu 22.04 aarch64、TROS-Humble）；S100/S100P/S600 请使用与已发布制品匹配的板端镜像与运行时。
 
-在线模型目录提供模型搜索、模型文件下载，以及性能、精度指标和对应测量条件。
+**分支说明。** 默认分支 [`main`](https://github.com/D-Robotics/rdk_model_zoo/tree/main) 为交付线，[`develop`](https://github.com/D-Robotics/rdk_model_zoo/tree/develop) 为统一开发分支。此前的分板卡交付线保留在 [`rdk_x5`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x5) 与 [`rdk_s`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_s)；RDK X3 资料归档在 [`rdk_x3`](https://github.com/D-Robotics/rdk_model_zoo/tree/rdk_x3)。
 
 ---
 
@@ -168,7 +183,12 @@ python3 main.py \
 
 ## 模型列表
 
-下表列出各模型家族及其平台与可用模型；请在各样例的支持表中选择 Python 或 C++ 运行时及兼容的模型制品。
+下表列出各模型家族及其平台与可用模型；请在各样例的支持表中选择 Python 或 C++ 运行时及兼容的模型制品。如需按任务或板卡筛选，请使用[在线模型目录](https://d-robotics.github.io/rdk_model_zoo/)。
+
+<details>
+<summary><b>点击展开完整模型列表（按类别与平台）</b></summary>
+
+<br>
 
 | 类别 | 模型名称 | 模型路径 | 支持平台 | 详情 |
 | :--- | :--- | :--- | :--- | :---: |
@@ -195,9 +215,9 @@ python3 main.py \
 | 图像分类 | ResNeXt | `samples/vision/resnext` | RDK X5 | [详情](./samples/vision/resnext) |
 | 图像分类 | VargConvNet | `samples/vision/vargconvnet` | RDK X5 | [详情](./samples/vision/vargconvnet) |
 | 图像分类 | ViT | `samples/vision/vit` | RDK S100 | [详情](./samples/vision/vit) |
-| 行人重识别 | OSNet x1.0 | `samples/vision/osnet` | RDK X5 / S100 / S100P / S600（Archive，仅供研究） | [详情](./samples/vision/osnet) |
-| 多目标跟踪 | ByteTrack | `samples/vision/bytetrack` | RDK X5 / RDK S100 / RDK S100P（需准备本地检测模型）/ RDK S600 | [详情](./samples/vision/bytetrack) |
-| 多目标跟踪 | HobotMot（IOU 2.0） | `samples/vision/hobot_mot` | RDK X5 / RDK S100 / RDK S100P / RDK S600（基于检测框的 CPU 跟踪器） | [详情](./samples/vision/hobot_mot) |
+| 行人重识别 | OSNet x1.0 | `samples/vision/osnet` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/osnet) |
+| 多目标跟踪 | ByteTrack | `samples/vision/bytetrack` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/bytetrack) |
+| 多目标跟踪 | HobotMot（IOU 2.0） | `samples/vision/hobot_mot` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/hobot_mot) |
 | 目标检测 / 行人跟踪 | Faster R-CNN MobileNetV3-Large-320-FPN | `samples/vision/fasterrcnn` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/fasterrcnn) |
 | 提示式图像分割 | EfficientSAM-Tiny | `samples/vision/efficient_sam` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/efficient_sam) |
 | 提示式图像分割 | MobileSAM | `samples/vision/mobile_sam` | RDK X5 / RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/mobile_sam) |
@@ -214,7 +234,7 @@ python3 main.py \
 | 开放词表目标检测 | YOLOWorld | `samples/vision/yoloworld` | RDK X5 | [详情](./samples/vision/yoloworld) |
 | 点云分割 | PointNet | `samples/vision/pointnet` | RDK S100 | [详情](./samples/vision/pointnet) |
 | 图像抠图 | MODNet | `samples/vision/modnet` | RDK X5 | [详情](./samples/vision/modnet) |
-| OCR 文字检测与识别 | PaddleOCR | `samples/vision/paddle_ocr` | RDK X5 / RDK S100 / RDK S600（C++，需准备匹配模型） | [详情](./samples/vision/paddle_ocr) |
+| OCR 文字检测与识别 | PaddleOCR | `samples/vision/paddle_ocr` | RDK X5 / RDK S100 / RDK S600 | [详情](./samples/vision/paddle_ocr) |
 | 车牌识别 | LPRNet | `samples/vision/lprnet` | RDK X5 | [详情](./samples/vision/lprnet) |
 | 图文多模态匹配 | CLIP | `samples/vision/clip` | RDK X5 | [详情](./samples/vision/clip) |
 | 视觉特征编码 | DINOv2 | `samples/vision/dinov2` | RDK S100 / RDK S100P / RDK S600 | [详情](./samples/vision/dinov2) |
@@ -225,8 +245,12 @@ python3 main.py \
 | 语音识别 | Paraformer | `samples/speech/paraformer` | RDK S100 | [详情](./samples/speech/paraformer) |
 | 端到端规划驾驶 | DiffusionDrive | `samples/vision/diffusiondrive` | RDK S100P / RDK S600 | [详情](./samples/vision/diffusiondrive) |
 | 足式机器人运动控制 | HIMLoco (Unitree Go2) | `samples/robotics/himloco` | RDK X5 | [详情](./samples/robotics/himloco) |
-| 视觉-语言模型 | Gemma4-E2B（原生 C++） | `samples/llm/gemma4-e2b` | RDK S100（需自行提供模型）/ RDK S100P / RDK S600 | [详情](./samples/llm/gemma4-e2b) |
+| 视觉-语言模型 | Gemma4-E2B（原生 C++） | `samples/llm/gemma4-e2b` | RDK S100 / RDK S100P / RDK S600 | [详情](./samples/llm/gemma4-e2b) |
 | 文本生成 | MiniCPM5-2B (native C++) | `samples/llm/minicpm5-2b` | RDK S100 / RDK S100P / RDK S600 | [详情](./samples/llm/minicpm5-2b) |
+
+部分 Sample 为归档或参考实现，或需要本地检测模型、C++ 运行时、自行提供模型文件；具体要求见各 Sample 的支持表。
+
+</details>
 
 上游 VLA 集成（ACT 与 Pi0）另外以固定 Git 子模块形式提供于 `samples/vla/`，集成范围见 [VLA 总览](./samples/vla/README_cn.md)。
 
@@ -234,6 +258,8 @@ python3 main.py \
 
 建议优先阅读以下文档：
 
+- **在线模型目录**
+  - 搜索和筛选已发布模型，比较实测性能与精度，并查看部署详情：[d-robotics.github.io/rdk_model_zoo](https://d-robotics.github.io/rdk_model_zoo/)。
 - **模型说明**
   - 每个模型目录下的 `README.md` / `README_cn.md` 都包含整体介绍、运行方法和目录说明。
 - **源码参考**

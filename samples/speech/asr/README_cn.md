@@ -2,6 +2,9 @@
 
 # ASR 分块语音识别
 
+<!-- public-specification-20261105 -->
+新增的独立 S100 规格、完整源模型合同、下载及 Python 运行命令见[公开转换规格](conversion/public-20261105.md)。新规格的板端精度和性能待实测；下文旧规格及 C++ 记录保留原含义。
+
 <a id="overview"></a>
 ## 概述
 

@@ -507,6 +507,7 @@ class YOLO26Detect:
                 semantic,
                 self.contract,
                 input_size=self.input_size,
+                grids=self.grids,
                 score_thres=score,
                 nms_thres=nms,
             )
@@ -901,17 +902,6 @@ def _as_nhwc(value: Any,
     return np.asarray(result, dtype=np.float32), actual_grid
 
 
-def _probabilities(values: np.ndarray, mode: str, role: str) -> np.ndarray:
-    mode = str(mode).lower()
-    if mode == "logits":
-        return sigmoid(values)
-    if mode != "probabilities":
-        raise DecodeError(f"Unsupported {role} activation mode {mode!r}.")
-    if not np.all(np.isfinite(values)) or np.any(values < -1e-5) or np.any(values > 1.00001):
-        raise DecodeError(f"{role} declares probabilities but contains values outside [0, 1].")
-    return values
-
-
 def _dfl_offsets(values: np.ndarray, mode: str, bins: int) -> np.ndarray:
     values = values.reshape(-1, 4, bins)
     mode = str(mode).lower()
@@ -998,7 +988,8 @@ def _decode_heads(outputs: Mapping[str, Any],
                   classes_num: Optional[int],
                   box_channels: int,
                   offset_decoder: Any,
-                  protocol: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+                  protocol: str,
+                  grids: Optional[Mapping[int, np.ndarray]] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     strides, classes, nms_mode, nms_thres = _decode_options(
         contract, strides=strides, classes_num=classes_num,
         score_thres=score_thres, nms_thres=nms_thres, nms=nms,
@@ -1021,13 +1012,7 @@ def _decode_heads(outputs: Mapping[str, Any],
         box_flat = box_array.reshape(-1, box_channels)
         classification = str(_contract_value(
             contract, "classification", "logits")).lower()
-        cls_prob = _probabilities(
-            cls_flat, classification, f"cls_{stride}")
-        # Choose the class in the source logit domain.  Applying sigmoid first
-        # can round large logits to the same float32 value and change the
-        # selected class even though sigmoid is monotonic.
-        ids = np.argmax(cls_flat, axis=1).astype(np.int64)
-        scores = cls_prob[np.arange(cls_prob.shape[0]), ids]
+        maximum = cls_flat.max(axis=1)
         if classification == "logits":
             threshold = float(score_thres)
             if threshold <= 0.0:
@@ -1036,30 +1021,38 @@ def _decode_heads(outputs: Mapping[str, Any],
                 raw_threshold = np.inf
             else:
                 raw_threshold = -np.log(1.0 / threshold - 1.0)
-            raw_scores = cls_flat[np.arange(cls_flat.shape[0]), ids]
-            valid = raw_scores >= raw_threshold
+            valid = maximum >= raw_threshold
+        elif classification == "probabilities":
+            if np.any(cls_flat < -1e-5) or np.any(cls_flat > 1.00001):
+                raise DecodeError(f"cls_{stride} declares probabilities but contains values outside [0, 1].")
+            valid = maximum >= float(score_thres)
         else:
-            valid = scores >= float(score_thres)
+            raise DecodeError(f"Unsupported cls_{stride} activation mode {classification!r}.")
         if not np.any(valid):
             continue
+        ids = np.argmax(cls_flat[valid], axis=1).astype(np.int64, copy=False)
+        scores = maximum[valid]
+        if classification == "logits":
+            scores = sigmoid(scores)
         offsets = np.asarray(offset_decoder(box_flat[valid]), dtype=np.float32)
         if offsets.shape != (int(np.count_nonzero(valid)), 4):
             raise DecodeError(
                 f"{protocol} box decoder returned shape {offsets.shape}; expected four offsets.")
         if not np.all(np.isfinite(offsets)):
             raise DecodeError(f"{protocol} box offsets contain NaN or infinity.")
-        gh, gw = cls_grid
-        grid_y, grid_x = np.indices((gh, gw), dtype=np.float32)
-        anchors = np.stack((grid_x.reshape(-1) + 0.5,
-                            grid_y.reshape(-1) + 0.5), axis=-1)[valid]
+        if grids is None:
+            rows, cols = np.divmod(np.flatnonzero(valid), cls_grid[1])
+            anchors = np.column_stack((cols, rows)).astype(np.float32) + 0.5
+        else:
+            anchors = grids[stride][valid]
         selected_boxes = np.concatenate((
             anchors - offsets[:, :2], anchors + offsets[:, 2:]), axis=1
         ) * float(stride)
         if not np.all(np.isfinite(selected_boxes)):
             raise DecodeError(f"{protocol} decoded boxes contain NaN or infinity.")
         all_boxes.append(selected_boxes.astype(np.float32, copy=False))
-        all_scores.append(scores[valid].astype(np.float32, copy=False))
-        all_ids.append(ids[valid])
+        all_scores.append(scores)
+        all_ids.append(ids)
 
     if not all_boxes:
         return _empty()
@@ -1114,6 +1107,7 @@ def decode_ltrb(outputs: Mapping[str, Any],
                 input_size: Optional[Sequence[int]] = None,
                 score_thres: float = 0.25,
                 nms_thres: Optional[float] = None,
+                grids: Optional[Mapping[int, np.ndarray]] = None,
                 binding: Any = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Decode the reviewed YOLO26 direct four-channel LTRB outputs."""
     outputs, contract = _bound_outputs(outputs, contract, binding, "LTRB")
@@ -1122,7 +1116,7 @@ def decode_ltrb(outputs: Mapping[str, Any],
     return _decode_heads(
         outputs, contract, input_size=input_size, score_thres=score_thres,
         nms_thres=nms_thres, nms=None, strides=None, classes_num=None,
-        box_channels=4, offset_decoder=_direct_ltrb_offsets, protocol="LTRB",
+        box_channels=4, offset_decoder=_direct_ltrb_offsets, protocol="LTRB", grids=grids,
     )
 
 # ====================================================================

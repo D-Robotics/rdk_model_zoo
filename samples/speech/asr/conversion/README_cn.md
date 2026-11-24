@@ -2,9 +2,13 @@
 
 # ASR 模型转换
 
+独立的已训练中文 XLSR53 导出、上游预处理及完整动态补零 mask 见
+[2026-11-05 转换说明](public-20261105.md)。原始全部 logits 与词表均保留，
+新规格与历史 HBM 的来源、输入约定和测量分别登记。
+
 <a id="source-model"></a>
 ## 源模型
-本 sample 使用 Wav2Vec2 ASR 模型。已发布的 S100/S600 HBM 与固定词表可通过[模型文档](../model/README_cn.md)获取。本目录不提供 checkpoint→HBM 脚本：请以外部输入方式准备 Wav2Vec2 checkpoint、导出器和各目标的 OE 配置，并记录 checkpoint 链接/版本、结构与训练配置。
+历史 S100/S600 HBM 与固定词表见[模型文档](../model/README_cn.md)，其精确源 checkpoint 尚未记录。上文独立公开来源导出器分别记录固定权重、结构、完整词表、预处理及数值合同，不借用旧 HBM 的身份或测量。
 
 <a id="directory"></a>
 ## 目录结构
