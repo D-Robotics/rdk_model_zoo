@@ -41,9 +41,12 @@ def match_target(soc_name: str, board_type: Optional[str] = None) -> Optional[st
 
 def _read_identity(path: Path) -> Optional[str]:
     try:
-        return path.read_text(encoding='utf-8').strip('\x00 \t\r\n') or None
+        value = path.read_text(encoding='utf-8').strip('\x00 \t\r\n')
     except OSError:
         return None
+    if not value or value.lower() == '(null)':
+        return None
+    return value
 
 
 def detect_target() -> Optional[str]:

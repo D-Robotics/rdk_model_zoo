@@ -56,6 +56,9 @@ class NativePreflightTests(unittest.TestCase):
             for tree in target.get("device_tree_models", ()):
                 cases.append(("", "", "", tree))
         cases.extend([
+            ("(null)", "(null)", "", "D-Robotics RDK S100 V1P1"),
+            ("(null)", "", "", ""),
+            ("unknown", "", "", "D-Robotics RDK S100 V1P1"),
             ("unknown", "", "x5u", "D-Robotics RDK X5 V1.0"),
             ("", "", "unknown", "D-Robotics RDK X5 V1.0"),
             ("s100", "unknown", "x5u", ""),

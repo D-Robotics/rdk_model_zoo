@@ -23,9 +23,12 @@ inline std::string trim_identity(std::string value, bool lower = true) {
 }
 // Exact aliases and fallback precedence from docs/release/platforms.json and
 // utils/py_utils/platforms.py. Registry parity is exercised by the host probe.
+inline bool is_missing_identity(const std::string &trimmed_lower) {
+  return trimmed_lower.empty() || trimmed_lower == "(null)";
+}
 inline std::string identify_target(const NativeIdentity &raw) {
   const auto soc = trim_identity(raw.soc), board = trim_identity(raw.board);
-  if (!soc.empty()) {
+  if (!is_missing_identity(soc)) {
     if (soc == "s100" && (board == "s100p" || board == "rdk s100p"))
       return "s100p";
     if (soc == "x5" || soc == "s100" || soc == "s100p" || soc == "s600")
@@ -33,12 +36,15 @@ inline std::string identify_target(const NativeIdentity &raw) {
     return {};
   }
   const auto socinfo = trim_identity(raw.socinfo);
-  if (!socinfo.empty())
+  if (!is_missing_identity(socinfo))
     return (socinfo == "x5u" || socinfo == "x5h" || socinfo == "x5m") ? "x5"
                                                                       : "";
-  return trim_identity(raw.device_tree, false) == "D-Robotics RDK X5 V1.0"
-             ? "x5"
-             : "";
+  const auto tree = trim_identity(raw.device_tree, false);
+  if (tree == "D-Robotics RDK X5 V1.0")
+    return "x5";
+  if (tree == "D-Robotics RDK S100 V1P1")
+    return "s100";
+  return "";
 }
 NativeIdentity read_native_identity();
 } // namespace rdk
