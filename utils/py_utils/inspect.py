@@ -43,12 +43,25 @@ Notes:
 """
 
 
+def _detect_target_fallback() -> str:
+    """Resolve board target via platforms.detect_target() when sysfs is missing/(null)."""
+    try:
+        from .platforms import detect_target
+    except ImportError:
+        try:
+            from platforms import detect_target
+        except ImportError:
+            return ""
+    return detect_target() or ""
+
+
 def get_soc_name() -> str:
     """Get the SoC (System-on-Chip) name of the current device.
 
     The SoC name is read from the system file
-    `/sys/class/boardinfo/soc_name`. If the file cannot be read, a default
-    value is returned.
+    `/sys/class/boardinfo/soc_name`. If the file cannot be read or reports
+    `(null)` (kernel boardinfo table miss), fallback detection via
+    `platforms.detect_target()` is attempted before returning `"s100"`.
 
     Returns:
         The SoC name as a string. Returns `"s100"` if reading the system
@@ -59,10 +72,13 @@ def get_soc_name() -> str:
         # Attempt to read the SoC name from the system information file
         with open(soc_path, "r") as f:
             # Strip trailing whitespace and return the content
-            return f.read().strip()
+            value = f.read().strip()
+            if value and value.lower() != "(null)":
+                return value
     except Exception:
-        # Return a default SoC name when the system file cannot be read
-        return "s100"
+        pass
+    # Fall back to device-tree / socinfo detection, then legacy default "s100"
+    return _detect_target_fallback() or "s100"
 
 
 def resolve_platform(soc_name: str, board_type: str = "") -> tuple[str, str, str, str]:
@@ -139,9 +155,12 @@ def get_soc_name_fallback_free() -> str:
     soc_path = "/sys/class/boardinfo/soc_name"
     try:
         with open(soc_path, "r") as f:
-            return f.read().strip()
+            value = f.read().strip()
+            if value and value.lower() != "(null)":
+                return value
     except Exception:
-        return ""
+        pass
+    return _detect_target_fallback()
 
 
 def print_model_info(models: object) -> None:

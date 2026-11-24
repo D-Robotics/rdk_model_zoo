@@ -173,13 +173,14 @@ const char* const kX5Soc[] = {"x5", nullptr};
 const char* const kX5Socinfo[] = {"x5u", "x5h", "x5m", nullptr};
 const char* const kX5DeviceTree[] = {"D-Robotics RDK X5 V1.0", nullptr};
 const char* const kS100Soc[] = {"s100", nullptr};
+const char* const kS100DeviceTree[] = {"D-Robotics RDK S100 V1P1", nullptr};
 const char* const kS100pBoardTypes[] = {"s100p", "rdk s100p", nullptr};
 const char* const kS100pSoc[] = {"s100p", nullptr};
 const char* const kS600Soc[] = {"s600", nullptr};
 
 const BoardIdentity kBoardIdentities[] = {
     {"x5", "", nullptr, kX5Soc, kX5Socinfo, kX5DeviceTree},
-    {"s100", "", nullptr, kS100Soc, nullptr, nullptr},
+    {"s100", "", nullptr, kS100Soc, nullptr, kS100DeviceTree},
     {"s100p", "s100", kS100pBoardTypes, kS100pSoc, nullptr, nullptr},
     {"s600", "", nullptr, kS600Soc, nullptr, nullptr},
 };
@@ -205,7 +206,9 @@ std::string read_identity(const char* path) {
   std::size_t begin = 0, end = text.size();
   while (begin < end && kPad.find(text[begin]) != std::string::npos) ++begin;
   while (end > begin && kPad.find(text[end - 1]) != std::string::npos) --end;
-  return text.substr(begin, end - begin);
+  std::string result = text.substr(begin, end - begin);
+  if (to_lower(result) == "(null)") return "";
+  return result;
 }
 
 std::string match_target(const std::string& soc, const std::string& board) {
