@@ -229,6 +229,13 @@ def _rotated_nms(boxes, scores, ids, score_thres, nms_thres, family):
             [_cv_rectangle(b) for b in boxes], scores, score_thres, nms_thres
         )
         return np.asarray(kept, dtype=np.int64).reshape(-1).tolist()
+    if not len(boxes):
+        return []
+    # Round the OpenCV corners outwards so touching or nearly touching
+    # rectangles still go through the exact intersection calculation.
+    corners = np.asarray([cv2.boxPoints(_cv_rectangle(box)) for box in boxes])
+    left, top = np.floor(corners.min(axis=1)).T
+    right, bottom = (np.floor(corners.max(axis=1)) + 1).T
     keep = []
     score_array = np.asarray(scores, np.float32)
     ids = np.asarray(ids, np.int32)
@@ -238,14 +245,17 @@ def _rotated_nms(boxes, scores, ids, score_thres, nms_thres, family):
         while order.size:
             current = order[0]
             keep.append(int(current))
-            order = np.array(
-                [
-                    i
-                    for i in order[1:]
-                    if _rotated_iou(boxes[current], boxes[i]) < nms_thres
-                ],
-                dtype=np.int64,
-            )
+            # The original strict IoU < threshold rule rejects even disjoint
+            # boxes when the threshold is zero.
+            if nms_thres == 0 or order.size == 1:
+                break
+            rest = order[1:]
+            overlap = ((left[current] <= right[rest]) & (right[current] >= left[rest])
+                       & (top[current] <= bottom[rest]) & (bottom[current] >= top[rest]))
+            survive = np.ones(rest.size, dtype=bool)
+            for pos in np.flatnonzero(overlap):
+                survive[pos] = _rotated_iou(boxes[current], boxes[rest[pos]]) < nms_thres
+            order = rest[survive]
     return keep
 
 
