@@ -1,9 +1,12 @@
 """Regression checks for the independent upstream base224 input contract."""
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 import numpy as np
 from PIL import Image
 from samples.vision.siglip.runtime.python.public_preprocess import prepare_image
-from utils.tools.hf_transformer_conversion import FACTS, compare
+from utils.tools.hf_transformer_conversion import FACTS, compare, export
 
 
 class PublicSourceTests(unittest.TestCase):
@@ -40,3 +43,28 @@ class PublicSourceTests(unittest.TestCase):
         self.assertEqual(rgb.shape,(14,14,3))
         self.assertFalse(details['semantic_labels'])
         with self.assertRaises(ValueError):validate_outputs({'pooler_output':values['pooler_output']})
+
+    def test_export_checks_actual_calibration_and_validation_counts(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            calibration = root / 'calibration.json'
+            validation = root / 'validation.json'
+            for kind, count in [('asr', 50), ('siglip', 200)]:
+                def write_manifest(path, purpose, declared, actual):
+                    path.write_text(json.dumps({
+                        'sample': kind, 'purpose': purpose, 'count': declared,
+                        'official_preprocessing_byte_exact': True,
+                        'records': [{}] * actual,
+                    }))
+
+                for actual in (1, count + 1):
+                    with self.subTest(kind=kind, calibration_count=actual):
+                        write_manifest(calibration, 'calibration', count, actual)
+                        with self.assertRaisesRegex(ValueError, f'{count} verified {kind} calibration'):
+                            export(kind, root, calibration, root / 'export')
+                write_manifest(calibration, 'calibration', count, count)
+                for actual in (0, 9):
+                    with self.subTest(kind=kind, validation_count=actual):
+                        write_manifest(validation, 'validation', 8, actual)
+                        with self.assertRaisesRegex(ValueError, f'8 verified {kind} validation'):
+                            export(kind, root, calibration, root / 'export', validation)

@@ -1,4 +1,6 @@
 """Regression checks for upstream XLSR normalization and valid mask geometry."""
+from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 import numpy as np
@@ -54,3 +56,22 @@ class PublicSourceTests(unittest.TestCase):
         for value in [np.zeros((1,93,3502),np.float32),np.full((1,93,3503),np.nan,np.float32)]:
             with patch('samples.speech.asr.runtime.python.public.audio_windows',return_value=windows):
                 with self.assertRaises(ValueError):transcribe('unused.wav',lambda _: {'logits':value},[])
+
+    def test_rerun_preserves_previous_transcript_and_raw_chunks(self):
+        from samples.speech.asr.runtime.python import public
+        with TemporaryDirectory() as tmp:
+            output = Path(tmp) / 'run'
+            raw = output / 'raw'
+            raw.mkdir(parents=True)
+            transcript = output / 'transcript.json'
+            chunk = raw / 'chunk-000001.npz'
+            transcript.write_bytes(b'previous transcript')
+            chunk.write_bytes(b'previous logits')
+            with patch.object(public, 'Runner') as runner:
+                with self.assertRaises(FileExistsError):
+                    public.main(['--output-dir', str(output)])
+                runner.assert_not_called()
+                with self.assertRaises(FileExistsError):
+                    public.transcribe('unused.wav', runner, [], raw_dir=raw)
+            self.assertEqual(transcript.read_bytes(), b'previous transcript')
+            self.assertEqual(chunk.read_bytes(), b'previous logits')

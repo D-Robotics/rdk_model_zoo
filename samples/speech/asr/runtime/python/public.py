@@ -43,6 +43,9 @@ def audio_windows(path):
 
 def transcribe(path, runner, vocabulary, *, raw_dir=None):
     """Decode all valid frames, retaining complete raw logits when requested."""
+    if raw_dir is not None:
+        raw_dir = Path(raw_dir)
+        raw_dir.mkdir(parents=True, exist_ok=False)
     records = []
     for index, (mono, source) in enumerate(audio_windows(path)):
         frames = feature_frames(len(mono))
@@ -60,7 +63,6 @@ def transcribe(path, runner, vocabulary, *, raw_dir=None):
                 raise ValueError('Expected all finite F32 [1,93,3503] raw logits')
             row.update(text=decode_logits(logits[:, :frames], vocabulary, mode='ctc'), inference='completed')
             if raw_dir is not None:
-                raw_dir = Path(raw_dir); raw_dir.mkdir(parents=True, exist_ok=True)
                 raw_path = raw_dir / f'chunk-{index:06d}.npz'
                 np.savez(raw_path, logits=logits)
                 row['raw_logits'] = str(raw_path)
@@ -85,11 +87,11 @@ def main(argv=None):
     selection = select(SAMPLE, a.target, a.variant, asset_id=a.asset_id, model_path=a.model_path)
     if a.dry_run:
         print(json.dumps({'asset_id': selection.asset.reference, 'profile': selection.profile})); return 0
+    a.output_dir.mkdir(parents=True, exist_ok=False)
     report = transcribe(a.audio_file, Runner(selection, backend=a.backend, source_onnx=a.source_onnx),
                         load_vocabulary(a.vocab_file), raw_dir=a.output_dir/'raw')
     report.update(backend=a.backend, asset_id=selection.asset.reference,
                   audio_sha256=sha256_file(a.audio_file), variant=a.variant)
-    a.output_dir.mkdir(parents=True, exist_ok=True)
     (a.output_dir/'transcript.json').write_text(json.dumps(report, indent=2, ensure_ascii=False)+'\n')
     print(json.dumps(report, ensure_ascii=False))
     return 0

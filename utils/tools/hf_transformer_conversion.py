@@ -167,14 +167,30 @@ def compare(actual, expected, facts):
     return result
 
 
+def _read_records(path, kind, purpose, expected_count):
+    manifest = json.loads(Path(path).read_text())
+    records = manifest.get('records')
+    if (manifest.get('sample') != kind or manifest.get('purpose') != purpose
+            or manifest.get('count') != expected_count
+            or not isinstance(records, list) or len(records) != expected_count
+            or manifest.get('official_preprocessing_byte_exact') is not True):
+        raise ValueError(f'Expected {expected_count} verified {kind} {purpose} records')
+    return records
+
+
 def export(kind, source_dir, calibration_manifest, output, validation_manifest=None):
     """Strictly load trained weights, export complete heads, and verify all inputs."""
+    facts = FACTS[kind]
+    prepared_rows = [('real', _read_records(calibration_manifest, kind, 'calibration',
+                                            facts['calibration_count']))]
+    if validation_manifest is not None:
+        prepared_rows.append(('heldout', _read_records(validation_manifest, kind, 'validation', 8)))
+
     import torch
     import transformers
     import onnx
     import onnxruntime as ort
     from transformers import SiglipConfig, SiglipVisionModel, Wav2Vec2ForCTC
-    facts = FACTS[kind]
     source_dir, calibration_manifest, output = map(Path, (source_dir, calibration_manifest, output))
     checkpoint = identity(source_dir / facts['filename'])
     config_id = identity(source_dir / 'config.json')
@@ -237,20 +253,8 @@ def export(kind, source_dir, calibration_manifest, output, validation_manifest=N
         if not torch.isfinite(value).all():
             raise ValueError('Non-finite trained parameter: ' + name)
     parameter_count = sum(p.numel() for p in model.parameters())
-    manifest = json.loads(calibration_manifest.read_text())
-    if (manifest['sample'] != kind or manifest['purpose'] != 'calibration'
-            or manifest['count'] != facts['calibration_count']
-            or not manifest['official_preprocessing_byte_exact']):
-        raise ValueError('Wrong or unverified calibration manifest')
     cases = []
     case_inputs = []
-    prepared_rows = [('real', manifest['records'])]
-    if validation_manifest is not None:
-        validation = json.loads(Path(validation_manifest).read_text())
-        if (validation['sample'] != kind or validation['purpose'] != 'validation'
-                or validation['count'] != 8 or not validation['official_preprocessing_byte_exact']):
-            raise ValueError('Wrong independent validation inputs')
-        prepared_rows.append(('heldout', validation['records']))
     for prefix, records in prepared_rows:
         for index, row in enumerate(records):
             feed = {}
