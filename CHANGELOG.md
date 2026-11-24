@@ -4,7 +4,7 @@ Version changes of the unified source and the two platform delivery lines.
 For the unified source, `main` is the delivery default branch and `develop`
 is the unified development/integration line:
 
-- **unified source** — repository root `VERSION` (2.0.0); unified release
+- **unified source** — repository root `VERSION` (2.0.1); unified release
   tags use `model-zoo-vX.Y.Z`
 - **rdk_x5** — `docs/release/x5/VERSION` (x5-v1.1.3)
 - **rdk_s** — `docs/release/s/VERSION` (s-v1.1.2)
@@ -14,6 +14,22 @@ delivery branches; their platform-prefixed anchor links stay unique across
 both bodies, so every in-file link keeps resolving.
 
 ---
+
+## model-zoo-v2.0.1 — 2026-11-24
+
+- The X5 catalog now lists 251 downloadable artifacts (up from 193 in
+  2.0.0), and the S-series catalog lists 631 (up from 402). Additions
+  include S600 SDK language model profiles, plus S100 masked Mandarin ASR
+  and a SigLIP vision encoder that returns pooled and patch features.
+- YOLO detection filters logits before applying sigmoid. YOLO26 reuses
+  detection and rotated-box grids, and X5 rotated NMS skips exact
+  intersection tests for disjoint boxes. On an X5 8 GB board, median
+  YOLO26n rotated-box postprocessing fell from 161.0 to 59.8 ms on DOTA
+  P0009 and from 45.7 to 31.3 ms on P0014, with identical predictions.
+- The masked ASR runtime requires a fresh output directory to prevent
+  transcripts and logits from different runs from mixing. The ASR and
+  SigLIP exporters verify the actual number of calibration and validation
+  records before exporting.
 
 ## model-zoo-v2.0.0 — unified source 2.0.0
 
