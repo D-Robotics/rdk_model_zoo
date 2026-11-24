@@ -2,9 +2,11 @@
 
 import unittest
 import types
+from unittest.mock import patch
 
 import numpy as np
 
+from samples.vision.ultralytics_yolo.runtime.python import detect
 from samples.vision.ultralytics_yolo.runtime.python.detect import (
     DecodeError,
     decode_dfl,
@@ -107,6 +109,15 @@ class LTRBBindingTests(unittest.TestCase):
             score_thres=0.5, nms_thres=0.5,
         )
         self.assertFalse(np.allclose(boxes, dfl_boxes))
+
+    def test_sigmoid_only_receives_surviving_anchor_scores(self):
+        outputs = _semantic_ltrb_outputs(classes=2)
+        outputs["cls_8"][0, 0, 0] = [4.0, 5.0]
+        with patch.object(detect, "sigmoid", wraps=detect.sigmoid) as activate:
+            decode_ltrb(outputs, LTRBDetectionContract(classes=2),
+                        input_size=(64, 64), score_thres=0.5, nms_thres=0.5)
+        activate.assert_called_once()
+        np.testing.assert_array_equal(activate.call_args.args[0], [5.0])
 
     def test_large_logits_keep_raw_class_order(self):
         contract = LTRBDetectionContract(classes=2)
