@@ -337,3 +337,11 @@ We warmly welcome contributions! Please raise an issue on [GitHub Issues](https:
 ## License
 
 This project is licensed under the [Apache License 2.0](./LICENSE) agreement.
+
+## Which branch should I use? (for first-time users)
+
+For RDK X5, S100, S100P and S600, use the default `main` branch.
+The `rdk_x5` / `rdk_s` branches are kept for history only, and
+`rdk_x3` is an archive — do not follow older tutorials that point there.
+
+See the Model Zoo overview in the developer docs for details.
