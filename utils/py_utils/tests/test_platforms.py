@@ -65,6 +65,53 @@ class TargetSelectionTests(unittest.TestCase):
         with patch('utils.py_utils.platforms._read_identity', side_effect=lambda path: 'X5U-unknown' if str(path).replace('\\', '/') == '/sys/class/socinfo/soc_name' else None):
             self.assertIsNone(detect_target())
 
+    def test_null_sysfs_identity_falls_back_to_s100_v1p1_device_tree(self):
+        from pathlib import Path
+        import tempfile
+        from utils.py_utils import platforms
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            soc = root / 'soc_name'
+            board = root / 'board_type'
+            socinfo = root / 'socinfo'
+            tree = root / 'model'
+            soc.write_text('(null)\n', encoding='utf-8')
+            board.write_text('(null)\n', encoding='utf-8')
+            socinfo.write_text('', encoding='utf-8')
+            tree.write_text('D-Robotics RDK S100 V1P1\x00', encoding='utf-8')
+
+            with patch.multiple(
+                platforms,
+                SOC_NAME_PATH=soc,
+                BOARD_TYPE_PATH=board,
+                SOCINFO_NAME_PATH=socinfo,
+                DEVICE_TREE_MODEL_PATH=tree,
+            ):
+                self.assertEqual(platforms.detect_target(), 's100')
+
+                # Non-null unknown SoC must still fail closed rather than falling back
+                soc.write_text('unknown\n', encoding='utf-8')
+                self.assertIsNone(platforms.detect_target())
+
+                # (null) without a recognized device-tree model remains unknown
+                soc.write_text('(null)\n', encoding='utf-8')
+                tree.write_text('Unknown Board\x00', encoding='utf-8')
+                self.assertIsNone(platforms.detect_target())
+
+    def test_inspect_soc_name_handles_null_sysfs_via_device_tree_fallback(self):
+        from utils.py_utils import inspect as rdk_inspect
+        from unittest.mock import mock_open
+
+        with patch('builtins.open', mock_open(read_data='(null)\n')), \
+             patch('utils.py_utils.platforms.detect_target', return_value='s100'):
+            self.assertEqual(rdk_inspect.get_soc_name_fallback_free(), 's100')
+            self.assertEqual(rdk_inspect.get_soc_name(), 's100')
+        with patch('builtins.open', mock_open(read_data='(null)\n')), \
+             patch('utils.py_utils.platforms.detect_target', return_value=None):
+            self.assertEqual(rdk_inspect.get_soc_name_fallback_free(), '')
+            self.assertEqual(rdk_inspect.get_soc_name(), 's100')
+
 
 if __name__ == '__main__':
     unittest.main()

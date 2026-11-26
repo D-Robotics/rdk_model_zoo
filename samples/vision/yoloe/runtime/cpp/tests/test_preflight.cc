@@ -51,6 +51,13 @@ int main(int argc, char **argv) {
   expect(rdk::identify_target({"", "", "x5h", ""}) == "x5");
   expect(rdk::identify_target({"", "", "x5m", ""}) == "x5");
   expect(rdk::identify_target({"", "", "", "D-Robotics RDK X5 V1.0"}) == "x5");
+  expect(rdk::identify_target({"", "", "", "D-Robotics RDK S100 V1P1"}) ==
+         "s100");
+  expect(rdk::identify_target(
+             {"(null)", "(null)", "", "D-Robotics RDK S100 V1P1"}) == "s100");
+  expect(rdk::identify_target({"(null)", "", "", ""}).empty());
+  expect(rdk::identify_target({"unknown", "", "", "D-Robotics RDK S100 V1P1"})
+             .empty());
   expect(rdk::identify_target({"unknown", "", "x5u", "D-Robotics RDK X5 V1.0"})
              .empty());
   expect(rdk::identify_target({"", "", "unknown", "D-Robotics RDK X5 V1.0"})
