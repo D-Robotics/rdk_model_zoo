@@ -48,7 +48,7 @@ Official Gemma and registered OELLM profiles use the verified SDK OSS ZIP URLs r
 Other public deployment models use the verified Archive platform and sample directory:
 
 ```text
-https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_<platform>/<source>/<artifact>
+https://model-zoo-web.oss-cn-beijing.aliyuncs.com/rdk_<platform>/<source>/<artifact>
 ```
 
 Release manifests and OE reports use the model-specific Archive `assets/`

@@ -7,7 +7,7 @@ from pathlib import Path, PurePosixPath
 import re
 from urllib.parse import unquote, urlparse
 
-ARCHIVE_HTTPS = 'https://archive.d-robotics.cc/downloads/rdk_model_zoo_web'
+ARCHIVE_HTTPS = 'https://model-zoo-web.oss-cn-beijing.aliyuncs.com'
 PLATFORMS = {'x5', 's100', 's100p', 's600'}
 PACKAGE_FILES = ('release.json', 'release.source.json', 'oe_report.html', 'oe_report_data.json', 'SHA256SUMS')
 

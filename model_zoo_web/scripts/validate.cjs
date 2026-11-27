@@ -208,7 +208,7 @@ if (preview) {
         assert.equal(availability.verification.method, 'anonymous-https-full-sha256');
         assert.match(asset.url, official
           ? /^https:\/\/d-robotics-aitoolchain\.oss-cn-beijing\.aliyuncs\.com\/llm\/2\.0\.0\/s600_models\/[A-Za-z0-9][A-Za-z0-9._-]+\.zip$/
-          : /^https:\/\/archive\.d-robotics\.cc\/downloads\/rdk_model_zoo_web\/rdk_s600\/gemma\//);
+          : /^https:\/\/model-zoo-web\.oss-cn-beijing\.aliyuncs\.com\/rdk_s600\/gemma\//);
         assert.equal(asset.url, availability.package_url);
         assert.equal(asset.sha256, availability.sha256);
         assert.equal(asset.sizeBytes, availability.size_bytes);
@@ -322,8 +322,8 @@ if (preview) {
     for (const asset of model.assets || []) {
       assert(asset.url && asset.sha256 && asset.sizeBytes, `${model.id}: assets need url, sha256 and size_bytes`);
       assert.match(asset.url,
-        /^https:\/\/archive\.d-robotics\.cc\/downloads\/rdk_model_zoo_web\//,
-        `${model.id}: published model downloads must use archive`);
+        /^https:\/\/model-zoo-web\.oss-cn-beijing\.aliyuncs\.com\//,
+        `${model.id}: published model downloads must use model-zoo-web OSS`);
     }
     if (model.reportDataUrl) {
       const dataPath = path.join(root, model.reportDataUrl);

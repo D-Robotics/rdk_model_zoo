@@ -30,7 +30,7 @@ class ComponentPackageTests(unittest.TestCase):
             'cases':[{'input':name,'comparisons':{'connected':{'passed':True}}}
                      for name in ('first.jpg','second.jpg','third.jpg','seed0-random')]}).encode()
         components = [{'role':r, 'filename':r+'.hbm', 'platform':'s100', 'format':'HBM',
-                       'url':f'https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/mobile_sam/{r}.hbm',
+                       'url':f'https://model-zoo-web.oss-cn-beijing.aliyuncs.com/rdk_s100/mobile_sam/{r}.hbm',
                        'sha256':sha(self.files[r+'.hbm']), 'size_bytes':len(self.files[r+'.hbm'])}
                       for r in ('encoder','decoder')]
         tensor = [{'name':'test', 'shape':[1,256,32,32], 'dtype':'float32'}]
@@ -85,7 +85,7 @@ class ComponentPackageTests(unittest.TestCase):
         digest = sha(data)
         row.update(status='converted',metadata_revision=1)
         row['artifact'].update(sha256=digest,size_bytes=len(data),
-            url='https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/mobile_sam/complete.tar.gz')
+            url='https://model-zoo-web.oss-cn-beijing.aliyuncs.com/rdk_s100/mobile_sam/complete.tar.gz')
         row['validation'].update(artifact_sha256=digest,conversion='passed',host_smoke='passed',
             **{k:'not-run' for k in ('board_smoke','accuracy','runtime_1','runtime_2','cpp_1','cpp_2')})
         oe['provenance']['artifact_sha256'] = digest
@@ -174,7 +174,7 @@ class ComponentPackageTests(unittest.TestCase):
         predictor.update(role='predictor', filename='predictor.hbm')
         row['artifact']['components'].insert(1, predictor)
         for component in row['artifact']['components']:
-            component['url'] = ('https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/'
+            component['url'] = ('https://model-zoo-web.oss-cn-beijing.aliyuncs.com/'
                                 'rdk_s100/paraformer/' + component['filename'])
         for section in ('provenance', 'conversion'):
             row[section]['components']['predictor'] = copy.deepcopy(row[section]['components']['encoder'])

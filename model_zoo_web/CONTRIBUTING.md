@@ -149,11 +149,11 @@ rdk_model_zoo_web/
 Workbench 的原始冻结发布包及历史 OSS 上传回执仍使用 `models/` 层级：
 `https://rdk-model-zoo.oss-cn-beijing.aliyuncs.com/models/...`。
 Archive 按服务器已有的板卡 / Sample 目录存放：
-`https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_<platform>/<source>/<filename>`，
+`https://model-zoo-web.oss-cn-beijing.aliyuncs.com/rdk_<platform>/<source>/<filename>`，
 例如 `rdk_x5/osnet/osnet_x1_0_bayes_e_256x128_rgb.bin`。Archive 不增加 `models/`、
 重复的来源/系列或任务/规格目录；任务与规格仍在 Catalog 字段和模型文件名中登记。
 `model-stem` 为模型文件名去掉最后一个扩展名。所有附属链接必须指向同一个
-`https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_<platform>/<source>/<model-stem>/`
+`https://model-zoo-web.oss-cn-beijing.aliyuncs.com/assets/rdk_<platform>/<source>/<model-stem>/`
 目录。Git 的 `release/reports/` 保留轻量 OE 数据，供站点构建直接使用；公开副本字节一致。
 
 派生 `release.json` 只改模型及附属文件的位置字段，并增加

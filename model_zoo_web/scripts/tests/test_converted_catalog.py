@@ -31,7 +31,7 @@ class ConvertedCatalogTest(unittest.TestCase):
             repository_commit='94df7461027547906bbfb12016356f89123c0e74',
             toolchain_image='existing-test-image:v1',build_id='converted-test-r01',precision_policy='int8')
         filename=row['artifact']['url'].rsplit('/',1)[1]
-        base='https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/rdk_x5/ultralytics_yolo/'+Path(filename).stem+'/v1'
+        base='https://model-zoo-web.oss-cn-beijing.aliyuncs.com/assets/rdk_x5/ultralytics_yolo/'+Path(filename).stem+'/v1'
         row['artifact'].update(release_manifest_url=base+'/release.json',checksums_url=base+'/SHA256SUMS')
         row['reports'].update(oe_conversion_url=base+'/oe_report.html',oe_data_url=base+'/oe_report_data.json')
         self.row=row

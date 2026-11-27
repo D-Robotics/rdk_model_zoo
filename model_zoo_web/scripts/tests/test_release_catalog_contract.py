@@ -84,7 +84,7 @@ class ReleaseCatalogContractTests(unittest.TestCase):
         artifact = copy.deepcopy(self.platform["artifact"])
         old_base = artifact["url"].rsplit("/", 1)[0]
         new_base = (
-            "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/"
+            "https://model-zoo-web.oss-cn-beijing.aliyuncs.com/"
             f"rdk_{self.platform['platform']}/ultralytics_yolo"
         )
         for field in ("url", "release_manifest_url", "checksums_url"):
@@ -94,11 +94,11 @@ class ReleaseCatalogContractTests(unittest.TestCase):
             artifact["url"].replace("https:", "http:"),
             artifact["url"] + "?signature=temporary",
             artifact["url"] + "#fragment",
-            artifact["url"].replace("archive.d-robotics.cc", "archive.d-robotics.cc.example.org"),
-            artifact["url"].replace("/downloads/rdk_model_zoo_web/", "/downloads/rdk_model_zoo/"),
+            artifact["url"].replace("model-zoo-web.oss-cn-beijing.aliyuncs.com", "model-zoo-web.oss-cn-beijing.aliyuncs.com.example.org"),
+            artifact["url"].replace("/rdk_", "/downloads/rdk_model_zoo/rdk_"),
             artifact["url"].replace("/ultralytics_yolo/", "/another-sample/"),
             artifact["url"].replace(f"/rdk_{self.platform['platform']}/", "/rdk_unknown/"),
-            artifact["url"].replace(new_base, "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/models/ultralytics_yolo/yolo26/detect/n/x5"),
+            artifact["url"].replace(new_base, "https://model-zoo-web.oss-cn-beijing.aliyuncs.com/models/ultralytics_yolo/yolo26/detect/n/x5"),
         ):
             with self.subTest(url=bad_url), self.assertRaises(catalog.CatalogError):
                 self.validate_artifact({**artifact, "url": bad_url})
@@ -110,7 +110,7 @@ class ReleaseCatalogContractTests(unittest.TestCase):
         original_model_url = artifact["url"]
         filename = original_model_url.rsplit("/", 1)[1]
         base = (
-            "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/"
+            "https://model-zoo-web.oss-cn-beijing.aliyuncs.com/assets/"
             f"rdk_{self.platform['platform']}/ultralytics_yolo/{Path(filename).stem}"
         )
         artifact.update(release_manifest_url=base+"/release.json", checksums_url=base+"/SHA256SUMS")
@@ -155,7 +155,7 @@ class ReleaseCatalogContractTests(unittest.TestCase):
             self.assertEqual(row["artifact"]["sha256"], artifact["sha256"])
             self.assertEqual(row["artifact"]["size_bytes"], artifact["size_bytes"])
             self.assertTrue(row["artifact"]["url"].startswith(
-                "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/"
+                "https://model-zoo-web.oss-cn-beijing.aliyuncs.com/"
                 f"rdk_{row['platform']}/osnet/"
             ))
 

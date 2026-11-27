@@ -29,9 +29,11 @@ BUILD_ROOT = WEB_ROOT / "build"
 CATALOG_PATH = BUILD_ROOT / "catalog.json"
 META_PATH = BUILD_ROOT / "catalog.meta.json"
 OSS_HOST = "rdk-model-zoo.oss-cn-beijing.aliyuncs.com"
-ARCHIVE_BASE = "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web"
+WEB_OSS_HOST = "model-zoo-web.oss-cn-beijing.aliyuncs.com"
+ARCHIVE_BASE = f"https://{WEB_OSS_HOST}"
 ARTIFACT_ROOTS = {
     OSS_HOST: "/models",
+    WEB_OSS_HOST: "",
     "archive.d-robotics.cc": "/downloads/rdk_model_zoo_web",
 }
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -316,7 +318,7 @@ def validate_artifact(
             f"{label}.url must be a direct HTTPS URL on " + " or ".join(ARTIFACT_ROOTS)
         )
     filename = PurePosixPath(unquote(parsed.path)).name
-    if parsed.netloc == "archive.d-robotics.cc":
+    if parsed.netloc in {WEB_OSS_HOST, "archive.d-robotics.cc"}:
         expected_path = f"{root}/rdk_{platform}/{source}/{filename}"
     else:
         expected_path = f"{root}/{source}/{family}/{task}/{size}/{platform}/{filename}"
@@ -336,8 +338,13 @@ def validate_artifact(
         raise CatalogError(f"{label}.size_bytes must be a positive integer")
 
     model_base_url = url.rsplit("/", 1)[0]
+    assets_root = (
+        f"https://{parsed.netloc}{root}/assets/"
+        if parsed.netloc in {WEB_OSS_HOST, "archive.d-robotics.cc"}
+        else f"{ARCHIVE_BASE}/assets/"
+    )
     base_url = (
-        "https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/assets/"
+        f"{assets_root}"
         f"rdk_{platform}/{source}/{PurePosixPath(filename).stem}"
     )
     if metadata_revision is not None:

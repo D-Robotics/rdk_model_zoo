@@ -26,7 +26,7 @@ function page(record) {
 const file = (platform, filename) => ({
   platform,
   filename,
-  url: `https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_${platform}/fixture/${filename.split('/').at(-1)}`,
+  url: `https://model-zoo-web.oss-cn-beijing.aliyuncs.com/rdk_${platform}/fixture/${filename.split('/').at(-1)}`,
 });
 
 test('legacy downloads stay out of the model dialog and preparation command', () => {

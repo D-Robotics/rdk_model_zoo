@@ -14,7 +14,7 @@ SOURCES = {'efficient_sam': 'encoder-decoder', 'mobile_sam': 'encoder-decoder',
            'fasterrcnn': 'fasterrcnn-split', 'clip': 'clip-image-text',
            'paraformer': 'paraformer-staged'}
 SHA = re.compile(r'^[0-9a-f]{64}$')
-ARCHIVE = 'https://archive.d-robotics.cc/downloads/rdk_model_zoo_web'
+ARCHIVE = 'https://model-zoo-web.oss-cn-beijing.aliyuncs.com'
 
 
 def require(condition, message):

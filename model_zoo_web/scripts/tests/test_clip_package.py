@@ -29,7 +29,7 @@ class ClipPackageTests(unittest.TestCase):
         self.files['text-runtime.json']=encoded({'bpe_sha256':sha(self.files['bpe.txt.gz']),
             'tokenizer_sha256':sha(self.files['simple_tokenizer.py'])})
         components=[{'role':role,'filename':name,'platform':'s100','format':fmt,'execution':device,
-            'url':'https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_s100/clip/'+name,
+            'url':'https://model-zoo-web.oss-cn-beijing.aliyuncs.com/rdk_s100/clip/'+name,
             'sha256':sha(self.files[name]),'size_bytes':len(self.files[name])}
             for role,name,fmt,device in [('image','image.hbm','HBM','BPU'),('text','text.onnx','ONNX','CPU')]]
         prov={r:{'onnx_sha256':('a'*64 if r=='image' else components[1]['sha256']),

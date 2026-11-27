@@ -57,7 +57,7 @@ class ConvertedPublicationTests(unittest.TestCase):
                 'model': {'source': 'convnext'}, 'target': {'platform': 'x5'},
                 'artifact': {'filename': model.name, 'sha256': digest,
                     'size_bytes': model.stat().st_size,
-                    'url': 'https://archive.d-robotics.cc/downloads/rdk_model_zoo_web/rdk_x5/convnext/new.bin'},
+                    'url': 'https://model-zoo-web.oss-cn-beijing.aliyuncs.com/rdk_x5/convnext/new.bin'},
                 'validation': {'artifact_sha256': digest, 'conversion': 'passed', 'host_smoke': 'passed',
                     **{k: 'not-run' for k in ('board_smoke', 'accuracy', 'runtime_1', 'runtime_2', 'cpp_1', 'cpp_2')}}}
             report = root / 'report.html'
