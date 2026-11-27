@@ -22,7 +22,7 @@
   // S-series first, X5 last — the same order the detail page presents.
   const openPreference = ['S600', 'S100P', 'S100', 'X5', 'X3'];
   const openRank = platform => { const index = openPreference.indexOf(platform); return index < 0 ? openPreference.length : index; };
-  const sizePreference = ['n', 's', 'm', 'l', 'x'];
+  const sizePreference = ['xx-small', 'x-small', 'atto', 'femto', 'pico', 'nano', 'tiny', 'n', 's', 'm', 'l', 'x', 'small', 'medium', 'base', 'large', 'conv-small', 'conv-medium', 'conv-large', 't0', 't1', 't2', 't8', 't12', 's0', 's1', 's2', 's3', 's4', 's12', 'sa12', 'b0', 'b1', 'b2', 'b3', 'b4', 'b5', 'l1', 'l3', 'a0', 'a1', 'a2', 'b1g4', 'm0-9', 'm1-0', 'm1-1', 'm5', '18', '34', '50', '101', '152', '100', '111', '125', '130', '140', '150', '200'];
   const sizeRank = size => { const index = sizePreference.indexOf(String(size || '').toLowerCase()); return index < 0 ? sizePreference.length : index; };
   // One grid card per model variant: the per-platform releases of the same
   // model collapse into a single card listing its hardware targets, and the
@@ -81,7 +81,7 @@
       const pool = releasedMembers.length && releasedMembers.length < members.length ? releasedMembers : members;
       return [...pool].sort((a, b) =>
         openRank(modelPlatforms(a)[0]) - openRank(modelPlatforms(b)[0])
-        || sizeRank(a.modelSize) - sizeRank(b.modelSize))[0];
+        || sizeRank(a.variantKey || a.modelSize) - sizeRank(b.variantKey || b.modelSize))[0];
     };
     const platformMembers = group.members.filter(member => modelPlatforms(member).some(platform => selectedPlatforms.has(platform)));
     const openModel = platformMembers.length

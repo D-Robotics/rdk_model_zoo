@@ -346,6 +346,20 @@ if (preview) {
       assert(entry.path, `Report ${entry.id} needs either dataUrl or an original-report path`);
     }
   }
+  assert.equal(
+    data.models.filter(model => model.dataPending).length,
+    0,
+    'Published preview must not include data-pending placeholder models',
+  );
+  const seenPlatformVariantNames = new Map();
+  for (const model of data.models) {
+    const key = `${model.catalogId || model.name}::${model.releasePlatform || ''}`;
+    const label = String(model.variantName || model.name);
+    const seen = seenPlatformVariantNames.get(key) || new Set();
+    assert.ok(!seen.has(label), `Duplicate variantName "${label}" for ${key}`);
+    seen.add(label);
+    seenPlatformVariantNames.set(key, seen);
+  }
   const modelsWithData = data.models.filter(model => model.reportDataUrl).length;
   assert(
     modelsWithData === 0 || reportEntries.some(entry => entry.dataUrl),

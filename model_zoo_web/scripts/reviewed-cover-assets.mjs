@@ -4,7 +4,7 @@ import { basename, extname, resolve } from 'node:path';
 const kinds = new Set(['task-illustration', 'host-float-reference', 'recorded-board-reference']);
 
 /** Apply explicitly reviewed artwork after all family/official/pending defaults. */
-export async function applyReviewedCovers({ models, covers = {}, inputRoot, assetsRoot }) {
+export async function applyReviewedCovers({ models, covers = {}, inputRoot, assetsRoot, ignoredIds = new Set() }) {
   if (!covers || typeof covers !== 'object' || Array.isArray(covers)) {
     throw new Error('MODEL_ZOO_INPUTS.reviewed_covers must be keyed by catalog model id');
   }
@@ -15,7 +15,10 @@ export async function applyReviewedCovers({ models, covers = {}, inputRoot, asse
   }
   for (const [id, entry] of Object.entries(covers)) {
     const targets = byCatalog.get(id);
-    if (!targets?.length) throw new Error(`Reviewed cover references unknown model ${id}`);
+    if (!targets?.length) {
+      if (ignoredIds.has(id)) continue;
+      throw new Error(`Reviewed cover references unknown model ${id}`);
+    }
     if (!entry || !kinds.has(entry.kind) || !entry.cover_label?.trim()
         || typeof entry.cover !== 'string' || extname(entry.cover) !== '.webp'
         || typeof entry.provenance !== 'string') {

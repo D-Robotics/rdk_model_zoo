@@ -388,21 +388,25 @@ const taskMetadata = {
 };
 
 const safeId = (...parts) => parts.join('-').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-');
-const displayNames = (record, size) => {
+const displayNames = (record, size, variant = null) => {
   const { family, task } = record;
-  if (family === 'bytetrack' && size.startsWith('yolov5x-v7-672-')) {
-    return { model: record.name, variant: 'YOLOv5x · 672 × 672' };
-  }
-  if (family === 'paraformer' && size.startsWith('large-contextual-8404-')) {
-    return { model: record.name, variant: 'Paraformer Large · 16 kHz' };
-  }
-  if (family === 'paddle_ocr' && size.startsWith('v3-en-')) {
-    return { model: record.name, variant: task === 'ocr-det' ? 'PP-OCRv3 English · 640 × 640' : 'PP-OCRv3 English · 48 × 320' };
-  }
-  if (family === 'lprnet' && size.startsWith('sirius-68class-')) {
-    return { model: record.name, variant: 'LPRNet Sirius · 68 classes' };
-  }
+  const explicitVariant = typeof variant?.display_name === 'string' && variant.display_name.trim()
+    ? variant.display_name.trim()
+    : null;
   if (!/^yolo/i.test(family) || family === 'yolo26_depth') {
+    if (explicitVariant) return { model: record.name, variant: explicitVariant };
+    if (family === 'bytetrack' && size.startsWith('yolov5x-v7-672-')) {
+      return { model: record.name, variant: 'YOLOv5x · 672 × 672' };
+    }
+    if (family === 'paraformer' && size.startsWith('large-contextual-8404-')) {
+      return { model: record.name, variant: 'Paraformer Large · 16 kHz' };
+    }
+    if (family === 'paddle_ocr' && size.startsWith('v3-en-')) {
+      return { model: record.name, variant: task === 'ocr-det' ? 'PP-OCRv3 English · 640 × 640' : 'PP-OCRv3 English · 48 × 320' };
+    }
+    if (family === 'lprnet' && size.startsWith('sirius-68class-')) {
+      return { model: record.name, variant: 'LPRNet Sirius · 68 classes' };
+    }
     // Other families keep their catalog name; the size id is spelled out
     // ("conv-small-224" -> "Conv Small 224").
     const sizeName = size.split('-')
@@ -419,7 +423,7 @@ const displayNames = (record, size) => {
   const variantFamily = yoloeSeries && size.startsWith(yoloeSeries[1]) ? 'YOLOE' : familyName;
   return {
     model: `${familyName} ${taskName}`,
-    variant: `${variantFamily}${size} ${taskName}`,
+    variant: explicitVariant || `${variantFamily}${size} ${taskName}`,
   };
 };
 const models = [];
@@ -475,7 +479,7 @@ for (const record of catalog.models || []) {
         continue;
       }
       const releaseId = `${record.id}/${variant.size}/${release.platform}`;
-      const names = displayNames(record, variant.size);
+      const names = displayNames(record, variant.size, variant);
 
       const artifact = release.artifact;
       const clsSegCandidate = candidatePreview && ['cls', 'seg'].includes(record.task);
@@ -665,6 +669,7 @@ for (const record of catalog.models || []) {
         catalogId: record.id,
         name: names.model,
         variantName: names.variant,
+        ...(variant.variant_key ? { variantKey: variant.variant_key } : {}),
         family: record.family,
         modelSize: variant.size,
         releaseStatus: release.status,
@@ -815,28 +820,8 @@ for (const record of catalog.models || []) {
   }
 }
 
-if (!candidatePreview) {
-  const pendingModels = buildPendingModels(fullCatalog.models || [], {
-    officialRepositoryUrl,
-    taskRegistry,
-    safeId,
-  });
-  for (const model of pendingModels) {
-    if (model.heroProvenance?.receiptVersion === 2) continue;
-    const cover = familyInferenceBanners.items.get(model.catalogId);
-    if (!cover) continue;
-    model.coverImage = `assets/models/${safeId(...model.catalogId.split('/'))}${extname(cover.path)}`;
-    model.coverLabel = cover.cover_label;
-    model.heroProvenance = {
-      kind: cover.kind, input: `model_zoo_web/release/assets/${cover.source_image.file}`,
-      predictionsSource: `model_zoo_web/release/assets/${cover.predictions.file}`,
-      revision: cover.model.conversion_source_commit, runtime: 'host-float-reference',
-      note: 'Family reference from the recorded source variant; not a legacy artifact or board result.',
-      modelUrl: cover.model.source_weight_url, framework: 'ONNX Runtime CPU',
-    };
-  }
-  models.push(...pendingModels);
-}
+// Placeholder data-pending entries are omitted from the published site so every
+// listed card and variant selector item maps to a real downloadable model.
 
 if (!models.length) throw new Error('The samples-only catalog contains no released models');
 if (!candidatePreview && !localCandidate) {
@@ -875,7 +860,7 @@ if (technicalPassedPreview) {
 
 // Reviewed artwork has its own provenance and does not change release facts.
 if (!candidatePreview && !technicalPassedPreview) {
-  await applyReviewedCovers({ models, covers: inputs.reviewed_covers, inputRoot, assetsRoot });
+  await applyReviewedCovers({ models, covers: inputs.reviewed_covers, inputRoot, assetsRoot, ignoredIds: pendingIds });
 }
 
 const platformNames = [...new Set(models.flatMap(model => model.platforms))];

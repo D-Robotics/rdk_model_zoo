@@ -30,8 +30,10 @@
     'RDK S600': 0, 'RDK S100P': 1, 'RDK S100': 2, 'RDK X5': 3,
   }[String(hardware)] ?? 99);
   const byPlatformOrder = (a, b) => platformDisplayOrder(a) - platformDisplayOrder(b) || String(a).localeCompare(String(b));
-  const sizePreference = ['n', 's', 'm', 'l', 'x', 'atto', 'femto', 'pico', 'nano', 'tiny', 'small', 'base', 'large', 'b0', 'b1', 'b2', 'b3', 'b4', 'b5', 's0', 's1', 's2', 's3', 's4'];
+  const sizePreference = ['xx-small', 'x-small', 'atto', 'femto', 'pico', 'nano', 'tiny', 'n', 's', 'm', 'l', 'x', 'small', 'medium', 'base', 'large', 'conv-small', 'conv-medium', 'conv-large', 't0', 't1', 't2', 't8', 't12', 's0', 's1', 's2', 's3', 's4', 's12', 'sa12', 'b0', 'b1', 'b2', 'b3', 'b4', 'b5', 'l1', 'l3', 'a0', 'a1', 'a2', 'b1g4', 'm0-9', 'm1-0', 'm1-1', 'm5', '18', '34', '50', '101', '152', '100', '111', '125', '130', '140', '150', '200'];
+  const variantMatchKey = model => String(model?.variantKey || model?.modelSize || model?.variantName || model?.id || '').toLowerCase();
   const sizeRank = size => { const index = sizePreference.indexOf(String(size || '').toLowerCase()); return index < 0 ? sizePreference.length : index; };
+  const byVariantOrder = (a, b) => sizeRank(variantMatchKey(a)) - sizeRank(variantMatchKey(b)) || String(a.variantName || a.name).localeCompare(String(b.variantName || b.name));
   const relatedGroupId = model => model.family || model.catalogId || `${model.name}/${model.taskId || model.task}`;
   const formatShape = value => {
     if (Array.isArray(value)) return value.join(' × ');
@@ -406,8 +408,8 @@
     for (const other of relatedCandidates) {
       const key = relatedGroupId(other);
       const current = relatedByFamily.get(key);
-      if (!current || sizeRank(other.modelSize) < sizeRank(current.modelSize)
-        || (sizeRank(other.modelSize) === sizeRank(current.modelSize)
+      if (!current || sizeRank(variantMatchKey(other)) < sizeRank(variantMatchKey(current))
+        || (sizeRank(variantMatchKey(other)) === sizeRank(variantMatchKey(current))
           && platformDisplayOrder(hardwareOf(other, data)) < platformDisplayOrder(hardwareOf(current, data)))) {
         relatedByFamily.set(key, other);
       }
@@ -475,14 +477,14 @@
     const documentedDialog = !selectedDownloadModel && documentedDownloads.length > 1
       ? `<dialog class="mz-download-dialog mz-store" id="${esc(dialogId)}" aria-labelledby="${esc(dialogId)}-title"><form method="dialog" class="mz-store-shell"><header class="mz-store-header"><div><span>获取模型</span><h2 id="${esc(dialogId)}-title">${esc(m.name)}</h2></div><button type="submit" value="cancel" class="mz-dialog-close" aria-label="关闭" title="关闭">${icon('x')}</button></header><div class="mz-store-body"><div class="mz-resource-links">${documentedDownloads.map(item => external(item.url, esc(item.filename))).join('')}</div></div></form></dialog>`
       : '';
-    const downloadDialog = selectedDownloadModel ? `<dialog class="mz-download-dialog mz-store" id="${esc(dialogId)}" aria-labelledby="${esc(dialogId)}-title"><form method="dialog" class="mz-store-shell"><header class="mz-store-header"><div><span>获取模型</span><h2 id="${esc(dialogId)}-title">${esc(m.name)}</h2></div><button type="submit" value="cancel" class="mz-dialog-close" aria-label="关闭" title="关闭">${icon('x')}</button></header><div class="mz-store-body"><fieldset class="mz-store-step"><legend>选择芯片</legend><div class="mz-store-grid">${downloadPlatforms.map(platform => `<label class="mz-store-choice"><input type="radio" name="download-platform" value="${esc(platform)}" ${platform === selectedPlatform ? 'checked' : ''}><span class="mz-store-choice-main"><strong>${esc(platform)}</strong><small>${platformSizes(platform)} 个尺寸</small></span></label>`).join('')}</div></fieldset><fieldset class="mz-store-step"><legend>选择尺寸</legend><div class="mz-store-list">${downloadModels.map(model => { const platform = hardwareOf(model, data); const asset = model.assets[0]; return `<label class="mz-store-choice mz-model-choice" data-platform="${esc(platform)}" data-model-size="${esc(model.modelSize || '')}" ${platform === selectedPlatform ? '' : 'hidden'}><input type="radio" name="download-model" value="${esc(model.id)}" data-url="${esc(asset.url)}" ${model.id === selectedDownloadModel.id ? 'checked' : ''}><span class="mz-store-choice-main"><strong>${esc(model.variantName || model.name)}</strong></span>${choiceStats(model, data)}</label>`; }).join('')}</div></fieldset></div><footer class="mz-store-summary"><a class="button mz-dialog-download" data-download-link href="${esc(selectedAsset.url)}" target="_blank" rel="noopener">${icon('download')}下载</a></footer></form></dialog>` : documentedDialog;
+    const downloadDialog = selectedDownloadModel ? `<dialog class="mz-download-dialog mz-store" id="${esc(dialogId)}" aria-labelledby="${esc(dialogId)}-title"><form method="dialog" class="mz-store-shell"><header class="mz-store-header"><div><span>获取模型</span><h2 id="${esc(dialogId)}-title">${esc(m.name)}</h2></div><button type="submit" value="cancel" class="mz-dialog-close" aria-label="关闭" title="关闭">${icon('x')}</button></header><div class="mz-store-body"><fieldset class="mz-store-step"><legend>选择芯片</legend><div class="mz-store-grid">${downloadPlatforms.map(platform => `<label class="mz-store-choice"><input type="radio" name="download-platform" value="${esc(platform)}" ${platform === selectedPlatform ? 'checked' : ''}><span class="mz-store-choice-main"><strong>${esc(platform)}</strong><small>${platformSizes(platform)} 个尺寸</small></span></label>`).join('')}</div></fieldset><fieldset class="mz-store-step"><legend>选择尺寸</legend><div class="mz-store-list">${[...downloadModels].sort(byVariantOrder).map(model => { const platform = hardwareOf(model, data); const asset = model.assets[0]; return `<label class="mz-store-choice mz-model-choice" data-platform="${esc(platform)}" data-model-size="${esc(model.modelSize || '')}" data-variant-key="${esc(variantMatchKey(model))}" ${platform === selectedPlatform ? '' : 'hidden'}><input type="radio" name="download-model" value="${esc(model.id)}" data-url="${esc(asset.url)}" ${model.id === selectedDownloadModel.id ? 'checked' : ''}><span class="mz-store-choice-main"><strong>${esc(model.variantName || model.name)}</strong></span>${choiceStats(model, data)}</label>`; }).join('')}</div></fieldset></div><footer class="mz-store-summary"><a class="button mz-dialog-download" data-download-link href="${esc(selectedAsset.url)}" target="_blank" rel="noopener">${icon('download')}下载</a></footer></form></dialog>` : documentedDialog;
     return `<nav class="mz-breadcrumb" aria-label="模型导航"><a class="back-link" href="#">Model Zoo</a><span aria-hidden="true">/</span><span>${m.name}</span></nav>
       <section class="mz-overview"><div class="mz-introduction">${kicker}<h1>${m.name}</h1><p data-i18n-zh="${esc(m.description)}" data-i18n-en="${esc(m.descriptionEn || m.description)}">${esc(description)}</p><div class="mz-primary-actions">${acquireButton}${repositoryLinks(m, 'mz-text-link')}</div></div>${cover}</section>
-      <section class="mz-benchmark" aria-label="性能与精度"><div class="mz-benchmark-title"><h2>性能与精度</h2></div><div class="mz-configuration"><div><span>目标硬件</span>${dropdown('benchmark-hardware', '目标硬件', hardwareOptions.map(value => ({ value, label: value })), hardware)}</div><div><span>模型变体</span>${dropdown('benchmark-variant', '模型变体', variants.filter(other => hardwareOf(other, data) === hardware).sort((a, b) => sizeRank(a.modelSize) - sizeRank(b.modelSize) || String(a.variantName || a.name).localeCompare(String(b.variantName || b.name))).map(other => ({ value: other.id, label: other.variantName || other.name })), m.id)}</div><div><span>Runtime 并发</span>${dropdown('benchmark-condition', 'Runtime 并发', conditionChoices, conditionChoices[0]?.value || '', m.dataPending ? false : !conditionChoices.length)}</div></div>
+      <section class="mz-benchmark" aria-label="性能与精度"><div class="mz-benchmark-title"><h2>性能与精度</h2></div><div class="mz-configuration"><div><span>目标硬件</span>${dropdown('benchmark-hardware', '目标硬件', hardwareOptions.map(value => ({ value, label: value })), hardware)}</div><div><span>模型变体</span>${dropdown('benchmark-variant', '模型变体', variants.filter(other => hardwareOf(other, data) === hardware).sort(byVariantOrder).map(other => ({ value: other.id, label: other.variantName || other.name })), m.id)}</div><div><span>Runtime 并发</span>${dropdown('benchmark-condition', 'Runtime 并发', conditionChoices, conditionChoices[0]?.value || '', m.dataPending ? false : !conditionChoices.length)}</div></div>
       ${benchmarkBody}<div class="mz-report-actions">${reportAction}</div></section>
       <div class="mz-information"><div class="mz-main-column"><section class="mz-section"><h2>模型参数</h2><dl class="mz-specifications">${propertyRows(m)}</dl></section>${upstreamLine}${conversionLine}${downloadLine}${usageLine}${quickStart(m)}${pendingQuickStart(m)}
       </div>
-      <aside class="mz-side-column"><section><h2>目标平台</h2><div class="mz-platform-list">${hardwareOptions.map(platform => { const target = variants.find(other => hardwareOf(other, data) === platform && other.modelSize === m.modelSize) || variants.find(other => hardwareOf(other, data) === platform); const active = platform === hardware; return `<button type="button" class="mz-platform-option${active ? ' is-active' : ''}" data-platform-target="${esc(target?.id || '')}" ${active || !target ? 'disabled' : ''} aria-label="切换到 ${esc(platform)}"><span class="mz-platform-mark">${icon('cpu')}</span><strong>${esc(platform)}</strong></button>`; }).join('')}</div></section><section><h2>开发资源</h2><div class="mz-resource-links">${developerResourceLinks(m)}</div></section>${licenseSections(m)}</aside></div>
+      <aside class="mz-side-column"><section><h2>目标平台</h2><div class="mz-platform-list">${hardwareOptions.map(platform => { const platformVariants = variants.filter(other => hardwareOf(other, data) === platform).sort(byVariantOrder); const target = platformVariants.find(other => variantMatchKey(other) === variantMatchKey(m)) || platformVariants[0]; const active = platform === hardware; return `<button type="button" class="mz-platform-option${active ? ' is-active' : ''}" data-platform-target="${esc(target?.id || '')}" ${active || !target ? 'disabled' : ''} aria-label="切换到 ${esc(platform)}"><span class="mz-platform-mark">${icon('cpu')}</span><strong>${esc(platform)}</strong></button>`; }).join('')}</div></section><section><h2>开发资源</h2><div class="mz-resource-links">${developerResourceLinks(m)}</div></section>${licenseSections(m)}</aside></div>
       ${related.length ? `<section class="mz-related"><div class="mz-section-heading"><h2>相关模型</h2><a href="#">查看全部模型</a></div><div class="mz-related-grid">${related.map(other => `<a href="#model/${other.id}" class="mz-related-model"><img src="${esc(other.coverImage || (other.dataPending ? 'assets/pending-cover.svg' : ''))}" alt="${esc(other.name)}" loading="lazy"><div><h3>${other.name}</h3><span>${other.task}</span></div></a>`).join('')}</div></section>` : ''}
       ${downloadDialog}
       `;
@@ -582,9 +584,13 @@
       for (const choice of modelChoices) choice.hidden = choice.dataset.platform !== selectedPlatform;
       let selectedModel = downloadDialog.querySelector('input[name="download-model"]:checked');
       if (!selectedModel || selectedModel.closest('.mz-model-choice')?.hidden) {
-        const size = selectedModel?.closest('.mz-model-choice')?.dataset.modelSize;
+        const choiceEl = selectedModel?.closest('.mz-model-choice');
+        const variantKey = choiceEl?.dataset.variantKey;
+        const size = choiceEl?.dataset.modelSize;
         const visible = modelChoices.filter(choice => !choice.hidden);
-        selectedModel = (visible.find(choice => choice.dataset.modelSize === size) || visible[0])?.querySelector('input[name="download-model"]');
+        selectedModel = (visible.find(choice => variantKey && choice.dataset.variantKey === variantKey)
+          || visible.find(choice => size && choice.dataset.modelSize === size)
+          || visible[0])?.querySelector('input[name="download-model"]');
         if (selectedModel) selectedModel.checked = true;
       }
       if (!selectedModel) return;
@@ -827,7 +833,14 @@
       if (event.target.dataset.value !== m.id) location.hash = '#model/' + event.target.dataset.value;
     });
     listen(root.querySelector('#benchmark-hardware'), 'change', event => {
-      const target = models.find(other => other.sample === m.sample && other.task === m.task && hardwareOf(other, data) === event.target.dataset.value);
+      const groupId = m.catalogId || `${m.name}/${m.taskId || m.task}`;
+      const nextHardware = event.target.dataset.value;
+      const candidates = models
+        .filter(other => (other.catalogId || `${other.name}/${other.taskId || other.task}`) === groupId && hardwareOf(other, data) === nextHardware)
+        .sort(byVariantOrder);
+      const target = candidates.find(other => other.sample === m.sample)
+        || candidates.find(other => variantMatchKey(other) === variantMatchKey(m))
+        || candidates[0];
       if (target && target.id !== m.id) location.hash = '#model/' + target.id;
     });
     for (const button of root.querySelectorAll('[data-platform-target]')) {

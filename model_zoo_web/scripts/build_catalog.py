@@ -1717,6 +1717,10 @@ def validate_record(record: dict[str, Any], source_path: Path) -> dict[str, Any]
         if size in seen_sizes:
             raise CatalogError(f"{relative_source}: duplicate variant size {size}")
         seen_sizes.add(size)
+        if "display_name" in variant:
+            require_string(variant.get("display_name"), f"{variant_label}.display_name")
+        if "variant_key" in variant:
+            require_string(variant.get("variant_key"), f"{variant_label}.variant_key")
 
         input_config = require_mapping(variant.get("input"), f"{variant_label}.input")
         demo_profiles = require_list(variant.get("platforms"), f"{variant_label}.platforms")
