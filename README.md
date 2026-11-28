@@ -67,6 +67,9 @@ rdk_model_zoo/
 |-- samples/
 |   |-- robotics/
 |   |   `-- himloco/              # Unitree Go2 locomotion policy
+|   |-- speech/
+|   |   |-- wav2vec2/             # English speech recognition
+|   |   `-- whisper/              # Multilingual speech recognition
 |   |-- vision/
 |   |   |-- clip/                 # Image-text multimodal matching
 |   |   |-- convnext/             # Image classification
@@ -179,6 +182,15 @@ python3 main.py \
 | Image-Text Multimodal Matching | CLIP | `samples/vision/clip` | RDK X5 | [Details](./samples/vision/clip) |
 | Open-Vocabulary Object Detection | YOLOWorld | `samples/vision/yoloworld` | RDK X5 | [Details](./samples/vision/yoloworld) |
 | Legged Locomotion | HIMLoco (Unitree Go2) | `samples/robotics/himloco` | RDK X5 | [Details](./samples/robotics/himloco) |
+
+## Speech recognition samples
+
+These examples use locally compiled models for RDK X5.
+
+| Model | Task | Sample |
+| --- | --- | --- |
+| Whisper Tiny | Multilingual speech transcription | [Usage guide](./samples/speech/whisper/README.md) |
+| Wav2Vec2 Base 960h | English speech transcription | [Usage guide](./samples/speech/wav2vec2/README.md) |
 
 ## Documentation & Resources
 

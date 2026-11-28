@@ -7,6 +7,7 @@
 ```bash
 py_utils
 ├── __init__.py
+├── audio_utils.py
 ├── file_io.py
 ├── inspect.py
 ├── nn_math.py
@@ -22,6 +23,7 @@ py_utils
 
 | 文件名            | 说明             | 包含内容                                 |
 | ---------------- | ---------------- | --------------------------------------- |
+| `audio_utils.py`  | 语音波形处理 | 读取单声道音频、重采样、补齐和归一化 |
 | `file_io.py`     | 文件与资源读写工具 | 图像加载、标签文件读取、词表加载等         |
 | `inspect.py`     | 模型与数据检查工具 | Tensor / 模型输出信息打印、调试与辅助检查  |
 | `nn_math.py`     | 数学与数值计算工具 | sigmoid / softmax / 数值归一化等         |

@@ -67,6 +67,9 @@ rdk_model_zoo/
 |-- samples/
 |   |-- robotics/
 |   |   `-- himloco/              # Unitree Go2 运动控制策略
+|   |-- speech/
+|   |   |-- wav2vec2/             # 英文语音识别
+|   |   `-- whisper/              # 多语言语音识别
 |   |-- vision/
 |   |   |-- clip/                 # 图文多模态匹配
 |   |   |-- convnext/             # 图像分类
@@ -182,6 +185,15 @@ python3 main.py \
 | 图文多模态匹配 | CLIP | `samples/vision/clip` | RDK X5 | [详情](./samples/vision/clip) |
 | 开放词表目标检测 | YOLOWorld | `samples/vision/yoloworld` | RDK X5 | [详情](./samples/vision/yoloworld) |
 | 足式机器人运动控制 | HIMLoco（Unitree Go2） | `samples/robotics/himloco` | RDK X5 | [详情](./samples/robotics/himloco) |
+
+## 语音识别示例
+
+以下示例使用本地编译的 RDK X5 模型。
+
+| 模型 | 任务 | 示例 |
+| --- | --- | --- |
+| Whisper Tiny | 多语言语音转录 | [使用说明](./samples/speech/whisper/README_cn.md) |
+| Wav2Vec2 Base 960h | 英语语音转录 | [使用说明](./samples/speech/wav2vec2/README_cn.md) |
 
 ## 文档说明与学习资源
 
